@@ -109,7 +109,8 @@ public final class ViccExtractor {
             if (gene == null) {
                 LOGGER.warn("No gene configured for {}. Skipping!", feature);
             } else {
-                EventExtractorOutput extractorOutput = eventExtractor.extract(gene, entry.transcriptId(), feature.type(), feature.name());
+                EventExtractorOutput extractorOutput =
+                        eventExtractor.extract(gene, entry.transcriptId(), feature.type(), feature.name(), Strings.EMPTY);
                 rawInput = feature.name();
                 if (extractorOutput.hotspots() != null) {
                     hotspotsPerFeature.put(feature, extractorOutput.hotspots());

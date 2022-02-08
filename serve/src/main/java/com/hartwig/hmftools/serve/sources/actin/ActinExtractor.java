@@ -52,7 +52,7 @@ public class ActinExtractor {
                     LOGGER.warn("No event type known for '{}' on '{}'", entry, entry.gene());
                 } else {
                     String gene = entry.gene() != null ? entry.gene() : "-";
-                    extractions.add(toExtractionResult(trial, eventExtractor.extract(gene, null, type, event)));
+                    extractions.add(toExtractionResult(trial, eventExtractor.extract(gene, null, type, event, entry.mutation())));
                 }
             }
 

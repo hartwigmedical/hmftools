@@ -12,7 +12,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.serve.actionability.util.ActionableFileFunctions;
-import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -46,7 +46,7 @@ public final class ActionableCharacteristicFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(FIELD_DELIMITER).add("name").add(ActionableFileFunctions.header()).toString();
+        return new StringJoiner(FIELD_DELIMITER).add("name").add("cutOff").add(ActionableFileFunctions.header()).toString();
     }
 
     @NotNull
@@ -64,8 +64,9 @@ public final class ActionableCharacteristicFile {
         String[] values = line.split(FIELD_DELIMITER);
 
         return ImmutableActionableCharacteristic.builder()
-                .from(ActionableFileFunctions.fromLine(values, 1))
-                .name(TumorCharacteristic.valueOf(values[0]))
+                .from(ActionableFileFunctions.fromLine(values, 2))
+                .name(TumorCharacteristicAnnotation.valueOf(values[0]))
+                .cutOff(values[1])
                 .build();
     }
 
@@ -91,6 +92,7 @@ public final class ActionableCharacteristicFile {
     @NotNull
     private static String toLine(@NotNull ActionableCharacteristic characteristic) {
         return new StringJoiner(FIELD_DELIMITER).add(characteristic.name().toString())
+                .add(characteristic.cutOff())
                 .add(ActionableFileFunctions.toLine(characteristic))
                 .toString();
     }

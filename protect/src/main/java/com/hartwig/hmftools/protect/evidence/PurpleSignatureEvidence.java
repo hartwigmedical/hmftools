@@ -9,7 +9,7 @@ import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
-import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -27,8 +27,8 @@ public class PurpleSignatureEvidence {
             @NotNull final List<ActionableCharacteristic> actionableCharacteristics) {
         this.personalizedEvidenceFactory = personalizedEvidenceFactory;
         this.actionableSignatures = actionableCharacteristics.stream()
-                .filter(x -> x.name() == TumorCharacteristic.MICROSATELLITE_UNSTABLE
-                        || x.name() == TumorCharacteristic.HIGH_TUMOR_MUTATIONAL_LOAD)
+                .filter(x -> x.name() == TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE
+                        || x.name() == TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD)
                 .collect(Collectors.toList());
     }
 

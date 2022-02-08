@@ -45,6 +45,7 @@ import com.hartwig.hmftools.serve.util.ProgressTracker;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -81,7 +82,7 @@ public class CkbExtractor {
 
             String transcript = null;
 
-            EventExtractorOutput eventExtractorOutput = eventExtractor.extract(gene, transcript, entry.type(), event);
+            EventExtractorOutput eventExtractorOutput = eventExtractor.extract(gene, transcript, entry.type(), event, Strings.EMPTY);
             Set<? extends ActionableEvent> actionableEvents = actionableEntryFactory.toActionableEntries(entry, variant.variant());
 
             extractions.add(toExtractionResult(gene, event, transcript, eventExtractorOutput, actionableEvents));

@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.virus.VirusConstants;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
-import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -28,7 +28,8 @@ public class VirusEvidence {
             @NotNull final List<ActionableCharacteristic> actionableCharacteristics) {
         this.personalizedEvidenceFactory = personalizedEvidenceFactory;
         this.actionableViruses = actionableCharacteristics.stream()
-                .filter(x -> x.name() == TumorCharacteristic.HPV_POSITIVE || x.name() == TumorCharacteristic.EBV_POSITIVE)
+                .filter(x -> x.name() == TumorCharacteristicAnnotation.HPV_POSITIVE
+                        || x.name() == TumorCharacteristicAnnotation.EBV_POSITIVE)
                 .collect(Collectors.toList());
     }
 
@@ -45,20 +46,16 @@ public class VirusEvidence {
             switch (virus.name()) {
                 case HPV_POSITIVE: {
                     if (!hpv.isEmpty()) {
-                        ProtectEvidence evidence = personalizedEvidenceFactory.somaticEvidence(virus)
-                                .reported(reportHPV)
-                                .event(HPV_POSITIVE_EVENT)
-                                .build();
+                        ProtectEvidence evidence =
+                                personalizedEvidenceFactory.somaticEvidence(virus).reported(reportHPV).event(HPV_POSITIVE_EVENT).build();
                         result.add(evidence);
                     }
                     break;
                 }
                 case EBV_POSITIVE: {
                     if (!ebv.isEmpty()) {
-                        ProtectEvidence evidence = personalizedEvidenceFactory.somaticEvidence(virus)
-                                .reported(reportEBV)
-                                .event(EBV_POSITIVE_EVENT)
-                                .build();
+                        ProtectEvidence evidence =
+                                personalizedEvidenceFactory.somaticEvidence(virus).reported(reportEBV).event(EBV_POSITIVE_EVENT).build();
                         result.add(evidence);
                     }
                     break;
