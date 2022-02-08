@@ -51,23 +51,23 @@ public class PhasingGroupsTest
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
         assertEquals(1, mPhaser.getPhasedGroups().size());
 
-        // negatives can diff
+        // negatives cannot diff
         posCounters = Lists.newArrayList(rc1);
         negCounters = Lists.newArrayList(rc2, rc3);
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
-        assertEquals(1, mPhaser.getPhasedGroups().size());
+        assertEquals(2, mPhaser.getPhasedGroups().size());
 
         PhasedVariantGroup group = findGroup(posCounters);
         assertNotNull(group);
-        assertEquals(2, group.ReadCount);
+        assertEquals(1, group.ReadCount);
 
         // positive cannot differ
         posCounters = Lists.newArrayList(rc1, rc3);
         negCounters = Lists.newArrayList(rc2);
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
-        assertEquals(2, mPhaser.getPhasedGroups().size());
+        assertEquals(3, mPhaser.getPhasedGroups().size());
         assertTrue(checkGroupsAreOrdered());
 
         // groups are added in order
@@ -75,61 +75,40 @@ public class PhasingGroupsTest
         negCounters = Lists.newArrayList();
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
-        assertEquals(3, mPhaser.getPhasedGroups().size());
+        assertEquals(4, mPhaser.getPhasedGroups().size());
         assertTrue(checkGroupsAreOrdered());
 
         posCounters = Lists.newArrayList(rc3, rc5);
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
-        assertEquals(4, mPhaser.getPhasedGroups().size());
+        assertEquals(5, mPhaser.getPhasedGroups().size());
         assertTrue(checkGroupsAreOrdered());
 
         posCounters = Lists.newArrayList(rc2, rc4);
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
-        assertEquals(5, mPhaser.getPhasedGroups().size());
+        assertEquals(6, mPhaser.getPhasedGroups().size());
         assertTrue(checkGroupsAreOrdered());
 
         posCounters = Lists.newArrayList(rc6);
         negCounters = Lists.newArrayList(rc3);
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
-        assertEquals(6, mPhaser.getPhasedGroups().size());
+        assertEquals(7, mPhaser.getPhasedGroups().size());
         assertTrue(checkGroupsAreOrdered());
 
         posCounters = Lists.newArrayList(rc4, rc5);
         negCounters = Lists.newArrayList();
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
-        assertEquals(7, mPhaser.getPhasedGroups().size());
+        assertEquals(8, mPhaser.getPhasedGroups().size());
         assertTrue(checkGroupsAreOrdered());
 
         posCounters = Lists.newArrayList(rc2, rc5);
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
-        assertEquals(8, mPhaser.getPhasedGroups().size());
+        assertEquals(9, mPhaser.getPhasedGroups().size());
         assertTrue(checkGroupsAreOrdered());
-
-        // test matches on positives only and merges of negatives
-        posCounters = Lists.newArrayList(rc6);
-        negCounters = Lists.newArrayList(rc3, rc4, rc5);
-
-        mPhaser.registeredPhasedVariants(posCounters, negCounters);
-        assertEquals(8, mPhaser.getPhasedGroups().size());
-        group = findGroup(posCounters);
-        assertNotNull(group);
-        assertEquals(2, group.ReadCount);
-        assertEquals(3, group.NegativeReadCounters.size());
-
-        posCounters = Lists.newArrayList(rc4, rc5);
-        negCounters = Lists.newArrayList(rc1, rc6);
-
-        mPhaser.registeredPhasedVariants(posCounters, negCounters);
-        assertEquals(8, mPhaser.getPhasedGroups().size());
-        group = findGroup(posCounters);
-        assertNotNull(group);
-        assertEquals(2, group.ReadCount);
-        assertEquals(2, group.NegativeReadCounters.size());
     }
 
     @Test
@@ -227,7 +206,6 @@ public class PhasingGroupsTest
         assertNotNull(group);
         assertEquals(2, group.ReadCount);
         assertEquals(0.8, group.AllocatedReadCount, 0.1);
-        */
 
         assertEquals(3, mPhaser.getPhasedGroups().size());
 
@@ -245,13 +223,15 @@ public class PhasingGroupsTest
         assertNotNull(group);
         assertEquals(2, group.ReadCount);
         assertEquals(0.8, group.AllocatedReadCount, 0.1);
+        */
     }
 
     private PhasedVariantGroup findGroup(final List<ReadContextCounter> posCounters)
     {
-        int minPos = posCounters.get(0).position();
-        int maxPos = posCounters.get(posCounters.size() - 1).position();
-        return mPhaser.getPhasedGroups().stream().filter(x -> x.matches(minPos, maxPos, posCounters)).findFirst().orElse(null);
+        return mPhaser.getPhasedGroups().stream()
+                .filter(x -> x.PositiveReadCounters.size() == posCounters.size())
+                .filter(x -> x.PositiveReadCounters.stream().allMatch(y -> posCounters.contains(y)))
+                .findFirst().orElse(null);
     }
 
     private boolean checkGroupsAreOrdered()
@@ -261,7 +241,7 @@ public class PhasingGroupsTest
             PhasedVariantGroup current = mPhaser.getPhasedGroups().get(i);
             PhasedVariantGroup next = mPhaser.getPhasedGroups().get(i + 1);
 
-            if(next.minVariantPos() < current.minVariantPos())
+            if(next.posVariantMin() < current.posVariantMin())
                 return false;
         }
 

@@ -1,11 +1,15 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+import static java.lang.Math.sin;
+
 import java.util.List;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
-import com.hartwig.hmftools.sage.common.ReadContext;
+
+import org.apache.commons.compress.utils.Lists;
 
 public class PhasedVariantGroup
 {
@@ -17,8 +21,12 @@ public class PhasedVariantGroup
     public double AllocatedReadCount; // allocated from subset groups
 
     // cache min and max variant positions from the positive read-counters, used for faster group matching
-    private int mMinVariantPos;
-    private int mMaxVariantPos;
+    private int mPosVariantMin;
+    private int mPosVariantMax;
+
+    private int mVariantMin;
+    private int mVariantMax;
+    private final List<Integer> mMergedIds;
 
     public PhasedVariantGroup(
             final int id, final int minVariantPos, final int maxVariantPos,
@@ -28,44 +36,128 @@ public class PhasedVariantGroup
         PositiveReadCounters = posCounters;
         NegativeReadCounters = negCounters;
 
-        mMinVariantPos = minVariantPos;
-        mMaxVariantPos = maxVariantPos;
+        mPosVariantMin = minVariantPos;
+        mPosVariantMax = maxVariantPos;
+
+        mVariantMin = minVariantPos;
+        mVariantMax = maxVariantPos;
+
+        if(!negCounters.isEmpty())
+        {
+            mVariantMin = min(mVariantMin, negCounters.get(0).position());
+            mVariantMax = max(mVariantMax, negCounters.get(negCounters.size() - 1).position());
+        }
 
         ReadCount = 1;
         AllocatedReadCount = 0;
+        mMergedIds = Lists.newArrayList();
     }
 
-    public int minVariantPos() { return mMinVariantPos; }
-    public int maxVariantPos() { return mMaxVariantPos; }
+    public int posVariantMin() { return mPosVariantMin; }
+    public int posVariantMax() { return mPosVariantMax; }
+    public int variantMin() { return mVariantMin; }
+    public int variantMax() { return mVariantMax; }
 
     public boolean positionsOverlap(final PhasedVariantGroup other)
     {
-        return BaseRegion.positionsOverlap(mMinVariantPos, mMaxVariantPos, other.minVariantPos(), other.maxVariantPos());
+        return BaseRegion.positionsOverlap(mPosVariantMin, mPosVariantMax, other.posVariantMin(), other.posVariantMax());
     }
 
-    public boolean matches(final int minVariantPos, final int maxVariantPos, final List<ReadContextCounter> posCounters)
+    public boolean exactMatch(
+            final int minVariantPos, final int maxVariantPos,
+            final List<ReadContextCounter> posCounters, final List<ReadContextCounter> negCounters)
     {
         // positives need to match exactly, negatives don't
-        if(minVariantPos != mMinVariantPos || maxVariantPos != mMaxVariantPos)
+        if(minVariantPos != mPosVariantMin || maxVariantPos != mPosVariantMax)
             return false;
 
-        if(PositiveReadCounters.size() != posCounters.size())
+        if(PositiveReadCounters.size() != posCounters.size() || NegativeReadCounters.size() != negCounters.size())
             return false;
 
         if(PositiveReadCounters.stream().anyMatch(x -> !posCounters.contains(x)))
             return false;
 
+        if(NegativeReadCounters.stream().anyMatch(x -> !negCounters.contains(x)))
+            return false;
+
         return true;
+    }
+
+    public boolean positivesMatch(final PhasedVariantGroup other)
+    {
+        // positives need to match exactly, negatives don't
+        if(other.posVariantMin() != mPosVariantMin || other.posVariantMax() != mPosVariantMax)
+            return false;
+
+        if(PositiveReadCounters.size() != other.PositiveReadCounters.size())
+            return false;
+
+        if(PositiveReadCounters.stream().anyMatch(x -> !other.PositiveReadCounters.contains(x)))
+            return false;
+
+        return true;
+    }
+
+    public boolean isSubsetOf(final PhasedVariantGroup other)
+    {
+        // returns true if this group is a subset of 'other' is a su
+        if(other.PositiveReadCounters.size() < PositiveReadCounters.size())
+            return false;
+
+        if(!PositiveReadCounters.stream().allMatch(x -> other.PositiveReadCounters.contains(x)))
+            return false;
+
+        // cannot have contradictory negatives
+        if(hasAnyOverlap(other.PositiveReadCounters, NegativeReadCounters) || hasAnyOverlap(PositiveReadCounters, other.NegativeReadCounters))
+            return false;
+
+        return true;
+    }
+
+    public boolean populateCommon(final PhasedVariantGroup other, final List<ReadContextCounter> posCounters, final List<ReadContextCounter> negCounters)
+    {
+        // cannot have contradictory negatives
+        if(hasAnyOverlap(other.PositiveReadCounters, NegativeReadCounters) || hasAnyOverlap(PositiveReadCounters, other.NegativeReadCounters))
+            return false;
+
+        PositiveReadCounters.stream().filter(x -> other.PositiveReadCounters.contains(x)).forEach(x -> posCounters.add(x));
+        NegativeReadCounters.stream().filter(x -> other.NegativeReadCounters.contains(x)).forEach(x -> negCounters.add(x));
+        return !posCounters.isEmpty();
+    }
+
+    public boolean hasCommonSubset(
+            final PhasedVariantGroup other, final List<ReadContextCounter> posCounters, final List<ReadContextCounter> negCounters)
+    {
+        if(hasAnyOverlap(other.PositiveReadCounters, NegativeReadCounters) || hasAnyOverlap(PositiveReadCounters, other.NegativeReadCounters))
+            return false;
+
+        return posCounters.stream().allMatch(x -> PositiveReadCounters.contains(x))
+                && negCounters.stream().allMatch(x -> NegativeReadCounters.contains(x));
+    }
+
+    private static boolean hasAnyOverlap(final List<ReadContextCounter> counters1, final List<ReadContextCounter> counters2)
+    {
+        return counters1.stream().anyMatch(x -> counters2.contains(x)) || counters2.stream().anyMatch(x -> counters1.contains(x));
     }
 
     public void merge(final PhasedVariantGroup other)
     {
-        ReadCount += other.ReadCount;
-
-
-        // TODO: merged reads need to go into allocated not original
+        // simple merge without expanding the +ves
+        if(other.PositiveReadCounters.size() == PositiveReadCounters.size())
+            ReadCount += other.ReadCount;
+        else
+            AllocatedReadCount += other.ReadCount;
 
         AllocatedReadCount += other.AllocatedReadCount;
+
+        mergeNegatives(other.NegativeReadCounters);
+        mMergedIds.add(other.Id);
+    }
+
+    public void merge(final PhasedVariantGroup other, double allocFraction)
+    {
+        // merge and allocate as directed, expanding +ves as required
+        AllocatedReadCount += (other.ReadCount + other.AllocatedReadCount) * allocFraction;
 
         int index = 0;
 
@@ -99,57 +191,34 @@ public class PhasedVariantGroup
                 PositiveReadCounters.add(index, readCounter);
         }
 
+        mPosVariantMin = PositiveReadCounters.get(0).position();
+        mPosVariantMax = PositiveReadCounters.get(PositiveReadCounters.size() - 1).position();
+
         // other.PositiveReadCounters.stream().filter(x -> !PositiveReadCounters.contains(x)).forEach(x -> PositiveReadCounters.add(x));
         mergeNegatives(other.NegativeReadCounters);
 
-        mMinVariantPos = PositiveReadCounters.get(0).position();
-        mMaxVariantPos = PositiveReadCounters.get(PositiveReadCounters.size() - 1).position();
+        mMergedIds.add(other.Id);
     }
 
     public void mergeNegatives(final List<ReadContextCounter> negCounters)
     {
         negCounters.stream().filter(x -> !NegativeReadCounters.contains(x)).forEach(x -> NegativeReadCounters.add(x));
+
+        mVariantMin = min(mPosVariantMin, NegativeReadCounters.stream().mapToInt(x -> x.position()).min().orElse(mPosVariantMin));
+        mVariantMax = max(mPosVariantMax, NegativeReadCounters.stream().mapToInt(x -> x.position()).max().orElse(mPosVariantMin));
     }
 
-    public boolean isSubsetOf(final PhasedVariantGroup other)
+    public String mergedGroupIds()
     {
-        // returns true if this group is a subset of 'other' is a su
-        if(other.PositiveReadCounters.size() < PositiveReadCounters.size())
-            return false;
-
-        if(!PositiveReadCounters.stream().allMatch(x -> other.PositiveReadCounters.contains(x)))
-            return false;
-
-        // cannot have contradictory negatives
-        if(hasAnyOverlap(other.PositiveReadCounters, NegativeReadCounters) || hasAnyOverlap(PositiveReadCounters, other.NegativeReadCounters))
-            return false;
-
-        return true;
-    }
-
-    public boolean haveCommonSubset(final PhasedVariantGroup other)
-    {
-        // returns true if the groups contain common subsets but not all
-        int countInOther = (int)PositiveReadCounters.stream().filter(x -> other.PositiveReadCounters.contains(x)).count();
-
-        if(countInOther == 0 || countInOther == PositiveReadCounters.size() || countInOther == other.PositiveReadCounters.size())
-            return false;
-
-        // cannot have contradictory negatives
-        if(hasAnyOverlap(other.PositiveReadCounters, NegativeReadCounters) || hasAnyOverlap(PositiveReadCounters, other.NegativeReadCounters))
-            return false;
-
-        return true;
-    }
-
-    private static boolean hasAnyOverlap(final List<ReadContextCounter> counters1, final List<ReadContextCounter> counters2)
-    {
-        return counters1.stream().anyMatch(x -> counters2.contains(x)) || counters2.stream().anyMatch(x -> counters1.contains(x));
+        StringJoiner sj = new StringJoiner(";");
+        mMergedIds.forEach(x -> sj.add(String.valueOf(x)));
+        return sj.toString();
     }
 
     public String toString()
     {
-        return String.format("%d: range(%d - %d) pos(%d) neg(%d) rc(%d) alloc(%.1f)",
-            Id, mMinVariantPos, mMaxVariantPos, PositiveReadCounters.size(), NegativeReadCounters.size(), ReadCount, AllocatedReadCount);
+        return String.format("%d: range(%d - %d) pos(%d) neg(%d) rc(%d) alloc(%.1f) fullRange(%s - %s)",
+            Id, mPosVariantMin, mPosVariantMax, PositiveReadCounters.size(), NegativeReadCounters.size(), ReadCount, AllocatedReadCount,
+                mVariantMin, mVariantMax);
     }
 }
