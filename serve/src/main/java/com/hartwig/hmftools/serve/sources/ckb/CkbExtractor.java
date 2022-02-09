@@ -24,6 +24,7 @@ import com.hartwig.hmftools.serve.extraction.EventExtractorOutput;
 import com.hartwig.hmftools.serve.extraction.ExtractionFunctions;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
+import com.hartwig.hmftools.serve.extraction.catalog.DealWithDriverInconsistentModeAnnotation;
 import com.hartwig.hmftools.serve.extraction.codon.CodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.codon.CodonFunctions;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableKnownCodon;
@@ -53,6 +54,7 @@ public class CkbExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(CkbExtractor.class);
 
+    private static final String DEAL_WITH_DRIVER_INCONSISTENCIES_MODE = "ignore";
     @NotNull
     private final EventExtractor eventExtractor;
     @NotNull
@@ -66,6 +68,8 @@ public class CkbExtractor {
     @NotNull
     public ExtractionResult extract(@NotNull List<CkbEntry> ckbEntries) {
         List<ExtractionResult> extractions = Lists.newArrayList();
+        DealWithDriverInconsistentModeAnnotation annotation =
+                DealWithDriverInconsistentModeAnnotation.extractDealWithDriverInconsistentMode(DEAL_WITH_DRIVER_INCONSISTENCIES_MODE);
 
         ProgressTracker tracker = new ProgressTracker("CKB", ckbEntries.size());
         for (CkbEntry entry : ckbEntries) {
@@ -82,7 +86,7 @@ public class CkbExtractor {
 
             String transcript = null;
 
-            EventExtractorOutput eventExtractorOutput = eventExtractor.extract(gene, transcript, entry.type(), event, Strings.EMPTY);
+            EventExtractorOutput eventExtractorOutput = eventExtractor.extract(gene, transcript, entry.type(), event, Strings.EMPTY, annotation);
             Set<? extends ActionableEvent> actionableEvents = actionableEntryFactory.toActionableEntries(entry, variant.variant());
 
             extractions.add(toExtractionResult(gene, event, transcript, eventExtractorOutput, actionableEvents));

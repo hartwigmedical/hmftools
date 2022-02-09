@@ -8,6 +8,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.serve.classification.EventType;
+import com.hartwig.hmftools.serve.extraction.catalog.DealWithDriverInconsistentModeAnnotation;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 
 import org.apache.logging.log4j.LogManager;
@@ -47,7 +48,8 @@ public class GeneLevelExtractor {
     }
 
     @Nullable
-    public GeneLevelAnnotation extract(@NotNull String gene, @NotNull EventType type, @NotNull String event) {
+    public GeneLevelAnnotation extract(@NotNull String gene, @NotNull EventType type, @NotNull String event,
+            @NotNull DealWithDriverInconsistentModeAnnotation dealWithInconsistents) {
         if (type == EventType.WILD_TYPE && exomeGeneChecker.isValidGene(gene)) {
             GeneLevelEvent geneLevelEvent = extractWildTypeEvents(gene, type);
             return ImmutableGeneLevelAnnotation.builder().gene(gene).event(geneLevelEvent).build();

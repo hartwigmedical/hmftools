@@ -7,6 +7,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.serve.classification.EventType;
+import com.hartwig.hmftools.serve.extraction.catalog.DealWithDriverInconsistentModeAnnotation;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 
 import org.apache.logging.log4j.LogManager;
@@ -34,7 +35,8 @@ public class CopyNumberExtractor {
     }
 
     @Nullable
-    public KnownCopyNumber extract(@NotNull String gene, @NotNull EventType type) {
+    public KnownCopyNumber extract(@NotNull String gene, @NotNull EventType type,
+            @NotNull DealWithDriverInconsistentModeAnnotation dealWithInconsistents) {
         if (COPY_NUMBER_EVENTS.contains(type) && geneChecker.isValidGene(gene)) {
             if (reportOnDriverInconsistencies) {
                 DriverCategory driverCategory = findByGene(driverGenes, gene);
