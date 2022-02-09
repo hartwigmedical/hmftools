@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.amber;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -33,7 +32,6 @@ public class RegionOfHomozygosityFinderTest
     }
 
     @Test
-    @Ignore
     public void testFindRegionSample()
     {
         int minHomozygousRegionSize = 200;
@@ -88,7 +86,6 @@ public class RegionOfHomozygosityFinderTest
     }
 
     @Test
-    @Ignore
     // test case where there are 3 hets scattered inside the window
     public void testFindRegionHetsInWindow()
     {
@@ -171,12 +168,7 @@ public class RegionOfHomozygosityFinderTest
     // case by loading COLO829 data from file
     public void testUsingBaseDepthFiles() throws IOException
     {
-        /*
-        String sampleId = "CPCT02010535T";
-        String dir = "/Users/hongwingl/" + sampleId + "/amber/";
-        String refSample = sampleId.substring(0, sampleId.length() - 1) + 'R';*/
-
-        String dir = "/Users/hongwingl/COLO829/amber/";
+        String dir = "COLO829/amber/";
         String refSample = "COLO829v003R";
 
         RegionOfHomozygosityFinder
