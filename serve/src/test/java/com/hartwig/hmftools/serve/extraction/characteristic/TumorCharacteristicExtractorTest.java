@@ -23,6 +23,55 @@ public class TumorCharacteristicExtractorTest {
     private static final String IMMUNO_HLA = "hla";
 
     @Test
+    public void canDetermineCutOffMSI() {
+        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
+        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, MSI, Strings.EMPTY);
+        assertEquals(TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE, characteristic.tumorCharacteristicAnnotation());
+        assertEquals("MSI >= 4", characteristic.cutoff());
+
+    }
+
+    @Test
+    public void canDetermineCutOffMSS() {
+        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
+        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, MSS, Strings.EMPTY);
+        assertEquals(TumorCharacteristicAnnotation.MICROSATELLITE_STABLE, characteristic.tumorCharacteristicAnnotation());
+        assertEquals("MSS < 4", characteristic.cutoff());
+    }
+
+    @Test
+    public void canDetermineCutOffTMLLow() {
+        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
+        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, LOW_TMB, Strings.EMPTY);
+        assertEquals(TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_LOAD, characteristic.tumorCharacteristicAnnotation());
+        assertEquals("TML < 140", characteristic.cutoff());
+    }
+
+    @Test
+    public void canDetermineCutOffTMLHigh() {
+        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
+        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, HIGH_TMB, Strings.EMPTY);
+        assertEquals(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD, characteristic.tumorCharacteristicAnnotation());
+        assertEquals("TML >= 140", characteristic.cutoff());
+    }
+
+    @Test
+    public void canDetermineCutOffHRD() {
+        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
+        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, HRD, Strings.EMPTY);
+        assertEquals(TumorCharacteristicAnnotation.HOMOLOGOUS_RECOMBINATION_DEFICIENT, characteristic.tumorCharacteristicAnnotation());
+        assertEquals("HRD >= 0.5", characteristic.cutoff());
+    }
+
+    @Test
+    public void canDetermineCutOffSource() {
+        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
+        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, HIGH_TMB, "TML >= 200");
+        assertEquals(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD, characteristic.tumorCharacteristicAnnotation());
+        assertEquals("TML >= 200", characteristic.cutoff());
+    }
+
+    @Test
     public void canExtractMicrosatelliteUnstableCharacteristic() {
         TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
         TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, MSI, Strings.EMPTY);
