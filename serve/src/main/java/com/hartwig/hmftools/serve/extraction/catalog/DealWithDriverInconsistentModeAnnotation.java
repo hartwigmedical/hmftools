@@ -3,9 +3,9 @@ package com.hartwig.hmftools.serve.extraction.catalog;
 import org.jetbrains.annotations.NotNull;
 
 public enum DealWithDriverInconsistentModeAnnotation {
-    IGNORE, //We want not to deal with any driver inconsistency!
-    WARN_ONLY, //We want to deal with any driver inconsistency!
-    FILTER, //We want to deal with any driver inconsistency! + remove
+    IGNORE, //We want to report whole source
+    WARN_ONLY, //We want report source when match with driver catalog
+    FILTER, //We want report source when match with driver catalog + filtering
     UNKNOWN;
 
     @NotNull
