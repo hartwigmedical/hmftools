@@ -4,8 +4,12 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.sin;
 
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+
 import java.util.List;
+import java.util.Set;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
@@ -44,8 +48,8 @@ public class PhasedVariantGroup
 
         if(!negCounters.isEmpty())
         {
-            mVariantMin = min(mVariantMin, negCounters.get(0).position());
-            mVariantMax = max(mVariantMax, negCounters.get(negCounters.size() - 1).position());
+            mVariantMin = min(mVariantMin, minPosition(negCounters, true));
+            mVariantMax = max(mVariantMax, maxPosition(negCounters, true));
         }
 
         ReadCount = 1;
@@ -62,6 +66,41 @@ public class PhasedVariantGroup
     {
         return BaseRegion.positionsOverlap(mPosVariantMin, mPosVariantMax, other.posVariantMin(), other.posVariantMax());
     }
+
+    public boolean cullReadCounters(final Set<ReadContextCounter> validCounters)
+    {
+        // return true if the counters in this group have been culled
+        Set<ReadContextCounter> localisedValidCounters = validCounters.stream()
+                .filter(x -> positionWithin(x.position(), mVariantMin, mVariantMax)).collect(Collectors.toSet());
+
+        List<ReadContextCounter> invalidPosCounters = PositiveReadCounters.stream().filter(x -> !localisedValidCounters.contains(x)).collect(Collectors.toList());
+        List<ReadContextCounter> invalidNegCounters = NegativeReadCounters.stream().filter(x -> !localisedValidCounters.contains(x)).collect(Collectors.toList());
+
+        if(invalidPosCounters.isEmpty() && invalidNegCounters.isEmpty())
+            return false;
+
+        if(invalidPosCounters.size() == PositiveReadCounters.size())
+            return true;
+
+        invalidPosCounters.forEach(x -> PositiveReadCounters.remove(x));
+        invalidNegCounters.forEach(x -> NegativeReadCounters.remove(x));
+
+        mPosVariantMin = minPosition(PositiveReadCounters, true);
+        mPosVariantMax = maxPosition(PositiveReadCounters, true);
+
+        mVariantMin = mPosVariantMin;
+        mVariantMax = mPosVariantMax;
+
+        if(!NegativeReadCounters.isEmpty())
+        {
+            mVariantMin = min(mVariantMin, minPosition(NegativeReadCounters, true));
+            mVariantMax = max(mVariantMax, maxPosition(NegativeReadCounters, true));
+        }
+
+        return true;
+    }
+
+    public boolean isValid() { return !PositiveReadCounters.isEmpty() && PositiveReadCounters.size() + NegativeReadCounters.size() >= 2; }
 
     public boolean exactMatch(
             final int minVariantPos, final int maxVariantPos,
@@ -191,8 +230,8 @@ public class PhasedVariantGroup
                 PositiveReadCounters.add(index, readCounter);
         }
 
-        mPosVariantMin = PositiveReadCounters.get(0).position();
-        mPosVariantMax = PositiveReadCounters.get(PositiveReadCounters.size() - 1).position();
+        mPosVariantMin = minPosition(PositiveReadCounters, true);
+        mPosVariantMax = maxPosition(PositiveReadCounters, true);
 
         // other.PositiveReadCounters.stream().filter(x -> !PositiveReadCounters.contains(x)).forEach(x -> PositiveReadCounters.add(x));
         mergeNegatives(other.NegativeReadCounters);
@@ -204,8 +243,27 @@ public class PhasedVariantGroup
     {
         negCounters.stream().filter(x -> !NegativeReadCounters.contains(x)).forEach(x -> NegativeReadCounters.add(x));
 
-        mVariantMin = min(mPosVariantMin, NegativeReadCounters.stream().mapToInt(x -> x.position()).min().orElse(mPosVariantMin));
-        mVariantMax = max(mPosVariantMax, NegativeReadCounters.stream().mapToInt(x -> x.position()).max().orElse(mPosVariantMin));
+        if(!NegativeReadCounters.isEmpty())
+        {
+            mVariantMin = min(mPosVariantMin, minPosition(NegativeReadCounters, false));
+            mVariantMax = max(mPosVariantMax, maxPosition(NegativeReadCounters, false));
+        }
+    }
+
+    public static int minPosition(final List<ReadContextCounter> readCounters, boolean ordered)
+    {
+        if(ordered)
+            return readCounters.get(0).position();
+        else
+            return readCounters.stream().mapToInt(x -> x.position()).min().orElse(0);
+    }
+
+    public static int maxPosition(final List<ReadContextCounter> readCounters, boolean ordered)
+    {
+        if(ordered)
+            return readCounters.get(readCounters.size() - 1).position();
+        else
+            return readCounters.stream().mapToInt(x -> x.position()).max().orElse(0);
     }
 
     public String mergedGroupIds()

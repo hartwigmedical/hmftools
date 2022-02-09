@@ -101,6 +101,7 @@ public class PerformanceCounter
             return;
 
         mIsRunning = false;
+        mIsPaused = false;
 
         long sampleTime = System.nanoTime() - mStartTime;
         sampleTime += mPausedTime;

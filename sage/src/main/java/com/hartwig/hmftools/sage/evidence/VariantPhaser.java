@@ -5,6 +5,8 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.evidence.PhasedVariantGroup.maxPosition;
+import static com.hartwig.hmftools.sage.evidence.PhasedVariantGroup.minPosition;
 
 import java.util.Comparator;
 import java.util.List;
@@ -59,7 +61,7 @@ public class VariantPhaser
         mCurrentIndex = 0;
 
         mPerfCounters.get(PC_PHASE_READS).start();
-        mPerfCounters.get(PC_PHASE_READS).resume();
+        mPerfCounters.get(PC_PHASE_READS).pause();
     }
 
     public void registeredPhasedVariants(final List<ReadContextCounter> posCounters, final List<ReadContextCounter> negCounters)
@@ -75,8 +77,8 @@ public class VariantPhaser
     private void processPhasedVariants(final List<ReadContextCounter> posCounters, final List<ReadContextCounter> negCounters)
     {
         // walk backwards then forwards from the current location looking for a match
-        int posVarMin = posCounters.get(0).position();
-        int posVarMax = posCounters.get(posCounters.size() - 1).position();
+        int posVarMin = minPosition(posCounters, true);
+        int posVarMax = maxPosition(posCounters, true);
 
         if(mPhasedGroups.isEmpty())
         {
@@ -87,8 +89,6 @@ public class VariantPhaser
         int index = mCurrentIndex;
 
         PhasedVariantGroup currentPhasedGroup = mPhasedGroups.get(index);
-
-        //boolean searchBackwards = minVarPos < currentPhasedGroup.minVariantPos();
 
         boolean searchBackwards;
 
@@ -190,14 +190,27 @@ public class VariantPhaser
         mPhasedGroups.add(index, new PhasedVariantGroup(mPhasedGroups.size(), posVarMin, posVarMax, posCounters, negCounters));
     }
 
-    public void assignLocalPhaseSets(final Set<ReadContextCounter> passingReadCounters)
+    public void assignLocalPhaseSets(final Set<ReadContextCounter> passingCounters, final Set<ReadContextCounter> validCounters)
     {
         // assign local phase set IDs to all phased variants
         mPerfCounters.get(PC_PHASE_READS).stop();
 
+        /*
+        if(SG_LOGGER.isDebugEnabled())
+        {
+            PerformanceCounter pc = mPerfCounters.get(PC_PHASE_READS);
+            double lastTime = pc.getTimes().get(pc.getTimes().size() - 1);
+            if(lastTime > 0.5)
+            {
+                SG_LOGGER.debug("region({}) read phasing groups({}) rc(pass={} valid={}) time({})",
+                        mRegion, mPhasedGroups.size(), passingCounters.size(), validCounters.size(), lastTime);
+            }
+        }
+        */
+
         int startCount = mPhasedGroups.size();
 
-        List<PhasedVariantGroup> filteredGroups = applyInitialFilters(passingReadCounters);
+        List<PhasedVariantGroup> filteredGroups = applyInitialFilters(passingCounters, validCounters);
 
         mPhasedGroups.clear();
 
@@ -235,20 +248,51 @@ public class VariantPhaser
             }
         }
 
-        SG_LOGGER.trace("region({}) phasing groups start({} filtered={}) postMerge({}) assigned({}) uniqueRCs({})",
-                mRegion, startCount, startFilteredCount, mPhasedGroups.size(), assignedLps, uniqueRCs != null ? uniqueRCs.size() : 0);
+        SG_LOGGER.trace("region({}) phasing groups start({} filtered={}) postMerge({}) assigned({}) rc(pass={} valid={} uniqueRCs={})",
+                mRegion, startCount, startFilteredCount, mPhasedGroups.size(), assignedLps,
+                passingCounters.size(), validCounters.size(), uniqueRCs != null ? uniqueRCs.size() : 0);
 
         mPhasedGroups.clear();
 
         mPerfCounters.get(PC_FORM_LPS).stop();
+
+        if(SG_LOGGER.isDebugEnabled())
+        {
+            PerformanceCounter pc = mPerfCounters.get(PC_FORM_LPS);
+            double lastTime = pc.getTimes().get(pc.getTimes().size() - 1);
+            if(lastTime > 0.5)
+            {
+                SG_LOGGER.debug("region({}) phasing groups start({} filtered={}) postMerge({}) assigned({}) rc(pass={} valid={}) time({})",
+                        mRegion, startCount, startFilteredCount, mPhasedGroups.size(), assignedLps,
+                        passingCounters.size(), validCounters.size(), lastTime);
+            }
+        }
     }
 
-    private List<PhasedVariantGroup> applyInitialFilters(final Set<ReadContextCounter> passingReadCounters)
+    private List<PhasedVariantGroup> applyInitialFilters(
+            final Set<ReadContextCounter> passingReadCounters, final Set<ReadContextCounter> validCounters)
     {
-        List<PhasedVariantGroup> filteredGroups = mPhasedGroups.stream()
-                .filter(x -> x.ReadCount >= INITIAL_MIN_READ_COUNT)
-                .filter(x -> x.PositiveReadCounters.stream().anyMatch(y -> passingReadCounters.contains(y)))
-                .collect(Collectors.toList());
+        List<PhasedVariantGroup> filteredGroups = Lists.newArrayList();
+
+        if(passingReadCounters.isEmpty())
+            return filteredGroups;
+
+        for(PhasedVariantGroup phasedGroup : mPhasedGroups)
+        {
+            if(phasedGroup.ReadCount < INITIAL_MIN_READ_COUNT)
+                continue;
+
+            if(phasedGroup.PositiveReadCounters.stream().noneMatch(y -> passingReadCounters.contains(y)))
+                continue;
+
+            if(phasedGroup.cullReadCounters(validCounters))
+            {
+                if(!phasedGroup.isValid())
+                    continue;
+            }
+
+            filteredGroups.add(phasedGroup);
+        }
 
         return filteredGroups;
     }
@@ -306,6 +350,9 @@ public class VariantPhaser
 
     private void mergeMatching(final List<PhasedVariantGroup> filteredGroups)
     {
+        if(filteredGroups.size() < 2)
+            return;
+
         Set<PhasedVariantGroup> removedGroups = Sets.newHashSet();
 
         for(PhasedVariantGroup phasedGroup : filteredGroups)
@@ -347,6 +394,9 @@ public class VariantPhaser
 
     private void mergeByExtension(final List<PhasedVariantGroup> filteredGroups)
     {
+        if(filteredGroups.size() < 2)
+            return;
+
         // merge any group with a common subset of +ves and -ves if it can only be extended in one direction
         List<ReadContextCounter> commonPosCounters = Lists.newArrayList();
         List<ReadContextCounter> commonNegCounters = Lists.newArrayList();
@@ -442,6 +492,14 @@ public class VariantPhaser
         while(index < filteredGroups.size())
         {
             PhasedVariantGroup phasedGroup = filteredGroups.get(index);
+
+            if(phasedGroup.PositiveReadCounters.size() == 1
+            && filteredGroups.stream().filter(x -> x != phasedGroup).noneMatch(x -> phasedGroup.isSubsetOf(x)))
+            {
+                // remove any group with a single variant not present as a +ve in another group
+                filteredGroups.remove(phasedGroup);
+                continue;
+            }
 
             // find groups which have matching +ves and aren't subsets of any other group
             List<PhasedVariantGroup> matchingGroups = filteredGroups.stream()

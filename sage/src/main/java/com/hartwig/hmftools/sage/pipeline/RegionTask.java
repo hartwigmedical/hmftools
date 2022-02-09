@@ -105,6 +105,7 @@ public class RegionTask implements Callable
 
         // combine normal and tumor together to create variants, then apply soft filters
         Set<ReadContextCounter> passingTumorReadCounters = Sets.newHashSet();
+        Set<ReadContextCounter> validTumorReadCounters = Sets.newHashSet(); // those not hard-filtered
 
         for(Candidate candidate : finalCandidates)
         {
@@ -120,12 +121,14 @@ public class RegionTask implements Callable
 
             if(sageVariant.isPassing())
                 passingTumorReadCounters.add(tumorReadCounters.get(0));
+
+            validTumorReadCounters.add(tumorReadCounters.get(0));
         }
 
         // phase variants now all evidence has been collected and filters applied
         VariantPhaser variantPhaser = mEvidenceStage.getVariantPhaser();
 
-        variantPhaser.assignLocalPhaseSets(passingTumorReadCounters);
+        variantPhaser.assignLocalPhaseSets(passingTumorReadCounters, validTumorReadCounters);
 
         SG_LOGGER.trace("{}: region({}) complete", mTaskId, mRegion);
 
