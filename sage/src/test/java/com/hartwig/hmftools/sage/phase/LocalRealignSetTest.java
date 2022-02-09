@@ -12,9 +12,8 @@ import com.hartwig.hmftools.sage.misc.CandidateSerializationTest;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class LocalPhaseSetTest
+public class LocalRealignSetTest
 {
-
     @Test
     public void testExample()
     {
@@ -32,17 +31,8 @@ public class LocalPhaseSetTest
 
     private static void assertPhased(boolean expectedPhased, Candidate candidate1, Candidate candidate2)
     {
-        int offset = LocalPhaseSet.adjustedOffset(candidate1.variant(), candidate2.variant());
+        int offset = LocalRealignSet.adjustedOffset(candidate1.variant(), candidate2.variant());
         assertEquals(expectedPhased, candidate1.readContext().phased(offset, candidate2.readContext()));
-    }
-
-    @Test
-    public void testRightInLeftDel()
-    {
-        VariantHotspot left = create(100, "ATT", "T");
-        assertTrue(LocalPhaseSet.rightInLeftDel(left, create(101, "T", "C")));
-        assertTrue(LocalPhaseSet.rightInLeftDel(left, create(102, "T", "C")));
-        assertFalse(LocalPhaseSet.rightInLeftDel(left, create(103, "T", "C")));
     }
 
     @Test
@@ -50,7 +40,7 @@ public class LocalPhaseSetTest
     {
         VariantHotspot left = create(100, "A", "T");
         VariantHotspot right = create(102, "C", "T");
-        assertEquals(-2, LocalPhaseSet.adjustedOffset(left, right));
+        assertEquals(-2, LocalRealignSet.adjustedOffset(left, right));
     }
 
     @Test
@@ -58,7 +48,7 @@ public class LocalPhaseSetTest
     {
         VariantHotspot left = create(100, "A", "T");
         VariantHotspot right = create(102, "CAT", "T");
-        assertEquals(-2, LocalPhaseSet.adjustedOffset(left, right));
+        assertEquals(-2, LocalRealignSet.adjustedOffset(left, right));
     }
 
     @Test
@@ -66,7 +56,7 @@ public class LocalPhaseSetTest
     {
         VariantHotspot left = create(100, "A", "T");
         VariantHotspot right = create(102, "C", "TAT");
-        assertEquals(-2, LocalPhaseSet.adjustedOffset(left, right));
+        assertEquals(-2, LocalRealignSet.adjustedOffset(left, right));
     }
 
     @Test
@@ -74,19 +64,19 @@ public class LocalPhaseSetTest
     {
         VariantHotspot left = create(100, "AA", "A");
         VariantHotspot right = create(102, "G", "T");
-        assertEquals(-1, LocalPhaseSet.adjustedOffset(left, right));
+        assertEquals(-1, LocalRealignSet.adjustedOffset(left, right));
 
         left = create(100, "AA", "A");
         right = create(103, "G", "T");
-        assertEquals(-2, LocalPhaseSet.adjustedOffset(left, right));
+        assertEquals(-2, LocalRealignSet.adjustedOffset(left, right));
 
         left = create(100, "AAC", "A");
         right = create(103, "G", "T");
-        assertEquals(-1, LocalPhaseSet.adjustedOffset(left, right));
+        assertEquals(-1, LocalRealignSet.adjustedOffset(left, right));
 
         left = create(100, "AAC", "A");
         right = create(104, "G", "T");
-        assertEquals(-2, LocalPhaseSet.adjustedOffset(left, right));
+        assertEquals(-2, LocalRealignSet.adjustedOffset(left, right));
     }
 
     @Test
@@ -94,19 +84,19 @@ public class LocalPhaseSetTest
     {
         VariantHotspot left = create(100, "A", "AA");
         VariantHotspot right = create(101, "G", "T");
-        assertEquals(-2, LocalPhaseSet.adjustedOffset(left, right));
+        assertEquals(-2, LocalRealignSet.adjustedOffset(left, right));
 
         left = create(100, "A", "AA");
         right = create(102, "G", "T");
-        assertEquals(-3, LocalPhaseSet.adjustedOffset(left, right));
+        assertEquals(-3, LocalRealignSet.adjustedOffset(left, right));
 
         left = create(100, "A", "AAC");
         right = create(101, "G", "T");
-        assertEquals(-3, LocalPhaseSet.adjustedOffset(left, right));
+        assertEquals(-3, LocalRealignSet.adjustedOffset(left, right));
 
         left = create(100, "A", "AAC");
         right = create(102, "G", "T");
-        assertEquals(-4, LocalPhaseSet.adjustedOffset(left, right));
+        assertEquals(-4, LocalRealignSet.adjustedOffset(left, right));
     }
 
     @Test
@@ -114,8 +104,8 @@ public class LocalPhaseSetTest
     {
         VariantHotspot left = create(100, "A", "AAA");
         VariantHotspot right = create(100, "A", "AA");
-        assertEquals(0, LocalPhaseSet.adjustedOffset(left, right));
-        assertEquals(0, LocalPhaseSet.adjustedOffset(right, left));
+        assertEquals(0, LocalRealignSet.adjustedOffset(left, right));
+        assertEquals(0, LocalRealignSet.adjustedOffset(right, left));
     }
 
     @Test
@@ -123,8 +113,8 @@ public class LocalPhaseSetTest
     {
         VariantHotspot left = create(100, "AAA", "A");
         VariantHotspot right = create(100, "AA", "A");
-        assertEquals(0, LocalPhaseSet.adjustedOffset(left, right));
-        assertEquals(0, LocalPhaseSet.adjustedOffset(right, left));
+        assertEquals(0, LocalRealignSet.adjustedOffset(left, right));
+        assertEquals(0, LocalRealignSet.adjustedOffset(right, left));
     }
 
     @NotNull

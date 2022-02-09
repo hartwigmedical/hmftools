@@ -75,23 +75,6 @@ public class LocalPhaseSet extends BufferedPostProcessor
         */
     }
 
-    static int positionOffset(final VariantHotspot left, final VariantHotspot right)
-    {
-        int positionOffset = left.position() - right.position();
-        return positionOffset;
-    }
-
-    static int adjustedOffset(final VariantHotspot left, final VariantHotspot right)
-    {
-        int positionOffset = positionOffset(left, right);
-
-        if(positionOffset == 0)
-            return 0;
-
-        return positionOffset
-                + Math.max(0, left.ref().length() - left.alt().length())
-                - Math.max(0, left.alt().length() - left.ref().length());
-    }
 
     static boolean rightInLeftDel(final VariantHotspot left, final VariantHotspot right)
     {

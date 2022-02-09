@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.sage.phase.VariantDeduper.PHASE_BUFFER;
 import java.util.Collection;
 import java.util.function.Consumer;
 
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.SageVariant;
 
@@ -31,8 +32,8 @@ class LocalRealignSet extends BufferedPostProcessor
             if(!variant.hasLocalPhaseSets() || !other.hasMatchingLps(variant.localPhaseSets()))
                 continue;
 
-            int positionOffset = LocalPhaseSet.positionOffset(other.variant(), variant.variant());
-            int offset = LocalPhaseSet.adjustedOffset(other.variant(), variant.variant());
+            int positionOffset = positionOffset(other.variant(), variant.variant());
+            int offset = adjustedOffset(other.variant(), variant.variant());
 
             if(positionOffset != offset && other.readContext().phased(positionOffset, newReadContext))
             {
@@ -53,4 +54,23 @@ class LocalRealignSet extends BufferedPostProcessor
             }
         }
     }
+
+    public static int positionOffset(final VariantHotspot left, final VariantHotspot right)
+    {
+        int positionOffset = left.position() - right.position();
+        return positionOffset;
+    }
+
+    public static int adjustedOffset(final VariantHotspot left, final VariantHotspot right)
+    {
+        int positionOffset = positionOffset(left, right);
+
+        if(positionOffset == 0)
+            return 0;
+
+        return positionOffset
+                + Math.max(0, left.ref().length() - left.alt().length())
+                - Math.max(0, left.alt().length() - left.ref().length());
+    }
+
 }

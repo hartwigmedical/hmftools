@@ -40,7 +40,7 @@ public class SageVariant
     {
         return variant().chromosome();
     }
-    public int position() { return (int)variant().position(); }
+    public int position() { return variant().position(); }
 
     public String ref()
     {
@@ -70,7 +70,7 @@ public class SageVariant
         if(mTumorReadCounters.isEmpty())
             return false;
 
-        return mTumorReadCounters.get(0).localPhaseSets() != null;
+        return mTumorReadCounters.get(0).localPhaseSets() != null && !mTumorReadCounters.get(0).localPhaseSets().isEmpty();
     }
 
     public boolean hasMatchingLps(final List<Integer> otherLocalPhaseSets)
@@ -78,14 +78,66 @@ public class SageVariant
         if(otherLocalPhaseSets == null)
             return false;
 
-        if(mTumorReadCounters.isEmpty() || mTumorReadCounters.get(0).localPhaseSets() == null)
+        if(!hasLocalPhaseSets())
             return false;
 
         return mTumorReadCounters.get(0).localPhaseSets().stream().anyMatch(x -> otherLocalPhaseSets.contains(x));
     }
 
+    public boolean hasMatchingLps(final Set<Integer> otherLocalPhaseSets)
+    {
+        if(otherLocalPhaseSets == null)
+            return false;
+
+        if(!hasLocalPhaseSets())
+            return false;
+
+        return mTumorReadCounters.get(0).localPhaseSets().stream().anyMatch(x -> otherLocalPhaseSets.contains(x));
+    }
+
+    public boolean hasMatchingLps(final Integer lps)
+    {
+        if(!hasLocalPhaseSets())
+            return false;
+
+        return mTumorReadCounters.get(0).localPhaseSets().contains(lps);
+    }
+
+    public int getLpsReadCount(int lps)
+    {
+        if(!hasLocalPhaseSets())
+            return 0;
+
+        for(int i = 0; i < mTumorReadCounters.get(0).localPhaseSets().size(); ++i)
+        {
+            if(mTumorReadCounters.get(0).localPhaseSets().get(i) == lps)
+            {
+                final int[] counts = mTumorReadCounters.get(0).lpsCounts().get(i);
+                return counts[0] + counts[1];
+            }
+        }
+
+        return 0;
+    }
+
+    public void removeLps(int lps)
+    {
+        if(!hasLocalPhaseSets())
+            return;
+
+        for(int i = 0; i < mTumorReadCounters.get(0).localPhaseSets().size(); ++i)
+        {
+            if(mTumorReadCounters.get(0).localPhaseSets().get(i) == lps)
+            {
+                mTumorReadCounters.get(0).localPhaseSets().remove(i);
+                mTumorReadCounters.get(0).lpsCounts().remove(i);
+                return;
+            }
+        }
+    }
+
     @Nullable
-    public List<double[]> localPhaseSetCounts()
+    public List<int[]> localPhaseSetCounts()
     {
         if(mTumorReadCounters.isEmpty())
             return null;

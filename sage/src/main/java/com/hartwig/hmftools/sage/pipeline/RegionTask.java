@@ -6,9 +6,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
@@ -23,6 +27,7 @@ import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
 import com.hartwig.hmftools.sage.evidence.VariantPhaser;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
+import com.hartwig.hmftools.sage.phase.VariantDeduper;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 
 import htsjdk.samtools.reference.ReferenceSequenceFile;
@@ -37,8 +42,10 @@ public class RegionTask implements Callable
 
     private final CandidateStage mCandidateState;
     private final EvidenceStage mEvidenceStage;
+    private final VariantDeduper mVariantDeduper;
 
     private final List<SageVariant> mSageVariants;
+    private final Set<Integer> mPassingPhaseSets;
 
     private final List<PerformanceCounter> mPerfCounters;
 
@@ -48,7 +55,7 @@ public class RegionTask implements Callable
 
     public RegionTask(
             final int taskId, final ChrBaseRegion region, final SageConfig config, final ReferenceSequenceFile refGenome,
-            final List<VariantHotspot> hotspots, final List<BaseRegion> panelRegions,
+            final List<VariantHotspot> hotspots, final List<BaseRegion> panelRegions, final List<TranscriptData> transcripts,
             final List<BaseRegion> highConfidenceRegions, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap,
             final PhaseSetCounter phaseSetCounter, final Coverage coverage)
     {
@@ -60,11 +67,15 @@ public class RegionTask implements Callable
         mCandidateState = new CandidateStage(config, refGenome, hotspots, panelRegions, highConfidenceRegions, coverage);
         mEvidenceStage = new EvidenceStage(config, refGenome, qualityRecalibrationMap, phaseSetCounter);
 
+        mVariantDeduper = new VariantDeduper(transcripts, phaseSetCounter, this::acceptDedupedVariant);
+
         mSageVariants = Lists.newArrayList();
+        mPassingPhaseSets = Sets.newHashSet();
 
         mPerfCounters = Lists.newArrayList();
         mPerfCounters.add(new PerformanceCounter("Candidates"));
         mPerfCounters.add(new PerformanceCounter("Evidence"));
+        mPerfCounters.add(new PerformanceCounter("Dedup"));
     }
 
     public final List<SageVariant> getVariants() { return mSageVariants; }
@@ -130,8 +141,124 @@ public class RegionTask implements Callable
 
         variantPhaser.assignLocalPhaseSets(passingTumorReadCounters, validTumorReadCounters);
 
+        mPerfCounters.get(PC_DEDUP).start();
+
+        SG_LOGGER.trace("phasing {} variants", mSageVariants.size());
+        mSageVariants.forEach(mVariantDeduper);
+        mVariantDeduper.flush();
+
+        mPerfCounters.get(PC_DEDUP).stop();
+
         SG_LOGGER.trace("{}: region({}) complete", mTaskId, mRegion);
 
         return (long)0;
     }
+
+    private void acceptDedupedVariant(final SageVariant variant)
+    {
+        if(variant.isPassing() && variant.hasLocalPhaseSets())
+            mPassingPhaseSets.addAll(variant.localPhaseSets());
+
+        /*
+        if(checkWriteVariant(variant, mVariantDeduper.passingPhaseSets()))
+        {
+            mFinalSageVariants.add(variant);
+            // mWriteConsumer.accept(variant);
+        }
+        */
+    }
+
+    public void writeVariants(final Consumer<SageVariant> variantWriter)
+    {
+        List<SageVariant> finalVariants = mSageVariants.stream()
+                .filter(x -> VariantFilters.checkFinalFilters(x, mPassingPhaseSets, mConfig)).collect(Collectors.toList());
+
+        // remove any uninformative local phasings sets where they all have the same passing variants
+
+        Map<Integer,List<SageVariant>> lpsVariantsMap = Maps.newHashMap();
+        Map<Integer,List<SageVariant>> lpsPassingVariantsMap = Maps.newHashMap();
+        Map<Integer,Integer> lpsMaxReadCountMap = Maps.newHashMap();
+
+        List<Integer> uninformativeLpsIds = Lists.newArrayList();
+        List<Integer> processedLpsIds = Lists.newArrayList();
+
+        // first put all variants into LPS datasets
+        for(Integer lpsId : mPassingPhaseSets)
+        {
+            List<SageVariant> lpsVariants = mSageVariants.stream().filter(x -> x.hasMatchingLps(lpsId)).collect(Collectors.toList());
+            List<SageVariant> passingVariants = lpsVariants.stream().filter(x -> x.isPassing()).collect(Collectors.toList());
+
+            if(passingVariants.isEmpty())
+            {
+                uninformativeLpsIds.add(lpsId);
+                processedLpsIds.add(lpsId);
+                continue;
+            }
+
+            lpsVariantsMap.put(lpsId, lpsVariants);
+            lpsPassingVariantsMap.put(lpsId, passingVariants);
+            lpsMaxReadCountMap.put(lpsId, lpsVariants.get(0).getLpsReadCount(lpsId));
+        }
+
+        for(Map.Entry<Integer,List<SageVariant>> entry : lpsVariantsMap.entrySet())
+        {
+            Integer lpsId = entry.getKey();
+
+            if(processedLpsIds.contains(lpsId))
+                continue;
+
+            processedLpsIds.add(lpsId);
+
+            List<SageVariant> lpsVariants = entry.getValue();
+            List<SageVariant> passingVariants = lpsPassingVariantsMap.get(lpsId);
+            int maxReadCount = passingVariants.get(0).getLpsReadCount(lpsId);
+
+            // look for matching passing variants
+            int maxLpsId = lpsId;
+
+            List<Integer> matchedVariantsLpsIds = Lists.newArrayList(lpsId);
+
+            for(Map.Entry<Integer,List<SageVariant>> entry2 : lpsVariantsMap.entrySet())
+            {
+                Integer otherLpsId = entry2.getKey();
+
+                if(otherLpsId == lpsId || processedLpsIds.contains(otherLpsId))
+                    continue;
+
+                // List<SageVariant> otherLpsVariants = entry.getValue();
+                List<SageVariant> otherPassingVariants = lpsPassingVariantsMap.get(otherLpsId);
+
+                if(otherPassingVariants.size() == passingVariants.size() && otherPassingVariants.stream().allMatch(x -> passingVariants.contains(x)))
+                {
+                    processedLpsIds.add(otherLpsId);
+
+                    int otherReadCount = otherPassingVariants.get(0).getLpsReadCount(otherLpsId);
+                    matchedVariantsLpsIds.add(otherLpsId);
+
+                    if(otherReadCount > maxReadCount)
+                    {
+                        maxReadCount = otherReadCount;
+                        maxLpsId = otherLpsId;
+                    }
+                }
+            }
+
+            if(matchedVariantsLpsIds.size() > 1)
+            {
+                int maxId = maxLpsId;
+                matchedVariantsLpsIds.stream().filter(x -> x != maxId).forEach(x -> uninformativeLpsIds.add(x));
+            }
+        }
+
+        // now remove all uninformative IDs from each variant
+        for(Integer lpsId : uninformativeLpsIds)
+        {
+            List<SageVariant> variants = lpsVariantsMap.get(lpsId);
+
+            variants.forEach(x -> x.removeLps(lpsId));
+        }
+
+        finalVariants.forEach(x -> variantWriter.accept(x));
+    }
+
 }

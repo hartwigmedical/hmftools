@@ -61,9 +61,9 @@ public final class VariantContextFactory
         {
             builder.attribute(LOCAL_PHASE_SET, variant.localPhaseSets());
 
-            List<double[]> readCountsRaw = variant.localPhaseSetCounts();
+            List<int[]> readCountsRaw = variant.localPhaseSetCounts();
             List<Integer> readCountTotals = Lists.newArrayListWithExpectedSize(readCountsRaw.size());
-            readCountsRaw.forEach(x -> readCountTotals.add((int)(x[0] + x[1])));
+            readCountsRaw.forEach(x -> readCountTotals.add(x[0] + x[1]));
             builder.attribute(LOCAL_PHASE_SET_READ_COUNT, readCountTotals);
         }
 

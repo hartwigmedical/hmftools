@@ -63,7 +63,7 @@ public class ReadContextCounter implements VariantHotspot
     private int mRawRefBaseQuality;
 
     private List<Integer> mLocalPhaseSets;
-    private List<double[]> mLpsCounts;
+    private List<int[]> mLpsCounts;
 
     public static final int RC_FULL = 0;
     public static final int RC_PARTIAL = 1;
@@ -179,11 +179,11 @@ public class ReadContextCounter implements VariantHotspot
         }
 
         mLocalPhaseSets.add(lps);
-        mLpsCounts.add(new double[] { readCount, allocCount } );
+        mLpsCounts.add(new int[] { readCount, (int)allocCount } );
     }
 
     public List<Integer> localPhaseSets() { return mLocalPhaseSets; }
-    public List<double[]> lpsCounts() { return mLpsCounts; }
+    public List<int[]> lpsCounts() { return mLpsCounts; }
 
     public boolean exceedsMaxCoverage() { return mCounts[RC_TOTAL] >= MaxCoverage; }
 

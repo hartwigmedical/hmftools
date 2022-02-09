@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.sage.phase;
 
 import java.util.List;
-import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.sage.common.SageVariant;
@@ -14,7 +12,6 @@ public class VariantDeduper implements Consumer<SageVariant>
 
     private final DedupRealign mDedupRealign;
     private final DedupMnv mDedupMnv;
-    private final LocalPhaseSet mLocalPhaseSet;
     private final LocalRealignSet mLocalRealignSet;
     private final DedupIndel mDedupIndel;
     private final MixedSomaticGermlineIdentifier mMixedSomaticGermlineIdentifier;
@@ -28,23 +25,16 @@ public class VariantDeduper implements Consumer<SageVariant>
         mMixedSomaticGermlineDedup = new MixedSomaticGermlineDedup(mDedupMnv, transcripts);
         mMixedSomaticGermlineIdentifier = new MixedSomaticGermlineIdentifier(mMixedSomaticGermlineDedup);
         mLocalRealignSet = new LocalRealignSet(mMixedSomaticGermlineIdentifier);
-        mLocalPhaseSet = new LocalPhaseSet(phaseSetCounter, mLocalRealignSet);
-    }
-
-    public List<Integer> passingPhaseSets()
-    {
-        return mLocalPhaseSet.passingPhaseSets().stream().collect(Collectors.toList());
     }
 
     @Override
     public void accept(final SageVariant sageVariant)
     {
-        mLocalPhaseSet.accept(sageVariant);
+        mLocalRealignSet.accept(sageVariant);
     }
 
     public void flush()
     {
-        mLocalPhaseSet.flush();
         mLocalRealignSet.flush();
         mMixedSomaticGermlineIdentifier.flush();
         mMixedSomaticGermlineDedup.flush();

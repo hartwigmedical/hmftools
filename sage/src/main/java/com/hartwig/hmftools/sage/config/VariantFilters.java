@@ -6,13 +6,14 @@ import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPP
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.NORMAL_RAW_ALT_BQ_MAX;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
@@ -189,39 +190,37 @@ public class VariantFilters
         return tier != VariantTier.HOTSPOT && normal.variant().isMNV() && applyMnvFilter && normal.altSupport() != 0;
     }
 
-    /*
-    public boolean isSoftFiltered(final ReadContextCounter normal, final ReadContextCounter tumor)
+    private static final EnumSet<VariantTier> PANEL_ONLY_TIERS = EnumSet.of(VariantTier.HOTSPOT, VariantTier.PANEL);
+
+    public static boolean checkFinalFilters(final SageVariant variant, final Set<Integer> passingPhaseSets, final SageConfig config)
     {
-        if(!mConfig.SoftFilter)
+        if(config.PanelOnly && !PANEL_ONLY_TIERS.contains(variant.tier()))
             return false;
 
-        SoftFilterConfig softFilterConfig = getTieredSoftFilterConfig(tumor.Tier);
+        if(variant.isPassing())
+            return true;
 
-        if(!skipMinTumorQualTest(tumor.Tier, tumor))
+        if(config.Filter.HardFilter)
+            return false;
+
+        if(variant.tier() == VariantTier.HOTSPOT)
+            return true;
+
+        // Its not always 100% transparent whats happening with the mixed germline dedup logic unless we keep all the associated records
+        if(variant.mixedGermlineImpact() > 0)
+            return true;
+
+        if(!variant.isNormalEmpty() && !variant.isTumorEmpty() && !MitochondrialChromosome.contains(variant.chromosome())
+                && !variant.hasMatchingLps(passingPhaseSets))
         {
-            if(belowMinTumorQual(softFilterConfig, tumor))
-                return true;
+            final ReadContextCounter normal = variant.normalReadCounters().get(0);
 
-            if(belowMinTumorVaf(softFilterConfig, tumor))
-                return true;
+            if(normal.altSupport() > config.Filter.FilteredMaxNormalAltSupport)
+                return false;
         }
 
-        if(belowMinGermlineCoverage(softFilterConfig, normal))
-            return true;
-
-        if(aboveMaxGermlineVaf(softFilterConfig, normal, tumor))
-            return true;
-
-        // Paired Tests
-        if(aboveMaxGermlineQual(softFilterConfig, normal, tumor))
-            return true;
-
-        // MNV Tests
-        if(aboveMaxMnvNormalAltSupport(tumor.Tier, normal, this.mConfig.MnvFilter))
-            return true;
-
-        return false;
+        return true;
     }
-    */
+
 
 }
