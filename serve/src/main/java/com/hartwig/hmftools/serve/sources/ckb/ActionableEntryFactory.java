@@ -11,6 +11,9 @@ import com.hartwig.hmftools.ckb.datamodel.reference.Reference;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.serve.blacklisting.ImmutableTumorLocationBlacklisting;
+import com.hartwig.hmftools.serve.blacklisting.TumorLocationBlacklist;
+import com.hartwig.hmftools.serve.blacklisting.TumorLocationBlacklisting;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -86,9 +89,17 @@ class ActionableEntryFactory {
                     for (Drug drug : evidence.therapy().drugs()) {
                         sourceLinks.add(
                                 "https://ckbhome.jax.org/profileResponse/advancedEvidenceFind?molecularProfileId=" + molecularProfileId
-                                        + "&drugId=" + drug.id() + "&doId=" + doidKb + "&responseType=" + responseType
-                                        + "&evidenceType=" + evidence.evidenceType());
+                                        + "&drugId=" + drug.id() + "&doId=" + doidKb + "&responseType=" + responseType + "&evidenceType="
+                                        + evidence.evidenceType());
                     }
+
+                    Set<TumorLocationBlacklisting> tumorLocationBlacklistings = Sets.newHashSet();
+                    tumorLocationBlacklistings.add(ImmutableTumorLocationBlacklisting.builder()
+                            .blacklistCancerType(doid.equals("162") ? "Hematologic cancer": Strings.EMPTY)
+                            .blacklistedDoid(doid.equals("162") ? "2531": Strings.EMPTY)
+                            .build());
+                    String tumorLocationBlacklist = TumorLocationBlacklist.extractTumorLocationBlacklisting(tumorLocationBlacklistings);
+                    String tumorLocationBlacklistDoid = TumorLocationBlacklist.extractTumorLocationDoid(tumorLocationBlacklistings);
 
                     actionableEntries.add(ImmutableActionableEntry.builder()
                             .rawInput(rawInput)
@@ -96,8 +107,8 @@ class ActionableEntryFactory {
                             .treatment(treatment)
                             .cancerType(cancerType)
                             .doid(doid)
-                            .blacklistCancerType(doid.equals("162") ? Sets.newHashSet("Hematologic cancer") : Sets.newHashSet())
-                            .blacklistedDoid(doid.equals("162") ? Sets.newHashSet("2531") : Sets.newHashSet())
+                            .blacklistCancerType(tumorLocationBlacklist)
+                            .blacklistedDoid(tumorLocationBlacklistDoid)
                             .level(level)
                             .direction(direction)
                             .urlSource(sourceLinks)
@@ -113,13 +124,14 @@ class ActionableEntryFactory {
     @NotNull
     static String extractResponseType(@NotNull String responseType) {
         if (responseType.equals("predicted - sensitive")) {
-            return"predicted+-+sensitive";
+            return "predicted+-+sensitive";
         } else if (responseType.equals("predicted - resistant")) {
-            return"predicted+-+resistant";
+            return "predicted+-+resistant";
         } else {
             return responseType;
         }
     }
+
     @Nullable
     @VisibleForTesting
     static String extractDoidKB(@Nullable String doidString) {

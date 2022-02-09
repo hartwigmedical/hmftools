@@ -10,6 +10,9 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTumorLocation;
+import com.hartwig.hmftools.serve.blacklisting.ImmutableTumorLocationBlacklisting;
+import com.hartwig.hmftools.serve.blacklisting.TumorLocationBlacklist;
+import com.hartwig.hmftools.serve.blacklisting.TumorLocationBlacklisting;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
 
 import org.apache.commons.compress.utils.Lists;
@@ -56,12 +59,18 @@ public class ActionableTrialFactory {
             }
             for (String doid : doids) {
                 String doidCorrected = extractDoid(doid);
+                Set<TumorLocationBlacklisting> tumorLocationBlacklistings = Sets.newHashSet();
+                tumorLocationBlacklistings.add(ImmutableTumorLocationBlacklisting.builder()
+                        .blacklistCancerType(doid.equals("162") ? "Hematologic cancer": Strings.EMPTY)
+                        .blacklistedDoid(doid.equals("162") ? "2531": Strings.EMPTY)
+                        .build());
+                String tumorLocationBlacklist = TumorLocationBlacklist.extractTumorLocationBlacklisting(tumorLocationBlacklistings);
+                String tumorLocationBlacklistDoid = TumorLocationBlacklist.extractTumorLocationDoid(tumorLocationBlacklistings);
+
                 actionableTrials.add(actionableBuilder.cancerType(tumorLocation.primaryTumorLocation())
                         .doid(doidCorrected)
-                        .blacklistCancerType(doidCorrected.equals("162")
-                                ? Sets.newHashSet("Hematologic cancer")
-                                : Sets.newHashSet())
-                        .blacklistedDoid(doidCorrected.equals("162") ? Sets.newHashSet("2531") : Sets.newHashSet())
+                        .blacklistCancerType(tumorLocationBlacklist)
+                        .blacklistedDoid(tumorLocationBlacklistDoid)
                         .build());
             }
         }

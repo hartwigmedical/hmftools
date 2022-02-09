@@ -27,10 +27,10 @@ public interface ActionableEvent {
     String doid();
 
     @NotNull
-    Set<String> blacklistCancerType();
+    String blacklistCancerType();
 
     @NotNull
-    Set<String> blacklistedDoid();
+    String blacklistedDoid();
 
     @NotNull
     EvidenceLevel level();

@@ -14,6 +14,9 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
+import com.hartwig.hmftools.serve.blacklisting.ImmutableTumorLocationBlacklisting;
+import com.hartwig.hmftools.serve.blacklisting.TumorLocationBlacklist;
+import com.hartwig.hmftools.serve.blacklisting.TumorLocationBlacklisting;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.serve.sources.vicc.curation.DrugCurator;
 import com.hartwig.hmftools.serve.sources.vicc.curation.EvidenceLevelCurator;
@@ -114,11 +117,19 @@ class ActionableEvidenceFactory {
             for (Map.Entry<String, Set<String>> cancerTypeEntry : cancerTypeToDoidsMap.entrySet()) {
                 String cancerType = cancerTypeEntry.getKey();
                 for (String doid : cancerTypeEntry.getValue()) {
+                    Set<TumorLocationBlacklisting> tumorLocationBlacklistings = Sets.newHashSet();
+                    tumorLocationBlacklistings.add(ImmutableTumorLocationBlacklisting.builder()
+                            .blacklistCancerType(doid.equals("162") ? "Hematologic cancer": Strings.EMPTY)
+                            .blacklistedDoid(doid.equals("162") ? "2531": Strings.EMPTY)
+                            .build());
+                    String tumorLocationBlacklist = TumorLocationBlacklist.extractTumorLocationBlacklisting(tumorLocationBlacklistings);
+                    String tumorLocationBlacklistDoid = TumorLocationBlacklist.extractTumorLocationDoid(tumorLocationBlacklistings);
+
                     for (List<String> drugList : drugLists) {
                         actionableEvents.add(builder.cancerType(cancerType)
                                 .doid(doid)
-                                .blacklistCancerType(doid.equals("162") ? Sets.newHashSet("Hematologic cancer") : Sets.newHashSet())
-                                .blacklistedDoid(doid.equals("162") ? Sets.newHashSet("2531") : Sets.newHashSet())
+                                .blacklistCancerType(tumorLocationBlacklist)
+                                .blacklistedDoid(tumorLocationBlacklistDoid)
                                 .treatment(formatDrugList(drugList))
                                 .build());
                     }
