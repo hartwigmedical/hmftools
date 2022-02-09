@@ -102,22 +102,6 @@ public class FilterConfig
         return options;
     }
 
-
-    public SoftFilterConfig softConfig(final VariantTier tier)
-    {
-        switch(tier)
-        {
-            case HOTSPOT:
-                return SoftHotspotFilter;
-            case PANEL:
-                return SoftPanelFilter;
-            case HIGH_CONFIDENCE:
-                return SoftHighConfidenceFilter;
-            default:
-                return SoftLowConfidenceFilter;
-        }
-    }
-
     public boolean passesHardFilters(final ReadContextCounter readContextCounter)
     {
         if(readContextCounter.Tier.equals(VariantTier.HOTSPOT))

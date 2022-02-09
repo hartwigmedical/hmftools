@@ -29,7 +29,7 @@ public class PhasingGroupsTest
     public PhasingGroupsTest()
     {
         mPhaser = new VariantPhaser(new PhaseSetCounter());
-        mPhaser.initialise(new ChrBaseRegion("1", 0, 200), true, false);
+        mPhaser.initialise(new ChrBaseRegion("1", 0, 200), false);
 
         mNextReadCounterId = 0;
     }
@@ -192,7 +192,7 @@ public class PhasingGroupsTest
         assertEquals(8, mPhaser.getPhasedGroups().size());
         PhasedVariantGroup group7 = mPhaser.getPhasedGroups().get(mPhaser.getPhasedGroups().size() - 1);
 
-        mPhaser.mergeGroups();
+        mPhaser.mergeGroups(Lists.newArrayList(mPhaser.getPhasedGroups()));
 
         /* when -ves are not copied from subsets to supersets
         assertEquals(2, mPhaser.getPhasedGroups().size());

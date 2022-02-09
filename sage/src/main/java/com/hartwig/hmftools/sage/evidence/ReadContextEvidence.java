@@ -41,16 +41,11 @@ public class ReadContextEvidence
     private List<ReadContextCounter> mReadCounters;
     private int mLastCandidateIndex;
 
-    private final VariantPhaser mVariantPhaser;
-
-    private final List<PerformanceCounter> mPerfCounters;
-
-    public static final int PC_PHASE_READS = 0;
-    public static final int PC_FORM_LPS = 1;
+    private VariantPhaser mVariantPhaser;
 
     public ReadContextEvidence(
             final SageConfig config, final ReferenceSequenceFile refGenome,
-            final Map<String,QualityRecalibrationMap> qualityRecalibrationMap, final PhaseSetCounter phaseSetCounter)
+            final Map<String,QualityRecalibrationMap> qualityRecalibrationMap)
     {
         mSageConfig = config;
         mRefGenome = refGenome;
@@ -62,17 +57,11 @@ public class ReadContextEvidence
         mQualityCalculator = null;
         mReadCounters = null;
         mLastCandidateIndex = 0;
-        mVariantPhaser = new VariantPhaser(phaseSetCounter);
-
-        mPerfCounters = Lists.newArrayList();
-        mPerfCounters.add(new PerformanceCounter("PhaseReads"));
-        mPerfCounters.add(new PerformanceCounter("FormLPS"));
+        mVariantPhaser = null;
     }
 
-    public List<PerformanceCounter> getPerfCounters() { return mPerfCounters; }
-
     public List<ReadContextCounter> collectEvidence(
-            final List<Candidate> candidates, final String sample, final String bam, boolean checkPhasing)
+            final List<Candidate> candidates, final String sample, final String bam, final VariantPhaser variantPhaser)
     {
         mReadCounters = mFactory.create(candidates);
         mLastCandidateIndex = 0;
@@ -87,7 +76,10 @@ public class ReadContextEvidence
                 firstCandidate.chromosome(),
                 Math.max(firstCandidate.position() - mTypicalReadLength, 1), lastCandidate.position() + mTypicalReadLength);
 
-        mVariantPhaser.initialise(sliceRegion, checkPhasing, mSageConfig.LogLpsData);
+        mVariantPhaser = variantPhaser;
+
+        if(mVariantPhaser != null)
+            mVariantPhaser.initialise(sliceRegion, mSageConfig.LogLpsData);
 
         mRefSequence = new RefSequence(sliceRegion, mRefGenome);
 
@@ -99,17 +91,7 @@ public class ReadContextEvidence
 
         final SamSlicer slicer = new SamSlicer(0, sliceRegion);
 
-        mPerfCounters.get(PC_PHASE_READS).start();
-        mPerfCounters.get(PC_PHASE_READS).resume();
-
         slicer.slice(tumorReader, this::processReadRecord);
-
-        mPerfCounters.get(PC_PHASE_READS).stop();
-
-        // assign local phase set IDs to all phased variants
-        mPerfCounters.get(PC_FORM_LPS).start();
-        mVariantPhaser.assignLocalPhaseSets();
-        mPerfCounters.get(PC_FORM_LPS).stop();
 
         return mReadCounters;
     }
@@ -180,14 +162,14 @@ public class ReadContextEvidence
         if(readCounters.isEmpty())
             return;
 
-        List<ReadContextCounter> posPhasedCounters = mVariantPhaser.enabled() ? Lists.newArrayList() : null;
-        List<ReadContextCounter> negPhasedCounters = mVariantPhaser.enabled() ? Lists.newArrayList() : null;
+        List<ReadContextCounter> posPhasedCounters = mVariantPhaser != null ? Lists.newArrayList() : null;
+        List<ReadContextCounter> negPhasedCounters = mVariantPhaser != null ? Lists.newArrayList() : null;
 
         for(ReadContextCounter readCounter : readCounters)
         {
             ReadMatchType matchType = readCounter.processRead(record, mSageConfig, mQualityCalculator, numberOfEvents);
 
-            if(mVariantPhaser.enabled())
+            if(mVariantPhaser != null)
             {
                 if(matchType == SUPPORT)
                     posPhasedCounters.add(readCounter);
@@ -196,9 +178,7 @@ public class ReadContextEvidence
             }
         }
 
-        mPerfCounters.get(PC_PHASE_READS).resume();
-        mVariantPhaser.registeredPhasedVariants(posPhasedCounters, negPhasedCounters);
-        mPerfCounters.get(PC_PHASE_READS).pause();
+        if(mVariantPhaser != null)
+            mVariantPhaser.registeredPhasedVariants(posPhasedCounters, negPhasedCounters);
     }
-
 }

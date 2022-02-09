@@ -17,7 +17,7 @@ public class ReadContextCounters
 
     private final Map<VariantHotspot,List<ReadContextCounter>> mVariantReadCounters;
 
-    public ReadContextCounters(final String primarySample, final List<Candidate> candidates)
+    public ReadContextCounters(final List<Candidate> candidates)
     {
         mCandidates = candidates;
         mVariantReadCounters = Maps.newHashMap();

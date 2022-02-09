@@ -4,9 +4,11 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
@@ -14,11 +16,12 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SageVariant;
-import com.hartwig.hmftools.sage.common.SageVariantFactory;
 import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.config.VariantFilters;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
+import com.hartwig.hmftools.sage.evidence.VariantPhaser;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 
@@ -68,7 +71,7 @@ public class RegionTask implements Callable
 
     public final List<PerformanceCounter> getPerfCounters()
     {
-        mPerfCounters.addAll(mEvidenceStage.getPerfCounters());
+        mPerfCounters.addAll(mEvidenceStage.getVariantPhaser().getPerfCounters());
         return mPerfCounters;
     }
 
@@ -97,17 +100,32 @@ public class RegionTask implements Callable
 
         mPerfCounters.get(PC_EVIDENCE).stop();
 
-        final SageVariantFactory variantFactory = new SageVariantFactory(mConfig.Filter);
+        // final SageVariantFactory variantFactory = new SageVariantFactory(mConfig.Filter);
+        VariantFilters filters = new VariantFilters(mConfig.Filter);
 
-        // combine normal and tumor together and create variants
+        // combine normal and tumor together to create variants, then apply soft filters
+        Set<ReadContextCounter> passingTumorReadCounters = Sets.newHashSet();
+
         for(Candidate candidate : finalCandidates)
         {
-            final List<ReadContextCounter> normal = normalEvidence.getVariantReadCounters(candidate.variant());
-            final List<ReadContextCounter> tumor = tumorEvidence.getVariantReadCounters(candidate.variant());
+            final List<ReadContextCounter> normalReadCounters = normalEvidence.getVariantReadCounters(candidate.variant());
+            final List<ReadContextCounter> tumorReadCounters = tumorEvidence.getVariantReadCounters(candidate.variant());
 
-            SageVariant sageVariant = variantFactory.create(candidate, normal, tumor);
+            SageVariant sageVariant = new SageVariant(candidate, normalReadCounters, tumorReadCounters);
             mSageVariants.add(sageVariant);
+
+            // apply filters
+            if(filters.enabled())
+                filters.applySoftFilters(sageVariant);
+
+            if(sageVariant.isPassing())
+                passingTumorReadCounters.add(tumorReadCounters.get(0));
         }
+
+        // phase variants now all evidence has been collected and filters applied
+        VariantPhaser variantPhaser = mEvidenceStage.getVariantPhaser();
+
+        variantPhaser.assignLocalPhaseSets(passingTumorReadCounters);
 
         SG_LOGGER.trace("{}: region({}) complete", mTaskId, mRegion);
 

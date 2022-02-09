@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.evidence.ReadContextEvidence;
+import com.hartwig.hmftools.sage.evidence.VariantPhaser;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
@@ -21,15 +22,15 @@ import htsjdk.samtools.reference.ReferenceSequenceFile;
 public class EvidenceStage
 {
     private final ReadContextEvidence mReadContextEvidence;
+    private final VariantPhaser mVariantPhaser;
 
     public EvidenceStage(
             final SageConfig config, final ReferenceSequenceFile refGenome,
             final Map<String, QualityRecalibrationMap> qualityRecalibrationMap, final PhaseSetCounter phaseSetCounter)
     {
-        mReadContextEvidence = new ReadContextEvidence(config, refGenome, qualityRecalibrationMap, phaseSetCounter);
+        mReadContextEvidence = new ReadContextEvidence(config, refGenome, qualityRecalibrationMap);
+        mVariantPhaser = new VariantPhaser(phaseSetCounter);
     }
-
-    public List<PerformanceCounter> getPerfCounters() { return mReadContextEvidence.getPerfCounters(); }
 
     public ReadContextCounters findEvidence(
             final ChrBaseRegion region, final String sampleType, final List<String> samples, final List<String> sampleBams,
@@ -38,21 +39,22 @@ public class EvidenceStage
         // search BAMs for evidence of each candidate variant
         if(samples.isEmpty())
         {
-            return new ReadContextCounters("PRIMARY", candidates);
+            return new ReadContextCounters(candidates);
         }
 
-        final String primarySample = samples.get(0);
         int sampleCount = samples.size();
-        final ReadContextCounters readContextCounters = new ReadContextCounters(primarySample, candidates);
+        final ReadContextCounters readContextCounters = new ReadContextCounters(candidates);
 
         for(int i = 0; i < samples.size(); i++)
         {
             final String sample = samples.get(i);
             final String sampleBam = sampleBams.get(i);
 
-            // SG_LOGGER.trace("region({}) tumor sample({}) gathering evidence for {} candidates", region, sample, initialCandidates.size());
+            boolean collectPhasingGroups = checkPhasing && (i == 0);
 
-            List<ReadContextCounter> readCounters = mReadContextEvidence.collectEvidence(candidates, sample, sampleBam, checkPhasing);
+            List<ReadContextCounter> readCounters = mReadContextEvidence.collectEvidence(
+                    candidates, sample, sampleBam, collectPhasingGroups ? mVariantPhaser : null);
+
             readContextCounters.addCounters(readCounters, sampleCount);
         }
 
@@ -61,4 +63,6 @@ public class EvidenceStage
 
         return readContextCounters;
     }
+
+    public VariantPhaser getVariantPhaser() { return mVariantPhaser; }
 }

@@ -45,7 +45,7 @@ public enum SoftFilter
         mGermline = germline;
     }
 
-    public static boolean isGermlineAndNotTumorFiltered(@NotNull final Set<String> softFilters)
+    public static boolean isGermlineAndNotTumorFiltered(final Set<String> softFilters)
     {
         for(final String softFilter : softFilters)
         {
