@@ -10,14 +10,17 @@ import static com.hartwig.hmftools.sage.evidence.PhasedVariantGroup.minPosition;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 
 public class VariantPhaser
@@ -522,35 +525,89 @@ public class VariantPhaser
         }
     }
 
-    public static class ReadCounterIdComparator implements Comparator<ReadContextCounter>
+    public static void removeUninformativeLps(final List<SageVariant> variants, final Set<Integer> passingPhaseSets)
     {
-        public int compare(final ReadContextCounter first, final ReadContextCounter second)
-        {
-            return first.id() - second.id();
-        }
-    }
+        // remove any uninformative local phasings sets where they all have the same passing variants
+        Map<Integer,List<SageVariant>> lpsVariantsMap = Maps.newHashMap();
+        Map<Integer,List<SageVariant>> lpsPassingVariantsMap = Maps.newHashMap();
+        Map<Integer,Integer> lpsMaxReadCountMap = Maps.newHashMap();
 
-    public static class PhasedRcReadCountComparator implements Comparator<PhasedVariantGroup>
-    {
-        public int compare(final PhasedVariantGroup first, final PhasedVariantGroup second)
-        {
-            return second.ReadCount - first.ReadCount;
-        }
-    }
+        List<Integer> uninformativeLpsIds = Lists.newArrayList();
+        List<Integer> processedLpsIds = Lists.newArrayList();
 
-    public static class PhasedRcPosCountComparator implements Comparator<PhasedVariantGroup>
-    {
-        public int compare(final PhasedVariantGroup first, final PhasedVariantGroup second)
+        // first put all variants into LPS datasets
+        for(Integer lpsId : passingPhaseSets)
         {
-            return second.PositiveReadCounters.size() - first.PositiveReadCounters.size();
-        }
-    }
+            List<SageVariant> lpsVariants = variants.stream().filter(x -> x.hasMatchingLps(lpsId)).collect(Collectors.toList());
+            List<SageVariant> passingVariants = lpsVariants.stream().filter(x -> x.isPassing()).collect(Collectors.toList());
 
-    public static class PhasedRcNegCountComparator implements Comparator<PhasedVariantGroup>
-    {
-        public int compare(final PhasedVariantGroup first, final PhasedVariantGroup second)
+            if(passingVariants.isEmpty())
+            {
+                uninformativeLpsIds.add(lpsId);
+                processedLpsIds.add(lpsId);
+                continue;
+            }
+
+            lpsVariantsMap.put(lpsId, lpsVariants);
+            lpsPassingVariantsMap.put(lpsId, passingVariants);
+            lpsMaxReadCountMap.put(lpsId, lpsVariants.get(0).getLpsReadCount(lpsId));
+        }
+
+        for(Map.Entry<Integer,List<SageVariant>> entry : lpsVariantsMap.entrySet())
         {
-            return second.NegativeReadCounters.size() - first.NegativeReadCounters.size();
+            Integer lpsId = entry.getKey();
+
+            if(processedLpsIds.contains(lpsId))
+                continue;
+
+            processedLpsIds.add(lpsId);
+
+            List<SageVariant> passingVariants = lpsPassingVariantsMap.get(lpsId);
+            int maxReadCount = passingVariants.get(0).getLpsReadCount(lpsId);
+
+            // look for matching passing variants
+            int maxLpsId = lpsId;
+
+            List<Integer> matchedVariantsLpsIds = Lists.newArrayList(lpsId);
+
+            for(Map.Entry<Integer,List<SageVariant>> entry2 : lpsVariantsMap.entrySet())
+            {
+                Integer otherLpsId = entry2.getKey();
+
+                if(otherLpsId == lpsId || processedLpsIds.contains(otherLpsId))
+                    continue;
+
+                // List<SageVariant> otherLpsVariants = entry.getValue();
+                List<SageVariant> otherPassingVariants = lpsPassingVariantsMap.get(otherLpsId);
+
+                if(otherPassingVariants.size() == passingVariants.size() && otherPassingVariants.stream().allMatch(x -> passingVariants.contains(x)))
+                {
+                    processedLpsIds.add(otherLpsId);
+
+                    int otherReadCount = otherPassingVariants.get(0).getLpsReadCount(otherLpsId);
+                    matchedVariantsLpsIds.add(otherLpsId);
+
+                    if(otherReadCount > maxReadCount)
+                    {
+                        maxReadCount = otherReadCount;
+                        maxLpsId = otherLpsId;
+                    }
+                }
+            }
+
+            if(matchedVariantsLpsIds.size() > 1)
+            {
+                int maxId = maxLpsId;
+                matchedVariantsLpsIds.stream().filter(x -> x != maxId).forEach(x -> uninformativeLpsIds.add(x));
+            }
+        }
+
+        // now remove all uninformative IDs from each variant
+        for(Integer lpsId : uninformativeLpsIds)
+        {
+            List<SageVariant> lpsVariants = lpsVariantsMap.get(lpsId);
+
+            lpsVariants.forEach(x -> x.removeLps(lpsId));
         }
     }
 

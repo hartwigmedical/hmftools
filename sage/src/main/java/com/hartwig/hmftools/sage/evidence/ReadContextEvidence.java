@@ -128,7 +128,7 @@ public class ReadContextEvidence
             if(positionWithin(readCounter.position(), readStart, readEnd))
             {
                 mLastCandidateIndex = prevIndex;
-                readCounters.add(readCounter);
+                readCounters.add(0, readCounter);
             }
             else if(readCounter.position() < readStart)
             {

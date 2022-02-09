@@ -134,10 +134,7 @@ public class SageAppendApplication
         {
             final String chromosome = samSequenceRecord.getSequenceName();
 
-            if(!mConfig.SpecificChromosomes.isEmpty() && !mConfig.SpecificChromosomes.contains(chromosome))
-                continue;
-
-            if(!HumanChromosome.contains(chromosome) && !MitochondrialChromosome.contains(chromosome))
+            if(!mConfig.processChromosome(chromosome))
                 continue;
 
             SG_LOGGER.info("processing chromosome({})", chromosome);

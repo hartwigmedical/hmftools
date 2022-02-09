@@ -198,12 +198,11 @@ public class PhasedVariantGroup
         // merge and allocate as directed, expanding +ves as required
         AllocatedReadCount += (other.ReadCount + other.AllocatedReadCount) * allocFraction;
 
-        int index = 0;
-
         // keep merged positive RCs in positional order
         for(ReadContextCounter readCounter : other.PositiveReadCounters)
         {
             boolean matched = false;
+            int index = 0;
 
             while(index < PositiveReadCounters.size())
             {

@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.sage.phase;
 
+import static com.hartwig.hmftools.sage.config.SoftFilter.MAX_GERMLINE_VAF;
+import static com.hartwig.hmftools.sage.evidence.VariantPhaser.removeUninformativeLps;
+
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertNotNull;
@@ -7,13 +10,17 @@ import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
+import java.util.Set;
 
+import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.evidence.PhasedVariantGroup;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
@@ -226,6 +233,94 @@ public class PhasingGroupsTest
         */
     }
 
+    @Test
+    public void testRemoveUninformativeLps()
+    {
+        Set<Integer> passingPhaseSets = Sets.newHashSet();
+        List<SageVariant> variants = Lists.newArrayList();
+
+        // LPS 1 and 2 both have passing var 1
+        // LPS 2 has same passing variant as LPS 1 and is uninformative
+
+        // LPS 3, 4 and 5 all have passing vars 4 & 5
+        // LPS 4 & 5 has same passing variants as LPS 3 and are uninformative
+
+        // LPS 6 has passing variants 1 and 4 but no overlap so remains
+
+        SageVariant var1 = createVariant(11);
+        var1.tumorReadCounters().get(0).addLocalPhaseSet(1, 10, 0);
+        var1.tumorReadCounters().get(0).addLocalPhaseSet(2, 1, 0);
+        var1.tumorReadCounters().get(0).addLocalPhaseSet(6, 1, 0);
+        variants.add(var1);
+
+        SageVariant var2 = createVariant(12);
+        var2.tumorReadCounters().get(0).addLocalPhaseSet(1, 10, 0);
+        var2.filters().add(MAX_GERMLINE_VAF.toString());
+        variants.add(var2);
+
+        // a second group, uninformative vs both 1 and 3
+        SageVariant var3 = createVariant(13);
+        var3.tumorReadCounters().get(0).addLocalPhaseSet(2, 1, 0);
+        var3.filters().add(MAX_GERMLINE_VAF.toString());
+        variants.add(var3);
+
+        SageVariant var4 = createVariant(14);
+        var4.tumorReadCounters().get(0).addLocalPhaseSet(3, 10, 0);
+        var4.tumorReadCounters().get(0).addLocalPhaseSet(4, 5, 0);
+        var4.tumorReadCounters().get(0).addLocalPhaseSet(5, 1, 0);
+        var4.tumorReadCounters().get(0).addLocalPhaseSet(6, 1, 0);
+        variants.add(var4);
+
+        SageVariant var5 = createVariant(15);
+        var5.tumorReadCounters().get(0).addLocalPhaseSet(3, 10, 0);
+        var5.tumorReadCounters().get(0).addLocalPhaseSet(4, 5, 0);
+        var5.tumorReadCounters().get(0).addLocalPhaseSet(5, 1, 0);
+        variants.add(var5);
+
+        SageVariant var6 = createVariant(16);
+        var6.tumorReadCounters().get(0).addLocalPhaseSet(3, 10, 0);
+        var6.filters().add(MAX_GERMLINE_VAF.toString());
+        variants.add(var6);
+
+        SageVariant var7 = createVariant(17);
+        var7.tumorReadCounters().get(0).addLocalPhaseSet(4, 5, 0);
+        var7.filters().add(MAX_GERMLINE_VAF.toString());
+        variants.add(var7);
+
+        SageVariant var8 = createVariant(18);
+        var8.tumorReadCounters().get(0).addLocalPhaseSet(5, 1, 0);
+        var8.tumorReadCounters().get(0).addLocalPhaseSet(6, 1, 0);
+        var8.filters().add(MAX_GERMLINE_VAF.toString());
+        variants.add(var8);
+
+        variants.stream().filter(x -> x.isPassing()).forEach(x -> x.localPhaseSets().stream().forEach(y -> passingPhaseSets.add(y)));
+        assertEquals(6, passingPhaseSets.size());
+
+        removeUninformativeLps(variants, passingPhaseSets);
+
+        assertTrue(var1.hasMatchingLps(1));
+
+        assertFalse(var1.hasMatchingLps(2));
+        assertFalse(var3.hasMatchingLps(2));
+
+        assertTrue(var4.hasMatchingLps(3));
+        assertTrue(var5.hasMatchingLps(3));
+        assertTrue(var6.hasMatchingLps(3));
+
+        assertFalse(var4.hasMatchingLps(4));
+        assertFalse(var5.hasMatchingLps(4));
+        assertFalse(var7.hasMatchingLps(4));
+
+        assertFalse(var4.hasMatchingLps(5));
+        assertFalse(var5.hasMatchingLps(5));
+        assertFalse(var8.hasMatchingLps(5));
+
+        assertTrue(var1.hasMatchingLps(6));
+        assertTrue(var4.hasMatchingLps(6));
+        assertTrue(var8.hasMatchingLps(6));
+    }
+
+
     private PhasedVariantGroup findGroup(final List<ReadContextCounter> posCounters)
     {
         return mPhaser.getPhasedGroups().stream()
@@ -246,6 +341,24 @@ public class PhasingGroupsTest
         }
 
         return true;
+    }
+
+    private SageVariant createVariant(int position)
+    {
+        VariantHotspot variant = ImmutableVariantHotspotImpl.builder()
+                .chromosome("1")
+                .position(position)
+                .ref("A")
+                .alt("C").build();
+
+        List<ReadContextCounter> tumorCounters = Lists.newArrayList(createReadCounter(position));
+
+        Candidate candidate = new Candidate(
+                VariantTier.HIGH_CONFIDENCE, variant, tumorCounters.get(0).readContext(),
+                100, 1, 1);
+
+        List<ReadContextCounter> normalCounters = Lists.newArrayList();
+        return new SageVariant(candidate, normalCounters, tumorCounters);
     }
 
     private ReadContextCounter createReadCounter(int position)

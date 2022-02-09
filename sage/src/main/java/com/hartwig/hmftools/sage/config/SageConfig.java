@@ -31,6 +31,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationConfig;
@@ -63,6 +65,7 @@ public class SageConfig
     public final Set<String> SpecificChromosomes;
     public final Set<Integer> SpecificPositions;
     public final List<ChrBaseRegion> SpecificRegions;
+    public final boolean IncludeMT;
     public final int RegionSliceSize;
     public final int MinMapQuality;
     public final int MaxRealignmentDepth;
@@ -115,6 +118,7 @@ public class SageConfig
     private static final String READ_CONTEXT_FLANK_SIZE = "read_context_flank_size";
     private static final String COVERAGE_BED = "coverage_bed";
     private static final String VALIDATION_STRINGENCY = "validation_stringency";
+    private static final String INCLUDE_MT = "include_mt";
     private static final String LOG_LPS_DATA = "log_lps_data";
 
     public SageConfig(boolean appendMode, @NotNull final String version, @NotNull final CommandLine cmd)
@@ -154,6 +158,8 @@ public class SageConfig
             Arrays.stream(cmd.getOptionValue(TUMOR_BAM, Strings.EMPTY).split(","))
                     .forEach(x -> TumorBams.add(SampleDataDir + x));
         }
+
+        IncludeMT = cmd.hasOption(INCLUDE_MT);
 
         SpecificChromosomes = Sets.newHashSet();
         SpecificPositions = Sets.newHashSet();
@@ -301,6 +307,20 @@ public class SageConfig
         return true;
     }
 
+    public boolean processChromosome(final String chromosome)
+    {
+        if(!SpecificChromosomes.isEmpty() && !SpecificChromosomes.contains(chromosome))
+            return false;
+
+        if(HumanChromosome.contains(chromosome))
+            return true;
+
+        if(IncludeMT && MitochondrialChromosome.contains(chromosome))
+            return true;
+
+        return false;
+    }
+
     public static Options createSageOptions()
     {
         final Options options = new Options();
@@ -339,6 +359,7 @@ public class SageConfig
         options.addOption(SPECIFIC_CHROMOSOMES, true, "Run for subset of chromosomes, split by ';'");
         options.addOption(SPECIFIC_REGIONS, true, "Run for specific regions(s) separated by ';' in format Chr:PosStart:PosEnd");
         options.addOption(SPECIFIC_POSITIONS, true, "Run for specific positions(s) separated by ';', for debug purposes");
+        options.addOption(INCLUDE_MT, false, "Call MT variants");
         options.addOption(SLICE_SIZE, true, "Slice size [" + DEFAULT_SLICE_SIZE + "]");
 
         options.addOption(MAX_READ_DEPTH, true, "Max depth to look for evidence [" + DEFAULT_MAX_READ_DEPTH + "]");
@@ -353,14 +374,14 @@ public class SageConfig
         return options;
     }
 
-    public String geneCoverageFile(@NotNull final String sample)
+    public String geneCoverageFile(final String sample)
     {
         String filename = sample + ".sage.gene.coverage.tsv";
         String parent = new File(OutputFile).getParent();
         return parent == null ? filename : parent + File.separator + filename;
     }
 
-    public String baseQualityRecalibrationFile(@NotNull final String sample)
+    public String baseQualityRecalibrationFile(final String sample)
     {
         String parent = new File(OutputFile).getParent();
         return parent == null ? sample + ".sage.bqr.tsv" : parent + File.separator + sample + ".sage.bqr.tsv";
@@ -384,6 +405,7 @@ public class SageConfig
         SpecificChromosomes = Sets.newHashSet();
         SpecificPositions = Sets.newHashSet();
         SpecificRegions = Lists.newArrayList();
+        IncludeMT = false;
         RegionSliceSize = 500_000;
         MinMapQuality = DEFAULT_MIN_MAP_QUALITY;
         MaxRealignmentDepth = DEFAULT_MAX_REALIGNMENT_DEPTH;
