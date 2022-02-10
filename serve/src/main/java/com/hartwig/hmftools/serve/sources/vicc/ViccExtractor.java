@@ -20,6 +20,7 @@ import com.hartwig.hmftools.serve.extraction.EventExtractorOutput;
 import com.hartwig.hmftools.serve.extraction.ExtractionFunctions;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
+import com.hartwig.hmftools.serve.extraction.catalog.DealWithDriverInconsistentModeAnnotation;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
 import com.hartwig.hmftools.serve.extraction.codon.CodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.codon.CodonFunctions;
@@ -54,6 +55,8 @@ import org.jetbrains.annotations.NotNull;
 public final class ViccExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(ViccExtractor.class);
+
+    private static final String DEAL_WITH_DRIVER_INCONSISTENCIES_MODE = "ignore";
 
     @NotNull
     private final EventExtractor eventExtractor;
@@ -103,6 +106,8 @@ public final class ViccExtractor {
         Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
         Map<Feature, TumorCharacteristic> characteristicsPerFeature = Maps.newHashMap();
         String rawInput = Strings.EMPTY;
+        DealWithDriverInconsistentModeAnnotation annotation =
+                DealWithDriverInconsistentModeAnnotation.extractDealWithDriverInconsistentMode(DEAL_WITH_DRIVER_INCONSISTENCIES_MODE);
 
         for (Feature feature : entry.features()) {
             String gene = feature.geneSymbol();
@@ -110,7 +115,7 @@ public final class ViccExtractor {
                 LOGGER.warn("No gene configured for {}. Skipping!", feature);
             } else {
                 EventExtractorOutput extractorOutput =
-                        eventExtractor.extract(gene, entry.transcriptId(), feature.type(), feature.name(), Strings.EMPTY);
+                        eventExtractor.extract(gene, entry.transcriptId(), feature.type(), feature.name(), Strings.EMPTY, annotation);
                 rawInput = feature.name();
                 if (extractorOutput.hotspots() != null) {
                     hotspotsPerFeature.put(feature, extractorOutput.hotspots());

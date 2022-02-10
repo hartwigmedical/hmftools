@@ -7,6 +7,7 @@ import java.util.Set;
 
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.serve.classification.EventType;
+import com.hartwig.hmftools.serve.extraction.catalog.DealWithDriverInconsistentModeAnnotation;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 
 import org.apache.commons.compress.utils.Lists;
@@ -36,7 +37,8 @@ public class FusionExtractor {
     }
 
     @Nullable
-    public KnownFusionPair extract(@NotNull String gene, @NotNull EventType type, @NotNull String event) {
+    public KnownFusionPair extract(@NotNull String gene, @NotNull EventType type, @NotNull String event,
+            @NotNull DealWithDriverInconsistentModeAnnotation dealWithInconsistents) {
         KnownFusionPair pair = null;
         if (type == EventType.FUSION_PAIR) {
             if (EXONIC_FUSIONS_MAP.containsKey(event)) {

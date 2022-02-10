@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.DriverGeneTestFactory;
 import com.hartwig.hmftools.serve.EnsemblDataCacheTestFactory;
+import com.hartwig.hmftools.serve.extraction.catalog.DealWithDriverInconsistentModeAnnotation;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilterAlgo;
@@ -23,7 +24,11 @@ public class ExonExtractorTest {
     @Test
     public void canExtractExonForExonAndFusion() {
         ExonExtractor extractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "KIT"));
-        List<ExonAnnotation> exons = extractor.extract("KIT", null, EventType.FUSION_PAIR_AND_EXON, "EXON 11 MUTATION");
+        List<ExonAnnotation> exons = extractor.extract("KIT",
+                null,
+                EventType.FUSION_PAIR_AND_EXON,
+                "EXON 11 MUTATION",
+                DealWithDriverInconsistentModeAnnotation.IGNORE);
 
         assertEquals(1, exons.size());
 
@@ -37,7 +42,8 @@ public class ExonExtractorTest {
     @Test
     public void canExtractExonForwardStrand() {
         ExonExtractor extractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "EGFR"));
-        List<ExonAnnotation> exons = extractor.extract("EGFR", null, EventType.EXON, "EXON 19 DELETION");
+        List<ExonAnnotation> exons =
+                extractor.extract("EGFR", null, EventType.EXON, "EXON 19 DELETION", DealWithDriverInconsistentModeAnnotation.IGNORE);
 
         assertEquals(1, exons.size());
 
@@ -51,7 +57,8 @@ public class ExonExtractorTest {
     @Test
     public void canExtractExonReverseStrand() {
         ExonExtractor extractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "EGFR"));
-        List<ExonAnnotation> exons = extractor.extract("KRAS", null, EventType.EXON, "EXON 2 DELETION");
+        List<ExonAnnotation> exons =
+                extractor.extract("KRAS", null, EventType.EXON, "EXON 2 DELETION", DealWithDriverInconsistentModeAnnotation.IGNORE);
 
         assertEquals(1, exons.size());
 
@@ -65,19 +72,31 @@ public class ExonExtractorTest {
     @Test
     public void canFilterOnNonCanonicalTranscript() {
         ExonExtractor extractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "EGFR"));
-        assertNull(extractor.extract("KRAS", "not the canonical transcript", EventType.EXON, "EXON 2 DELETION"));
+        assertNull(extractor.extract("KRAS",
+                "not the canonical transcript",
+                EventType.EXON,
+                "EXON 2 DELETION",
+                DealWithDriverInconsistentModeAnnotation.IGNORE));
     }
 
     @Test
     public void canFilterWhenExonIndicesDoNotExist() {
         ExonExtractor extractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "EGFR"));
-        assertNull(extractor.extract("KRAS", "ENST00000256078", EventType.EXON, "not a correct event"));
+        assertNull(extractor.extract("KRAS",
+                "ENST00000256078",
+                EventType.EXON,
+                "not a correct event",
+                DealWithDriverInconsistentModeAnnotation.IGNORE));
     }
 
     @Test
     public void canFilterWhenExonIndexNotOnTranscript() {
         ExonExtractor extractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "EGFR"));
-        assertNull(extractor.extract("KRAS", "ENST00000256078", EventType.EXON, "Exon 2000 deletion"));
+        assertNull(extractor.extract("KRAS",
+                "ENST00000256078",
+                EventType.EXON,
+                "Exon 2000 deletion",
+                DealWithDriverInconsistentModeAnnotation.IGNORE));
     }
 
     @Test

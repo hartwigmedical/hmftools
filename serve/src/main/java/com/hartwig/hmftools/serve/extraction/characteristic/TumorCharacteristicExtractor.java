@@ -6,6 +6,7 @@ import com.hartwig.hmftools.common.serve.classification.EventType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -52,10 +53,32 @@ public class TumorCharacteristicExtractor {
             if (characteristic == null) {
                 LOGGER.warn("Could not extract characteristic from '{}'", event);
             } else {
-                return ImmutableTumorCharacteristic.builder().tumorCharacteristicAnnotation(characteristic).cutoff(cutOff).build();
+                String cutOffInterpretated = determineCutoff(characteristic, cutOff);
+                return ImmutableTumorCharacteristic.builder().tumorCharacteristicAnnotation(characteristic).cutoff(cutOffInterpretated).build();
             }
         }
         return null;
+    }
+
+    @NotNull
+    private String determineCutoff(@Nullable TumorCharacteristicAnnotation characteristic, @NotNull String cutOff) {
+        if (!cutOff.equals(Strings.EMPTY)) {
+            return cutOff;
+        } else {
+            if (characteristic == TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE) {
+                return "MSI >= 4";
+            } else if (characteristic == TumorCharacteristicAnnotation.MICROSATELLITE_STABLE) {
+                return "MSS < 4";
+            } else if (characteristic == TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD) {
+                return "TML >= 140";
+            } else if (characteristic == TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_LOAD) {
+                return "TML < 140";
+            } else if (characteristic == TumorCharacteristicAnnotation.HOMOLOGOUS_RECOMBINATION_DEFICIENT) {
+                return "HRD >= 0.5";
+            } else {
+                return Strings.EMPTY;
+            }
+        }
     }
 
     @Nullable

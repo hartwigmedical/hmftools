@@ -73,16 +73,14 @@ public final class ActionableFileFunctions {
 
             @NotNull
             @Override
-            public Set<String> blacklistCancerType() {
-                int urlPosition = startingPosition + 5;
-                return values.length > urlPosition ? stringToUrls(values[urlPosition]) : Sets.newHashSet();
+            public String blacklistCancerType() {
+                return values[startingPosition + 5];
             }
 
             @NotNull
             @Override
-            public Set<String> blacklistedDoid() {
-                int urlPosition = startingPosition + 6;
-                return values.length > urlPosition ? stringToUrls(values[urlPosition]) : Sets.newHashSet();
+            public String blacklistedDoid() {
+                return values[startingPosition + 6];
             }
 
             @NotNull
@@ -120,8 +118,8 @@ public final class ActionableFileFunctions {
                 .add(event.treatment())
                 .add(event.cancerType())
                 .add(event.doid())
-                .add(urlsToString(event.blacklistCancerType()))
-                .add(urlsToString(event.blacklistedDoid()))
+                .add(event.blacklistCancerType())
+                .add(event.blacklistedDoid())
                 .add(event.level().toString())
                 .add(event.direction().toString())
                 .add(urlsToString(event.urlSource()))
