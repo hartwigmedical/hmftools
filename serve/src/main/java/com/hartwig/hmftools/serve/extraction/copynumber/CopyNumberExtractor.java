@@ -26,42 +26,37 @@ public class CopyNumberExtractor {
     private final GeneChecker geneChecker;
     @NotNull
     private final List<DriverGene> driverGenes;
-    private final boolean reportOnDriverInconsistencies;
+    private final DealWithDriverInconsistentModeAnnotation dealWithDriverInconsistentModeAnnotation;
 
     public CopyNumberExtractor(@NotNull final GeneChecker geneChecker, @NotNull final List<DriverGene> driverGenes,
-            final boolean reportOnDriverInconsistencies) {
+            @NotNull final DealWithDriverInconsistentModeAnnotation dealWithDriverInconsistentModeAnnotation) {
         this.geneChecker = geneChecker;
         this.driverGenes = driverGenes;
-        this.reportOnDriverInconsistencies = reportOnDriverInconsistencies;
+        this.dealWithDriverInconsistentModeAnnotation = dealWithDriverInconsistentModeAnnotation;
     }
 
     @Nullable
-    public KnownCopyNumber extract(@NotNull String gene, @NotNull EventType type,
-            @NotNull DealWithDriverInconsistentModeAnnotation dealWithInconsistents) {
+    public KnownCopyNumber extract(@NotNull String gene, @NotNull EventType type) {
         if (COPY_NUMBER_EVENTS.contains(type) && geneChecker.isValidGene(gene)) {
             DriverCategory driverCategory = findByGene(driverGenes, gene);
-            if (driverCategory != null) {
-                if (DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithInconsistents)) {
-                    if ((driverCategory == DriverCategory.TSG && type == EventType.AMPLIFICATION) || (driverCategory == DriverCategory.ONCO
-                            && type == EventType.DELETION)) {
-                        LOGGER.warn("Mismatch for {} in driver category {} vs event type {}", gene, driverCategory, type);
-                        return ImmutableKnownCopyNumber.builder().gene(gene).type(toCopyNumberType(type)).build();
-                    } else {
-                        return ImmutableKnownCopyNumber.builder().gene(gene).type(toCopyNumberType(type)).build();
+            if (DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithDriverInconsistentModeAnnotation)) {
+                if ((driverCategory == DriverCategory.TSG && type == EventType.AMPLIFICATION) || (driverCategory == DriverCategory.ONCO
+                        && type == EventType.DELETION)) {
+                    if (dealWithDriverInconsistentModeAnnotation.logging()) {
+                        LOGGER.info("Mismatch for {} in driver category {} vs event type {}", gene, driverCategory, type);
                     }
-                } else {
-                    return null;
                 }
+                return ImmutableKnownCopyNumber.builder().gene(gene).type(toCopyNumberType(type)).build();
             } else {
-                if (DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithInconsistents)) {
-                    LOGGER.warn("{} on {} is not included in driver catalog and won't ever be reported.", type, gene);
+                if ((driverCategory == DriverCategory.ONCO && type == EventType.AMPLIFICATION) || (driverCategory == DriverCategory.TSG
+                        && type == EventType.DELETION)) {
                     return ImmutableKnownCopyNumber.builder().gene(gene).type(toCopyNumberType(type)).build();
-                } else {
-                    return null;
                 }
-
+                if (dealWithDriverInconsistentModeAnnotation.logging()) {
+                    LOGGER.info("Mismatch for {} in driver category {} vs event type {}", gene, driverCategory, type);
+                }
+                return null;
             }
-
         }
 
         return null;

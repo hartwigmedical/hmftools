@@ -17,7 +17,7 @@ public class CopyNumberExtractorTest {
     @Test
     public void canExtractCopyNumbersAmp() {
         CopyNumberExtractor copyNumberExtractor = createTestExtractor();
-        KnownCopyNumber amp = copyNumberExtractor.extract("AKT1", EventType.AMPLIFICATION, DealWithDriverInconsistentModeAnnotation.IGNORE);
+        KnownCopyNumber amp = copyNumberExtractor.extract("AKT1", EventType.AMPLIFICATION);
 
         assertEquals("AKT1", amp.gene());
         assertEquals(CopyNumberType.AMPLIFICATION, amp.type());
@@ -26,13 +26,13 @@ public class CopyNumberExtractorTest {
     @Test
     public void canFilterAmpOnUnknownGene() {
         CopyNumberExtractor copyNumberExtractor = createTestExtractor();
-        assertNull(copyNumberExtractor.extract("NOT-A-GENE", EventType.AMPLIFICATION, DealWithDriverInconsistentModeAnnotation.IGNORE));
+        assertNull(copyNumberExtractor.extract("NOT-A-GENE", EventType.AMPLIFICATION));
     }
 
     @Test
     public void canExtractCopyNumbersDel() {
         CopyNumberExtractor copyNumberExtractor = createTestExtractor();
-        KnownCopyNumber del = copyNumberExtractor.extract("PTEN", EventType.DELETION, DealWithDriverInconsistentModeAnnotation.IGNORE);
+        KnownCopyNumber del = copyNumberExtractor.extract("PTEN", EventType.DELETION);
 
         assertEquals("PTEN", del.gene());
         assertEquals(CopyNumberType.DELETION, del.type());
@@ -41,11 +41,13 @@ public class CopyNumberExtractorTest {
     @Test
     public void canFilterDelOnUnknownGene() {
         CopyNumberExtractor copyNumberExtractor = createTestExtractor();
-        assertNull(copyNumberExtractor.extract("NOT-A-GENE", EventType.DELETION, DealWithDriverInconsistentModeAnnotation.IGNORE));
+        assertNull(copyNumberExtractor.extract("NOT-A-GENE", EventType.DELETION));
     }
 
     @NotNull
     private static CopyNumberExtractor createTestExtractor() {
-        return new CopyNumberExtractor(new GeneChecker(Sets.newHashSet("PTEN", "AKT1")), Lists.newArrayList(), true);
+        return new CopyNumberExtractor(new GeneChecker(Sets.newHashSet("PTEN", "AKT1")),
+                Lists.newArrayList(),
+                DealWithDriverInconsistentModeAnnotation.IGNORE);
     }
 }
