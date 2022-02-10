@@ -45,14 +45,14 @@ public class EventExtractor {
 
     @NotNull
     public EventExtractorOutput extract(@NotNull String gene, @Nullable String transcriptId, @NotNull EventType type,
-            @NotNull String event, @NotNull String cutOff, @NotNull DealWithDriverInconsistentModeAnnotation annotation) {
+            @NotNull String event, @NotNull String cutOff) {
         return ImmutableEventExtractorOutput.builder()
                 .hotspots(hotspotExtractor.extract(gene, transcriptId, type, event))
-                .codons(codonExtractor.extract(gene, transcriptId, type, event, annotation))
-                .exons(exonExtractor.extract(gene, transcriptId, type, event, annotation))
-                .geneLevelEvent(geneLevelExtractor.extract(gene, type, event, annotation))
-                .knownCopyNumber(copyNumberExtractor.extract(gene, type, annotation))
-                .knownFusionPair(fusionExtractor.extract(gene, type, event, annotation))
+                .codons(codonExtractor.extract(gene, transcriptId, type, event))
+                .exons(exonExtractor.extract(gene, transcriptId, type, event))
+                .geneLevelEvent(geneLevelExtractor.extract(gene, type, event))
+                .knownCopyNumber(copyNumberExtractor.extract(gene, type))
+                .knownFusionPair(fusionExtractor.extract(gene, type, event))
                 .characteristic(tumorCharacteristicExtractor.extract(type, event, cutOff))
                 .build();
     }

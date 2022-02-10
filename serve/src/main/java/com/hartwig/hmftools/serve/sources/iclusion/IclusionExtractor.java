@@ -21,7 +21,6 @@ import com.hartwig.hmftools.serve.extraction.EventExtractorOutput;
 import com.hartwig.hmftools.serve.extraction.ExtractionFunctions;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
-import com.hartwig.hmftools.serve.extraction.catalog.DealWithDriverInconsistentModeAnnotation;
 import com.hartwig.hmftools.serve.util.ProgressTracker;
 
 import org.apache.logging.log4j.LogManager;
@@ -32,8 +31,6 @@ import org.jetbrains.annotations.NotNull;
 public class IclusionExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(IclusionExtractor.class);
-
-    private static final String DEAL_WITH_DRIVER_INCONSISTENCIES_MODE = "ignore";
 
     @NotNull
     private final EventExtractor eventExtractor;
@@ -48,8 +45,6 @@ public class IclusionExtractor {
     @NotNull
     public ExtractionResult extract(@NotNull List<IclusionTrial> trials) {
         // We assume filtered trials (no empty acronyms, only OR mutations, and no negated mutations
-        DealWithDriverInconsistentModeAnnotation annotation =
-                DealWithDriverInconsistentModeAnnotation.extractDealWithDriverInconsistentMode(DEAL_WITH_DRIVER_INCONSISTENCIES_MODE);
 
         ProgressTracker tracker = new ProgressTracker("iClusion", trials.size());
         List<ExtractionResult> extractions = Lists.newArrayList();
@@ -63,7 +58,7 @@ public class IclusionExtractor {
                     if (mutation.type() == EventType.UNKNOWN) {
                         LOGGER.warn("No event type known for '{}' on '{}'", mutation.name(), mutation.gene());
                     }
-                    eventExtractions.add(eventExtractor.extract(mutation.gene(), null, mutation.type(), mutation.name(), Strings.EMPTY, annotation));
+                    eventExtractions.add(eventExtractor.extract(mutation.gene(), null, mutation.type(), mutation.name(), Strings.EMPTY));
                 }
             }
 

@@ -7,6 +7,7 @@ import java.util.Set;
 
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.serve.classification.EventType;
+import com.hartwig.hmftools.serve.extraction.catalog.DealWithDriverInconsistentMode;
 import com.hartwig.hmftools.serve.extraction.catalog.DealWithDriverInconsistentModeAnnotation;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 
@@ -26,33 +27,32 @@ public class FusionExtractor {
     private final KnownFusionCache knownFusionCache;
     @NotNull
     private final Set<String> exonicDelDupFusionKeyPhrases;
-    private final boolean reportOnDriverInconsistencies;
+    private final DealWithDriverInconsistentModeAnnotation dealWithDriverInconsistentModeAnnotation;
 
     public FusionExtractor(@NotNull final GeneChecker geneChecker, @NotNull final KnownFusionCache knownFusionCache,
-            @NotNull final Set<String> exonicDelDupFusionKeyPhrases, final boolean reportOnDriverInconsistencies) {
+            @NotNull final Set<String> exonicDelDupFusionKeyPhrases,
+            @NotNull final DealWithDriverInconsistentModeAnnotation dealWithDriverInconsistentModeAnnotation) {
         this.geneChecker = geneChecker;
         this.knownFusionCache = knownFusionCache;
         this.exonicDelDupFusionKeyPhrases = exonicDelDupFusionKeyPhrases;
-        this.reportOnDriverInconsistencies = reportOnDriverInconsistencies;
+        this.dealWithDriverInconsistentModeAnnotation = dealWithDriverInconsistentModeAnnotation;
     }
 
     @Nullable
-    public KnownFusionPair extract(@NotNull String gene, @NotNull EventType type, @NotNull String event,
-            @NotNull DealWithDriverInconsistentModeAnnotation dealWithInconsistents) {
-        KnownFusionPair pair = null;
+    public KnownFusionPair extract(@NotNull String gene, @NotNull EventType type, @NotNull String event) {
         if (type == EventType.FUSION_PAIR) {
             if (EXONIC_FUSIONS_MAP.containsKey(event)) {
-                pair = fromConfiguredPair(EXONIC_FUSIONS_MAP.get(event), gene);
+                return fromConfiguredPair(EXONIC_FUSIONS_MAP.get(event), gene);
             } else if (hasExonicDelDupKeyPhrase(event)) {
-                pair = fromExonicDelDup(gene, event);
+                return validate(fromExonicDelDup(gene, event));
             } else {
-                pair = fromStandardFusionPairEvent(event);
+                return validate(fromStandardFusionPairEvent(event));
             }
         } else if (type == EventType.FUSION_PAIR_AND_EXON) {
-            pair = fromExonicDelDup(gene, event);
+            return validate(fromExonicDelDup(gene, event));
+        } else {
+            return null;
         }
-
-        return validate(pair);
     }
 
     private boolean hasExonicDelDupKeyPhrase(@NotNull String event) {
@@ -169,9 +169,10 @@ public class FusionExtractor {
         }
     }
 
-    @NotNull
-    private static KnownFusionPair fromConfiguredPair(@NotNull KnownFusionPair configuredPair, @NotNull String gene) {
+    @Nullable
+    private KnownFusionPair fromConfiguredPair(@NotNull KnownFusionPair configuredPair, @NotNull String gene) {
         KnownFusionPair pair = ImmutableKnownFusionPair.builder().from(configuredPair).build();
+        pair = validate(pair);
         if (!pair.geneUp().equals(gene) || !pair.geneDown().equals(gene)) {
             LOGGER.warn("Preconfigured fusion '{}' does not match on gene level: {}", configuredPair, gene);
             return null;
@@ -187,13 +188,28 @@ public class FusionExtractor {
         }
 
         if (geneChecker.isValidGene(pair.geneUp()) && geneChecker.isValidGene(pair.geneDown())) {
-            if (reportOnDriverInconsistencies && !isIncludedSomewhereInFusionCache(pair.geneUp(), pair.geneDown())) {
-                LOGGER.warn("Fusion '{}-{}' is not part of the known fusion cache", pair.geneUp(), pair.geneDown());
+            if (DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithDriverInconsistentModeAnnotation)) {
+                if (!isIncludedSomewhereInFusionCache(pair.geneUp(), pair.geneDown())) {
+                    if (dealWithDriverInconsistentModeAnnotation.logging()) {
+                        LOGGER.info("Fusion '{}-{}' is not part of the known fusion cache", pair.geneUp(), pair.geneDown());
+                    }
+                    return pair;
+                } else {
+                    return pair;
+                }
+            } else {
+                if (!isIncludedSomewhereInFusionCache(pair.geneUp(), pair.geneDown())) {
+                    if (dealWithDriverInconsistentModeAnnotation.logging()) {
+                        LOGGER.warn("Fusion '{}-{}' is not part of the known fusion cache", pair.geneUp(), pair.geneDown());
+                    }
+                    return null;
+                } else {
+                    return pair;
+                }
             }
-            return pair;
+        } else {
+            return null;
         }
-
-        return null;
     }
 
     private boolean isIncludedSomewhereInFusionCache(@NotNull String fiveGene, @NotNull String threeGene) {

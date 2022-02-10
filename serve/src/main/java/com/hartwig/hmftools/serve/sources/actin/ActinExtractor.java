@@ -18,7 +18,6 @@ import com.hartwig.hmftools.serve.extraction.EventExtractorOutput;
 import com.hartwig.hmftools.serve.extraction.ExtractionFunctions;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
-import com.hartwig.hmftools.serve.extraction.catalog.DealWithDriverInconsistentModeAnnotation;
 import com.hartwig.hmftools.serve.sources.actin.classification.ActinEventExtractor;
 import com.hartwig.hmftools.serve.sources.actin.classification.ActinEventTypeExtractor;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
@@ -31,8 +30,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class ActinExtractor {
 
-    private static final String DEAL_WITH_DRIVER_INCONSISTENCIES_MODE = "ignore";
-
     private static final Logger LOGGER = LogManager.getLogger(CkbExtractor.class);
 
     @NotNull
@@ -44,8 +41,7 @@ public class ActinExtractor {
 
     @NotNull
     public ExtractionResult extract(@NotNull List<ActinEntry> entries) {
-        DealWithDriverInconsistentModeAnnotation annotation =
-                DealWithDriverInconsistentModeAnnotation.extractDealWithDriverInconsistentMode(DEAL_WITH_DRIVER_INCONSISTENCIES_MODE);
+
         ProgressTracker tracker = new ProgressTracker("ACTIN", entries.size());
         List<ExtractionResult> extractions = Lists.newArrayList();
         for (ActinEntry entry : entries) {
@@ -58,7 +54,7 @@ public class ActinExtractor {
                 } else {
                     String gene = entry.gene() != null ? entry.gene() : "-";
                     extractions.add(toExtractionResult(trial,
-                            eventExtractor.extract(gene, null, type, event, entry.mutation(), annotation)));
+                            eventExtractor.extract(gene, null, type, event, entry.mutation())));
                 }
             }
 
