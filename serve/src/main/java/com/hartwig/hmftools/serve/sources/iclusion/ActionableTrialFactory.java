@@ -2,6 +2,7 @@ package com.hartwig.hmftools.serve.sources.iclusion;
 
 import java.util.List;
 import java.util.Set;
+import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
@@ -22,6 +23,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class ActionableTrialFactory {
+    private static final String DELIMITER = ",";
 
     private static final Logger LOGGER = LogManager.getLogger(ActionableTrialFactory.class);
 
@@ -33,7 +35,17 @@ public class ActionableTrialFactory {
     }
 
     @NotNull
+    private static String urlsToString(@NotNull Set<String> urls) {
+        StringJoiner joiner = new StringJoiner(DELIMITER);
+        for (String url : urls) {
+            joiner.add(url);
+        }
+        return joiner.toString();
+    }
+
+    @NotNull
     public List<ActionableTrial> toActionableTrials(@NotNull IclusionTrial trial, @NotNull String rawInput) {
+        Set<TumorLocationBlacklisting> tumorLocationBlacklistings = Sets.newHashSet();
         ImmutableActionableTrial.Builder actionableBuilder = ImmutableActionableTrial.builder()
                 .rawInput(rawInput)
                 .source(Knowledgebase.ICLUSION)
@@ -44,6 +56,35 @@ public class ActionableTrialFactory {
                 .urls(Sets.newHashSet("https://trial-eye.com/hmf/" + trial.id()));
 
         List<ActionableTrial> actionableTrials = Lists.newArrayList();
+        Set<String> blacklistTumorLocations = Sets.newHashSet();
+        Set<String> blacklistedDoids = Sets.newHashSet();
+        for (IclusionTumorLocation blacklistTumorLocation : trial.blacklistedTumorLocations()) {
+            List<String> blacklistDoids = blacklistTumorLocation.doids();
+            blacklistTumorLocations.add(blacklistTumorLocation.primaryTumorLocation());
+            if (blacklistDoids.isEmpty()) {
+                Set<String> manualDoidsBlacklist =
+                        missingDoidLookup.lookupDoidsForCancerType(blacklistTumorLocation.primaryTumorLocation());
+                if (manualDoidsBlacklist == null) {
+                    LOGGER.warn("No doids could be derived for iClusion primary tumor location '{}'",
+                            blacklistTumorLocation.primaryTumorLocation());
+                } else {
+                    LOGGER.debug("Resolved doids to '{}' for iClusion primary tumor location '{}'",
+                            manualDoidsBlacklist,
+                            blacklistTumorLocation.primaryTumorLocation());
+                    blacklistDoids = Lists.newArrayList(manualDoidsBlacklist.iterator());
+                }
+            }
+            for (String doid : blacklistDoids) {
+                String doidCorrected = extractDoid(doid);
+                blacklistedDoids.add(doidCorrected);
+            }
+        }
+
+        tumorLocationBlacklistings.add(ImmutableTumorLocationBlacklisting.builder()
+                .blacklistCancerType(urlsToString(blacklistTumorLocations))
+                .blacklistedDoid(urlsToString(blacklistedDoids))
+                .build());
+
         for (IclusionTumorLocation tumorLocation : trial.tumorLocations()) {
             List<String> doids = tumorLocation.doids();
             if (doids.isEmpty()) {
@@ -59,10 +100,10 @@ public class ActionableTrialFactory {
             }
             for (String doid : doids) {
                 String doidCorrected = extractDoid(doid);
-                Set<TumorLocationBlacklisting> tumorLocationBlacklistings = Sets.newHashSet();
+
                 tumorLocationBlacklistings.add(ImmutableTumorLocationBlacklisting.builder()
-                        .blacklistCancerType(doid.equals("162") ? "Hematologic cancer": Strings.EMPTY)
-                        .blacklistedDoid(doid.equals("162") ? "2531": Strings.EMPTY)
+                        .blacklistCancerType(doidCorrected.equals("162") ? "Hematologic cancer" : Strings.EMPTY)
+                        .blacklistedDoid(doidCorrected.equals("162") ? "2531" : Strings.EMPTY)
                         .build());
                 String tumorLocationBlacklist = TumorLocationBlacklist.extractTumorLocationBlacklisting(tumorLocationBlacklistings);
                 String tumorLocationBlacklistDoid = TumorLocationBlacklist.extractTumorLocationDoid(tumorLocationBlacklistings);
@@ -74,8 +115,6 @@ public class ActionableTrialFactory {
                         .build());
             }
         }
-
-        //TODO implement extraction blacklisted tumorLocation from API?
 
         return actionableTrials;
     }
