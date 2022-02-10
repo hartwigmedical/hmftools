@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 public final class IclusionExtractorFactory {
 
     // For iClusion we want to deal with any driver inconsistency!
-    private static final String DEAL_WITH_DRIVER_INCONSISTENCIES_MODE = "ignore";
+    private static final String DEAL_WITH_DRIVER_INCONSISTENCIES_MODE = "filter";
 
     private IclusionExtractorFactory() {
     }

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.serve.extraction.catalog;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -17,7 +18,7 @@ public class DealWithDriverInconsistentModeAnnotationTest {
         DealWithDriverInconsistentModeAnnotation annotationIgnore =
                 DealWithDriverInconsistentModeAnnotation.extractDealWithDriverInconsistentMode("ignore");
         assertEquals(DealWithDriverInconsistentModeAnnotation.IGNORE, annotationIgnore);
-        assertTrue(DealWithDriverInconsistentModeAnnotation.IGNORE.logging());
+        assertFalse(DealWithDriverInconsistentModeAnnotation.IGNORE.logging());
 
         DealWithDriverInconsistentModeAnnotation annotationWarnOnly =
                 DealWithDriverInconsistentModeAnnotation.extractDealWithDriverInconsistentMode("warn_only");

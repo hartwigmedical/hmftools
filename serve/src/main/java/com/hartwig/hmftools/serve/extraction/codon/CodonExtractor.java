@@ -40,7 +40,8 @@ public class CodonExtractor {
     private final List<DriverGene> driverGenes;
 
     public CodonExtractor(@NotNull final GeneChecker geneChecker, @NotNull final MutationTypeFilterAlgo mutationTypeFilterAlgo,
-            @NotNull final EnsemblDataCache ensemblDataCache, @NotNull final DealWithDriverInconsistentModeAnnotation dealWithDriverInconsistentModeAnnotation,
+            @NotNull final EnsemblDataCache ensemblDataCache,
+            @NotNull final DealWithDriverInconsistentModeAnnotation dealWithDriverInconsistentModeAnnotation,
             @NotNull final List<DriverGene> driverGenes) {
         this.geneChecker = geneChecker;
         this.mutationTypeFilterAlgo = mutationTypeFilterAlgo;
@@ -64,17 +65,23 @@ public class CodonExtractor {
             @NotNull String event) {
         if (type == EventType.CODON && geneChecker.isValidGene(gene)) {
             DriverCategory driverCategory = findByGene(driverGenes, gene);
-            if (DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithDriverInconsistentModeAnnotation)) {
+            if (!DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithDriverInconsistentModeAnnotation)) {
                 if (driverCategory != null) {
-
-                } else {
-
+                    if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
+                            DealWithDriverInconsistentModeAnnotation.WARN_ONLY)) {
+                        LOGGER.warn("{} on {} is not included in driver catalog and won't ever be reported.", type, gene);
+                    } else if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
+                            DealWithDriverInconsistentModeAnnotation.FILTER)) {
+                        LOGGER.info("{} on {} is not included in driver catalog and won't ever be reported.", type, gene);
+                        return null;
+                    }
                 }
             } else {
-                if (driverCategory != null) {
-
-                } else {
-                    return null;
+                if (driverCategory == null) {
+                    if (dealWithDriverInconsistentModeAnnotation.logging()) {
+                        LOGGER.warn("{} on {} is not included in driver catalog and won't ever be reported.", type, gene);
+                        return null;
+                    }
                 }
             }
 

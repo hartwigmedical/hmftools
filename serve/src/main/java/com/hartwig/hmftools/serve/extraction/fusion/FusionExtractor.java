@@ -9,6 +9,8 @@ import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.extraction.catalog.DealWithDriverInconsistentMode;
 import com.hartwig.hmftools.serve.extraction.catalog.DealWithDriverInconsistentModeAnnotation;
+import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
+import com.hartwig.hmftools.serve.extraction.gene.ImmutableGeneLevelAnnotation;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 
 import org.apache.commons.compress.utils.Lists;
@@ -172,11 +174,14 @@ public class FusionExtractor {
     @Nullable
     private KnownFusionPair fromConfiguredPair(@NotNull KnownFusionPair configuredPair, @NotNull String gene) {
         KnownFusionPair pair = ImmutableKnownFusionPair.builder().from(configuredPair).build();
-        pair = validate(pair);
-        if (!pair.geneUp().equals(gene) || !pair.geneDown().equals(gene)) {
-            LOGGER.warn("Preconfigured fusion '{}' does not match on gene level: {}", configuredPair, gene);
-            return null;
+        KnownFusionPair pairValidated = validate(pair);
+        if (pairValidated != null) {
+            if (!pairValidated.geneUp().equals(gene) || !pairValidated.geneDown().equals(gene)) {
+                LOGGER.warn("Preconfigured fusion '{}' does not match on gene level: {}", configuredPair, gene);
+                return null;
+            }
         }
+
 
         return pair;
     }
@@ -188,12 +193,17 @@ public class FusionExtractor {
         }
 
         if (geneChecker.isValidGene(pair.geneUp()) && geneChecker.isValidGene(pair.geneDown())) {
-            if (DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithDriverInconsistentModeAnnotation)) {
+            if (!DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithDriverInconsistentModeAnnotation)) {
                 if (!isIncludedSomewhereInFusionCache(pair.geneUp(), pair.geneDown())) {
-                    if (dealWithDriverInconsistentModeAnnotation.logging()) {
+                    if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
+                            DealWithDriverInconsistentModeAnnotation.WARN_ONLY)) {
+                        LOGGER.warn("Fusion '{}-{}' is not part of the known fusion cache", pair.geneUp(), pair.geneDown());
+                        return pair;
+                    } else if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
+                            DealWithDriverInconsistentModeAnnotation.FILTER)) {
                         LOGGER.info("Fusion '{}-{}' is not part of the known fusion cache", pair.geneUp(), pair.geneDown());
+                        return null;
                     }
-                    return pair;
                 } else {
                     return pair;
                 }
@@ -206,10 +216,10 @@ public class FusionExtractor {
                 } else {
                     return pair;
                 }
+
             }
-        } else {
-            return null;
         }
+        return null;
     }
 
     private boolean isIncludedSomewhereInFusionCache(@NotNull String fiveGene, @NotNull String threeGene) {
