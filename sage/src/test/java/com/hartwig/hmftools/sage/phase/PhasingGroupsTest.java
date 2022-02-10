@@ -335,6 +335,10 @@ public class PhasingGroupsTest
         var5.tumorReadCounters().get(0).addLocalPhaseSet(3, 10, 0);
         var5.tumorReadCounters().get(0).addLocalPhaseSet(4, 5, 0);
         var5.tumorReadCounters().get(0).addLocalPhaseSet(5, 1, 0);
+
+        // a group which is a subset and with less < 25% RCs
+        var5.tumorReadCounters().get(0).addLocalPhaseSet(7, 1, 0);
+
         variants.add(var5);
 
         SageVariant var6 = createVariant(16);
@@ -349,12 +353,17 @@ public class PhasingGroupsTest
 
         SageVariant var8 = createVariant(18);
         var8.tumorReadCounters().get(0).addLocalPhaseSet(5, 1, 0);
-        var8.tumorReadCounters().get(0).addLocalPhaseSet(6, 1, 0);
+        var8.tumorReadCounters().get(0).addLocalPhaseSet(6, 10, 0);
         var8.filters().add(MAX_GERMLINE_VAF.toString());
         variants.add(var8);
 
+        SageVariant var9 = createVariant(19);
+        var9.tumorReadCounters().get(0).addLocalPhaseSet(7, 1, 0);
+        var9.filters().add(MAX_GERMLINE_VAF.toString());
+        variants.add(var9);
+
         variants.stream().filter(x -> x.isPassing()).forEach(x -> x.localPhaseSets().stream().forEach(y -> passingPhaseSets.add(y)));
-        assertEquals(6, passingPhaseSets.size());
+        assertEquals(7, passingPhaseSets.size());
 
         removeUninformativeLps(variants, passingPhaseSets);
 
@@ -373,11 +382,13 @@ public class PhasingGroupsTest
 
         assertFalse(var4.hasMatchingLps(5));
         assertFalse(var5.hasMatchingLps(5));
-        assertFalse(var8.hasMatchingLps(5));
+        assertFalse(var9.hasMatchingLps(5));
 
         assertTrue(var1.hasMatchingLps(6));
         assertTrue(var4.hasMatchingLps(6));
-        assertTrue(var8.hasMatchingLps(6));
+
+        assertFalse(var5.hasMatchingLps(7));
+        assertFalse(var9.hasLocalPhaseSets());
     }
 
     private List<PhasedVariantGroup> getPhasedGroups()

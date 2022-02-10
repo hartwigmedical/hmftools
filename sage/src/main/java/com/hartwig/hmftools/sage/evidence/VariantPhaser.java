@@ -34,8 +34,10 @@ public class VariantPhaser
 
     private final List<PerformanceCounter> mPerfCounters;
 
-    public static final int INITIAL_MIN_READ_COUNT = 1;
-    public static final int FINAL_MIN_READ_COUNT = 2;
+    private static final int INITIAL_MIN_READ_COUNT = 1;
+    private static final int FINAL_MIN_READ_COUNT = 2;
+    private static final double SUBSET_READ_COUNT_LIMIT = 0.25;
+
     public static final int PC_PHASE_READS = 0;
     public static final int PC_FORM_LPS = 1;
 
@@ -528,6 +530,41 @@ public class VariantPhaser
             {
                 int maxId = maxLpsId;
                 matchedVariantsLpsIds.stream().filter(x -> x != maxId).forEach(x -> uninformativeLpsIds.add(x));
+            }
+        }
+
+        // and filter any subsets of PASS variants with <25% read support of a superset of PASS variants
+        for(Map.Entry<Integer,List<SageVariant>> entry : lpsVariantsMap.entrySet())
+        {
+            Integer lpsId = entry.getKey();
+
+            if(uninformativeLpsIds.contains(lpsId))
+                continue;
+
+            List<SageVariant> passingVariants = lpsPassingVariantsMap.get(lpsId);
+
+            int readCount = passingVariants.get(0).getLpsReadCount(lpsId);
+
+            // look for superset of these passing variants
+            for(Map.Entry<Integer, List<SageVariant>> entry2 : lpsVariantsMap.entrySet())
+            {
+                Integer otherLpsId = entry2.getKey();
+
+                if(otherLpsId == lpsId || uninformativeLpsIds.contains(otherLpsId))
+                    continue;
+
+                List<SageVariant> otherPassingVariants = lpsPassingVariantsMap.get(otherLpsId);
+
+                if(otherPassingVariants.size() > passingVariants.size() && passingVariants.stream().allMatch(x -> otherPassingVariants.contains(x)))
+                {
+                    // is a subset
+                    int otherReadCount = otherPassingVariants.get(0).getLpsReadCount(otherLpsId);
+                    if(readCount < otherReadCount * SUBSET_READ_COUNT_LIMIT)
+                    {
+                        uninformativeLpsIds.add(lpsId);
+                        break;
+                    }
+                }
             }
         }
 
