@@ -45,7 +45,8 @@ public class GenomicAnalyzer {
     }
 
     @NotNull
-    public GenomicAnalysis run(@NotNull String tumorSampleId, @Nullable String referenceSampleId, @NotNull PatientReporterConfig config,
+    public GenomicAnalysis run(@NotNull String tumorSampleId, @NotNull String tumorSampleBarcode,
+            @Nullable String referenceSampleId, @Nullable String referenceSampleBarcode, @NotNull PatientReporterConfig config,
             @NotNull LimsGermlineReportingLevel germlineReportingLevel) throws IOException {
         PurpleData purpleData = PurpleDataLoader.load(tumorSampleId,
                 referenceSampleId,
@@ -57,7 +58,9 @@ public class GenomicAnalyzer {
                 config.purpleGermlineVariantVcf(),
                 null,
                 config.purpleSomaticCopyNumberTsv(),
-                config.refGenomeVersion());
+                config.refGenomeVersion(),
+                tumorSampleBarcode,
+                referenceSampleBarcode);
 
         LinxData linxData = LinxDataLoader.load(config.linxFusionTsv(),
                 config.linxBreakendTsv(),
