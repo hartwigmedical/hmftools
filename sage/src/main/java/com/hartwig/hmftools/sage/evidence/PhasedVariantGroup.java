@@ -6,6 +6,7 @@ import static java.lang.Math.sin;
 
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -232,7 +233,6 @@ public class PhasedVariantGroup
         mPosVariantMin = minPosition(PositiveReadCounters, true);
         mPosVariantMax = maxPosition(PositiveReadCounters, true);
 
-        // other.PositiveReadCounters.stream().filter(x -> !PositiveReadCounters.contains(x)).forEach(x -> PositiveReadCounters.add(x));
         mergeNegatives(other.NegativeReadCounters);
 
         mMergedIds.add(other.Id);
@@ -270,6 +270,14 @@ public class PhasedVariantGroup
         StringJoiner sj = new StringJoiner(";");
         mMergedIds.forEach(x -> sj.add(String.valueOf(x)));
         return sj.toString();
+    }
+
+    public static class PhasedGroupComparator implements Comparator<PhasedVariantGroup>
+    {
+        public int compare(final PhasedVariantGroup first, final PhasedVariantGroup second)
+        {
+            return first.posVariantMin() - second.posVariantMax();
+        }
     }
 
     public String toString()

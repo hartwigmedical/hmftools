@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.evidence.PhasedVariantGroup.maxPosition;
 import static com.hartwig.hmftools.sage.evidence.PhasedVariantGroup.minPosition;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,8 +29,8 @@ public class VariantPhaser
     private boolean mLogData;
     private ChrBaseRegion mRegion; // only for logging
 
-    private final List<PhasedVariantGroup> mPhasedGroups; // order by position of the lowest variant
-    private int mCurrentIndex;
+    private final List<PhasedGroupCollection> mPhasedGroupCollections; // order by position of the lowest variant
+    private int mNextGroupId;
 
     private final List<PerformanceCounter> mPerfCounters;
 
@@ -45,23 +44,24 @@ public class VariantPhaser
         mPhaseSetCounter = phaseSetCounter;
         mLogData = false;
 
-        mPhasedGroups = Lists.newArrayList();
-        mCurrentIndex = 0;
+        mPhasedGroupCollections = Lists.newArrayList();
+        mNextGroupId = 0;
 
         mPerfCounters = Lists.newArrayList();
         mPerfCounters.add(new PerformanceCounter("PhaseReads"));
         mPerfCounters.add(new PerformanceCounter("FormLPS"));
     }
 
-    public List<PhasedVariantGroup> getPhasedGroups() { return mPhasedGroups; }
+    public List<PhasedGroupCollection> getPhasedCollections() { return mPhasedGroupCollections; }
     public List<PerformanceCounter> getPerfCounters() { return mPerfCounters; }
+    public ChrBaseRegion region() { return mRegion; }
 
     public void initialise(final ChrBaseRegion region, boolean logData)
     {
         mRegion = region;
         mLogData = logData;
-        mPhasedGroups.clear();
-        mCurrentIndex = 0;
+        mPhasedGroupCollections.clear();
+        mNextGroupId = 0;
 
         mPerfCounters.get(PC_PHASE_READS).start();
         mPerfCounters.get(PC_PHASE_READS).pause();
@@ -83,114 +83,46 @@ public class VariantPhaser
         int posVarMin = minPosition(posCounters, true);
         int posVarMax = maxPosition(posCounters, true);
 
-        if(mPhasedGroups.isEmpty())
-        {
-            mPhasedGroups.add(new PhasedVariantGroup(mPhasedGroups.size(), posVarMin, posVarMax, posCounters, negCounters));
-            return;
-        }
+        int variantMin = !negCounters.isEmpty() ? min(posVarMin, minPosition(negCounters, true)) : posVarMin;
+        int variantMax = !negCounters.isEmpty() ? max(posVarMax, maxPosition(negCounters, true)) : posVarMax;
 
-        int index = mCurrentIndex;
-
-        PhasedVariantGroup currentPhasedGroup = mPhasedGroups.get(index);
-
-        boolean searchBackwards;
-
-        if(posVarMin > currentPhasedGroup.posVariantMin())
+        // assign collections of variants to non-overlapping collections for subsequent comparison efficiency
+        int index = 0;
+        while(index < mPhasedGroupCollections.size())
         {
-            searchBackwards = false;
-        }
-        else if(posVarMin < currentPhasedGroup.posVariantMin())
-        {
-            searchBackwards = true;
-        }
-        else
-        {
-            // may not be the first the the matching groups at this position, in which case move to the last matching
-            searchBackwards = true;
-            while(posVarMin == mPhasedGroups.get(index).posVariantMin())
+            PhasedGroupCollection collection = mPhasedGroupCollections.get(index);
+            if(collection.positionsOverlap(variantMin, variantMax))
             {
-                if(index == mPhasedGroups.size() - 1)
-                    break;
-
-                index++;
-            }
-        }
-
-        boolean matchFound = false;
-
-        if(searchBackwards)
-        {
-            while(index >= 0)
-            {
-                PhasedVariantGroup phasedGroup = mPhasedGroups.get(index);
-
-                if(phasedGroup.posVariantMin() < posVarMin)
+                if(collection.addPhaseVariants(posVarMin, posVarMax, mNextGroupId, posCounters, negCounters))
                 {
-                    ++index;
-                    break;
-                }
+                    ++mNextGroupId;
 
-                if(phasedGroup.posVariantMin() == posVarMin)
-                {
-                    // test for an exact match
-                    if(phasedGroup.exactMatch(posVarMin, posVarMax, posCounters, negCounters))
+                    // check for a merge with the next collection
+                    if(index < mPhasedGroupCollections.size() - 1)
                     {
-                        phasedGroup.ReadCount++;
-                        phasedGroup.mergeNegatives(negCounters);
-                        matchFound = true;
-                        break;
+                        PhasedGroupCollection nextCollection = mPhasedGroupCollections.get(index + 1);
+                        if(collection.positionsOverlap(nextCollection.minPosition(), nextCollection.maxPosition()))
+                        {
+                            collection.merge(nextCollection);
+                            mPhasedGroupCollections.remove(index + 1);
+                        }
                     }
                 }
 
-                index--;
-
-                if(index < 0)
-                {
-                    index = 0;
-                    break;
-                }
+                return;
             }
-        }
-        else
-        {
-            while(index < mPhasedGroups.size())
+            else if(variantMax < collection.minPosition())
             {
-                PhasedVariantGroup phasedGroup = mPhasedGroups.get(index);
-
-                if(posVarMin < phasedGroup.posVariantMin())
-                    break;
-
-                if(phasedGroup.posVariantMin() == posVarMin)
-                {
-                    // test for an exact match
-                    if(phasedGroup.exactMatch(posVarMin, posVarMax, posCounters, negCounters))
-                    {
-                        phasedGroup.ReadCount++;
-                        phasedGroup.mergeNegatives(negCounters);
-                        matchFound = true;
-                        break;
-                    }
-                }
-
-                index++;
+                break;
             }
+
+            ++index;
         }
 
-        mCurrentIndex = index;
-
-        if(matchFound)
-            return;
-
-        if(index > 0 && index < mPhasedGroups.size() - 1)
-        {
-            if(posVarMin < mPhasedGroups.get(index - 1).posVariantMin() || posVarMin > mPhasedGroups.get(index + 1).posVariantMin())
-            {
-                SG_LOGGER.error("region({}) invalid pos() insertion at index({}) groups({})",
-                        mRegion, posVarMin, index, mPhasedGroups.size());
-            }
-        }
-
-        mPhasedGroups.add(index, new PhasedVariantGroup(mPhasedGroups.size(), posVarMin, posVarMax, posCounters, negCounters));
+        PhasedGroupCollection collection = new PhasedGroupCollection();
+        collection.addPhaseVariants(posVarMin, posVarMax, mNextGroupId, posCounters, negCounters);
+        ++mNextGroupId;
+        mPhasedGroupCollections.add(collection);
     }
 
     public void assignLocalPhaseSets(final Set<ReadContextCounter> passingCounters, final Set<ReadContextCounter> validCounters)
@@ -211,51 +143,56 @@ public class VariantPhaser
         }
         */
 
-        int startCount = mPhasedGroups.size();
+        int startCount = mNextGroupId;
 
-        List<PhasedVariantGroup> filteredGroups = applyInitialFilters(passingCounters, validCounters);
+        boolean hasGroups = applyInitialFilters(passingCounters, validCounters);
 
-        mPhasedGroups.clear();
-
-        if(filteredGroups.isEmpty())
+        if(!hasGroups)
             return;
 
         mPerfCounters.get(PC_FORM_LPS).start();
 
-        int startFilteredCount = filteredGroups.size();
+        int startFilteredCount = mPhasedGroupCollections.stream().mapToInt(x -> x.groups().size()).sum();
 
         if(mLogData)
-            logPhasedReadCounters(filteredGroups, "INITIAL");
+        {
+            List<PhasedVariantGroup> phasedGroups = Lists.newArrayList();
+            mPhasedGroupCollections.forEach(x -> phasedGroups.addAll(x.groups()));
+            logPhasedReadCounters(phasedGroups, "INITIAL");
+        }
 
-        mergeGroups(filteredGroups);
+        mergeGroups();
+
+        List<PhasedVariantGroup> finalPhasedGroups = Lists.newArrayList();
+        mPhasedGroupCollections.forEach(x -> finalPhasedGroups.addAll(x.groups()));
 
         if(mLogData)
-            logPhasedReadCounters(mPhasedGroups, "FINAL");
+        {
+            logPhasedReadCounters(finalPhasedGroups, "FINAL");
+        }
 
         int assignedLps = 0;
         Set<ReadContextCounter> uniqueRCs = mLogData && SG_LOGGER.isTraceEnabled() ? Sets.newHashSet() : null;
 
-        for(PhasedVariantGroup phasedGroup : mPhasedGroups)
+        for(PhasedVariantGroup group : finalPhasedGroups)
         {
-            if(phasedGroup.ReadCount + phasedGroup.AllocatedReadCount < FINAL_MIN_READ_COUNT)
+            if(group.ReadCount + group.AllocatedReadCount < FINAL_MIN_READ_COUNT)
                 continue;
 
             int nextLps = mPhaseSetCounter.getNext();
-            phasedGroup.PositiveReadCounters.forEach(x -> x.addLocalPhaseSet(nextLps, phasedGroup.ReadCount, phasedGroup.AllocatedReadCount));
+            group.PositiveReadCounters.forEach(x -> x.addLocalPhaseSet(nextLps, group.ReadCount, group.AllocatedReadCount));
             ++assignedLps;
 
             if(uniqueRCs != null)
             {
-                phasedGroup.PositiveReadCounters.forEach(x -> uniqueRCs.add(x));
-                phasedGroup.NegativeReadCounters.forEach(x -> uniqueRCs.add(x));
+                group.PositiveReadCounters.forEach(x -> uniqueRCs.add(x));
+                group.NegativeReadCounters.forEach(x -> uniqueRCs.add(x));
             }
         }
 
         SG_LOGGER.trace("region({}) phasing groups start({} filtered={}) postMerge({}) assigned({}) rc(pass={} valid={} uniqueRCs={})",
-                mRegion, startCount, startFilteredCount, mPhasedGroups.size(), assignedLps,
+                mRegion, startCount, startFilteredCount, finalPhasedGroups.size(), assignedLps,
                 passingCounters.size(), validCounters.size(), uniqueRCs != null ? uniqueRCs.size() : 0);
-
-        mPhasedGroups.clear();
 
         mPerfCounters.get(PC_FORM_LPS).stop();
 
@@ -266,136 +203,125 @@ public class VariantPhaser
             if(lastTime > 0.5)
             {
                 SG_LOGGER.debug("region({}) phasing groups start({} filtered={}) postMerge({}) assigned({}) rc(pass={} valid={}) time({})",
-                        mRegion, startCount, startFilteredCount, mPhasedGroups.size(), assignedLps,
+                        mRegion, startCount, startFilteredCount, finalPhasedGroups.size(), assignedLps,
                         passingCounters.size(), validCounters.size(), lastTime);
             }
         }
     }
 
-    private List<PhasedVariantGroup> applyInitialFilters(
+    private boolean applyInitialFilters(
             final Set<ReadContextCounter> passingReadCounters, final Set<ReadContextCounter> validCounters)
     {
-        List<PhasedVariantGroup> filteredGroups = Lists.newArrayList();
-
+        // returns true if a group has variants left after filtering
         if(passingReadCounters.isEmpty())
-            return filteredGroups;
+            return false;
 
-        for(PhasedVariantGroup phasedGroup : mPhasedGroups)
+        boolean hasGroups = false;
+
+        for(PhasedGroupCollection collection : mPhasedGroupCollections)
         {
-            if(phasedGroup.ReadCount < INITIAL_MIN_READ_COUNT)
-                continue;
-
-            if(phasedGroup.PositiveReadCounters.stream().noneMatch(y -> passingReadCounters.contains(y)))
-                continue;
-
-            if(phasedGroup.cullReadCounters(validCounters))
-            {
-                if(!phasedGroup.isValid())
-                    continue;
-            }
-
-            filteredGroups.add(phasedGroup);
-        }
-
-        return filteredGroups;
-    }
-
-    public void mergeGroups(final List<PhasedVariantGroup> filteredGroups)
-    {
-        /* merge groups by the following rules:
-            - if a group has only matching positive read-counters (ie not a subset of any other group), then merge them all
-            -
-
-        then:
-            - filter for LPS support > X
-            - remove any uninformative LPS (ie LPS has 1+ variant and is the only LPS that includes that variant).
-        */
-
-        // break groups into non-overlapping collections
-        while(!filteredGroups.isEmpty())
-        {
-            List<PhasedVariantGroup> overlappingGroups = Lists.newArrayList(filteredGroups.get(0));
-            int groupMin = filteredGroups.get(0).variantMin();
-            int groupMax = filteredGroups.get(0).variantMax();
-
-            filteredGroups.remove(0);
-
             int index = 0;
-            while(index < filteredGroups.size())
+            while(index < collection.groups().size())
             {
-                PhasedVariantGroup phasedGroup = filteredGroups.get(index);
+                PhasedVariantGroup group = collection.groups().get(index);
 
-                if(positionsOverlap(groupMin, groupMax, phasedGroup.variantMin(), phasedGroup.variantMax()))
+                if(group.ReadCount < INITIAL_MIN_READ_COUNT)
                 {
-                    groupMin = min(groupMin, phasedGroup.variantMin());
-                    groupMax = max(groupMax, phasedGroup.variantMax());
-                    overlappingGroups.add(phasedGroup);
-                    filteredGroups.remove(index);
+                    collection.groups().remove(index);
+                    continue;
                 }
-                else
+
+                if(group.PositiveReadCounters.stream().noneMatch(y -> passingReadCounters.contains(y)))
                 {
-                    ++index;
+                    collection.groups().remove(index);
+                    continue;
                 }
+
+                if(group.cullReadCounters(validCounters) && !group.isValid())
+                {
+                    collection.groups().remove(index);
+                    continue;
+                }
+
+                ++index;
             }
 
+            hasGroups |= !collection.groups().isEmpty();
+        }
+
+        return hasGroups;
+    }
+
+    public void mergeGroups()
+    {
+        // reduce groups to minimum set of information local phase sets by merging:
+        // groups with matching positives, non-conflicting negatives and not subsets of other groups
+        // extending groups with common overlaps if only one group extends either up or down
+        // removing uninformative groups
+
+        for(PhasedGroupCollection collection : mPhasedGroupCollections)
+        {
             // then apply merging rules within these overlapping groups
-            mergeMatching(overlappingGroups);
+            mergeMatching(collection.groups());
 
-            mergeByExtension(overlappingGroups);
+            mergeByExtension(collection.groups());
 
-            mergeUninformative(overlappingGroups);
+            mergeUninformative(collection.groups());
 
-            mergeByExtension(overlappingGroups);
-
-            mPhasedGroups.addAll(overlappingGroups);
+            mergeByExtension(collection.groups());
         }
     }
 
-    private void mergeMatching(final List<PhasedVariantGroup> filteredGroups)
+    public static void mergeMatching(final List<PhasedVariantGroup> filteredGroups)
     {
+        // merge groups with matching positives, non-conflicting negatives and not subsets of other groups
         if(filteredGroups.size() < 2)
             return;
 
-        Set<PhasedVariantGroup> removedGroups = Sets.newHashSet();
-
-        for(PhasedVariantGroup phasedGroup : filteredGroups)
+        int i = 0;
+        while(i < filteredGroups.size())
         {
-            if(removedGroups.contains(phasedGroup))
-                continue;
+            PhasedVariantGroup group = filteredGroups.get(i);
 
             // find groups which have matching +ves and aren't subsets of any other group
-            List<PhasedVariantGroup> superGroups = filteredGroups.stream()
-                    .filter(x -> x != phasedGroup)
-                    .filter(x -> !removedGroups.contains(x))
-                    .filter(x -> phasedGroup.positionsOverlap(x))
-                    .filter(x -> phasedGroup.isSubsetOf(x))
-                    .collect(Collectors.toList());
+            List<PhasedVariantGroup> superGroups = Lists.newArrayList();
+
+            for(int j = i + 1; j < filteredGroups.size(); ++j)
+            {
+                PhasedVariantGroup otherGroup = filteredGroups.get(j);
+
+                if(group.positionsOverlap(otherGroup) && group.isSubsetOf(otherGroup))
+                    superGroups.add(otherGroup);
+            }
 
             if(superGroups.isEmpty())
             {
-                // remove any group with a single variant not present as a +ve in another group
-                if(phasedGroup.PositiveReadCounters.size() == 1)
-                    removedGroups.add(phasedGroup);
-
-                continue;
-            }
-
-            if(superGroups.stream().noneMatch(x -> x.PositiveReadCounters.size() > phasedGroup.PositiveReadCounters.size()))
-            {
-                // collapse the groups into this one
-                for(PhasedVariantGroup superGroup : superGroups)
+                if(group.PositiveReadCounters.size() == 1)
                 {
-                    phasedGroup.merge(superGroup);
+                    // remove any group with a single variant not present as a +ve in another group
+                    filteredGroups.remove(group);
+                    continue;
                 }
-
-                removedGroups.addAll(superGroups);
             }
-        }
+            else
+            {
+                // if all groups have matching +ves then collapse into the current
+                if(superGroups.stream().noneMatch(x -> x.PositiveReadCounters.size() > group.PositiveReadCounters.size()))
+                {
+                    for(PhasedVariantGroup superGroup : superGroups)
+                    {
+                        group.merge(superGroup);
+                    }
 
-        removedGroups.forEach(x -> filteredGroups.remove(x));
+                    filteredGroups.removeAll(superGroups);
+                }
+            }
+
+            ++i;
+        }
     }
 
-    private void mergeByExtension(final List<PhasedVariantGroup> filteredGroups)
+    public static void mergeByExtension(final List<PhasedVariantGroup> filteredGroups)
     {
         if(filteredGroups.size() < 2)
             return;
@@ -415,31 +341,34 @@ public class VariantPhaser
 
             for(int i = 0; i < filteredGroups.size(); ++i)
             {
-                PhasedVariantGroup phasedGroup = filteredGroups.get(i);
+                PhasedVariantGroup group = filteredGroups.get(i);
 
-                if(!initialLoop && !lastModifiedGroups.contains(phasedGroup))
+                if(!initialLoop && !lastModifiedGroups.contains(group))
                     continue;
 
-                List<PhasedVariantGroup> candidateGroups = Lists.newArrayList(phasedGroup);
+                List<PhasedVariantGroup> candidateGroups = Lists.newArrayList(group);
 
                 commonPosCounters.clear();
                 commonNegCounters.clear();
 
-                for(int j = i + 1; j < filteredGroups.size(); ++j)
+                for(int j = 0; j < filteredGroups.size(); ++j)
                 {
+                    if(j == i)
+                        continue;
+
                     PhasedVariantGroup otherPhasedGroup = filteredGroups.get(j);
 
-                    if(!phasedGroup.positionsOverlap(otherPhasedGroup))
+                    if(!group.positionsOverlap(otherPhasedGroup))
                         continue;
 
                     if(commonPosCounters.isEmpty())
                     {
-                        if(!phasedGroup.populateCommon(otherPhasedGroup, commonPosCounters, commonNegCounters))
+                        if(!group.populateCommon(otherPhasedGroup, commonPosCounters, commonNegCounters))
                             continue;
 
                         candidateGroups.add(otherPhasedGroup);
                     }
-                    //else if(otherPhasedGroup.hasCommonSubset(phasedGroup, commonPosCounters, commonNegCounters))
+                    //else if(otherPhasedGroup.hasCommonSubset(group, commonPosCounters, commonNegCounters))
                     else if(candidateGroups.stream().allMatch(x -> otherPhasedGroup.hasCommonSubset(x, commonPosCounters, commonNegCounters)))
                     {
                         candidateGroups.add(otherPhasedGroup);
@@ -488,26 +417,26 @@ public class VariantPhaser
         }
     }
 
-    private void mergeUninformative(final List<PhasedVariantGroup> filteredGroups)
+    public static void mergeUninformative(final List<PhasedVariantGroup> filteredGroups)
     {
         // finally merge any groups with the same +ves or are non-conflicting subsets of others now that supersets have been considered
         int index = 0;
         while(index < filteredGroups.size())
         {
-            PhasedVariantGroup phasedGroup = filteredGroups.get(index);
+            PhasedVariantGroup group = filteredGroups.get(index);
 
-            if(phasedGroup.PositiveReadCounters.size() == 1
-            && filteredGroups.stream().filter(x -> x != phasedGroup).noneMatch(x -> phasedGroup.isSubsetOf(x)))
+            if(group.PositiveReadCounters.size() == 1
+            && filteredGroups.stream().filter(x -> x != group).noneMatch(x -> group.isSubsetOf(x)))
             {
                 // remove any group with a single variant not present as a +ve in another group
-                filteredGroups.remove(phasedGroup);
+                filteredGroups.remove(group);
                 continue;
             }
 
             // find groups which have matching +ves and aren't subsets of any other group
             List<PhasedVariantGroup> matchingGroups = filteredGroups.stream()
-                    .filter(x -> x != phasedGroup)
-                    .filter(x -> phasedGroup.positivesMatch(x) || x.isSubsetOf(phasedGroup))
+                    .filter(x -> x != group)
+                    .filter(x -> group.positivesMatch(x) || x.isSubsetOf(group))
                     .collect(Collectors.toList());
 
             if(!matchingGroups.isEmpty())
@@ -515,7 +444,7 @@ public class VariantPhaser
                 // collapse the groups into this one
                 for(PhasedVariantGroup otherGroup : matchingGroups)
                 {
-                    phasedGroup.merge(otherGroup);
+                    group.merge(otherGroup);
                 }
 
                 filteredGroups.removeAll(matchingGroups);
@@ -613,20 +542,20 @@ public class VariantPhaser
 
     private void logPhasedReadCounters(final List<PhasedVariantGroup> phasedGroups, final String stage)
     {
-        for(PhasedVariantGroup phasedGroup : phasedGroups)
+        for(PhasedVariantGroup group : phasedGroups)
         {
             StringJoiner posVars = new StringJoiner(";");
             StringJoiner posIds = new StringJoiner(";");
             StringJoiner negVars = new StringJoiner(";");
             StringJoiner negIds = new StringJoiner(";");
 
-            for(ReadContextCounter rc : phasedGroup.PositiveReadCounters)
+            for(ReadContextCounter rc : group.PositiveReadCounters)
             {
                 posVars.add(getReadCounterVar(rc));
                 posIds.add(String.valueOf(rc.id()));
             }
 
-            for(ReadContextCounter rc : phasedGroup.NegativeReadCounters)
+            for(ReadContextCounter rc : group.NegativeReadCounters)
             {
                 negVars.add(getReadCounterVar(rc));
                 negIds.add(String.valueOf(rc.id()));
@@ -634,8 +563,8 @@ public class VariantPhaser
 
             // Time,Stage,Id,MergedIds,PosIds,NegIds,UniqueReadCount,AllocReadCount,PosVars,NegVars
             SG_LOGGER.debug(String.format("LPS_DATA,%s,%d,%s,%s,%s,%d,%.1f,%s,%s",
-                    stage, phasedGroup.Id, phasedGroup.mergedGroupIds(), posIds, negIds,
-                    phasedGroup.ReadCount, phasedGroup.AllocatedReadCount, posVars, negVars));
+                    stage, group.Id, group.mergedGroupIds(), posIds, negIds,
+                    group.ReadCount, group.AllocatedReadCount, posVars, negVars));
         }
     }
 
@@ -643,4 +572,5 @@ public class VariantPhaser
     {
         return String.format("%d_%s>%s", rc.position(), rc.ref(), rc.alt());
     }
+
 }

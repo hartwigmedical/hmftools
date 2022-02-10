@@ -1,12 +1,14 @@
 package com.hartwig.hmftools.sage.phase;
 
 import static com.hartwig.hmftools.sage.config.SoftFilter.MAX_GERMLINE_VAF;
+import static com.hartwig.hmftools.sage.evidence.VariantPhaser.mergeByExtension;
+import static com.hartwig.hmftools.sage.evidence.VariantPhaser.mergeMatching;
+import static com.hartwig.hmftools.sage.evidence.VariantPhaser.mergeUninformative;
 import static com.hartwig.hmftools.sage.evidence.VariantPhaser.removeUninformativeLps;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertNotNull;
-import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
@@ -56,14 +58,14 @@ public class PhasingGroupsTest
         List<ReadContextCounter> negCounters = Lists.newArrayList(rc2);
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
-        assertEquals(1, mPhaser.getPhasedGroups().size());
+        assertEquals(1, getPhasedGroupCount());
 
         // negatives cannot diff
         posCounters = Lists.newArrayList(rc1);
         negCounters = Lists.newArrayList(rc2, rc3);
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
-        assertEquals(2, mPhaser.getPhasedGroups().size());
+        assertEquals(2, getPhasedGroupCount());
 
         PhasedVariantGroup group = findGroup(posCounters);
         assertNotNull(group);
@@ -74,7 +76,7 @@ public class PhasingGroupsTest
         negCounters = Lists.newArrayList(rc2);
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
-        assertEquals(3, mPhaser.getPhasedGroups().size());
+        assertEquals(3, getPhasedGroupCount());
         assertTrue(checkGroupsAreOrdered());
 
         // groups are added in order
@@ -82,50 +84,53 @@ public class PhasingGroupsTest
         negCounters = Lists.newArrayList();
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
-        assertEquals(4, mPhaser.getPhasedGroups().size());
+        assertEquals(4, getPhasedGroupCount());
         assertTrue(checkGroupsAreOrdered());
 
         posCounters = Lists.newArrayList(rc3, rc5);
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
-        assertEquals(5, mPhaser.getPhasedGroups().size());
+        assertEquals(5, getPhasedGroupCount());
         assertTrue(checkGroupsAreOrdered());
 
         posCounters = Lists.newArrayList(rc2, rc4);
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
-        assertEquals(6, mPhaser.getPhasedGroups().size());
+        assertEquals(6, getPhasedGroupCount());
         assertTrue(checkGroupsAreOrdered());
 
         posCounters = Lists.newArrayList(rc6);
         negCounters = Lists.newArrayList(rc3);
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
-        assertEquals(7, mPhaser.getPhasedGroups().size());
+        assertEquals(7, getPhasedGroupCount());
         assertTrue(checkGroupsAreOrdered());
 
         posCounters = Lists.newArrayList(rc4, rc5);
         negCounters = Lists.newArrayList();
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
-        assertEquals(8, mPhaser.getPhasedGroups().size());
+        assertEquals(8, getPhasedGroupCount());
         assertTrue(checkGroupsAreOrdered());
 
         posCounters = Lists.newArrayList(rc2, rc5);
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
-        assertEquals(9, mPhaser.getPhasedGroups().size());
+        assertEquals(9, getPhasedGroupCount());
         assertTrue(checkGroupsAreOrdered());
     }
 
+    private int getPhasedGroupCount()
+    {
+        return mPhaser.getPhasedCollections().stream().mapToInt(x -> x.groups().size()).sum();
+    }
+
     @Test
-    public void testGroupMerging()
+    public void testMergeMatching()
     {
         // scenarios:
-        // subsets allocated pro-rate to super group(s), test with subsets of subsets of super groups
+        // remove groups which only have their +ves in other groups with the same +ves
         // single-variant groups dropped if not present in another group
-        // merge of groups with common subset
-        // cannot merge if have conflicting negatives
 
         ReadContextCounter rc0 = createReadCounter(10);
         ReadContextCounter rc1 = createReadCounter(10);
@@ -140,97 +145,152 @@ public class PhasingGroupsTest
         List<ReadContextCounter> negCounters = Lists.newArrayList(rc1);
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
-        assertEquals(1, mPhaser.getPhasedGroups().size());
-        PhasedVariantGroup group0 = mPhaser.getPhasedGroups().get(mPhaser.getPhasedGroups().size() - 1);
 
-        // not super group of 1 since has conflicting negative
-        posCounters = Lists.newArrayList(rc0, rc1);
+        // matches group 0, will be merged
+        posCounters = Lists.newArrayList(rc0);
+        negCounters = Lists.newArrayList(rc1, rc2);
+        mPhaser.registeredPhasedVariants(posCounters, negCounters);
+
+        // also matches group 0, will be merged
+        posCounters = Lists.newArrayList(rc0);
         negCounters = Lists.newArrayList(rc2);
-
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
-        assertEquals(2, mPhaser.getPhasedGroups().size());
-        PhasedVariantGroup group1 = mPhaser.getPhasedGroups().get(mPhaser.getPhasedGroups().size() - 1);
 
-        // super group of 1
-        posCounters = Lists.newArrayList(rc0, rc2);
-        negCounters = Lists.newArrayList();
-
+        // distinct group and will be a subset of another
+        posCounters = Lists.newArrayList(rc1, rc2);
+        negCounters = Lists.newArrayList(rc3);
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
-        assertEquals(3, mPhaser.getPhasedGroups().size());
-        PhasedVariantGroup group2 = mPhaser.getPhasedGroups().get(mPhaser.getPhasedGroups().size() - 1);
 
-        // another super group of 1, and subgroup of 4, 5 and 6
-        posCounters = Lists.newArrayList(rc0, rc3);
-        negCounters = Lists.newArrayList();
-
+        // superset of 3
+        posCounters = Lists.newArrayList(rc1, rc2, rc4);
+        negCounters = Lists.newArrayList(rc5);
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
-        assertEquals(4, mPhaser.getPhasedGroups().size());
-        PhasedVariantGroup group3 = mPhaser.getPhasedGroups().get(mPhaser.getPhasedGroups().size() - 1);
 
-        // super group of 4
-        posCounters = Lists.newArrayList(rc0, rc3, rc4);
-        negCounters = Lists.newArrayList();
-
+        // matches group 4, will be merged
+        posCounters = Lists.newArrayList(rc1, rc2, rc4);
+        negCounters = Lists.newArrayList(rc6);
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
-        assertEquals(5, mPhaser.getPhasedGroups().size());
-        PhasedVariantGroup group4 = mPhaser.getPhasedGroups().get(mPhaser.getPhasedGroups().size() - 1);
 
-        // another super group of 4, will merge with group 5 since has common subset and no conflicts
-        posCounters = Lists.newArrayList(rc0, rc3, rc5);
-        negCounters = Lists.newArrayList();
-
+        // finally 2 groups not part of any others
+        posCounters = Lists.newArrayList(rc3);
+        negCounters = Lists.newArrayList(rc6);
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
-        assertEquals(6, mPhaser.getPhasedGroups().size());
-        PhasedVariantGroup group5 = mPhaser.getPhasedGroups().get(mPhaser.getPhasedGroups().size() - 1);
 
-        // another super group of 4 but cannot be merged with common subsets
-        posCounters = Lists.newArrayList(rc0, rc3, rc7);
-        negCounters = Lists.newArrayList(rc4, rc5);
-
-        mPhaser.registeredPhasedVariants(posCounters, negCounters);
-        assertEquals(7, mPhaser.getPhasedGroups().size());
-        PhasedVariantGroup group6 = mPhaser.getPhasedGroups().get(mPhaser.getPhasedGroups().size() - 1);
-
-        // single group not present in others will be dropped
         posCounters = Lists.newArrayList(rc6);
-        negCounters = Lists.newArrayList(rc4, rc5);
-
+        negCounters = Lists.newArrayList(rc7);
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
-        assertEquals(8, mPhaser.getPhasedGroups().size());
-        PhasedVariantGroup group7 = mPhaser.getPhasedGroups().get(mPhaser.getPhasedGroups().size() - 1);
 
-        mPhaser.mergeGroups(Lists.newArrayList(mPhaser.getPhasedGroups()));
+        List<PhasedVariantGroup> groups = Lists.newArrayList(getPhasedGroups());
 
-        /* when -ves are not copied from subsets to supersets
-        assertEquals(2, mPhaser.getPhasedGroups().size());
+        assertEquals(8, groups.size());
 
-        PhasedVariantGroup group = findGroup(Lists.newArrayList(rc0, rc1, rc3, rc4, rc5));
+        mergeMatching(groups);
+        assertEquals(3, groups.size());
+
+        PhasedVariantGroup group = findGroup(Lists.newArrayList(rc0));
         assertNotNull(group);
         assertEquals(3, group.ReadCount);
-        assertEquals(1.2, group.AllocatedReadCount, 0.1);
-
-        group = findGroup(Lists.newArrayList(rc0, rc2, rc3, rc7));
-        assertNotNull(group);
-        assertEquals(2, group.ReadCount);
-        assertEquals(0.8, group.AllocatedReadCount, 0.1);
-
-        assertEquals(3, mPhaser.getPhasedGroups().size());
-
-        PhasedVariantGroup group = findGroup(Lists.newArrayList(rc0, rc3, rc4, rc5));
-        assertNotNull(group);
-        assertEquals(2, group.ReadCount);
-        assertEquals(1.2, group.AllocatedReadCount, 0.1);
-
-        group = findGroup(Lists.newArrayList(rc0, rc1));
-        assertNotNull(group);
-        assertEquals(1, group.ReadCount);
         assertEquals(0, group.AllocatedReadCount, 0.1);
 
-        group = findGroup(Lists.newArrayList(rc0, rc2, rc3, rc7));
+        group = findGroup(Lists.newArrayList(rc1, rc2));
+        assertNotNull(group);
+        assertEquals(1, group.ReadCount);
+
+        group = findGroup(Lists.newArrayList(rc1, rc2, rc4));
         assertNotNull(group);
         assertEquals(2, group.ReadCount);
-        assertEquals(0.8, group.AllocatedReadCount, 0.1);
-        */
+    }
+
+    @Test
+    public void testMergByExtension()
+    {
+        // merge any group with a common subset of +ves and -ves if it can only be extended in one direction
+        ReadContextCounter rc0 = createReadCounter(10);
+        ReadContextCounter rc1 = createReadCounter(20);
+        ReadContextCounter rc2 = createReadCounter(30);
+        ReadContextCounter rc3 = createReadCounter(40);
+        ReadContextCounter rc4 = createReadCounter(50);
+        ReadContextCounter rc5 = createReadCounter(60);
+        ReadContextCounter rc6 = createReadCounter(70);
+        // ReadContextCounter rc7 = createReadCounter(80);
+
+        // 2 sub-groups and 1 extending in either direction, results in a single group
+        List<ReadContextCounter> posCounters = Lists.newArrayList(rc2, rc5);
+        List<ReadContextCounter> negCounters = Lists.newArrayList(rc3, rc4);
+        mPhaser.registeredPhasedVariants(posCounters, negCounters);
+
+        // another sub-group
+        posCounters = Lists.newArrayList(rc2, rc5);
+        negCounters = Lists.newArrayList(rc4);
+        mPhaser.registeredPhasedVariants(posCounters, negCounters);
+
+        // extends down
+        posCounters = Lists.newArrayList(rc0, rc1, rc2, rc5);
+        negCounters = Lists.newArrayList();
+        mPhaser.registeredPhasedVariants(posCounters, negCounters);
+
+        // extends up
+        posCounters = Lists.newArrayList(rc2, rc5, rc6);
+        negCounters = Lists.newArrayList();
+        mPhaser.registeredPhasedVariants(posCounters, negCounters);
+
+        List<PhasedVariantGroup> groups = Lists.newArrayList(getPhasedGroups());
+
+        assertEquals(4, groups.size());
+
+        mergeByExtension(groups);
+        assertEquals(2, groups.size());
+
+        PhasedVariantGroup group = findGroup(Lists.newArrayList(rc0, rc1, rc2, rc5, rc6));
+        assertNotNull(group);
+        assertEquals(1, group.ReadCount);
+        assertEquals(1, group.AllocatedReadCount, 0.1);
+
+        mergeUninformative(groups);
+        assertEquals(1, groups.size());
+
+
+        // test again but with multiple options up and down preventing a merge
+        groups.clear();
+        mPhaser.initialise(mPhaser.region(), false);
+
+        // a sub-group
+        posCounters = Lists.newArrayList(rc2, rc3, rc4);
+        negCounters = Lists.newArrayList(rc4);
+        mPhaser.registeredPhasedVariants(posCounters, negCounters);
+
+        // conflicting sub-group
+        posCounters = Lists.newArrayList(rc2, rc4);
+        negCounters = Lists.newArrayList(rc3);
+        mPhaser.registeredPhasedVariants(posCounters, negCounters);
+
+        // extends down
+        posCounters = Lists.newArrayList(rc1, rc2, rc3, rc4);
+        negCounters = Lists.newArrayList();
+        mPhaser.registeredPhasedVariants(posCounters, negCounters);
+
+        // extends down again differently
+        posCounters = Lists.newArrayList(rc0, rc2, rc3, rc4);
+        negCounters = Lists.newArrayList();
+        mPhaser.registeredPhasedVariants(posCounters, negCounters);
+
+        // extends up
+        posCounters = Lists.newArrayList(rc2, rc3, rc4, rc5);
+        negCounters = Lists.newArrayList();
+        mPhaser.registeredPhasedVariants(posCounters, negCounters);
+
+        // extends up differently
+        posCounters = Lists.newArrayList(rc2, rc3, rc4, rc6);
+        negCounters = Lists.newArrayList();
+        mPhaser.registeredPhasedVariants(posCounters, negCounters);
+
+        groups = Lists.newArrayList(getPhasedGroups());
+
+        assertEquals(6, groups.size());
+
+        mergeByExtension(groups);
+
+        assertEquals(6, groups.size());
     }
 
     @Test
@@ -320,10 +380,16 @@ public class PhasingGroupsTest
         assertTrue(var8.hasMatchingLps(6));
     }
 
+    private List<PhasedVariantGroup> getPhasedGroups()
+    {
+        List<PhasedVariantGroup> phasedGroups = Lists.newArrayList();
+        mPhaser.getPhasedCollections().forEach(x -> phasedGroups.addAll(x.groups()));
+        return phasedGroups;
+    }
 
     private PhasedVariantGroup findGroup(final List<ReadContextCounter> posCounters)
     {
-        return mPhaser.getPhasedGroups().stream()
+        return getPhasedGroups().stream()
                 .filter(x -> x.PositiveReadCounters.size() == posCounters.size())
                 .filter(x -> x.PositiveReadCounters.stream().allMatch(y -> posCounters.contains(y)))
                 .findFirst().orElse(null);
@@ -331,10 +397,12 @@ public class PhasingGroupsTest
 
     private boolean checkGroupsAreOrdered()
     {
-        for(int i = 0; i < mPhaser.getPhasedGroups().size() - 1; ++i)
+        List<PhasedVariantGroup> groups = getPhasedGroups();
+
+        for(int i = 0; i < groups.size() - 1; ++i)
         {
-            PhasedVariantGroup current = mPhaser.getPhasedGroups().get(i);
-            PhasedVariantGroup next = mPhaser.getPhasedGroups().get(i + 1);
+            PhasedVariantGroup current = groups.get(i);
+            PhasedVariantGroup next = groups.get(i + 1);
 
             if(next.posVariantMin() < current.posVariantMin())
                 return false;
