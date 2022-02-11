@@ -116,7 +116,7 @@ Chromosome | Start Position | End Position
 10 | 42527000 | 42531000
 10 | 42596000 | 42601000
 10 | 135523000 | 135526000
-12 | 94000 | 97000
+12 | 92000 | 97000
 12 | 133841000 | 133843000
 15 | 102520000 | 102522000
 18 | 9000 | 12000
@@ -136,18 +136,16 @@ The outputs of TEAL is a 'telbam' file (ie a bam restricted to fragments where a
 ### Telomeric Length and content
 Column | Description
 --|--
-SampleId | Unique Id of sample
-Type | ‘Tumor’ or ‘Ref’
 Purity | From PURPLE (=1 for ref)
 Ploidy | From PURPLE (=2 for ref)
 GC50ReadsPerKb | From COBALT
 MeanReadsPerKb | From COBALT
-DuplicatePercent | Estimated proportion of duplicates in file (from WGS metrics)
+DuplicateProportion | Estimated proportion of duplicates in file (from WGS metrics)
 fullFragments | Count of fragments with both reads classified as telomeric
 cRichPartialFragments | Count of fragments with 1 read non telomeric and the other telomeric oriented in a C-rich orientation
 gRichPartialFragments | Count of fragments with 1 read non telomeric and the other telomeric oriented in a G-rich orientation
-RawTelomereLength | Telomeric reads normalized for total coverage
-FinalTelomereLength | Final telomere length adjusted for tumor purity (=Raw length for ref sample)
+SampleMixLength | Telomeric reads normalized for total coverage
+TelomereLength | Final telomere length adjusted for tumor purity (=Raw length for ref sample)
 
 ### Rearrangements
 Field | Description

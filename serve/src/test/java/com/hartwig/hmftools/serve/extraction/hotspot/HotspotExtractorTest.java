@@ -11,6 +11,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.serve.extraction.catalog.DealWithDriverInconsistentModeAnnotation;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 
 import org.jetbrains.annotations.NotNull;
@@ -46,7 +47,8 @@ public class HotspotExtractorTest {
 
     @NotNull
     private static HotspotExtractor createWithProtein(@NotNull String protein) {
-        return new HotspotExtractor(GENE_CHECKER, new TestProteinResolver(protein), event -> event);
+        return new HotspotExtractor(GENE_CHECKER, new TestProteinResolver(protein), event -> event,
+                DealWithDriverInconsistentModeAnnotation.IGNORE, Lists.newArrayList());
     }
 
     private static class TestProteinResolver implements ProteinResolver {
