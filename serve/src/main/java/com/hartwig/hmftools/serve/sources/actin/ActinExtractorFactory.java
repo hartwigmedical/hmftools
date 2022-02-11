@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class ActinExtractorFactory {
 
-    private static final String DEAL_WITH_DRIVER_INCONSISTENCIES_MODE = "ignore";
+    private static final String DEAL_WITH_DRIVER_INCONSISTENCIES_MODE = "filter";
 
     private ActinExtractorFactory() {
     }

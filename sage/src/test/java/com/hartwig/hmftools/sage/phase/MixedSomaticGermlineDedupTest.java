@@ -1,12 +1,10 @@
 package com.hartwig.hmftools.sage.phase;
 
-import static com.hartwig.hmftools.sage.phase.BufferedPostProcessorTest.create;
-import static com.hartwig.hmftools.sage.phase.MixedSomaticGermlineDedup.codonDifferences;
+import static com.hartwig.hmftools.sage.phase.DedupMixedGermlineSomatic.codonDifferences;
+import static com.hartwig.hmftools.sage.phase.LocalRealignSetTest.create;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 

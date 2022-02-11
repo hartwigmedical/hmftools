@@ -83,7 +83,7 @@ public class CandidateSerializationTest
         assertEquals(expected.readContext().RepeatCount, victim.readContext().RepeatCount);
         assertEquals(expected.readContext().microhomology(), victim.readContext().microhomology());
         assertEquals(expected.readContext().leftFlankString(), victim.readContext().leftFlankString());
-        assertEquals(expected.readContext().centerBases(), victim.readContext().centerBases());
+        assertEquals(expected.readContext().coreString(), victim.readContext().coreString());
         assertEquals(expected.readContext().rightFlankString(), victim.readContext().rightFlankString());
     }
 

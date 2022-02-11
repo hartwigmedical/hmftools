@@ -93,7 +93,7 @@ public class ReadContext
 
     public boolean isCoreCovered(int otherReadIndex, byte[] otherBases)
     {
-        return mReadBases.isCentreCovered(otherReadIndex, otherBases);
+        return mReadBases.isCoreCovered(otherReadIndex, otherBases);
     }
 
     public int readBasesPositionIndex() { return mReadBases.Index; }
@@ -116,10 +116,10 @@ public class ReadContext
     }
 
     @VisibleForTesting
-    public String centerBases() { return mReadBases.centerString(); }
+    public String coreString() { return mReadBases.coreString(); }
 
     public String leftFlankString() { return mReadBases.leftFlankString(); }
     public String rightFlankString() { return mReadBases.rightFlankString(); }
 
-    public String toString() { return mReadBases.centerString(); }
+    public String toString() { return mReadBases.coreString(); }
 }

@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 public final class ViccExtractorFactory {
 
     // For the current VICC release we have dealt with all driver inconsistencies we want to deal with, so want to ignore remaining.
-    private static final String DEAL_WITH_DRIVER_INCONSISTENCIES_MODE = "ignore";
+    private static final String DEAL_WITH_DRIVER_INCONSISTENCIES_MODE = "filter";
 
     private ViccExtractorFactory() {
     }

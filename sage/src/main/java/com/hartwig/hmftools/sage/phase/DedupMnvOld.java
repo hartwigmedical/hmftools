@@ -6,11 +6,11 @@ import java.util.function.Consumer;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
-public class DedupMnv extends BufferedPostProcessor
+public class DedupMnvOld extends BufferedPostProcessor
 {
     private static final int BUFFER = 10;
 
-    public DedupMnv(final Consumer<SageVariant> consumer)
+    public DedupMnvOld(final Consumer<SageVariant> consumer)
     {
         super(BUFFER, consumer);
     }

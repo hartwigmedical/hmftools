@@ -96,9 +96,9 @@ public class MixedGermlineTest
     {
         final List<SageVariant> consumer = Lists.newArrayList();
 
-        PhaseSetCounter phaseSetCounter = new PhaseSetCounter();
-        final VariantDeduper victim = new VariantDeduper(mTranscripts, phaseSetCounter, consumer::add);
+        final VariantDeduperOld victim = new VariantDeduperOld(mTranscripts, consumer::add);
 
+        PhaseSetCounter phaseSetCounter = new PhaseSetCounter();
         int nextLps = phaseSetCounter.getNext();
 
         for(SageVariant variant : variants)

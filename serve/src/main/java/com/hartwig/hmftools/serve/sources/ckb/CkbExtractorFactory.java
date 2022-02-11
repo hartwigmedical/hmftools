@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 public final class CkbExtractorFactory {
 
     // For CKB we want to ignore driver inconsistencies for now (their gene panel is larger than hmf driver panel to start with)
-    private static final String DEAL_WITH_DRIVER_INCONSISTENCIES_MODE = "ignore";
+    private static final String DEAL_WITH_DRIVER_INCONSISTENCIES_MODE = "filter";
 
     private CkbExtractorFactory() {
     }

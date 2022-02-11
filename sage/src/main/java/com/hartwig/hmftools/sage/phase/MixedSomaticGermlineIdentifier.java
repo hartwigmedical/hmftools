@@ -43,7 +43,7 @@ public class MixedSomaticGermlineIdentifier extends BufferedPostProcessor
 
     private void process(final SageVariant mnv, final SageVariant germlineSnv)
     {
-        if(DedupMnv.longerContainsShorter(germlineSnv, mnv))
+        if(longerContainsShorter(germlineSnv, mnv))
         {
             if(mnv.mixedGermlineImpact() == 0)
             {

@@ -1,0 +1,206 @@
+package com.hartwig.hmftools.sage.phase;
+
+import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
+import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
+import static com.hartwig.hmftools.sage.common.TestUtils.addLocalPhaseSet;
+import static com.hartwig.hmftools.sage.common.TestUtils.clearFilters;
+import static com.hartwig.hmftools.sage.common.TestUtils.createVariant;
+import static com.hartwig.hmftools.sage.common.TestUtils.createVariantHotspot;
+import static com.hartwig.hmftools.sage.common.TestUtils.setTumorQuality;
+import static com.hartwig.hmftools.sage.config.SoftFilter.MIN_GERMLINE_DEPTH;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.test.GeneTestUtils;
+import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.common.SageVariant;
+
+import org.junit.Test;
+
+public class VariantDedupTest
+{
+    @Test
+    public void testLongerContainsShorter()
+    {
+        final VariantHotspot mnv = createVariantHotspot(100, "CAC", "TGT");
+
+        assertTrue(BufferedPostProcessor.longerContainsShorter(createVariantHotspot(100, "C", "T"), mnv));
+        assertFalse(BufferedPostProcessor.longerContainsShorter(createVariantHotspot(100, "C", "C"), mnv));
+
+        assertTrue(BufferedPostProcessor.longerContainsShorter(createVariantHotspot(101, "A", "G"), mnv));
+        assertTrue(BufferedPostProcessor.longerContainsShorter(createVariantHotspot(102, "C", "T"), mnv));
+
+        assertTrue(BufferedPostProcessor.longerContainsShorter(createVariantHotspot(100, "CA", "TG"), mnv));
+        assertTrue(BufferedPostProcessor.longerContainsShorter(createVariantHotspot(101, "AC", "GT"), mnv));
+
+        assertTrue(BufferedPostProcessor.longerContainsShorter(createVariantHotspot(100, "CAC", "TGT"), mnv));
+    }
+
+    @Test
+    public void testMnvDedup()
+    {
+        // must overlap, be phased and passing
+
+        // ATG -> CGA
+        SageVariant var1 = createVariant(10, "AT", "CG");
+        SageVariant var2 = createVariant(11, "TG", "GA");
+
+        setTumorQuality(var1, 5, 1000);
+        setTumorQuality(var2, 4, 900);
+
+        List<SageVariant> variants = Lists.newArrayList(var1, var2);
+
+        DedupSnvMnv.dedupMnvOverlaps(variants);
+
+        assertTrue(var1.isPassing());
+        assertTrue(var2.isPassing());
+
+        // must be same LPS
+        addLocalPhaseSet(var1, 1, 1);
+        addLocalPhaseSet(var2, 1, 1);
+
+        DedupSnvMnv.dedupMnvOverlaps(variants);
+
+        // determined by tumor qual
+        assertTrue(var1.isPassing());
+        assertFalse(var2.isPassing());
+
+        clearFilters(variants);
+
+        setTumorQuality(var1, 5, 500);
+
+        DedupSnvMnv.dedupMnvOverlaps(variants);
+
+        // determined by tumor qual
+        assertFalse(var1.isPassing());
+        assertTrue(var2.isPassing());
+
+        clearFilters(variants);
+
+        // ATGC -> CGAT
+        var1 = createVariant(10, "ATG", "CGA");
+        var2 = createVariant(12, "GC", "AT");
+        addLocalPhaseSet(var1, 1, 1);
+        addLocalPhaseSet(var2, 1, 1);
+
+        variants = Lists.newArrayList(var1, var2);
+
+        DedupSnvMnv.dedupMnvOverlaps(variants);
+
+        assertTrue(var1.isPassing());
+        assertFalse(var2.isPassing());
+    }
+
+    @Test
+    public void testMnvSnvDedup()
+    {
+        // ATG -> CGA
+        SageVariant var1 = createVariant(10, "ATG", "CGA");
+        SageVariant var2 = createVariant(10, "A", "C");
+        SageVariant var3 = createVariant(11, "T", "G");
+        SageVariant var4 = createVariant(12, "G", "A");
+
+        // must be same LPS
+        addLocalPhaseSet(var1, 1, 1);
+        addLocalPhaseSet(var2, 1, 1);
+        addLocalPhaseSet(var3, 1, 1);
+        addLocalPhaseSet(var4, 1, 1);
+
+        List<SageVariant> variants = Lists.newArrayList(var1, var2, var3, var4);
+
+        DedupSnvMnv.dedupMnvSnvs(variants);
+
+        assertTrue(var1.isPassing());
+        assertFalse(var2.isPassing());
+        assertFalse(var3.isPassing());
+        assertFalse(var4.isPassing());
+
+        // more complicated example with variants interspersed
+        var1 = createVariant(10, "A", "G"); // no match
+        var2 = createVariant(10, "ATG", "CGA");
+        SageVariant var7 = createVariant(11, "TGA", "CCC");
+        var3 = createVariant(11, "T", "A");
+        var4 = createVariant(11, "T", "G"); // dedup with first MNV
+        SageVariant var5 = createVariant(12, "G", "T");
+        SageVariant var6 = createVariant(12, "G", "A"); // deup with first MNV
+        SageVariant var8 = createVariant(13, "A", "C");
+
+        // must be same LPS
+        addLocalPhaseSet(var2, 1, 1);
+        addLocalPhaseSet(var4, 1, 1);
+        addLocalPhaseSet(var6, 1, 1);
+        addLocalPhaseSet(var7, 2, 1);
+        addLocalPhaseSet(var8, 2, 1);
+
+        variants = Lists.newArrayList(var1, var2, var3, var4, var5, var6, var7, var8);
+
+        DedupSnvMnv.dedupMnvSnvs(variants);
+
+        assertTrue(var1.isPassing());
+        assertTrue(var2.isPassing());
+        assertTrue(var3.isPassing());
+        assertFalse(var4.isPassing());
+        assertTrue(var5.isPassing());
+        assertFalse(var6.isPassing());
+        assertTrue(var7.isPassing());
+        assertFalse(var8.isPassing());
+    }
+
+    @Test
+    public void testMixedGermline()
+    {
+        // ATG -> CGA
+        SageVariant var1 = createVariant(10, "ATG", "CGA");
+        SageVariant var2 = createVariant(10, "A", "C");
+        SageVariant var3 = createVariant(12, "G", "A"); // marked as germline
+
+        // must be same LPS
+        addLocalPhaseSet(var1, 1, 1);
+        addLocalPhaseSet(var2, 1, 1);
+        addLocalPhaseSet(var3, 1, 1);
+
+        var3.filters().add(MIN_GERMLINE_DEPTH.toString());
+
+        List<SageVariant> variants = Lists.newArrayList(var1, var2, var3);
+
+        List<TranscriptData> transcripts = Lists.newArrayList();
+
+        transcripts.add(GeneTestUtils.createTransExons(
+                GENE_ID_1, TRANS_ID_1, POS_STRAND, new int[] {7, 20}, 9, 7, 25, true, ""));
+
+        DedupMixedGermlineSomatic deduper = new DedupMixedGermlineSomatic(transcripts);
+        deduper.dedupVariants(variants);
+
+        assertTrue(var1.isPassing());
+        assertFalse(var2.isPassing());
+        assertFalse(var3.isPassing());
+
+        // test again with the MNV spanning a codon so the SNV is kept
+        var1 = createVariant(11, "ATG", "CGA");
+        var2 = createVariant(12, "T", "G"); // marked as germline
+        var3 = createVariant(13, "G", "A");
+
+        // must be same LPS
+        addLocalPhaseSet(var1, 1, 1);
+        addLocalPhaseSet(var2, 1, 1);
+        addLocalPhaseSet(var3, 1, 1);
+
+        var2.filters().add(MIN_GERMLINE_DEPTH.toString());
+
+        variants = Lists.newArrayList(var1, var2, var3);
+
+        deduper.dedupVariants(variants);
+
+        assertFalse(var1.isPassing());
+        assertFalse(var2.isPassing());
+        assertTrue(var3.isPassing());
+    }
+}

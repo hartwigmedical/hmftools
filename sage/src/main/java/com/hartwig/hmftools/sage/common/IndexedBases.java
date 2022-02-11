@@ -3,15 +3,11 @@ package com.hartwig.hmftools.sage.common;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.CORE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.FULL;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.PARTIAL;
-
-import java.util.Arrays;
 
 import org.apache.logging.log4j.util.Strings;
 
@@ -53,7 +49,7 @@ public class IndexedBases
         FlankSize = flankSize;
     }
 
-    public String centerString()
+    public String coreString()
     {
         return Bases.length == 0 ? Strings.EMPTY : new String(Bases, LeftCoreIndex, coreLength());
     }
@@ -86,7 +82,7 @@ public class IndexedBases
     }
 
     public int length() { return RightFlankIndex - LeftFlankIndex + 1; }
-    private int coreLength()
+    public int coreLength()
     {
         return RightCoreIndex - LeftCoreIndex + 1;
     }
@@ -95,6 +91,9 @@ public class IndexedBases
     {
         return RightFlankIndex - RightCoreIndex;
     }
+
+    public int corePositionStart() { return Position + Index - LeftCoreIndex; }
+    public int corePositionEnd() { return Position + RightCoreIndex - Index; }
 
     public byte base(int position)
     {
@@ -123,7 +122,7 @@ public class IndexedBases
         return otherRefIndex- Index + RightCoreIndex;
     }
 
-    public boolean isCentreCovered(int otherReadIndex, byte[] otherBases)
+    public boolean isCoreCovered(int otherReadIndex, byte[] otherBases)
     {
         int otherLeftCentreIndex = otherLeftCoreIndex(otherReadIndex);
 

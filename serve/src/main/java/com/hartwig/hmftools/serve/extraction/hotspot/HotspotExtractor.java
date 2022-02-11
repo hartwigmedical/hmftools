@@ -11,11 +11,14 @@ import com.hartwig.hmftools.serve.extraction.catalog.DealWithDriverInconsistentM
 import com.hartwig.hmftools.serve.extraction.catalog.DealWithDriverInconsistentModeAnnotation;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class HotspotExtractor {
 
+    private static final Logger LOGGER = LogManager.getLogger(HotspotExtractor.class);
     @NotNull
     private final GeneChecker geneChecker;
     @NotNull
@@ -53,18 +56,26 @@ public class HotspotExtractor {
             @NotNull String event) {
         if (type == EventType.HOTSPOT && geneChecker.isValidGene(gene)) {
             DriverCategory driverCategory = findByGene(driverGenes, gene);
-            if (DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithDriverInconsistentModeAnnotation)) {
+            if (!DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithDriverInconsistentModeAnnotation)) {
                 if (driverCategory != null) {
-                    return proteinResolver.resolve(gene, transcriptId, proteinAnnotationExtractor.apply(event));
+                    if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
+                            DealWithDriverInconsistentModeAnnotation.WARN_ONLY)) {
+                        LOGGER.warn("{} on {} is not included in driver catalog and won't ever be reported.", type, gene);
+                        return proteinResolver.resolve(gene, transcriptId, proteinAnnotationExtractor.apply(event));
+                    } else if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
+                            DealWithDriverInconsistentModeAnnotation.FILTER)) {
+                        LOGGER.info("Filtered -- {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
+                        return null;
+                    }
                 } else {
                     return proteinResolver.resolve(gene, transcriptId, proteinAnnotationExtractor.apply(event));
                 }
             } else {
-                if (driverCategory != null) {
-                    return proteinResolver.resolve(gene, transcriptId, proteinAnnotationExtractor.apply(event));
-                } else {
+                if (driverCategory == null) {
+                    LOGGER.warn("Filtered -- {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
                     return null;
                 }
+                return proteinResolver.resolve(gene, transcriptId, proteinAnnotationExtractor.apply(event));
             }
         }
         return null;

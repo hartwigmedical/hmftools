@@ -132,19 +132,6 @@ public class VariantPhaser
         // assign local phase set IDs to all phased variants
         mPerfCounters.get(PC_PHASE_READS).stop();
 
-        /*
-        if(SG_LOGGER.isDebugEnabled())
-        {
-            PerformanceCounter pc = mPerfCounters.get(PC_PHASE_READS);
-            double lastTime = pc.getTimes().get(pc.getTimes().size() - 1);
-            if(lastTime > 0.5)
-            {
-                SG_LOGGER.debug("region({}) read phasing groups({}) rc(pass={} valid={}) time({})",
-                        mRegion, mPhasedGroups.size(), passingCounters.size(), validCounters.size(), lastTime);
-            }
-        }
-        */
-
         int startCount = mNextGroupId;
 
         boolean hasGroups = applyInitialFilters(passingCounters, validCounters);
@@ -192,8 +179,8 @@ public class VariantPhaser
             }
         }
 
-        SG_LOGGER.trace("region({}) phasing groups start({} filtered={}) postMerge({}) assigned({}) rc(pass={} valid={} uniqueRCs={})",
-                mRegion, startCount, startFilteredCount, finalPhasedGroups.size(), assignedLps,
+        SG_LOGGER.trace("region({}) phasing groups(coll={} start={} filtered={}) postMerge({}) assigned({}) rc(pass={} valid={} uniqueRCs={})",
+                mRegion, mPhasedGroupCollections.size(), startCount, startFilteredCount, finalPhasedGroups.size(), assignedLps,
                 passingCounters.size(), validCounters.size(), uniqueRCs != null ? uniqueRCs.size() : 0);
 
         mPerfCounters.get(PC_FORM_LPS).stop();
@@ -427,12 +414,16 @@ public class VariantPhaser
         {
             PhasedVariantGroup group = filteredGroups.get(index);
 
-            if(group.PositiveReadCounters.size() == 1
-            && filteredGroups.stream().filter(x -> x != group).noneMatch(x -> group.isSubsetOf(x)))
+            if(group.PositiveReadCounters.size() == 1)
             {
-                // remove any group with a single variant not present as a +ve in another group
-                filteredGroups.remove(group);
-                continue;
+                ReadContextCounter readCounter = group.PositiveReadCounters.get(0);
+
+                if(filteredGroups.stream().filter(x -> x != group).noneMatch(x -> group.PositiveReadCounters.contains(readCounter)))
+                {
+                    // remove any group with a single variant not present as a +ve in another group
+                    filteredGroups.remove(group);
+                    continue;
+                }
             }
 
             // find groups which have matching +ves and aren't subsets of any other group
@@ -484,6 +475,8 @@ public class VariantPhaser
             lpsMaxReadCountMap.put(lpsId, lpsVariants.get(0).getLpsReadCount(lpsId));
         }
 
+        Set<Integer> singlePassingVarGroups = Sets.newHashSet();
+
         for(Map.Entry<Integer,List<SageVariant>> entry : lpsVariantsMap.entrySet())
         {
             Integer lpsId = entry.getKey();
@@ -530,6 +523,9 @@ public class VariantPhaser
             {
                 int maxId = maxLpsId;
                 matchedVariantsLpsIds.stream().filter(x -> x != maxId).forEach(x -> uninformativeLpsIds.add(x));
+
+                if(passingVariants.size() == 1)
+                    singlePassingVarGroups.add(maxLpsId);
             }
         }
 
@@ -562,6 +558,10 @@ public class VariantPhaser
                     if(readCount < otherReadCount * SUBSET_READ_COUNT_LIMIT)
                     {
                         uninformativeLpsIds.add(lpsId);
+
+                        if(otherPassingVariants.size() == 1)
+                            singlePassingVarGroups.add(otherLpsId);
+
                         break;
                     }
                 }
@@ -575,6 +575,18 @@ public class VariantPhaser
 
             lpsVariants.forEach(x -> x.removeLps(lpsId));
         }
+
+        // remove any LPS if a variant now has no other LPS and is by itself
+        for(Integer lpsId : singlePassingVarGroups)
+        {
+            List<SageVariant> lpsVariants = lpsVariantsMap.get(lpsId);
+
+            if(lpsVariants.stream().allMatch(x -> x.hasLocalPhaseSets() && x.localPhaseSets().size() == 1))
+            {
+                lpsVariants.forEach(x -> x.removeLps(lpsId));
+            }
+        }
+
     }
 
     private void logPhasedReadCounters(final List<PhasedVariantGroup> phasedGroups, final String stage)
