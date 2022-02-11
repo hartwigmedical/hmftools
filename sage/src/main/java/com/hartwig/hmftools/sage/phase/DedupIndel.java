@@ -25,7 +25,6 @@ public final class DedupIndel
     public static void dedupIndels(final List<SageVariant> variants)
     {
         List<SageVariant> candidates = variants.stream()
-                .filter(x -> !x.isIndel())
                 .filter(x -> x.isPassing())
                 .filter(x -> x.hasLocalPhaseSets())
                 .collect(Collectors.toList());;

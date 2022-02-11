@@ -4,12 +4,15 @@ import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
+import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.common.TestUtils.addLocalPhaseSet;
 import static com.hartwig.hmftools.sage.common.TestUtils.clearFilters;
 import static com.hartwig.hmftools.sage.common.TestUtils.createVariant;
 import static com.hartwig.hmftools.sage.common.TestUtils.createVariantHotspot;
 import static com.hartwig.hmftools.sage.common.TestUtils.setTumorQuality;
 import static com.hartwig.hmftools.sage.config.SoftFilter.MIN_GERMLINE_DEPTH;
+import static com.hartwig.hmftools.sage.phase.DedupIndel.dedupIndels;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -21,6 +24,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.test.GeneTestUtils;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.SageVariant;
 
 import org.junit.Test;
@@ -203,4 +207,47 @@ public class VariantDedupTest
         assertFalse(var2.isPassing());
         assertTrue(var3.isPassing());
     }
+
+    @Test
+    public void testIndels()
+    {
+        // var1: GATCGATCGA AACTCTCTC TCTCTCTCTC
+        // var2: GATCGATCGA AACTC TCTCTCTCTC
+        // ref:  GATCGATCGA AAATC TCTCTCTCTC
+
+        // 0123456789  01  2  34  0123456789
+        String flank = generateRandomBases(DEFAULT_READ_CONTEXT_FLANK_SIZE);
+        String alt1 = "CTCTC";
+        String alt2 = "C";
+        String readBases1 = flank + "AA" + alt1 + "TC" + "TCTCTCTCTC";
+        String readBases2 = flank + "AA" + alt2 + "TC" + "TCTCTCTCTC";
+        int leftCoreIndex = DEFAULT_READ_CONTEXT_FLANK_SIZE;
+        int index = leftCoreIndex + MIN_CORE_DISTANCE;
+        int rightCoreIndex1 = index + alt1.length() - 1 + MIN_CORE_DISTANCE;
+        int rightCoreIndex2 = index + alt2.length() - 1 + MIN_CORE_DISTANCE;
+
+        IndexedBases indexBases1 = new IndexedBases(
+                12, index, leftCoreIndex, rightCoreIndex1, DEFAULT_READ_CONTEXT_FLANK_SIZE, readBases1.getBytes());
+
+        IndexedBases indexBases2 = new IndexedBases(
+                16, index, leftCoreIndex, rightCoreIndex2, DEFAULT_READ_CONTEXT_FLANK_SIZE, readBases2.getBytes());
+
+        SageVariant var1 = createVariant(12, "A", alt1, indexBases1);
+        SageVariant var2 = createVariant(16, "A", alt2, indexBases2);
+
+        // must be same LPS
+        addLocalPhaseSet(var1, 1, 1);
+        addLocalPhaseSet(var2, 1, 1);
+
+        setTumorQuality(var1, 5, 1000);
+        setTumorQuality(var2, 5, 800);
+
+        List<SageVariant> variants = Lists.newArrayList(var1, var2);
+
+        dedupIndels(variants);
+
+        assertTrue(var1.isPassing());
+        assertFalse(var2.isPassing());
+    }
+
 }

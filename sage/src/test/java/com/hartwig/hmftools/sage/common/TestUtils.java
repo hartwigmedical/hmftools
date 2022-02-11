@@ -17,8 +17,6 @@ public class TestUtils
 {
     public static SageVariant createVariant(int position, final String ref, final String alt)
     {
-        VariantHotspot variant = createVariantHotspot(position, ref, alt);
-
         String readBases = buildReadContextBases(alt);
 
         // LF          L   I   RC          RF
@@ -29,6 +27,13 @@ public class TestUtils
 
         IndexedBases indexBases = new IndexedBases(
                 position, index, leftCoreIndex, rightCoreIndex, DEFAULT_READ_CONTEXT_FLANK_SIZE, readBases.getBytes());
+
+        return createVariant(position, ref, alt, indexBases);
+    }
+
+    public static SageVariant createVariant(int position, final String ref, final String alt, final IndexedBases indexBases)
+    {
+        VariantHotspot variant = createVariantHotspot(position, ref, alt);
 
         ReadContext readContext = new ReadContext(position, "", 0, "", indexBases, false);
 
