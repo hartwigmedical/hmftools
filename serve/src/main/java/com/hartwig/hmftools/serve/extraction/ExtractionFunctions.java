@@ -9,7 +9,9 @@ import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharact
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGeneUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotUrlConsolidator;
+import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRangeUrlConsolidator;
+import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
 import com.hartwig.hmftools.serve.actionability.util.ActionableEventUrlMerger;
 import com.hartwig.hmftools.serve.extraction.codon.CodonFunctions;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
@@ -57,7 +59,26 @@ public final class ExtractionFunctions {
         Set<KnownCopyNumber> allCopyNumbers = Sets.newHashSet();
         Set<KnownFusionPair> allFusionPairs = Sets.newHashSet();
 
+        Set<ActionableRange> actionableRange = Sets.newHashSet();
+
         for (ExtractionResult result : results) {
+
+            for (ActionableRange range : result.actionableRanges()) {
+                if (range.gene().equals("BRAF") && range.rank() == 600 && range.rangeType().toString().equals("CODON")) {
+                    int start = 140753335;
+                    int end = 140753337;
+                    String canonicalTranscriptID = "ENST00000288602";
+                    actionableRange.add(ImmutableActionableRange.builder()
+                            .from(range)
+                            .start(start)
+                            .end(end)
+                            .transcript(canonicalTranscriptID)
+                            .build());
+                } else {
+                    actionableRange.add(range);
+                }
+            }
+
             allHotspots.addAll(result.knownHotspots());
             allCodons.addAll(result.knownCodons());
             allExons.addAll(result.knownExons());
@@ -65,7 +86,7 @@ public final class ExtractionFunctions {
             allFusionPairs.addAll(result.knownFusionPairs());
 
             mergedBuilder.addAllActionableHotspots(result.actionableHotspots());
-            mergedBuilder.addAllActionableRanges(result.actionableRanges());
+            mergedBuilder.addAllActionableRanges(actionableRange);
             mergedBuilder.addAllActionableGenes(result.actionableGenes());
             mergedBuilder.addAllActionableFusions(result.actionableFusions());
             mergedBuilder.addAllActionableCharacteristics(result.actionableCharacteristics());
