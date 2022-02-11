@@ -10,7 +10,10 @@ public class SageConstants
     public static final int DEFAULT_MAX_READ_DEPTH_PANEL = 100_000;
     public static final int DEFAULT_MAX_REALIGNMENT_DEPTH = 1000;
     public static final int DEFAULT_SLICE_SIZE = 100_000;
+
     public static final int DEFAULT_READ_CONTEXT_FLANK_SIZE = 10;
+    public static final int MIN_CORE_DISTANCE = 2;
+
     public static final boolean DEFAULT_MNV = true;
 
     // base quality recalibration

@@ -13,11 +13,11 @@ import com.hartwig.hmftools.sage.common.ReadContext;
 public class RefContext implements GenomePosition
 {
     public final String Chromosome;
-    private final boolean mUsePanelDepth;
     public final int Position;
     
     private Map<String,AltContext> mAlts;
 
+    private final boolean mUsePanelDepth;
     private int mRawDepth;
 
     public RefContext(final String chromosome, int position, boolean usePanelDepth)

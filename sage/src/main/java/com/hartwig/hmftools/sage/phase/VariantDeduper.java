@@ -1,45 +1,65 @@
 package com.hartwig.hmftools.sage.phase;
 
+import static com.hartwig.hmftools.sage.phase.DedupIndel.dedupIndels;
+import static com.hartwig.hmftools.sage.phase.DedupSnvMnv.dedupMnvOverlaps;
+import static com.hartwig.hmftools.sage.phase.DedupSnvMnv.dedupMnvSnvs;
+
 import java.util.List;
-import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.SageVariant;
 
-public class VariantDeduper implements Consumer<SageVariant>
+public class VariantDeduper
 {
-    public static final int PHASE_BUFFER = 150;
+    private final DedupMixedGermlineSomatic mDedupMixedGermlineSomatic;
 
-    private final DedupRealign mDedupRealign;
-    private final DedupMnv mDedupMnv;
-    private final LocalRealignSet mLocalRealignSet;
-    private final DedupIndel mDedupIndel;
-    private final MixedSomaticGermlineIdentifier mMixedSomaticGermlineIdentifier;
-    private final MixedSomaticGermlineDedup mMixedSomaticGermlineDedup;
+    private final VariantDeduperOld mVariantDeduperOld;
 
-    public VariantDeduper(final List<TranscriptData> transcripts, final PhaseSetCounter phaseSetCounter, final Consumer<SageVariant> consumer)
+    public VariantDeduper(final List<TranscriptData> transcripts)
     {
-        mDedupRealign = new DedupRealign(consumer);
-        mDedupIndel = new DedupIndel(mDedupRealign);
-        mDedupMnv = new DedupMnv(mDedupIndel);
-        mMixedSomaticGermlineDedup = new MixedSomaticGermlineDedup(mDedupMnv, transcripts);
-        mMixedSomaticGermlineIdentifier = new MixedSomaticGermlineIdentifier(mMixedSomaticGermlineDedup);
-        mLocalRealignSet = new LocalRealignSet(mMixedSomaticGermlineIdentifier);
+        mDedupMixedGermlineSomatic = new DedupMixedGermlineSomatic(transcripts);
+
+        mVariantDeduperOld = new VariantDeduperOld(transcripts, this::acceptDedupedVariant);
     }
 
-    @Override
-    public void accept(final SageVariant sageVariant)
+    public void processVariants(final List<SageVariant> variants)
     {
-        mLocalRealignSet.accept(sageVariant);
+        // variants.forEach(mVariantDeduperOld);
+        // mVariantDeduperOld.flush();
+
+        dedupMnvOverlaps(variants);
+
+        mDedupMixedGermlineSomatic.dedupVariants(variants);
+
+        dedupMnvSnvs(variants);
+
+        dedupIndels(variants);
     }
 
-    public void flush()
+    private void acceptDedupedVariant(final SageVariant variant) {}
+
+    public static boolean longerContainsShorter(final SageVariant shorter, final SageVariant longer)
     {
-        mLocalRealignSet.flush();
-        mMixedSomaticGermlineIdentifier.flush();
-        mMixedSomaticGermlineDedup.flush();
-        mDedupMnv.flush();
-        mDedupIndel.flush();
-        mDedupRealign.flush();
+        return longerContainsShorter(shorter.variant(), longer.variant());
     }
+
+    public static boolean longerContainsShorter(final VariantHotspot shorter, final VariantHotspot longer)
+    {
+        int longerStart = longer.position();
+        int longerEnd = longer.end();
+
+        int shorterStart = shorter.position();
+        int shorterEnd = shorter.end();
+
+        if(shorterStart < longerStart || shorterEnd > longerEnd)
+            return false;
+
+        final String shorterAlt = shorter.alt();
+
+        int offset = shorterStart - longerStart;
+        final String longerAlt = new String(longer.alt().getBytes(), offset, shorter.alt().length());
+        return shorterAlt.equals(longerAlt);
+    }
+
 }

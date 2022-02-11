@@ -47,7 +47,6 @@ public class ReadContextCounterFactory
 
     private int maxCoverage(@NotNull final Candidate candidate)
     {
-        return HIGH_COVERAGE.contains(candidate.tier()) || MitochondrialChromosome.contains(candidate.chromosome())
-                ? mConfig.MaxReadDepthPanel : mConfig.MaxReadDepth;
+        return HIGH_COVERAGE.contains(candidate.tier()) ? mConfig.MaxReadDepthPanel : mConfig.MaxReadDepth;
     }
 }

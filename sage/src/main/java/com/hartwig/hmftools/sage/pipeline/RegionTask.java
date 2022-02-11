@@ -27,6 +27,7 @@ import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
 import com.hartwig.hmftools.sage.evidence.VariantPhaser;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.phase.VariantDeduper;
+import com.hartwig.hmftools.sage.phase.VariantDeduperOld;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 
 import htsjdk.samtools.reference.ReferenceSequenceFile;
@@ -66,7 +67,7 @@ public class RegionTask implements Callable
         mCandidateState = new CandidateStage(config, refGenome, hotspots, panelRegions, highConfidenceRegions, coverage);
         mEvidenceStage = new EvidenceStage(config, refGenome, qualityRecalibrationMap, phaseSetCounter);
 
-        mVariantDeduper = new VariantDeduper(transcripts, phaseSetCounter, this::acceptDedupedVariant);
+        mVariantDeduper = new VariantDeduper(transcripts);
 
         mSageVariants = Lists.newArrayList();
         mPassingPhaseSets = Sets.newHashSet();
@@ -74,7 +75,7 @@ public class RegionTask implements Callable
         mPerfCounters = Lists.newArrayList();
         mPerfCounters.add(new PerformanceCounter("Candidates"));
         mPerfCounters.add(new PerformanceCounter("Evidence"));
-        // mPerfCounters.add(new PerformanceCounter("Dedup"));
+        mPerfCounters.add(new PerformanceCounter("Dedup"));
     }
 
     public final List<SageVariant> getVariants() { return mSageVariants; }
@@ -140,35 +141,23 @@ public class RegionTask implements Callable
 
         variantPhaser.assignLocalPhaseSets(passingTumorReadCounters, validTumorReadCounters);
 
-        // mPerfCounters.get(PC_DEDUP).start();
+        mPerfCounters.get(PC_DEDUP).start();
 
         SG_LOGGER.trace("phasing {} variants", mSageVariants.size());
-        mSageVariants.forEach(mVariantDeduper);
-        mVariantDeduper.flush();
 
-        // mPerfCounters.get(PC_DEDUP).stop();
+        mVariantDeduper.processVariants(mSageVariants);
+
+        mPerfCounters.get(PC_DEDUP).stop();
 
         SG_LOGGER.trace("{}: region({}) complete", mTaskId, mRegion);
 
         return (long)0;
     }
 
-    private void acceptDedupedVariant(final SageVariant variant)
-    {
-        if(variant.isPassing() && variant.hasLocalPhaseSets())
-            mPassingPhaseSets.addAll(variant.localPhaseSets());
-
-        /*
-        if(checkWriteVariant(variant, mVariantDeduper.passingPhaseSets()))
-        {
-            mFinalSageVariants.add(variant);
-            // mWriteConsumer.accept(variant);
-        }
-        */
-    }
-
     public void writeVariants(final Consumer<SageVariant> variantWriter)
     {
+        mSageVariants.stream().filter(x -> x.isPassing() && x.hasLocalPhaseSets()).forEach(x -> mPassingPhaseSets.addAll(x.localPhaseSets()));
+
         List<SageVariant> finalVariants = mSageVariants.stream()
                 .filter(x -> VariantFilters.checkFinalFilters(x, mPassingPhaseSets, mConfig)).collect(Collectors.toList());
 

@@ -1,91 +1,129 @@
 package com.hartwig.hmftools.sage.phase;
 
-import java.util.Collection;
-import java.util.function.Consumer;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_INDEL_FILTER;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_MNV_FILTER;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_SNV_MNV_FILTER;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.SageVariant;
-import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
-public class DedupIndel extends BufferedPostProcessor
+public final class DedupIndel
 {
-    DedupIndel(final Consumer<SageVariant> consumer)
-    {
-        super(0, consumer);
-    }
+    /*
+    - replaces test for local realign set, DedupIndel and DedupRealign
+    - Replace the concept of ‘LRS’ with direct comparison of variants in the same LPS where the CORE at least partially overlap
+      and where at least 1 of the variants must be an INDEL.
+      For each case where this occurs:
+        - Calculate the read context and flank of each variant excluding the variant
+        - If the CORE of one variant is fully explained by the CORE+FLANKS of the other, then filter as DEDUP whichever has a shorter CORE
+        or if identical, the lowest quality.
+    */
 
-    @Override
-    protected void processSageVariant(final SageVariant variant, final Collection<SageVariant> variants)
+    public static void dedupIndels(final List<SageVariant> variants)
     {
-        if(!isPassingPhasedIndel(variant))
-            return;
+        List<SageVariant> candidates = variants.stream()
+                .filter(x -> !x.isIndel())
+                .filter(x -> x.isPassing())
+                .filter(x -> x.hasLocalPhaseSets())
+                .collect(Collectors.toList());;
 
-        for(final SageVariant other : variants)
+        int index = 0;
+        while(index < candidates.size() - 1)
         {
-            if(isPassingPhasedIndel(other) && other.hasMatchingLps(variant.localPhaseSets()))
+            SageVariant firstVariant = candidates.get(index);
+
+            // look for an overlapping MNV
+            int firstCoreEnd = firstVariant.readContext().indexedBases().corePositionEnd();
+
+            int nextIndex = index + 1;
+
+            while(nextIndex < candidates.size())
             {
-                if(variant.isDelete() && other.isDelete())
+                SageVariant nextVariant = candidates.get(nextIndex);
+
+                // cores must overlap
+                int nextCoreStart = nextVariant.readContext().indexedBases().corePositionStart();
+                if(nextCoreStart > firstCoreEnd)
+                    break;
+
+                if(!validPair(firstVariant, nextVariant))
                 {
-                    processDel(variant, other);
+                    ++nextIndex;
+                    continue;
                 }
 
-                if(variant.isInsert() && other.isInsert())
-                {
-                    processIns(variant, other);
-                }
+                dedupPair(firstVariant, nextVariant);
+                ++nextIndex;
             }
+
+            index = nextIndex;
         }
+
     }
 
-    private void processDel(final SageVariant left, final SageVariant right)
+    private static boolean validPair(final SageVariant first, final SageVariant second)
     {
-        if(!left.alt().equals(right.alt()))
-            return;
+        if(!first.isPassing() || !second.isPassing())
+            return false;
 
-        final SageVariant shorter;
-        final SageVariant longer;
-        if(left.ref().length() < right.ref().length())
+        if(!first.hasMatchingLps(second.localPhaseSets()))
+            return false;
+
+        if(first.isIndel() == second.isIndel())
+            return false;
+
+        return true;
+    }
+
+    private static boolean dedupPair(final SageVariant first, final SageVariant second)
+    {
+        // calculate the read context and flank of each variant excluding the variant
+        // if the CORE of one variant is fully explained by the CORE+FLANKS of the other, then
+        // filter as DEDUP whichever has a shorter CORE or if identical, the lowest quality
+
+        final String[] firstRefBases = extractCoreFlanksLessAlt(first);
+        final String[] secondRefBases = extractCoreFlanksLessAlt(second);
+
+        if(!secondRefBases[CORE_FLANKS_STR].contains(firstRefBases[CORE_STR])
+        && !firstRefBases[CORE_FLANKS_STR].contains(secondRefBases[CORE_STR]))
         {
-            shorter = left;
-            longer = right;
+            return false;
+        }
+
+        if(secondRefBases[CORE_STR].length() < firstRefBases[CORE_STR].length())
+        {
+            second.filters().add(DEDUP_INDEL_FILTER);
+        }
+        else if(secondRefBases[CORE_STR].length() > firstRefBases[CORE_STR].length())
+        {
+            first.filters().add(DEDUP_INDEL_FILTER);
         }
         else
         {
-            shorter = right;
-            longer = left;
+            if(first.totalQuality() > second.totalQuality())
+                second.filters().add(DEDUP_MNV_FILTER);
+            else
+                first.filters().add(DEDUP_MNV_FILTER);
         }
 
-        if(longer.ref().substring(0, shorter.ref().length()).equals(shorter.ref()))
-        {
-            longer.filters().add(VariantVCF.DEDUP_FILTER);
-        }
+        return false;
     }
 
-    private void processIns(final SageVariant left, final SageVariant right)
+    private static final int CORE_STR = 0;
+    private static final int CORE_FLANKS_STR = 1;
+
+    private static String[] extractCoreFlanksLessAlt(final SageVariant variant)
     {
-        if(!left.ref().equals(right.ref()))
-            return;
-
-        final SageVariant shorter;
-        final SageVariant longer;
-        if(left.alt().length() < right.alt().length())
-        {
-            shorter = left;
-            longer = right;
-        }
-        else
-        {
-            shorter = right;
-            longer = left;
-        }
-
-        if(longer.alt().substring(0, shorter.alt().length()).equals(shorter.alt()))
-        {
-            longer.filters().add(VariantVCF.DEDUP_FILTER);
-        }
+        final IndexedBases indexedBases = variant.readContext().indexedBases();
+        String coreString = indexedBases.coreString();
+        int altIndex = indexedBases.Index - indexedBases.LeftCoreIndex;
+        int postAltIndex = altIndex + variant.alt().length();
+        String coreRefString = coreString.substring(0, altIndex) + variant.ref() + coreString.substring(postAltIndex);
+        String coreFlankRefBases = indexedBases.leftFlankString() + coreRefString + indexedBases.rightFlankString();
+        return new String[] { coreRefString, coreFlankRefBases };
     }
 
-    private static boolean isPassingPhasedIndel(final SageVariant variant)
-    {
-        return variant.isPassing() && variant.hasLocalPhaseSets() && variant.isIndel();
-    }
 }

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.read;
 import static com.hartwig.hmftools.common.variant.Microhomology.expandMicrohomologyRepeats;
 import static com.hartwig.hmftools.common.variant.Microhomology.microhomologyAtDeleteFromReadSequence;
 import static com.hartwig.hmftools.common.variant.Microhomology.microhomologyAtInsert;
+import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 
 import java.util.Optional;
 
@@ -19,7 +20,6 @@ import htsjdk.samtools.SAMRecord;
 
 public class ReadContextFactory
 {
-    private static final int MIN_CORE_DISTANCE = 2;
     private static final int MIN_REPEAT_COUNT = 3;
 
     private final int mFlankSize;

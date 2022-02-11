@@ -14,7 +14,6 @@ import org.junit.Test;
 
 public class SoftFilterTest
 {
-
     @Test
     public void testIsGermlineAndNotTumorFiltered()
     {

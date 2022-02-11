@@ -40,7 +40,14 @@ public class VariantVCF implements AutoCloseable
     public static final String READ_CONTEXT_RIGHT_FLANK = "RC_RF";
     public static final String READ_CONTEXT_INDEX = "RC_IDX";
     public static final String PASS = "PASS";
+
+    @Deprecated
     public static final String DEDUP_FILTER = "dedup";
+
+    public static final String DEDUP_MNV_FILTER = "dedupMnv";
+    public static final String DEDUP_MIXED_GERMLINE_SOMATIC_FILTER = "dedupMixedGermlineSomatic";
+    public static final String DEDUP_SNV_MNV_FILTER = "dedupSnvMnv";
+    public static final String DEDUP_INDEL_FILTER = "dedupIndel";
 
     public static final String READ_CONTEXT_JITTER = "RC_JIT";
     private static final String READ_CONTEXT_JITTER_DESCRIPTION = "Read context jitter [Shortened, Lengthened, QualityPenalty]";

@@ -220,7 +220,7 @@ public class IndexedBasesTest
     public void testStrings()
     {
         ReadContext victim = createReadContext(1000, 4, 3, 5, 2, "AACATGAGG", Strings.EMPTY);
-        assertEquals("ATG", victim.centerBases());
+        assertEquals("ATG", victim.coreString());
         assertEquals("AC", victim.leftFlankString());
         assertEquals("AG", victim.rightFlankString());
     }
@@ -246,13 +246,13 @@ public class IndexedBasesTest
         assertEquals(1, victimWithExtra.indexInCore());
         assertEquals(5, victimWithExtra.Index);
         assertEquals("TA", victimWithExtra.leftFlankString());
-        assertEquals("ATG", victimWithExtra.centerString());
+        assertEquals("ATG", victimWithExtra.coreString());
         assertEquals("CG", victimWithExtra.rightFlankString());
 
         IndexedBases victimWithoutExtra = createIndexedBases(1000, 1, Strings.EMPTY, "TA", "ATG", "CG", Strings.EMPTY);
         assertEquals(1, victimWithoutExtra.indexInCore());
         assertEquals("TA", victimWithoutExtra.leftFlankString());
-        assertEquals("ATG", victimWithoutExtra.centerString());
+        assertEquals("ATG", victimWithoutExtra.coreString());
         assertEquals("CG", victimWithoutExtra.rightFlankString());
     }
 

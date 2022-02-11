@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcExonicCodingPhase;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.sage.phase.DedupMixedGermlineSomatic.keepMnv;
 
 import java.util.Collection;
 import java.util.List;
@@ -127,32 +128,4 @@ public class MixedSomaticGermlineDedup extends BufferedPostProcessor
         return variant.isPassing() && variant.isMnv() && variant.mixedGermlineImpact() > 0;
     }
 
-    static boolean keepMnv(final BaseRegion codon, final VariantHotspot somaticSnv, final VariantHotspot mixedMnv)
-    {
-        int snvCodonDifferences = codonDifferences(codon, somaticSnv);
-        int mnvCodonDifferences = codonDifferences(codon, mixedMnv);
-
-        return mnvCodonDifferences > snvCodonDifferences;
-    }
-
-    public static int codonDifferences(final BaseRegion codon, final VariantHotspot variant)
-    {
-        if(codon.start() > variant.end() || variant.position() > codon.end())
-            return 0;
-
-        int overlapStart = max(codon.start(), variant.position());
-        int overlapEnd = min(codon.end(), variant.end());
-
-        int difference = 0;
-        for(int position = overlapStart; position <= overlapEnd; position++)
-        {
-            int variantIndex = position - variant.position();
-
-            if(variant.ref().charAt(variantIndex) != variant.alt().charAt(variantIndex))
-            {
-                difference++;
-            }
-        }
-        return difference;
-    }
 }

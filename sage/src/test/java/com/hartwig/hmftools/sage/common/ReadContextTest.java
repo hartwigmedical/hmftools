@@ -2,14 +2,9 @@ package com.hartwig.hmftools.sage.common;
 
 import static java.util.Arrays.fill;
 
-import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-
-import com.hartwig.hmftools.sage.common.IndexedBases;
-import com.hartwig.hmftools.sage.common.ReadContext;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -31,31 +26,31 @@ public class ReadContextTest
     {
         final ReadContext initial = create(1000, 2, "CAT", "ACGCA", "GT", 2);
 
-        assertEquals("ACGCA", initial.centerBases());
+        assertEquals("ACGCA", initial.coreString());
         assertEquals("TACGCA", expandClonedReadContext(
-                initial, initial.readBasesLeftCentreIndex() - 1, initial.readBasesRightCentreIndex()).centerBases());
+                initial, initial.readBasesLeftCentreIndex() - 1, initial.readBasesRightCentreIndex()).coreString());
 
         assertEquals("ACGCAG", expandClonedReadContext(
-                initial, initial.readBasesLeftCentreIndex(), initial.readBasesRightCentreIndex() + 1).centerBases());
+                initial, initial.readBasesLeftCentreIndex(), initial.readBasesRightCentreIndex() + 1).coreString());
 
         final ReadContext allComplete = expandClonedReadContext(
                 initial, initial.readBasesLeftCentreIndex() - 3, initial.readBasesRightCentreIndex() + 2);
 
         assertFalse(allComplete.hasIncompleteCore());
-        assertEquals("CATACGCAGT", allComplete.centerBases());
+        assertEquals("CATACGCAGT", allComplete.coreString());
 
         final ReadContext allIncompleteLeft = expandClonedReadContext(
                 initial, initial.readBasesLeftCentreIndex() - 4, initial.readBasesRightCentreIndex() + 2);
 
         assertTrue(allIncompleteLeft.hasIncompleteCore());
-        assertEquals("CATACGCAGT", allIncompleteLeft.centerBases());
+        assertEquals("CATACGCAGT", allIncompleteLeft.coreString());
 
         final ReadContext allIncompleteRight =
                 expandClonedReadContext(
                         initial, initial.readBasesLeftCentreIndex() - 3, initial.readBasesRightCentreIndex() + 3);
 
         assertTrue(allIncompleteRight.hasIncompleteCore());
-        assertEquals("CATACGCAGT", allIncompleteRight.centerBases());
+        assertEquals("CATACGCAGT", allIncompleteRight.coreString());
     }
 
     @NotNull
