@@ -72,14 +72,14 @@ public class CodonExtractor {
                         LOGGER.warn("{} on {} is not included in driver catalog and won't ever be reported.", type, gene);
                     } else if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
                             DealWithDriverInconsistentModeAnnotation.FILTER)) {
-                        LOGGER.info("{} on {} is not included in driver catalog and won't ever be reported.", type, gene);
+                        LOGGER.info("Filtered -- {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
                         return null;
                     }
                 }
             } else {
                 if (driverCategory == null) {
                     if (dealWithDriverInconsistentModeAnnotation.logging()) {
-                        LOGGER.warn("{} on {} is not included in driver catalog and won't ever be reported.", type, gene);
+                        LOGGER.info("Filtered -- {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
                         return null;
                     }
                 }

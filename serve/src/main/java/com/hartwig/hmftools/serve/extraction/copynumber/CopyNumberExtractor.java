@@ -48,7 +48,9 @@ public class CopyNumberExtractor {
                         return ImmutableKnownCopyNumber.builder().gene(gene).type(toCopyNumberType(type)).build();
                     } else if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
                             DealWithDriverInconsistentModeAnnotation.FILTER)) {
-                        LOGGER.info("Mismatch for {} in driver category {} vs event type {}", gene, driverCategory, type);
+                        LOGGER.info("Filtered -- Mismatch for {} in driver category {} vs event type {}", gene, driverCategory, type);
+                        return null;
+                    } else {
                         return null;
                     }
                 } else {
@@ -58,6 +60,13 @@ public class CopyNumberExtractor {
                 if ((driverCategory == DriverCategory.ONCO && type == EventType.AMPLIFICATION) || (driverCategory == DriverCategory.TSG
                         && type == EventType.DELETION)) {
                     return ImmutableKnownCopyNumber.builder().gene(gene).type(toCopyNumberType(type)).build();
+                } else {
+                    if (driverCategory == null) {
+                        LOGGER.info("Filtered -- {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
+                    } else {
+                        LOGGER.info("Filtered -- Mismatch for {} in driver category {} vs event type {}", gene, driverCategory, type);
+                    }
+                    return null;
                 }
             }
         }
