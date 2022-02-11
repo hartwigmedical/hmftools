@@ -58,6 +58,7 @@ public class LilacConfig
     public final RefGenomeVersion RefGenVersion;
     public final String SampleDataDir;
     public final String OutputDir;
+    public final boolean WriteAllFiles;
 
     public int MinBaseQual;
     private final int MinEvidence;
@@ -112,7 +113,7 @@ public class LilacConfig
     public static final String LOG_DEBUG = "log_debug";
     public static final String RUN_VALIDATION = "run_validation";
     public static final String MAX_ELIM_CANDIDATES = "max_elim_candidates";
-    public static final String LOG_LEVEL = "log_level";
+    public static final String WRITE_ALL_FILES = "write_all_files";
 
     public static final Logger LL_LOGGER = LogManager.getLogger(LilacConfig.class);;
 
@@ -176,6 +177,7 @@ public class LilacConfig
 
         DebugPhasing = cmd.hasOption(DEBUG_PHASING); //  || cmd.hasOption(LOG_);
         RunValidation = cmd.hasOption(RUN_VALIDATION);
+        WriteAllFiles = cmd.hasOption(WRITE_ALL_FILES);
     }
 
     private String checkFileExists(final String filename)
@@ -280,6 +282,7 @@ public class LilacConfig
         Threads = 0;
         DebugPhasing = false;
         RunValidation = true;
+        WriteAllFiles = false;
     }
 
     @NotNull
@@ -293,8 +296,6 @@ public class LilacConfig
         options.addOption(RNA_BAM, true,"Analyse tumor BAM only");
         options.addOption(RUN_ID, true,"Only search for HLA-Y fragments");
         options.addOption(RESOURCE_DIR, true,"Path to resource files");
-        addOutputDir(options);
-        addRefGenomeConfig(options);
         options.addOption(MIN_BASE_QUAL, true,"Min base quality threshold");
         options.addOption(MIN_EVIDENCE, true,"Min fragment evidence required");
         options.addOption(MIN_HIGH_QUAL_EVIDENCE_FACTOR, true,"Min high-qual fragment evidence factor");
@@ -309,8 +310,11 @@ public class LilacConfig
         options.addOption(SOMATIC_VARIANTS, true,"Path to somatic VCF");
         options.addOption(DEBUG_PHASING, false, "More detailed logging of phasing");
         options.addOption(RUN_VALIDATION, false, "Run validation checks");
-        addLoggingOptions(options);
         options.addOption(THREADS, true,"Number of threads");
+        options.addOption(WRITE_ALL_FILES, false,"Write more detailed output files");
+        addRefGenomeConfig(options);
+        addOutputDir(options);
+        addLoggingOptions(options);
         DatabaseAccess.addDatabaseCmdLineArgs((Options) options);
         return options;
     }

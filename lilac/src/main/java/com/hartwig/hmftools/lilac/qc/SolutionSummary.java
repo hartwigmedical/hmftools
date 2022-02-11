@@ -46,10 +46,13 @@ public class SolutionSummary
             writer.write(generateAlleleHeader());
             writer.newLine();
 
-            for(int i = 0; i < 6; ++i)
+            if(ReferenceCoverage != null)
             {
-                writer.write(generateAlleleBody(i));
-                writer.newLine();
+                for(int i = 0; i < 6; ++i)
+                {
+                    writer.write(generateAlleleBody(i));
+                    writer.newLine();
+                }
             }
 
             writer.close();
