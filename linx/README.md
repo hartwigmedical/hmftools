@@ -81,6 +81,7 @@ Argument  | Description
 -fusion_gene_distance | distance upstream of gene to consider a breakend applicable (default = 100K)
 -restricted_fusion_genes | restrict fusion search to specified genes, separated by ';'
 -write_vis_data | write output to for generation of Circos clustering and chaining plots
+-write_all_vis_fusions | Write visualiser data for all fusions including non-reportable 
 -log_debug | logs in debug mode
 
 ### Running LINX from the HMF MySQL database
