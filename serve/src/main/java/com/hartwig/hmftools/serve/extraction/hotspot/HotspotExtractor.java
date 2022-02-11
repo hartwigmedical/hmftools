@@ -71,6 +71,10 @@ public class HotspotExtractor {
                     return proteinResolver.resolve(gene, transcriptId, proteinAnnotationExtractor.apply(event));
                 }
             } else {
+                if (driverCategory == null) {
+                    LOGGER.warn("Filtered -- {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
+                    return null;
+                }
                 return proteinResolver.resolve(gene, transcriptId, proteinAnnotationExtractor.apply(event));
             }
         }

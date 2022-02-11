@@ -82,7 +82,7 @@ public class ExonExtractor {
                 }
             } else {
                 if (driverCategory == null) {
-                    LOGGER.info("Filtered -- {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
+                    LOGGER.warn("Filtered -- {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
                     return null;
                 }
             }

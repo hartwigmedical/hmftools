@@ -81,10 +81,13 @@ public class GeneLevelExtractor {
             if (geneIsPresentInFusionCache(gene)) {
                 return ImmutableGeneLevelAnnotation.builder().gene(gene).event(GeneLevelEvent.FUSION).build();
             } else {
-                LOGGER.warn("Filtered -- Promiscuous fusion '{}' is not present in the known fusion cache", gene);
-                return null;
+                if (!geneIsPresentInFusionCache(gene)) {
+                    LOGGER.warn("Filtered -- Promiscuous fusion '{}' is not present in the known fusion cache", gene);
+                    return null;
+                } else {
+                    return ImmutableGeneLevelAnnotation.builder().gene(gene).event(GeneLevelEvent.FUSION).build();
+                }
             }
-
         }
         return null;
     }
@@ -172,7 +175,14 @@ public class GeneLevelExtractor {
                 }
             } else if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
                     DealWithDriverInconsistentModeAnnotation.FILTER)) {
-                LOGGER.info("Filtered -- {} on {} is not included in driver catalog and won't ever be reported.", gene, result);
+                if (driverBasedEvent == GeneLevelEvent.ANY_MUTATION) {
+                    LOGGER.info("Filtered -- {} on {} is not included in driver catalog and won't ever be reported.", gene, result);
+                } else if (result != driverBasedEvent) {
+                    LOGGER.info("Mismatch in driver gene event for '{}'. Event suggests {} while driver catalog suggests {}",
+                            gene,
+                            result,
+                            driverBasedEvent);
+                }
                 return null;
             }
         } else {
@@ -180,7 +190,7 @@ public class GeneLevelExtractor {
                 if (driverBasedEvent == GeneLevelEvent.ANY_MUTATION) {
                     LOGGER.warn("Filtered -- {} on {} is not included in driver catalog and won't ever be reported.", gene, result);
                 } else {
-                    LOGGER.info("Filtered -- Mismatch in driver gene event for '{}'. Event suggests {} while driver catalog suggests {}",
+                    LOGGER.warn("Filtered -- Mismatch in driver gene event for '{}'. Event suggests {} while driver catalog suggests {}",
                             gene,
                             result,
                             driverBasedEvent);

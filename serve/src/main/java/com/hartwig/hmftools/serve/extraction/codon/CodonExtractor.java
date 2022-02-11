@@ -78,10 +78,8 @@ public class CodonExtractor {
                 }
             } else {
                 if (driverCategory == null) {
-                    if (dealWithDriverInconsistentModeAnnotation.logging()) {
-                        LOGGER.info("Filtered -- {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
-                        return null;
-                    }
+                    LOGGER.warn("Filtered -- {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
+                    return null;
                 }
             }
 
