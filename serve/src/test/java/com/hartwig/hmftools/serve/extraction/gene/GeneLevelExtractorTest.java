@@ -25,7 +25,6 @@ public class GeneLevelExtractorTest {
             new GeneChecker(Sets.newHashSet("KIT", "NTRK3", "STK11", "MET", "TP53", "KRAS", "NOTCH1", "BRCA1"));
 
     @Test
-    @Ignore
     public void canExtractGeneLevelEventWiltType() {
         GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KIT"));
         GeneLevelAnnotation geneLevelEvent = geneLevelExtractor.extract("KIT", EventType.WILD_TYPE, "KIT  wild type");
@@ -47,7 +46,7 @@ public class GeneLevelExtractorTest {
 
     @Test
     public void canExtractGeneLevelEventTsg() {
-        GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KIT"));
+        GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "KIT"));
         GeneLevelAnnotation geneLevelEvent = geneLevelExtractor.extract("TP53", EventType.GENE_LEVEL, "TP53  negative");
 
         assertNotNull(geneLevelEvent);
@@ -60,9 +59,7 @@ public class GeneLevelExtractorTest {
         GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KIT"));
 
         GeneLevelAnnotation conflictingGeneLevelEvent = geneLevelExtractor.extract("STK11", EventType.GENE_LEVEL, "STK11 positive");
-        assertNotNull(conflictingGeneLevelEvent);
-        assertEquals("STK11", conflictingGeneLevelEvent.gene());
-        assertEquals(GeneLevelEvent.ACTIVATION, conflictingGeneLevelEvent.event());
+        assertNull(conflictingGeneLevelEvent);
     }
 
     @Test
@@ -93,13 +90,14 @@ public class GeneLevelExtractorTest {
     }
 
     @Test
+    @Ignore
     public void canExtractGeneLevelEvent() {
         GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("NOTCH1", "MET"));
 
-        assertEquals(ImmutableGeneLevelAnnotation.builder().gene("KRAS").event(GeneLevelEvent.ACTIVATION).build(),
-                geneLevelExtractor.extractGeneLevelEvent("KRAS", "KRAS activating mutation"));
-        assertEquals(ImmutableGeneLevelAnnotation.builder().gene("KRAS").event(GeneLevelEvent.ACTIVATION).build(),
-                geneLevelExtractor.extractGeneLevelEvent("KRAS", "KRAS act mut"));
+        assertEquals(ImmutableGeneLevelAnnotation.builder().gene("MET").event(GeneLevelEvent.ACTIVATION).build(),
+                geneLevelExtractor.extractGeneLevelEvent("MET", "MET activating mutation"));
+        assertEquals(ImmutableGeneLevelAnnotation.builder().gene("MET").event(GeneLevelEvent.ACTIVATION).build(),
+                geneLevelExtractor.extractGeneLevelEvent("MET", "MET act mut"));
         assertEquals(ImmutableGeneLevelAnnotation.builder().gene("NOTCH1").event(GeneLevelEvent.INACTIVATION).build(),
                 geneLevelExtractor.extractGeneLevelEvent("NOTCH1", "LOSS-OF-FUNCTION"));
         assertEquals(ImmutableGeneLevelAnnotation.builder().gene("NOTCH1").event(GeneLevelEvent.INACTIVATION).build(),
@@ -111,10 +109,8 @@ public class GeneLevelExtractorTest {
                 geneLevelExtractor.extractGeneLevelEvent("NOTCH1", "MUTATION"));
         assertEquals(ImmutableGeneLevelAnnotation.builder().gene("NOTCH1").event(GeneLevelEvent.INACTIVATION).build(),
                 geneLevelExtractor.extractGeneLevelEvent("NOTCH1", "NOTCH1 "));
-        assertEquals(ImmutableGeneLevelAnnotation.builder().gene("BRCA1").event(GeneLevelEvent.ANY_MUTATION).build(),
-                geneLevelExtractor.extractGeneLevelEvent("BRCA1", "BRCA1"));
-        assertEquals(ImmutableGeneLevelAnnotation.builder().gene("KRAS").event(GeneLevelEvent.ANY_MUTATION).build(),
-                geneLevelExtractor.extractGeneLevelEvent("KRAS", "not a gene level event"));
+        assertNull(geneLevelExtractor.extractGeneLevelEvent("BRCA1", "BRCA1"));
+        assertNull(geneLevelExtractor.extractGeneLevelEvent("KRAS", "not a gene level event"));
     }
 
     @Test

@@ -64,13 +64,17 @@ public class HotspotExtractor {
                         return proteinResolver.resolve(gene, transcriptId, proteinAnnotationExtractor.apply(event));
                     } else if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
                             DealWithDriverInconsistentModeAnnotation.FILTER)) {
-                        LOGGER.info("{} on {} is not included in driver catalog and won't ever be reported.", type, gene);
+                        LOGGER.info("Filtered -- {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
                         return null;
                     }
                 } else {
                     return proteinResolver.resolve(gene, transcriptId, proteinAnnotationExtractor.apply(event));
                 }
             } else {
+                if (driverCategory == null) {
+                    LOGGER.warn("Filtered -- {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
+                    return null;
+                }
                 return proteinResolver.resolve(gene, transcriptId, proteinAnnotationExtractor.apply(event));
             }
         }

@@ -182,7 +182,6 @@ public class FusionExtractor {
             }
         }
 
-
         return pair;
     }
 
@@ -201,7 +200,7 @@ public class FusionExtractor {
                         return pair;
                     } else if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
                             DealWithDriverInconsistentModeAnnotation.FILTER)) {
-                        LOGGER.info("Fusion '{}-{}' is not part of the known fusion cache", pair.geneUp(), pair.geneDown());
+                        LOGGER.info("Filtered -- Fusion '{}-{}' is not part of the known fusion cache", pair.geneUp(), pair.geneDown());
                         return null;
                     }
                 } else {
@@ -209,14 +208,11 @@ public class FusionExtractor {
                 }
             } else {
                 if (!isIncludedSomewhereInFusionCache(pair.geneUp(), pair.geneDown())) {
-                    if (dealWithDriverInconsistentModeAnnotation.logging()) {
-                        LOGGER.warn("Fusion '{}-{}' is not part of the known fusion cache", pair.geneUp(), pair.geneDown());
-                    }
+                    LOGGER.warn("Filtered -- Fusion '{}-{}' is not part of the known fusion cache", pair.geneUp(), pair.geneDown());
                     return null;
                 } else {
                     return pair;
                 }
-
             }
         }
         return null;
