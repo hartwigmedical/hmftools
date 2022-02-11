@@ -60,7 +60,7 @@ public class MixedSomaticGermlineIdentifier extends BufferedPostProcessor
 
     private static boolean isPassingMnv(final SageVariant newVariant)
     {
-        return newVariant.isPassing() && newVariant.isMnv();
+        return newVariant.isPassing() && newVariant.isMnvOrSnv();
     }
 
 }

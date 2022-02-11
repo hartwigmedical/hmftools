@@ -456,6 +456,7 @@ public class VariantPhaser
 
         List<Integer> uninformativeLpsIds = Lists.newArrayList();
         List<Integer> processedLpsIds = Lists.newArrayList();
+        Set<Integer> singlePassingVarGroups = Sets.newHashSet();
 
         // first put all variants into LPS datasets
         for(Integer lpsId : passingPhaseSets)
@@ -470,12 +471,13 @@ public class VariantPhaser
                 continue;
             }
 
+            if(passingVariants.size() == 1 && passingVariants.get(0).localPhaseSets().size() == 1)
+                singlePassingVarGroups.add(lpsId);
+
             lpsVariantsMap.put(lpsId, lpsVariants);
             lpsPassingVariantsMap.put(lpsId, passingVariants);
             lpsMaxReadCountMap.put(lpsId, lpsVariants.get(0).getLpsReadCount(lpsId));
         }
-
-        Set<Integer> singlePassingVarGroups = Sets.newHashSet();
 
         for(Map.Entry<Integer,List<SageVariant>> entry : lpsVariantsMap.entrySet())
         {

@@ -205,10 +205,16 @@ public class SageVariant
     {
         return variant().ref().length() != variant().alt().length();
     }
-    public boolean isMnv()
+    public boolean isMnvOrSnv()
     {
         return variant().ref().length() >= 1 && variant().ref().length() == variant().alt().length();
     }
+
+    public boolean isMnv()
+    {
+        return variant().ref().length() > 1 && variant().ref().length() == variant().alt().length();
+    }
+
     public boolean isSnv()
     {
         return variant().ref().length() == 1 && variant().alt().length() == 1;

@@ -17,7 +17,6 @@ import java.util.function.Consumer;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.select.TranscriptSelector;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
@@ -125,7 +124,7 @@ public class MixedSomaticGermlineDedup extends BufferedPostProcessor
 
     private static boolean isMixedGermlineMnv(final SageVariant variant)
     {
-        return variant.isPassing() && variant.isMnv() && variant.mixedGermlineImpact() > 0;
+        return variant.isPassing() && variant.isMnvOrSnv() && variant.mixedGermlineImpact() > 0;
     }
 
 }

@@ -75,7 +75,7 @@ public class RegionTask implements Callable
         mPerfCounters = Lists.newArrayList();
         mPerfCounters.add(new PerformanceCounter("Candidates"));
         mPerfCounters.add(new PerformanceCounter("Evidence"));
-        mPerfCounters.add(new PerformanceCounter("Dedup"));
+        // mPerfCounters.add(new PerformanceCounter("Dedup"));
     }
 
     public final List<SageVariant> getVariants() { return mSageVariants; }
@@ -141,13 +141,13 @@ public class RegionTask implements Callable
 
         variantPhaser.assignLocalPhaseSets(passingTumorReadCounters, validTumorReadCounters);
 
-        mPerfCounters.get(PC_DEDUP).start();
+        // mPerfCounters.get(PC_DEDUP).start();
 
         SG_LOGGER.trace("phasing {} variants", mSageVariants.size());
 
         mVariantDeduper.processVariants(mSageVariants);
 
-        mPerfCounters.get(PC_DEDUP).stop();
+        //mPerfCounters.get(PC_DEDUP).stop();
 
         SG_LOGGER.trace("{}: region({}) complete", mTaskId, mRegion);
 
