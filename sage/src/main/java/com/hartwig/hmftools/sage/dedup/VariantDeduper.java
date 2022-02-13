@@ -1,14 +1,15 @@
-package com.hartwig.hmftools.sage.phase;
+package com.hartwig.hmftools.sage.dedup;
 
-import static com.hartwig.hmftools.sage.phase.DedupIndel.dedupIndels;
-import static com.hartwig.hmftools.sage.phase.DedupSnvMnv.dedupMnvOverlaps;
-import static com.hartwig.hmftools.sage.phase.DedupSnvMnv.dedupMnvSnvs;
+import static com.hartwig.hmftools.sage.dedup.DedupIndel.dedupIndels;
+import static com.hartwig.hmftools.sage.dedup.DedupSnvMnv.dedupMnvOverlaps;
+import static com.hartwig.hmftools.sage.dedup.DedupSnvMnv.dedupMnvSnvs;
 
 import java.util.List;
 
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.SageVariant;
+import com.hartwig.hmftools.sage.dedup_old.VariantDeduperOld;
 
 public class VariantDeduper
 {

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.phase;
+package com.hartwig.hmftools.sage.dedup_old;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcExonicCodingPhase;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.sage.phase.DedupMixedGermlineSomatic.keepMnv;
+import static com.hartwig.hmftools.sage.dedup.DedupMixedGermlineSomatic.keepMnv;
 
 import java.util.Collection;
 import java.util.List;

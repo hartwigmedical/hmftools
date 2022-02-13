@@ -12,7 +12,7 @@ import static com.hartwig.hmftools.sage.common.TestUtils.createVariant;
 import static com.hartwig.hmftools.sage.common.TestUtils.createVariantHotspot;
 import static com.hartwig.hmftools.sage.common.TestUtils.setTumorQuality;
 import static com.hartwig.hmftools.sage.config.SoftFilter.MIN_GERMLINE_DEPTH;
-import static com.hartwig.hmftools.sage.phase.DedupIndel.dedupIndels;
+import static com.hartwig.hmftools.sage.dedup.DedupIndel.dedupIndels;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -22,10 +22,12 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.test.GeneTestUtils;
-import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.SageVariant;
+import com.hartwig.hmftools.sage.dedup.DedupMixedGermlineSomatic;
+import com.hartwig.hmftools.sage.dedup.DedupSnvMnv;
+import com.hartwig.hmftools.sage.dedup_old.BufferedPostProcessor;
 
 import org.junit.Test;
 

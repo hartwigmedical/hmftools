@@ -1,12 +1,11 @@
-package com.hartwig.hmftools.sage.evidence;
+package com.hartwig.hmftools.sage.phase;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.evidence.PhasedVariantGroup.maxPosition;
-import static com.hartwig.hmftools.sage.evidence.PhasedVariantGroup.minPosition;
+import static com.hartwig.hmftools.sage.phase.PhasedVariantGroup.maxPosition;
+import static com.hartwig.hmftools.sage.phase.PhasedVariantGroup.minPosition;
 
 import java.util.List;
 import java.util.Map;
@@ -20,7 +19,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.common.SageVariant;
-import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
+import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
 public class VariantPhaser
 {

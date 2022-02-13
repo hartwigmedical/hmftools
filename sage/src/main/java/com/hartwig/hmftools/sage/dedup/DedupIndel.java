@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.phase;
+package com.hartwig.hmftools.sage.dedup;
 
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_INDEL_FILTER;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_MNV_FILTER;

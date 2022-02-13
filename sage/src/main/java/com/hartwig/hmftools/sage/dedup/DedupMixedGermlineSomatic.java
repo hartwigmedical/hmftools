@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.phase;
+package com.hartwig.hmftools.sage.dedup;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;

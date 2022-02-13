@@ -24,10 +24,9 @@ import com.hartwig.hmftools.sage.config.VariantFilters;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
-import com.hartwig.hmftools.sage.evidence.VariantPhaser;
+import com.hartwig.hmftools.sage.phase.VariantPhaser;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
-import com.hartwig.hmftools.sage.phase.VariantDeduper;
-import com.hartwig.hmftools.sage.phase.VariantDeduperOld;
+import com.hartwig.hmftools.sage.dedup.VariantDeduper;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 
 import htsjdk.samtools.reference.ReferenceSequenceFile;

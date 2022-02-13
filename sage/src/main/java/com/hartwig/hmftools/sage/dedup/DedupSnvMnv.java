@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.sage.phase;
+package com.hartwig.hmftools.sage.dedup;
 
-import static com.hartwig.hmftools.sage.phase.VariantDeduper.longerContainsShorter;
+import static com.hartwig.hmftools.sage.dedup.VariantDeduper.longerContainsShorter;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_MNV_FILTER;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_SNV_MNV_FILTER;
 
@@ -43,8 +43,11 @@ public final class DedupSnvMnv
 
                 // filter the overlaps
                 DedupSnvMnv.dedupMnvPair(firstVariant, nextVariant);
-                ++nextIndex; // skip past the pair
-                break;
+
+                if(!firstVariant.isPassing())
+                    break;
+
+                ++nextIndex;
             }
 
             index = nextIndex;
@@ -106,6 +109,10 @@ public final class DedupSnvMnv
 
                 // filter the overlaps
                 DedupSnvMnv.dedupMnvSnvPair(firstVariant, nextVariant);
+
+                if(!firstVariant.isPassing())
+                    break;
+
                 ++nextIndex;
             }
 

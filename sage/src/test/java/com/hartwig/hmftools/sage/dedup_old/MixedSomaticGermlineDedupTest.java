@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.sage.phase;
+package com.hartwig.hmftools.sage.dedup_old;
 
-import static com.hartwig.hmftools.sage.phase.DedupMixedGermlineSomatic.codonDifferences;
-import static com.hartwig.hmftools.sage.phase.LocalRealignSetTest.create;
+import static com.hartwig.hmftools.sage.dedup.DedupMixedGermlineSomatic.codonDifferences;
+import static com.hartwig.hmftools.sage.dedup_old.LocalRealignSetTest.create;
 
 import static org.junit.Assert.assertEquals;
 

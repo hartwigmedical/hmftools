@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.phase;
+package com.hartwig.hmftools.sage.dedup_old;
 
 import java.util.List;
 import java.util.function.Consumer;

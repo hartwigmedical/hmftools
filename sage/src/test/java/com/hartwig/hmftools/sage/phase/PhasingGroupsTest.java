@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.sage.phase;
 
 import static com.hartwig.hmftools.sage.config.SoftFilter.MAX_GERMLINE_VAF;
-import static com.hartwig.hmftools.sage.evidence.VariantPhaser.mergeByExtension;
-import static com.hartwig.hmftools.sage.evidence.VariantPhaser.mergeMatching;
-import static com.hartwig.hmftools.sage.evidence.VariantPhaser.mergeUninformative;
-import static com.hartwig.hmftools.sage.evidence.VariantPhaser.removeUninformativeLps;
+import static com.hartwig.hmftools.sage.phase.VariantPhaser.mergeByExtension;
+import static com.hartwig.hmftools.sage.phase.VariantPhaser.mergeMatching;
+import static com.hartwig.hmftools.sage.phase.VariantPhaser.mergeUninformative;
+import static com.hartwig.hmftools.sage.phase.VariantPhaser.removeUninformativeLps;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -24,9 +24,7 @@ import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
-import com.hartwig.hmftools.sage.evidence.PhasedVariantGroup;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
-import com.hartwig.hmftools.sage.evidence.VariantPhaser;
 
 import org.junit.Test;
 

@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.sage.phase;
+package com.hartwig.hmftools.sage.dedup_old;
 
-import static com.hartwig.hmftools.sage.phase.VariantDeduperOld.PHASE_BUFFER;
+import static com.hartwig.hmftools.sage.dedup_old.VariantDeduperOld.PHASE_BUFFER;
 
 import java.util.Collection;
 import java.util.function.Consumer;
