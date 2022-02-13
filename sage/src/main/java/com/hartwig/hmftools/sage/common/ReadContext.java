@@ -110,11 +110,6 @@ public class ReadContext
 
     public int maxFlankLength() { return mReadBases.maxFlankLength(); }
 
-    public int length()
-    {
-        return readBasesRightFlankIndex() - readBasesLeftFlankIndex() + 1;
-    }
-
     @VisibleForTesting
     public String coreString() { return mReadBases.coreString(); }
 

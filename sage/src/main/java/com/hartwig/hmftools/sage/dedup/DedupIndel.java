@@ -92,11 +92,14 @@ public final class DedupIndel
             return false;
         }
 
-        if(secondRefBases[CORE_STR].length() < firstRefBases[CORE_STR].length())
+        int firstRcLength = first.readContext().indexedBases().length();
+        int secondRcLength = second.readContext().indexedBases().length();
+
+        if(secondRcLength < firstRcLength)
         {
             second.filters().add(DEDUP_INDEL_FILTER);
         }
-        else if(secondRefBases[CORE_STR].length() > firstRefBases[CORE_STR].length())
+        else if(secondRcLength > firstRcLength)
         {
             first.filters().add(DEDUP_INDEL_FILTER);
         }

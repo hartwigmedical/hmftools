@@ -86,7 +86,7 @@ public class DedupMixedGermlineSomatic
                 if(nextVariant.position() - maxPos > MAX_DISTANCE)
                     break;
 
-                if(!nextVariant.hasMatchingLps(firstVariant.localPhaseSets()) || (firstVariant.isSnv() == nextVariant.isSnv()))
+                if(!nextVariant.hasMatchingLps(firstVariant.localPhaseSets()))
                 {
                     ++nextIndex;
                     continue;

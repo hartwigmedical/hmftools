@@ -470,7 +470,7 @@ public class VariantPhaser
                 continue;
             }
 
-            if(passingVariants.size() == 1 && passingVariants.get(0).localPhaseSets().size() == 1)
+            if(lpsVariants.size() == 1 && passingVariants.get(0).localPhaseSets().size() == 1)
                 singlePassingVarGroups.add(lpsId);
 
             lpsVariantsMap.put(lpsId, lpsVariants);
@@ -587,7 +587,6 @@ public class VariantPhaser
                 lpsVariants.forEach(x -> x.removeLps(lpsId));
             }
         }
-
     }
 
     private void logPhasedReadCounters(final List<PhasedVariantGroup> phasedGroups, final String stage)
