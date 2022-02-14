@@ -111,7 +111,7 @@ public class DedupMixedGermlineSomatic
                 ++nextIndex;
             }
 
-            index = nextIndex;
+            ++index;
         }
     }
 

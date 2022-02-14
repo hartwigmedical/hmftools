@@ -91,8 +91,8 @@ public class VariantDedupTest
 
         clearFilters(variants);
 
-        // ATGC -> CGAT
-        var1 = createVariant(10, "ATG", "CGA");
+        // dedup shorter if has same number of changed bases
+        var1 = createVariant(10, "ATG", "CTA");
         var2 = createVariant(12, "GC", "AT");
         addLocalPhaseSet(var1, 1, 1);
         addLocalPhaseSet(var2, 1, 1);
@@ -101,8 +101,8 @@ public class VariantDedupTest
 
         DedupSnvMnv.dedupMnvOverlaps(variants);
 
-        assertTrue(var1.isPassing());
-        assertFalse(var2.isPassing());
+        assertFalse(var1.isPassing());
+        assertTrue(var2.isPassing());
     }
 
     @Test

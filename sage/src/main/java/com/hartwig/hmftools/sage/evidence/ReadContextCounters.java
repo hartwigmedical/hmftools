@@ -1,12 +1,8 @@
 package com.hartwig.hmftools.sage.evidence;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
 import com.hartwig.hmftools.sage.candidate.Candidate;
@@ -16,22 +12,18 @@ public class ReadContextCounters
 {
     private final List<Candidate> mCandidates;
 
-    // multiple read counters exist to support multiple samples
+    // multiple read counters exist to support multiple samples - these are 1:1 with the candidates above
     private final List<List<ReadContextCounter>> mSampleCandidateReadCounters;
     private final List<Integer> mFilteredCandidateIndex; // index of the filtered candidates into the original/full list
-
-    // private final Map<VariantHotspot,List<ReadContextCounter>> mVariantReadCounters;
 
     public ReadContextCounters(final List<Candidate> candidates)
     {
         mCandidates = candidates;
         mSampleCandidateReadCounters = Lists.newArrayList();
-        // mVariantReadCounters = Maps.newHashMap();
         mFilteredCandidateIndex = Lists.newArrayList();
     }
 
     public int candidateCount() { return mCandidates.size(); }
-    // public int variantCount() { return mVariantReadCounters.size(); }
 
     public List<ReadContextCounter> getReadCounters(final int candidateIndex)
     {
@@ -99,20 +91,6 @@ public class ReadContextCounters
 
             readCounters.add(sampleReadCounters.get(i));
         }
-
-        /*
-        for(ReadContextCounter readCounter : readCounters)
-        {
-            List<ReadContextCounter> variantReadCounters = mVariantReadCounters.get(readCounter.variant());
-            if(variantReadCounters == null)
-            {
-                variantReadCounters = Lists.newArrayListWithExpectedSize(expectedCount);
-                mVariantReadCounters.put(readCounter.variant(), variantReadCounters);
-            }
-
-            variantReadCounters.add(readCounter);
-        }
-        */
     }
 
     public List<Candidate> filterCandidates(final FilterConfig filterConfig)
@@ -125,22 +103,10 @@ public class ReadContextCounters
 
             if(readCounters.stream().anyMatch(x -> filterConfig.passesHardFilters(x)))
             {
-                Candidate candidate = mCandidates.get(i);
-
                 validCandidates.add(mCandidates.get(i));
                 mFilteredCandidateIndex.add(i);
             }
         }
-
-        /*
-        for(Candidate candidate : mCandidates)
-        {
-            List<ReadContextCounter> readCounters = mVariantReadCounters.get(candidate.variant());
-
-            if(readCounters != null && readCounters.stream().anyMatch(x -> filterConfig.passesHardFilters(x)))
-                validCandidates.add(candidate);
-        }
-        */
 
         return  validCandidates;
     }

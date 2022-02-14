@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.candidate;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.sage.SageConstants.MIN_SECOND_CANDIDATE_FULL_READS;
+import static com.hartwig.hmftools.sage.SageConstants.MIN_SECOND_CANDIDATE_FULL_READS_PERC;
 
 import java.util.Collections;
 import java.util.List;
@@ -40,14 +41,18 @@ public class AltContext implements VariantHotspot
         mCandidate = null;
     }
 
-    public AltContext(final RefContext refContext, final String ref, final String alt, final ReadContextCandidate candidate)
+    public AltContext(
+            final RefContext refContext, final String ref, final String alt, final ReadContextCandidate candidate,
+            int rawSupportAlt, int rawBaseQualAlt)
     {
         RefContext = refContext;
         Ref = ref;
         Alt = alt;
 
-        mReadContextCandidates = null;
         mCandidate = candidate;
+        mRawSupportAlt = rawSupportAlt;
+        mRawBaseQualityAlt = rawBaseQualAlt;
+        mReadContextCandidates = null;
     }
 
     public void incrementAltRead(int baseQuality)
@@ -134,49 +139,30 @@ public class AltContext implements VariantHotspot
             return null;
 
         List<AltContext> validContexts = Lists.newArrayListWithExpectedSize(min(2, mReadContextCandidates.size()));
-        validContexts.add(new AltContext(RefContext, Ref, Alt, mReadContextCandidates.get(0)));
+        validContexts.add(new AltContext(
+                RefContext, Ref, Alt, mReadContextCandidates.get(0), mRawSupportAlt, mRawBaseQualityAlt));
 
         final String topCore = mReadContextCandidates.get(0).readContext().coreString();
+        double topCandidateRcThreshold = mReadContextCandidates.get(0).fullMatch() * MIN_SECOND_CANDIDATE_FULL_READS_PERC;
 
         // add a second if its core is different and it has sufficient support
         for(int i = 0; i < mReadContextCandidates.size(); ++i)
         {
             ReadContextCandidate candidate = mReadContextCandidates.get(i);
 
-            if(candidate.fullMatch() < MIN_SECOND_CANDIDATE_FULL_READS)
+            if(candidate.fullMatch() < MIN_SECOND_CANDIDATE_FULL_READS || candidate.fullMatch() < topCandidateRcThreshold)
                 break;
 
             String coreStr = candidate.readContext().coreString();
             if(coreStr.contains(topCore) || topCore.contains(coreStr))
                 continue;
 
-            validContexts.add(new AltContext(RefContext, Ref, Alt, candidate));
+            validContexts.add(new AltContext(RefContext, Ref, Alt, candidate, mRawSupportAlt, mRawBaseQualityAlt));
             break;
         }
 
         mReadContextCandidates.clear();
         return validContexts;
-    }
-
-    public boolean finaliseAndValidate()
-    {
-        if(mReadContextCandidates.isEmpty())
-            return false;
-
-        mReadContextCandidates.removeIf(x -> x.readContext().hasIncompleteFlanks());
-
-        Collections.sort(mReadContextCandidates);
-
-        if(!mReadContextCandidates.isEmpty())
-        {
-            mCandidate = mReadContextCandidates.get(0);
-
-
-        }
-
-        mReadContextCandidates.clear();
-
-        return mCandidate != null;
     }
 
     public ReadContext readContext() { return mCandidate.readContext(); }
@@ -275,10 +261,7 @@ public class AltContext implements VariantHotspot
 
         public ReadContext readContext() { return mReadContext; }
 
-        public int fullMatch()
-        {
-            return mFullMatch;
-        }
+        public int fullMatch() { return mFullMatch; }
 
         @Override
         public int compareTo(@NotNull final ReadContextCandidate o)

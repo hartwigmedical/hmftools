@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.candidate;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import static junit.framework.TestCase.assertEquals;
@@ -39,7 +40,7 @@ public class AltContextTest
         Collections.shuffle(readContexts);
         readContexts.forEach(x -> victim.addReadContext(0, x));
 
-        assertFalse(victim.finaliseAndValidate());
+        assertTrue(victim.selectCandidates() == null);
     }
 
     @Test
@@ -58,8 +59,9 @@ public class AltContextTest
         Collections.shuffle(readContexts);
         readContexts.forEach(x -> victim.addReadContext(0, x));
 
-        assertTrue(victim.finaliseAndValidate());
-        assertEquals("AG" + core1 + "AG", new String(victim.readContext().readBases()));
+        List<AltContext> candidates = victim.selectCandidates();
+        assertNotNull(candidates);
+        assertEquals("AG" + core1 + "AG", new String(candidates.get(0).readContext().readBases()));
     }
 
     @Test
@@ -87,8 +89,9 @@ public class AltContextTest
         Collections.shuffle(readContexts);
         readContexts.forEach(x -> victim.addReadContext(0, x));
 
-        assertTrue(victim.finaliseAndValidate());
-        assertEquals("AG" + core1 + "AG", new String(victim.readContext().readBases()));
+        List<AltContext> candidates = victim.selectCandidates();
+        assertNotNull(candidates);
+        assertEquals("AG" + core1 + "AG", new String(candidates.get(0).readContext().readBases()));
     }
 
     @Test
@@ -116,8 +119,9 @@ public class AltContextTest
         Collections.shuffle(readContexts);
         readContexts.forEach(x -> victim.addReadContext(0, x));
 
-        assertTrue(victim.finaliseAndValidate());
-        assertEquals("AG" + core1 + "AG", new String(victim.readContext().readBases()));
+        List<AltContext> candidates = victim.selectCandidates();
+        assertNotNull(candidates);
+        assertEquals("AG" + core1 + "AG", new String(candidates.get(0).readContext().readBases()));
     }
 
     @Test

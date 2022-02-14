@@ -228,5 +228,9 @@ public class SageVariant
         return variant().ref().length() > variant().alt().length();
     }
 
-    public String toString() { return String.format("%s", mCandidate.toString()); }
+    public String toString()
+    {
+        return String.format("%s filters(%s)",
+                mCandidate.toString(), mFilters.toString());
+    }
 }

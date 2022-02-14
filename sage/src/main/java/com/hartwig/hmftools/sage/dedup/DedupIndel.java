@@ -71,7 +71,7 @@ public final class DedupIndel
         if(!first.hasMatchingLps(second.localPhaseSets()))
             return false;
 
-        if(first.isIndel() == second.isIndel())
+        if(!first.isIndel() && !second.isIndel())
             return false;
 
         return true;

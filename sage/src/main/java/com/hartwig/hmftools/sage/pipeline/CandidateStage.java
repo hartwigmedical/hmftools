@@ -48,7 +48,7 @@ public class CandidateStage
 
             List<AltContext> altContexts = mCandidateEvidence.readBam(sample, sampleBam, refSequence, region);
 
-            if(i == 0)
+            if(mConfig.TumorIds.size() == 1)
                 initialCandidates.addSingleSample(altContexts);
             else
                 initialCandidates.addOfMultipleSamples(altContexts);

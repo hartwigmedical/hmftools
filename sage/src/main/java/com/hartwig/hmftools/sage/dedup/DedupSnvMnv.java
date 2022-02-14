@@ -56,25 +56,51 @@ public final class DedupSnvMnv
 
     private static void dedupMnvPair(final SageVariant first, final SageVariant second)
     {
-        int firstRcLength = first.readContext().indexedBases().coreLength();
-        int secondRcLength = second.readContext().indexedBases().coreLength();
+        // First any MNV which has 2 changed bases and overlaps with an MNV with 3 changed bases is filtered.
+        // If both have 2 changed bases then the least compact MNV is filtered
+        // If both have the same number of bases and changed bases then the lowest qual MNV is filtered
+        int firstChangedBases = mnvChangedBaseCount(first);
+        int secondChangedBases = mnvChangedBaseCount(second);
 
-        if(firstRcLength > secondRcLength)
+        if(firstChangedBases < secondChangedBases)
         {
             second.filters().add(DEDUP_MNV_FILTER);
         }
-        else if(firstRcLength < secondRcLength)
+        else if(secondChangedBases < firstChangedBases)
         {
             first.filters().add(DEDUP_MNV_FILTER);
         }
         else
         {
-            // equal so use tumor quality
-            if(first.totalQuality() > second.totalQuality())
+            if(first.ref().length() < second.ref().length())
+            {
                 second.filters().add(DEDUP_MNV_FILTER);
-            else
+            }
+            else if(second.ref().length() < first.ref().length())
+            {
                 first.filters().add(DEDUP_MNV_FILTER);
+            }
+            else
+            {
+                // equal so use tumor quality
+                if(first.totalQuality() > second.totalQuality())
+                    second.filters().add(DEDUP_MNV_FILTER);
+                else
+                    first.filters().add(DEDUP_MNV_FILTER);
+            }
         }
+    }
+
+    private static int mnvChangedBaseCount(final SageVariant mnv)
+    {
+        int changed = 0;
+        for(int i = 0; i < mnv.ref().length(); ++i)
+        {
+            if(mnv.ref().charAt(i) != mnv.alt().charAt(i))
+                ++changed;
+        }
+
+        return changed;
     }
 
     public static void dedupMnvSnvs(final List<SageVariant> variants)
