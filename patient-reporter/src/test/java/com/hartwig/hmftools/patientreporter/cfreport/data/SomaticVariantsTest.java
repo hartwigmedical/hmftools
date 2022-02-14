@@ -60,7 +60,7 @@ public class SomaticVariantsTest {
         ReportableVariant variant2 = ImmutableReportableVariant.builder().from(base).gene("BRCA2").build();
         ReportableVariant variant3 = ImmutableReportableVariant.builder().from(base).gene("PALB2").build();
         ReportableVariant variant4 = ImmutableReportableVariant.builder().from(base).gene("RAD51B").build();
-        ReportableVariant variant5 = ImmutableReportableVariant.builder().from(base).gene("RAD51D").build();
+        ReportableVariant variant5 = ImmutableReportableVariant.builder().from(base).gene("RAD51C").build();
         ReportableVariant variant6 = ImmutableReportableVariant.builder().from(base).gene("BRAF").build();
 
         List<ReportableVariant> variants = Lists.newArrayList(variant1, variant2, variant3, variant4, variant5, variant6);

@@ -183,7 +183,7 @@ public final class SomaticVariants {
 
     @NotNull
     public static Set<String> determineHRDgenes(@NotNull List<ReportableVariant> reportableVariants) {
-        Set<String> HRD_genes = Sets.newHashSet("BRCA1", "BRCA2", "PALB2", "RAD51B", "RAD51D");
+        Set<String> HRD_genes = Sets.newHashSet("BRCA1", "BRCA2", "PALB2", "RAD51B", "RAD51C");
         Set<String> genesDisplay = Sets.newHashSet();
 
         for (ReportableVariant variant : reportableVariants) {
