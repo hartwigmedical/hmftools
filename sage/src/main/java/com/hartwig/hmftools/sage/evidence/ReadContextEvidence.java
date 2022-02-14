@@ -37,7 +37,7 @@ public class ReadContextEvidence
     // state per slice region
     private RefSequence mRefSequence;
     private QualityCalculator mQualityCalculator;
-    private List<ReadContextCounter> mReadCounters;
+    private List<ReadContextCounter> mReadCounters; // has one per candidate
     private int mLastCandidateIndex;
 
     private VariantPhaser mVariantPhaser;

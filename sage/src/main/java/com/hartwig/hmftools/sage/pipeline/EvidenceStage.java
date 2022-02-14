@@ -57,7 +57,7 @@ public class EvidenceStage
         }
 
         SG_LOGGER.trace("region({}) gathered {} evidence for {} variants",
-                region, sampleType, readContextCounters.variantCount());
+                region, sampleType, readContextCounters.candidateCount());
 
         return readContextCounters;
     }

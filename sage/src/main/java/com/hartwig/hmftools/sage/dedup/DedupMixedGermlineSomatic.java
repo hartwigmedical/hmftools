@@ -57,7 +57,6 @@ public class DedupMixedGermlineSomatic
 
         List<SageVariant> candidates = variants.stream()
                 .filter(x -> isGermlineFilteredSnv(x) || isPassingSnv(x) || isPassingMnv(x))
-                .filter(x -> x.hasLocalPhaseSets())
                 .collect(Collectors.toList());
 
         int index = 0;
@@ -86,11 +85,13 @@ public class DedupMixedGermlineSomatic
                 if(nextVariant.position() - maxPos > MAX_DISTANCE)
                     break;
 
+                /*
                 if(!nextVariant.hasMatchingLps(firstVariant.localPhaseSets()))
                 {
                     ++nextIndex;
                     continue;
                 }
+                */
 
                 if(mnv == null && isPassingMnv(nextVariant))
                     mnv = nextVariant;
@@ -116,6 +117,9 @@ public class DedupMixedGermlineSomatic
 
     private void checkGroup(final SageVariant mnv, final SageVariant snvPassing, final SageVariant snvGermline)
     {
+        if(!snvPassing.hasMatchingLps(mnv.localPhaseSets()))
+            return;
+
         if(VariantDeduper.longerContainsShorter(snvGermline, mnv))
         {
             if(mnv.mixedGermlineImpact() == 0)
@@ -156,12 +160,12 @@ public class DedupMixedGermlineSomatic
 
     private static boolean isPassingMnv(final SageVariant variant)
     {
-        return variant.isMnv() && variant.isPassing();
+        return variant.isMnv() && variant.isPassing() && variant.hasLocalPhaseSets();
     }
 
     private static boolean isPassingSnv(final SageVariant variant)
     {
-        return variant.isSnv() && variant.isPassing();
+        return variant.isSnv() && variant.isPassing() && variant.hasLocalPhaseSets();
     }
 
     public static int codonDifferences(final BaseRegion codon, final VariantHotspot variant)

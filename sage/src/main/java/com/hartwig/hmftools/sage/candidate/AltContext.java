@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.sage.candidate;
 
+import static java.lang.Math.min;
+
+import static com.hartwig.hmftools.sage.SageConstants.MIN_SECOND_CANDIDATE_FULL_READS;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -33,6 +37,17 @@ public class AltContext implements VariantHotspot
         Alt = alt;
 
         mReadContextCandidates = Lists.newArrayList();
+        mCandidate = null;
+    }
+
+    public AltContext(final RefContext refContext, final String ref, final String alt, final ReadContextCandidate candidate)
+    {
+        RefContext = refContext;
+        Ref = ref;
+        Alt = alt;
+
+        mReadContextCandidates = null;
+        mCandidate = candidate;
     }
 
     public void incrementAltRead(int baseQuality)
@@ -105,6 +120,44 @@ public class AltContext implements VariantHotspot
         return mReadContextCandidates;
     }
 
+    public List<AltContext> selectCandidates()
+    {
+        if(mReadContextCandidates.isEmpty())
+            return null;
+
+        mReadContextCandidates.removeIf(x -> x.readContext().hasIncompleteFlanks());
+
+        // sort by full, the partial then core read counts
+        Collections.sort(mReadContextCandidates);
+
+        if(mReadContextCandidates.isEmpty())
+            return null;
+
+        List<AltContext> validContexts = Lists.newArrayListWithExpectedSize(min(2, mReadContextCandidates.size()));
+        validContexts.add(new AltContext(RefContext, Ref, Alt, mReadContextCandidates.get(0)));
+
+        final String topCore = mReadContextCandidates.get(0).readContext().coreString();
+
+        // add a second if its core is different and it has sufficient support
+        for(int i = 0; i < mReadContextCandidates.size(); ++i)
+        {
+            ReadContextCandidate candidate = mReadContextCandidates.get(i);
+
+            if(candidate.fullMatch() < MIN_SECOND_CANDIDATE_FULL_READS)
+                break;
+
+            String coreStr = candidate.readContext().coreString();
+            if(coreStr.contains(topCore) || topCore.contains(coreStr))
+                continue;
+
+            validContexts.add(new AltContext(RefContext, Ref, Alt, candidate));
+            break;
+        }
+
+        mReadContextCandidates.clear();
+        return validContexts;
+    }
+
     public boolean finaliseAndValidate()
     {
         if(mReadContextCandidates.isEmpty())
@@ -117,6 +170,8 @@ public class AltContext implements VariantHotspot
         if(!mReadContextCandidates.isEmpty())
         {
             mCandidate = mReadContextCandidates.get(0);
+
+
         }
 
         mReadContextCandidates.clear();
@@ -172,7 +227,8 @@ public class AltContext implements VariantHotspot
 
     public String toString()
     {
-        return String.format("var(%s:%d %s->%s) readCandidates(%d)", chromosome(), position(), Ref, Alt, mReadContextCandidates.size());
+        return String.format("var(%s:%d %s->%s) readCandidates(%d)",
+                chromosome(), position(), Ref, Alt, mReadContextCandidates != null ? mReadContextCandidates.size() : 0);
     }
 
     static class ReadContextCandidate implements Comparable<ReadContextCandidate>
@@ -192,7 +248,7 @@ public class AltContext implements VariantHotspot
         public void incrementFull(int count, int numberOfEvents)
         {
             mFullMatch += count;
-            mMinNumberOfEvents = Math.min(mMinNumberOfEvents, numberOfEvents);
+            mMinNumberOfEvents = min(mMinNumberOfEvents, numberOfEvents);
         }
 
         public void incrementPartial(int count)

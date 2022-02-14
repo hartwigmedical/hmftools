@@ -14,6 +14,8 @@ public class SageConstants
     public static final int DEFAULT_READ_CONTEXT_FLANK_SIZE = 10;
     public static final int MIN_CORE_DISTANCE = 2;
 
+    public static final int MIN_SECOND_CANDIDATE_FULL_READS = 3;
+
     public static final boolean DEFAULT_MNV = true;
 
     // base quality recalibration

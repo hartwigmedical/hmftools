@@ -3,7 +3,6 @@ package com.hartwig.hmftools.sage.pipeline;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
@@ -15,8 +14,6 @@ import com.hartwig.hmftools.sage.candidate.AltContext;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.CandidateEvidence;
 import com.hartwig.hmftools.sage.common.RefSequence;
-
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
@@ -49,11 +46,12 @@ public class CandidateStage
             final String sample = mConfig.TumorIds.get(i);
             final String sampleBam = mConfig.TumorBams.get(i);
 
-            // SG_LOGGER.trace("region({}) finding candidates from tumor sample({})", region, sample);
-
             List<AltContext> altContexts = mCandidateEvidence.readBam(sample, sampleBam, refSequence, region);
 
-            initialCandidates.add(altContexts);
+            if(i == 0)
+                initialCandidates.addSingleSample(altContexts);
+            else
+                initialCandidates.addOfMultipleSamples(altContexts);
         }
 
         List<Candidate> candidates = initialCandidates.candidates(mConfig.SpecificPositions);

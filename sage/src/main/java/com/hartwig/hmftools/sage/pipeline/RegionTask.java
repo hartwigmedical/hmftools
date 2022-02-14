@@ -110,17 +110,21 @@ public class RegionTask implements Callable
 
         mPerfCounters.get(PC_EVIDENCE).stop();
 
-        // final SageVariantFactory variantFactory = new SageVariantFactory(mConfig.Filter);
         VariantFilters filters = new VariantFilters(mConfig.Filter);
 
         // combine normal and tumor together to create variants, then apply soft filters
         Set<ReadContextCounter> passingTumorReadCounters = Sets.newHashSet();
         Set<ReadContextCounter> validTumorReadCounters = Sets.newHashSet(); // those not hard-filtered
 
-        for(Candidate candidate : finalCandidates)
+        for(int candidateIndex = 0; candidateIndex < finalCandidates.size(); ++candidateIndex)
         {
-            final List<ReadContextCounter> normalReadCounters = normalEvidence.getVariantReadCounters(candidate.variant());
-            final List<ReadContextCounter> tumorReadCounters = tumorEvidence.getVariantReadCounters(candidate.variant());
+            Candidate candidate = finalCandidates.get(candidateIndex);
+
+            // final List<ReadContextCounter> normalReadCounters = normalEvidence.getVariantReadCounters(candidate.variant());
+            // final List<ReadContextCounter> tumorReadCounters = tumorEvidence.getVariantReadCounters(candidate.variant());
+
+            final List<ReadContextCounter> normalReadCounters = normalEvidence.getReadCounters(candidateIndex);
+            final List<ReadContextCounter> tumorReadCounters = tumorEvidence.getFilteredReadCounters(candidateIndex);
 
             SageVariant sageVariant = new SageVariant(candidate, normalReadCounters, tumorReadCounters);
             mSageVariants.add(sageVariant);

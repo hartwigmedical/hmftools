@@ -18,8 +18,8 @@ public class Candidates
     private final List<VariantHotspot> mHotspots;
     private final List<BaseRegion> mPanel;
     private final List<BaseRegion> mHighConfidence;
-    private final Map<VariantHotspot,Candidate> mCandidateMap;
-    private List<Candidate> mCandidateList;
+    private Map<VariantHotspot,List<Candidate>> mCandidateMap;
+    private final List<Candidate> mCandidateList;
 
     public Candidates(final List<VariantHotspot> hotspots, final List<BaseRegion> panel, final List<BaseRegion> highConfidence)
     {
@@ -27,45 +27,89 @@ public class Candidates
         mPanel = panel;
         mHighConfidence = highConfidence;
 
-        mCandidateMap = Maps.newHashMap();
+        mCandidateMap = null;
+        mCandidateList = Lists.newArrayList();
     }
 
-    public void add(final Collection<AltContext> altContexts)
+    public void addOfMultipleSamples(final Collection<AltContext> altContexts)
     {
-        if(mCandidateList != null)
-        {
-            throw new IllegalStateException("Cannot add more alt contexts");
-        }
+        if(mCandidateMap == null)
+            mCandidateMap = Maps.newHashMap();
 
         final TierSelector tierSelector = new TierSelector(mHotspots, mPanel, mHighConfidence);
+        final VariantHotspotComparator variantComparator = new VariantHotspotComparator();
 
         for(final AltContext altContext : altContexts)
         {
-            Candidate candidate = mCandidateMap.get(altContext);
+            List<Candidate> candidates = mCandidateMap.get(altContext);
 
-            if(candidate == null)
+            if(candidates == null)
             {
-                candidate = Candidate.fromAltContext(tierSelector.tier(altContext), altContext);
-                mCandidateMap.put(altContext, candidate);
+                candidates = Lists.newArrayList();
+                mCandidateMap.put(altContext, candidates);
             }
 
+            Candidate newCandidate = Candidate.fromAltContext(tierSelector.tier(altContext), altContext);
+
+            Candidate matchingCandidate = candidates.stream()
+                    .filter(x -> variantComparator.compare(x.variant(), newCandidate.variant()) == 0)
+                    .filter(x -> x.readContext().coreString().equals(newCandidate.readContext().coreString()))
+                    .findFirst().orElse(null);
+
+            if(matchingCandidate != null)
+            {
+                matchingCandidate.update(altContext);
+            }
+            else
+            {
+                newCandidate.update(altContext);
+                candidates.add(newCandidate);
+            }
+        }
+    }
+
+    public void addSingleSample(final Collection<AltContext> altContexts)
+    {
+        final TierSelector tierSelector = new TierSelector(mHotspots, mPanel, mHighConfidence);
+
+        final VariantHotspotComparator variantComparator = new VariantHotspotComparator();
+
+        for(final AltContext altContext : altContexts)
+        {
+            Candidate candidate = Candidate.fromAltContext(tierSelector.tier(altContext), altContext);
             candidate.update(altContext);
+
+            int index = 0;
+
+            while(index < mCandidateList.size())
+            {
+                Candidate existingCandidate = mCandidateList.get(index);
+                if(variantComparator.compare(existingCandidate.variant(), candidate.variant()) > 0)
+                    break;
+
+                ++index;
+            }
+
+            mCandidateList.add(index, candidate);
         }
     }
 
     public List<Candidate> candidates(final Set<Integer> restrictedPositions)
     {
-        if(mCandidateList == null)
+        if(mCandidateMap != null)
         {
-            final VariantHotspotComparator variantHotspotComparator = new VariantHotspotComparator();
-            mCandidateList = Lists.newArrayList(mCandidateMap.values());
-            mCandidateList.sort((o1, o2) -> variantHotspotComparator.compare(o1.variant(), o2.variant()));
+            final VariantHotspotComparator variantComparator = new VariantHotspotComparator();
+            mCandidateMap.values().stream().forEach(x -> mCandidateList.addAll(x));
+            mCandidateList.sort((o1, o2) -> variantComparator.compare(o1.variant(), o2.variant()));
         }
 
         if(!restrictedPositions.isEmpty())
         {
-            mCandidateList = mCandidateList.stream()
+            List<Candidate> restrictedList = mCandidateList.stream()
                     .filter(x -> restrictedPositions.contains(x.position())).collect(Collectors.toList());
+
+            mCandidateList.clear();
+            mCandidateList.addAll(restrictedList);
         }
 
         return mCandidateList;

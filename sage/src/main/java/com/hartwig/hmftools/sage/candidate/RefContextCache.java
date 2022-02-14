@@ -62,16 +62,20 @@ public class RefContextCache
 
         for(AltContext altContext : altContexts)
         {
-            if(!altContext.finaliseAndValidate())
-                continue;
-
             if(!hasValidDnaBases(altContext))
                 continue;
 
             if(!passesTumorHardLimits(altContext))
                 continue;
 
-            mSavedCandidates.add(altContext);
+            // if(!altContext.finaliseAndValidate())
+            //    continue;
+            // mSavedCandidates.add(altContext.candidate());
+
+            List<AltContext> validCandidates = altContext.selectCandidates();
+
+            if(validCandidates != null)
+                mSavedCandidates.addAll(validCandidates);
         }
     }
 
