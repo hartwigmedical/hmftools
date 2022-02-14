@@ -9,3 +9,6 @@ ALTER TABLE protect
 
 ALTER TABLE protect
     ADD COLUMN rangeRank int AFTER evidenceType;
+
+ALTER TABLE somaticVariant
+	DROP COLUMN localRealignmentSet;

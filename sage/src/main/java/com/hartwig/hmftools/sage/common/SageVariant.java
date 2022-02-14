@@ -8,7 +8,6 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class SageVariant
@@ -18,7 +17,6 @@ public class SageVariant
     private final List<ReadContextCounter> mNormalReadCounters;
     private final List<ReadContextCounter> mTumorReadCounters;
 
-    private int mLocalRealignSet;
     private int mMixedImpact;
 
     public SageVariant(
@@ -28,7 +26,6 @@ public class SageVariant
         mNormalReadCounters = normalCounters;
         mTumorReadCounters = tumorReadCounters;
         mFilters = Sets.newHashSet();
-        mLocalRealignSet = 0;
     }
 
     public Candidate candidate()
@@ -145,53 +142,21 @@ public class SageVariant
         return mTumorReadCounters.get(0).lpsCounts();
     }
 
-    public int localRealignSet() { return mLocalRealignSet; }
-    public boolean hasLocalRealignSet() { return mLocalRealignSet > 0; }
-    public void localRealignSet(int localRealignSet)
-    {
-        mLocalRealignSet = localRealignSet;
-    }
+    public int mixedGermlineImpact() { return mMixedImpact; }
+    public void mixedGermlineImpact(final int mixedImpact) { mMixedImpact = mixedImpact; }
 
-    public int mixedGermlineImpact()
-    {
-        return mMixedImpact;
-    }
+    public boolean isPassing() { return mFilters.isEmpty(); }
 
-    public void mixedGermlineImpact(final int mixedImpact)
-    {
-        mMixedImpact = mixedImpact;
-    }
-
-    public boolean isPassing()
-    {
-        return mFilters.isEmpty();
-    }
-
-    public boolean isTumorEmpty()
-    {
-        return mTumorReadCounters.isEmpty();
-    }
-
+    public boolean isTumorEmpty() { return mTumorReadCounters.isEmpty(); }
     public boolean isNormalEmpty() { return mNormalReadCounters.isEmpty(); }
 
-    public VariantHotspot variant()
-    {
-        return mCandidate.variant();
-    }
-    public VariantTier tier()
-    {
-        return mCandidate.tier();
-    }
-    public Set<String> filters()
-    {
-        return mFilters;
-    }
+    public VariantHotspot variant() { return mCandidate.variant(); }
+
+    public VariantTier tier() { return mCandidate.tier(); }
+
+    public Set<String> filters() { return mFilters; }
 
     public ReadContext readContext() { return mTumorReadCounters.get(0).readContext(); }
-    public String microhomology()
-    {
-        return readContext().microhomology();
-    }
 
     public List<ReadContextCounter> normalReadCounters() { return mNormalReadCounters; }
     public List<ReadContextCounter> tumorReadCounters() { return mTumorReadCounters; }
@@ -205,10 +170,6 @@ public class SageVariant
     {
         return variant().ref().length() != variant().alt().length();
     }
-    public boolean isMnvOrSnv()
-    {
-        return variant().ref().length() >= 1 && variant().ref().length() == variant().alt().length();
-    }
 
     public boolean isMnv()
     {
@@ -218,14 +179,6 @@ public class SageVariant
     public boolean isSnv()
     {
         return variant().ref().length() == 1 && variant().alt().length() == 1;
-    }
-    public boolean isInsert()
-    {
-        return variant().ref().length() < variant().alt().length();
-    }
-    public boolean isDelete()
-    {
-        return variant().ref().length() > variant().alt().length();
     }
 
     public String toString()

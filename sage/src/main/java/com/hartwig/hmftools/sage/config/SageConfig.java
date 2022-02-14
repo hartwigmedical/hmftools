@@ -78,7 +78,6 @@ public class SageConfig
     public final String HighConfidenceBed;
     public final String CoverageBed;
     public final String OutputFile;
-    public final boolean WriteCsv;
 
     public final String Version;
     public final int Threads;
@@ -100,7 +99,6 @@ public class SageConfig
     private static final String TUMOR = "tumor";
     private static final String TUMOR_BAM = "tumor_bam";
     private static final String OUTPUT_VCF = "out";
-    private static final String WRITE_CSV = "write_csv";
     private static final String MIN_MAP_QUALITY = "min_map_quality";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
     private static final String PANEL_BED = "panel_bed";
@@ -206,7 +204,6 @@ public class SageConfig
         }
 
         OutputFile = SampleDataDir + cmd.getOptionValue(OUTPUT_VCF);
-        WriteCsv = cmd.hasOption(WRITE_CSV);
 
         PanelBed = getReferenceFile(cmd, PANEL_BED);
         CoverageBed = getReferenceFile(cmd, COVERAGE_BED);
@@ -354,7 +351,6 @@ public class SageConfig
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(REF_GENOME_VERSION, true, "Assembly, must be one of [37, 38]");
         options.addOption(OUTPUT_VCF, true, "Output vcf");
-        options.addOption(WRITE_CSV, false, "Write variant data to CSV as well as VCF");
         options.addOption(MIN_MAP_QUALITY, true, "Min map quality to apply to non-hotspot variants [" + DEFAULT_MIN_MAP_QUALITY + "]");
         options.addOption(SPECIFIC_CHROMOSOMES, true, "Run for subset of chromosomes, split by ';'");
         options.addOption(SPECIFIC_REGIONS, true, "Run for specific regions(s) separated by ';' in format Chr:PosStart:PosEnd");
@@ -416,7 +412,6 @@ public class SageConfig
         HighConfidenceBed = "highConf";
         CoverageBed = "coverage";
         OutputFile = "out.vcf";
-        WriteCsv = false;
         Version = "1.0";
         Threads = DEFAULT_THREADS;
         LogLpsData = false;

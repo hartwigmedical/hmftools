@@ -243,11 +243,6 @@ public class SomaticVariantFactory implements VariantContextFilter
             builder.localPhaseSet(context.getAttributeAsInt(SageMetaData.LOCAL_PHASE_SET, 0));
         }
 
-        if(context.hasAttribute(SageMetaData.LOCAL_REALIGN_SET))
-        {
-            builder.localRealignmentSet(context.getAttributeAsInt(SageMetaData.LOCAL_REALIGN_SET, 0));
-        }
-
         return builder;
     }
 

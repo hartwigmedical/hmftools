@@ -91,7 +91,4 @@ public interface SomaticVariant extends Variant {
 
     @Nullable
     Integer localPhaseSet();
-
-    @Nullable
-    Integer localRealignmentSet();
 }

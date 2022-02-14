@@ -9,26 +9,18 @@ import java.util.List;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.SageVariant;
-import com.hartwig.hmftools.sage.dedup_old.VariantDeduperOld;
 
 public class VariantDeduper
 {
     private final DedupMixedGermlineSomatic mDedupMixedGermlineSomatic;
 
-    private final VariantDeduperOld mVariantDeduperOld;
-
     public VariantDeduper(final List<TranscriptData> transcripts)
     {
         mDedupMixedGermlineSomatic = new DedupMixedGermlineSomatic(transcripts);
-
-        mVariantDeduperOld = new VariantDeduperOld(transcripts, this::acceptDedupedVariant);
     }
 
     public void processVariants(final List<SageVariant> variants)
     {
-        // variants.forEach(mVariantDeduperOld);
-        // mVariantDeduperOld.flush();
-
         dedupMnvOverlaps(variants);
 
         mDedupMixedGermlineSomatic.dedupVariants(variants);

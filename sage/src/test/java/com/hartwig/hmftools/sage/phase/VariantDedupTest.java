@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.sage.common.TestUtils.createVariantHotspot;
 import static com.hartwig.hmftools.sage.common.TestUtils.setTumorQuality;
 import static com.hartwig.hmftools.sage.config.SoftFilter.MIN_GERMLINE_DEPTH;
 import static com.hartwig.hmftools.sage.dedup.DedupIndel.dedupIndels;
+import static com.hartwig.hmftools.sage.dedup.VariantDeduper.longerContainsShorter;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -27,7 +28,6 @@ import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.dedup.DedupMixedGermlineSomatic;
 import com.hartwig.hmftools.sage.dedup.DedupSnvMnv;
-import com.hartwig.hmftools.sage.dedup_old.BufferedPostProcessor;
 
 import org.junit.Test;
 
@@ -38,16 +38,16 @@ public class VariantDedupTest
     {
         final VariantHotspot mnv = createVariantHotspot(100, "CAC", "TGT");
 
-        assertTrue(BufferedPostProcessor.longerContainsShorter(createVariantHotspot(100, "C", "T"), mnv));
-        assertFalse(BufferedPostProcessor.longerContainsShorter(createVariantHotspot(100, "C", "C"), mnv));
+        assertTrue(longerContainsShorter(createVariantHotspot(100, "C", "T"), mnv));
+        assertFalse(longerContainsShorter(createVariantHotspot(100, "C", "C"), mnv));
 
-        assertTrue(BufferedPostProcessor.longerContainsShorter(createVariantHotspot(101, "A", "G"), mnv));
-        assertTrue(BufferedPostProcessor.longerContainsShorter(createVariantHotspot(102, "C", "T"), mnv));
+        assertTrue(longerContainsShorter(createVariantHotspot(101, "A", "G"), mnv));
+        assertTrue(longerContainsShorter(createVariantHotspot(102, "C", "T"), mnv));
 
-        assertTrue(BufferedPostProcessor.longerContainsShorter(createVariantHotspot(100, "CA", "TG"), mnv));
-        assertTrue(BufferedPostProcessor.longerContainsShorter(createVariantHotspot(101, "AC", "GT"), mnv));
+        assertTrue(longerContainsShorter(createVariantHotspot(100, "CA", "TG"), mnv));
+        assertTrue(longerContainsShorter(createVariantHotspot(101, "AC", "GT"), mnv));
 
-        assertTrue(BufferedPostProcessor.longerContainsShorter(createVariantHotspot(100, "CAC", "TGT"), mnv));
+        assertTrue(longerContainsShorter(createVariantHotspot(100, "CAC", "TGT"), mnv));
     }
 
     @Test
