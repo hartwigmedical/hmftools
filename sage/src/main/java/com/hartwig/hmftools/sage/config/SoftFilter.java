@@ -8,13 +8,14 @@ import org.jetbrains.annotations.NotNull;
 
 public enum SoftFilter
 {
-    MIN_TUMOR_QUAL("min_tumor_qual", true, false),
-    MIN_TUMOR_VAF("min_tumor_vaf", true, false),
-    MIN_GERMLINE_DEPTH("min_germline_depth", false, true),
-    MIN_GERMLINE_DEPTH_ALLOSOME("min_germline_depth_allosome", false, true),
-    MAX_GERMLINE_VAF("max_germline_vaf", false, true),
-    MAX_GERMLINE_REL_RAW_BASE_QUAL("max_germline_rel_raw_base_qual", false, true),
-    MAX_GERMLINE_ALT_SUPPORT("max_germline_alt_support", false, true);
+    MIN_TUMOR_QUAL("minTumorQual", true, false),
+    MIN_TUMOR_VAF("minTumorVAF", true, false),
+    MIN_GERMLINE_DEPTH("minGermlineDepth", false, true),
+    MIN_GERMLINE_DEPTH_ALLOSOME("minGermlineDepthAllosome", false, true),
+    MAX_GERMLINE_VAF("maxGermlineVAF", false, true),
+    MAX_GERMLINE_REL_RAW_BASE_QUAL("maxGermlineRelRawBaseQual", false, true),
+    MAX_GERMLINE_ALT_SUPPORT("maxGermlineAltSupport", false, true),
+    STRAND_BIAS("strandBias", true, false);
 
     private static final Set<String> TUMOR_FILTERS = Sets.newHashSet();
     private static final Set<String> GERMLINE_FILTERS = Sets.newHashSet();

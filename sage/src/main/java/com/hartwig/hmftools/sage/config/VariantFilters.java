@@ -21,20 +21,32 @@ import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 public class VariantFilters
 {
     private final FilterConfig mConfig;
+    private final StrandBiasCalcs mStrandBiasCalcs;
 
     public VariantFilters(final FilterConfig config)
     {
         mConfig = config;
+        mStrandBiasCalcs = new StrandBiasCalcs();
     }
 
-    public boolean passesHardFilters(final ReadContextCounter readContextCounter)
+    public static boolean passesHardFilters(final FilterConfig config, final ReadContextCounter readContextCounter)
     {
         if(readContextCounter.Tier.equals(VariantTier.HOTSPOT))
             return true;
 
-        return readContextCounter.rawAltBaseQuality() >= mConfig.HardMinTumorRawBaseQuality
-                && readContextCounter.rawAltSupport() >= mConfig.HardMinTumorRawAltSupport
-                && readContextCounter.tumorQuality() >= mConfig.HardMinTumorQual;
+        if(readContextCounter.rawAltBaseQuality() < config.HardMinTumorRawBaseQuality)
+            return false;
+
+        if(readContextCounter.rawAltSupport() < config.HardMinTumorRawAltSupport)
+            return false;
+
+        if(readContextCounter.tumorQuality() < config.HardMinTumorQual)
+            return false;
+
+        if(readContextCounter.vaf() < config.HardMinTumorVaf)
+            return false;
+
+        return true;
     }
 
     public boolean enabled() { return mConfig.SoftFilter; }
@@ -101,6 +113,11 @@ public class VariantFilters
 
             if(belowMinTumorVaf(config, primaryTumor))
                 filters.add(SoftFilter.MIN_TUMOR_VAF.toString());
+        }
+
+        if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.strandBias(), primaryTumor.strandDepth()))
+        {
+            filters.add(SoftFilter.STRAND_BIAS.toString());
         }
     }
 

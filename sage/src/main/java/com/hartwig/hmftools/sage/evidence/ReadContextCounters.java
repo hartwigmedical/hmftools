@@ -7,6 +7,7 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.config.FilterConfig;
+import com.hartwig.hmftools.sage.config.VariantFilters;
 
 public class ReadContextCounters
 {
@@ -101,7 +102,7 @@ public class ReadContextCounters
         {
             List<ReadContextCounter> readCounters = mSampleCandidateReadCounters.get(i);
 
-            if(readCounters.stream().anyMatch(x -> filterConfig.passesHardFilters(x)))
+            if(readCounters.stream().anyMatch(x -> VariantFilters.passesHardFilters(filterConfig, x)))
             {
                 validCandidates.add(mCandidates.get(i));
                 mFilteredCandidateIndex.add(i);

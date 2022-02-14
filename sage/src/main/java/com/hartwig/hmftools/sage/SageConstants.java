@@ -33,6 +33,7 @@ public class SageConstants
     // filtering defaults and constants
     public static final int DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY = 0;
     public static final int DEFAULT_HARD_MIN_TUMOR_QUAL = 30;
+    public static final double DEFAULT_HARD_MIN_TUMOR_VAF = 0.01;
     public static final int DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT = 2;
     public static final int DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT = 3;
 
