@@ -60,36 +60,32 @@ public class SampleDataFiles
             CobaltDirectory = cmd.getOptionValue(COBALT);
         }
 
-        SvVcfFile = getFilename(cmd, STRUCTURAL_VARIANTS, SampleDataDir, sampleId, ".gripss.somatic.filtered.vcf.gz", false);
-        RecoveredSvVcfFile = getFilename(cmd, STRUCTURAL_VARIANT_RECOVERY, SampleDataDir, sampleId, ".gripss.somatic.vcf.gz", false);
-        SomaticVcfFile = getFilename(cmd, SOMATIC_VARIANTS, SampleDataDir, sampleId, ".sage.somatic.filtered.pave.vcf.gz", false);
-        GermlineVcfFile = getFilename(cmd, GERMLINE_VARIANTS, SampleDataDir, sampleId, ".sage.germline.filtered.pave.vcf.gz", false);
+        SvVcfFile = getFilename(cmd, STRUCTURAL_VARIANTS, SampleDataDir, sampleId, ".gripss.somatic.filtered.vcf.gz");
+        RecoveredSvVcfFile = getFilename(cmd, STRUCTURAL_VARIANT_RECOVERY, SampleDataDir, sampleId, ".gripss.somatic.vcf.gz");
+        SomaticVcfFile = getFilename(cmd, SOMATIC_VARIANTS, SampleDataDir, sampleId, ".sage.somatic.filtered.pave.vcf.gz");
+        GermlineVcfFile = getFilename(cmd, GERMLINE_VARIANTS, SampleDataDir, sampleId, ".sage.germline.filtered.pave.vcf.gz");
     }
 
     private String getFilename(
             final CommandLine cmd, final String config, final String sampleDataDir,
-            final String sampleId, final String fileSuffix, boolean failOnNotFound) throws ParseException
+            final String sampleId, final String fileSuffix) throws ParseException
     {
         if(cmd.hasOption(config))
-            return cmd.getOptionValue(config);
+        {
+            final String filename = cmd.getOptionValue(config);
+
+            if(Files.exists(Paths.get(filename)))
+                return filename;
+            else
+                throw new ParseException(String.format("missing file: %s", filename));
+        }
 
         if(sampleDataDir == null)
-        {
-            if(failOnNotFound)
-                throw new ParseException(String.format("missing %s or sample data directory", config));
-            else
-                return "";
-        }
+            return "";
 
         final String filename = sampleDataDir + sampleId + fileSuffix;
 
-        if(Files.exists(Paths.get(filename)))
-            return filename;
-
-        if(failOnNotFound)
-            throw new ParseException("missing sample data file: " + filename);
-        else
-            return "";
+        return Files.exists(Paths.get(filename)) ? filename : "";
     }
 
 }
