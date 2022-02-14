@@ -82,7 +82,7 @@
         <sigs.version>1.0</sigs.version>
         <serve.version>1.8</serve.version>
         <sv-tools.version>1.0</sv-tools.version>
-        <telo.version>1.0</telo.version>
+        <teal.version>1.0</teal.version>
         <vicc-importer.version>1.2</vicc-importer.version>
         <virus-interpreter.version>1.2</virus-interpreter.version>
 
@@ -109,7 +109,7 @@
         <kotlin.coroutines.version>1.5.2</kotlin.coroutines.version>
         <selenium.version>3.14.0</selenium.version>
         <itext.version>7.1.5</itext.version>
-        <tablesaw.version>0.38.5</tablesaw.version>
+        <tablesaw.version>0.42.0</tablesaw.version>
         <jcommander.version>1.81</jcommander.version>
 
         <kotest.version>4.6.4</kotest.version>
@@ -433,6 +433,12 @@
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
                 <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-test-junit</artifactId>
+                <version>${kotlin.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
