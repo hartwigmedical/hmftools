@@ -103,6 +103,21 @@ public class VariantDedupTest
 
         assertFalse(var1.isPassing());
         assertTrue(var2.isPassing());
+
+        clearFilters(variants);
+
+        // dedup longer assuming all bases have changed
+        var1 = createVariant(10, "AAG", "CTA");
+        var2 = createVariant(12, "GC", "AT");
+        addLocalPhaseSet(var1, 1, 1);
+        addLocalPhaseSet(var2, 1, 1);
+
+        variants = Lists.newArrayList(var1, var2);
+
+        DedupSnvMnv.dedupMnvOverlaps(variants);
+
+        assertTrue(var1.isPassing());
+        assertFalse(var2.isPassing());
     }
 
     @Test

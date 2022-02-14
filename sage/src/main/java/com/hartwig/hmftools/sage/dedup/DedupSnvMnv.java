@@ -62,11 +62,11 @@ public final class DedupSnvMnv
         int firstChangedBases = mnvChangedBaseCount(first);
         int secondChangedBases = mnvChangedBaseCount(second);
 
-        if(firstChangedBases < secondChangedBases)
+        if(firstChangedBases > secondChangedBases)
         {
             second.filters().add(DEDUP_MNV_FILTER);
         }
-        else if(secondChangedBases < firstChangedBases)
+        else if(secondChangedBases > firstChangedBases)
         {
             first.filters().add(DEDUP_MNV_FILTER);
         }
