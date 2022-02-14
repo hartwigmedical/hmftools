@@ -39,7 +39,7 @@ public class SomaticVariantsTest {
     }
 
     @Test
-    public void canExtractMSI_genes() {
+    public void canExtractMSIgenes() {
         ReportableVariant base = VariantTestFactory.createTestReportableVariant();
         ReportableVariant variant1 = ImmutableReportableVariant.builder().from(base).gene("MLH1").build();
         ReportableVariant variant2 = ImmutableReportableVariant.builder().from(base).gene("MSH2").build();
@@ -51,5 +51,20 @@ public class SomaticVariantsTest {
         List<ReportableVariant> variants = Lists.newArrayList(variant1, variant2, variant3, variant4, variant5, variant6);
 
         assertEquals(5, SomaticVariants.determineMSIgenes(variants).size());
+    }
+
+    @Test
+    public void canExtractHRDgenes() {
+        ReportableVariant base = VariantTestFactory.createTestReportableVariant();
+        ReportableVariant variant1 = ImmutableReportableVariant.builder().from(base).gene("BRCA1").build();
+        ReportableVariant variant2 = ImmutableReportableVariant.builder().from(base).gene("BRCA2").build();
+        ReportableVariant variant3 = ImmutableReportableVariant.builder().from(base).gene("PALB2").build();
+        ReportableVariant variant4 = ImmutableReportableVariant.builder().from(base).gene("RAD51B").build();
+        ReportableVariant variant5 = ImmutableReportableVariant.builder().from(base).gene("RAD51C").build();
+        ReportableVariant variant6 = ImmutableReportableVariant.builder().from(base).gene("BRAF").build();
+
+        List<ReportableVariant> variants = Lists.newArrayList(variant1, variant2, variant3, variant4, variant5, variant6);
+
+        assertEquals(5, SomaticVariants.determineHRDgenes(variants).size());
     }
 }
