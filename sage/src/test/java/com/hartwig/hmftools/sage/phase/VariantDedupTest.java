@@ -265,6 +265,66 @@ public class VariantDedupTest
 
         assertTrue(var1.isPassing());
         assertFalse(var2.isPassing());
+
+        // overlapping variants with different read context
+        var1 = createVariant(12, "ATG", "A");
+        var2 = createVariant(12, "A", "G");
+
+        setTumorQuality(var1, 5, 1000);
+        setTumorQuality(var2, 5, 800);
+        addLocalPhaseSet(var1, 1, 1);
+        addLocalPhaseSet(var2, 1, 1);
+
+        variants = Lists.newArrayList(var1, var2);
+
+        dedupIndels(variants);
+
+        assertTrue(var1.isPassing());
+        assertFalse(var2.isPassing());
+
+        var1 = createVariant(12, "A", "ATG");
+        var2 = createVariant(12, "A", "G");
+
+        setTumorQuality(var1, 5, 1000);
+        setTumorQuality(var2, 5, 800);
+        addLocalPhaseSet(var1, 1, 1);
+        addLocalPhaseSet(var2, 1, 1);
+
+        variants = Lists.newArrayList(var1, var2);
+
+        dedupIndels(variants);
+
+        assertTrue(var1.isPassing());
+        assertFalse(var2.isPassing());
+
+        // delete containing another variant
+        var1 = createVariant(12, "ATG", "A");
+        var2 = createVariant(14, "G", "A");
+
+        setTumorQuality(var1, 5, 1000);
+        setTumorQuality(var2, 5, 800);
+        addLocalPhaseSet(var1, 1, 1);
+        addLocalPhaseSet(var2, 1, 1);
+
+        variants = Lists.newArrayList(var1, var2);
+
+        dedupIndels(variants);
+
+        assertTrue(var1.isPassing());
+        assertFalse(var2.isPassing());
+
+        var1 = createVariant(12, "ATGAT", "A");
+        var2 = createVariant(14, "GA", "AT");
+
+        addLocalPhaseSet(var1, 1, 1);
+        addLocalPhaseSet(var2, 1, 1);
+
+        variants = Lists.newArrayList(var1, var2);
+
+        dedupIndels(variants);
+
+        assertFalse(var1.isPassing());
+        assertTrue(var2.isPassing()); // MNV has longer read context
     }
 
 }

@@ -11,6 +11,7 @@ import org.apache.commons.math3.distribution.BinomialDistribution;
 public class StrandBiasCalcs
 {
     private final double[] mStrandBiasValues;
+    private final double mMaxStrandBiasValue;
 
     private static final int MAX_AD_VS_PROB = 1000;
     private static final int MAX_ITERATIONS = 30;
@@ -19,22 +20,27 @@ public class StrandBiasCalcs
     private static final double PROB_DIFF = 0.0001;
     private static final double EXPECTED_RATE = 0.5;
     private static final double INVALID_STRAND_BIAS = -1;
+    private static final double STRAND_BAIS_CHECK_THRESHOLD = 0.1;
+
 
     public StrandBiasCalcs()
     {
         mStrandBiasValues = new double[MAX_AD_VS_PROB + 1];
         buildProbabilityCache();
+        mMaxStrandBiasValue = mStrandBiasValues[mStrandBiasValues.length - 1];
     }
 
     public boolean isDepthBelowProbability(double strandBias, int depth)
     {
-        double requiredStrandBias = depth < mStrandBiasValues.length ?
-                mStrandBiasValues[depth] : mStrandBiasValues[mStrandBiasValues.length - 1];
+        double minStrandBias = min(strandBias, 1 - strandBias);
+        if(minStrandBias > STRAND_BAIS_CHECK_THRESHOLD)
+            return false;
+
+        double requiredStrandBias = depth < mStrandBiasValues.length ? mStrandBiasValues[depth] : mMaxStrandBiasValue;
 
         if(requiredStrandBias == INVALID_STRAND_BIAS)
             return false;
 
-        double minStrandBias = min(strandBias, 1 - strandBias);
         return Doubles.lessOrEqual(minStrandBias, requiredStrandBias);
     }
 

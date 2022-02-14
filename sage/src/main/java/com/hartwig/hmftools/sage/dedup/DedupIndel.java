@@ -80,17 +80,33 @@ public final class DedupIndel
     private static boolean dedupPair(final SageVariant first, final SageVariant second)
     {
         // calculate the read context and flank of each variant excluding the variant
-        // if the CORE of one variant is fully explained by the CORE+FLANKS of the other, then
+        // if the CORE of one variant is fully explained by the CORE+FLANKS of the other,
+        // or if an INDEL coexist at the same base as another variant and shares an LPS, or a DEL overlaps any other variant which shares an LPS
+        // then the variant with the shorter read context should be filtered as DEDUP
+
         // filter as DEDUP whichever has a shorter CORE or if identical, the lowest quality
 
         final String[] firstRefBases = extractCoreFlanksLessAlt(first);
         final String[] secondRefBases = extractCoreFlanksLessAlt(second);
 
-        if(!secondRefBases[CORE_FLANKS_STR].contains(firstRefBases[CORE_STR])
-        && !firstRefBases[CORE_FLANKS_STR].contains(secondRefBases[CORE_STR]))
+        boolean applyFilter = false;
+
+        if(secondRefBases[CORE_FLANKS_STR].contains(firstRefBases[CORE_STR])
+        || firstRefBases[CORE_FLANKS_STR].contains(secondRefBases[CORE_STR]))
         {
-            return false;
+            applyFilter = true;
         }
+        else if(first.position() == second.position())
+        {
+            applyFilter = true;
+        }
+        else if(first.isDelete() && deleteContainsVariant(first, second))
+        {
+            applyFilter = true;
+        }
+
+        if(!applyFilter)
+            return false;
 
         int firstRcLength = first.readContext().indexedBases().length();
         int secondRcLength = second.readContext().indexedBases().length();
@@ -112,6 +128,14 @@ public final class DedupIndel
         }
 
         return false;
+    }
+
+    private static boolean deleteContainsVariant(final SageVariant del, final SageVariant variant)
+    {
+        int delStart = del.position() + 1;
+        int delEnd = del.position() + del.ref().length() - 1;
+
+        return variant.position() >= delStart && variant.position() + variant.ref().length() - 1 <= delEnd;
     }
 
     private static final int CORE_STR = 0;

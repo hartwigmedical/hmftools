@@ -166,10 +166,7 @@ public class SageVariant
         return mTumorReadCounters.stream().mapToInt(ReadContextCounter::tumorQuality).sum();
     }
 
-    public boolean isIndel()
-    {
-        return variant().ref().length() != variant().alt().length();
-    }
+    public boolean isIndel() { return variant().ref().length() != variant().alt().length(); }
 
     public boolean isMnv()
     {
@@ -180,6 +177,9 @@ public class SageVariant
     {
         return variant().ref().length() == 1 && variant().alt().length() == 1;
     }
+
+    public boolean isDelete() { return variant().ref().length() > variant().alt().length(); }
+    public boolean isInsert() { return variant().ref().length() < variant().alt().length(); }
 
     public String toString()
     {
