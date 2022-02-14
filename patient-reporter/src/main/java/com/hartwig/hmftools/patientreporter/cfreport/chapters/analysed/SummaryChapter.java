@@ -27,6 +27,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.EvidenceItems;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GainsAndLosses;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.HomozygousDisruptions;
+import com.hartwig.hmftools.patientreporter.cfreport.data.HrDeficiency;
 import com.hartwig.hmftools.patientreporter.cfreport.data.Pharmacogenetics;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.cfreport.data.TumorPurity;
@@ -289,6 +290,14 @@ public class SummaryChapter implements ReportChapter {
             Set<String> genesDisplay = SomaticVariants.determineMSIgenes(analysis().reportableVariants());
             table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                     .add(new Paragraph("Mismatch repair genes").addStyle(ReportResources.bodyTextStyle())));
+            table.addCell(createGeneListCell(sortGenes(genesDisplay)));
+        }
+
+        ChordStatus chordStatus = analysis().hasReliablePurity() ? analysis().chordHrdStatus() : ChordStatus.UNKNOWN;
+        if (chordStatus == ChordStatus.HR_DEFICIENT) {
+            Set<String> genesDisplay = SomaticVariants.determineHRDgenes(analysis().reportableVariants());
+            table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
+                    .add(new Paragraph("Homologous recombination deficiency genes").addStyle(ReportResources.bodyTextStyle())));
             table.addCell(createGeneListCell(sortGenes(genesDisplay)));
         }
 

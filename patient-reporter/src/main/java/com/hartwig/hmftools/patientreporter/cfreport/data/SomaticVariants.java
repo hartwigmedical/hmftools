@@ -180,4 +180,17 @@ public final class SomaticVariants {
         }
         return genesDisplay;
     }
+
+    @NotNull
+    public static Set<String> determineHRDgenes(@NotNull List<ReportableVariant> reportableVariants) {
+        Set<String> HRD_genes = Sets.newHashSet("BRCA1", "BRCA2", "PALB2", "RAD51B", "RAD51D");
+        Set<String> genesDisplay = Sets.newHashSet();
+
+        for (ReportableVariant variant : reportableVariants) {
+            if (HRD_genes.contains(variant.gene())) {
+                genesDisplay.add(variant.gene());
+            }
+        }
+        return genesDisplay;
+    }
 }
