@@ -12,6 +12,7 @@ import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotUrlCons
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRangeUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
+import com.hartwig.hmftools.serve.actionability.range.RangeType;
 import com.hartwig.hmftools.serve.actionability.util.ActionableEventUrlMerger;
 import com.hartwig.hmftools.serve.extraction.codon.CodonFunctions;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
@@ -27,6 +28,7 @@ import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class ExtractionFunctions {
 
@@ -59,25 +61,9 @@ public final class ExtractionFunctions {
         Set<KnownCopyNumber> allCopyNumbers = Sets.newHashSet();
         Set<KnownFusionPair> allFusionPairs = Sets.newHashSet();
 
-        Set<ActionableRange> actionableRange = Sets.newHashSet();
-
         for (ExtractionResult result : results) {
 
-            for (ActionableRange range : result.actionableRanges()) {
-                if (range.gene().equals("BRAF") && range.rank() == 600 && range.rangeType().toString().equals("CODON")) {
-                    int start = 140753335;
-                    int end = 140753337;
-                    String canonicalTranscriptID = "ENST00000288602";
-                    actionableRange.add(ImmutableActionableRange.builder()
-                            .from(range)
-                            .start(start)
-                            .end(end)
-                            .transcript(canonicalTranscriptID)
-                            .build());
-                } else {
-                    actionableRange.add(range);
-                }
-            }
+            Set<ActionableRange> actionableRange = curationsOfResult(result.actionableRanges());
 
             allHotspots.addAll(result.knownHotspots());
             allCodons.addAll(result.knownCodons());
@@ -100,6 +86,27 @@ public final class ExtractionFunctions {
                 .build();
 
         return consolidateActionableEvents(mergedResult);
+    }
+
+    @NotNull
+    public static Set<ActionableRange> curationsOfResult(@NotNull Set<ActionableRange> actionableRanges) {
+        Set<ActionableRange> actionableRange = Sets.newHashSet();
+        for (ActionableRange range : actionableRanges) {
+            if (range.gene().equals("BRAF") &&  range.rank() == 600 && range.rangeType().equals(RangeType.CODON)) {
+                int start = 140753335;
+                int end = 140753337;
+                String canonicalTranscriptID = "ENST00000288602";
+                actionableRange.add(ImmutableActionableRange.builder()
+                        .from(range)
+                        .start(start)
+                        .end(end)
+                        .transcript(canonicalTranscriptID)
+                        .build());
+            } else {
+                actionableRange.add(range);
+            }
+        }
+        return actionableRange;
     }
 
     @NotNull
