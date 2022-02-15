@@ -169,8 +169,15 @@ class ActionableEntryFactory {
                 return id;
             } else if (source.equalsIgnoreCase("jax")) {
                 if (id.equals("10000003")) {
+                    // CKB uses this as Advanced Solid Tumor
                     return "162";
-                } else {
+                } else if (id.equals("10000009")){
+                    // CKB uses this as Squamous Cell Carcinoma of Unknown Primary
+                    return "1749";
+                } else if (id.equals("10000008")) {
+                    // CKB uses this as Adenocarcinoma of Unknown Primary
+                    return "299";
+                }else {
                     // CKB uses 10000005 for configuring "Not a cancer". We can ignore these.
                     if (!id.equals("10000005")) {
                         LOGGER.warn("Unexpected DOID string annotated by CKB: '{}'", doidString);
