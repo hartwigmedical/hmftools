@@ -296,7 +296,7 @@ public class AmberApplication implements AutoCloseable
     private static SamReaderFactory readerFactory(final AmberConfig config)
     {
         final SamReaderFactory readerFactory = SamReaderFactory.make().validationStringency(config.Stringency);
-        if(!config.RefGenomePath.isEmpty())
+        if(config.RefGenomePath != null)
         {
             return readerFactory.referenceSource(new ReferenceSource(new File(config.RefGenomePath)));
         }
