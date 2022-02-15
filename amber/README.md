@@ -60,6 +60,7 @@ AMBER supports both BAM and CRAM file formats.
 | min_het_af_percent    | 0.4     | Minimum allelic frequency to be considered heterozygous                                           |
 | max_het_af_percent    | 0.65    | Maximum allelic frequency to be considered heterozygous                                           |
 | ref_genome            | NA      | Path to the reference genome fasta file. Required only when using CRAM files.                     |
+| ref_genome_version    | NA      | One of `37` or `38`. Required only when using CRAM files.                                         |
 | validation_stringency | STRICT  | SAM validation strategy: STRICT, SILENT, LENIENT                                                  |
 
 ### Example Usage
