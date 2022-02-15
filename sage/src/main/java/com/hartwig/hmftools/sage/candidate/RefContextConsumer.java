@@ -31,6 +31,8 @@ public class RefContextConsumer implements Consumer<SAMRecord>
     private final RefContextCache mRefContextCache;
     private final ReadContextFactory mReadContextFactory;
 
+    private int mReadCount;
+
     public RefContextConsumer(
             final SageConfig config, final ChrBaseRegion bounds, final RefSequence refGenome, final RefContextCache refContextCache)
     {
@@ -38,14 +40,22 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         mRefGenome = refGenome;
         mRefContextCache = refContextCache;
         mReadContextFactory = new ReadContextFactory(config.ReadContextFlankSize);
-
         mConfig = config;
+
+        mReadCount = 0;
     }
+
+    public int getReadCount() { return mReadCount; }
 
     @Override
     public void accept(final SAMRecord record)
     {
-        if(!inBounds(record) || reachedDepthLimit(record))
+        if(!inBounds(record))
+            return;
+
+        ++mReadCount;
+
+        if(reachedDepthLimit(record))
             return;
 
         final List<AltRead> altReads = Lists.newArrayList();

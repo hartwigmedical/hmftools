@@ -14,12 +14,14 @@ import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
 public class PhasedGroupCollection
 {
+    private final int mId;
     private final List<PhasedVariantGroup> mGroups;
     private int mMinPostion;
     private int mMaxPostion;
 
-    public PhasedGroupCollection()
+    public PhasedGroupCollection(int id)
     {
+        mId = id;
         mGroups = Lists.newArrayList();
         mMinPostion = 0;
         mMaxPostion = 0;
@@ -97,5 +99,5 @@ public class PhasedGroupCollection
         mMaxPostion = max(mMaxPostion, other.maxPosition());
     }
 
-    public String toString() { return String.format("groups(%d) range(%d - %d)", mGroups.size(), mMinPostion, mMaxPostion); }
+    public String toString() { return String.format("id(%d) groups(%d) range(%d - %d)", mId, mGroups.size(), mMinPostion, mMaxPostion); }
 }

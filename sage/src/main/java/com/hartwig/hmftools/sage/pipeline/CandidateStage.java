@@ -37,6 +37,8 @@ public class CandidateStage
         mCandidateEvidence = new CandidateEvidence(config, hotspots, panelRegions, refGenome, coverage);
     }
 
+    public int totalReadsProcessed() { return mCandidateEvidence.totalReadsProcessed(); }
+
     public List<Candidate> findCandidates(final ChrBaseRegion region, final RefSequence refSequence)
     {
         final Candidates initialCandidates = new Candidates(mHotspots, mPanelRegions, mHighConfidenceRegions);

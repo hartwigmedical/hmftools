@@ -276,7 +276,7 @@ public class PhasedVariantGroup
     {
         public int compare(final PhasedVariantGroup first, final PhasedVariantGroup second)
         {
-            return first.posVariantMin() - second.posVariantMax();
+            return first.posVariantMin() - second.posVariantMin();
         }
     }
 

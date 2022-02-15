@@ -82,7 +82,10 @@ public class ChromosomePipeline implements AutoCloseable
         final List<Callable> callableList = mRegionTasks.stream().collect(Collectors.toList());
         TaskExecutor.executeTasks(callableList, mConfig.Threads);
 
-        SG_LOGGER.debug("chromosome({}) {} regions complete", mChromosome, mRegionTasks.size());
+        int totalReads = mRegionTasks.stream().mapToInt(x -> x.totalReadsProcessed()).sum();
+
+        SG_LOGGER.debug("chromosome({}) {} regions complete, processed {} reads",
+                mChromosome, mRegionTasks.size(), totalReads);
 
         // write variants to file
         mRegionTasks.forEach(x -> x.writeVariants(mWriteConsumer));

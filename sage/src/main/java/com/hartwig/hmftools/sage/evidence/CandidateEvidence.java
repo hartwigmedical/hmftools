@@ -34,6 +34,8 @@ public class CandidateEvidence
     private final ReferenceSequenceFile mRefGenome;
     private final Coverage mCoverage;
 
+    private int mTotalReadsProcessed;
+
     public CandidateEvidence(
             final SageConfig config, final List<VariantHotspot> hotspots, final List<BaseRegion> panel,
             final ReferenceSequenceFile refGenome, final Coverage coverage)
@@ -43,7 +45,11 @@ public class CandidateEvidence
         mHotspots = hotspots;
         mRefGenome = refGenome;
         mCoverage = coverage;
+
+        mTotalReadsProcessed = 0;
     }
+
+    public int totalReadsProcessed() { return mTotalReadsProcessed; }
 
     public List<AltContext> readBam(
             final String sample, final String bamFile, final RefSequence refSequence, final ChrBaseRegion bounds)
@@ -62,7 +68,11 @@ public class CandidateEvidence
             }
         };
 
-        return readBam(bamFile, bounds, consumer, refContextCache);
+        List<AltContext> altContexts = readBam(bamFile, bounds, consumer, refContextCache);
+
+        mTotalReadsProcessed += refContextConsumer.getReadCount();
+
+        return altContexts;
     }
 
     @NotNull

@@ -120,17 +120,17 @@ public class VariantPhaser
             ++index;
         }
 
-        PhasedGroupCollection collection = new PhasedGroupCollection();
+        PhasedGroupCollection collection = new PhasedGroupCollection(mPhasedGroupCollections.size());
         collection.addPhaseVariants(posVarMin, posVarMax, mNextGroupId, posCounters, negCounters);
         ++mNextGroupId;
         mPhasedGroupCollections.add(collection);
     }
 
+    public void signalPhaseReadsEnd() { mPerfCounters.get(PC_PHASE_READS).stop(); }
+
     public void assignLocalPhaseSets(final Set<ReadContextCounter> passingCounters, final Set<ReadContextCounter> validCounters)
     {
         // assign local phase set IDs to all phased variants
-        mPerfCounters.get(PC_PHASE_READS).stop();
-
         int startCount = mNextGroupId;
 
         boolean hasGroups = applyInitialFilters(passingCounters, validCounters);

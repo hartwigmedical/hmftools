@@ -110,6 +110,9 @@ public class RegionTask implements Callable
 
         mPerfCounters.get(PC_EVIDENCE).stop();
 
+        VariantPhaser variantPhaser = mEvidenceStage.getVariantPhaser();
+        variantPhaser.signalPhaseReadsEnd();
+
         VariantFilters filters = new VariantFilters(mConfig.Filter);
 
         // combine normal and tumor together to create variants, then apply soft filters
@@ -137,8 +140,6 @@ public class RegionTask implements Callable
         }
 
         // phase variants now all evidence has been collected and filters applied
-        VariantPhaser variantPhaser = mEvidenceStage.getVariantPhaser();
-
         variantPhaser.assignLocalPhaseSets(passingTumorReadCounters, validTumorReadCounters);
 
         // mPerfCounters.get(PC_DEDUP).start();
@@ -153,6 +154,8 @@ public class RegionTask implements Callable
 
         return (long)0;
     }
+
+    public int totalReadsProcessed() { return mCandidateState.totalReadsProcessed(); }
 
     public void writeVariants(final Consumer<SageVariant> variantWriter)
     {
