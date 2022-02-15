@@ -50,7 +50,7 @@ public class RegionTask implements Callable
 
     public static final int PC_CANDIDATES = 0;
     public static final int PC_EVIDENCE = 1;
-    public static final int PC_DEDUP = 2;
+    public static final int PC_VARIANTS = 2;
 
     public RegionTask(
             final int taskId, final ChrBaseRegion region, final SageConfig config, final ReferenceSequenceFile refGenome,
@@ -74,7 +74,7 @@ public class RegionTask implements Callable
         mPerfCounters = Lists.newArrayList();
         mPerfCounters.add(new PerformanceCounter("Candidates"));
         mPerfCounters.add(new PerformanceCounter("Evidence"));
-        // mPerfCounters.add(new PerformanceCounter("Dedup"));
+        mPerfCounters.add(new PerformanceCounter("Variants"));
     }
 
     public final List<SageVariant> getVariants() { return mSageVariants; }
@@ -96,6 +96,13 @@ public class RegionTask implements Callable
         List<Candidate> initialCandidates = mCandidateState.findCandidates(mRegion, refSequence);
         mPerfCounters.get(PC_CANDIDATES).stop();
 
+        if(mConfig.PerfWarnTime > 0 && mPerfCounters.get(PC_CANDIDATES).getLastTime() > mConfig.PerfWarnTime)
+        {
+            SG_LOGGER.warn("region({}) candidate({}) reads({}) processing time({})",
+                    mRegion, initialCandidates.size(), mCandidateState.totalReadsProcessed(),
+                    String.format("%.3f", mPerfCounters.get(PC_CANDIDATES).getLastTime()));
+        }
+
         SG_LOGGER.trace("{}: region({}) building evidence for {} candidates", mTaskId, mRegion, initialCandidates.size());
 
         mPerfCounters.get(PC_EVIDENCE).start();
@@ -111,7 +118,17 @@ public class RegionTask implements Callable
         mPerfCounters.get(PC_EVIDENCE).stop();
 
         VariantPhaser variantPhaser = mEvidenceStage.getVariantPhaser();
+
+        if(mConfig.PerfWarnTime > 0 && mPerfCounters.get(PC_EVIDENCE).getLastTime() > mConfig.PerfWarnTime)
+        {
+            SG_LOGGER.warn("region({}) evidence candidates({}) phasing(g={} c={}) processing time({})",
+                    mRegion, finalCandidates.size(),  variantPhaser.getPhasingGroupCount(), variantPhaser.getPhasedCollections().size(),
+                    String.format("%.3f", mPerfCounters.get(PC_EVIDENCE).getLastTime()));
+        }
+
         variantPhaser.signalPhaseReadsEnd();
+
+        mPerfCounters.get(PC_VARIANTS).start();
 
         VariantFilters filters = new VariantFilters(mConfig.Filter);
 
@@ -142,13 +159,11 @@ public class RegionTask implements Callable
         // phase variants now all evidence has been collected and filters applied
         variantPhaser.assignLocalPhaseSets(passingTumorReadCounters, validTumorReadCounters);
 
-        // mPerfCounters.get(PC_DEDUP).start();
-
         SG_LOGGER.trace("phasing {} variants", mSageVariants.size());
 
         mVariantDeduper.processVariants(mSageVariants);
 
-        //mPerfCounters.get(PC_DEDUP).stop();
+        mPerfCounters.get(PC_VARIANTS).stop();
 
         SG_LOGGER.trace("{}: region({}) complete", mTaskId, mRegion);
 

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.pipeline;
 
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.ReferenceData.loadRefGenome;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
@@ -18,6 +19,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.ReferenceData;
 import com.hartwig.hmftools.sage.config.SageConfig;
@@ -58,14 +60,25 @@ public class ChromosomePipeline implements AutoCloseable
 
         List<ChrBaseRegion> partitionedRegions = mPartition.partition(mChromosome);
 
+        List<BaseRegion> panelRegions = refData.PanelWithHotspots.get(chr);
+
         mRegionTasks = Lists.newArrayList();
 
         for(int i = 0; i < partitionedRegions.size(); ++i)
         {
             ChrBaseRegion region = partitionedRegions.get(i);
 
+            if(mConfig.PanelOnly)
+            {
+                if(panelRegions == null)
+                    continue;
+
+                if(panelRegions.stream().noneMatch(x -> positionsOverlap(x.start(), x.end(), region.start(), region.end())))
+                    continue;
+            }
+
             mRegionTasks.add(new RegionTask(i, region, config, mRefGenome,
-                    refData.Hotspots.get(chr), refData.PanelWithHotspots.get(chr), refData.ChromosomeTranscripts.get(chromosome),
+                    refData.Hotspots.get(chr), panelRegions, refData.ChromosomeTranscripts.get(chromosome),
                     refData.HighConfidence.get(chr), qualityRecalibrationMap, phaseSetCounter, coverage));
         }
     }

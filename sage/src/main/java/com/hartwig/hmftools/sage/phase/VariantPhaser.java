@@ -50,10 +50,11 @@ public class VariantPhaser
 
         mPerfCounters = Lists.newArrayList();
         mPerfCounters.add(new PerformanceCounter("PhaseReads"));
-        mPerfCounters.add(new PerformanceCounter("FormLPS"));
+        // mPerfCounters.add(new PerformanceCounter("FormLPS"));
     }
 
     public List<PhasedGroupCollection> getPhasedCollections() { return mPhasedGroupCollections; }
+    public int getPhasingGroupCount() { return mPhasedGroupCollections.stream().mapToInt(x -> x.groups().size()).sum(); }
     public List<PerformanceCounter> getPerfCounters() { return mPerfCounters; }
     public ChrBaseRegion region() { return mRegion; }
 
@@ -138,7 +139,7 @@ public class VariantPhaser
         if(!hasGroups)
             return;
 
-        mPerfCounters.get(PC_FORM_LPS).start();
+        // mPerfCounters.get(PC_FORM_LPS).start();
 
         int startFilteredCount = mPhasedGroupCollections.stream().mapToInt(x -> x.groups().size()).sum();
 
@@ -182,19 +183,7 @@ public class VariantPhaser
                 mRegion, mPhasedGroupCollections.size(), startCount, startFilteredCount, finalPhasedGroups.size(), assignedLps,
                 passingCounters.size(), validCounters.size(), uniqueRCs != null ? uniqueRCs.size() : 0);
 
-        mPerfCounters.get(PC_FORM_LPS).stop();
-
-        if(SG_LOGGER.isDebugEnabled())
-        {
-            PerformanceCounter pc = mPerfCounters.get(PC_FORM_LPS);
-            double lastTime = pc.getTimes().get(pc.getTimes().size() - 1);
-            if(lastTime > 0.5)
-            {
-                SG_LOGGER.debug("region({}) phasing groups start({} filtered={}) postMerge({}) assigned({}) rc(pass={} valid={}) time({})",
-                        mRegion, startCount, startFilteredCount, finalPhasedGroups.size(), assignedLps,
-                        passingCounters.size(), validCounters.size(), lastTime);
-            }
-        }
+        // mPerfCounters.get(PC_FORM_LPS).stop();
     }
 
     private boolean applyInitialFilters(
@@ -463,6 +452,8 @@ public class VariantPhaser
             List<SageVariant> lpsVariants = variants.stream().filter(x -> x.hasMatchingLps(lpsId)).collect(Collectors.toList());
             List<SageVariant> passingVariants = lpsVariants.stream().filter(x -> x.isPassing()).collect(Collectors.toList());
 
+            lpsVariantsMap.put(lpsId, lpsVariants);
+
             if(passingVariants.isEmpty())
             {
                 uninformativeLpsIds.add(lpsId);
@@ -473,7 +464,6 @@ public class VariantPhaser
             if(lpsVariants.size() == 1 && passingVariants.get(0).localPhaseSets().size() == 1)
                 singlePassingVarGroups.add(lpsId);
 
-            lpsVariantsMap.put(lpsId, lpsVariants);
             lpsPassingVariantsMap.put(lpsId, passingVariants);
             lpsMaxReadCountMap.put(lpsId, lpsVariants.get(0).getLpsReadCount(lpsId));
         }
