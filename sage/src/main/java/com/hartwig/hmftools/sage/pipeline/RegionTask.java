@@ -158,6 +158,7 @@ public class RegionTask implements Callable
 
         // phase variants now all evidence has been collected and filters applied
         variantPhaser.assignLocalPhaseSets(passingTumorReadCounters, validTumorReadCounters);
+        variantPhaser.clearAll();
 
         SG_LOGGER.trace("phasing {} variants", mSageVariants.size());
 

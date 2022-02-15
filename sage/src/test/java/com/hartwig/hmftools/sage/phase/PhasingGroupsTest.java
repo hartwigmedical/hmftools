@@ -89,38 +89,36 @@ public class PhasingGroupsTest
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
         assertEquals(5, getPhasedGroupCount());
-        assertTrue(checkGroupsAreOrdered());
 
         posCounters = Lists.newArrayList(rc2, rc4);
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
         assertEquals(6, getPhasedGroupCount());
-        assertTrue(checkGroupsAreOrdered());
 
         posCounters = Lists.newArrayList(rc6);
         negCounters = Lists.newArrayList(rc3);
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
         assertEquals(7, getPhasedGroupCount());
-        assertTrue(checkGroupsAreOrdered());
 
         posCounters = Lists.newArrayList(rc4, rc5);
         negCounters = Lists.newArrayList();
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
         assertEquals(8, getPhasedGroupCount());
-        assertTrue(checkGroupsAreOrdered());
 
         posCounters = Lists.newArrayList(rc2, rc5);
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
         assertEquals(9, getPhasedGroupCount());
+
+        mPhaser.getPhasedCollections().forEach(x -> x.finalise());
         assertTrue(checkGroupsAreOrdered());
     }
 
     private int getPhasedGroupCount()
     {
-        return mPhaser.getPhasedCollections().stream().mapToInt(x -> x.groups().size()).sum();
+        return mPhaser.getPhasedCollections().stream().mapToInt(x -> x.groupCount()).sum();
     }
 
     @Test
@@ -210,7 +208,6 @@ public class PhasingGroupsTest
         ReadContextCounter rc4 = createReadCounter(50);
         ReadContextCounter rc5 = createReadCounter(60);
         ReadContextCounter rc6 = createReadCounter(70);
-        // ReadContextCounter rc7 = createReadCounter(80);
 
         // 2 sub-groups and 1 extending in either direction, results in a single group
         List<ReadContextCounter> posCounters = Lists.newArrayList(rc2, rc5);
@@ -392,7 +389,7 @@ public class PhasingGroupsTest
     private List<PhasedVariantGroup> getPhasedGroups()
     {
         List<PhasedVariantGroup> phasedGroups = Lists.newArrayList();
-        mPhaser.getPhasedCollections().forEach(x -> phasedGroups.addAll(x.groups()));
+        mPhaser.getPhasedCollections().forEach(x -> x.groupsMap().values().forEach(y -> phasedGroups.addAll(y)));
         return phasedGroups;
     }
 

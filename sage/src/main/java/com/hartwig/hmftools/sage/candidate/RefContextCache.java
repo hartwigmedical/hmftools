@@ -67,10 +67,13 @@ public class RefContextCache
             if(!passesTumorHardLimits(altContext))
                 continue;
 
-            List<AltContext> validCandidates = altContext.selectCandidates();
+            altContext.selectCandidates();
 
-            if(validCandidates != null)
-                mSavedCandidates.addAll(validCandidates);
+            if(altContext.hasValidCandidate())
+                mSavedCandidates.add(altContext);
+
+            if(altContext.hasSecondCandidate())
+                mSavedCandidates.add(altContext.secondCandidate());
         }
     }
 

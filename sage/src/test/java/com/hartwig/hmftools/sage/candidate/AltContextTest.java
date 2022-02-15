@@ -40,7 +40,8 @@ public class AltContextTest
         Collections.shuffle(readContexts);
         readContexts.forEach(x -> victim.addReadContext(0, x));
 
-        assertTrue(victim.selectCandidates() == null);
+        victim.selectCandidates();
+        assertFalse(victim.hasValidCandidate());
     }
 
     @Test
@@ -59,9 +60,9 @@ public class AltContextTest
         Collections.shuffle(readContexts);
         readContexts.forEach(x -> victim.addReadContext(0, x));
 
-        List<AltContext> candidates = victim.selectCandidates();
-        assertNotNull(candidates);
-        assertEquals("AG" + core1 + "AG", new String(candidates.get(0).readContext().readBases()));
+        victim.selectCandidates();
+        assertTrue(victim.hasValidCandidate());
+        assertEquals("AG" + core1 + "AG", new String(victim.readContext().readBases()));
     }
 
     @Test
@@ -89,9 +90,9 @@ public class AltContextTest
         Collections.shuffle(readContexts);
         readContexts.forEach(x -> victim.addReadContext(0, x));
 
-        List<AltContext> candidates = victim.selectCandidates();
-        assertNotNull(candidates);
-        assertEquals("AG" + core1 + "AG", new String(candidates.get(0).readContext().readBases()));
+        victim.selectCandidates();
+        assertTrue(victim.hasValidCandidate());
+        assertEquals("AG" + core1 + "AG", new String(victim.readContext().readBases()));
     }
 
     @Test
@@ -119,9 +120,9 @@ public class AltContextTest
         Collections.shuffle(readContexts);
         readContexts.forEach(x -> victim.addReadContext(0, x));
 
-        List<AltContext> candidates = victim.selectCandidates();
-        assertNotNull(candidates);
-        assertEquals("AG" + core1 + "AG", new String(candidates.get(0).readContext().readBases()));
+        victim.selectCandidates();
+        assertTrue(victim.hasValidCandidate());
+        assertEquals("AG" + core1 + "AG", new String(victim.readContext().readBases()));
     }
 
     @Test

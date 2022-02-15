@@ -54,9 +54,14 @@ public class VariantPhaser
     }
 
     public List<PhasedGroupCollection> getPhasedCollections() { return mPhasedGroupCollections; }
-    public int getPhasingGroupCount() { return mPhasedGroupCollections.stream().mapToInt(x -> x.groups().size()).sum(); }
+    public int getPhasingGroupCount() { return mPhasedGroupCollections.stream().mapToInt(x -> x.groupCount()).sum(); }
     public List<PerformanceCounter> getPerfCounters() { return mPerfCounters; }
     public ChrBaseRegion region() { return mRegion; }
+
+    public void clearAll()
+    {
+        mPhasedGroupCollections.clear();
+    }
 
     public void initialise(final ChrBaseRegion region, boolean logData)
     {
@@ -197,6 +202,8 @@ public class VariantPhaser
 
         for(PhasedGroupCollection collection : mPhasedGroupCollections)
         {
+            collection.finalise();
+
             int index = 0;
             while(index < collection.groups().size())
             {
