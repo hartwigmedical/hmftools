@@ -12,19 +12,22 @@ import com.hartwig.hmftools.sage.config.VariantFilters;
 public class ReadContextCounters
 {
     private final List<Candidate> mCandidates;
+    private final VariantFilters mVariantFilters;
 
     // multiple read counters exist to support multiple samples - these are 1:1 with the candidates above
     private final List<List<ReadContextCounter>> mSampleCandidateReadCounters;
     private final List<Integer> mFilteredCandidateIndex; // index of the filtered candidates into the original/full list
 
-    public ReadContextCounters(final List<Candidate> candidates)
+    public ReadContextCounters(final FilterConfig filterConfig, final List<Candidate> candidates)
     {
         mCandidates = candidates;
         mSampleCandidateReadCounters = Lists.newArrayList();
         mFilteredCandidateIndex = Lists.newArrayList();
+        mVariantFilters = new VariantFilters(filterConfig);
     }
 
     public int candidateCount() { return mCandidates.size(); }
+    public VariantFilters variantFilters() { return mVariantFilters; }
 
     public List<ReadContextCounter> getReadCounters(final int candidateIndex)
     {
@@ -41,17 +44,6 @@ public class ReadContextCounters
 
         int candidateIndex = mFilteredCandidateIndex.get(filteredCandidateIndex);
         return mSampleCandidateReadCounters.get(candidateIndex);
-    }
-
-    public List<ReadContextCounter> getReadCounters(final Candidate candidate)
-    {
-        for(int i = 0; i < mCandidates.size(); ++i)
-        {
-            if(mCandidates.get(i) == candidate)
-                return mSampleCandidateReadCounters.get(i);
-        }
-
-        return null;
     }
 
     public List<ReadContextCounter> getVariantReadCounters(final VariantHotspot variant)
@@ -94,7 +86,7 @@ public class ReadContextCounters
         }
     }
 
-    public List<Candidate> filterCandidates(final FilterConfig filterConfig)
+    public List<Candidate> filterCandidates()
     {
         final List<Candidate> validCandidates = Lists.newArrayList();
 
@@ -102,7 +94,7 @@ public class ReadContextCounters
         {
             List<ReadContextCounter> readCounters = mSampleCandidateReadCounters.get(i);
 
-            if(readCounters.stream().anyMatch(x -> VariantFilters.passesHardFilters(filterConfig, x)))
+            if(readCounters.stream().anyMatch(x -> mVariantFilters.passesHardFilters(x)))
             {
                 validCandidates.add(mCandidates.get(i));
                 mFilteredCandidateIndex.add(i);

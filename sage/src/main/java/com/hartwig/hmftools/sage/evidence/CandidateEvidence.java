@@ -56,7 +56,7 @@ public class CandidateEvidence
     {
         final List<GeneCoverage> geneCoverage = mCoverage.coverage(sample, bounds.Chromosome);
         final RefContextCache refContextCache = new RefContextCache(mConfig, mHotspots, mPanel);
-        final RefContextConsumer refContextConsumer = new RefContextConsumer(mConfig, bounds, refSequence, refContextCache);
+        final RefContextConsumer refContextConsumer = new RefContextConsumer(mConfig, bounds, refSequence, refContextCache, mHotspots);
 
         final Consumer<SAMRecord> consumer = record ->
         {

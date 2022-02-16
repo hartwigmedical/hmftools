@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
@@ -21,6 +22,7 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.ReferenceData;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.coverage.Coverage;
@@ -60,7 +62,10 @@ public class ChromosomePipeline implements AutoCloseable
 
         List<ChrBaseRegion> partitionedRegions = mPartition.partition(mChromosome);
 
-        List<BaseRegion> panelRegions = refData.PanelWithHotspots.get(chr);
+        List<BaseRegion> chrPanel = refData.PanelWithHotspots.get(chr);
+        List<VariantHotspot> chrHotspots = refData.Hotspots.get(chr);
+        List<TranscriptData> chrTranscripts = refData.ChromosomeTranscripts.get(chromosome);
+        List<BaseRegion> chrHighConfidence = refData.HighConfidence.get(chr);
 
         mRegionTasks = Lists.newArrayList();
 
@@ -68,18 +73,27 @@ public class ChromosomePipeline implements AutoCloseable
         {
             ChrBaseRegion region = partitionedRegions.get(i);
 
-            if(mConfig.PanelOnly)
-            {
-                if(panelRegions == null)
-                    continue;
+            List<BaseRegion> regionPanel = chrPanel != null ? chrPanel.stream()
+                    .filter(x -> positionsOverlap(region.start(), region.end(), x.start(), x.end())).collect(Collectors.toList())
+                    : Lists.newArrayList();
 
-                if(panelRegions.stream().noneMatch(x -> positionsOverlap(x.start(), x.end(), region.start(), region.end())))
-                    continue;
-            }
+            if(mConfig.PanelOnly && regionPanel.isEmpty())
+                continue;
 
-            mRegionTasks.add(new RegionTask(i, region, config, mRefGenome,
-                    refData.Hotspots.get(chr), panelRegions, refData.ChromosomeTranscripts.get(chromosome),
-                    refData.HighConfidence.get(chr), qualityRecalibrationMap, phaseSetCounter, coverage));
+            List<VariantHotspot> regionHotspots = chrHotspots != null ? chrHotspots.stream()
+                    .filter(x -> region.containsPosition(x.position())).collect(Collectors.toList()) : Lists.newArrayList();
+
+            List<TranscriptData> regionsTranscripts = chrTranscripts != null ? chrTranscripts.stream()
+                    .filter(x -> positionsOverlap(region.start(), region.end(), x.TransStart, x.TransEnd)).collect(Collectors.toList())
+                    : Lists.newArrayList();
+
+            List<BaseRegion> regionHighConfidence = chrHighConfidence != null ? chrHighConfidence.stream()
+                    .filter(x -> positionsOverlap(region.start(), region.end(), x.start(), x.end())).collect(Collectors.toList())
+                    : Lists.newArrayList();
+
+            mRegionTasks.add(new RegionTask(
+                    i, region, config, mRefGenome, regionHotspots, regionPanel, regionsTranscripts,
+                    regionHighConfidence, qualityRecalibrationMap, phaseSetCounter, coverage));
         }
     }
 

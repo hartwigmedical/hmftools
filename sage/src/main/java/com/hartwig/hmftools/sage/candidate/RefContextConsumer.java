@@ -1,24 +1,28 @@
 package com.hartwig.hmftools.sage.candidate;
 
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
+import com.beust.jcommander.internal.Sets;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.samtools.CigarTraversal;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.read.ReadContextFactory;
 import com.hartwig.hmftools.sage.read.NumberEvents;
-
-import org.apache.commons.compress.utils.Lists;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
@@ -30,17 +34,22 @@ public class RefContextConsumer implements Consumer<SAMRecord>
     private final RefSequence mRefGenome;
     private final RefContextCache mRefContextCache;
     private final ReadContextFactory mReadContextFactory;
+    private final Set<Integer> mHotspotPositions;
 
     private int mReadCount;
 
     public RefContextConsumer(
-            final SageConfig config, final ChrBaseRegion bounds, final RefSequence refGenome, final RefContextCache refContextCache)
+            final SageConfig config, final ChrBaseRegion bounds, final RefSequence refGenome, final RefContextCache refContextCache,
+            final List<VariantHotspot> regionHotspots)
     {
         mBounds = bounds;
         mRefGenome = refGenome;
         mRefContextCache = refContextCache;
         mReadContextFactory = new ReadContextFactory(config.ReadContextFlankSize);
         mConfig = config;
+
+        mHotspotPositions = Sets.newHashSet();
+        regionHotspots.forEach(x -> mHotspotPositions.add(x.position()));
 
         mReadCount = 0;
     }
@@ -58,33 +67,40 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         if(reachedDepthLimit(record))
             return;
 
+        int numberOfEvents = NumberEvents.numberOfEvents(record, mRefGenome);
+
+        boolean readExceedsQuality = exceedsQualityCheck(record, numberOfEvents);
+        if(!readExceedsQuality)
+        {
+            if(mHotspotPositions.stream().noneMatch(x -> positionWithin(x, record.getStart(), record.getEnd())))
+                return;
+        }
+
         final List<AltRead> altReads = Lists.newArrayList();
         final IndexedBases refBases = mRefGenome.alignment();
-
-        int numberOfEvents = NumberEvents.numberOfEvents(record, mRefGenome);
 
         final CigarHandler handler = new CigarHandler()
         {
             @Override
-            public void handleAlignment(final SAMRecord record, final CigarElement element, final int readIndex,
-                    final int refPosition)
+            public void handleAlignment(final SAMRecord record, final CigarElement element, final int readIndex, final int refPosition)
             {
-                altReads.addAll(processAlignment(record, readIndex, refPosition, element.getLength(), refBases, numberOfEvents));
+                altReads.addAll(processAlignment(
+                        record, readIndex, refPosition, element.getLength(), refBases, numberOfEvents, readExceedsQuality));
             }
 
             @Override
-            public void handleInsert(final SAMRecord record, final CigarElement element, final int readIndex,
-                    final int refPosition)
+            public void handleInsert(final SAMRecord record, final CigarElement element, final int readIndex, final int refPosition)
             {
-                Optional.ofNullable(processInsert(element, record, readIndex, refPosition, refBases, numberOfEvents))
+                Optional.ofNullable(
+                        processInsert(element, record, readIndex, refPosition, refBases, numberOfEvents, readExceedsQuality))
                         .ifPresent(altReads::add);
             }
 
             @Override
-            public void handleDelete(final SAMRecord record, final CigarElement element, final int readIndex,
-                    final int refPosition)
+            public void handleDelete(final SAMRecord record, final CigarElement element, final int readIndex, final int refPosition)
             {
-                Optional.ofNullable(processDel(element, record, readIndex, refPosition, refBases, numberOfEvents))
+                Optional.ofNullable(processDel(
+                        element, record, readIndex, refPosition, refBases, numberOfEvents, readExceedsQuality))
                         .ifPresent(altReads::add);
             }
         };
@@ -96,15 +112,31 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         altReads.forEach(AltRead::updateRefContext);
     }
 
+    private boolean exceedsQualityCheck(final SAMRecord record, int numberOfEvents)
+    {
+        int eventsPenalty = (numberOfEvents - 1) * mConfig.Quality.MapQualityReadEventsPenalty;
+
+        int improperPenalty = !record.getReadPairedFlag() || !record.getProperPairFlag() || record.getSupplementaryAlignmentFlag() ?
+                mConfig.Quality.MapQualityImproperPairPenalty : 0;
+
+        int calcMapQual = record.getMappingQuality() - mConfig.Quality.MapQualityFixedPenalty - eventsPenalty - improperPenalty;
+        return calcMapQual > 0;
+    }
+
+    private boolean isHotspotLocation(int position) { return mHotspotPositions.contains(position); }
+
     private AltRead processInsert(
             final CigarElement element, final SAMRecord record, int readIndex, int refPosition,
-            final IndexedBases refBases, int numberOfEvents)
+            final IndexedBases refBases, int numberOfEvents, boolean readExceedsQuality)
     {
         int refIndex = refBases.index(refPosition);
         boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.MinMapQuality;
 
         if(refPosition <= mBounds.end() && refPosition >= mBounds.start())
         {
+            if(!readExceedsQuality && !isHotspotLocation(refPosition))
+                return null;
+
             final String ref = new String(refBases.Bases, refIndex, 1);
             final String alt = new String(record.getReadBases(), readIndex, element.getLength() + 1);
             boolean findReadContext = withinReadContext(readIndex, record);
@@ -124,13 +156,16 @@ public class RefContextConsumer implements Consumer<SAMRecord>
 
     private AltRead processDel(
             final CigarElement element, final SAMRecord record, int readIndex, int refPosition,
-            final IndexedBases refBases, int numberOfEvents)
+            final IndexedBases refBases, int numberOfEvents, boolean readExceedsQuality)
     {
         int refIndex = refBases.index(refPosition);
         boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.MinMapQuality;
 
         if(refPosition <= mBounds.end() && refPosition >= mBounds.start())
         {
+            if(!readExceedsQuality && !isHotspotLocation(refPosition))
+                return null;
+
             final String ref = new String(refBases.Bases, refIndex, element.getLength() + 1);
             final String alt = new String(record.getReadBases(), readIndex, 1);
             boolean findReadContext = withinReadContext(readIndex, record);
@@ -150,7 +185,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
 
     private List<AltRead> processAlignment(
             final SAMRecord record, int readBasesStartIndex, int refPositionStart,
-            int alignmentLength, final IndexedBases refBases, int numberOfEvents)
+            int alignmentLength, final IndexedBases refBases, int numberOfEvents, boolean readExceedsQuality)
     {
         final List<AltRead> result = Lists.newArrayList();
         boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.MinMapQuality;
@@ -164,6 +199,9 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             int refBaseIndex = refIndex + i;
 
             if(!mBounds.containsPosition(refPosition))
+                continue;
+
+            if(!readExceedsQuality && !isHotspotLocation(refPosition))
                 continue;
 
             final byte refByte = refBases.Bases[refBaseIndex];

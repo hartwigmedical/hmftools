@@ -360,7 +360,7 @@ public class ReadContextCounter implements VariantHotspot
 
     private void checkImproperCount(final SAMRecord record)
     {
-        if(!record.getReadPairedFlag() || !record.getProperPairFlag())
+        if(!record.getReadPairedFlag() || !record.getProperPairFlag() || record.getSupplementaryAlignmentFlag())
         {
             mImproperPair++;
         }

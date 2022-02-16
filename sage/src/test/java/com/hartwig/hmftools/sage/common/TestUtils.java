@@ -44,7 +44,7 @@ public class TestUtils
 
         Candidate candidate = new Candidate(
                 VariantTier.HIGH_CONFIDENCE, variant, tumorCounters.get(0).readContext(),
-                100, 1, 1);
+                100, 1, 1, 0, 0);
 
         List<ReadContextCounter> normalCounters = Lists.newArrayList();
 

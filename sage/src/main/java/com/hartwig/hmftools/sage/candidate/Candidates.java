@@ -62,7 +62,6 @@ public class Candidates
             }
             else
             {
-                newCandidate.update(altContext);
                 candidates.add(newCandidate);
             }
         }
@@ -77,7 +76,6 @@ public class Candidates
         for(final AltContext altContext : altContexts)
         {
             Candidate candidate = Candidate.fromAltContext(tierSelector.tier(altContext), altContext);
-            candidate.update(altContext);
 
             int index = 0;
 

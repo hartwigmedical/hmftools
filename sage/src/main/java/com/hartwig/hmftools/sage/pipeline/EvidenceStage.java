@@ -19,6 +19,7 @@ import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 public class EvidenceStage
 {
+    private final SageConfig mConfig;
     private final ReadContextEvidence mReadContextEvidence;
     private final VariantPhaser mVariantPhaser;
 
@@ -26,6 +27,7 @@ public class EvidenceStage
             final SageConfig config, final ReferenceSequenceFile refGenome,
             final Map<String, QualityRecalibrationMap> qualityRecalibrationMap, final PhaseSetCounter phaseSetCounter)
     {
+        mConfig = config;
         mReadContextEvidence = new ReadContextEvidence(config, refGenome, qualityRecalibrationMap);
         mVariantPhaser = new VariantPhaser(phaseSetCounter);
     }
@@ -37,11 +39,11 @@ public class EvidenceStage
         // search BAMs for evidence of each candidate variant
         if(samples.isEmpty())
         {
-            return new ReadContextCounters(candidates);
+            return new ReadContextCounters(mConfig.Filter, candidates);
         }
 
         int sampleCount = samples.size();
-        final ReadContextCounters readContextCounters = new ReadContextCounters(candidates);
+        final ReadContextCounters readContextCounters = new ReadContextCounters(mConfig.Filter, candidates);
 
         for(int i = 0; i < samples.size(); i++)
         {

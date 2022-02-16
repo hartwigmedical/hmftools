@@ -237,10 +237,7 @@ public class AltContext implements VariantHotspot
             mMinNumberOfEvents = min(mMinNumberOfEvents, numberOfEvents);
         }
 
-        public int count()
-        {
-            return FullMatch + PartialMatch;
-        }
+        public int count() { return FullMatch + PartialMatch; }
 
         public int minNumberOfEvents() { return mMinNumberOfEvents; }
 

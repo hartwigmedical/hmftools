@@ -110,7 +110,7 @@ public class RegionTask implements Callable
         ReadContextCounters tumorEvidence = mEvidenceStage.findEvidence(
                 mRegion, "tumor", mConfig.TumorIds, mConfig.TumorBams, initialCandidates, true);
 
-        List<Candidate> finalCandidates = tumorEvidence.filterCandidates(mConfig.Filter);
+        List<Candidate> finalCandidates = tumorEvidence.filterCandidates();
 
         ReadContextCounters normalEvidence = mEvidenceStage.findEvidence
                 (mRegion, "normal", mConfig.ReferenceIds, mConfig.ReferenceBams, finalCandidates, false);
@@ -121,9 +121,9 @@ public class RegionTask implements Callable
 
         if(mConfig.PerfWarnTime > 0 && mPerfCounters.get(PC_EVIDENCE).getLastTime() > mConfig.PerfWarnTime)
         {
-            SG_LOGGER.warn("region({}) evidence candidates({}) phasing(g={} c={}) processing time({})",
+            SG_LOGGER.warn("region({}) evidence candidates({}) phasing(g={} c={}) hardFilter({}) processing time({})",
                     mRegion, finalCandidates.size(),  variantPhaser.getPhasingGroupCount(), variantPhaser.getPhasedCollections().size(),
-                    String.format("%.3f", mPerfCounters.get(PC_EVIDENCE).getLastTime()));
+                    tumorEvidence.variantFilters().filterCountsStr(), String.format("%.3f", mPerfCounters.get(PC_EVIDENCE).getLastTime()));
         }
 
         variantPhaser.signalPhaseReadsEnd();
@@ -142,6 +142,20 @@ public class RegionTask implements Callable
 
             final List<ReadContextCounter> normalReadCounters = normalEvidence.getReadCounters(candidateIndex);
             final List<ReadContextCounter> tumorReadCounters = tumorEvidence.getFilteredReadCounters(candidateIndex);
+
+            /*
+            ReadContextCounter primaryTumorRc = tumorReadCounters.get(0);
+
+            boolean candidatePassesRawAlt = candidate.rawSupportAlt() >= mConfig.Filter.HardMinTumorRawAltSupport;
+            boolean evidencePassesRawAlt = primaryTumorRc.rawAltSupport() >= mConfig.Filter.HardMinTumorRawAltSupport;
+            if(candidatePassesRawAlt != evidencePassesRawAlt)
+            {
+                SG_LOGGER.debug("variant({}) raw alt support mismatch({} vs {})",
+                        candidate.toString(), candidate.rawSupportAlt(), primaryTumorRc.rawAltSupport());
+            }
+
+            // || primaryTumorRc.rawAltBaseQuality() != candidate.rawBaseQualityAlt())
+            */
 
             SageVariant sageVariant = new SageVariant(candidate, normalReadCounters, tumorReadCounters);
             mSageVariants.add(sageVariant);
