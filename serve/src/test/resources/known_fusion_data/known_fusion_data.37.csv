@@ -1,1 +1,2 @@
 Type,FiveGene,ThreeGene,CancerTypes,PubMedId,KnownExonTranscript,KnownExonUpRange,KnownExonDownRange,HighImpactPromiscuous,Overrides
+PROMISCUOUS_3,,NTRK3,<multiple>,,,,,TRUE,

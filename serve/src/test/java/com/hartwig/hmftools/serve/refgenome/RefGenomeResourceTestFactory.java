@@ -32,7 +32,7 @@ public final class RefGenomeResourceTestFactory {
         return ImmutableRefGenomeResource.builder()
                 .refSequence(loadTestRefSequence37())
                 .driverGenes(Lists.newArrayList())
-                .knownFusionCache(new KnownFusionCache())
+                .knownFusionCache(RefGenomeManagerFactoryTest.knownFusionCache())
                 .ensemblDataCache(EnsemblDataCacheTestFactory.create37())
                 .proteinResolver(new TestProteinResolver())
                 .build();

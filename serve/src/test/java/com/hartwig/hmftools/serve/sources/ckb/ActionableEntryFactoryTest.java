@@ -14,6 +14,8 @@ public class ActionableEntryFactoryTest {
 
         assertEquals("0060463", ActionableEntryFactory.extractDoid("DOID:0060463"));
         assertEquals("162", ActionableEntryFactory.extractDoid("JAX:10000003"));
+        assertEquals("1749", ActionableEntryFactory.extractDoid("JAX:10000009"));
+        assertEquals("299", ActionableEntryFactory.extractDoid("JAX:10000008"));
         assertNull(ActionableEntryFactory.extractDoid("JAX:10000004"));
     }
 }

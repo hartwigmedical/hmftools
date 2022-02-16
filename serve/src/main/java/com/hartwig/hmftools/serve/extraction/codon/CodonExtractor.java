@@ -51,7 +51,8 @@ public class CodonExtractor {
     }
 
     @Nullable
-    private static DriverCategory findByGene(@NotNull List<DriverGene> driverGenes, @NotNull String gene) {
+    @VisibleForTesting
+    public static DriverCategory findByGene(@NotNull List<DriverGene> driverGenes, @NotNull String gene) {
         for (DriverGene driverGene : driverGenes) {
             if (driverGene.gene().equals(gene)) {
                 return driverGene.likelihoodType();
@@ -64,8 +65,10 @@ public class CodonExtractor {
     public List<CodonAnnotation> extract(@NotNull String gene, @Nullable String transcriptId, @NotNull EventType type,
             @NotNull String event) {
         if (type == EventType.CODON && geneChecker.isValidGene(gene)) {
+
             DriverCategory driverCategory = findByGene(driverGenes, gene);
             if (!DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithDriverInconsistentModeAnnotation)) {
+                LOGGER.info("test1");
                 if (driverCategory != null) {
                     if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
                             DealWithDriverInconsistentModeAnnotation.WARN_ONLY)) {
@@ -77,8 +80,9 @@ public class CodonExtractor {
                     }
                 }
             } else {
+                LOGGER.info(driverCategory);
                 if (driverCategory == null) {
-                    LOGGER.warn("Filtered -- {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
+                    LOGGER.info("Filtered -- {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
                     return null;
                 }
             }

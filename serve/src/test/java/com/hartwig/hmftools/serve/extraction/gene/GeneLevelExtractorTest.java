@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.DriverGeneTestFactory;
 import com.hartwig.hmftools.serve.extraction.catalog.DealWithDriverInconsistentModeAnnotation;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
+import com.hartwig.hmftools.serve.refgenome.RefGenomeResourceTestFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Ignore;
@@ -73,7 +74,6 @@ public class GeneLevelExtractorTest {
     }
 
     @Test
-    @Ignore
     public void canExtractGeneLevelEventFusion() {
         GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "MET"));
         GeneLevelAnnotation geneLevelEvent = geneLevelExtractor.extract("NTRK3", EventType.PROMISCUOUS_FUSION, "NTRK3 fusion");
@@ -139,7 +139,7 @@ public class GeneLevelExtractorTest {
         return new GeneLevelExtractor(GENE_CHECKER,
                 GENE_CHECKER,
                 driverGenes,
-                new KnownFusionCache(),
+                RefGenomeResourceTestFactory.buildTestResource37().knownFusionCache(),
                 Sets.newHashSet("positive", "activating mutation", "act mut"),
                 Sets.newHashSet("negative", "LOSS-OF-FUNCTION", "inact mut"),
                 DealWithDriverInconsistentModeAnnotation.WARN_ONLY);

@@ -273,7 +273,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
             return TableUtil.createNoneReportTable(title, null);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { 80, 80, 80, 40, 40, 40, 65, 65, 40 },
+        Table contentTable = TableUtil.createReportContentTable(new float[] { 80, 80, 80, 40, 40, 40, 65, 70, 40 },
                 new Cell[] { TableUtil.createHeaderCell("Fusion"), TableUtil.createHeaderCell("5' Transcript"),
                         TableUtil.createHeaderCell("3' Transcript"), TableUtil.createHeaderCell("5' End"),
                         TableUtil.createHeaderCell("3' Start"), TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.CENTER),

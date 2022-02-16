@@ -9,6 +9,9 @@
 # Ignore target directies
 target
 
+# Ignore log files
+*.log
+
 # Ignore test xml ecrf
 hmf-common/src/test/resources/ecrf/example/ecrf.xml
 
@@ -19,3 +22,4 @@ hmf-common/src/test/resources/doid/201015_doid.json
 patient-db/patient-db-logs/*.log
 .DS_Store
 /patient-db/nb-configuration.xml
+

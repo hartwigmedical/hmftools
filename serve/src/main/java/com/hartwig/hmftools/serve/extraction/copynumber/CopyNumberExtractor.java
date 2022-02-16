@@ -39,6 +39,8 @@ public class CopyNumberExtractor {
     public KnownCopyNumber extract(@NotNull String gene, @NotNull EventType type) {
         if (COPY_NUMBER_EVENTS.contains(type) && geneChecker.isValidGene(gene)) {
             DriverCategory driverCategory = findByGene(driverGenes, gene);
+            LOGGER.info(driverCategory);
+            LOGGER.info(DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithDriverInconsistentModeAnnotation));
             if (!DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithDriverInconsistentModeAnnotation)) {
                 if ((driverCategory == DriverCategory.TSG && type == EventType.AMPLIFICATION) || (driverCategory == DriverCategory.ONCO
                         && type == EventType.DELETION)) {
@@ -57,6 +59,7 @@ public class CopyNumberExtractor {
                     return ImmutableKnownCopyNumber.builder().gene(gene).type(toCopyNumberType(type)).build();
                 }
             } else {
+                LOGGER.info(driverCategory);
                 if ((driverCategory == DriverCategory.ONCO && type == EventType.AMPLIFICATION) || (driverCategory == DriverCategory.TSG
                         && type == EventType.DELETION)) {
                     return ImmutableKnownCopyNumber.builder().gene(gene).type(toCopyNumberType(type)).build();
