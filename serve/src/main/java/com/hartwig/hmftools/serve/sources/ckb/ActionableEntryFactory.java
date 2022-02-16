@@ -60,11 +60,12 @@ class ActionableEntryFactory {
     }
 
     @NotNull
-    public Set<ActionableEntry> toActionableEntries(@NotNull CkbEntry entry, @NotNull String rawInput) {
+    @VisibleForTesting
+    public static Set<ActionableEntry> toActionableEntries(@NotNull CkbEntry entry, @NotNull String rawInput) {
         Set<ActionableEntry> actionableEntries = Sets.newHashSet();
 
         for (Evidence evidence : entry.evidences()) {
-            if (hasUsableEvidenceType(evidence)) {
+            if (hasUsableEvidenceType(evidence.evidenceType())) {
                 EvidenceLevel level = resolveLevel(evidence.ampCapAscoEvidenceLevel());
                 EvidenceDirection direction = resolveDirection(evidence.responseType());
                 String doid = extractDoid(evidence.indication().termId());
@@ -95,8 +96,8 @@ class ActionableEntryFactory {
 
                     Set<TumorLocationBlacklisting> tumorLocationBlacklistings = Sets.newHashSet();
                     tumorLocationBlacklistings.add(ImmutableTumorLocationBlacklisting.builder()
-                            .blacklistCancerType(doid.equals("162") ? "Hematologic cancer": Strings.EMPTY)
-                            .blacklistedDoid(doid.equals("162") ? "2531": Strings.EMPTY)
+                            .blacklistCancerType(doid.equals("162") ? "Hematologic cancer" : Strings.EMPTY)
+                            .blacklistedDoid(doid.equals("162") ? "2531" : Strings.EMPTY)
                             .build());
                     String tumorLocationBlacklist = TumorLocationBlacklist.extractTumorLocationBlacklisting(tumorLocationBlacklistings);
                     String tumorLocationBlacklistDoid = TumorLocationBlacklist.extractTumorLocationDoid(tumorLocationBlacklistings);
@@ -117,12 +118,12 @@ class ActionableEntryFactory {
                 }
             }
         }
-
         return actionableEntries;
     }
 
     @NotNull
-    static String extractResponseType(@NotNull String responseType) {
+    @VisibleForTesting
+    public static String extractResponseType(@NotNull String responseType) {
         if (responseType.equals("predicted - sensitive")) {
             return "predicted+-+sensitive";
         } else if (responseType.equals("predicted - resistant")) {
@@ -171,13 +172,13 @@ class ActionableEntryFactory {
                 if (id.equals("10000003")) {
                     // CKB uses this as Advanced Solid Tumor
                     return "162";
-                } else if (id.equals("10000009")){
+                } else if (id.equals("10000009")) {
                     // CKB uses this as Squamous Cell Carcinoma of Unknown Primary
                     return "1749";
                 } else if (id.equals("10000008")) {
                     // CKB uses this as Adenocarcinoma of Unknown Primary
                     return "299";
-                }else {
+                } else {
                     // CKB uses 10000005 for configuring "Not a cancer". We can ignore these.
                     if (!id.equals("10000005")) {
                         LOGGER.warn("Unexpected DOID string annotated by CKB: '{}'", doidString);
@@ -193,8 +194,8 @@ class ActionableEntryFactory {
         }
     }
 
-    private static boolean hasUsableEvidenceType(@NotNull Evidence evidence) {
-        String evidenceType = evidence.evidenceType();
+    @VisibleForTesting
+    public static boolean hasUsableEvidenceType(@NotNull String evidenceType) {
         if (USABLE_EVIDENCE_TYPES.contains(evidenceType)) {
             return true;
         } else {
@@ -206,7 +207,8 @@ class ActionableEntryFactory {
     }
 
     @Nullable
-    static EvidenceLevel resolveLevel(@Nullable String evidenceLabel) {
+    @VisibleForTesting
+    public static EvidenceLevel resolveLevel(@Nullable String evidenceLabel) {
         if (evidenceLabel == null || evidenceLabel.equals("NA")) {
             return null;
         }

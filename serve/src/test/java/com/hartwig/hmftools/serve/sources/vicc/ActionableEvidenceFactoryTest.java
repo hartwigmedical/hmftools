@@ -31,7 +31,7 @@ public class ActionableEvidenceFactoryTest {
 
         Map<String, Set<String>> doidLookupMap = Maps.newHashMap();
         doidLookupMap.put(cancerTypeA, Sets.newHashSet("1"));
-        doidLookupMap.put(cancerTypeB, Sets.newHashSet("2"));
+        doidLookupMap.put(cancerTypeB, Sets.newHashSet("162"));
         ActionableEvidenceFactory factory =
                 new ActionableEvidenceFactory(DoidLookupTestFactory.test(doidLookupMap), new DrugCurator(), new EvidenceLevelCurator());
 
@@ -50,6 +50,8 @@ public class ActionableEvidenceFactoryTest {
         assertEquals("Treatment", eventA.treatment());
         assertEquals(cancerTypeA, eventA.cancerType());
         assertEquals("1", eventA.doid());
+        assertEquals(Strings.EMPTY, eventA.blacklistCancerType());
+        assertEquals(Strings.EMPTY, eventA.blacklistedDoid());
         assertEquals(EvidenceLevel.A, eventA.level());
         assertEquals(EvidenceDirection.RESPONSIVE, eventA.direction());
         assertEquals(Sets.newHashSet("url"), eventA.urls());
@@ -57,11 +59,12 @@ public class ActionableEvidenceFactoryTest {
         ActionableEvent eventB = findByCancerType(events, cancerTypeB);
         assertEquals("Treatment", eventB.treatment());
         assertEquals(cancerTypeB, eventB.cancerType());
-        assertEquals("2", eventB.doid());
+        assertEquals("162", eventB.doid());
         assertEquals(EvidenceLevel.A, eventB.level());
         assertEquals(EvidenceDirection.RESPONSIVE, eventB.direction());
         assertEquals(Sets.newHashSet("url"), eventB.urls());
-
+        assertEquals("Hematologic cancer", eventB.blacklistCancerType());
+        assertEquals("2531", eventB.blacklistedDoid());
         factory.evaluateCuration();
     }
 
