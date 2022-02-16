@@ -8,7 +8,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import com.beust.jcommander.internal.Sets;
 import com.google.common.annotations.VisibleForTesting;
@@ -114,6 +113,14 @@ public class RefContextConsumer implements Consumer<SAMRecord>
 
     private boolean exceedsQualityCheck(final SAMRecord record, int numberOfEvents)
     {
+        // ignore HLA genes
+        if(mConfig.Quality.HighlyPolymorphicGenes.stream()
+            .anyMatch(x -> record.getContig().equals(x.Chromosome)
+                    && positionsOverlap(record.getStart(), record.getEnd(), x.GeneStart, x.GeneEnd)))
+        {
+            return true;
+        }
+
         int eventsPenalty = (numberOfEvents - 1) * mConfig.Quality.MapQualityReadEventsPenalty;
 
         int improperPenalty = !record.getReadPairedFlag() || !record.getProperPairFlag() || record.getSupplementaryAlignmentFlag() ?
@@ -123,7 +130,10 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         return calcMapQual > 0;
     }
 
-    private boolean isHotspotLocation(int position) { return mHotspotPositions.contains(position); }
+    private boolean isLowQualityExclusion(int position)
+    {
+        return mHotspotPositions.contains(position);
+    }
 
     private AltRead processInsert(
             final CigarElement element, final SAMRecord record, int readIndex, int refPosition,
@@ -134,7 +144,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
 
         if(refPosition <= mBounds.end() && refPosition >= mBounds.start())
         {
-            if(!readExceedsQuality && !isHotspotLocation(refPosition))
+            if(!readExceedsQuality && !isLowQualityExclusion(refPosition))
                 return null;
 
             final String ref = new String(refBases.Bases, refIndex, 1);
@@ -163,7 +173,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
 
         if(refPosition <= mBounds.end() && refPosition >= mBounds.start())
         {
-            if(!readExceedsQuality && !isHotspotLocation(refPosition))
+            if(!readExceedsQuality && !isLowQualityExclusion(refPosition))
                 return null;
 
             final String ref = new String(refBases.Bases, refIndex, element.getLength() + 1);
@@ -201,7 +211,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             if(!mBounds.containsPosition(refPosition))
                 continue;
 
-            if(!readExceedsQuality && !isHotspotLocation(refPosition))
+            if(!readExceedsQuality && !isLowQualityExclusion(refPosition))
                 continue;
 
             final byte refByte = refBases.Bases[refBaseIndex];

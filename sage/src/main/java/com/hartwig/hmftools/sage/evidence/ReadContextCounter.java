@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_EVIDENCE_MAP_QUAL;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
+import static com.hartwig.hmftools.sage.quality.QualityCalculator.jitterPenalty;
 
 import java.util.List;
 
@@ -316,11 +317,11 @@ public class ReadContextCounter implements VariantHotspot
         switch(realignmentType)
         {
             case LENGTHENED:
-                mJitterPenalty += qualityConfig.jitterPenalty(realignment.RepeatCount);
+                mJitterPenalty += jitterPenalty(qualityConfig, realignment.RepeatCount);
                 mLengthened++;
                 break;
             case SHORTENED:
-                mJitterPenalty += qualityConfig.jitterPenalty(realignment.RepeatCount);
+                mJitterPenalty += jitterPenalty(qualityConfig, realignment.RepeatCount);
                 mShortened++;
                 break;
         }

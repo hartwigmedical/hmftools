@@ -47,7 +47,6 @@ public class QualityConfig
     private static final int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
     private static final int DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 8;
     private static final String DEFAULT_HIGHLY_POLYMORPHIC_GENES = "HLA-A,HLA-B,HLA-C,HLA-DQA1,HLA-DQB1,HLA-DRB1";
-    private static final int MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY = 10;
 
     public QualityConfig(final CommandLine cmd)
     {
@@ -86,29 +85,8 @@ public class QualityConfig
 
     public boolean isHighlyPolymorphic(final GenomePosition position)
     {
-        return HighlyPolymorphicGenes.stream().anyMatch(x -> positionWithin(position.position(), x.GeneStart, x.GeneEnd));
-    }
-
-    public int modifiedMapQuality(@NotNull final GenomePosition position, int mapQuality, int readEvents, boolean properPairFlag)
-    {
-        if(isHighlyPolymorphic(position))
-        {
-            return Math.min(MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY, mapQuality - MapQualityFixedPenalty);
-        }
-
-        int improperPairPenalty = MapQualityImproperPairPenalty * (properPairFlag ? 0 : 1);
-        int distancePenalty = Math.max(0, readEvents - 1) * MapQualityReadEventsPenalty;
-        return mapQuality - MapQualityFixedPenalty - improperPairPenalty - distancePenalty;
-    }
-
-    public double modifiedBaseQuality(double baseQuality, int distanceFromReadEdge)
-    {
-        return Math.min(baseQuality - BaseQualityFixedPenalty, 3 * distanceFromReadEdge - DistanceFromReadEdgeFixedPenalty);
-    }
-
-    public double jitterPenalty(int repeatCount)
-    {
-        return (JitterPenalty * Math.max(0, repeatCount - JitterMinRepeatCount));
+        return HighlyPolymorphicGenes.stream()
+                .anyMatch(x -> position.chromosome().equals(x.Chromosome) && positionWithin(position.position(), x.GeneStart, x.GeneEnd));
     }
 
     public static Options createOptions()
