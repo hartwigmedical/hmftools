@@ -288,7 +288,6 @@ public class SomaticVariantDAO
                 SOMATICVARIANT.RNATOTALREADCOUNT,
                 SOMATICVARIANT.QUAL,
                 SOMATICVARIANT.LOCALPHASESET,
-                SOMATICVARIANT.LOCALREALIGNMENTSET,
                 SOMATICVARIANT.MODIFIED);
         variants.forEach(variant -> addRecord(timestamp, inserter, sample, variant));
         inserter.execute();

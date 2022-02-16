@@ -1,5 +1,9 @@
 # TEAL
 
+TEAL measures telomere content, and estimates telomeric length based on WGS BAM input and can be run on a germline only, tumor only or tumor-normal pair.
+
+If a tumor-normal pair is provided, TEAL will also call somatic telomeric rearrangements, ie. breakends linking non telomeric regions of the genome to telomeric content.
+
 ## Installation
 
 To install, download the latest compiled jar file from the [download links](#version-history-and-download-links).

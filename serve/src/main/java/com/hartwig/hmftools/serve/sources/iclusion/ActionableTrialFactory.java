@@ -110,12 +110,13 @@ public class ActionableTrialFactory {
 
                 actionableTrials.add(actionableBuilder.cancerType(tumorLocation.primaryTumorLocation())
                         .doid(doidCorrected)
-                        .blacklistCancerType(tumorLocationBlacklist)
-                        .blacklistedDoid(tumorLocationBlacklistDoid)
+                        .blacklistCancerType(tumorLocationBlacklist.endsWith(",") ? tumorLocationBlacklist.substring(0,
+                                tumorLocationBlacklist.length() - 1) : tumorLocationBlacklist)
+                        .blacklistedDoid(tumorLocationBlacklistDoid.endsWith(",") ? tumorLocationBlacklistDoid.substring(0,
+                                tumorLocationBlacklistDoid.length() - 1) : tumorLocationBlacklistDoid)
                         .build());
             }
         }
-
         return actionableTrials;
     }
 

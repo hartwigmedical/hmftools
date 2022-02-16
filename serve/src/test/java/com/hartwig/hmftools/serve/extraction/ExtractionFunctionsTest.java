@@ -37,7 +37,7 @@ public class ExtractionFunctionsTest {
                 .rangeType(RangeType.CODON)
                 .start(10)
                 .end(20)
-                .transcript("transscript")
+                .transcript("transcript")
                 .build();
         ActionableRange range2 = ImmutableActionableRange.builder()
                 .from(ServeTestFactory.createTestActionableRange())
@@ -55,7 +55,7 @@ public class ExtractionFunctionsTest {
         assertEquals("BRAF", actionableRange1.gene());
         assertEquals(10, actionableRange1.start());
         assertEquals(20, actionableRange1.end());
-        assertEquals("transscript", actionableRange1.transcript());
+        assertEquals("transcript", actionableRange1.transcript());
 
         ActionableRange actionableRange2 = listOfActionableRange.get(1);
         assertEquals("BRAF", actionableRange2.gene());

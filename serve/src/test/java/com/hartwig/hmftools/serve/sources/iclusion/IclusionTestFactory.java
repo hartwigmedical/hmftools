@@ -20,18 +20,19 @@ public final class IclusionTestFactory {
     }
 
     @NotNull
-    public static IclusionTrial trialWithTumors(@NotNull String acronym, @NotNull List<IclusionTumorLocation> tumorLocations) {
-        return trial(acronym, Lists.newArrayList(), tumorLocations);
+    public static IclusionTrial trialWithTumors(@NotNull String acronym, @NotNull List<IclusionTumorLocation> tumorLocations,
+            @NotNull List<IclusionTumorLocation> blacklist) {
+        return trial(acronym, Lists.newArrayList(), tumorLocations, blacklist);
     }
 
     @NotNull
     public static IclusionTrial trial(@NotNull String acronym, @NotNull List<IclusionMutationCondition> mutationConditions) {
-        return trial(acronym, mutationConditions, Lists.newArrayList());
+        return trial(acronym, mutationConditions, Lists.newArrayList(), Lists.newArrayList());
     }
 
     @NotNull
     public static IclusionTrial trial(@NotNull String acronym, @NotNull List<IclusionMutationCondition> mutationConditions,
-            @NotNull List<IclusionTumorLocation> tumorLocations) {
+            @NotNull List<IclusionTumorLocation> tumorLocations, @NotNull List<IclusionTumorLocation> blacklist) {
         return ImmutableIclusionTrial.builder()
                 .id("id")
                 .acronym(acronym)
@@ -42,7 +43,7 @@ public final class IclusionTestFactory {
                 .ccmo("ccmo")
                 .mutationConditions(mutationConditions)
                 .tumorLocations(tumorLocations)
-                .blacklistedTumorLocations(tumorLocations)
+                .blacklistedTumorLocations(blacklist)
                 .build();
     }
 

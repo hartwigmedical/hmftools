@@ -17,7 +17,6 @@ import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilterAlgo;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class CodonExtractorTest {
@@ -31,26 +30,27 @@ public class CodonExtractorTest {
     }
 
     @Test
-    @Ignore
-    public void canCheckFiltering() {
-        CodonExtractor extractor1 = createWithDriverGenes(createTestDriverGenes(), DealWithDriverInconsistentModeAnnotation.FILTER);
-         assertNull(extractor1.extract("EGFR", null, EventType.CODON, "R249").size());
+    public void canCheckFilterNotInCatalog() {
+        CodonExtractor extractorFilter = createWithDriverGenes(createTestDriverGenes(), DealWithDriverInconsistentModeAnnotation.FILTER);
+        assertNull(extractorFilter.extract("EGFR", null, EventType.CODON, "R249"));
 
-        CodonExtractor extractor2 = createWithDriverGenes(createTestDriverGenes(), DealWithDriverInconsistentModeAnnotation.WARN_ONLY);
-        assertNull(extractor2.extract("EGFR", null, EventType.CODON, "R249").size());
+        CodonExtractor extractorWarn = createWithDriverGenes(createTestDriverGenes(), DealWithDriverInconsistentModeAnnotation.WARN_ONLY);
+        assertEquals(1, extractorWarn.extract("EGFR", null, EventType.CODON, "R249").size());
 
-        CodonExtractor extractor3 = createWithDriverGenes(createTestDriverGenes(), DealWithDriverInconsistentModeAnnotation.IGNORE);
-        assertEquals(1, extractor3.extract("EGFR", null, EventType.CODON, "R249").size());
+        CodonExtractor extractorIgnore = createWithDriverGenes(createTestDriverGenes(), DealWithDriverInconsistentModeAnnotation.IGNORE);
+        assertEquals(1, extractorIgnore.extract("EGFR", null, EventType.CODON, "R249").size());
+    }
 
-        CodonExtractor extractor4 = createWithDriverGenes(createTestDriverGenes(), DealWithDriverInconsistentModeAnnotation.FILTER);
-        extractor4.extract("TP53", null, EventType.CODON, "R249").size();
-        assertEquals(1, extractor4.extract("TP53", null, EventType.CODON, "R249").size());
+    @Test
+    public void canCheckFilterInCatalog() {
+        CodonExtractor extractorFilter = createWithDriverGenes(createTestDriverGenes(), DealWithDriverInconsistentModeAnnotation.FILTER);
+        assertEquals(1, extractorFilter.extract("TP53", null, EventType.CODON, "R249").size());
 
-        CodonExtractor extractor5 = createWithDriverGenes(createTestDriverGenes(), DealWithDriverInconsistentModeAnnotation.WARN_ONLY);
-        assertEquals(1, extractor5.extract("TP53", null, EventType.CODON, "R249").size());
+        CodonExtractor extractorWarn = createWithDriverGenes(createTestDriverGenes(), DealWithDriverInconsistentModeAnnotation.WARN_ONLY);
+        assertEquals(1, extractorWarn.extract("TP53", null, EventType.CODON, "R249").size());
 
-        CodonExtractor extractor6 = createWithDriverGenes(createTestDriverGenes(), DealWithDriverInconsistentModeAnnotation.IGNORE);
-        assertEquals(1, extractor6.extract("TP53", null, EventType.CODON, "R249").size());
+        CodonExtractor extractorIgnore = createWithDriverGenes(createTestDriverGenes(), DealWithDriverInconsistentModeAnnotation.IGNORE);
+        assertEquals(1, extractorIgnore.extract("TP53", null, EventType.CODON, "R249").size());
     }
 
     @Test

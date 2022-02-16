@@ -63,7 +63,7 @@ public class GeneLevelExtractor {
 
     @Nullable
     GeneLevelAnnotation extractPromiscuousFusion(@NotNull String gene) {
-        if (!DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithDriverInconsistentModeAnnotation)) {
+        if (DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithDriverInconsistentModeAnnotation)) {
             if (!geneIsPresentInFusionCache(gene)) {
                 if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
                         DealWithDriverInconsistentModeAnnotation.WARN_ONLY)) {
@@ -78,16 +78,7 @@ public class GeneLevelExtractor {
                 return ImmutableGeneLevelAnnotation.builder().gene(gene).event(GeneLevelEvent.FUSION).build();
             }
         } else {
-            if (geneIsPresentInFusionCache(gene)) {
-                return ImmutableGeneLevelAnnotation.builder().gene(gene).event(GeneLevelEvent.FUSION).build();
-            } else {
-                if (!geneIsPresentInFusionCache(gene)) {
-                    LOGGER.warn("Filtered -- Promiscuous fusion '{}' is not present in the known fusion cache", gene);
-                    return null;
-                } else {
-                    return ImmutableGeneLevelAnnotation.builder().gene(gene).event(GeneLevelEvent.FUSION).build();
-                }
-            }
+            return ImmutableGeneLevelAnnotation.builder().gene(gene).event(GeneLevelEvent.FUSION).build();
         }
         return null;
     }
@@ -95,7 +86,7 @@ public class GeneLevelExtractor {
     @Nullable
     GeneLevelAnnotation extractWildTypeEvents(@NotNull String gene, @NotNull EventType type) {
         DriverCategory driverCategory = findByGene(driverGenes, gene);
-        if (!DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithDriverInconsistentModeAnnotation)) {
+        if (DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithDriverInconsistentModeAnnotation)) {
             if (driverCategory == null) {
                 if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
                         DealWithDriverInconsistentModeAnnotation.WARN_ONLY)) {
@@ -112,12 +103,7 @@ public class GeneLevelExtractor {
                 return ImmutableGeneLevelAnnotation.builder().gene(gene).event(GeneLevelEvent.WILD_TYPE).build();
             }
         } else {
-            if (driverCategory != null) {
-                return ImmutableGeneLevelAnnotation.builder().gene(gene).event(GeneLevelEvent.WILD_TYPE).build();
-            } else {
-                LOGGER.warn("Filtered -- {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
-                return null;
-            }
+            return ImmutableGeneLevelAnnotation.builder().gene(gene).event(GeneLevelEvent.WILD_TYPE).build();
         }
     }
 
@@ -160,45 +146,38 @@ public class GeneLevelExtractor {
             result = driverBasedEvent;
         }
 
-        if (!DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithDriverInconsistentModeAnnotation)) {
+
+        if (DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithDriverInconsistentModeAnnotation)) {
             if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
                     DealWithDriverInconsistentModeAnnotation.WARN_ONLY)) {
+                LOGGER.info(driverBasedEvent);
+                LOGGER.info(result);
                 if (driverBasedEvent == GeneLevelEvent.ANY_MUTATION) {
                     LOGGER.warn("Gene {} not present in driver catalog. {} will never be reported", gene, result);
-                    return ImmutableGeneLevelAnnotation.builder().gene(gene).event(result).build();
                 } else if (result != driverBasedEvent) {
                     LOGGER.warn("Mismatch in driver gene event for '{}'. Event suggests {} while driver catalog suggests {}",
                             gene,
                             result,
                             driverBasedEvent);
-                    return ImmutableGeneLevelAnnotation.builder().gene(gene).event(result).build();
                 }
+                return ImmutableGeneLevelAnnotation.builder().gene(gene).event(result).build();
             } else if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
                     DealWithDriverInconsistentModeAnnotation.FILTER)) {
-                if (driverBasedEvent == GeneLevelEvent.ANY_MUTATION) {
+
+                if(driverBasedEvent == GeneLevelEvent.ANY_MUTATION) {
                     LOGGER.info("Filtered -- {} on {} is not included in driver catalog and won't ever be reported.", gene, result);
                 } else if (result != driverBasedEvent) {
                     LOGGER.info("Mismatch in driver gene event for '{}'. Event suggests {} while driver catalog suggests {}",
                             gene,
                             result,
                             driverBasedEvent);
+                } else if (result == driverBasedEvent) {
+                    return ImmutableGeneLevelAnnotation.builder().gene(gene).event(result).build();
                 }
                 return null;
             }
         } else {
-            if (driverBasedEvent != result) {
-                if (driverBasedEvent == GeneLevelEvent.ANY_MUTATION) {
-                    LOGGER.warn("Filtered -- {} on {} is not included in driver catalog and won't ever be reported.", gene, result);
-                } else {
-                    LOGGER.warn("Filtered -- Mismatch in driver gene event for '{}'. Event suggests {} while driver catalog suggests {}",
-                            gene,
-                            result,
-                            driverBasedEvent);
-                }
-                return null;
-            } else {
-                return ImmutableGeneLevelAnnotation.builder().gene(gene).event(result).build();
-            }
+            return ImmutableGeneLevelAnnotation.builder().gene(gene).event(result).build();
         }
         return null;
     }

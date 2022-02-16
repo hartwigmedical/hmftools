@@ -9,9 +9,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.serve.classification.EventType;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.DriverGeneTestFactory;
 import com.hartwig.hmftools.serve.EnsemblDataCacheTestFactory;
 import com.hartwig.hmftools.serve.extraction.catalog.DealWithDriverInconsistentModeAnnotation;
+import com.hartwig.hmftools.serve.extraction.hotspot.HotspotExtractor;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilterAlgo;
@@ -22,8 +24,45 @@ import org.junit.Test;
 public class ExonExtractorTest {
 
     @Test
+    public void canFilterInCatalog() {
+        ExonExtractor exonExtractorIgnore = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "KIT"),
+                DealWithDriverInconsistentModeAnnotation.IGNORE);
+        List<ExonAnnotation> exonsIgnore = exonExtractorIgnore.extract("KIT", null, EventType.FUSION_PAIR_AND_EXON, "EXON 11 MUTATION");
+        assertEquals(1, exonsIgnore.size());
+
+        ExonExtractor exonExtractorFilter = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "KIT"),
+                DealWithDriverInconsistentModeAnnotation.FILTER);
+        List<ExonAnnotation> exonsFilter = exonExtractorFilter.extract("KIT", null, EventType.FUSION_PAIR_AND_EXON, "EXON 11 MUTATION");
+        assertEquals(1, exonsFilter.size());
+
+        ExonExtractor exonExtractorWarn = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "KIT"),
+                DealWithDriverInconsistentModeAnnotation.WARN_ONLY);
+        List<ExonAnnotation> exonsWarn = exonExtractorWarn.extract("KIT", null, EventType.FUSION_PAIR_AND_EXON, "EXON 11 MUTATION");
+        assertEquals(1, exonsWarn.size());
+    }
+
+    @Test
+    public void canFilterNotInCatalog() {
+        ExonExtractor exonExtractorIgnore = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "KIT"),
+                DealWithDriverInconsistentModeAnnotation.IGNORE);
+        List<ExonAnnotation> exonsIgnore = exonExtractorIgnore.extract("KRAS", null, EventType.FUSION_PAIR_AND_EXON, "EXON 2 MUTATION");
+        assertEquals(1, exonsIgnore.size());
+
+        ExonExtractor exonExtractorFilter = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "KIT"),
+                DealWithDriverInconsistentModeAnnotation.FILTER);
+        List<ExonAnnotation> exonsFilter = exonExtractorFilter.extract("KRAS", null, EventType.FUSION_PAIR_AND_EXON, "EXON 3 MUTATION");
+        assertNull(exonsFilter);
+
+        ExonExtractor exonExtractorWarn = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "KIT"),
+                DealWithDriverInconsistentModeAnnotation.WARN_ONLY);
+        List<ExonAnnotation> exonsWarn = exonExtractorWarn.extract("KRAS", null, EventType.FUSION_PAIR_AND_EXON, "EXON 2 MUTATION");
+        assertEquals(1, exonsWarn.size());
+    }
+
+    @Test
     public void canExtractExonForExonAndFusion() {
-        ExonExtractor extractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "KIT"));
+        ExonExtractor extractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "KIT"),
+                DealWithDriverInconsistentModeAnnotation.IGNORE);
         List<ExonAnnotation> exons = extractor.extract("KIT", null, EventType.FUSION_PAIR_AND_EXON, "EXON 11 MUTATION");
 
         assertEquals(1, exons.size());
@@ -37,7 +76,8 @@ public class ExonExtractorTest {
 
     @Test
     public void canExtractExonForwardStrand() {
-        ExonExtractor extractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "EGFR"));
+        ExonExtractor extractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "EGFR"),
+                DealWithDriverInconsistentModeAnnotation.IGNORE);
         List<ExonAnnotation> exons = extractor.extract("EGFR", null, EventType.EXON, "EXON 19 DELETION");
 
         assertEquals(1, exons.size());
@@ -51,7 +91,8 @@ public class ExonExtractorTest {
 
     @Test
     public void canExtractExonReverseStrand() {
-        ExonExtractor extractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "EGFR"));
+        ExonExtractor extractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "EGFR"),
+                DealWithDriverInconsistentModeAnnotation.IGNORE);
         List<ExonAnnotation> exons = extractor.extract("KRAS", null, EventType.EXON, "EXON 2 DELETION");
 
         assertEquals(1, exons.size());
@@ -65,19 +106,22 @@ public class ExonExtractorTest {
 
     @Test
     public void canFilterOnNonCanonicalTranscript() {
-        ExonExtractor extractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "EGFR"));
+        ExonExtractor extractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "EGFR"),
+                DealWithDriverInconsistentModeAnnotation.IGNORE);
         assertNull(extractor.extract("KRAS", "not the canonical transcript", EventType.EXON, "EXON 2 DELETION"));
     }
 
     @Test
     public void canFilterWhenExonIndicesDoNotExist() {
-        ExonExtractor extractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "EGFR"));
+        ExonExtractor extractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "EGFR"),
+                DealWithDriverInconsistentModeAnnotation.IGNORE);
         assertNull(extractor.extract("KRAS", "ENST00000256078", EventType.EXON, "not a correct event"));
     }
 
     @Test
     public void canFilterWhenExonIndexNotOnTranscript() {
-        ExonExtractor extractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "EGFR"));
+        ExonExtractor extractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "EGFR"),
+                DealWithDriverInconsistentModeAnnotation.IGNORE);
         assertNull(extractor.extract("KRAS", "ENST00000256078", EventType.EXON, "Exon 2000 deletion"));
     }
 
@@ -94,11 +138,12 @@ public class ExonExtractorTest {
     }
 
     @NotNull
-    private static ExonExtractor createWithDriverGenes(@NotNull List<DriverGene> driverGenes) {
+    private static ExonExtractor createWithDriverGenes(@NotNull List<DriverGene> driverGenes,
+            @NotNull DealWithDriverInconsistentModeAnnotation annotation) {
         return new ExonExtractor(new GeneChecker(Sets.newHashSet("TP53", "KIT", "EGFR", "KRAS")),
                 new MutationTypeFilterAlgo(driverGenes),
                 EnsemblDataCacheTestFactory.create37(),
-                DealWithDriverInconsistentModeAnnotation.IGNORE,
-                Lists.newArrayList());
+                annotation,
+                DriverGeneTestFactory.createDriverGenes("TP53", "KIT"));
     }
 }

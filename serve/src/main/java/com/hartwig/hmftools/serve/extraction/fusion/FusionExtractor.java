@@ -192,7 +192,7 @@ public class FusionExtractor {
         }
 
         if (geneChecker.isValidGene(pair.geneUp()) && geneChecker.isValidGene(pair.geneDown())) {
-            if (!DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithDriverInconsistentModeAnnotation)) {
+            if (DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithDriverInconsistentModeAnnotation)) {
                 if (!isIncludedSomewhereInFusionCache(pair.geneUp(), pair.geneDown())) {
                     if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
                             DealWithDriverInconsistentModeAnnotation.WARN_ONLY)) {
@@ -207,12 +207,8 @@ public class FusionExtractor {
                     return pair;
                 }
             } else {
-                if (!isIncludedSomewhereInFusionCache(pair.geneUp(), pair.geneDown())) {
-                    LOGGER.warn("Filtered -- Fusion '{}-{}' is not part of the known fusion cache", pair.geneUp(), pair.geneDown());
-                    return null;
-                } else {
-                    return pair;
-                }
+                return pair;
+
             }
         }
         return null;
