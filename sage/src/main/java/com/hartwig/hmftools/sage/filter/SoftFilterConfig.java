@@ -1,12 +1,12 @@
-package com.hartwig.hmftools.sage.config;
+package com.hartwig.hmftools.sage.filter;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
-import static com.hartwig.hmftools.sage.config.SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL;
-import static com.hartwig.hmftools.sage.config.SoftFilter.MAX_GERMLINE_VAF;
-import static com.hartwig.hmftools.sage.config.SoftFilter.MIN_GERMLINE_DEPTH;
-import static com.hartwig.hmftools.sage.config.SoftFilter.MIN_GERMLINE_DEPTH_ALLOSOME;
-import static com.hartwig.hmftools.sage.config.SoftFilter.MIN_TUMOR_QUAL;
-import static com.hartwig.hmftools.sage.config.SoftFilter.MIN_TUMOR_VAF;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_VAF;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_GERMLINE_DEPTH;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_GERMLINE_DEPTH_ALLOSOME;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_TUMOR_QUAL;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_TUMOR_VAF;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;

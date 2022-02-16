@@ -2,7 +2,6 @@ package com.hartwig.hmftools.sage.quality;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.sage.common.IndexedBases;
-import com.hartwig.hmftools.sage.config.QualityConfig;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
 import htsjdk.samtools.SAMRecord;

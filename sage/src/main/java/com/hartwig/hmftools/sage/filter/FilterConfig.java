@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.config;
+package com.hartwig.hmftools.sage.filter;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT;
@@ -10,8 +10,6 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HIGH_CONFIDENCE_FI
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HOTSPOT_FILTER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_LOW_CONFIDENCE_FILTER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_PANEL_FILTER;
-
-import java.util.function.Predicate;
 
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.common.VariantTier;

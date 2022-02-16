@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.config;
+package com.hartwig.hmftools.sage.quality;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;

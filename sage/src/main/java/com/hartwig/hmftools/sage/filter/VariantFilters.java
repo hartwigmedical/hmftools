@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.config;
+package com.hartwig.hmftools.sage.filter;
 
 import static java.lang.Math.min;
 
@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_VAF_SKIP
 import static com.hartwig.hmftools.sage.SageConstants.NORMAL_RAW_ALT_BQ_MAX;
 
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
@@ -16,6 +15,7 @@ import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
+import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
 public class VariantFilters

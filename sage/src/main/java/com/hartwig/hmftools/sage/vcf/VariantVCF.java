@@ -10,10 +10,8 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
-import com.hartwig.hmftools.sage.config.SageConfig;
-import com.hartwig.hmftools.sage.config.SoftFilter;
-
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.filter.SoftFilter;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;

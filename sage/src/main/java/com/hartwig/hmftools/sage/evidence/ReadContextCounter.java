@@ -13,8 +13,8 @@ import static com.hartwig.hmftools.sage.quality.QualityCalculator.jitterPenalty;
 import java.util.List;
 
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.config.QualityConfig;
-import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.quality.QualityConfig;
+import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.read.ExpandedBasesFactory;
 import com.hartwig.hmftools.sage.common.IndexedBases;

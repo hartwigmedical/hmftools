@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage;
 
-import com.hartwig.hmftools.sage.config.SoftFilterConfig;
+import com.hartwig.hmftools.sage.filter.SoftFilterConfig;
 
 public class SageConstants
 {

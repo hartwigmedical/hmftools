@@ -27,7 +27,6 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
-import com.hartwig.hmftools.sage.config.SageConfig;
 
 import org.apache.commons.cli.CommandLine;
 
@@ -191,9 +190,35 @@ public class ReferenceData
                 int index = 0;
                 while(index < panelRegions.size())
                 {
-                    if(panelRegions.get(index).containsPosition(hotspot.position()))
+                    BaseRegion panelRegion = panelRegions.get(index);
+
+                    if(panelRegion.containsPosition(hotspot.position()))
                     {
                         covered = true;
+                        break;
+                    }
+                    else if(hotspot.position() == panelRegion.start() - 1)
+                    {
+                        covered = true;
+                        panelRegion.setStart(hotspot.position());
+                        break;
+                    }
+                    else if(hotspot.position() == panelRegion.end() + 1)
+                    {
+                        covered = true;
+                        panelRegion.setEnd(hotspot.position());
+
+                        if(index < panelRegions.size() - 1)
+                        {
+                            // check for a merge with the next panel region since BAM slicing does not like adjacent regions
+                            BaseRegion nextRegion = panelRegions.get(index + 1);
+                            if(nextRegion.start() <= panelRegion.end() + 1)
+                            {
+                                panelRegion.setEnd(nextRegion.end());
+                                panelRegions.remove(index + 1);
+                            }
+                        }
+
                         break;
                     }
                     else if(hotspot.position() < panelRegions.get(index).start())

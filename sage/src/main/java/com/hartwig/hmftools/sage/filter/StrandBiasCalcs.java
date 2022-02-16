@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.config;
+package com.hartwig.hmftools.sage.filter;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.min;

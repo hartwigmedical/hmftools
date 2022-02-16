@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.SageVariant;
-import com.hartwig.hmftools.sage.config.SoftFilter;
+import com.hartwig.hmftools.sage.filter.SoftFilter;
 import com.hartwig.hmftools.sage.select.TranscriptSelector;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
