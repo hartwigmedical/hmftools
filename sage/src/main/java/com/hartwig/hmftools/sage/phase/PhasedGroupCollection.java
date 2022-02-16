@@ -79,66 +79,9 @@ public class PhasedGroupCollection
         return true;
     }
 
-    public boolean addPhaseVariantsOld(
-            int posVarMin, int posVarMax, int nextGroupId,
-            final List<ReadContextCounter> posCounters, final List<ReadContextCounter> negCounters)
-    {
-        // returns true if a new group was added
-        if(mGroups.isEmpty())
-        {
-            PhasedVariantGroup newGroup = new PhasedVariantGroup(nextGroupId, posVarMin, posVarMax, posCounters, negCounters);
-            mGroups.add(newGroup);
-
-            mMinPostion = newGroup.variantMin();
-            mMaxPostion = newGroup.variantMax();
-            return true;
-        }
-
-        int index = 0;
-
-        while(index < mGroups.size())
-        {
-            PhasedVariantGroup group = mGroups.get(index);
-
-            if(posVarMin < group.posVariantMin())
-                break;
-
-            if(group.posVariantMin() == posVarMin)
-            {
-                // test for an exact match
-                if(group.exactMatch(posVarMin, posVarMax, posCounters, negCounters))
-                {
-                    group.ReadCount++;
-                    group.mergeNegatives(negCounters);
-                    return false;
-                }
-            }
-
-            index++;
-        }
-
-        if(index > 0 && index < mGroups.size() - 1)
-        {
-            if(posVarMin < mGroups.get(index - 1).posVariantMin() || posVarMin > mGroups.get(index + 1).posVariantMin())
-            {
-                SG_LOGGER.error("invalid pos() insertion at index({}) groups({})",
-                        posVarMin, index, mGroups.size());
-            }
-        }
-
-        PhasedVariantGroup newGroup = new PhasedVariantGroup(nextGroupId, posVarMin, posVarMax, posCounters, negCounters);
-        mGroups.add(index, newGroup);
-
-        mMinPostion = min(mMinPostion, newGroup.variantMin());
-        mMaxPostion = max(mMaxPostion, newGroup.variantMax());
-        return true;
-    }
-
     public void merge(final PhasedGroupCollection other)
     {
         mGroupsMap.putAll(other.groupsMap());
-        // mGroups.addAll(other.groups());
-        // Collections.sort(mGroups, new PhasedVariantGroup.PhasedGroupComparator());
         mMinPostion = min(mMinPostion, other.minPosition());
         mMaxPostion = max(mMaxPostion, other.maxPosition());
     }

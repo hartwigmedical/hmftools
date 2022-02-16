@@ -188,7 +188,7 @@ public class VariantDedupTest
         addLocalPhaseSet(var2, 1, 1);
         addLocalPhaseSet(var3, 1, 1);
 
-        var3.filters().add(MIN_GERMLINE_DEPTH.toString());
+        var3.filters().add(MIN_GERMLINE_DEPTH.filterName());
 
         List<SageVariant> variants = Lists.newArrayList(var1, var2, var3);
 
@@ -214,7 +214,7 @@ public class VariantDedupTest
         addLocalPhaseSet(var2, 1, 1);
         addLocalPhaseSet(var3, 1, 1);
 
-        var2.filters().add(MIN_GERMLINE_DEPTH.toString());
+        var2.filters().add(MIN_GERMLINE_DEPTH.filterName());
 
         variants = Lists.newArrayList(var1, var2, var3);
 

@@ -26,11 +26,11 @@ public enum SoftFilter
         {
             if(softFilter.mGermline)
             {
-                GERMLINE_FILTERS.add(softFilter.toString());
+                GERMLINE_FILTERS.add(softFilter.filterName());
             }
             if(softFilter.mTumor)
             {
-                TUMOR_FILTERS.add(softFilter.toString());
+                TUMOR_FILTERS.add(softFilter.filterName());
             }
         }
     }
@@ -48,7 +48,10 @@ public enum SoftFilter
         mGermline = germline;
     }
 
-    public String config() { return mConfig; }
+    public String configName() { return mConfig; }
+    public String filterName() { return mFilter; }
+
+    public String toString() { return mFilter; }
 
     public static boolean isGermlineAndNotTumorFiltered(final Set<String> softFilters)
     {
@@ -64,10 +67,5 @@ public enum SoftFilter
         return !softFilters.isEmpty();
     }
 
-    @Override
-    public String toString()
-    {
-        return mFilter;
-    }
 }
 

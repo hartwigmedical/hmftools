@@ -76,14 +76,6 @@ public class VariantFilters
                 mFilterCounts[HARD_FC_TUMOR_QUAL], mFilterCounts[HARD_FC_TUMOR_VAF]);
     }
 
-    public static void mergeFilterCounts(final int[] counts, final int[] other)
-    {
-        for(int i = 0; i < counts.length; ++i)
-        {
-            counts[i] += other[i];
-        }
-    }
-
     public boolean enabled() { return mConfig.SoftFilter; }
 
     public void applySoftFilters(final SageVariant variant)
@@ -144,15 +136,15 @@ public class VariantFilters
         if(!skipMinTumorQualTest(tier, primaryTumor))
         {
             if(belowMinTumorQual(config, primaryTumor))
-                filters.add(SoftFilter.MIN_TUMOR_QUAL.toString());
+                filters.add(SoftFilter.MIN_TUMOR_QUAL.filterName());
 
             if(belowMinTumorVaf(config, primaryTumor))
-                filters.add(SoftFilter.MIN_TUMOR_VAF.toString());
+                filters.add(SoftFilter.MIN_TUMOR_VAF.filterName());
         }
 
         if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.strandBias(), primaryTumor.strandDepth()))
         {
-            filters.add(SoftFilter.STRAND_BIAS.toString());
+            filters.add(SoftFilter.STRAND_BIAS.filterName());
         }
     }
 
@@ -181,24 +173,24 @@ public class VariantFilters
     {
         if(belowMinGermlineCoverage(config, normal))
         {
-            filters.add(SoftFilter.MIN_GERMLINE_DEPTH.toString());
+            filters.add(SoftFilter.MIN_GERMLINE_DEPTH.filterName());
         }
 
         if(aboveMaxGermlineVaf(config, normal, primaryTumor))
         {
-            filters.add(SoftFilter.MAX_GERMLINE_VAF.toString());
+            filters.add(SoftFilter.MAX_GERMLINE_VAF.filterName());
         }
 
         // Paired Tests
         if(aboveMaxGermlineQual(config, normal, primaryTumor))
         {
-            filters.add(SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL.toString());
+            filters.add(SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL.filterName());
         }
 
         // MNV Tests
         if(aboveMaxMnvNormalAltSupport(tier, normal, this.mConfig.MnvFilter))
         {
-            filters.add(SoftFilter.MAX_GERMLINE_ALT_SUPPORT.toString());
+            filters.add(SoftFilter.MAX_GERMLINE_ALT_SUPPORT.filterName());
         }
     }
 

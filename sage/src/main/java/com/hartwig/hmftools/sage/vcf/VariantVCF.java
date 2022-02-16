@@ -202,14 +202,14 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_INDEL_FILTER, "Variant duplicate SNV/MNV vs INDEL"));
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_MIXED_GERMLINE_SOMATIC_FILTER, "Variant duplicate mixed somatic/germline"));
 
-        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.STRAND_BIAS.toString(), "Variant exceeds strand bias limit"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_TUMOR_QUAL.toString(), "Insufficient tumor quality"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_TUMOR_VAF.toString(), "Insufficient tumor VAF"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_GERMLINE_DEPTH.toString(), "Insufficient germline depth"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MAX_GERMLINE_VAF.toString(), "Excess germline VAF"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL.toString(),
+        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.STRAND_BIAS.filterName(), "Variant exceeds strand bias limit"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_TUMOR_QUAL.filterName(), "Insufficient tumor quality"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_TUMOR_VAF.filterName(), "Insufficient tumor VAF"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_GERMLINE_DEPTH.filterName(), "Insufficient germline depth"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MAX_GERMLINE_VAF.filterName(), "Excess germline VAF"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL.filterName(),
                 "Excess germline relative quality"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MAX_GERMLINE_ALT_SUPPORT.toString(), "Excess germline alt support"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MAX_GERMLINE_ALT_SUPPORT.filterName(), "Excess germline alt support"));
         header.addMetaDataLine(new VCFFilterHeaderLine(PASS, "All filters passed"));
 
         return header;
