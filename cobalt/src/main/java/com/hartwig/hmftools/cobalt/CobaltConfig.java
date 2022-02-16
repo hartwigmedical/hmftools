@@ -38,20 +38,22 @@ public class CobaltConfig
     public final ValidationStringency Stringency;
     public final boolean TumorOnly;
     public final String TumorOnlyDiploidBed;
+    public final boolean SkipGcAdjustment;
 
     private static final int DEFAULT_THREADS = 4;
 
-    public static String TUMOR = "tumor";
-    public static String REFERENCE = "reference";
+    public static final String TUMOR = "tumor";
+    public static final String REFERENCE = "reference";
 
-    private static String TUMOR_ONLY = "tumor_only";
-    private static String TUMOR_ONLY_DIPLOID_BED = "tumor_only_diploid_bed";
-    private static String THREADS = "threads";
-    private static String REFERENCE_BAM = "reference_bam";
-    private static String TUMOR_BAM = "tumor_bam";
-    private static String GC_PROFILE = "gc_profile";
-    private static String MIN_MAPPING_QUALITY = "min_quality";
-    private static String VALIDATION_STRINGENCY = "validation_stringency";
+    private static final String TUMOR_ONLY = "tumor_only";
+    private static final String TUMOR_ONLY_DIPLOID_BED = "tumor_only_diploid_bed";
+    private static final String THREADS = "threads";
+    private static final String REFERENCE_BAM = "reference_bam";
+    private static final String TUMOR_BAM = "tumor_bam";
+    private static final String GC_PROFILE = "gc_profile";
+    private static final String MIN_MAPPING_QUALITY = "min_quality";
+    private static final String VALIDATION_STRINGENCY = "validation_stringency";
+    private static final String SKIP_GC_ADJUSTMENT = "skip_gc_adj";
 
     public static final Logger CB_LOGGER = LogManager.getLogger(CobaltConfig.class);
 
@@ -59,7 +61,7 @@ public class CobaltConfig
     {
         ThreadCount = getConfigValue(cmd, THREADS, DEFAULT_THREADS);
         MinMappingQuality = getConfigValue(cmd, MIN_MAPPING_QUALITY, DEFAULT_MIN_MAPPING_QUALITY);
-        RefGenomePath = cmd.getOptionValue(REF_GENOME, "");
+        RefGenomePath = cmd.getOptionValue(REF_GENOME);
 
         final StringJoiner missingJoiner = new StringJoiner(", ");
         GcProfilePath = cmd.getOptionValue(GC_PROFILE);
@@ -84,7 +86,16 @@ public class CobaltConfig
 
         TumorId = parameter(cmd, TUMOR, missingJoiner);
 
-        Stringency = ValidationStringency.valueOf(cmd.getOptionValue(VALIDATION_STRINGENCY, "DEFAULT_STRINGENCY"));
+        if (cmd.hasOption(VALIDATION_STRINGENCY))
+        {
+            Stringency = ValidationStringency.valueOf(cmd.getOptionValue(VALIDATION_STRINGENCY));
+        }
+        else
+        {
+            Stringency = ValidationStringency.DEFAULT_STRINGENCY;
+        }
+
+        SkipGcAdjustment = cmd.hasOption(SKIP_GC_ADJUSTMENT);
     }
 
     public boolean isValid()
@@ -128,6 +139,7 @@ public class CobaltConfig
         options.addOption(GC_PROFILE, true, "Location of GC Profile");
         options.addOption(REF_GENOME, true, "Path to reference genome fasta file if using CRAM files");
         options.addOption(VALIDATION_STRINGENCY, true, "SAM validation strategy: STRICT, SILENT, LENIENT [STRICT]");
+        options.addOption(SKIP_GC_ADJUSTMENT, false, "Skip GC adjustment");
 
         return options;
     }

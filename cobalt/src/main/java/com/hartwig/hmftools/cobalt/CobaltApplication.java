@@ -8,6 +8,7 @@ import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -32,7 +33,6 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SamReaderFactory;
@@ -58,7 +58,7 @@ public class CobaltApplication implements AutoCloseable
         {
             CB_LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("CountBamLinesApplication", options);
+            formatter.printHelp("CobaltApplication", options);
             System.exit(1);
         }
     }
@@ -71,7 +71,7 @@ public class CobaltApplication implements AutoCloseable
         final CommandLine cmd = createCommandLine(args, options);
         mConfig = new CobaltConfig(cmd);
 
-        if(!mConfig.RefGenomePath.isEmpty() && !new File(mConfig.GcProfilePath).exists())
+        if(mConfig.ReferenceBamPath != null && !mConfig.RefGenomePath.isEmpty() && !new File(mConfig.GcProfilePath).exists())
         {
             throw new IOException("Unable to locate ref genome file " + mConfig.RefGenomePath);
         }
@@ -123,7 +123,7 @@ public class CobaltApplication implements AutoCloseable
     @NotNull
     private static List<BEDFeature> diploidBedFile(CobaltConfig config) throws IOException
     {
-        List<BEDFeature> result = Lists.newArrayList();
+        List<BEDFeature> result = new ArrayList<>();
         if(!config.TumorOnly)
         {
             return result;
@@ -147,7 +147,7 @@ public class CobaltApplication implements AutoCloseable
     private static SamReaderFactory readerFactory(@NotNull final CobaltConfig config)
     {
         final SamReaderFactory readerFactory = SamReaderFactory.make().validationStringency(config.Stringency);
-        if(!config.RefGenomePath.isEmpty())
+        if(config.RefGenomePath != null && !config.RefGenomePath.isEmpty())
         {
             return readerFactory.referenceSource(new ReferenceSource(new File(config.RefGenomePath)));
         }

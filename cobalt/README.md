@@ -12,11 +12,11 @@ ratio of the median to mean read count of all windows.
 
 Post GC normalization, COBALT is able to detect the following germline chromosomal aberrations from the reference ratio:
 
-Aberration | Gender | Ratio Criteria
----|---|---
-`MOSAIC_X` | FEMALE| X ratio < min(0.8, minAutosomeMedianDepthRatio*)
-`KLINEFELTER` (XXY) | MALE | X ratio >= 0.65
-`TRISOMY_[X,21,13,18,15]` | BOTH | chromosome ratio >= 1.4
+| Aberration                | Gender | Ratio Criteria                                   |
+|---------------------------|--------|--------------------------------------------------|
+| `MOSAIC_X`                | FEMALE | X ratio < min(0.8, minAutosomeMedianDepthRatio*) |
+| `KLINEFELTER` (XXY)       | MALE   | X ratio >= 0.65                                  |
+| `TRISOMY_[X,21,13,18,15]` | BOTH   | chromosome ratio >= 1.4                          |
 
 *By checking against autosomes we rule out very high GC bias in the reference.  
 
@@ -24,12 +24,12 @@ The reference sample ratios have a further ‘diploid’ normalization applied t
 This normalization assumes that the median ratio of each 10Mb window (minimum 1Mb readable) should be diploid for autosomes and haploid for 
 male sex chromosomes in addition to the following exceptions:
 
-Aberration | Chromosome | Normalized Ratio
----|---|---
-`MOSAIC_X` | X | use median X ratio
-`KLINEFELTER` | X | 1
-`KLINEFELTER` | Y | 0.5
-`TRISOMY_[X,21,13,18,15]` | X,21,13,18,15 | 1.5
+| Aberration                | Chromosome    | Normalized Ratio   |
+|---------------------------|---------------|--------------------|
+| `MOSAIC_X`                | X             | use median X ratio |
+| `KLINEFELTER`             | X             | 1                  |
+| `KLINEFELTER`             | Y             | 0.5                |
+| `TRISOMY_[X,21,13,18,15]` | X,21,13,18,15 | 1.5                |
 
 Finally, the Bioconductor copy number package is used to generate segments from the ratio file.
 
@@ -44,7 +44,7 @@ After installing [R](https://www.r-project.org/) or [RStudio](https://rstudio.co
     install("copynumber")
 ```
 
-COBALT requires Java 1.8+ and can be run with the minimum set of arguments as follows:
+COBALT requires Java 11+ and can be run with the minimum set of arguments as follows:
 
 ```
 java -cp -Xmx8G cobalt.jar com.hartwig.hmftools.cobalt.CobaltApplication \
@@ -57,14 +57,14 @@ java -cp -Xmx8G cobalt.jar com.hartwig.hmftools.cobalt.CobaltApplication \
 
 ## Mandatory Arguments
 
-Argument  | Description
----|---
-reference | Name of the reference sample
-reference_bam | Path to reference BAM file
-tumor | Name of tumor sample
-tumor_bam | Path to tumor BAM file
-output_dir | Path to the output directory. This directory will be created if it does not already exist
-gc_profile | Path to GC profile 
+| Argument      | Description                                                                               |
+|---------------|-------------------------------------------------------------------------------------------|
+| reference     | Name of the reference sample                                                              |
+| reference_bam | Path to reference BAM file                                                                |
+| tumor         | Name of tumor sample                                                                      |
+| tumor_bam     | Path to tumor BAM file                                                                    |
+| output_dir    | Path to the output directory. This directory will be created if it does not already exist |
+| gc_profile    | Path to GC profile                                                                        |
 
 A compressed copy of the GC Profile file used by HMF (GC_profile.1000bp.37.cnp) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
 A 38 equivalent is also available. Please note the downloaded file must be un-compressed before use. 
@@ -73,14 +73,14 @@ COBALT supports both BAM and CRAM file formats. If using CRAM, the ref_genome ar
 
 ## Optional Arguments
 
-Argument | Default | Description 
----|---|---
-threads | 4 | Number of threads to use
-min_quality | 10 | Min quality
-ref_genome | None | Path to the reference genome fasta file if using CRAM files
-validation_stringency | STRICT | SAM validation strategy: STRICT, SILENT, LENIENT
-tumor_only | NA | Set to tumor only mode
-tumor_only_diploid_bed | NA | Bed file of diploid regions of the genome
+| Argument               | Default | Description                                                 |
+|------------------------|---------|-------------------------------------------------------------|
+| threads                | 4       | Number of threads to use                                    |
+| min_quality            | 10      | Min quality                                                 |
+| ref_genome             | None    | Path to the reference genome fasta file if using CRAM files |
+| validation_stringency  | STRICT  | SAM validation strategy: STRICT, SILENT, LENIENT            |
+| tumor_only             | NA      | Set to tumor only mode                                      |
+| tumor_only_diploid_bed | NA      | Bed file of diploid regions of the genome                   |
 
 ## Tumor Only Mode
 In the absence of a reference bam, COBALT can be put into tumor only mode with the `tumor_only` flag. 
@@ -104,14 +104,13 @@ CPU time is minutes spent in user mode.
 Peak memory is measure in gigabytes.
 
 
-Threads | Elapsed Time| CPU Time | Peak Mem
----|---|---|---
-1 | 111 | 122 | 3.85
-8 | 17 | 127 | 4.49
-16 | 10 | 139 | 4.58 
-32 | 11 | 184 | 4.33
-48 | 10 | 153 | 4.35
-
+| Threads | Elapsed Time | CPU Time | Peak Mem |
+|---------|--------------|----------|----------|
+| 1       | 111          | 122      | 3.85     |
+| 8       | 17           | 127      | 4.49     |
+| 16      | 10           | 139      | 4.58     |
+| 32      | 11           | 184      | 4.33     |
+| 48      | 10           | 153      | 4.35     |
 
 ## Output
 The following tab delimited files are written:
@@ -126,13 +125,13 @@ The following tab delimited files are written:
 
 TUMOR.cobalt.ratio.tsv contains the counts and ratios of the reference and tumor:
 
-Chromosome | Position | ReferenceReadCount | TumorReadCount | ReferenceGCRatio | TumorGCRatio | ReferenceGCDiploidRatio
----|---|---|---|---|---|---
-1|4000001|204|504|0.8803|0.855|0.8982
-1|4001001|203|570|0.8429|0.9149|0.86
-1|4002001|155|473|0.6463|0.7654|0.6594
-1|4003001|260|566|1.098|0.9328|1.1203
-1|4004001|256|550|1.1144|0.9428|1.1371
+| Chromosome | Position | ReferenceReadCount | TumorReadCount | ReferenceGCRatio | TumorGCRatio | ReferenceGCDiploidRatio |
+|------------|----------|--------------------|----------------|------------------|--------------|-------------------------|
+| 1          | 4000001  | 204                | 504            | 0.8803           | 0.855        | 0.8982                  |
+| 1          | 4001001  | 203                | 570            | 0.8429           | 0.9149       | 0.86                    |
+| 1          | 4002001  | 155                | 473            | 0.6463           | 0.7654       | 0.6594                  |
+| 1          | 4003001  | 260                | 566            | 1.098            | 0.9328       | 1.1203                  |
+| 1          | 4004001  | 256                | 550            | 1.1144           | 0.9428       | 1.1371                  |
 
 TUMOR.cobalt.ratio.pcf and REFERENCE.cobalt.ratio.pcf contain the segmented regions determined from the ratios.
 
