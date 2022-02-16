@@ -20,6 +20,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
+import com.hartwig.hmftools.common.sv.linx.LinxGermlineSv;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.sv.linx.ImmutableLinxCluster;
 import com.hartwig.hmftools.common.sv.linx.ImmutableLinxLink;
@@ -389,20 +390,28 @@ public class SampleAnalyser implements Callable
         {
             LinxSvAnnotation.write(LinxSvAnnotation.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
             LinxCluster.write(LinxCluster.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-            LinxLink.write(LinxLink.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
 
-            LinxFusion.write(LinxFusion.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-            LinxBreakend.write(LinxBreakend.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-            LinxDriver.write(LinxDriver.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+            DriverCatalogFile.write(LinxDriver.generateCatalogFilename(
+                    mConfig.OutputDataPath, mCurrentSampleId, !mConfig.IsGermline), Lists.newArrayList());
 
-            DriverCatalogFile.write(LinxDriver.generateCatalogFilename(mConfig.OutputDataPath, mCurrentSampleId, true), Lists.newArrayList());
+            if(mConfig.IsGermline)
+            {
+                LinxGermlineSv.write(LinxGermlineSv.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+            }
+            else
+            {
+                LinxLink.write(LinxLink.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+                LinxFusion.write(LinxFusion.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+                LinxBreakend.write(LinxBreakend.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+                LinxDriver.write(LinxDriver.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
 
-            VisSvDataFile.write(VisSvDataFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-            VisCopyNumberFile.write(VisCopyNumberFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-            VisGeneExon.write(VisGeneExon.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-            VisSegmentFile.write(VisSegmentFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-            VisFusionFile.write(VisFusionFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-            VisProteinDomainFile.write(VisProteinDomainFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+                VisSvDataFile.write(VisSvDataFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+                VisCopyNumberFile.write(VisCopyNumberFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+                VisGeneExon.write(VisGeneExon.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+                VisSegmentFile.write(VisSegmentFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+                VisFusionFile.write(VisFusionFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+                VisProteinDomainFile.write(VisProteinDomainFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+            }
         }
         catch (IOException e)
         {

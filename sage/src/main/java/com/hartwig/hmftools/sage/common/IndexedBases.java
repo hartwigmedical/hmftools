@@ -65,12 +65,6 @@ public class IndexedBases
         return rightFlankLength == 0 ? Strings.EMPTY : new String(Bases, RightCoreIndex + 1, rightFlankLength);
     }
 
-    @Override
-    public String toString()
-    {
-        return Bases.length == 0 ? Strings.EMPTY : new String(Bases, LeftFlankIndex, length());
-    }
-
     public int indexInCore()
     {
         return Index - LeftCoreIndex;
@@ -92,7 +86,7 @@ public class IndexedBases
         return RightFlankIndex - RightCoreIndex;
     }
 
-    public int corePositionStart() { return Position + Index - LeftCoreIndex; }
+    public int corePositionStart() { return Position - (Index - LeftCoreIndex); }
     public int corePositionEnd() { return Position + RightCoreIndex - Index; }
 
     public byte base(int position)
@@ -296,4 +290,14 @@ public class IndexedBases
 
         return rightFlankingBases >= 0 && (rightFlankingBases >= FlankSize || leftFlankingBases >= FlankSize);
     }
+
+    public String toString()
+    {
+        if(Bases.length == 0)
+            return "";
+
+        return String.format("%s indices(%d-%d-%d-%d-%d",
+                new String(Bases, LeftFlankIndex, length()), LeftFlankIndex, LeftCoreIndex, Index, RightCoreIndex, RightFlankIndex);
+    }
+
 }

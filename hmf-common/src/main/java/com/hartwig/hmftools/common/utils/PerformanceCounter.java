@@ -173,6 +173,8 @@ public class PerformanceCounter
         return mTimes.get(medianIndex);
     }
 
+    public double getLastTime() { return !mTimes.isEmpty() ? mTimes.get(mTimes.size() - 1) : 0; }
+
     public void logStats()
     {
         logStats(false);

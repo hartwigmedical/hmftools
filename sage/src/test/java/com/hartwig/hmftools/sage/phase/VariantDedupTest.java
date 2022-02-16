@@ -4,12 +4,16 @@ import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
+import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.common.TestUtils.addLocalPhaseSet;
 import static com.hartwig.hmftools.sage.common.TestUtils.clearFilters;
 import static com.hartwig.hmftools.sage.common.TestUtils.createVariant;
 import static com.hartwig.hmftools.sage.common.TestUtils.createVariantHotspot;
 import static com.hartwig.hmftools.sage.common.TestUtils.setTumorQuality;
 import static com.hartwig.hmftools.sage.config.SoftFilter.MIN_GERMLINE_DEPTH;
+import static com.hartwig.hmftools.sage.dedup.DedupIndel.dedupIndels;
+import static com.hartwig.hmftools.sage.dedup.VariantDeduper.longerContainsShorter;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -19,9 +23,11 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.test.GeneTestUtils;
-import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.SageVariant;
+import com.hartwig.hmftools.sage.dedup.DedupMixedGermlineSomatic;
+import com.hartwig.hmftools.sage.dedup.DedupSnvMnv;
 
 import org.junit.Test;
 
@@ -32,16 +38,16 @@ public class VariantDedupTest
     {
         final VariantHotspot mnv = createVariantHotspot(100, "CAC", "TGT");
 
-        assertTrue(BufferedPostProcessor.longerContainsShorter(createVariantHotspot(100, "C", "T"), mnv));
-        assertFalse(BufferedPostProcessor.longerContainsShorter(createVariantHotspot(100, "C", "C"), mnv));
+        assertTrue(longerContainsShorter(createVariantHotspot(100, "C", "T"), mnv));
+        assertFalse(longerContainsShorter(createVariantHotspot(100, "C", "C"), mnv));
 
-        assertTrue(BufferedPostProcessor.longerContainsShorter(createVariantHotspot(101, "A", "G"), mnv));
-        assertTrue(BufferedPostProcessor.longerContainsShorter(createVariantHotspot(102, "C", "T"), mnv));
+        assertTrue(longerContainsShorter(createVariantHotspot(101, "A", "G"), mnv));
+        assertTrue(longerContainsShorter(createVariantHotspot(102, "C", "T"), mnv));
 
-        assertTrue(BufferedPostProcessor.longerContainsShorter(createVariantHotspot(100, "CA", "TG"), mnv));
-        assertTrue(BufferedPostProcessor.longerContainsShorter(createVariantHotspot(101, "AC", "GT"), mnv));
+        assertTrue(longerContainsShorter(createVariantHotspot(100, "CA", "TG"), mnv));
+        assertTrue(longerContainsShorter(createVariantHotspot(101, "AC", "GT"), mnv));
 
-        assertTrue(BufferedPostProcessor.longerContainsShorter(createVariantHotspot(100, "CAC", "TGT"), mnv));
+        assertTrue(longerContainsShorter(createVariantHotspot(100, "CAC", "TGT"), mnv));
     }
 
     @Test
@@ -85,8 +91,23 @@ public class VariantDedupTest
 
         clearFilters(variants);
 
-        // ATGC -> CGAT
-        var1 = createVariant(10, "ATG", "CGA");
+        // dedup shorter if has same number of changed bases
+        var1 = createVariant(10, "ATG", "CTA");
+        var2 = createVariant(12, "GC", "AT");
+        addLocalPhaseSet(var1, 1, 1);
+        addLocalPhaseSet(var2, 1, 1);
+
+        variants = Lists.newArrayList(var1, var2);
+
+        DedupSnvMnv.dedupMnvOverlaps(variants);
+
+        assertFalse(var1.isPassing());
+        assertTrue(var2.isPassing());
+
+        clearFilters(variants);
+
+        // dedup longer assuming all bases have changed
+        var1 = createVariant(10, "AAG", "CTA");
         var2 = createVariant(12, "GC", "AT");
         addLocalPhaseSet(var1, 1, 1);
         addLocalPhaseSet(var2, 1, 1);
@@ -167,7 +188,7 @@ public class VariantDedupTest
         addLocalPhaseSet(var2, 1, 1);
         addLocalPhaseSet(var3, 1, 1);
 
-        var3.filters().add(MIN_GERMLINE_DEPTH.toString());
+        var3.filters().add(MIN_GERMLINE_DEPTH.filterName());
 
         List<SageVariant> variants = Lists.newArrayList(var1, var2, var3);
 
@@ -193,7 +214,7 @@ public class VariantDedupTest
         addLocalPhaseSet(var2, 1, 1);
         addLocalPhaseSet(var3, 1, 1);
 
-        var2.filters().add(MIN_GERMLINE_DEPTH.toString());
+        var2.filters().add(MIN_GERMLINE_DEPTH.filterName());
 
         variants = Lists.newArrayList(var1, var2, var3);
 
@@ -203,4 +224,107 @@ public class VariantDedupTest
         assertFalse(var2.isPassing());
         assertTrue(var3.isPassing());
     }
+
+    @Test
+    public void testIndels()
+    {
+        // var1: GATCGATCGA AACTCTCTC TCTCTCTCTC
+        // var2: GATCGATCGA AACTC TCTCTCTCTC
+        // ref:  GATCGATCGA AAATC TCTCTCTCTC
+
+        // 0123456789  01  2  34  0123456789
+        String flank = generateRandomBases(DEFAULT_READ_CONTEXT_FLANK_SIZE);
+        String alt1 = "CTCTC";
+        String alt2 = "C";
+        String readBases1 = flank + "AA" + alt1 + "TC" + "TCTCTCTCTC";
+        String readBases2 = flank + "AA" + alt2 + "TC" + "TCTCTCTCTC";
+        int leftCoreIndex = DEFAULT_READ_CONTEXT_FLANK_SIZE;
+        int index = leftCoreIndex + MIN_CORE_DISTANCE;
+        int rightCoreIndex1 = index + alt1.length() - 1 + MIN_CORE_DISTANCE;
+        int rightCoreIndex2 = index + alt2.length() - 1 + MIN_CORE_DISTANCE;
+
+        IndexedBases indexBases1 = new IndexedBases(
+                12, index, leftCoreIndex, rightCoreIndex1, DEFAULT_READ_CONTEXT_FLANK_SIZE, readBases1.getBytes());
+
+        IndexedBases indexBases2 = new IndexedBases(
+                16, index, leftCoreIndex, rightCoreIndex2, DEFAULT_READ_CONTEXT_FLANK_SIZE, readBases2.getBytes());
+
+        SageVariant var1 = createVariant(12, "A", alt1, indexBases1);
+        SageVariant var2 = createVariant(16, "A", alt2, indexBases2);
+
+        // must be same LPS
+        addLocalPhaseSet(var1, 1, 1);
+        addLocalPhaseSet(var2, 1, 1);
+
+        setTumorQuality(var1, 5, 1000);
+        setTumorQuality(var2, 5, 800);
+
+        List<SageVariant> variants = Lists.newArrayList(var1, var2);
+
+        dedupIndels(variants);
+
+        assertTrue(var1.isPassing());
+        assertFalse(var2.isPassing());
+
+        // overlapping variants with different read context
+        var1 = createVariant(12, "ATG", "A");
+        var2 = createVariant(12, "A", "G");
+
+        setTumorQuality(var1, 5, 1000);
+        setTumorQuality(var2, 5, 800);
+        addLocalPhaseSet(var1, 1, 1);
+        addLocalPhaseSet(var2, 1, 1);
+
+        variants = Lists.newArrayList(var1, var2);
+
+        dedupIndels(variants);
+
+        assertTrue(var1.isPassing());
+        assertFalse(var2.isPassing());
+
+        var1 = createVariant(12, "A", "ATG");
+        var2 = createVariant(12, "A", "G");
+
+        setTumorQuality(var1, 5, 1000);
+        setTumorQuality(var2, 5, 800);
+        addLocalPhaseSet(var1, 1, 1);
+        addLocalPhaseSet(var2, 1, 1);
+
+        variants = Lists.newArrayList(var1, var2);
+
+        dedupIndels(variants);
+
+        assertTrue(var1.isPassing());
+        assertFalse(var2.isPassing());
+
+        // delete containing another variant
+        var1 = createVariant(12, "ATG", "A");
+        var2 = createVariant(14, "G", "A");
+
+        setTumorQuality(var1, 5, 1000);
+        setTumorQuality(var2, 5, 800);
+        addLocalPhaseSet(var1, 1, 1);
+        addLocalPhaseSet(var2, 1, 1);
+
+        variants = Lists.newArrayList(var1, var2);
+
+        dedupIndels(variants);
+
+        assertTrue(var1.isPassing());
+        assertFalse(var2.isPassing());
+
+        var1 = createVariant(12, "ATGAT", "A");
+        var2 = createVariant(14, "GA", "AT");
+
+        addLocalPhaseSet(var1, 1, 1);
+        addLocalPhaseSet(var2, 1, 1);
+
+        variants = Lists.newArrayList(var1, var2);
+
+        dedupIndels(variants);
+
+        assertFalse(var1.isPassing());
+        assertTrue(var2.isPassing()); // MNV has longer read context
+    }
+
 }

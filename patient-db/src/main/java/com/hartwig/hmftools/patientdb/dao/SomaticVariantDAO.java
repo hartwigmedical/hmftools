@@ -231,7 +231,6 @@ public class SomaticVariantDAO
                 .rnaDepth(rnaAllelicDepth)
                 .qual(record.get(SOMATICVARIANT.QUAL))
                 .localPhaseSet(record.get(SOMATICVARIANT.LOCALPHASESET))
-                .localRealignmentSet(record.get(SOMATICVARIANT.LOCALREALIGNMENTSET))
                 .genotypeStatus(UNKNOWN)
                 .build();
     }
@@ -295,8 +294,8 @@ public class SomaticVariantDAO
         inserter.execute();
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStepN inserter, @NotNull String sample,
-            @NotNull SomaticVariant variant)
+    private static void addRecord(
+            Timestamp timestamp, InsertValuesStepN inserter, String sample, SomaticVariant variant)
     {
         inserter.values(sample,
                 variant.chromosome(),
@@ -339,11 +338,10 @@ public class SomaticVariantDAO
                 Optional.ofNullable(variant.rnaDepth()).map(AllelicDepth::totalReadCount).orElse(null),
                 variant.qual(),
                 variant.localPhaseSet(),
-                variant.localRealignmentSet(),
                 timestamp);
     }
 
-    void deleteSomaticVariantForSample(@NotNull String sample)
+    void deleteSomaticVariantForSample(String sample)
     {
         context.delete(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(sample)).execute();
     }

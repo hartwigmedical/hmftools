@@ -14,10 +14,12 @@ public class Candidate
     private int mMinNumberOfEvents;
     private int mReadContextSupport;
     private ReadContext mReadContext;
+    private int mRawSupportAlt;
+    private int mRawBaseQualityAlt;
 
     public Candidate(
             final VariantTier tier, final VariantHotspot variant, final ReadContext readContext,
-            int maxDepth, int minNumberOfEvents, int readContextSupport)
+            int maxDepth, int minNumberOfEvents, int readContextSupport, int rawSupportAlt, int rawBaseQualAlt)
     {
         mTier = tier;
         mVariant = variant;
@@ -25,13 +27,16 @@ public class Candidate
         mMaxDepth = maxDepth;
         mMinNumberOfEvents = minNumberOfEvents;
         mReadContextSupport = readContextSupport;
+        mRawSupportAlt = rawSupportAlt;
+        mRawBaseQualityAlt = rawBaseQualAlt;
     }
 
     public static Candidate fromAltContext(final VariantTier tier, final AltContext altContext)
     {
         return new Candidate(
                 tier, ImmutableVariantHotspotImpl.builder().from(altContext).build(), altContext.readContext(),
-                altContext.rawDepth(), altContext.minNumberOfEvents(), altContext.readContextSupport());
+                altContext.rawDepth(), altContext.minNumberOfEvents(), altContext.readContextSupport(),
+                altContext.rawAltSupport(), altContext.rawAltBaseQuality());
     }
 
     public void update(final AltContext altContext)
@@ -42,6 +47,9 @@ public class Candidate
             mReadContextSupport = altContextSupport;
             mReadContext = altContext.readContext();
             mMinNumberOfEvents = Math.min(mMinNumberOfEvents, altContext.minNumberOfEvents());
+            mRawSupportAlt = altContext.rawAltSupport();
+            mRawBaseQualityAlt = altContext.rawAltBaseQuality();
+
         }
         mMaxDepth = Math.max(mMaxDepth, altContext.rawDepth());
     }
@@ -53,6 +61,8 @@ public class Candidate
 
     public int maxReadDepth() { return mMaxDepth; }
     public int minNumberOfEvents() { return mMinNumberOfEvents; }
+    public int rawSupportAlt() { return mRawSupportAlt; }
+    public int rawBaseQualityAlt() { return mRawBaseQualityAlt; }
 
     public String chromosome() { return mVariant.chromosome(); }
 

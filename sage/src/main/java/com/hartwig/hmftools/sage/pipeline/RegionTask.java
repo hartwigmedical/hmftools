@@ -24,10 +24,9 @@ import com.hartwig.hmftools.sage.config.VariantFilters;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
-import com.hartwig.hmftools.sage.evidence.VariantPhaser;
+import com.hartwig.hmftools.sage.phase.VariantPhaser;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
-import com.hartwig.hmftools.sage.phase.VariantDeduper;
-import com.hartwig.hmftools.sage.phase.VariantDeduperOld;
+import com.hartwig.hmftools.sage.dedup.VariantDeduper;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 
 import htsjdk.samtools.reference.ReferenceSequenceFile;
@@ -51,7 +50,7 @@ public class RegionTask implements Callable
 
     public static final int PC_CANDIDATES = 0;
     public static final int PC_EVIDENCE = 1;
-    public static final int PC_DEDUP = 2;
+    public static final int PC_VARIANTS = 2;
 
     public RegionTask(
             final int taskId, final ChrBaseRegion region, final SageConfig config, final ReferenceSequenceFile refGenome,
@@ -75,7 +74,7 @@ public class RegionTask implements Callable
         mPerfCounters = Lists.newArrayList();
         mPerfCounters.add(new PerformanceCounter("Candidates"));
         mPerfCounters.add(new PerformanceCounter("Evidence"));
-        mPerfCounters.add(new PerformanceCounter("Dedup"));
+        mPerfCounters.add(new PerformanceCounter("Variants"));
     }
 
     public final List<SageVariant> getVariants() { return mSageVariants; }
@@ -97,6 +96,13 @@ public class RegionTask implements Callable
         List<Candidate> initialCandidates = mCandidateState.findCandidates(mRegion, refSequence);
         mPerfCounters.get(PC_CANDIDATES).stop();
 
+        if(mConfig.PerfWarnTime > 0 && mPerfCounters.get(PC_CANDIDATES).getLastTime() > mConfig.PerfWarnTime)
+        {
+            SG_LOGGER.warn("region({}) candidate({}) reads({}) processing time({})",
+                    mRegion, initialCandidates.size(), mCandidateState.totalReadsProcessed(),
+                    String.format("%.3f", mPerfCounters.get(PC_CANDIDATES).getLastTime()));
+        }
+
         SG_LOGGER.trace("{}: region({}) building evidence for {} candidates", mTaskId, mRegion, initialCandidates.size());
 
         mPerfCounters.get(PC_EVIDENCE).start();
@@ -104,24 +110,52 @@ public class RegionTask implements Callable
         ReadContextCounters tumorEvidence = mEvidenceStage.findEvidence(
                 mRegion, "tumor", mConfig.TumorIds, mConfig.TumorBams, initialCandidates, true);
 
-        List<Candidate> finalCandidates = tumorEvidence.filterCandidates(mConfig.Filter);
+        List<Candidate> finalCandidates = tumorEvidence.filterCandidates();
 
         ReadContextCounters normalEvidence = mEvidenceStage.findEvidence
                 (mRegion, "normal", mConfig.ReferenceIds, mConfig.ReferenceBams, finalCandidates, false);
 
         mPerfCounters.get(PC_EVIDENCE).stop();
 
-        // final SageVariantFactory variantFactory = new SageVariantFactory(mConfig.Filter);
+        VariantPhaser variantPhaser = mEvidenceStage.getVariantPhaser();
+
+        if(mConfig.PerfWarnTime > 0 && mPerfCounters.get(PC_EVIDENCE).getLastTime() > mConfig.PerfWarnTime)
+        {
+            SG_LOGGER.warn("region({}) evidence candidates({}) phasing(g={} c={}) hardFilter({}) processing time({})",
+                    mRegion, finalCandidates.size(),  variantPhaser.getPhasingGroupCount(), variantPhaser.getPhasedCollections().size(),
+                    tumorEvidence.variantFilters().filterCountsStr(), String.format("%.3f", mPerfCounters.get(PC_EVIDENCE).getLastTime()));
+        }
+
+        variantPhaser.signalPhaseReadsEnd();
+
+        mPerfCounters.get(PC_VARIANTS).start();
+
         VariantFilters filters = new VariantFilters(mConfig.Filter);
 
         // combine normal and tumor together to create variants, then apply soft filters
         Set<ReadContextCounter> passingTumorReadCounters = Sets.newHashSet();
         Set<ReadContextCounter> validTumorReadCounters = Sets.newHashSet(); // those not hard-filtered
 
-        for(Candidate candidate : finalCandidates)
+        for(int candidateIndex = 0; candidateIndex < finalCandidates.size(); ++candidateIndex)
         {
-            final List<ReadContextCounter> normalReadCounters = normalEvidence.getVariantReadCounters(candidate.variant());
-            final List<ReadContextCounter> tumorReadCounters = tumorEvidence.getVariantReadCounters(candidate.variant());
+            Candidate candidate = finalCandidates.get(candidateIndex);
+
+            final List<ReadContextCounter> normalReadCounters = normalEvidence.getReadCounters(candidateIndex);
+            final List<ReadContextCounter> tumorReadCounters = tumorEvidence.getFilteredReadCounters(candidateIndex);
+
+            /*
+            ReadContextCounter primaryTumorRc = tumorReadCounters.get(0);
+
+            boolean candidatePassesRawAlt = candidate.rawSupportAlt() >= mConfig.Filter.HardMinTumorRawAltSupport;
+            boolean evidencePassesRawAlt = primaryTumorRc.rawAltSupport() >= mConfig.Filter.HardMinTumorRawAltSupport;
+            if(candidatePassesRawAlt != evidencePassesRawAlt)
+            {
+                SG_LOGGER.debug("variant({}) raw alt support mismatch({} vs {})",
+                        candidate.toString(), candidate.rawSupportAlt(), primaryTumorRc.rawAltSupport());
+            }
+
+            // || primaryTumorRc.rawAltBaseQuality() != candidate.rawBaseQualityAlt())
+            */
 
             SageVariant sageVariant = new SageVariant(candidate, normalReadCounters, tumorReadCounters);
             mSageVariants.add(sageVariant);
@@ -137,22 +171,21 @@ public class RegionTask implements Callable
         }
 
         // phase variants now all evidence has been collected and filters applied
-        VariantPhaser variantPhaser = mEvidenceStage.getVariantPhaser();
-
         variantPhaser.assignLocalPhaseSets(passingTumorReadCounters, validTumorReadCounters);
-
-        mPerfCounters.get(PC_DEDUP).start();
+        variantPhaser.clearAll();
 
         SG_LOGGER.trace("phasing {} variants", mSageVariants.size());
 
         mVariantDeduper.processVariants(mSageVariants);
 
-        mPerfCounters.get(PC_DEDUP).stop();
+        mPerfCounters.get(PC_VARIANTS).stop();
 
         SG_LOGGER.trace("{}: region({}) complete", mTaskId, mRegion);
 
         return (long)0;
     }
+
+    public int totalReadsProcessed() { return mCandidateState.totalReadsProcessed(); }
 
     public void writeVariants(final Consumer<SageVariant> variantWriter)
     {

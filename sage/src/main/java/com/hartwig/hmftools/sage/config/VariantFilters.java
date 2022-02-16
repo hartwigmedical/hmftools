@@ -21,20 +21,59 @@ import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 public class VariantFilters
 {
     private final FilterConfig mConfig;
+    private final StrandBiasCalcs mStrandBiasCalcs;
+
+    private final int[] mFilterCounts;
+
+    public static int HARD_FC_RAW_BASE_QUAL = 0;
+    public static int HARD_FC_RAW_ALT_SUPPORT = 1;
+    public static int HARD_FC_TUMOR_QUAL = 2;
+    public static int HARD_FC_TUMOR_VAF = 3;
 
     public VariantFilters(final FilterConfig config)
     {
         mConfig = config;
+        mStrandBiasCalcs = new StrandBiasCalcs();
+        mFilterCounts = new int[HARD_FC_TUMOR_VAF+1];
     }
 
-    public boolean passesHardFilters(final ReadContextCounter readContextCounter)
+    public boolean passesHardFilters(final ReadContextCounter readCounter)
     {
-        if(readContextCounter.Tier.equals(VariantTier.HOTSPOT))
+        if(readCounter.Tier.equals(VariantTier.HOTSPOT))
             return true;
 
-        return readContextCounter.rawAltBaseQuality() >= mConfig.HardMinTumorRawBaseQuality
-                && readContextCounter.rawAltSupport() >= mConfig.HardMinTumorRawAltSupport
-                && readContextCounter.tumorQuality() >= mConfig.HardMinTumorQual;
+        if(readCounter.rawAltBaseQuality() < mConfig.HardMinTumorRawBaseQuality)
+        {
+            ++mFilterCounts[HARD_FC_RAW_BASE_QUAL];
+            return false;
+        }
+
+        if(readCounter.rawAltSupport() < mConfig.HardMinTumorRawAltSupport)
+        {
+            ++mFilterCounts[HARD_FC_RAW_ALT_SUPPORT];
+            return false;
+        }
+
+        if(readCounter.tumorQuality() < mConfig.HardMinTumorQual)
+        {
+            ++mFilterCounts[HARD_FC_TUMOR_QUAL];
+            return false;
+        }
+
+        if(readCounter.vaf() < mConfig.HardMinTumorVaf)
+        {
+            ++mFilterCounts[HARD_FC_TUMOR_VAF];
+            return false;
+        }
+
+        return true;
+    }
+
+    public String filterCountsStr()
+    {
+        return String.format("bq=%d a=%d tq=%d qv=%d",
+                mFilterCounts[HARD_FC_RAW_BASE_QUAL], mFilterCounts[HARD_FC_RAW_ALT_SUPPORT],
+                mFilterCounts[HARD_FC_TUMOR_QUAL], mFilterCounts[HARD_FC_TUMOR_VAF]);
     }
 
     public boolean enabled() { return mConfig.SoftFilter; }
@@ -97,10 +136,15 @@ public class VariantFilters
         if(!skipMinTumorQualTest(tier, primaryTumor))
         {
             if(belowMinTumorQual(config, primaryTumor))
-                filters.add(SoftFilter.MIN_TUMOR_QUAL.toString());
+                filters.add(SoftFilter.MIN_TUMOR_QUAL.filterName());
 
             if(belowMinTumorVaf(config, primaryTumor))
-                filters.add(SoftFilter.MIN_TUMOR_VAF.toString());
+                filters.add(SoftFilter.MIN_TUMOR_VAF.filterName());
+        }
+
+        if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.strandBias(), primaryTumor.strandDepth()))
+        {
+            filters.add(SoftFilter.STRAND_BIAS.filterName());
         }
     }
 
@@ -129,24 +173,24 @@ public class VariantFilters
     {
         if(belowMinGermlineCoverage(config, normal))
         {
-            filters.add(SoftFilter.MIN_GERMLINE_DEPTH.toString());
+            filters.add(SoftFilter.MIN_GERMLINE_DEPTH.filterName());
         }
 
         if(aboveMaxGermlineVaf(config, normal, primaryTumor))
         {
-            filters.add(SoftFilter.MAX_GERMLINE_VAF.toString());
+            filters.add(SoftFilter.MAX_GERMLINE_VAF.filterName());
         }
 
         // Paired Tests
         if(aboveMaxGermlineQual(config, normal, primaryTumor))
         {
-            filters.add(SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL.toString());
+            filters.add(SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL.filterName());
         }
 
         // MNV Tests
         if(aboveMaxMnvNormalAltSupport(tier, normal, this.mConfig.MnvFilter))
         {
-            filters.add(SoftFilter.MAX_GERMLINE_ALT_SUPPORT.toString());
+            filters.add(SoftFilter.MAX_GERMLINE_ALT_SUPPORT.filterName());
         }
     }
 

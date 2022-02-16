@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.sage.phase;
 
 import static com.hartwig.hmftools.sage.config.SoftFilter.MAX_GERMLINE_VAF;
-import static com.hartwig.hmftools.sage.evidence.VariantPhaser.mergeByExtension;
-import static com.hartwig.hmftools.sage.evidence.VariantPhaser.mergeMatching;
-import static com.hartwig.hmftools.sage.evidence.VariantPhaser.mergeUninformative;
-import static com.hartwig.hmftools.sage.evidence.VariantPhaser.removeUninformativeLps;
+import static com.hartwig.hmftools.sage.phase.VariantPhaser.mergeByExtension;
+import static com.hartwig.hmftools.sage.phase.VariantPhaser.mergeMatching;
+import static com.hartwig.hmftools.sage.phase.VariantPhaser.mergeUninformative;
+import static com.hartwig.hmftools.sage.phase.VariantPhaser.removeUninformativeLps;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -24,9 +24,7 @@ import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
-import com.hartwig.hmftools.sage.evidence.PhasedVariantGroup;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
-import com.hartwig.hmftools.sage.evidence.VariantPhaser;
 
 import org.junit.Test;
 
@@ -91,38 +89,36 @@ public class PhasingGroupsTest
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
         assertEquals(5, getPhasedGroupCount());
-        assertTrue(checkGroupsAreOrdered());
 
         posCounters = Lists.newArrayList(rc2, rc4);
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
         assertEquals(6, getPhasedGroupCount());
-        assertTrue(checkGroupsAreOrdered());
 
         posCounters = Lists.newArrayList(rc6);
         negCounters = Lists.newArrayList(rc3);
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
         assertEquals(7, getPhasedGroupCount());
-        assertTrue(checkGroupsAreOrdered());
 
         posCounters = Lists.newArrayList(rc4, rc5);
         negCounters = Lists.newArrayList();
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
         assertEquals(8, getPhasedGroupCount());
-        assertTrue(checkGroupsAreOrdered());
 
         posCounters = Lists.newArrayList(rc2, rc5);
 
         mPhaser.registeredPhasedVariants(posCounters, negCounters);
         assertEquals(9, getPhasedGroupCount());
+
+        mPhaser.getPhasedCollections().forEach(x -> x.finalise());
         assertTrue(checkGroupsAreOrdered());
     }
 
     private int getPhasedGroupCount()
     {
-        return mPhaser.getPhasedCollections().stream().mapToInt(x -> x.groups().size()).sum();
+        return mPhaser.getPhasedCollections().stream().mapToInt(x -> x.groupCount()).sum();
     }
 
     @Test
@@ -212,7 +208,6 @@ public class PhasingGroupsTest
         ReadContextCounter rc4 = createReadCounter(50);
         ReadContextCounter rc5 = createReadCounter(60);
         ReadContextCounter rc6 = createReadCounter(70);
-        // ReadContextCounter rc7 = createReadCounter(80);
 
         // 2 sub-groups and 1 extending in either direction, results in a single group
         List<ReadContextCounter> posCounters = Lists.newArrayList(rc2, rc5);
@@ -394,7 +389,7 @@ public class PhasingGroupsTest
     private List<PhasedVariantGroup> getPhasedGroups()
     {
         List<PhasedVariantGroup> phasedGroups = Lists.newArrayList();
-        mPhaser.getPhasedCollections().forEach(x -> phasedGroups.addAll(x.groups()));
+        mPhaser.getPhasedCollections().forEach(x -> x.groupsMap().values().forEach(y -> phasedGroups.addAll(y)));
         return phasedGroups;
     }
 
@@ -434,7 +429,7 @@ public class PhasingGroupsTest
 
         Candidate candidate = new Candidate(
                 VariantTier.HIGH_CONFIDENCE, variant, tumorCounters.get(0).readContext(),
-                100, 1, 1);
+                100, 1, 1, 0, 0);
 
         List<ReadContextCounter> normalCounters = Lists.newArrayList();
         return new SageVariant(candidate, normalCounters, tumorCounters);

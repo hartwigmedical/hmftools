@@ -23,7 +23,7 @@ After installing [R](https://www.r-project.org/) or [RStudio](https://rstudio.co
     install("copynumber")
 ```
 
-AMBER requires Java 1.8+ to be installed.
+AMBER requires Java 11+ to be installed.
 
 ## Paired Normal/Tumor Mode
 This is the default and recommended mode.
@@ -60,6 +60,7 @@ AMBER supports both BAM and CRAM file formats.
 | min_het_af_percent    | 0.4     | Minimum allelic frequency to be considered heterozygous                                           |
 | max_het_af_percent    | 0.65    | Maximum allelic frequency to be considered heterozygous                                           |
 | ref_genome            | NA      | Path to the reference genome fasta file. Required only when using CRAM files.                     |
+| ref_genome_version    | NA      | One of `37` or `38`. Required only when using CRAM files.                                         |
 | validation_stringency | STRICT  | SAM validation strategy: STRICT, SILENT, LENIENT                                                  |
 
 ### Example Usage
@@ -106,7 +107,6 @@ No change is made to the SNPCheck or contamination output. These will be run on 
 
 ```
 java -Xmx32G -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
-   -tumor_only \
    -tumor COLO829T -tumor_bam /run_dir/COLO829T.bam \ 
    -output_dir /run_dir/amber/ \
    -threads 16 \
@@ -205,6 +205,8 @@ Peak memory is measure in gigabytes.
 
  
 # Version History and Download Links
+- [3.7](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.7)
+  - Fixed `NullPointerException` when no `-ref_genome` argument is provided
 - [3.6](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.6)
   - Added detection of regions of homozygosity, consanguinity proportion and uniparentaldisomy.
   - Remove `tumor_only` config.

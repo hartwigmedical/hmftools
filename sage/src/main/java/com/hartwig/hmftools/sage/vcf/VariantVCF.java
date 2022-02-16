@@ -41,9 +41,6 @@ public class VariantVCF implements AutoCloseable
     public static final String READ_CONTEXT_INDEX = "RC_IDX";
     public static final String PASS = "PASS";
 
-    @Deprecated
-    public static final String DEDUP_FILTER = "dedup";
-
     public static final String DEDUP_MNV_FILTER = "dedupMnv";
     public static final String DEDUP_MIXED_GERMLINE_SOMATIC_FILTER = "dedupMixedGermlineSomatic";
     public static final String DEDUP_SNV_MNV_FILTER = "dedupSnvMnv";
@@ -200,15 +197,19 @@ public class VariantVCF implements AutoCloseable
                 VCFHeaderLineType.Integer,
                 MIXED_SOMATIC_GERMLINE_DESCRIPTION));
 
-        header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_FILTER, "Variant was removed as duplicate"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_MNV_FILTER, "Filter duplicate MNV"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_SNV_MNV_FILTER, "Variant duplicate MNV vs SNV"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_INDEL_FILTER, "Variant duplicate SNV/MNV vs INDEL"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_MIXED_GERMLINE_SOMATIC_FILTER, "Variant duplicate mixed somatic/germline"));
 
-        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_TUMOR_QUAL.toString(), "Insufficient tumor quality"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_TUMOR_VAF.toString(), "Insufficient tumor VAF"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_GERMLINE_DEPTH.toString(), "Insufficient germline depth"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MAX_GERMLINE_VAF.toString(), "Excess germline VAF"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL.toString(),
+        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.STRAND_BIAS.filterName(), "Variant exceeds strand bias limit"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_TUMOR_QUAL.filterName(), "Insufficient tumor quality"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_TUMOR_VAF.filterName(), "Insufficient tumor VAF"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_GERMLINE_DEPTH.filterName(), "Insufficient germline depth"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MAX_GERMLINE_VAF.filterName(), "Excess germline VAF"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL.filterName(),
                 "Excess germline relative quality"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MAX_GERMLINE_ALT_SUPPORT.toString(), "Excess germline alt support"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MAX_GERMLINE_ALT_SUPPORT.filterName(), "Excess germline alt support"));
         header.addMetaDataLine(new VCFFilterHeaderLine(PASS, "All filters passed"));
 
         return header;

@@ -4,14 +4,12 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.evidence.ReadContextEvidence;
-import com.hartwig.hmftools.sage.evidence.VariantPhaser;
+import com.hartwig.hmftools.sage.phase.VariantPhaser;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
@@ -21,6 +19,7 @@ import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 public class EvidenceStage
 {
+    private final SageConfig mConfig;
     private final ReadContextEvidence mReadContextEvidence;
     private final VariantPhaser mVariantPhaser;
 
@@ -28,6 +27,7 @@ public class EvidenceStage
             final SageConfig config, final ReferenceSequenceFile refGenome,
             final Map<String, QualityRecalibrationMap> qualityRecalibrationMap, final PhaseSetCounter phaseSetCounter)
     {
+        mConfig = config;
         mReadContextEvidence = new ReadContextEvidence(config, refGenome, qualityRecalibrationMap);
         mVariantPhaser = new VariantPhaser(phaseSetCounter);
     }
@@ -39,11 +39,11 @@ public class EvidenceStage
         // search BAMs for evidence of each candidate variant
         if(samples.isEmpty())
         {
-            return new ReadContextCounters(candidates);
+            return new ReadContextCounters(mConfig.Filter, candidates);
         }
 
         int sampleCount = samples.size();
-        final ReadContextCounters readContextCounters = new ReadContextCounters(candidates);
+        final ReadContextCounters readContextCounters = new ReadContextCounters(mConfig.Filter, candidates);
 
         for(int i = 0; i < samples.size(); i++)
         {
@@ -59,7 +59,7 @@ public class EvidenceStage
         }
 
         SG_LOGGER.trace("region({}) gathered {} evidence for {} variants",
-                region, sampleType, readContextCounters.variantCount());
+                region, sampleType, readContextCounters.candidateCount());
 
         return readContextCounters;
     }

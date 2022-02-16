@@ -410,7 +410,8 @@ To reduce processing the following hard filters are applied:
 
 Filter | Default Value | Field
 ---|---|---
-hard_min_tumor_qual |30| `QUAL`
+hard_min_tumor_qual |50| `QUAL`
+hard_min_tumor_vaf |0.01| `VAF`
 hard_min_tumor_raw_alt_support |2| `RAD[1]`
 hard_min_tumor_raw_base_quality |0| `RABQ[1]`
 filtered_max_normal_alt_support |3| Normal `AD[1]`

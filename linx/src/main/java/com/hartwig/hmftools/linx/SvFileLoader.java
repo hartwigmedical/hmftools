@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.germline.GermlineFilter.GERMLINE_MIN_QUAL;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.valueNotNull;
 
 import java.io.IOException;
@@ -69,13 +68,11 @@ public final class SvFileLoader
 
     private static List<StructuralVariantData> loadSvDataFromGermlineVcf(final String vcfFile, final CommandLine cmd)
     {
-        int minQualLimit = Integer.parseInt(cmd.getOptionValue(GERMLINE_MIN_QUAL, "0"));
-
         final List<StructuralVariantData> svDataList = Lists.newArrayList();
 
         try
         {
-            final List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfFile, new GermlineFilter(minQualLimit));
+            final List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfFile, new GermlineFilter());
 
             int svId = 0;
 

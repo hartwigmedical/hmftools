@@ -27,7 +27,6 @@ import com.hartwig.hmftools.sage.quality.BaseQualityRecalibration;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.vcf.VariantContextFactory;
-import com.hartwig.hmftools.sage.vcf.VariantFile;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
 import org.apache.commons.cli.CommandLine;
@@ -52,7 +51,6 @@ public class SageApplication implements AutoCloseable
     private final PhaseSetCounter mPhaseSetCounter;
 
     private final VariantVCF mVcfFile;
-    private final VariantFile mVariantFile;
 
     private SageApplication(final CommandLine cmd)
     {
@@ -81,15 +79,6 @@ public class SageApplication implements AutoCloseable
         mPhaseSetCounter = new PhaseSetCounter();
 
         mVcfFile = new VariantVCF(mRefData.RefGenome, mConfig);
-
-        if(mConfig.WriteCsv && !mConfig.TumorIds.isEmpty())
-        {
-            mVariantFile = new VariantFile(mConfig.TumorIds.get(0), mConfig.SampleDataDir);
-        }
-        else
-        {
-            mVariantFile = null;
-        }
 
         SG_LOGGER.info("writing to file: {}", mConfig.OutputFile);
     }
@@ -149,9 +138,6 @@ public class SageApplication implements AutoCloseable
     public void writeVariant(final SageVariant variant)
     {
         mVcfFile.write(VariantContextFactory.create(variant, mConfig.ReferenceIds, mConfig.TumorIds));
-
-        if(mVariantFile != null)
-            mVariantFile.writeToFile(variant);
     }
 
     private Coverage createCoverage()
@@ -171,9 +157,6 @@ public class SageApplication implements AutoCloseable
     public void close() throws IOException
     {
         mVcfFile.close();
-
-        if(mVariantFile != null)
-            mVariantFile.close();
 
         mRefData.RefGenome.close();
         mExecutorService.shutdown();

@@ -72,6 +72,7 @@ public class FusionDisruptionAnalyser
     private final FusionParameters mFusionParams;
     private boolean mLogReportableOnly;
     private boolean mLogAllPotentials;
+    private boolean mWriteAllVisFusions;
 
     private final List<GeneFusion> mFusions; // all possible valid transcript-pair fusions
     private final List<GeneFusion> mUniqueFusions; // top-priority fusions from within each unique gene and SV pair
@@ -88,6 +89,7 @@ public class FusionDisruptionAnalyser
     public static final String LOG_INVALID_REASONS = "log_invalid_fusions";
     public static final String SKIP_UNPHASED_FUSIONS = "skip_unphased_fusions";
     public static final String WRITE_NEO_EPITOPES = "write_neo_epitopes";
+    public static final String WRITE_ALL_VIS_FUSIONS = "write_all_vis_fusions";
 
     public FusionDisruptionAnalyser(
             final CommandLine cmdLineArgs, final LinxConfig config, final EnsemblDataCache ensemblDataCache, final DatabaseAccess dbAccess,
@@ -111,6 +113,7 @@ public class FusionDisruptionAnalyser
         mInvalidFusions = Maps.newHashMap();
         mLogReportableOnly = false;
         mLogAllPotentials = false;
+        mWriteAllVisFusions = false;
 
         mFusionParams = new FusionParameters();
         mFusionParams.RequireUpstreamBiotypes = true;
@@ -134,6 +137,7 @@ public class FusionDisruptionAnalyser
         options.addOption(LOG_REPORTABLE_ONLY, false, "Only write out reportable fusions");
         options.addOption(LOG_ALL_POTENTIALS, false, "Log all potential fusions");
         options.addOption(LOG_INVALID_REASONS, false, "Log reasons for not making a fusion between transcripts");
+        options.addOption(WRITE_ALL_VIS_FUSIONS, false, "Write all fusions including non-reportable for visualiser");
     }
 
     public PerformanceCounter getPerfCounter() { return mPerfCounter; }
@@ -157,6 +161,7 @@ public class FusionDisruptionAnalyser
         mLogReportableOnly = cmdLineArgs.hasOption(LOG_REPORTABLE_ONLY);
         mFusionParams.RequirePhaseMatch = cmdLineArgs.hasOption(SKIP_UNPHASED_FUSIONS);
         mLogAllPotentials = cmdLineArgs.hasOption(LOG_ALL_POTENTIALS);
+        mWriteAllVisFusions = cmdLineArgs.hasOption(WRITE_ALL_VIS_FUSIONS);
 
         if(cmdLineArgs.hasOption(LOG_INVALID_REASONS))
         {
@@ -1049,7 +1054,7 @@ public class FusionDisruptionAnalyser
 
         for(final GeneFusion fusion : fusionList)
         {
-            if(fusion.reportable())
+            if(fusion.reportable() || mWriteAllVisFusions)
             {
                 int clusterId = fusion.getAnnotations() != null ? fusion.getAnnotations().clusterId() : -1;
 

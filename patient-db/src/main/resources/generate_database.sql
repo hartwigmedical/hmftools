@@ -565,7 +565,6 @@ CREATE TABLE somaticVariant
     rnaAlleleReadCount int,
     rnaTotalReadCount int,
     localPhaseSet int,
-    localRealignmentSet int,
     qual double precision not null,
     reported BOOLEAN NOT NULL,
     PRIMARY KEY (id),

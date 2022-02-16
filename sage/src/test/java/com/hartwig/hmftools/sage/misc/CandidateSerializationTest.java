@@ -61,7 +61,8 @@ public class CandidateSerializationTest
         final ReadContext readContext = new ReadContext(
                 expositionPosition, expectedRepeat, expectedRepeatCount, expectedMH, readBases, false);
 
-        final Candidate candidate = new Candidate(expectedTier, variant, readContext, 1000, 2, 0);
+        final Candidate candidate = new Candidate(expectedTier, variant, readContext, 1000, 2,
+                0, 0, 0);
 
         final VariantContext serialized = toContext(candidate);
         final IndexedBases deserializedReadBases = CandidateSerialization.readBases(serialized);

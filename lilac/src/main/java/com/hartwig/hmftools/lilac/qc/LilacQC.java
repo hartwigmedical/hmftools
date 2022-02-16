@@ -122,7 +122,6 @@ public final class LilacQC
         for(int i = 0; i < headerItems.size(); ++i)
         {
             sj.add(String.format("%s=%s", headerItems.get(i), bodyItems.get(i)));
-            // LL_LOGGER.info("  {} = {}", headerItems.get(i), bodyItems.get(i));
         }
 
         LL_LOGGER.info("{} QC Stats: {}", sampleId, sj.toString());
@@ -151,7 +150,7 @@ public final class LilacQC
 
     private void populateStatus()
     {
-        if(BamQC.totalLowCoverage() >= FAIL_LOW_COVERAGE_THRESHOLD)
+        if(CoverageQC.TotalFragments == 0 || BamQC.totalLowCoverage() >= FAIL_LOW_COVERAGE_THRESHOLD)
         {
             Status.add(FAIL);
             return;

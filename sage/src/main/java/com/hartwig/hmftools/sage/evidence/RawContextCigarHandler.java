@@ -32,7 +32,7 @@ public class RawContextCigarHandler implements CigarHandler
     }
 
     @Override
-    public void handleLeftSoftClip(@NotNull final SAMRecord record, @NotNull final CigarElement element)
+    public void handleLeftSoftClip(final SAMRecord record, final CigarElement element)
     {
         if(mVariant.position() < record.getAlignmentStart())
         {
@@ -98,7 +98,7 @@ public class RawContextCigarHandler implements CigarHandler
     }
 
     @Override
-    public void handleDelete(@NotNull final SAMRecord record, final CigarElement e, int readIndex, int refPosition)
+    public void handleDelete(final SAMRecord record, final CigarElement e, int readIndex, int refPosition)
     {
         if(mResult != null)
             return;
@@ -136,12 +136,12 @@ public class RawContextCigarHandler implements CigarHandler
         handleDelete(record, e, readIndex, refPosition);
     }
 
-    private static boolean matchesFirstBase(@NotNull final SAMRecord record, int index, @NotNull final String expected)
+    private static boolean matchesFirstBase(final SAMRecord record, int index, final String expected)
     {
         return expected.charAt(0) == record.getReadBases()[index];
     }
 
-    private static boolean matchesString(@NotNull final SAMRecord record, int index, @NotNull final String expected)
+    private static boolean matchesString(final SAMRecord record, int index, final String expected)
     {
         for(int i = 0; i < expected.length(); i++)
         {

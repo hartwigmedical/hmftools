@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
@@ -62,16 +61,19 @@ public class RefContextCache
 
         for(AltContext altContext : altContexts)
         {
-            if(!altContext.finaliseAndValidate())
-                continue;
-
             if(!hasValidDnaBases(altContext))
                 continue;
 
             if(!passesTumorHardLimits(altContext))
                 continue;
 
-            mSavedCandidates.add(altContext);
+            altContext.selectCandidates();
+
+            if(altContext.hasValidCandidate())
+                mSavedCandidates.add(altContext);
+
+            if(altContext.hasSecondCandidate())
+                mSavedCandidates.add(altContext.secondCandidate());
         }
     }
 

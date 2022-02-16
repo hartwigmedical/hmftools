@@ -85,7 +85,7 @@ public class ClinicalEvidenceFunctions {
     public static Table createTreatmentTable(@NotNull String title, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
             float contentWidth) {
         Table treatmentTable = TableUtil.createReportContentTable(contentWidth,
-                new float[] { 25, 140, 45, 25, 40, 140, 60 },
+                new float[] { 25, 120, 80, 25, 40, 120, 60 },
                 new Cell[] { TableUtil.createHeaderCell("Treatment", 2), TableUtil.createHeaderCell("Match", 1),
                         TableUtil.createHeaderCell("Level", 1), TableUtil.createHeaderCell("Response", 1),
                         TableUtil.createHeaderCell("Genomic event", 1), TableUtil.createHeaderCell("Evidence links", 1) });
@@ -98,7 +98,7 @@ public class ClinicalEvidenceFunctions {
     public static Table createTrialTable(@NotNull String title, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
             float contentWidth) {
         Table treatmentTable = TableUtil.createReportContentTable(contentWidth,
-                new float[] { 20, 180, 45, 180 },
+                new float[] { 20, 170, 80, 170 },
                 new Cell[] { TableUtil.createHeaderCell("Trial", 2), TableUtil.createHeaderCell("Match", 1),
                         TableUtil.createHeaderCell("Genomic event", 1) });
 

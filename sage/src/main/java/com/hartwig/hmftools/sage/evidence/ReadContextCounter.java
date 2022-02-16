@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
 
-import java.util.Comparator;
 import java.util.List;
 
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -135,9 +134,9 @@ public class ReadContextCounter implements VariantHotspot
     public int coverage() { return mCounts[RC_TOTAL]; }
     public int depth() { return mCounts[RC_TOTAL]; }
 
-    public double vaf() { return af(altSupport()); }
+    public double vaf() { return alleleFrequency(altSupport()); }
 
-    private double af(double support)
+    private double alleleFrequency(double support)
     {
         return mCounts[RC_TOTAL] == 0 ? 0d : support / mCounts[RC_TOTAL];
     }
@@ -161,6 +160,8 @@ public class ReadContextCounter implements VariantHotspot
         double total = mForwardStrand + mReverseStrand;
         return total > 0 ? mForwardStrand / total : 0;
     }
+
+    public int strandDepth() { return mForwardStrand + mReverseStrand; }
 
     public int improperPair() { return mImproperPair; }
 
@@ -359,7 +360,7 @@ public class ReadContextCounter implements VariantHotspot
 
     private void checkImproperCount(final SAMRecord record)
     {
-        if(!record.getReadPairedFlag() || !record.getProperPairFlag())
+        if(!record.getReadPairedFlag() || !record.getProperPairFlag() || record.getSupplementaryAlignmentFlag())
         {
             mImproperPair++;
         }

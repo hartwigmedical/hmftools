@@ -84,7 +84,7 @@ public final class RefGenomeManagerFactory {
     }
 
     @NotNull
-    private static KnownFusionCache buildKnownFusionCacheFromFile(@NotNull String knownFusionFile) throws IOException {
+    public static KnownFusionCache buildKnownFusionCacheFromFile(@NotNull String knownFusionFile) throws IOException {
         LOGGER.info(" Reading known fusions from {}", knownFusionFile);
         KnownFusionCache cache = new KnownFusionCache();
         if (!cache.loadFile(knownFusionFile)) {

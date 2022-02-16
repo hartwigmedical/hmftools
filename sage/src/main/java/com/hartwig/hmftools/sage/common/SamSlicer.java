@@ -45,25 +45,5 @@ public class SamSlicer
     public void slice(final SamReader samReader, final Consumer<SAMRecord> consumer)
     {
         mBamSlicer.slice(samReader, mRegions, consumer);
-
-        // TODO: is this required or are regions already exclusive??
-        // return QueryInterval.optimizeIntervals(queryIntervals.toArray(new QueryInterval[queryIntervals.size()]));
-
-
-        /*
-        final QueryInterval[] queryIntervals = createIntervals(mRegions, samReader.getFileHeader());
-
-        try(final SAMRecordIterator iterator = samReader.queryOverlapping(queryIntervals))
-        {
-            while(iterator.hasNext())
-            {
-                final SAMRecord record = iterator.next();
-                if(samRecordMeetsQualityRequirements(record))
-                {
-                    consumer.accept(record);
-                }
-            }
-        }
-        */
     }
 }

@@ -78,11 +78,11 @@ public class SageConfig
     public final String HighConfidenceBed;
     public final String CoverageBed;
     public final String OutputFile;
-    public final boolean WriteCsv;
 
     public final String Version;
     public final int Threads;
     public final boolean LogLpsData;
+    public final double PerfWarnTime;
 
     public final ValidationStringency Stringency;
 
@@ -100,7 +100,6 @@ public class SageConfig
     private static final String TUMOR = "tumor";
     private static final String TUMOR_BAM = "tumor_bam";
     private static final String OUTPUT_VCF = "out";
-    private static final String WRITE_CSV = "write_csv";
     private static final String MIN_MAP_QUALITY = "min_map_quality";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
     private static final String PANEL_BED = "panel_bed";
@@ -119,7 +118,9 @@ public class SageConfig
     private static final String COVERAGE_BED = "coverage_bed";
     private static final String VALIDATION_STRINGENCY = "validation_stringency";
     private static final String INCLUDE_MT = "include_mt";
+
     private static final String LOG_LPS_DATA = "log_lps_data";
+    private static final String PERF_WARN_TIME = "perf_warn_time";
 
     public SageConfig(boolean appendMode, @NotNull final String version, @NotNull final CommandLine cmd)
     {
@@ -206,7 +207,6 @@ public class SageConfig
         }
 
         OutputFile = SampleDataDir + cmd.getOptionValue(OUTPUT_VCF);
-        WriteCsv = cmd.hasOption(WRITE_CSV);
 
         PanelBed = getReferenceFile(cmd, PANEL_BED);
         CoverageBed = getReferenceFile(cmd, COVERAGE_BED);
@@ -229,6 +229,8 @@ public class SageConfig
 
         PanelOnly = containsFlag(cmd, PANEL_ONLY);
         LogLpsData = containsFlag(cmd, LOG_LPS_DATA);
+
+        PerfWarnTime = Double.parseDouble(cmd.getOptionValue(PERF_WARN_TIME, "0"));
 
         Threads = getConfigValue(cmd, THREADS, DEFAULT_THREADS);
     }
@@ -336,6 +338,7 @@ public class SageConfig
         options.addOption(COVERAGE_BED, true, "Coverage is calculated for optionally supplied bed");
         options.addOption(VALIDATION_STRINGENCY, true, "SAM validation strategy: STRICT, SILENT, LENIENT [STRICT]");
         options.addOption(LOG_LPS_DATA, false, "Log local phasing data");
+        options.addOption(PERF_WARN_TIME, true, "Log details of partitions taking longer than X seconds");
 
         commonOptions().getOptions().forEach(options::addOption);
         FilterConfig.createOptions().getOptions().forEach(options::addOption);
@@ -354,7 +357,6 @@ public class SageConfig
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(REF_GENOME_VERSION, true, "Assembly, must be one of [37, 38]");
         options.addOption(OUTPUT_VCF, true, "Output vcf");
-        options.addOption(WRITE_CSV, false, "Write variant data to CSV as well as VCF");
         options.addOption(MIN_MAP_QUALITY, true, "Min map quality to apply to non-hotspot variants [" + DEFAULT_MIN_MAP_QUALITY + "]");
         options.addOption(SPECIFIC_CHROMOSOMES, true, "Run for subset of chromosomes, split by ';'");
         options.addOption(SPECIFIC_REGIONS, true, "Run for specific regions(s) separated by ';' in format Chr:PosStart:PosEnd");
@@ -416,10 +418,10 @@ public class SageConfig
         HighConfidenceBed = "highConf";
         CoverageBed = "coverage";
         OutputFile = "out.vcf";
-        WriteCsv = false;
         Version = "1.0";
         Threads = DEFAULT_THREADS;
         LogLpsData = false;
+        PerfWarnTime = 0;
         RefGenVersion = V37;
         Stringency = ValidationStringency.DEFAULT_STRINGENCY;
         AppendMode = false;

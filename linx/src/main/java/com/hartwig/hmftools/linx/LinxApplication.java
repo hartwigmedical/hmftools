@@ -66,8 +66,6 @@ public class LinxApplication
 
         final DatabaseAccess dbAccess = createDatabaseAccess(cmd);
 
-        // boolean sampleDataFromFile = (!config.PurpleDataPath.isEmpty() && config.SvVcfFile != null) || config.IsGermline;
-
         List<String> samplesList = config.getSampleIds();
 
         if(dbAccess == null && !config.hasValidSampleDataSource(cmd))

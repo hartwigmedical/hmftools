@@ -164,7 +164,7 @@ public class LilacApplication
     public SolutionSummary getSolutionSummary() { return mSolutionSummary; }
     public List<ComplexCoverage> getRankedComplexes() { return mRankedComplexes; }
 
-    public void run()
+    public boolean run()
     {
         if(!mConfig.isValid())
         {
@@ -212,7 +212,11 @@ public class LilacApplication
         }
 
         final Map<String,int[]> geneBaseDepth = calculateGeneCoverage(mRefNucleotideFrags);
-        validateGeneDepth(geneBaseDepth);
+        if(!hasSufficientGeneDepth(geneBaseDepth))
+        {
+            writeFailedSampleFileOutputs(geneBaseDepth, medianBaseQuality);
+            return false;
+        }
 
         allValid &= validateFragments(mRefNucleotideFrags);
 
@@ -477,6 +481,8 @@ public class LilacApplication
         if(!allValid)
         {
             LL_LOGGER.error("failed validation");
+            writeFailedSampleFileOutputs(geneBaseDepth, medianBaseQuality);
+            return false;
         }
 
         // create various QC and other metrics
@@ -504,6 +510,8 @@ public class LilacApplication
                 aminoAcidQC, bamQC, coverageQC, haplotypeQC, somaticVariantQC);
 
         mSolutionSummary = SolutionSummary.create(winningRefCoverage, mTumorCoverage, mTumorCopyNumber, mSomaticCodingCounts, mRnaCoverage);
+
+        return true;
     }
 
     public void extractTumorResults(
@@ -615,15 +623,42 @@ public class LilacApplication
         mSummaryMetrics.writefile(mConfig.formFileId(LILAC_FILE_QC));
 
         HlaComplexFile.writeToFile(mConfig.formFileId(LILAC_FILE_CANDIDATE_COVERAGE), mRankedComplexes);
-        HlaComplexFile.writeFragmentAssignment(mConfig.formFileId(LILAC_FILE_CANDIDATE_FRAGS), mRankedComplexes, mRefFragAlleles);
 
-        mRefAminoAcidCounts.writeVertically(mConfig.formFileId(LILAC_FILE_CANDIDATE_AA));
-        mRefNucleotideCounts.writeVertically(mConfig.formFileId(LILAC_FILE_CANDIDATE_NUC));
-        mAminoAcidPipeline.writeCounts(mConfig);
+        if(mConfig.WriteAllFiles)
+        {
+            HlaComplexFile.writeFragmentAssignment(mConfig.formFileId(LILAC_FILE_CANDIDATE_FRAGS), mRankedComplexes, mRefFragAlleles);
+            mRefAminoAcidCounts.writeVertically(mConfig.formFileId(LILAC_FILE_CANDIDATE_AA));
+            mRefNucleotideCounts.writeVertically(mConfig.formFileId(LILAC_FILE_CANDIDATE_NUC));
+            mAminoAcidPipeline.writeCounts(mConfig);
+            FragmentUtils.writeFragmentData(mConfig.formFileId(LILAC_FILE_ALL_FRAGMENTS), mRefNucleotideFrags);
+            mHlaYCoverage.writeAlleleCounts(mConfig.Sample);
+        }
+    }
 
-        FragmentUtils.writeFragmentData(mConfig.formFileId(LILAC_FILE_ALL_FRAGMENTS), mRefNucleotideFrags);
+    public void writeFailedSampleFileOutputs(final Map<String,int[]> geneBaseDepth, int medianBaseQuality)
+    {
+        if(mConfig.OutputDir.isEmpty())
+            return;
 
-        mHlaYCoverage.writeAlleleCounts(mConfig.Sample);
+        LL_LOGGER.info("writing failed-sample output to {}", mConfig.OutputDir);
+
+        HaplotypeQC haplotypeQC = new HaplotypeQC(0, 0, 0, Lists.newArrayList());
+
+        AminoAcidQC aminoAcidQC = new AminoAcidQC(0, 0);
+
+        BamQC bamQC = new BamQC(0, 0, 0, geneBaseDepth);
+
+        CoverageQC coverageQC = new CoverageQC(
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+
+        mSummaryMetrics = new LilacQC(
+                0, "", 0, null,
+                aminoAcidQC, bamQC, coverageQC, haplotypeQC, new SomaticVariantQC(0, 0));
+
+        mSolutionSummary = new SolutionSummary(null, mTumorCoverage, mTumorCopyNumber, mSomaticCodingCounts, mRnaCoverage);
+
+        mSolutionSummary.write(mConfig.formFileId(LILAC_FILE_SUMMARY));
+        mSummaryMetrics.writefile(mConfig.formFileId(LILAC_FILE_QC));
     }
 
     private boolean validateFragments(final List<Fragment> fragments)
@@ -667,7 +702,7 @@ public class LilacApplication
         return false;
     }
 
-    private void validateGeneDepth(final Map<String,int[]> geneBaseDepth)
+    private boolean hasSufficientGeneDepth(final Map<String,int[]> geneBaseDepth)
     {
         int aLowCoverage = (int) Arrays.stream(geneBaseDepth.get(HLA_A)).filter(x -> x < WARN_LOW_COVERAGE_DEPTH).count();
         int bLowCoverage = (int)Arrays.stream(geneBaseDepth.get(HLA_B)).filter(x -> x < WARN_LOW_COVERAGE_DEPTH).count();
@@ -675,9 +710,11 @@ public class LilacApplication
 
         if(!mConfig.ReferenceBam.isEmpty() && aLowCoverage + bLowCoverage + cLowCoverage >= FATAL_LOW_COVERAGE_THRESHOLD)
         {
-            LL_LOGGER.error("gene depth coverage(A={} B={} C={}) too low, exiting", aLowCoverage, bLowCoverage, cLowCoverage);
-            System.exit(1);
+            LL_LOGGER.warn("gene depth coverage(A={} B={} C={}) too low, exiting", aLowCoverage, bLowCoverage, cLowCoverage);
+            return false;
         }
+
+        return true;
     }
 
     public void writeDatabaseResults(final CommandLine cmd)
@@ -705,11 +742,13 @@ public class LilacApplication
 
         long startTime = System.currentTimeMillis();
 
-        lilac.run();
-        lilac.writeFileOutputs();
+        if(lilac.run())
+        {
+            lilac.writeFileOutputs();
 
-        if(DatabaseAccess.hasDatabaseConfig(cmd))
-            lilac.writeDatabaseResults(cmd);
+            if(DatabaseAccess.hasDatabaseConfig(cmd))
+                lilac.writeDatabaseResults(cmd);
+        }
 
         long endTime = System.currentTimeMillis();
         double runTime = (endTime - startTime) / 1000.0;

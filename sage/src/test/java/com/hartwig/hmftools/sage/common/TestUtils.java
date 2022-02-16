@@ -17,8 +17,6 @@ public class TestUtils
 {
     public static SageVariant createVariant(int position, final String ref, final String alt)
     {
-        VariantHotspot variant = createVariantHotspot(position, ref, alt);
-
         String readBases = buildReadContextBases(alt);
 
         // LF          L   I   RC          RF
@@ -30,6 +28,13 @@ public class TestUtils
         IndexedBases indexBases = new IndexedBases(
                 position, index, leftCoreIndex, rightCoreIndex, DEFAULT_READ_CONTEXT_FLANK_SIZE, readBases.getBytes());
 
+        return createVariant(position, ref, alt, indexBases);
+    }
+
+    public static SageVariant createVariant(int position, final String ref, final String alt, final IndexedBases indexBases)
+    {
+        VariantHotspot variant = createVariantHotspot(position, ref, alt);
+
         ReadContext readContext = new ReadContext(position, "", 0, "", indexBases, false);
 
         ReadContextCounter readCounter =  new ReadContextCounter(0, variant, readContext, VariantTier.LOW_CONFIDENCE,
@@ -39,7 +44,7 @@ public class TestUtils
 
         Candidate candidate = new Candidate(
                 VariantTier.HIGH_CONFIDENCE, variant, tumorCounters.get(0).readContext(),
-                100, 1, 1);
+                100, 1, 1, 0, 0);
 
         List<ReadContextCounter> normalCounters = Lists.newArrayList();
 

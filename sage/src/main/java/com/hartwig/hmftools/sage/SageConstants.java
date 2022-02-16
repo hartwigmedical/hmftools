@@ -14,6 +14,9 @@ public class SageConstants
     public static final int DEFAULT_READ_CONTEXT_FLANK_SIZE = 10;
     public static final int MIN_CORE_DISTANCE = 2;
 
+    public static final int MIN_SECOND_CANDIDATE_FULL_READS = 3;
+    public static final double MIN_SECOND_CANDIDATE_FULL_READS_PERC = 0.25;
+
     public static final boolean DEFAULT_MNV = true;
 
     // base quality recalibration
@@ -29,7 +32,8 @@ public class SageConstants
     
     // filtering defaults and constants
     public static final int DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY = 0;
-    public static final int DEFAULT_HARD_MIN_TUMOR_QUAL = 30;
+    public static final int DEFAULT_HARD_MIN_TUMOR_QUAL = 50;
+    public static final double DEFAULT_HARD_MIN_TUMOR_VAF = 0.01;
     public static final int DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT = 2;
     public static final int DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT = 3;
 

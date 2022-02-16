@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.sage.vcf;
 
 import static com.hartwig.hmftools.common.sage.SageMetaData.LOCAL_PHASE_SET;
-import static com.hartwig.hmftools.common.sage.SageMetaData.LOCAL_REALIGN_SET;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.LOCAL_PHASE_SET_READ_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.MIXED_SOMATIC_GERMLINE;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.PASS;
@@ -65,11 +64,6 @@ public final class VariantContextFactory
             List<Integer> readCountTotals = Lists.newArrayListWithExpectedSize(readCountsRaw.size());
             readCountsRaw.forEach(x -> readCountTotals.add(x[0] + x[1]));
             builder.attribute(LOCAL_PHASE_SET_READ_COUNT, readCountTotals);
-        }
-
-        if(variant.localRealignSet() > 0)
-        {
-            builder.attribute(LOCAL_REALIGN_SET, variant.localRealignSet());
         }
 
         if(variant.mixedGermlineImpact() > 0)

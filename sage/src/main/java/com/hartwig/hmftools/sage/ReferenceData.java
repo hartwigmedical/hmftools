@@ -130,17 +130,6 @@ public class ReferenceData
 
             loadHotspots();
 
-            /*
-            final Map<Chromosome,List<BaseRegion>> panelWithoutHotspots = loadBedFile(mConfig.PanelBed);
-
-            if(!mConfig.PanelBed.isEmpty())
-            {
-                SG_LOGGER.info("read {} panel entries from bed file: {}", panelWithoutHotspots.size(), mConfig.PanelBed);
-            }
-
-            PanelWithHotspots.putAll(panelWithHotspots(panelWithoutHotspots, Hotspots));
-            */
-
             if(!mConfig.PanelBed.isEmpty())
             {
                 PanelWithHotspots.putAll(loadBedFile(mConfig.PanelBed));
