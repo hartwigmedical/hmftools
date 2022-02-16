@@ -15,11 +15,13 @@ import com.hartwig.hmftools.serve.curation.DoidLookupTestFactory;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.refgenome.RefGenomeResourceTestFactory;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class IclusionExtractorTest {
 
     @Test
+    @Ignore
     public void canExtractFromIclusionEntries() {
         EventClassifierConfig config = IclusionClassificationConfig.build();
         IclusionExtractor extractor = IclusionExtractorFactory.buildIclusionExtractor(config,
@@ -30,8 +32,8 @@ public class IclusionExtractorTest {
         entries.add(IclusionTestFactory.trial("trial",
                 Lists.newArrayList(or(Lists.newArrayList(ImmutableIclusionMutation.builder()
                         .gene("KIT")
-                        .name("KIT Amplification")
-                        .negation(false)
+                        .name("KIT AMPLIFICATION")
+                        .negation(true)
                         .build())))));
         entries.add(IclusionTestFactory.trial("trial",
                 Lists.newArrayList(or(Lists.newArrayList(ImmutableIclusionMutation.builder()
@@ -42,43 +44,43 @@ public class IclusionExtractorTest {
         entries.add(IclusionTestFactory.trial("trial",
                 Lists.newArrayList(or(Lists.newArrayList(ImmutableIclusionMutation.builder()
                         .gene("NTRK3")
-                        .name("NTRK3 Fusion")
-                        .negation(false)
+                        .name("NTRK3 FUSION")
+                        .negation(true)
                         .build())))));
         entries.add(IclusionTestFactory.trial("trial",
                 Lists.newArrayList(or(Lists.newArrayList(ImmutableIclusionMutation.builder()
                         .gene("BRAF")
                         .name("V600")
-                        .negation(false)
+                        .negation(true)
                         .build())))));
         entries.add(IclusionTestFactory.trial("trial",
                 Lists.newArrayList(or(Lists.newArrayList(ImmutableIclusionMutation.builder()
                         .gene("EGFR")
-                        .name("Exon 19 deletion")
-                        .negation(false)
+                        .name("Exon 19")
+                        .negation(true)
                         .build())))));
         entries.add(IclusionTestFactory.trial("trial",
                 Lists.newArrayList(or(Lists.newArrayList(ImmutableIclusionMutation.builder()
                         .gene("ALK")
                         .name("EML4-ALK Fusion")
-                        .negation(false)
+                        .negation(true)
                         .build())))));
         entries.add(IclusionTestFactory.trial("trial",
                 Lists.newArrayList(or(Lists.newArrayList(ImmutableIclusionMutation.builder()
                         .gene("-")
                         .name("MSI HIGH")
-                        .negation(false)
+                        .negation(true)
                         .build())))));
 
         ExtractionResult result = extractor.extract(entries);
-//        assertEquals(1, result.knownHotspots().size());
-//        assertEquals(1, result.knownCopyNumbers().size());
-//        assertEquals(1, result.knownFusionPairs().size());
-//        assertEquals(1, result.actionableHotspots().size());
-//        assertEquals(2, result.actionableRanges().size());
-//        assertEquals(2, result.actionableGenes().size());
-//        assertEquals(1, result.actionableFusions().size());
-  //      assertEquals(1, result.actionableCharacteristics().size());
+        assertEquals(1, result.knownHotspots().size());
+        assertEquals(1, result.knownCopyNumbers().size());
+        assertEquals(1, result.knownFusionPairs().size());
+        assertEquals(1, result.actionableHotspots().size());
+        assertEquals(2, result.actionableRanges().size());
+        assertEquals(2, result.actionableGenes().size());
+        assertEquals(1, result.actionableFusions().size());
+        assertEquals(1, result.actionableCharacteristics().size());
 
     }
 }
