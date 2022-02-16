@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.classification.EventType;
+import com.hartwig.hmftools.serve.DriverGeneTestFactory;
 import com.hartwig.hmftools.serve.extraction.catalog.DealWithDriverInconsistentModeAnnotation;
 import com.hartwig.hmftools.serve.extraction.codon.CodonExtractor;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
@@ -17,23 +18,30 @@ import org.junit.Test;
 public class CopyNumberExtractorTest {
 
     @Test
-    @Ignore
-    public void canCheckFiltering() {
-//        CopyNumberExtractor copyNumberExtractor1 = createTestExtractor(DealWithDriverInconsistentModeAnnotation.IGNORE);
-//        assertEquals(CopyNumberType.AMPLIFICATION, copyNumberExtractor1.extract("AKT1", EventType.AMPLIFICATION).type());
-//
-//        CopyNumberExtractor copyNumberExtractor2 = createTestExtractor(DealWithDriverInconsistentModeAnnotation.IGNORE);
-//        assertEquals(CopyNumberType.DELETION, copyNumberExtractor2.extract("AKT1", EventType.DELETION).type());
-//
-//        CopyNumberExtractor copyNumberExtractor3 = createTestExtractor(DealWithDriverInconsistentModeAnnotation.IGNORE);
-//        assertEquals(CopyNumberType.AMPLIFICATION, copyNumberExtractor3.extract("AKT1", EventType.DELETION).type());
+    public void canCheckFilterInCatalog() {
+        CopyNumberExtractor copyNumberExtractorIgnore = createTestExtractor(DealWithDriverInconsistentModeAnnotation.IGNORE);
+        assertEquals(CopyNumberType.AMPLIFICATION, copyNumberExtractorIgnore.extract("AKT1", EventType.AMPLIFICATION).type());
 
-//        CopyNumberExtractor copyNumberExtractor2 = createTestExtractor(DealWithDriverInconsistentModeAnnotation.WARN_ONLY);
-//        copyNumberExtractor2.extract("AKT1", EventType.AMPLIFICATION);
-//
-//        CopyNumberExtractor copyNumberExtractor3 = createTestExtractor(DealWithDriverInconsistentModeAnnotation.FILTER);
-//        copyNumberExtractor3.extract("AKT1", EventType.AMPLIFICATION);
+        CopyNumberExtractor copyNumberExtractorWarn = createTestExtractor(DealWithDriverInconsistentModeAnnotation.WARN_ONLY);
+        assertEquals(CopyNumberType.AMPLIFICATION, copyNumberExtractorWarn.extract("AKT1", EventType.AMPLIFICATION).type());
 
+        CopyNumberExtractor copyNumberExtractorFilter = createTestExtractor(DealWithDriverInconsistentModeAnnotation.FILTER);
+        assertEquals(CopyNumberType.AMPLIFICATION, copyNumberExtractorFilter.extract("AKT1", EventType.AMPLIFICATION).type());
+
+        CopyNumberExtractor copyNumberExtractorFilterDel = createTestExtractor(DealWithDriverInconsistentModeAnnotation.FILTER);
+        assertNull(copyNumberExtractorFilterDel.extract("AKT1", EventType.DELETION));
+    }
+
+    @Test
+    public void canCheckFilterNotInCatalog() {
+        CopyNumberExtractor copyNumberExtractorIgnore = createTestExtractor(DealWithDriverInconsistentModeAnnotation.IGNORE);
+        assertEquals(CopyNumberType.AMPLIFICATION, copyNumberExtractorIgnore.extract("KRAS", EventType.AMPLIFICATION).type());
+
+        CopyNumberExtractor copyNumberExtractorWarn = createTestExtractor(DealWithDriverInconsistentModeAnnotation.WARN_ONLY);
+        assertEquals(CopyNumberType.AMPLIFICATION, copyNumberExtractorWarn.extract("PTEN", EventType.AMPLIFICATION).type());
+
+       CopyNumberExtractor copyNumberExtractorFilter = createTestExtractor(DealWithDriverInconsistentModeAnnotation.FILTER);
+       assertNull(copyNumberExtractorFilter.extract("PTEN", EventType.AMPLIFICATION));
     }
 
     @Test
@@ -68,7 +76,7 @@ public class CopyNumberExtractorTest {
 
     @NotNull
     private static CopyNumberExtractor createTestExtractor(@NotNull DealWithDriverInconsistentModeAnnotation annotation) {
-        return new CopyNumberExtractor(new GeneChecker(Sets.newHashSet("PTEN", "AKT1")),
-                Lists.newArrayList(), annotation);
+        return new CopyNumberExtractor(new GeneChecker(Sets.newHashSet("PTEN", "AKT1", "KRAS")),
+                DriverGeneTestFactory.createDriverGenes("KRAS", "AKT1"), annotation);
     }
 }
