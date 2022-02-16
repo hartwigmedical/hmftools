@@ -34,7 +34,6 @@ Example Usage:
 java -Xmx16G -cp teal.jar com.hartwig.hmftools.teal.TealApplication \
    -reference COLO829R -reference_bam COLO829R.bam \
    -tumor COLO829T -tumor_bam COLO829T.bam \
-   -ref_genome /path/to/refGenome.fasta \
    -purple /path/to/COLO829/purple \
    -cobalt /path/to/COLO829/cobalt \
    -reference_wgs_metrics /path/to/COLO829/bam_metrics/COLO829R_WGSMetrics.txt \
@@ -55,12 +54,11 @@ java -Xmx16G -cp teal.jar com.hartwig.hmftools.teal.TealApplication \
 | threads (default = 1) | Number of threads to use                                                                   |
 | ref_genome (optional) | Path to the reference genome fasta file. Required only when using CRAM files.              |
 
-Example Usage
+Example Usage:
 
 ```
 java -Xmx16G -cp teal.jar com.hartwig.hmftools.teal.TealApplication \
    -reference COLO829R -reference_bam COLO829R.bam \
-   -ref_genome /path/to/refGenome.fasta \
    -cobalt /path/to/COLO829/cobalt \
    -reference_wgs_metrics /path/to/COLO829/bam_metrics/COLO829R_WGSMetrics.txt \
    -output_dir /path/to/COLO829/teal \
@@ -72,8 +70,6 @@ If HMF pipeline is not available, then TEAL can be used in standalone mode. Inpu
 other pipeline tools will need to be explicited provided.
 
 ### Paired germline/tumor mode standalone
-
-Arguments
 
 | Argument                       | Default                     | Description                                                                                |
 |--------------------------------|-----------------------------|--------------------------------------------------------------------------------------------|
@@ -93,13 +89,11 @@ Arguments
 | threads                        | 1                           | Number of threads to use                                                                   |
 | ref_genome                     |                             | Path to the reference genome fasta file. Required only when using CRAM files.              |
 
-Example Usage
-
+Example Usage:
 ```
 java -Xmx16G -cp teal.jar com.hartwig.hmftools.teal.TealApplication \
    -reference COLO829R -reference_bam COLO829R.bam \
    -tumor COLO829T -tumor_bam COLO829T.bam \
-   -ref_genome /path/to/refGenome.fasta \
    -reference_duplicate_proportion 0.2284 \
    -reference_gc50_reads_per_kb 214 \
    -reference_mean_reads_per_kb 271 \
@@ -114,8 +108,6 @@ java -Xmx16G -cp teal.jar com.hartwig.hmftools.teal.TealApplication \
 
 ### Running germline only mode standalone
 
-Arguments
-
 | Argument                       | Default                     | Description                                                                                |
 |--------------------------------|-----------------------------|--------------------------------------------------------------------------------------------|
 | reference                      |                             | Name of the reference sample                                                               |
@@ -127,30 +119,17 @@ Arguments
 | threads                        | 1                           | Number of threads to use                                                                   |
 | ref_genome                     |                             | Path to the reference genome fasta file. Required only when using CRAM files.              |
 
-Example Usage
+Example Usage:
 
 ```
 java -Xmx16G -cp teal.jar com.hartwig.hmftools.teal.TealApplication \
    -reference COLO829R -reference_bam COLO829R.bam \
-   -ref_genome /path/to/refGenome.fasta \
    -reference_duplicate_proportion 0.2284 \
    -reference_gc50_reads_per_kb 214 \
    -reference_mean_reads_per_kb 271 \
    -output_dir /path/to/COLO829/teal \
    -threads 28
 ```
-
-### INPUTS
-
-The main inputs for TEAL are a reference and tumor bam.   The following inputs are also required and may be sourced from HMF pipeline outputs (PURPLE and WGS metri s), or if not specified must be input as values:
-
-| Input            | Source File           | Samples    | Default (if not parsed) |
-|------------------|-----------------------|------------|-------------------------|
-| Purity           | .purple.purity.tsv    | Tumor      | 2                       |
-| Ploidy           | .purple.purity.tsv    | Tumor      | 1                       |
-| DuplicatePercent | .wgsmetrics           | Tumor, Ref | 0                       |
-| MeanReadsPerKb   | .cobalt.gc.median.tsv | Tumor, Ref | Required                |
-| GC50ReadsPerKb   | .cobalt.gc.median.tsv | Tumor, Ref | (=MeanReadsPerKb)       |
  
 ## Algorithm
 
@@ -314,5 +293,5 @@ The outputs of TEAL is a 'telbam' file (ie a bam restricted to fragments where a
 * TEAL could aslo count relatve amount T-Type, C-Type, G-Type and J-Type content per sample (relevant for ALT pathway identification)
 
 # Version History and Download Links
-- [0.1](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v0.1)
+- [1.0_beta](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.0_beta)
     - First release
