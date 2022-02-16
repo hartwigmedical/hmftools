@@ -4,21 +4,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.serve.classification.EventType;
-import com.hartwig.hmftools.serve.DriverGeneTestFactory;
 import com.hartwig.hmftools.serve.extraction.catalog.DealWithDriverInconsistentModeAnnotation;
-import com.hartwig.hmftools.serve.extraction.exon.ExonAnnotation;
-import com.hartwig.hmftools.serve.extraction.exon.ExonExtractor;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 import com.hartwig.hmftools.serve.refgenome.RefGenomeManagerFactoryTest;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class FusionExtractorTest {
@@ -56,7 +50,6 @@ public class FusionExtractorTest {
     }
 
     @Test
-    @Ignore
     public void canExtractSimpleFusionPair() {
         FusionExtractor fusionExtractor = testFusionExtractor();
         KnownFusionPair fusion = fusionExtractor.extract("PDGFRA", EventType.FUSION_PAIR, "BCR-PDGFRA Fusion");
@@ -89,7 +82,6 @@ public class FusionExtractorTest {
     }
 
     @Test
-    @Ignore
     public void canExtractFusionPairsWithOddNames() {
         FusionExtractor fusionExtractor =
                 testFusionExtractorWithGeneChecker(new GeneChecker(Sets.newHashSet("IGH", "NKX2-1", "HLA-A", "ROS1")));
@@ -109,7 +101,6 @@ public class FusionExtractorTest {
     }
 
     @Test
-    @Ignore
     public void canExtractFusionPairsWithExons() {
         FusionExtractor fusionExtractor = testFusionExtractor();
         KnownFusionPair fusion = fusionExtractor.extract("MET", EventType.FUSION_PAIR_AND_EXON, "EXON 14 SKIPPING MUTATION");

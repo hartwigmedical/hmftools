@@ -17,7 +17,6 @@ import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilterAlgo;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class CodonExtractorTest {
@@ -31,7 +30,6 @@ public class CodonExtractorTest {
     }
 
     @Test
-    @Ignore
     public void canCheckFilterNotInCatalog() {
         CodonExtractor extractorFilter = createWithDriverGenes(createTestDriverGenes(), DealWithDriverInconsistentModeAnnotation.FILTER);
         assertNull(extractorFilter.extract("EGFR", null, EventType.CODON, "R249"));
@@ -44,7 +42,6 @@ public class CodonExtractorTest {
     }
 
     @Test
-    @Ignore
     public void canCheckFilterInCatalog() {
         CodonExtractor extractorFilter = createWithDriverGenes(createTestDriverGenes(), DealWithDriverInconsistentModeAnnotation.FILTER);
         assertEquals(1, extractorFilter.extract("TP53", null, EventType.CODON, "R249").size());
