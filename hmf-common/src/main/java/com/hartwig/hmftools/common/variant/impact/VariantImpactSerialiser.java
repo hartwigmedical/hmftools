@@ -28,19 +28,14 @@ public final class VariantImpactSerialiser
     public static VCFHeader writeHeader(final VCFHeader header)
     {
         StringJoiner fields = new StringJoiner(", ");
-        fields.add("Gene");
-        fields.add("Transcript");
-        fields.add("CanonicalEffect");
-        fields.add("CanonicalCodingEffect");
-        fields.add("SpliceRegion");
-        fields.add("HgvsCodingImpact");
-        fields.add("HgvsProteinImpact");
-        fields.add("OtherReportableEffects");
-        fields.add("WorstCodingEffect");
-        fields.add("GenesAffected");
+
+        List<String> fieldItems = Lists.newArrayList(
+                "Gene", "Transcript", "CanonicalEffect", "CanonicalCodingEffect", "SpliceRegion", "HgvsCodingImpact",
+        "HgvsProteinImpact", "OtherReportableEffects", "WorstCodingEffect", "GenesAffected");
+        fieldItems.forEach(x -> fields.add(x));
 
         header.addMetaDataLine(new VCFInfoHeaderLine(
-                VAR_IMPACT, fields.length(), VCFHeaderLineType.String, String.format("Variant Impact [%s]", fields.toString())));
+                VAR_IMPACT, fieldItems.size(), VCFHeaderLineType.String, String.format("Variant Impact [%s]", fields.toString())));
         return header;
     }
 

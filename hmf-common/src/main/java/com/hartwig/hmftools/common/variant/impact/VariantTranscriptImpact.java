@@ -3,6 +3,8 @@ package com.hartwig.hmftools.common.variant.impact;
 import java.util.List;
 import java.util.StringJoiner;
 
+import com.google.common.collect.Lists;
+
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
@@ -41,16 +43,12 @@ public class VariantTranscriptImpact
     public static void writeHeader(final VCFHeader header)
     {
         StringJoiner fields = new StringJoiner(", ");
-        fields.add("Gene");
-        fields.add("GeneName");
-        fields.add("Transcript");
-        fields.add("Effects");
-        fields.add("SpliceRegion");
-        fields.add("HGVS.c");
-        fields.add("HGVS.p");
+        List<String> fieldItems = Lists.newArrayList(
+                "Gene", "GeneName", "Transcript", "Effects", "SpliceRegion", "HGVS.c", "HGVS.p");
+        fieldItems.forEach(x -> fields.add(x));
 
         header.addMetaDataLine(new VCFInfoHeaderLine(
-                VAR_TRANS_IMPACT_ANNOATATION, fields.length(), VCFHeaderLineType.String,
+                VAR_TRANS_IMPACT_ANNOATATION, fieldItems.size(), VCFHeaderLineType.String,
                 String.format("Transcript impact [%s]", fields.toString())));
     }
 
