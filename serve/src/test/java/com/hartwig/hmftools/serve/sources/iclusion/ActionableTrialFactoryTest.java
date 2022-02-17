@@ -13,7 +13,7 @@ import com.hartwig.hmftools.serve.curation.DoidLookupTestFactory;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
-public class ActinTrialFactoryTest {
+public class ActionableTrialFactoryTest {
 
     @Test
     public void canCreateActionableTrials() {
