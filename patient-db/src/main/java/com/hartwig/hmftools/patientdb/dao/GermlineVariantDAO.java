@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.checkStringLength;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTGERMLINE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Germlinevariant.GERMLINEVARIANT;
 
@@ -143,7 +144,7 @@ public class GermlineVariantDAO
                 rnaDepth.totalReadCount(),
                 tumorDepth.alleleReadCount(),
                 tumorDepth.totalReadCount(),
-                decorator.localPhaseSetsToString(),
+                checkStringLength(decorator.localPhaseSetsToString(), GERMLINEVARIANT.LOCALPHASESET),
                 decorator.adjustedVaf(),
                 decorator.variantCopyNumber(),
                 decorator.adjustedCopyNumber(),
@@ -239,10 +240,10 @@ public class GermlineVariantDAO
                 germlineSV.TumorFragments,
                 germlineSV.TumorReferenceFragmentsStart,
                 germlineSV.TumorReferenceFragmentsEnd,
-                DatabaseUtil.checkStringLength(germlineSV.InsertSequence, STRUCTURALVARIANTGERMLINE.INSERTSEQUENCE),
-                DatabaseUtil.checkStringLength(germlineSV.InsertSequenceAlignments, STRUCTURALVARIANTGERMLINE.INSERTSEQUENCEALIGNMENTS),
-                DatabaseUtil.checkStringLength(germlineSV.InsertSequenceRepeatClass, STRUCTURALVARIANTGERMLINE.INSERTSEQUENCEREPEATCLASS),
-                DatabaseUtil.checkStringLength(germlineSV.InsertSequenceRepeatType, STRUCTURALVARIANTGERMLINE.INSERTSEQUENCEREPEATTYPE),
+                checkStringLength(germlineSV.InsertSequence, STRUCTURALVARIANTGERMLINE.INSERTSEQUENCE),
+                checkStringLength(germlineSV.InsertSequenceAlignments, STRUCTURALVARIANTGERMLINE.INSERTSEQUENCEALIGNMENTS),
+                checkStringLength(germlineSV.InsertSequenceRepeatClass, STRUCTURALVARIANTGERMLINE.INSERTSEQUENCEREPEATCLASS),
+                checkStringLength(germlineSV.InsertSequenceRepeatType, STRUCTURALVARIANTGERMLINE.INSERTSEQUENCEREPEATTYPE),
                 germlineSV.ClusterId,
                 germlineSV.ClusterCount,
                 germlineSV.ResolvedType,

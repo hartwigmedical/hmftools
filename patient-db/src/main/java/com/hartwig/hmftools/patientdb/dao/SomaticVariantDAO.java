@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.common.genotype.GenotypeStatus.UNKNOWN;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.checkStringLength;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 
 import static org.jooq.impl.DSL.count;
@@ -337,7 +338,7 @@ public class SomaticVariantDAO
                 Optional.ofNullable(variant.rnaDepth()).map(AllelicDepth::alleleReadCount).orElse(null),
                 Optional.ofNullable(variant.rnaDepth()).map(AllelicDepth::totalReadCount).orElse(null),
                 variant.qual(),
-                variant.localPhaseSetsStr(),
+                checkStringLength(variant.localPhaseSetsStr(), SOMATICVARIANT.LOCALPHASESET),
                 timestamp);
     }
 

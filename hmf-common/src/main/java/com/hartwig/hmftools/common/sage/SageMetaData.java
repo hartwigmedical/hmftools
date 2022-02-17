@@ -16,13 +16,7 @@ public final class SageMetaData
     private static final String PHASE_DESCRIPTION = "Local Phase Set";
     private static final String REALIGN_DESCRIPTION = "Local Realignment Set";
 
-    // no longer required by Pave nor set by Sage, to be deprecated once SnpEff handling is removed
-    public static final String PHASED_INFRAME_INDEL = "PII";
-    private static final String PHASED_INFRAME_INDEL_DESCRIPTION = "Phased inframe indel identifier";
-
-    private SageMetaData()
-    {
-    }
+    private SageMetaData() { }
 
     @NotNull
     public static VCFHeader addSageMetaData(@NotNull final VCFHeader header)
