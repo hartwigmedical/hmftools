@@ -21,4 +21,14 @@ public final class ActinTestFactory {
                 .mutation(Strings.EMPTY)
                 .build();
     }
+
+    @NotNull
+    public static ActinEntry createTestEntryWithData(@NotNull ActinRule actinRule, @NotNull String gene, @NotNull String mutation) {
+        return ImmutableActinEntry.builder()
+                .trial(Strings.EMPTY)
+                .rule(actinRule)
+                .gene(gene)
+                .mutation(mutation)
+                .build();
+    }
 }
