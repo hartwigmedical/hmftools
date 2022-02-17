@@ -165,8 +165,10 @@ public class VariantData
         VariantData variant = new VariantData(chromosome, variantPosition, ref, alt);
         variant.setContext(variantContext);
 
+        List<Integer> localPhaseSets = variantContext.getAttributeAsIntList(SageMetaData.LOCAL_PHASE_SET, NO_LOCAL_PHASE_SET);
+
         variant.setVariantDetails(
-                variantContext.getAttributeAsInt(SageMetaData.LOCAL_PHASE_SET, NO_LOCAL_PHASE_SET),
+                !localPhaseSets.isEmpty() ? localPhaseSets.get(0) : 0,
                 variantContext.getAttributeAsString(MICROHOMOLOGY_FLAG, Strings.EMPTY),
                 variantContext.getAttributeAsString(REPEAT_SEQUENCE_FLAG, Strings.EMPTY),
                 variantContext.getAttributeAsInt(REPEAT_COUNT_FLAG, 0));
