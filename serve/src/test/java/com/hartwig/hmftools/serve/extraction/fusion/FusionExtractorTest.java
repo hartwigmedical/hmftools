@@ -21,30 +21,36 @@ public class FusionExtractorTest {
 
     @Test
     public void canFilterInCatalog() {
-        FusionExtractor fusionExtractorIgnore = buildTestFusionExtractor(GENE_CHECKER, Sets.newHashSet(), DealWithDriverInconsistentModeAnnotation.IGNORE);
+        FusionExtractor fusionExtractorIgnore =
+                buildTestFusionExtractor(GENE_CHECKER, Sets.newHashSet(), DealWithDriverInconsistentModeAnnotation.IGNORE);
         KnownFusionPair fusionIgnore = fusionExtractorIgnore.extract("NTRK3", EventType.FUSION_PAIR, "BCR-NTRK3 Fusion");
         assertNotNull(fusionIgnore);
 
-        FusionExtractor fusionExtractorFilter = buildTestFusionExtractor(GENE_CHECKER, Sets.newHashSet(), DealWithDriverInconsistentModeAnnotation.FILTER);
+        FusionExtractor fusionExtractorFilter =
+                buildTestFusionExtractor(GENE_CHECKER, Sets.newHashSet(), DealWithDriverInconsistentModeAnnotation.FILTER);
         KnownFusionPair fusionFilter = fusionExtractorFilter.extract("NTRK3", EventType.FUSION_PAIR, "BCR-NTRK3 Fusion");
         assertNotNull(fusionFilter);
 
-        FusionExtractor fusionExtractorWarn = buildTestFusionExtractor(GENE_CHECKER, Sets.newHashSet(), DealWithDriverInconsistentModeAnnotation.WARN_ONLY);
+        FusionExtractor fusionExtractorWarn =
+                buildTestFusionExtractor(GENE_CHECKER, Sets.newHashSet(), DealWithDriverInconsistentModeAnnotation.WARN_ONLY);
         KnownFusionPair fusionWarn = fusionExtractorWarn.extract("NTRK3", EventType.FUSION_PAIR, "BCR-NTRK3 Fusion");
         assertNotNull(fusionWarn);
     }
 
     @Test
     public void canFilterNotInCatalog() {
-        FusionExtractor fusionExtractorIgnore = buildTestFusionExtractor(GENE_CHECKER, Sets.newHashSet(), DealWithDriverInconsistentModeAnnotation.IGNORE);
+        FusionExtractor fusionExtractorIgnore =
+                buildTestFusionExtractor(GENE_CHECKER, Sets.newHashSet(), DealWithDriverInconsistentModeAnnotation.IGNORE);
         KnownFusionPair fusionIgnore = fusionExtractorIgnore.extract("PDGFRA", EventType.FUSION_PAIR, "BCR-PDGFRA Fusion");
         assertNotNull(fusionIgnore);
 
-        FusionExtractor fusionExtractorFilter = buildTestFusionExtractor(GENE_CHECKER, Sets.newHashSet(), DealWithDriverInconsistentModeAnnotation.FILTER);
+        FusionExtractor fusionExtractorFilter =
+                buildTestFusionExtractor(GENE_CHECKER, Sets.newHashSet(), DealWithDriverInconsistentModeAnnotation.FILTER);
         KnownFusionPair fusionFilter = fusionExtractorFilter.extract("PDGFRA", EventType.FUSION_PAIR, "BCR-PDGFRA Fusion");
         assertNull(fusionFilter);
 
-        FusionExtractor fusionExtractorWarn = buildTestFusionExtractor(GENE_CHECKER, Sets.newHashSet(), DealWithDriverInconsistentModeAnnotation.WARN_ONLY);
+        FusionExtractor fusionExtractorWarn =
+                buildTestFusionExtractor(GENE_CHECKER, Sets.newHashSet(), DealWithDriverInconsistentModeAnnotation.WARN_ONLY);
         KnownFusionPair fusionWarn = fusionExtractorWarn.extract("PDGFRA", EventType.FUSION_PAIR, "BCR-PDGFRA Fusion");
         assertNotNull(fusionWarn);
     }

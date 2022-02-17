@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.serve.sources.ckb.curation;
 
-
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;

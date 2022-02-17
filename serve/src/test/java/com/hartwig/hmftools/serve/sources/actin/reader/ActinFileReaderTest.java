@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.serve.sources.actin.reader;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
 import java.util.List;

@@ -81,5 +81,4 @@ public class IclusionFilterTest {
     private static IclusionFilterEntry create(@NotNull IclusionFilterType type, @NotNull String value) {
         return ImmutableIclusionFilterEntry.builder().type(type).value(value).build();
     }
-
 }

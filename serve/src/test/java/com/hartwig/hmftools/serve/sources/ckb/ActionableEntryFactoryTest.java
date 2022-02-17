@@ -7,17 +7,12 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.ckb.classification.CkbEventTypeExtractor;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
-import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.common.serve.classification.EventType;
 
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class ActionableEntryFactoryTest {
