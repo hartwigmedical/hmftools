@@ -38,9 +38,7 @@ public class EvidenceStage
     {
         // search BAMs for evidence of each candidate variant
         if(samples.isEmpty())
-        {
             return new ReadContextCounters(mConfig.Filter, candidates);
-        }
 
         int sampleCount = samples.size();
         final ReadContextCounters readContextCounters = new ReadContextCounters(mConfig.Filter, candidates);

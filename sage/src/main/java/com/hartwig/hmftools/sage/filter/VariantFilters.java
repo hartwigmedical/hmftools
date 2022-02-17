@@ -209,7 +209,8 @@ public class VariantFilters
     {
         double normalVaf = normal.vaf();
 
-        if(!primaryTumor.isIndel() && normal.rawAltBaseQuality() > 0 && normal.rawAltBaseQuality() < NORMAL_RAW_ALT_BQ_MAX)
+        if(!primaryTumor.isIndel() && normal.rawAltBaseQuality() > 0 && normal.rawAltBaseQuality() < NORMAL_RAW_ALT_BQ_MAX
+        && normal.rawAltSupport() == normal.altSupport())
         {
             double normalRawBqVcf = normal.rawAltBaseQuality() / (double)(normal.rawAltBaseQuality() + normal.rawRefBaseQuality());
             normalVaf = min(normalVaf, normalRawBqVcf);

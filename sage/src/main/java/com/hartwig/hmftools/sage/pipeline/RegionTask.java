@@ -140,7 +140,9 @@ public class RegionTask implements Callable
         {
             Candidate candidate = finalCandidates.get(candidateIndex);
 
-            final List<ReadContextCounter> normalReadCounters = normalEvidence.getReadCounters(candidateIndex);
+            final List<ReadContextCounter> normalReadCounters = !mConfig.ReferenceIds.isEmpty() ?
+                    normalEvidence.getReadCounters(candidateIndex) : Lists.newArrayList();
+
             final List<ReadContextCounter> tumorReadCounters = tumorEvidence.getFilteredReadCounters(candidateIndex);
 
             /*
