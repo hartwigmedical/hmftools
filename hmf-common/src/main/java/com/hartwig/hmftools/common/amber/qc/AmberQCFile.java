@@ -39,6 +39,8 @@ public final class AmberQCFile {
             return ImmutableAmberQC.builder()
                     .meanBAF(Double.parseDouble(getValue(lines.get(1))))
                     .contamination(lines.size() > 2 ? Double.parseDouble(getValue(lines.get(2))) : 0)
+                    .consanguinityProportion(lines.size() > 3 ? Double.parseDouble(getValue(lines.get(3))) : 0)
+                    .uniparentalDisomy(lines.size() > 4 ? lines.get(4) : null)
                     .build();
         } catch (Exception e) {
             throw new IOException(String.format("Unable to parse amber qc file with %s lines.", lines.size()));
