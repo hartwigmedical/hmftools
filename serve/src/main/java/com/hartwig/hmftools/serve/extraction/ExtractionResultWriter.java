@@ -84,8 +84,8 @@ public class ExtractionResultWriter {
                 actionableCharacteristicTsv);
         ActionableCharacteristicFile.write(actionableCharacteristicTsv, result.actionableCharacteristics());
 
-        String eventInterpretationTsv = EventInterpretationFile.eventInterpretationTsv(outputDir);;
-        LOGGER.info(" Writing event interpretation to {}", eventInterpretationTsv);
+        String eventInterpretationTsv = EventInterpretationFile.eventInterpretationTsv(outputDir);
+        LOGGER.info(" Writing {} event interpretation to {}", result.eventInterpretation().size(), eventInterpretationTsv);
         EventInterpretationFile.write(eventInterpretationTsv, result.eventInterpretation());
     }
 }
