@@ -180,8 +180,19 @@ public class ReadContextCounter implements VariantHotspot
             mLpsCounts = Lists.newArrayList();
         }
 
-        mLocalPhaseSets.add(lps);
-        mLpsCounts.add(new int[] { readCount, (int)allocCount } );
+        // add in order of highest counts
+        int index = 0;
+        while(index < mLpsCounts.size())
+        {
+            final int[] existingCounts = mLpsCounts.get(index);
+            if(readCount + allocCount > existingCounts[0] + existingCounts[0])
+                break;
+
+            ++index;
+        }
+
+        mLocalPhaseSets.add(index, lps);
+        mLpsCounts.add(index, new int[] { readCount, (int)allocCount } );
     }
 
     public List<Integer> localPhaseSets() { return mLocalPhaseSets; }
