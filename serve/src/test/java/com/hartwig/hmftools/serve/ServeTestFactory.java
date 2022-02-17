@@ -38,6 +38,7 @@ import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 
+import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -49,6 +50,7 @@ public final class ServeTestFactory {
     @NotNull
     public static ExtractionResult createResultForSource(@NotNull Knowledgebase source) {
         return ImmutableExtractionResult.builder()
+                .eventInterpretation(Lists.newArrayList())
                 .refGenomeVersion(source.refGenomeVersion())
                 .addKnownHotspots(createTestKnownHotspotForSource(source))
                 .addKnownCodons(createTestKnownCodonForSource(source))

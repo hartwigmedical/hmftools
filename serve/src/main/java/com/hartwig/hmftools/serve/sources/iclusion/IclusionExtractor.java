@@ -21,6 +21,8 @@ import com.hartwig.hmftools.serve.extraction.EventExtractorOutput;
 import com.hartwig.hmftools.serve.extraction.ExtractionFunctions;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
+import com.hartwig.hmftools.serve.extraction.events.EventInterpretation;
+import com.hartwig.hmftools.serve.extraction.events.ImmutableEventInterpretation;
 import com.hartwig.hmftools.serve.util.ProgressTracker;
 
 import org.apache.logging.log4j.LogManager;
@@ -51,6 +53,7 @@ public class IclusionExtractor {
         for (IclusionTrial trial : trials) {
             List<EventExtractorOutput> eventExtractions = Lists.newArrayList();
             String rawInput = Strings.EMPTY;
+            List<EventInterpretation> interpretation = Lists.newArrayList();
             for (IclusionMutationCondition mutationCondition : trial.mutationConditions()) {
                 for (IclusionMutation mutation : mutationCondition.mutations()) {
                     rawInput = mutation.name();
@@ -59,6 +62,13 @@ public class IclusionExtractor {
                         LOGGER.warn("No event type known for '{}' on '{}'", mutation.name(), mutation.gene());
                     }
                     eventExtractions.add(eventExtractor.extract(mutation.gene(), null, mutation.type(), mutation.name(), Strings.EMPTY));
+                    interpretation.add(ImmutableEventInterpretation.builder()
+                            .knowledgebase(Knowledgebase.ICLUSION)
+                            .rawInputKB(rawInput)
+                            .interpretGene(mutation.gene())
+                            .interpretEvent(mutation.name())
+                            .interpretEventType(mutation.type())
+                            .build());
                 }
             }
 
@@ -67,7 +77,7 @@ public class IclusionExtractor {
                 LOGGER.debug("Generated {} based off {}", actionableTrial, trial);
             }
 
-            extractions.add(toExtractionResult(actionableTrials, eventExtractions));
+            extractions.add(toExtractionResult(actionableTrials, eventExtractions, interpretation));
 
             tracker.update();
         }
@@ -77,7 +87,7 @@ public class IclusionExtractor {
 
     @NotNull
     private static ExtractionResult toExtractionResult(@NotNull List<ActionableTrial> actionableTrials,
-            @NotNull List<EventExtractorOutput> eventExtractions) {
+            @NotNull List<EventExtractorOutput> eventExtractions, @NotNull List<EventInterpretation> interpretation) {
         Set<ActionableHotspot> actionableHotspots = Sets.newHashSet();
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
         Set<ActionableGene> actionableGenes = Sets.newHashSet();
@@ -109,6 +119,7 @@ public class IclusionExtractor {
         }
 
         return ImmutableExtractionResult.builder()
+                .eventInterpretation(interpretation)
                 .refGenomeVersion(Knowledgebase.ICLUSION.refGenomeVersion())
                 .actionableHotspots(actionableHotspots)
                 .actionableRanges(actionableRanges)

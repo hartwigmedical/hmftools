@@ -10,6 +10,7 @@ import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotFile;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRangeFile;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodonFile;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumberFile;
+import com.hartwig.hmftools.serve.extraction.events.EventInterpretationFile;
 import com.hartwig.hmftools.serve.extraction.exon.KnownExonFile;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPairFile;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspotFile;
@@ -82,5 +83,9 @@ public class ExtractionResultWriter {
                 result.actionableCharacteristics().size(),
                 actionableCharacteristicTsv);
         ActionableCharacteristicFile.write(actionableCharacteristicTsv, result.actionableCharacteristics());
+
+        String eventInterpretationTsv = EventInterpretationFile.eventInterpretationTsv(outputDir);;
+        LOGGER.info(" Writing event interpretation to {}", eventInterpretationTsv);
+        EventInterpretationFile.write(eventInterpretationTsv, result.eventInterpretation());
     }
 }
