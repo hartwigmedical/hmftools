@@ -47,11 +47,11 @@ public class CopyNumberExtractor {
                         driverCategory == DriverCategory.ONCO && type == EventType.DELETION) || driverCategory == null) {
                     if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
                             DealWithDriverInconsistentModeAnnotation.WARN_ONLY)) {
-                        LOGGER.warn("Mismatch for {} in driver category {} vs event type {}", gene, driverCategory, type);
+                        LOGGER.warn("CopyNumber event mismatch for {} in driver category {} vs event type {}", gene, driverCategory, type);
                         return ImmutableKnownCopyNumber.builder().gene(gene).type(toCopyNumberType(type)).build();
                     } else if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
                             DealWithDriverInconsistentModeAnnotation.FILTER)) {
-                        LOGGER.info("Filtered -- Mismatch for {} in driver category {} vs event type {}", gene, driverCategory, type);
+                        LOGGER.info("CopyNumber event filtered -- Mismatch for {} in driver category {} vs event type {}", gene, driverCategory, type);
                         return null;
                     } else {
                         return null;

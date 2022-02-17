@@ -189,6 +189,5 @@ public final class ViccTestFactory {
     }
 
     private static class TestKbSpecificObject implements KbSpecificObject {
-
     }
 }

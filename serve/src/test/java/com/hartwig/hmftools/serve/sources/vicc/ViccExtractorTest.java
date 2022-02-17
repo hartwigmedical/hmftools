@@ -13,7 +13,6 @@ import com.hartwig.hmftools.vicc.annotation.ViccClassificationConfig;
 import com.hartwig.hmftools.vicc.datamodel.Association;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class ViccExtractorTest {
@@ -33,18 +32,18 @@ public class ViccExtractorTest {
         entries.add(ViccTestFactory.testEntryWithGeneEventAndAssociation("BRAF", "V600E", association));
         entries.add(ViccTestFactory.testEntryWithGeneEventAndAssociation("NTRK3", "NTRK3 Fusion", association));
         entries.add(ViccTestFactory.testEntryWithGeneEventAndAssociation("BRAF", "V600", association));
-        entries.add(ViccTestFactory.testEntryWithGeneEventAndAssociation("EGFR", "Exon 19 deletion", association));
+        entries.add(ViccTestFactory.testEntryWithGeneEventAndAssociation("BRAF", "Exon 3 deletion", association));
         entries.add(ViccTestFactory.testEntryWithGeneEventAndAssociation("ALK", "EML4-ALK Fusion", association));
         entries.add(ViccTestFactory.testEntryWithGeneEventAndAssociation("-", "Microsatellite Instability-High", association));
 
         ExtractionResult result = extractor.extract(entries);
-//        assertEquals(1, result.knownHotspots().size());
-//        assertEquals(1, result.knownCopyNumbers().size());
-//        assertEquals(1, result.knownFusionPairs().size());
-//        assertEquals(1, result.actionableHotspots().size());
-//        assertEquals(2, result.actionableRanges().size());
-//        assertEquals(2, result.actionableGenes().size());
-//        assertEquals(1, result.actionableFusions().size());
+        assertEquals(1, result.knownHotspots().size());
+        assertEquals(1, result.knownCopyNumbers().size());
+        assertEquals(1, result.knownFusionPairs().size());
+        assertEquals(1, result.actionableHotspots().size());
+        assertEquals(2, result.actionableRanges().size());
+        assertEquals(2, result.actionableGenes().size());
+        assertEquals(1, result.actionableFusions().size());
         assertEquals(1, result.actionableCharacteristics().size());
     }
 }
