@@ -120,7 +120,7 @@ public final class ReportableVariantFactory {
                 .clonalLikelihood(variant.clonalLikelihood())
                 .biallelic(variant.biallelic())
                 .genotypeStatus(variant.genotypeStatus())
-                .localPhaseSet(variant.localPhaseSet());
+                .localPhaseSet(variant.topLocalPhaseSet());
     }
 
     private static double calcAlleleCopyNumber(double adjustedCopyNumber, double adjustedVAF) {

@@ -35,7 +35,7 @@ public final class DataLoader
         List<RefVariantData> variants = Lists.newArrayList();
 
         Result<Record18<String, String, Integer, String, String, String, String, String, String, String, String, String, String,
-                                String, Integer, Integer, Byte, String>>
+                                String, Integer, String, Byte, String>>
                 result = dbAccess.context()
                 .select(SOMATICVARIANT.GENE, SOMATICVARIANT.CHROMOSOME, SOMATICVARIANT.POSITION,
                         SOMATICVARIANT.REF, SOMATICVARIANT.ALT, SOMATICVARIANT.TYPE, SOMATICVARIANT.GENE,

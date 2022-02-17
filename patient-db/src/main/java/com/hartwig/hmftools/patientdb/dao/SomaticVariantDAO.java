@@ -21,6 +21,7 @@ import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableAllelicDepthImpl;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 
@@ -230,7 +231,7 @@ public class SomaticVariantDAO
                 .referenceDepth(referenceAllelicDepth)
                 .rnaDepth(rnaAllelicDepth)
                 .qual(record.get(SOMATICVARIANT.QUAL))
-                .localPhaseSet(record.get(SOMATICVARIANT.LOCALPHASESET))
+                .localPhaseSets(SomaticVariantFactory.localPhaseSetsStringToList(record.get(SOMATICVARIANT.LOCALPHASESET)))
                 .genotypeStatus(UNKNOWN)
                 .build();
     }
@@ -336,7 +337,7 @@ public class SomaticVariantDAO
                 Optional.ofNullable(variant.rnaDepth()).map(AllelicDepth::alleleReadCount).orElse(null),
                 Optional.ofNullable(variant.rnaDepth()).map(AllelicDepth::totalReadCount).orElse(null),
                 variant.qual(),
-                variant.localPhaseSet(),
+                variant.localPhaseSetsStr(),
                 timestamp);
     }
 

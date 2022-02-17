@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.localPhaseSetsStringToList;
 import static com.hartwig.hmftools.neo.NeoCommon.DOWNSTREAM_PRE_GENE_DISTANCE;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.epitope.NeoEpitopeAnnotator.initialiseNeoepitopeWriter;
@@ -124,7 +125,7 @@ public class NeoSampleTask implements Callable
 
         if(mDbAccess != null)
         {
-            final Result<Record8<String, String, String, Integer, String, String, Double, Integer>> result = mDbAccess.context()
+            final Result<Record8<String, String, String, Integer, String, String, Double, String>> result = mDbAccess.context()
                     .select(SOMATICVARIANT.GENE, SOMATICVARIANT.WORSTCODINGEFFECT, SOMATICVARIANT.CHROMOSOME, SOMATICVARIANT.POSITION,
                             SOMATICVARIANT.REF, SOMATICVARIANT.ALT, SOMATICVARIANT.VARIANTCOPYNUMBER, SOMATICVARIANT.LOCALPHASESET)
                     .from(Tables.SOMATICVARIANT)
@@ -151,10 +152,11 @@ public class NeoSampleTask implements Callable
                 String ref = record.getValue(Tables.SOMATICVARIANT.REF);
                 String alt = record.getValue(Tables.SOMATICVARIANT.ALT);
                 double copyNumber = record.getValue(Tables.SOMATICVARIANT.VARIANTCOPYNUMBER);
-                Integer localPhaseSet = record.get(Tables.SOMATICVARIANT.LOCALPHASESET);
+                String localPhaseSetStr = record.get(Tables.SOMATICVARIANT.LOCALPHASESET);
+                List<Integer> localPhaseSets = localPhaseSetsStringToList(localPhaseSetStr);
 
                 pointMutations.add(new PointMutationData(chromosome, position, ref, alt, gene,
-                        codingEffect, copyNumber, localPhaseSet != null ? localPhaseSet : -1));
+                        codingEffect, copyNumber, localPhaseSets != null ? localPhaseSets.get(0) : -1));
             }
         }
         else
@@ -198,7 +200,7 @@ public class NeoSampleTask implements Callable
                         pointMutations.add(new PointMutationData(
                                 somaticVariant.chromosome(), (int)somaticVariant.position(), somaticVariant.ref(), somaticVariant.alt(),
                                 somaticVariant.gene(), somaticVariant.worstCodingEffect(), somaticVariant.adjustedCopyNumber(),
-                                somaticVariant.localPhaseSet() != null ? somaticVariant.localPhaseSet() : -1));
+                                somaticVariant.localPhaseSets() != null ? somaticVariant.topLocalPhaseSet() : -1));
                     }
                 }
 

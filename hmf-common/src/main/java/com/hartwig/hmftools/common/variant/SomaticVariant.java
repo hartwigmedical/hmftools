@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.variant;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 
@@ -90,5 +92,12 @@ public interface SomaticVariant extends Variant {
     AllelicDepth referenceDepth();
 
     @Nullable
-    Integer localPhaseSet();
+    List<Integer> localPhaseSets();
+
+    default Integer topLocalPhaseSet() { return localPhaseSets() != null && !localPhaseSets().isEmpty() ? localPhaseSets().get(0) : null; }
+
+    default String localPhaseSetsStr()
+    {
+        return SomaticVariantFactory.localPhaseSetsStr(localPhaseSets());
+    }
 }
