@@ -115,12 +115,7 @@ public class GermlineDeletionDrivers
             if(matchedCopyNumber == null)
                 continue;
 
-            int cohortFrequency = mCohortFrequency.getRegionFrequency(
-                    region.chromosome(), (int)region.start(), (int)region.end(), GERMLINE_DEL_REGION_MATCH_BUFFER);
-
-            final List<String> filters = checkFilters(region, matchedCopyNumber, cohortFrequency);
-
-            findOverlappingDriverGene(region, filters, cohortFrequency);
+            findOverlappingDriverGene(region, matchedCopyNumber);
         }
     }
 
@@ -159,7 +154,7 @@ public class GermlineDeletionDrivers
         return filters;
     }
 
-    private void findOverlappingDriverGene(final FittedRegion region, final List<String> filters, int cohortFrequency)
+    private void findOverlappingDriverGene(final FittedRegion region, final PurpleCopyNumber matchedCopyNumber)
     {
         // now find genes
         List<GeneData> geneDataList = mGeneDataCache.getChrGeneDataMap().get(region.chromosome());
@@ -197,6 +192,11 @@ public class GermlineDeletionDrivers
 
         if(overlappingGenes.isEmpty() && driverGenes.isEmpty())
             return;
+
+        int cohortFrequency = mCohortFrequency.getRegionFrequency(
+                region.chromosome(), region.start(), region.end(), GERMLINE_DEL_REGION_MATCH_BUFFER);
+
+        final List<String> filters = checkFilters(region, matchedCopyNumber, cohortFrequency);
 
         int exonRankMin = 0;
         int exonRankMax = 0;
