@@ -48,11 +48,12 @@ they are compliant with the usage of the data itself.
 SERVE generates clinical evidence in the following datamodel:
  - Treatment (name of trial or drug(s))
  - Cancer type (annotated with DOID) for which the treatment is considered on-label.
- - Blacklist cancer type (annotated with DOID) for blacklist this specific cancer type next to the inclusion cancer type to consider the treatment on-label.
+ - Blacklist cancer types (annotated with DOID) that should be children of the main cancer type and are used for blacklisting 
+ specific types of the main cancer type.
  - Tier / Evidence level of the treatment
  - Direction (Responsive for the treatment or resistant to the treatment)
- - A set of URLs with extra information about the evidence (general website)
- - A set of URLs with extra information about the evidence (publications of this evidence)
+ - A set of URLs pointing towards the source website which provide extra information about the treatment.
+ - A set of URLs with extra information about the evidence (e.g. publications backing up the evidence)
  
 The following genomic events and tumor characteristics can be mapped to clinical evidence:
  - Genome-wide tumor characteristics such as signatures, MSI status, TML status or viral presence
@@ -83,14 +84,15 @@ of the exome, see [HMF Gene Utils](../gene-utils/README.md).
 For fusions, genes are permitted that can exist in the context of a fusion pair (eg @IG genes). 
 
 ### Driver inconsistencies
-In the supported knowledgebases, which is using for extraction actionable/known events, there are gene/events which isn't met with the 
-Hartwig's gene panel. For this reason, a logica is add to determine if we want to use this data
+In the supported knowledgebases, there can be events defined on genes that are are not part of the Hartwig's driver gene panel.
+Also, the event could be inconsistent with respect to driver gene panel (e.g. "Inactivation" evidence for a gene that is configured to be 
+an oncogene). There are various ways to deal with such inconsistencies on a per-knowledgebase level:
 
 Filter  | Description
 ---|---
-FILTER  | We filter every entry when the gene/event isn't present or there is an inconsistecy with the Hartwig's gene panel
+FILTER  | We filter every entry when the gene/event isn't present or there is an inconsistency with the Hartwig's driver gene panel
 IGNORE  | Every gene/event is used regardless of mismatch/inconsistencies 
-WARN_ONLY  | Every gene/event is used regardless of mismatch/inconsistencies, however a warning messages is shown for the inconcistencies
+WARN_ONLY  | Every gene/event is used regardless of mismatch/inconsistencies, however a warning messages is shown for the inconsistencies
 
 ### Protein resolving for SNVs and (small) INDELs
  
@@ -174,7 +176,7 @@ ACTIVATION | Evidence is applicable when a gene has been activated. Downstream a
 INACTIVATION | Evidence is applicable when a gene has been inactivated. Downstream algorithms are expected to interpret this.
 ANY_MUTATION | SERVE does not restrict this evidence based on the type of mutation and considers every type of mutation applicable for this evidence.
 FUSION | Evidence is applicable in case the gene has fused with another gene (either 3' or 5').
-WILD_TYPE | Evidence is applicable in case no genomic alteration is detected (For more information about Hartwig's wildtype definition, see (work-in-progress))
+WILD_TYPE | Evidence is applicable in case no genomic alteration is detected)
 
 ### Exonic ranges specific for fusion pairs
 
@@ -186,9 +188,8 @@ Evidence on fusion pairs where these restrictions are missing can be assumed to 
 ### Genome wide tumor characteristics
 
 For evidence that is applicable when a genome wide event has happened, the type of event required to match evidence to the event 
-is derived from the knowledgebase event. 
-When the knowledgebase event has also a cut-off for met this evidence this information will be also extracted. When no cut-off values is 
-present, teh Hartwigs cut off values are used. 
+is derived from the knowledgebase event. When the knowledgebase event has a cutoff defined for this evidence this information will be also extracted. 
+When no cut-off values is present but is expected for the characteristics, Hartwig's default cutoff values are used. 
 
 Genome wide event  | Description
 ---|---
@@ -241,8 +242,8 @@ Also, genes that do not follow HGNC model are renamed to their HGNC name.
 
 ### ACTIN Curation
 
-ACTIN ingest the molecular inclusion criteria which is extract from the ACTIN treatment database (see also [actin](https://github.com/hartwigmedical/actin/blob/master/serve-bridge/README.md)).
-The inclusion criteria can be defined as a set of rules, to determine possible eligibility.
+ACTIN ingest the molecular inclusion criteria which are extracted from the ACTIN treatment database (see also [actin](https://github.com/hartwigmedical/actin/blob/master/serve-bridge/README.md)).
+The inclusion criteria in the trials of the ACTIN database are defined in terms of specific rules.
 
 Rule | When does a patient pass evaluation?
 ---|---
@@ -275,7 +276,7 @@ FILTER_EVERYTHING_FOR_RULE | Can be used to remove all evidence of a specific ru
 
 iClusion contributes to actionability only. SERVE configures every trial to B-level evidence with responsive direction. 
 SERVE only considers trials with one or more molecular inclusion criterium. The filtering is predominantly configurable rather than fixed 
-in SERVE. The fixed curation of iClusion is done in SERVE is mapping gene names and signatures. 
+in SERVE. The fixed curation of iClusion that is done in SERVE is mapping gene names and signatures. 
 
 The following filters can be configured in iClusion:
 
@@ -372,7 +373,7 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   - The actionable output is the database that [PROTECT](../protect/README.md) bases its clinical evidence matching on.
   
 ## Version History and Download Links
-- [1.9](Upcoming)
+- Upcoming
   - Support the raw input string of the input knowledgebases to the actionable output files
   - Support wild-type events as gene level evidences 
   - The filtering of iClusion events is moved to a input file instead inside SERVE  
