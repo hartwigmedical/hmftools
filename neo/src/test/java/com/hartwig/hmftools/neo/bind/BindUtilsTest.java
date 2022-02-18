@@ -29,7 +29,6 @@ public class BindUtilsTest
         }
 
         List<double[]> discreteScoreData = Lists.newArrayList();
-        // discreteScoreData.add(new double[] {0.0001, 0.01});
         discreteScoreData.add(new double[] {0.001, 0.1});
         discreteScoreData.add(new double[] {0.01, 0.25});
         discreteScoreData.add(new double[] {0.05, 1.0});
