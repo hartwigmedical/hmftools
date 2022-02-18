@@ -231,7 +231,7 @@ class RefGenomeConverter {
         verifyNoChromosomeChange(annotation.chromosome(), liftedStart, annotation);
         verifyNoChromosomeChange(annotation.chromosome(), liftedEnd, annotation);
 
-        // We blank out the transcript and rank since we are unsure to what extend the transcript maps to the new ref genome.
+        // We blank out the transcript since we are unsure to what extend the transcript maps to the new ref genome.
         return new RangeAnnotation() {
             @NotNull
             @Override
