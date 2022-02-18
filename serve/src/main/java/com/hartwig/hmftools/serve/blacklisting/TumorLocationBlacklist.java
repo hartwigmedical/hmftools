@@ -5,14 +5,17 @@ import java.util.StringJoiner;
 
 import org.jetbrains.annotations.NotNull;
 
-public class TumorLocationBlacklist {
+public final class TumorLocationBlacklist {
 
     private static final String DELIMITER = ",";
+
+    private TumorLocationBlacklist() {
+    }
 
     @NotNull
     public static String extractTumorLocationBlacklisting(@NotNull Set<TumorLocationBlacklisting> tumorLocationBlacklistings) {
         StringJoiner joiner = new StringJoiner(DELIMITER);
-        for (TumorLocationBlacklisting tumorLocation: tumorLocationBlacklistings) {
+        for (TumorLocationBlacklisting tumorLocation : tumorLocationBlacklistings) {
             joiner.add(tumorLocation.blacklistCancerType());
         }
         return joiner.toString();
@@ -21,7 +24,7 @@ public class TumorLocationBlacklist {
     @NotNull
     public static String extractTumorLocationDoid(@NotNull Set<TumorLocationBlacklisting> tumorLocationBlacklistings) {
         StringJoiner joiner = new StringJoiner(DELIMITER);
-        for (TumorLocationBlacklisting tumorLocation: tumorLocationBlacklistings) {
+        for (TumorLocationBlacklisting tumorLocation : tumorLocationBlacklistings) {
             joiner.add(tumorLocation.blacklistedDoid());
         }
         return joiner.toString();
