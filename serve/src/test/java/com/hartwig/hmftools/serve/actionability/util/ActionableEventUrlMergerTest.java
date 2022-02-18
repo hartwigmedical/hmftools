@@ -13,7 +13,6 @@ import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 

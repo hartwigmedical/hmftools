@@ -71,7 +71,7 @@ public class GeneLevelExtractor {
                     return ImmutableGeneLevelAnnotation.builder().gene(gene).event(GeneLevelEvent.FUSION).build();
                 } else if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
                         DealWithDriverInconsistentModeAnnotation.FILTER)) {
-                    LOGGER.info("Filtered -- Promiscuous fusion '{}' is not present in the known fusion cache", gene);
+                    LOGGER.info("Promiscuous fusion filtered -- Promiscuous fusion '{}' is not present in the known fusion cache", gene);
                     return null;
                 }
             } else {
@@ -90,11 +90,11 @@ public class GeneLevelExtractor {
             if (driverCategory == null) {
                 if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
                         DealWithDriverInconsistentModeAnnotation.WARN_ONLY)) {
-                    LOGGER.warn("{} on {} is not included in driver catalog and won't ever be reported.", type, gene);
+                    LOGGER.warn("Wildtype event on {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
                     return ImmutableGeneLevelAnnotation.builder().gene(gene).event(GeneLevelEvent.WILD_TYPE).build();
                 } else if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
                         DealWithDriverInconsistentModeAnnotation.FILTER)) {
-                    LOGGER.info("Filtered -- {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
+                    LOGGER.info("Wildtype event filtered -- {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
                     return null;
                 } else {
                     return null;
@@ -153,9 +153,9 @@ public class GeneLevelExtractor {
                 LOGGER.info(driverBasedEvent);
                 LOGGER.info(result);
                 if (driverBasedEvent == GeneLevelEvent.ANY_MUTATION) {
-                    LOGGER.warn("Gene {} not present in driver catalog. {} will never be reported", gene, result);
+                    LOGGER.warn("Gene level event on gene {} not present in driver catalog. {} will never be reported", gene, result);
                 } else if (result != driverBasedEvent) {
-                    LOGGER.warn("Mismatch in driver gene event for '{}'. Event suggests {} while driver catalog suggests {}",
+                    LOGGER.warn("Gene level event mismatch in driver gene event for '{}'. Event suggests {} while driver catalog suggests {}",
                             gene,
                             result,
                             driverBasedEvent);
@@ -165,9 +165,9 @@ public class GeneLevelExtractor {
                     DealWithDriverInconsistentModeAnnotation.FILTER)) {
 
                 if(driverBasedEvent == GeneLevelEvent.ANY_MUTATION) {
-                    LOGGER.info("Filtered -- {} on {} is not included in driver catalog and won't ever be reported.", gene, result);
+                    LOGGER.info("Gene level event filtered -- {} on {} is not included in driver catalog and won't ever be reported.", gene, result);
                 } else if (result != driverBasedEvent) {
-                    LOGGER.info("Mismatch in driver gene event for '{}'. Event suggests {} while driver catalog suggests {}",
+                    LOGGER.info("Gene level event mismatch in driver gene event for '{}'. Event suggests {} while driver catalog suggests {}",
                             gene,
                             result,
                             driverBasedEvent);

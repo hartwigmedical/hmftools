@@ -18,6 +18,8 @@ import com.hartwig.hmftools.serve.extraction.EventExtractorOutput;
 import com.hartwig.hmftools.serve.extraction.ExtractionFunctions;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
+import com.hartwig.hmftools.serve.extraction.events.EventInterpretation;
+import com.hartwig.hmftools.serve.extraction.events.ImmutableEventInterpretation;
 import com.hartwig.hmftools.serve.sources.actin.classification.ActinEventExtractor;
 import com.hartwig.hmftools.serve.sources.actin.classification.ActinEventTypeExtractor;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
@@ -41,7 +43,7 @@ public class ActinExtractor {
 
     @NotNull
     public ExtractionResult extract(@NotNull List<ActinEntry> entries) {
-
+        List<EventInterpretation> interpretation = Lists.newArrayList();
         ProgressTracker tracker = new ProgressTracker("ACTIN", entries.size());
         List<ExtractionResult> extractions = Lists.newArrayList();
         for (ActinEntry entry : entries) {
@@ -53,8 +55,17 @@ public class ActinExtractor {
                     LOGGER.warn("No event type known for '{}' on '{}'", entry, entry.gene());
                 } else {
                     String gene = entry.gene() != null ? entry.gene() : "-";
+                    interpretation.add(ImmutableEventInterpretation.builder()
+                            .knowledgebase(Knowledgebase.ACTIN)
+                            .rawInputKB(entry.rule().toString())
+                            .interpretGene(gene)
+                            .interpretEvent(event)
+                            .interpretEventType(type)
+                            .build());
+
                     extractions.add(toExtractionResult(trial,
-                            eventExtractor.extract(gene, null, type, event, entry.mutation())));
+                            eventExtractor.extract(gene, null, type, event, entry.mutation()),
+                            interpretation));
                 }
             }
 
@@ -65,7 +76,8 @@ public class ActinExtractor {
     }
 
     @NotNull
-    private static ExtractionResult toExtractionResult(@NotNull ActinTrial trial, @NotNull EventExtractorOutput extraction) {
+    private static ExtractionResult toExtractionResult(@NotNull ActinTrial trial, @NotNull EventExtractorOutput extraction,
+            @NotNull List<EventInterpretation> interpretation) {
         Set<ActionableHotspot> actionableHotspots = ActionableEventFactory.toActionableHotspots(trial, extraction.hotspots());
 
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
@@ -92,6 +104,7 @@ public class ActinExtractor {
         }
 
         return ImmutableExtractionResult.builder()
+                .eventInterpretation(interpretation)
                 .refGenomeVersion(Knowledgebase.ACTIN.refGenomeVersion())
                 .actionableHotspots(actionableHotspots)
                 .actionableRanges(actionableRanges)

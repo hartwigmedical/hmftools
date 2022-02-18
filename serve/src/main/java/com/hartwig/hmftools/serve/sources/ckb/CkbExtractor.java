@@ -31,6 +31,8 @@ import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
 import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberFunctions;
 import com.hartwig.hmftools.serve.extraction.copynumber.ImmutableKnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
+import com.hartwig.hmftools.serve.extraction.events.EventInterpretation;
+import com.hartwig.hmftools.serve.extraction.events.ImmutableEventInterpretation;
 import com.hartwig.hmftools.serve.extraction.exon.ExonAnnotation;
 import com.hartwig.hmftools.serve.extraction.exon.ExonFunctions;
 import com.hartwig.hmftools.serve.extraction.exon.ImmutableKnownExon;
@@ -85,7 +87,15 @@ public class CkbExtractor {
             EventExtractorOutput eventExtractorOutput = eventExtractor.extract(gene, transcript, entry.type(), event, Strings.EMPTY);
             Set<? extends ActionableEvent> actionableEvents = actionableEntryFactory.toActionableEntries(entry, variant.variant());
 
-            extractions.add(toExtractionResult(gene, event, transcript, eventExtractorOutput, actionableEvents));
+            List<EventInterpretation> interpretation = Lists.newArrayList();
+            interpretation.add(ImmutableEventInterpretation.builder()
+                    .knowledgebase(Knowledgebase.CKB)
+                    .rawInputKB(variant.variant())
+                    .interpretGene(gene)
+                    .interpretEvent(event)
+                    .interpretEventType(entry.type())
+                    .build());
+            extractions.add(toExtractionResult(gene, event, transcript, eventExtractorOutput, actionableEvents, interpretation));
 
             tracker.update();
         }
@@ -95,7 +105,8 @@ public class CkbExtractor {
 
     @NotNull
     private static ExtractionResult toExtractionResult(@NotNull String gene, @NotNull String variant, @Nullable String transcript,
-            @NotNull EventExtractorOutput output, @NotNull Set<? extends ActionableEvent> actionableEvents) {
+            @NotNull EventExtractorOutput output, @NotNull Set<? extends ActionableEvent> actionableEvents,
+            @NotNull List<EventInterpretation> interpretation) {
         Set<ActionableHotspot> actionableHotspots = Sets.newHashSet();
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
         Set<ActionableGene> actionableGenes = Sets.newHashSet();
@@ -125,6 +136,7 @@ public class CkbExtractor {
         }
 
         return ImmutableExtractionResult.builder()
+                .eventInterpretation(interpretation)
                 .refGenomeVersion(Knowledgebase.CKB.refGenomeVersion())
                 .knownHotspots(convertToKnownHotspots(output.hotspots(), gene, variant, transcript))
                 .knownCodons(convertToKnownCodons(output.codons()))
