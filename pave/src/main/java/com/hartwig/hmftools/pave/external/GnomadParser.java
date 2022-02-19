@@ -53,6 +53,20 @@ public class GnomadParser
         mFreqThreshold = Double.parseDouble(cmd.getOptionValue(FREQ_THRESHOLD, "0"));
     }
 
+    public static String formFileId(final String dir, final String chromosome, final String outputId)
+    {
+        String outputFile = dir + GNOMAD_FILE_ID;
+
+        if(chromosome != null)
+            outputFile += "_chr" + chromosome;
+
+        if(outputId != null)
+            outputFile += "_" + outputId;
+
+        outputFile += ".csv";
+        return outputFile;
+    }
+
     public void run()
     {
         if(mInputVcf == null || !Files.exists(Paths.get(mInputVcf)))
@@ -64,15 +78,7 @@ public class GnomadParser
         PV_LOGGER.info("parsing Gnomad file({}) specificChr({}) frequencyThreshold({})",
                 mInputVcf, mSpecificChromosome, mFreqThreshold);
 
-        String outputFile = mOutputDir + GNOMAD_FILE_ID;
-
-        if(!mSpecificChromosome.isEmpty())
-            outputFile += "_chr" + mSpecificChromosome;
-
-        if(mOutputId != null)
-            outputFile += "_" + mOutputId;
-
-        outputFile += ".csv";
+        String outputFile = formFileId(mOutputDir, mSpecificChromosome, mOutputId);
 
         try
         {

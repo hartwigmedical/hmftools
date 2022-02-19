@@ -47,7 +47,7 @@ public class VcfWriter
         if(hasGnomadFrequency)
         {
             newHeader.addMetaDataLine(new VCFInfoHeaderLine(
-                    GNOMAD_VCF_TAG, 1, VCFHeaderLineType.String, "Gnomad variant frequency"));
+                    GNOMAD_VCF_TAG, 1, VCFHeaderLineType.Float, "Gnomad variant frequency"));
         }
 
         mWriter.writeHeader(newHeader);

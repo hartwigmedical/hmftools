@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.external.GnomadParser.GNOMAD_FILE_ID;
+import static com.hartwig.hmftools.pave.external.GnomadParser.formFileId;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -32,17 +33,25 @@ import org.apache.commons.cli.Options;
 public class GnomadAnnotation
 {
     private final Map<String,Map<Integer,List<GnomadVariant>>> mFrequencies;
+    private final RefGenomeVersion mRefGenomeVersion;
+    private final boolean mLoadChromosomeOnDemand;
+    private final Map<String,String> mChromosomeFiles;
 
     public static final String GNOMAD_FREQUENCY_FILE = "gnomad_freq_file";
     public static final String GNOMAD_FREQUENCY_DIR = "gnomad_freq_dir";
+    private static final String GNOMAD_LOAD_CHR_ON_DEMAND = "gnomad_load_chr_on_demand";
     public static final String GNOMAD_VCF_TAG = "GND_FREQ";
 
     public GnomadAnnotation(final CommandLine cmd)
     {
         mFrequencies = Maps.newHashMap();
+        mChromosomeFiles = Maps.newHashMap();
 
         if(cmd != null)
         {
+            mRefGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
+            mLoadChromosomeOnDemand = cmd.hasOption(GNOMAD_LOAD_CHR_ON_DEMAND);
+
             if(cmd.hasOption(GNOMAD_FREQUENCY_FILE))
             {
                 loadFrequency(cmd.getOptionValue(GNOMAD_FREQUENCY_FILE), null);
@@ -50,47 +59,22 @@ public class GnomadAnnotation
             else if(cmd.hasOption(GNOMAD_FREQUENCY_DIR))
             {
                 String gnomadDir = cmd.getOptionValue(GNOMAD_FREQUENCY_DIR);
-                RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
-
-                try
-                {
-                    final Stream<Path> stream = Files.walk(Paths.get(gnomadDir), 1, FileVisitOption.FOLLOW_LINKS);
-
-                    List<String> files = stream.filter(x -> !x.toFile().isDirectory())
-                            .map(x -> x.toFile().toString())
-                            .filter(x -> x.contains(GNOMAD_FILE_ID))
-                            .collect(Collectors.toList());
-
-                    for(HumanChromosome humanChr : HumanChromosome.values())
-                    {
-                        String chrStr = refGenomeVersion.versionedChromosome(humanChr.toString());
-                        String fileChrStr = "chr" + humanChr.toString();
-
-                        String chrFile = files.stream().filter(x -> x.contains(fileChrStr)).findFirst().orElse(null);
-
-                        if(chrFile == null)
-                        {
-                            PV_LOGGER.error("missing Gnomad chromosome({}) file", chrStr);
-                            continue;
-                        }
-
-                        loadFrequency(chrFile, chrStr);
-                    }
-                }
-                catch(IOException e)
-                {
-                    PV_LOGGER.error("failed to find gnoamd chromosome files in dir({}): {}", gnomadDir, e.toString());
-                }
-
-
+                loadAllFrequencyFiles(gnomadDir);
             }
+        }
+        else
+        {
+            mRefGenomeVersion = V37;
+            mLoadChromosomeOnDemand = false;
         }
     }
 
-    public boolean hasData() { return !mFrequencies.isEmpty(); }
+    public boolean hasData() { return !mFrequencies.isEmpty() || !mChromosomeFiles.isEmpty(); }
 
     public Double getFrequency(final VariantData variant)
     {
+        checkLoadChromosome(variant.Chromosome);
+
         Map<Integer,List<GnomadVariant>> posMap = mFrequencies.get(variant.Chromosome);
 
         if(posMap == null)
@@ -105,8 +89,73 @@ public class GnomadAnnotation
         return match != null ? match.Frequency : null;
     }
 
+    private void checkLoadChromosome(final String chromosome)
+    {
+        if(!mLoadChromosomeOnDemand)
+            return;
+
+        if(mFrequencies.containsKey(chromosome))
+            return;
+
+        mFrequencies.clear();
+
+        String chrFilename = mChromosomeFiles.get(chromosome);
+
+        if(chrFilename == null)
+            return;
+
+        loadFrequency(chrFilename, chromosome);
+    }
+
+    private void loadAllFrequencyFiles(final String gnomadDir)
+    {
+        try
+        {
+            final Stream<Path> stream = Files.walk(Paths.get(gnomadDir), 1, FileVisitOption.FOLLOW_LINKS);
+
+            List<String> files = stream.filter(x -> !x.toFile().isDirectory())
+                    .map(x -> x.toFile().toString())
+                    .filter(x -> x.contains(GNOMAD_FILE_ID))
+                    .collect(Collectors.toList());
+
+            for(HumanChromosome humanChr : HumanChromosome.values())
+            {
+                String fileChrStrNoId = formFileId(gnomadDir, humanChr.toString(), null);
+                String fileChrStrWithId = GNOMAD_FILE_ID + "_chr" + humanChr.toString() + "_";
+
+                // expect file name to contain 'chr1.csv' or 'chr1_id.csv'
+
+                String chrFile = files.stream()
+                        .filter(x -> x.endsWith(fileChrStrNoId) || x.contains(fileChrStrWithId))
+                        .findFirst().orElse(null);
+
+                String chrStr = mRefGenomeVersion.versionedChromosome(humanChr.toString());
+
+                if(chrFile == null)
+                {
+                    PV_LOGGER.error("missing Gnomad chromosome({}) file", chrStr);
+                    continue;
+                }
+
+                if(mLoadChromosomeOnDemand)
+                {
+                    mChromosomeFiles.put(chrStr, chrFile);
+                }
+                else
+                {
+                    loadFrequency(chrFile, chrStr);
+                }
+            }
+        }
+        catch(IOException e)
+        {
+            PV_LOGGER.error("failed to find Gnoamd chromosome files in dir({}): {}", gnomadDir, e.toString());
+        }
+    }
+
     private void loadFrequency(final String filename, final String fileChromosome)
     {
+        // if file chromosome is supplied then it is not read from the input file
         if(filename == null)
             return;
 
@@ -176,6 +225,7 @@ public class GnomadAnnotation
     {
         options.addOption(GNOMAD_FREQUENCY_FILE, true, "Gnomad frequency file");
         options.addOption(GNOMAD_FREQUENCY_DIR, true, "Gnomad frequency directory");
+        options.addOption(GNOMAD_LOAD_CHR_ON_DEMAND, false, "Gnomad load frequency files by chromosome on demand");
     }
 
     private class GnomadVariant
