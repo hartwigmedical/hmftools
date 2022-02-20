@@ -338,7 +338,7 @@ public class SomaticVariantDAO
                 Optional.ofNullable(variant.rnaDepth()).map(AllelicDepth::alleleReadCount).orElse(null),
                 Optional.ofNullable(variant.rnaDepth()).map(AllelicDepth::totalReadCount).orElse(null),
                 variant.qual(),
-                checkStringLength(variant.localPhaseSetsStr(), SOMATICVARIANT.LOCALPHASESET),
+                variant.localPhaseSets() != null ? checkStringLength(variant.localPhaseSetsStr(), SOMATICVARIANT.LOCALPHASESET) : null,
                 timestamp);
     }
 
