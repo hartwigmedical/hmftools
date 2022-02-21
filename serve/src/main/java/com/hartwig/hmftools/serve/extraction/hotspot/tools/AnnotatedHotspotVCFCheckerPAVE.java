@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.serve.extraction.hotspot.tools;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -11,6 +12,7 @@ import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
 import com.hartwig.hmftools.serve.extraction.util.VCFWriterFactory;
 
+import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,7 +43,7 @@ public class AnnotatedHotspotVCFCheckerPAVE {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        String annotatedHotspotVcf = System.getProperty("user.home") + "/hmf/tmp/KnownHotspots.somatic.37.pave.vcf";
+        String annotatedHotspotVcf = System.getProperty("user.home") + "/hmf/tmp/test.vcf";
         new AnnotatedHotspotVCFCheckerPAVE().run(annotatedHotspotVcf);
     }
 
@@ -68,7 +70,7 @@ public class AnnotatedHotspotVCFCheckerPAVE {
                 LOGGER.debug("Skipping non-coding hotspot on '{}'", formattedHotspot);
                 matchCount++;
             } else {
-                VariantTranscriptImpact annotations = VariantTranscriptImpact.fromVcfData(variant.getAttributeAsString("PAVE_TI", "ENSG00000064012"));
+                List<VariantTranscriptImpact> annotations = toVariantTranscriptImpact(variant.getAttributeAsStringList("PAVE_TI", ""));
                 VariantImpact impact = VariantImpactSerialiser.fromVariantContext(variant);
 
                 MatchType match = determineMatch(inputTranscript, inputProteinAnnotation, impact);
@@ -97,14 +99,14 @@ public class AnnotatedHotspotVCFCheckerPAVE {
                         //                        LOGGER.warn("Could not find a match amongst candidate transcripts for '{}' on '{}'",
                         //                                inputProteinAnnotation,
                         //                                inputGene);
-                                                LOGGER.warn(
-                                                        "Could not match inputTranscript {}, pave transcript {}, input protein {}, pave protein {} for input gene {}, pave gene {}",
-                                                        inputTranscript,
-                                                        impact.CanonicalTranscript,
-                                                        inputProteinAnnotation,
-                                                        AminoAcids.forceSingleLetterProteinAnnotation(impact.CanonicalHgvsProtein),
-                                                        inputGene,
-                                                        impact.CanonicalGeneName);
+                        LOGGER.warn(
+                                "Could not match inputTranscript {}, pave transcript {}, input protein {}, pave protein {} for input gene {}, pave gene {}",
+                                inputTranscript,
+                                impact.CanonicalTranscript,
+                                inputProteinAnnotation,
+                                AminoAcids.forceSingleLetterProteinAnnotation(impact.CanonicalHgvsProtein),
+                                inputGene,
+                                impact.CanonicalGeneName);
                         diffCount++;
                         break;
                     }
@@ -116,6 +118,16 @@ public class AnnotatedHotspotVCFCheckerPAVE {
                 + " and {} differences found.", totalCount, matchCount, approximateMatchCount, transcriptChangeLiftoverCount, diffCount);
 
         checkForUnusedMappings();
+    }
+
+    @NotNull
+    private static List<VariantTranscriptImpact> toVariantTranscriptImpact(@NotNull final List<String> annotation) {
+        List<VariantTranscriptImpact> variantTranscriptImpactList = Lists.newArrayList();
+        for (int i=0; i <= annotation.size() - 1; i++) {
+            variantTranscriptImpactList.add(VariantTranscriptImpact.fromVcfData(annotation.get(i)));
+        }
+
+        return variantTranscriptImpactList;
     }
 
     @NotNull
