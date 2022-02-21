@@ -29,7 +29,7 @@ public class ActionableEntryFactoryTest {
         Set<ActionableEntry> entryCharacteristicsSet = ActionableEntryFactory.toActionableEntries(entryCharacteristics, "MSI neg");
         assertEquals(1, entryCharacteristicsSet.size());
         ActionableEntry characteristics = entryCharacteristicsSet.iterator().next();
-        assertEquals("MSI neg", characteristics.rawInput());
+        assertEquals("MSI neg", characteristics.sourceEvent());
         assertEquals(Knowledgebase.CKB, characteristics.source());
         assertEquals("AB", characteristics.treatment());
         assertEquals("AB", characteristics.cancerType());
@@ -51,7 +51,7 @@ public class ActionableEntryFactoryTest {
         Set<ActionableEntry> entryAmplificationSet = ActionableEntryFactory.toActionableEntries(entryAmplification, "KRAS amplification");
         assertEquals(1, entryAmplificationSet.size());
         ActionableEntry amplification = entryAmplificationSet.iterator().next();
-        assertEquals("KRAS amplification", amplification.rawInput());
+        assertEquals("KRAS amplification", amplification.sourceEvent());
         assertEquals(Knowledgebase.CKB, amplification.source());
         assertEquals("AB", amplification.treatment());
         assertEquals("AB", amplification.cancerType());
@@ -66,7 +66,7 @@ public class ActionableEntryFactoryTest {
         Set<ActionableEntry> entryHotspotSet = ActionableEntryFactory.toActionableEntries(entryHotspot, "BRAF V600E");
         assertEquals(1, entryHotspotSet.size());
         ActionableEntry hotspot = entryHotspotSet.iterator().next();
-        assertEquals("BRAF V600E", hotspot.rawInput());
+        assertEquals("BRAF V600E", hotspot.sourceEvent());
         assertEquals(Knowledgebase.CKB, hotspot.source());
         assertEquals("AB", hotspot.treatment());
         assertEquals("AB", hotspot.cancerType());

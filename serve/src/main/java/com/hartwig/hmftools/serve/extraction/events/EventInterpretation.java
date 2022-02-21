@@ -16,7 +16,7 @@ public abstract class EventInterpretation {
     public abstract Knowledgebase knowledgebase();
 
     @NotNull
-    public abstract String rawInputKB();
+    public abstract String sourceEvent();
 
     @NotNull
     public abstract String interpretGene();

@@ -19,11 +19,11 @@ public final class ActionabilityTestUtil {
     }
 
     @NotNull
-    public static ActionableEvent create(@NotNull String rawInput, @NotNull Knowledgebase source, @NotNull String treatment,
+    public static ActionableEvent create(@NotNull String sourceEvent, @NotNull Knowledgebase source, @NotNull String treatment,
             @NotNull String cancerType, @NotNull String doid, @NotNull String blacklistCancerType, @NotNull String blacklistedDoid,
             @NotNull EvidenceLevel level, @NotNull EvidenceDirection direction, @Nullable Set<String> sourceUrls,
             @NotNull Set<String> evidenceUrls) {
-        return new ActionableEventImpl(rawInput,
+        return new ActionableEventImpl(sourceEvent,
                 source,
                 treatment,
                 cancerType,
@@ -39,7 +39,7 @@ public final class ActionabilityTestUtil {
     private static class ActionableEventImpl implements ActionableEvent {
 
         @NotNull
-        private final String rawInput;
+        private final String sourceEvent;
         @NotNull
         private final Knowledgebase source;
         @NotNull
@@ -61,11 +61,11 @@ public final class ActionabilityTestUtil {
         @NotNull
         private final Set<String> evidenceUrls;
 
-        public ActionableEventImpl(@NotNull String rawInput, @NotNull final Knowledgebase source, @NotNull final String treatment,
+        public ActionableEventImpl(@NotNull String sourceEvent, @NotNull final Knowledgebase source, @NotNull final String treatment,
                 @NotNull final String cancerType, @NotNull final String doid, @NotNull final String blacklistCancerType,
                 @NotNull final String blacklistedDoid, @NotNull final EvidenceLevel level, @NotNull final EvidenceDirection direction,
                 @Nullable Set<String> sourceUrls, @NotNull final Set<String> evidenceUrls) {
-            this.rawInput = rawInput;
+            this.sourceEvent = sourceEvent;
             this.source = source;
             this.treatment = treatment;
             this.cancerType = cancerType;
@@ -80,8 +80,8 @@ public final class ActionabilityTestUtil {
 
         @NotNull
         @Override
-        public String rawInput() {
-            return rawInput;
+        public String sourceEvent() {
+            return sourceEvent;
         }
 
         @NotNull
@@ -153,7 +153,7 @@ public final class ActionabilityTestUtil {
                 return false;
             }
             final ActionableEventImpl that = (ActionableEventImpl) o;
-            return rawInput.equals(that.rawInput()) && source == that.source && treatment.equals(that.treatment)
+            return sourceEvent.equals(that.sourceEvent()) && source == that.source && treatment.equals(that.treatment)
                     && cancerType.equals(that.cancerType) && doid.equals(that.doid) && blacklistCancerType.equals(that.blacklistCancerType)
                     && blacklistedDoid.equals(that.blacklistedDoid) && level == that.level && direction == that.direction
                     && sourceUrls.equals(that.sourceUrls) && evidenceUrls.equals(that.evidenceUrls);
@@ -161,7 +161,7 @@ public final class ActionabilityTestUtil {
 
         @Override
         public int hashCode() {
-            return Objects.hash(rawInput,
+            return Objects.hash(sourceEvent,
                     source,
                     treatment,
                     cancerType,
@@ -176,7 +176,7 @@ public final class ActionabilityTestUtil {
 
         @Override
         public String toString() {
-            return "ActionableEventImpl{" + "rawInput=" + rawInput + ",source=" + source + ", treatment='" + treatment + '\''
+            return "ActionableEventImpl{" + "sourceEvent=" + sourceEvent + ",source=" + source + ", treatment='" + treatment + '\''
                     + ", cancerType='" + cancerType + '\'' + ", doid='" + doid + ", blacklistCancerType='" + blacklistCancerType + '\''
                     + ", blacklistedDoid='" + blacklistedDoid + '\'' + ", level=" + level + ", direction=" + direction + ", sourceUrls="
                     + sourceUrls + ", evidenceUrls=" + evidenceUrls + '}';

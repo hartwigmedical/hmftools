@@ -24,7 +24,7 @@ public final class ActionableFileFunctions {
 
     @NotNull
     public static String header() {
-        return new StringJoiner(FIELD_DELIMITER).add("rawInput")
+        return new StringJoiner(FIELD_DELIMITER).add("sourceEvent")
                 .add("source")
                 .add("treatment")
                 .add("cancerType")
@@ -43,7 +43,7 @@ public final class ActionableFileFunctions {
         return new ActionableEvent() {
             @NotNull
             @Override
-            public String rawInput() {
+            public String sourceEvent() {
                 return values[startingPosition];
             }
 
@@ -113,7 +113,7 @@ public final class ActionableFileFunctions {
 
     @NotNull
     public static String toLine(@NotNull ActionableEvent event) {
-        return new StringJoiner(FIELD_DELIMITER).add(event.rawInput())
+        return new StringJoiner(FIELD_DELIMITER).add(event.sourceEvent())
                 .add(event.source().toString())
                 .add(event.treatment())
                 .add(event.cancerType())

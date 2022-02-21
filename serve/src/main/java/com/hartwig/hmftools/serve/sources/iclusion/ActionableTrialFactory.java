@@ -47,7 +47,7 @@ public class ActionableTrialFactory {
     public List<ActionableTrial> toActionableTrials(@NotNull IclusionTrial trial, @NotNull String rawInput) {
         Set<TumorLocationBlacklisting> tumorLocationBlacklistings = Sets.newHashSet();
         ImmutableActionableTrial.Builder actionableBuilder = ImmutableActionableTrial.builder()
-                .rawInput(rawInput)
+                .sourceEvent(rawInput)
                 .source(Knowledgebase.ICLUSION)
                 .treatment(trial.acronym())
                 .level(EvidenceLevel.B)

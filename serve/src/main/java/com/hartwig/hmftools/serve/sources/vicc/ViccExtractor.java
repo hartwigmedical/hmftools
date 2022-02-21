@@ -119,7 +119,7 @@ public final class ViccExtractor {
 
                 interpretation.add(ImmutableEventInterpretation.builder()
                         .knowledgebase(Knowledgebase.VICC_CGI)
-                        .rawInputKB(rawInput)
+                        .sourceEvent(rawInput)
                         .interpretGene(gene)
                         .interpretEvent(feature.name())
                         .interpretEventType(feature.type()).build());

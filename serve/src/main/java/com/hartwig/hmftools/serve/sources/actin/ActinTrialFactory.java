@@ -31,7 +31,7 @@ public final class ActinTrialFactory {
         String tumorLocationBlacklistDoid = TumorLocationBlacklist.extractTumorLocationDoid(tumorLocationBlacklistings);
 
         return ImmutableActinTrial.builder()
-                .rawInput(rawInput)
+                .sourceEvent(rawInput)
                 .source(Knowledgebase.ACTIN)
                 .treatment(actionTrial.trial())
                 .level(EvidenceLevel.A)

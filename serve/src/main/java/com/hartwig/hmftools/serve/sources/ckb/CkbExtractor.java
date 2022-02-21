@@ -90,7 +90,7 @@ public class CkbExtractor {
             List<EventInterpretation> interpretation = Lists.newArrayList();
             interpretation.add(ImmutableEventInterpretation.builder()
                     .knowledgebase(Knowledgebase.CKB)
-                    .rawInputKB(variant.variant())
+                    .sourceEvent(variant.variant())
                     .interpretGene(gene)
                     .interpretEvent(event)
                     .interpretEventType(entry.type())

@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 public interface ActionableEvent {
 
     @NotNull
-    String rawInput();
+    String sourceEvent();
 
     @NotNull
     Knowledgebase source();

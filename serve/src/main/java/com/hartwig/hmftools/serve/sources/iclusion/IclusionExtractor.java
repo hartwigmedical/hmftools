@@ -64,7 +64,7 @@ public class IclusionExtractor {
                     eventExtractions.add(eventExtractor.extract(mutation.gene(), null, mutation.type(), mutation.name(), Strings.EMPTY));
                     interpretation.add(ImmutableEventInterpretation.builder()
                             .knowledgebase(Knowledgebase.ICLUSION)
-                            .rawInputKB(rawInput)
+                            .sourceEvent(rawInput)
                             .interpretGene(mutation.gene())
                             .interpretEvent(mutation.name())
                             .interpretEventType(mutation.type())

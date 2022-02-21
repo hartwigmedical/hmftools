@@ -103,7 +103,7 @@ class ActionableEntryFactory {
                     String tumorLocationBlacklistDoid = TumorLocationBlacklist.extractTumorLocationDoid(tumorLocationBlacklistings);
 
                     actionableEntries.add(ImmutableActionableEntry.builder()
-                            .rawInput(rawInput)
+                            .sourceEvent(rawInput)
                             .source(Knowledgebase.CKB)
                             .treatment(treatment)
                             .cancerType(cancerType)

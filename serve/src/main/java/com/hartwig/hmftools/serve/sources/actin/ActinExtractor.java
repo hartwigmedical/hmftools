@@ -57,7 +57,7 @@ public class ActinExtractor {
                     String gene = entry.gene() != null ? entry.gene() : "-";
                     interpretation.add(ImmutableEventInterpretation.builder()
                             .knowledgebase(Knowledgebase.ACTIN)
-                            .rawInputKB(entry.rule().toString())
+                            .sourceEvent(entry.rule().toString())
                             .interpretGene(gene)
                             .interpretEvent(event)
                             .interpretEventType(type)

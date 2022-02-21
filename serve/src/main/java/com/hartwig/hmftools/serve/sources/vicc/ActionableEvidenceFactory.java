@@ -107,7 +107,7 @@ class ActionableEvidenceFactory {
             List<List<String>> drugLists = drugCurator.curate(entry.source(), level, treatment);
 
             ImmutableActionableEvidence.Builder builder = ImmutableActionableEvidence.builder()
-                    .rawInput(rawInput)
+                    .sourceEvent(rawInput)
                     .source(fromViccSource(entry.source()))
                     .level(level)
                     .direction(direction)
