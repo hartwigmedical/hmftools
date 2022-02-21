@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
+import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
 import com.hartwig.hmftools.serve.extraction.util.VCFWriterFactory;
 
 import org.apache.logging.log4j.Level;
@@ -67,6 +68,7 @@ public class AnnotatedHotspotVCFCheckerPAVE {
                 LOGGER.debug("Skipping non-coding hotspot on '{}'", formattedHotspot);
                 matchCount++;
             } else {
+                VariantTranscriptImpact annotations = VariantTranscriptImpact.fromVcfData(variant.getAttributeAsString("PAVE_TI", "ENSG00000064012"));
                 VariantImpact impact = VariantImpactSerialiser.fromVariantContext(variant);
 
                 MatchType match = determineMatch(inputTranscript, inputProteinAnnotation, impact);

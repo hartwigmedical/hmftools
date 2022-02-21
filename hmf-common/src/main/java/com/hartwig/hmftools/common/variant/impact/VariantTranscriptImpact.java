@@ -60,7 +60,7 @@ public class VariantTranscriptImpact
         context.getCommonInfo().putAttribute(VAR_TRANS_IMPACT_ANNOATATION, sj.toString(), true);
     }
 
-    public VariantTranscriptImpact fromVcfData(final String data)
+    public static VariantTranscriptImpact fromVcfData(final String data)
     {
         String[] items = data.split(VAR_TRANS_IMPACT_ITEM_DELIM, -1);
         return new VariantTranscriptImpact(items[0], items[1], items[2], items[3], Boolean.parseBoolean(items[4]), items[5], items[6]);
