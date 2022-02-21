@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.neo.bind;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -9,6 +10,7 @@ import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE_LEN;
+import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEPTIDE_LENGTHS;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_LIKELIHOOD_ALLELE_BIND_COUNT;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
@@ -38,6 +40,10 @@ public class BindingLikelihood
     private static final double INVALID_LIKELIHOOD = -1;
     private static final double MIN_BUCKET_RANK = 0.00005;
     private static final int PEPTIDE_LENGTHS = 5;
+
+    private static final double MIN_EMPTY_PEP_LEN_LIKELIHOOD = 0.25;
+    private static final double MIN_EMPTY_PEP_LEN_FACTOR = 1000;
+    private static final double MIN_EMPTY_PEP_LEN_BUCKET_THRESHOLD = 0.01;
 
     public BindingLikelihood()
     {
@@ -258,17 +264,23 @@ public class BindingLikelihood
 
     private void buildAllelePeptideLikelihoods(final String allele, final Map<Integer,List<Double>> pepLenRanks)
     {
-        Map<Integer,int[]> pepLenRankCounts = Maps.newHashMap();
+        Map<Integer,double[]> pepLenRankCounts = Maps.newHashMap();
         int totalBuckets = mScoreRankBuckets.size();
+        int totalPositivesCount = 0;
 
-        for(Map.Entry<Integer,List<Double>> entry : pepLenRanks.entrySet())
+        for(int peptideLength : DEFAULT_PEPTIDE_LENGTHS)
         {
-            int peptideLength = entry.getKey();
-
-            int[] rankCounts = new int[totalBuckets];
+            double[] rankCounts = new double[totalBuckets];
             pepLenRankCounts.put(peptideLength, rankCounts);
 
-            for(double rank : entry.getValue())
+            List<Double> pepLengthRanks = pepLenRanks.get(peptideLength);
+
+            if(pepLengthRanks == null)
+                continue;
+
+            totalPositivesCount += pepLengthRanks.size();
+
+            for(double rank : pepLengthRanks)
             {
                 for(int i = 0; i < totalBuckets; ++i)
                 {
@@ -301,16 +313,39 @@ public class BindingLikelihood
             }
         }
 
+        // fill in values for zeros using a fraction of total positives for lengths with none, and halving for other missing buckets
+        double minLikelihood = min(MIN_EMPTY_PEP_LEN_LIKELIHOOD, totalPositivesCount / MIN_EMPTY_PEP_LEN_FACTOR);
+
+        for(int peptideLength : DEFAULT_PEPTIDE_LENGTHS)
+        {
+            double[] rankCounts = pepLenRankCounts.get(peptideLength);
+
+            for(int i = 0; i < rankCounts.length; ++i)
+            {
+                if(rankCounts[i] > 0)
+                    continue;
+
+                double bucketRank = mScoreRankBuckets.get(i);
+                if(bucketRank < MIN_EMPTY_PEP_LEN_BUCKET_THRESHOLD)
+                {
+                    rankCounts[i] = minLikelihood;
+                }
+                else
+                {
+                    rankCounts[i] = min(minLikelihood, rankCounts[i - 1] * 0.5);
+                }
+            }
+        }
+
         double totalAdjustedCounts = 0;
 
         double[][] pepLenLikelihoods = new double[PEPTIDE_LENGTHS][totalBuckets];
 
-        for(Map.Entry<Integer,List<Double>> entry : pepLenRanks.entrySet())
+        for(int peptideLength : DEFAULT_PEPTIDE_LENGTHS)
         {
-            int peptideLength = entry.getKey();
             int pepLenIndex = peptideLengthIndex(peptideLength);
 
-            final int[] rankCounts = pepLenRankCounts.get(peptideLength);
+            final double[] rankCounts = pepLenRankCounts.get(peptideLength);
 
             for(int i = rankCounts.length - 1; i >= 0; --i)
             {
@@ -380,7 +415,7 @@ public class BindingLikelihood
 
                 for(int i = 0; i < mScoreRankBuckets.size(); ++i)
                 {
-                    mWriter.write(String.format(",%.6f", pepLenLikelihoods[pl][i]));
+                    mWriter.write(String.format(",%4.3e", pepLenLikelihoods[pl][i]));
                 }
 
                 mWriter.newLine();

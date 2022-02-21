@@ -210,7 +210,7 @@ public class RandomDistributionTask implements Callable
         if(peptideScores.size() < 2)
             return Lists.newArrayList();
 
-        // write the distribution as 0.0001 up to 0.01, 0.001 up to 0.01, then 0.01 up to 100%
+        // write the distribution frequency by grouping the sorted items into increasing discrete bucket increments
         // store the best score at each point
         int totalScores = peptideScores.size();
         int discreteIndex = 0;

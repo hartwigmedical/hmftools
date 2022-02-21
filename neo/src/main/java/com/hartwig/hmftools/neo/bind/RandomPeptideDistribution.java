@@ -331,7 +331,7 @@ public class RandomPeptideDistribution
             {
                 for(ScoreDistributionData scoreDist : alleleEntry.getValue())
                 {
-                    writer.write(String.format("%s,%f,%.8f",
+                    writer.write(String.format("%s,%f,%4.3e",
                             scoreDist.Allele, scoreDist.ScoreBucket, scoreDist.Score));
 
                     writer.newLine();
