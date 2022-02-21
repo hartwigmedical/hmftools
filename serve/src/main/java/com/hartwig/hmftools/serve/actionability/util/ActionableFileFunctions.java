@@ -33,8 +33,8 @@ public final class ActionableFileFunctions {
                 .add("blacklistedDoid")
                 .add("level")
                 .add("direction")
-                .add("urlSource")
-                .add("urls")
+                .add("sourceUrls")
+                .add("evidenceUrls")
                 .toString();
     }
 
@@ -97,14 +97,14 @@ public final class ActionableFileFunctions {
 
             @NotNull
             @Override
-            public Set<String> urlSource(){
+            public Set<String> sourceUrls(){
                 int urlPosition = startingPosition + 9;
                 return values.length > urlPosition ? stringToUrls(values[urlPosition]) : Sets.newHashSet();
             }
 
             @NotNull
             @Override
-            public Set<String> urls() {
+            public Set<String> evidenceUrls() {
                 int urlPosition = startingPosition + 10;
                 return values.length > urlPosition ? stringToUrls(values[urlPosition]) : Sets.newHashSet();
             }
@@ -122,8 +122,8 @@ public final class ActionableFileFunctions {
                 .add(event.blacklistedDoid())
                 .add(event.level().toString())
                 .add(event.direction().toString())
-                .add(urlsToString(event.urlSource()))
-                .add(urlsToString(event.urls()))
+                .add(urlsToString(event.sourceUrls()))
+                .add(urlsToString(event.evidenceUrls()))
                 .toString();
     }
 

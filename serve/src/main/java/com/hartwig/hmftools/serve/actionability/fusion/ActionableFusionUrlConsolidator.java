@@ -12,12 +12,12 @@ public class ActionableFusionUrlConsolidator implements UrlConsolidator<Actionab
     @NotNull
     @Override
     public ActionableFusion stripUrls(@NotNull final ActionableFusion instance) {
-        return ImmutableActionableFusion.builder().from(instance).urls(Sets.newHashSet()).build();
+        return ImmutableActionableFusion.builder().from(instance).evidenceUrls(Sets.newHashSet()).build();
     }
 
     @NotNull
     @Override
     public ActionableFusion buildWithUrls(@NotNull final ActionableFusion instance, @NotNull final Set<String> urls) {
-        return ImmutableActionableFusion.builder().from(instance).urls(urls).build();
+        return ImmutableActionableFusion.builder().from(instance).evidenceUrls(urls).build();
     }
 }

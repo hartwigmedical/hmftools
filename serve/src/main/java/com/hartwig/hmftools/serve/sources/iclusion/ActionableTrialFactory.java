@@ -52,8 +52,8 @@ public class ActionableTrialFactory {
                 .treatment(trial.acronym())
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .urlSource(Sets.newHashSet("https://trial-eye.com/hmf/" + trial.id()))
-                .urls(Sets.newHashSet());
+                .sourceUrls(Sets.newHashSet("https://trial-eye.com/hmf/" + trial.id()))
+                .evidenceUrls(Sets.newHashSet());
 
         List<ActionableTrial> actionableTrials = Lists.newArrayList();
         Set<String> blacklistTumorLocations = Sets.newHashSet();

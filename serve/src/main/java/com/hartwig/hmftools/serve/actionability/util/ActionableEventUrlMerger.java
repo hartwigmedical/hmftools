@@ -23,7 +23,7 @@ public final class ActionableEventUrlMerger {
             if (urls == null) {
                 urls = Sets.newTreeSet();
             }
-            urls.addAll(event.urls());
+            urls.addAll(event.evidenceUrls());
             urlsPerEvent.put(key, urls);
         }
 

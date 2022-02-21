@@ -112,8 +112,8 @@ class ActionableEntryFactory {
                             .blacklistedDoid(tumorLocationBlacklistDoid)
                             .level(level)
                             .direction(direction)
-                            .urlSource(sourceLinks)
-                            .urls(urls)
+                            .sourceUrls(sourceLinks)
+                            .evidenceUrls(urls)
                             .build());
                 }
             }

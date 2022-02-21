@@ -111,8 +111,8 @@ class ActionableEvidenceFactory {
                     .source(fromViccSource(entry.source()))
                     .level(level)
                     .direction(direction)
-                    .urlSource(Sets.newHashSet())
-                    .urls(urls);
+                    .sourceUrls(Sets.newHashSet())
+                    .evidenceUrls(urls);
 
             for (Map.Entry<String, Set<String>> cancerTypeEntry : cancerTypeToDoidsMap.entrySet()) {
                 String cancerType = cancerTypeEntry.getKey();

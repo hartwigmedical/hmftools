@@ -39,6 +39,6 @@ public class ActionableFileFunctionsTest {
         assertEquals("doid", convertedEvent.doid());
         assertEquals(EvidenceLevel.C, convertedEvent.level());
         assertEquals(EvidenceDirection.RESISTANT, convertedEvent.direction());
-        assertEquals(Sets.newHashSet("url1", "url2"), convertedEvent.urls());
+        assertEquals(Sets.newHashSet("url1", "url2"), convertedEvent.evidenceUrls());
     }
 }

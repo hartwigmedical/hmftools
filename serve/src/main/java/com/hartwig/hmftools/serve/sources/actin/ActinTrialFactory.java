@@ -40,8 +40,8 @@ public final class ActinTrialFactory {
                 .doid("162")
                 .blacklistCancerType(tumorLocationBlacklist)
                 .blacklistedDoid(tumorLocationBlacklistDoid)
-                .urls(Sets.newHashSet())
-                .urlSource(Sets.newHashSet())
+                .sourceUrls(Sets.newHashSet())
+                .evidenceUrls(Sets.newHashSet())
                 .build();
     }
 }
