@@ -313,7 +313,7 @@ class ActionableEvidenceFactory {
     }
 
     @NotNull
-    private static Knowledgebase fromViccSource(@NotNull ViccSource source) {
+    public static Knowledgebase fromViccSource(@NotNull ViccSource source) {
         switch (source) {
             case CIVIC:
                 return Knowledgebase.VICC_CIVIC;

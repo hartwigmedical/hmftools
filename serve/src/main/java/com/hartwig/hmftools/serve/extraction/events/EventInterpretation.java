@@ -2,6 +2,7 @@ package com.hartwig.hmftools.serve.extraction.events;
 
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.classification.EventType;
+import com.hartwig.hmftools.serve.sources.Sources;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -13,10 +14,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class EventInterpretation {
 
     @NotNull
-    public abstract Knowledgebase knowledgebase();
-
-    @NotNull
-    public abstract String sourceEvent();
+    public abstract Sources source();
 
     @NotNull
     public abstract String interpretGene();
