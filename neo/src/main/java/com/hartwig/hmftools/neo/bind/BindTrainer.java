@@ -71,15 +71,12 @@ public class BindTrainer
 
     public void run()
     {
-        NE_LOGGER.info("building training data from {} alleles for {} required alleles",
-                mAllelePeptideData.size(), mConfig.RequiredOutputAlleles.size());
-
         if(!loadTrainingData())
         {
             System.exit(1);
         }
 
-        // check that the HLA defintions cover the training and required (if specified) alleles if specified
+        // check that the HLA definitions cover the training and required (if specified) alleles if specified
         Set<String> allAlleles = mAllelePeptideData.keySet().stream().collect(Collectors.toSet());
         mConfig.RequiredOutputAlleles.forEach(x -> allAlleles.add(x));
 
@@ -91,6 +88,9 @@ public class BindTrainer
             NE_LOGGER.error("HLA definitions are missing the following alleles: {}", missingAlleleDefinitions);
             System.exit(1);
         }
+
+        NE_LOGGER.info("building training data from {} alleles for {} required alleles",
+                mAllelePeptideData.size(), mConfig.RequiredOutputAlleles.size());
 
         buildBindCountsData();
         buildPositionWeightMatrices();
