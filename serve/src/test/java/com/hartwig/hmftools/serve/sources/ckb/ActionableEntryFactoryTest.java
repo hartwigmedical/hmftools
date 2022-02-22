@@ -29,8 +29,8 @@ public class ActionableEntryFactoryTest {
         Set<ActionableEntry> entryCharacteristicsSet = ActionableEntryFactory.toActionableEntries(entryCharacteristics, "MSI neg");
         assertEquals(1, entryCharacteristicsSet.size());
         ActionableEntry characteristics = entryCharacteristicsSet.iterator().next();
-        assertEquals("MSI neg", characteristics.sourceEvent());
-        assertEquals(Knowledgebase.CKB, characteristics.source());
+        assertEquals("MSI neg", characteristics.source().sourceEvent());
+        assertEquals(Knowledgebase.CKB, characteristics.source().source());
         assertEquals("AB", characteristics.treatment());
         assertEquals("AB", characteristics.cancerType());
         assertEquals("162", characteristics.doid());
@@ -51,8 +51,8 @@ public class ActionableEntryFactoryTest {
         Set<ActionableEntry> entryAmplificationSet = ActionableEntryFactory.toActionableEntries(entryAmplification, "KRAS amplification");
         assertEquals(1, entryAmplificationSet.size());
         ActionableEntry amplification = entryAmplificationSet.iterator().next();
-        assertEquals("KRAS amplification", amplification.sourceEvent());
-        assertEquals(Knowledgebase.CKB, amplification.source());
+        assertEquals("KRAS amplification", amplification.source().sourceEvent());
+        assertEquals(Knowledgebase.CKB, amplification.source().source());
         assertEquals("AB", amplification.treatment());
         assertEquals("AB", amplification.cancerType());
         assertEquals("163", amplification.doid());
@@ -66,8 +66,8 @@ public class ActionableEntryFactoryTest {
         Set<ActionableEntry> entryHotspotSet = ActionableEntryFactory.toActionableEntries(entryHotspot, "BRAF V600E");
         assertEquals(1, entryHotspotSet.size());
         ActionableEntry hotspot = entryHotspotSet.iterator().next();
-        assertEquals("BRAF V600E", hotspot.sourceEvent());
-        assertEquals(Knowledgebase.CKB, hotspot.source());
+        assertEquals("BRAF V600E", hotspot.source().sourceEvent());
+        assertEquals(Knowledgebase.CKB, hotspot.source().source());
         assertEquals("AB", hotspot.treatment());
         assertEquals("AB", hotspot.cancerType());
         assertEquals("162", hotspot.doid());

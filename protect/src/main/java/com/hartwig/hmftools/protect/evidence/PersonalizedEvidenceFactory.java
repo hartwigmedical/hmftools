@@ -43,7 +43,7 @@ public class PersonalizedEvidenceFactory {
                 .level(actionable.level())
                 .direction(actionable.direction())
                 .onLabel(patientTumorDoids.contains(actionable.doid()))
-                .addSources(actionable.source())
+                .addSources(actionable.source().source())
                 .urls(actionable.evidenceUrls());
     }
 

@@ -18,6 +18,8 @@ import com.hartwig.hmftools.serve.blacklisting.ImmutableTumorLocationBlacklistin
 import com.hartwig.hmftools.serve.blacklisting.TumorLocationBlacklist;
 import com.hartwig.hmftools.serve.blacklisting.TumorLocationBlacklisting;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
+import com.hartwig.hmftools.serve.sources.ImmutableSources;
+import com.hartwig.hmftools.serve.sources.Sources;
 import com.hartwig.hmftools.serve.sources.vicc.curation.DrugCurator;
 import com.hartwig.hmftools.serve.sources.vicc.curation.EvidenceLevelCurator;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
@@ -106,9 +108,10 @@ class ActionableEvidenceFactory {
             level = evidenceLevelCurator.curate(entry.source(), entry.genes(), treatment, level, direction);
             List<List<String>> drugLists = drugCurator.curate(entry.source(), level, treatment);
 
+            Sources sources = ImmutableSources.builder().sourceEvent(rawInput).source(fromViccSource(entry.source())).build();
+
             ImmutableActionableEvidence.Builder builder = ImmutableActionableEvidence.builder()
-                    .sourceEvent(rawInput)
-                    .source(fromViccSource(entry.source()))
+                    .source(sources)
                     .level(level)
                     .direction(direction)
                     .sourceUrls(Sets.newHashSet())

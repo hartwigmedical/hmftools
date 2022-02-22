@@ -4,9 +4,9 @@ import java.util.Objects;
 import java.util.Set;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.serve.sources.Sources;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,11 +19,11 @@ public final class ActionabilityTestUtil {
     }
 
     @NotNull
-    public static ActionableEvent create(@NotNull String sourceEvent, @NotNull Knowledgebase source, @NotNull String treatment,
+    public static ActionableEvent create(@NotNull Sources source, @NotNull String treatment,
             @NotNull String cancerType, @NotNull String doid, @NotNull String blacklistCancerType, @NotNull String blacklistedDoid,
             @NotNull EvidenceLevel level, @NotNull EvidenceDirection direction, @Nullable Set<String> sourceUrls,
             @NotNull Set<String> evidenceUrls) {
-        return new ActionableEventImpl(sourceEvent,
+        return new ActionableEventImpl(
                 source,
                 treatment,
                 cancerType,
@@ -39,9 +39,7 @@ public final class ActionabilityTestUtil {
     private static class ActionableEventImpl implements ActionableEvent {
 
         @NotNull
-        private final String sourceEvent;
-        @NotNull
-        private final Knowledgebase source;
+        private final Sources source;
         @NotNull
         private final String treatment;
         @NotNull
@@ -61,11 +59,10 @@ public final class ActionabilityTestUtil {
         @NotNull
         private final Set<String> evidenceUrls;
 
-        public ActionableEventImpl(@NotNull String sourceEvent, @NotNull final Knowledgebase source, @NotNull final String treatment,
+        public ActionableEventImpl(@NotNull final Sources source, @NotNull final String treatment,
                 @NotNull final String cancerType, @NotNull final String doid, @NotNull final String blacklistCancerType,
                 @NotNull final String blacklistedDoid, @NotNull final EvidenceLevel level, @NotNull final EvidenceDirection direction,
                 @Nullable Set<String> sourceUrls, @NotNull final Set<String> evidenceUrls) {
-            this.sourceEvent = sourceEvent;
             this.source = source;
             this.treatment = treatment;
             this.cancerType = cancerType;
@@ -80,13 +77,7 @@ public final class ActionabilityTestUtil {
 
         @NotNull
         @Override
-        public String sourceEvent() {
-            return sourceEvent;
-        }
-
-        @NotNull
-        @Override
-        public Knowledgebase source() {
+        public Sources source() {
             return source;
         }
 
@@ -153,7 +144,7 @@ public final class ActionabilityTestUtil {
                 return false;
             }
             final ActionableEventImpl that = (ActionableEventImpl) o;
-            return sourceEvent.equals(that.sourceEvent()) && source == that.source && treatment.equals(that.treatment)
+            return source == that.source && treatment.equals(that.treatment)
                     && cancerType.equals(that.cancerType) && doid.equals(that.doid) && blacklistCancerType.equals(that.blacklistCancerType)
                     && blacklistedDoid.equals(that.blacklistedDoid) && level == that.level && direction == that.direction
                     && sourceUrls.equals(that.sourceUrls) && evidenceUrls.equals(that.evidenceUrls);
@@ -161,7 +152,7 @@ public final class ActionabilityTestUtil {
 
         @Override
         public int hashCode() {
-            return Objects.hash(sourceEvent,
+            return Objects.hash(
                     source,
                     treatment,
                     cancerType,
@@ -176,7 +167,7 @@ public final class ActionabilityTestUtil {
 
         @Override
         public String toString() {
-            return "ActionableEventImpl{" + "sourceEvent=" + sourceEvent + ",source=" + source + ", treatment='" + treatment + '\''
+            return "ActionableEventImpl{" + "source=" + source + ", treatment='" + treatment + '\''
                     + ", cancerType='" + cancerType + '\'' + ", doid='" + doid + ", blacklistCancerType='" + blacklistCancerType + '\''
                     + ", blacklistedDoid='" + blacklistedDoid + '\'' + ", level=" + level + ", direction=" + direction + ", sourceUrls="
                     + sourceUrls + ", evidenceUrls=" + evidenceUrls + '}';

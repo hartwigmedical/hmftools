@@ -9,9 +9,10 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.blacklisting.ImmutableTumorLocationBlacklisting;
 import com.hartwig.hmftools.serve.blacklisting.TumorLocationBlacklist;
 import com.hartwig.hmftools.serve.blacklisting.TumorLocationBlacklisting;
+import com.hartwig.hmftools.serve.sources.ImmutableSources;
+import com.hartwig.hmftools.serve.sources.Sources;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ActinTrialFactory {
@@ -30,9 +31,10 @@ public final class ActinTrialFactory {
         String tumorLocationBlacklist = TumorLocationBlacklist.extractTumorLocationBlacklisting(tumorLocationBlacklistings);
         String tumorLocationBlacklistDoid = TumorLocationBlacklist.extractTumorLocationDoid(tumorLocationBlacklistings);
 
+        Sources sources = ImmutableSources.builder().sourceEvent(rawInput).source(Knowledgebase.ACTIN).build();
+
         return ImmutableActinTrial.builder()
-                .sourceEvent(rawInput)
-                .source(Knowledgebase.ACTIN)
+                .source(sources)
                 .treatment(actionTrial.trial())
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)

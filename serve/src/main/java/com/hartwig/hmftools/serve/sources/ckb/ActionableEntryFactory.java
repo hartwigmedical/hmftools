@@ -14,6 +14,8 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.blacklisting.ImmutableTumorLocationBlacklisting;
 import com.hartwig.hmftools.serve.blacklisting.TumorLocationBlacklist;
 import com.hartwig.hmftools.serve.blacklisting.TumorLocationBlacklisting;
+import com.hartwig.hmftools.serve.sources.ImmutableSources;
+import com.hartwig.hmftools.serve.sources.Sources;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -102,9 +104,9 @@ class ActionableEntryFactory {
                     String tumorLocationBlacklist = TumorLocationBlacklist.extractTumorLocationBlacklisting(tumorLocationBlacklistings);
                     String tumorLocationBlacklistDoid = TumorLocationBlacklist.extractTumorLocationDoid(tumorLocationBlacklistings);
 
+                    Sources sources = ImmutableSources.builder().sourceEvent(rawInput).source(Knowledgebase.CKB).build();
                     actionableEntries.add(ImmutableActionableEntry.builder()
-                            .sourceEvent(rawInput)
-                            .source(Knowledgebase.CKB)
+                            .source(sources)
                             .treatment(treatment)
                             .cancerType(cancerType)
                             .doid(doid)
