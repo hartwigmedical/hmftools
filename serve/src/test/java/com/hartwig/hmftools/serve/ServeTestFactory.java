@@ -236,7 +236,8 @@ public final class ServeTestFactory {
         return ImmutableActionableCharacteristic.builder()
                 .from(createTestBaseEvent())
                 .name(TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE)
-                .cutOff(Strings.EMPTY)
+                .atLeast(null)
+                .cutOff(null)
                 .build();
     }
 

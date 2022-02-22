@@ -137,7 +137,8 @@ public final class ActionableEventFactory {
         return ImmutableActionableCharacteristic.builder()
                 .from(actionableEvent)
                 .name(characteristic.tumorCharacteristicAnnotation())
-                .cutOff(characteristic.cutoff())
+                .atLeast(characteristic.atLeast())
+                .cutOff(characteristic.cutOff())
                 .build();
     }
 }
