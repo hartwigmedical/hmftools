@@ -312,6 +312,13 @@ public class ClinicalEvidenceFunctions {
     }
 
     @NotNull
+    public static Paragraph noteEvidenceMatching() {
+        return new Paragraph().setFixedLeading(ReportResources.BODY_TEXT_LEADING)
+                .add("If evidence matching based on a mutation is not in a hotspot, evidence should be interpreted with extra caution.")
+                .addStyle(ReportResources.subTextStyle());
+    }
+
+    @NotNull
     public static Paragraph note(@NotNull String message) {
         return new Paragraph(message).addStyle(ReportResources.subTextStyle());
     }
