@@ -75,17 +75,43 @@ public class GnomadAnnotation
     {
         checkLoadChromosome(variant.Chromosome);
 
-        Map<Integer,List<GnomadVariant>> posMap = mFrequencies.get(variant.Chromosome);
+        if(variant.isMnv())
+        {
+            // check for successive bases for an MNV
+            double minFreq = 0;
+            for(int i = 0; i < variant.Ref.length(); ++i)
+            {
+                Double freq = getFrequency(
+                        variant.Chromosome, variant.Position + i, variant.Ref.substring(i, i + 1), variant.Alt.substring(i, i + 1));
+
+                if(freq == null)
+                    return null;
+
+                if(minFreq == 0 ||freq < minFreq)
+                    minFreq = freq;
+            }
+
+            return minFreq;
+        }
+        else
+        {
+            return getFrequency(variant.Chromosome, variant.Position, variant.Ref, variant.Alt);
+        }
+    }
+
+    public Double getFrequency(final String chromosome, int position, final String ref, final String alt)
+    {
+        Map<Integer,List<GnomadVariant>> posMap = mFrequencies.get(chromosome);
 
         if(posMap == null)
             return null;
 
-        List<GnomadVariant> posList = posMap.get(variant.Position);
+        List<GnomadVariant> posList = posMap.get(position);
 
         if(posList == null)
             return null;
 
-        GnomadVariant match = posList.stream().filter(x -> x.matches(variant.Ref, variant.Alt)).findFirst().orElse(null);
+        GnomadVariant match = posList.stream().filter(x -> x.matches(ref, alt)).findFirst().orElse(null);
         return match != null ? match.Frequency : null;
     }
 

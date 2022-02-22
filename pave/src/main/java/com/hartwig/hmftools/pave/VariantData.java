@@ -192,6 +192,8 @@ public class VariantData
     public boolean isInsert() { return mIndelBaseDiff > 0; }
     public boolean isDeletion() { return mIndelBaseDiff < 0; }
     public boolean isMixed() { return mIndelBaseDiff != 0 && Alt.charAt(0) != Ref.charAt(0); }
+    public boolean isSnv() { return mIndelBaseDiff == 0 && Ref.length() == 1; }
+    public boolean isMnv() { return mIndelBaseDiff == 0 && Ref.length() > 1; }
 
     public List<Integer> altPositions() { return mAltPositions; }
 
