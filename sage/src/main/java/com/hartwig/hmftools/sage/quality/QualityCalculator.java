@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.quality;
 
+import static java.lang.Math.round;
+
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
@@ -23,7 +25,7 @@ public class QualityCalculator
     }
 
     public static int modifiedMapQuality(
-            final QualityConfig config, final GenomePosition position, int mapQuality, int readEvents, boolean properPairFlag)
+            final QualityConfig config, final GenomePosition position, int mapQuality, double readEvents, boolean properPairFlag)
     {
         if(config.isHighlyPolymorphic(position))
         {
@@ -31,7 +33,7 @@ public class QualityCalculator
         }
 
         int improperPairPenalty = config.MapQualityImproperPairPenalty * (properPairFlag ? 0 : 1);
-        int distancePenalty = Math.max(0, readEvents - 1) * config.MapQualityReadEventsPenalty;
+        int distancePenalty = (int)round(Math.max(0, readEvents - 1) * config.MapQualityReadEventsPenalty);
         return mapQuality - config.MapQualityFixedPenalty - improperPairPenalty - distancePenalty;
     }
 
@@ -46,7 +48,7 @@ public class QualityCalculator
     }
 
     public double calculateQualityScore(
-            final ReadContextCounter readContextCounter, int readBaseIndex, final SAMRecord record, int numberOfEvents)
+            final ReadContextCounter readContextCounter, int readBaseIndex, final SAMRecord record, double numberOfEvents)
     {
         double baseQuality = baseQuality(readContextCounter, readBaseIndex, record);
         int distanceFromReadEdge = readDistanceFromEdge(readContextCounter, readBaseIndex, record);

@@ -25,6 +25,7 @@ public class SageConstants
     public static final int DEFAULT_BQR_MIN_MAP_QUAL = 10;
 
     public static final int MATCHING_BASE_QUALITY = 20;
+    public static final double SC_READ_EVENTS_FACTOR = 10;
 
     public static final int NORMAL_RAW_ALT_BQ_MAX = 25;
 

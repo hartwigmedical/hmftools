@@ -97,8 +97,6 @@ public class ReadContextEvidence
 
     private void processReadRecord(final SAMRecord record)
     {
-        int numberOfEvents = NumberEvents.numberOfEvents(record, mRefSequence);
-
         // find any candidate potentially interested in this record
         int readStart = record.getAlignmentStart();
         int readEnd = record.getAlignmentEnd();
@@ -163,6 +161,8 @@ public class ReadContextEvidence
 
         List<ReadContextCounter> posPhasedCounters = mVariantPhaser != null ? Lists.newArrayList() : null;
         List<ReadContextCounter> negPhasedCounters = mVariantPhaser != null ? Lists.newArrayList() : null;
+
+        double numberOfEvents = NumberEvents.numberOfEventsRaw(record, mRefSequence);
 
         for(ReadContextCounter readCounter : readCounters)
         {

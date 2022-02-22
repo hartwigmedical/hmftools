@@ -207,7 +207,8 @@ public class ReadContextCounter implements VariantHotspot
                 mReadContext.toString(), mCounts[RC_FULL], mCounts[RC_PARTIAL], mCounts[RC_CORE]);
     }
 
-    public ReadMatchType processRead(final SAMRecord record, final SageConfig sageConfig, final QualityCalculator qualityCalc, final int rawNumberOfEvents)
+    public ReadMatchType processRead(
+            final SAMRecord record, final SageConfig sageConfig, final QualityCalculator qualityCalc, double rawNumberOfEvents)
     {
         if(exceedsMaxCoverage())
             return UNRELATED;
@@ -239,8 +240,8 @@ public class ReadContextCounter implements VariantHotspot
 
         final QualityConfig qualityConfig = sageConfig.Quality;
 
-        int numberOfEvents = mIsMnv ?
-                max(mMinNumberOfEvents, NumberEvents.numberOfEventsWithMNV(rawNumberOfEvents, mVariant.ref(), mVariant.alt()))
+        double numberOfEvents = mIsMnv ?
+                max(mMinNumberOfEvents, NumberEvents.numberOfEventsWithMNVRaw(rawNumberOfEvents, mVariant.ref(), mVariant.alt()))
                 : max(mMinNumberOfEvents, rawNumberOfEvents);
 
         double quality = qualityCalc.calculateQualityScore(this, readIndex, record, numberOfEvents);
