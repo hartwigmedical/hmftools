@@ -12,12 +12,12 @@ public class ActionableHotspotUrlConsolidator implements UrlConsolidator<Actiona
     @NotNull
     @Override
     public ActionableHotspot stripUrls(@NotNull final ActionableHotspot instance) {
-        return ImmutableActionableHotspot.builder().from(instance).urls(Sets.newHashSet()).build();
+        return ImmutableActionableHotspot.builder().from(instance).evidenceUrls(Sets.newHashSet()).build();
     }
 
     @NotNull
     @Override
     public ActionableHotspot buildWithUrls(@NotNull final ActionableHotspot instance, @NotNull final Set<String> urls) {
-        return ImmutableActionableHotspot.builder().from(instance).urls(urls).build();
+        return ImmutableActionableHotspot.builder().from(instance).evidenceUrls(urls).build();
     }
 }

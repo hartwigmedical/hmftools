@@ -8,10 +8,10 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
+import com.hartwig.hmftools.serve.sources.ImmutableSources;
+import com.hartwig.hmftools.serve.sources.Sources;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class ActionableFileFunctions {
 
@@ -24,7 +24,7 @@ public final class ActionableFileFunctions {
 
     @NotNull
     public static String header() {
-        return new StringJoiner(FIELD_DELIMITER).add("rawInput")
+        return new StringJoiner(FIELD_DELIMITER).add("sourceEvent")
                 .add("source")
                 .add("treatment")
                 .add("cancerType")
@@ -33,24 +33,23 @@ public final class ActionableFileFunctions {
                 .add("blacklistedDoid")
                 .add("level")
                 .add("direction")
-                .add("urlSource")
-                .add("urls")
+                .add("sourceUrls")
+                .add("evidenceUrls")
                 .toString();
     }
 
     @NotNull
     public static ActionableEvent fromLine(@NotNull String[] values, int startingPosition) {
+
         return new ActionableEvent() {
-            @NotNull
-            @Override
-            public String rawInput() {
-                return values[startingPosition];
-            }
 
             @NotNull
             @Override
-            public Knowledgebase source() {
-                return Knowledgebase.valueOf(values[startingPosition + 1]);
+            public Sources source() {
+                return ImmutableSources.builder()
+                        .sourceEvent(values[startingPosition])
+                        .source(Knowledgebase.valueOf(values[startingPosition + 1]))
+                        .build();
             }
 
             @NotNull
@@ -97,14 +96,14 @@ public final class ActionableFileFunctions {
 
             @NotNull
             @Override
-            public Set<String> urlSource(){
+            public Set<String> sourceUrls() {
                 int urlPosition = startingPosition + 9;
                 return values.length > urlPosition ? stringToUrls(values[urlPosition]) : Sets.newHashSet();
             }
 
             @NotNull
             @Override
-            public Set<String> urls() {
+            public Set<String> evidenceUrls() {
                 int urlPosition = startingPosition + 10;
                 return values.length > urlPosition ? stringToUrls(values[urlPosition]) : Sets.newHashSet();
             }
@@ -113,8 +112,8 @@ public final class ActionableFileFunctions {
 
     @NotNull
     public static String toLine(@NotNull ActionableEvent event) {
-        return new StringJoiner(FIELD_DELIMITER).add(event.rawInput())
-                .add(event.source().toString())
+        return new StringJoiner(FIELD_DELIMITER).add(event.source().sourceEvent())
+                .add(event.source().source().toString())
                 .add(event.treatment())
                 .add(event.cancerType())
                 .add(event.doid())
@@ -122,8 +121,8 @@ public final class ActionableFileFunctions {
                 .add(event.blacklistedDoid())
                 .add(event.level().toString())
                 .add(event.direction().toString())
-                .add(urlsToString(event.urlSource()))
-                .add(urlsToString(event.urls()))
+                .add(urlsToString(event.sourceUrls()))
+                .add(urlsToString(event.evidenceUrls()))
                 .toString();
     }
 

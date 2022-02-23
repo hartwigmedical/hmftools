@@ -12,12 +12,12 @@ public class ActionableCharacteristicUrlConsolidator implements UrlConsolidator<
     @NotNull
     @Override
     public ActionableCharacteristic stripUrls(@NotNull final ActionableCharacteristic instance) {
-        return ImmutableActionableCharacteristic.builder().from(instance).urls(Sets.newHashSet()).build();
+        return ImmutableActionableCharacteristic.builder().from(instance).evidenceUrls(Sets.newHashSet()).build();
     }
 
     @NotNull
     @Override
     public ActionableCharacteristic buildWithUrls(@NotNull final ActionableCharacteristic instance, @NotNull final Set<String> urls) {
-        return ImmutableActionableCharacteristic.builder().from(instance).urls(urls).build();
+        return ImmutableActionableCharacteristic.builder().from(instance).evidenceUrls(urls).build();
     }
 }

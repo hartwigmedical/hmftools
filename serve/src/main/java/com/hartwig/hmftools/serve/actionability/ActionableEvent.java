@@ -2,20 +2,16 @@ package com.hartwig.hmftools.serve.actionability;
 
 import java.util.Set;
 
-import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.serve.sources.Sources;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public interface ActionableEvent {
 
     @NotNull
-    String rawInput();
-
-    @NotNull
-    Knowledgebase source();
+    Sources source();
 
     @NotNull
     String treatment();
@@ -39,8 +35,8 @@ public interface ActionableEvent {
     EvidenceDirection direction();
 
     @NotNull
-    Set<String> urlSource();
+    Set<String> sourceUrls();
 
     @NotNull
-    Set<String> urls();
+    Set<String> evidenceUrls();
 }

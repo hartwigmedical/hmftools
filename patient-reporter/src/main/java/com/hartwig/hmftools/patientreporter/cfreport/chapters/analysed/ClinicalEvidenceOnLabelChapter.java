@@ -50,6 +50,7 @@ public class ClinicalEvidenceOnLabelChapter implements ReportChapter {
                 + "characteristics of which only the DNA aberrations are considered in this report. \n"));
         document.add(ClinicalEvidenceFunctions.noteEvidence());
         document.add(ClinicalEvidenceFunctions.noteGlossaryTerms());
+        document.add(ClinicalEvidenceFunctions.noteEvidenceMatching());
     }
 
     private void addTreatmentSection(@NotNull Document document, @NotNull String header, @NotNull List<ProtectEvidence> evidences) {

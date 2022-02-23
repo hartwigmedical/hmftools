@@ -20,6 +20,8 @@ import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
 import com.hartwig.hmftools.serve.extraction.events.EventInterpretation;
 import com.hartwig.hmftools.serve.extraction.events.ImmutableEventInterpretation;
+import com.hartwig.hmftools.serve.sources.ImmutableSources;
+import com.hartwig.hmftools.serve.sources.Sources;
 import com.hartwig.hmftools.serve.sources.actin.classification.ActinEventExtractor;
 import com.hartwig.hmftools.serve.sources.actin.classification.ActinEventTypeExtractor;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
@@ -55,9 +57,9 @@ public class ActinExtractor {
                     LOGGER.warn("No event type known for '{}' on '{}'", entry, entry.gene());
                 } else {
                     String gene = entry.gene() != null ? entry.gene() : "-";
+                    Sources sources = ImmutableSources.builder().sourceEvent(entry.rule().toString()).source(Knowledgebase.ACTIN).build();
                     interpretation.add(ImmutableEventInterpretation.builder()
-                            .knowledgebase(Knowledgebase.ACTIN)
-                            .rawInputKB(entry.rule().toString())
+                            .source(sources)
                             .interpretGene(gene)
                             .interpretEvent(event)
                             .interpretEventType(type)

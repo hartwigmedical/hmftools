@@ -43,6 +43,8 @@ import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
+import com.hartwig.hmftools.serve.sources.ImmutableSources;
+import com.hartwig.hmftools.serve.sources.Sources;
 import com.hartwig.hmftools.serve.util.ProgressTracker;
 
 import org.apache.logging.log4j.LogManager;
@@ -88,9 +90,9 @@ public class CkbExtractor {
             Set<? extends ActionableEvent> actionableEvents = actionableEntryFactory.toActionableEntries(entry, variant.variant());
 
             List<EventInterpretation> interpretation = Lists.newArrayList();
+            Sources sources = ImmutableSources.builder().sourceEvent(variant.variant()).source(Knowledgebase.CKB).build();
             interpretation.add(ImmutableEventInterpretation.builder()
-                    .knowledgebase(Knowledgebase.CKB)
-                    .rawInputKB(variant.variant())
+                    .source(sources)
                     .interpretGene(gene)
                     .interpretEvent(event)
                     .interpretEventType(entry.type())

@@ -4,9 +4,9 @@ import java.util.Objects;
 import java.util.Set;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.serve.sources.Sources;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,11 +19,11 @@ public final class ActionabilityTestUtil {
     }
 
     @NotNull
-    public static ActionableEvent create(@NotNull String rawInput, @NotNull Knowledgebase source, @NotNull String treatment,
+    public static ActionableEvent create(@NotNull Sources source, @NotNull String treatment,
             @NotNull String cancerType, @NotNull String doid, @NotNull String blacklistCancerType, @NotNull String blacklistedDoid,
-            @NotNull EvidenceLevel level, @NotNull EvidenceDirection direction, @Nullable Set<String> urlSource,
-            @NotNull Set<String> urls) {
-        return new ActionableEventImpl(rawInput,
+            @NotNull EvidenceLevel level, @NotNull EvidenceDirection direction, @Nullable Set<String> sourceUrls,
+            @NotNull Set<String> evidenceUrls) {
+        return new ActionableEventImpl(
                 source,
                 treatment,
                 cancerType,
@@ -32,16 +32,14 @@ public final class ActionabilityTestUtil {
                 blacklistedDoid,
                 level,
                 direction,
-                urlSource,
-                urls);
+                sourceUrls,
+                evidenceUrls);
     }
 
     private static class ActionableEventImpl implements ActionableEvent {
 
         @NotNull
-        private final String rawInput;
-        @NotNull
-        private final Knowledgebase source;
+        private final Sources source;
         @NotNull
         private final String treatment;
         @NotNull
@@ -57,15 +55,14 @@ public final class ActionabilityTestUtil {
         @NotNull
         private final EvidenceDirection direction;
         @Nullable
-        private final Set<String> urlSource;
+        private final Set<String> sourceUrls;
         @NotNull
-        private final Set<String> urls;
+        private final Set<String> evidenceUrls;
 
-        public ActionableEventImpl(@NotNull String rawInput, @NotNull final Knowledgebase source, @NotNull final String treatment,
+        public ActionableEventImpl(@NotNull final Sources source, @NotNull final String treatment,
                 @NotNull final String cancerType, @NotNull final String doid, @NotNull final String blacklistCancerType,
                 @NotNull final String blacklistedDoid, @NotNull final EvidenceLevel level, @NotNull final EvidenceDirection direction,
-                @Nullable Set<String> urlSource, @NotNull final Set<String> urls) {
-            this.rawInput = rawInput;
+                @Nullable Set<String> sourceUrls, @NotNull final Set<String> evidenceUrls) {
             this.source = source;
             this.treatment = treatment;
             this.cancerType = cancerType;
@@ -74,19 +71,13 @@ public final class ActionabilityTestUtil {
             this.blacklistedDoid = blacklistedDoid;
             this.level = level;
             this.direction = direction;
-            this.urlSource = urlSource;
-            this.urls = urls;
+            this.sourceUrls = sourceUrls;
+            this.evidenceUrls = evidenceUrls;
         }
 
         @NotNull
         @Override
-        public String rawInput() {
-            return rawInput;
-        }
-
-        @NotNull
-        @Override
-        public Knowledgebase source() {
+        public Sources source() {
             return source;
         }
 
@@ -134,14 +125,14 @@ public final class ActionabilityTestUtil {
 
         @NotNull
         @Override
-        public Set<String> urlSource() {
-            return urlSource;
+        public Set<String> sourceUrls() {
+            return sourceUrls;
         }
 
         @NotNull
         @Override
-        public Set<String> urls() {
-            return urls;
+        public Set<String> evidenceUrls() {
+            return evidenceUrls;
         }
 
         @Override
@@ -153,15 +144,15 @@ public final class ActionabilityTestUtil {
                 return false;
             }
             final ActionableEventImpl that = (ActionableEventImpl) o;
-            return rawInput.equals(that.rawInput()) && source == that.source && treatment.equals(that.treatment)
+            return source == that.source && treatment.equals(that.treatment)
                     && cancerType.equals(that.cancerType) && doid.equals(that.doid) && blacklistCancerType.equals(that.blacklistCancerType)
                     && blacklistedDoid.equals(that.blacklistedDoid) && level == that.level && direction == that.direction
-                    && urlSource.equals(that.urlSource) && urls.equals(that.urls);
+                    && sourceUrls.equals(that.sourceUrls) && evidenceUrls.equals(that.evidenceUrls);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(rawInput,
+            return Objects.hash(
                     source,
                     treatment,
                     cancerType,
@@ -170,16 +161,16 @@ public final class ActionabilityTestUtil {
                     blacklistedDoid,
                     level,
                     direction,
-                    urlSource,
-                    urls);
+                    sourceUrls,
+                    evidenceUrls);
         }
 
         @Override
         public String toString() {
-            return "ActionableEventImpl{" + "rawInput=" + rawInput + ",source=" + source + ", treatment='" + treatment + '\''
+            return "ActionableEventImpl{" + "source=" + source + ", treatment='" + treatment + '\''
                     + ", cancerType='" + cancerType + '\'' + ", doid='" + doid + ", blacklistCancerType='" + blacklistCancerType + '\''
-                    + ", blacklistedDoid='" + blacklistedDoid + '\'' + ", level=" + level + ", direction=" + direction + ", urlSource="
-                    + urlSource + ", urls=" + urls + '}';
+                    + ", blacklistedDoid='" + blacklistedDoid + '\'' + ", level=" + level + ", direction=" + direction + ", sourceUrls="
+                    + sourceUrls + ", evidenceUrls=" + evidenceUrls + '}';
         }
     }
 }
