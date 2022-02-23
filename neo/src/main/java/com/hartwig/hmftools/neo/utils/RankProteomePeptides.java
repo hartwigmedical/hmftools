@@ -137,7 +137,7 @@ public class RankProteomePeptides
     {
         try
         {
-            String outputFile = BindCommon.formFilename(outputDir, "ranked_prot_peptides.csv", outputId);
+            String outputFile = BindCommon.formFilename(outputDir, "ranked_prot_peptides", outputId);
             BufferedWriter writer = createBufferedWriter(outputFile, false);
 
             writer.write("Allele,Peptide,LikelihoodRank,Genes,TransNames");
@@ -157,7 +157,6 @@ public class RankProteomePeptides
         {
             for(PeptideData peptideData : peptideDataList)
             {
-
                 writer.write(String.format("%s,%s,%.6f,%s,%s",
                         allele, peptideData.Peptide, peptideData.LikelihoodRank, peptideData.geneNames(), peptideData.transNames()));
 
