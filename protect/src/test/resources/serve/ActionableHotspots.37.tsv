@@ -1,2 +1,2 @@
-chromosome	position	ref	alt	rawInput	source	treatment	cancerType	doid	blacklistCancerType	blacklistDoid	level	direction	urlSource	urls
-1	100	A	C	variant	HARTWIG_CURATED	drug	all	162			C	RESISTANT
+chromosome	position	ref	alt	rawInput	source	treatment	cancerType	doid	tumorLocationBlacklisting	level	direction	urlSource	urls
+1	100	A	C	variant	HARTWIG_CURATED	drug	all	162		C	RESISTANT

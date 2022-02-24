@@ -20,7 +20,7 @@ public final class ActionabilityTestUtil {
 
     @NotNull
     public static ActionableEvent create(@NotNull Sources source, @NotNull String treatment,
-            @NotNull String cancerType, @NotNull String doid, @NotNull String blacklistCancerType, @NotNull String blacklistedDoid,
+            @NotNull String cancerType, @NotNull String doid, @NotNull String tumorLocationBlacklisting,
             @NotNull EvidenceLevel level, @NotNull EvidenceDirection direction, @Nullable Set<String> sourceUrls,
             @NotNull Set<String> evidenceUrls) {
         return new ActionableEventImpl(
@@ -28,8 +28,7 @@ public final class ActionabilityTestUtil {
                 treatment,
                 cancerType,
                 doid,
-                blacklistCancerType,
-                blacklistedDoid,
+                tumorLocationBlacklisting,
                 level,
                 direction,
                 sourceUrls,
@@ -47,9 +46,7 @@ public final class ActionabilityTestUtil {
         @NotNull
         private final String doid;
         @NotNull
-        private final String blacklistCancerType;
-        @NotNull
-        private final String blacklistedDoid;
+        private final String tumorLocationBlacklisting;
         @NotNull
         private final EvidenceLevel level;
         @NotNull
@@ -60,15 +57,14 @@ public final class ActionabilityTestUtil {
         private final Set<String> evidenceUrls;
 
         public ActionableEventImpl(@NotNull final Sources source, @NotNull final String treatment,
-                @NotNull final String cancerType, @NotNull final String doid, @NotNull final String blacklistCancerType,
-                @NotNull final String blacklistedDoid, @NotNull final EvidenceLevel level, @NotNull final EvidenceDirection direction,
+                @NotNull final String cancerType, @NotNull final String doid, @NotNull final String tumorLocationBlacklisting,
+                @NotNull final EvidenceLevel level, @NotNull final EvidenceDirection direction,
                 @Nullable Set<String> sourceUrls, @NotNull final Set<String> evidenceUrls) {
             this.source = source;
             this.treatment = treatment;
             this.cancerType = cancerType;
             this.doid = doid;
-            this.blacklistCancerType = blacklistCancerType;
-            this.blacklistedDoid = blacklistedDoid;
+            this.tumorLocationBlacklisting = tumorLocationBlacklisting;
             this.level = level;
             this.direction = direction;
             this.sourceUrls = sourceUrls;
@@ -101,14 +97,8 @@ public final class ActionabilityTestUtil {
 
         @NotNull
         @Override
-        public String blacklistCancerType() {
-            return blacklistCancerType;
-        }
-
-        @NotNull
-        @Override
-        public String blacklistedDoid() {
-            return blacklistedDoid;
+        public String tumorLocationBlacklisting() {
+            return tumorLocationBlacklisting;
         }
 
         @NotNull
@@ -145,8 +135,8 @@ public final class ActionabilityTestUtil {
             }
             final ActionableEventImpl that = (ActionableEventImpl) o;
             return source == that.source && treatment.equals(that.treatment)
-                    && cancerType.equals(that.cancerType) && doid.equals(that.doid) && blacklistCancerType.equals(that.blacklistCancerType)
-                    && blacklistedDoid.equals(that.blacklistedDoid) && level == that.level && direction == that.direction
+                    && cancerType.equals(that.cancerType) && doid.equals(that.doid) && tumorLocationBlacklisting.equals(that.tumorLocationBlacklisting)
+                    && level == that.level && direction == that.direction
                     && sourceUrls.equals(that.sourceUrls) && evidenceUrls.equals(that.evidenceUrls);
         }
 
@@ -157,8 +147,7 @@ public final class ActionabilityTestUtil {
                     treatment,
                     cancerType,
                     doid,
-                    blacklistCancerType,
-                    blacklistedDoid,
+                    tumorLocationBlacklisting,
                     level,
                     direction,
                     sourceUrls,
@@ -168,8 +157,8 @@ public final class ActionabilityTestUtil {
         @Override
         public String toString() {
             return "ActionableEventImpl{" + "source=" + source + ", treatment='" + treatment + '\''
-                    + ", cancerType='" + cancerType + '\'' + ", doid='" + doid + ", blacklistCancerType='" + blacklistCancerType + '\''
-                    + ", blacklistedDoid='" + blacklistedDoid + '\'' + ", level=" + level + ", direction=" + direction + ", sourceUrls="
+                    + ", cancerType='" + cancerType + '\'' + ", doid='" + doid + '\''
+                    + ", tumorLocationBlacklisting='" + tumorLocationBlacklisting + '\'' + ", level=" + level + ", direction=" + direction + ", sourceUrls="
                     + sourceUrls + ", evidenceUrls=" + evidenceUrls + '}';
         }
     }

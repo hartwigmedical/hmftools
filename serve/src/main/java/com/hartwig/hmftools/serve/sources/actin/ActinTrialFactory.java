@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.serve.sources.actin;
 
-import java.util.Set;
+import java.util.List;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
@@ -13,6 +13,7 @@ import com.hartwig.hmftools.serve.sources.ImmutableSources;
 import com.hartwig.hmftools.serve.sources.Sources;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
 
+import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 public final class ActinTrialFactory {
@@ -23,13 +24,12 @@ public final class ActinTrialFactory {
     @NotNull
     public static ActinTrial toActinTrial(@NotNull ActinEntry actionTrial, @NotNull String rawInput) {
 
-        Set<TumorLocationBlacklisting> tumorLocationBlacklistings = Sets.newHashSet();
+        List<TumorLocationBlacklisting> tumorLocationBlacklistings = Lists.newArrayList();
         tumorLocationBlacklistings.add(ImmutableTumorLocationBlacklisting.builder()
                 .blacklistCancerType("Hematologic cancer")
                 .blacklistedDoid("2531")
                 .build());
-        String tumorLocationBlacklist = TumorLocationBlacklist.extractTumorLocationBlacklisting(tumorLocationBlacklistings);
-        String tumorLocationBlacklistDoid = TumorLocationBlacklist.extractTumorLocationDoid(tumorLocationBlacklistings);
+        String tumorLocationBlacklisting = TumorLocationBlacklist.extractTumorLocationBlacklisting(tumorLocationBlacklistings);
 
         Sources sources = ImmutableSources.builder().sourceEvent(rawInput).source(Knowledgebase.ACTIN).build();
 
@@ -40,8 +40,7 @@ public final class ActinTrialFactory {
                 .direction(EvidenceDirection.RESPONSIVE)
                 .cancerType("Advanced Solid Tumor")
                 .doid("162")
-                .blacklistCancerType(tumorLocationBlacklist)
-                .blacklistedDoid(tumorLocationBlacklistDoid)
+                .tumorLocationBlacklisting(tumorLocationBlacklisting)
                 .sourceUrls(Sets.newHashSet())
                 .evidenceUrls(Sets.newHashSet())
                 .build();

@@ -31,7 +31,6 @@ import com.hartwig.hmftools.vicc.datamodel.civic.Civic;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.internal.$guava$.annotations.$VisibleForTesting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -120,19 +119,16 @@ class ActionableEvidenceFactory {
             for (Map.Entry<String, Set<String>> cancerTypeEntry : cancerTypeToDoidsMap.entrySet()) {
                 String cancerType = cancerTypeEntry.getKey();
                 for (String doid : cancerTypeEntry.getValue()) {
-                    Set<TumorLocationBlacklisting> tumorLocationBlacklistings = Sets.newHashSet();
+                    List<TumorLocationBlacklisting> tumorLocationBlacklistings = Lists.newArrayList();
                     tumorLocationBlacklistings.add(ImmutableTumorLocationBlacklisting.builder()
-                            .blacklistCancerType(doid.equals("162") ? "Hematologic cancer": Strings.EMPTY)
-                            .blacklistedDoid(doid.equals("162") ? "2531": Strings.EMPTY)
+                            .blacklistCancerType(doid.equals("162") ? "Hematologic cancer" : null)
+                            .blacklistedDoid(doid.equals("162") ? "2531" : null)
                             .build());
-                    String tumorLocationBlacklist = TumorLocationBlacklist.extractTumorLocationBlacklisting(tumorLocationBlacklistings);
-                    String tumorLocationBlacklistDoid = TumorLocationBlacklist.extractTumorLocationDoid(tumorLocationBlacklistings);
-
+                    String tumorLocationBlacklisting = TumorLocationBlacklist.extractTumorLocationBlacklisting(tumorLocationBlacklistings);
                     for (List<String> drugList : drugLists) {
                         actionableEvents.add(builder.cancerType(cancerType)
                                 .doid(doid)
-                                .blacklistCancerType(tumorLocationBlacklist)
-                                .blacklistedDoid(tumorLocationBlacklistDoid)
+                                .tumorLocationBlacklisting(tumorLocationBlacklisting)
                                 .treatment(formatDrugList(drugList))
                                 .build());
                     }

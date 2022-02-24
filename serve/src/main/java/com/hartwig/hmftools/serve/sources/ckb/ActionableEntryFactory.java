@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.serve.sources.ckb;
 
+import java.util.List;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -17,9 +18,9 @@ import com.hartwig.hmftools.serve.blacklisting.TumorLocationBlacklisting;
 import com.hartwig.hmftools.serve.sources.ImmutableSources;
 import com.hartwig.hmftools.serve.sources.Sources;
 
+import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -96,13 +97,12 @@ class ActionableEntryFactory {
                                         + evidence.evidenceType());
                     }
 
-                    Set<TumorLocationBlacklisting> tumorLocationBlacklistings = Sets.newHashSet();
+                    List<TumorLocationBlacklisting> tumorLocationBlacklistings = Lists.newArrayList();
                     tumorLocationBlacklistings.add(ImmutableTumorLocationBlacklisting.builder()
-                            .blacklistCancerType(doid.equals("162") ? "Hematologic cancer" : Strings.EMPTY)
-                            .blacklistedDoid(doid.equals("162") ? "2531" : Strings.EMPTY)
+                            .blacklistCancerType(doid.equals("162") ? "Hematologic cancer" : null)
+                            .blacklistedDoid(doid.equals("162") ? "2531" : null)
                             .build());
-                    String tumorLocationBlacklist = TumorLocationBlacklist.extractTumorLocationBlacklisting(tumorLocationBlacklistings);
-                    String tumorLocationBlacklistDoid = TumorLocationBlacklist.extractTumorLocationDoid(tumorLocationBlacklistings);
+                    String tumorLocationBlacklisting = TumorLocationBlacklist.extractTumorLocationBlacklisting(tumorLocationBlacklistings);
 
                     Sources sources = ImmutableSources.builder().sourceEvent(rawInput).source(Knowledgebase.CKB).build();
                     actionableEntries.add(ImmutableActionableEntry.builder()
@@ -110,8 +110,7 @@ class ActionableEntryFactory {
                             .treatment(treatment)
                             .cancerType(cancerType)
                             .doid(doid)
-                            .blacklistCancerType(tumorLocationBlacklist)
-                            .blacklistedDoid(tumorLocationBlacklistDoid)
+                            .tumorLocationBlacklisting(tumorLocationBlacklisting)
                             .level(level)
                             .direction(direction)
                             .sourceUrls(sourceLinks)
