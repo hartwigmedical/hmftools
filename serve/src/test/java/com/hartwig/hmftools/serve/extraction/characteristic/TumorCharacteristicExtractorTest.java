@@ -17,6 +17,8 @@ public class TumorCharacteristicExtractorTest {
 
     private static final String MSI = "msi";
     private static final String MSS = "mss";
+    private static final String HIGH_TML = "high_tml";
+    private static final String LOW_TML = "low_tml";
     private static final String HIGH_TMB = "high_tmb";
     private static final String LOW_TMB = "low_tmb";
     private static final String HRD = "hrd";
@@ -53,7 +55,7 @@ public class TumorCharacteristicExtractorTest {
     @Test
     public void canDetermineCutOffTMLLow() {
         TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
-        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, LOW_TMB, Strings.EMPTY);
+        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, LOW_TML, Strings.EMPTY);
         assertEquals(TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_LOAD, characteristic.tumorCharacteristicAnnotation());
 
         assertEquals(TumorCharacteristicsAtLeast.LESSER,
@@ -66,13 +68,39 @@ public class TumorCharacteristicExtractorTest {
     @Test
     public void canDetermineCutOffTMLHigh() {
         TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
-        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, HIGH_TMB, Strings.EMPTY);
+        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, HIGH_TML, Strings.EMPTY);
         assertEquals(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD, characteristic.tumorCharacteristicAnnotation());
 
         assertEquals(TumorCharacteristicsAtLeast.EQUALS_GREATHER,
                 tumorCharacteristicExtractor.determineAtLeast(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD, "TML >= 140"));
         assertEquals(140,
                 tumorCharacteristicExtractor.determineCutoff(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD, "TML >= 140"),
+                EPSILON);
+    }
+
+    @Test
+    public void canDetermineCutOffTMBLow() {
+        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
+        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, LOW_TMB, Strings.EMPTY);
+        assertEquals(TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_BURDEN, characteristic.tumorCharacteristicAnnotation());
+
+        assertEquals(TumorCharacteristicsAtLeast.LESSER,
+                tumorCharacteristicExtractor.determineAtLeast(TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_BURDEN, "TMB < 3"));
+        assertEquals(3,
+                tumorCharacteristicExtractor.determineCutoff(TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_BURDEN, "TMB < 3"),
+                EPSILON);
+    }
+
+    @Test
+    public void canDetermineCutOffTMBHigh() {
+        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
+        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, HIGH_TMB, Strings.EMPTY);
+        assertEquals(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_BURDEN, characteristic.tumorCharacteristicAnnotation());
+
+        assertEquals(TumorCharacteristicsAtLeast.EQUALS_GREATHER,
+                tumorCharacteristicExtractor.determineAtLeast(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_BURDEN, "TMB >= 14"));
+        assertEquals(14,
+                tumorCharacteristicExtractor.determineCutoff(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_BURDEN, "TMB >= 14"),
                 EPSILON);
     }
 
@@ -94,7 +122,7 @@ public class TumorCharacteristicExtractorTest {
     @Test
     public void canDetermineCutOffSource() {
         TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
-        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, HIGH_TMB, "TML >= 200");
+        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, HIGH_TML, "TML >= 200");
         assertEquals(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD, characteristic.tumorCharacteristicAnnotation());
 
         assertEquals(TumorCharacteristicsAtLeast.EQUALS_GREATHER,
@@ -136,7 +164,7 @@ public class TumorCharacteristicExtractorTest {
     @Test
     public void canExtractHighTumorMutationalLoadCharacteristic() {
         TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
-        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, HIGH_TMB, Strings.EMPTY);
+        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, HIGH_TML, Strings.EMPTY);
 
         assertNotNull(characteristic);
         assertEquals(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD, characteristic.tumorCharacteristicAnnotation());
@@ -150,7 +178,7 @@ public class TumorCharacteristicExtractorTest {
     @Test
     public void canExtractLowTumorMutationalLoadCharacteristic() {
         TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
-        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, LOW_TMB, Strings.EMPTY);
+        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, LOW_TML, Strings.EMPTY);
 
         assertNotNull(characteristic);
         assertEquals(TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_LOAD, characteristic.tumorCharacteristicAnnotation());
@@ -228,6 +256,8 @@ public class TumorCharacteristicExtractorTest {
     private static TumorCharacteristicExtractor buildTestExtractor() {
         return new TumorCharacteristicExtractor(Sets.newHashSet(MSI),
                 Sets.newHashSet(MSS),
+                Sets.newHashSet(HIGH_TML),
+                Sets.newHashSet(LOW_TML),
                 Sets.newHashSet(HIGH_TMB),
                 Sets.newHashSet(LOW_TMB),
                 Sets.newHashSet(HRD),

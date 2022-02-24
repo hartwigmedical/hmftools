@@ -23,10 +23,7 @@ public interface ActionableEvent {
     String doid();
 
     @NotNull
-    String blacklistCancerType();
-
-    @NotNull
-    String blacklistedDoid();
+    String tumorLocationBlacklisting();
 
     @NotNull
     EvidenceLevel level();

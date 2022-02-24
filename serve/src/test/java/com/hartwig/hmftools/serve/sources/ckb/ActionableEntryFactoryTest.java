@@ -34,8 +34,7 @@ public class ActionableEntryFactoryTest {
         assertEquals("AB", characteristics.treatment());
         assertEquals("AB", characteristics.cancerType());
         assertEquals("162", characteristics.doid());
-        assertEquals("Hematologic cancer", characteristics.blacklistCancerType());
-        assertEquals("2531", characteristics.blacklistedDoid());
+        assertEquals("Hematologic cancer,2531", characteristics.tumorLocationBlacklisting());
         assertEquals(EvidenceLevel.A, characteristics.level());
         assertEquals(EvidenceDirection.RESPONSIVE, characteristics.direction());
 
@@ -56,8 +55,7 @@ public class ActionableEntryFactoryTest {
         assertEquals("AB", amplification.treatment());
         assertEquals("AB", amplification.cancerType());
         assertEquals("163", amplification.doid());
-        assertEquals(Strings.EMPTY, amplification.blacklistCancerType());
-        assertEquals(Strings.EMPTY, amplification.blacklistedDoid());
+        assertEquals(Strings.EMPTY, amplification.tumorLocationBlacklisting());
         assertEquals(EvidenceLevel.A, amplification.level());
         assertEquals(EvidenceDirection.RESPONSIVE, amplification.direction());
 
@@ -71,8 +69,7 @@ public class ActionableEntryFactoryTest {
         assertEquals("AB", hotspot.treatment());
         assertEquals("AB", hotspot.cancerType());
         assertEquals("162", hotspot.doid());
-        assertEquals("Hematologic cancer", hotspot.blacklistCancerType());
-        assertEquals("2531", hotspot.blacklistedDoid());
+        assertEquals("Hematologic cancer,2531", hotspot.tumorLocationBlacklisting());
         assertEquals(EvidenceLevel.A, characteristics.level());
         assertEquals(EvidenceDirection.RESPONSIVE, characteristics.direction());
     }

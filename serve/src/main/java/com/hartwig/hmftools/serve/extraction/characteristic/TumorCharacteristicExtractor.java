@@ -24,6 +24,10 @@ public class TumorCharacteristicExtractor {
     @NotNull
     private final Set<String> lowTumorMutationalLoadEvents;
     @NotNull
+    private final Set<String> highTumorMutationalBurdenEvents;
+    @NotNull
+    private final Set<String> lowTumorMutationalBurdenEvents;
+    @NotNull
     private final Set<String> hrDeficiencyEvents;
     @NotNull
     private final Set<String> hpvPositiveEvents;
@@ -34,13 +38,16 @@ public class TumorCharacteristicExtractor {
 
     public TumorCharacteristicExtractor(@NotNull final Set<String> microsatelliteUnstableEvents,
             @NotNull final Set<String> microsatelliteStableEvents, @NotNull final Set<String> highTumorMutationalLoadEvents,
-            @NotNull final Set<String> lowTumorMutationalLoadEvents, @NotNull final Set<String> hrDeficiencyEvents,
+            @NotNull final Set<String> lowTumorMutationalLoadEvents, @NotNull final Set<String> highTumorMutationalBurdenEvents,
+            @NotNull final Set<String> lowTumorMutationalBurdenEvents, @NotNull final Set<String> hrDeficiencyEvents,
             @NotNull final Set<String> hpvPositiveEvents, @NotNull final Set<String> ebvPositiveEvents,
             @NotNull final Set<String> immunoHlaEvents) {
         this.microsatelliteUnstableEvents = microsatelliteUnstableEvents;
         this.microsatelliteStableEvents = microsatelliteStableEvents;
         this.highTumorMutationalLoadEvents = highTumorMutationalLoadEvents;
         this.lowTumorMutationalLoadEvents = lowTumorMutationalLoadEvents;
+        this.highTumorMutationalBurdenEvents = highTumorMutationalBurdenEvents;
+        this.lowTumorMutationalBurdenEvents = lowTumorMutationalBurdenEvents;
         this.hrDeficiencyEvents = hrDeficiencyEvents;
         this.hpvPositiveEvents = hpvPositiveEvents;
         this.ebvPositiveEvents = ebvPositiveEvents;
@@ -149,6 +156,10 @@ public class TumorCharacteristicExtractor {
             return TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD;
         } else if (lowTumorMutationalLoadEvents.contains(event)) {
             return TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_LOAD;
+        } else if (highTumorMutationalBurdenEvents.contains(event)) {
+            return TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_BURDEN;
+        } else if (lowTumorMutationalBurdenEvents.contains(event)) {
+            return TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_BURDEN;
         } else if (hrDeficiencyEvents.contains(event)) {
             return TumorCharacteristicAnnotation.HOMOLOGOUS_RECOMBINATION_DEFICIENT;
         } else if (hpvPositiveEvents.contains(event)) {

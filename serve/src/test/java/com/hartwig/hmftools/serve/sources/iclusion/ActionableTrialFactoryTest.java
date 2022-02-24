@@ -39,20 +39,17 @@ public class ActionableTrialFactoryTest {
         assertEquals(treatment, actionableTrials.get(0).treatment());
         assertEquals(location1, actionableTrials.get(0).cancerType());
         assertEquals(loc1Doid1, actionableTrials.get(0).doid());
-        assertEquals("Hematologic cancer," + blacklistLocation1, actionableTrials.get(0).blacklistCancerType());
-        assertEquals("2531," + blacklistDoid1, actionableTrials.get(0).blacklistedDoid());
+        assertEquals("blacklistLocation,blacklistDoid;Hematologic cancer,2531", actionableTrials.get(0).tumorLocationBlacklisting());
 
         assertEquals(treatment, actionableTrials.get(1).treatment());
         assertEquals(location1, actionableTrials.get(1).cancerType());
         assertEquals(loc1Doid2, actionableTrials.get(1).doid());
-        assertEquals("Hematologic cancer," + blacklistLocation1, actionableTrials.get(1).blacklistCancerType());
-        assertEquals("2531," + blacklistDoid1, actionableTrials.get(1).blacklistedDoid());
+        assertEquals("blacklistLocation,blacklistDoid;Hematologic cancer,2531", actionableTrials.get(1).tumorLocationBlacklisting());
 
         assertEquals(treatment, actionableTrials.get(2).treatment());
         assertEquals(location2, actionableTrials.get(2).cancerType());
         assertEquals(loc2Doid1, actionableTrials.get(2).doid());
-        assertEquals("Hematologic cancer," + blacklistLocation1, actionableTrials.get(2).blacklistCancerType());
-        assertEquals("2531," + blacklistDoid1, actionableTrials.get(2).blacklistedDoid());
+        assertEquals("blacklistLocation,blacklistDoid;Hematologic cancer,2531", actionableTrials.get(2).tumorLocationBlacklisting());
 
         IclusionTrial trialOnlyBlacklist =
                 IclusionTestFactory.trialWithTumors(treatment, Lists.newArrayList(loc2), Lists.newArrayList(blacklist));
@@ -61,8 +58,7 @@ public class ActionableTrialFactoryTest {
         assertEquals(treatment, actionableTrialsOnlyBlacklist.get(0).treatment());
         assertEquals(location2, actionableTrialsOnlyBlacklist.get(0).cancerType());
         assertEquals(loc2Doid1, actionableTrialsOnlyBlacklist.get(0).doid());
-        assertEquals(blacklistLocation1, actionableTrialsOnlyBlacklist.get(0).blacklistCancerType());
-        assertEquals(blacklistDoid1, actionableTrialsOnlyBlacklist.get(0).blacklistedDoid());
+        assertEquals("blacklistLocation,blacklistDoid", actionableTrialsOnlyBlacklist.get(0).tumorLocationBlacklisting());
 
         IclusionTrial trialWithoutBlacklist =
                 IclusionTestFactory.trialWithTumors(treatment, Lists.newArrayList(loc2), Lists.newArrayList());
@@ -71,8 +67,7 @@ public class ActionableTrialFactoryTest {
         assertEquals(treatment, actionableTrialsWithoutBlacklist.get(0).treatment());
         assertEquals(location2, actionableTrialsWithoutBlacklist.get(0).cancerType());
         assertEquals(loc2Doid1, actionableTrialsWithoutBlacklist.get(0).doid());
-        assertEquals(Strings.EMPTY, actionableTrialsWithoutBlacklist.get(0).blacklistCancerType());
-        assertEquals(Strings.EMPTY, actionableTrialsWithoutBlacklist.get(0).blacklistedDoid());
+        assertEquals(Strings.EMPTY, actionableTrialsWithoutBlacklist.get(0).tumorLocationBlacklisting());
 
         IclusionTrial trialWith162 = IclusionTestFactory.trialWithTumors(treatment, Lists.newArrayList(loc1), Lists.newArrayList());
         List<ActionableTrial> actionableTrialsWith162 = factory.toActionableTrials(trialWith162, Strings.EMPTY);
@@ -80,8 +75,7 @@ public class ActionableTrialFactoryTest {
         assertEquals(treatment, actionableTrialsWith162.get(0).treatment());
         assertEquals(location1, actionableTrialsWith162.get(0).cancerType());
         assertEquals(loc1Doid1, actionableTrialsWith162.get(0).doid());
-        assertEquals("Hematologic cancer", actionableTrialsWith162.get(0).blacklistCancerType());
-        assertEquals("2531", actionableTrialsWith162.get(0).blacklistedDoid());
+        assertEquals("Hematologic cancer,2531", actionableTrialsWith162.get(0).tumorLocationBlacklisting());
 
     }
 

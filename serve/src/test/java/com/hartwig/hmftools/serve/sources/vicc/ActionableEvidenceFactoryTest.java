@@ -50,8 +50,7 @@ public class ActionableEvidenceFactoryTest {
         assertEquals("Treatment", eventA.treatment());
         assertEquals(cancerTypeA, eventA.cancerType());
         assertEquals("1", eventA.doid());
-        assertEquals(Strings.EMPTY, eventA.blacklistCancerType());
-        assertEquals(Strings.EMPTY, eventA.blacklistedDoid());
+        assertEquals(Strings.EMPTY, eventA.tumorLocationBlacklisting());
         assertEquals(EvidenceLevel.A, eventA.level());
         assertEquals(EvidenceDirection.RESPONSIVE, eventA.direction());
         assertEquals(Sets.newHashSet("url"), eventA.evidenceUrls());
@@ -63,8 +62,7 @@ public class ActionableEvidenceFactoryTest {
         assertEquals(EvidenceLevel.A, eventB.level());
         assertEquals(EvidenceDirection.RESPONSIVE, eventB.direction());
         assertEquals(Sets.newHashSet("url"), eventB.evidenceUrls());
-        assertEquals("Hematologic cancer", eventB.blacklistCancerType());
-        assertEquals("2531", eventB.blacklistedDoid());
+        assertEquals("Hematologic cancer,2531", eventB.tumorLocationBlacklisting());
         factory.evaluateCuration();
     }
 
