@@ -42,7 +42,6 @@ public class PurpleConfig
     private static final String TUMOR_ONLY = "tumor_only";
 
     public static String RUN_DRIVERS = "run_drivers";
-    public static String DRIVER_ENABLED = "driver_catalog";
     public static String DRIVERS_ONLY = "drivers_only";
 
     public PurpleConfig(final String version, final CommandLine cmd)
@@ -74,7 +73,7 @@ public class PurpleConfig
         }
 
         TumorOnlyMode = cmd.hasOption(TUMOR_ONLY);
-        RunDrivers = cmd.hasOption(RUN_DRIVERS) || cmd.hasOption(DRIVER_ENABLED);
+        RunDrivers = cmd.hasOption(RUN_DRIVERS);
         DriversOnly = cmd.hasOption(DRIVERS_ONLY);
 
         TumorId = parameter(cmd, TUMOR_SAMPLE, missingJoiner);
@@ -152,7 +151,6 @@ public class PurpleConfig
 
         options.addOption(RUN_DRIVERS, false, "Run driver routine");
         options.addOption(DRIVERS_ONLY, false, "Only run the driver routine");
-        options.addOption(DRIVER_ENABLED, false, "Deprecated, use 'run_drivers' instead");
 
         addDatabaseCmdLineArgs(options);
         FittingConfig.addOptions(options);

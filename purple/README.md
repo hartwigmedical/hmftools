@@ -91,12 +91,12 @@ java -jar purple.jar \
    -cobalt /path/to/COLO829/cobalt \
    -gc_profile /path/to/GC_profile.1000bp.37.cnp \
    -ref_genome /path/to/Homo_sapiens_assembly37.fasta \
+   -ensembl_data_dir /path_to_ensembl_data_cache/ \
    -somatic_vcf /path/to/COLO829/COLO829.somatic.vcf.gz \
    -structural_vcf /path/to/COLO829/COLO829.sv.high_confidence.vcf.gz \
    -sv_recovery_vcf /path/to/COLO829/COLO829.sv.low_confidence.vcf.gz \
    -circos /path/to/circos-0.69-6/bin/circos \
-   -db_enabled -db_user build -db_pass build \
-   -db_url mysql://localhost:3306/hmfpatients?serverTimezone=UTC
+   -db_user build -db_pass build -db_url mysql://localhost:3306/hmfpatients?serverTimezone=UTC
 ```
 
 ## Arguments
@@ -113,6 +113,7 @@ cobalt | Path to COBALT output. This should correspond to the output_dir used in
 gc_profile | Path to GC profile.
 ref_genome | Path to reference genome fasta file.
 ref_genome_version | V37 (default) or V38
+ensembl_data_dir | Path to Ensembl data cache
 
 The GC Profile file used by HMF (GC_profile.1000bp.37.cnp) is available to download from [HMFTools-Resources > Cobalt](https://resources.hartwigmedicalfoundation.nl). 
 A 38 equivalent is also available.
@@ -134,10 +135,9 @@ structural_vcf | None | Optional location of high confidence structural variants
 sv_recovery_vcf | None | Optional location of low confidence structural variants vcf which may be recovered by PURPLE. GZ files supported.
 germline_del_freq_file | None | Provide a cohort frequency for germline deletions
 circos | None | Optional path to circos binary. When supplied, circos graphs will be written to <output_dir>/plot
-db_enabled | None | This parameter has no arguments. Optionally include if you wish to persist results to a database. Database initialization script can be found [here](https://github.com/hartwigmedical/hmftools/blob/master/patient-db/src/main/resources/generate_database.sql).
-db_user | None | Database username. Mandatory if db_enabled.
-db_pass | None | Database password. Mandatory if db_enabled.
-db_url | None | Database URL. Should be of format: `mysql://localhost:3306/hmfpatients`. Mandatory if db_enabled.
+db_user | None | Database username - set all 3 DB parameters to load Purple data to hmf_patients DB
+db_pass | None | Database password
+db_url | None | Database URL. Should be of format: `mysql://localhost:3306/hmfpatients`
 no_charts | NA | Disables creation of (non-circos) charts
 tumor_only | NA | [Tumor only mode](#tumor-only-mode)
 
@@ -187,7 +187,7 @@ The following arguments control the driver catalog behaviour.
 
 Argument | Description 
 ---|---
-driver_catalog |  Enables the driver catalog
+run_drivers |  Enables the driver catalog
 somatic_hotspots | VCF of somatic hotspot locations. Mandatory if driver catalog enabled.
 germline_hotspots | VCF of germline hotspot locations. Mandatory if driver catalog enabled and germline variants supplied.
 driver_gene_panel | TSV of driver genes. Mandatory if driver catalog enabled.
