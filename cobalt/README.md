@@ -148,6 +148,8 @@ java -Xmx8G -Xms4G -cp ${cobalt_jar} com.hartwig.hmftools.cobalt.CountBamLinesMi
 ```
 
 ## Version History and Download Links
+- [1.12](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.12)
+  - Added workaround for R copy_number module pcf function bug 
 - [1.11](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.11)
   - Tumor only mode
 - [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.10)

@@ -9,17 +9,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.utils.pcf.PCFFile;
 import com.hartwig.hmftools.common.utils.r.RExecutor;
 
 public class RatioSegmentation
 {
     public static void applyRatioSegmentation(
-            final ExecutorService executorService, final String outputDir,
+            final ExecutorService executorService, final String outputDir, final String ratioFile,
             final String reference, final String tumor) throws ExecutionException, InterruptedException
     {
-        final String ratioFile = CobaltRatioFile.generateFilenameForReading(outputDir, tumor);
         final List<Future<Object>> futures = Lists.newArrayList();
         futures.add(executorService.submit(() -> ratioSegmentation(outputDir, ratioFile, reference, "referenceGCDiploidRatio")));
         futures.add(executorService.submit(() -> ratioSegmentation(outputDir, ratioFile, tumor, "tumorGCRatio")));

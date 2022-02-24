@@ -2,199 +2,110 @@ package com.hartwig.hmftools.cobalt;
 
 import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 
-import java.util.StringJoiner;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.ParameterException;
 
-import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.ValidationStringency;
 
 public class CobaltConfig
 {
-    public final int ThreadCount;
-
-    public final int MinMappingQuality;
-
-    public final String ReferenceId;
-    public final String TumorId;
-
-    public final String TumorBamPath;
-    public final String ReferenceBamPath;
-    public final String RefGenomePath;
-    public final String GcProfilePath;
-    public final String OutputDir;
-
-    public final ValidationStringency Stringency;
-    public final boolean TumorOnly;
-    public final String TumorOnlyDiploidBed;
-    public final boolean SkipGcAdjustment;
-
     private static final int DEFAULT_THREADS = 4;
 
-    public static final String TUMOR = "tumor";
-    public static final String REFERENCE = "reference";
+    public static final String TUMOR = "-tumor";
+    public static final String REFERENCE = "-reference";
 
-    private static final String TUMOR_ONLY = "tumor_only";
-    private static final String TUMOR_ONLY_DIPLOID_BED = "tumor_only_diploid_bed";
-    private static final String THREADS = "threads";
-    private static final String REFERENCE_BAM = "reference_bam";
-    private static final String TUMOR_BAM = "tumor_bam";
-    private static final String GC_PROFILE = "gc_profile";
-    private static final String MIN_MAPPING_QUALITY = "min_quality";
-    private static final String VALIDATION_STRINGENCY = "validation_stringency";
-    private static final String SKIP_GC_ADJUSTMENT = "skip_gc_adj";
+    private static final String TUMOR_ONLY = "-tumor_only";
+    private static final String TUMOR_ONLY_DIPLOID_BED = "-tumor_only_diploid_bed";
+    private static final String REFERENCE_BAM = "-reference_bam";
+    private static final String TUMOR_BAM = "-tumor_bam";
+    private static final String GC_PROFILE = "-gc_profile";
+    private static final String MIN_MAPPING_QUALITY = "-min_quality";
+    private static final String VALIDATION_STRINGENCY = "-validation_stringency";
+
+    @Parameter(names = "-threads",
+               description = "Number of threads")
+    public int ThreadCount = DEFAULT_THREADS;
+
+    @Parameter(names = MIN_MAPPING_QUALITY, description = "Min quality")
+    public int MinMappingQuality = DEFAULT_MIN_MAPPING_QUALITY;
+
+    @Parameter(names = REFERENCE, description = "Name of reference sample")
+    public String ReferenceId;
+
+    @Parameter(names = REFERENCE_BAM, description = "Path to reference bam file")
+    public String ReferenceBamPath;
+
+    @Parameter(names = TUMOR, required = true, description = "Name of tumor sample")
+    public String TumorId;
+
+    @Parameter(names = TUMOR_BAM, required = true, description = "Path to tumor bam file")
+    public String TumorBamPath;
+
+    @Parameter(names = "-" + REF_GENOME,
+               description = "Path to the reference genome fasta file. Required only when using CRAM files.")
+    public String RefGenomePath;
+
+    @Parameter(names = GC_PROFILE,
+               required = true,
+               description = "Location of GC Profile")
+    public String GcProfilePath;
+
+    @Parameter(names = "-" + OUTPUT_DIR,
+               required = true,
+               description = "Path to the output directory. "
+                       + "This directory will be created if it does not already exist.")
+    public String OutputDir;
+
+    @Parameter(names = VALIDATION_STRINGENCY,
+               description = "SAM validation strategy")
+    public ValidationStringency Stringency = ValidationStringency.DEFAULT_STRINGENCY;
+
+    @Parameter(names = TUMOR_ONLY,
+               description = "Tumor only mode")
+    public boolean TumorOnly = false;
+
+    @Parameter(names = TUMOR_ONLY_DIPLOID_BED,
+               description = "Diploid regions for tumor-only mode")
+    public String TumorOnlyDiploidBed;
 
     public static final Logger CB_LOGGER = LogManager.getLogger(CobaltConfig.class);
 
-    public CobaltConfig(final CommandLine cmd)
+    public CobaltConfig()
     {
-        ThreadCount = getConfigValue(cmd, THREADS, DEFAULT_THREADS);
-        MinMappingQuality = getConfigValue(cmd, MIN_MAPPING_QUALITY, DEFAULT_MIN_MAPPING_QUALITY);
-        RefGenomePath = cmd.getOptionValue(REF_GENOME);
-
-        final StringJoiner missingJoiner = new StringJoiner(", ");
-        GcProfilePath = cmd.getOptionValue(GC_PROFILE);
-
-        TumorOnly = cmd.hasOption(TUMOR_ONLY);
-
-        if(TumorOnly)
-        {
-            ReferenceId = CobaltRatioFile.TUMOR_ONLY_REFERENCE_SAMPLE;
-            ReferenceBamPath = Strings.EMPTY;
-            TumorOnlyDiploidBed = cmd.getOptionValue(TUMOR_ONLY_DIPLOID_BED);
-        }
-        else
-        {
-            TumorOnlyDiploidBed = "";
-            ReferenceId = parameter(cmd, REFERENCE, missingJoiner);
-            ReferenceBamPath = cmd.getOptionValue(REFERENCE_BAM);
-        }
-
-        TumorBamPath = cmd.getOptionValue(TUMOR_BAM);
-        OutputDir = parseOutputDir(cmd);
-
-        TumorId = parameter(cmd, TUMOR, missingJoiner);
-
-        if (cmd.hasOption(VALIDATION_STRINGENCY))
-        {
-            Stringency = ValidationStringency.valueOf(cmd.getOptionValue(VALIDATION_STRINGENCY));
-        }
-        else
-        {
-            Stringency = ValidationStringency.DEFAULT_STRINGENCY;
-        }
-
-        SkipGcAdjustment = cmd.hasOption(SKIP_GC_ADJUSTMENT);
     }
 
-    public boolean isValid()
+    public void validate() throws ParameterException
     {
-        if(TumorOnly)
+        if (TumorOnly)
         {
-            if(ReferenceBamPath != null || ReferenceId != null)
+            if (ReferenceId != null)
             {
-                CB_LOGGER.error( "referenceId or BAM not applicable to tumor only mode");
-                return false;
+                throw new ParameterException(String.format("%s option not allowed in tumor only mode", REFERENCE));
+            }
+            if (ReferenceBamPath != null)
+            {
+                throw new ParameterException(String.format("%s option not allowed in tumor only mode", REFERENCE_BAM));
             }
         }
-
-        if(!checkCreateOutputDir(OutputDir))
+        else if (TumorOnlyDiploidBed != null)
         {
-            CB_LOGGER.error("failed to create output directory({})", OutputDir);
-            return false;
+            throw new ParameterException(String.format("%s option is only allowed in tumor only mode", TUMOR_ONLY_DIPLOID_BED));
         }
 
-        if(GcProfilePath.endsWith("gz"))
+        if (!checkCreateOutputDir(OutputDir))
         {
-            CB_LOGGER.error( "invalid GC-profile file, must be uncompressed");
-            return false;
+            throw new ParameterException(String.format("failed to create output directory(%s)", OutputDir));
         }
 
-        return true;
-    }
-
-    public static Options createOptions()
-    {
-        final Options options = new Options();
-        options.addOption(TUMOR_ONLY, false, "Tumor only mode");
-        options.addOption(TUMOR_ONLY_DIPLOID_BED, true, "Diploid regions for tumor-only mode");
-        options.addOption(THREADS, true, "Number of threads [" + DEFAULT_THREADS + "]");
-        options.addOption(REFERENCE, true, "Name of reference sample");
-        options.addOption(REFERENCE_BAM, true, "Path to reference bam file");
-        options.addOption(TUMOR, true, "Name of tumor sample");
-        options.addOption(TUMOR_BAM, true, "Path to tumor bam file");
-        options.addOption(OUTPUT_DIR, true, "Output directory");
-        options.addOption(MIN_MAPPING_QUALITY, true, "Min quality [" + DEFAULT_MIN_MAPPING_QUALITY + "]");
-        options.addOption(GC_PROFILE, true, "Location of GC Profile");
-        options.addOption(REF_GENOME, true, "Path to reference genome fasta file if using CRAM files");
-        options.addOption(VALIDATION_STRINGENCY, true, "SAM validation strategy: STRICT, SILENT, LENIENT [STRICT]");
-        options.addOption(SKIP_GC_ADJUSTMENT, false, "Skip GC adjustment");
-
-        return options;
-    }
-
-    /*
-    public CobaltConfig createMigrationConfig(final CommandLine cmd) throws ParseException
-    {
-        final StringJoiner missingJoiner = new StringJoiner(", ");
-
-        GcProfilePath = parameter(cmd, GC_PROFILE, missingJoiner);
-        if(gcProfilePath.endsWith("gz"))
+        if (GcProfilePath.endsWith(".gz"))
         {
-            throw new ParseException("Please supply un-compressed " + GC_PROFILE + " file");
+            throw new ParameterException(String.format("invalid GC-profile file(%s), must be uncompressed", GcProfilePath));
         }
-
-        final String normal = parameter(cmd, REFERENCE, missingJoiner);
-        final String tumor = parameter(cmd, TUMOR, missingJoiner);
-        final String inputDirectory = parameter(cmd, INPUT_DIR, missingJoiner);
-        final String outputDirectory = parameter(cmd, OUTPUT_DIR, missingJoiner);
-        final String missing = missingJoiner.toString();
-
-        if(!missing.isEmpty())
-        {
-            throw new ParseException("Missing the following parameters: " + missing);
-        }
-
-        if(inputDirectory.equals(outputDirectory))
-        {
-            throw new ParseException("Input and output directories must be difference");
-        }
-
-        return ImmutableCobaltConfig.builder()
-                .threadCount(1)
-                .minMappingQuality(0)
-                .gcProfilePath(gcProfilePath)
-                .tumorBamPath(Strings.EMPTY)
-                .referenceBamPath(Strings.EMPTY)
-                .refGenomePath(Strings.EMPTY)
-                .inputDirectory(inputDirectory)
-                .outputDirectory(outputDirectory)
-                .reference(normal)
-                .tumor(tumor)
-                .validationStringency(ValidationStringency.DEFAULT_STRINGENCY)
-                .build();
-    }
-    */
-
-    private String parameter(@NotNull final CommandLine cmd, @NotNull final String parameter, @NotNull final StringJoiner missing)
-    {
-        final String value = cmd.getOptionValue(parameter);
-        if(value == null)
-        {
-            missing.add(parameter);
-            return "";
-        }
-        return value;
     }
 }

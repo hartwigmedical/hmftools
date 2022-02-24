@@ -15,6 +15,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.ParametersDelegate;
+import com.beust.jcommander.UnixStyleUsageFormatter;
 import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.cobalt.count.CountSupplier;
@@ -25,14 +28,10 @@ import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.gc.GCProfileFactory;
+import com.hartwig.hmftools.common.utils.config.DeclaredOrderParameterComparator;
+import com.hartwig.hmftools.common.utils.config.LoggingOptions;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SamReaderFactory;
@@ -44,45 +43,56 @@ import htsjdk.tribble.readers.LineIterator;
 
 public class CobaltApplication implements AutoCloseable
 {
-    private final CobaltConfig mConfig;
-    private final VersionInfo mVersionInfo;
+    @ParametersDelegate
+    private final CobaltConfig mConfig = new CobaltConfig();
+
+    // add to the logging options
+    @ParametersDelegate
+    private final LoggingOptions mLoggingOptions = new LoggingOptions();
+
+    private VersionInfo mVersionInfo;
 
     public static void main(final String... args) throws IOException, ExecutionException, InterruptedException
     {
-        final Options options = CobaltConfig.createOptions();
-        try(final CobaltApplication application = new CobaltApplication(options, args))
+        final CobaltApplication application = new CobaltApplication();
+        JCommander commander = JCommander.newBuilder()
+                .addObject(application)
+                .build();
+
+        // use unix style formatter
+        commander.setUsageFormatter(new UnixStyleUsageFormatter(commander));
+        // help message show in order parameters are declared
+        commander.setParameterDescriptionComparator(new DeclaredOrderParameterComparator(application.getClass()));
+
+        try
         {
-            application.run();
-        } 
-        catch(ParseException e)
+            commander.parse(args);
+            System.exit(application.run());
+        }
+        catch (com.beust.jcommander.ParameterException e)
         {
-            CB_LOGGER.warn(e);
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("CobaltApplication", options);
+            System.out.println("Unable to parse args: " + e.getMessage());
+            commander.usage();
             System.exit(1);
         }
     }
 
-    private CobaltApplication(final Options options, final String... args) throws ParseException, IOException
+    private int run() throws IOException, ExecutionException, InterruptedException
     {
+        mConfig.validate();
+        mLoggingOptions.setLogLevel();
+
         mVersionInfo = new VersionInfo("cobalt.version");
         CB_LOGGER.info("COBALT version: {}", mVersionInfo.version());
-
-        final CommandLine cmd = createCommandLine(args, options);
-        mConfig = new CobaltConfig(cmd);
 
         if(mConfig.ReferenceBamPath != null && !mConfig.RefGenomePath.isEmpty() && !new File(mConfig.GcProfilePath).exists())
         {
             throw new IOException("Unable to locate ref genome file " + mConfig.RefGenomePath);
         }
-    }
 
-    private void run() throws IOException, ExecutionException, InterruptedException
-    {
-        if(!mConfig.isValid())
+        if (mConfig.TumorOnly)
         {
-            CB_LOGGER.error(" invalid config, exiting");
-            System.exit(1);
+            mConfig.ReferenceId = CobaltRatioFile.TUMOR_ONLY_REFERENCE_SAMPLE;
         }
 
         CB_LOGGER.info("Reading GC Profile from {}", mConfig.GcProfilePath);
@@ -115,9 +125,11 @@ public class CobaltApplication implements AutoCloseable
         mVersionInfo.write(mConfig.OutputDir);
         CobaltRatioFile.write(outputFilename, ratios);
 
-        applyRatioSegmentation(executorService, mConfig.OutputDir, mConfig.ReferenceId, mConfig.TumorId);
+        applyRatioSegmentation(executorService, mConfig.OutputDir, outputFilename, mConfig.ReferenceId, mConfig.TumorId);
 
         executorService.shutdown();
+
+        return 0;
     }
 
     @NotNull
@@ -152,13 +164,6 @@ public class CobaltApplication implements AutoCloseable
             return readerFactory.referenceSource(new ReferenceSource(new File(config.RefGenomePath)));
         }
         return readerFactory;
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 
     @Override
