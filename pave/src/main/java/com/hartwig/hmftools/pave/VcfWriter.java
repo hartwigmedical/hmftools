@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.pave;
 
-import static com.hartwig.hmftools.pave.external.GnomadAnnotation.GNOMAD_VCF_TAG;
+import static com.hartwig.hmftools.pave.GnomadAnnotation.GNOMAD_VCF_TAG;
 
 import java.io.File;
 import java.util.List;

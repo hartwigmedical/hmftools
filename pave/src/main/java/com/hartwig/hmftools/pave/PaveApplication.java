@@ -11,7 +11,9 @@ import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FIL
 import static com.hartwig.hmftools.common.variant.VariantConsequence.VARIANT_CONSEQ_DELIM;
 import static com.hartwig.hmftools.common.variant.snpeff.SnpEffUtils.SNPEFF_CANONICAL;
 import static com.hartwig.hmftools.common.variant.snpeff.SnpEffUtils.SNPEFF_WORST;
-import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_UNKNOWN;
+import static com.hartwig.hmftools.pave.PaveConfig.PON_ARTEFACTS_FILE;
+import static com.hartwig.hmftools.pave.PaveConfig.PON_FILE;
+import static com.hartwig.hmftools.pave.PaveConfig.PON_FILTERS;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 import static com.hartwig.hmftools.pave.PaveUtils.createRightAlignedVariant;
@@ -37,7 +39,6 @@ import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationParser;
 import com.hartwig.hmftools.pave.compare.ComparisonUtils;
-import com.hartwig.hmftools.pave.external.GnomadAnnotation;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -59,6 +60,9 @@ public class PaveApplication
     private final GeneDataCache mGeneDataCache;
     private final GnomadAnnotation mGnomadAnnotation;
 
+    private final PonAnnotation mPon;
+    private final PonAnnotation mPonArtefacts;
+
     // for comparison with SnpEff
     private int mTransEffectMatched;
     private int mTransTotalComparisons;
@@ -75,6 +79,11 @@ public class PaveApplication
                 cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION), mConfig.CompareSnpEff, true);
 
         mGnomadAnnotation = new GnomadAnnotation(cmd);
+
+        mPon = new PonAnnotation(cmd.getOptionValue(PON_FILE), true);
+        mPon.loadFilters(cmd.getOptionValue(PON_FILTERS));
+
+        mPonArtefacts = new PonAnnotation(cmd.getOptionValue(PON_ARTEFACTS_FILE), false);
 
         mImpactBuilder = new VariantImpactBuilder(mGeneDataCache);
 
@@ -204,6 +213,9 @@ public class PaveApplication
         VariantImpact variantImpact = mImpactBuilder.createVariantImpact(variant);
 
         variant.setGnomadFrequency(mGnomadAnnotation.getFrequency(variant));
+
+        mPon.getFrequency(variant);
+        mPonArtefacts.getFrequency(variant);
 
         mVcfWriter.writeVariant(variant.context(), variant, variantImpact);
 

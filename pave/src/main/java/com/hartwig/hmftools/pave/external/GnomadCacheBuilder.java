@@ -3,7 +3,6 @@ package com.hartwig.hmftools.pave.external;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
@@ -30,7 +29,7 @@ import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 
-public class GnomadParser
+public class GnomadCacheBuilder
 {
     private final String mInputVcf;
     private final String mOutputDir;
@@ -44,7 +43,7 @@ public class GnomadParser
 
     public static final String GNOMAD_FILE_ID = "gnomad_variants";
 
-    public GnomadParser(final CommandLine cmd)
+    public GnomadCacheBuilder(final CommandLine cmd)
     {
         mOutputDir = parseOutputDir(cmd);
         mInputVcf = cmd.getOptionValue(GNOMAD_FILE);
@@ -156,8 +155,8 @@ public class GnomadParser
         final CommandLine cmd = createCommandLine(args, options);
         setLogLevel(cmd);
 
-        GnomadParser gnomadParser = new GnomadParser(cmd);
-        gnomadParser.run();
+        GnomadCacheBuilder gnomadCacheBuilder = new GnomadCacheBuilder(cmd);
+        gnomadCacheBuilder.run();
     }
 
     @NotNull

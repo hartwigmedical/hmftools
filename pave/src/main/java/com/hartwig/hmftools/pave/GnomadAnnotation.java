@@ -1,12 +1,12 @@
-package com.hartwig.hmftools.pave.external;
+package com.hartwig.hmftools.pave;
 
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
-import static com.hartwig.hmftools.pave.external.GnomadParser.GNOMAD_FILE_ID;
-import static com.hartwig.hmftools.pave.external.GnomadParser.formFileId;
+import static com.hartwig.hmftools.pave.external.GnomadCacheBuilder.GNOMAD_FILE_ID;
+import static com.hartwig.hmftools.pave.external.GnomadCacheBuilder.formFileId;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -23,9 +23,7 @@ import java.util.stream.Stream;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.pave.VariantData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -193,7 +191,6 @@ public class GnomadAnnotation
             String line = fileReader.readLine(); // skip header
             String currentChr = "";
             int currentPos = 0;
-            int maxAtPos = 0;
 
             Map<Integer,List<GnomadVariant>> posMap = null;
             List<GnomadVariant> posList = null;
@@ -233,7 +230,6 @@ public class GnomadAnnotation
                 }
 
                 posList.add(new GnomadVariant(ref, alt, frequency));
-                maxAtPos = max(maxAtPos, posList.size());
 
                 ++itemCount;
             }
