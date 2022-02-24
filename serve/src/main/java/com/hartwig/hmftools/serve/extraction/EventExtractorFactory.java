@@ -71,6 +71,8 @@ public final class EventExtractorFactory {
                         config.microsatelliteStableEvents(),
                         config.highTumorMutationalLoadEvents(),
                         config.lowTumorMutationalLoadEvents(),
+                        config.highTumorMutationalBurdenEvents(),
+                        config.lowTumorMutationalBurdenEvents(),
                         config.hrDeficiencyEvents(),
                         config.hpvPositiveEvents(),
                         config.ebvPositiveEvents(),

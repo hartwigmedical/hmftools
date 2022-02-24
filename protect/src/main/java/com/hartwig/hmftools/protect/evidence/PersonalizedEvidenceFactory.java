@@ -108,6 +108,8 @@ public class PersonalizedEvidenceFactory {
             case MICROSATELLITE_STABLE:
             case HIGH_TUMOR_MUTATIONAL_LOAD:
             case LOW_TUMOR_MUTATIONAL_LOAD:
+            case HIGH_TUMOR_MUTATIONAL_BURDEN:
+            case LOW_TUMOR_MUTATIONAL_BURDEN:
             case HOMOLOGOUS_RECOMBINATION_DEFICIENT:
             case IMMUNO_HLA:
                 return ProtectEvidenceType.SIGNATURE;

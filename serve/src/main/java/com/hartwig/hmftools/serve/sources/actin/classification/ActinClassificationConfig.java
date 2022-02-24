@@ -35,6 +35,8 @@ public class ActinClassificationConfig {
     private static final Set<String> MICROSATELLITE_STABLE_EVENTS = microsatelliteStableEvents();
     private static final Set<String> HIGH_TUMOR_MUTATIONAL_LOAD_EVENTS = highTumorMutationalLoadEvents();
     private static final Set<String> LOW_TUMOR_MUTATIONAL_LOAD_EVENTS = lowTumorMutationalLoadEvents();
+    private static final Set<String> HIGH_TUMOR_MUTATIONAL_BURDEN_EVENTS = highTumorMutationalBurdenEvents();
+    private static final Set<String> LOW_TUMOR_MUTATIONAL_BURDEN_EVENTS = lowTumorMutationalBurdenEvents();
     private static final Set<String> HR_DEFICIENCY_EVENTS = hrDeficiencyEvents();
     private static final Set<String> HLA_EVENTS = hlaEvents();
     private static final Set<String> HPV_POSITIVE_EVENTS = hpvPositiveEvents();
@@ -72,6 +74,8 @@ public class ActinClassificationConfig {
                 .microsatelliteStableEvents(MICROSATELLITE_STABLE_EVENTS)
                 .highTumorMutationalLoadEvents(HIGH_TUMOR_MUTATIONAL_LOAD_EVENTS)
                 .lowTumorMutationalLoadEvents(LOW_TUMOR_MUTATIONAL_LOAD_EVENTS)
+                .highTumorMutationalBurdenEvents(HIGH_TUMOR_MUTATIONAL_BURDEN_EVENTS)
+                .lowTumorMutationalBurdenEvents(LOW_TUMOR_MUTATIONAL_BURDEN_EVENTS)
                 .hrDeficiencyEvents(HR_DEFICIENCY_EVENTS)
                 .hlaEvents(HLA_EVENTS)
                 .hpvPositiveEvents(HPV_POSITIVE_EVENTS)
@@ -210,7 +214,6 @@ public class ActinClassificationConfig {
     private static Set<String> highTumorMutationalLoadEvents() {
         Set<String> set = Sets.newHashSet();
         set.add(ActinKeywords.TML_HIGH);
-        set.add(ActinKeywords.TMB_HIGH);
         return set;
     }
 
@@ -218,6 +221,18 @@ public class ActinClassificationConfig {
     private static Set<String> lowTumorMutationalLoadEvents() {
         Set<String> set = Sets.newHashSet();
         set.add(ActinKeywords.TML_LOW);
+        return set;
+    }
+
+    @NotNull
+    private static Set<String> lowTumorMutationalBurdenEvents() {
+        return Sets.newHashSet();
+    }
+
+    @NotNull
+    private static Set<String> highTumorMutationalBurdenEvents() {
+        Set<String> set = Sets.newHashSet();
+        set.add(ActinKeywords.TMB_HIGH);
         return set;
     }
 
