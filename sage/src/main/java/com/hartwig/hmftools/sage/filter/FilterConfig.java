@@ -105,14 +105,4 @@ public class FilterConfig
 
         return options;
     }
-
-    public boolean passesHardFilters(final ReadContextCounter readContextCounter)
-    {
-        if(readContextCounter.Tier.equals(VariantTier.HOTSPOT))
-            return true;
-
-        return readContextCounter.rawAltBaseQuality() >= HardMinTumorRawBaseQuality
-                && readContextCounter.rawAltSupport() >= HardMinTumorRawAltSupport
-                && readContextCounter.tumorQuality() >= HardMinTumorQual;
-    }
 }

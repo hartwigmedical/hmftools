@@ -44,7 +44,7 @@ public class SageConstants
     public static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(70, 0.005,
             0, 0, 0.1, 0.5);
 
-    public static final SoftFilterConfig DEFAULT_PANEL_FILTER = new SoftFilterConfig(100, 0.015,
+    public static final SoftFilterConfig DEFAULT_PANEL_FILTER = new SoftFilterConfig(100, 0.02  ,
             0, 0, 0.04, 0.04);
 
     public static final SoftFilterConfig DEFAULT_HIGH_CONFIDENCE_FILTER = new SoftFilterConfig(160, 0.025,
