@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage;
 
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
@@ -260,9 +261,7 @@ public class ReferenceData
 
         try
         {
-            BufferedReader fileReader = bedFile.endsWith(".gz") ?
-                    new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(bedFile)))) :
-                    new BufferedReader(new FileReader(bedFile));
+            BufferedReader fileReader = createBufferedReader(bedFile);
 
             final String fileDelim = "\t";
             String line = "";

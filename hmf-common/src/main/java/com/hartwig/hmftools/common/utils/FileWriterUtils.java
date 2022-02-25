@@ -1,13 +1,19 @@
 package com.hartwig.hmftools.common.utils;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 
 import com.google.common.collect.Maps;
 
@@ -60,6 +66,14 @@ public final class FileWriterUtils
             return outputDir;
 
         return outputDir + File.separator;
+    }
+
+    public static BufferedReader createBufferedReader(final String filename) throws IOException
+    {
+        Reader reader = filename.endsWith(".gz") ?
+                new InputStreamReader(new GZIPInputStream(new FileInputStream(filename))) : new FileReader(filename);
+
+        return new BufferedReader(reader);
     }
 
     @NotNull

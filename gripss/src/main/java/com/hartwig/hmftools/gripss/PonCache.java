@@ -424,24 +424,6 @@ public class PonCache
             PonCount = ponCount;
         }
 
-        /*
-        public boolean withinStartRegion(int position, int margin)
-        {
-            return position >= RegionStart.start() - margin && position <= RegionStart.end() + margin;
-        }
-
-        public boolean matches(final SvData var, int marginStart, int marginEnd)
-        {
-            if(var.posStart() < RegionStart.start() - marginStart || var.posStart() > RegionStart.end() + marginStart)
-                return false;
-
-            if(var.posEnd() < RegionEnd.start() - marginEnd || var.posEnd() > RegionEnd.end() + marginEnd)
-                return false;
-
-            return OrientStart == var.orientStart() && OrientEnd == var.orientEnd();
-        }
-        */
-
         public boolean matches(final BaseRegion svStart, final ChrBaseRegion svEnd, byte orientStart, byte orientEnd)
         {
             return RegionStart.overlaps(svStart) && RegionEnd.overlaps(svEnd) && OrientStart == orientStart && OrientEnd == orientEnd;
@@ -464,11 +446,6 @@ public class PonCache
             Region = region;
             Orient = orient;
             PonCount = ponCount;
-        }
-
-        public boolean withinRegion(int position, int margin)
-        {
-            return position >= Region.start() - margin && position <= Region.end() + margin;
         }
 
         public boolean matches(final BaseRegion svRegion, byte orientation)
