@@ -30,5 +30,4 @@ public class ActionableHLAFileTest {
             assertEquals(lines.get(i), regeneratedLines.get(i));
         }
     }
-
 }
