@@ -151,6 +151,7 @@ public class SageApplication implements AutoCloseable
     {
         mRefData.RefGenome.close();
         mExecutorService.shutdown();
+        mVcfWriter.close();
     }
 
     public static void main(final String... args) throws IOException, InterruptedException, ExecutionException

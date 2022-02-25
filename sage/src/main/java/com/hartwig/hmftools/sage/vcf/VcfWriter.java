@@ -2,11 +2,10 @@ package com.hartwig.hmftools.sage.vcf;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.sage.ReferenceData;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.SageVariant;
-
-import org.apache.commons.compress.utils.Lists;
 
 public class VcfWriter
 {

@@ -256,7 +256,7 @@ public class GnomadAnnotation
                 ++itemCount;
             }
 
-            PV_LOGGER.info("loaded {} gnomad frequency records from file({})", itemCount, filename);
+            PV_LOGGER.debug("loaded {} gnomad frequency records from file({})", itemCount, filename);
         }
         catch(IOException e)
         {
