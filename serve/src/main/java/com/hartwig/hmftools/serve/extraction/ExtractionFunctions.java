@@ -77,6 +77,7 @@ public final class ExtractionFunctions {
             mergedBuilder.addAllActionableGenes(result.actionableGenes());
             mergedBuilder.addAllActionableFusions(result.actionableFusions());
             mergedBuilder.addAllActionableCharacteristics(result.actionableCharacteristics());
+            mergedBuilder.addAllActionableHLA(result.actionableHLA());
         }
 
         ExtractionResult mergedResult = mergedBuilder.knownHotspots(HotspotFunctions.consolidate(allHotspots))

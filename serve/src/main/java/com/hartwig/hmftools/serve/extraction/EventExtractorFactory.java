@@ -77,7 +77,7 @@ public final class EventExtractorFactory {
                         config.hrDeficiencyEvents(),
                         config.hpvPositiveEvents(),
                         config.ebvPositiveEvents()),
-                new ImmunoHLAExtractor(config.hlaEvents()));
+                new ImmunoHLAExtractor());
     }
 
     @NotNull
