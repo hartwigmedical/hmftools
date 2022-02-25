@@ -11,6 +11,7 @@ import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharact
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
+import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLA;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.extraction.ActionableEventFactory;
 import com.hartwig.hmftools.serve.extraction.EventExtractor;
@@ -105,6 +106,11 @@ public class ActinExtractor {
             actionableCharacteristics.add(ActionableEventFactory.toActionableCharacteristic(trial, extraction.characteristic()));
         }
 
+        Set<ActionableHLA> actionableHLA = Sets.newHashSet();
+        if (extraction.hla() != null) {
+            actionableHLA.add(ActionableEventFactory.toActionableHLa(trial, extraction.hla()));
+        }
+
         return ImmutableExtractionResult.builder()
                 .eventInterpretation(interpretation)
                 .refGenomeVersion(Knowledgebase.ACTIN.refGenomeVersion())
@@ -113,6 +119,7 @@ public class ActinExtractor {
                 .actionableGenes(actionableGenes)
                 .actionableFusions(actionableFusions)
                 .actionableCharacteristics(actionableCharacteristics)
+                .actionableHLA(actionableHLA)
                 .build();
     }
 }

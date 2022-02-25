@@ -9,6 +9,7 @@ import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharact
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGeneUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotUrlConsolidator;
+import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLAUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRangeUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
@@ -28,7 +29,6 @@ import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class ExtractionFunctions {
 
@@ -47,6 +47,7 @@ public final class ExtractionFunctions {
                 .actionableFusions(ActionableEventUrlMerger.merge(result.actionableFusions(), new ActionableFusionUrlConsolidator()))
                 .actionableCharacteristics(ActionableEventUrlMerger.merge(result.actionableCharacteristics(),
                         new ActionableCharacteristicUrlConsolidator()))
+                .actionableHLA(ActionableEventUrlMerger.merge(result.actionableHLA(), new ActionableHLAUrlConsolidator()))
                 .build();
     }
 

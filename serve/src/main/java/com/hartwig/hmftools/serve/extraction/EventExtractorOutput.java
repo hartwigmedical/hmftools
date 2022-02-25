@@ -9,6 +9,7 @@ import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.exon.ExonAnnotation;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelAnnotation;
+import com.hartwig.hmftools.serve.extraction.immuno.ImmunoHLA;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -39,4 +40,7 @@ public abstract class EventExtractorOutput {
 
     @Nullable
     public abstract TumorCharacteristic characteristic();
+
+    @Nullable
+    public abstract ImmunoHLA hla();
 }

@@ -9,6 +9,7 @@ import com.hartwig.hmftools.serve.extraction.exon.ExonExtractor;
 import com.hartwig.hmftools.serve.extraction.fusion.FusionExtractor;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelExtractor;
 import com.hartwig.hmftools.serve.extraction.hotspot.HotspotExtractor;
+import com.hartwig.hmftools.serve.extraction.immuno.ImmunoHLAExtractor;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,11 +30,13 @@ public class EventExtractor {
     private final FusionExtractor fusionExtractor;
     @NotNull
     private final TumorCharacteristicExtractor tumorCharacteristicExtractor;
+    @NotNull
+    private final ImmunoHLAExtractor immunoHLAExtractor;
 
     public EventExtractor(@NotNull final HotspotExtractor hotspotExtractor, @NotNull final CodonExtractor codonExtractor,
             @NotNull final ExonExtractor exonExtractor, @NotNull final GeneLevelExtractor geneLevelExtractor,
             @NotNull final CopyNumberExtractor copyNumberExtractor, @NotNull final FusionExtractor fusionExtractor,
-            @NotNull final TumorCharacteristicExtractor tumorCharacteristicExtractor) {
+            @NotNull final TumorCharacteristicExtractor tumorCharacteristicExtractor, @NotNull ImmunoHLAExtractor immunoHLAExtractor) {
         this.hotspotExtractor = hotspotExtractor;
         this.codonExtractor = codonExtractor;
         this.exonExtractor = exonExtractor;
@@ -41,6 +44,7 @@ public class EventExtractor {
         this.copyNumberExtractor = copyNumberExtractor;
         this.fusionExtractor = fusionExtractor;
         this.tumorCharacteristicExtractor = tumorCharacteristicExtractor;
+        this.immunoHLAExtractor = immunoHLAExtractor;
     }
 
     @NotNull
@@ -54,6 +58,7 @@ public class EventExtractor {
                 .knownCopyNumber(copyNumberExtractor.extract(gene, type))
                 .knownFusionPair(fusionExtractor.extract(gene, type, event))
                 .characteristic(tumorCharacteristicExtractor.extract(type, event, cutOff))
+                .hla(immunoHLAExtractor.extract(type, event))
                 .build();
     }
 }

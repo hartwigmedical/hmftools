@@ -41,6 +41,7 @@ import com.hartwig.hmftools.serve.extraction.gene.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.extraction.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
+import com.hartwig.hmftools.serve.extraction.immuno.ImmunoHLA;
 import com.hartwig.hmftools.serve.extraction.range.RangeAnnotation;
 import com.hartwig.hmftools.serve.sources.ImmutableSources;
 import com.hartwig.hmftools.serve.sources.Sources;
@@ -108,6 +109,8 @@ public final class ViccExtractor {
         Map<Feature, KnownCopyNumber> ampsDelsPerFeature = Maps.newHashMap();
         Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
         Map<Feature, TumorCharacteristic> characteristicsPerFeature = Maps.newHashMap();
+        Map<Feature, ImmunoHLA> hlaPerFeature = Maps.newHashMap();
+
         String rawInput = Strings.EMPTY;
         List<EventInterpretation> interpretation = Lists.newArrayList();
         for (Feature feature : entry.features()) {
@@ -157,13 +160,18 @@ public final class ViccExtractor {
                 if (extractorOutput.characteristic() != null) {
                     characteristicsPerFeature.put(feature, extractorOutput.characteristic());
                 }
+
+                if (extractorOutput.hla() != null) {
+                    hlaPerFeature.put(feature, extractorOutput.hla());
+                }
             }
         }
 
         // We only need to resolve the actionable event in case we have extracted at least one feature interpretation.
         Set<ActionableEvent> actionableEvents;
         if (hotspotsPerFeature.isEmpty() && codonsPerFeature.isEmpty() && exonsPerFeature.isEmpty() && geneLevelEventsPerFeature.isEmpty()
-                && ampsDelsPerFeature.isEmpty() && fusionsPerFeature.isEmpty() && characteristicsPerFeature.isEmpty()) {
+                && ampsDelsPerFeature.isEmpty() && fusionsPerFeature.isEmpty() && characteristicsPerFeature.isEmpty()
+                && hlaPerFeature.isEmpty()) {
             actionableEvents = Sets.newHashSet();
         } else {
             actionableEvents = actionableEvidenceFactory.toActionableEvents(entry, rawInput);
