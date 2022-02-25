@@ -102,8 +102,8 @@ java -jar lilac.jar \
    -resource_dir /path_to_lilac_resource_files/ \ 
    -reference_bam /sample_data_path/COLO829R.bam \
    -tumor_bam /sample_data_path/COLO829T.bam \
-   -somatic_vcf /sample_data_path/COLO829T.purple.somatic.vcf.gz \
-   -gene_copy_number /sample_data_path/COLO829T.purple.cnv.gene.tsv \
+   -somatic_variants_file /sample_data_path/COLO829T.purple.somatic.vcf.gz \
+   -gene_copy_number_file /sample_data_path/COLO829T.purple.cnv.gene.tsv \
    -output_dir /output_dir/ \
 ```
 
@@ -357,4 +357,5 @@ nucleotide matches are permitted.
 
 ## Version History and Download Links
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.0)
+- [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.1)
  

@@ -7,17 +7,12 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.ckb.classification.CkbEventTypeExtractor;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
-import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.common.serve.classification.EventType;
 
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class ActionableEntryFactoryTest {
@@ -34,13 +29,12 @@ public class ActionableEntryFactoryTest {
         Set<ActionableEntry> entryCharacteristicsSet = ActionableEntryFactory.toActionableEntries(entryCharacteristics, "MSI neg");
         assertEquals(1, entryCharacteristicsSet.size());
         ActionableEntry characteristics = entryCharacteristicsSet.iterator().next();
-        assertEquals("MSI neg", characteristics.rawInput());
-        assertEquals(Knowledgebase.CKB, characteristics.source());
+        assertEquals("MSI neg", characteristics.source().sourceEvent());
+        assertEquals(Knowledgebase.CKB, characteristics.source().source());
         assertEquals("AB", characteristics.treatment());
         assertEquals("AB", characteristics.cancerType());
         assertEquals("162", characteristics.doid());
-        assertEquals("Hematologic cancer", characteristics.blacklistCancerType());
-        assertEquals("2531", characteristics.blacklistedDoid());
+        assertEquals("Hematologic cancer,2531", characteristics.tumorLocationBlacklisting());
         assertEquals(EvidenceLevel.A, characteristics.level());
         assertEquals(EvidenceDirection.RESPONSIVE, characteristics.direction());
 
@@ -56,13 +50,12 @@ public class ActionableEntryFactoryTest {
         Set<ActionableEntry> entryAmplificationSet = ActionableEntryFactory.toActionableEntries(entryAmplification, "KRAS amplification");
         assertEquals(1, entryAmplificationSet.size());
         ActionableEntry amplification = entryAmplificationSet.iterator().next();
-        assertEquals("KRAS amplification", amplification.rawInput());
-        assertEquals(Knowledgebase.CKB, amplification.source());
+        assertEquals("KRAS amplification", amplification.source().sourceEvent());
+        assertEquals(Knowledgebase.CKB, amplification.source().source());
         assertEquals("AB", amplification.treatment());
         assertEquals("AB", amplification.cancerType());
         assertEquals("163", amplification.doid());
-        assertEquals(Strings.EMPTY, amplification.blacklistCancerType());
-        assertEquals(Strings.EMPTY, amplification.blacklistedDoid());
+        assertEquals(Strings.EMPTY, amplification.tumorLocationBlacklisting());
         assertEquals(EvidenceLevel.A, amplification.level());
         assertEquals(EvidenceDirection.RESPONSIVE, amplification.direction());
 
@@ -71,13 +64,12 @@ public class ActionableEntryFactoryTest {
         Set<ActionableEntry> entryHotspotSet = ActionableEntryFactory.toActionableEntries(entryHotspot, "BRAF V600E");
         assertEquals(1, entryHotspotSet.size());
         ActionableEntry hotspot = entryHotspotSet.iterator().next();
-        assertEquals("BRAF V600E", hotspot.rawInput());
-        assertEquals(Knowledgebase.CKB, hotspot.source());
+        assertEquals("BRAF V600E", hotspot.source().sourceEvent());
+        assertEquals(Knowledgebase.CKB, hotspot.source().source());
         assertEquals("AB", hotspot.treatment());
         assertEquals("AB", hotspot.cancerType());
         assertEquals("162", hotspot.doid());
-        assertEquals("Hematologic cancer", hotspot.blacklistCancerType());
-        assertEquals("2531", hotspot.blacklistedDoid());
+        assertEquals("Hematologic cancer,2531", hotspot.tumorLocationBlacklisting());
         assertEquals(EvidenceLevel.A, characteristics.level());
         assertEquals(EvidenceDirection.RESPONSIVE, characteristics.direction());
     }

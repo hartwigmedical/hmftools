@@ -14,6 +14,8 @@ import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.hotspot.ImmutableActionableHotspot;
+import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLA;
+import com.hartwig.hmftools.serve.actionability.immuno.ImmutableActionableHLA;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.RangeType;
@@ -26,6 +28,7 @@ import com.hartwig.hmftools.serve.extraction.exon.ImmutableExonAnnotation;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
+import com.hartwig.hmftools.serve.extraction.immuno.ImmunoHLA;
 import com.hartwig.hmftools.serve.extraction.range.RangeAnnotation;
 
 import org.jetbrains.annotations.NotNull;
@@ -137,7 +140,17 @@ public final class ActionableEventFactory {
         return ImmutableActionableCharacteristic.builder()
                 .from(actionableEvent)
                 .name(characteristic.tumorCharacteristicAnnotation())
-                .cutOff(characteristic.cutoff())
+                .atLeast(characteristic.atLeast())
+                .cutOff(characteristic.cutOff())
+                .build();
+    }
+
+    @NotNull
+    public static ActionableHLA toActionableHLa(@NotNull ActionableEvent actionableEvent,
+            @NotNull ImmunoHLA hla) {
+        return ImmutableActionableHLA.builder()
+                .from(actionableEvent)
+                .hlaTypering(hla.immunoHLA())
                 .build();
     }
 }

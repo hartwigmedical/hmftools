@@ -192,27 +192,23 @@ public class FusionExtractor {
         }
 
         if (geneChecker.isValidGene(pair.geneUp()) && geneChecker.isValidGene(pair.geneDown())) {
-            if (!DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithDriverInconsistentModeAnnotation)) {
+            if (DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithDriverInconsistentModeAnnotation)) {
                 if (!isIncludedSomewhereInFusionCache(pair.geneUp(), pair.geneDown())) {
                     if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
                             DealWithDriverInconsistentModeAnnotation.WARN_ONLY)) {
-                        LOGGER.warn("Fusion '{}-{}' is not part of the known fusion cache", pair.geneUp(), pair.geneDown());
+                        LOGGER.warn("Fusion event on fusion '{}-{}' is not part of the known fusion cache", pair.geneUp(), pair.geneDown());
                         return pair;
                     } else if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
                             DealWithDriverInconsistentModeAnnotation.FILTER)) {
-                        LOGGER.info("Filtered -- Fusion '{}-{}' is not part of the known fusion cache", pair.geneUp(), pair.geneDown());
+                        LOGGER.info("Fusion evnet filtered -- Fusion '{}-{}' is not part of the known fusion cache", pair.geneUp(), pair.geneDown());
                         return null;
                     }
                 } else {
                     return pair;
                 }
             } else {
-                if (!isIncludedSomewhereInFusionCache(pair.geneUp(), pair.geneDown())) {
-                    LOGGER.warn("Filtered -- Fusion '{}-{}' is not part of the known fusion cache", pair.geneUp(), pair.geneDown());
-                    return null;
-                } else {
-                    return pair;
-                }
+                return pair;
+
             }
         }
         return null;

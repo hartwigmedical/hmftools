@@ -19,8 +19,8 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SageVariant;
-import com.hartwig.hmftools.sage.config.SageConfig;
-import com.hartwig.hmftools.sage.config.VariantFilters;
+import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.filter.VariantFilters;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
@@ -140,7 +140,9 @@ public class RegionTask implements Callable
         {
             Candidate candidate = finalCandidates.get(candidateIndex);
 
-            final List<ReadContextCounter> normalReadCounters = normalEvidence.getReadCounters(candidateIndex);
+            final List<ReadContextCounter> normalReadCounters = !mConfig.ReferenceIds.isEmpty() ?
+                    normalEvidence.getReadCounters(candidateIndex) : Lists.newArrayList();
+
             final List<ReadContextCounter> tumorReadCounters = tumorEvidence.getFilteredReadCounters(candidateIndex);
 
             /*

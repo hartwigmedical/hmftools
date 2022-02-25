@@ -24,7 +24,7 @@ import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.ReferenceData;
-import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;

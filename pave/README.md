@@ -64,7 +64,9 @@ java -jar pave.jar
 
 ## Overview and algorithm
 
-PAVE predicts the coding impact, protein impact and coding effect of each variant on every overlapping transcript including for up to 1kb upstream.  The following annotations are added for each affected transcript:
+PAVE predicts the coding impact, protein impact and coding effect of each variant on every overlapping transcript including for up to 1kb upstream.  Note that PAVE takes into account nearby mutations in the same local phase set (LPS) where they alter effect (either same codon, or multiple frameshifts leading to a single inframe indel).  If a variant exists in multiple LPS then the one with the highest support is used.
+
+The following annotations are added for each affected transcript:
 
 * Gene
 * TranscriptId

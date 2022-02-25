@@ -77,12 +77,6 @@ java -Xmx32G -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
 ## Tumor Only Mode
 If no reference BAM is supplied, AMBER will be put into tumor only mode.
 
-## Multiple Reference / Donor mode
-The `reference` and `reference_bam` arguments supports multiple arguments separated by commas. 
-When run in this mode the heterozygous baf points are taken as the intersection of each of the reference bams. 
-No change is made to the SNPCheck or contamination output. These will be run on the first reference bam in the list. 
-
-
 ### Mandatory Arguments
 
 | Argument   | Description                                                                                |
@@ -112,6 +106,13 @@ java -Xmx32G -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
    -threads 16 \
    -loci /path/to/GermlineHetPon.37.vcf.gz 
 ```
+
+## Multiple Reference / Donor mode
+The `reference` and `reference_bam` arguments supports multiple arguments separated by commas. 
+When run in this mode the heterozygous baf points are taken as the intersection of each of the reference bams. 
+No change is made to the SNPCheck or contamination output. These will be run on the first reference bam in the list. 
+
+
 ## Regions of Homozygosity Algorithm
 Amber outputs a file which contains continuous regions of homozygous sites.  The sex chromosomes are excluded from consideration, as are the short arms of chr 13,14,15,21 & 22 as well as regions within 1M bases of centromeric gaps and large regions of heterochromatin (ie for chr 1,chr9, chr 16).
 

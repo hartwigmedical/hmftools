@@ -11,6 +11,7 @@ import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharact
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
+import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLA;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.extraction.ActionableEventFactory;
 import com.hartwig.hmftools.serve.extraction.EventExtractor;
@@ -18,6 +19,10 @@ import com.hartwig.hmftools.serve.extraction.EventExtractorOutput;
 import com.hartwig.hmftools.serve.extraction.ExtractionFunctions;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
+import com.hartwig.hmftools.serve.extraction.events.EventInterpretation;
+import com.hartwig.hmftools.serve.extraction.events.ImmutableEventInterpretation;
+import com.hartwig.hmftools.serve.sources.ImmutableSources;
+import com.hartwig.hmftools.serve.sources.Sources;
 import com.hartwig.hmftools.serve.sources.actin.classification.ActinEventExtractor;
 import com.hartwig.hmftools.serve.sources.actin.classification.ActinEventTypeExtractor;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
@@ -41,7 +46,7 @@ public class ActinExtractor {
 
     @NotNull
     public ExtractionResult extract(@NotNull List<ActinEntry> entries) {
-
+        List<EventInterpretation> interpretation = Lists.newArrayList();
         ProgressTracker tracker = new ProgressTracker("ACTIN", entries.size());
         List<ExtractionResult> extractions = Lists.newArrayList();
         for (ActinEntry entry : entries) {
@@ -53,8 +58,17 @@ public class ActinExtractor {
                     LOGGER.warn("No event type known for '{}' on '{}'", entry, entry.gene());
                 } else {
                     String gene = entry.gene() != null ? entry.gene() : "-";
+                    Sources sources = ImmutableSources.builder().sourceEvent(entry.rule().toString()).source(Knowledgebase.ACTIN).build();
+                    interpretation.add(ImmutableEventInterpretation.builder()
+                            .source(sources)
+                            .interpretGene(gene)
+                            .interpretEvent(event)
+                            .interpretEventType(type)
+                            .build());
+
                     extractions.add(toExtractionResult(trial,
-                            eventExtractor.extract(gene, null, type, event, entry.mutation())));
+                            eventExtractor.extract(gene, null, type, event, entry.mutation()),
+                            interpretation));
                 }
             }
 
@@ -65,7 +79,8 @@ public class ActinExtractor {
     }
 
     @NotNull
-    private static ExtractionResult toExtractionResult(@NotNull ActinTrial trial, @NotNull EventExtractorOutput extraction) {
+    private static ExtractionResult toExtractionResult(@NotNull ActinTrial trial, @NotNull EventExtractorOutput extraction,
+            @NotNull List<EventInterpretation> interpretation) {
         Set<ActionableHotspot> actionableHotspots = ActionableEventFactory.toActionableHotspots(trial, extraction.hotspots());
 
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
@@ -91,13 +106,20 @@ public class ActinExtractor {
             actionableCharacteristics.add(ActionableEventFactory.toActionableCharacteristic(trial, extraction.characteristic()));
         }
 
+        Set<ActionableHLA> actionableHLA = Sets.newHashSet();
+        if (extraction.hla() != null) {
+            actionableHLA.add(ActionableEventFactory.toActionableHLa(trial, extraction.hla()));
+        }
+
         return ImmutableExtractionResult.builder()
+                .eventInterpretation(interpretation)
                 .refGenomeVersion(Knowledgebase.ACTIN.refGenomeVersion())
                 .actionableHotspots(actionableHotspots)
                 .actionableRanges(actionableRanges)
                 .actionableGenes(actionableGenes)
                 .actionableFusions(actionableFusions)
                 .actionableCharacteristics(actionableCharacteristics)
+                .actionableHLA(actionableHLA)
                 .build();
     }
 }

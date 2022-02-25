@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage;
 
-import com.hartwig.hmftools.sage.config.SoftFilterConfig;
+import com.hartwig.hmftools.sage.filter.SoftFilterConfig;
 
 public class SageConstants
 {
@@ -25,6 +25,7 @@ public class SageConstants
     public static final int DEFAULT_BQR_MIN_MAP_QUAL = 10;
 
     public static final int MATCHING_BASE_QUALITY = 20;
+    public static final double SC_READ_EVENTS_FACTOR = 10;
 
     public static final int NORMAL_RAW_ALT_BQ_MAX = 25;
 
@@ -43,7 +44,7 @@ public class SageConstants
     public static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(70, 0.005,
             0, 0, 0.1, 0.5);
 
-    public static final SoftFilterConfig DEFAULT_PANEL_FILTER = new SoftFilterConfig(100, 0.015,
+    public static final SoftFilterConfig DEFAULT_PANEL_FILTER = new SoftFilterConfig(100, 0.02  ,
             0, 0, 0.04, 0.04);
 
     public static final SoftFilterConfig DEFAULT_HIGH_CONFIDENCE_FILTER = new SoftFilterConfig(160, 0.025,

@@ -28,6 +28,8 @@ import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
 import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberFunctions;
 import com.hartwig.hmftools.serve.extraction.copynumber.ImmutableKnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
+import com.hartwig.hmftools.serve.extraction.events.EventInterpretation;
+import com.hartwig.hmftools.serve.extraction.events.ImmutableEventInterpretation;
 import com.hartwig.hmftools.serve.extraction.exon.ExonAnnotation;
 import com.hartwig.hmftools.serve.extraction.exon.ExonFunctions;
 import com.hartwig.hmftools.serve.extraction.exon.ImmutableKnownExon;
@@ -39,13 +41,17 @@ import com.hartwig.hmftools.serve.extraction.gene.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.extraction.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
+import com.hartwig.hmftools.serve.extraction.immuno.ImmunoHLA;
 import com.hartwig.hmftools.serve.extraction.range.RangeAnnotation;
+import com.hartwig.hmftools.serve.sources.ImmutableSources;
+import com.hartwig.hmftools.serve.sources.Sources;
 import com.hartwig.hmftools.serve.util.ProgressTracker;
 import com.hartwig.hmftools.vicc.annotation.ViccProteinAnnotationExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
+import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
@@ -81,6 +87,7 @@ public final class ViccExtractor {
 
         // Assume all VICC knowledgebases are on the same ref genome version
         ImmutableExtractionResult.Builder outputBuilder = ImmutableExtractionResult.builder()
+                .eventInterpretation(convertToEventInterpretation(resultsPerEntry))
                 .refGenomeVersion(Knowledgebase.VICC_CGI.refGenomeVersion())
                 .knownHotspots(convertToHotspots(resultsPerEntry))
                 .knownCodons(convertToCodons(resultsPerEntry))
@@ -102,8 +109,10 @@ public final class ViccExtractor {
         Map<Feature, KnownCopyNumber> ampsDelsPerFeature = Maps.newHashMap();
         Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
         Map<Feature, TumorCharacteristic> characteristicsPerFeature = Maps.newHashMap();
-        String rawInput = Strings.EMPTY;
+        Map<Feature, ImmunoHLA> hlaPerFeature = Maps.newHashMap();
 
+        String rawInput = Strings.EMPTY;
+        List<EventInterpretation> interpretation = Lists.newArrayList();
         for (Feature feature : entry.features()) {
             String gene = feature.geneSymbol();
             if (gene == null) {
@@ -112,6 +121,18 @@ public final class ViccExtractor {
                 EventExtractorOutput extractorOutput =
                         eventExtractor.extract(gene, entry.transcriptId(), feature.type(), feature.name(), Strings.EMPTY);
                 rawInput = feature.name();
+
+                Sources sources = ImmutableSources.builder()
+                        .sourceEvent(rawInput)
+                        .source(ActionableEvidenceFactory.fromViccSource(entry.source()))
+                        .build();
+
+                interpretation.add(ImmutableEventInterpretation.builder()
+                        .source(sources)
+                        .interpretGene(gene)
+                        .interpretEvent(feature.name())
+                        .interpretEventType(feature.type())
+                        .build());
                 if (extractorOutput.hotspots() != null) {
                     hotspotsPerFeature.put(feature, extractorOutput.hotspots());
                 }
@@ -139,19 +160,25 @@ public final class ViccExtractor {
                 if (extractorOutput.characteristic() != null) {
                     characteristicsPerFeature.put(feature, extractorOutput.characteristic());
                 }
+
+                if (extractorOutput.hla() != null) {
+                    hlaPerFeature.put(feature, extractorOutput.hla());
+                }
             }
         }
 
         // We only need to resolve the actionable event in case we have extracted at least one feature interpretation.
         Set<ActionableEvent> actionableEvents;
         if (hotspotsPerFeature.isEmpty() && codonsPerFeature.isEmpty() && exonsPerFeature.isEmpty() && geneLevelEventsPerFeature.isEmpty()
-                && ampsDelsPerFeature.isEmpty() && fusionsPerFeature.isEmpty() && characteristicsPerFeature.isEmpty()) {
+                && ampsDelsPerFeature.isEmpty() && fusionsPerFeature.isEmpty() && characteristicsPerFeature.isEmpty()
+                && hlaPerFeature.isEmpty()) {
             actionableEvents = Sets.newHashSet();
         } else {
             actionableEvents = actionableEvidenceFactory.toActionableEvents(entry, rawInput);
         }
 
         return ImmutableViccExtractionResult.builder()
+                .eventInterpretation(interpretation)
                 .hotspotsPerFeature(hotspotsPerFeature)
                 .codonsPerFeature(codonsPerFeature)
                 .exonsPerFeature(exonsPerFeature)
@@ -161,6 +188,15 @@ public final class ViccExtractor {
                 .characteristicsPerFeature(characteristicsPerFeature)
                 .actionableEvents(actionableEvents)
                 .build();
+    }
+
+    @NotNull
+    private static List<EventInterpretation> convertToEventInterpretation(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
+        List<EventInterpretation> interpretation = Lists.newArrayList();
+        for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
+            interpretation = entry.getValue().eventInterpretation();
+        }
+        return interpretation;
     }
 
     @NotNull

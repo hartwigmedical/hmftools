@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.neo.bind;
 
+import static java.lang.Math.max;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
@@ -206,34 +207,42 @@ public class RandomDistributionTask implements Callable
     public static List<ScoreDistributionData> generateDistribution(
             final String allele, final int peptideLength, final List<Double> peptideScores, final List<double[]> discreteScoreData)
     {
-        // write the distribution as 0.0001 up to 0.01, 0.001 up to 0.01, then 0.01 up to 100%
-        // store the lowest/worst score at each point
+        if(peptideScores.size() < 2)
+            return Lists.newArrayList();
+
+        // write the distribution frequency by grouping the sorted items into increasing discrete bucket increments
+        // store the best score at each point
         int totalScores = peptideScores.size();
         int discreteIndex = 0;
         double currentSize = discreteScoreData.get(discreteIndex)[SCORE_SIZE];
         double currentBracket = discreteScoreData.get(discreteIndex)[SCORE_BRACKET];
-        int requiredScores = (int) round(totalScores * currentSize);
+
+        int requiredScores = (int) max(round(totalScores * currentSize), 1);
 
         int currentScoreCount = 0;
-        double currentSizeTotal = 0;
-        int cumulativeScores = 0;
+        double scoreTotal = 0;
 
         List<ScoreDistributionData> scoresDistributions = Lists.newArrayList();
 
-        for(Double score : peptideScores)
+        // start with the top score in the first bucket by itself
+        scoresDistributions.add(new ScoreDistributionData(
+                allele, peptideLength, scoreTotal, peptideScores.get(0), 1, 1));
+
+        currentScoreCount = 0;
+        scoreTotal += currentSize;
+
+        for(int i = 1; i < peptideScores.size() - 1; ++i)
         {
+            Double score = peptideScores.get(i);
             ++currentScoreCount;
-            ++cumulativeScores;
 
             if(currentScoreCount >= requiredScores)
             {
-                scoresDistributions.add(new ScoreDistributionData(
-                        allele, peptideLength, currentSizeTotal, score, currentScoreCount, cumulativeScores));
+                scoresDistributions.add(new ScoreDistributionData(allele, peptideLength, scoreTotal, score, currentScoreCount, i + 1));
 
                 currentScoreCount = 0;
-                currentSizeTotal += currentSize;
 
-                if(Doubles.equal(currentSizeTotal, currentBracket))
+                if(Doubles.equal(scoreTotal, currentBracket))
                 {
                     ++discreteIndex;
 
@@ -241,11 +250,18 @@ public class RandomDistributionTask implements Callable
                     {
                         currentSize = discreteScoreData.get(discreteIndex)[SCORE_SIZE];
                         currentBracket = discreteScoreData.get(discreteIndex)[SCORE_BRACKET];
-                        requiredScores = (int) round(totalScores * currentSize);
+                        requiredScores = (int) max(round(totalScores * currentSize), 1);
                     }
                 }
+
+                scoreTotal += currentSize;
             }
         }
+
+        // add the last score so as to interpolate between scores right up to 100%
+        double lastScore = peptideScores.get(peptideScores.size() - 1);
+        scoresDistributions.add(new ScoreDistributionData(
+                allele, peptideLength, 1, lastScore, 1, peptideScores.size()));
 
         return scoresDistributions;
     }

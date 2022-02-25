@@ -1,10 +1,8 @@
-package com.hartwig.hmftools.sage.config;
+package com.hartwig.hmftools.sage.filter;
 
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-
-import org.jetbrains.annotations.NotNull;
 
 public enum SoftFilter
 {

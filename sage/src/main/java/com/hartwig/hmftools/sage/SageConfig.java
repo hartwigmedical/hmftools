@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.config;
+package com.hartwig.hmftools.sage;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
@@ -35,6 +35,8 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.sage.filter.FilterConfig;
+import com.hartwig.hmftools.sage.quality.QualityConfig;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationConfig;
 
 import org.apache.commons.cli.CommandLine;
@@ -246,6 +248,11 @@ public class SageConfig
         return ResourceDir + cmd.getOptionValue(config);
     }
 
+    public String formOutputDir()
+    {
+        return OutputFile != null ? new File(OutputFile).getParent() + File.separator : "";
+    }
+
     public boolean isValid()
     {
         if(ReferenceIds.size() != ReferenceBams.size())
@@ -381,12 +388,6 @@ public class SageConfig
         String filename = sample + ".sage.gene.coverage.tsv";
         String parent = new File(OutputFile).getParent();
         return parent == null ? filename : parent + File.separator + filename;
-    }
-
-    public String baseQualityRecalibrationFile(final String sample)
-    {
-        String parent = new File(OutputFile).getParent();
-        return parent == null ? sample + ".sage.bqr.tsv" : parent + File.separator + sample + ".sage.bqr.tsv";
     }
 
     public SageConfig()

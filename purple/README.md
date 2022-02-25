@@ -91,12 +91,12 @@ java -jar purple.jar \
    -cobalt /path/to/COLO829/cobalt \
    -gc_profile /path/to/GC_profile.1000bp.37.cnp \
    -ref_genome /path/to/Homo_sapiens_assembly37.fasta \
+   -ensembl_data_dir /path_to_ensembl_data_cache/ \
    -somatic_vcf /path/to/COLO829/COLO829.somatic.vcf.gz \
    -structural_vcf /path/to/COLO829/COLO829.sv.high_confidence.vcf.gz \
    -sv_recovery_vcf /path/to/COLO829/COLO829.sv.low_confidence.vcf.gz \
    -circos /path/to/circos-0.69-6/bin/circos \
-   -db_enabled -db_user build -db_pass build \
-   -db_url mysql://localhost:3306/hmfpatients?serverTimezone=UTC
+   -db_user build -db_pass build -db_url mysql://localhost:3306/hmfpatients?serverTimezone=UTC
 ```
 
 ## Arguments
@@ -113,6 +113,7 @@ cobalt | Path to COBALT output. This should correspond to the output_dir used in
 gc_profile | Path to GC profile.
 ref_genome | Path to reference genome fasta file.
 ref_genome_version | V37 (default) or V38
+ensembl_data_dir | Path to Ensembl data cache
 
 The GC Profile file used by HMF (GC_profile.1000bp.37.cnp) is available to download from [HMFTools-Resources > Cobalt](https://resources.hartwigmedicalfoundation.nl). 
 A 38 equivalent is also available.
@@ -132,11 +133,11 @@ germline_vcf | None | Optional location of germline variants vcf. Sample names m
 somatic_vcf | None | Optional location of somatic variants vcf.  Sample name must match tumor parameter. GZ files supported.
 structural_vcf | None | Optional location of high confidence structural variants vcf. GZ files supported.
 sv_recovery_vcf | None | Optional location of low confidence structural variants vcf which may be recovered by PURPLE. GZ files supported.
+germline_del_freq_file | None | Provide a cohort frequency for germline deletions
 circos | None | Optional path to circos binary. When supplied, circos graphs will be written to <output_dir>/plot
-db_enabled | None | This parameter has no arguments. Optionally include if you wish to persist results to a database. Database initialization script can be found [here](https://github.com/hartwigmedical/hmftools/blob/master/patient-db/src/main/resources/generate_database.sql).
-db_user | None | Database username. Mandatory if db_enabled.
-db_pass | None | Database password. Mandatory if db_enabled.
-db_url | None | Database URL. Should be of format: `mysql://localhost:3306/hmfpatients`. Mandatory if db_enabled.
+db_user | None | Database username - set all 3 DB parameters to load Purple data to hmf_patients DB
+db_pass | None | Database password
+db_url | None | Database URL. Should be of format: `mysql://localhost:3306/hmfpatients`
 no_charts | NA | Disables creation of (non-circos) charts
 tumor_only | NA | [Tumor only mode](#tumor-only-mode)
 
@@ -186,7 +187,7 @@ The following arguments control the driver catalog behaviour.
 
 Argument | Description 
 ---|---
-driver_catalog |  Enables the driver catalog
+run_drivers |  Enables the driver catalog
 somatic_hotspots | VCF of somatic hotspot locations. Mandatory if driver catalog enabled.
 germline_hotspots | VCF of germline hotspot locations. Mandatory if driver catalog enabled and germline variants supplied.
 driver_gene_panel | TSV of driver genes. Mandatory if driver catalog enabled.
@@ -509,7 +510,7 @@ At this stage we have determined a copy number and minor allele copy number for 
 
 PURPLE attempts to recover entries from a set of lower confidence structural variants if a recovery vcf (parameter: `sv_recovery_vcf`) is provided.
 
-There are two situations where PURPLE will attempt to recover structural variants. The first is when a copy number segment is unsupported by an existing structural variant. The second is to search for an structural variant which could offset the copy number impact of an existing “unbalanced” structural variant break that has a junction copy number not supported by the copy number change. A structural variant is considered unbalanced if the unexplained copy number change (ie. the junction copy number - copy number change) is greater than 20% of the copy number at the breakpoint and > 0.5.  An unbalanced structural variant must also have a min depth window count of 5 in the copy number segments immediately before and after the SV breakpoint. If only one leg of a structural variant is unbalanced but no suitable candidate was found, a single ended breakpoint will be inferred at that position. 
+There are two situations where PURPLE will attempt to recover structural variants. The first is when a copy number segment is unsupported by an existing structural variant. The second is to search for an structural variant which could offset the copy number impact of an existing “unbalanced” structural variant break that has a junction copy number not supported by the copy number change. A structural variant is considered unbalanced if the unexplained copy number change (ie. the junction copy number - copy number change) is greater than 20% of the copy number at the breakpoint and > 0.5.  An unbalanced structural variant must also have a min depth window count of 5 in the copy number segments immediately before and after the SV breakpoint.  
 
 Eligible recovery candidates must:
 
@@ -517,6 +518,8 @@ Eligible recovery candidates must:
 2. Not be “minTumorAF” or "DEDUP" filtered in GRIPSS
 3. Have a minQual > 300 (breakpoints) or 800 (single breakends)
 4. Have a junction copy number of at least 50% of the unexplained copy number change and of at least 0.5.
+
+In both siuations, if no suitable SV candidate is found to help explain the copy number discrepancy, a single ended breakend will be inferred (with type = 'INF') at that position.
 
 Following the successful recovery any structural variants we will rerun the segmentation, copy number smoothing and minor allele copy number smoothing with the updated structural variants to produce a final set of copy number segments and breakpoints. Note that the purity estimation does not change.
 
@@ -1086,180 +1089,12 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
+- [3.3](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.3)
 - [3.2](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.2)
 - [3.1](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.1)
 - [3.0](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.0)
 - [2.54](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.54) 
-  - Germline VAF = 0 for negative copy numbers
-  - Fix logic for acceptor +3 splice variant to consider strand
-  - Fix bug in LOW_TUMOR_VCN logic
-  - WILDTYPE_LOST logic only applies if multiple germline variants do not share same LPS
-  - Stop loading MT variants. It causes lots of unexpected headaches.
 - [2.53](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.53) 
-  - Added LOW_TUMOR_VCN filter to germline variants
-  - Fixed bug with incorrect driver category in copy number drivers.
-  - Better coding effect interpretation of splice variants
-  - Improved germline reporting logic
 - [2.52](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.52) 
-  - Support for COBALT tumor only mode
-  - Indels over splice regions should be marked as such
-  - Add `PARTIAL_AMP` driver type for amplifications where only part of a gene is > 3 * tumor ploidy
-  - Germline variant enrichment
-  - Germline driver catalog
 - [2.51](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.51) 
-  - Correctly identify SV genotypes in tumor-only mode
-  - Allow overwrites of MH field in somatic VCF
 - [2.50](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.50) 
-  - Fixed ref genome 38 regression
-- [2.49](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.49) 
-  - Re-added support for cancel panel integration test 
-- [2.48](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.48) 
-  - Do not produce somatic variant rainfall plot if >100000 variants
-  - Refreshed DNDS values with larger cohort (4404 samples)
-  - Add support for XXY, XYY, Female Mosaic X, and Trisomy 13,15,18,21,X germline aberrations. Requires [patch](../patient-db/src/main/resources/patches/purple/purple2.47_to_2.48_migration.sql) to load to data base.
-  - Removed MALE_KLINEFELTER as a gender. Gender will instead be MALE and KLINEFELTER will be added to the germline aberrations field.
-  - QC Status improvements.
-  - Changing fitting space from ‘normFactor’ to ‘ploidy’ (allows configuration of min-max ploidy and improves fitting resolution at low purity).
-  - Add `min_ploidy` [1] and `max_ploidy` [8] parameters. 
-  - Renamed `somatic_min_total` parameter to `somatic_min_variants`
-  - Changed default value of `somatic_min_total` to 10
-  - Changed default value of `somatic_min_peak` to 10
-  - Write all purity range records to `TUMOR.purple.purity.range.tsv` file
-- [2.47](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.47) 
-  - Add ref genome 38 support for driver gene panel
-  - Phased inframe indels only annotated as MISSENSE if they are otherwise NONSENSE or FRAMESHIFT
-- [2.46](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.46) 
-  - Configurable driver gene panel
-  - Added `REPORTED` flag to any variants that are eligible for the driver catalog. Requires [patch](../patient-db/src/main/resources/patches/patientdb/patientdb3.45_to_3.46_migration.sql) to load to data base.
-- [2.45](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.45) 
-  - Sunrise plot shows relative score
-  - Minor cosmetic changes to plots
-  - Replicate SAGE SnpEff somatic variant enrichments SEW and SEC for driver catalog
-- [2.44](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.44) 
-  - Requires [database patch](../patient-db/src/main/resources/patches/purple/purple2.43_to_2.44_migration.sql). Note that there are corresponding patches for [Linx](../patient-db/src/main/resources/patches/linx/linx_1.10.sql) and [PatientDb](../patient-db/src/main/resources/patches/patientdb/patientdb3.43_to_3.44_migration.sql).
-  - Use non diploid-normalised normal ratio for input circos figure
-  - Do not include chrY in female output in ref genome 38
-  - Small change to LOH BAF inferring
-  - Always use LONG-ARM inferring for 21p copy number
-  - Rename structural variant VCF field PURPLE_PLOIDY to PURPLE_JCN
-  - Rename somatic VCF fields PURPLE_MAP & PURPLE_PLOIDY to PURPLE_MACN & PURPLE_VCN respectively
-  - Fix bug where driver likelihood of having multiple variants can be less than having single variant
-  - Change tumor mutational load to be int rather than double
-- [2.43](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.43) 
-  - Update allelic frequency calculation
-- [2.42](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.42) 
-  - Fix bug when trying to recover structural variant in alt contig
-- [2.41](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.41) 
-  - Fix bug when trying to recover structural variant without allelic frequency
-  - Updated fitting deviation to aggressively penalise highly negative implied copy number
-- [2.40](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.40) 
-  - Increase default value of min_diploid_tumor_ratio_count_centromere to 150
-  - Update driver catalog DNDS values
-  - Driver catalog does not run by default. Only if `driver_catalog` argument supplied
-  - Driver catalog requires KnownHotspots vcf
-- [2.39](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.39) 
-  - Use appropriate karyotype in circos plot 
-- [2.38](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.38) 
-  - Added tumor mutational load and burden to purity output (requires database [patch](../patient-db/src/main/resources/patches/purple/purple2.37_to_2.38_migration.sql))
-  - Support ensemble transcript version id in driver catalog
-- [2.37](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.37)
-  - Remove requirement of chromosome lengths in somatic VCF 
-- [2.36](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.36)
-  - Support for new GRIDSS fields
-- [2.35](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.35)
-  - Driver catalog written to DB
-  - Tumor only mode (disables somatic fitting)
-- [2.34](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.34)
-  - Added driver catalog to file output
-  - Purity sunrise plot now supports somatic inferred purity 
-  - Additional BAF inferring rule
-  - Removed `GERMLINE_AMPLIFICATION` copy number method.
-  - Added `NON_DIPLOID` copy number method. This uses the ref normalised tumor copy number (adjusted for observed normal ratio rather than ideal).  
-  - Only extend long arm copy numbers to unknown regions of chromosomes 13-15,21,22
-  - Use read count structural variant inferring logic when VAF = 1
-- [2.33](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.33)
-  - Raised QC segment fail to >220 unsupported segments
-  - Infer LOH in simple DUPs between 2 LOH regions 
-  - Fixed ref genome 38 regression bug
-  - Added new logic to structural variant recovery to create inferred variant if unable to find suitable candidate in file.  
-  - Changed relative copy number tolerance when smoothing from fixed 10% to 0.12 + 0.8 / sqrt(min depth window count) 
-  - Fixed bug in subclonal plot
-- [2.32](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.32)
-  - Fixed bug in subclonal modelling when somatic peak is close to max 
-- [2.31](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.31)
-  - Added microsatellite status
-  - Added subclonal likelihood model and figure
-  - Consistent file headers
-  - Consistent file names
-  - Fix whole genome duplication calculation
-  - Changed definition of `ref_genome` parameter to be mandatory path to reference fasta file.
-  - Added REP_S, REP_C, MH, TNC, KT fields to somatic vcf output 
-  - Added REF_G to structural vcf output
-  - Added variant rainfall plot
-- [2.30](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.30)
-  - Removed FittedSegment file and db table
-  - Added wholeGenomeDuplication field to purity output (true if more than 10 autosomes have average major allele copy number > 1.5)
-  - Improved logging of missing arguments
-  - Added support for new AMBER and COBALT file names and formats
-- [2.29](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.29)
-  - Add biallelic status to somatic VCF
-  - Removed low VAF SGL filtering logic
-  - Create plot directory before writing to it
-  - Allow plotting of negative copy numbers
-- [2.28](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.28)
-  - Fixed exception when no SV vcf supplied
-- 2.27 
-  - Fixed missing ploidy when loading somatics
-- 2.26
-  - Support for MySQL 8
-  - Added fitted segment chart
-  - Added purity range chart
-  - Ported existing charts to R
-  - Added `no_chart` option
-  - Write purity enriched somatic VCF into output dir 
-  - Added application to persist PURPLE structural variants to DB
-  - Added application to persist PURPLE somatic variants to DB
-- 2.25
-  - Removed unused columns from GeneCopyNumber output
-  - Added minorAllelePloidy and majorAllelePloidy to copy number output
-  - Cleaned up names of penalty fields and parameters to be more consistent
-- 2.24
-  - Recovered SVs were not being used for re-segmentation.
-- 2.23
-  - Fixed bug where SV VCF samples were being sorted into alphabetical order. Now they will be in same order as input VCF.
-- 2.22
-  - Added new tool to annotate SNPs and INDELS in strelka output with AD field. Will **not** override existing AD values. 
-  - Example Usage: `java -Xmx4G -cp purple.jar com.hartwig.hmftools.purple.tools.AnnotateStrelkaWithAllelicDepth -in strelka.vcf -out strelka.annotated.vcf`
-- 2.21
-  - No functional changes.
-  - Changed ref_sample and tumor_sample parameters to reference and tumor respectively to be consistent with AMBER and COBALT. 
-  - Made run_dir parameter optional so long as output_dir, amber and cobalt parameters are set.
-- 2.20
-  - Added purity and copy number fields to structural variant VCF output
-  - Fixed bug in somatic fit logic to only select from candidate purities.
-  - Fixed BAF inferring bug
-- 2.19
-  - Improvements to SV copy number inferring.
-  - Improvements to SV recovery.
-- 2.18
-  - Allow recovery of pon filtered SVs
-- 2.17
-  - Added ref genome 38 support for gene copy numbers.
-  - Look further out to infer baf if there are no amber points in a region.
-  - Fixed bug where some structural variant breakpoints were off by one base.  
-- 2.16
-  - Added support for ref genome 38. Purple will try to automatically detect the ref genome used from the cobalt output otherwise -ref_genome should be set to either 37 or 38.
-  - Added feature to recover filtered structural variants. If supplied, the recovery vcf will be searched for candidates at any copy number break points that are currently unexplained by an SV.
-    If suitable, they will be recovered and included in the segmentation and smoothing algorithms. 
-    All passing and recovered structural variants are now written as a VCF to the purple output directory.
-- 2.15
-  - New ploidy penalty model adopted using minor and major allele copy number deviation instead of baf and copy number deviation.
-  - A somatic deviation penalty has been added to penalise fits which lead to somatic variants with higher variant copy numbers than the major allele copy number. 
-    The 99.9% upper cutoff for binomial distribution from the major allele copy number is used as a cutoff to mark variants as inconsistent. 
-    1000 somatic variants are sampled per tumor, with the somatic penalty equal to the sum of the deviations over the 99.9% cutoff divided by the number of somatic variants sampled.
-  - Cutoff to be classified as highly diploid tightened (minor and major allele copy number must both be between 0.8 and 1.2).
-  - If there is <300 variants (all types) with raw vaf > 10% then mark as NO_TUMOR (formerly was if there were >1000 SNP in total). 
-    Purity is set to what it would have been if NO_TUMOR rule had not been applied (ie the somatic peak or highly diploid)
-- 2.14
-  - Added check for excessive deleted genes.
-  - Added C11orf95 to gene panel.    

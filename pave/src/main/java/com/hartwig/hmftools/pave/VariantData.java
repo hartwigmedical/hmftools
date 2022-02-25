@@ -13,14 +13,17 @@ import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
+import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.pave.compare.RefVariantData;
 
@@ -71,6 +74,10 @@ public class VariantData
     private RefVariantData mRefVariantData;
 
     private boolean mReportable;
+
+    public final Set<String> mFilters;
+    public int mPonSampleCount;
+    public int mPonMaxReadCount;
     private Double mGnomadFrequency;
 
     public static final int NO_LOCAL_PHASE_SET = -1;
@@ -145,6 +152,10 @@ public class VariantData
         mIsRealignedVariant = false;
         mGeneImpacts = Maps.newHashMap();
         mReportable = false;
+
+        mFilters = Sets.newHashSet();
+        mPonSampleCount = 0;
+        mPonMaxReadCount = 0;
         mGnomadFrequency = null;
     }
 
@@ -165,16 +176,16 @@ public class VariantData
         VariantData variant = new VariantData(chromosome, variantPosition, ref, alt);
         variant.setContext(variantContext);
 
+        List<Integer> localPhaseSets = variantContext.getAttributeAsIntList(SageMetaData.LOCAL_PHASE_SET, NO_LOCAL_PHASE_SET);
+
         variant.setVariantDetails(
-                variantContext.getAttributeAsInt(SageMetaData.LOCAL_PHASE_SET, NO_LOCAL_PHASE_SET),
+                !localPhaseSets.isEmpty() ? localPhaseSets.get(0) : 0,
                 variantContext.getAttributeAsString(MICROHOMOLOGY_FLAG, Strings.EMPTY),
                 variantContext.getAttributeAsString(REPEAT_SEQUENCE_FLAG, Strings.EMPTY),
                 variantContext.getAttributeAsInt(REPEAT_COUNT_FLAG, 0));
 
         return variant;
     }
-
-
 
     public VariantType type()
     {
@@ -190,6 +201,8 @@ public class VariantData
     public boolean isInsert() { return mIndelBaseDiff > 0; }
     public boolean isDeletion() { return mIndelBaseDiff < 0; }
     public boolean isMixed() { return mIndelBaseDiff != 0 && Alt.charAt(0) != Ref.charAt(0); }
+    public boolean isSnv() { return mIndelBaseDiff == 0 && Ref.length() == 1; }
+    public boolean isMnv() { return mIndelBaseDiff == 0 && Ref.length() > 1; }
 
     public List<Integer> altPositions() { return mAltPositions; }
 
@@ -218,9 +231,6 @@ public class VariantData
 
     public boolean reported() { return mReportable; }
     public void markReported() { mReportable = true; }
-
-    public Double gnomadFrequency() { return mGnomadFrequency; }
-    public void setGnomadFrequency(Double frequency) { mGnomadFrequency = frequency; }
 
     public void setVariantDetails(int localPhaseSet, final String microHomology, final String repeatSequece, final int repeatCount)
     {
@@ -316,6 +326,28 @@ public class VariantData
 
         return raImpacts.stream().filter(x -> x.TransData.TransName.equals(transImpact.TransData.TransName)).findFirst().orElse(null);
     }
+
+    public VariantTier tier()
+    {
+        if(mVariantContext == null)
+            return VariantTier.UNKNOWN;
+
+        return VariantTier.fromContext(mVariantContext);
+    }
+
+    public Set<String> filters() { return mFilters; }
+    public void addFilter(final String filter) { mFilters.add(filter); }
+
+    public int ponSampleCount() { return mPonSampleCount; }
+    public int ponMaxReadCount() { return mPonMaxReadCount; }
+    public void setPonFrequency(int sampleCount, int maxReadCount)
+    {
+        mPonSampleCount = sampleCount;
+        mPonMaxReadCount = maxReadCount;
+    }
+
+    public Double gnomadFrequency() { return mGnomadFrequency; }
+    public void setGnomadFrequency(Double frequency) { mGnomadFrequency = frequency; }
 
     public String toString()
     {

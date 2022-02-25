@@ -14,8 +14,8 @@ public class ScoreDistributionData
     public final double ScoreBucket;
     public final double Score;
 
-    public final int BucketCount;
-    public final int CumulativeCount;
+    public int BucketCount;
+    public int CumulativeCount;
 
     public ScoreDistributionData(
             final String allele, final int peptideLength, final double scoreBucket, final double score, int bucketCount, int cumulCount)
@@ -52,5 +52,8 @@ public class ScoreDistributionData
                 0, 0);
     }
 
-    public String toString() { return String.format("bucket(%f) score(%f)", ScoreBucket, Score); }
+    public String toString()
+    {
+        return String.format("bucket(%f) score(%.4f) items(%d cumul=%d)", ScoreBucket, Score, BucketCount, CumulativeCount);
+    }
 }

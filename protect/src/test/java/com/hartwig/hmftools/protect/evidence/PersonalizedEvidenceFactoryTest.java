@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.protect.evidence;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -15,11 +14,14 @@ import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.RangeType;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicAnnotation;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicsAtLeast;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
 
 import org.junit.Test;
 
 public class PersonalizedEvidenceFactoryTest {
+
+    private static final double EPSILON = 1e-10;
 
     @Test
     public void canDetermineEvidenceTypes() {
@@ -42,10 +44,11 @@ public class PersonalizedEvidenceFactoryTest {
         ActionableCharacteristic characteristic = ImmutableActionableCharacteristic.builder()
                 .from(ServeTestFactory.createTestActionableCharacteristic())
                 .name(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD)
-                .cutOff("10")
+                .atLeast(TumorCharacteristicsAtLeast.EQUALS_GREATHER)
+                .cutOff((double)10)
                 .build();
         assertEquals(ProtectEvidenceType.SIGNATURE, PersonalizedEvidenceFactory.determineEvidenceType(characteristic));
-        assertEquals("10", characteristic.cutOff());
+        assertEquals(10, characteristic.cutOff(), EPSILON);
     }
 
     @Test

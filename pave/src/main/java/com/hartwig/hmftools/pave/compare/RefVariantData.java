@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.pave.compare;
 
-import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
-import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.localPhaseSetsStringToList;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 
+import java.util.List;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -71,7 +71,7 @@ public class RefVariantData
 
     public static RefVariantData fromSomatic(final SomaticVariant variant)
     {
-        int localPhaseSet = variant.localPhaseSet() != null ? variant.localPhaseSet() : NO_LOCAL_PHASE_SET;
+        int localPhaseSet = variant.topLocalPhaseSet() != null ? variant.topLocalPhaseSet() : NO_LOCAL_PHASE_SET;
 
         return new RefVariantData(
                 variant.chromosome(), (int)variant.position(), variant.ref(), variant.alt(), variant.type(), variant.gene(),
@@ -91,8 +91,9 @@ public class RefVariantData
                 ? CodingEffect.UNDEFINED
                 : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT));
 
-        Integer localPhaseSetDb = record.get(Tables.SOMATICVARIANT.LOCALPHASESET);
-        int localPhaseSet = localPhaseSetDb != null ? localPhaseSetDb : NO_LOCAL_PHASE_SET;
+        String localPhaseSetStr = record.get(Tables.SOMATICVARIANT.LOCALPHASESET);
+        List<Integer> localPhaseSets = localPhaseSetsStringToList(localPhaseSetStr);
+        int localPhaseSet = localPhaseSets != null ? localPhaseSets.get(0) : NO_LOCAL_PHASE_SET;
 
         boolean isHotspot = Hotspot.valueOf(record.getValue(SOMATICVARIANT.HOTSPOT)) == Hotspot.HOTSPOT;
 

@@ -18,6 +18,8 @@ import com.hartwig.hmftools.serve.blacklisting.ImmutableTumorLocationBlacklistin
 import com.hartwig.hmftools.serve.blacklisting.TumorLocationBlacklist;
 import com.hartwig.hmftools.serve.blacklisting.TumorLocationBlacklisting;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
+import com.hartwig.hmftools.serve.sources.ImmutableSources;
+import com.hartwig.hmftools.serve.sources.Sources;
 import com.hartwig.hmftools.serve.sources.vicc.curation.DrugCurator;
 import com.hartwig.hmftools.serve.sources.vicc.curation.EvidenceLevelCurator;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
@@ -29,7 +31,6 @@ import com.hartwig.hmftools.vicc.datamodel.civic.Civic;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.internal.$guava$.annotations.$VisibleForTesting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -106,30 +107,28 @@ class ActionableEvidenceFactory {
             level = evidenceLevelCurator.curate(entry.source(), entry.genes(), treatment, level, direction);
             List<List<String>> drugLists = drugCurator.curate(entry.source(), level, treatment);
 
+            Sources sources = ImmutableSources.builder().sourceEvent(rawInput).source(fromViccSource(entry.source())).build();
+
             ImmutableActionableEvidence.Builder builder = ImmutableActionableEvidence.builder()
-                    .rawInput(rawInput)
-                    .source(fromViccSource(entry.source()))
+                    .source(sources)
                     .level(level)
                     .direction(direction)
-                    .urlSource(Sets.newHashSet())
-                    .urls(urls);
+                    .sourceUrls(Sets.newHashSet())
+                    .evidenceUrls(urls);
 
             for (Map.Entry<String, Set<String>> cancerTypeEntry : cancerTypeToDoidsMap.entrySet()) {
                 String cancerType = cancerTypeEntry.getKey();
                 for (String doid : cancerTypeEntry.getValue()) {
-                    Set<TumorLocationBlacklisting> tumorLocationBlacklistings = Sets.newHashSet();
+                    List<TumorLocationBlacklisting> tumorLocationBlacklistings = Lists.newArrayList();
                     tumorLocationBlacklistings.add(ImmutableTumorLocationBlacklisting.builder()
-                            .blacklistCancerType(doid.equals("162") ? "Hematologic cancer": Strings.EMPTY)
-                            .blacklistedDoid(doid.equals("162") ? "2531": Strings.EMPTY)
+                            .blacklistCancerType(doid.equals("162") ? "Hematologic cancer" : null)
+                            .blacklistedDoid(doid.equals("162") ? "2531" : null)
                             .build());
-                    String tumorLocationBlacklist = TumorLocationBlacklist.extractTumorLocationBlacklisting(tumorLocationBlacklistings);
-                    String tumorLocationBlacklistDoid = TumorLocationBlacklist.extractTumorLocationDoid(tumorLocationBlacklistings);
-
+                    String tumorLocationBlacklisting = TumorLocationBlacklist.extractTumorLocationBlacklisting(tumorLocationBlacklistings);
                     for (List<String> drugList : drugLists) {
                         actionableEvents.add(builder.cancerType(cancerType)
                                 .doid(doid)
-                                .blacklistCancerType(tumorLocationBlacklist)
-                                .blacklistedDoid(tumorLocationBlacklistDoid)
+                                .tumorLocationBlacklisting(tumorLocationBlacklisting)
                                 .treatment(formatDrugList(drugList))
                                 .build());
                     }
@@ -310,7 +309,7 @@ class ActionableEvidenceFactory {
     }
 
     @NotNull
-    private static Knowledgebase fromViccSource(@NotNull ViccSource source) {
+    public static Knowledgebase fromViccSource(@NotNull ViccSource source) {
         switch (source) {
             case CIVIC:
                 return Knowledgebase.VICC_CIVIC;

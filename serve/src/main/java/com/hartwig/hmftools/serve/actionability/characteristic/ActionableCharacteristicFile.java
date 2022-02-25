@@ -13,7 +13,9 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.serve.actionability.util.ActionableFileFunctions;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicAnnotation;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicsAtLeast;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ActionableCharacteristicFile {
@@ -46,7 +48,7 @@ public final class ActionableCharacteristicFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(FIELD_DELIMITER).add("name").add("cutOff").add(ActionableFileFunctions.header()).toString();
+        return new StringJoiner(FIELD_DELIMITER).add("name").add("atLeast").add("cutOff").add(ActionableFileFunctions.header()).toString();
     }
 
     @NotNull
@@ -64,9 +66,10 @@ public final class ActionableCharacteristicFile {
         String[] values = line.split(FIELD_DELIMITER);
 
         return ImmutableActionableCharacteristic.builder()
-                .from(ActionableFileFunctions.fromLine(values, 2))
+                .from(ActionableFileFunctions.fromLine(values, 3))
                 .name(TumorCharacteristicAnnotation.valueOf(values[0]))
-                .cutOff(values[1])
+                .atLeast(!values[1].equals(Strings.EMPTY) ? TumorCharacteristicsAtLeast.valueOf(values[1]) : null)
+                .cutOff(!values[2].equals(Strings.EMPTY) ? Double.valueOf(values[2]) : null)
                 .build();
     }
 
@@ -92,7 +95,8 @@ public final class ActionableCharacteristicFile {
     @NotNull
     private static String toLine(@NotNull ActionableCharacteristic characteristic) {
         return new StringJoiner(FIELD_DELIMITER).add(characteristic.name().toString())
-                .add(characteristic.cutOff())
+                .add(characteristic.atLeast() != null ? characteristic.atLeast().toString() : Strings.EMPTY)
+                .add(characteristic.cutOff() != null ? Double.toString(characteristic.cutOff()) : Strings.EMPTY)
                 .add(ActionableFileFunctions.toLine(characteristic))
                 .toString();
     }

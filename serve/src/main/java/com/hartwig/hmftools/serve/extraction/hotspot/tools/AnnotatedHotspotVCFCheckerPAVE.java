@@ -1,15 +1,16 @@
 package com.hartwig.hmftools.serve.extraction.hotspot.tools;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.AminoAcids;
-import com.hartwig.hmftools.common.variant.impact.VariantImpact;
-import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
+import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
 import com.hartwig.hmftools.serve.extraction.util.VCFWriterFactory;
 
+import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -61,15 +62,15 @@ public class AnnotatedHotspotVCFCheckerPAVE {
             String inputGene = inputParts[0];
             String inputTranscript = inputParts[1].equals("null") ? null : inputParts[1];
             String inputProteinAnnotation = inputParts[2];
-            String formattedHotspot = formatHotspot(variant);
 
+            String formattedHotspot = formatHotspot(variant);
             if (inputProteinAnnotation.equals(NO_INPUT_PROTEIN)) {
                 LOGGER.debug("Skipping non-coding hotspot on '{}'", formattedHotspot);
                 matchCount++;
             } else {
-                VariantImpact impact = VariantImpactSerialiser.fromVariantContext(variant);
+                List<VariantTranscriptImpact> annotations = toVariantTranscriptImpact(variant.getAttributeAsStringList("PAVE_TI", ""));
 
-                MatchType match = determineMatch(inputTranscript, inputProteinAnnotation, impact);
+                MatchType match = determineMatch(inputTranscript, inputProteinAnnotation, annotations);
 
                 switch (match) {
                     case IDENTICAL: {
@@ -92,18 +93,18 @@ public class AnnotatedHotspotVCFCheckerPAVE {
                         break;
                     }
                     case NO_MATCH: {
-                        //                        LOGGER.warn("Could not find a match amongst candidate transcripts for '{}' on '{}'",
-                        //                                inputProteinAnnotation,
-                        //                                inputGene);
-                                                LOGGER.warn(
-                                                        "Could not match inputTranscript {}, pave transcript {}, input protein {}, pave protein {} for input gene {}, pave gene {}",
-                                                        inputTranscript,
-                                                        impact.CanonicalTranscript,
-                                                        inputProteinAnnotation,
-                                                        AminoAcids.forceSingleLetterProteinAnnotation(impact.CanonicalHgvsProtein),
-                                                        inputGene,
-                                                        impact.CanonicalGeneName);
+                        LOGGER.warn("Could not match inputTranscript {}, input protein {} for input gene {}",
+                                inputTranscript,
+                                inputProteinAnnotation,
+                                inputGene);
+
+                        for (VariantTranscriptImpact variantTranscriptImpact : annotations) {
+                            LOGGER.info(variantTranscriptImpact.GeneName + " " + variantTranscriptImpact.Transcript + " "
+                                    + variantTranscriptImpact.HgvsProtein);
+                        }
+
                         diffCount++;
+
                         break;
                     }
                 }
@@ -113,7 +114,19 @@ public class AnnotatedHotspotVCFCheckerPAVE {
         LOGGER.info("Done comparing {} records: {} matches (of which {} are approximate and {} are due to transcript liftover changes)"
                 + " and {} differences found.", totalCount, matchCount, approximateMatchCount, transcriptChangeLiftoverCount, diffCount);
 
+        // current result will be
+        // Done comparing 9452 records: 9452 matches (of which 30 are approximate and 0 are due to transcript liftover changes) and 0 differences found.
         checkForUnusedMappings();
+    }
+
+    @NotNull
+    private static List<VariantTranscriptImpact> toVariantTranscriptImpact(@NotNull final List<String> annotation) {
+        List<VariantTranscriptImpact> variantTranscriptImpactList = Lists.newArrayList();
+        for (int i = 0; i <= annotation.size() - 1; i++) {
+            variantTranscriptImpactList.add(VariantTranscriptImpact.fromVcfData(annotation.get(i)));
+        }
+
+        return variantTranscriptImpactList;
     }
 
     @NotNull
@@ -124,56 +137,67 @@ public class AnnotatedHotspotVCFCheckerPAVE {
 
     @NotNull
     private MatchType determineMatch(@Nullable String inputTranscript, @NotNull String inputProteinAnnotation,
-            @NotNull VariantImpact impact) {
-        if (inputTranscript != null) {
-            return matchOnSpecificAnnotation(inputTranscript, inputProteinAnnotation, impact);
+            @NotNull List<VariantTranscriptImpact> annotations) {
+        VariantTranscriptImpact specificAnnotation = annotationForTranscript(annotations, inputTranscript);
+        if (specificAnnotation != null) {
+            return matchOnSpecificAnnotation(inputTranscript, inputProteinAnnotation, specificAnnotation);
         } else {
             // In case input transcript is missing or can't be found, we try to match against any transcript.
             // This could be tricky in case a variant was generated from 37 and is now being evaluated on 38 with different transcript IDs.
-            return matchOnAnyTranscript(inputProteinAnnotation, impact);
+            return matchOnAnyTranscript(inputProteinAnnotation, annotations);
         }
     }
 
     @NotNull
     private MatchType matchOnSpecificAnnotation(@NotNull String inputTranscript, @NotNull String inputProteinAnnotation,
-            @NotNull VariantImpact impact) {
-        String paveProteinAnnotation = AminoAcids.forceSingleLetterProteinAnnotation(impact.CanonicalHgvsProtein);
-        return matchAnnotation(inputTranscript, inputProteinAnnotation, paveProteinAnnotation, impact.CanonicalEffect);
+            @NotNull VariantTranscriptImpact specificAnnotation) {
+        String snpeffProteinAnnotation = AminoAcids.forceSingleLetterProteinAnnotation(specificAnnotation.HgvsProtein);
+        return matchAnnotation(inputTranscript, inputProteinAnnotation, snpeffProteinAnnotation);
     }
 
     @NotNull
-    private MatchType matchOnAnyTranscript(@NotNull String inputProteinAnnotation, @NotNull VariantImpact impact) {
+    private MatchType matchOnAnyTranscript(@NotNull String inputProteinAnnotation, @NotNull List<VariantTranscriptImpact> annotations) {
         MatchType matchedMatchType = MatchType.NO_MATCH;
-        // We only want to consider transcript features with coding impact.
-
-        if (!impact.CanonicalHgvsProtein.isEmpty()) {
-            String paveProteinAnnotation = AminoAcids.forceSingleLetterProteinAnnotation(impact.CanonicalHgvsProtein);
-            MatchType match =
-                    matchAnnotation(impact.CanonicalTranscript, inputProteinAnnotation, paveProteinAnnotation, impact.CanonicalEffect);
-            if (match != MatchType.NO_MATCH && matchedMatchType == MatchType.NO_MATCH) {
-                matchedMatchType = match;
+        for (VariantTranscriptImpact annotation : annotations) {
+            // We only want to consider transcript features with coding impact.
+            if (!annotation.HgvsProtein.isEmpty()) {
+                String snpeffProteinAnnotation = AminoAcids.forceSingleLetterProteinAnnotation(annotation.HgvsProtein);
+                MatchType match = matchAnnotation(annotation.Transcript, inputProteinAnnotation, snpeffProteinAnnotation);
+                if (match != MatchType.NO_MATCH && matchedMatchType == MatchType.NO_MATCH) {
+                    matchedMatchType = match;
+                }
             }
         }
 
         return matchedMatchType;
     }
 
+    @Nullable
+    private static VariantTranscriptImpact annotationForTranscript(@NotNull List<VariantTranscriptImpact> annotations,
+            @Nullable String transcript) {
+        for (VariantTranscriptImpact annotation : annotations) {
+            if (annotation.Transcript.equals(transcript)) {
+                return annotation;
+            }
+        }
+        return null;
+    }
+
     @NotNull
-    private MatchType matchAnnotation(@NotNull String transcript, @NotNull String inputAnnotation, @NotNull String paveAnnotation,
-            @NotNull String canonicalEffect) {
-        String curatedInputAnnotation = curateStartCodonAnnotation(inputAnnotation, paveAnnotation, canonicalEffect);
-        if (curatedInputAnnotation.equals(paveAnnotation)) {
+    private MatchType matchAnnotation(@NotNull String transcript, @NotNull String inputAnnotation, @NotNull String snpeffAnnotation) {
+        String curatedInputAnnotation = curateStartCodonAnnotation(inputAnnotation);
+        if (curatedInputAnnotation.equals(snpeffAnnotation)) {
             return MatchType.IDENTICAL;
         }
 
-        if (isApproximateIndelMatch(inputAnnotation, paveAnnotation)) {
+        if (isApproximateIndelMatch(inputAnnotation, snpeffAnnotation)) {
             return MatchType.APPROXIMATE;
         }
 
-        if (ENABLE_TRANSCRIPT_REF_GENOME_CURATION && (retiredTranscriptCheck(transcript, paveAnnotation) || changedTranscriptCheck(
+        if (ENABLE_TRANSCRIPT_REF_GENOME_CURATION && (retiredTranscriptCheck(transcript, snpeffAnnotation) || changedTranscriptCheck(
                 transcript,
                 inputAnnotation,
-                paveAnnotation))) {
+                snpeffAnnotation))) {
             return MatchType.LIFTOVER_RETIRED_OR_CHANGED_TRANSCRIPT;
         }
 
@@ -181,30 +205,20 @@ public class AnnotatedHotspotVCFCheckerPAVE {
     }
 
     @NotNull
-    private static String curateStartCodonAnnotation(@NotNull String serveAnnotation, @NotNull String paveAnnotation,
-            @NotNull String canonicalEffect) {
-
-        // curate synonymous variants for PAVE annotation
-        if (paveAnnotation.endsWith("=")) {
-            return serveAnnotation.substring(0, serveAnnotation.length() - 1) + "=";
-        }
-
-        if (serveAnnotation.startsWith("p.M1") && canonicalEffect.equals("5_prime_UTR_variant")) {
-            return Strings.EMPTY;
-        }
-        if (serveAnnotation.startsWith("p.M1") && canonicalEffect.equals("start_lost")) {
+    private static String curateStartCodonAnnotation(@NotNull String serveAnnotation) {
+        if (serveAnnotation.startsWith("p.M1") && serveAnnotation.length() == 5) {
             return "p.M1?";
+        } else {
+            return serveAnnotation;
         }
-
-        return serveAnnotation;
     }
 
     @VisibleForTesting
-    static boolean isApproximateIndelMatch(@NotNull String inputAnnotation, @NotNull String paveAnnotation) {
+    static boolean isApproximateIndelMatch(@NotNull String inputAnnotation, @NotNull String snpEffAnnotation) {
         if (inputAnnotation.contains("del") || inputAnnotation.contains("ins") || inputAnnotation.contains("dup")) {
             int inputStartCodon = extractDigitWithIndex(inputAnnotation, 1);
             Integer inputEndCodon = extractDigitWithIndex(inputAnnotation, 2);
-            int snpeffStartCodon = extractDigitWithIndex(paveAnnotation, 1);
+            int snpeffStartCodon = extractDigitWithIndex(snpEffAnnotation, 1);
 
             int maxDistance = inputEndCodon != null ? 1 + inputEndCodon - inputStartCodon : 3;
 
@@ -214,7 +228,7 @@ public class AnnotatedHotspotVCFCheckerPAVE {
                 maxDistance = 20;
                 if (!inputAnnotation.contains("_")) {
                     // Single AA deletes have to match on specific AA
-                    aminoAcidCheck = inputAnnotation.substring(2, 3).equals(paveAnnotation.substring(2, 3));
+                    aminoAcidCheck = inputAnnotation.substring(2, 3).equals(snpEffAnnotation.substring(2, 3));
                 }
             }
 
@@ -258,8 +272,8 @@ public class AnnotatedHotspotVCFCheckerPAVE {
         }
     }
 
-    private boolean retiredTranscriptCheck(@NotNull String transcript, @NotNull String paveAnnotation) {
-        if (AnnotatedHotspotCurationFactory.RETIRED_TRANSCRIPTS.contains(transcript) && paveAnnotation.isEmpty()) {
+    private boolean retiredTranscriptCheck(@NotNull String transcript, @NotNull String snpeffAnnotation) {
+        if (AnnotatedHotspotCurationFactory.RETIRED_TRANSCRIPTS.contains(transcript) && snpeffAnnotation.isEmpty()) {
             // In case we know a transcript has been retired from coding duty in certain ref genomes we accept the diff when empty.
             curatedTranscripts.add(transcript);
             return true;
@@ -268,13 +282,13 @@ public class AnnotatedHotspotVCFCheckerPAVE {
         return false;
     }
 
-    private boolean changedTranscriptCheck(@NotNull String transcript, @NotNull String inputAnnotation, @NotNull String paveAnnotation) {
+    private boolean changedTranscriptCheck(@NotNull String transcript, @NotNull String inputAnnotation, @NotNull String snpeffAnnotation) {
         if (AnnotatedHotspotCurationFactory.CHANGED_TRANSCRIPTS.contains(transcript)) {
             // In case transcripts have different versions across ref genomes we assume the AA change is the same, just a different position
             // Eg p.PxxS should match for any xx
             curatedTranscripts.add(transcript);
-            return inputAnnotation.substring(0, 3).equals(paveAnnotation.substring(0, 3))
-                    && inputAnnotation.substring(inputAnnotation.length()).equals(paveAnnotation.substring(paveAnnotation.length()));
+            return inputAnnotation.substring(0, 3).equals(snpeffAnnotation.substring(0, 3))
+                    && inputAnnotation.substring(inputAnnotation.length()).equals(snpeffAnnotation.substring(snpeffAnnotation.length()));
         }
 
         return false;

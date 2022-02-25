@@ -27,7 +27,6 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
-import com.hartwig.hmftools.sage.config.SageConfig;
 
 import org.apache.commons.cli.CommandLine;
 
@@ -128,14 +127,14 @@ public class ReferenceData
                 SG_LOGGER.info("read {} coverage entries from bed file: {}", CoveragePanel.size(), mConfig.CoverageBed);
             }
 
-            loadHotspots();
-
             if(!mConfig.PanelBed.isEmpty())
             {
                 PanelWithHotspots.putAll(loadBedFile(mConfig.PanelBed));
                 SG_LOGGER.info("read {} panel entries from bed file: {}",
                         PanelWithHotspots.values().stream().mapToInt(x -> x.size()).sum(), mConfig.PanelBed);
             }
+
+            loadHotspots();
 
             if(!mConfig.HighConfidenceBed.isEmpty())
             {
@@ -167,41 +166,76 @@ public class ReferenceData
 
     private void loadHotspots() throws IOException
     {
-        if(!mConfig.Hotspots.isEmpty())
+        if(mConfig.Hotspots.isEmpty())
+            return;
+
+        Hotspots.putAll(VariantHotspotFile.readFromVCF(mConfig.Hotspots));
+        SG_LOGGER.info("read {} hotspots from vcf: {}", Hotspots.size(), mConfig.Hotspots);
+
+        // add to panel regions as well if not already covering them
+        for(Chromosome chromosome : Hotspots.keySet())
         {
-            Hotspots.putAll(VariantHotspotFile.readFromVCF(mConfig.Hotspots));
-            SG_LOGGER.info("read {} hotspots from vcf: {}", Hotspots.size(), mConfig.Hotspots);
-        }
-    }
+            List<VariantHotspot> hotspots = Hotspots.get(chromosome);
+            List<BaseRegion> panelRegions = PanelWithHotspots.get(chromosome);
 
-    /*
-    private ListMultimap<Chromosome, ChrBaseRegion> panelWithHotspots(
-            final Map<Chromosome,List<BaseRegion>> panelWithoutHotspots, final ListMultimap<Chromosome,VariantHotspot> hotspots)
-    {
-        final ListMultimap<Chromosome, ChrBaseRegion> result = ArrayListMultimap.create();
-
-        for(HumanChromosome chromosome : HumanChromosome.values())
-        {
-            List<ChrBaseRegion> regions = Lists.newArrayList();
-
-            if(panelWithoutHotspots.containsKey(chromosome))
+            if(panelRegions == null)
             {
-                regions.addAll(panelWithoutHotspots.get(chromosome));
+                panelRegions = Lists.newArrayList();
+                PanelWithHotspots.put(chromosome, panelRegions);
             }
 
-            if(hotspots.containsKey(chromosome))
+            for(VariantHotspot hotspot : hotspots)
             {
-                hotspots.get(chromosome).forEach(x -> regions.add(new ChrBaseRegion(chromosome.toString(), (int)x.position(), (int)x.end())));
+                boolean covered = false;
+                int index = 0;
+                while(index < panelRegions.size())
+                {
+                    BaseRegion panelRegion = panelRegions.get(index);
+
+                    if(panelRegion.containsPosition(hotspot.position()))
+                    {
+                        covered = true;
+                        break;
+                    }
+                    else if(hotspot.position() == panelRegion.start() - 1)
+                    {
+                        covered = true;
+                        panelRegion.setStart(hotspot.position());
+                        break;
+                    }
+                    else if(hotspot.position() == panelRegion.end() + 1)
+                    {
+                        covered = true;
+                        panelRegion.setEnd(hotspot.position());
+
+                        if(index < panelRegions.size() - 1)
+                        {
+                            // check for a merge with the next panel region since BAM slicing does not like adjacent regions
+                            BaseRegion nextRegion = panelRegions.get(index + 1);
+                            if(nextRegion.start() <= panelRegion.end() + 1)
+                            {
+                                panelRegion.setEnd(nextRegion.end());
+                                panelRegions.remove(index + 1);
+                            }
+                        }
+
+                        break;
+                    }
+                    else if(hotspot.position() < panelRegions.get(index).start())
+                    {
+                        break;
+                    }
+
+                    ++index;
+                }
+
+                if(!covered)
+                {
+                    panelRegions.add(index, new BaseRegion(hotspot.position(), hotspot.position()));
+                }
             }
-
-            Collections.sort(regions);
-
-            result.putAll(chromosome, regions);
         }
-
-        return result;
     }
-    */
 
     private static ListMultimap<Chromosome,NamedBed> readNamedBedFile(final String panelBed) throws IOException
     {

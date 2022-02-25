@@ -8,12 +8,13 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_EVIDENCE_MAP_QUAL;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
+import static com.hartwig.hmftools.sage.quality.QualityCalculator.jitterPenalty;
 
 import java.util.List;
 
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.config.QualityConfig;
-import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.quality.QualityConfig;
+import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.read.ExpandedBasesFactory;
 import com.hartwig.hmftools.sage.common.IndexedBases;
@@ -179,8 +180,19 @@ public class ReadContextCounter implements VariantHotspot
             mLpsCounts = Lists.newArrayList();
         }
 
-        mLocalPhaseSets.add(lps);
-        mLpsCounts.add(new int[] { readCount, (int)allocCount } );
+        // add in order of highest counts
+        int index = 0;
+        while(index < mLpsCounts.size())
+        {
+            final int[] existingCounts = mLpsCounts.get(index);
+            if(readCount + allocCount > existingCounts[0] + existingCounts[0])
+                break;
+
+            ++index;
+        }
+
+        mLocalPhaseSets.add(index, lps);
+        mLpsCounts.add(index, new int[] { readCount, (int)allocCount } );
     }
 
     public List<Integer> localPhaseSets() { return mLocalPhaseSets; }
@@ -195,7 +207,8 @@ public class ReadContextCounter implements VariantHotspot
                 mReadContext.toString(), mCounts[RC_FULL], mCounts[RC_PARTIAL], mCounts[RC_CORE]);
     }
 
-    public ReadMatchType processRead(final SAMRecord record, final SageConfig sageConfig, final QualityCalculator qualityCalc, final int rawNumberOfEvents)
+    public ReadMatchType processRead(
+            final SAMRecord record, final SageConfig sageConfig, final QualityCalculator qualityCalc, double rawNumberOfEvents)
     {
         if(exceedsMaxCoverage())
             return UNRELATED;
@@ -227,8 +240,8 @@ public class ReadContextCounter implements VariantHotspot
 
         final QualityConfig qualityConfig = sageConfig.Quality;
 
-        int numberOfEvents = mIsMnv ?
-                max(mMinNumberOfEvents, NumberEvents.numberOfEventsWithMNV(rawNumberOfEvents, mVariant.ref(), mVariant.alt()))
+        double numberOfEvents = mIsMnv ?
+                max(mMinNumberOfEvents, NumberEvents.numberOfEventsWithMNVRaw(rawNumberOfEvents, mVariant.ref(), mVariant.alt()))
                 : max(mMinNumberOfEvents, rawNumberOfEvents);
 
         double quality = qualityCalc.calculateQualityScore(this, readIndex, record, numberOfEvents);
@@ -316,11 +329,11 @@ public class ReadContextCounter implements VariantHotspot
         switch(realignmentType)
         {
             case LENGTHENED:
-                mJitterPenalty += qualityConfig.jitterPenalty(realignment.RepeatCount);
+                mJitterPenalty += jitterPenalty(qualityConfig, realignment.RepeatCount);
                 mLengthened++;
                 break;
             case SHORTENED:
-                mJitterPenalty += qualityConfig.jitterPenalty(realignment.RepeatCount);
+                mJitterPenalty += jitterPenalty(qualityConfig, realignment.RepeatCount);
                 mShortened++;
                 break;
         }

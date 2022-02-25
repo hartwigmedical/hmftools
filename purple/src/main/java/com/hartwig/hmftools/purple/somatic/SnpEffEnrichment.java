@@ -87,7 +87,7 @@ public class SnpEffEnrichment implements VariantContextEnrichment
 
     private VariantImpact formVariantImpact(@NotNull final VariantContext context)
     {
-        boolean phasedInframeIndel = context.isIndel() && context.getAttributeAsInt(SageMetaData.PHASED_INFRAME_INDEL, 0) > 0;
+        boolean phasedInframeIndel = false;
 
         final List<SnpEffAnnotation> allAnnotations = SnpEffAnnotationParser.fromContext(context);
 

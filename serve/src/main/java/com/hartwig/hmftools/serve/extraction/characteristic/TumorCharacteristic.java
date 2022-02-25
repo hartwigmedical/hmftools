@@ -12,6 +12,9 @@ public abstract class TumorCharacteristic {
     @Nullable
     public abstract TumorCharacteristicAnnotation tumorCharacteristicAnnotation();
 
-    @NotNull
-    public abstract String cutoff();
+    @Nullable
+    public abstract TumorCharacteristicsAtLeast atLeast();
+
+    @Nullable
+    public abstract Double cutOff();
 }

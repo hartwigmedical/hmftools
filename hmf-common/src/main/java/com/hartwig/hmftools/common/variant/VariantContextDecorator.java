@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.variant;
 
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.localPhaseSetsStr;
 import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_AF_INFO;
 import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_BIALLELIC_FLAG;
 import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_CN_INFO;
@@ -15,6 +16,7 @@ import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrich
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.TRINUCLEOTIDE_FLAG;
 
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
@@ -203,9 +205,20 @@ public class VariantContextDecorator implements GenomePosition
     }
 
     @Nullable
+    public String localPhaseSetsToString()
+    {
+        List<Integer> localPhaseSets = mContext.getAttributeAsIntList(SageMetaData.LOCAL_PHASE_SET, 0);
+        return localPhaseSetsStr(localPhaseSets);
+    }
+
+    @Nullable
     public Integer localPhaseSet()
     {
-        return mContext.hasAttribute(SageMetaData.LOCAL_PHASE_SET) ? mContext.getAttributeAsInt(SageMetaData.LOCAL_PHASE_SET, 0) : null;
+        if(!mContext.hasAttribute(SageMetaData.LOCAL_PHASE_SET))
+            return null;
+
+        List<Integer> localPhaseSets = mContext.getAttributeAsIntList(SageMetaData.LOCAL_PHASE_SET, 0);
+        return !localPhaseSets.isEmpty() ? localPhaseSets.get(0) : null;
     }
 
     @NotNull

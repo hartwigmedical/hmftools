@@ -31,6 +31,12 @@ public final class IclusionTestFactory {
     }
 
     @NotNull
+    public static IclusionTrial trialWithMutationsAndTumorLocation(@NotNull String acronym, @NotNull List<IclusionMutationCondition> mutationConditions,
+            @NotNull List<IclusionTumorLocation> tumorLocations) {
+        return trial(acronym, mutationConditions, tumorLocations, Lists.newArrayList());
+    }
+
+    @NotNull
     public static IclusionTrial trial(@NotNull String acronym, @NotNull List<IclusionMutationCondition> mutationConditions,
             @NotNull List<IclusionTumorLocation> tumorLocations, @NotNull List<IclusionTumorLocation> blacklist) {
         return ImmutableIclusionTrial.builder()

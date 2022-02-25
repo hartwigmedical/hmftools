@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.sage.common.TestUtils.clearFilters;
 import static com.hartwig.hmftools.sage.common.TestUtils.createVariant;
 import static com.hartwig.hmftools.sage.common.TestUtils.createVariantHotspot;
 import static com.hartwig.hmftools.sage.common.TestUtils.setTumorQuality;
-import static com.hartwig.hmftools.sage.config.SoftFilter.MIN_GERMLINE_DEPTH;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_GERMLINE_DEPTH;
 import static com.hartwig.hmftools.sage.dedup.DedupIndel.dedupIndels;
 import static com.hartwig.hmftools.sage.dedup.VariantDeduper.longerContainsShorter;
 

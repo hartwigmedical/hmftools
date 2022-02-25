@@ -9,6 +9,7 @@ import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharact
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGeneUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotUrlConsolidator;
+import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLAUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRangeUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
@@ -28,7 +29,6 @@ import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class ExtractionFunctions {
 
@@ -47,6 +47,7 @@ public final class ExtractionFunctions {
                 .actionableFusions(ActionableEventUrlMerger.merge(result.actionableFusions(), new ActionableFusionUrlConsolidator()))
                 .actionableCharacteristics(ActionableEventUrlMerger.merge(result.actionableCharacteristics(),
                         new ActionableCharacteristicUrlConsolidator()))
+                .actionableHLA(ActionableEventUrlMerger.merge(result.actionableHLA(), new ActionableHLAUrlConsolidator()))
                 .build();
     }
 
@@ -92,7 +93,7 @@ public final class ExtractionFunctions {
     public static Set<ActionableRange> curationsOfResult(@NotNull Set<ActionableRange> actionableRanges) {
         Set<ActionableRange> actionableRange = Sets.newHashSet();
         for (ActionableRange range : actionableRanges) {
-            if (range.gene().equals("BRAF") &&  range.rank() == 600 && range.rangeType().equals(RangeType.CODON)) {
+            if (range.gene().equals("BRAF") && range.rank() == 600 && range.rangeType().equals(RangeType.CODON)) {
                 int start = 140753335;
                 int end = 140753337;
                 String canonicalTranscriptID = "ENST00000288602";
@@ -102,11 +103,13 @@ public final class ExtractionFunctions {
                         .end(end)
                         .transcript(canonicalTranscriptID)
                         .build());
+            } else if (range.gene().equals("BRAF") && range.rank() != 600) {
+                LOGGER.warn("BRAF isn't curated!");
+                actionableRange.add(range);
             } else {
                 actionableRange.add(range);
             }
-        }
-        return actionableRange;
+        } return actionableRange;
     }
 
     @NotNull

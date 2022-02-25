@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.localPhaseSetsStringToList;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.ALT_SPLICE_JUNCTION;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
@@ -258,7 +259,8 @@ public class SpliceVariantMatcher
             int position = record.getValue(Tables.SOMATICVARIANT.POSITION);
             String ref = record.getValue(Tables.SOMATICVARIANT.REF);
             String alt = record.getValue(Tables.SOMATICVARIANT.ALT);
-            Integer localPhaseSet = record.get(Tables.SOMATICVARIANT.LOCALPHASESET);
+            String localPhaseSetStr = record.get(Tables.SOMATICVARIANT.LOCALPHASESET);
+            List<Integer> localPhaseSets = localPhaseSetsStringToList(localPhaseSetStr);
             String triNecContext = record.getValue(SOMATICVARIANT.TRINUCLEOTIDECONTEXT);
             String canonicalEffect = record.getValue(SOMATICVARIANT.CANONICALEFFECT);
             String canonicalCodingImpact = record.getValue(SOMATICVARIANT.CANONICALHGVSCODINGIMPACT);
@@ -266,7 +268,7 @@ public class SpliceVariantMatcher
 
             spliceVariants.add(new SpliceVariant(
                     gene, chromosome, position, type, ref, alt,
-                    canonicalEffect, canonicalCodingImpact, triNecContext, localPhaseSet != null ? localPhaseSet : -1));
+                    canonicalEffect, canonicalCodingImpact, triNecContext, localPhaseSets != null ? localPhaseSets.get(0) : -1));
         }
 
         return spliceVariants;

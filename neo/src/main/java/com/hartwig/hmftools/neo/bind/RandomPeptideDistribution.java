@@ -270,7 +270,7 @@ public class RandomPeptideDistribution
         {
             for(ScoreDistributionData scoreDist : scoreDistributionData)
             {
-                writer.write(String.format("%s,%d,%f,%.4f,%d,%d",
+                writer.write(String.format("%s,%d,%f,%.6f,%d,%d",
                         scoreDist.Allele, scoreDist.PeptideLength, scoreDist.ScoreBucket, scoreDist.Score,
                         scoreDist.BucketCount, scoreDist.CumulativeCount));
 
@@ -331,7 +331,7 @@ public class RandomPeptideDistribution
             {
                 for(ScoreDistributionData scoreDist : alleleEntry.getValue())
                 {
-                    writer.write(String.format("%s,%f,%.8f",
+                    writer.write(String.format("%s,%f,%4.3e",
                             scoreDist.Allele, scoreDist.ScoreBucket, scoreDist.Score));
 
                     writer.newLine();

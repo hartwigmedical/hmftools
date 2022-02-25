@@ -9,7 +9,7 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.candidate.Candidates;
-import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.candidate.AltContext;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.CandidateEvidence;

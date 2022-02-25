@@ -9,6 +9,7 @@ import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
 import com.hartwig.hmftools.serve.extraction.codon.CodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
+import com.hartwig.hmftools.serve.extraction.events.EventInterpretation;
 import com.hartwig.hmftools.serve.extraction.exon.ExonAnnotation;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelAnnotation;
@@ -22,6 +23,9 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 abstract class ViccExtractionResult {
+
+    @NotNull
+    public abstract List<EventInterpretation> eventInterpretation();
 
     @NotNull
     public abstract Map<Feature, List<VariantHotspot>> hotspotsPerFeature();

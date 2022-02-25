@@ -11,11 +11,15 @@ import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FIL
 import static com.hartwig.hmftools.common.variant.VariantConsequence.VARIANT_CONSEQ_DELIM;
 import static com.hartwig.hmftools.common.variant.snpeff.SnpEffUtils.SNPEFF_CANONICAL;
 import static com.hartwig.hmftools.common.variant.snpeff.SnpEffUtils.SNPEFF_WORST;
-import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_UNKNOWN;
+import static com.hartwig.hmftools.pave.PaveConfig.PON_ARTEFACTS_FILE;
+import static com.hartwig.hmftools.pave.PaveConfig.PON_FILE;
+import static com.hartwig.hmftools.pave.PaveConfig.PON_FILTERS;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 import static com.hartwig.hmftools.pave.PaveUtils.createRightAlignedVariant;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
+import static com.hartwig.hmftools.pave.VcfWriter.PON_ARTEFACT_FILTER;
+import static com.hartwig.hmftools.pave.VcfWriter.PON_GNOMAD_FILTER;
 import static com.hartwig.hmftools.pave.compare.ComparisonUtils.effectsMatch;
 import static com.hartwig.hmftools.pave.compare.ComparisonUtils.ignoreSnpEffAnnotation;
 
@@ -37,7 +41,6 @@ import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationParser;
 import com.hartwig.hmftools.pave.compare.ComparisonUtils;
-import com.hartwig.hmftools.pave.external.GnomadAnnotation;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -59,6 +62,9 @@ public class PaveApplication
     private final GeneDataCache mGeneDataCache;
     private final GnomadAnnotation mGnomadAnnotation;
 
+    private final PonAnnotation mPon;
+    private final PonAnnotation mPonArtefacts;
+
     // for comparison with SnpEff
     private int mTransEffectMatched;
     private int mTransTotalComparisons;
@@ -75,6 +81,11 @@ public class PaveApplication
                 cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION), mConfig.CompareSnpEff, true);
 
         mGnomadAnnotation = new GnomadAnnotation(cmd);
+
+        mPon = new PonAnnotation(cmd.getOptionValue(PON_FILE), true);
+        mPon.loadFilters(cmd.getOptionValue(PON_FILTERS));
+
+        mPonArtefacts = new PonAnnotation(cmd.getOptionValue(PON_ARTEFACTS_FILE), false);
 
         mImpactBuilder = new VariantImpactBuilder(mGeneDataCache);
 
@@ -203,7 +214,7 @@ public class PaveApplication
         // can be null if no impacts exist for any transcript
         VariantImpact variantImpact = mImpactBuilder.createVariantImpact(variant);
 
-        variant.setGnomadFrequency(mGnomadAnnotation.getFrequency(variant));
+        ponAnnotateAndFilter(variant);
 
         mVcfWriter.writeVariant(variant.context(), variant, variantImpact);
 
@@ -222,6 +233,16 @@ public class PaveApplication
         {
             checkAndWriteTransDifferences(variant);
         }
+    }
+
+    private void ponAnnotateAndFilter(final VariantData variant)
+    {
+        mGnomadAnnotation.annotateVariant(variant);
+
+        mPon.annotateVariant(variant);
+
+        if(mPonArtefacts.getPonData(variant) != null)
+            variant.addFilter(PON_ARTEFACT_FILTER);
     }
 
     public static void findVariantImpacts(
@@ -293,7 +314,7 @@ public class PaveApplication
         PV_LOGGER.info("writing VCF file({})", outputVcfFilename);
 
         mVcfWriter = new VcfWriter(outputVcfFilename, mConfig.VcfFile);
-        mVcfWriter.writeHeader(version.version(), mGnomadAnnotation.hasData());
+        mVcfWriter.writeHeader(version.version(), mGnomadAnnotation.hasData(), mPon.hasData());
     }
 
     private void initialiseTranscriptWriter()

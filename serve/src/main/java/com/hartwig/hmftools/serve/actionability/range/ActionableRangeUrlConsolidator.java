@@ -12,12 +12,12 @@ public class ActionableRangeUrlConsolidator implements UrlConsolidator<Actionabl
     @NotNull
     @Override
     public ActionableRange stripUrls(@NotNull final ActionableRange instance) {
-        return ImmutableActionableRange.builder().from(instance).urls(Sets.newHashSet()).build();
+        return ImmutableActionableRange.builder().from(instance).evidenceUrls(Sets.newHashSet()).build();
     }
 
     @NotNull
     @Override
     public ActionableRange buildWithUrls(@NotNull final ActionableRange instance, @NotNull final Set<String> urls) {
-        return ImmutableActionableRange.builder().from(instance).urls(urls).build();
+        return ImmutableActionableRange.builder().from(instance).evidenceUrls(urls).build();
     }
 }

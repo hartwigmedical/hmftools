@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.phase;
 
-import static com.hartwig.hmftools.sage.config.SoftFilter.MAX_GERMLINE_VAF;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_VAF;
 import static com.hartwig.hmftools.sage.phase.VariantPhaser.mergeByExtension;
 import static com.hartwig.hmftools.sage.phase.VariantPhaser.mergeMatching;
 import static com.hartwig.hmftools.sage.phase.VariantPhaser.mergeUninformative;

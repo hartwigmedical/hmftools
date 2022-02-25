@@ -9,6 +9,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.serve.sources.ImmutableSources;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -39,11 +40,9 @@ public class ActionableEventComparatorTest {
     @NotNull
     private static ActionableEvent create(@NotNull Knowledgebase source, @NotNull String treatment, @NotNull String cancerType,
             @NotNull EvidenceLevel level, @NotNull EvidenceDirection direction) {
-        return ActionabilityTestUtil.create(Strings.EMPTY,
-                source,
+        return ActionabilityTestUtil.create(ImmutableSources.builder().source(source).sourceEvent(Strings.EMPTY).build(),
                 treatment,
                 cancerType,
-                Strings.EMPTY,
                 Strings.EMPTY,
                 Strings.EMPTY,
                 level,

@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.sage.filters;
 
-import static com.hartwig.hmftools.sage.config.SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL;
-import static com.hartwig.hmftools.sage.config.SoftFilter.MAX_GERMLINE_VAF;
-import static com.hartwig.hmftools.sage.config.SoftFilter.MIN_TUMOR_QUAL;
-import static com.hartwig.hmftools.sage.config.SoftFilter.isGermlineAndNotTumorFiltered;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_VAF;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_TUMOR_QUAL;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.isGermlineAndNotTumorFiltered;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

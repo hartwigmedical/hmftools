@@ -247,7 +247,7 @@ class RefGenomeConverter {
 
             @Override
             public Integer rank() {
-                return annotation.rank();
+                return 0;
             }
 
             @NotNull

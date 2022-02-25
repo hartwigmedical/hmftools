@@ -37,7 +37,9 @@ import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
 import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
+import com.hartwig.hmftools.serve.sources.ImmutableSources;
 
+import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -49,6 +51,7 @@ public final class ServeTestFactory {
     @NotNull
     public static ExtractionResult createResultForSource(@NotNull Knowledgebase source) {
         return ImmutableExtractionResult.builder()
+                .eventInterpretation(Lists.newArrayList())
                 .refGenomeVersion(source.refGenomeVersion())
                 .addKnownHotspots(createTestKnownHotspotForSource(source))
                 .addKnownCodons(createTestKnownCodonForSource(source))
@@ -150,7 +153,10 @@ public final class ServeTestFactory {
 
     @NotNull
     public static ActionableHotspot createTestActionableHotspotForSource(@NotNull Knowledgebase source) {
-        return ImmutableActionableHotspot.builder().from(createTestActionableHotspot()).source(source).build();
+        return ImmutableActionableHotspot.builder()
+                .from(createTestActionableHotspot())
+                .source(ImmutableSources.builder().source(source).sourceEvent(Strings.EMPTY).build())
+                .build();
     }
 
     @NotNull
@@ -166,7 +172,10 @@ public final class ServeTestFactory {
 
     @NotNull
     public static ActionableRange createTestActionableRangeForSource(@NotNull Knowledgebase source) {
-        return ImmutableActionableRange.builder().from(createTestActionableRange()).source(source).build();
+        return ImmutableActionableRange.builder()
+                .from(createTestActionableRange())
+                .source(ImmutableSources.builder().source(source).sourceEvent(Strings.EMPTY).build())
+                .build();
     }
 
     @NotNull
@@ -186,7 +195,10 @@ public final class ServeTestFactory {
 
     @NotNull
     public static ActionableGene createTestActionableGeneForSource(@NotNull Knowledgebase source) {
-        return ImmutableActionableGene.builder().from(createTestActionableGene()).source(source).build();
+        return ImmutableActionableGene.builder()
+                .from(createTestActionableGene())
+                .source(ImmutableSources.builder().source(source).sourceEvent(Strings.EMPTY).build())
+                .build();
     }
 
     @NotNull
@@ -200,7 +212,10 @@ public final class ServeTestFactory {
 
     @NotNull
     public static ActionableFusion createTestActionableFusionForSource(@NotNull Knowledgebase source) {
-        return ImmutableActionableFusion.builder().from(createTestActionableFusion()).source(source).build();
+        return ImmutableActionableFusion.builder()
+                .from(createTestActionableFusion())
+                .source(ImmutableSources.builder().source(source).sourceEvent(Strings.EMPTY).build())
+                .build();
     }
 
     @NotNull
@@ -210,7 +225,10 @@ public final class ServeTestFactory {
 
     @NotNull
     public static ActionableCharacteristic createTestActionableCharacteristicForSource(@NotNull Knowledgebase source) {
-        return ImmutableActionableCharacteristic.builder().from(createTestActionableCharacteristic()).source(source).build();
+        return ImmutableActionableCharacteristic.builder()
+                .from(createTestActionableCharacteristic())
+                .source(ImmutableSources.builder().source(source).sourceEvent(Strings.EMPTY).build())
+                .build();
     }
 
     @NotNull
@@ -218,7 +236,8 @@ public final class ServeTestFactory {
         return ImmutableActionableCharacteristic.builder()
                 .from(createTestBaseEvent())
                 .name(TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE)
-                .cutOff(Strings.EMPTY)
+                .atLeast(null)
+                .cutOff(null)
                 .build();
     }
 
@@ -229,9 +248,7 @@ public final class ServeTestFactory {
 
     @NotNull
     private static ActionableEvent createTestBaseEvent(@NotNull Knowledgebase source) {
-        return ActionabilityTestUtil.create(Strings.EMPTY,
-                source,
-                Strings.EMPTY,
+        return ActionabilityTestUtil.create(ImmutableSources.builder().source(source).sourceEvent(Strings.EMPTY).build(),
                 Strings.EMPTY,
                 Strings.EMPTY,
                 Strings.EMPTY,

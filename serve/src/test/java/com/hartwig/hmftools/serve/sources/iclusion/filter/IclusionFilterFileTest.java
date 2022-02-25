@@ -18,5 +18,4 @@ public class IclusionFilterFileTest {
         List<IclusionFilterEntry> filterEntries = IclusionFilterFile.read(TEST_ICLUSION_FILTER_FILE);
         assertEquals(1, filterEntries.size());
     }
-
 }

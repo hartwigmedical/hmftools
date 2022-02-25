@@ -180,7 +180,7 @@ public class SoftFilters
 
     private boolean polyGCInsert(final SvData sv)
     {
-        if(mFilterConstants.PolyGcRegion.containsPosition(sv.chromosomeStart(), sv.posStart()))
+        if(mFilterConstants.matchesPolyGRegion(sv.chromosomeStart(), sv.posStart()))
             return true;
 
         if(sv.isSgl())
@@ -190,11 +190,8 @@ public class SoftFilters
         }
         else
         {
-            if(mFilterConstants.PolyGcRegion.containsPosition(sv.chromosomeStart(), sv.posStart())
-            || mFilterConstants.PolyGcRegion.containsPosition(sv.chromosomeEnd(), sv.posEnd()))
-            {
+            if(mFilterConstants.matchesPolyGRegion(sv.chromosomeEnd(), sv.posEnd()))
                 return true;
-            }
         }
 
         return false;

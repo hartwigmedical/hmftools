@@ -24,7 +24,7 @@ SERVE supports the ingestion of the following knowledgebases:
  - [OncoKB](https://www.oncokb.org) - general purpose knowledgebase that is supported through [VICC](http://cancervariants.org)
  - [DoCM](http://www.docm.info) - database containing pathogenic mutations in cancer
  - [iClusion](https://iclusion.org) - a database with all actively recruiting clinical trials in the Netherlands 
- - ACTIN - a database with all actively recruiting clinical trials in the ACTIN study along with 
+ - [ACTIN](https://github.com/hartwigmedical/actin/blob/master/treatment/README.md) - a database with all actively recruiting clinical trials in the ACTIN study along with 
  molecular inclusion criteria for these trials.
  - HMF Cohort - a database of recurrent somatic mutations in cancer-related genes from the Hartwig database.
  - HMF Curated - a database of known driver mutations curated by the Hartwig team.
@@ -48,12 +48,15 @@ they are compliant with the usage of the data itself.
 SERVE generates clinical evidence in the following datamodel:
  - Treatment (name of trial or drug(s))
  - Cancer type (annotated with DOID) for which the treatment is considered on-label.
+ - Blacklist cancer types (annotated with DOID) that should be children of the main cancer type and are used for blacklisting 
+ specific types of the main cancer type.
  - Tier / Evidence level of the treatment
  - Direction (Responsive for the treatment or resistant to the treatment)
- - A set of URLs with extra information about the evidence (could be a publication, or a general website)
+ - A set of URLs pointing towards the source website which provide extra information about the treatment.
+ - A set of URLs with extra information about the evidence (e.g. publications backing up the evidence)
  
 The following genomic events and tumor characteristics can be mapped to clinical evidence:
- - Genome-wide tumor characteristics such as signatures, MSI status or viral presence
+ - Genome-wide tumor characteristics such as signatures, MSI status, TML status or viral presence
  - Multi-gene events such as gene fusions
  - Single gene events such as amplification or general (in)activation of a gene
  - Types of mutations in ranges overlapping with specific genes such as:
@@ -79,7 +82,18 @@ If a gene does not exist in Hartwig's exome definition the evidence is ignored. 
 of the exome, see [HMF Gene Utils](../gene-utils/README.md).
 
 For fusions, genes are permitted that can exist in the context of a fusion pair (eg @IG genes). 
- 
+
+### Driver inconsistencies
+In the supported knowledgebases, there can be events defined on genes that are are not part of the Hartwig's driver gene panel.
+Also, the event could be inconsistent with respect to driver gene panel (e.g. "Inactivation" evidence for a gene that is configured to be 
+an oncogene). There are various ways to deal with such inconsistencies on a per-knowledgebase level:
+
+Filter  | Description
+---|---
+FILTER  | We filter every entry when the gene/event isn't present or there is an inconsistency with the Hartwig's driver gene panel
+IGNORE  | Every gene/event is used regardless of mismatch/inconsistencies 
+WARN_ONLY  | Every gene/event is used regardless of mismatch/inconsistencies, however a warning messages is shown for the inconsistencies
+
 ### Protein resolving for SNVs and (small) INDELs
  
 Evidence on SNVs and small INDELs generally come in their protein annotated form (e.g. BRAF V600E). 
@@ -161,7 +175,8 @@ DELETION | Evidence is applicable when the gene has been completely deleted from
 ACTIVATION | Evidence is applicable when a gene has been activated. Downstream algorithms are expected to interpret this.
 INACTIVATION | Evidence is applicable when a gene has been inactivated. Downstream algorithms are expected to interpret this.
 ANY_MUTATION | SERVE does not restrict this evidence based on the type of mutation and considers every type of mutation applicable for this evidence.
-FUSION | Evidence is applicable in case the gene has fused with another gene (either 3' or 5') .
+FUSION | Evidence is applicable in case the gene has fused with another gene (either 3' or 5').
+WILD_TYPE | Evidence is applicable in case no genomic alteration is detected)
 
 ### Exonic ranges specific for fusion pairs
 
@@ -173,15 +188,16 @@ Evidence on fusion pairs where these restrictions are missing can be assumed to 
 ### Genome wide tumor characteristics
 
 For evidence that is applicable when a genome wide event has happened, the type of event required to match evidence to the event 
-is derived from the knowledgebase event.
+is derived from the knowledgebase event. When the knowledgebase event has a cutoff defined for this evidence this information will be also extracted. 
+When no cut-off values is present but is expected for the characteristics, Hartwig's default cutoff values are used. 
 
 Genome wide event  | Description
 ---|---
-MICROSATELLITE_UNSTABLE  | Evidence is applicable when the genome has a MSI status
-MICROSATELLITE_STABLE  | Evidence is applicable when the genome dopes not have a MSI status
-HIGH_TUMOR_MUTATIONAL_LOAD | Evidence is applicable when the genome has a high tumor mutational load status
-LOW_TUMOR_MUTATIONAL_LOAD | Evidence is applicable when the genome does not have a high tumor mutational load status
-HOMOLOGOUS_RECOMBINATION_DEFICIENT | Evidence is applicable when the genome has a HRD status
+MICROSATELLITE_UNSTABLE  | Evidence is applicable when the genome has a MSI status (Hartwig's cutoff >=4)
+MICROSATELLITE_STABLE  | Evidence is applicable when the genome dopes not have a MSI status (Hartwig's cutoff <4)
+HIGH_TUMOR_MUTATIONAL_LOAD | Evidence is applicable when the genome has a high tumor mutational load status (Hartwig's cutoff >=140)
+LOW_TUMOR_MUTATIONAL_LOAD | Evidence is applicable when the genome does not have a high tumor mutational load status (Hartwig's cutoff <4)
+HOMOLOGOUS_RECOMBINATION_DEFICIENT | Evidence is applicable when the genome has a HRD status (Hartwig's cutoff >= 0.5)
 HPV_POSITIVE | Evidence is applicable when viral presence of some form of HPV has been found
 EBV_POSITIVE | Evidence is applicable when viral presence of some form of EBV has been found
 IMMUNO_HLA / Evidence is applicable in case of an HLA type match
@@ -223,13 +239,51 @@ DoCM is used exclusively for known hotspot generation. The filtering is therefor
  - Mutations that don't exist on the transcript specified by DoCM are removed.
  
 Also, genes that do not follow HGNC model are renamed to their HGNC name.
- 
+
+### ACTIN Curation
+
+ACTIN ingest the molecular inclusion criteria which are extracted from the ACTIN treatment database (see also [actin](https://github.com/hartwigmedical/actin/blob/master/serve-bridge/README.md)).
+The inclusion criteria in the trials of the ACTIN database are defined in terms of specific rules.
+
+Rule | When does a patient pass evaluation?
+---|---
+ACTIVATION_OR_AMPLIFICATION_OF_GENE_X | Activating mutation or amplification is found in gene X
+ACTIVATING_MUTATION_IN_GENE_X | Activating mutation is found in gene X
+FUSION_IN_GENE_X | Driver fusion with fusion partner gene X is found
+SPECIFIC_FUSION_OF_X_TO_Y | Driver fusion with 2 specified fusion partner genes is found
+INACTIVATION_OF_GENE_X | Inactivating mutation or deletion/disruption is found in gene X
+MUTATION_IN_GENE_X_OF_TYPE_Y | Specific mutation Y is found in gene X
+AMPLIFICATION_OF_GENE_X | Amplification is found in gene X
+DELETION_OF_GENE_X | Deletion is found in gene X
+WILDTYPE_OF_GENE_X | No driver mutation is found in gene X
+MSI_SIGNATURE | MS Status = MSI
+HRD_SIGNATURE | HR Status = HRD
+TMB_OF_AT_LEAST_X | Tumor Mutational Burden (TMB) should be => X
+TML_OF_AT_LEAST_X | Tumor Mutational Load (TML) should be => X
+TML_OF_AT_MOST_X | TML should be <= X
+
+SERVE configures every trial to A-level evidence with responsive direction. The filtering is predominantly configurable rather than fixed
+in SERVE. The following filters can be configured in ACTIN:
+
+Filter  | Description
+---|---
+FILTER_RULE_ON_GENE | Can be used to remove evidence of a specific rule of a particular gene 
+FILTER_MUTATION_ON_GENE | Can be used to remove evidence of a gene with a specific mutation
+FILTER_EVERYTHING_FOR_GENE | Can be used to remove all evidence of a gene (eg. Mutations that are inconsistent with the Hartwig driver catalog)
+FILTER_EVERYTHING_FOR_RULE | Can be used to remove all evidence of a specific rule 
+
 ### iClusion Curation
 
 iClusion contributes to actionability only. SERVE configures every trial to B-level evidence with responsive direction. 
-SERVE only considers trials with one or more molecular inclusion criterium, and applies the following filtering and curation:
- - Mutations that are inconsistent with the Hartwig driver catalog are removed
- - Mutations that are undetectable in DNA are removed. One example is "Expression" of a gene.
+SERVE only considers trials with one or more molecular inclusion criterium. The filtering is predominantly configurable rather than fixed 
+in SERVE. The fixed curation of iClusion that is done in SERVE is mapping gene names and signatures. 
+
+The following filters can be configured in iClusion:
+
+Filter  | Description
+---|---
+FILTER_EVENT_WITH_KEYWORD  | Can be used to remove evidence of a type that is not observable in DNA (eg "hypermethylation")
+FILTER_VARIANT_ON_GENE  | Can be used to remove evidence of a gene (eg. Mutations that are inconsistent with the Hartwig driver catalog)
  
 Finally, cancer types for which no DOIDs have been specified get a DOID assigned by SERVE.
 
@@ -319,6 +373,16 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   - The actionable output is the database that [PROTECT](../protect/README.md) bases its clinical evidence matching on.
   
 ## Version History and Download Links
+- Upcoming
+  - Support the raw input string of the input knowledgebases to the actionable output files
+  - Support wild-type events as gene level evidences 
+  - The filtering of iClusion events is moved to a input file instead inside SERVE  
+  - Created a link of CKB of the evidence for CKB Boost (web based)
+  - For actionable signatures evidences could be applicable with different cut-offs. Now supporting those cut-off values of the different signatures (eg. TML >= 140 )
+  - Support the possibility to blacklist specific tumor locations for particular treatments
+  - Add an option to filter evidences when there are driver inconsistenties 
+  - Support for curation the coordinates of genes because with ensembl data cache BRAF has the wrong coordinates
+  - We support the interpretation of the new cancer type(DOIDs) of the CKB knowledgebase (JAX:10000009 and JAX:10000008)
 - [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.8)
   - Add full support for HGNC gene model implied by [HMF Gene Utils](../gene-utils/README.md)
     - Removed gene name mapping from ref genome converter when mapping between 37 and 38 (since gene names are always equal)

@@ -84,6 +84,12 @@ public abstract class EventClassifierConfig {
     public abstract Set<String> lowTumorMutationalLoadEvents();
 
     @NotNull
+    public abstract Set<String> highTumorMutationalBurdenEvents();
+
+    @NotNull
+    public abstract Set<String> lowTumorMutationalBurdenEvents();
+
+    @NotNull
     public abstract Set<String> hrDeficiencyEvents();
 
     @NotNull

@@ -41,6 +41,7 @@ public class ClinicalEvidenceOffLabelChapter implements ReportChapter {
         addTreatmentSection(document, "Evidence on other tumor types", reportedOffLabel);
         document.add(ClinicalEvidenceFunctions.noteEvidence());
         document.add(ClinicalEvidenceFunctions.noteGlossaryTerms());
+        document.add(ClinicalEvidenceFunctions.noteEvidenceMatching());
     }
 
     private void addTreatmentSection(@NotNull Document document, @NotNull String header, @NotNull List<ProtectEvidence> evidences) {

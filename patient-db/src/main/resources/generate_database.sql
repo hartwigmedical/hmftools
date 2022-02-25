@@ -564,7 +564,7 @@ CREATE TABLE somaticVariant
     referenceTotalReadCount int,
     rnaAlleleReadCount int,
     rnaTotalReadCount int,
-    localPhaseSet int,
+    localPhaseSet varchar(50),
     qual double precision not null,
     reported BOOLEAN NOT NULL,
     PRIMARY KEY (id),
@@ -597,7 +597,7 @@ CREATE TABLE germlineVariant
     rnaTotalReadCount int,
     tumorAlleleReadCount int NOT NULL,
     tumorTotalReadCount int NOT NULL,
-    localPhaseSet int,
+    localPhaseSet varchar(50),
 
     ### PURPLE ENRICHMENT
     adjustedVaf DOUBLE PRECISION NOT NULL,

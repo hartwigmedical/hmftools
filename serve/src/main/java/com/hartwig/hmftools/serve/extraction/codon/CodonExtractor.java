@@ -67,23 +67,16 @@ public class CodonExtractor {
         if (type == EventType.CODON && geneChecker.isValidGene(gene)) {
 
             DriverCategory driverCategory = findByGene(driverGenes, gene);
-            if (!DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithDriverInconsistentModeAnnotation)) {
-                LOGGER.info("test1");
-                if (driverCategory != null) {
+            if (DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithDriverInconsistentModeAnnotation)) {
+                if (driverCategory == null) {
                     if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
                             DealWithDriverInconsistentModeAnnotation.WARN_ONLY)) {
-                        LOGGER.warn("{} on {} is not included in driver catalog and won't ever be reported.", type, gene);
+                        LOGGER.warn("Codon event on {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
                     } else if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
                             DealWithDriverInconsistentModeAnnotation.FILTER)) {
-                        LOGGER.info("Filtered -- {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
+                        LOGGER.info("Codon event filtered -- {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
                         return null;
                     }
-                }
-            } else {
-                LOGGER.info(driverCategory);
-                if (driverCategory == null) {
-                    LOGGER.info("Filtered -- {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
-                    return null;
                 }
             }
 

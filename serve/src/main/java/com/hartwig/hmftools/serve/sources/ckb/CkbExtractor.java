@@ -17,6 +17,7 @@ import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharact
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
+import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLA;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.extraction.ActionableEventFactory;
 import com.hartwig.hmftools.serve.extraction.EventExtractor;
@@ -31,6 +32,8 @@ import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
 import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberFunctions;
 import com.hartwig.hmftools.serve.extraction.copynumber.ImmutableKnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
+import com.hartwig.hmftools.serve.extraction.events.EventInterpretation;
+import com.hartwig.hmftools.serve.extraction.events.ImmutableEventInterpretation;
 import com.hartwig.hmftools.serve.extraction.exon.ExonAnnotation;
 import com.hartwig.hmftools.serve.extraction.exon.ExonFunctions;
 import com.hartwig.hmftools.serve.extraction.exon.ImmutableKnownExon;
@@ -41,6 +44,8 @@ import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
+import com.hartwig.hmftools.serve.sources.ImmutableSources;
+import com.hartwig.hmftools.serve.sources.Sources;
 import com.hartwig.hmftools.serve.util.ProgressTracker;
 
 import org.apache.logging.log4j.LogManager;
@@ -85,7 +90,15 @@ public class CkbExtractor {
             EventExtractorOutput eventExtractorOutput = eventExtractor.extract(gene, transcript, entry.type(), event, Strings.EMPTY);
             Set<? extends ActionableEvent> actionableEvents = actionableEntryFactory.toActionableEntries(entry, variant.variant());
 
-            extractions.add(toExtractionResult(gene, event, transcript, eventExtractorOutput, actionableEvents));
+            List<EventInterpretation> interpretation = Lists.newArrayList();
+            Sources sources = ImmutableSources.builder().sourceEvent(variant.variant()).source(Knowledgebase.CKB).build();
+            interpretation.add(ImmutableEventInterpretation.builder()
+                    .source(sources)
+                    .interpretGene(gene)
+                    .interpretEvent(event)
+                    .interpretEventType(entry.type())
+                    .build());
+            extractions.add(toExtractionResult(gene, event, transcript, eventExtractorOutput, actionableEvents, interpretation));
 
             tracker.update();
         }
@@ -95,12 +108,14 @@ public class CkbExtractor {
 
     @NotNull
     private static ExtractionResult toExtractionResult(@NotNull String gene, @NotNull String variant, @Nullable String transcript,
-            @NotNull EventExtractorOutput output, @NotNull Set<? extends ActionableEvent> actionableEvents) {
+            @NotNull EventExtractorOutput output, @NotNull Set<? extends ActionableEvent> actionableEvents,
+            @NotNull List<EventInterpretation> interpretation) {
         Set<ActionableHotspot> actionableHotspots = Sets.newHashSet();
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
         Set<ActionableGene> actionableGenes = Sets.newHashSet();
         Set<ActionableFusion> actionableFusions = Sets.newHashSet();
         Set<ActionableCharacteristic> actionableCharacteristics = Sets.newHashSet();
+        Set<ActionableHLA> actionableHLA = Sets.newHashSet();
 
         for (ActionableEvent event : actionableEvents) {
             actionableHotspots.addAll(ActionableEventFactory.toActionableHotspots(event, output.hotspots()));
@@ -122,9 +137,14 @@ public class CkbExtractor {
             if (output.characteristic() != null) {
                 actionableCharacteristics.add(ActionableEventFactory.toActionableCharacteristic(event, output.characteristic()));
             }
+
+            if (output.hla() != null) {
+                actionableHLA.add(ActionableEventFactory.toActionableHLa(event, output.hla()));
+            }
         }
 
         return ImmutableExtractionResult.builder()
+                .eventInterpretation(interpretation)
                 .refGenomeVersion(Knowledgebase.CKB.refGenomeVersion())
                 .knownHotspots(convertToKnownHotspots(output.hotspots(), gene, variant, transcript))
                 .knownCodons(convertToKnownCodons(output.codons()))
@@ -136,6 +156,7 @@ public class CkbExtractor {
                 .actionableGenes(actionableGenes)
                 .actionableFusions(actionableFusions)
                 .actionableCharacteristics(actionableCharacteristics)
+                .actionableHLA(actionableHLA)
                 .build();
     }
 

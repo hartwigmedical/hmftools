@@ -1,19 +1,15 @@
 package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.DB_BATCH_INSERT_SIZE;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.checkStringLength;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTGERMLINE;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SVCLUSTER;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Germlinevariant.GERMLINEVARIANT;
 
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 
-import com.google.common.collect.Iterables;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummary;
-import com.hartwig.hmftools.common.sv.linx.LinxCluster;
 import com.hartwig.hmftools.common.sv.linx.LinxGermlineSv;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -23,7 +19,6 @@ import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep8;
 import org.jooq.InsertValuesStepN;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -149,7 +144,7 @@ public class GermlineVariantDAO
                 rnaDepth.totalReadCount(),
                 tumorDepth.alleleReadCount(),
                 tumorDepth.totalReadCount(),
-                decorator.localPhaseSet(),
+                checkStringLength(decorator.localPhaseSetsToString(), GERMLINEVARIANT.LOCALPHASESET),
                 decorator.adjustedVaf(),
                 decorator.variantCopyNumber(),
                 decorator.adjustedCopyNumber(),
@@ -245,10 +240,10 @@ public class GermlineVariantDAO
                 germlineSV.TumorFragments,
                 germlineSV.TumorReferenceFragmentsStart,
                 germlineSV.TumorReferenceFragmentsEnd,
-                DatabaseUtil.checkStringLength(germlineSV.InsertSequence, STRUCTURALVARIANTGERMLINE.INSERTSEQUENCE),
-                DatabaseUtil.checkStringLength(germlineSV.InsertSequenceAlignments, STRUCTURALVARIANTGERMLINE.INSERTSEQUENCEALIGNMENTS),
-                DatabaseUtil.checkStringLength(germlineSV.InsertSequenceRepeatClass, STRUCTURALVARIANTGERMLINE.INSERTSEQUENCEREPEATCLASS),
-                DatabaseUtil.checkStringLength(germlineSV.InsertSequenceRepeatType, STRUCTURALVARIANTGERMLINE.INSERTSEQUENCEREPEATTYPE),
+                checkStringLength(germlineSV.InsertSequence, STRUCTURALVARIANTGERMLINE.INSERTSEQUENCE),
+                checkStringLength(germlineSV.InsertSequenceAlignments, STRUCTURALVARIANTGERMLINE.INSERTSEQUENCEALIGNMENTS),
+                checkStringLength(germlineSV.InsertSequenceRepeatClass, STRUCTURALVARIANTGERMLINE.INSERTSEQUENCEREPEATCLASS),
+                checkStringLength(germlineSV.InsertSequenceRepeatType, STRUCTURALVARIANTGERMLINE.INSERTSEQUENCEREPEATTYPE),
                 germlineSV.ClusterId,
                 germlineSV.ClusterCount,
                 germlineSV.ResolvedType,

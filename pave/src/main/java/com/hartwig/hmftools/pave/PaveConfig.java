@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.pave.external.GnomadAnnotation;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -30,6 +29,7 @@ public class PaveConfig
 
     public final String OutputDir;
     public final String OutputVcfFile;
+
     public final boolean WriteTranscriptCsv;
     public final boolean CompareSnpEff;
     public final boolean WriteDiffs;
@@ -39,6 +39,12 @@ public class PaveConfig
     private static final String SAMPLE = "sample";
     private static final String VCF_FILE = "vcf_file";
     private static final String OUTPUT_VCF_FILE = "output_vcf_file";
+
+    public static final String PON_FILE = "pon_file";
+    public static final String PON_FILTERS = "pon_filters";
+    public static final String PON_ARTEFACTS_FILE = "pon_artefact_file";
+
+    // optional and debugging config
     private static final String COMPARE_SNPEFF = "compare_snpeff";
     private static final String ONLY_CANONCIAL = "only_canonical";
     private static final String FILTER_PASS = "filter_pass";
@@ -55,6 +61,7 @@ public class PaveConfig
         RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
 
         OutputVcfFile = cmd.getOptionValue(OUTPUT_VCF_FILE);
+
         WriteTranscriptCsv = cmd.hasOption(WRITE_TRANSCRIPT_CSV);
         CompareSnpEff = cmd.hasOption(COMPARE_SNPEFF);
         WriteDiffs = cmd.hasOption(WRITE_DIFFS);
@@ -84,6 +91,9 @@ public class PaveConfig
         options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
         addEnsemblDir(options);
         options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
+        options.addOption(PON_FILE, true, "PON entries");
+        options.addOption(PON_ARTEFACTS_FILE, true, "PON artefacts to filter");
+        options.addOption(PON_FILTERS, true, "PON filters per tier, format: TIER:MAX_SAMPLES:MAX_COUNT separated by ';'");
 
         options.addOption(COMPARE_SNPEFF, false, "Check against SnpEff annotations");
         options.addOption(WRITE_DIFFS, false, "Only write transcript diffs to CSV file");

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.quality;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.quality.QualityRecalibrationFile.generateBqrFilename;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,7 +18,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.r.RExecutor;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.SageConfig;
 
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -51,6 +52,27 @@ public class BaseQualityRecalibration
         if(!mConfig.QualityRecalibration.Enabled)
         {
             buildEmptyRecalibrations();
+            return;
+        }
+
+        if(mConfig.QualityRecalibration.LoadBqrFiles)
+        {
+            Map<String,String> sampleFileNames = Maps.newHashMap();
+            String outputDir = mConfig.formOutputDir();
+            mConfig.ReferenceIds.forEach(x -> sampleFileNames.put(x, generateBqrFilename(x, outputDir)));
+            mConfig.TumorIds.forEach(x -> sampleFileNames.put(x, generateBqrFilename(x, outputDir)));
+
+            for(Map.Entry<String,String> entry : sampleFileNames.entrySet())
+            {
+                String sampleId = entry.getKey();
+                String filename = entry.getValue();
+
+                final List<QualityRecalibrationRecord> counts = QualityRecalibrationFile.read(filename);
+
+                SG_LOGGER.info("loaded sample({}) {} base quality recalibration records from {}", sampleId, counts.size(), filename);
+                mSampleRecalibrationMap.put(sampleId, new QualityRecalibrationMap(counts));
+            }
+
             return;
         }
 
@@ -120,7 +142,8 @@ public class BaseQualityRecalibration
         mSampleRecalibrationMap.put(sampleId, new QualityRecalibrationMap(records));
 
         // write results to file
-        writeSampleData(sampleId, records);
+        if(mConfig.QualityRecalibration.WriteFile)
+            writeSampleData(sampleId, records);
 
         mPerfCounter.stop();
     }
@@ -214,12 +237,12 @@ public class BaseQualityRecalibration
     {
         try
         {
-            final String tsvFile = mConfig.baseQualityRecalibrationFile(sampleId);
+            final String tsvFile = generateBqrFilename(sampleId, mConfig.formOutputDir());
             SG_LOGGER.debug("writing base quality recalibration file: {}", tsvFile);
 
             QualityRecalibrationFile.write(tsvFile, records.stream().collect(Collectors.toList()));
 
-            if(mConfig.QualityRecalibration.Plot)
+            if(mConfig.QualityRecalibration.WritePlot)
             {
                 RExecutor.executeFromClasspath("r/baseQualityRecalibrationPlot.R", tsvFile);
             }

@@ -19,7 +19,9 @@ import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.exon.KnownExon;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
+import com.hartwig.hmftools.serve.sources.ImmutableSources;
 
+import org.apache.logging.log4j.util.Strings;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -31,17 +33,17 @@ public class ExtractionFunctionsTest {
         Set<ActionableRange> actionableRangeSet = Sets.newHashSet();
         ActionableRange range1 = ImmutableActionableRange.builder()
                 .from(ServeTestFactory.createTestActionableRange())
-                .source(Knowledgebase.CKB)
+                .source(ImmutableSources.builder().source(Knowledgebase.CKB).sourceEvent(Strings.EMPTY).build())
                 .gene("BRAF")
                 .rank(601)
                 .rangeType(RangeType.CODON)
                 .start(10)
                 .end(20)
-                .transcript("transscript")
+                .transcript("transcript")
                 .build();
         ActionableRange range2 = ImmutableActionableRange.builder()
                 .from(ServeTestFactory.createTestActionableRange())
-                .source(Knowledgebase.CKB)
+                .source(ImmutableSources.builder().source(Knowledgebase.CKB).sourceEvent(Strings.EMPTY).build())
                 .gene("BRAF")
                 .rank(600)
                 .rangeType(RangeType.CODON)
@@ -55,7 +57,7 @@ public class ExtractionFunctionsTest {
         assertEquals("BRAF", actionableRange1.gene());
         assertEquals(10, actionableRange1.start());
         assertEquals(20, actionableRange1.end());
-        assertEquals("transscript", actionableRange1.transcript());
+        assertEquals("transcript", actionableRange1.transcript());
 
         ActionableRange actionableRange2 = listOfActionableRange.get(1);
         assertEquals("BRAF", actionableRange2.gene());

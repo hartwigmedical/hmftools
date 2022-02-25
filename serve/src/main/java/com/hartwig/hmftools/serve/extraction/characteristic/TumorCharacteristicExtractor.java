@@ -2,6 +2,7 @@ package com.hartwig.hmftools.serve.extraction.characteristic;
 
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 
 import org.apache.logging.log4j.LogManager;
@@ -23,27 +24,30 @@ public class TumorCharacteristicExtractor {
     @NotNull
     private final Set<String> lowTumorMutationalLoadEvents;
     @NotNull
+    private final Set<String> highTumorMutationalBurdenEvents;
+    @NotNull
+    private final Set<String> lowTumorMutationalBurdenEvents;
+    @NotNull
     private final Set<String> hrDeficiencyEvents;
     @NotNull
     private final Set<String> hpvPositiveEvents;
     @NotNull
     private final Set<String> ebvPositiveEvents;
-    @NotNull
-    private final Set<String> immunoHlaEvents;
 
     public TumorCharacteristicExtractor(@NotNull final Set<String> microsatelliteUnstableEvents,
             @NotNull final Set<String> microsatelliteStableEvents, @NotNull final Set<String> highTumorMutationalLoadEvents,
-            @NotNull final Set<String> lowTumorMutationalLoadEvents, @NotNull final Set<String> hrDeficiencyEvents,
-            @NotNull final Set<String> hpvPositiveEvents, @NotNull final Set<String> ebvPositiveEvents,
-            @NotNull final Set<String> immunoHlaEvents) {
+            @NotNull final Set<String> lowTumorMutationalLoadEvents, @NotNull final Set<String> highTumorMutationalBurdenEvents,
+            @NotNull final Set<String> lowTumorMutationalBurdenEvents, @NotNull final Set<String> hrDeficiencyEvents,
+            @NotNull final Set<String> hpvPositiveEvents, @NotNull final Set<String> ebvPositiveEvents) {
         this.microsatelliteUnstableEvents = microsatelliteUnstableEvents;
         this.microsatelliteStableEvents = microsatelliteStableEvents;
         this.highTumorMutationalLoadEvents = highTumorMutationalLoadEvents;
         this.lowTumorMutationalLoadEvents = lowTumorMutationalLoadEvents;
+        this.highTumorMutationalBurdenEvents = highTumorMutationalBurdenEvents;
+        this.lowTumorMutationalBurdenEvents = lowTumorMutationalBurdenEvents;
         this.hrDeficiencyEvents = hrDeficiencyEvents;
         this.hpvPositiveEvents = hpvPositiveEvents;
         this.ebvPositiveEvents = ebvPositiveEvents;
-        this.immunoHlaEvents = immunoHlaEvents;
     }
 
     @Nullable
@@ -53,30 +57,87 @@ public class TumorCharacteristicExtractor {
             if (characteristic == null) {
                 LOGGER.warn("Could not extract characteristic from '{}'", event);
             } else {
-                String cutOffInterpretated = determineCutoff(characteristic, cutOff);
-                return ImmutableTumorCharacteristic.builder().tumorCharacteristicAnnotation(characteristic).cutoff(cutOffInterpretated).build();
+                TumorCharacteristicsAtLeast atLeast = determineAtLeast(characteristic, cutOff);
+                Double cutOffInterpretated = determineCutoff(characteristic, cutOff);
+                return ImmutableTumorCharacteristic.builder()
+                        .tumorCharacteristicAnnotation(characteristic)
+                        .atLeast(atLeast)
+                        .cutOff(cutOffInterpretated)
+                        .build();
             }
         }
         return null;
     }
 
-    @NotNull
-    private String determineCutoff(@Nullable TumorCharacteristicAnnotation characteristic, @NotNull String cutOff) {
+    @Nullable
+    @VisibleForTesting
+    public TumorCharacteristicsAtLeast determineAtLeast(@Nullable TumorCharacteristicAnnotation characteristic, @NotNull String cutOff) {
         if (!cutOff.equals(Strings.EMPTY)) {
-            return cutOff;
+            String[] cutOffSplit = cutOff.split(" ");
+
+            if (cutOff.equals("MSI high")) {
+                return TumorCharacteristicsAtLeast.EQUALS_GREATHER;
+            } else if (cutOffSplit.length == 3) {
+                if (cutOffSplit[1].equals(">=")) {
+                    return TumorCharacteristicsAtLeast.EQUALS_GREATHER;
+                } else if (cutOffSplit[1].equals("<=")) {
+                    return TumorCharacteristicsAtLeast.EQUALS_LESSER;
+                } else if (cutOffSplit[1].equals("<")) {
+                    return TumorCharacteristicsAtLeast.LESSER;
+                } else if (cutOffSplit[1].equals(">")) {
+                    return TumorCharacteristicsAtLeast.GREATHER;
+                } else {
+                    LOGGER.warn("Could not determine greather of smaller cut-off");
+                    return null;
+                }
+            } else {
+                LOGGER.warn("cutOff value couldn't be determined");
+                return null;
+            }
         } else {
             if (characteristic == TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE) {
-                return "MSI >= 4";
+                return TumorCharacteristicsAtLeast.EQUALS_GREATHER;
             } else if (characteristic == TumorCharacteristicAnnotation.MICROSATELLITE_STABLE) {
-                return "MSS < 4";
+                return TumorCharacteristicsAtLeast.LESSER;
             } else if (characteristic == TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD) {
-                return "TML >= 140";
+                return TumorCharacteristicsAtLeast.EQUALS_GREATHER;
             } else if (characteristic == TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_LOAD) {
-                return "TML < 140";
+                return TumorCharacteristicsAtLeast.LESSER;
             } else if (characteristic == TumorCharacteristicAnnotation.HOMOLOGOUS_RECOMBINATION_DEFICIENT) {
-                return "HRD >= 0.5";
+                return TumorCharacteristicsAtLeast.EQUALS_GREATHER;
             } else {
-                return Strings.EMPTY;
+                return null;
+            }
+        }
+    }
+
+    @Nullable
+    @VisibleForTesting
+    public Double determineCutoff(@Nullable TumorCharacteristicAnnotation characteristic, @NotNull String cutOff) {
+        if (!cutOff.equals(Strings.EMPTY)) {
+            String[] cutOffSplit = cutOff.split(" ");
+            if (cutOff.equals("MSI high")) {
+                return (double) 4;
+            } else if (cutOffSplit.length == 3) {
+                return Double.valueOf(cutOffSplit[2]);
+            } else {
+                LOGGER.warn("cutOff value couldn't be determined");
+                return null;
+            }
+        } else {
+            //HMF definitions cut-off
+            if (characteristic == TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE) {
+                return (double) 4;
+            } else if (characteristic == TumorCharacteristicAnnotation.MICROSATELLITE_STABLE) {
+                return (double) 4;
+            } else if (characteristic == TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD) {
+                return (double) 140;
+            } else if (characteristic == TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_LOAD) {
+                return (double) 140;
+            } else if (characteristic == TumorCharacteristicAnnotation.HOMOLOGOUS_RECOMBINATION_DEFICIENT) {
+                return 0.5;
+            } else {
+                return null;
             }
         }
     }
@@ -91,14 +152,16 @@ public class TumorCharacteristicExtractor {
             return TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD;
         } else if (lowTumorMutationalLoadEvents.contains(event)) {
             return TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_LOAD;
+        } else if (highTumorMutationalBurdenEvents.contains(event)) {
+            return TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_BURDEN;
+        } else if (lowTumorMutationalBurdenEvents.contains(event)) {
+            return TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_BURDEN;
         } else if (hrDeficiencyEvents.contains(event)) {
             return TumorCharacteristicAnnotation.HOMOLOGOUS_RECOMBINATION_DEFICIENT;
         } else if (hpvPositiveEvents.contains(event)) {
             return TumorCharacteristicAnnotation.HPV_POSITIVE;
         } else if (ebvPositiveEvents.contains(event)) {
             return TumorCharacteristicAnnotation.EBV_POSITIVE;
-        } else if (immunoHlaEvents.contains(event)) {
-            return TumorCharacteristicAnnotation.IMMUNO_HLA;
         }
 
         return null;

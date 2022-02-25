@@ -9,9 +9,9 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class TumorLocationBlacklisting {
 
-    @NotNull
+    @Nullable
     public abstract String blacklistCancerType();
 
-    @NotNull
+    @Nullable
     public abstract String blacklistedDoid();
 }

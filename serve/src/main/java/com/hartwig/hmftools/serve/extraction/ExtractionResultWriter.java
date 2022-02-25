@@ -7,9 +7,11 @@ import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharact
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionFile;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGeneFile;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotFile;
+import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLAFile;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRangeFile;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodonFile;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumberFile;
+import com.hartwig.hmftools.serve.extraction.events.EventInterpretationFile;
 import com.hartwig.hmftools.serve.extraction.exon.KnownExonFile;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPairFile;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspotFile;
@@ -82,5 +84,15 @@ public class ExtractionResultWriter {
                 result.actionableCharacteristics().size(),
                 actionableCharacteristicTsv);
         ActionableCharacteristicFile.write(actionableCharacteristicTsv, result.actionableCharacteristics());
+
+        String actionableHLATsv = ActionableHLAFile.actionableHLATsvPath(outputDir, refGenomeVersion);
+        LOGGER.info(" Writing {} actionable hla to {}",
+                result.actionableHLA().size(),
+                actionableHLATsv);
+        ActionableHLAFile.write(actionableHLATsv, result.actionableHLA());
+
+        String eventInterpretationTsv = EventInterpretationFile.eventInterpretationTsv(outputDir);
+        LOGGER.info(" Writing {} event interpretation to {}", result.eventInterpretation().size(), eventInterpretationTsv);
+        EventInterpretationFile.write(eventInterpretationTsv, result.eventInterpretation());
     }
 }

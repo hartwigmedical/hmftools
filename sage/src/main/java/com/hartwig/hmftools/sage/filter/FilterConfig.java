@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.config;
+package com.hartwig.hmftools.sage.filter;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT;
@@ -10,8 +10,6 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HIGH_CONFIDENCE_FI
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HOTSPOT_FILTER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_LOW_CONFIDENCE_FILTER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_PANEL_FILTER;
-
-import java.util.function.Predicate;
 
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.common.VariantTier;
@@ -81,11 +79,6 @@ public class FilterConfig
         FilteredMaxNormalAltSupport = DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT;
     }
 
-    private static final SoftFilterConfig NO_FILTER = new SoftFilterConfig(
-            0, 0, 0, 0,
-            1d, 1d);
-
-
     public static Options createOptions()
     {
         final Options options = new Options();
@@ -106,15 +99,5 @@ public class FilterConfig
         SoftFilterConfig.createOptions("low_confidence", DEFAULT_LOW_CONFIDENCE_FILTER).getOptions().forEach(options::addOption);
 
         return options;
-    }
-
-    public boolean passesHardFilters(final ReadContextCounter readContextCounter)
-    {
-        if(readContextCounter.Tier.equals(VariantTier.HOTSPOT))
-            return true;
-
-        return readContextCounter.rawAltBaseQuality() >= HardMinTumorRawBaseQuality
-                && readContextCounter.rawAltSupport() >= HardMinTumorRawAltSupport
-                && readContextCounter.tumorQuality() >= HardMinTumorQual;
     }
 }

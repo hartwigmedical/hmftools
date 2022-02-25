@@ -18,6 +18,7 @@ import com.hartwig.hmftools.serve.extraction.exon.ExonExtractor;
 import com.hartwig.hmftools.serve.extraction.fusion.FusionExtractor;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelExtractor;
 import com.hartwig.hmftools.serve.extraction.hotspot.HotspotExtractor;
+import com.hartwig.hmftools.serve.extraction.immuno.ImmunoHLAExtractor;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilterAlgo;
 import com.hartwig.hmftools.serve.refgenome.RefGenomeResource;
@@ -71,10 +72,12 @@ public final class EventExtractorFactory {
                         config.microsatelliteStableEvents(),
                         config.highTumorMutationalLoadEvents(),
                         config.lowTumorMutationalLoadEvents(),
+                        config.highTumorMutationalBurdenEvents(),
+                        config.lowTumorMutationalBurdenEvents(),
                         config.hrDeficiencyEvents(),
                         config.hpvPositiveEvents(),
-                        config.ebvPositiveEvents(),
-                        config.hlaEvents()));
+                        config.ebvPositiveEvents()),
+                new ImmunoHLAExtractor(config.hlaEvents()));
     }
 
     @NotNull
