@@ -76,8 +76,7 @@ public final class EventExtractorFactory {
                         config.lowTumorMutationalBurdenEvents(),
                         config.hrDeficiencyEvents(),
                         config.hpvPositiveEvents(),
-                        config.ebvPositiveEvents(),
-                        config.hlaEvents()),
+                        config.ebvPositiveEvents()),
                 new ImmunoHLAExtractor(config.hlaEvents()));
     }
 
