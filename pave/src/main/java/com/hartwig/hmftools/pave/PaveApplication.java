@@ -18,6 +18,8 @@ import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 import static com.hartwig.hmftools.pave.PaveUtils.createRightAlignedVariant;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
+import static com.hartwig.hmftools.pave.VcfWriter.PON_ARTEFACT_FILTER;
+import static com.hartwig.hmftools.pave.VcfWriter.PON_GNOMAD_FILTER;
 import static com.hartwig.hmftools.pave.compare.ComparisonUtils.effectsMatch;
 import static com.hartwig.hmftools.pave.compare.ComparisonUtils.ignoreSnpEffAnnotation;
 
@@ -212,10 +214,7 @@ public class PaveApplication
         // can be null if no impacts exist for any transcript
         VariantImpact variantImpact = mImpactBuilder.createVariantImpact(variant);
 
-        variant.setGnomadFrequency(mGnomadAnnotation.getFrequency(variant));
-
-        mPon.getFrequency(variant);
-        mPonArtefacts.getFrequency(variant);
+        ponAnnotateAndFilter(variant);
 
         mVcfWriter.writeVariant(variant.context(), variant, variantImpact);
 
@@ -234,6 +233,16 @@ public class PaveApplication
         {
             checkAndWriteTransDifferences(variant);
         }
+    }
+
+    private void ponAnnotateAndFilter(final VariantData variant)
+    {
+        mGnomadAnnotation.annotateVariant(variant);
+
+        mPon.annotateVariant(variant);
+
+        if(mPonArtefacts.getPonData(variant) != null)
+            variant.addFilter(PON_ARTEFACT_FILTER);
     }
 
     public static void findVariantImpacts(
@@ -305,7 +314,7 @@ public class PaveApplication
         PV_LOGGER.info("writing VCF file({})", outputVcfFilename);
 
         mVcfWriter = new VcfWriter(outputVcfFilename, mConfig.VcfFile);
-        mVcfWriter.writeHeader(version.version(), mGnomadAnnotation.hasData());
+        mVcfWriter.writeHeader(version.version(), mGnomadAnnotation.hasData(), mPon.hasData());
     }
 
     private void initialiseTranscriptWriter()

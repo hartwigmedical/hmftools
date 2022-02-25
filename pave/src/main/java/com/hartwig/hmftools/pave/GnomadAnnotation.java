@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
+import static com.hartwig.hmftools.pave.VcfWriter.PON_GNOMAD_FILTER;
 import static com.hartwig.hmftools.pave.external.GnomadCacheBuilder.GNOMAD_FILE_ID;
 import static com.hartwig.hmftools.pave.external.GnomadCacheBuilder.formFileId;
 
@@ -34,11 +35,14 @@ public class GnomadAnnotation
     private final RefGenomeVersion mRefGenomeVersion;
     private final boolean mLoadChromosomeOnDemand;
     private final Map<String,String> mChromosomeFiles;
+    private final double mPonFilterThreshold;
 
     public static final String GNOMAD_FREQUENCY_FILE = "gnomad_freq_file";
     public static final String GNOMAD_FREQUENCY_DIR = "gnomad_freq_dir";
     private static final String GNOMAD_LOAD_CHR_ON_DEMAND = "gnomad_load_chr_on_demand";
-    public static final String GNOMAD_VCF_TAG = "GND_FREQ";
+    private static final String GNOMAD_PON_FILTER = "gnomad_pon_filter";
+
+    private static final double DEFAULT_PON_FILTER_THRESHOLD = 0.00015;
 
     public GnomadAnnotation(final CommandLine cmd)
     {
@@ -59,15 +63,33 @@ public class GnomadAnnotation
                 String gnomadDir = cmd.getOptionValue(GNOMAD_FREQUENCY_DIR);
                 loadAllFrequencyFiles(gnomadDir);
             }
+
+            mPonFilterThreshold = Double.parseDouble(cmd.getOptionValue(GNOMAD_PON_FILTER, String.valueOf(DEFAULT_PON_FILTER_THRESHOLD)));
         }
         else
         {
             mRefGenomeVersion = V37;
             mLoadChromosomeOnDemand = false;
+            mPonFilterThreshold = 0;
         }
     }
 
     public boolean hasData() { return !mFrequencies.isEmpty() || !mChromosomeFiles.isEmpty(); }
+
+    public void annotateVariant(final VariantData variant)
+    {
+        Double gnomadFreq = getFrequency(variant);
+
+        if(gnomadFreq != null)
+        {
+            variant.setGnomadFrequency(gnomadFreq);
+
+            if(exceedsPonThreshold(gnomadFreq))
+                variant.addFilter(PON_GNOMAD_FILTER);
+        }
+    }
+
+    public boolean exceedsPonThreshold(final Double frequency) { return frequency != null && frequency >= mPonFilterThreshold; }
 
     public Double getFrequency(final VariantData variant)
     {
@@ -248,6 +270,7 @@ public class GnomadAnnotation
         options.addOption(GNOMAD_FREQUENCY_FILE, true, "Gnomad frequency file");
         options.addOption(GNOMAD_FREQUENCY_DIR, true, "Gnomad frequency directory");
         options.addOption(GNOMAD_LOAD_CHR_ON_DEMAND, false, "Gnomad load frequency files by chromosome on demand");
+        options.addOption(GNOMAD_PON_FILTER, true, "Gnomad PON frequency filter (default: 0.00015)");
     }
 
     private class GnomadVariant

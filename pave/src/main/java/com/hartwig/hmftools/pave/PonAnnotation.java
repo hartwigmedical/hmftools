@@ -2,6 +2,7 @@ package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.ITEM_DELIM;
+import static com.hartwig.hmftools.pave.VcfWriter.PON_FILTER;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -42,7 +43,7 @@ public class PonAnnotation
         mPonFilters = Maps.newHashMap();
     }
 
-    public boolean hasData() { return !mPonEntries.isEmpty(); }
+    public boolean hasData() { return mPonFilename != null; }
 
     public boolean loadFilters(final String filtersConfig)
     {
@@ -71,7 +72,26 @@ public class PonAnnotation
         return true;
     }
 
-    public PonVariantData getFrequency(final VariantData variant)
+    public void annotateVariant(final VariantData variant)
+    {
+        PonVariantData ponData = getPonData(variant);
+        if(ponData == null)
+            return;
+
+        variant.setPonFrequency(ponData.Samples, ponData.MaxSampleReads);
+
+        VariantTier tier = variant.tier();
+
+        PonFilters filters = mPonFilters.containsKey(tier) ? mPonFilters.get(tier) : mPonFilters.get(VariantTier.UNKNOWN);
+
+        if(filters == null)
+            return;
+
+        if(ponData.Samples >= filters.RequiredSampleCount && ponData.MaxSampleReads >= filters.RequiredMaxReadCount)
+            variant.addFilter(PON_FILTER);
+    }
+
+    public PonVariantData getPonData(final VariantData variant)
     {
         if(mLoadOnDemand && !variant.Chromosome.equals(mCurrentChromosome))
         {

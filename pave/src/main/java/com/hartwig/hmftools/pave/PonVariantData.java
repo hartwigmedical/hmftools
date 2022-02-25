@@ -18,4 +18,9 @@ class PonVariantData
     }
 
     public boolean matches(final String ref, final String alt) { return ref.equals(Ref) && alt.equals(Alt); }
+
+    public String toString()
+    {
+        return String.format("%s>%s sample(%d) maxReads(%d) total(%d)", Ref, Alt, Samples, MaxSampleReads, TotalSampleReads);
+    }
 }
