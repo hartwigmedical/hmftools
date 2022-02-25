@@ -15,6 +15,7 @@ import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotFile;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRangeFile;
 
+import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -58,6 +59,7 @@ public final class ActionableEventsLoader {
                 .genes(genes)
                 .fusions(fusions)
                 .characteristics(characteristics)
+                .hla(Lists.newArrayList())
                 .build();
     }
 }
