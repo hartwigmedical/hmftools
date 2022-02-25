@@ -25,6 +25,7 @@ import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.vcf.VariantContextFactory;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
+import com.hartwig.hmftools.sage.vcf.VcfWriter;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -47,7 +48,7 @@ public class SageApplication implements AutoCloseable
     private final ExecutorService mExecutorService;
     private final PhaseSetCounter mPhaseSetCounter;
 
-    private final VariantVCF mVcfFile;
+    private final VcfWriter mVcfWriter;
 
     private SageApplication(final CommandLine cmd)
     {
@@ -75,7 +76,7 @@ public class SageApplication implements AutoCloseable
 
         mPhaseSetCounter = new PhaseSetCounter();
 
-        mVcfFile = new VariantVCF(mRefData.RefGenome, mConfig);
+        mVcfWriter = new VcfWriter(mConfig, mRefData);
 
         SG_LOGGER.info("writing to file: {}", mConfig.OutputFile);
     }
@@ -98,7 +99,7 @@ public class SageApplication implements AutoCloseable
                 continue;
 
             final ChromosomePipeline pipeline = new ChromosomePipeline(
-                    chromosome, mConfig, mRefData, recalibrationMap, coverage, mPhaseSetCounter, this::writeVariant);
+                    chromosome, mConfig, mRefData, recalibrationMap, coverage, mPhaseSetCounter, mVcfWriter);
 
             pipeline.process();
             System.gc();
@@ -132,11 +133,6 @@ public class SageApplication implements AutoCloseable
         return dictionary;
     }
 
-    public void writeVariant(final SageVariant variant)
-    {
-        mVcfFile.write(VariantContextFactory.create(variant, mConfig.ReferenceIds, mConfig.TumorIds));
-    }
-
     private Coverage createCoverage()
     {
         populateCoverageBuckets();
@@ -153,8 +149,6 @@ public class SageApplication implements AutoCloseable
     @Override
     public void close() throws IOException
     {
-        mVcfFile.close();
-
         mRefData.RefGenome.close();
         mExecutorService.shutdown();
     }

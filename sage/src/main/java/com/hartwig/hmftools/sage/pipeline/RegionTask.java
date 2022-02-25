@@ -35,6 +35,7 @@ public class RegionTask implements Callable
 {
     private final ChrBaseRegion mRegion; // region to slice and analyse for this task
     private final int mTaskId;
+    private final RegionResults mResults;
 
     private final SageConfig mConfig;
     private final ReferenceSequenceFile mRefGenome;
@@ -53,13 +54,14 @@ public class RegionTask implements Callable
     public static final int PC_VARIANTS = 2;
 
     public RegionTask(
-            final int taskId, final ChrBaseRegion region, final SageConfig config, final ReferenceSequenceFile refGenome,
+            final int taskId, final ChrBaseRegion region, final RegionResults results, final SageConfig config, final ReferenceSequenceFile refGenome,
             final List<VariantHotspot> hotspots, final List<BaseRegion> panelRegions, final List<TranscriptData> transcripts,
             final List<BaseRegion> highConfidenceRegions, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap,
             final PhaseSetCounter phaseSetCounter, final Coverage coverage)
     {
         mTaskId = taskId;
         mRegion = region;
+        mResults = results;
         mConfig = config;
         mRefGenome = refGenome;
 
@@ -145,20 +147,6 @@ public class RegionTask implements Callable
 
             final List<ReadContextCounter> tumorReadCounters = tumorEvidence.getFilteredReadCounters(candidateIndex);
 
-            /*
-            ReadContextCounter primaryTumorRc = tumorReadCounters.get(0);
-
-            boolean candidatePassesRawAlt = candidate.rawSupportAlt() >= mConfig.Filter.HardMinTumorRawAltSupport;
-            boolean evidencePassesRawAlt = primaryTumorRc.rawAltSupport() >= mConfig.Filter.HardMinTumorRawAltSupport;
-            if(candidatePassesRawAlt != evidencePassesRawAlt)
-            {
-                SG_LOGGER.debug("variant({}) raw alt support mismatch({} vs {})",
-                        candidate.toString(), candidate.rawSupportAlt(), primaryTumorRc.rawAltSupport());
-            }
-
-            // || primaryTumorRc.rawAltBaseQuality() != candidate.rawBaseQualityAlt())
-            */
-
             SageVariant sageVariant = new SageVariant(candidate, normalReadCounters, tumorReadCounters);
             mSageVariants.add(sageVariant);
 
@@ -182,12 +170,29 @@ public class RegionTask implements Callable
 
         mPerfCounters.get(PC_VARIANTS).stop();
 
+        finaliseResults();
+
         SG_LOGGER.trace("{}: region({}) complete", mTaskId, mRegion);
 
         return (long)0;
     }
 
-    public int totalReadsProcessed() { return mCandidateState.totalReadsProcessed(); }
+    private void finaliseResults()
+    {
+        mSageVariants.stream().filter(x -> x.isPassing() && x.hasLocalPhaseSets()).forEach(x -> mPassingPhaseSets.addAll(x.localPhaseSets()));
+
+        List<SageVariant> finalVariants = mSageVariants.stream()
+                .filter(x -> VariantFilters.checkFinalFilters(x, mPassingPhaseSets, mConfig)).collect(Collectors.toList());
+
+        VariantPhaser.removeUninformativeLps(finalVariants, mPassingPhaseSets);
+
+        mResults.addFinalVariants(mTaskId, finalVariants);
+
+        mResults.addTotalReads(mCandidateState.totalReadsProcessed());
+
+        mPerfCounters.addAll(mEvidenceStage.getVariantPhaser().getPerfCounters());
+        mResults.addPerfCounters(mPerfCounters);
+    }
 
     public void writeVariants(final Consumer<SageVariant> variantWriter)
     {

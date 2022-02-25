@@ -5,11 +5,15 @@ import static com.hartwig.hmftools.sage.ReferenceData.loadRefGenome;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -30,6 +34,9 @@ import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
+import com.hartwig.hmftools.sage.vcf.VcfWriter;
+
+import org.checkerframework.checker.units.qual.A;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -37,23 +44,25 @@ public class ChromosomePipeline implements AutoCloseable
 {
     private final String mChromosome;
     private final SageConfig mConfig;
-    private final List<RegionFuture<List<SageVariant>>> mRegions = Lists.newArrayList();
     private final IndexedFastaSequenceFile mRefGenome;
-    private final Consumer<SageVariant> mWriteConsumer;
+    private final VcfWriter mVcfWriter;
     private final ChromosomePartition mPartition;
-    private final List<RegionTask> mRegionTasks;
+    private final Queue<RegionTask> mRegionTasks;
+    private final RegionResults mRegionResults;
 
     private static final EnumSet<VariantTier> PANEL_ONLY_TIERS = EnumSet.of(VariantTier.HOTSPOT, VariantTier.PANEL);
 
     public ChromosomePipeline(
             final String chromosome, final SageConfig config,
             final ReferenceData refData, final Map<String,QualityRecalibrationMap> qualityRecalibrationMap,
-            final Coverage coverage, final PhaseSetCounter phaseSetCounter, final Consumer<SageVariant> consumer)
+            final Coverage coverage, final PhaseSetCounter phaseSetCounter, final VcfWriter vcfWriter)
     {
         mChromosome = chromosome;
         mConfig = config;
         mRefGenome = loadRefGenome(config.RefGenomeFile);
-        mWriteConsumer = consumer;
+        mVcfWriter = vcfWriter;
+
+        mRegionResults = new RegionResults(vcfWriter);
 
         final Chromosome chr = HumanChromosome.contains(chromosome)
                 ? HumanChromosome.fromString(chromosome) : MitochondrialChromosome.fromString(chromosome);
@@ -67,7 +76,8 @@ public class ChromosomePipeline implements AutoCloseable
         List<TranscriptData> chrTranscripts = refData.ChromosomeTranscripts.get(chromosome);
         List<BaseRegion> chrHighConfidence = refData.HighConfidence.get(chr);
 
-        mRegionTasks = Lists.newArrayList();
+        mRegionTasks= new ConcurrentLinkedQueue<>();
+        // mRegionTasks = Lists.newArrayList();
 
         for(int i = 0; i < partitionedRegions.size(); ++i)
         {
@@ -92,7 +102,7 @@ public class ChromosomePipeline implements AutoCloseable
                     : Lists.newArrayList();
 
             mRegionTasks.add(new RegionTask(
-                    i, region, config, mRefGenome, regionHotspots, regionPanel, regionsTranscripts,
+                    i, region, mRegionResults, config, mRefGenome, regionHotspots, regionPanel, regionsTranscripts,
                     regionHighConfidence, qualityRecalibrationMap, phaseSetCounter, coverage));
         }
     }
@@ -104,35 +114,59 @@ public class ChromosomePipeline implements AutoCloseable
 
     public void process()
     {
-        SG_LOGGER.info("chromosome({}) executing {} regions", mChromosome, mRegionTasks.size());
+        int regionCount = mRegionTasks.size();
+        SG_LOGGER.info("chromosome({}) executing {} regions", mChromosome, regionCount);
 
-        final List<Callable> callableList = mRegionTasks.stream().collect(Collectors.toList());
-        TaskExecutor.executeTasks(callableList, mConfig.Threads);
+        //final List<Callable> callableList = mRegionTasks.stream().collect(Collectors.toList());
+        // TaskExecutor.executeTasks(callableList, mConfig.Threads);
 
-        int totalReads = mRegionTasks.stream().mapToInt(x -> x.totalReadsProcessed()).sum();
-
-        SG_LOGGER.debug("chromosome({}) {} regions complete, processed {} reads",
-                mChromosome, mRegionTasks.size(), totalReads);
-
-        // write variants to file
-        mRegionTasks.forEach(x -> x.writeVariants(mWriteConsumer));
-
-        if(SG_LOGGER.isDebugEnabled())
+        List<Thread> workers = new ArrayList<>();
+        for (int i = 0; i < mConfig.Threads; ++i)
         {
-            List<PerformanceCounter> perfCounters = mRegionTasks.get(0).getPerfCounters();
-
-            for(int i = 1; i < mRegionTasks.size(); ++i)
-            {
-                List<PerformanceCounter> taskPerfCounters = mRegionTasks.get(i).getPerfCounters();
-
-                for(int j = 0; j < perfCounters.size(); ++j)
+            workers.add(new Thread(() -> {
+                while(true)
                 {
-                    perfCounters.get(j).merge(taskPerfCounters.get(j));
-                }
-            }
+                    try
+                    {
+                        RegionTask task = mRegionTasks.remove();
 
-            perfCounters.forEach(x -> x.logStats());
+                        if((mRegionTasks.size() % 100) == 0)
+                        {
+                            SG_LOGGER.debug("chromosome({}) regions completed({}) remaining({})",
+                                    mChromosome, regionCount - mRegionTasks.size(), mRegionTasks.size());
+                        }
+
+                        task.call();
+                    }
+                    catch(NoSuchElementException e)
+                    {
+                        SG_LOGGER.trace("all tasks complete");
+                        break;
+                    }
+                } }));
         }
+
+        workers.forEach(x -> x.start());
+
+        for(Thread worker : workers)
+        {
+            try
+            {
+                worker.join();
+            }
+            catch(InterruptedException e)
+            {
+                SG_LOGGER.error("task execution error: {}", e.toString());
+                e.printStackTrace();
+            }
+        }
+
+        SG_LOGGER.debug("chromosome({}) {} regions complete, processed {} reads, writing {} variants",
+                mChromosome, regionCount, mRegionResults.totalReads(), mRegionResults.totalVariants());
+
+        mVcfWriter.flushChromosome();
+
+        mRegionResults.logPerfCounters();
 
         SG_LOGGER.info("chromosome({}) analysis complete", mChromosome);
     }
@@ -141,27 +175,5 @@ public class ChromosomePipeline implements AutoCloseable
     public void close() throws IOException
     {
         mRefGenome.close();
-    }
-
-    private static class RegionFuture<T>
-    {
-        private final CompletableFuture<T> mFuture;
-        private final ChrBaseRegion mRegion;
-
-        public RegionFuture(final ChrBaseRegion region, final CompletableFuture<T> future)
-        {
-            mRegion = region;
-            mFuture = future;
-        }
-
-        public CompletableFuture<T> future()
-        {
-            return mFuture;
-        }
-
-        public ChrBaseRegion region()
-        {
-            return mRegion;
-        }
     }
 }
