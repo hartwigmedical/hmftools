@@ -14,7 +14,6 @@ public final class SageMetaData
 
     private static final String TIER_DESCRIPTION = "Tier: [HOTSPOT, PANEL, HIGH_CONFIDENCE, LOW_CONFIDENCE]";
     private static final String PHASE_DESCRIPTION = "Local Phase Set";
-    private static final String REALIGN_DESCRIPTION = "Local Realignment Set";
 
     private SageMetaData() { }
 

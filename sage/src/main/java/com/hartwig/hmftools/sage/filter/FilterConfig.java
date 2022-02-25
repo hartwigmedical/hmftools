@@ -79,11 +79,6 @@ public class FilterConfig
         FilteredMaxNormalAltSupport = DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT;
     }
 
-    private static final SoftFilterConfig NO_FILTER = new SoftFilterConfig(
-            0, 0, 0, 0,
-            1d, 1d);
-
-
     public static Options createOptions()
     {
         final Options options = new Options();
