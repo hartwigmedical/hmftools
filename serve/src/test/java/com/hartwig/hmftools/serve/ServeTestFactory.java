@@ -14,6 +14,8 @@ import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.hotspot.ImmutableActionableHotspot;
+import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLA;
+import com.hartwig.hmftools.serve.actionability.immuno.ImmutableActionableHLA;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.RangeType;
@@ -63,6 +65,7 @@ public final class ServeTestFactory {
                 .addActionableGenes(createTestActionableGeneForSource(source))
                 .addActionableFusions(createTestActionableFusionForSource(source))
                 .addActionableCharacteristics(createTestActionableCharacteristicForSource(source))
+                .addActionableHLA(createTestActionableImmunoHLAForSource(source))
                 .build();
     }
 
@@ -239,6 +242,19 @@ public final class ServeTestFactory {
                 .atLeast(null)
                 .cutOff(null)
                 .build();
+    }
+
+    @NotNull
+    public static ActionableHLA createTestActionableImmunoHLAForSource(@NotNull Knowledgebase source) {
+        return ImmutableActionableHLA.builder()
+                .from(createTestActionableHLA())
+                .source(ImmutableSources.builder().source(source).sourceEvent("as").build())
+                .build();
+    }
+
+    @NotNull
+    public static ActionableHLA createTestActionableHLA() {
+        return ImmutableActionableHLA.builder().from(createTestBaseEvent()).hlaTypering(Strings.EMPTY).build();
     }
 
     @NotNull

@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.classification.EventType;
+import com.hartwig.hmftools.serve.extraction.immuno.ImmunoHLA;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -228,17 +229,6 @@ public class TumorCharacteristicExtractorTest {
     }
 
     @Test
-    public void canExtractImmunoHlaCharacteristic() {
-        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
-        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, IMMUNO_HLA, Strings.EMPTY);
-
-        assertNotNull(characteristic);
-        assertEquals(TumorCharacteristicAnnotation.IMMUNO_HLA, characteristic.tumorCharacteristicAnnotation());
-        assertNull(tumorCharacteristicExtractor.determineAtLeast(TumorCharacteristicAnnotation.HPV_POSITIVE, Strings.EMPTY));
-        assertNull(tumorCharacteristicExtractor.determineCutoff(TumorCharacteristicAnnotation.HPV_POSITIVE, Strings.EMPTY));
-    }
-
-    @Test
     public void canFilterUnknownCharacteristic() {
         TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
 
@@ -262,7 +252,6 @@ public class TumorCharacteristicExtractorTest {
                 Sets.newHashSet(LOW_TMB),
                 Sets.newHashSet(HRD),
                 Sets.newHashSet(HPV),
-                Sets.newHashSet(EBV),
-                Sets.newHashSet(IMMUNO_HLA));
+                Sets.newHashSet(EBV));
     }
 }

@@ -9,6 +9,5 @@ public enum TumorCharacteristicAnnotation {
     LOW_TUMOR_MUTATIONAL_BURDEN,
     HOMOLOGOUS_RECOMBINATION_DEFICIENT,
     HPV_POSITIVE,
-    EBV_POSITIVE,
-    IMMUNO_HLA
+    EBV_POSITIVE
 }

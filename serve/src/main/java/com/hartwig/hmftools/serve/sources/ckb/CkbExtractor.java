@@ -17,6 +17,7 @@ import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharact
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
+import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLA;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.extraction.ActionableEventFactory;
 import com.hartwig.hmftools.serve.extraction.EventExtractor;
@@ -114,6 +115,7 @@ public class CkbExtractor {
         Set<ActionableGene> actionableGenes = Sets.newHashSet();
         Set<ActionableFusion> actionableFusions = Sets.newHashSet();
         Set<ActionableCharacteristic> actionableCharacteristics = Sets.newHashSet();
+        Set<ActionableHLA> actionableHLA = Sets.newHashSet();
 
         for (ActionableEvent event : actionableEvents) {
             actionableHotspots.addAll(ActionableEventFactory.toActionableHotspots(event, output.hotspots()));
@@ -135,6 +137,10 @@ public class CkbExtractor {
             if (output.characteristic() != null) {
                 actionableCharacteristics.add(ActionableEventFactory.toActionableCharacteristic(event, output.characteristic()));
             }
+
+            if (output.hla() != null) {
+                actionableHLA.add(ActionableEventFactory.toActionableHLa(event, output.hla()));
+            }
         }
 
         return ImmutableExtractionResult.builder()
@@ -150,6 +156,7 @@ public class CkbExtractor {
                 .actionableGenes(actionableGenes)
                 .actionableFusions(actionableFusions)
                 .actionableCharacteristics(actionableCharacteristics)
+                .actionableHLA(actionableHLA)
                 .build();
     }
 

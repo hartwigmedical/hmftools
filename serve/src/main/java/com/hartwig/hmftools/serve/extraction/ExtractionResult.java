@@ -8,6 +8,7 @@ import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharact
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
+import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLA;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
@@ -60,4 +61,7 @@ public abstract class ExtractionResult {
 
     @NotNull
     public abstract Set<ActionableCharacteristic> actionableCharacteristics();
+
+    @NotNull
+    public abstract Set<ActionableHLA> actionableHLA();
 }

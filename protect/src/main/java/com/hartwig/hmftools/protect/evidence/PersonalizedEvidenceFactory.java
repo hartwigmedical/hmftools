@@ -111,7 +111,6 @@ public class PersonalizedEvidenceFactory {
             case HIGH_TUMOR_MUTATIONAL_BURDEN:
             case LOW_TUMOR_MUTATIONAL_BURDEN:
             case HOMOLOGOUS_RECOMBINATION_DEFICIENT:
-            case IMMUNO_HLA:
                 return ProtectEvidenceType.SIGNATURE;
             case HPV_POSITIVE:
             case EBV_POSITIVE:

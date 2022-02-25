@@ -33,15 +33,12 @@ public class TumorCharacteristicExtractor {
     private final Set<String> hpvPositiveEvents;
     @NotNull
     private final Set<String> ebvPositiveEvents;
-    @NotNull
-    private final Set<String> immunoHlaEvents;
 
     public TumorCharacteristicExtractor(@NotNull final Set<String> microsatelliteUnstableEvents,
             @NotNull final Set<String> microsatelliteStableEvents, @NotNull final Set<String> highTumorMutationalLoadEvents,
             @NotNull final Set<String> lowTumorMutationalLoadEvents, @NotNull final Set<String> highTumorMutationalBurdenEvents,
             @NotNull final Set<String> lowTumorMutationalBurdenEvents, @NotNull final Set<String> hrDeficiencyEvents,
-            @NotNull final Set<String> hpvPositiveEvents, @NotNull final Set<String> ebvPositiveEvents,
-            @NotNull final Set<String> immunoHlaEvents) {
+            @NotNull final Set<String> hpvPositiveEvents, @NotNull final Set<String> ebvPositiveEvents) {
         this.microsatelliteUnstableEvents = microsatelliteUnstableEvents;
         this.microsatelliteStableEvents = microsatelliteStableEvents;
         this.highTumorMutationalLoadEvents = highTumorMutationalLoadEvents;
@@ -51,7 +48,6 @@ public class TumorCharacteristicExtractor {
         this.hrDeficiencyEvents = hrDeficiencyEvents;
         this.hpvPositiveEvents = hpvPositiveEvents;
         this.ebvPositiveEvents = ebvPositiveEvents;
-        this.immunoHlaEvents = immunoHlaEvents;
     }
 
     @Nullable
@@ -166,8 +162,6 @@ public class TumorCharacteristicExtractor {
             return TumorCharacteristicAnnotation.HPV_POSITIVE;
         } else if (ebvPositiveEvents.contains(event)) {
             return TumorCharacteristicAnnotation.EBV_POSITIVE;
-        } else if (immunoHlaEvents.contains(event)) {
-            return TumorCharacteristicAnnotation.IMMUNO_HLA;
         }
 
         return null;

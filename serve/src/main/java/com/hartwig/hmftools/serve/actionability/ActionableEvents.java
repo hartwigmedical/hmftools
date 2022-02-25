@@ -6,6 +6,7 @@ import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharact
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
+import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLA;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 
 import org.immutables.value.Value;
@@ -31,4 +32,7 @@ public interface ActionableEvents {
 
     @NotNull
     List<ActionableCharacteristic> characteristics();
+
+    @NotNull
+    List<ActionableHLA> hla();
 }
