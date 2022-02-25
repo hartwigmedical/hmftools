@@ -50,7 +50,7 @@ import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_MIN_TU
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_MIN_TUMOR_AF_SGL;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_PON_DISTANCE;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_SOFT_MAX_NORMAL_RELATIVE_SUPPORT;
-import static com.hartwig.hmftools.gripss.filters.FilterConstants.LINC_00486_V37;
+import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_G_REGIONS_V37;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.PMS2_V37;
 
 import java.util.List;
@@ -369,7 +369,7 @@ public class GripssTestUtils
                 DEFAULT_MAX_HOM_LENGTH_SHORT_INV,
                 DEFAULT_MIN_LENGTH,
                 DEFAULT_PON_DISTANCE,
-                LINC_00486_V37,
+                POLY_G_REGIONS_V37,
                 PMS2_V37);
     }
 

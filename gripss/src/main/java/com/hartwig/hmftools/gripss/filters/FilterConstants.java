@@ -3,11 +3,14 @@ package com.hartwig.hmftools.gripss.filters;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.commons.compress.utils.Lists;
 
 public class FilterConstants
 {
@@ -25,10 +28,10 @@ public class FilterConstants
     public final int MaxHomLengthShortInv;
     public final int MinLength;
     public final int PonDistance;
-    public final ChrBaseRegion PolyGcRegion;
+    public final List<ChrBaseRegion> PolyGcRegions;
     public final ChrBaseRegion LowQualRegion;
 
-    // filter which only apply when reference is present:
+    // filters which only apply when reference is present:
     // minNormalCoverage, minRelativeCoverage, maxNormalSupport, shortSRNormalSupport, discordantPairSupport
 
     // default filter values
@@ -64,8 +67,19 @@ public class FilterConstants
     public static final String POLY_A = "AAAAAAA";
     public static final String POLY_T = "TTTTTTT";
 
-    public static final ChrBaseRegion LINC_00486_V37 = new ChrBaseRegion("2", 33141260, 33141700);
-    public static final ChrBaseRegion LINC_00486_V38 = new ChrBaseRegion("chr2", 32916190, 32916630);
+    public static final List<ChrBaseRegion> POLY_G_REGIONS_V37 = Lists.newArrayList();
+    public static final List<ChrBaseRegion> POLY_G_REGIONS_V38 = Lists.newArrayList();
+
+    static
+    {
+        POLY_G_REGIONS_V37.add(new ChrBaseRegion("2", 33141260, 33141700));
+        POLY_G_REGIONS_V37.add(new ChrBaseRegion("4", 41218427, 41218467));
+        POLY_G_REGIONS_V37.add(new ChrBaseRegion("17", 42646418, 42646458));
+
+        POLY_G_REGIONS_V38.add(new ChrBaseRegion("chr2", 32916190, 32916630));
+        POLY_G_REGIONS_V38.add(new ChrBaseRegion("chr4", 41216410, 41216450));
+        POLY_G_REGIONS_V38.add(new ChrBaseRegion("chr17", 44569050, 44569090));
+    }
 
     public static final ChrBaseRegion PMS2_V37 = new ChrBaseRegion("7", 6002870, 6058756); // has 10K buffer
     public static final ChrBaseRegion PMS2_V38 = new ChrBaseRegion("chr7", 5960925, 6019106);
@@ -107,14 +121,14 @@ public class FilterConstants
                 Integer.parseInt(cmd.getOptionValue(MAX_HOM_LENGTH_SHORT_INV_CFG, String.valueOf(DEFAULT_MAX_HOM_LENGTH_SHORT_INV))),
                 Integer.parseInt(cmd.getOptionValue(MIN_LENGTH_CFG, String.valueOf(DEFAULT_MIN_LENGTH))),
                 Integer.parseInt(cmd.getOptionValue(PON_DISTANCE, String.valueOf(DEFAULT_PON_DISTANCE))),
-                refGenVersion == V37 ? LINC_00486_V37 : LINC_00486_V38, refGenVersion == V37 ? PMS2_V37 : PMS2_V38);
+                refGenVersion == V37 ? POLY_G_REGIONS_V37 : POLY_G_REGIONS_V38, refGenVersion == V37 ? PMS2_V37 : PMS2_V38);
     }
 
     public FilterConstants(
             int minTumorQual, int hardMaxNormalAbsoluteSupport, double hardMaxNormalRelativeSupport, double softMaxNormalRelativeSupport,
             double minNormalCoverage, double minTumorAfBreakend, double minTumorAfBreakpoint, double maxShortStrandBias,
             int minQualBreakend, int minQualBreakpoint, int minQualRescueLine, int maxHomLengthShortInv,
-            int minLength, int ponDistance, final ChrBaseRegion polyGcRegion, final ChrBaseRegion lowQualRegion)
+            int minLength, int ponDistance, final List<ChrBaseRegion> polyGcRegions, final ChrBaseRegion lowQualRegion)
     {
         MinTumorQual = minTumorQual;
         HardMaxNormalAbsoluteSupport = hardMaxNormalAbsoluteSupport;
@@ -130,8 +144,13 @@ public class FilterConstants
         MaxHomLengthShortInv = maxHomLengthShortInv;
         MinLength = minLength;
         PonDistance = ponDistance;
-        PolyGcRegion = polyGcRegion;
+        PolyGcRegions = polyGcRegions;
         LowQualRegion = lowQualRegion;
+    }
+
+    public boolean matchesPolyGRegion(final String chromosome, int position)
+    {
+        return PolyGcRegions.stream().anyMatch(x -> x.containsPosition(chromosome, position));
     }
 
     public static void addCmdLineArgs(Options options)
