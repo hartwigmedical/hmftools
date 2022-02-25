@@ -72,20 +72,19 @@ public class ActionableHLAFile {
     @VisibleForTesting
     static List<String> toLines(@NotNull Iterable<ActionableHLA> actionableHLAs) {
         List<String> lines = Lists.newArrayList();
-//        for (ActionableHLA actionableHLA : sort(actionableHLAs)) {
-//            lines.add(toLine(actionableHLA));
-//        }
+        for (ActionableHLA actionableHLA : sort(actionableHLAs)) {
+            lines.add(toLine(actionableHLA));
+        }
         return lines;
     }
 
-//    @NotNull
-//    private static List<ActionableHLA> sort(@NotNull Iterable<ActionableHLA> actionableHLAs) {
-//        // Need to make a copy since the input may be immutable and cannot be sorted!
-//        List<ActionableHLA> sorted = Lists.newArrayList(actionableHLAs);
-//        sorted.sort(new ActionableHLAComparator());
-//
-//        return sorted;
-//    }
+    @NotNull
+    private static List<ActionableHLA> sort(@NotNull Iterable<ActionableHLA> actionableHLAs) {
+        // Need to make a copy since the input may be immutable and cannot be sorted!
+        List<ActionableHLA> sorted = Lists.newArrayList(actionableHLAs);
+        sorted.sort(new ActionableHLAComparator());
+        return sorted;
+    }
 
     @NotNull
     private static String toLine(@NotNull ActionableHLA hla) {
