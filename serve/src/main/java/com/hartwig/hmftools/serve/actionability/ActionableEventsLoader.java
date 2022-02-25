@@ -12,10 +12,11 @@ import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGeneFile;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotFile;
+import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLA;
+import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLAFile;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRangeFile;
 
-import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -53,13 +54,18 @@ public final class ActionableEventsLoader {
         List<ActionableCharacteristic> characteristics = ActionableCharacteristicFile.read(actionableCharacteristicTsv);
         LOGGER.info(" Loaded {} actionable tumor characteristics from {}", characteristics.size(), actionableCharacteristicTsv);
 
+        String actionableHLATsv =
+                ActionableHLAFile.actionableHLATsvPath(actionabilityDir, refGenomeVersion);
+        List<ActionableHLA> HLAs = ActionableHLAFile.read(actionableHLATsv);
+        LOGGER.info(" Loaded {} actionable hla from {}", HLAs.size(), actionableHLATsv);
+
         return ImmutableActionableEvents.builder()
                 .hotspots(hotspots)
                 .ranges(ranges)
                 .genes(genes)
                 .fusions(fusions)
                 .characteristics(characteristics)
-                .hla(Lists.newArrayList())
+                .hla(HLAs)
                 .build();
     }
 }
