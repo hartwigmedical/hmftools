@@ -72,10 +72,11 @@ public class PhasedGroupCollection
         }
 
         PhasedVariantGroup newGroup = new PhasedVariantGroup(nextGroupId, posVarMin, posVarMax, posCounters, negCounters);
-        groups.add(newGroup);
 
-        mMinPostion = min(mMinPostion, newGroup.variantMin());
+        mMinPostion = groups.isEmpty() ? newGroup.variantMin() : min(mMinPostion, newGroup.variantMin());
         mMaxPostion = max(mMaxPostion, newGroup.variantMax());
+
+        groups.add(newGroup);
         return true;
     }
 

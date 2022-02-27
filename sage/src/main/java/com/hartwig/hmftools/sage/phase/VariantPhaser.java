@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.sage.phase;
 
+import static java.lang.Math.log10;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.phase.PhasedVariantGroup.maxPosition;
@@ -204,12 +206,15 @@ public class VariantPhaser
         {
             collection.finalise();
 
+            // require more reads to keep a group where there are high numbers in a collection (ie 2 at 310, 3 at 3100, 4 at 31000)
+            int readCountThreshold = max((int)round(log10(collection.groups().size())) - 1, INITIAL_MIN_READ_COUNT);
+
             int index = 0;
             while(index < collection.groups().size())
             {
                 PhasedVariantGroup group = collection.groups().get(index);
 
-                if(group.ReadCount < INITIAL_MIN_READ_COUNT)
+                if(group.ReadCount < readCountThreshold)
                 {
                     collection.groups().remove(index);
                     continue;
