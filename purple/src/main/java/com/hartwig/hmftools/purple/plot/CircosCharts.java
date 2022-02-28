@@ -166,7 +166,7 @@ public class CircosCharts
         final Charset charset = StandardCharsets.UTF_8;
         String content = readResource("/circos/" + type + ".template");
         content = content.replaceAll("SAMPLE", mCurrentSampleId);
-        content = content.replaceAll("REFERENCE", mCurrentReferenceId);
+        content = content.replaceAll("REFERENCE", mCurrentReferenceId != null ? mCurrentReferenceId : mCurrentSampleId);
         content = content.replaceAll("EXCLUDE", gender.equals(Gender.FEMALE) ? "hsY" : "hsZ");
         content = content.replaceAll("KARYOTYPE",
                 mIsHg38 ? "data/karyotype/karyotype.human.hg38.txt" : "data/karyotype/karyotype.human.hg19.txt");

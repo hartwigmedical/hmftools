@@ -34,7 +34,7 @@ public class RCharts
                 mOutputDir,
                 mChartConfig.PlotDirectory)));
 
-        if(plotSomatics) // configSupplier.somaticConfig().file().isPresent()
+        if(plotSomatics)
         {
             result.add(mExecutorService.submit(() -> RExecutor.executeFromClasspath("r/somaticVariantPlots.R",
                     sampleId,

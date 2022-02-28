@@ -172,7 +172,7 @@ public class SomaticStream implements Consumer<VariantContext>
             {
                 if(mConfig.TumorOnlyMode && context.isFiltered())
                     continue;
-                
+
                 enricher.accept(context);
                 ++varCount;
 
