@@ -72,7 +72,9 @@ public final class DriverGeneFile
 
             if(altTransIndex != null)
             {
-                Arrays.stream(values[altTransIndex].split(OTHER_TRANS_DELIM)).forEach(x -> otherReportableTrans.add(x));
+                Arrays.stream(values[altTransIndex].split(OTHER_TRANS_DELIM))
+                        .filter(x -> !x.isEmpty())
+                        .forEach(x -> otherReportableTrans.add(x));
             }
 
             builder.gene(values[geneIndex])
