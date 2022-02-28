@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.codon.AminoAcids;
-import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.serve.extraction.util.VCFWriterFactory;
@@ -33,7 +31,6 @@ public class AnnotatedHotspotVCFPrinterPAVE {
     }
 
     public void run(@NotNull String annotatedInputVcf) throws IOException {
-        List<HmfTranscriptRegion> canonicalTranscripts = HmfGenePanelSupplier.allGeneList37();
 
         LOGGER.info("Simplifying variants from '{}'", annotatedInputVcf);
         AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(annotatedInputVcf, new VCFCodec(), false);
