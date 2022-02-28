@@ -18,7 +18,8 @@ public class BaseQualityRecalibrationTest
     public void testBaseQualityCounts()
     {
         BaseQualityRegionCounter bqrCounter = new BaseQualityRegionCounter(
-                new SageConfig(), null, null, new ChrBaseRegion("1", 100, 1000));
+                new SageConfig(), null, null, new ChrBaseRegion("1", 100, 1000),
+                new BaseQualityResults());
 
         Map<Integer, Map<BaseQualityKey,Integer>> bqMap = bqrCounter.getQualityMap();
 
@@ -46,7 +47,7 @@ public class BaseQualityRecalibrationTest
 
         bqMap.put(pos3, loc3);
 
-        bqrCounter.produceRegionCounts();
+        bqrCounter.run();
 
         Collection<QualityCounter> qualityCounts = bqrCounter.getQualityCounts();
 

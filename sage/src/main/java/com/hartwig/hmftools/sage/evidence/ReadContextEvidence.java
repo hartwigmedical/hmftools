@@ -62,7 +62,7 @@ public class ReadContextEvidence
     }
 
     public List<ReadContextCounter> collectEvidence(
-            final List<Candidate> candidates, final String sample, final String bamFile, final VariantPhaser variantPhaser)
+            final List<Candidate> candidates, final String sample, final SamReader bamReader, final VariantPhaser variantPhaser)
     {
         mReadCounters = mFactory.create(candidates);
         mLastCandidateIndex = 0;
@@ -87,21 +87,9 @@ public class ReadContextEvidence
         QualityRecalibrationMap qrMap = mQualityRecalibrationMap.get(sample);
         mQualityCalculator = new QualityCalculator(mSageConfig.Quality, qrMap, mRefSequence.IndexedBases);
 
-        try
-        {
-            final SamReader tumorReader = SamReaderFactory.makeDefault().validationStringency(mSageConfig.Stringency)
-                    .referenceSource(new ReferenceSource(mRefGenome)).open(new File(bamFile));
+        final SamSlicer slicer = new SamSlicer(0, sliceRegion);
 
-            final SamSlicer slicer = new SamSlicer(0, sliceRegion);
-
-            slicer.slice(tumorReader, this::processReadRecord);
-
-            tumorReader.close();
-        }
-        catch(IOException e)
-        {
-            SG_LOGGER.error("failed to read bamFile({})", bamFile);
-        }
+        slicer.slice(bamReader, this::processReadRecord);
 
         return mReadCounters;
     }

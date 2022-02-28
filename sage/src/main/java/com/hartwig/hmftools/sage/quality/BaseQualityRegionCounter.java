@@ -32,13 +32,14 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
-class BaseQualityRegionCounter implements CigarHandler, Callable<Long>
+public class BaseQualityRegionCounter implements CigarHandler
 {
-    private final String mBamFile;
+    private final SamReader mBamReader;
     private final ChrBaseRegion mRegion;
     private final ReferenceSequenceFile mRefGenome;
     private final IndexedBases mIndexedBases;
     private final SageConfig mConfig;
+    private final BaseQualityResults mResults;
 
     private final Set<Integer> mIndelPositions = Sets.newHashSet();
 
@@ -50,17 +51,19 @@ class BaseQualityRegionCounter implements CigarHandler, Callable<Long>
     private static final byte N = (byte) 'N';
 
     private int mReadCounter;
-    private final PerformanceCounter mReadsPc;
-    private final PerformanceCounter mSummaryPc;
+
+    private final PerformanceCounter mPerfCounter;
 
     public BaseQualityRegionCounter(
-            final SageConfig config, final String bamFile, final ReferenceSequenceFile refGenome, final ChrBaseRegion region)
+            final SageConfig config, final SamReader bamReader, final ReferenceSequenceFile refGenome, final ChrBaseRegion region,
+            final BaseQualityResults results)
     {
         mConfig = config;
-        mBamFile = bamFile;
+        mBamReader = bamReader;
 
         mRegion = region;
         mRefGenome = refGenome;
+        mResults = results;
 
         if(mRefGenome != null)
         {
@@ -76,44 +79,23 @@ class BaseQualityRegionCounter implements CigarHandler, Callable<Long>
         mQualityCounts = Sets.newHashSet();
 
         mReadCounter = 0;
-        mReadsPc = new PerformanceCounter("BqrReads");
-        mSummaryPc = new PerformanceCounter("BqrSummary");
-    }
-
-    @Override
-    public Long call()
-    {
-        produceRegionCounts();
-        return (long)0;
+        mPerfCounter = new PerformanceCounter("BaseQualBuild");
     }
 
     public Collection<QualityCounter> getQualityCounts() { return mQualityCounts; }
 
     protected Map<Integer,Map<BaseQualityKey,Integer>> getQualityMap() { return mQualityMap; }
 
-    public void logPerfs()
-    {
-        SG_LOGGER.debug(String.format("region(%s) readCount(%d) time(read=%.3f summary=%.3f)",
-                mRegion, mReadCounter, mReadsPc.getMaxTime(), mSummaryPc.getMaxTime()));
-    }
-
-    public void produceRegionCounts()
+    public void run()
     {
         SG_LOGGER.trace("processing BQR region {}", mRegion);
 
-        readBam();
+        mPerfCounter.start();
 
-        mSummaryPc.start();
+        readBam();
 
         // remove locations where the alt count exceeds the configured limit
         Map<Integer,Set<BaseQualityKey>> repeatedAltLocations = findRepeatedAltLocations();
-
-        /*
-        if(!repeatedAltLocations.isEmpty())
-        {
-            SG_LOGGER.trace("region({}) has {} repeated alt locations", mRegion, repeatedAltLocations.size());
-        }
-        */
 
         // form a set of counts by variant, no longer taking position into account
         Map<BaseQualityKey,Integer> countsMap = Maps.newHashMap();
@@ -148,33 +130,27 @@ class BaseQualityRegionCounter implements CigarHandler, Callable<Long>
             mQualityCounts.add(counter);
         }
 
-        mSummaryPc.stop();
+        mPerfCounter.stop();
+
+        mResults.addBaseQualityRegionCounter(this);
+        mResults.addPerfCounter(mPerfCounter);
     }
 
     private void readBam()
     {
-        if(mBamFile == null)
+        if(mBamReader == null)
             return;
-
-        mReadsPc.start();
 
         BamSlicer slicer = new BamSlicer(mConfig.MinMapQuality);
 
         try
         {
-            final SamReader tumorReader = SamReaderFactory.makeDefault()
-                    .validationStringency(mConfig.Stringency)
-                    .referenceSource(new ReferenceSource(mRefGenome))
-                    .open(new File(mBamFile));
-
-            slicer.slice(tumorReader, Lists.newArrayList(mRegion), this::processRecord);
+            slicer.slice(mBamReader, Lists.newArrayList(mRegion), this::processRecord);
         }
         catch(Exception e)
         {
             throw new CompletionException(e);
         }
-
-        mReadsPc.stop();
     }
 
     private Map<Integer,Set<BaseQualityKey>> findRepeatedAltLocations()

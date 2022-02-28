@@ -55,7 +55,7 @@ public class CandidateEvidence
     public int totalReadsProcessed() { return mTotalReadsProcessed; }
 
     public List<AltContext> readBam(
-            final String sample, final String bamFile, final RefSequence refSequence, final ChrBaseRegion bounds)
+            final String sample, final SamReader bamReader, final RefSequence refSequence, final ChrBaseRegion bounds)
     {
         final List<GeneCoverage> geneCoverage = mCoverage.coverage(sample, bounds.Chromosome);
         final RefContextCache refContextCache = new RefContextCache(mConfig, mHotspots, mPanel);
@@ -71,7 +71,7 @@ public class CandidateEvidence
             }
         };
 
-        List<AltContext> altContexts = readBam(bamFile, bounds, consumer, refContextCache);
+        List<AltContext> altContexts = readBam(bamReader, bounds, consumer, refContextCache);
 
         mTotalReadsProcessed += refContextConsumer.getReadCount();
 
@@ -80,31 +80,17 @@ public class CandidateEvidence
 
     @NotNull
     private List<AltContext> readBam(
-            final String bamFile, final ChrBaseRegion bounds, final Consumer<SAMRecord> recordConsumer, final RefContextCache refContextCache)
+            final SamReader bamReader, final ChrBaseRegion bounds, final Consumer<SAMRecord> recordConsumer, final RefContextCache refContextCache)
     {
         final List<AltContext> altContexts = Lists.newArrayList();
 
         final SamSlicer slicer = mConfig.PanelOnly ?
                 new SamSlicer(0, bounds, mPanel) : new SamSlicer(0, bounds);
 
-        try
-        {
-            final SamReader tumorReader = SamReaderFactory.makeDefault()
-                    .validationStringency(mConfig.Stringency)
-                    .referenceSource(new ReferenceSource(mRefGenome))
-                    .open(new File(bamFile));
+        slicer.slice(bamReader, recordConsumer);
 
-            slicer.slice(tumorReader, recordConsumer);
-
-            // add all valid alt contexts
-            altContexts.addAll(refContextCache.altContexts());
-
-            tumorReader.close();
-        }
-        catch(IOException e)
-        {
-            SG_LOGGER.error("failed to read bamFile({})", bamFile);
-        }
+        // add all valid alt contexts
+        altContexts.addAll(refContextCache.altContexts());
 
         return altContexts;
     }

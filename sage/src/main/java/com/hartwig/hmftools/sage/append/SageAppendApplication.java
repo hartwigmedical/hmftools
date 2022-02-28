@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.append;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.sage.SageApplication.createCommandLine;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.quality.BaseQualityRecalibration.buildQualityRecalibrationMap;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,21 +13,17 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePartition;
-import com.hartwig.hmftools.sage.quality.BaseQualityRecalibration;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
@@ -53,7 +50,6 @@ public class SageAppendApplication
 {
     private final SageConfig mConfig;
     private final String mInputVcf;
-    private final ExecutorService mExecutorService;
     private final IndexedFastaSequenceFile mRefGenome;
 
     private static final double MIN_PRIOR_VERSION = 3.0;
@@ -68,8 +64,6 @@ public class SageAppendApplication
         mConfig = new SageConfig(true, version.version(), cmd);
         mInputVcf = mConfig.SampleDataDir + cmd.getOptionValue(INPUT_VCF);
 
-        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("SAGE-%d").build();
-        mExecutorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
         mRefGenome = new IndexedFastaSequenceFile(new File(mConfig.RefGenomeFile));
     }
 
@@ -121,9 +115,7 @@ public class SageAppendApplication
 
         final SAMSequenceDictionary dictionary = dictionary();
 
-        BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(mConfig, mExecutorService, mRefGenome);
-        baseQualityRecalibration.produceRecalibrationMap();
-        final Map<String,QualityRecalibrationMap> recalibrationMap = baseQualityRecalibration.getSampleRecalibrationMap();
+        final Map<String,QualityRecalibrationMap> recalibrationMap = buildQualityRecalibrationMap(mConfig, mRefGenome);
 
         final ChromosomePartition chromosomePartition = new ChromosomePartition(mConfig, mRefGenome);
 

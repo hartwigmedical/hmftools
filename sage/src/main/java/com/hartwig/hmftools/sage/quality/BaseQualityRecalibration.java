@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.quality;
 
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.quality.QualityRecalibrationFile.generateBqrFilename;
 
@@ -8,44 +10,51 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.FutureTask;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.r.RExecutor;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.common.PartitionTask;
 
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class BaseQualityRecalibration
 {
-    private final ExecutorService mExecutorService;
     private final IndexedFastaSequenceFile mRefGenome;
     private final SageConfig mConfig;
 
     private final Map<String,QualityRecalibrationMap> mSampleRecalibrationMap;
+    private final Queue<PartitionTask> mRegions;
+    private final BaseQualityResults mResults;
 
-    private final PerformanceCounter mPerfCounter;
-
-    public BaseQualityRecalibration(
-            final SageConfig config, final ExecutorService executorService, final IndexedFastaSequenceFile refGenome)
+    public BaseQualityRecalibration(final SageConfig config, final IndexedFastaSequenceFile refGenome)
     {
-        mExecutorService = executorService;
         mRefGenome = refGenome;
         mConfig = config;
 
         mSampleRecalibrationMap = Maps.newHashMap();
-
-        mPerfCounter = new PerformanceCounter("BaseQualRecal");
+        mRegions = new ConcurrentLinkedQueue<>();
+        mResults = new BaseQualityResults();
      }
 
     public Map<String,QualityRecalibrationMap> getSampleRecalibrationMap() { return mSampleRecalibrationMap; }
+
+    public static Map<String,QualityRecalibrationMap> buildQualityRecalibrationMap(
+            final SageConfig config, final IndexedFastaSequenceFile refGenome)
+    {
+        BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(config, refGenome);
+        baseQualityRecalibration.produceRecalibrationMap();
+        return baseQualityRecalibration.getSampleRecalibrationMap();
+    }
 
     public void produceRecalibrationMap()
     {
@@ -76,15 +85,12 @@ public class BaseQualityRecalibration
             return;
         }
 
-        final List<ChrBaseRegion> regions = createRegions();
+        final List<PartitionTask> regions = createRegions();
 
         for(int i = 0; i < mConfig.ReferenceIds.size(); i++)
         {
             processSample(mConfig.ReferenceIds.get(i), mConfig.ReferenceBams.get(i), regions);
         }
-
-        if(SG_LOGGER.isDebugEnabled())
-            mPerfCounter.logStats();
 
         for(int i = 0; i < mConfig.TumorIds.size(); i++)
         {
@@ -92,42 +98,41 @@ public class BaseQualityRecalibration
         }
 
         if(SG_LOGGER.isDebugEnabled())
-            mPerfCounter.logStats();
+            mResults.logPerfStats();
 
         SG_LOGGER.info("base quality recalibration cache generated");
     }
 
-    private void processSample(final String sampleId, final String bamFile, final List<ChrBaseRegion> regions)
+    private void processSample(final String sampleId, final String bamFile, final List<PartitionTask> regions)
     {
-        List<BaseQualityRegionCounter> regionCounters = Lists.newArrayList();
-        List<FutureTask<Long>> taskList = new ArrayList<>();
+        mRegions.addAll(regions);
+        mResults.clear();
 
-        for(ChrBaseRegion region : regions)
+        int regionCount = mRegions.size();
+
+        SG_LOGGER.debug("samples({}) building base-qual recalibration map from {} regions", sampleId, regionCount);
+
+        List<BqrThread> workers = new ArrayList<>();
+
+        for(int i = 0; i < min(mRegions.size(), mConfig.Threads); ++i)
         {
-            BaseQualityRegionCounter regionCounter = new BaseQualityRegionCounter(mConfig, bamFile, mRefGenome, region);
-            regionCounters.add(regionCounter);
-
-            FutureTask<Long> futureTask = new FutureTask<>(regionCounter);
-            taskList.add(futureTask);
-            mExecutorService.execute(futureTask);
+            workers.add(new BqrThread(mConfig, mRefGenome, bamFile, mRegions, mResults));
         }
 
-        try
+        for(Thread worker : workers)
         {
-            for(FutureTask<Long> task : taskList)
+            try
             {
-                task.get();
+                worker.join();
+            }
+            catch(InterruptedException e)
+            {
+                SG_LOGGER.error("task execution error: {}", e.toString());
+                e.printStackTrace();
             }
         }
-        catch (Exception e)
-        {
-            SG_LOGGER.error("sampleId({}) failed to produce base-qual counts: {}", e.toString());
-            e.printStackTrace();
-        }
 
-        // regionCounters.forEach(x -> x.logPerfs());
-
-        mPerfCounter.start();
+        List<BaseQualityRegionCounter> regionCounters = mResults.getRegionCounters();
 
         // merge results for this sample across all regions
         final Map<BaseQualityKey,Integer> allQualityCounts = Maps.newHashMap();
@@ -144,8 +149,6 @@ public class BaseQualityRecalibration
         // write results to file
         if(mConfig.QualityRecalibration.WriteFile)
             writeSampleData(sampleId, records);
-
-        mPerfCounter.stop();
     }
 
     private void buildEmptyRecalibrations()
@@ -207,9 +210,10 @@ public class BaseQualityRecalibration
     private static final int END_BUFFER = 1000000;
     private static final int REGION_SIZE = 100000;
 
-    private List<ChrBaseRegion> createRegions()
+    private List<PartitionTask> createRegions()
     {
-        List<ChrBaseRegion> result = Lists.newArrayList();
+        List<PartitionTask> regionTasks = Lists.newArrayList();
+        int taskId = 1;
 
         for(final SAMSequenceRecord sequenceRecord : mRefGenome.getSequenceDictionary().getSequences())
         {
@@ -226,11 +230,11 @@ public class BaseQualityRecalibration
 
             while(start < end)
             {
-                result.add(new ChrBaseRegion(chromosome, start, start + REGION_SIZE - 1));
+                regionTasks.add(new PartitionTask(new ChrBaseRegion(chromosome, start, start + REGION_SIZE - 1), taskId++));
                 start += REGION_SIZE;
             }
         }
-        return result;
+        return regionTasks;
     }
 
     private void writeSampleData(final String sampleId, final Collection<QualityRecalibrationRecord> records)

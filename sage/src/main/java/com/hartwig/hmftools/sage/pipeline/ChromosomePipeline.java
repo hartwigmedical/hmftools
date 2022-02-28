@@ -13,10 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Queue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -24,21 +21,17 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.ReferenceData;
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.common.PartitionTask;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
-import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.vcf.VcfWriter;
-
-import org.checkerframework.checker.units.qual.A;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -123,32 +116,11 @@ public class ChromosomePipeline implements AutoCloseable
 
         for(int i = 0; i < min(mPartitions.size(), mConfig.Threads); ++i)
         {
-            workers.add(new Thread(() -> {
-
-                while(true)
-                {
-                    try
-                    {
-                        PartitionTask partition = mPartitions.remove();
-                        RegionTask task = createRegionTask(partition);
-
-                        if(partition.TaskId > 0 && (partition.TaskId % 100) == 0)
-                        {
-                            SG_LOGGER.debug("chromosome({}) regions assigned({}) remaining({})",
-                                    mChromosome, partition.TaskId, mPartitions.size());
-                        }
-
-                        task.call();
-                    }
-                    catch(NoSuchElementException e)
-                    {
-                        SG_LOGGER.trace("all tasks complete");
-                        break;
-                    }
-                } }));
+            workers.add(new RegionThread(
+                    mChromosome, mConfig, mQualityRecalibrationMap, mCoverage, mPhaseSetCounter,
+                    mPanelRegions, mHotspots, mTranscripts, mHighConfidenceRegions,
+                    mPartitions, mRegionResults));
         }
-
-        workers.forEach(x -> x.start());
 
         for(Thread worker : workers)
         {
@@ -179,45 +151,10 @@ public class ChromosomePipeline implements AutoCloseable
 
     public int maxMemoryUsage() { return mRegionResults.maxMemoryUsage(); }
 
-    private RegionTask createRegionTask(final PartitionTask partitionTask)
-    {
-        ChrBaseRegion region = partitionTask.Partition;
-
-        List<BaseRegion> regionPanel = mPanelRegions != null ? mPanelRegions.stream()
-                .filter(x -> positionsOverlap(region.start(), region.end(), x.start(), x.end())).collect(Collectors.toList())
-                : Lists.newArrayList();
-
-        List<VariantHotspot> regionHotspots = mHotspots != null ? mHotspots.stream()
-                .filter(x -> region.containsPosition(x.position())).collect(Collectors.toList()) : Lists.newArrayList();
-
-        List<TranscriptData> regionsTranscripts = mTranscripts != null ? mTranscripts.stream()
-                .filter(x -> positionsOverlap(region.start(), region.end(), x.TransStart, x.TransEnd)).collect(Collectors.toList())
-                : Lists.newArrayList();
-
-        List<BaseRegion> regionHighConfidence = mHighConfidenceRegions != null ? mHighConfidenceRegions.stream()
-                .filter(x -> positionsOverlap(region.start(), region.end(), x.start(), x.end())).collect(Collectors.toList())
-                : Lists.newArrayList();
-
-        return new RegionTask(
-                partitionTask.TaskId, region, mRegionResults, mConfig, mRefGenome, regionHotspots, regionPanel, regionsTranscripts,
-                regionHighConfidence, mQualityRecalibrationMap, mPhaseSetCounter, mCoverage);
-    }
-
     @Override
     public void close() throws IOException
     {
         mRefGenome.close();
     }
 
-    private class PartitionTask
-    {
-        public final ChrBaseRegion Partition;
-        public final int TaskId;
-
-        public PartitionTask(final ChrBaseRegion partition, final int taskId)
-        {
-            Partition = partition;
-            TaskId = taskId;
-        }
-    }
 }

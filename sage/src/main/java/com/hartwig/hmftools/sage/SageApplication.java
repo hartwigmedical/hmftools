@@ -6,28 +6,21 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageCommon.calcCurrentMemoryUsage;
 import static com.hartwig.hmftools.sage.coverage.GeneCoverage.populateCoverageBuckets;
+import static com.hartwig.hmftools.sage.quality.BaseQualityRecalibration.buildQualityRecalibrationMap;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.coverage.GeneDepthFile;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePipeline;
-import com.hartwig.hmftools.sage.quality.BaseQualityRecalibration;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
-import com.hartwig.hmftools.sage.common.SageVariant;
-import com.hartwig.hmftools.sage.vcf.VariantContextFactory;
-import com.hartwig.hmftools.sage.vcf.VariantVCF;
 import com.hartwig.hmftools.sage.vcf.VcfWriter;
 
 import org.apache.commons.cli.CommandLine;
@@ -48,7 +41,6 @@ public class SageApplication implements AutoCloseable
     private final SageConfig mConfig;
     private final ReferenceData mRefData;
 
-    private final ExecutorService mExecutorService;
     private final PhaseSetCounter mPhaseSetCounter;
 
     private final VcfWriter mVcfWriter;
@@ -74,9 +66,6 @@ public class SageApplication implements AutoCloseable
             SG_LOGGER.error("invalid reference data, exiting");
         }
 
-        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("SAGE-%d").build();
-        mExecutorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
-
         mPhaseSetCounter = new PhaseSetCounter();
 
         mVcfWriter = new VcfWriter(mConfig, mRefData);
@@ -89,12 +78,12 @@ public class SageApplication implements AutoCloseable
         long startTime = System.currentTimeMillis();
         final Coverage coverage = createCoverage();
 
-        BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(mConfig, mExecutorService, mRefData.RefGenome);
-        baseQualityRecalibration.produceRecalibrationMap();
-        final Map<String,QualityRecalibrationMap> recalibrationMap = baseQualityRecalibration.getSampleRecalibrationMap();
+        final Map<String,QualityRecalibrationMap> recalibrationMap = buildQualityRecalibrationMap(mConfig, mRefData.RefGenome);
 
         int initMemory = calcCurrentMemoryUsage(false);
         int maxTaskMemory = 0;
+
+        System.gc();
 
         final SAMSequenceDictionary dictionary = dictionary();
         for(final SAMSequenceRecord samSequenceRecord : dictionary.getSequences())
@@ -158,7 +147,6 @@ public class SageApplication implements AutoCloseable
     public void close() throws IOException
     {
         mRefData.RefGenome.close();
-        mExecutorService.shutdown();
         mVcfWriter.close();
     }
 

@@ -30,9 +30,10 @@ import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.dedup.VariantDeduper;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 
+import htsjdk.samtools.SamReader;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
-public class RegionTask implements Callable
+public class RegionTask
 {
     private final ChrBaseRegion mRegion; // region to slice and analyse for this task
     private final int mTaskId;
@@ -58,7 +59,7 @@ public class RegionTask implements Callable
             final int taskId, final ChrBaseRegion region, final RegionResults results, final SageConfig config, final ReferenceSequenceFile refGenome,
             final List<VariantHotspot> hotspots, final List<BaseRegion> panelRegions, final List<TranscriptData> transcripts,
             final List<BaseRegion> highConfidenceRegions, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap,
-            final PhaseSetCounter phaseSetCounter, final Coverage coverage)
+            final PhaseSetCounter phaseSetCounter, final Coverage coverage, final Map<String,SamReader> bamReaders)
     {
         mTaskId = taskId;
         mRegion = region;
@@ -66,8 +67,8 @@ public class RegionTask implements Callable
         mConfig = config;
         mRefGenome = refGenome;
 
-        mCandidateState = new CandidateStage(config, refGenome, hotspots, panelRegions, highConfidenceRegions, coverage);
-        mEvidenceStage = new EvidenceStage(config, refGenome, qualityRecalibrationMap, phaseSetCounter);
+        mCandidateState = new CandidateStage(config, refGenome, hotspots, panelRegions, highConfidenceRegions, coverage, bamReaders);
+        mEvidenceStage = new EvidenceStage(config, refGenome, qualityRecalibrationMap, phaseSetCounter, bamReaders);
 
         mVariantDeduper = new VariantDeduper(transcripts);
 
@@ -88,8 +89,7 @@ public class RegionTask implements Callable
         return mPerfCounters;
     }
 
-    @Override
-    public Long call()
+    public void run()
     {
         SG_LOGGER.trace("{}: region({}) finding candidates", mTaskId, mRegion);
 
@@ -174,8 +174,6 @@ public class RegionTask implements Callable
         finaliseResults();
 
         SG_LOGGER.trace("{}: region({}) complete", mTaskId, mRegion);
-
-        return (long)0;
     }
 
     private void finaliseResults()
