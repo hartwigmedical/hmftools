@@ -45,6 +45,8 @@ public final class EventMatcherFactory {
                 new DeletionMatcher(config.deletionBlacklistKeyPhrases(), config.deletionKeywords(), config.deletionKeyPhrases());
 
         CharacteristicMatcher characteristicMatcher = new CharacteristicMatcher(allCharacteristicEvents(config));
+        HlaMatcher hlaMatcher = new HlaMatcher(allHlaEvents(config));
+
         ComplexMatcher complexMatcher = new ComplexMatcher(hotspotMatcher, config.complexEventsPerGene());
         CombinedMatcher combinedMatcher =
                 new CombinedMatcher(config.combinedEventsPerGene(), hotspotMatcher, fusionPairMatcher, amplificationMatcher);
@@ -63,10 +65,18 @@ public final class EventMatcherFactory {
         map.put(EventType.FUSION_PAIR, withFirstTierMatchers(firstTierEventMatchers, fusionPairMatcher));
         map.put(EventType.PROMISCUOUS_FUSION, withFirstTierMatchers(firstTierEventMatchers, promiscuousFusionMatcher));
         map.put(EventType.CHARACTERISTIC, withFirstTierMatchers(firstTierEventMatchers, characteristicMatcher));
+        map.put(EventType.IMMUNO_HLA, withFirstTierMatchers(firstTierEventMatchers, hlaMatcher));
         map.put(EventType.COMBINED, combinedMatcher);
         map.put(EventType.COMPLEX, complexMatcher);
 
         return map;
+    }
+
+    @NotNull
+    private static Set<String> allHlaEvents(@NotNull EventClassifierConfig config) {
+        Set<String> hla = Sets.newHashSet();
+        hla.addAll(config.hlaEvents());
+        return hla;
     }
 
     @NotNull
@@ -77,7 +87,6 @@ public final class EventMatcherFactory {
         tumorCharacteristics.addAll(config.highTumorMutationalLoadEvents());
         tumorCharacteristics.addAll(config.lowTumorMutationalLoadEvents());
         tumorCharacteristics.addAll(config.hrDeficiencyEvents());
-        tumorCharacteristics.addAll(config.hlaEvents());
         tumorCharacteristics.addAll(config.hpvPositiveEvents());
         tumorCharacteristics.addAll(config.ebvPositiveEvents());
         return tumorCharacteristics;
