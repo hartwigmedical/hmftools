@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.sage;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.SageCommon.calcCurrentMemoryUsage;
 import static com.hartwig.hmftools.sage.coverage.GeneCoverage.populateCoverageBuckets;
 
 import java.io.File;
@@ -90,6 +93,9 @@ public class SageApplication implements AutoCloseable
         baseQualityRecalibration.produceRecalibrationMap();
         final Map<String,QualityRecalibrationMap> recalibrationMap = baseQualityRecalibration.getSampleRecalibrationMap();
 
+        int initMemory = calcCurrentMemoryUsage(false);
+        int maxTaskMemory = 0;
+
         final SAMSequenceDictionary dictionary = dictionary();
         for(final SAMSequenceRecord samSequenceRecord : dictionary.getSequences())
         {
@@ -102,6 +108,7 @@ public class SageApplication implements AutoCloseable
                     chromosome, mConfig, mRefData, recalibrationMap, coverage, mPhaseSetCounter, mVcfWriter);
 
             pipeline.process();
+            maxTaskMemory = max(pipeline.maxMemoryUsage(), maxTaskMemory);
             System.gc();
         }
 
@@ -114,7 +121,8 @@ public class SageApplication implements AutoCloseable
         long endTime = System.currentTimeMillis();
         double runTime = (endTime - startTime) / 1000.0;
 
-        SG_LOGGER.info("Sage complete, run time({}s)", String.format("%.2f", runTime));
+        SG_LOGGER.info("Sage complete, run time({}s) memory(init={}mb max={}mb)",
+                String.format("%.2f", runTime), initMemory, maxTaskMemory);
     }
 
     private SAMSequenceDictionary dictionary() throws IOException

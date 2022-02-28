@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.pipeline;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.SageCommon.calcCurrentMemoryUsage;
 
 import java.util.List;
 import java.util.Map;
@@ -191,19 +192,7 @@ public class RegionTask implements Callable
         mResults.addTotalReads(mCandidateState.totalReadsProcessed());
 
         mPerfCounters.addAll(mEvidenceStage.getVariantPhaser().getPerfCounters());
-        mResults.addPerfCounters(mPerfCounters);
+
+        mResults.addPerfCounters(mPerfCounters, calcCurrentMemoryUsage(false));
     }
-
-    public void writeVariants(final Consumer<SageVariant> variantWriter)
-    {
-        mSageVariants.stream().filter(x -> x.isPassing() && x.hasLocalPhaseSets()).forEach(x -> mPassingPhaseSets.addAll(x.localPhaseSets()));
-
-        List<SageVariant> finalVariants = mSageVariants.stream()
-                .filter(x -> VariantFilters.checkFinalFilters(x, mPassingPhaseSets, mConfig)).collect(Collectors.toList());
-
-        VariantPhaser.removeUninformativeLps(finalVariants, mPassingPhaseSets);
-
-        finalVariants.forEach(x -> variantWriter.accept(x));
-    }
-
 }

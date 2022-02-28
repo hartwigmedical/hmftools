@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.sage.evidence;
 
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -60,7 +62,7 @@ public class ReadContextEvidence
     }
 
     public List<ReadContextCounter> collectEvidence(
-            final List<Candidate> candidates, final String sample, final String bam, final VariantPhaser variantPhaser)
+            final List<Candidate> candidates, final String sample, final String bamFile, final VariantPhaser variantPhaser)
     {
         mReadCounters = mFactory.create(candidates);
         mLastCandidateIndex = 0;
@@ -85,12 +87,21 @@ public class ReadContextEvidence
         QualityRecalibrationMap qrMap = mQualityRecalibrationMap.get(sample);
         mQualityCalculator = new QualityCalculator(mSageConfig.Quality, qrMap, mRefSequence.IndexedBases);
 
-        final SamReader tumorReader = SamReaderFactory.makeDefault().validationStringency(mSageConfig.Stringency)
-                .referenceSource(new ReferenceSource(mRefGenome)).open(new File(bam));
+        try
+        {
+            final SamReader tumorReader = SamReaderFactory.makeDefault().validationStringency(mSageConfig.Stringency)
+                    .referenceSource(new ReferenceSource(mRefGenome)).open(new File(bamFile));
 
-        final SamSlicer slicer = new SamSlicer(0, sliceRegion);
+            final SamSlicer slicer = new SamSlicer(0, sliceRegion);
 
-        slicer.slice(tumorReader, this::processReadRecord);
+            slicer.slice(tumorReader, this::processReadRecord);
+
+            tumorReader.close();
+        }
+        catch(IOException e)
+        {
+            SG_LOGGER.error("failed to read bamFile({})", bamFile);
+        }
 
         return mReadCounters;
     }

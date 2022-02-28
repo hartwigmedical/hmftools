@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
@@ -84,20 +87,23 @@ public class CandidateEvidence
         final SamSlicer slicer = mConfig.PanelOnly ?
                 new SamSlicer(0, bounds, mPanel) : new SamSlicer(0, bounds);
 
-        try(final SamReader tumorReader = SamReaderFactory.makeDefault()
-                .validationStringency(mConfig.Stringency)
-                .referenceSource(new ReferenceSource(mRefGenome))
-                .open(new File(bamFile)))
+        try
         {
-            // First parse
+            final SamReader tumorReader = SamReaderFactory.makeDefault()
+                    .validationStringency(mConfig.Stringency)
+                    .referenceSource(new ReferenceSource(mRefGenome))
+                    .open(new File(bamFile));
+
             slicer.slice(tumorReader, recordConsumer);
 
-            // Add all valid alt contexts
+            // add all valid alt contexts
             altContexts.addAll(refContextCache.altContexts());
+
+            tumorReader.close();
         }
-        catch(Exception e)
+        catch(IOException e)
         {
-            throw new CompletionException(e);
+            SG_LOGGER.error("failed to read bamFile({})", bamFile);
         }
 
         return altContexts;

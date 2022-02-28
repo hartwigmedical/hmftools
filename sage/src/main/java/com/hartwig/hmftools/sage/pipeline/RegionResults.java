@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.pipeline;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.util.List;
@@ -14,6 +16,7 @@ public class RegionResults
     private final VcfWriter mVcfWriter;
     private int mTotalReads;
     private int mTotaVariants;
+    private int mMaxMemoryUsage;
     private final List<PerformanceCounter> mPerfCounters;
 
     public RegionResults(final VcfWriter vcfWriter)
@@ -21,6 +24,7 @@ public class RegionResults
         mVcfWriter = vcfWriter;
         mTotalReads = 0;
         mTotaVariants = 0;
+        mMaxMemoryUsage = 0;
         mPerfCounters = Lists.newArrayList();
     }
 
@@ -35,7 +39,7 @@ public class RegionResults
         mTotalReads += totalReads;
     }
 
-    public synchronized void addPerfCounters(final List<PerformanceCounter> perfCounters)
+    public synchronized void addPerfCounters(final List<PerformanceCounter> perfCounters, int maxMemory)
     {
         if(mPerfCounters.isEmpty())
         {
@@ -48,17 +52,17 @@ public class RegionResults
                 mPerfCounters.get(j).merge(perfCounters.get(j));
             }
         }
+
+        mMaxMemoryUsage = max(mMaxMemoryUsage, maxMemory);
     }
 
     public int totalReads() { return mTotalReads; }
     public int totalVariants() { return mTotaVariants; }
+    public int maxMemoryUsage() { return mMaxMemoryUsage; }
 
     public void logPerfCounters()
     {
-        if(SG_LOGGER.isDebugEnabled())
-        {
-            mPerfCounters.forEach(x -> x.logStats());
-        }
+        mPerfCounters.forEach(x -> x.logStats());
     }
 
 }

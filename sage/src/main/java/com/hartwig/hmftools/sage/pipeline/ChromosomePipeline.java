@@ -168,10 +168,16 @@ public class ChromosomePipeline implements AutoCloseable
 
         mVcfWriter.flushChromosome();
 
-        mRegionResults.logPerfCounters();
+        if(SG_LOGGER.isDebugEnabled())
+        {
+            mRegionResults.logPerfCounters();
+            SG_LOGGER.debug("chromosome({}) max memory({})", mChromosome, mRegionResults.maxMemoryUsage());
+        }
 
         SG_LOGGER.info("chromosome({}) analysis complete", mChromosome);
     }
+
+    public int maxMemoryUsage() { return mRegionResults.maxMemoryUsage(); }
 
     private RegionTask createRegionTask(final PartitionTask partitionTask)
     {
