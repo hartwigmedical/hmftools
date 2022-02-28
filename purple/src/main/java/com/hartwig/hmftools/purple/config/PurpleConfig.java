@@ -39,7 +39,6 @@ public class PurpleConfig
     private static final String OUTPUT_DIRECTORY = "output_dir";
     private static final String AMBER = "amber";
     private static final String COBALT = "cobalt";
-    private static final String TUMOR_ONLY = "tumor_only";
 
     public static String RUN_DRIVERS = "run_drivers";
     public static String DRIVERS_ONLY = "drivers_only";
@@ -50,34 +49,14 @@ public class PurpleConfig
 
         Version = version;
 
-        final boolean isTumorOnly = cmd.hasOption(TUMOR_ONLY);
-
         final StringJoiner missingJoiner = new StringJoiner(", ");
 
-        String refSample = "";
-        if(isTumorOnly)
-        {
-            if(cmd.hasOption(REF_SAMPLE))
-            {
-                mIsValid = false;
-                PPL_LOGGER.error(REF_SAMPLE + " not supported in tumor-only mode");
-            }
-            else
-            {
-                refSample = CobaltRatioFile.TUMOR_ONLY_REFERENCE_SAMPLE;
-            }
-        }
-        else
-        {
-            refSample = parameter(cmd, REF_SAMPLE, missingJoiner);
-        }
-
-        TumorOnlyMode = cmd.hasOption(TUMOR_ONLY);
         RunDrivers = cmd.hasOption(RUN_DRIVERS);
         DriversOnly = cmd.hasOption(DRIVERS_ONLY);
 
         TumorId = parameter(cmd, TUMOR_SAMPLE, missingJoiner);
-        ReferenceId = refSample;
+        ReferenceId = cmd.getOptionValue(REF_SAMPLE);
+        TumorOnlyMode = ReferenceId == null;
 
         String sampleDir = "";
 
@@ -108,7 +87,7 @@ public class PurpleConfig
             PPL_LOGGER.error("Unable to write directory " + OutputDir);
         }
 
-        if(isTumorOnly)
+        if(TumorOnlyMode)
         {
             PPL_LOGGER.info("Tumor Sample: {}", TumorId);
         }
@@ -129,7 +108,6 @@ public class PurpleConfig
 
     public static void addOptions(@NotNull Options options)
     {
-        options.addOption(TUMOR_ONLY, false, "Tumor only mode. Disables somatic fitting.");
         options.addOption(REF_SAMPLE, true, "Name of the reference sample. This should correspond to the value used in AMBER and COBALT.");
         options.addOption(TUMOR_SAMPLE, true, "Name of the tumor sample. This should correspond to the value used in AMBER and COBALT.");
 

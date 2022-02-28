@@ -64,7 +64,7 @@ public class SomaticPeakStream
 
         try (VCFFileReader vcfReader = new VCFFileReader(new File(somaticVcfFile), false))
         {
-            // gather up passing variants less then max ploidy
+            // gather up passing variants less than max ploidy
             final List<ModifiableWeightedPloidy> weightedPloidies = newArrayList();
 
             final Consumer<VariantContext> consumer = context ->

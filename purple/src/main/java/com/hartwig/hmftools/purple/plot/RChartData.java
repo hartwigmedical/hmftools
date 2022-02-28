@@ -41,10 +41,7 @@ public class RChartData
 
     public void processVariant(final VariantContext somaticVariant)
     {
-        if(isPassing(somaticVariant) && HumanChromosome.contains(somaticVariant.getContig()))
-        {
-            somaticVariantCopyNumberPdf(somaticVariant);
-        }
+        somaticVariantCopyNumberPdf(somaticVariant);
     }
 
     public void write() throws IOException

@@ -170,6 +170,9 @@ public class SomaticStream implements Consumer<VariantContext>
 
             for(VariantContext context : vcfReader)
             {
+                if(mConfig.TumorOnlyMode && context.isFiltered())
+                    continue;
+                
                 enricher.accept(context);
                 ++varCount;
 
@@ -195,21 +198,25 @@ public class SomaticStream implements Consumer<VariantContext>
         VariantContextDecorator variant = new VariantContextDecorator(context);
 
         boolean isValidChromosome = HumanChromosome.contains(variant.chromosome());
+        boolean isPass = variant.isPass();
 
-        if(isValidChromosome)
+        if(isValidChromosome && isPass)
         {
             mTumorMutationalLoad.processVariant(variant);
             mMicrosatelliteIndels.processVariant(context);
             checkDrivers(context, variant, true);
-        }
 
-        mVcfWriter.add(context);
-
-        if(isValidChromosome)
-        {
             mRChartData.processVariant(context);
             checkChartDownsampling(variant);
         }
+
+
+        // expect only pass or PON to be loaded into Purple
+        // in tumor-only mode, the PON variants should be dropped
+        boolean writeToVcf = !mConfig.TumorOnlyMode || isPass;
+
+        if(writeToVcf)
+            mVcfWriter.add(context);
     }
 
     public int loadVariantsForDrivers(final String somaticVcf)
@@ -257,9 +264,6 @@ public class SomaticStream implements Consumer<VariantContext>
 
     private void checkChartDownsampling(final VariantContextDecorator variant)
     {
-        if(!variant.isPass())
-            return;
-
         if(mConfig.Charting.disabled())
             return;
 

@@ -140,7 +140,7 @@ public class StructuralVariantCache
                 .make();
     }
 
-    void write(final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers)
+    public void write(final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers, boolean passOnly)
     {
         if(mVcfHeader.isPresent())
         {
@@ -155,9 +155,21 @@ public class StructuralVariantCache
 
                 final StructuralRefContextEnrichment refEnricher =
                         new StructuralRefContextEnrichment(mRefGenomeFile, writer::add);
+
                 writer.writeHeader(refEnricher.enrichHeader(mVcfHeader.get()));
 
-                enriched(purityAdjuster, copyNumbers).forEach(refEnricher);
+                Iterable<VariantContext> enrichedVariants = enriched(purityAdjuster, copyNumbers);
+
+                for(VariantContext variant : enrichedVariants)
+                {
+                    if(passOnly && variant.isFiltered())
+                        continue;
+
+                    refEnricher.accept(variant);
+                }
+
+                // enriched(purityAdjuster, copyNumbers).forEach(refEnricher);
+
                 refEnricher.flush();
             }
         }
@@ -165,8 +177,6 @@ public class StructuralVariantCache
 
     private Iterable<VariantContext> enriched(final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers)
     {
-        assert (mVcfHeader.isPresent());
-
         final StructuralVariantFactory svFactory = new StructuralVariantFactory(x -> true);
         mVariants.forEach(svFactory::addVariantContext);
 
@@ -190,6 +200,7 @@ public class StructuralVariantCache
         }
 
         svFactory.unmatched().forEach(enrichedCollection::add);
+
         return enrichedCollection;
     }
 

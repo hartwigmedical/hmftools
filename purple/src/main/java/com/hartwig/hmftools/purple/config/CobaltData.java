@@ -45,7 +45,9 @@ public class CobaltData
             throw new ParseException("Unable to open cobalt ratio file: " + cobaltFilename);
         }
 
-        final String referenceSegmentFile = PCFFile.generateRatioFilename(cobaltDirectory, referenceId);
+        String cobaltRefId = referenceId != null ? referenceId : CobaltRatioFile.TUMOR_ONLY_REFERENCE_SAMPLE;
+
+        final String referenceSegmentFile = PCFFile.generateRatioFilename(cobaltDirectory, cobaltRefId);
         if(!new File(referenceSegmentFile).exists())
         {
             throw new ParseException("Unable to open cobalt reference pcf file: " + referenceSegmentFile);

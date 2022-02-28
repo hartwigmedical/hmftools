@@ -30,8 +30,6 @@ public class MicrosatelliteIndels
 
     private static final int MAX_REF_ALT_LENGTH = 50;
 
-    private static final VariantContextFilter PASS = new PassingVariantFilter();
-
     public double microsatelliteIndelsPerMb()
     {
         return (double) mIndelCount / NUMBER_OF_MB_PER_GENOME;
@@ -39,7 +37,7 @@ public class MicrosatelliteIndels
 
     public void processVariant(final VariantContext context)
     {
-        if(isPassIndel(context))
+        if(isValidIndel(context))
         {
             int repeatCount = context.getAttributeAsInt(REPEAT_COUNT_FLAG, 0);
             int repeatSequenceLength = context.getAttributeAsString(REPEAT_SEQUENCE_FLAG, Strings.EMPTY).length();
@@ -51,18 +49,12 @@ public class MicrosatelliteIndels
         }
     }
 
-    private static boolean isPassIndel(final SomaticVariant variant)
-    {
-        return variant.type() == VariantType.INDEL && variant.ref().length() < MAX_REF_ALT_LENGTH
-                && variant.alt().length() < MAX_REF_ALT_LENGTH && !variant.isFiltered();
-    }
-
-    private static boolean isPassIndel(final VariantContext context)
+    private static boolean isValidIndel(final VariantContext context)
     {
         int altLength = alt(context).length();
         int refLength = context.getReference().getBaseString().length();
 
-        return context.isIndel() && refLength < MAX_REF_ALT_LENGTH && altLength < MAX_REF_ALT_LENGTH && PASS.test(context);
+        return context.isIndel() && refLength < MAX_REF_ALT_LENGTH && altLength < MAX_REF_ALT_LENGTH;
     }
 
     private static boolean repeatContextIsRelevant(int repeatCount, int repeatSequenceLength)

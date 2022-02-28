@@ -57,8 +57,8 @@ public class FittedPurityFactory
     public FittedPurityFactory(
             final ExecutorService executorService, final CobaltChromosomes cobaltChromosomes, final double minPurity,
             final double maxPurity, final double purityIncrements, final double minPloidy, final double maxPloidy,
-            final double somaticPenaltyWeight, final boolean tumorOnlyMode, @NotNull final FittedRegionFactory fittedRegionFactory,
-            @NotNull final Collection<ObservedRegion> observedRegions, @NotNull final Collection<SomaticVariant> variants)
+            final double somaticPenaltyWeight, final boolean tumorOnlyMode, final FittedRegionFactory fittedRegionFactory,
+            final Collection<ObservedRegion> observedRegions, final Collection<SomaticVariant> variants)
             throws ExecutionException, InterruptedException
     {
         mExecutorService = executorService;
@@ -94,8 +94,7 @@ public class FittedPurityFactory
     }
 
     @VisibleForTesting
-    static boolean useRegionToFitPurity(boolean tumorOnlyMode, @NotNull final CobaltChromosomes cobaltChromosomes,
-            @NotNull final ObservedRegion region)
+    static boolean useRegionToFitPurity(boolean tumorOnlyMode, final CobaltChromosomes cobaltChromosomes, final ObservedRegion region)
     {
         if(region.bafCount() <= 0)
         {

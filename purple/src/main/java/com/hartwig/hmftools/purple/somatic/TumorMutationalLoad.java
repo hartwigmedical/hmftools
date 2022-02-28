@@ -20,14 +20,11 @@ public class TumorMutationalLoad
 
     public void processVariant(VariantContextDecorator variant)
     {
-        if(variant.isPass())
-        {
-            mBurden++;
+        mBurden++;
 
-            final VariantImpact variantImpact = variant.variantImpact();
+        final VariantImpact variantImpact = variant.variantImpact();
 
-            if (variantImpact.WorstCodingEffect.equals(CodingEffect.MISSENSE))
-                mLoad++;
-        }
+        if (variantImpact.WorstCodingEffect.equals(CodingEffect.MISSENSE))
+            mLoad++;
     }
 }
