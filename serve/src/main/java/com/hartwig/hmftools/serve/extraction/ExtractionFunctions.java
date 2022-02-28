@@ -110,7 +110,8 @@ public final class ExtractionFunctions {
             } else {
                 actionableRange.add(range);
             }
-        } return actionableRange;
+        }
+        return actionableRange;
     }
 
     @NotNull
