@@ -28,6 +28,7 @@ import org.junit.Test;
 public class ExtractionFunctionsTest {
 
     @Test
+    @Ignore
     public void canCurateRanges() {
         Set<ActionableRange> actionableRangeSet = Sets.newHashSet();
         ActionableRange range1 = ImmutableActionableRange.builder()
