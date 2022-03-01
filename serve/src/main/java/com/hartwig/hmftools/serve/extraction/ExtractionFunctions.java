@@ -104,10 +104,7 @@ public final class ExtractionFunctions {
                         .end(end)
                         .transcript(canonicalTranscriptID)
                         .build());
-            } else if (range.gene().equals("BRAF") && range.rank() != 600) {
-                LOGGER.warn("BRAF isn't curated!");
-                actionableRange.add(range);
-            } else {
+            }  else {
                 actionableRange.add(range);
             }
         }
