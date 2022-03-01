@@ -61,6 +61,9 @@ public final class ActinEventExtractor {
             case TML_OF_AT_MOST_X: {
                 return Sets.newHashSet(ActinKeywords.TML_LOW);
             }
+            case HAS_HLA_A_TYPE_X: {
+                return Sets.newHashSet(ActinKeywords.HLA_TYPE);
+            }
             default: {
                 throw new IllegalStateException("Unrecognized event: " + entry.rule());
             }

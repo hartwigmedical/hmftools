@@ -245,7 +245,9 @@ public class ActinClassificationConfig {
 
     @NotNull
     private static Set<String> hlaEvents() {
-        return Sets.newHashSet();
+        Set<String> set = Sets.newHashSet();
+        set.add(ActinKeywords.HLA_TYPE);
+        return set;
     }
 
     @NotNull
