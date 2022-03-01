@@ -86,6 +86,8 @@ public final class EventMatcherFactory {
         tumorCharacteristics.addAll(config.microsatelliteStableEvents());
         tumorCharacteristics.addAll(config.highTumorMutationalLoadEvents());
         tumorCharacteristics.addAll(config.lowTumorMutationalLoadEvents());
+        tumorCharacteristics.addAll(config.highTumorMutationalBurdenEvents());
+        tumorCharacteristics.addAll(config.lowTumorMutationalBurdenEvents());
         tumorCharacteristics.addAll(config.hrDeficiencyEvents());
         tumorCharacteristics.addAll(config.hpvPositiveEvents());
         tumorCharacteristics.addAll(config.ebvPositiveEvents());
