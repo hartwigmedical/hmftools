@@ -29,7 +29,7 @@ public abstract class ClinicalTrial {
     @NotNull
     public abstract List<Indication> indications();
 
-    @NotNull
+    @Nullable
     public abstract String phase();
 
     @NotNull

@@ -10,36 +10,36 @@
 
     <modules>
         <module>hmf-common</module>
-        <module>patient-db</module>
-        <module>gene-utils</module>
-        <module>stat-calcs</module>
-        <module>hmf-id-generator</module>
-        <module>fastq-stats</module>
-        <module>health-checker</module>
-        <module>paddle</module>
-        <module>compar</module>
-        <module>amber</module>
-        <module>cobalt</module>
-        <module>sage</module>
-        <module>gripss</module>
-        <module>purple</module>
-        <module>linx</module>
-        <module>sv-tools</module>
-        <module>virus-interpreter</module>
-        <module>lilac</module>
-        <module>neo</module>
-        <module>sigs</module>
-        <module>teal</module>
-        <module>cuppa</module>
-        <module>isofox</module>
-        <module>pave</module>
+<!--        <module>patient-db</module>-->
+<!--        <module>gene-utils</module>-->
+<!--        <module>stat-calcs</module>-->
+<!--        <module>hmf-id-generator</module>-->
+<!--        <module>fastq-stats</module>-->
+<!--        <module>health-checker</module>-->
+<!--        <module>paddle</module>-->
+<!--        <module>compar</module>-->
+<!--        <module>amber</module>-->
+<!--        <module>cobalt</module>-->
+<!--        <module>sage</module>-->
+<!--        <module>gripss</module>-->
+<!--        <module>purple</module>-->
+<!--        <module>linx</module>-->
+<!--        <module>sv-tools</module>-->
+<!--        <module>virus-interpreter</module>-->
+<!--        <module>lilac</module>-->
+<!--        <module>neo</module>-->
+<!--        <module>sigs</module>-->
+<!--        <module>teal</module>-->
+<!--        <module>cuppa</module>-->
+<!--        <module>isofox</module>-->
+<!--        <module>pave</module>-->
         <module>ckb-importer</module>
-        <module>iclusion-importer</module>
-        <module>vicc-importer</module>
-        <module>serve</module>
-        <module>protect</module>
-        <module>orange</module>
-        <module>patient-reporter</module>
+<!--        <module>iclusion-importer</module>-->
+<!--        <module>vicc-importer</module>-->
+<!--        <module>serve</module>-->
+<!--        <module>protect</module>-->
+<!--        <module>orange</module>-->
+<!--        <module>patient-reporter</module>-->
     </modules>
 
     <properties>
