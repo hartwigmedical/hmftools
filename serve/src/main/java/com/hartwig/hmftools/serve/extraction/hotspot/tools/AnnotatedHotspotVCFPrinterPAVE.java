@@ -26,7 +26,7 @@ public class AnnotatedHotspotVCFPrinterPAVE {
     private static final Logger LOGGER = LogManager.getLogger(AnnotatedHotspotVCFPrinterPAVE.class);
 
     public static void main(String[] args) throws IOException {
-        String annotatedInputVcf = System.getProperty("user.home") + "/hmf/tmp/annotatedHotspots.vcf";
+        String annotatedInputVcf = System.getProperty("user.home") + "/hmf/tmp/KnownHotspots.somatic.37.pave.vcf";
         new AnnotatedHotspotVCFPrinterPAVE().run(annotatedInputVcf);
     }
 
