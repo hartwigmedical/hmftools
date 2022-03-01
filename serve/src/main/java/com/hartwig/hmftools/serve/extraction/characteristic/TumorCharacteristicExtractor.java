@@ -77,7 +77,8 @@ public class TumorCharacteristicExtractor {
 
             if (cutOff.equals("MSI high")) {
                 return TumorCharacteristicsAtLeast.EQUALS_GREATHER;
-            } else if (cutOffSplit.length == 3) {
+            }
+            else if (cutOffSplit.length == 3) {
                 if (cutOffSplit[1].equals(">=")) {
                     return TumorCharacteristicsAtLeast.EQUALS_GREATHER;
                 } else if (cutOffSplit[1].equals("<=")) {
@@ -91,7 +92,7 @@ public class TumorCharacteristicExtractor {
                     return null;
                 }
             } else {
-                LOGGER.warn("cutOff value couldn't be determined");
+                LOGGER.warn("cutOff value '{}' couldn't be determined", cutOff);
                 return null;
             }
         } else {
