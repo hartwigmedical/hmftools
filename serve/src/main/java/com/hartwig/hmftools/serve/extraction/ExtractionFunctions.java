@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.serve.extraction;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -11,6 +12,7 @@ import com.hartwig.hmftools.serve.actionability.gene.ActionableGeneUrlConsolidat
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLAUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
+import com.hartwig.hmftools.serve.actionability.range.ActionableRangeFile;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRangeUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.RangeType;
@@ -108,7 +110,12 @@ public final class ExtractionFunctions {
                 actionableRange.add(range);
             }
         }
-        return actionableRange;
+        return sort(actionableRange);
+    }
+
+    @NotNull
+    public static Set<ActionableRange> sort(@NotNull Set<ActionableRange> actionableRanges) {
+        return new HashSet<>(ActionableRangeFile.sort(actionableRanges));
     }
 
     @NotNull
