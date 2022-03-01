@@ -99,8 +99,11 @@ public class AnnotatedHotspotVCFCheckerPAVE {
                                 inputGene);
 
                         for (VariantTranscriptImpact variantTranscriptImpact : annotations) {
-                            LOGGER.info(variantTranscriptImpact.GeneName + " " + variantTranscriptImpact.Transcript + " "
-                                    + variantTranscriptImpact.HgvsProtein);
+                            if (variantTranscriptImpact.Transcript.equals(inputTranscript)) {
+                                LOGGER.info(variantTranscriptImpact.Effects);
+                                LOGGER.info("Gene: " + variantTranscriptImpact.GeneName + " Transcript: " + variantTranscriptImpact.Transcript + " HgvsProtein: "
+                                        + variantTranscriptImpact.HgvsProtein);
+                            }
                         }
 
                         diffCount++;
@@ -151,8 +154,8 @@ public class AnnotatedHotspotVCFCheckerPAVE {
     @NotNull
     private MatchType matchOnSpecificAnnotation(@NotNull String inputTranscript, @NotNull String inputProteinAnnotation,
             @NotNull VariantTranscriptImpact specificAnnotation) {
-        String snpeffProteinAnnotation = AminoAcids.forceSingleLetterProteinAnnotation(specificAnnotation.HgvsProtein);
-        return matchAnnotation(inputTranscript, inputProteinAnnotation, snpeffProteinAnnotation);
+        String PaveProteinAnnotation = AminoAcids.forceSingleLetterProteinAnnotation(specificAnnotation.HgvsProtein);
+        return matchAnnotation(inputTranscript, inputProteinAnnotation, PaveProteinAnnotation, specificAnnotation.Effects);
     }
 
     @NotNull
@@ -161,8 +164,8 @@ public class AnnotatedHotspotVCFCheckerPAVE {
         for (VariantTranscriptImpact annotation : annotations) {
             // We only want to consider transcript features with coding impact.
             if (!annotation.HgvsProtein.isEmpty()) {
-                String snpeffProteinAnnotation = AminoAcids.forceSingleLetterProteinAnnotation(annotation.HgvsProtein);
-                MatchType match = matchAnnotation(annotation.Transcript, inputProteinAnnotation, snpeffProteinAnnotation);
+                String PaveProteinAnnotation = AminoAcids.forceSingleLetterProteinAnnotation(annotation.HgvsProtein);
+                MatchType match = matchAnnotation(annotation.Transcript, inputProteinAnnotation, PaveProteinAnnotation, annotation.Effects);
                 if (match != MatchType.NO_MATCH && matchedMatchType == MatchType.NO_MATCH) {
                     matchedMatchType = match;
                 }
@@ -184,20 +187,21 @@ public class AnnotatedHotspotVCFCheckerPAVE {
     }
 
     @NotNull
-    private MatchType matchAnnotation(@NotNull String transcript, @NotNull String inputAnnotation, @NotNull String snpeffAnnotation) {
+    private MatchType matchAnnotation(@NotNull String transcript, @NotNull String inputAnnotation, @NotNull String PaveProteinAnnotation, @NotNull String effect) {
         String curatedInputAnnotation = curateStartCodonAnnotation(inputAnnotation);
-        if (curatedInputAnnotation.equals(snpeffAnnotation)) {
+        curatedInputAnnotation = curateSynomyous(curatedInputAnnotation, effect, PaveProteinAnnotation);
+        if (curatedInputAnnotation.equals(PaveProteinAnnotation)) {
             return MatchType.IDENTICAL;
         }
 
-        if (isApproximateIndelMatch(inputAnnotation, snpeffAnnotation)) {
+        if (isApproximateIndelMatch(inputAnnotation, PaveProteinAnnotation)) {
             return MatchType.APPROXIMATE;
         }
 
-        if (ENABLE_TRANSCRIPT_REF_GENOME_CURATION && (retiredTranscriptCheck(transcript, snpeffAnnotation) || changedTranscriptCheck(
+        if (ENABLE_TRANSCRIPT_REF_GENOME_CURATION && (retiredTranscriptCheck(transcript, PaveProteinAnnotation) || changedTranscriptCheck(
                 transcript,
                 inputAnnotation,
-                snpeffAnnotation))) {
+                PaveProteinAnnotation))) {
             return MatchType.LIFTOVER_RETIRED_OR_CHANGED_TRANSCRIPT;
         }
 
@@ -209,6 +213,18 @@ public class AnnotatedHotspotVCFCheckerPAVE {
         if (serveAnnotation.startsWith("p.M1") && serveAnnotation.length() == 5) {
             return "p.M1?";
         } else {
+            return serveAnnotation;
+        }
+    }
+
+    @NotNull
+    private static String curateSynomyous(@NotNull String serveAnnotation, @NotNull String effect, @NotNull String PaveProteinAnnotation) {
+        if (effect.contains("synonymous_variant")) {
+            return PaveProteinAnnotation;
+        } else if (effect.contains("start_lost")) {
+            return PaveProteinAnnotation;
+        }
+        else {
             return serveAnnotation;
         }
     }
