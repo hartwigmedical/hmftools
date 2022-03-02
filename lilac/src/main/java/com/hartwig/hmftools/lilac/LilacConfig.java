@@ -185,7 +185,6 @@ public class LilacConfig
         return Files.exists(Paths.get(filename)) ? filename : "";
     }
 
-    public String outputPrefix() { return OutputDir + Sample; }
     public String formFileId(final String fileId) { return OutputDir + Sample + "." + fileId; }
 
     public double calcMinEvidence(int totalFragments) { return max(MinEvidence, totalFragments * MinEvidenceFactor); }

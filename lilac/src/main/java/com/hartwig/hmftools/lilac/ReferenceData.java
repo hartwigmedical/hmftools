@@ -120,11 +120,18 @@ public class ReferenceData
 
     private static void setKnownStopLossIndels(final RefGenomeVersion version)
     {
-        int position = version.is37() ? 31237115 : 31269338;
-        STOP_LOSS_ON_C_INDEL = new Indel("6", position, "CN", "C");
-
-        if(version == V38 || version == HG19)
+        if(version.is38())
+        {
+            STOP_LOSS_ON_C_INDEL = new Indel("chr6", 31269338, "CN", "C");
             LilacConstants.HLA_CHR = "chr6"; // should be abe to get from transcript info at time of use when get rid of NamedBed
+        }
+        else
+        {
+            STOP_LOSS_ON_C_INDEL = new Indel("6", 31237115, "CN", "C");
+
+            if(version == HG19)
+                LilacConstants.HLA_CHR = "chr6"; // should be abe to get from transcript info at time of use when get rid of NamedBed
+        }
     }
 
     public CohortFrequency getAlleleFrequencies() { return mAlleleFrequencies; }
