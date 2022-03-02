@@ -49,26 +49,32 @@ public class Charts
             final Gender gender, final List<PurpleCopyNumber> copyNumbers,
             final List<VariantContextDecorator> somaticVariants, final List<StructuralVariant> structuralVariants,
             final List<FittedRegion> regions, final List<AmberBAF> bafs)
-            throws InterruptedException, ExecutionException, IOException
     {
         final ChartConfig chartConfig = mConfig.Charting;
 
-        mCircosCharts.write(referenceId, sampleId, gender, copyNumbers, somaticVariants, structuralVariants, regions, bafs);
-        final List<Future<Integer>> futures = mCircosCharts.chartFutures();
-
-        if(chartConfig.Enabled)
+        try
         {
-            futures.addAll(mRCharts.chartFutures(sampleId, plotSomatics));
-        }
+            mCircosCharts.write(referenceId, sampleId, gender, copyNumbers, somaticVariants, structuralVariants, regions, bafs);
+            final List<Future<Integer>> futures = mCircosCharts.chartFutures();
 
-        for(final Future<Integer> future : futures)
-        {
-            // This (intentionally) has side effect of alerting users to any exceptions
-            int result = future.get();
-            if(result != 0)
+            if(chartConfig.Enabled)
             {
-                PPL_LOGGER.warn("Error generating charts.");
+                futures.addAll(mRCharts.chartFutures(sampleId, plotSomatics));
             }
+
+            for(final Future<Integer> future : futures)
+            {
+                // This (intentionally) has side effect of alerting users to any exceptions
+                int result = future.get();
+                if(result != 0)
+                {
+                    PPL_LOGGER.warn("Error generating charts");
+                }
+            }
+        }
+        catch(Exception e)
+        {
+            PPL_LOGGER.error("charting error: {}", e.toString());
         }
     }
 
