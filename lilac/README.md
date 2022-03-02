@@ -160,7 +160,7 @@ Once complete, we can eliminate any alleles that do not match the phased evidenc
 #### 4. Recover common alleles
 As a fail safe for phasing, any ‘common alleles’ with more than 0.1% population frequency are recovered. The frequencies of alleles are specified in a resource file and are derived from the Hartwig cohort.   
 
-Additionally, C*04:09N (the most common HLA allele with a frameshift variant) specifically is also rescued if the out of frame indel 6:31237115 CN>C is present.
+Additionally, C*04:09N (the most common HLA allele with a frameshift variant) specifically is also rescued if the out of frame indel 6:31237115 CN>C (hg38: chr6:31269338 CN>C) is present.
 
 #### 5. Detect HLA-Y presence 
 HLA-Y is a pseudogene that is highly similar to HLA-A and is not present in the human ref genome but is found in approximately 17% of the Hartwig cohort.    The presence of HLA-Y can cause confusion in typing particularly in determining the HLA-A types.    To detect HLA-Y,  LILAC counts the number of fragments that can be assigned uniquely to one of the 3 known HLA-Y alleles and no other candidate alleles.  If at least 1% of fragments align uniquely to HLA-Y then HLA-Y is considered to be present in the sample.   If HLA-Y is found to be present ANY fragment which matches exactly to a HLA-Y allele (uniquely or shared with other alleles) are excluded from further analysis to prevent confusion with highly similar HLA-A alleles. 
