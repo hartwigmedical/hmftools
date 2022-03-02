@@ -11,19 +11,22 @@ import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.util.CollectionUtil;
 
-public class CircosExecution {
+public class CircosExecution
+{
 
     private static final Logger LOGGER = LogManager.getLogger(CircosExecution.class);
 
     private final String executable;
 
-    public CircosExecution(@NotNull final String executable) {
+    public CircosExecution(@NotNull final String executable)
+    {
         this.executable = executable;
     }
 
     @Nullable
     public Integer generateCircos(@NotNull final String inputConfig, @NotNull final String outputPath, @NotNull final String outputFile,
-            @NotNull final String errorPath) throws IOException, InterruptedException {
+            @NotNull final String errorPath) throws IOException, InterruptedException
+    {
         final File redirectErrorFile = new File(errorPath + File.separator + outputFile + ".error");
         final File redirectOutputFile = new File(errorPath + File.separator + outputFile + ".out");
 
@@ -39,15 +42,16 @@ public class CircosExecution {
 
         LOGGER.info(String.format("Generating " + outputFile + " via command: %s", CollectionUtil.join(Arrays.asList(command), " ")));
         int result = new ProcessBuilder(command).redirectError(redirectErrorFile).redirectOutput(redirectOutputFile).start().waitFor();
-        if (result != 0) {
-            LOGGER.fatal("Fatal error creating circos plot. Examine error file " + redirectErrorFile.toString() + " for details.");
-            System.exit(1);
+        if(result != 0)
+        {
+            LOGGER.error("Fatal error creating circos plot. Examine error file " + redirectErrorFile.toString() + " for details.");
+            return 0;
         }
 
         final File finalFile = new File(outputPath + File.separator + outputFile);
-        if (!finalFile.exists()) {
-            LOGGER.fatal("Failed to create file {}", finalFile.toString());
-            System.exit(1);
+        if(!finalFile.exists())
+        {
+            LOGGER.error("Failed to create file {}", finalFile.toString());
         }
 
         return 0;

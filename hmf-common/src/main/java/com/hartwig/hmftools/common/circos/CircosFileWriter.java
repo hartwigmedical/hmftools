@@ -16,25 +16,30 @@ import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class CircosFileWriter {
+public final class CircosFileWriter
+{
 
-    private CircosFileWriter() {
+    private CircosFileWriter()
+    {
     }
 
     public static <T extends GenomeRegion> void writeRegions(@NotNull final String filePath, @NotNull Collection<T> values,
-            @NotNull ToDoubleFunction<T> valueExtractor) throws IOException {
+            @NotNull ToDoubleFunction<T> valueExtractor) throws IOException
+    {
         Function<T, String> toString = t -> transformRegion(valueExtractor, t);
         writeCircosFile(filePath, values, toString);
     }
 
     public static <T extends GenomePosition> void writePositions(@NotNull final String filePath, @NotNull Collection<T> values,
-            @NotNull ToDoubleFunction<T> valueExtractor) throws IOException {
+            @NotNull ToDoubleFunction<T> valueExtractor) throws IOException
+    {
         Function<T, String> toString = t -> transformPosition(valueExtractor, t);
         writeCircosFile(filePath, values, toString);
     }
 
     private static <T> void writeCircosFile(@NotNull final String filePath, @NotNull Collection<T> values,
-            Function<T, String> toStringFunction) throws IOException {
+            Function<T, String> toStringFunction) throws IOException
+    {
         final Collection<String> lines = Lists.newArrayList();
         lines.add(header());
         values.stream().map(toStringFunction).forEach(lines::add);
@@ -42,12 +47,14 @@ public final class CircosFileWriter {
     }
 
     @NotNull
-    private static String header() {
+    private static String header()
+    {
         return "#chromosome\tstart\tend\tvalue";
     }
 
     @NotNull
-    private static <T extends GenomePosition> String transformPosition(@NotNull ToDoubleFunction<T> valueExtractor, @NotNull T position) {
+    private static <T extends GenomePosition> String transformPosition(@NotNull ToDoubleFunction<T> valueExtractor, @NotNull T position)
+    {
         return new StringBuilder().append(circosContig(position.chromosome()))
                 .append('\t')
                 .append(position.position())
@@ -59,7 +66,8 @@ public final class CircosFileWriter {
     }
 
     @NotNull
-    private static <T extends GenomeRegion> String transformRegion(@NotNull ToDoubleFunction<T> valueExtractor, @NotNull T region) {
+    private static <T extends GenomeRegion> String transformRegion(@NotNull ToDoubleFunction<T> valueExtractor, @NotNull T region)
+    {
         return new StringBuilder().append(circosContig(region.chromosome()))
                 .append('\t')
                 .append(region.start())
@@ -71,13 +79,15 @@ public final class CircosFileWriter {
     }
 
     @NotNull
-    static String circosContig(@NotNull String chromosome) {
+    static String circosContig(@NotNull String chromosome)
+    {
         return "hs" + HumanChromosome.fromString(chromosome);
     }
 
     @NotNull
     static String transformPosition(@NotNull VariantContextDecorator position,
-            @NotNull Function<VariantContextDecorator, String> colourFunction) {
+            @NotNull Function<VariantContextDecorator, String> colourFunction)
+    {
         return new StringJoiner("\t").add(circosContig(position.chromosome()))
                 .add(String.valueOf(position.position()))
                 .add(String.valueOf(position.position()))
