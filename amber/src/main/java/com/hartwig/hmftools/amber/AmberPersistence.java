@@ -41,7 +41,7 @@ class AmberPersistence
         AmberBAFFile.write(filename, result);
 
         AMB_LOGGER.info("Applying pcf segmentation");
-        new BAFSegmentation(mConfig.OutputDir).applySegmentation(mConfig.TumorId);
+        new BAFSegmentation(mConfig.OutputDir).applySegmentation(mConfig.TumorId, filename);
     }
 
     void persistBafVcf(@NotNull final List<TumorBAF> tumorBAFList, final AmberHetNormalEvidence amberHetNormalEvidence)
