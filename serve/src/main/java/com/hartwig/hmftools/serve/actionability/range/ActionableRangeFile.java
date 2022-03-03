@@ -94,7 +94,7 @@ public final class ActionableRangeFile {
     }
 
     @NotNull
-    private static List<ActionableRange> sort(@NotNull Iterable<ActionableRange> actionableRanges) {
+    public static List<ActionableRange> sort(@NotNull Iterable<ActionableRange> actionableRanges) {
         // Need to make a copy since the input may be immutable and cannot be sorted!
         List<ActionableRange> sorted = Lists.newArrayList(actionableRanges);
         sorted.sort(new ActionableRangeComparator());

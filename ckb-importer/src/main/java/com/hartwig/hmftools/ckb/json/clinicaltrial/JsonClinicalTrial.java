@@ -21,7 +21,7 @@ public abstract class JsonClinicalTrial implements CkbJsonObject {
     @NotNull
     public abstract String title();
 
-    @NotNull
+    @Nullable
     public abstract String phase();
 
     @NotNull

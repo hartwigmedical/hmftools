@@ -31,7 +31,7 @@ public class AnnotatedHotspotVCFPrinter {
     private static final Logger LOGGER = LogManager.getLogger(AnnotatedHotspotVCFPrinter.class);
 
     public static void main(String[] args) throws IOException {
-        String annotatedInputVcf = System.getProperty("user.home") + "/hmf/tmp/annotatedHotspots.vcf";
+        String annotatedInputVcf = System.getProperty("user.home") + "/hmf/tmp/annotatedHotspots_SNPeff.vcf";
         new AnnotatedHotspotVCFPrinter().run(annotatedInputVcf);
     }
 

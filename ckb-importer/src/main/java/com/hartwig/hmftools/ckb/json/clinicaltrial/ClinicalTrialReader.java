@@ -17,10 +17,13 @@ import com.hartwig.hmftools.ckb.util.DateConverter;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ClinicalTrialReader extends CkbJsonDirectoryReader<JsonClinicalTrial> {
+    private static final Logger LOGGER = LogManager.getLogger(ClinicalTrialReader.class);
 
     public ClinicalTrialReader(@Nullable final Integer maxFilesToRead) {
         super(maxFilesToRead);
@@ -32,10 +35,13 @@ public class ClinicalTrialReader extends CkbJsonDirectoryReader<JsonClinicalTria
         JsonDatamodelChecker clinicalTrialChecker = ClinicalTrialDataModelChecker.clinicalTrialObjectChecker();
         clinicalTrialChecker.check(object);
 
+        if (JsonFunctions.nullableString(object, "phase") == null) {
+            LOGGER.warn("phase of study '{}' is nullable from ClinicalTrialReader", JsonFunctions.string(object, "nctId"));
+        }
         return ImmutableJsonClinicalTrial.builder()
                 .nctId(JsonFunctions.string(object, "nctId"))
                 .title(JsonFunctions.string(object, "title"))
-                .phase(JsonFunctions.string(object, "phase"))
+                .phase(JsonFunctions.nullableString(object, "phase"))
                 .recruitment(JsonFunctions.string(object, "recruitment"))
                 .therapies(extractTherapies(object.getAsJsonArray("therapies")))
                 .ageGroups(JsonFunctions.stringList(object, "ageGroups"))

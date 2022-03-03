@@ -80,14 +80,14 @@ public class AnnotatedCodonVCFCheckerPAVE {
             if (variantImpact != null) {
                 int snpEffCodon = extractCodon(variantImpact.CanonicalHgvsProtein);
                 if (inputCodon == snpEffCodon) {
-                    LOGGER.debug("Identical on gene '{}': SERVE input codon '{}' vs SnpEff codon '{}'", inputGene, inputCodon, snpEffCodon);
+                    LOGGER.debug("Identical on gene '{}': SERVE input codon '{}' vs PAVE codon '{}'", inputGene, inputCodon, snpEffCodon);
                     return true;
                 } else {
-                    LOGGER.warn("Difference on gene '{}': SERVE input codon '{}' vs SnpEff codon '{}'", inputGene, inputCodon, snpEffCodon);
+                    LOGGER.warn("Difference on gene '{}': SERVE input codon '{}' vs PAVE codon '{}'", inputGene, inputCodon, snpEffCodon);
                     return false;
                 }
             } else {
-                LOGGER.warn("No suitable SnpEff annotation found on gene '{}': SERVE input codon '{}'", inputGene, inputCodon);
+                LOGGER.warn("No suitable PAVE annotation found on gene '{}': SERVE input codon '{}'", inputGene, inputCodon);
                 return false;
             }
         } else {

@@ -92,6 +92,7 @@ public class RefGenomeManager {
                 .actionableGenes(converter.convertActionableGenes(filteredExtraction.actionableGenes()))
                 .actionableFusions(converter.convertActionableFusions(filteredExtraction.actionableFusions()))
                 .actionableCharacteristics(filteredExtraction.actionableCharacteristics())
+                .actionableHLA(filteredExtraction.actionableHLA())
                 .build();
     }
 

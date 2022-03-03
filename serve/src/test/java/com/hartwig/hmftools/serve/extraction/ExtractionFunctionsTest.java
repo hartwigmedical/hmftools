@@ -35,18 +35,18 @@ public class ExtractionFunctionsTest {
                 .from(ServeTestFactory.createTestActionableRange())
                 .source(ImmutableSources.builder().source(Knowledgebase.CKB).sourceEvent(Strings.EMPTY).build())
                 .gene("BRAF")
-                .rank(601)
+                .rank(600)
                 .rangeType(RangeType.CODON)
-                .start(10)
-                .end(20)
-                .transcript("transcript")
                 .build();
         ActionableRange range2 = ImmutableActionableRange.builder()
                 .from(ServeTestFactory.createTestActionableRange())
                 .source(ImmutableSources.builder().source(Knowledgebase.CKB).sourceEvent(Strings.EMPTY).build())
                 .gene("BRAF")
-                .rank(600)
+                .rank(601)
                 .rangeType(RangeType.CODON)
+                .start(10)
+                .end(20)
+                .transcript("transcript")
                 .build();
         actionableRangeSet.add(range1);
         actionableRangeSet.add(range2);
@@ -64,7 +64,6 @@ public class ExtractionFunctionsTest {
         assertEquals(140753335, actionableRange2.start());
         assertEquals(140753337, actionableRange2.end());
         assertEquals("ENST00000288602", actionableRange2.transcript());
-
     }
 
     @Test

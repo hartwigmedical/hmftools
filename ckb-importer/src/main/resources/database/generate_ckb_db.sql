@@ -333,7 +333,7 @@ CREATE TABLE clinicalTrial
     updateDate DATE,
     nctId varchar(50) NOT NULL,
     title varchar(500) NOT NULL,
-    phase varchar(50) NOT NULL,
+    phase varchar(50),
     recruitment varchar(50) NOT NULL,
     gender varchar(50),
     sponsors varchar(250),

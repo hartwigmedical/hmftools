@@ -77,7 +77,11 @@ public class TumorCharacteristicExtractor {
 
             if (cutOff.equals("MSI high")) {
                 return TumorCharacteristicsAtLeast.EQUALS_GREATHER;
-            } else if (cutOffSplit.length == 3) {
+            }
+            else if (cutOff.equals("HRD pos")) {
+                return TumorCharacteristicsAtLeast.EQUALS_GREATHER;
+            }
+            else if (cutOffSplit.length == 3) {
                 if (cutOffSplit[1].equals(">=")) {
                     return TumorCharacteristicsAtLeast.EQUALS_GREATHER;
                 } else if (cutOffSplit[1].equals("<=")) {
@@ -91,7 +95,7 @@ public class TumorCharacteristicExtractor {
                     return null;
                 }
             } else {
-                LOGGER.warn("cutOff value couldn't be determined");
+                LOGGER.warn("cutOff value '{}' couldn't be determined", cutOff);
                 return null;
             }
         } else {
@@ -118,10 +122,13 @@ public class TumorCharacteristicExtractor {
             String[] cutOffSplit = cutOff.split(" ");
             if (cutOff.equals("MSI high")) {
                 return (double) 4;
-            } else if (cutOffSplit.length == 3) {
+            } else if (cutOff.equals("HRD pos")) {
+                return 0.5;
+            }
+            else if (cutOffSplit.length == 3) {
                 return Double.valueOf(cutOffSplit[2]);
             } else {
-                LOGGER.warn("cutOff value couldn't be determined");
+                LOGGER.warn("cutOff value '{}' couldn't be determined", cutOff);
                 return null;
             }
         } else {

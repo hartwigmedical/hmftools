@@ -14,5 +14,6 @@ public enum ActinRule {
     HRD_SIGNATURE,
     TMB_OF_AT_LEAST_X,
     TML_OF_AT_LEAST_X,
-    TML_OF_AT_MOST_X
+    TML_OF_AT_MOST_X,
+    HAS_HLA_A_TYPE_X
 }

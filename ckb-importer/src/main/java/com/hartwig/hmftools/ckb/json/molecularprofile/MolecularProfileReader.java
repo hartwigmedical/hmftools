@@ -27,10 +27,13 @@ import com.hartwig.hmftools.ckb.util.DateConverter;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class MolecularProfileReader extends CkbJsonDirectoryReader<JsonMolecularProfile> {
+    private static final Logger LOGGER = LogManager.getLogger(MolecularProfileReader.class);
 
     public MolecularProfileReader(@Nullable final Integer maxFilesToRead) {
         super(maxFilesToRead);
@@ -258,10 +261,14 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<JsonMolecular
             JsonObject variantAssociatedClinicalTrialJsonObject = variantAssociatedClinicalTrial.getAsJsonObject();
             variantAssociatedClinicalTrialChecker.check(variantAssociatedClinicalTrialJsonObject);
 
+            if (JsonFunctions.nullableString(variantAssociatedClinicalTrialJsonObject, "phase") == null) {
+                LOGGER.warn("phase of study '{}' is nullable from MolecularProfileReader", JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "nctId"));
+            }
+
             variantAssociatedClinicalTrials.add(ImmutableClinicalTrialInfo.builder()
                     .nctId(JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "nctId"))
                     .title(JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "title"))
-                    .phase(JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "phase"))
+                    .phase(JsonFunctions.nullableString(variantAssociatedClinicalTrialJsonObject, "phase"))
                     .recruitment(JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "recruitment"))
                     .therapies(extractTherapyList(variantAssociatedClinicalTrialJsonObject.getAsJsonArray("therapies")))
                     .build());

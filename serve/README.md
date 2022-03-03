@@ -202,6 +202,10 @@ HPV_POSITIVE | Evidence is applicable when viral presence of some form of HPV ha
 EBV_POSITIVE | Evidence is applicable when viral presence of some form of EBV has been found
 IMMUNO_HLA / Evidence is applicable in case of an HLA type match
 
+### HLA typering
+Every patient has a specific HLA Class type I in there germline. If this class matches to HLA class type I which is derived from the 
+knowledgebase this patient is applicable for the evidence.
+
 ## Curation and harmonization of individual knowledgebases
 
 Per knowledgebase curation and filtering is applied to harmonize knowledge from different sources and to correct/remove mistakes or 
@@ -261,6 +265,7 @@ HRD_SIGNATURE | HR Status = HRD
 TMB_OF_AT_LEAST_X | Tumor Mutational Burden (TMB) should be => X
 TML_OF_AT_LEAST_X | Tumor Mutational Load (TML) should be => X
 TML_OF_AT_MOST_X | TML should be <= X
+HAS_HLA_A_TYPE_X | HLA typering should be X   
 
 SERVE configures every trial to A-level evidence with responsive direction. The filtering is predominantly configurable rather than fixed
 in SERVE. The following filters can be configured in ACTIN:
@@ -376,6 +381,7 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
 - Upcoming
   - Support the raw input string of the input knowledgebases to the actionable output files
   - Support wild-type events as gene level evidences 
+  - Support HLA Class type I as new actionability options 
   - The filtering of iClusion events is moved to a input file instead inside SERVE  
   - Created a link of CKB of the evidence for CKB Boost (web based)
   - For actionable signatures evidences could be applicable with different cut-offs. Now supporting those cut-off values of the different signatures (eg. TML >= 140 )
