@@ -1,13 +1,24 @@
 package com.hartwig.hmftools.common.cobalt;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -42,36 +53,65 @@ public final class CobaltRatioFile {
     @NotNull
     public static String generateFilenameForReading(@NotNull final String basePath, @NotNull final String sample) {
         String filename = basePath + File.separator + sample + EXTENSION;
-        return (new File(filename).exists()) ? filename : basePath + File.separator + sample + EXTENSION_OLD;
+        if (new File(filename).exists())
+            return filename;
+
+        // or maybe it is gzipped
+        filename += ".gz";
+        if (new File(filename).exists())
+            return filename;
+
+        // old version
+        filename = basePath + File.separator + sample + EXTENSION_OLD;
+        return filename;
     }
 
     @NotNull
     public static ListMultimap<Chromosome, CobaltRatio> read(@NotNull final String filename) throws IOException {
-        return fromRatios(Files.readAllLines(new File(filename).toPath())
-                .stream()
-                .skip(1)
-                .map(x -> fromLine(null, x))
-                .collect(Collectors.toList()));
+
+        return read(filename, null);
     }
 
     @NotNull
     public static ListMultimap<Chromosome, CobaltRatio> readTumorOnly(@NotNull final String filename, @NotNull final Gender gender)
             throws IOException {
-        return fromRatios(Files.readAllLines(new File(filename).toPath())
-                .stream()
-                .skip(1)
-                .map(x -> fromLine(gender, x))
-                .collect(Collectors.toList()));
+
+        return read(filename, gender);
+    }
+
+    @NotNull
+    private static ListMultimap<Chromosome, CobaltRatio> read(@NotNull final String filename, @Nullable final Gender gender)
+            throws IOException {
+        InputStream inputStream = new FileInputStream(filename);
+        if (filename.endsWith(".gz")) {
+            inputStream = new GZIPInputStream(inputStream);
+        }
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream)))
+        {
+            return fromRatios(reader.lines()
+                    .skip(1)
+                    .map(x -> fromLine(gender, x))
+                    .collect(Collectors.toList()));
+        }
     }
 
     public static void write(@NotNull final String fileName, @NotNull Multimap<Chromosome, CobaltRatio> ratios) throws IOException {
-        List<CobaltRatio> sorted = Lists.newArrayList(ratios.values());
+        List<CobaltRatio> sorted = new ArrayList<>(ratios.values());
         Collections.sort(sorted);
         write(fileName, sorted);
     }
 
     private static void write(@NotNull final String fileName, @NotNull List<CobaltRatio> ratios) throws IOException {
-        Files.write(new File(fileName).toPath(), toLines(ratios));
+        OutputStream outputStream = new FileOutputStream(fileName);
+        if (fileName.endsWith(".gz"))
+            outputStream = new GZIPOutputStream(outputStream);
+        try (Writer writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8))
+        {
+            for (String line : toLines(ratios))
+            {
+                writer.write(line + '\n');
+            }
+        }
     }
 
     @NotNull
