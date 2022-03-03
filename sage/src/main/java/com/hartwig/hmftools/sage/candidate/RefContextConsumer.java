@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.sage.candidate;
 
-import static java.lang.Math.round;
-
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.SageConstants.SC_INSERT_MIN_FLANK_LENGTH;
 
 import java.util.List;
 import java.util.Optional;
@@ -104,6 +104,29 @@ public class RefContextConsumer implements Consumer<SAMRecord>
                         element, record, readIndex, refPosition, refBases, numberOfEvents, readExceedsQuality))
                         .ifPresent(altReads::add);
             }
+
+            /*
+            @Override
+            public void handleLeftSoftClip(final SAMRecord record, final CigarElement element)
+            {
+                AltRead altRead = processSoftClip(
+                        record, element.getLength(), 0, refBases, readExceedsQuality, numberOfEvents, true);
+
+                if(altRead != null)
+                    altReads.add(altRead);
+            }
+
+            @Override
+            public void handleRightSoftClip(final SAMRecord record, final CigarElement element, int readIndex, int refPosition)
+            {
+                AltRead altRead = processSoftClip(
+                        record, element.getLength(), readIndex, refBases, readExceedsQuality, numberOfEvents, false);
+
+                if(altRead != null)
+                    altReads.add(altRead);
+            }
+            */
+
         };
 
         CigarTraversal.traverseCigar(record, handler);
@@ -270,6 +293,119 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         }
 
         return result;
+    }
+
+    private AltRead processSoftClip(
+            final SAMRecord record, int scLength, int scReadIndex, final IndexedBases refBases, boolean readExceedsQuality,
+            int numberOfEvents, boolean onLeft)
+    {
+        if(!readExceedsQuality)
+            return null;
+
+        if(scLength < SC_INSERT_MIN_FLANK_LENGTH + 1)
+            return null;
+
+        boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.MinMapQuality;
+
+        AltRead altRead = processSoftClip(
+                record.getAlignmentStart(), record.getAlignmentEnd(), record.getReadString(), scLength, scReadIndex, refBases, onLeft);
+
+        if(altRead == null)
+            return null;
+
+        int refPosition;
+        int readIndex;
+
+        if(onLeft)
+        {
+            refPosition = record.getAlignmentStart() - 1;
+            readIndex = scLength;
+        }
+        else
+        {
+            refPosition = record.getAlignmentEnd();
+            readIndex = record.getReadBases().length - scLength - 1;
+            // readIndex = scLength - 1 - altRead.Alt.length(); // not sure why it was set like this
+        }
+
+        if(!mBounds.containsPosition(refPosition))
+            return null;
+
+        boolean findReadContext = withinReadContext(readIndex, record);
+
+        final RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
+        if(reachedDepthLimit(refContext))
+            return null;
+
+        final int baseQuality = baseQuality(readIndex, record, altRead.Alt.length());
+
+        final ReadContext readContext =
+                (findReadContext || true) ? mReadContextFactory.createInsertContext(altRead.Alt, refPosition, readIndex, record, refBases) : null;
+
+        SG_LOGGER.debug("soft-clipped insert({}:{} {}>{}) read(index={} {}) softClip(len={} index={} on {})",
+                record.getContig(), refPosition, altRead.Ref, altRead.Alt, readIndex, record.getReadName(),
+                scLength, scReadIndex, onLeft ? "left" : "right");
+
+        return new AltRead(refContext, altRead.Ref, altRead.Alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext);
+    }
+
+    public static AltRead processSoftClip(
+            int readStart, int readEnd, final String readBases, int scLength, int scReadIndex, final IndexedBases refBases, boolean onLeft)
+    {
+        // look for an insert of X bases starting at the soft-clip followed by at least 10 bases of matching ref bases in the soft-clipping
+        if(onLeft)
+        {
+            int prevRefPos = readStart - 1;
+            int refIndexOffset = prevRefPos - refBases.Position;
+
+            String requiredRefBases = new String(
+                    refBases.Bases, refBases.Index + refIndexOffset - SC_INSERT_MIN_FLANK_LENGTH + 1, SC_INSERT_MIN_FLANK_LENGTH);
+
+            String scBases = readBases.substring(0, scLength);
+            int scMatchIndex = scBases.lastIndexOf(requiredRefBases);
+
+            if(scMatchIndex <= 0)
+                return null;
+
+            int scIndexMatchEnd = scMatchIndex + SC_INSERT_MIN_FLANK_LENGTH - 1;
+            int altLength = scLength - scIndexMatchEnd - 1;
+
+            try
+            {
+                String ref = readBases.substring(scIndexMatchEnd, scIndexMatchEnd + 1);
+                String alt = readBases.substring(scIndexMatchEnd, scIndexMatchEnd + altLength + 1);
+
+                return new AltRead(null, ref, alt, 0, 0, false, null);
+            }
+            catch(Exception e)
+            {
+                return null;
+            }
+        }
+        else
+        {
+            int nextRefPos = readEnd + 1;
+            int refIndexOffset = nextRefPos - refBases.Position;
+            String requiredRefBases = new String(refBases.Bases, refBases.Index + refIndexOffset, SC_INSERT_MIN_FLANK_LENGTH);
+
+            String scBases = readBases.substring(scReadIndex);
+            int scMatchIndex = scBases.indexOf(requiredRefBases);
+
+            if(scMatchIndex <= 0)
+                return null;
+
+            try
+            {
+                String ref = readBases.substring(scReadIndex - 1, scReadIndex);
+                String alt = readBases.substring(scReadIndex - 1, scReadIndex + scMatchIndex);
+
+                return new AltRead(null, ref, alt, 0, 0, false, null);
+            }
+            catch(Exception e)
+            {
+                return null;
+            }
+        }
     }
 
     private boolean withinReadContext(int readIndex, final SAMRecord record)

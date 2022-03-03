@@ -86,11 +86,6 @@ public class ReadContext
         return (int)Math.round(quality / baseLength);
     }
 
-    public boolean phased(int offset, final ReadContext other)
-    {
-        return mReadBases.phased(offset, other.mReadBases);
-    }
-
     public boolean isCoreCovered(int otherReadIndex, byte[] otherBases)
     {
         return mReadBases.isCoreCovered(otherReadIndex, otherBases);

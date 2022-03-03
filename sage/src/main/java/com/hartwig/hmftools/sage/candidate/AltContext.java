@@ -143,23 +143,26 @@ public class AltContext implements VariantHotspot
 
         mCandidate = mReadContextCandidates.get(0);
 
-        final String topCore = mReadContextCandidates.get(0).readContext().coreString();
-        double topCandidateRcThreshold = mReadContextCandidates.get(0).fullMatch() * MIN_SECOND_CANDIDATE_FULL_READS_PERC;
-
-        // add a second if its core is different and it has sufficient support
-        for(int i = 0; i < mReadContextCandidates.size(); ++i)
+        if(mReadContextCandidates.size() > 1)
         {
-            ReadContextCandidate candidate = mReadContextCandidates.get(i);
+            final String topCore = mReadContextCandidates.get(0).readContext().coreString();
+            double topCandidateRcThreshold = mReadContextCandidates.get(0).fullMatch() * MIN_SECOND_CANDIDATE_FULL_READS_PERC;
 
-            if(candidate.fullMatch() < MIN_SECOND_CANDIDATE_FULL_READS || candidate.fullMatch() < topCandidateRcThreshold)
+            // add a second if its core is different and it has sufficient support
+            for(int i = 0; i < mReadContextCandidates.size(); ++i)
+            {
+                ReadContextCandidate candidate = mReadContextCandidates.get(i);
+
+                if(candidate.fullMatch() < MIN_SECOND_CANDIDATE_FULL_READS || candidate.fullMatch() < topCandidateRcThreshold)
+                    break;
+
+                String coreStr = candidate.readContext().coreString();
+                if(coreStr.contains(topCore) || topCore.contains(coreStr))
+                    continue;
+
+                mSecondCandidate = new AltContext(RefContext, Ref, Alt, candidate, mRawSupportAlt, mRawBaseQualityAlt);
                 break;
-
-            String coreStr = candidate.readContext().coreString();
-            if(coreStr.contains(topCore) || topCore.contains(coreStr))
-                continue;
-
-            mSecondCandidate = new AltContext(RefContext, Ref, Alt, candidate, mRawSupportAlt, mRawBaseQualityAlt);
-            break;
+            }
         }
 
         mReadContextCandidates.clear();

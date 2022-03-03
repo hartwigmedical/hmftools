@@ -27,6 +27,8 @@ public class SageConstants
     public static final int MATCHING_BASE_QUALITY = 20;
     public static final double SC_READ_EVENTS_FACTOR = 10;
 
+    public static final int SC_INSERT_MIN_FLANK_LENGTH = 10;
+
     public static final int NORMAL_RAW_ALT_BQ_MAX = 25;
 
     public static final int DEFAULT_EVIDENCE_MAP_QUAL = 1;

@@ -177,46 +177,6 @@ public class IndexedBasesTest
     }
 
     @Test
-    public void testPhasedMNV()
-    {
-        ReadContext victim1 = createReadContext(1000, 4, 4, 4, 4, "GATCTTGAT", Strings.EMPTY);
-        ReadContext victim2 = createReadContext(1001, 5, 5, 5, 4, "GATCTTGATC", Strings.EMPTY);
-
-        assertTrue(victim1.phased(-1, victim2));
-        assertTrue(victim2.phased(1, victim1));
-    }
-
-    @Test
-    public void testPhasedReadLongEnoughOnAtLeastOneSide()
-    {
-        ReadContext victim1 = createReadContext(1000, 4, 4, 4, 4, "GATCTTGA", Strings.EMPTY);
-        ReadContext victim2 = createReadContext(1001, 5, 5, 5, 4, "GATCTTGATCT", Strings.EMPTY);
-
-        assertTrue(victim1.phased(-1, victim2));
-        assertTrue(victim2.phased(1, victim1));
-    }
-
-    @Test
-    public void testLongReadShortFlanks()
-    {
-        final String read = "TACCACAAATACATATACGTGTATCTGTCTGTGTGTTATGAACTTATATAAACCATCAC";
-        ReadContext victim1 = createReadContext(1010, 10, 9, 11, 3, read, Strings.EMPTY);
-        ReadContext victim2 = createReadContext(1030, 40, 39, 41, 3, read, Strings.EMPTY);
-
-        assertTrue(victim1.phased(-30, victim2));
-        assertTrue(victim2.phased(30, victim1));
-    }
-
-    @Test
-    public void testBothCentreMatches()
-    {
-        ReadContext victim1 = createReadContext(1000, 4, 4, 4, 4, "AAAATGGGG", Strings.EMPTY);
-        ReadContext victim2 = createReadContext(1005, 5, 5, 5, 4, "TGGGGACCCC", Strings.EMPTY);
-        assertFalse(victim1.phased(-5, victim2));
-        assertFalse(victim2.phased(5, victim1));
-    }
-
-    @Test
     public void testStrings()
     {
         ReadContext victim = createReadContext(1000, 4, 3, 5, 2, "AACATGAGG", Strings.EMPTY);

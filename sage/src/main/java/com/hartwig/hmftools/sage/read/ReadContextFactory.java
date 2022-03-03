@@ -29,9 +29,8 @@ public class ReadContextFactory
         mFlankSize = flankSize;
     }
 
-    @NotNull
     public ReadContext createDelContext(
-            @NotNull final String ref, int refPosition, int readIndex, @NotNull final SAMRecord record,
+            final String ref, int refPosition, int readIndex, final SAMRecord record,
             final IndexedBases refBases)
     {
         int refIndex = refBases.index(refPosition);
@@ -69,10 +68,9 @@ public class ReadContextFactory
                 refPosition, readIndex, startIndex, endIndex, mFlankSize, record);
     }
 
-    @NotNull
     public ReadContext createInsertContext(
-            @NotNull final String alt, int refPosition, int readIndex,
-            @NotNull final SAMRecord record, final IndexedBases refBases)
+            final String alt, int refPosition, int readIndex,
+            final SAMRecord record, final IndexedBases refBases)
     {
         int refIndex = refBases.index(refPosition);
 
@@ -110,14 +108,14 @@ public class ReadContextFactory
     }
 
     @NotNull
-    public ReadContext createSNVContext(int refPosition, int readIndex, @NotNull final SAMRecord record, final IndexedBases refBases)
+    public ReadContext createSNVContext(int refPosition, int readIndex, final SAMRecord record, final IndexedBases refBases)
     {
         return createMNVContext(refPosition, readIndex, 1, record, refBases);
     }
 
     @NotNull
     public ReadContext createMNVContext(
-            int refPosition, int readIndex, int length, @NotNull final SAMRecord record, final IndexedBases refBases)
+            int refPosition, int readIndex, int length, final SAMRecord record, final IndexedBases refBases)
     {
         int refIndex = refBases.index(refPosition);
         int startIndex = readIndex - MIN_CORE_DISTANCE;

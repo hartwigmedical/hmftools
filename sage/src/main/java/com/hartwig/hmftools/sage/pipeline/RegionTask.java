@@ -111,12 +111,12 @@ public class RegionTask
         mPerfCounters.get(PC_EVIDENCE).start();
 
         ReadContextCounters tumorEvidence = mEvidenceStage.findEvidence(
-                mRegion, "tumor", mConfig.TumorIds, mConfig.TumorBams, initialCandidates, true);
+                mRegion, "tumor", mConfig.TumorIds, initialCandidates, true);
 
         List<Candidate> finalCandidates = tumorEvidence.filterCandidates();
 
         ReadContextCounters normalEvidence = mEvidenceStage.findEvidence
-                (mRegion, "normal", mConfig.ReferenceIds, mConfig.ReferenceBams, finalCandidates, false);
+                (mRegion, "normal", mConfig.ReferenceIds, finalCandidates, false);
 
         mPerfCounters.get(PC_EVIDENCE).stop();
 

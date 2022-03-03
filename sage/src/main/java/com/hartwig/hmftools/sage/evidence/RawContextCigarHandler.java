@@ -36,7 +36,8 @@ public class RawContextCigarHandler implements CigarHandler
     {
         if(mVariant.position() < record.getAlignmentStart())
         {
-            int readIndex = record.getReadPositionAtReferencePosition(record.getAlignmentStart()) - 1 - record.getAlignmentStart()
+            int readStartPos = record.getReadPositionAtReferencePosition(record.getAlignmentStart());
+            int readIndex = readStartPos - 1 - record.getAlignmentStart()
                     + mVariant.position() - mVariant.alt().length() + mVariant.ref().length();
             mResult = RawContext.inSoftClip(readIndex);
         }
@@ -72,7 +73,7 @@ public class RawContextCigarHandler implements CigarHandler
 
         if(refPosition <= mVariant.position() && mVariant.position() <= refPositionEnd)
         {
-            int readIndexOffset = (int) (mVariant.position() - refPosition);
+            int readIndexOffset = mVariant.position() - refPosition;
             int variantReadIndex = readIndex + readIndexOffset;
 
             int baseQuality = record.getBaseQualities()[variantReadIndex];

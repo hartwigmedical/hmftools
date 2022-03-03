@@ -266,37 +266,12 @@ public class IndexedBases
         return totalLength;
     }
 
-    // now only used for local realignment
-    public boolean phased(int offset, final IndexedBases other)
-    {
-        int otherReadIndex = other.Index + offset;
-
-        boolean centreMatch = coreMatch(false, otherReadIndex, other.Bases);
-
-        if(!centreMatch)
-            return false;
-
-        boolean otherCentreMatch = other.coreMatch(false, Index - offset, Bases);
-
-        if(!otherCentreMatch)
-            return false;
-
-        int leftFlankingBases = leftFlankMatchingBases(otherReadIndex, other.Bases);
-
-        if(leftFlankingBases < 0)
-            return false;
-
-        int rightFlankingBases = rightFlankMatchingBases(otherReadIndex, other.Bases);
-
-        return rightFlankingBases >= 0 && (rightFlankingBases >= FlankSize || leftFlankingBases >= FlankSize);
-    }
-
     public String toString()
     {
         if(Bases.length == 0)
             return "";
 
-        return String.format("%s indices(%d-%d-%d-%d-%d",
+        return String.format("%s indices(%d-%d-%d-%d-%d)",
                 new String(Bases, LeftFlankIndex, length()), LeftFlankIndex, LeftCoreIndex, Index, RightCoreIndex, RightFlankIndex);
     }
 
