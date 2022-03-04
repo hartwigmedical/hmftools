@@ -111,7 +111,7 @@ public class PurpleApplication
     private PurpleApplication(final Options options, final String... args) throws ParseException, IOException
     {
         mPurpleVersion = new VersionInfo("purple.version");
-        PPL_LOGGER.info("PURPLE version: {}", mPurpleVersion.version());
+        PPL_LOGGER.info("Purple version: {}", mPurpleVersion.version());
 
         mCmdLineArgs = createCommandLine(options, args);
 
@@ -149,7 +149,7 @@ public class PurpleApplication
 
         if(!mConfig.DriversOnly)
         {
-            mSegmentation = new Segmentation(mConfig, mReferenceData);
+            mSegmentation = new Segmentation(mReferenceData);
             mCharts = new Charts(mConfig, mExecutorService, mReferenceData.RefGenVersion.is38());
         }
         else
@@ -170,7 +170,7 @@ public class PurpleApplication
             mExecutorService.shutdown();
         }
 
-        PPL_LOGGER.info("Complete");
+        PPL_LOGGER.info("Purple complete");
     }
 
     private SampleData loadSampleData(final String referenceId, final String tumorSample, final SampleDataFiles sampleDataFiles)
@@ -210,7 +210,7 @@ public class PurpleApplication
 
     private void processSample(final String referenceId, final String tumorSample)
     {
-        PPL_LOGGER.info("Processing sample(ref={} tumor={})", referenceId, tumorSample);
+        PPL_LOGGER.info("processing sample(ref={} tumor={})", referenceId, tumorSample);
 
         try
         {
@@ -249,17 +249,17 @@ public class PurpleApplication
 
         if(cobaltGender.equals(amberGender))
         {
-            PPL_LOGGER.info("Sample gender is {}", cobaltGender.toString().toLowerCase());
+            PPL_LOGGER.info("sample gender is {}", cobaltGender.toString().toLowerCase());
         }
         else
         {
-            PPL_LOGGER.warn("COBALT gender {} does not match AMBER gender {}", cobaltGender, amberGender);
+            PPL_LOGGER.warn("Cobalt gender {} does not match Amber gender {}", cobaltGender, amberGender);
         }
 
-        PPL_LOGGER.info("Applying segmentation");
+        PPL_LOGGER.info("applying segmentation");
         final List<ObservedRegion> observedRegions = mSegmentation.createSegments(sampleData.SvCache.variants(), amberData, cobaltData);
 
-        PPL_LOGGER.info("Fitting purity");
+        PPL_LOGGER.info("fitting purity");
         final FittedRegionFactory fittedRegionFactory =
                 createFittedRegionFactory(amberData.AverageTumorDepth, cobaltChromosomes, mConfig.Fitting);
 
@@ -278,7 +278,7 @@ public class PurpleApplication
                 purityAdjuster,
                 cobaltData.CobaltChromosomes);
 
-        PPL_LOGGER.info("Calculating copy number");
+        PPL_LOGGER.info("calculating copy number");
         List<FittedRegion> fittedRegions =
                 fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), observedRegions);
         copyNumberFactory.invoke(fittedRegions, sampleData.SvCache.variants());
@@ -288,11 +288,11 @@ public class PurpleApplication
 
         if(recoveredSVCount > 0)
         {
-            PPL_LOGGER.info("Reapplying segmentation with {} recovered structural variants", recoveredSVCount);
+            PPL_LOGGER.info("reapplying segmentation with {} recovered structural variants", recoveredSVCount);
             final List<ObservedRegion> recoveredObservedRegions =
                     mSegmentation.createSegments(sampleData.SvCache.variants(), amberData, cobaltData);
 
-            PPL_LOGGER.info("Recalculating copy number");
+            PPL_LOGGER.info("recalculating copy number");
             fittedRegions = fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), recoveredObservedRegions);
             copyNumberFactory.invoke(fittedRegions, sampleData.SvCache.variants());
         }
@@ -304,12 +304,12 @@ public class PurpleApplication
 
         final List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFactory.geneCopyNumbers(mReferenceData.GeneTransCache, copyNumbers);
 
-        PPL_LOGGER.info("Generating QC Stats");
+        PPL_LOGGER.info("generating QC Stats");
         final PurpleQC qcChecks = PurpleQCFactory.create(
                 amberData.Contamination, bestFit, amberGender, cobaltGender, copyNumbers, geneCopyNumbers,
                 cobaltChromosomes.germlineAberrations(), amberData.AverageTumorDepth);
 
-        PPL_LOGGER.info("Modelling somatic peaks");
+        PPL_LOGGER.info("modelling somatic peaks");
         final SomaticPeakStream somaticPeakStream = new SomaticPeakStream(mConfig);
 
         final List<PeakModel> somaticPeaks = somaticPeakStream.somaticPeakModel(
@@ -317,7 +317,7 @@ public class PurpleApplication
 
         // at the moment the enriching of somatic variants is also contributing to the purity context, so it cannot be done afterwards
         // if the read and write process were split then so could the fitting and enriching steps
-        PPL_LOGGER.info("Enriching somatic variants");
+        PPL_LOGGER.info("enriching somatic variants");
 
         final SomaticStream somaticStream = new SomaticStream(
                 mConfig, mReferenceData, somaticPeakStream.snpCount(), somaticPeakStream.indelCount(),
@@ -354,7 +354,7 @@ public class PurpleApplication
                 .build();
 
         // write fit results
-        PPL_LOGGER.info("Writing purple data to directory: {}", mConfig.OutputDir);
+        PPL_LOGGER.info("writing purple data to directory: {}", mConfig.OutputDir);
         mPurpleVersion.write(mConfig.OutputDir);
         PurityContextFile.write(mConfig.OutputDir, tumorSample, purityContext);
         FittedPurityRangeFile.write(mConfig.OutputDir, tumorSample, bestFit.allFits());
@@ -376,7 +376,7 @@ public class PurpleApplication
 
         if(mDbAccess != null)
         {
-            PPL_LOGGER.info("Writing purple data to database: {}", mCmdLineArgs.getOptionValue(DB_URL));
+            PPL_LOGGER.info("writing purple data to database: {}", mCmdLineArgs.getOptionValue(DB_URL));
 
             mDbAccess.writePurity(tumorSample, purityContext, qcChecks);
             mDbAccess.writeBestFitPerPurity(tumorSample, bestFit.bestFitPerPurity());
@@ -387,7 +387,7 @@ public class PurpleApplication
 
         if(mConfig.Charting.Enabled || mConfig.Charting.CircosBinary.isPresent())
         {
-            PPL_LOGGER.info("Generating charts");
+            PPL_LOGGER.info("generating charts");
 
             mCharts.write(
                     referenceId, tumorSample, !sampleDataFiles.SomaticVcfFile.isEmpty(),
@@ -445,7 +445,7 @@ public class PurpleApplication
         final List<DriverCatalog> somaticDriverCatalog = Lists.newArrayList();
         final List<DriverCatalog> germlineDriverCatalog = Lists.newArrayList();
 
-        PPL_LOGGER.info("Generating driver catalog");
+        PPL_LOGGER.info("generating drivers");
 
         final Map<String,List<GeneCopyNumber>> geneCopyNumberMap = listToMap(geneCopyNumbers);
 
@@ -483,7 +483,7 @@ public class PurpleApplication
         if(sampleDataFiles.RecoveredSvVcfFile.isEmpty())
             return 0;
 
-        PPL_LOGGER.info("Loading recovery candidates from {}", sampleDataFiles.RecoveredSvVcfFile);
+        PPL_LOGGER.info("loading recovery candidates from {}", sampleDataFiles.RecoveredSvVcfFile);
 
         final RecoverStructuralVariants recovery = new RecoverStructuralVariants(
                 mConfig.Misc, purityAdjuster, sampleDataFiles.RecoveredSvVcfFile, copyNumbers);
@@ -557,7 +557,7 @@ public class PurpleApplication
             return new StructuralVariantCache();
         }
 
-        PPL_LOGGER.info("Loading structural variants from {}", sampleDataFiles.SvVcfFile);
+        PPL_LOGGER.info("loading structural variants from {}", sampleDataFiles.SvVcfFile);
 
         final String outputVcf = mConfig.OutputDir + File.separator + tumorSample + PURPLE_SV_VCF_SUFFIX;
 

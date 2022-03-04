@@ -32,21 +32,19 @@ import org.jetbrains.annotations.NotNull;
 public class ObservedRegionFactory
 {
     private final int mWindowSize;
-    @NotNull
     private final CobaltChromosomes mCobaltChromosomes;
-    @NotNull
     private final GermlineStatusFactory mStatusFactory;
 
-    public ObservedRegionFactory(final int windowSize, @NotNull final CobaltChromosomes cobaltChromosomes)
+    public ObservedRegionFactory(final int windowSize, final CobaltChromosomes cobaltChromosomes)
     {
         mWindowSize = windowSize;
         mCobaltChromosomes = cobaltChromosomes;
         mStatusFactory = new GermlineStatusFactory(cobaltChromosomes);
     }
 
-    @NotNull
-    public List<ObservedRegion> combine(@NotNull final List<PurpleSegment> regions, @NotNull final Multimap<Chromosome, AmberBAF> bafs,
-            @NotNull final Multimap<Chromosome, CobaltRatio> ratios, @NotNull final Multimap<Chromosome, GCProfile> gcProfiles)
+    public List<ObservedRegion> combine(
+            final List<PurpleSegment> regions, final Multimap<Chromosome, AmberBAF> bafs,
+            final Multimap<Chromosome, CobaltRatio> ratios, final Multimap<Chromosome, GCProfile> gcProfiles)
     {
         final List<ModifiableEnrichedRegion> result = Lists.newArrayList();
 
@@ -64,6 +62,7 @@ public class ObservedRegionFactory
             cobaltSelector.select(region, cobalt);
             gcSelector.select(region, gc);
 
+            // double tumorRatio = cobalt.tumorMedianRatio();
             double tumorRatio = cobalt.tumorMeanRatio();
             double normalRatio = cobalt.referenceMeanRatio();
             final ModifiableEnrichedRegion observedRegion = ModifiableEnrichedRegion.create()
@@ -89,7 +88,7 @@ public class ObservedRegionFactory
     }
 
     @NotNull
-    static List<ObservedRegion> extendMinSupport(@NotNull final List<ModifiableEnrichedRegion> modifiables)
+    static List<ObservedRegion> extendMinSupport(final List<ModifiableEnrichedRegion> modifiables)
     {
         for(int i = 0; i < modifiables.size(); i++)
         {
@@ -118,8 +117,8 @@ public class ObservedRegionFactory
 
     private class BAFAccumulator implements Consumer<AmberBAF>
     {
-        private int count;
-        final private List<Double> bafs = Lists.newArrayList();
+        private int mCount;
+        final private List<Double> mBafs = Lists.newArrayList();
 
         @Override
         public void accept(final AmberBAF baf)
@@ -129,23 +128,23 @@ public class ObservedRegionFactory
                 CobaltChromosome cobaltChromosome = mCobaltChromosomes.get(baf.chromosome());
                 if(cobaltChromosome.isNormal() && cobaltChromosome.isDiploid() && !Double.isNaN(baf.tumorModifiedBAF()))
                 {
-                    count++;
-                    bafs.add(baf.tumorModifiedBAF());
+                    mCount++;
+                    mBafs.add(baf.tumorModifiedBAF());
                 }
             }
         }
 
         private int count()
         {
-            return count;
+            return mCount;
         }
 
         private double medianBaf()
         {
-            if(count > 0)
+            if(mCount > 0)
             {
-                Collections.sort(bafs);
-                return bafs.size() % 2 == 0 ? (bafs.get(count / 2) + bafs.get(count / 2 - 1)) / 2 : bafs.get(count / 2);
+                Collections.sort(mBafs);
+                return mBafs.size() % 2 == 0 ? (mBafs.get(mCount / 2) + mBafs.get(mCount / 2 - 1)) / 2 : mBafs.get(mCount / 2);
             }
             return 0;
         }
@@ -154,74 +153,108 @@ public class ObservedRegionFactory
     @VisibleForTesting
     static class CobaltAccumulator implements Consumer<CobaltRatio>
     {
+        private final Window mWindow;
+        private final GenomeRegion mRegion;
 
-        private final Window window;
-        private final GenomeRegion region;
+        private final RatioAccumulator mReferenceAccumulator;
+        private final RatioAccumulator mUnnormalisedReferenceAccumulator;
+        private final RatioAccumulator mTumorAccumulator;
 
-        private final RatioAccumulator referenceAccumulator = new RatioAccumulator();
-        private final RatioAccumulator unnormalisedReferenceAccumulator = new RatioAccumulator();
-        private final RatioAccumulator tumorAccumulator = new RatioAccumulator();
-
-        CobaltAccumulator(final int windowSize, final GenomeRegion region)
+        public CobaltAccumulator(final int windowSize, final GenomeRegion region)
         {
-            this.window = new Window(windowSize);
-            this.region = region;
+            mWindow = new Window(windowSize);
+            mRegion = region;
+
+            mReferenceAccumulator = new RatioAccumulator();
+            mUnnormalisedReferenceAccumulator = new RatioAccumulator();
+            mTumorAccumulator = new RatioAccumulator();
         }
 
         double referenceMeanRatio()
         {
-            return referenceAccumulator.meanRatio();
+            return mReferenceAccumulator.meanRatio();
         }
 
         double unnormalisedReferenceMeanRatio()
         {
-            return unnormalisedReferenceAccumulator.meanRatio();
+            return mUnnormalisedReferenceAccumulator.meanRatio();
         }
 
-        double tumorMeanRatio()
-        {
-            return tumorAccumulator.meanRatio();
-        }
+        double tumorMeanRatio() { return mTumorAccumulator.meanRatio(); }
+        double tumorMedianRatio() { return mTumorAccumulator.medianRatio(); }
 
         int tumorCount()
         {
-            return tumorAccumulator.count();
+            return mTumorAccumulator.count();
         }
 
         @Override
         public void accept(final CobaltRatio ratio)
         {
-            if(window.end(ratio.position()) <= region.end())
+            if(mWindow.end(ratio.position()) <= mRegion.end())
             {
-                referenceAccumulator.accept(ratio.referenceGCDiploidRatio());
-                unnormalisedReferenceAccumulator.accept(ratio.referenceGCRatio());
-                tumorAccumulator.accept(ratio.tumorGCRatio());
+                mReferenceAccumulator.add(ratio.referenceGCDiploidRatio());
+                mUnnormalisedReferenceAccumulator.add(ratio.referenceGCRatio());
+                mTumorAccumulator.add(ratio.tumorGCRatio(), true);
             }
         }
     }
 
-    static private class RatioAccumulator implements Consumer<Double>
+    static private class RatioAccumulator
     {
-        private double sumRatio;
-        private int count;
+        private double mSumRatio;
+        private int mCount;
+        private final List<Double> mRatios = Lists.newArrayList();
 
         private double meanRatio()
         {
-            return count > 0 ? sumRatio / count : 0;
+            return mCount > 0 ? mSumRatio / mCount : 0;
+        }
+
+        private double medianRatio()
+        {
+            if(mRatios.isEmpty())
+                return 0;
+
+            int medianIndex = mRatios.size() / 2;
+
+            if((mRatios.size() % 2) == 0)
+                return (mRatios.get(medianIndex - 1) + mRatios.get(medianIndex)) * 0.5;
+            else
+                return mRatios.get(medianIndex);
         }
 
         private int count()
         {
-            return count;
+            return mCount;
         }
 
-        @Override
-        public void accept(final Double ratio)
+        public void add(double ratio)
         {
-            if(Doubles.greaterThan(ratio, -1))
+            add(ratio, false);
+        }
+
+        public void add(double ratio, boolean keepValues)
+        {
+            if(!Doubles.greaterThan(ratio, -1))
+                return;
+
+            mCount++;
+            mSumRatio += ratio;
+
+            if(keepValues)
             {
-                count++;
-                sumRatio += ratio;
+                int index = 0;
+
+                while(index < mRatios.size())
+                {
+                    if(ratio < mRatios.get(index))
+                        break;
+
+                    ++index;
+                }
+
+                mRatios.add(index, ratio);
             }
         }
     }

@@ -42,7 +42,7 @@ public class CobaltData
         final String cobaltFilename = CobaltRatioFile.generateFilenameForReading(cobaltDirectory, tumorSample);
         if(!new File(cobaltFilename).exists())
         {
-            throw new ParseException("Unable to open cobalt ratio file: " + cobaltFilename);
+            throw new ParseException("uable to open cobalt ratio file: " + cobaltFilename);
         }
 
         String cobaltRefId = referenceId != null ? referenceId : CobaltRatioFile.TUMOR_ONLY_REFERENCE_SAMPLE;
@@ -50,24 +50,24 @@ public class CobaltData
         final String referenceSegmentFile = PCFFile.generateRatioFilename(cobaltDirectory, cobaltRefId);
         if(!new File(referenceSegmentFile).exists())
         {
-            throw new ParseException("Unable to open cobalt reference pcf file: " + referenceSegmentFile);
+            throw new ParseException("unable to open cobalt reference pcf file: " + referenceSegmentFile);
         }
 
         final String tumorSegmentFile = PCFFile.generateRatioFilename(cobaltDirectory, tumorSample);
         if(!new File(tumorSegmentFile).exists())
         {
-            throw new ParseException("Unable to open cobalt tumor pcf file: " + tumorSegmentFile);
+            throw new ParseException("unable to open cobalt tumor pcf file: " + tumorSegmentFile);
         }
 
-        PPL_LOGGER.info("Reading cobalt ratios from {}", cobaltFilename);
+        PPL_LOGGER.info("reading cobalt ratios from {}", cobaltFilename);
         Ratios = tumorOnlyMode
                 ? CobaltRatioFile.readTumorOnly(cobaltFilename, amberGender)
                 : CobaltRatioFile.read(cobaltFilename);
 
-        PPL_LOGGER.info("Reading cobalt reference segments from {}", referenceSegmentFile);
+        PPL_LOGGER.info("reading cobalt reference segments from {}", referenceSegmentFile);
         ReferenceSegments = PCFFile.readPositions(WINDOW_SIZE, PCFSource.REFERENCE_RATIO, referenceSegmentFile);
 
-        PPL_LOGGER.info("Reading cobalt tumor segments from {}", tumorSegmentFile);
+        PPL_LOGGER.info("reading cobalt tumor segments from {}", tumorSegmentFile);
         TumorSegments = PCFFile.readPositions(WINDOW_SIZE, PCFSource.TUMOR_RATIO, tumorSegmentFile);
 
         final List<MedianRatio> medianRatios = MedianRatioFactory.create(Ratios);

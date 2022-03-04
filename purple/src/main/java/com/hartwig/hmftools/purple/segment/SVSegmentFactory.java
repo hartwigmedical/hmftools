@@ -13,8 +13,7 @@ import org.jetbrains.annotations.NotNull;
 
 final class SVSegmentFactory
 {
-    @NotNull
-    public static List<SVSegment> create(@NotNull final List<StructuralVariant> variants)
+    public static List<SVSegment> create(final List<StructuralVariant> variants)
     {
         final List<SVSegment> positions = Lists.newArrayList();
         for(StructuralVariant variant : variants)
@@ -32,7 +31,7 @@ final class SVSegmentFactory
     }
 
     @NotNull
-    private static SVSegment create(@NotNull final StructuralVariantType type, @NotNull final StructuralVariantLeg leg)
+    private static SVSegment create(final StructuralVariantType type, final StructuralVariantLeg leg)
     {
         return ImmutableSVSegment.builder().chromosome(leg.chromosome()).position(leg.cnaPosition()).type(type).build();
     }

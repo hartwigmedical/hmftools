@@ -49,7 +49,7 @@ public class SampleData
 
         final VariantHotspotEnrichment hotspotEnrichment = new VariantHotspotEnrichment(referenceData.SomaticHotspots, null);
 
-        PPL_LOGGER.info("Loading somatic variants from {}", somaticVcf);
+        PPL_LOGGER.info("loading somatic variants from {}", somaticVcf);
 
         try (VCFFileReader vcfReader = new VCFFileReader(new File(somaticVcf), false))
         {

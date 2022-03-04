@@ -20,7 +20,7 @@ import com.hartwig.hmftools.common.sv.StructuralVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-class ClusterFactory
+public class ClusterFactory
 {
     private final int mWindowSize;
     private final Window mWindow;
@@ -31,17 +31,15 @@ class ClusterFactory
         mWindow = new Window(windowSize);
     }
 
-    @NotNull
-    public ListMultimap<Chromosome, Cluster> cluster(@NotNull final List<StructuralVariant> variants,
-            @NotNull final Multimap<Chromosome, PCFPosition> pcfPositions, @NotNull ListMultimap<Chromosome, CobaltRatio> ratios)
+    public ListMultimap<Chromosome, Cluster> cluster(final List<StructuralVariant> variants,
+            final Multimap<Chromosome, PCFPosition> pcfPositions, ListMultimap<Chromosome, CobaltRatio> ratios)
     {
         final Multimap<Chromosome, SVSegment> positions = Multimaps.fromPositions(SVSegmentFactory.create(variants));
         return cluster(positions, pcfPositions, ratios);
     }
 
-    @NotNull
-    private ListMultimap<Chromosome, Cluster> cluster(@NotNull final Multimap<Chromosome, SVSegment> variantPositions,
-            @NotNull final Multimap<Chromosome, PCFPosition> pcfPositions, @NotNull final ListMultimap<Chromosome, CobaltRatio> ratios)
+    private ListMultimap<Chromosome, Cluster> cluster(final Multimap<Chromosome, SVSegment> variantPositions,
+            final Multimap<Chromosome, PCFPosition> pcfPositions, final ListMultimap<Chromosome, CobaltRatio> ratios)
     {
         ListMultimap<Chromosome, Cluster> clusters = ArrayListMultimap.create();
         for(Chromosome chromosome : pcfPositions.keySet())
@@ -56,10 +54,9 @@ class ClusterFactory
         return clusters;
     }
 
-    @NotNull
     @VisibleForTesting
-    List<Cluster> cluster(@NotNull final Collection<SVSegment> variantPositions,
-            @NotNull final Collection<PCFPosition> pcfPositions, @NotNull final List<CobaltRatio> cobaltRatios)
+    List<Cluster> cluster(final Collection<SVSegment> variantPositions,
+            final Collection<PCFPosition> pcfPositions, final List<CobaltRatio> cobaltRatios)
     {
         final List<GenomePosition> allPositions = Lists.newArrayList();
         allPositions.addAll(variantPositions);
@@ -115,7 +112,7 @@ class ClusterFactory
     }
 
     @VisibleForTesting
-    int earliestDetectableCopyNumberChangePosition(int position, int index, @NotNull final List<CobaltRatio> ratios)
+    int earliestDetectableCopyNumberChangePosition(int position, int index, final List<CobaltRatio> ratios)
     {
         assert (index <= ratios.size());
         final int min = mWindow.start(position) - mWindowSize + 1;

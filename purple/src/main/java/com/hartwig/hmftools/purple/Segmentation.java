@@ -30,12 +30,12 @@ class Segmentation
     private final ReferenceData mReferenceData;
     private final int mWindowSize;
 
-    public Segmentation(@NotNull final PurpleConfig config, final ReferenceData referenceData) throws IOException
+    public Segmentation(final ReferenceData referenceData) throws IOException
     {
         mReferenceData = referenceData;
         mWindowSize = WINDOW_SIZE;
 
-        PPL_LOGGER.info("Reading GC Profiles from {}", referenceData.GcProfileFilename);
+        PPL_LOGGER.info("reading GC Profiles from {}", referenceData.GcProfileFilename);
         mGcProfiles = GCProfileFactory.loadGCContent(mWindowSize, referenceData.GcProfileFilename);
     }
 
