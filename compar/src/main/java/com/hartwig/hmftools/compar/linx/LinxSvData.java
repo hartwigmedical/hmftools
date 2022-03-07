@@ -3,22 +3,20 @@ package com.hartwig.hmftools.compar.linx;
 import static com.hartwig.hmftools.compar.Category.LINX_DATA;
 import static com.hartwig.hmftools.compar.CommonUtils.ITEM_DELIM;
 import static com.hartwig.hmftools.compar.CommonUtils.checkDiff;
-import static com.hartwig.hmftools.compar.CommonUtils.diffValue;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.linx.LinxCluster;
 import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
-import com.hartwig.hmftools.common.sv.linx.LinxViralInsertion;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.MatchLevel;
-
-import org.apache.commons.compress.utils.Lists;
+import com.hartwig.hmftools.compar.Mismatch;
 
 public class LinxSvData implements ComparableItem
 {
@@ -36,6 +34,24 @@ public class LinxSvData implements ComparableItem
 
     @Override
     public Category category() { return LINX_DATA; }
+
+    @Override
+    public String key()
+    {
+        return String.format("%d_%s %s_%d - %s_%d",
+                SvData.id(), SvData.type(), SvData.startChromosome(), SvData.startPosition(), SvData.endChromosome(), SvData.endPosition());
+    }
+
+    @Override
+    public List<String> displayValues()
+    {
+        List<String> values = Lists.newArrayList();
+//        values.add(String.format("Qual(%.0f)", Variant.qual()));
+//        values.add(String.format("Tier(%s)", Variant.tier().toString()));
+//        values.add(String.format("TotalReadCount(%d)", Variant.totalReadCount()));
+//        values.add(String.format("AlleleReadCount(%d)", Variant.alleleReadCount()));
+        return values;
+    }
 
     @Override
     public boolean reportable() { return false; }
@@ -58,6 +74,12 @@ public class LinxSvData implements ComparableItem
             return false;
 
         return true;
+    }
+
+    @Override
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel)
+    {
+        return null;
     }
 
     @Override
@@ -100,14 +122,4 @@ public class LinxSvData implements ComparableItem
 
         return !geneNames1.stream().noneMatch(x -> geneNames2.contains(x));
     }
-
-    @Override
-    public String description()
-    {
-        return String.format("%d_%s %s_%d - %s_%d",
-                SvData.id(), SvData.type(), SvData.startChromosome(), SvData.startPosition(), SvData.endChromosome(), SvData.endPosition());
-    }
-
-    @Override
-    public String gene() { return ""; }
 }

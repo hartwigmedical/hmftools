@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 

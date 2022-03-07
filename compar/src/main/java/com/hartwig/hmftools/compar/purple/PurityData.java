@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.MatchLevel;
+import com.hartwig.hmftools.compar.Mismatch;
 
 public class PurityData implements ComparableItem
 {
@@ -25,6 +26,22 @@ public class PurityData implements ComparableItem
     }
 
     @Override
+    public String key()
+    {
+        return "";
+    }
+
+    @Override
+    public List<String> displayValues()
+    {
+        List<String> values = Lists.newArrayList();
+        values.add(String.format("Pass(%s)", Purity.qc().pass()));
+        values.add(String.format("Purity(%.2f)", Purity.bestFit().purity()));
+        values.add(String.format("Ploidy(%.2f)", Purity.bestFit().ploidy()));
+        return values;
+    }
+
+    @Override
     public boolean reportable() {
         return true;
     }
@@ -34,6 +51,12 @@ public class PurityData implements ComparableItem
     {
         // a single record for each sample
         return true;
+    }
+
+    @Override
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel)
+    {
+        return null;
     }
 
     @Override
@@ -54,15 +77,4 @@ public class PurityData implements ComparableItem
 
         return diffs;
     }
-
-    @Override
-    public String description()
-    {
-        return String.format("%s_%.2f_%.2f",
-                Purity.qc().pass(), Purity.bestFit().purity(), Purity.bestFit().ploidy());
-    }
-
-    @Override
-    public String gene() { return ""; }
-
 }

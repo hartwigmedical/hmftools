@@ -12,7 +12,9 @@ public interface ComparableItem
 
     List<String> findDifferences(final ComparableItem other, final MatchLevel matchLevel);
 
-    String description();
+    Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel);
 
-    String gene();
+    String key();
+
+    List<String> displayValues();
 }

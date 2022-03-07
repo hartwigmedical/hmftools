@@ -6,12 +6,12 @@ import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.MatchLevel;
-
-import org.apache.commons.compress.utils.Lists;
+import com.hartwig.hmftools.compar.Mismatch;
 
 public class FusionData implements ComparableItem
 {
@@ -28,6 +28,23 @@ public class FusionData implements ComparableItem
     public Category category() { return FUSION; }
 
     @Override
+    public String key()
+    {
+        return String.format("%s_%s", Fusion.name(), Fusion.reportedType());
+    }
+
+    @Override
+    public List<String> displayValues()
+    {
+        List<String> values = Lists.newArrayList();
+//        values.add(String.format("Qual(%.0f)", Variant.qual()));
+//        values.add(String.format("Tier(%s)", Variant.tier().toString()));
+//        values.add(String.format("TotalReadCount(%d)", Variant.totalReadCount()));
+//        values.add(String.format("AlleleReadCount(%d)", Variant.alleleReadCount()));
+        return values;
+    }
+
+    @Override
     public boolean reportable() { return Fusion.reported(); }
 
     @Override
@@ -36,6 +53,12 @@ public class FusionData implements ComparableItem
         final FusionData otherFusion = (FusionData)other;
 
         return otherFusion.GeneMappedName.equals(GeneMappedName);
+    }
+
+    @Override
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel)
+    {
+        return null;
     }
 
     @Override
@@ -69,13 +92,4 @@ public class FusionData implements ComparableItem
 
         return diffs;
     }
-
-    public String description()
-    {
-        return String.format("%s_%s", Fusion.name(), Fusion.reportedType());
-    }
-
-    @Override
-    public String gene() { return GeneMappedName; }
-
 }

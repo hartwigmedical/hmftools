@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;

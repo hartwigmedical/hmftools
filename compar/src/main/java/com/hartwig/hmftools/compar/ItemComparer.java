@@ -14,5 +14,4 @@ public interface ItemComparer
 
     List<ComparableItem> loadFromFile(final String sampleId, final FileSources fileSources);
 
-
 }

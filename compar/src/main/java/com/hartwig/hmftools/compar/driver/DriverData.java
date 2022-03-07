@@ -8,14 +8,14 @@ import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 import java.util.List;
 import java.util.StringJoiner;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.sv.linx.LinxDriver;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.MatchLevel;
-
-import org.apache.commons.compress.utils.Lists;
+import com.hartwig.hmftools.compar.Mismatch;
 
 public class DriverData implements ComparableItem
 {
@@ -32,6 +32,19 @@ public class DriverData implements ComparableItem
 
     @Override
     public Category category() { return DRIVER; }
+
+    @Override
+    public String key()
+    {
+        return String.format("%s_%s_%s", DriverCatalog.driver(), DriverCatalog.gene(), DriverCatalog.likelihoodMethod());
+    }
+
+    @Override
+    public List<String> displayValues()
+    {
+        List<String> values = Lists.newArrayList();
+        return values;
+    }
 
     @Override
     public boolean reportable() { return true; }
@@ -61,6 +74,12 @@ public class DriverData implements ComparableItem
 
 
         return true;
+    }
+
+    @Override
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel)
+    {
+        return null;
     }
 
     @Override
@@ -109,14 +128,5 @@ public class DriverData implements ComparableItem
 
         return diffs;
     }
-
-    @Override
-    public String description()
-    {
-        return String.format("%s_%s_%s", DriverCatalog.driver(), DriverCatalog.gene(), DriverCatalog.likelihoodMethod());
-    }
-
-    @Override
-    public String gene() { return MappedGeneName; }
 
 }

@@ -1,50 +1,61 @@
 package com.hartwig.hmftools.compar;
 
 import static com.hartwig.hmftools.compar.CommonUtils.DATA_DELIM;
+import static com.hartwig.hmftools.compar.CommonUtils.diffsStr;
 
+import java.util.List;
 import java.util.StringJoiner;
 
 public class Mismatch
 {
-    public final Category Category;
+    public final ComparableItem RefItem;
+    public final ComparableItem OtherItem;
     public final MismatchType MismatchType;
-    public final boolean Reportable;
-    public final String RefSource;
-    public final String OtherSource;
-    public final String ItemName;
-    public final String Gene; // if applicable
-    public final String DiffValue;
+    public final List<String> DiffValues; // list of the form: field(refValue/otherValue)
 
     public Mismatch(
-            final Category category, final MismatchType mismatchType, final String refSource, final String otherSource,
-            final boolean reportable, final String itemName, final String gene, final String diffValue)
+            final ComparableItem refItem, final ComparableItem otherItem, final MismatchType mismatchType,
+            final List<String> diffValues)
     {
-        Category = category;
+        RefItem = refItem;
+        OtherItem = otherItem;
         MismatchType = mismatchType;
-        Reportable = reportable;
-        RefSource = refSource;
-        OtherSource = otherSource;
-        ItemName = itemName;
-        Gene = gene;
-        DiffValue = diffValue;
+        DiffValues = diffValues;
     }
 
     public static String header()
     {
-        return "Category,MismatchType,Reportable,RefSource,OtherSource,Item,Gene,Diff";
+        return "Category,MismatchType,Key,RefValues,OtherValues,Differences";
     }
 
     public String toCsv()
     {
         StringJoiner sj = new StringJoiner(DATA_DELIM);
-        sj.add(Category.toString());
+
+        if(RefItem != null)
+            sj.add(RefItem.category().toString());
+        else
+            sj.add(OtherItem.category().toString());
+
         sj.add(MismatchType.toString());
-        sj.add(String.valueOf(Reportable));
-        sj.add(RefSource);
-        sj.add(OtherSource);
-        sj.add(ItemName);
-        sj.add(Gene);
-        sj.add(DiffValue);
+
+        if(RefItem != null)
+            sj.add(RefItem.key());
+        else
+            sj.add(OtherItem.key());
+
+        if(RefItem != null)
+            sj.add(diffsStr(RefItem.displayValues()));
+        else
+            sj.add("");
+
+        if(OtherItem != null)
+            sj.add(diffsStr(OtherItem.displayValues()));
+        else
+            sj.add("");
+
+        sj.add(diffsStr(DiffValues));
+
         return sj.toString();
     }
 }

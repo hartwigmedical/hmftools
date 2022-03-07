@@ -6,12 +6,12 @@ import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.MatchLevel;
-
-import org.apache.commons.compress.utils.Lists;
+import com.hartwig.hmftools.compar.Mismatch;
 
 public class DisruptionData implements ComparableItem
 {
@@ -29,6 +29,24 @@ public class DisruptionData implements ComparableItem
 
     @Override
     public Category category() { return DISRUPTION; }
+
+    @Override
+    public String key()
+    {
+        return String.format("%s_%s_%d", MappedGeneName, reportable(), mBreakends.size());
+        // return String.format("%d_%s_%s", Breakend.svId(), Breakend.isStart(), Breakend.gene());
+    }
+
+    @Override
+    public List<String> displayValues()
+    {
+        List<String> values = Lists.newArrayList();
+//        values.add(String.format("Qual(%.0f)", Variant.qual()));
+//        values.add(String.format("Tier(%s)", Variant.tier().toString()));
+//        values.add(String.format("TotalReadCount(%d)", Variant.totalReadCount()));
+//        values.add(String.format("AlleleReadCount(%d)", Variant.alleleReadCount()));
+        return values;
+    }
 
     @Override
     public boolean reportable() { return mBreakends.stream().anyMatch(x -> x.reportedDisruption()); }
@@ -64,6 +82,12 @@ public class DisruptionData implements ComparableItem
     }
 
     @Override
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel)
+    {
+        return null;
+    }
+
+    @Override
     public List<String> findDifferences(final ComparableItem other, final MatchLevel matchLevel)
     {
         final DisruptionData otherBreakend = (DisruptionData)other;
@@ -78,15 +102,4 @@ public class DisruptionData implements ComparableItem
 
         return diffs;
     }
-
-    @Override
-    public String description()
-    {
-        return String.format("%s_%s_%d", MappedGeneName, reportable(), mBreakends.size());
-        // return String.format("%d_%s_%s", Breakend.svId(), Breakend.isStart(), Breakend.gene());
-    }
-
-    @Override
-    public String gene() { return MappedGeneName; }
-
 }

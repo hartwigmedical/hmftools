@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.compar.MismatchType.PRESENCE;
 import static com.hartwig.hmftools.compar.MismatchType.VALUE;
 
 import java.util.List;
+import java.util.Set;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
@@ -183,17 +184,23 @@ public class CommonUtils
 
                     if(matchLevel != REPORTABLE || eitherReportable)
                     {
-                        final List<String> diffs = item1.findDifferences(item2, matchLevel);
+                        // final List<String> diffs = item1.findDifferences(item2, matchLevel);
+                        Mismatch mismatch = item1.findMismatch(item2, matchLevel);
 
+                        if(mismatch != null)
+                            mismatches.add(mismatch);
+
+                        /*
                         if(!diffs.isEmpty())
                         {
                             StringJoiner differencesStr = new StringJoiner(ITEM_DELIM);
                             diffs.forEach(x -> differencesStr.add(x));
 
-                            mismatches.add(new Mismatch(
+                            mismatches.add(new MismatchOld(
                                     item1.category(), VALUE, source1, source2, eitherReportable,
-                                    item1.description(), item1.gene(), differencesStr.toString()));
+                                    item1.displayValues(), item1.gene(), differencesStr.toString()));
                         }
+                        */
                     }
 
                     break;
@@ -208,13 +215,30 @@ public class CommonUtils
                 ++index1;
         }
 
+        if(items1.isEmpty() && items2.isEmpty())
+            return;
+
+        List<String> emptyDiffs = Lists.newArrayList();
+
         items1.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
-                .forEach(x -> mismatches.add(new Mismatch(x.category(), PRESENCE, source1, source2,
-                        x.reportable(), x.description(), x.gene(), "")));
+                .forEach(x -> mismatches.add(new Mismatch(x, null, PRESENCE, emptyDiffs)));
 
         items2.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
-                .forEach(x -> mismatches.add(new Mismatch(x.category(), PRESENCE, source2, source1,
-                        x.reportable(), x.description(),  x.gene(),"")));
+                .forEach(x -> mismatches.add(new Mismatch(x, null, PRESENCE, emptyDiffs)));
+    }
+
+    public static String filtersStr(final Set<String> filters)
+    {
+        StringJoiner sj = new StringJoiner(ITEM_DELIM);
+        filters.forEach(x -> sj.add(x));
+        return sj.toString();
+    }
+
+    public static String diffsStr(final List<String> diffs)
+    {
+        StringJoiner sj = new StringJoiner(ITEM_DELIM);
+        diffs.forEach(x -> sj.add(x));
+        return sj.toString();
     }
 
 }

@@ -23,6 +23,7 @@ import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
+import com.hartwig.hmftools.compar.MatchLevel;
 import com.hartwig.hmftools.compar.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.SomaticVariantDAO;
@@ -62,7 +63,7 @@ public class SomaticVariantComparer implements ItemComparer
                 .from(SOMATICVARIANT)
                 .where(SOMATICVARIANT.FILTER.eq(PASS_FILTER))
                 .and(SOMATICVARIANT.SAMPLEID.eq(sampleId))
-                .and(SOMATICVARIANT.GENE.isNotNull())
+                // .and(SOMATICVARIANT.GENE.isNotNull())
                 .and(SOMATICVARIANT.CANONICALCODINGEFFECT.in(NONSENSE_OR_FRAMESHIFT.toString(), SPLICE.toString(), MISSENSE.toString()))
                 .fetch();
 
@@ -88,6 +89,8 @@ public class SomaticVariantComparer implements ItemComparer
 
         String vcfFile = fileSources.Purple + sampleId + PURPLE_SOMATIC_VCF_SUFFIX;
 
+        boolean reportedOnly = mConfig.Categories.get(SOMATIC_VARIANT) == MatchLevel.REPORTABLE;
+
         try
         {
             final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false);
@@ -98,18 +101,7 @@ public class SomaticVariantComparer implements ItemComparer
                 {
                     final SomaticVariant somaticVariant = variantFactory.createVariant(sampleId, variant).orElse(null);
 
-                    if(somaticVariant == null)
-                        continue;
-
-                    if(somaticVariant.isFiltered())
-                        continue;
-
-                    if(somaticVariant.gene().isEmpty())
-                        continue;
-
-                    if(somaticVariant.canonicalCodingEffect() != NONSENSE_OR_FRAMESHIFT
-                    && somaticVariant.canonicalCodingEffect() != SPLICE
-                    && somaticVariant.canonicalCodingEffect() != MISSENSE)
+                    if(reportedOnly && !somaticVariant.reported())
                         continue;
 
                     comparableItems.add(new SomaticVariantData(somaticVariant));
