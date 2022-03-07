@@ -6,14 +6,9 @@ import static com.hartwig.hmftools.pave.PaveConstants.ITEM_DELIM;
 import static com.hartwig.hmftools.pave.VcfWriter.PON_FILTER;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.List;
 import java.util.Map;
-import java.util.zip.GZIPInputStream;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -28,6 +23,7 @@ public class PonAnnotation
     private BufferedReader mFileReader;
     private String mCurrentChromosome;
     private int mColumnCount;
+    private boolean mHasValidData;
 
     private final Map<VariantTier,PonFilters> mPonFilters;
 
@@ -39,6 +35,7 @@ public class PonAnnotation
         mFileReader = null;
         mCurrentChromosome = "";
         mColumnCount = -1;
+        mHasValidData = false;
 
         if(filename != null && !filename.isEmpty())
         {
@@ -48,7 +45,9 @@ public class PonAnnotation
         mPonFilters = Maps.newHashMap();
     }
 
-    public boolean hasData() { return mPonFilename != null; }
+    public boolean hasValidData() { return mHasValidData; }
+
+    public boolean isEnabled() { return mPonFilename != null; }
 
     public boolean loadFilters(final String filtersConfig)
     {
@@ -71,6 +70,7 @@ public class PonAnnotation
         catch(Exception e)
         {
             PV_LOGGER.error("invalid PON filters(): {}", filtersConfig, e.toString());
+            mHasValidData = false;
             return false;
         }
 
@@ -132,7 +132,7 @@ public class PonAnnotation
 
             if(mColumnCount < 4)
             {
-                PV_LOGGER.error("pon file({}) has insufficient columns", filename);
+                PV_LOGGER.error("pon file({}) has insufficient column count({})", filename, mColumnCount);
                 mFileReader = null;
             }
 
@@ -141,10 +141,13 @@ public class PonAnnotation
                 // load the full file
                 loadPonEntries();
             }
+
+            mHasValidData = true;
         }
         catch(IOException e)
         {
             PV_LOGGER.error("failed to load PON file({}): {}", filename, e.toString());
+            mHasValidData = false;
         }
     }
 
@@ -243,6 +246,7 @@ public class PonAnnotation
         catch(IOException e)
         {
             PV_LOGGER.error("failed to load PON file: {}", e.toString());
+            mHasValidData = false;
             return;
         }
     }

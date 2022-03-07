@@ -19,7 +19,6 @@ import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 import static com.hartwig.hmftools.pave.PaveUtils.createRightAlignedVariant;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.pave.VcfWriter.PON_ARTEFACT_FILTER;
-import static com.hartwig.hmftools.pave.VcfWriter.PON_GNOMAD_FILTER;
 import static com.hartwig.hmftools.pave.compare.ComparisonUtils.effectsMatch;
 import static com.hartwig.hmftools.pave.compare.ComparisonUtils.ignoreSnpEffAnnotation;
 
@@ -114,6 +113,12 @@ public class PaveApplication
         if(!mGeneDataCache.loadCache(mConfig.OnlyCanonical, false))
         {
             PV_LOGGER.error("Ensembl data cache loading failed, exiting");
+            System.exit(1);
+        }
+
+        if((mPon.isEnabled() && !mPon.hasValidData()) || (mPonArtefacts.isEnabled() && !mPonArtefacts.hasValidData()))
+        {
+            PV_LOGGER.error("invalid PON files, exiting");
             System.exit(1);
         }
 
@@ -314,7 +319,7 @@ public class PaveApplication
         PV_LOGGER.info("writing VCF file({})", outputVcfFilename);
 
         mVcfWriter = new VcfWriter(outputVcfFilename, mConfig.VcfFile);
-        mVcfWriter.writeHeader(version.version(), mGnomadAnnotation.hasData(), mPon.hasData());
+        mVcfWriter.writeHeader(version.version(), mGnomadAnnotation.hasData(), mPon.isEnabled());
     }
 
     private void initialiseTranscriptWriter()
