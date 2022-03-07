@@ -26,6 +26,8 @@ public final class HospitalChecker {
         Set<String> keyACTIN = hospitalModel.hospitalPersonsACTIN().keySet();
         Set<String> keyGLOW = hospitalModel.hospitalPersonsGLOW().keySet();
         Set<String> keyOPTIC = hospitalModel.hospitalPersonsOPTIC().keySet();
+        Set<String> keySHERPA = hospitalModel.hospitalPersonsSHERPA().keySet();
+        Set<String> keyGENAYA = hospitalModel.hospitalPersonsGENAYA().keySet();
         Set<String> keySampleMapping = Sets.newHashSet(hospitalModel.sampleToHospitalMapping().values());
 
         boolean allCorrect = true;
@@ -67,14 +69,28 @@ public final class HospitalChecker {
         for (String GLOW : keyGLOW) {
             if (!hospitalIdsInAddressList.contains(GLOW)) {
                 allCorrect = false;
-                LOGGER.warn("ACTIN hospital ID is not present in hospital address list: '{}'", GLOW);
+                LOGGER.warn("GLOW hospital ID is not present in hospital address list: '{}'", GLOW);
             }
         }
 
         for (String OPTIC : keyOPTIC) {
             if (!hospitalIdsInAddressList.contains(OPTIC)) {
                 allCorrect = false;
-                LOGGER.warn("ACTIN hospital ID is not present in hospital address list: '{}'", OPTIC);
+                LOGGER.warn("OPTIC hospital ID is not present in hospital address list: '{}'", OPTIC);
+            }
+        }
+
+        for (String SHERPA : keySHERPA) {
+            if (!hospitalIdsInAddressList.contains(SHERPA)) {
+                allCorrect = false;
+                LOGGER.warn("SHERPA hospital ID is not present in hospital address list: '{}'", SHERPA);
+            }
+        }
+
+        for (String GENAYA : keyGENAYA) {
+            if (!hospitalIdsInAddressList.contains(GENAYA)) {
+                allCorrect = false;
+                LOGGER.warn("GENAYA hospital ID is not present in hospital address list: '{}'", GENAYA);
             }
         }
 
