@@ -45,7 +45,7 @@ public class ActionableHLAFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(FIELD_DELIMITER).add("HLATypering").add(ActionableFileFunctions.header()).toString();
+        return new StringJoiner(FIELD_DELIMITER).add("HLAType").add(ActionableFileFunctions.header()).toString();
     }
 
     @NotNull
@@ -64,7 +64,7 @@ public class ActionableHLAFile {
 
         return ImmutableActionableHLA.builder()
                 .from(ActionableFileFunctions.fromLine(values, 1))
-                .hlaTypering(values[0])
+                .hlaType(values[0])
                 .build();
     }
 
@@ -88,7 +88,7 @@ public class ActionableHLAFile {
 
     @NotNull
     private static String toLine(@NotNull ActionableHLA hla) {
-        return new StringJoiner(FIELD_DELIMITER).add(hla.hlaTypering())
+        return new StringJoiner(FIELD_DELIMITER).add(hla.hlaType())
                 .add(ActionableFileFunctions.toLine(hla))
                 .toString();
     }

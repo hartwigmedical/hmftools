@@ -14,7 +14,7 @@ class ActionableHLAComparator implements Comparator<ActionableHLA> {
 
     @Override
     public int compare(@NotNull ActionableHLA hla1, @NotNull ActionableHLA hla2) {
-        int hlaCompare = hla1.hlaTypering().compareTo(hla2.hlaTypering());
+        int hlaCompare = hla1.hlaType().compareTo(hla2.hlaType());
         if (hlaCompare != 0) {
             return hlaCompare;
         }

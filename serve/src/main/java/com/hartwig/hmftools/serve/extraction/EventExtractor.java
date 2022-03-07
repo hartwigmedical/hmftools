@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.serve.extraction;
 
 import com.hartwig.hmftools.common.serve.classification.EventType;
-import com.hartwig.hmftools.serve.extraction.catalog.DealWithDriverInconsistentModeAnnotation;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicExtractor;
 import com.hartwig.hmftools.serve.extraction.codon.CodonExtractor;
 import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberExtractor;
@@ -49,7 +48,7 @@ public class EventExtractor {
 
     @NotNull
     public EventExtractorOutput extract(@NotNull String gene, @Nullable String transcriptId, @NotNull EventType type,
-            @NotNull String event, @NotNull String cutOff) {
+            @NotNull String event, @NotNull String cutoff) {
         return ImmutableEventExtractorOutput.builder()
                 .hotspots(hotspotExtractor.extract(gene, transcriptId, type, event))
                 .codons(codonExtractor.extract(gene, transcriptId, type, event))
@@ -57,7 +56,7 @@ public class EventExtractor {
                 .geneLevelEvent(geneLevelExtractor.extract(gene, type, event))
                 .knownCopyNumber(copyNumberExtractor.extract(gene, type))
                 .knownFusionPair(fusionExtractor.extract(gene, type, event))
-                .characteristic(tumorCharacteristicExtractor.extract(type, event, cutOff))
+                .characteristic(tumorCharacteristicExtractor.extract(type, event, cutoff))
                 .hla(immunoHLAExtractor.extract(type, event))
                 .build();
     }

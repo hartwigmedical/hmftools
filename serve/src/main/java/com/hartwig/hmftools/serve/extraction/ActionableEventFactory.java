@@ -139,18 +139,14 @@ public final class ActionableEventFactory {
             @NotNull TumorCharacteristic characteristic) {
         return ImmutableActionableCharacteristic.builder()
                 .from(actionableEvent)
-                .name(characteristic.tumorCharacteristicAnnotation())
-                .atLeast(characteristic.atLeast())
-                .cutOff(characteristic.cutOff())
+                .name(characteristic.annotation())
+                .comparator(characteristic.comparator())
+                .cutoff(characteristic.cutoff())
                 .build();
     }
 
     @NotNull
-    public static ActionableHLA toActionableHLa(@NotNull ActionableEvent actionableEvent,
-            @NotNull ImmunoHLA hla) {
-        return ImmutableActionableHLA.builder()
-                .from(actionableEvent)
-                .hlaTypering(hla.immunoHLA())
-                .build();
+    public static ActionableHLA toActionableHLa(@NotNull ActionableEvent actionableEvent, @NotNull ImmunoHLA hla) {
+        return ImmutableActionableHLA.builder().from(actionableEvent).hlaType(hla.immunoHLA()).build();
     }
 }

@@ -1,2 +1,2 @@
-name	atLeast	cutOff	rawInput	source	treatment	cancerType	doid	tumorLocationBlacklisting	level	direction	urlSource	urls
-MICROSATELLITE_UNSTABLE	EQUALS_GREATHER	4	msi	HARTWIG_CURATED	drug	all	162		B	RESPONSIVE
+name	comparator	cutoff	rawInput	source	treatment	cancerType	doid	tumorLocationBlacklisting	level	direction	urlSource	urls
+MICROSATELLITE_UNSTABLE	EQUAL_OR_GREATER	4	msi	HARTWIG_CURATED	drug	all	162		B	RESPONSIVE
