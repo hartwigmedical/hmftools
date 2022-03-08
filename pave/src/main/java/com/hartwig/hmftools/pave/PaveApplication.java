@@ -221,6 +221,9 @@ public class PaveApplication
 
         ponAnnotateAndFilter(variant);
 
+        if(mConfig.FilterPass && !variant.filters().isEmpty())
+            return;
+
         mVcfWriter.writeVariant(variant.context(), variant, variantImpact);
 
         if(!mConfig.WriteTranscriptCsv)
