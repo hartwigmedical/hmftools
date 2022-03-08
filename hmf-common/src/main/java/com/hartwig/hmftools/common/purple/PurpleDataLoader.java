@@ -61,25 +61,7 @@ public final class PurpleDataLoader {
                 germlineVariantVcf,
                 purpleGeneCopyNumberTsv,
                 null,
-                null);
-    }
-
-    @NotNull
-    public static PurpleData load(@NotNull String tumorSample, @Nullable String referenceSample, @NotNull String qcFile,
-            @NotNull String purityTsv, @NotNull String somaticDriverCatalogTsv, @NotNull String somaticVariantVcf,
-            @NotNull String germlineDriverCatalogTsv, @NotNull String germlineVariantVcf, @Nullable String purpleGeneCopyNumberTsv,
-            @Nullable String purpleSomaticCopynumberTsv, @Nullable RefGenomeVersion refGenomeVersion) throws IOException {
-        return load(tumorSample,
-                referenceSample,
-                qcFile,
-                purityTsv,
-                somaticDriverCatalogTsv,
-                somaticVariantVcf,
-                germlineDriverCatalogTsv,
-                germlineVariantVcf,
-                purpleGeneCopyNumberTsv,
-                purpleSomaticCopynumberTsv,
-                refGenomeVersion,
+                null,
                 null,
                 null);
     }
@@ -127,8 +109,11 @@ public final class PurpleDataLoader {
             List<DriverCatalog> germlineDriverCatalog = DriverCatalogFile.read(germlineDriverCatalogTsv);
             LOGGER.info(" Loaded {} germline driver catalog entries from {}", germlineDriverCatalog.size(), germlineDriverCatalogTsv);
 
-            List<SomaticVariant> germlineVariants =
-                    new SomaticVariantFactory().fromVCFFile(tumorSample, referenceSample, alternativeTumorSampleId, alternativeReferenceSampleId, germlineVariantVcf);
+            List<SomaticVariant> germlineVariants = new SomaticVariantFactory().fromVCFFile(tumorSample,
+                    referenceSample,
+                    alternativeTumorSampleId,
+                    alternativeReferenceSampleId,
+                    germlineVariantVcf);
             reportableGermlineVariants = ReportableVariantFactory.toReportableGermlineVariants(germlineVariants, germlineDriverCatalog);
             LOGGER.info(" Loaded {} reportable germline variants from {}", reportableGermlineVariants.size(), germlineVariantVcf);
 
@@ -138,8 +123,8 @@ public final class PurpleDataLoader {
             LOGGER.info(" Skipped loading germline variants since no reference sample configured");
         }
 
-        List<SomaticVariant> somaticVariants =
-                SomaticVariantFactory.passOnlyInstance().fromVCFFile(tumorSample, referenceSample, alternativeTumorSampleId, alternativeReferenceSampleId, somaticVariantVcf);
+        List<SomaticVariant> somaticVariants = SomaticVariantFactory.passOnlyInstance()
+                .fromVCFFile(tumorSample, referenceSample, alternativeTumorSampleId, alternativeReferenceSampleId, somaticVariantVcf);
         List<ReportableVariant> reportableSomaticVariants =
                 ReportableVariantFactory.toReportableSomaticVariants(somaticVariants, somaticDriverCatalog);
         LOGGER.info(" Loaded {} reportable somatic variants from {}", reportableSomaticVariants.size(), somaticVariantVcf);
