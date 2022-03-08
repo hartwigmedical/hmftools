@@ -86,7 +86,7 @@ public final class HospitalModelFactory {
         Map<String, HospitalPersons> hospitalPersonsSHERPA =
                 readFromHospitalPersonsTsv(hospitalPersonsSHERPATsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP_ACTIN, "SHERPA");
         Map<String, HospitalPersons> hospitalPersonsGENAYA =
-                readFromHospitalPersonsTsv(hospitalPersonsGENAYATsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP_ACTIN, "GENAYA");
+                readFromHospitalPersonsTsv(hospitalPersonsGENAYATsv, HOSPITAL_PERSONS_FIELD_COUNT_COREDB, "GENAYA");
         Map<String, String> sampleHospitalMapping = readFromSampleToHospitalMappingTsv(sampleHospitalMappingTsv);
 
         HospitalModel hospitalModel = ImmutableHospitalModel.builder()
@@ -145,7 +145,9 @@ public final class HospitalModelFactory {
                 String requesterEmail = parts.length > 2 ? parts[HOSPITAL_PERSONS_REQUESTER_EMAIL_COLUMN] : null;
 
                 HospitalPersons hospitalPersons = ImmutableHospitalPersons.builder()
-                        .hospitalPI(cohort.startsWith("COREDB") ? requesterName : parts[HOSPITAL_PERSONS_PI_COLUMN])
+                        .hospitalPI(cohort.startsWith("COREDB") || cohort.startsWith("GENAYA")
+                                ? requesterName
+                                : parts[HOSPITAL_PERSONS_PI_COLUMN])
                         .requesterName(requesterName)
                         .requesterEmail(requesterEmail)
                         .build();
