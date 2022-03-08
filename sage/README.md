@@ -36,8 +36,8 @@ To install, download the latest compiled jar file from the [download links](#ver
 
 37 and 38 resources are available to download from [HMFTools-Resources > SAGE](https://resources.hartwigmedicalfoundation.nl/). 
 
-R is used to generate the base quality recalibration charts. Required packages include `ggplot2`,`tidyr` and `dplyr`. 
-R is not required if the charts are disable with the `-bqr_plot false` argument. 
+R is used to generate the base quality recalibration charts, which is done if the config 'write_bqr_plot' is included. Required packages include `ggplot2`,`tidyr` and `dplyr`. 
+
 
 # Usage
 
@@ -60,16 +60,17 @@ The cardinality of `tumor` must match `tumor_bam`. At least one tumor must be su
 ## Optional Arguments
 Argument | Default | Description 
 ---|---|---
-threads | 2 | Number of threads to use
 reference | NA | Comma separated names of the reference sample
 reference_bam | NA | Comma separated paths to indexed reference BAM file
-chr | NA | Limit sage to comma separated list of chromosomes
+resource_dir | None | Path to all resource files, in which case specify the file names only for ref_genome, hotspots, panel_bed and high_confidence_bed  
+threads | 2 | Number of threads to use
 max_read_depth | 1000 | Maximum number of reads to look for evidence of any `HIGH_CONFIDENCE` or `LOW_CONFIDENCE` variant. Reads in excess of this are ignored.  
 max_read_depth_panel | 100,000 | Maximum number of reads to look for evidence of any `HOTSPOT` or `PANEL` variant. Reads in excess of this are ignored.  
 max_realignment_depth | 1000 | Do not look for evidence of realigned variant if its read depth exceeds this value
 min_map_quality | 10 | Min mapping quality to apply to non-hotspot variants
 coverage_bed | NA | Write file with counts of depth of each base of the supplied bed file
 validation_stringency | STRICT | SAM validation strategy: STRICT, SILENT, LENIENT
+include_mt | NA | By default the mitochondrial DNA is not read but will be if this config is included
 
 The cardinality of `reference` must match `reference_bam`.
 
@@ -80,7 +81,9 @@ The following arguments control the [alt specific base quality recalibration](#1
 Argument | Default | Description 
 ---|---|---
 bqr_enabled | true | Enable base quality recalibration
-bqr_plot | true | Plot BQR charts
+write_bqr_data | NA | Write BQR calculations - for information purposes, or to re-use if Sage is run again with 'load_bqr_files'
+load_bqr_files | NA | Attempts to reload previously generated BQR files
+write_bqr_plot | NA | Generate base-quality recalibration plots (requires R)
 bqr_sample_size | 2,000,000 | Sample size of each autosome
 bqr_max_alt_count | 3 | Max support of variant before it is considered likely to be real and not a sequencing error
 bqr_min_map_qual | 10 | Min mapping quality of bam record
@@ -97,6 +100,18 @@ base_qual_fixed_penalty | 12 | Fixed penalty to apply to base quality
 map_qual_fixed_penalty | 15 | Fixed penalty to apply to map quality
 map_qual_improper_pair_penalty | 15 | Penalty to apply to map qual when SAM record does not have the ProperPair flag
 map_qual_read_events_penalty | 8 | Penalty to apply to map qual for additional events in read
+
+## Debug and logging Arguments
+
+
+Argument | Default | Description 
+---|---|---
+threads | 1 | Number of threads to use
+log_level | INFO | Also DEBUG and TRACE
+specific_chr | None | Limit sage to list of chromosomes, separated by ';'
+specific_regions | None | Limit sage to list of regions, separated by ';' in the form chromosome:positionStart:positionEnd
+perf_warn_time | None | Log a warning if any region (ie 100K partition by default) takes more than X seconds to complete  
+
 
 ## Example Usage
 
@@ -573,7 +588,6 @@ Similarly, the following EGFR inserts are equivalent:
 
 ## 9. Gene Panel Coverage
 To provide confidence that there is sufficient depth in the gene panel a count of depth of each base in the gene panel is calculated and written to file for each tumor sample. 
-This can be disabled by setting the `panel_coverage` parameter to `false`.
 
 The file shows the number of bases with 0 to 30 reads and then buckets reads in intervals of 10 up to 100+.
 
@@ -628,8 +642,8 @@ bcftools filter -e 'PON_COUNT!="." && INFO/TIER="PANEL" && PON_MAX>=5 && PON_COU
 bcftools filter -e 'PON_COUNT!="." && INFO/TIER!="HOTSPOT" && INFO/TIER!="PANEL" && PON_COUNT >= 2' -s PON -m+ -O z -o $pon_filtered_vcf
 ```
 
-## SnpEff
-SnpEff is run over the output and then summarised for each variant with a separate post processing application.
+## Pave for PON, Gnomad and Gene/Transcipt impact annotation
+Pave is run over the output and then summarised for each variant with a separate post processing application.
 
 # Performance Characteristics
 Performance numbers were taken from a 72 core machine using paired normal tumor COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. 
@@ -646,8 +660,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 32 | 45 | 943 | 15
 
 # Version History and Download Links
-- Upcoming
-  - Renamed `assembly` to `ref_genome_version` with valid values [37, 38]
+- [3.0](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.8)
 - [2.8](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.8)
   - Right align inserts that would otherwise be outside a coding region in the same manner as deletes
 - [2.7](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.7)

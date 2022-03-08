@@ -17,7 +17,6 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MNV;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_SLICE_SIZE;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_THREADS;
 import static com.hartwig.hmftools.sage.SageConstants.ITEM_DELIM;
 import static com.hartwig.hmftools.sage.SageConstants.SUB_ITEM_DELIM;
 
@@ -111,9 +110,6 @@ public class SageConfig
     private static final String MAX_READ_DEPTH_PANEL = "max_read_depth_panel";
     private static final String MAX_REALIGNMENT_DEPTH = "max_realignment_depth";
     private static final String REF_GENOME_VERSION = "ref_genome_version";
-    private static final String SPECIFIC_CHROMOSOMES = "specific_chr";
-    private static final String SPECIFIC_REGIONS = "specific_regions";
-    private static final String SPECIFIC_POSITIONS = "specific_positions";
     private static final String SLICE_SIZE = "slice_size";
     private static final String MNV = "mnv_enabled";
     private static final String READ_CONTEXT_FLANK_SIZE = "read_context_flank_size";
@@ -121,6 +117,9 @@ public class SageConfig
     private static final String VALIDATION_STRINGENCY = "validation_stringency";
     private static final String INCLUDE_MT = "include_mt";
 
+    private static final String SPECIFIC_CHROMOSOMES = "specific_chr";
+    private static final String SPECIFIC_REGIONS = "specific_regions";
+    private static final String SPECIFIC_POSITIONS = "specific_positions";
     private static final String LOG_LPS_DATA = "log_lps_data";
     private static final String PERF_WARN_TIME = "perf_warn_time";
 
@@ -238,7 +237,7 @@ public class SageConfig
 
         PerfWarnTime = Double.parseDouble(cmd.getOptionValue(PERF_WARN_TIME, "0"));
 
-        Threads = getConfigValue(cmd, THREADS, DEFAULT_THREADS);
+        Threads = getConfigValue(cmd, THREADS, 1);
     }
 
     private String getReferenceFile(final CommandLine cmd, final String config)
@@ -360,7 +359,7 @@ public class SageConfig
     public static Options commonOptions()
     {
         final Options options = new Options();
-        options.addOption(THREADS, true, "Number of threads [" + DEFAULT_THREADS + "]");
+        options.addOption(THREADS, true, "Number of threads [" + 1 + "]");
         options.addOption(REFERENCE, true, "Reference sample, or collection separated by ',");
         options.addOption(RESOURCE_DIR, true, "Resource files");
         options.addOption(SAMPLE_DATA_DIR, true, "Path to sample data files");
@@ -424,7 +423,7 @@ public class SageConfig
         CoverageBed = "coverage";
         OutputFile = "out.vcf";
         Version = "1.0";
-        Threads = DEFAULT_THREADS;
+        Threads = 1;
         LogLpsData = false;
         PerfWarnTime = 0;
         RefGenVersion = V37;

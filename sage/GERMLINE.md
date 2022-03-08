@@ -2,7 +2,7 @@
 
 SAGE can be configured to detect germline variants by switching the tumor and germline samples, and adjusting filtering parameters, panel definition and hotspot inputs.  
 
-A '-panel_coverage' option has also been added which when set, provides coverage statistics per gene in the PANEL file.   This can be used to estimate the likelihood of missing a genuine germline variant.
+If a 'coverage_bed' file is provided, then calculate and write coverage statistics per gene in the PANEL file. This can be used to estimate the likelihood of missing a genuine germline variant.
 
 The following sections describe how SAGE can be configured to detect pathogenic germline variants. 
 
@@ -45,6 +45,7 @@ To run SAGE in germline mode we use the following parameters:
 -hotspots /opt/resources/sage/37/KnownHotspots.germline.37.vcf.gz 
 -ref_genome_version 37 
 -ref_genome /opt/resources/reference_genome/37/Homo_sapiens.GRCh37.GATK.illumina.fasta
+-ensembl_data_dir /path_to_ensmebl_cache/ \
 -threads 8 
 -out /data/output/TUMOR_SAMPLE.sage.germline.vcf.gz 
 ``` 
@@ -61,7 +62,7 @@ These changes disable the germline filters (which is actually the tumor).
 - Annotate with clinvar
 - Annotate with blacklist bed file (brca locations)
 - Annotate with blacklist vcf file
-- Annotate with SnpEff
+- Annotate with Pave (see https://github.com/hartwigmedical/hmftools/tree/master/pave)
 
 
 ```
@@ -71,7 +72,6 @@ These changes disable the germline filters (which is actually the tumor).
 /opt/tools/bcftools/1.9/bcftools annotate -a /opt/resources/sage/37/clinvar.37.vcf.gz -c INFO/CLNSIG,INFO/CLNSIGCONF /data/output/tumor.mappability.annotated.vcf.gz -O z -o /data/output/tumor.clinvar.vcf.gz
 /opt/tools/bcftools/1.9/bcftools annotate -a /opt/resources/sage/37/KnownBlacklist.germline.37.bed.gz -m BLACKLIST_BED -c CHROM,FROM,TO /data/output/tumor.clinvar.vcf.gz -O z -o /data/output/tumor.blacklist.regions.vcf.gz
 /opt/tools/bcftools/1.9/bcftools annotate -a /opt/resources/sage/37/KnownBlacklist.germline.37.vcf.gz -m BLACKLIST_VCF /data/output/tumor.blacklist.regions.vcf.gz -O z -o /data/output/tumor.blacklist.variants.vcf.gz
-opt/tools/snpEff/4.3s/snpEff.sh /opt/tools/snpEff/4.3s/snpEff.jar /opt/resources/snpeff/snpEff.config GRCh37.75 /data/output/tumor.blacklist.variants.vcf.gz /data/output/tumor.sage.germline.filtered.vcf
 ```
 
 ## Known Issues

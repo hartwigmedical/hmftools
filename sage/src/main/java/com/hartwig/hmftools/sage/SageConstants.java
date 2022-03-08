@@ -4,7 +4,6 @@ import com.hartwig.hmftools.sage.filter.SoftFilterConfig;
 
 public class SageConstants
 {
-    public static final int DEFAULT_THREADS = 2;
     public static final int DEFAULT_MIN_MAP_QUALITY = 10;
     public static final int DEFAULT_MAX_READ_DEPTH = 1000;
     public static final int DEFAULT_MAX_READ_DEPTH_PANEL = 100_000;
