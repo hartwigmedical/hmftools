@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.sage.append;
 
 import static com.hartwig.hmftools.common.sage.SageMetaData.TIER;
-import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_DEPTH;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_EVENTS;
@@ -12,7 +11,6 @@ import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_REPEAT_COUNT
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_REPEAT_SEQUENCE;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_RIGHT_FLANK;
 
-import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;

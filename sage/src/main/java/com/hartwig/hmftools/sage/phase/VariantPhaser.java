@@ -33,14 +33,13 @@ public class VariantPhaser
     private final List<PhasedGroupCollection> mPhasedGroupCollections; // order by position of the lowest variant
     private int mNextGroupId;
 
-    private final List<PerformanceCounter> mPerfCounters;
+    private final PerformanceCounter mPerfCounter;
 
     private static final int INITIAL_MIN_READ_COUNT = 1;
     private static final int FINAL_MIN_READ_COUNT = 2;
     private static final double SUBSET_READ_COUNT_LIMIT = 0.25;
 
     public static final int PC_PHASE_READS = 0;
-    public static final int PC_FORM_LPS = 1;
 
     public VariantPhaser(final PhaseSetCounter phaseSetCounter)
     {
@@ -50,14 +49,12 @@ public class VariantPhaser
         mPhasedGroupCollections = Lists.newArrayList();
         mNextGroupId = 0;
 
-        mPerfCounters = Lists.newArrayList();
-        mPerfCounters.add(new PerformanceCounter("PhaseReads"));
-        // mPerfCounters.add(new PerformanceCounter("FormLPS"));
+        mPerfCounter = new PerformanceCounter("PhaseReads");
     }
 
     public List<PhasedGroupCollection> getPhasedCollections() { return mPhasedGroupCollections; }
     public int getPhasingGroupCount() { return mPhasedGroupCollections.stream().mapToInt(x -> x.groupCount()).sum(); }
-    public List<PerformanceCounter> getPerfCounters() { return mPerfCounters; }
+    public PerformanceCounter getPerfCounter() { return mPerfCounter; }
     public ChrBaseRegion region() { return mRegion; }
 
     public void clearAll()
@@ -72,8 +69,8 @@ public class VariantPhaser
         mPhasedGroupCollections.clear();
         mNextGroupId = 0;
 
-        mPerfCounters.get(PC_PHASE_READS).start();
-        mPerfCounters.get(PC_PHASE_READS).pause();
+        mPerfCounter.start();
+        mPerfCounter.pause();
     }
 
     public void registeredPhasedVariants(final List<ReadContextCounter> posCounters, final List<ReadContextCounter> negCounters)
@@ -81,9 +78,9 @@ public class VariantPhaser
         if(posCounters.isEmpty() || posCounters.size() + negCounters.size() < 2)
             return;
 
-        mPerfCounters.get(PC_PHASE_READS).resume();
+        mPerfCounter.resume();
         processPhasedVariants(posCounters, negCounters);
-        mPerfCounters.get(PC_PHASE_READS).pause();
+        mPerfCounter.pause();
     }
 
     private void processPhasedVariants(final List<ReadContextCounter> posCounters, final List<ReadContextCounter> negCounters)
@@ -134,7 +131,7 @@ public class VariantPhaser
         mPhasedGroupCollections.add(collection);
     }
 
-    public void signalPhaseReadsEnd() { mPerfCounters.get(PC_PHASE_READS).stop(); }
+    public void signalPhaseReadsEnd() { mPerfCounter.stop(); }
 
     public void assignLocalPhaseSets(final Set<ReadContextCounter> passingCounters, final Set<ReadContextCounter> validCounters)
     {
@@ -145,8 +142,6 @@ public class VariantPhaser
 
         if(!hasGroups)
             return;
-
-        // mPerfCounters.get(PC_FORM_LPS).start();
 
         int startFilteredCount = mPhasedGroupCollections.stream().mapToInt(x -> x.groups().size()).sum();
 
@@ -256,6 +251,9 @@ public class VariantPhaser
 
         for(PhasedGroupCollection collection : mPhasedGroupCollections)
         {
+            if(collection.groups().isEmpty())
+                continue;
+
             // then apply merging rules within these overlapping groups
             mergeMatching(collection.groups());
 

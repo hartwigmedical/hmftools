@@ -63,7 +63,8 @@ public class PhasedGroupCollection
 
         for(PhasedVariantGroup group : groups)
         {
-            if(group.exactMatch(posVarMin, posVarMax, posCounters, negCounters))
+            // allow exact match on positives only
+            if(group.positivesMatch(posVarMin, posVarMax, posCounters))
             {
                 group.ReadCount++;
                 group.mergeNegatives(negCounters);

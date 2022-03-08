@@ -85,7 +85,7 @@ public class RegionTask
 
     public final List<PerformanceCounter> getPerfCounters()
     {
-        mPerfCounters.addAll(mEvidenceStage.getVariantPhaser().getPerfCounters());
+        mPerfCounters.add(mEvidenceStage.getVariantPhaser().getPerfCounter());
         return mPerfCounters;
     }
 
@@ -189,7 +189,7 @@ public class RegionTask
 
         mResults.addTotalReads(mCandidateState.totalReadsProcessed());
 
-        mPerfCounters.addAll(mEvidenceStage.getVariantPhaser().getPerfCounters());
+        mPerfCounters.add(mEvidenceStage.getVariantPhaser().getPerfCounter());
 
         mResults.addPerfCounters(mPerfCounters, calcCurrentMemoryUsage(false));
     }

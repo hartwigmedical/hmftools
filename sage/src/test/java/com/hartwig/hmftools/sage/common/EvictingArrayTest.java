@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.sage.common;
 
 import static com.hartwig.hmftools.sage.common.EvictingArray.calculateSize;
-import static com.hartwig.hmftools.sage.common.EvictingArray.calculateSizeOld;
 
 import static org.junit.Assert.assertEquals;
 
@@ -32,19 +31,10 @@ public class EvictingArrayTest
     @Test
     public void testCapacityCalc()
     {
-        assertEquals(8, calculateSizeOld(8));
         assertEquals(8, calculateSize(8));
-
-        assertEquals(32, calculateSizeOld(17));
         assertEquals(32, calculateSize(32));
-
-        assertEquals(256, calculateSizeOld(129));
         assertEquals(256, calculateSize(256));
-
-        assertEquals(1024, calculateSizeOld(513));
         assertEquals(1024, calculateSize(1024));
-
-        assertEquals(8192, calculateSizeOld(4097));
         assertEquals(8192, calculateSize(8192));
     }
 

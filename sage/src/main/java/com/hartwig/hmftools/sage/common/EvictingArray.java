@@ -94,28 +94,4 @@ public class EvictingArray
     {
         return ceilingPowerOfTwo(numElements);
     }
-
-    @Deprecated
-    public static int calculateSizeOld(int numElements)
-    {
-        int initialCapacity = MIN_INITIAL_CAPACITY;
-        // Find the best power of two to hold elements.
-        // Tests "<=" because arrays aren't kept full.
-        if(numElements >= initialCapacity)
-        {
-            initialCapacity = numElements - 1;
-            initialCapacity |= (initialCapacity >>> 1);
-            initialCapacity |= (initialCapacity >>> 2);
-            initialCapacity |= (initialCapacity >>> 4);
-            initialCapacity |= (initialCapacity >>> 8);
-            initialCapacity |= (initialCapacity >>> 16);
-            initialCapacity++;
-
-            if(initialCapacity < 0)   // Too many elements, must back off
-            {
-                initialCapacity >>>= 1;// Good luck allocating 2 ^ 30 elements
-            }
-        }
-        return initialCapacity;
-    }
 }

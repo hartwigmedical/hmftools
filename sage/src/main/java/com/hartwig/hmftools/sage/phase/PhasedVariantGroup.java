@@ -75,7 +75,7 @@ public class PhasedVariantGroup
                 .filter(x -> positionWithin(x.position(), mVariantMin, mVariantMax)).collect(Collectors.toSet());
 
         if(localisedValidCounters.isEmpty())
-            return false;
+            return true;
 
         List<ReadContextCounter> invalidPosCounters = PositiveReadCounters.stream().filter(x -> !localisedValidCounters.contains(x)).collect(Collectors.toList());
         List<ReadContextCounter> invalidNegCounters = NegativeReadCounters.stream().filter(x -> !localisedValidCounters.contains(x)).collect(Collectors.toList());
@@ -110,7 +110,7 @@ public class PhasedVariantGroup
             final int minVariantPos, final int maxVariantPos,
             final List<ReadContextCounter> posCounters, final List<ReadContextCounter> negCounters)
     {
-        // positives need to match exactly, negatives don't
+        // both positives and negatives need to match exactly
         if(minVariantPos != mPosVariantMin || maxVariantPos != mPosVariantMax)
             return false;
 
@@ -128,14 +128,19 @@ public class PhasedVariantGroup
 
     public boolean positivesMatch(final PhasedVariantGroup other)
     {
+        return positivesMatch(other.posVariantMin(), other.posVariantMax(), other.PositiveReadCounters);
+    }
+
+    public boolean positivesMatch(final int minVariantPos, final int maxVariantPos, final List<ReadContextCounter> posCounters)
+    {
         // positives need to match exactly, negatives don't
-        if(other.posVariantMin() != mPosVariantMin || other.posVariantMax() != mPosVariantMax)
+        if(minVariantPos != mPosVariantMin || maxVariantPos != mPosVariantMax)
             return false;
 
-        if(PositiveReadCounters.size() != other.PositiveReadCounters.size())
+        if(PositiveReadCounters.size() != posCounters.size())
             return false;
 
-        if(PositiveReadCounters.stream().anyMatch(x -> !other.PositiveReadCounters.contains(x)))
+        if(PositiveReadCounters.stream().anyMatch(x -> !posCounters.contains(x)))
             return false;
 
         return true;
@@ -143,14 +148,13 @@ public class PhasedVariantGroup
 
     public boolean isSubsetOf(final PhasedVariantGroup other)
     {
-        // returns true if this group is a subset of 'other' is a su
+        // returns true if this group's positives are a subset of another without any contradictory negatives
         if(other.PositiveReadCounters.size() < PositiveReadCounters.size())
             return false;
 
         if(!PositiveReadCounters.stream().allMatch(x -> other.PositiveReadCounters.contains(x)))
             return false;
 
-        // cannot have contradictory negatives
         if(hasAnyOverlap(other.PositiveReadCounters, NegativeReadCounters) || hasAnyOverlap(PositiveReadCounters, other.NegativeReadCounters))
             return false;
 
