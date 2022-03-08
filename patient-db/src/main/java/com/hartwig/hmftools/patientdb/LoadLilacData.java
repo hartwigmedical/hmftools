@@ -25,21 +25,21 @@ public class LoadLilacData {
     private static final Logger LOGGER = LogManager.getLogger(LoadLilacData.class);
 
     private static final String SAMPLE = "sample";
-    private static final String LILAC_DIR = "lilac_dir";
+    private static final String LILAC_OUTPUT_FILE = "lilac_output_file";
+    private static final String LILAC_QC_METRICS_FILE = "lilac_qc_metrics_file";
 
     public static void main(@NotNull String[] args) throws ParseException, IOException, SQLException {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
         DatabaseAccess dbAccess = databaseAccess(cmd);
 
-        String sample = cmd.getOptionValue(SAMPLE);
-        String lilacDir = cmd.getOptionValue(LILAC_DIR);
+        final String sample = cmd.getOptionValue(SAMPLE);
+        final String lilacOutputFile = cmd.getOptionValue(LILAC_OUTPUT_FILE);
+        final String lilacQcMetricsFile = cmd.getOptionValue(LILAC_QC_METRICS_FILE);
 
-        LOGGER.info("Reading data from {}", lilacDir);
-        final String lilacFile = lilacDir + "/" + sample + ".lilac.txt";
-        final String qcFile = lilacDir + "/" + sample + ".lilac.qc.txt";
-        final HlaType type = HlaFiles.type(lilacFile, qcFile);
-        final List<HlaTypeDetails> details = HlaFiles.typeDetails(lilacFile);
+        LOGGER.info("Reading output from {} and using QC metrics from {}", lilacOutputFile, lilacQcMetricsFile);
+        final HlaType type = HlaFiles.type(lilacOutputFile, lilacQcMetricsFile);
+        final List<HlaTypeDetails> details = HlaFiles.typeDetails(lilacOutputFile);
 
         LOGGER.info("Persisting lilac data to db for {}", sample);
         dbAccess.writeHla(sample, type, details);
@@ -51,7 +51,8 @@ public class LoadLilacData {
     private static Options createOptions() {
         Options options = new Options();
         options.addOption(SAMPLE, true, "Tumor sample.");
-        options.addOption(LILAC_DIR, true, "Path to the lilac directory.");
+        options.addOption(LILAC_OUTPUT_FILE, true, "Lilac output file.");
+        options.addOption(LILAC_QC_METRICS_FILE, true, "Lilac QC metrics file.");
         addDatabaseCmdLineArgs(options);
         return options;
     }
