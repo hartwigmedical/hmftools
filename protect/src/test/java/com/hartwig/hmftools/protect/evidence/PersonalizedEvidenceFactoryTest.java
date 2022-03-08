@@ -14,7 +14,7 @@ import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.RangeType;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicAnnotation;
-import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicsAtLeast;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicsComparator;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
 
 import org.junit.Test;
@@ -44,11 +44,11 @@ public class PersonalizedEvidenceFactoryTest {
         ActionableCharacteristic characteristic = ImmutableActionableCharacteristic.builder()
                 .from(ServeTestFactory.createTestActionableCharacteristic())
                 .name(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD)
-                .atLeast(TumorCharacteristicsAtLeast.EQUALS_GREATHER)
-                .cutOff((double)10)
+                .comparator(TumorCharacteristicsComparator.EQUAL_OR_GREATER)
+                .cutoff((double)10)
                 .build();
         assertEquals(ProtectEvidenceType.SIGNATURE, PersonalizedEvidenceFactory.determineEvidenceType(characteristic));
-        assertEquals(10, characteristic.cutOff(), EPSILON);
+        assertEquals(10, characteristic.cutoff(), EPSILON);
     }
 
     @Test

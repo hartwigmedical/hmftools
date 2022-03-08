@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.serve.extraction;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -12,7 +11,6 @@ import com.hartwig.hmftools.serve.actionability.gene.ActionableGeneUrlConsolidat
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLAUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
-import com.hartwig.hmftools.serve.actionability.range.ActionableRangeFile;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRangeUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.RangeType;
@@ -66,7 +64,7 @@ public final class ExtractionFunctions {
 
         for (ExtractionResult result : results) {
 
-            Set<ActionableRange> actionableRange = curationsOfResult(result.actionableRanges());
+            Set<ActionableRange> actionableRange = curate(result.actionableRanges());
 
             allHotspots.addAll(result.knownHotspots());
             allCodons.addAll(result.knownCodons());
@@ -93,29 +91,24 @@ public final class ExtractionFunctions {
     }
 
     @NotNull
-    public static Set<ActionableRange> curationsOfResult(@NotNull Set<ActionableRange> actionableRanges) {
-        Set<ActionableRange> actionableRange = Sets.newHashSet();
+    static Set<ActionableRange> curate(@NotNull Set<ActionableRange> actionableRanges) {
+        Set<ActionableRange> curatedRanges = Sets.newHashSet();
         for (ActionableRange range : actionableRanges) {
             if (range.gene().equals("BRAF") && range.rank() == 600 && range.rangeType().equals(RangeType.CODON)) {
                 int start = 140753335;
                 int end = 140753337;
                 String canonicalTranscriptID = "ENST00000288602";
-                actionableRange.add(ImmutableActionableRange.builder()
+                curatedRanges.add(ImmutableActionableRange.builder()
                         .from(range)
                         .start(start)
                         .end(end)
                         .transcript(canonicalTranscriptID)
                         .build());
-            }  else {
-                actionableRange.add(range);
+            } else {
+                curatedRanges.add(range);
             }
         }
-        return sort(actionableRange);
-    }
-
-    @NotNull
-    public static Set<ActionableRange> sort(@NotNull Set<ActionableRange> actionableRanges) {
-        return new HashSet<>(ActionableRangeFile.sort(actionableRanges));
+        return curatedRanges;
     }
 
     @NotNull

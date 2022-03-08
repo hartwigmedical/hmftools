@@ -239,8 +239,8 @@ public final class ServeTestFactory {
         return ImmutableActionableCharacteristic.builder()
                 .from(createTestBaseEvent())
                 .name(TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE)
-                .atLeast(null)
-                .cutOff(null)
+                .comparator(null)
+                .cutoff(null)
                 .build();
     }
 
@@ -254,7 +254,7 @@ public final class ServeTestFactory {
 
     @NotNull
     public static ActionableHLA createTestActionableHLA() {
-        return ImmutableActionableHLA.builder().from(createTestBaseEvent()).hlaTypering(Strings.EMPTY).build();
+        return ImmutableActionableHLA.builder().from(createTestBaseEvent()).hlaType(Strings.EMPTY).build();
     }
 
     @NotNull

@@ -3,8 +3,6 @@ package com.hartwig.hmftools.serve.extraction;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
@@ -22,13 +20,12 @@ import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
 import com.hartwig.hmftools.serve.sources.ImmutableSources;
 
 import org.apache.logging.log4j.util.Strings;
-import org.junit.Ignore;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class ExtractionFunctionsTest {
 
     @Test
-    @Ignore
     public void canCurateRanges() {
         Set<ActionableRange> actionableRangeSet = Sets.newHashSet();
         ActionableRange range1 = ImmutableActionableRange.builder()
@@ -37,6 +34,9 @@ public class ExtractionFunctionsTest {
                 .gene("BRAF")
                 .rank(600)
                 .rangeType(RangeType.CODON)
+                .start(10)
+                .end(20)
+                .transcript("transcript")
                 .build();
         ActionableRange range2 = ImmutableActionableRange.builder()
                 .from(ServeTestFactory.createTestActionableRange())
@@ -51,19 +51,29 @@ public class ExtractionFunctionsTest {
         actionableRangeSet.add(range1);
         actionableRangeSet.add(range2);
 
-        Set<ActionableRange> actionableRangeSetCorrected = ExtractionFunctions.curationsOfResult(actionableRangeSet);
-        List<ActionableRange> listOfActionableRange = new ArrayList<>(actionableRangeSetCorrected);
-        ActionableRange actionableRange1 = listOfActionableRange.get(0);
+        Set<ActionableRange> curatedRanges = ExtractionFunctions.curate(actionableRangeSet);
+        ActionableRange actionableRange1 = findByRank(curatedRanges, 601);
         assertEquals("BRAF", actionableRange1.gene());
         assertEquals(10, actionableRange1.start());
         assertEquals(20, actionableRange1.end());
         assertEquals("transcript", actionableRange1.transcript());
 
-        ActionableRange actionableRange2 = listOfActionableRange.get(1);
+        ActionableRange actionableRange2 = findByRank(curatedRanges, 600);
         assertEquals("BRAF", actionableRange2.gene());
         assertEquals(140753335, actionableRange2.start());
         assertEquals(140753337, actionableRange2.end());
         assertEquals("ENST00000288602", actionableRange2.transcript());
+    }
+
+    @NotNull
+    private static ActionableRange findByRank(@NotNull Iterable<ActionableRange> ranges, int rank) {
+        for (ActionableRange range : ranges) {
+            if (range.rank() == rank) {
+                return range;
+            }
+        }
+
+        throw new IllegalStateException("Could not find actionable range with rank " + rank);
     }
 
     @Test

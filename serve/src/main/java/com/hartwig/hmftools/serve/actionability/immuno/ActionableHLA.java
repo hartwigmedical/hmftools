@@ -12,5 +12,5 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ActionableHLA implements ActionableEvent {
 
     @NotNull
-    public abstract String hlaTypering();
+    public abstract String hlaType();
 }

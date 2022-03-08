@@ -51,18 +51,18 @@ public class TumorCharacteristicExtractor {
     }
 
     @Nullable
-    public TumorCharacteristic extract(@NotNull EventType type, @NotNull String event, @NotNull String cutOff) {
+    public TumorCharacteristic extract(@NotNull EventType type, @NotNull String event, @NotNull String cutoff) {
         if (type == EventType.CHARACTERISTIC) {
             TumorCharacteristicAnnotation characteristic = determineCharacteristic(event);
             if (characteristic == null) {
                 LOGGER.warn("Could not extract characteristic from '{}'", event);
             } else {
-                TumorCharacteristicsAtLeast atLeast = determineAtLeast(characteristic, cutOff);
-                Double cutOffInterpretated = determineCutoff(characteristic, cutOff);
+                TumorCharacteristicsComparator comparator = determineComparator(characteristic, cutoff);
+                Double interpretedCutoff = determineCutoff(characteristic, cutoff);
                 return ImmutableTumorCharacteristic.builder()
-                        .tumorCharacteristicAnnotation(characteristic)
-                        .atLeast(atLeast)
-                        .cutOff(cutOffInterpretated)
+                        .annotation(characteristic)
+                        .comparator(comparator)
+                        .cutoff(interpretedCutoff)
                         .build();
             }
         }
@@ -71,44 +71,43 @@ public class TumorCharacteristicExtractor {
 
     @Nullable
     @VisibleForTesting
-    public TumorCharacteristicsAtLeast determineAtLeast(@Nullable TumorCharacteristicAnnotation characteristic, @NotNull String cutOff) {
-        if (!cutOff.equals(Strings.EMPTY)) {
-            String[] cutOffSplit = cutOff.split(" ");
+    public TumorCharacteristicsComparator determineComparator(@Nullable TumorCharacteristicAnnotation characteristic,
+            @NotNull String cutoff) {
+        if (!cutoff.equals(Strings.EMPTY)) {
+            String[] cutoffSplit = cutoff.split(" ");
 
-            if (cutOff.equals("MSI high")) {
-                return TumorCharacteristicsAtLeast.EQUALS_GREATHER;
-            }
-            else if (cutOff.equals("HRD pos")) {
-                return TumorCharacteristicsAtLeast.EQUALS_GREATHER;
-            }
-            else if (cutOffSplit.length == 3) {
-                if (cutOffSplit[1].equals(">=")) {
-                    return TumorCharacteristicsAtLeast.EQUALS_GREATHER;
-                } else if (cutOffSplit[1].equals("<=")) {
-                    return TumorCharacteristicsAtLeast.EQUALS_LESSER;
-                } else if (cutOffSplit[1].equals("<")) {
-                    return TumorCharacteristicsAtLeast.LESSER;
-                } else if (cutOffSplit[1].equals(">")) {
-                    return TumorCharacteristicsAtLeast.GREATHER;
+            if (cutoff.equals("MSI high")) {
+                return TumorCharacteristicsComparator.EQUAL_OR_GREATER;
+            } else if (cutoff.equals("HRD pos")) {
+                return TumorCharacteristicsComparator.EQUAL_OR_GREATER;
+            } else if (cutoffSplit.length == 3) {
+                if (cutoffSplit[1].equals(">=")) {
+                    return TumorCharacteristicsComparator.EQUAL_OR_GREATER;
+                } else if (cutoffSplit[1].equals("<=")) {
+                    return TumorCharacteristicsComparator.EQUAL_OR_LOWER;
+                } else if (cutoffSplit[1].equals("<")) {
+                    return TumorCharacteristicsComparator.LOWER;
+                } else if (cutoffSplit[1].equals(">")) {
+                    return TumorCharacteristicsComparator.GREATER;
                 } else {
-                    LOGGER.warn("Could not determine greather of smaller cut-off");
+                    LOGGER.warn("Could not determine greater of smaller cut-off");
                     return null;
                 }
             } else {
-                LOGGER.warn("cutOff value '{}' couldn't be determined", cutOff);
+                LOGGER.warn("cutoff value '{}' couldn't be determined", cutoff);
                 return null;
             }
         } else {
             if (characteristic == TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE) {
-                return TumorCharacteristicsAtLeast.EQUALS_GREATHER;
+                return TumorCharacteristicsComparator.EQUAL_OR_GREATER;
             } else if (characteristic == TumorCharacteristicAnnotation.MICROSATELLITE_STABLE) {
-                return TumorCharacteristicsAtLeast.LESSER;
+                return TumorCharacteristicsComparator.LOWER;
             } else if (characteristic == TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD) {
-                return TumorCharacteristicsAtLeast.EQUALS_GREATHER;
+                return TumorCharacteristicsComparator.EQUAL_OR_GREATER;
             } else if (characteristic == TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_LOAD) {
-                return TumorCharacteristicsAtLeast.LESSER;
+                return TumorCharacteristicsComparator.LOWER;
             } else if (characteristic == TumorCharacteristicAnnotation.HOMOLOGOUS_RECOMBINATION_DEFICIENT) {
-                return TumorCharacteristicsAtLeast.EQUALS_GREATHER;
+                return TumorCharacteristicsComparator.EQUAL_OR_GREATER;
             } else {
                 return null;
             }
@@ -117,18 +116,17 @@ public class TumorCharacteristicExtractor {
 
     @Nullable
     @VisibleForTesting
-    public Double determineCutoff(@Nullable TumorCharacteristicAnnotation characteristic, @NotNull String cutOff) {
-        if (!cutOff.equals(Strings.EMPTY)) {
-            String[] cutOffSplit = cutOff.split(" ");
-            if (cutOff.equals("MSI high")) {
+    public Double determineCutoff(@Nullable TumorCharacteristicAnnotation characteristic, @NotNull String cutoff) {
+        if (!cutoff.equals(Strings.EMPTY)) {
+            String[] cutoffSplit = cutoff.split(" ");
+            if (cutoff.equals("MSI high")) {
                 return (double) 4;
-            } else if (cutOff.equals("HRD pos")) {
+            } else if (cutoff.equals("HRD pos")) {
                 return 0.5;
-            }
-            else if (cutOffSplit.length == 3) {
-                return Double.valueOf(cutOffSplit[2]);
+            } else if (cutoffSplit.length == 3) {
+                return Double.valueOf(cutoffSplit[2]);
             } else {
-                LOGGER.warn("cutOff value '{}' couldn't be determined", cutOff);
+                LOGGER.warn("cutoff value '{}' couldn't be determined", cutoff);
                 return null;
             }
         } else {

@@ -59,13 +59,12 @@ public class IclusionExtractor {
             List<EventInterpretation> interpretation = Lists.newArrayList();
             for (IclusionMutationCondition mutationCondition : trial.mutationConditions()) {
                 for (IclusionMutation mutation : mutationCondition.mutations()) {
-                    rawInput = mutation.name();
                     LOGGER.debug("Interpreting '{}' on '{}' for {}", mutation.name(), mutation.gene(), trial.acronym());
                     if (mutation.type() == EventType.UNKNOWN) {
                         LOGGER.warn("No event type known for '{}' on '{}'", mutation.name(), mutation.gene());
                     }
                     eventExtractions.add(eventExtractor.extract(mutation.gene(), null, mutation.type(), mutation.name(), Strings.EMPTY));
-                    Sources sources = ImmutableSources.builder().sourceEvent(rawInput).source(Knowledgebase.ICLUSION).build();
+                    Sources sources = ImmutableSources.builder().sourceEvent(mutation.name()).source(Knowledgebase.ICLUSION).build();
                     interpretation.add(ImmutableEventInterpretation.builder()
                             .source(sources)
                             .interpretGene(mutation.gene())

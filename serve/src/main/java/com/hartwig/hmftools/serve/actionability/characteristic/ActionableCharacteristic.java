@@ -2,7 +2,7 @@ package com.hartwig.hmftools.serve.actionability.characteristic;
 
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicAnnotation;
-import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicsAtLeast;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicsComparator;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -17,8 +17,8 @@ public abstract class ActionableCharacteristic implements ActionableEvent {
     public abstract TumorCharacteristicAnnotation name();
 
     @Nullable
-    public abstract TumorCharacteristicsAtLeast atLeast();
+    public abstract TumorCharacteristicsComparator comparator();
 
     @Nullable
-    public abstract Double cutOff();
+    public abstract Double cutoff();
 }
