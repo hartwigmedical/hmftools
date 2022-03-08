@@ -74,6 +74,9 @@ public class PhasedVariantGroup
         Set<ReadContextCounter> localisedValidCounters = validCounters.stream()
                 .filter(x -> positionWithin(x.position(), mVariantMin, mVariantMax)).collect(Collectors.toSet());
 
+        if(localisedValidCounters.isEmpty())
+            return false;
+
         List<ReadContextCounter> invalidPosCounters = PositiveReadCounters.stream().filter(x -> !localisedValidCounters.contains(x)).collect(Collectors.toList());
         List<ReadContextCounter> invalidNegCounters = NegativeReadCounters.stream().filter(x -> !localisedValidCounters.contains(x)).collect(Collectors.toList());
 

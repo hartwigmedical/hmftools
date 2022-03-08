@@ -206,8 +206,14 @@ public class VariantPhaser
         {
             collection.finalise();
 
-            // require more reads to keep a group where there are high numbers in a collection (ie 2 at 310, 3 at 3100, 4 at 31000)
-            int readCountThreshold = max((int)round(log10(collection.groups().size())) - 1, INITIAL_MIN_READ_COUNT);
+            // require more reads to keep a group where there are high numbers in a collection (ie 2 at 3100, 3 at 31K, 4 at 310K)
+            int readCountThreshold = max((int)round(log10(collection.groups().size())) - 2, INITIAL_MIN_READ_COUNT);
+
+            if(readCountThreshold >= 3)
+            {
+                SG_LOGGER.info("region({}) phasing group collection({}) sets min read count to {}",
+                        mRegion, collection, readCountThreshold);
+            }
 
             int index = 0;
             while(index < collection.groups().size())

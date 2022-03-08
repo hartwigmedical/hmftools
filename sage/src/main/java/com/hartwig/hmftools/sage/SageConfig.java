@@ -188,6 +188,10 @@ public class SageConfig
                     SpecificRegions.add(region);
                     SpecificChromosomes.add(region.Chromosome);
                 }
+                else
+                {
+                    SG_LOGGER.error("invalid specific region: {}", regionStr);
+                }
             }
         }
         else if(cmd.hasOption(SPECIFIC_CHROMOSOMES))
