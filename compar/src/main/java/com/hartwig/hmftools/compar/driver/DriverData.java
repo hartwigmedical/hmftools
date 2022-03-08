@@ -79,18 +79,12 @@ public class DriverData implements ComparableItem
     @Override
     public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel)
     {
-        return null;
-    }
-
-    @Override
-    public List<String> findDifferences(final ComparableItem other, final MatchLevel matchLevel)
-    {
         final DriverData otherDriver = (DriverData)other;
 
         final List<String> diffs = Lists.newArrayList();
 
         if(matchLevel == REPORTABLE)
-            return diffs;
+            return null;
 
         checkDiff(
                 diffs, "likelihoodMethod",
@@ -126,7 +120,6 @@ public class DriverData implements ComparableItem
         }
 
 
-        return diffs;
+        return null;
     }
-
 }

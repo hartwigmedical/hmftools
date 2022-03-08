@@ -6,6 +6,7 @@ public enum Category
     COPY_NUMBER,
     DRIVER,
     SOMATIC_VARIANT,
+    GERMLINE_VARIANT,
     SV,
     LINX_DATA,
     FUSION,

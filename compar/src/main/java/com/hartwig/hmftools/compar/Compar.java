@@ -5,16 +5,18 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.compar.CommonUtils.buildComparers;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
-import java.util.StringJoiner;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 
 import org.apache.commons.cli.CommandLine;
@@ -27,14 +29,12 @@ import org.jetbrains.annotations.NotNull;
 public class Compar
 {
     private final ComparConfig mConfig;
-
-    private BufferedWriter mDiffWriter;
+    private final MismatchWriter mWriter;
 
     public Compar(final CommandLine cmd)
     {
         mConfig = new ComparConfig(cmd);
-
-        mDiffWriter = null;
+        mWriter = new MismatchWriter(mConfig);
     }
 
     public void run()
@@ -42,13 +42,13 @@ public class Compar
         if(!mConfig.isValid())
         {
             CMP_LOGGER.error("invalid config");
-            return;
+            System.exit(1);
         }
 
         if(mConfig.SampleIds.isEmpty())
         {
             CMP_LOGGER.error("no samples specified");
-            return;
+            System.exit(1);
         }
 
         if(mConfig.multiSample())
@@ -56,7 +56,10 @@ public class Compar
             CMP_LOGGER.info("running comparison for {} sample(s)", mConfig.SampleIds.size());
         }
 
-        initialiseOutputFiles();
+        if(!mWriter.initialiseOutputFiles())
+        {
+            System.exit(1);
+        }
 
         List<ComparTask> sampleTasks = Lists.newArrayList();
 
@@ -64,7 +67,7 @@ public class Compar
         {
             for(int i = 0; i < min(mConfig.SampleIds.size(), mConfig.Threads); ++i)
             {
-                sampleTasks.add(new ComparTask(i, mConfig, mDiffWriter));
+                sampleTasks.add(new ComparTask(i, mConfig, mWriter));
             }
 
             int taskIndex = 0;
@@ -83,7 +86,7 @@ public class Compar
         }
         else
         {
-            ComparTask sampleTask = new ComparTask(0, mConfig, mDiffWriter);
+            ComparTask sampleTask = new ComparTask(0, mConfig, mWriter);
 
             sampleTask.getSampleIds().addAll(mConfig.SampleIds);
 
@@ -91,66 +94,9 @@ public class Compar
             sampleTask.call();
         }
 
-        closeBufferedWriter(mDiffWriter);
+        mWriter.close();
 
         CMP_LOGGER.info("comparison complete");
-    }
-
-    private void initialiseOutputFiles()
-    {
-        try
-        {
-            String outputFile = mConfig.OutputDir;
-
-            if(mConfig.singleSample())
-            {
-                outputFile += mConfig.SampleIds.get(0);
-            }
-            else
-            {
-                outputFile += "COMPAR_DIFFS";
-            }
-
-            if(mConfig.OutputId != null)
-                outputFile += "." + mConfig.OutputId;
-
-            outputFile += ".csv";
-
-            mDiffWriter = createBufferedWriter(outputFile, false);
-
-            if(mConfig.multiSample())
-                mDiffWriter.write("SampleId,");
-
-            mDiffWriter.write(Mismatch.header());
-
-            mDiffWriter.newLine();
-        }
-        catch(IOException e)
-        {
-            CMP_LOGGER.error("failed to write compar output: {}", e.toString());
-        }
-    }
-
-    public synchronized static void writeSampleMismatches(final BufferedWriter writer, final String sampleId, final List<Mismatch> mismatches)
-    {
-        if(mismatches.isEmpty() || writer == null)
-            return;
-
-        try
-        {
-            for(Mismatch mismatch : mismatches)
-            {
-                if(sampleId != null)
-                    writer.write(String.format("%s,", sampleId));
-
-                writer.write(mismatch.toCsv());
-                writer.newLine();
-            }
-        }
-        catch(IOException e)
-        {
-            CMP_LOGGER.error("failed to write sample data: {}", e.toString());
-        }
     }
 
     public static void main(@NotNull final String[] args) throws ParseException

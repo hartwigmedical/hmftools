@@ -58,12 +58,6 @@ public class FusionData implements ComparableItem
     @Override
     public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel)
     {
-        return null;
-    }
-
-    @Override
-    public List<String> findDifferences(final ComparableItem other, final MatchLevel matchLevel)
-    {
         final FusionData otherFusion = (FusionData)other;
 
         final List<String> diffs = Lists.newArrayList();
@@ -72,7 +66,7 @@ public class FusionData implements ComparableItem
         checkDiff(diffs, "reportedType", Fusion.reportedType(), otherFusion.Fusion.reportedType());
 
         if(matchLevel == REPORTABLE)
-            return diffs;
+            return null;
 
         checkDiff(diffs, "phased", Fusion.phased().toString(), otherFusion.Fusion.phased().toString());
         checkDiff(diffs, "likelihood", Fusion.likelihood().toString(), otherFusion.Fusion.likelihood().toString());
@@ -90,6 +84,6 @@ public class FusionData implements ComparableItem
 
          */
 
-        return diffs;
+        return null;
     }
 }

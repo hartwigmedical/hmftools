@@ -10,8 +10,6 @@ public interface ComparableItem
 
     boolean reportable();
 
-    List<String> findDifferences(final ComparableItem other, final MatchLevel matchLevel);
-
     Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel);
 
     String key();

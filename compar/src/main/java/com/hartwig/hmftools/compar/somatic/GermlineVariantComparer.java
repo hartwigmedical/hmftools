@@ -1,13 +1,12 @@
 package com.hartwig.hmftools.compar.somatic;
 
-import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SOMATIC_VCF_SUFFIX;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_GERMLINE_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
-import static com.hartwig.hmftools.compar.Category.SOMATIC_VARIANT;
+import static com.hartwig.hmftools.compar.Category.GERMLINE_VARIANT;
 import static com.hartwig.hmftools.compar.CommonUtils.diffsStr;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.Mismatch.commonCsv;
-import static com.hartwig.hmftools.compar.Mismatch.commonHeader;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GERMLINEVARIANT;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
@@ -38,17 +37,17 @@ import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 import htsjdk.variant.vcf.VCFCodec;
 
-public class SomaticVariantComparer implements ItemComparer
+public class GermlineVariantComparer implements ItemComparer
 {
     private final ComparConfig mConfig;
 
-    public SomaticVariantComparer(final ComparConfig config)
+    public GermlineVariantComparer(final ComparConfig config)
     {
         mConfig = config;
     }
 
     @Override
-    public Category category() { return SOMATIC_VARIANT; }
+    public Category category() { return GERMLINE_VARIANT; }
 
     @Override
     public void processSample(final String sampleId, final List<Mismatch> mismatches)
@@ -60,18 +59,16 @@ public class SomaticVariantComparer implements ItemComparer
     public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess)
     {
         Result<Record> result = dbAccess.context().select()
-                .from(SOMATICVARIANT)
-                .where(SOMATICVARIANT.FILTER.eq(PASS_FILTER))
-                .and(SOMATICVARIANT.SAMPLEID.eq(sampleId))
-                // .and(SOMATICVARIANT.GENE.isNotNull())
-                // .and(SOMATICVARIANT.CANONICALCODINGEFFECT.in(NONSENSE_OR_FRAMESHIFT.toString(), SPLICE.toString(), MISSENSE.toString()))
+                .from(GERMLINEVARIANT)
+                .where(GERMLINEVARIANT.FILTER.eq(PASS_FILTER))
+                .and(GERMLINEVARIANT.SAMPLEID.eq(sampleId))
                 .fetch();
 
         final List<ComparableItem> variants = Lists.newArrayList();
         for (Record record : result)
         {
             SomaticVariant variant = SomaticVariantDAO.buildFromRecord(record);
-            variants.add(new SomaticVariantData(variant));
+            variants.add(new GermlineVariantData(variant));
         }
 
         return variants;
@@ -87,9 +84,9 @@ public class SomaticVariantComparer implements ItemComparer
 
         SomaticVariantFactory variantFactory = new SomaticVariantFactory(filter);
 
-        String vcfFile = fileSources.Purple + sampleId + PURPLE_SOMATIC_VCF_SUFFIX;
+        String vcfFile = fileSources.Purple + sampleId + PURPLE_GERMLINE_VCF_SUFFIX;
 
-        boolean reportedOnly = mConfig.Categories.get(SOMATIC_VARIANT) == MatchLevel.REPORTABLE;
+        boolean reportedOnly = mConfig.Categories.get(GERMLINE_VARIANT) == MatchLevel.REPORTABLE;
 
         try
         {
@@ -104,7 +101,7 @@ public class SomaticVariantComparer implements ItemComparer
                     if(reportedOnly && !somaticVariant.reported())
                         continue;
 
-                    comparableItems.add(new SomaticVariantData(somaticVariant));
+                    comparableItems.add(new GermlineVariantData(somaticVariant));
                 }
             }
 
@@ -112,7 +109,7 @@ public class SomaticVariantComparer implements ItemComparer
         }
         catch(IOException e)
         {
-            CMP_LOGGER.error("failed to read Purple somatic VCF file({}): {}", vcfFile, e.toString());
+            CMP_LOGGER.error("failed to read Purple germline VCF file({}): {}", vcfFile, e.toString());
         }
 
         return comparableItems;
@@ -121,22 +118,21 @@ public class SomaticVariantComparer implements ItemComparer
     @Override
     public String outputHeader()
     {
-        return commonHeader() + ",RefFilter,RefQual,OtherQual,RefTier,OtherTier,RefTotalReads,OtherTotalReads"
-                + ",RefAlleleReads,OtherAlleleReads,Differences";
+        return "Category,MismatchType,Key,RefQual,OtherQual,RefTier,OtherTier,RefTotalReads,OtherTotalReads,RefAlleleReads,OtherAlleleReads,Differences";
     }
 
     @Override
     public String mismatchOutput(final Mismatch mismatch)
     {
-        final SomaticVariantData refVar = mismatch.RefItem != null ? (SomaticVariantData)mismatch.RefItem : null;
-        final SomaticVariantData newVar = mismatch.NewItem != null ? (SomaticVariantData)mismatch.NewItem : null;
+        final GermlineVariantData refVar = mismatch.RefItem != null ? (GermlineVariantData)mismatch.RefItem : null;
+        final GermlineVariantData otherVar = mismatch.NewItem != null ? (GermlineVariantData)mismatch.NewItem : null;
 
-        return String.format("%s,%s,%.0f,%.0f,%s,%s,%d,%d,%d,%d,%s",
-                commonCsv(mismatch), refVar != null ? refVar.Variant.filter() : newVar.Variant.filter(),
-                refVar != null ? refVar.Variant.qual() : 0, newVar != null ? newVar.Variant.qual() : 0,
-                refVar != null ? refVar.Variant.tier() : "", newVar != null ? newVar.Variant.tier() : "",
-                refVar != null ? refVar.Variant.totalReadCount() : 0, newVar != null ? newVar.Variant.totalReadCount() : 0,
-                refVar != null ? refVar.Variant.alleleReadCount() : 0, newVar != null ? newVar.Variant.alleleReadCount() : 0,
+        return String.format("%s,%.0f,%.0f,%s,%s,%d,%d,%d,%d,%s",
+                commonCsv(mismatch),
+                refVar != null ? refVar.Variant.qual() : 0, otherVar != null ? otherVar.Variant.qual() : 0,
+                refVar != null ? refVar.Variant.tier() : "", otherVar != null ? otherVar.Variant.tier() : "",
+                refVar != null ? refVar.Variant.totalReadCount() : 0, otherVar != null ? otherVar.Variant.totalReadCount() : 0,
+                refVar != null ? refVar.Variant.alleleReadCount() : 0, otherVar != null ? otherVar.Variant.alleleReadCount() : 0,
                 diffsStr(mismatch.DiffValues));
     }
 

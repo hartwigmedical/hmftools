@@ -56,12 +56,6 @@ public class PurityData implements ComparableItem
     @Override
     public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel)
     {
-        return null;
-    }
-
-    @Override
-    public List<String> findDifferences(final ComparableItem other, final MatchLevel matchLevel)
-    {
         final PurityData otherPurity = (PurityData) other;
 
         final List<String> diffs = Lists.newArrayList();
@@ -70,11 +64,11 @@ public class PurityData implements ComparableItem
         checkDiff(diffs, "qcPass", Purity.qc().pass(), otherPurity.Purity.qc().pass());
 
         if (matchLevel == REPORTABLE)
-            return diffs;
+            return null;
 
         checkDiff(diffs, "purity", Purity.bestFit().purity(), otherPurity.Purity.bestFit().purity());
         checkDiff(diffs, "ploidy", Purity.bestFit().ploidy(), otherPurity.Purity.bestFit().ploidy());
 
-        return diffs;
+        return null;
     }
 }

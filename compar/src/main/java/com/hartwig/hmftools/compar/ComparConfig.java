@@ -208,6 +208,13 @@ public class ComparConfig
         String dbSourcesStr = cmd.getOptionValue(DB_SOURCES, "");
         String[] dbSources = dbSourcesStr.split(DATA_DELIM, -1);
 
+        if(dbSources.length != 2)
+        {
+            CMP_LOGGER.error("invalid DB source config({}) - must contain 2 entries", dbSourcesStr);
+            mIsValid = false;
+            return;
+        }
+
         for(String dbSourceStr : dbSources)
         {
             String[] dbItems = dbSourceStr.split(ITEM_DELIM, -1);
@@ -254,6 +261,13 @@ public class ComparConfig
         // form: linx_dir=pipe_v1;/path_to_linx_data/;purple_dir/path_to_purple_data/ etc OR
         String fileSourcesStr = cmd.getOptionValue(FILE_SOURCES, "");
         String[] fileSourceEntries = fileSourcesStr.split(DATA_DELIM, -1);
+
+        if(fileSourceEntries.length != 2)
+        {
+            CMP_LOGGER.error("invalid file source config({}) - must contain 2 entries", fileSourceEntries);
+            mIsValid = false;
+            return;
+        }
 
         for(String fileSourceStr : fileSourceEntries)
         {

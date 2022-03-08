@@ -14,4 +14,14 @@ public interface ItemComparer
 
     List<ComparableItem> loadFromFile(final String sampleId, final FileSources fileSources);
 
+    default String outputHeader()
+    {
+        return Mismatch.header();
+    }
+
+    default String mismatchOutput(final Mismatch mismatch)
+    {
+        return mismatch.toCsv();
+    }
+
 }

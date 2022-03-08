@@ -64,23 +64,18 @@ public class CopyNumberData implements ComparableItem
     @Override
     public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel)
     {
-        return null;
-    }
-
-    @Override
-    public List<String> findDifferences(final ComparableItem other, final MatchLevel matchLevel)
-    {
         final CopyNumberData otherCn = (CopyNumberData)other;
 
         final List<String> diffs = Lists.newArrayList();
 
         if(matchLevel == REPORTABLE)
-            return diffs;
+            return null;
 
         checkDiff(diffs, "segStartSupport", CopyNumber.segmentStartSupport().toString(), otherCn.CopyNumber.segmentStartSupport().toString());
         checkDiff(diffs, "segEndSupport", CopyNumber.segmentEndSupport().toString(), otherCn.CopyNumber.segmentEndSupport().toString());
         checkDiff(diffs, "method", CopyNumber.method().toString(), otherCn.CopyNumber.method().toString());
 
-        return diffs;
+        return null;
     }
+
 }

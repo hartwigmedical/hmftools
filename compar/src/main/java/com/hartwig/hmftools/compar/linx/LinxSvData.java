@@ -79,12 +79,6 @@ public class LinxSvData implements ComparableItem
     @Override
     public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel)
     {
-        return null;
-    }
-
-    @Override
-    public List<String> findDifferences(final ComparableItem other, final MatchLevel matchLevel)
-    {
         final LinxSvData otherSv = (LinxSvData)other;
 
         final List<String> diffs = Lists.newArrayList();
@@ -92,7 +86,7 @@ public class LinxSvData implements ComparableItem
         checkDiff(diffs, "resolvedType", Cluster.resolvedType(), otherSv.Cluster.resolvedType());
 
         if(matchLevel == REPORTABLE)
-            return diffs;
+            return null;
 
         checkDiff(diffs, "clusterCount", Cluster.clusterCount(), otherSv.Cluster.clusterCount());
 
@@ -109,7 +103,7 @@ public class LinxSvData implements ComparableItem
 
         checkDiff(diffs, "foldback", Annotation.isFoldback(), otherSv.Annotation.isFoldback());
 
-        return diffs;
+        return null;
     }
 
     private boolean genesEqual(final String genes1, final String genes2)

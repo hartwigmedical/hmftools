@@ -7,13 +7,14 @@ import static com.hartwig.hmftools.compar.Category.COPY_NUMBER;
 import static com.hartwig.hmftools.compar.Category.DISRUPTION;
 import static com.hartwig.hmftools.compar.Category.DRIVER;
 import static com.hartwig.hmftools.compar.Category.FUSION;
+import static com.hartwig.hmftools.compar.Category.GERMLINE_VARIANT;
 import static com.hartwig.hmftools.compar.Category.LINX_DATA;
 import static com.hartwig.hmftools.compar.Category.PURITY;
 import static com.hartwig.hmftools.compar.Category.SOMATIC_VARIANT;
 import static com.hartwig.hmftools.compar.Category.SV;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
-import static com.hartwig.hmftools.compar.MismatchType.PRESENCE;
-import static com.hartwig.hmftools.compar.MismatchType.VALUE;
+import static com.hartwig.hmftools.compar.MismatchType.NEW_ONLY;
+import static com.hartwig.hmftools.compar.MismatchType.REF_ONLY;
 
 import java.util.List;
 import java.util.Set;
@@ -26,6 +27,7 @@ import com.hartwig.hmftools.compar.linx.FusionComparer;
 import com.hartwig.hmftools.compar.linx.LinxSvComparer;
 import com.hartwig.hmftools.compar.purple.CopyNumberComparer;
 import com.hartwig.hmftools.compar.purple.PurityComparer;
+import com.hartwig.hmftools.compar.somatic.GermlineVariantComparer;
 import com.hartwig.hmftools.compar.somatic.SomaticVariantComparer;
 
 public class CommonUtils
@@ -62,12 +64,15 @@ public class CommonUtils
         if(config.Categories.containsKey(SOMATIC_VARIANT))
             comparators.add(new SomaticVariantComparer(config));
 
+        if(config.Categories.containsKey(GERMLINE_VARIANT))
+            comparators.add(new GermlineVariantComparer(config));
+
         return comparators;
     }
 
     public static boolean checkDiff(final List<String> diffs, final String name, double value1, double value2)
     {
-        if(!diffValue(value1, value2))
+        if(!hasSignificantDiff(value1, value2))
             return false;
 
         diffs.add(String.format("%s(%.3f/%.3f)", name, value1, value2));
@@ -76,7 +81,7 @@ public class CommonUtils
 
     public static boolean checkDiff(final List<String> diffs, final String name, int value1, int value2)
     {
-        if(value1 == value2)
+        if(!hasSignificantDiff(value1, value2))
             return false;
 
         diffs.add(String.format("%s(%d/%d)", name, value1, value2));
@@ -101,12 +106,12 @@ public class CommonUtils
         return true;
     }
 
-    public static boolean diffValue(double value1, double value2)
+    public static boolean hasSignificantDiff(double value1, double value2)
     {
-        return diffValue(value1, value2, DEFAULT_DIFF, DEFAULT_DIFF_PERC, true);
+        return hasSignificantDiff(value1, value2, DEFAULT_DIFF, DEFAULT_DIFF_PERC, true);
     }
 
-    public static boolean diffValue(double value1, double value2, double maxAbsDiff, double maxRelDiff, boolean requireBothDiff)
+    public static boolean hasSignificantDiff(double value1, double value2, double maxAbsDiff, double maxRelDiff, boolean requireBothDiff)
     {
         // return TRUE if the values are DIFFERENT
         if(value1 == 0 && value2 == 0)
@@ -189,18 +194,6 @@ public class CommonUtils
 
                         if(mismatch != null)
                             mismatches.add(mismatch);
-
-                        /*
-                        if(!diffs.isEmpty())
-                        {
-                            StringJoiner differencesStr = new StringJoiner(ITEM_DELIM);
-                            diffs.forEach(x -> differencesStr.add(x));
-
-                            mismatches.add(new MismatchOld(
-                                    item1.category(), VALUE, source1, source2, eitherReportable,
-                                    item1.displayValues(), item1.gene(), differencesStr.toString()));
-                        }
-                        */
                     }
 
                     break;
@@ -221,10 +214,10 @@ public class CommonUtils
         List<String> emptyDiffs = Lists.newArrayList();
 
         items1.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
-                .forEach(x -> mismatches.add(new Mismatch(x, null, PRESENCE, emptyDiffs)));
+                .forEach(x -> mismatches.add(new Mismatch(x, null, REF_ONLY, emptyDiffs)));
 
         items2.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
-                .forEach(x -> mismatches.add(new Mismatch(x, null, PRESENCE, emptyDiffs)));
+                .forEach(x -> mismatches.add(new Mismatch(x, null, NEW_ONLY, emptyDiffs)));
     }
 
     public static String filtersStr(final Set<String> filters)

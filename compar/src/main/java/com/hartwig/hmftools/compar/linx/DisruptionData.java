@@ -84,12 +84,6 @@ public class DisruptionData implements ComparableItem
     @Override
     public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel)
     {
-        return null;
-    }
-
-    @Override
-    public List<String> findDifferences(final ComparableItem other, final MatchLevel matchLevel)
-    {
         final DisruptionData otherBreakend = (DisruptionData)other;
 
         final List<String> diffs = Lists.newArrayList();
@@ -98,8 +92,9 @@ public class DisruptionData implements ComparableItem
         checkDiff(diffs, "disruptive", hasDisruptive(), otherBreakend.hasDisruptive());
 
         if(matchLevel == REPORTABLE)
-            return diffs;
+            return null;
 
-        return diffs;
+
+        return null;
     }
 }

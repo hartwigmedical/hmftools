@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.somatic;
 
+import static com.hartwig.hmftools.compar.Category.GERMLINE_VARIANT;
 import static com.hartwig.hmftools.compar.Category.SOMATIC_VARIANT;
 import static com.hartwig.hmftools.compar.CommonUtils.checkDiff;
 import static com.hartwig.hmftools.compar.CommonUtils.filtersStr;
@@ -17,21 +18,20 @@ import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.MatchLevel;
 import com.hartwig.hmftools.compar.Mismatch;
-import com.hartwig.hmftools.compar.MismatchType;
 
-public class SomaticVariantData implements ComparableItem
+public class GermlineVariantData implements ComparableItem
 {
     public final SomaticVariant Variant;
     public final Set<String> Filters;
 
-    public SomaticVariantData(final SomaticVariant variant)
+    public GermlineVariantData(final SomaticVariant variant)
     {
         Variant = variant;
         Filters = Arrays.stream(variant.filter().split(";", -1)).collect(Collectors.toSet());
     }
 
     @Override
-    public Category category() { return SOMATIC_VARIANT; }
+    public Category category() { return GERMLINE_VARIANT; }
 
     @Override
     public String key()
@@ -60,7 +60,7 @@ public class SomaticVariantData implements ComparableItem
     @Override
     public boolean matches(final ComparableItem other)
     {
-        final SomaticVariantData otherVar = (SomaticVariantData)other;
+        final GermlineVariantData otherVar = (GermlineVariantData)other;
 
         if(!Variant.chromosome().equals(otherVar.Variant.chromosome()) || Variant.position() != otherVar.Variant.position())
             return false;
@@ -77,7 +77,7 @@ public class SomaticVariantData implements ComparableItem
     @Override
     public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel)
     {
-        final SomaticVariantData otherVar = (SomaticVariantData) other;
+        final GermlineVariantData otherVar = (GermlineVariantData) other;
 
         final List<String> diffs = Lists.newArrayList();
 
@@ -94,7 +94,6 @@ public class SomaticVariantData implements ComparableItem
             checkDiff(diffs, "canonicalHgvsCoding", Variant.canonicalHgvsCodingImpact(), otherVar.Variant.canonicalHgvsCodingImpact());
             checkDiff(diffs, "canonicalHgvsProtein", Variant.canonicalHgvsProteinImpact(), otherVar.Variant.canonicalHgvsProteinImpact());
             checkDiff(diffs, "otherReportedEffects", Variant.otherReportedEffects(), otherVar.Variant.otherReportedEffects());
-            checkDiff(diffs, "subclonalLikelihood", Variant.subclonalLikelihood(), otherVar.Variant.subclonalLikelihood());
             checkDiff(diffs, "qual", (int)Variant.qual(), (int)otherVar.Variant.qual());
         }
 
