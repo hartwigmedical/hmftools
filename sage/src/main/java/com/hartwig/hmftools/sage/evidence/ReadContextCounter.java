@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_EVIDENCE_MAP_QUAL;
+import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
@@ -208,7 +209,7 @@ public class ReadContextCounter implements VariantHotspot
     }
 
     public ReadMatchType processRead(
-            final SAMRecord record, final SageConfig sageConfig, final QualityCalculator qualityCalc, double rawNumberOfEvents)
+            final SAMRecord record, final SageConfig sageConfig, final QualityCalculator qualityCalc, int numberOfEvents)
     {
         if(exceedsMaxCoverage())
             return UNRELATED;
@@ -240,11 +241,20 @@ public class ReadContextCounter implements VariantHotspot
 
         final QualityConfig qualityConfig = sageConfig.Quality;
 
-        double numberOfEvents = mIsMnv ?
-                max(mMinNumberOfEvents, NumberEvents.numberOfEventsWithMNVRaw(rawNumberOfEvents, mVariant.ref(), mVariant.alt()))
-                : max(mMinNumberOfEvents, rawNumberOfEvents);
+        double adjustedNumOfEvents = numberOfEvents;
 
-        double quality = qualityCalc.calculateQualityScore(this, readIndex, record, numberOfEvents);
+        if(mIsMnv)
+            adjustedNumOfEvents = NumberEvents.calcWithMnvRaw(numberOfEvents, mVariant.ref(), mVariant.alt());
+
+        if(mVariant.alt().length() <= SC_READ_EVENTS_FACTOR)
+        {
+            // penalise variants except long inserts for their soft-clipped bases
+            adjustedNumOfEvents += NumberEvents.calcSoftClipAdjustment(record);
+        }
+
+        adjustedNumOfEvents = max(mMinNumberOfEvents, adjustedNumOfEvents);
+
+        double quality = qualityCalc.calculateQualityScore(this, readIndex, record, adjustedNumOfEvents);
 
         // Check if FULL, PARTIAL, OR CORE
         if(!baseDeleted)

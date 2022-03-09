@@ -1,12 +1,9 @@
 package com.hartwig.hmftools.sage.evidence;
 
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -24,8 +21,6 @@ import com.hartwig.hmftools.sage.read.NumberEvents;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.cram.ref.ReferenceSource;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 public class ReadContextEvidence
@@ -161,7 +156,7 @@ public class ReadContextEvidence
         List<ReadContextCounter> posPhasedCounters = mVariantPhaser != null ? Lists.newArrayList() : null;
         List<ReadContextCounter> negPhasedCounters = mVariantPhaser != null ? Lists.newArrayList() : null;
 
-        double numberOfEvents = NumberEvents.numberOfEventsRaw(record, mRefSequence);
+        int numberOfEvents = NumberEvents.calc(record, mRefSequence);
 
         for(ReadContextCounter readCounter : readCounters)
         {

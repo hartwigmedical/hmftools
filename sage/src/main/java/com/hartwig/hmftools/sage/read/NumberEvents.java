@@ -6,25 +6,18 @@ import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 
 import com.hartwig.hmftools.sage.common.RefSequence;
 
-import org.jetbrains.annotations.NotNull;
-
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.SequenceUtil;
 
 public final class NumberEvents
 {
-    public static int numberOfEvents(final SAMRecord record, final RefSequence refGenome)
-    {
-        return (int)round(numberOfEventsRaw(record, refGenome));
-    }
-
-    public static double numberOfEventsRaw(final SAMRecord record, final RefSequence refGenome)
+    public static int calc(final SAMRecord record, final RefSequence refGenome)
     {
         int nm = rawNM(record, refGenome);
 
         int additionalIndels = 0;
-        int softClippedBases = 0;
+
         for(CigarElement cigarElement : record.getCigar())
         {
             switch(cigarElement.getOperator())
@@ -33,16 +26,23 @@ public final class NumberEvents
                 case I:
                     additionalIndels += cigarElement.getLength() - 1;
                     break;
-                case S:
-                    softClippedBases += cigarElement.getLength();
-                    break;
             }
         }
 
-        // 1+ SUM(SoftClip bases) / 10
-        double softClipEvents = softClippedBases > 0 ? (1 + softClippedBases / SC_READ_EVENTS_FACTOR) : 0;
+        return nm - additionalIndels;
+    }
 
-        return nm - additionalIndels + softClipEvents;
+    public static double calcSoftClipAdjustment(final SAMRecord record)
+    {
+        int softClippedBases = 0;
+
+        if(record.getCigar().isLeftClipped())
+            softClippedBases += record.getCigar().getFirstCigarElement().getLength();
+
+        if(record.getCigar().isRightClipped())
+            softClippedBases += record.getCigar().getLastCigarElement().getLength();
+
+        return softClippedBases > 0 ? (1 + softClippedBases / SC_READ_EVENTS_FACTOR) : 0;
     }
 
     public static int rawNM(final SAMRecord record, final RefSequence refGenome)
@@ -57,12 +57,7 @@ public final class NumberEvents
         return SequenceUtil.calculateSamNmTag(record, refGenome.alignment().Bases, offset);
     }
 
-    public static int numberOfEventsWithMNV(double rawNumberEvents, final String ref, final String alt)
-    {
-        return (int)round(numberOfEventsWithMNVRaw(rawNumberEvents, ref, alt));
-    }
-
-    public static double numberOfEventsWithMNVRaw(double rawNumberEvents, final String ref, final String alt)
+    public static int calcWithMnvRaw(int numberOfEvents, final String ref, final String alt)
     {
         // Number of events includes each SNV as an additional event. This unfairly penalises MNVs.
         int differentBases = 0;
@@ -75,6 +70,6 @@ public final class NumberEvents
         }
 
         // We subtract one later when we actually use this value so we need to add one back in here to be consistent with SNVs and INDELs
-        return rawNumberEvents - differentBases + 1;
+        return numberOfEvents - differentBases + 1;
     }
 }

@@ -68,7 +68,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         if(reachedDepthLimit(record))
             return;
 
-        int numberOfEvents = NumberEvents.numberOfEvents(record, mRefGenome);
+        int numberOfEvents = NumberEvents.calc(record, mRefGenome) + (int)NumberEvents.calcSoftClipAdjustment(record);
 
         boolean readExceedsQuality = exceedsQualityCheck(record, numberOfEvents);
         if(!readExceedsQuality)
@@ -278,7 +278,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
                                         mnvRef,
                                         mnvAlt,
                                         baseQuality,
-                                        NumberEvents.numberOfEventsWithMNV(numberOfEvents, mnvRef, mnvAlt),
+                                        NumberEvents.calcWithMnvRaw(numberOfEvents, mnvRef, mnvAlt),
                                         sufficientMapQuality,
                                         mnvReadContext));
                             }
