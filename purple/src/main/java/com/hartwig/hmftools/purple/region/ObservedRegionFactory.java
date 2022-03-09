@@ -62,8 +62,8 @@ public class ObservedRegionFactory
             cobaltSelector.select(region, cobalt);
             gcSelector.select(region, gc);
 
-            // double tumorRatio = cobalt.tumorMedianRatio();
-            double tumorRatio = cobalt.tumorMeanRatio();
+            double tumorRatio = cobalt.tumorMedianRatio();
+            // double tumorRatio = cobalt.tumorMeanRatio();
             double normalRatio = cobalt.referenceMeanRatio();
             final ModifiableEnrichedRegion observedRegion = ModifiableEnrichedRegion.create()
                     .from(region)
