@@ -10,9 +10,8 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.actionability.ActionabilityTestUtil;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
-import com.hartwig.hmftools.serve.sources.ImmutableSources;
+import com.hartwig.hmftools.serve.tumorlocation.ImmutableTumorLocation;
 
-import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class ActionableFileFunctionsTest {
@@ -20,23 +19,29 @@ public class ActionableFileFunctionsTest {
     @Test
     public void canConvertActionableEvents() {
         ActionableEvent event =
-                ActionabilityTestUtil.create(ImmutableSources.builder().source(Knowledgebase.VICC_CGI).sourceEvent(Strings.EMPTY).build(),
+                ActionabilityTestUtil.create(Knowledgebase.VICC_CGI,
+                        "rawInput",
+                        Sets.newHashSet(),
                         "treatment",
-                        "cancerType",
-                        "doid",
-                        "tumorLocationBlacklisting",
+                        ImmutableTumorLocation.builder()
+                                .cancerType("whitlist cancertype")
+                                .doid("whitlist doid")
+                                .build(),
+                        Sets.newHashSet(ImmutableTumorLocation.builder()
+                                .cancerType("blacklist cancertype")
+                                .doid("blacklist doid")
+                                .build()),
                         EvidenceLevel.C,
                         EvidenceDirection.RESISTANT,
-                        Sets.newHashSet(),
                         Sets.newHashSet("url1", "url2"));
 
         String line = ActionableFileFunctions.toLine(event);
         ActionableEvent convertedEvent = ActionableFileFunctions.fromLine(line.split(FIELD_DELIMITER), 0);
 
-        assertEquals(Knowledgebase.VICC_CGI, convertedEvent.source().source());
+        assertEquals(Knowledgebase.VICC_CGI, convertedEvent.source());
         assertEquals("treatment", convertedEvent.treatment());
-        assertEquals("cancerType", convertedEvent.cancerType());
-        assertEquals("doid", convertedEvent.doid());
+        assertEquals("whitlist cancertype", convertedEvent.whiteList().cancerType());
+        assertEquals("whitlist doid", convertedEvent.whiteList().doid());
         assertEquals(EvidenceLevel.C, convertedEvent.level());
         assertEquals(EvidenceDirection.RESISTANT, convertedEvent.direction());
         assertEquals(Sets.newHashSet("url1", "url2"), convertedEvent.evidenceUrls());

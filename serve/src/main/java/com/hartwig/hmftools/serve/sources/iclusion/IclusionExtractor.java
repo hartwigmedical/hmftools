@@ -24,8 +24,6 @@ import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
 import com.hartwig.hmftools.serve.extraction.events.EventInterpretation;
 import com.hartwig.hmftools.serve.extraction.events.ImmutableEventInterpretation;
-import com.hartwig.hmftools.serve.sources.ImmutableSources;
-import com.hartwig.hmftools.serve.sources.Sources;
 import com.hartwig.hmftools.serve.util.ProgressTracker;
 
 import org.apache.logging.log4j.LogManager;
@@ -64,9 +62,9 @@ public class IclusionExtractor {
                         LOGGER.warn("No event type known for '{}' on '{}'", mutation.name(), mutation.gene());
                     }
                     eventExtractions.add(eventExtractor.extract(mutation.gene(), null, mutation.type(), mutation.name(), Strings.EMPTY));
-                    Sources sources = ImmutableSources.builder().sourceEvent(mutation.name()).source(Knowledgebase.ICLUSION).build();
                     interpretation.add(ImmutableEventInterpretation.builder()
-                            .source(sources)
+                            .source(Knowledgebase.ICLUSION)
+                            .sourceEvent(mutation.name())
                             .interpretGene(mutation.gene())
                             .interpretEvent(mutation.name())
                             .interpretEventType(mutation.type())

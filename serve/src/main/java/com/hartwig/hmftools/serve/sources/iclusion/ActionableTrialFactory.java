@@ -11,16 +11,14 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTumorLocation;
-import com.hartwig.hmftools.serve.blacklisting.ImmutableTumorLocationBlacklisting;
-import com.hartwig.hmftools.serve.blacklisting.TumorLocationBlacklist;
-import com.hartwig.hmftools.serve.blacklisting.TumorLocationBlacklisting;
+import com.hartwig.hmftools.serve.tumorlocation.ImmutableTumorLocation;
+import com.hartwig.hmftools.serve.tumorlocation.TumorLocation;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
-import com.hartwig.hmftools.serve.sources.ImmutableSources;
-import com.hartwig.hmftools.serve.sources.Sources;
 
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class ActionableTrialFactory {
@@ -46,15 +44,15 @@ public class ActionableTrialFactory {
 
     @NotNull
     public List<ActionableTrial> toActionableTrials(@NotNull IclusionTrial trial, @NotNull String rawInput) {
-        List<TumorLocationBlacklisting> tumorLocationBlacklistings = Lists.newArrayList();
-        Sources sources = ImmutableSources.builder().sourceEvent(rawInput).source(Knowledgebase.ICLUSION).build();
+        Set<TumorLocation> tumorLocationBlacklistings = Sets.newHashSet();
 
         ImmutableActionableTrial.Builder actionableBuilder = ImmutableActionableTrial.builder()
-                .source(sources)
+                .source(Knowledgebase.ICLUSION)
+                .sourceEvent(rawInput)
+                .sourceUrls(Sets.newHashSet("https://trial-eye.com/hmf/" + trial.id()))
                 .treatment(trial.acronym())
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .sourceUrls(Sets.newHashSet("https://trial-eye.com/hmf/" + trial.id()))
                 .evidenceUrls(Sets.newHashSet());
 
         List<ActionableTrial> actionableTrials = Lists.newArrayList();
@@ -82,9 +80,9 @@ public class ActionableTrialFactory {
             }
         }
 
-        tumorLocationBlacklistings.add(ImmutableTumorLocationBlacklisting.builder()
-                .blacklistCancerType(urlsToString(blacklistTumorLocations))
-                .blacklistedDoid(urlsToString(blacklistedDoids))
+        tumorLocationBlacklistings.add(ImmutableTumorLocation.builder()
+                .cancerType(urlsToString(blacklistTumorLocations))
+                .doid(urlsToString(blacklistedDoids))
                 .build());
 
         for (IclusionTumorLocation tumorLocation : trial.tumorLocations()) {
@@ -103,14 +101,16 @@ public class ActionableTrialFactory {
             for (String doid : doids) {
                 String doidCorrected = extractDoid(doid);
 
-                tumorLocationBlacklistings.add(ImmutableTumorLocationBlacklisting.builder()
-                        .blacklistCancerType(doidCorrected.equals("162") ? "Hematologic cancer" : null)
-                        .blacklistedDoid(doidCorrected.equals("162") ? "2531" : null)
+                tumorLocationBlacklistings.add(ImmutableTumorLocation.builder()
+                        .cancerType(doidCorrected.equals("162") ? "Hematologic cancer" : Strings.EMPTY)
+                        .doid(doidCorrected.equals("162") ? "2531" : Strings.EMPTY)
                         .build());
-                String tumorLocationBlacklisting = TumorLocationBlacklist.extractTumorLocationBlacklisting(tumorLocationBlacklistings);
-                actionableTrials.add(actionableBuilder.cancerType(tumorLocation.primaryTumorLocation())
-                        .doid(doidCorrected)
-                        .tumorLocationBlacklisting(tumorLocationBlacklisting)
+                actionableTrials.add(actionableBuilder
+                        .whiteList(ImmutableTumorLocation.builder()
+                                .cancerType(tumorLocation.primaryTumorLocation())
+                                .doid(doidCorrected)
+                                .build())
+                        .blacklistings(tumorLocationBlacklistings)
                         .build());
             }
         }

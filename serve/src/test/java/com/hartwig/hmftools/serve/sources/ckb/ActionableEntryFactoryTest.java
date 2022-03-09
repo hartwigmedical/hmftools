@@ -7,10 +7,12 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.serve.tumorlocation.ImmutableTumorLocation;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
@@ -29,12 +31,13 @@ public class ActionableEntryFactoryTest {
         Set<ActionableEntry> entryCharacteristicsSet = ActionableEntryFactory.toActionableEntries(entryCharacteristics, "MSI neg");
         assertEquals(1, entryCharacteristicsSet.size());
         ActionableEntry characteristics = entryCharacteristicsSet.iterator().next();
-        assertEquals("MSI neg", characteristics.source().sourceEvent());
-        assertEquals(Knowledgebase.CKB, characteristics.source().source());
+        assertEquals("MSI neg", characteristics.sourceEvent());
+        assertEquals(Knowledgebase.CKB, characteristics.source());
         assertEquals("AB", characteristics.treatment());
-        assertEquals("AB", characteristics.cancerType());
-        assertEquals("162", characteristics.doid());
-        assertEquals("Hematologic cancer,2531", characteristics.tumorLocationBlacklisting());
+        assertEquals("AB", characteristics.whiteList().cancerType());
+        assertEquals("162", characteristics.whiteList().doid());
+        assertEquals(Sets.newHashSet(ImmutableTumorLocation.builder().cancerType("Hematologic cancer").doid("2531").build()),
+                characteristics.blacklistings());
         assertEquals(EvidenceLevel.A, characteristics.level());
         assertEquals(EvidenceDirection.RESPONSIVE, characteristics.direction());
 
@@ -50,12 +53,13 @@ public class ActionableEntryFactoryTest {
         Set<ActionableEntry> entryAmplificationSet = ActionableEntryFactory.toActionableEntries(entryAmplification, "KRAS amplification");
         assertEquals(1, entryAmplificationSet.size());
         ActionableEntry amplification = entryAmplificationSet.iterator().next();
-        assertEquals("KRAS amplification", amplification.source().sourceEvent());
-        assertEquals(Knowledgebase.CKB, amplification.source().source());
+        assertEquals("KRAS amplification", amplification.sourceEvent());
+        assertEquals(Knowledgebase.CKB, amplification.source());
         assertEquals("AB", amplification.treatment());
-        assertEquals("AB", amplification.cancerType());
-        assertEquals("163", amplification.doid());
-        assertEquals(Strings.EMPTY, amplification.tumorLocationBlacklisting());
+        assertEquals("AB", amplification.whiteList().cancerType());
+        assertEquals("163", amplification.whiteList().doid());
+        assertEquals(Sets.newHashSet(ImmutableTumorLocation.builder().cancerType(Strings.EMPTY).doid(Strings.EMPTY).build()),
+                amplification.blacklistings());
         assertEquals(EvidenceLevel.A, amplification.level());
         assertEquals(EvidenceDirection.RESPONSIVE, amplification.direction());
 
@@ -64,12 +68,13 @@ public class ActionableEntryFactoryTest {
         Set<ActionableEntry> entryHotspotSet = ActionableEntryFactory.toActionableEntries(entryHotspot, "BRAF V600E");
         assertEquals(1, entryHotspotSet.size());
         ActionableEntry hotspot = entryHotspotSet.iterator().next();
-        assertEquals("BRAF V600E", hotspot.source().sourceEvent());
-        assertEquals(Knowledgebase.CKB, hotspot.source().source());
+        assertEquals("BRAF V600E", hotspot.sourceEvent());
+        assertEquals(Knowledgebase.CKB, hotspot.source());
         assertEquals("AB", hotspot.treatment());
-        assertEquals("AB", hotspot.cancerType());
-        assertEquals("162", hotspot.doid());
-        assertEquals("Hematologic cancer,2531", hotspot.tumorLocationBlacklisting());
+        assertEquals("AB", hotspot.whiteList().cancerType());
+        assertEquals("162", hotspot.whiteList().doid());
+        assertEquals(Sets.newHashSet(ImmutableTumorLocation.builder().cancerType("Hematologic cancer").doid("2531").build()),
+                hotspot.blacklistings());
         assertEquals(EvidenceLevel.A, characteristics.level());
         assertEquals(EvidenceDirection.RESPONSIVE, characteristics.direction());
     }

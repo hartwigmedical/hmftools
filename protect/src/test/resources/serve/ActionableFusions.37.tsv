@@ -1,2 +1,4 @@
-geneUp	minExonUp	maxExonUp	geneDown	minExonDown	maxExonDown	rawInput	source	treatment	cancerType	doid	tumorLocationBlacklisting	level	direction	urlSource	urls
-EML4			ALK			fusion	HARTWIG_CURATED	drug	all	162		A	RESPONSIVE
+geneUp	minExonUp	maxExonUp	geneDown	minExonDown	maxExonDown	source	sourceEvent	sourceUrls	treatment	cancerType	doid	blacklistCancerTypes	level	direction	evidenceUrls
+EGFR	1	1	EGFR	8	8	VICC_CIVIC	fusion	http	Osimertinib	Lung Cancer	X		A	RESPONSIVE	http,http
+EML4			ALK			VICC_CIVIC	fusion	http	Crizotinib	Lung Cancer	X		A	RESPONSIVE	http,http
+PCM1			JAK2			VICC_CGI	fusion	http	Ruxolitinib	Leukemia	X		B	RESPONSIVE	http,http
