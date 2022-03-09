@@ -34,7 +34,8 @@ public class PaveConfig
     public final boolean CompareSnpEff;
     public final boolean WriteDiffs;
     public final boolean OnlyCanonical;
-    public final boolean FilterPass;
+    public final boolean ReadPassOnly;
+    public final boolean WritePassOnly;
 
     private static final String SAMPLE = "sample";
     private static final String VCF_FILE = "vcf_file";
@@ -47,7 +48,8 @@ public class PaveConfig
     // optional and debugging config
     private static final String COMPARE_SNPEFF = "compare_snpeff";
     private static final String ONLY_CANONCIAL = "only_canonical";
-    private static final String FILTER_PASS = "filter_pass";
+    private static final String READ_PASS_ONLY = "read_pass_only";
+    private static final String WRITE_PASS_ONLY = "write_pass_only";
     private static final String WRITE_DIFFS = "write_diffs";
     private static final String WRITE_TRANSCRIPT_CSV = "write_transcript_csv";
 
@@ -66,7 +68,8 @@ public class PaveConfig
         CompareSnpEff = cmd.hasOption(COMPARE_SNPEFF);
         WriteDiffs = cmd.hasOption(WRITE_DIFFS);
         OnlyCanonical = cmd.hasOption(ONLY_CANONCIAL);
-        FilterPass = cmd.hasOption(FILTER_PASS);
+        ReadPassOnly = cmd.hasOption(READ_PASS_ONLY);
+        WritePassOnly = cmd.hasOption(WRITE_PASS_ONLY);
 
         OutputDir = parseOutputDir(cmd);
     }
@@ -99,7 +102,8 @@ public class PaveConfig
         options.addOption(WRITE_DIFFS, false, "Only write transcript diffs to CSV file");
         options.addOption(WRITE_TRANSCRIPT_CSV, false, "Write variant impacts per transcript to CSV");
         options.addOption(ONLY_CANONCIAL, false, "Only check canonical transcripts");
-        options.addOption(FILTER_PASS, false, "Only annotate passing variants");
+        options.addOption(READ_PASS_ONLY, false, "Filter incoming variants to PASS only");
+        options.addOption(WRITE_PASS_ONLY, false, "Only annotate passing variants");
 
         GnomadAnnotation.addCmdLineArgs(options);
 

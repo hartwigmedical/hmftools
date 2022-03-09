@@ -173,7 +173,7 @@ public class PaveApplication
     {
         VariantData variant = VariantData.fromContext(variantContext);
 
-        if(mConfig.FilterPass)
+        if(mConfig.ReadPassOnly)
         {
             if(!variantContext.getFilters().isEmpty() && !variantContext.getFilters().contains(PASS_FILTER))
                 return;
@@ -221,7 +221,7 @@ public class PaveApplication
 
         ponAnnotateAndFilter(variant);
 
-        if(mConfig.FilterPass && !variant.filters().isEmpty())
+        if(mConfig.WritePassOnly && !variant.filters().isEmpty())
             return;
 
         mVcfWriter.writeVariant(variant.context(), variant, variantImpact);

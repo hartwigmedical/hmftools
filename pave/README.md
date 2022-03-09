@@ -50,6 +50,10 @@ Argument | Description
 ref_genome_version | 37 (default) or 38
 output_vcf_file | Specify the output VCF filename
 only_canonical | Only annotate impacts on canonical transcripts
+read_pass_only | Only process passing variants
+write_pass_only | Only write passing variants
+pon_file | PON file to annotate variants (see file format below)
+pon_filters | Apply PON filters (see details below)
 write_transcript_csv | Write a detailed CSV file for each impacted transcript
 
 ```
@@ -174,9 +178,27 @@ MIXED | Inframe Deletion with stop lost (single AA) | p.104Terdelext*?
 _ | Inframe Deletion with stop lost (multiple AA non conservative) | p.Val98_Ter104delinsArgext*?
 _ Inframe insertion + stop gained | p.Leu339delinsHisPhe* | Ignore any AA inserted AFTER the stop codon
 
-### Population Frequency
+### PON Annotation and Filtering
+Pave can annotate with PON values if the config 'pon_file' is used. The PON file must be a TSV with the following fields:
 
-We annotate the population frequency using gnomAD (v3.1.2 for hg38, v2.1.1 for GRCH37).  We filter the Gnomad file for variants with at least 0.00005 frequency and and we annotate with a resolution of 0.0001. 
+```
+Chromosome      Position        Ref     Alt     SamplesCount    MaxSampleReads  TotalReads
+1       10003   A       T       10      30      191
+1       10006   C       A       16      11      86
+1       10007   T       G       40      16      234
+```
+
+Pave will then add VCF tags 'PON_COUNT' from SamplesCount and 'PON_MAX' from MaxSampleReads for any matched variant.
+
+If the config 'pon_filters' is used, then Pave will additionally add the filter 'PON' to any variant which exceeds both the specified SamplesCount and MaxSampleReads values. 
+The filters can be set per variant tier, for example
+
+```HOTSPOT:5:5;PANEL:2:5;UNKNOWN:2:0```
+
+will mark any variant of tier = HOTSPOT as PON if it matches an entry with 5+ SamplesCount and 5+ MaxSampleReads, 2+ and 5+ for a PANEL tier variant, and 2+ for any other tier variant.
+
+### Population Frequency
+We annotate the population frequency using gnomAD (v3.1.2 for hg38, v2.1.1 for GRCH37). We filter the Gnomad file for variants with at least 0.00005 frequency and and we annotate with a resolution of 0.0001. The VCF tag 'GND_FREQ' will report the frequency.
 
 ## Known Issues
 - Frameshifts may not always be fully aligned to 3'UTR for HGNC protein annotation
