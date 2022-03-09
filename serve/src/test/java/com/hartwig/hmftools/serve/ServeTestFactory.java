@@ -19,6 +19,7 @@ import com.hartwig.hmftools.serve.actionability.immuno.ImmutableActionableHLA;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.RangeType;
+import com.hartwig.hmftools.serve.tumorlocation.ImmutableTumorLocation;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicAnnotation;
@@ -39,7 +40,6 @@ import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
 import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
-import com.hartwig.hmftools.serve.sources.ImmutableSources;
 
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.util.Strings;
@@ -158,7 +158,8 @@ public final class ServeTestFactory {
     public static ActionableHotspot createTestActionableHotspotForSource(@NotNull Knowledgebase source) {
         return ImmutableActionableHotspot.builder()
                 .from(createTestActionableHotspot())
-                .source(ImmutableSources.builder().source(source).sourceEvent(Strings.EMPTY).build())
+                .source(source)
+                .sourceEvent("test")
                 .build();
     }
 
@@ -177,7 +178,6 @@ public final class ServeTestFactory {
     public static ActionableRange createTestActionableRangeForSource(@NotNull Knowledgebase source) {
         return ImmutableActionableRange.builder()
                 .from(createTestActionableRange())
-                .source(ImmutableSources.builder().source(source).sourceEvent(Strings.EMPTY).build())
                 .build();
     }
 
@@ -200,7 +200,6 @@ public final class ServeTestFactory {
     public static ActionableGene createTestActionableGeneForSource(@NotNull Knowledgebase source) {
         return ImmutableActionableGene.builder()
                 .from(createTestActionableGene())
-                .source(ImmutableSources.builder().source(source).sourceEvent(Strings.EMPTY).build())
                 .build();
     }
 
@@ -217,7 +216,6 @@ public final class ServeTestFactory {
     public static ActionableFusion createTestActionableFusionForSource(@NotNull Knowledgebase source) {
         return ImmutableActionableFusion.builder()
                 .from(createTestActionableFusion())
-                .source(ImmutableSources.builder().source(source).sourceEvent(Strings.EMPTY).build())
                 .build();
     }
 
@@ -230,7 +228,6 @@ public final class ServeTestFactory {
     public static ActionableCharacteristic createTestActionableCharacteristicForSource(@NotNull Knowledgebase source) {
         return ImmutableActionableCharacteristic.builder()
                 .from(createTestActionableCharacteristic())
-                .source(ImmutableSources.builder().source(source).sourceEvent(Strings.EMPTY).build())
                 .build();
     }
 
@@ -248,7 +245,6 @@ public final class ServeTestFactory {
     public static ActionableHLA createTestActionableImmunoHLAForSource(@NotNull Knowledgebase source) {
         return ImmutableActionableHLA.builder()
                 .from(createTestActionableHLA())
-                .source(ImmutableSources.builder().source(source).sourceEvent("as").build())
                 .build();
     }
 
@@ -264,14 +260,20 @@ public final class ServeTestFactory {
 
     @NotNull
     private static ActionableEvent createTestBaseEvent(@NotNull Knowledgebase source) {
-        return ActionabilityTestUtil.create(ImmutableSources.builder().source(source).sourceEvent(Strings.EMPTY).build(),
-                Strings.EMPTY,
-                Strings.EMPTY,
-                Strings.EMPTY,
-                Strings.EMPTY,
+        return ActionabilityTestUtil.create(source,
+                "rawInput",
+                Sets.newHashSet(),
+                "treatment",
+                ImmutableTumorLocation.builder()
+                        .cancerType("whitlist cancertype")
+                        .doid("whitlist doid")
+                        .build(),
+                Sets.newHashSet(ImmutableTumorLocation.builder()
+                        .cancerType("blacklist cancertype")
+                        .doid("blacklist doid")
+                        .build()),
                 EvidenceLevel.A,
                 EvidenceDirection.RESPONSIVE,
-                Sets.newHashSet(),
                 Sets.newHashSet());
     }
 }

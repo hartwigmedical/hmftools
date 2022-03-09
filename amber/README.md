@@ -186,7 +186,7 @@ ORDER BY sampleCount desc;
 | TUMOR.amber.baf.vcf.gz                  | Similar information as BAF file but in VCF format.                                       |
 | TUMOR.amber.contamination.vcf.gz        | Entry at each homozygous site in the reference and tumor.                                |
 | REFERENCE.amber.snp.vcf.gz              | Entry at each SNP location in the reference.                                             |
-| REFERENCE.amber.homozygousregion.vcf.gz | Regions of homozygosity found in the reference.                                          |
+| REFERENCE.amber.homozygousregion.tsv    | Regions of homozygosity found in the reference.                                          |
 
 ## Performance Characteristics
 Performance numbers were taken from a 72 core machine using COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. 

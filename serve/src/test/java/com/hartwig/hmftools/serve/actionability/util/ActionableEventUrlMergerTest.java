@@ -12,7 +12,7 @@ import com.hartwig.hmftools.serve.actionability.ActionabilityTestUtil;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
-import com.hartwig.hmftools.serve.sources.ImmutableSources;
+import com.hartwig.hmftools.serve.tumorlocation.ImmutableTumorLocation;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -38,14 +38,20 @@ public class ActionableEventUrlMergerTest {
     @NotNull
     private static ActionableFusion createFusion(@NotNull String gene, @NotNull String url) {
         return ImmutableActionableFusion.builder()
-                .from(ActionabilityTestUtil.create(ImmutableSources.builder().source(Knowledgebase.VICC_CGI).sourceEvent("fusion").build(),
+                .from(ActionabilityTestUtil.create(Knowledgebase.VICC_CGI,
+                        "rawInput",
+                        Sets.newHashSet(),
                         "treatment",
-                        "cancerType",
-                        "doid",
-                        "tumorLocationBlacklisting",
+                        ImmutableTumorLocation.builder()
+                                .cancerType("whitlist cancertype")
+                                .doid("whitlist doid")
+                                .build(),
+                        Sets.newHashSet(ImmutableTumorLocation.builder()
+                                .cancerType("blacklist cancertype")
+                                .doid("blacklist doid")
+                                .build()),
                         EvidenceLevel.A,
                         EvidenceDirection.RESPONSIVE,
-                        Sets.newHashSet(),
                         Sets.newHashSet(url)))
                 .geneUp(gene)
                 .geneDown(gene)

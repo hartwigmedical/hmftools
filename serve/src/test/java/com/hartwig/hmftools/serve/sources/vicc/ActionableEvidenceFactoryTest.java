@@ -14,6 +14,7 @@ import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.curation.DoidLookupTestFactory;
 import com.hartwig.hmftools.serve.sources.vicc.curation.DrugCurator;
 import com.hartwig.hmftools.serve.sources.vicc.curation.EvidenceLevelCurator;
+import com.hartwig.hmftools.serve.tumorlocation.ImmutableTumorLocation;
 import com.hartwig.hmftools.vicc.datamodel.Association;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -48,28 +49,30 @@ public class ActionableEvidenceFactoryTest {
 
         ActionableEvent eventA = findByCancerType(events, cancerTypeA);
         assertEquals("Treatment", eventA.treatment());
-        assertEquals(cancerTypeA, eventA.cancerType());
-        assertEquals("1", eventA.doid());
-        assertEquals(Strings.EMPTY, eventA.tumorLocationBlacklisting());
+        assertEquals(cancerTypeA, eventA.whiteList().cancerType());
+        assertEquals("1", eventA.whiteList().doid());
+        assertEquals(Sets.newHashSet(ImmutableTumorLocation.builder().cancerType(Strings.EMPTY).doid(Strings.EMPTY).build()),
+                eventA.blacklistings());
         assertEquals(EvidenceLevel.A, eventA.level());
         assertEquals(EvidenceDirection.RESPONSIVE, eventA.direction());
         assertEquals(Sets.newHashSet("url"), eventA.evidenceUrls());
 
         ActionableEvent eventB = findByCancerType(events, cancerTypeB);
         assertEquals("Treatment", eventB.treatment());
-        assertEquals(cancerTypeB, eventB.cancerType());
-        assertEquals("162", eventB.doid());
+        assertEquals(cancerTypeB, eventB.whiteList().cancerType());
+        assertEquals("162", eventB.whiteList().doid());
         assertEquals(EvidenceLevel.A, eventB.level());
         assertEquals(EvidenceDirection.RESPONSIVE, eventB.direction());
         assertEquals(Sets.newHashSet("url"), eventB.evidenceUrls());
-        assertEquals("Hematologic cancer,2531", eventB.tumorLocationBlacklisting());
+        assertEquals(Sets.newHashSet(ImmutableTumorLocation.builder().cancerType("Hematologic cancer").doid("2531").build()),
+                eventB.blacklistings());
         factory.evaluateCuration();
     }
 
     @NotNull
     private static ActionableEvent findByCancerType(@NotNull Iterable<ActionableEvent> events, @NotNull String cancerType) {
         for (ActionableEvent event : events) {
-            if (event.cancerType().equals(cancerType)) {
+            if (event.whiteList().cancerType().equals(cancerType)) {
                 return event;
             }
         }

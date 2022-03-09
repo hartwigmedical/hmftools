@@ -1,2 +1,2 @@
-HLATypering	rawInput	source	treatment	cancerType	doid	tumorLocationBlacklisting	level	direction	urlSource	urls
-A*02	A*02	VICC_CIVIC	Nivolumab	All cancer types	X		A	RESPONSIVE	http	http,http
+HLAType	source	sourceEvent	sourceUrls	treatment	cancerType	doid	blacklistCancerTypes	level	direction	evidenceUrls
+A*02	ICLUSION	A*02	http	MNivolumab	All cancer types	X	Hematologic cancer,2531	A	RESPONSIVE	http

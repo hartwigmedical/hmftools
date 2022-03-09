@@ -19,6 +19,7 @@ import com.hartwig.hmftools.serve.extraction.codon.CodonFunctions;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
 import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberFunctions;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
+import com.hartwig.hmftools.serve.extraction.events.EventInterpretation;
 import com.hartwig.hmftools.serve.extraction.exon.ExonFunctions;
 import com.hartwig.hmftools.serve.extraction.exon.KnownExon;
 import com.hartwig.hmftools.serve.extraction.fusion.FusionFunctions;
@@ -62,6 +63,8 @@ public final class ExtractionFunctions {
         Set<KnownCopyNumber> allCopyNumbers = Sets.newHashSet();
         Set<KnownFusionPair> allFusionPairs = Sets.newHashSet();
 
+        Set<EventInterpretation> eventInterpretations = Sets.newHashSet();
+
         for (ExtractionResult result : results) {
 
             Set<ActionableRange> actionableRange = curate(result.actionableRanges());
@@ -71,6 +74,8 @@ public final class ExtractionFunctions {
             allExons.addAll(result.knownExons());
             allCopyNumbers.addAll(result.knownCopyNumbers());
             allFusionPairs.addAll(result.knownFusionPairs());
+
+            eventInterpretations.addAll(result.eventInterpretation());
 
             mergedBuilder.addAllActionableHotspots(result.actionableHotspots());
             mergedBuilder.addAllActionableRanges(actionableRange);
@@ -85,6 +90,7 @@ public final class ExtractionFunctions {
                 .knownExons(ExonFunctions.consolidate(allExons))
                 .knownCopyNumbers(CopyNumberFunctions.consolidate(allCopyNumbers))
                 .knownFusionPairs(FusionFunctions.consolidate(allFusionPairs))
+                .eventInterpretation(eventInterpretations)
                 .build();
 
         return consolidateActionableEvents(mergedResult);

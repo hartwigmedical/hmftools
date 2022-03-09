@@ -43,8 +43,6 @@ import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
 import com.hartwig.hmftools.serve.extraction.immuno.ImmunoHLA;
 import com.hartwig.hmftools.serve.extraction.range.RangeAnnotation;
-import com.hartwig.hmftools.serve.sources.ImmutableSources;
-import com.hartwig.hmftools.serve.sources.Sources;
 import com.hartwig.hmftools.serve.util.ProgressTracker;
 import com.hartwig.hmftools.vicc.annotation.ViccProteinAnnotationExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
@@ -122,13 +120,9 @@ public final class ViccExtractor {
                         eventExtractor.extract(gene, entry.transcriptId(), feature.type(), feature.name(), Strings.EMPTY);
                 rawInput = feature.name();
 
-                Sources sources = ImmutableSources.builder()
-                        .sourceEvent(rawInput)
-                        .source(ActionableEvidenceFactory.fromViccSource(entry.source()))
-                        .build();
-
                 interpretation.add(ImmutableEventInterpretation.builder()
-                        .source(sources)
+                        .source(ActionableEvidenceFactory.fromViccSource(entry.source()))
+                        .sourceEvent(rawInput)
                         .interpretGene(gene)
                         .interpretEvent(feature.name())
                         .interpretEventType(feature.type())

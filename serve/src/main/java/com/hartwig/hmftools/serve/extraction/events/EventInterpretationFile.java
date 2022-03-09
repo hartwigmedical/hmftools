@@ -35,8 +35,8 @@ public class EventInterpretationFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(FIELD_DELIMITER).add("sourceEvent")
-                .add("source")
+        return new StringJoiner(FIELD_DELIMITER).add("source")
+                .add("sourceEvent")
                 .add("interpretGene")
                 .add("interpretEvent")
                 .add("interpretEventType")
@@ -55,8 +55,8 @@ public class EventInterpretationFile {
 
     @NotNull
     private static String toLine(@NotNull EventInterpretation eventInterpretation) {
-        return new StringJoiner(FIELD_DELIMITER).add(eventInterpretation.source().sourceEvent())
-                .add(eventInterpretation.source().source().toString())
+        return new StringJoiner(FIELD_DELIMITER).add(eventInterpretation.source().toString())
+                .add(eventInterpretation.sourceEvent())
                 .add(eventInterpretation.interpretGene())
                 .add(eventInterpretation.interpretEvent())
                 .add(eventInterpretation.interpretEventType().toString())

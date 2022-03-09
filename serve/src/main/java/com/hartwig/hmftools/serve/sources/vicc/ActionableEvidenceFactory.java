@@ -14,12 +14,9 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
-import com.hartwig.hmftools.serve.blacklisting.ImmutableTumorLocationBlacklisting;
-import com.hartwig.hmftools.serve.blacklisting.TumorLocationBlacklist;
-import com.hartwig.hmftools.serve.blacklisting.TumorLocationBlacklisting;
+import com.hartwig.hmftools.serve.tumorlocation.ImmutableTumorLocation;
+import com.hartwig.hmftools.serve.tumorlocation.TumorLocation;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
-import com.hartwig.hmftools.serve.sources.ImmutableSources;
-import com.hartwig.hmftools.serve.sources.Sources;
 import com.hartwig.hmftools.serve.sources.vicc.curation.DrugCurator;
 import com.hartwig.hmftools.serve.sources.vicc.curation.EvidenceLevelCurator;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
@@ -31,6 +28,7 @@ import com.hartwig.hmftools.vicc.datamodel.civic.Civic;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.internal.$guava$.annotations.$VisibleForTesting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -107,30 +105,32 @@ class ActionableEvidenceFactory {
             level = evidenceLevelCurator.curate(entry.source(), entry.genes(), treatment, level, direction);
             List<List<String>> drugLists = drugCurator.curate(entry.source(), level, treatment);
 
-            Sources sources = ImmutableSources.builder().sourceEvent(rawInput).source(fromViccSource(entry.source())).build();
 
             ImmutableActionableEvidence.Builder builder = ImmutableActionableEvidence.builder()
-                    .source(sources)
+                    .source(fromViccSource(entry.source()))
+                    .sourceEvent(rawInput)
+                    .sourceUrls(Sets.newHashSet())
                     .level(level)
                     .direction(direction)
-                    .sourceUrls(Sets.newHashSet())
                     .evidenceUrls(urls);
 
             for (Map.Entry<String, Set<String>> cancerTypeEntry : cancerTypeToDoidsMap.entrySet()) {
                 String cancerType = cancerTypeEntry.getKey();
                 for (String doid : cancerTypeEntry.getValue()) {
-                    List<TumorLocationBlacklisting> tumorLocationBlacklistings = Lists.newArrayList();
-                    tumorLocationBlacklistings.add(ImmutableTumorLocationBlacklisting.builder()
-                            .blacklistCancerType(doid.equals("162") ? "Hematologic cancer" : null)
-                            .blacklistedDoid(doid.equals("162") ? "2531" : null)
+                    Set<TumorLocation> tumorLocationBlacklistings = Sets.newHashSet();
+                    tumorLocationBlacklistings.add(ImmutableTumorLocation.builder()
+                            .cancerType(doid.equals("162") ? "Hematologic cancer" : Strings.EMPTY)
+                            .doid(doid.equals("162") ? "2531" : Strings.EMPTY)
                             .build());
-                    String tumorLocationBlacklisting = TumorLocationBlacklist.extractTumorLocationBlacklisting(tumorLocationBlacklistings);
                     for (List<String> drugList : drugLists) {
-                        actionableEvents.add(builder.cancerType(cancerType)
-                                .doid(doid)
-                                .tumorLocationBlacklisting(tumorLocationBlacklisting)
+                        actionableEvents.add(builder
                                 .treatment(formatDrugList(drugList))
-                                .build());
+                                .whiteList(
+                                        ImmutableTumorLocation.builder()
+                                                .cancerType(cancerType)
+                                                .doid(doid)
+                                                .build())
+                                .blacklistings(tumorLocationBlacklistings).build());
                     }
                 }
             }

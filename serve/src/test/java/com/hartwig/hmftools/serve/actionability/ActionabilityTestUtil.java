@@ -4,9 +4,10 @@ import java.util.Objects;
 import java.util.Set;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.serve.sources.Sources;
+import com.hartwig.hmftools.serve.tumorlocation.TumorLocation;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,62 +20,72 @@ public final class ActionabilityTestUtil {
     }
 
     @NotNull
-    public static ActionableEvent create(@NotNull Sources source, @NotNull String treatment,
-            @NotNull String cancerType, @NotNull String doid, @NotNull String tumorLocationBlacklisting,
-            @NotNull EvidenceLevel level, @NotNull EvidenceDirection direction, @Nullable Set<String> sourceUrls,
-            @NotNull Set<String> evidenceUrls) {
-        return new ActionableEventImpl(
-                source,
+    public static ActionableEvent create(@NotNull Knowledgebase source, @NotNull String sourceEvent, @NotNull Set<String> sourceUrls,
+            @NotNull String treatment, @NotNull TumorLocation whiteList, @NotNull Set<TumorLocation> blacklistings,
+            @NotNull EvidenceLevel level, @NotNull EvidenceDirection direction, @NotNull Set<String> evidenceUrls) {
+        return new ActionableEventImpl(source,
+                sourceEvent,
+                sourceUrls,
                 treatment,
-                cancerType,
-                doid,
-                tumorLocationBlacklisting,
+                whiteList,
+                blacklistings,
                 level,
                 direction,
-                sourceUrls,
                 evidenceUrls);
     }
 
     private static class ActionableEventImpl implements ActionableEvent {
 
         @NotNull
-        private final Sources source;
+        private final Knowledgebase source;
+        @NotNull
+        private final String sourceEvent;
+        @NotNull
+        private final Set<String> sourceUrls;
         @NotNull
         private final String treatment;
         @NotNull
-        private final String cancerType;
+        private final TumorLocation whiteList;
         @NotNull
-        private final String doid;
-        @NotNull
-        private final String tumorLocationBlacklisting;
+        private final Set<TumorLocation> blacklistings;
         @NotNull
         private final EvidenceLevel level;
         @NotNull
         private final EvidenceDirection direction;
-        @Nullable
-        private final Set<String> sourceUrls;
         @NotNull
         private final Set<String> evidenceUrls;
 
-        public ActionableEventImpl(@NotNull final Sources source, @NotNull final String treatment,
-                @NotNull final String cancerType, @NotNull final String doid, @NotNull final String tumorLocationBlacklisting,
-                @NotNull final EvidenceLevel level, @NotNull final EvidenceDirection direction,
-                @Nullable Set<String> sourceUrls, @NotNull final Set<String> evidenceUrls) {
+        public ActionableEventImpl(@NotNull Knowledgebase source, @NotNull String sourceEvent, @NotNull Set<String> sourceUrls,
+                @NotNull String treatment, @NotNull TumorLocation whiteList,
+                @NotNull Set<TumorLocation> blacklistings, @NotNull EvidenceLevel level, @NotNull EvidenceDirection direction,
+                @NotNull Set<String> evidenceUrls) {
             this.source = source;
+            this.sourceEvent = sourceEvent;
+            this.sourceUrls = sourceUrls;
             this.treatment = treatment;
-            this.cancerType = cancerType;
-            this.doid = doid;
-            this.tumorLocationBlacklisting = tumorLocationBlacklisting;
+            this.whiteList = whiteList;
+            this.blacklistings = blacklistings;
             this.level = level;
             this.direction = direction;
-            this.sourceUrls = sourceUrls;
             this.evidenceUrls = evidenceUrls;
         }
 
         @NotNull
         @Override
-        public Sources source() {
+        public Knowledgebase source() {
             return source;
+        }
+
+        @NotNull
+        @Override
+        public String sourceEvent() {
+            return sourceEvent;
+        }
+
+        @NotNull
+        @Override
+        public Set<String> sourceUrls() {
+            return sourceUrls;
         }
 
         @NotNull
@@ -85,20 +96,14 @@ public final class ActionabilityTestUtil {
 
         @NotNull
         @Override
-        public String cancerType() {
-            return cancerType;
+        public TumorLocation whiteList() {
+            return whiteList;
         }
 
         @NotNull
         @Override
-        public String doid() {
-            return doid;
-        }
-
-        @NotNull
-        @Override
-        public String tumorLocationBlacklisting() {
-            return tumorLocationBlacklisting;
+        public Set<TumorLocation> blacklistings() {
+            return blacklistings;
         }
 
         @NotNull
@@ -111,12 +116,6 @@ public final class ActionabilityTestUtil {
         @Override
         public EvidenceDirection direction() {
             return direction;
-        }
-
-        @NotNull
-        @Override
-        public Set<String> sourceUrls() {
-            return sourceUrls;
         }
 
         @NotNull
@@ -134,32 +133,23 @@ public final class ActionabilityTestUtil {
                 return false;
             }
             final ActionableEventImpl that = (ActionableEventImpl) o;
-            return source == that.source && treatment.equals(that.treatment)
-                    && cancerType.equals(that.cancerType) && doid.equals(that.doid) && tumorLocationBlacklisting.equals(that.tumorLocationBlacklisting)
-                    && level == that.level && direction == that.direction
-                    && sourceUrls.equals(that.sourceUrls) && evidenceUrls.equals(that.evidenceUrls);
+            return source == that.source && sourceEvent.equals(source == that.source) && sourceUrls.equals(that.sourceUrls)
+                    && treatment.equals(that.treatment) && whiteList.equals(that.whiteList) && blacklistings.equals(that.blacklistings)
+                    && level == that.level && direction == that.direction && evidenceUrls.equals(that.evidenceUrls);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(
-                    source,
-                    treatment,
-                    cancerType,
-                    doid,
-                    tumorLocationBlacklisting,
-                    level,
-                    direction,
-                    sourceUrls,
+            return Objects.hash(source, sourceEvent, sourceUrls, treatment, whiteList, blacklistings, level, direction,
+
                     evidenceUrls);
         }
 
         @Override
         public String toString() {
-            return "ActionableEventImpl{" + "source=" + source + ", treatment='" + treatment + '\''
-                    + ", cancerType='" + cancerType + '\'' + ", doid='" + doid + '\''
-                    + ", tumorLocationBlacklisting='" + tumorLocationBlacklisting + '\'' + ", level=" + level + ", direction=" + direction + ", sourceUrls="
-                    + sourceUrls + ", evidenceUrls=" + evidenceUrls + '}';
+            return "ActionableEventImpl{" + "source=" + source + ", sourceEvent='" + sourceEvent + ", sourceUrls=" + sourceUrls +
+                    ", treatment='" + treatment + ", whiteList='" + whiteList + ", blacklistings='" + blacklistings  + ", level=" + level
+                    + ", direction=" + direction +   ", evidenceUrls=" + evidenceUrls + '}';
         }
     }
 }

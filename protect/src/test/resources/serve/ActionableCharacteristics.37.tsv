@@ -1,2 +1,3 @@
-name	comparator	cutoff	rawInput	source	treatment	cancerType	doid	tumorLocationBlacklisting	level	direction	urlSource	urls
-MICROSATELLITE_UNSTABLE	EQUAL_OR_GREATER	4	msi	HARTWIG_CURATED	drug	all	162		B	RESPONSIVE
+annotation	comparator	cutoff	source	sourceEvent	sourceUrls	treatment	cancerType	doid	blacklistCancerTypes	level	direction	evidenceUrls
+MICROSATELLITE_UNSTABLE	EQUAL_OR_GREATER	4	VICC_CIVIC	msi	http	Nivolumab	All cancer types	X	Hematologic cancer,2531	A	RESPONSIVE	http,http
+MICROSATELLITE_UNSTABLE	EQUAL_OR_GREATER	4	VICC_CGI	msi	http	Nivolumab	All cancer types	X	Hematologic cancer,2531	A	RESPONSIVE	http,http

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.serve.sources.ckb;
 
-import java.util.List;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -12,15 +11,12 @@ import com.hartwig.hmftools.ckb.datamodel.reference.Reference;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.serve.blacklisting.ImmutableTumorLocationBlacklisting;
-import com.hartwig.hmftools.serve.blacklisting.TumorLocationBlacklist;
-import com.hartwig.hmftools.serve.blacklisting.TumorLocationBlacklisting;
-import com.hartwig.hmftools.serve.sources.ImmutableSources;
-import com.hartwig.hmftools.serve.sources.Sources;
+import com.hartwig.hmftools.serve.tumorlocation.ImmutableTumorLocation;
+import com.hartwig.hmftools.serve.tumorlocation.TumorLocation;
 
-import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -97,23 +93,24 @@ class ActionableEntryFactory {
                                         + evidence.evidenceType());
                     }
 
-                    List<TumorLocationBlacklisting> tumorLocationBlacklistings = Lists.newArrayList();
-                    tumorLocationBlacklistings.add(ImmutableTumorLocationBlacklisting.builder()
-                            .blacklistCancerType(doid.equals("162") ? "Hematologic cancer" : null)
-                            .blacklistedDoid(doid.equals("162") ? "2531" : null)
+                    Set<TumorLocation> tumorLocationBlacklistings = Sets.newHashSet();
+                    tumorLocationBlacklistings.add(ImmutableTumorLocation.builder()
+                            .cancerType(doid.equals("162") ? "Hematologic cancer" : Strings.EMPTY)
+                            .doid(doid.equals("162") ? "2531" : Strings.EMPTY)
                             .build());
-                    String tumorLocationBlacklisting = TumorLocationBlacklist.extractTumorLocationBlacklisting(tumorLocationBlacklistings);
 
-                    Sources sources = ImmutableSources.builder().sourceEvent(rawInput).source(Knowledgebase.CKB).build();
                     actionableEntries.add(ImmutableActionableEntry.builder()
-                            .source(sources)
+                            .source(Knowledgebase.CKB)
+                            .sourceEvent(rawInput)
+                            .sourceUrls(sourceLinks)
                             .treatment(treatment)
-                            .cancerType(cancerType)
-                            .doid(doid)
-                            .tumorLocationBlacklisting(tumorLocationBlacklisting)
+                            .whiteList(ImmutableTumorLocation.builder()
+                                    .cancerType(cancerType)
+                                    .doid(doid)
+                                    .build())
+                            .blacklistings(tumorLocationBlacklistings)
                             .level(level)
                             .direction(direction)
-                            .sourceUrls(sourceLinks)
                             .evidenceUrls(urls)
                             .build());
                 }
