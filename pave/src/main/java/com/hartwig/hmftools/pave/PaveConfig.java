@@ -31,7 +31,6 @@ public class PaveConfig
     public final String OutputVcfFile;
 
     public final boolean WriteTranscriptCsv;
-    public final boolean CompareSnpEff;
     public final boolean WriteDiffs;
     public final boolean OnlyCanonical;
     public final boolean ReadPassOnly;
@@ -46,7 +45,6 @@ public class PaveConfig
     public static final String PON_ARTEFACTS_FILE = "pon_artefact_file";
 
     // optional and debugging config
-    private static final String COMPARE_SNPEFF = "compare_snpeff";
     private static final String ONLY_CANONCIAL = "only_canonical";
     private static final String READ_PASS_ONLY = "read_pass_only";
     private static final String WRITE_PASS_ONLY = "write_pass_only";
@@ -65,7 +63,6 @@ public class PaveConfig
         OutputVcfFile = cmd.getOptionValue(OUTPUT_VCF_FILE);
 
         WriteTranscriptCsv = cmd.hasOption(WRITE_TRANSCRIPT_CSV);
-        CompareSnpEff = cmd.hasOption(COMPARE_SNPEFF);
         WriteDiffs = cmd.hasOption(WRITE_DIFFS);
         OnlyCanonical = cmd.hasOption(ONLY_CANONCIAL);
         ReadPassOnly = cmd.hasOption(READ_PASS_ONLY);
@@ -98,7 +95,6 @@ public class PaveConfig
         options.addOption(PON_ARTEFACTS_FILE, true, "PON artefacts to filter");
         options.addOption(PON_FILTERS, true, "PON filters per tier, format: TIER:MAX_SAMPLES:MAX_COUNT separated by ';'");
 
-        options.addOption(COMPARE_SNPEFF, false, "Check against SnpEff annotations");
         options.addOption(WRITE_DIFFS, false, "Only write transcript diffs to CSV file");
         options.addOption(WRITE_TRANSCRIPT_CSV, false, "Write variant impacts per transcript to CSV");
         options.addOption(ONLY_CANONCIAL, false, "Only check canonical transcripts");
