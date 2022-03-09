@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.compar.somatic;
 
 import static com.hartwig.hmftools.compar.Category.SOMATIC_VARIANT;
+import static com.hartwig.hmftools.compar.CommonUtils.DEFAULT_DIFF_PERC;
 import static com.hartwig.hmftools.compar.CommonUtils.checkDiff;
 import static com.hartwig.hmftools.compar.CommonUtils.filtersStr;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
@@ -17,7 +18,6 @@ import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.MatchLevel;
 import com.hartwig.hmftools.compar.Mismatch;
-import com.hartwig.hmftools.compar.MismatchType;
 
 public class SomaticVariantData implements ComparableItem
 {
@@ -94,8 +94,14 @@ public class SomaticVariantData implements ComparableItem
             checkDiff(diffs, "canonicalHgvsCoding", Variant.canonicalHgvsCodingImpact(), otherVar.Variant.canonicalHgvsCodingImpact());
             checkDiff(diffs, "canonicalHgvsProtein", Variant.canonicalHgvsProteinImpact(), otherVar.Variant.canonicalHgvsProteinImpact());
             checkDiff(diffs, "otherReportedEffects", Variant.otherReportedEffects(), otherVar.Variant.otherReportedEffects());
-            checkDiff(diffs, "subclonalLikelihood", Variant.subclonalLikelihood(), otherVar.Variant.subclonalLikelihood());
-            checkDiff(diffs, "qual", (int)Variant.qual(), (int)otherVar.Variant.qual());
+
+            checkDiff(
+                    diffs, "qual", (int)Variant.qual(), (int)otherVar.Variant.qual(),
+                    20, 0.2, true);
+
+            checkDiff(
+                    diffs, "subclonalLikelihood", Variant.subclonalLikelihood(), otherVar.Variant.subclonalLikelihood(),
+                    0.6, DEFAULT_DIFF_PERC, true);
         }
 
         // compare filters

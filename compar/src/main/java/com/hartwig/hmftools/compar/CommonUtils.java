@@ -72,7 +72,14 @@ public class CommonUtils
 
     public static boolean checkDiff(final List<String> diffs, final String name, double value1, double value2)
     {
-        if(!hasSignificantDiff(value1, value2))
+        return checkDiff(diffs, name, value1, value2, DEFAULT_DIFF, DEFAULT_DIFF_PERC, true);
+    }
+
+    public static boolean checkDiff(
+            final List<String> diffs, final String name, double value1, double value2,
+            double maxAbsDiff, double maxRelDiff, boolean requireBothDiff)
+    {
+        if(!hasSignificantDiff(value1, value2, maxAbsDiff, maxRelDiff, requireBothDiff))
             return false;
 
         diffs.add(String.format("%s(%.3f/%.3f)", name, value1, value2));
@@ -81,7 +88,14 @@ public class CommonUtils
 
     public static boolean checkDiff(final List<String> diffs, final String name, int value1, int value2)
     {
-        if(!hasSignificantDiff(value1, value2))
+        return checkDiff(diffs, name, value1, value2, DEFAULT_DIFF, DEFAULT_DIFF_PERC, true);
+    }
+
+    public static boolean checkDiff(
+            final List<String> diffs, final String name, int value1, int value2,
+            double maxAbsDiff, double maxRelDiff, boolean requireBothDiff)
+    {
+        if(!hasSignificantDiff(value1, value2, maxAbsDiff, maxRelDiff, requireBothDiff))
             return false;
 
         diffs.add(String.format("%s(%d/%d)", name, value1, value2));
@@ -217,7 +231,7 @@ public class CommonUtils
                 .forEach(x -> mismatches.add(new Mismatch(x, null, REF_ONLY, emptyDiffs)));
 
         items2.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
-                .forEach(x -> mismatches.add(new Mismatch(x, null, NEW_ONLY, emptyDiffs)));
+                .forEach(x -> mismatches.add(new Mismatch(null, x, NEW_ONLY, emptyDiffs)));
     }
 
     public static String filtersStr(final Set<String> filters)
