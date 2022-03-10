@@ -215,7 +215,7 @@ The read context core is the variant itself expanded to cover at least 5 bases.
 Typically we use 10 bases for the flank, but for this illustration we then use an additional 5 bases on either side to get the complete read context. 
   
 <pre>
-Reference:                ...ACCATGGATACCATCATCACATACGA...
+Reference:                ...ACCATGGATACCATCATAACATACGA...
 Variant:                                  <b>A</b>
 Core read context:                      <b>CAACA</b>
 Flanked read context:              <b>GATACCAACATAACA</b>
