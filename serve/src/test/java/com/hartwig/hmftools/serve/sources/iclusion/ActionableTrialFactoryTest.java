@@ -13,13 +13,11 @@ import com.hartwig.hmftools.serve.curation.DoidLookupTestFactory;
 import com.hartwig.hmftools.serve.tumorlocation.ImmutableTumorLocation;
 
 import org.apache.logging.log4j.util.Strings;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class ActionableTrialFactoryTest {
 
     @Test
-    @Ignore
     public void canCreateActionableTrials() {
         String location1 = "loc1";
         String loc1Doid1 = "162";
