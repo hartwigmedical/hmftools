@@ -52,6 +52,7 @@ public class IclusionExtractor {
         ProgressTracker tracker = new ProgressTracker("iClusion", trials.size());
         List<ExtractionResult> extractions = Lists.newArrayList();
         List<EventInterpretation> interpretation = Lists.newArrayList();
+        List<ActionableTrial> actionableTrials = Lists.newArrayList();
         for (IclusionTrial trial : trials) {
             List<EventExtractorOutput> eventExtractions = Lists.newArrayList();
             String rawInput = Strings.EMPTY;
@@ -62,6 +63,7 @@ public class IclusionExtractor {
                         LOGGER.warn("No event type known for '{}' on '{}'", mutation.name(), mutation.gene());
                     }
                     eventExtractions.add(eventExtractor.extract(mutation.gene(), null, mutation.type(), mutation.name(), Strings.EMPTY));
+                    rawInput = mutation.name();
                     interpretation.add(ImmutableEventInterpretation.builder()
                             .source(Knowledgebase.ICLUSION)
                             .sourceEvent(mutation.name())
@@ -69,16 +71,16 @@ public class IclusionExtractor {
                             .interpretEvent(mutation.name())
                             .interpretEventType(mutation.type())
                             .build());
+
+                    actionableTrials = actionableTrialFactory.toActionableTrials(trial, rawInput);
+                    for (ActionableTrial actionableTrial : actionableTrials) {
+                        LOGGER.debug("Generated {} based off {}", actionableTrial, trial);
+                    }
+
+
                 }
             }
-
-            List<ActionableTrial> actionableTrials = actionableTrialFactory.toActionableTrials(trial, rawInput);
-            for (ActionableTrial actionableTrial : actionableTrials) {
-                LOGGER.debug("Generated {} based off {}", actionableTrial, trial);
-            }
-
             extractions.add(toExtractionResult(actionableTrials, eventExtractions, interpretation));
-
             tracker.update();
         }
 
