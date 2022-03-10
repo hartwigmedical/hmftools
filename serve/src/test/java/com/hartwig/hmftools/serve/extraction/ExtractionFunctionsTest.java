@@ -3,74 +3,18 @@ package com.hartwig.hmftools.serve.extraction;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Set;
-
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.serve.ServeTestFactory;
-import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
-import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
-import com.hartwig.hmftools.serve.actionability.range.RangeType;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.exon.KnownExon;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class ExtractionFunctionsTest {
-
-    @Test
-    public void canCurateRanges() {
-        Set<ActionableRange> actionableRangeSet = Sets.newHashSet();
-        ActionableRange range1 = ImmutableActionableRange.builder()
-                .from(ServeTestFactory.createTestActionableRange())
-                .gene("BRAF")
-                .rank(600)
-                .rangeType(RangeType.CODON)
-                .start(10)
-                .end(20)
-                .transcript("transcript")
-                .build();
-        ActionableRange range2 = ImmutableActionableRange.builder()
-                .from(ServeTestFactory.createTestActionableRange())
-                .gene("BRAF")
-                .rank(601)
-                .rangeType(RangeType.CODON)
-                .start(10)
-                .end(20)
-                .transcript("transcript")
-                .build();
-        actionableRangeSet.add(range1);
-        actionableRangeSet.add(range2);
-
-        Set<ActionableRange> curatedRanges = ExtractionFunctions.curate(actionableRangeSet);
-        ActionableRange actionableRange1 = findByRank(curatedRanges, 601);
-        assertEquals("BRAF", actionableRange1.gene());
-        assertEquals(10, actionableRange1.start());
-        assertEquals(20, actionableRange1.end());
-        assertEquals("transcript", actionableRange1.transcript());
-
-        ActionableRange actionableRange2 = findByRank(curatedRanges, 600);
-        assertEquals("BRAF", actionableRange2.gene());
-        assertEquals(140753335, actionableRange2.start());
-        assertEquals(140753337, actionableRange2.end());
-        assertEquals("ENST00000288602", actionableRange2.transcript());
-    }
-
-    @NotNull
-    private static ActionableRange findByRank(@NotNull Iterable<ActionableRange> ranges, int rank) {
-        for (ActionableRange range : ranges) {
-            if (range.rank() == rank) {
-                return range;
-            }
-        }
-
-        throw new IllegalStateException("Could not find actionable range with rank " + rank);
-    }
 
     @Test
     public void canMergeExtractionResults() {

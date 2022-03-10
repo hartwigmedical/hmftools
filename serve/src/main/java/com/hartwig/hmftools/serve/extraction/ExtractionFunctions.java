@@ -10,10 +10,7 @@ import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionUrlConsol
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGeneUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLAUrlConsolidator;
-import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRangeUrlConsolidator;
-import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
-import com.hartwig.hmftools.serve.actionability.range.RangeType;
 import com.hartwig.hmftools.serve.actionability.util.ActionableEventUrlMerger;
 import com.hartwig.hmftools.serve.extraction.codon.CodonFunctions;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
@@ -67,8 +64,6 @@ public final class ExtractionFunctions {
 
         for (ExtractionResult result : results) {
 
-            Set<ActionableRange> actionableRange = curate(result.actionableRanges());
-
             allHotspots.addAll(result.knownHotspots());
             allCodons.addAll(result.knownCodons());
             allExons.addAll(result.knownExons());
@@ -78,7 +73,7 @@ public final class ExtractionFunctions {
             eventInterpretations.addAll(result.eventInterpretation());
 
             mergedBuilder.addAllActionableHotspots(result.actionableHotspots());
-            mergedBuilder.addAllActionableRanges(actionableRange);
+            mergedBuilder.addAllActionableRanges(result.actionableRanges());
             mergedBuilder.addAllActionableGenes(result.actionableGenes());
             mergedBuilder.addAllActionableFusions(result.actionableFusions());
             mergedBuilder.addAllActionableCharacteristics(result.actionableCharacteristics());
@@ -94,27 +89,6 @@ public final class ExtractionFunctions {
                 .build();
 
         return consolidateActionableEvents(mergedResult);
-    }
-
-    @NotNull
-    static Set<ActionableRange> curate(@NotNull Set<ActionableRange> actionableRanges) {
-        Set<ActionableRange> curatedRanges = Sets.newHashSet();
-        for (ActionableRange range : actionableRanges) {
-            if (range.gene().equals("BRAF") && range.rank() == 600 && range.rangeType().equals(RangeType.CODON)) {
-                int start = 140753335;
-                int end = 140753337;
-                String canonicalTranscriptID = "ENST00000288602";
-                curatedRanges.add(ImmutableActionableRange.builder()
-                        .from(range)
-                        .start(start)
-                        .end(end)
-                        .transcript(canonicalTranscriptID)
-                        .build());
-            } else {
-                curatedRanges.add(range);
-            }
-        }
-        return curatedRanges;
     }
 
     @NotNull
