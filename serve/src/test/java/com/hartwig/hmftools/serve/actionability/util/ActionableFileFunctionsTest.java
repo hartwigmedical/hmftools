@@ -40,8 +40,8 @@ public class ActionableFileFunctionsTest {
 
         assertEquals(Knowledgebase.VICC_CGI, convertedEvent.source());
         assertEquals("treatment", convertedEvent.treatment());
-        assertEquals("whitlist cancertype", convertedEvent.whiteList().cancerType());
-        assertEquals("whitlist doid", convertedEvent.whiteList().doid());
+        assertEquals("whitlist cancertype", convertedEvent.whiteListCancerType().cancerType());
+        assertEquals("whitlist doid", convertedEvent.whiteListCancerType().doid());
         assertEquals(EvidenceLevel.C, convertedEvent.level());
         assertEquals(EvidenceDirection.RESISTANT, convertedEvent.direction());
         assertEquals(Sets.newHashSet("url1", "url2"), convertedEvent.evidenceUrls());

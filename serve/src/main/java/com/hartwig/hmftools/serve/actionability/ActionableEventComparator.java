@@ -28,11 +28,11 @@ public class ActionableEventComparator implements Comparator<ActionableEvent> {
             return treatmentCompare;
         }
 
-        int cancerTypeCompare = event1.whiteList().cancerType().compareTo(event2.whiteList().cancerType());
+        int cancerTypeCompare = event1.whiteListCancerType().cancerType().compareTo(event2.whiteListCancerType().cancerType());
         if (cancerTypeCompare != 0) {
             return cancerTypeCompare;
         }
 
-        return event1.whiteList().doid().compareTo(event2.whiteList().doid());
+        return event1.whiteListCancerType().doid().compareTo(event2.whiteListCancerType().doid());
     }
 }

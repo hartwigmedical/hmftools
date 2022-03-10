@@ -106,11 +106,11 @@ public class ActionableTrialFactory {
                         .doid(doidCorrected.equals("162") ? "2531" : Strings.EMPTY)
                         .build());
                 actionableTrials.add(actionableBuilder
-                        .whiteList(ImmutableTumorLocation.builder()
+                        .whiteListCancerType(ImmutableTumorLocation.builder()
                                 .cancerType(tumorLocation.primaryTumorLocation())
                                 .doid(doidCorrected)
                                 .build())
-                        .blacklistings(tumorLocationBlacklistings)
+                        .blackListCancerTypes(tumorLocationBlacklistings)
                         .build());
             }
         }

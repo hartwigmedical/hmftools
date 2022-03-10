@@ -34,10 +34,10 @@ public class ActionableEntryFactoryTest {
         assertEquals("MSI neg", characteristics.sourceEvent());
         assertEquals(Knowledgebase.CKB, characteristics.source());
         assertEquals("AB", characteristics.treatment());
-        assertEquals("AB", characteristics.whiteList().cancerType());
-        assertEquals("162", characteristics.whiteList().doid());
+        assertEquals("AB", characteristics.whiteListCancerType().cancerType());
+        assertEquals("162", characteristics.whiteListCancerType().doid());
         assertEquals(Sets.newHashSet(ImmutableTumorLocation.builder().cancerType("Hematologic cancer").doid("2531").build()),
-                characteristics.blacklistings());
+                characteristics.blackListCancerTypes());
         assertEquals(EvidenceLevel.A, characteristics.level());
         assertEquals(EvidenceDirection.RESPONSIVE, characteristics.direction());
 
@@ -56,10 +56,10 @@ public class ActionableEntryFactoryTest {
         assertEquals("KRAS amplification", amplification.sourceEvent());
         assertEquals(Knowledgebase.CKB, amplification.source());
         assertEquals("AB", amplification.treatment());
-        assertEquals("AB", amplification.whiteList().cancerType());
-        assertEquals("163", amplification.whiteList().doid());
+        assertEquals("AB", amplification.whiteListCancerType().cancerType());
+        assertEquals("163", amplification.whiteListCancerType().doid());
         assertEquals(Sets.newHashSet(ImmutableTumorLocation.builder().cancerType(Strings.EMPTY).doid(Strings.EMPTY).build()),
-                amplification.blacklistings());
+                amplification.blackListCancerTypes());
         assertEquals(EvidenceLevel.A, amplification.level());
         assertEquals(EvidenceDirection.RESPONSIVE, amplification.direction());
 
@@ -71,10 +71,10 @@ public class ActionableEntryFactoryTest {
         assertEquals("BRAF V600E", hotspot.sourceEvent());
         assertEquals(Knowledgebase.CKB, hotspot.source());
         assertEquals("AB", hotspot.treatment());
-        assertEquals("AB", hotspot.whiteList().cancerType());
-        assertEquals("162", hotspot.whiteList().doid());
+        assertEquals("AB", hotspot.whiteListCancerType().cancerType());
+        assertEquals("162", hotspot.whiteListCancerType().doid());
         assertEquals(Sets.newHashSet(ImmutableTumorLocation.builder().cancerType("Hematologic cancer").doid("2531").build()),
-                hotspot.blacklistings());
+                hotspot.blackListCancerTypes());
         assertEquals(EvidenceLevel.A, characteristics.level());
         assertEquals(EvidenceDirection.RESPONSIVE, characteristics.direction());
     }

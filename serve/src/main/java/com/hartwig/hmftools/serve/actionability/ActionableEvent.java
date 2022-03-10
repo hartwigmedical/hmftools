@@ -24,10 +24,10 @@ public interface ActionableEvent {
     String treatment();
 
     @NotNull
-    TumorLocation whiteList();
+    TumorLocation whiteListCancerType();
 
     @NotNull
-    Set<TumorLocation> blacklistings();
+    Set<TumorLocation> blackListCancerTypes();
 
     @NotNull
     EvidenceLevel level();
