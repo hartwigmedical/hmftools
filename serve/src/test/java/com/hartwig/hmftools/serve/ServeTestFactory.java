@@ -178,6 +178,8 @@ public final class ServeTestFactory {
     public static ActionableRange createTestActionableRangeForSource(@NotNull Knowledgebase source) {
         return ImmutableActionableRange.builder()
                 .from(createTestActionableRange())
+                .source(source)
+                .sourceEvent("test")
                 .build();
     }
 
@@ -200,6 +202,8 @@ public final class ServeTestFactory {
     public static ActionableGene createTestActionableGeneForSource(@NotNull Knowledgebase source) {
         return ImmutableActionableGene.builder()
                 .from(createTestActionableGene())
+                .source(source)
+                .sourceEvent("test")
                 .build();
     }
 
@@ -216,6 +220,8 @@ public final class ServeTestFactory {
     public static ActionableFusion createTestActionableFusionForSource(@NotNull Knowledgebase source) {
         return ImmutableActionableFusion.builder()
                 .from(createTestActionableFusion())
+                .source(source)
+                .sourceEvent("test")
                 .build();
     }
 
@@ -228,6 +234,8 @@ public final class ServeTestFactory {
     public static ActionableCharacteristic createTestActionableCharacteristicForSource(@NotNull Knowledgebase source) {
         return ImmutableActionableCharacteristic.builder()
                 .from(createTestActionableCharacteristic())
+                .source(source)
+                .sourceEvent("test")
                 .build();
     }
 
@@ -245,6 +253,8 @@ public final class ServeTestFactory {
     public static ActionableHLA createTestActionableImmunoHLAForSource(@NotNull Knowledgebase source) {
         return ImmutableActionableHLA.builder()
                 .from(createTestActionableHLA())
+                .source(source)
+                .sourceEvent("test")
                 .build();
     }
 
