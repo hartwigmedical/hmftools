@@ -51,10 +51,10 @@ public class IclusionExtractor {
 
         ProgressTracker tracker = new ProgressTracker("iClusion", trials.size());
         List<ExtractionResult> extractions = Lists.newArrayList();
+        List<EventInterpretation> interpretation = Lists.newArrayList();
         for (IclusionTrial trial : trials) {
             List<EventExtractorOutput> eventExtractions = Lists.newArrayList();
             String rawInput = Strings.EMPTY;
-            List<EventInterpretation> interpretation = Lists.newArrayList();
             for (IclusionMutationCondition mutationCondition : trial.mutationConditions()) {
                 for (IclusionMutation mutation : mutationCondition.mutations()) {
                     LOGGER.debug("Interpreting '{}' on '{}' for {}", mutation.name(), mutation.gene(), trial.acronym());
