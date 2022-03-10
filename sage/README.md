@@ -439,7 +439,7 @@ The filtered_max_normal_alt_support does not apply to germline variants in the s
  
 ## 4. Normal Counts and Quality
 
-Evidence of each candidate variant is collected in all of the supplied reference bams in the same manner as step 2. 
+Evidence of each candidate variant is collected in all of the supplied reference bams in the same manner as step 3. 
 
 RNA bams are valid reference sources.
 
