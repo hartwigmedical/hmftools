@@ -69,6 +69,8 @@ public final class PatientReporterTestFactory {
                 .signature(SIGNATURE_PATH)
                 .udiDi(UDI_DI)
                 .qcFail(false)
+                .panel(false)
+                .panelQcFail(false)
                 .purplePurityTsv(PURPLE_PURITY_TSV)
                 .purpleQcFile(PURPLE_QC_FILE)
                 .purpleSomaticDriverCatalogTsv(PURPLE_SOMATIC_DRIVER_CATALOG_TSV)

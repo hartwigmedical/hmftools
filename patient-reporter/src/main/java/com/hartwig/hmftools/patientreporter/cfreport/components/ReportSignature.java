@@ -11,6 +11,7 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Text;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class ReportSignature {
 
@@ -23,17 +24,20 @@ public final class ReportSignature {
     }
 
     @NotNull
-    public static Div createSignatureDiv(@NotNull String rvaLogoPath, @NotNull String signaturePath) throws IOException {
+    public static Div createSignatureDiv(@NotNull String rvaLogoPath, @NotNull String signaturePath, boolean isPanel)
+            throws IOException {
         Div div = new Div();
         div.setKeepTogether(true);
         div.setMarginTop(40);
 
-        try {
-            Image rvaLogo = new Image(ImageDataFactory.create(rvaLogoPath));
-            rvaLogo.setMaxHeight(58);
-            div.add(rvaLogo);
-        } catch (MalformedURLException e) {
-            throw new IOException("Failed to read RVA logo image at " + rvaLogoPath);
+        if (!isPanel) {
+            try {
+                Image rvaLogo = new Image(ImageDataFactory.create(rvaLogoPath));
+                rvaLogo.setMaxHeight(58);
+                div.add(rvaLogo);
+            } catch (MalformedURLException e) {
+                throw new IOException("Failed to read RVA logo image at " + rvaLogoPath);
+            }
         }
 
         Paragraph signatureText =

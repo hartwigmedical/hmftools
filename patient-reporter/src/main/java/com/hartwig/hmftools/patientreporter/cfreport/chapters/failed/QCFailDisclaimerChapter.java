@@ -46,7 +46,8 @@ public class QCFailDisclaimerChapter implements ReportChapter {
     @Override
     public void render(@NotNull Document reportDocument) {
         reportDocument.add(createContentBody());
-        reportDocument.add(ReportSignature.createSignatureDiv(failReport.logoRVAPath(), failReport.signaturePath()).setMarginTop(15));
+        reportDocument.add(ReportSignature.createSignatureDiv(failReport.logoRVAPath(), failReport.signaturePath(), false)
+                .setMarginTop(15));
         reportDocument.add(ReportSignature.createEndOfReportIndication());
     }
 
@@ -68,12 +69,12 @@ public class QCFailDisclaimerChapter implements ReportChapter {
         div.add(reportIsBasedOnBloodSampleArrivedAt());
         div.add(resultsAreObtainedBetweenDates());
         if (failReport.sampleReport().cohort().requireHospitalPAId() && !failReport.sampleReport().cohort().requireHospitalId()) {
-            if (failReport.sampleReport().hospitalPathologySampleId() != null){
+            if (failReport.sampleReport().hospitalPathologySampleId() != null) {
                 div.add(reportIsForPathologySampleID());
             }
         }
         if (failReport.sampleReport().cohort().requireHospitalPAId() && failReport.sampleReport().cohort().requireHospitalId()) {
-            if (failReport.sampleReport().hospitalPathologySampleId() != null &&  failReport.sampleReport().hospitalPatientId() != null) {
+            if (failReport.sampleReport().hospitalPathologySampleId() != null && failReport.sampleReport().hospitalPatientId() != null) {
                 div.add(reportHospitalPatientIDAndPathologySampleId());
             }
         }
@@ -209,7 +210,7 @@ public class QCFailDisclaimerChapter implements ReportChapter {
 
     @NotNull
     private Paragraph testsArePerformedUnderUNI() {
-        return createContentParagraph("UDI-DI: ",  failReport.udiDi() + ".");
+        return createContentParagraph("UDI-DI: ", failReport.udiDi() + ".");
     }
 
     @NotNull

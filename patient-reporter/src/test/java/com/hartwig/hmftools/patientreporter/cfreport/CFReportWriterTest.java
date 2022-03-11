@@ -32,6 +32,8 @@ import com.hartwig.hmftools.patientreporter.ReportData;
 import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.panel.ImmutablePanelReport;
+import com.hartwig.hmftools.patientreporter.panel.PanelReport;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
@@ -43,7 +45,7 @@ import org.junit.Test;
 
 public class CFReportWriterTest {
 
-    private static final boolean WRITE_TO_PDF = false;
+    private static final boolean WRITE_TO_PDF = true;
     private static final boolean TIMESTAMP_FILES = false;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
@@ -366,6 +368,67 @@ public class CFReportWriterTest {
                 COMMENT_STRING_QC_FAIL,
                 LimsCohortTestFactory.createWIDECohortConfig(),
                 PurpleQCStatus.PASS);
+    }
+
+    @Test
+    public void canGeneratePanelReport() throws IOException {
+        generatePanelReport();
+    }
+
+    private static void generatePanelReport() throws IOException {
+        SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
+                .refSampleId("x")
+                .refSampleBarcode("FR12123488")
+                .tumorSampleId("testSample")
+                .tumorSampleBarcode("FR12345678")
+                .build();
+
+        ReportData testReportData = PatientReporterTestFactory.loadTestReportData();
+        SampleReport sampleReport = ImmutableSampleReport.builder()
+                .sampleMetadata(sampleMetadata)
+                .patientPrimaryTumor(ImmutablePatientPrimaryTumor.builder()
+                        .patientIdentifier("test")
+                        .location("Skin")
+                        .subLocation(Strings.EMPTY)
+                        .type("Melanoma")
+                        .subType(Strings.EMPTY)
+                        .extraDetails(Strings.EMPTY)
+                        .isOverridden(false)
+                        .build())
+                .biopsyLocation(Strings.EMPTY)
+                .germlineReportingLevel(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION)
+                .reportViralPresence(true)
+                .reportPharmogenetics(true)
+                .refArrivalDate(LocalDate.parse("10-Jan-2020", DATE_FORMATTER))
+                .tumorArrivalDate(LocalDate.parse("05-Jan-2020", DATE_FORMATTER))
+                .shallowSeqPurityString("")
+                .labProcedures("PREP013V23-QC037V20-SEQ008V25")
+                .cohort(LimsCohortTestFactory.createCPCTCohortConfig())
+                .projectName("TEST-001-002")
+                .submissionId("SUBM")
+                .hospitalContactData(createTestHospitalContactData())
+                .hospitalPatientId("HOSP1")
+                .hospitalPathologySampleId("PA1")
+                .build();
+        PanelReport patientReport = ImmutablePanelReport.builder()
+                .sampleReport(sampleReport)
+                .signaturePath(testReportData.signaturePath())
+                .logoRVAPath(testReportData.logoRVAPath())
+                .logoCompanyPath(testReportData.logoCompanyPath())
+                .isCorrectedReport(false)
+                .isCorrectedReportExtern(false)
+                .signaturePath(testReportData.signaturePath())
+                .logoRVAPath(testReportData.logoRVAPath())
+                .logoCompanyPath(testReportData.logoCompanyPath())
+                .udiDi(UDI_DI)
+                .qsFormNumber(QsFormNumber.FOR_209.display())
+                .reportDate(DataUtil.formatDate(LocalDate.now()))
+                .build();
+
+        String filename = testReportFilePath(patientReport);
+
+        CFReportWriter writer = testCFReportWriter();
+        writer.writePanelAnalysedReport(patientReport, filename);
     }
 
     private static void generateQCFailReport(@NotNull String sampleId, @NotNull String shallowSeqPurity, @Nullable String wgsPurityString,
