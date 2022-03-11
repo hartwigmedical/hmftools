@@ -15,6 +15,8 @@ public abstract class DoidMetadata {
 
     private static final Logger LOGGER = LogManager.getLogger(DoidMetadata.class);
 
+    // TODO Consider adding deprecated() and comments() which have been added between 201015 and 220302
+
     @Nullable
     public abstract DoidDefinition doidDefinition();
 
