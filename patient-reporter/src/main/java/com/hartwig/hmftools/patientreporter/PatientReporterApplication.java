@@ -16,6 +16,8 @@ import com.hartwig.hmftools.patientreporter.algo.AnalysedReportData;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedReportDataLoader;
 import com.hartwig.hmftools.patientreporter.cfreport.CFReportWriter;
 import com.hartwig.hmftools.patientreporter.panel.ImmutableQCFailPanelReportData;
+import com.hartwig.hmftools.patientreporter.panel.PanelFailReport;
+import com.hartwig.hmftools.patientreporter.panel.PanelFailReporter;
 import com.hartwig.hmftools.patientreporter.panel.PanelReport;
 import com.hartwig.hmftools.patientreporter.panel.PanelReporter;
 import com.hartwig.hmftools.patientreporter.panel.QCFailPanelReportData;
@@ -73,9 +75,9 @@ public class PatientReporterApplication {
         SampleMetadata sampleMetadata = buildSampleMetadata(config);
 
         if (config.panel()) {
-//            if (config.panelQcFail()) {
-//                generatePanelQCFail(sampleMetadata);
-//            }
+            if (config.panelQcFail()) {
+                generatePanelQCFail(sampleMetadata);
+            }
             generatePanelAnalysedReport(sampleMetadata);
         } else if (config.qcFail()) {
             LOGGER.info("Generating qc-fail report");
@@ -117,15 +119,15 @@ public class PatientReporterApplication {
 
     }
 
-//    private void generatePanelQCFail(@NotNull SampleMetadata sampleMetadata) throws IOException {
-//        PanelFailReporter reporter = new PanelFailReporter(buildBasePanelReportData(config), reportDate);
-//        PanelFailReport report = reporter.run();
-//
-//        ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
-//        String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
-//
-//        reportWriter.writePanelQCFailReport(report, outputFilePath);
-//    }
+    private void generatePanelQCFail(@NotNull SampleMetadata sampleMetadata) throws IOException {
+        PanelFailReporter reporter = new PanelFailReporter(buildBasePanelReportData(config), reportDate);
+        PanelFailReport report = reporter.run();
+
+        ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
+        String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
+
+        reportWriter.writePanelQCFailReport(report, outputFilePath);
+    }
 
     private void generateQCFail(@NotNull SampleMetadata sampleMetadata) throws IOException {
         QCFailReporter reporter = new QCFailReporter(buildBaseReportData(config), reportDate);

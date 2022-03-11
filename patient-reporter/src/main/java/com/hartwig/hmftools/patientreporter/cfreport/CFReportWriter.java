@@ -28,7 +28,10 @@ import com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed.TumorChar
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.failed.QCFailDisclaimerChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.failed.QCFailPGXChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.panel.PanelChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.panel.PanelQCFailChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.panel.SampleAndDisclaimerChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.panel.SampleAndDisclaimerChapterFail;
+import com.hartwig.hmftools.patientreporter.panel.PanelFailReport;
 import com.hartwig.hmftools.patientreporter.panel.PanelReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
@@ -97,10 +100,10 @@ public class CFReportWriter implements ReportWriter {
     }
 
     @Override
-    public void writePanelQCFailReport(@NotNull PanelReport report, @NotNull String outputFilePath) {
-//        ReportChapter[] chapters = new ReportChapter[] { new PanelChapter(report), new com.hartwig.hmftools.patientreporter.cfreport.chapters.panel.ExplanationChapter(report),
-//                new SampleAndDisclaimerChapter(report) };
-//        writeReport(report, chapters, outputFilePath);
+    public void writePanelQCFailReport(@NotNull PanelFailReport report, @NotNull String outputFilePath) throws IOException{
+        ReportChapter[] chapters = new ReportChapter[] { new PanelQCFailChapter(report),
+                new SampleAndDisclaimerChapterFail(report) };
+        writeReport(report, chapters, outputFilePath);
     }
 
     public void writeJsonFailedFile(@NotNull QCFailReport report, @NotNull String outputFilePath) throws IOException {

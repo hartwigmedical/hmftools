@@ -17,7 +17,7 @@ public interface ReportWriter {
 
     void writePanelAnalysedReport(@NotNull PanelReport report, @NotNull String outputFilePath) throws IOException;
 
-    void writePanelQCFailReport(@NotNull PanelReport report, @NotNull String outputFilePath) throws IOException;
+    void writePanelQCFailReport(@NotNull PanelFailReport report, @NotNull String outputFilePath) throws IOException;
 
     void writeJsonFailedFile(@NotNull QCFailReport report, @NotNull String outputFilePath) throws IOException;
 
