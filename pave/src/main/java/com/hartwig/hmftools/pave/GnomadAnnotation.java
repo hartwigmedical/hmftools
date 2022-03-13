@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.VcfWriter.PON_GNOMAD_FILTER;
 import static com.hartwig.hmftools.pave.external.GnomadCacheBuilder.GNOMAD_FILE_ID;
@@ -207,7 +208,7 @@ public class GnomadAnnotation
 
         try
         {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+            BufferedReader fileReader = createBufferedReader(filename);
 
             int itemCount = 0;
             String line = fileReader.readLine(); // skip header

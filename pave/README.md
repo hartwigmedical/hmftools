@@ -191,7 +191,7 @@ Chromosome      Position        Ref     Alt     SamplesCount    MaxSampleReads  
 Pave will then add VCF tags 'PON_COUNT' from SamplesCount and 'PON_MAX' from MaxSampleReads for any matched variant.
 
 If the config 'pon_filters' is used, then Pave will additionally add the filter 'PON' to any variant which exceeds both the specified SamplesCount and MaxSampleReads values. 
-The filters can be set per variant tier, for example
+The filters can be set per variant tier in the form: 'TIER;SAMPLE_COUNT_LIMIT;MAX_READS_LIMIT, for example
 
 ```HOTSPOT:5:5;PANEL:2:5;UNKNOWN:2:0```
 
