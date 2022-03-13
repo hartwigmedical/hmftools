@@ -5,39 +5,45 @@ import static com.hartwig.hmftools.compar.CommonUtils.ITEM_DELIM;
 import static com.hartwig.hmftools.compar.CommonUtils.SUB_ITEM_DELIM;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 
-import com.hartwig.hmftools.common.utils.ConfigUtils;
-import com.hartwig.hmftools.common.utils.FileWriterUtils;
-
 public class FileSources
 {
     public final String Source;
     public final String Linx;
-    public final String Somatic;
     public final String Purple;
+    public final String SomaticVcf;
+    public final String GermlineVcf;
 
     public static final String SAMPLE_DIR = "sample_dir";
     public static final String LINX_DIR = "linx_dir";
     public static final String PURPLE_DIR = "purple_dir";
-    // public static final String SOMATIC_DIR = "somatic_dir";
 
-    public FileSources(final String source, final String linx, final String somatic, final String purple)
+    // specify Sage VCFs instead of the default Purple VCFs
+    public static final String SOMATIC_VCF = "somatic_vcf";
+    public static final String GERMLINE_VCF = "germline_vcf";
+
+    public FileSources(final String source, final String linx, final String purple, final String somaticVcf, final String germlineVcf)
     {
         Source = source;
         Linx = linx;
-        Somatic = somatic;
         Purple = purple;
+        SomaticVcf = somaticVcf;
+        GermlineVcf = germlineVcf;
     }
 
     public static FileSources sampleInstance(final FileSources fileSources, final String sampleId)
     {
-        if(!fileSources.Linx.contains("*") && !fileSources.Purple.contains("*") && !fileSources.Somatic.contains("*"))
+        if(!fileSources.Linx.contains("*") && !fileSources.Purple.contains("*") && !fileSources.SomaticVcf.contains("*")
+        && !fileSources.GermlineVcf.contains("*"))
+        {
             return fileSources;
+        }
 
         return new FileSources(
                 fileSources.Source,
                 fileSources.Linx.replaceAll("\\*", sampleId),
                 fileSources.Purple.replaceAll("\\*", sampleId),
-                fileSources.Somatic.replaceAll("\\*", sampleId));
+                fileSources.SomaticVcf.replaceAll("\\*", sampleId),
+                fileSources.GermlineVcf.replaceAll("\\*", sampleId));
     }
 
     public static FileSources fromConfig(final String fileSourceStr)
@@ -54,7 +60,8 @@ public class FileSources
         String sampleDir = "";
         String linxDir = "";
         String purpleDir = "";
-        String somaticDir = "";
+        String somaticVcf = "";
+        String germlineVcf = "";
 
         int itemIndex = 1;
 
@@ -71,20 +78,25 @@ public class FileSources
             if(itemStr.length != 2)
                 return null;
 
-            if(itemStr[0].equals(LINX_DIR))
+            String type = itemStr[0];
+            String value = itemStr[1];
+
+            if(type.equals(LINX_DIR))
             {
-                linxDir = getDirectory(sampleDir, itemStr[1]);
+                linxDir = getDirectory(sampleDir, value);
             }
-            else if(itemStr[0].equals(PURPLE_DIR))
+            else if(type.equals(PURPLE_DIR))
             {
-                purpleDir = getDirectory(sampleDir, itemStr[1]);
+                purpleDir = getDirectory(sampleDir, value);
             }
-            /*
-            else if(itemStr[0].equals(SOMATIC_DIR))
+            else if(type.equals(SOMATIC_VCF))
             {
-                somaticDir = getDirectory(sampleDir, itemStr[1]);
+                somaticVcf = value;
             }
-            */
+            else if(type.equals(GERMLINE_VCF))
+            {
+                germlineVcf = value;
+            }
         }
 
         if(linxDir.isEmpty())
@@ -93,10 +105,7 @@ public class FileSources
         if(purpleDir.isEmpty())
             purpleDir = sampleDir;
 
-        if(somaticDir.isEmpty())
-            somaticDir = sampleDir;
-
-        return new FileSources(source, linxDir, purpleDir, somaticDir);
+        return new FileSources(source, linxDir, purpleDir, somaticVcf, germlineVcf);
     }
 
     private static String getDirectory(final String sampleDir, final String typeDir)

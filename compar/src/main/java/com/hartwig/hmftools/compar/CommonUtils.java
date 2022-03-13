@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.compar.MismatchType.REF_ONLY;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.compar.driver.DriverComparer;
@@ -232,6 +233,17 @@ public class CommonUtils
 
         items2.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
                 .forEach(x -> mismatches.add(new Mismatch(null, x, NEW_ONLY, emptyDiffs)));
+    }
+
+    public static void checkFilterDiffs(Set<String> refFilters, final Set<String> otherFilters, final List<String> diffs)
+    {
+        Set<String> origFilterDiffs = refFilters.stream().filter(x -> !otherFilters.contains(x)).collect(Collectors.toSet());
+        Set<String> newFilterDiffs = otherFilters.stream().filter(x -> !refFilters.contains(x)).collect(Collectors.toSet());
+
+        if(!newFilterDiffs.isEmpty() || !origFilterDiffs.isEmpty())
+        {
+            diffs.add(String.format("%s(%s/%s)", "filter", filtersStr(origFilterDiffs), filtersStr(newFilterDiffs)));
+        }
     }
 
     public static String filtersStr(final Set<String> filters)

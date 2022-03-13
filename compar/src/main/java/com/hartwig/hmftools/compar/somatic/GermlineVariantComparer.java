@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.compar.somatic;
 
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_GERMLINE_VCF_SUFFIX;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SOMATIC_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.compar.Category.GERMLINE_VARIANT;
 import static com.hartwig.hmftools.compar.CommonUtils.diffsStr;
@@ -84,7 +85,8 @@ public class GermlineVariantComparer implements ItemComparer
 
         SomaticVariantFactory variantFactory = new SomaticVariantFactory(filter);
 
-        String vcfFile = fileSources.Purple + sampleId + PURPLE_GERMLINE_VCF_SUFFIX;
+        String vcfFile = !fileSources.GermlineVcf.isEmpty() ?
+                fileSources.GermlineVcf : fileSources.Purple + sampleId + PURPLE_GERMLINE_VCF_SUFFIX;
 
         boolean reportedOnly = mConfig.Categories.get(GERMLINE_VARIANT) == MatchLevel.REPORTABLE;
 
@@ -105,11 +107,11 @@ public class GermlineVariantComparer implements ItemComparer
                 }
             }
 
-            CMP_LOGGER.debug("sample({}) loaded {} somatic variants", sampleId, comparableItems.size());
+            CMP_LOGGER.debug("sample({}) loaded {} germline variants", sampleId, comparableItems.size());
         }
         catch(IOException e)
         {
-            CMP_LOGGER.error("failed to read Purple germline VCF file({}): {}", vcfFile, e.toString());
+            CMP_LOGGER.error("failed to read germline VCF file({}): {}", vcfFile, e.toString());
         }
 
         return comparableItems;

@@ -41,8 +41,9 @@ public class MismatchWriter
         {
             if(mConfig.WriteConsolidated)
             {
-
                 String outputFile = filePrefix + "combined.csv";
+
+                CMP_LOGGER.info("writing output results: {}", outputFile);
 
                 mCombinedWriter = createBufferedWriter(outputFile, false);
 
@@ -59,6 +60,8 @@ public class MismatchWriter
                 for(ItemComparer comparer : comparers)
                 {
                     String outputFile = filePrefix + comparer.category().toString().toLowerCase() + ".csv";
+
+                    CMP_LOGGER.info("writing output results: {}", outputFile);
 
                     BufferedWriter writer = createBufferedWriter(outputFile, false);
 

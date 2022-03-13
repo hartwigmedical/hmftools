@@ -100,4 +100,5 @@ public interface SomaticVariant extends Variant {
     {
         return SomaticVariantFactory.localPhaseSetsStr(localPhaseSets());
     }
+    default boolean hasLocalPhaseSets() { return localPhaseSets() != null && !localPhaseSets().isEmpty(); }
 }

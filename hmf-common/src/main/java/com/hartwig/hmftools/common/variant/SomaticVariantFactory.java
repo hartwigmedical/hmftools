@@ -263,7 +263,7 @@ public class SomaticVariantFactory implements VariantContextFilter
     public static String localPhaseSetsStr(@Nullable final List<Integer> localPhaseSets)
     {
         if(localPhaseSets == null || localPhaseSets.isEmpty())
-            return null;
+            return "";
 
         if(localPhaseSets.size() == 1)
             return String.valueOf(localPhaseSets.get(0));

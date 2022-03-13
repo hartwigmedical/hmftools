@@ -87,7 +87,9 @@ public class SomaticVariantComparer implements ItemComparer
 
         SomaticVariantFactory variantFactory = new SomaticVariantFactory(filter);
 
-        String vcfFile = fileSources.Purple + sampleId + PURPLE_SOMATIC_VCF_SUFFIX;
+        // use the Purple suffix if not specified
+        String vcfFile = !fileSources.SomaticVcf.isEmpty() ?
+                fileSources.SomaticVcf : fileSources.Purple + sampleId + PURPLE_SOMATIC_VCF_SUFFIX;
 
         boolean reportedOnly = mConfig.Categories.get(SOMATIC_VARIANT) == MatchLevel.REPORTABLE;
 
@@ -112,7 +114,7 @@ public class SomaticVariantComparer implements ItemComparer
         }
         catch(IOException e)
         {
-            CMP_LOGGER.error("failed to read Purple somatic VCF file({}): {}", vcfFile, e.toString());
+            CMP_LOGGER.error("failed to read somatic VCF file({}): {}", vcfFile, e.toString());
         }
 
         return comparableItems;
@@ -121,8 +123,8 @@ public class SomaticVariantComparer implements ItemComparer
     @Override
     public String outputHeader()
     {
-        return commonHeader() + ",RefFilter,RefQual,OtherQual,RefTier,OtherTier,RefTotalReads,OtherTotalReads"
-                + ",RefAlleleReads,OtherAlleleReads,Differences";
+        return commonHeader() + ",RefFilter,RefQual,OtherQual,RefTier,OtherTier,RefTotalReads,NewTotalReads"
+                + ",RefAlleleReads,NewAlleleReads,RefLPS,NewLPS,Differences";
     }
 
     @Override
@@ -131,12 +133,13 @@ public class SomaticVariantComparer implements ItemComparer
         final SomaticVariantData refVar = mismatch.RefItem != null ? (SomaticVariantData)mismatch.RefItem : null;
         final SomaticVariantData newVar = mismatch.NewItem != null ? (SomaticVariantData)mismatch.NewItem : null;
 
-        return String.format("%s,%s,%.0f,%.0f,%s,%s,%d,%d,%d,%d,%s",
+        return String.format("%s,%s,%.0f,%.0f,%s,%s,%d,%d,%d,%d,%s,%s,%s",
                 commonCsv(mismatch), refVar != null ? refVar.Variant.filter() : newVar.Variant.filter(),
                 refVar != null ? refVar.Variant.qual() : 0, newVar != null ? newVar.Variant.qual() : 0,
                 refVar != null ? refVar.Variant.tier() : "", newVar != null ? newVar.Variant.tier() : "",
                 refVar != null ? refVar.Variant.totalReadCount() : 0, newVar != null ? newVar.Variant.totalReadCount() : 0,
                 refVar != null ? refVar.Variant.alleleReadCount() : 0, newVar != null ? newVar.Variant.alleleReadCount() : 0,
+                refVar != null ? refVar.Variant.localPhaseSetsStr() : "", newVar != null ? newVar.Variant.localPhaseSetsStr() : "",
                 diffsStr(mismatch.DiffValues));
     }
 

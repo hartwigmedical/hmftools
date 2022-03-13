@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.compar.somatic;
 
 import static com.hartwig.hmftools.compar.Category.GERMLINE_VARIANT;
-import static com.hartwig.hmftools.compar.Category.SOMATIC_VARIANT;
-import static com.hartwig.hmftools.compar.CommonUtils.checkDiff;
-import static com.hartwig.hmftools.compar.CommonUtils.filtersStr;
+import static com.hartwig.hmftools.compar.CommonUtils.checkFilterDiffs;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.compar.MismatchType.VALUE;
+import static com.hartwig.hmftools.compar.somatic.SomaticVariantData.findDiffs;
+import static com.hartwig.hmftools.compar.somatic.SomaticVariantData.variantsMatch;
 
 import java.util.Arrays;
 import java.util.List;
@@ -34,11 +34,7 @@ public class GermlineVariantData implements ComparableItem
     public Category category() { return GERMLINE_VARIANT; }
 
     @Override
-    public String key()
-    {
-        return String.format("%s:%d %s>%s %s",
-                Variant.chromosome(), Variant.position(), Variant.ref(), Variant.alt(), Variant.type());
-    }
+    public String key() { return SomaticVariantData.key(Variant); }
 
     @Override
     public List<String> displayValues()
@@ -60,18 +56,8 @@ public class GermlineVariantData implements ComparableItem
     @Override
     public boolean matches(final ComparableItem other)
     {
-        final GermlineVariantData otherVar = (GermlineVariantData)other;
-
-        if(!Variant.chromosome().equals(otherVar.Variant.chromosome()) || Variant.position() != otherVar.Variant.position())
-            return false;
-
-        if(!Variant.ref().equals(otherVar.Variant.ref()) || !Variant.alt().equals(otherVar.Variant.alt()))
-            return false;
-
-        if(Variant.type() != otherVar.Variant.type())
-            return false;
-
-        return true;
+        final GermlineVariantData otherVar = (GermlineVariantData) other;
+        return variantsMatch(Variant, otherVar.Variant);
     }
 
     @Override
@@ -79,35 +65,14 @@ public class GermlineVariantData implements ComparableItem
     {
         final GermlineVariantData otherVar = (GermlineVariantData) other;
 
-        final List<String> diffs = Lists.newArrayList();
-
-        checkDiff(diffs, "reported", Variant.reported(), otherVar.Variant.reported());
+        final List<String> diffs = findDiffs(Variant, otherVar.Variant, matchLevel);
 
         if(matchLevel != REPORTABLE)
         {
-            checkDiff(diffs, "hotspot", Variant.hotspot().toString(), otherVar.Variant.hotspot().toString());
-            checkDiff(diffs, "tier", Variant.tier().toString(), otherVar.Variant.tier().toString());
-            checkDiff(diffs, "biallelic", Variant.biallelic(), otherVar.Variant.biallelic());
-            checkDiff(diffs, "gene", Variant.gene(), otherVar.Variant.gene());
-            checkDiff(diffs, "canonicalEffect", Variant.canonicalEffect(), otherVar.Variant.canonicalEffect());
-            checkDiff(diffs, "canonicalCodingEffect", Variant.canonicalCodingEffect().toString(), otherVar.Variant.canonicalCodingEffect().toString());
-            checkDiff(diffs, "canonicalHgvsCoding", Variant.canonicalHgvsCodingImpact(), otherVar.Variant.canonicalHgvsCodingImpact());
-            checkDiff(diffs, "canonicalHgvsProtein", Variant.canonicalHgvsProteinImpact(), otherVar.Variant.canonicalHgvsProteinImpact());
-            checkDiff(diffs, "otherReportedEffects", Variant.otherReportedEffects(), otherVar.Variant.otherReportedEffects());
-            checkDiff(diffs, "qual", (int)Variant.qual(), (int)otherVar.Variant.qual());
+            // clinvar fields?
         }
 
-        // compare filters
-        Set<String> origFilters = Filters;
-        Set<String> newFilters = otherVar.Filters;
-
-        Set<String> origFilterDiffs = origFilters.stream().filter(x -> !newFilters.contains(x)).collect(Collectors.toSet());
-        Set<String> newFilterDiffs = newFilters.stream().filter(x -> !origFilters.contains(x)).collect(Collectors.toSet());
-
-        if(!newFilterDiffs.isEmpty() || !origFilterDiffs.isEmpty())
-        {
-            diffs.add(String.format("%s(%s/%s)", "filter", filtersStr(origFilterDiffs), filtersStr(newFilterDiffs)));
-        }
+        checkFilterDiffs(Filters, otherVar.Filters, diffs);
 
         if(diffs.isEmpty())
             return null;

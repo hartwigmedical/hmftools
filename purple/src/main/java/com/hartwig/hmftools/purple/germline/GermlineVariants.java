@@ -81,8 +81,7 @@ public class GermlineVariants
 
         final String outputVCF = mConfig.OutputDir + File.separator + tumorSample + PURPLE_GERMLINE_VCF_SUFFIX;
 
-        PPL_LOGGER.info("Loading germline variants from {}", germlineVcf);
-        PPL_LOGGER.info("Enriching germline variants");
+        PPL_LOGGER.info("loading germline variants from {}", germlineVcf);
 
         try
         {
@@ -119,6 +118,7 @@ public class GermlineVariants
         catch(Exception e)
         {
             PPL_LOGGER.error(" failed to enrich germline variants: {}", e.toString());
+            e.printStackTrace();
         }
     }
 }

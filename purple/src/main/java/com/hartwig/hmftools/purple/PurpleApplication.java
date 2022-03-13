@@ -210,8 +210,6 @@ public class PurpleApplication
 
     private void processSample(final String referenceId, final String tumorSample)
     {
-        PPL_LOGGER.info("processing sample(ref={} tumor={})", referenceId, tumorSample);
-
         try
         {
             if(mConfig.DriversOnly)
