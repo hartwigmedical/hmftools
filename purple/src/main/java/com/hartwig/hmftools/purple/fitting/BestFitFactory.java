@@ -93,7 +93,7 @@ public class BestFitFactory
         boolean hasTumor = !highlyDiploid || hasTumor(somatics, structuralVariants, observedRegions);
         final List<FittedPurity> diploidCandidates = BestFit.mostDiploidPerPurity(allCandidates);
 
-        PPL_LOGGER.info("Sample maxDiploidProportion({}) diploidCandidates({}) purityRange({} - {}) hasTumor({})",
+        PPL_LOGGER.info("maxDiploidProportion({}) diploidCandidates({}) purityRange({} - {}) hasTumor({})",
                 formatPurity(score.maxDiploidProportion()), diploidCandidates.size(),
                 formatPurity(score.minPurity()), formatPurity(score.maxPurity()), hasTumor);
 
@@ -105,7 +105,7 @@ public class BestFitFactory
 
         if(diploidCandidates.isEmpty())
         {
-            PPL_LOGGER.warn("Unable to use somatic fit as there are no diploid candidates");
+            PPL_LOGGER.warn("unable to use somatic fit as there are no diploid candidates");
             return builder.fit(lowestScoreFit).method(FittedPurityMethod.NORMAL).build();
         }
 
@@ -146,7 +146,7 @@ public class BestFitFactory
 
         if(mSvHotspotCount > 0 || mSvFragmentReadCount >= mConfig.SomaticFitting.minTotalSvFragmentCount())
         {
-            PPL_LOGGER.info("Tumor evidence: svHotspotCount({}) svFragmentReadCount({})",
+            PPL_LOGGER.info("tumor evidence: svHotspotCount({}) svFragmentReadCount({})",
                     mSvHotspotCount, mSvFragmentReadCount);
             return true;
         }
@@ -159,7 +159,7 @@ public class BestFitFactory
 
         if(tumorEvidenceBafCountTotal >= NO_TUMOR_BAF_TOTAL)
         {
-            PPL_LOGGER.info("Tumor evidence: tumorEvidenceBafCountTotal({})", tumorEvidenceBafCountTotal);
+            PPL_LOGGER.info("tumor evidence: tumorEvidenceBafCountTotal({})", tumorEvidenceBafCountTotal);
             return true;
         }
 

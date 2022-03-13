@@ -8,8 +8,6 @@ import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 import java.io.File;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.jetbrains.annotations.NotNull;
@@ -84,19 +82,19 @@ public class PurpleConfig
         if(!outputDir.exists() && !outputDir.mkdirs())
         {
             mIsValid = false;
-            PPL_LOGGER.error("Unable to write directory " + OutputDir);
+            PPL_LOGGER.error("unable to write directory " + OutputDir);
         }
 
         if(TumorOnlyMode)
         {
-            PPL_LOGGER.info("Tumor Sample: {}", TumorId);
+            PPL_LOGGER.info("tumor({}) only", TumorId);
         }
         else
         {
-            PPL_LOGGER.info("Reference Sample: {}, Tumor Sample: {}", ReferenceId, TumorId);
+            PPL_LOGGER.info("reference({}) tumor({})", ReferenceId, TumorId);
         }
 
-        PPL_LOGGER.info("Output Directory: {}", OutputDir);
+        PPL_LOGGER.info("output directory: {}", OutputDir);
 
         Charting = new ChartConfig(cmd, OutputDir);
         Fitting = new FittingConfig(cmd);
