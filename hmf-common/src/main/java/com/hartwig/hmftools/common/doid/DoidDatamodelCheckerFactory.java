@@ -128,6 +128,8 @@ final class DoidDatamodelCheckerFactory {
         map.put("basicPropertyValues", false);
         map.put("definition", false);
         map.put("subsets", false);
+        map.put("deprecated", false);
+        map.put("comments", false);
 
         return new JsonDatamodelChecker("DoidMetadata", map);
     }

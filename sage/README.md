@@ -215,7 +215,7 @@ The read context core is the variant itself expanded to cover at least 5 bases.
 Typically we use 10 bases for the flank, but for this illustration we then use an additional 5 bases on either side to get the complete read context. 
   
 <pre>
-Reference:                ...ACCATGGATACCATCATCACATACGA...
+Reference:                ...ACCATGGATACCATCATAACATACGA...
 Variant:                                  <b>A</b>
 Core read context:                      <b>CAACA</b>
 Flanked read context:              <b>GATACCAACATAACA</b>
@@ -316,7 +316,7 @@ The raw values are calculated directly from the aligner without any filters or q
 
 INDELS are located using the `I` and `D` flag in the CIGAR.
 SNVs and MNVs are located by comparing the bases in every aligned region (flags `M`, `X` or `=`) with the provided reference genome.
-MNVs can be of up to 3 bases but with no more than one matching base between un-matching bases, ie, MNVs with CIGARs `1X1M1X` and `3X` are both considered valid MNVs of length 3.  
+MNVs can be of up to 3 bases, with 2 SNVs split by 1 reference base also treated as a 3 base MNV.  ie, MNVs with CIGARs `1X1M1X` and `3X` are both considered valid MNVs of length 3.  
 
 SAGE tallies the raw ref/alt support and base quality and selects a single read context of each variant. 
 As each variant can potentially have multiple read contexts due to sequencing errors or sub-clonal populations, SAGE selects the most frequently found one as the candidate read context.
@@ -439,7 +439,7 @@ The filtered_max_normal_alt_support does not apply to germline variants in the s
  
 ## 4. Normal Counts and Quality
 
-Evidence of each candidate variant is collected in all of the supplied reference bams in the same manner as step 2. 
+Evidence of each candidate variant is collected in all of the supplied reference bams in the same manner as step 3. 
 
 RNA bams are valid reference sources.
 

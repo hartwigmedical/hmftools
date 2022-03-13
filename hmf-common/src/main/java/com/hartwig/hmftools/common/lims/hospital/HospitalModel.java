@@ -39,6 +39,13 @@ public abstract class HospitalModel {
     abstract Map<String, HospitalPersons> hospitalPersonsOPTIC();
 
     @NotNull
+    abstract Map<String, HospitalPersons> hospitalPersonsSHERPA();
+
+    @NotNull
+    abstract Map<String, HospitalPersons> hospitalPersonsGENAYA();
+
+
+    @NotNull
     abstract Map<String, String> sampleToHospitalMapping();
 
     @Nullable
@@ -104,6 +111,10 @@ public abstract class HospitalModel {
                 return hospitalPersonsGLOW().get(hospitalId);
             case "OPTIC":
                 return hospitalPersonsOPTIC().get(hospitalId);
+            case "SHERPA":
+                return hospitalPersonsSHERPA().get(hospitalId);
+            case "GENAYA":
+                return hospitalPersonsGENAYA().get(hospitalId);
             default:
                 return null;
         }

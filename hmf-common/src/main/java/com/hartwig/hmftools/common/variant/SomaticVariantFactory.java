@@ -74,10 +74,11 @@ public class SomaticVariantFactory implements VariantContextFilter
     }
 
     @NotNull
-    public List<SomaticVariant> fromVCFFile(@NotNull final String tumor, @NotNull final String reference, @NotNull final String vcfFile)
+    public List<SomaticVariant> fromVCFFile(@NotNull final String tumor, @Nullable final String reference,
+            @Nullable final String alternativeTumorId, @Nullable final String alternativeReferenceId, @NotNull final String vcfFile)
             throws IOException
     {
-        return fromVCFFileWithoutCheck(tumor, reference, null, vcfFile);
+        return fromVCFFileWithoutCheck(tumor, reference, alternativeTumorId, alternativeReferenceId, null, vcfFile);
     }
 
     @NotNull
@@ -91,10 +92,11 @@ public class SomaticVariantFactory implements VariantContextFilter
 
     @NotNull
     public List<SomaticVariant> fromVCFFileWithoutCheck(@NotNull final String tumor, @Nullable final String reference,
+            @Nullable final String alternativeTumorId, @Nullable final String alternativeReferenceId,
             @Nullable final String rna, @NotNull final String vcfFile) throws IOException
     {
         final List<SomaticVariant> result = Lists.newArrayList();
-        fromVCFFile(tumor, reference, rna, vcfFile, false, result::add);
+        fromVCFFile(tumor, reference, alternativeTumorId, alternativeReferenceId, rna, vcfFile, false, result::add);
         return result;
     }
 
@@ -102,20 +104,38 @@ public class SomaticVariantFactory implements VariantContextFilter
             @NotNull final String tumor, @Nullable final String reference, @Nullable final String rna,
             @NotNull final String vcfFile, boolean useCheckReference, @NotNull Consumer<SomaticVariant> consumer) throws IOException
     {
+        fromVCFFile(tumor, reference, null, null, rna, vcfFile, useCheckReference, consumer);
+    }
+
+    public void fromVCFFile(
+            @NotNull final String tumor, @Nullable final String reference, @Nullable final String alternativeTumorId,
+            @Nullable final String alternativeReferenceId, @Nullable final String rna, @NotNull final String vcfFile, boolean useCheckReference,
+            @NotNull Consumer<SomaticVariant> consumer) throws IOException
+    {
         try(final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false))
         {
             final VCFHeader header = (VCFHeader) reader.getHeader();
-            if(!sampleInFile(tumor, header))
+
+            String tumorIdInHeader;
+            String referenceIdInHeader;
+            if(sampleInFile(tumor, header))
             {
-                throw new IllegalArgumentException("Sample " + tumor + " not found in vcf file " + vcfFile);
+                tumorIdInHeader = tumor;
+                referenceIdInHeader = reference;
+            }
+            else if (alternativeTumorId != null && sampleInFile(alternativeTumorId, header))
+            {
+                tumorIdInHeader = alternativeTumorId;
+                referenceIdInHeader = alternativeReferenceId;
+            }
+            else
+            {
+                throw new IllegalArgumentException("Sample names " + tumor + " and " + alternativeTumorId + " not found in vcf file " + vcfFile);
             }
 
-            if(useCheckReference)
+            if(useCheckReference && referenceIdInHeader != null && !sampleInFile(referenceIdInHeader, header))
             {
-                if(reference != null && !sampleInFile(reference, header))
-                {
-                    throw new IllegalArgumentException("Sample " + reference + " not found in vcf file " + vcfFile);
-                }
+                throw new IllegalArgumentException("Sample " + referenceIdInHeader + " not found in vcf file " + vcfFile);
             }
 
             if(rna != null && !sampleInFile(rna, header))
@@ -132,7 +152,7 @@ public class SomaticVariantFactory implements VariantContextFilter
             {
                 if(mFilter.test(variant))
                 {
-                    Optional<SomaticVariant> varOptional = createVariant(tumor, reference, rna, variant);
+                    Optional<SomaticVariant> varOptional = createVariant(tumorIdInHeader, referenceIdInHeader, rna, variant);
 
                     if(varOptional.isPresent())
                     {

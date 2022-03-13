@@ -1,9 +1,5 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.io.IOException;
 import java.util.List;
 
@@ -24,6 +20,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
+import static org.junit.Assert.*;
+
 public class GenomicAnalyzerTest {
 
     @Test
@@ -34,7 +32,31 @@ public class GenomicAnalyzerTest {
 
         PatientReporterConfig config = PatientReporterTestFactory.createTestReporterConfig();
 
-        assertNotNull(analyzer.run("sample", "reference", config, LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION));
+        assertNotNull(analyzer.run("sample", "fakeSampleBarcode", "reference", "fakeReferenceBarcode", config, LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION));
+    }
+
+    @Test
+    public void canRunOnTestRunAnonymised() throws IOException {
+        AnalysedReportData testReportData = PatientReporterTestFactory.loadTestAnalysedReportData();
+
+        GenomicAnalyzer analyzer = new GenomicAnalyzer(testReportData.germlineReportingModel());
+
+        PatientReporterConfig config = PatientReporterTestFactory.createTestReporterConfig();
+
+        assertNotNull(analyzer.run("fakeSampleId", "sample", "fakeReferenceId", "reference", config, LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION));
+    }
+
+    @Test
+    public void testAnonymisedMakesNoDifference() throws IOException {
+        AnalysedReportData testReportData = PatientReporterTestFactory.loadTestAnalysedReportData();
+
+        GenomicAnalyzer analyzer = new GenomicAnalyzer(testReportData.germlineReportingModel());
+
+        PatientReporterConfig config = PatientReporterTestFactory.createTestReporterConfig();
+
+        GenomicAnalysis report_non_anonymised = analyzer.run("sample", "fakeSampleBarcode", "reference", "fakeReferenceBarcode", config, LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION);
+        GenomicAnalysis report_anonymised = analyzer.run("fakeSampleId", "sample", "fakeReferenceId", "reference", config, LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION);
+        assertEquals(report_non_anonymised, report_anonymised);
     }
 
     @Test

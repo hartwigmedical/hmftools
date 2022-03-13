@@ -37,14 +37,14 @@ public class ActionableEventComparatorTest {
     }
 
     @NotNull
-    private static ActionableEvent create(@NotNull Knowledgebase source, @NotNull String treatment, @NotNull String cancerType,
+    private static ActionableEvent create(@NotNull Knowledgebase source, @NotNull String treatment, @NotNull String whiteListCancerType,
             @NotNull EvidenceLevel level, @NotNull EvidenceDirection direction) {
         return ActionabilityTestUtil.create(source,
                 "rawInput",
                 Sets.newHashSet(),
                 treatment,
                 ImmutableTumorLocation.builder()
-                        .cancerType(cancerType)
+                        .cancerType(whiteListCancerType)
                         .doid("whitlist doid")
                         .build(),
                 Sets.newHashSet(ImmutableTumorLocation.builder()

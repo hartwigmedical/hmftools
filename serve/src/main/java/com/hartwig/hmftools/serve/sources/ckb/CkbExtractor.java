@@ -69,6 +69,7 @@ public class CkbExtractor {
     @NotNull
     public ExtractionResult extract(@NotNull List<CkbEntry> ckbEntries) {
         List<ExtractionResult> extractions = Lists.newArrayList();
+        List<EventInterpretation> interpretation = Lists.newArrayList();
 
         ProgressTracker tracker = new ProgressTracker("CKB", ckbEntries.size());
         for (CkbEntry entry : ckbEntries) {
@@ -88,7 +89,6 @@ public class CkbExtractor {
             EventExtractorOutput eventExtractorOutput = eventExtractor.extract(gene, transcript, entry.type(), event, Strings.EMPTY);
             Set<? extends ActionableEvent> actionableEvents = actionableEntryFactory.toActionableEntries(entry, variant.variant());
 
-            List<EventInterpretation> interpretation = Lists.newArrayList();
             interpretation.add(ImmutableEventInterpretation.builder()
                     .source(Knowledgebase.CKB)
                     .sourceEvent(variant.variant())

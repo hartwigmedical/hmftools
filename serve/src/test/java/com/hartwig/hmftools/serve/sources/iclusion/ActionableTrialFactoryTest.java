@@ -13,13 +13,11 @@ import com.hartwig.hmftools.serve.curation.DoidLookupTestFactory;
 import com.hartwig.hmftools.serve.tumorlocation.ImmutableTumorLocation;
 
 import org.apache.logging.log4j.util.Strings;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class ActionableTrialFactoryTest {
 
     @Test
-    @Ignore
     public void canCreateActionableTrials() {
         String location1 = "loc1";
         String loc1Doid1 = "162";
@@ -41,53 +39,53 @@ public class ActionableTrialFactoryTest {
         List<ActionableTrial> actionableTrials = factory.toActionableTrials(trial, Strings.EMPTY);
         assertEquals(3, actionableTrials.size());
         assertEquals(treatment, actionableTrials.get(0).treatment());
-        assertEquals(location1, actionableTrials.get(0).whiteList().cancerType());
-        assertEquals(loc1Doid1, actionableTrials.get(0).whiteList().doid());
+        assertEquals(location1, actionableTrials.get(0).whiteListCancerType().cancerType());
+        assertEquals(loc1Doid1, actionableTrials.get(0).whiteListCancerType().doid());
         assertEquals(Sets.newHashSet(ImmutableTumorLocation.builder().cancerType("blacklistLocation").doid("blacklistDoid").build(),
                         ImmutableTumorLocation.builder().cancerType("Hematologic cancer").doid("2531").build()),
-                actionableTrials.get(0).blacklistings());
+                actionableTrials.get(0).blackListCancerTypes());
 
         assertEquals(treatment, actionableTrials.get(1).treatment());
-        assertEquals(location1, actionableTrials.get(1).whiteList().cancerType());
-        assertEquals(loc1Doid2, actionableTrials.get(1).whiteList().doid());
+        assertEquals(location1, actionableTrials.get(1).whiteListCancerType().cancerType());
+        assertEquals(loc1Doid2, actionableTrials.get(1).whiteListCancerType().doid());
         assertEquals(Sets.newHashSet(ImmutableTumorLocation.builder().cancerType("blacklistLocation").doid("blacklistDoid").build(),
                         ImmutableTumorLocation.builder().cancerType("Hematologic cancer").doid("2531").build()),
-                actionableTrials.get(1).blacklistings());
+                actionableTrials.get(1).blackListCancerTypes());
 
         assertEquals(treatment, actionableTrials.get(2).treatment());
-        assertEquals(location2, actionableTrials.get(2).whiteList().cancerType());
-        assertEquals(loc2Doid1, actionableTrials.get(2).whiteList().doid());
+        assertEquals(location2, actionableTrials.get(2).whiteListCancerType().cancerType());
+        assertEquals(loc2Doid1, actionableTrials.get(2).whiteListCancerType().doid());
         assertEquals(Sets.newHashSet(ImmutableTumorLocation.builder().cancerType("blacklistLocation").doid("blacklistDoid").build(),
                         ImmutableTumorLocation.builder().cancerType("Hematologic cancer").doid("2531").build()),
-                actionableTrials.get(2).blacklistings());
+                actionableTrials.get(2).blackListCancerTypes());
 
         IclusionTrial trialOnlyBlacklist =
                 IclusionTestFactory.trialWithTumors(treatment, Lists.newArrayList(loc2), Lists.newArrayList(blacklist));
         List<ActionableTrial> actionableTrialsOnlyBlacklist = factory.toActionableTrials(trialOnlyBlacklist, Strings.EMPTY);
         assertEquals(1, actionableTrialsOnlyBlacklist.size());
         assertEquals(treatment, actionableTrialsOnlyBlacklist.get(0).treatment());
-        assertEquals(location2, actionableTrialsOnlyBlacklist.get(0).whiteList().cancerType());
-        assertEquals(loc2Doid1, actionableTrialsOnlyBlacklist.get(0).whiteList().doid());
+        assertEquals(location2, actionableTrialsOnlyBlacklist.get(0).whiteListCancerType().cancerType());
+        assertEquals(loc2Doid1, actionableTrialsOnlyBlacklist.get(0).whiteListCancerType().doid());
         assertEquals(Sets.newHashSet(ImmutableTumorLocation.builder().cancerType("blacklistLocation").doid("blacklistDoid").build()),
-                actionableTrialsOnlyBlacklist.get(0).blacklistings());
+                actionableTrialsOnlyBlacklist.get(0).blackListCancerTypes());
 
         IclusionTrial trialWithoutBlacklist =
                 IclusionTestFactory.trialWithTumors(treatment, Lists.newArrayList(loc2), Lists.newArrayList());
         List<ActionableTrial> actionableTrialsWithoutBlacklist = factory.toActionableTrials(trialWithoutBlacklist, Strings.EMPTY);
         assertEquals(1, actionableTrialsWithoutBlacklist.size());
         assertEquals(treatment, actionableTrialsWithoutBlacklist.get(0).treatment());
-        assertEquals(location2, actionableTrialsWithoutBlacklist.get(0).whiteList().cancerType());
-        assertEquals(loc2Doid1, actionableTrialsWithoutBlacklist.get(0).whiteList().doid());
-        assertEquals(Sets.newHashSet(), actionableTrialsWithoutBlacklist.get(0).blacklistings());
+        assertEquals(location2, actionableTrialsWithoutBlacklist.get(0).whiteListCancerType().cancerType());
+        assertEquals(loc2Doid1, actionableTrialsWithoutBlacklist.get(0).whiteListCancerType().doid());
+        assertEquals(Sets.newHashSet(), actionableTrialsWithoutBlacklist.get(0).blackListCancerTypes());
 
         IclusionTrial trialWith162 = IclusionTestFactory.trialWithTumors(treatment, Lists.newArrayList(loc1), Lists.newArrayList());
         List<ActionableTrial> actionableTrialsWith162 = factory.toActionableTrials(trialWith162, Strings.EMPTY);
         assertEquals(2, actionableTrialsWith162.size());
         assertEquals(treatment, actionableTrialsWith162.get(0).treatment());
-        assertEquals(location1, actionableTrialsWith162.get(0).whiteList().cancerType());
-        assertEquals(loc1Doid1, actionableTrialsWith162.get(0).whiteList().doid());
+        assertEquals(location1, actionableTrialsWith162.get(0).whiteListCancerType().cancerType());
+        assertEquals(loc1Doid1, actionableTrialsWith162.get(0).whiteListCancerType().doid());
         assertEquals(Sets.newHashSet(ImmutableTumorLocation.builder().cancerType("Hematologic cancer").doid("2531").build()),
-                actionableTrialsWith162.get(0).blacklistings());
+                actionableTrialsWith162.get(0).blackListCancerTypes());
 
     }
 

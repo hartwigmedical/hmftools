@@ -30,8 +30,8 @@ public final class ActionableFileFunctions {
                 .add("sourceEvent")
                 .add("sourceUrls")
                 .add("treatment")
-                .add("cancerType")
-                .add("doid")
+                .add("whiteListCancerType")
+                .add("whiteListDoid")
                 .add("blacklistCancerTypes")
                 .add("level")
                 .add("direction")
@@ -71,13 +71,13 @@ public final class ActionableFileFunctions {
 
             @NotNull
             @Override
-            public TumorLocation whiteList() {
+            public TumorLocation whiteListCancerType() {
                 return ImmutableTumorLocation.builder().cancerType(values[startingPosition + 4]).doid(values[startingPosition + 5]).build();
             }
 
             @NotNull
             @Override
-            public Set<TumorLocation> blacklistings() {
+            public Set<TumorLocation> blackListCancerTypes() {
                 return values[startingPosition + 6].equals(Strings.EMPTY) ? TumorLocationFactory.readTumorLocationBlacklistingString(values[
                         startingPosition + 6]): Sets.newHashSet();
             }
@@ -109,9 +109,9 @@ public final class ActionableFileFunctions {
                 .add(event.sourceEvent())
                 .add(urlsToString(event.sourceUrls()))
                 .add(event.treatment())
-                .add(event.whiteList().cancerType())
-                .add(event.whiteList().doid())
-                .add(TumorLocationFactory.extractTumorLocationBlacklisting(event.blacklistings()))
+                .add(event.whiteListCancerType().cancerType())
+                .add(event.whiteListCancerType().doid())
+                .add(TumorLocationFactory.extractTumorLocationBlacklisting(event.blackListCancerTypes()))
                 .add(event.level().toString())
                 .add(event.direction().toString())
                 .add(urlsToString(event.evidenceUrls()))

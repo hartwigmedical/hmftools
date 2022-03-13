@@ -49,30 +49,30 @@ public class ActionableEvidenceFactoryTest {
 
         ActionableEvent eventA = findByCancerType(events, cancerTypeA);
         assertEquals("Treatment", eventA.treatment());
-        assertEquals(cancerTypeA, eventA.whiteList().cancerType());
-        assertEquals("1", eventA.whiteList().doid());
+        assertEquals(cancerTypeA, eventA.whiteListCancerType().cancerType());
+        assertEquals("1", eventA.whiteListCancerType().doid());
         assertEquals(Sets.newHashSet(ImmutableTumorLocation.builder().cancerType(Strings.EMPTY).doid(Strings.EMPTY).build()),
-                eventA.blacklistings());
+                eventA.blackListCancerTypes());
         assertEquals(EvidenceLevel.A, eventA.level());
         assertEquals(EvidenceDirection.RESPONSIVE, eventA.direction());
         assertEquals(Sets.newHashSet("url"), eventA.evidenceUrls());
 
         ActionableEvent eventB = findByCancerType(events, cancerTypeB);
         assertEquals("Treatment", eventB.treatment());
-        assertEquals(cancerTypeB, eventB.whiteList().cancerType());
-        assertEquals("162", eventB.whiteList().doid());
+        assertEquals(cancerTypeB, eventB.whiteListCancerType().cancerType());
+        assertEquals("162", eventB.whiteListCancerType().doid());
         assertEquals(EvidenceLevel.A, eventB.level());
         assertEquals(EvidenceDirection.RESPONSIVE, eventB.direction());
         assertEquals(Sets.newHashSet("url"), eventB.evidenceUrls());
         assertEquals(Sets.newHashSet(ImmutableTumorLocation.builder().cancerType("Hematologic cancer").doid("2531").build()),
-                eventB.blacklistings());
+                eventB.blackListCancerTypes());
         factory.evaluateCuration();
     }
 
     @NotNull
     private static ActionableEvent findByCancerType(@NotNull Iterable<ActionableEvent> events, @NotNull String cancerType) {
         for (ActionableEvent event : events) {
-            if (event.whiteList().cancerType().equals(cancerType)) {
+            if (event.whiteListCancerType().cancerType().equals(cancerType)) {
                 return event;
             }
         }

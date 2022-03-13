@@ -19,7 +19,6 @@ import com.itextpdf.layout.property.UnitValue;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class DetailsAndDisclaimerChapter implements ReportChapter {
 
@@ -56,7 +55,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell().add(createDisclaimerDiv(patientReport)));
         reportDocument.add(table);
 
-        reportDocument.add(ReportSignature.createSignatureDiv(patientReport.logoRVAPath(), patientReport.signaturePath()));
+        reportDocument.add(ReportSignature.createSignatureDiv(patientReport.logoRVAPath(), patientReport.signaturePath(), false));
         reportDocument.add(ReportSignature.createEndOfReportIndication());
     }
 

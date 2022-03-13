@@ -14,6 +14,7 @@ import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.hotspot.ImmutableActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
+import com.hartwig.hmftools.serve.actionability.range.RangeType;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableCodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableKnownCodon;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
@@ -62,6 +63,60 @@ class RefGenomeConverter {
     }
 
     @NotNull
+    static Set<ActionableRange> curateActionableRange(@NotNull Set<ActionableRange> actionableRanges,
+            @NotNull RefGenomeVersion genomeVersion) {
+        Set<ActionableRange> curatedRanges = Sets.newHashSet();
+        for (ActionableRange range : actionableRanges) {
+            if (genomeVersion == RefGenomeVersion.V37) {
+                if (range.gene().equals("BRAF") && range.rank() == 600 && range.rangeType().equals(RangeType.CODON)) {
+                    int start = 140753335;
+                    int end = 140753337;
+                    String canonicalTranscriptID = "ENST00000288602";
+                    curatedRanges.add(ImmutableActionableRange.builder()
+                            .from(range)
+                            .start(start)
+                            .end(end)
+                            .transcript(canonicalTranscriptID)
+                            .build());
+                } else {
+                    curatedRanges.add(range);
+                }
+            } else {
+                curatedRanges.add(range);
+            }
+        }
+        return curatedRanges;
+    }
+
+    @NotNull
+    static Set<KnownCodon> curateKnownCodons(@NotNull Set<KnownCodon> convertedCodons, @NotNull RefGenomeVersion genomeVersion) {
+        Set<KnownCodon> curatedCodons = Sets.newHashSet();
+        for (KnownCodon codon : convertedCodons) {
+            if (genomeVersion == RefGenomeVersion.V37) {
+                if (codon.annotation().gene().equals("BRAF") && codon.annotation().rank() == 600) {
+                    int start = 140753335;
+                    int end = 140753337;
+                    String canonicalTranscriptID = "ENST00000288602";
+                    curatedCodons.add(ImmutableKnownCodon.builder()
+                            .from(codon)
+                            .annotation(ImmutableCodonAnnotation.builder()
+                                    .from(codon.annotation())
+                                    .start(start)
+                                    .end(end)
+                                    .transcript(canonicalTranscriptID)
+                                    .build())
+                            .build());
+                } else {
+                    curatedCodons.add(codon);
+                }
+            } else {
+                curatedCodons.add(codon);
+            }
+        }
+        return curatedCodons;
+    }
+
+    @NotNull
     public Set<KnownHotspot> convertKnownHotspots(@NotNull Set<KnownHotspot> hotspots) {
         Set<KnownHotspot> convertedHotspots = Sets.newHashSet();
         for (KnownHotspot hotspot : hotspots) {
@@ -82,6 +137,7 @@ class RefGenomeConverter {
     @NotNull
     public Set<KnownCodon> convertKnownCodons(@NotNull Set<KnownCodon> codons) {
         Set<KnownCodon> convertedCodons = Sets.newHashSet();
+        Set<KnownCodon> curatedCodons = curateKnownCodons(codons, targetVersion);
         for (KnownCodon codon : codons) {
             RangeAnnotation originalAnnotation = codon.annotation();
             RangeAnnotation liftedAnnotation = liftOverRange(originalAnnotation);
@@ -162,7 +218,8 @@ class RefGenomeConverter {
     @NotNull
     public Set<ActionableRange> convertActionableRanges(@NotNull Set<ActionableRange> actionableRanges) {
         Set<ActionableRange> convertedActionableRanges = Sets.newHashSet();
-        for (ActionableRange actionableRange : actionableRanges) {
+        Set<ActionableRange> curatedActionableRanges = curateActionableRange(actionableRanges, targetVersion);
+        for (ActionableRange actionableRange : curatedActionableRanges) {
             RangeAnnotation lifted = liftOverRange(actionableRange);
             if (lifted != null) {
                 convertedActionableRanges.add(ImmutableActionableRange.builder()

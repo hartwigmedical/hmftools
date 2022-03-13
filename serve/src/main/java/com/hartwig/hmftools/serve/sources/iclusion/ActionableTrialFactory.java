@@ -18,7 +18,6 @@ import com.hartwig.hmftools.serve.curation.DoidLookup;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class ActionableTrialFactory {
@@ -80,10 +79,12 @@ public class ActionableTrialFactory {
             }
         }
 
-        tumorLocationBlacklistings.add(ImmutableTumorLocation.builder()
-                .cancerType(urlsToString(blacklistTumorLocations))
-                .doid(urlsToString(blacklistedDoids))
-                .build());
+        if (!blacklistTumorLocations.equals(Sets.newHashSet()) && !blacklistedDoids.equals(Sets.newHashSet())){
+            tumorLocationBlacklistings.add(ImmutableTumorLocation.builder()
+                    .cancerType(urlsToString(blacklistTumorLocations))
+                    .doid(urlsToString(blacklistedDoids))
+                    .build());
+        }
 
         for (IclusionTumorLocation tumorLocation : trial.tumorLocations()) {
             List<String> doids = tumorLocation.doids();
@@ -101,16 +102,19 @@ public class ActionableTrialFactory {
             for (String doid : doids) {
                 String doidCorrected = extractDoid(doid);
 
-                tumorLocationBlacklistings.add(ImmutableTumorLocation.builder()
-                        .cancerType(doidCorrected.equals("162") ? "Hematologic cancer" : Strings.EMPTY)
-                        .doid(doidCorrected.equals("162") ? "2531" : Strings.EMPTY)
-                        .build());
+                if (doidCorrected.equals("162")) {
+                    tumorLocationBlacklistings.add(ImmutableTumorLocation.builder()
+                            .cancerType("Hematologic cancer")
+                            .doid("2531")
+                            .build());
+                }
+
                 actionableTrials.add(actionableBuilder
-                        .whiteList(ImmutableTumorLocation.builder()
+                        .whiteListCancerType(ImmutableTumorLocation.builder()
                                 .cancerType(tumorLocation.primaryTumorLocation())
                                 .doid(doidCorrected)
                                 .build())
-                        .blacklistings(tumorLocationBlacklistings)
+                        .blackListCancerTypes(tumorLocationBlacklistings)
                         .build());
             }
         }

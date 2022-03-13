@@ -125,12 +125,12 @@ class ActionableEvidenceFactory {
                     for (List<String> drugList : drugLists) {
                         actionableEvents.add(builder
                                 .treatment(formatDrugList(drugList))
-                                .whiteList(
+                                .whiteListCancerType(
                                         ImmutableTumorLocation.builder()
                                                 .cancerType(cancerType)
                                                 .doid(doid)
                                                 .build())
-                                .blacklistings(tumorLocationBlacklistings).build());
+                                .blackListCancerTypes(tumorLocationBlacklistings).build());
                     }
                 }
             }

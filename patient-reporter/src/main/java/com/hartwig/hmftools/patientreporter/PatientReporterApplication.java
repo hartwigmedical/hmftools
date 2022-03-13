@@ -15,6 +15,12 @@ import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReporter;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedReportData;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedReportDataLoader;
 import com.hartwig.hmftools.patientreporter.cfreport.CFReportWriter;
+import com.hartwig.hmftools.patientreporter.panel.ImmutableQCFailPanelReportData;
+import com.hartwig.hmftools.patientreporter.panel.PanelFailReport;
+import com.hartwig.hmftools.patientreporter.panel.PanelFailReporter;
+import com.hartwig.hmftools.patientreporter.panel.PanelReport;
+import com.hartwig.hmftools.patientreporter.panel.PanelReporter;
+import com.hartwig.hmftools.patientreporter.panel.QCFailPanelReportData;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReportData;
@@ -36,7 +42,7 @@ public class PatientReporterApplication {
     public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
 
     // Uncomment this line when generating an example report using CFReportWriterTest
-    //                public static final String VERSION = "7.24.1";
+    //                public static final String VERSION = "7.25";
 
     public static void main(@NotNull String[] args) throws IOException {
         LOGGER.info("Running patient reporter v{}", VERSION);
@@ -68,7 +74,12 @@ public class PatientReporterApplication {
     private void run() throws IOException {
         SampleMetadata sampleMetadata = buildSampleMetadata(config);
 
-        if (config.qcFail()) {
+        if (config.panel()) {
+            if (config.panelQcFail()) {
+                generatePanelQCFail(sampleMetadata);
+            }
+            generatePanelAnalysedReport(sampleMetadata);
+        } else if (config.qcFail()) {
             LOGGER.info("Generating qc-fail report");
             generateQCFail(sampleMetadata);
         } else {
@@ -95,6 +106,27 @@ public class PatientReporterApplication {
 
             new ReportingDb().appendAnalysedReport(report, config.outputDirData());
         }
+    }
+
+    private void generatePanelAnalysedReport(@NotNull SampleMetadata sampleMetadata) throws IOException {
+        PanelReporter reporter = new PanelReporter(buildBasePanelReportData(config), reportDate);
+        PanelReport report = reporter.run();
+
+        ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
+        String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
+
+        reportWriter.writePanelAnalysedReport(report, outputFilePath);
+
+    }
+
+    private void generatePanelQCFail(@NotNull SampleMetadata sampleMetadata) throws IOException {
+        PanelFailReporter reporter = new PanelFailReporter(buildBasePanelReportData(config), reportDate);
+        PanelFailReport report = reporter.run();
+
+        ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
+        String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
+
+        reportWriter.writePanelQCFailReport(report, outputFilePath);
     }
 
     private void generateQCFail(@NotNull SampleMetadata sampleMetadata) throws IOException {
@@ -147,6 +179,27 @@ public class PatientReporterApplication {
         LOGGER.info(" Ref sample barcode: {}", sampleMetadata.refSampleBarcode());
 
         return sampleMetadata;
+    }
+
+    @NotNull
+    private static QCFailPanelReportData buildBasePanelReportData(@NotNull PatientReporterConfig config) throws IOException {
+        String primaryTumorTsv = config.primaryTumorTsv();
+
+        List<PatientPrimaryTumor> patientPrimaryTumors = PatientPrimaryTumorFile.read(primaryTumorTsv);
+        LOGGER.info("Loaded primary tumors for {} patients from {}", patientPrimaryTumors.size(), primaryTumorTsv);
+
+        String limsDirectory = config.limsDir();
+        Lims lims = LimsFactory.fromLimsDirectory(limsDirectory);
+        LOGGER.info("Loaded LIMS data for {} samples from {}", lims.sampleBarcodeCount(), limsDirectory);
+
+        return ImmutableQCFailPanelReportData.builder()
+                .patientPrimaryTumors(patientPrimaryTumors)
+                .limsModel(lims)
+                .signaturePath(config.signature())
+                .logoRVAPath(config.rvaLogo())
+                .logoCompanyPath(config.companyLogo())
+                .udiDi(config.udiDi())
+                .build();
     }
 
     @NotNull
