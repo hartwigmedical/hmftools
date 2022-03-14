@@ -14,8 +14,8 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
-import com.hartwig.hmftools.serve.tumorlocation.ImmutableTumorLocation;
-import com.hartwig.hmftools.serve.tumorlocation.TumorLocation;
+import com.hartwig.hmftools.serve.cancertype.CancerType;
+import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.serve.sources.vicc.curation.DrugCurator;
 import com.hartwig.hmftools.serve.sources.vicc.curation.EvidenceLevelCurator;
@@ -117,20 +117,20 @@ class ActionableEvidenceFactory {
             for (Map.Entry<String, Set<String>> cancerTypeEntry : cancerTypeToDoidsMap.entrySet()) {
                 String cancerType = cancerTypeEntry.getKey();
                 for (String doid : cancerTypeEntry.getValue()) {
-                    Set<TumorLocation> tumorLocationBlacklistings = Sets.newHashSet();
-                    tumorLocationBlacklistings.add(ImmutableTumorLocation.builder()
+                    Set<CancerType> cancerTypeBlacklist = Sets.newHashSet();
+                    cancerTypeBlacklist.add(ImmutableCancerType.builder()
                             .cancerType(doid.equals("162") ? "Hematologic cancer" : Strings.EMPTY)
                             .doid(doid.equals("162") ? "2531" : Strings.EMPTY)
                             .build());
                     for (List<String> drugList : drugLists) {
                         actionableEvents.add(builder
                                 .treatment(formatDrugList(drugList))
-                                .whiteListCancerType(
-                                        ImmutableTumorLocation.builder()
+                                .applicableCancerType(
+                                        ImmutableCancerType.builder()
                                                 .cancerType(cancerType)
                                                 .doid(doid)
                                                 .build())
-                                .blackListCancerTypes(tumorLocationBlacklistings).build());
+                                .blacklistCancerTypes(cancerTypeBlacklist).build());
                     }
                 }
             }

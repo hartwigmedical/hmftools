@@ -11,8 +11,8 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTumorLocation;
-import com.hartwig.hmftools.serve.tumorlocation.ImmutableTumorLocation;
-import com.hartwig.hmftools.serve.tumorlocation.TumorLocation;
+import com.hartwig.hmftools.serve.cancertype.CancerType;
+import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
 
 import org.apache.commons.compress.utils.Lists;
@@ -43,7 +43,7 @@ public class ActionableTrialFactory {
 
     @NotNull
     public List<ActionableTrial> toActionableTrials(@NotNull IclusionTrial trial, @NotNull String rawInput) {
-        Set<TumorLocation> tumorLocationBlacklistings = Sets.newHashSet();
+        Set<CancerType> cancerTypeBlacklist = Sets.newHashSet();
 
         ImmutableActionableTrial.Builder actionableBuilder = ImmutableActionableTrial.builder()
                 .source(Knowledgebase.ICLUSION)
@@ -80,7 +80,7 @@ public class ActionableTrialFactory {
         }
 
         if (!blacklistTumorLocations.equals(Sets.newHashSet()) && !blacklistedDoids.equals(Sets.newHashSet())){
-            tumorLocationBlacklistings.add(ImmutableTumorLocation.builder()
+            cancerTypeBlacklist.add(ImmutableCancerType.builder()
                     .cancerType(urlsToString(blacklistTumorLocations))
                     .doid(urlsToString(blacklistedDoids))
                     .build());
@@ -103,18 +103,18 @@ public class ActionableTrialFactory {
                 String doidCorrected = extractDoid(doid);
 
                 if (doidCorrected.equals("162")) {
-                    tumorLocationBlacklistings.add(ImmutableTumorLocation.builder()
+                    cancerTypeBlacklist.add(ImmutableCancerType.builder()
                             .cancerType("Hematologic cancer")
                             .doid("2531")
                             .build());
                 }
 
                 actionableTrials.add(actionableBuilder
-                        .whiteListCancerType(ImmutableTumorLocation.builder()
+                        .applicableCancerType(ImmutableCancerType.builder()
                                 .cancerType(tumorLocation.primaryTumorLocation())
                                 .doid(doidCorrected)
                                 .build())
-                        .blackListCancerTypes(tumorLocationBlacklistings)
+                        .blacklistCancerTypes(cancerTypeBlacklist)
                         .build());
             }
         }

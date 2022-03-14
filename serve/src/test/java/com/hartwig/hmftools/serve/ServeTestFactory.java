@@ -19,7 +19,7 @@ import com.hartwig.hmftools.serve.actionability.immuno.ImmutableActionableHLA;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.RangeType;
-import com.hartwig.hmftools.serve.tumorlocation.ImmutableTumorLocation;
+import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicAnnotation;
@@ -274,11 +274,11 @@ public final class ServeTestFactory {
                 "rawInput",
                 Sets.newHashSet(),
                 "treatment",
-                ImmutableTumorLocation.builder()
-                        .cancerType("whitlist cancertype")
-                        .doid("whitlist doid")
+                ImmutableCancerType.builder()
+                        .cancerType("applicable cancerType")
+                        .doid("applicable doid")
                         .build(),
-                Sets.newHashSet(ImmutableTumorLocation.builder()
+                Sets.newHashSet(ImmutableCancerType.builder()
                         .cancerType("blacklist cancertype")
                         .doid("blacklist doid")
                         .build()),

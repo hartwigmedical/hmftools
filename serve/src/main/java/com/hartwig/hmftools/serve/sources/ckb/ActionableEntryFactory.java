@@ -11,8 +11,8 @@ import com.hartwig.hmftools.ckb.datamodel.reference.Reference;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.serve.tumorlocation.ImmutableTumorLocation;
-import com.hartwig.hmftools.serve.tumorlocation.TumorLocation;
+import com.hartwig.hmftools.serve.cancertype.CancerType;
+import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -93,8 +93,8 @@ class ActionableEntryFactory {
                                         + evidence.evidenceType());
                     }
 
-                    Set<TumorLocation> tumorLocationBlacklistings = Sets.newHashSet();
-                    tumorLocationBlacklistings.add(ImmutableTumorLocation.builder()
+                    Set<CancerType> cancerTypeBlacklisting = Sets.newHashSet();
+                    cancerTypeBlacklisting.add(ImmutableCancerType.builder()
                             .cancerType(doid.equals("162") ? "Hematologic cancer" : Strings.EMPTY)
                             .doid(doid.equals("162") ? "2531" : Strings.EMPTY)
                             .build());
@@ -104,11 +104,11 @@ class ActionableEntryFactory {
                             .sourceEvent(rawInput)
                             .sourceUrls(sourceLinks)
                             .treatment(treatment)
-                            .whiteListCancerType(ImmutableTumorLocation.builder()
+                            .applicableCancerType(ImmutableCancerType.builder()
                                     .cancerType(cancerType)
                                     .doid(doid)
                                     .build())
-                            .blackListCancerTypes(tumorLocationBlacklistings)
+                            .blacklistCancerTypes(cancerTypeBlacklisting)
                             .level(level)
                             .direction(direction)
                             .evidenceUrls(urls)

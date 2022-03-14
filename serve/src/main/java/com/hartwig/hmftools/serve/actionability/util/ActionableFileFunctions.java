@@ -8,9 +8,9 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
-import com.hartwig.hmftools.serve.tumorlocation.ImmutableTumorLocation;
-import com.hartwig.hmftools.serve.tumorlocation.TumorLocation;
-import com.hartwig.hmftools.serve.tumorlocation.TumorLocationFactory;
+import com.hartwig.hmftools.serve.cancertype.CancerType;
+import com.hartwig.hmftools.serve.cancertype.CancerTypeFactory;
+import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -30,8 +30,8 @@ public final class ActionableFileFunctions {
                 .add("sourceEvent")
                 .add("sourceUrls")
                 .add("treatment")
-                .add("whiteListCancerType")
-                .add("whiteListDoid")
+                .add("applicableCancerType")
+                .add("applicableDoid")
                 .add("blacklistCancerTypes")
                 .add("level")
                 .add("direction")
@@ -71,14 +71,14 @@ public final class ActionableFileFunctions {
 
             @NotNull
             @Override
-            public TumorLocation whiteListCancerType() {
-                return ImmutableTumorLocation.builder().cancerType(values[startingPosition + 4]).doid(values[startingPosition + 5]).build();
+            public CancerType applicableCancerType() {
+                return ImmutableCancerType.builder().cancerType(values[startingPosition + 4]).doid(values[startingPosition + 5]).build();
             }
 
             @NotNull
             @Override
-            public Set<TumorLocation> blackListCancerTypes() {
-                return values[startingPosition + 6].equals(Strings.EMPTY) ? TumorLocationFactory.readTumorLocationBlacklistingString(values[
+            public Set<CancerType> blacklistCancerTypes() {
+                return values[startingPosition + 6].equals(Strings.EMPTY) ? CancerTypeFactory.readCancerTypeBlacklistString(values[
                         startingPosition + 6]): Sets.newHashSet();
             }
 
@@ -109,9 +109,9 @@ public final class ActionableFileFunctions {
                 .add(event.sourceEvent())
                 .add(urlsToString(event.sourceUrls()))
                 .add(event.treatment())
-                .add(event.whiteListCancerType().cancerType())
-                .add(event.whiteListCancerType().doid())
-                .add(TumorLocationFactory.extractTumorLocationBlacklisting(event.blackListCancerTypes()))
+                .add(event.applicableCancerType().cancerType())
+                .add(event.applicableCancerType().doid())
+                .add(CancerTypeFactory.extractCancerTypeBlacklist(event.blacklistCancerTypes()))
                 .add(event.level().toString())
                 .add(event.direction().toString())
                 .add(urlsToString(event.evidenceUrls()))

@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.actionability.ActionabilityTestUtil;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
-import com.hartwig.hmftools.serve.tumorlocation.ImmutableTumorLocation;
+import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 
 import org.junit.Test;
 
@@ -23,11 +23,11 @@ public class ActionableFileFunctionsTest {
                         "rawInput",
                         Sets.newHashSet(),
                         "treatment",
-                        ImmutableTumorLocation.builder()
-                                .cancerType("whitlist cancertype")
-                                .doid("whitlist doid")
+                        ImmutableCancerType.builder()
+                                .cancerType("applicable cancerType")
+                                .doid("applicable doid")
                                 .build(),
-                        Sets.newHashSet(ImmutableTumorLocation.builder()
+                        Sets.newHashSet(ImmutableCancerType.builder()
                                 .cancerType("blacklist cancertype")
                                 .doid("blacklist doid")
                                 .build()),
@@ -40,8 +40,8 @@ public class ActionableFileFunctionsTest {
 
         assertEquals(Knowledgebase.VICC_CGI, convertedEvent.source());
         assertEquals("treatment", convertedEvent.treatment());
-        assertEquals("whitlist cancertype", convertedEvent.whiteListCancerType().cancerType());
-        assertEquals("whitlist doid", convertedEvent.whiteListCancerType().doid());
+        assertEquals("applicable cancerType", convertedEvent.applicableCancerType().cancerType());
+        assertEquals("applicable doid", convertedEvent.applicableCancerType().doid());
         assertEquals(EvidenceLevel.C, convertedEvent.level());
         assertEquals(EvidenceDirection.RESISTANT, convertedEvent.direction());
         assertEquals(Sets.newHashSet("url1", "url2"), convertedEvent.evidenceUrls());

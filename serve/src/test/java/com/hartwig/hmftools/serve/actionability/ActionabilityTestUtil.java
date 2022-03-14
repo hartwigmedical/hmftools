@@ -7,10 +7,9 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.serve.tumorlocation.TumorLocation;
+import com.hartwig.hmftools.serve.cancertype.CancerType;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class ActionabilityTestUtil {
 
@@ -21,14 +20,14 @@ public final class ActionabilityTestUtil {
 
     @NotNull
     public static ActionableEvent create(@NotNull Knowledgebase source, @NotNull String sourceEvent, @NotNull Set<String> sourceUrls,
-            @NotNull String treatment, @NotNull TumorLocation whiteListCancerType, @NotNull Set<TumorLocation> blackListCancerTypes,
+            @NotNull String treatment, @NotNull CancerType applicableCancerType, @NotNull Set<CancerType> blacklistCancerTypes,
             @NotNull EvidenceLevel level, @NotNull EvidenceDirection direction, @NotNull Set<String> evidenceUrls) {
         return new ActionableEventImpl(source,
                 sourceEvent,
                 sourceUrls,
                 treatment,
-                whiteListCancerType,
-                blackListCancerTypes,
+                applicableCancerType,
+                blacklistCancerTypes,
                 level,
                 direction,
                 evidenceUrls);
@@ -45,9 +44,9 @@ public final class ActionabilityTestUtil {
         @NotNull
         private final String treatment;
         @NotNull
-        private final TumorLocation whiteListCancerType;
+        private final CancerType applicableCancerType;
         @NotNull
-        private final Set<TumorLocation> blackListCancerTypes;
+        private final Set<CancerType> blacklistCancerTypes;
         @NotNull
         private final EvidenceLevel level;
         @NotNull
@@ -56,14 +55,14 @@ public final class ActionabilityTestUtil {
         private final Set<String> evidenceUrls;
 
         public ActionableEventImpl(@NotNull Knowledgebase source, @NotNull String sourceEvent, @NotNull Set<String> sourceUrls,
-                @NotNull String treatment, @NotNull TumorLocation whiteListCancerType, @NotNull Set<TumorLocation> blackListCancerTypes,
+                @NotNull String treatment, @NotNull CancerType applicableCancerType, @NotNull Set<CancerType> blacklistCancerTypes,
                 @NotNull EvidenceLevel level, @NotNull EvidenceDirection direction, @NotNull Set<String> evidenceUrls) {
             this.source = source;
             this.sourceEvent = sourceEvent;
             this.sourceUrls = sourceUrls;
             this.treatment = treatment;
-            this.whiteListCancerType = whiteListCancerType;
-            this.blackListCancerTypes = blackListCancerTypes;
+            this.applicableCancerType = applicableCancerType;
+            this.blacklistCancerTypes = blacklistCancerTypes;
             this.level = level;
             this.direction = direction;
             this.evidenceUrls = evidenceUrls;
@@ -95,14 +94,14 @@ public final class ActionabilityTestUtil {
 
         @NotNull
         @Override
-        public TumorLocation whiteListCancerType() {
-            return whiteListCancerType;
+        public CancerType applicableCancerType() {
+            return applicableCancerType;
         }
 
         @NotNull
         @Override
-        public Set<TumorLocation> blackListCancerTypes() {
-            return blackListCancerTypes;
+        public Set<CancerType> blacklistCancerTypes() {
+            return blacklistCancerTypes;
         }
 
         @NotNull
@@ -133,14 +132,14 @@ public final class ActionabilityTestUtil {
             }
             final ActionableEventImpl that = (ActionableEventImpl) o;
             return source == that.source && sourceEvent.equals(source == that.source) && sourceUrls.equals(that.sourceUrls)
-                    && treatment.equals(that.treatment) && whiteListCancerType.equals(that.whiteListCancerType)
-                    && blackListCancerTypes.equals(that.blackListCancerTypes) && level == that.level && direction == that.direction
+                    && treatment.equals(that.treatment) && applicableCancerType.equals(that.applicableCancerType)
+                    && blacklistCancerTypes.equals(that.blacklistCancerTypes) && level == that.level && direction == that.direction
                     && evidenceUrls.equals(that.evidenceUrls);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(source, sourceEvent, sourceUrls, treatment, whiteListCancerType, blackListCancerTypes, level, direction,
+            return Objects.hash(source, sourceEvent, sourceUrls, treatment, applicableCancerType, blacklistCancerTypes, level, direction,
 
                     evidenceUrls);
         }
@@ -148,8 +147,8 @@ public final class ActionabilityTestUtil {
         @Override
         public String toString() {
             return "ActionableEventImpl{" + "source=" + source + ", sourceEvent='" + sourceEvent + ", sourceUrls=" + sourceUrls
-                    + ", treatment='" + treatment + ", whitelistCancerType='" + whiteListCancerType + ", blackListCancerTypes='"
-                    + blackListCancerTypes + ", level=" + level + ", direction=" + direction + ", evidenceUrls=" + evidenceUrls + '}';
+                    + ", treatment='" + treatment + ", applicableCancerType='" + applicableCancerType + ", blacklistCancerTypes='"
+                    + blacklistCancerTypes + ", level=" + level + ", direction=" + direction + ", evidenceUrls=" + evidenceUrls + '}';
         }
     }
 }
