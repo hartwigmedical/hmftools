@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.dedup;
 
 import static com.hartwig.hmftools.sage.dedup.DedupIndel.dedupIndels;
+import static com.hartwig.hmftools.sage.dedup.DedupMatching.dedupMatchingVariants;
 import static com.hartwig.hmftools.sage.dedup.DedupSnvMnv.dedupMnvOverlaps;
 import static com.hartwig.hmftools.sage.dedup.DedupSnvMnv.dedupMnvSnvs;
 
@@ -28,6 +29,8 @@ public class VariantDeduper
         dedupMnvSnvs(variants);
 
         dedupIndels(variants);
+
+        dedupMatchingVariants(variants);
     }
 
     private void acceptDedupedVariant(final SageVariant variant) {}
