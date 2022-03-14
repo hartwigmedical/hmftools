@@ -122,9 +122,9 @@ public final class DedupIndel
         else
         {
             if(first.totalQuality() > second.totalQuality())
-                second.filters().add(DEDUP_MNV_FILTER);
+                second.filters().add(DEDUP_INDEL_FILTER);
             else
-                first.filters().add(DEDUP_MNV_FILTER);
+                first.filters().add(DEDUP_INDEL_FILTER);
         }
 
         return false;
