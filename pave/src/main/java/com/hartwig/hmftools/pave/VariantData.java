@@ -179,7 +179,7 @@ public class VariantData
         List<Integer> localPhaseSets = variantContext.getAttributeAsIntList(SageMetaData.LOCAL_PHASE_SET, NO_LOCAL_PHASE_SET);
 
         variant.setVariantDetails(
-                !localPhaseSets.isEmpty() ? localPhaseSets.get(0) : 0,
+                !localPhaseSets.isEmpty() ? localPhaseSets.get(0) : NO_LOCAL_PHASE_SET,
                 variantContext.getAttributeAsString(MICROHOMOLOGY_FLAG, Strings.EMPTY),
                 variantContext.getAttributeAsString(REPEAT_SEQUENCE_FLAG, Strings.EMPTY),
                 variantContext.getAttributeAsInt(REPEAT_COUNT_FLAG, 0));

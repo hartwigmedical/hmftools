@@ -282,11 +282,13 @@ public final class ProteinUtils
             if(downstreamBases == null)
                 break;
 
-            if(downstreamBases.length() < extraBases || downstreamBases.length() < downstreamAltOpenCodonBases)
+            boolean codingRegionEnded = downstreamBases.length() < extraBases || downstreamBases.length() < downstreamAltOpenCodonBases;
+
+            if(codingRegionEnded)
             {
-                PV_LOGGER.warn("var({}) invalid extraBases(P{) downstreamBases({}) downstreamAltOpenCodonBases({})",
+                // occurs if the coding region end is reached
+                PV_LOGGER.debug("var({}) invalid extraBases({}) downstreamBases({}) downstreamAltOpenCodonBases({})",
                         variant, extraBases, downstreamBases, downstreamAltOpenCodonBases);
-                break;
             }
 
             if(posStrand)
@@ -308,6 +310,9 @@ public final class ProteinUtils
             }
 
             if(!pc.RefAminoAcids.equals(pc.AltAminoAcids))
+                break;
+
+            if(codingRegionEnded)
                 break;
 
             extraBases += 3;

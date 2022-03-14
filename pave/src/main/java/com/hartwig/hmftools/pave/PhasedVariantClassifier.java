@@ -148,6 +148,7 @@ public class PhasedVariantClassifier
 
         // ignore if not phased anyway
         int indelBaseTotal = 0;
+        int indelVarCount = 0;
         int minIndelIndex = transImpacts.size();
         int maxIndelIndex = 0;
 
@@ -160,6 +161,7 @@ public class PhasedVariantClassifier
                 continue;
 
             indelBaseTotal += variant.isInsert() ? variant.baseDiff() : -transImpact.codingContext().DeletedCodingBases;
+            ++indelVarCount;
 
             minIndelIndex = min(minIndelIndex, i);
             maxIndelIndex = max(maxIndelIndex, i);
@@ -167,6 +169,7 @@ public class PhasedVariantClassifier
 
         // ignore any SNV or MNV which is not in between INDELs and doesn't overlap another variant
         List<VariantData> ignoredVariants = Lists.newArrayList();
+        boolean hasOverlappingBaseChange = false;
 
         for(int i = 0; i < transImpacts.size(); ++i)
         {
@@ -193,7 +196,13 @@ public class PhasedVariantClassifier
 
             if(!overlapsOnStart && !overlapsOnEnd)
                 ignoredVariants.add(variant);
+            else
+                hasOverlappingBaseChange = true;
         }
+
+        // proceed if there are 2+ out-of-frame INDELs or at least an INDEL and an overlapping SNV/MNV
+        if(!hasOverlappingBaseChange && indelVarCount <= 1)
+            return;
 
         if(!isCodonMultiple(indelBaseTotal))
         {
