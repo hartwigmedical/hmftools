@@ -412,16 +412,16 @@ public class CFReportWriterTest {
                 .build();
         PanelReport patientReport = ImmutablePanelReport.builder()
                 .sampleReport(sampleReport)
-                .signaturePath(testReportData.signaturePath())
-                .logoRVAPath(testReportData.logoRVAPath())
-                .logoCompanyPath(testReportData.logoCompanyPath())
+                .qsFormNumber("form")
+                .VCFFilename("test.vcf")
+                .sampleGbase("100 GB")
+                .sampleQ30Value("90")
                 .isCorrectedReport(false)
                 .isCorrectedReportExtern(false)
                 .signaturePath(testReportData.signaturePath())
                 .logoRVAPath(testReportData.logoRVAPath())
                 .logoCompanyPath(testReportData.logoCompanyPath())
-                .udiDi(UDI_DI)
-                .qsFormNumber(QsFormNumber.FOR_209.display())
+                .udiDi("")
                 .reportDate(DataUtil.formatDate(LocalDate.now()))
                 .build();
 

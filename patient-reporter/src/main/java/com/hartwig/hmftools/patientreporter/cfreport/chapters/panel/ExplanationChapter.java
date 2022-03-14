@@ -51,7 +51,7 @@ public class ExplanationChapter implements ReportChapter {
 
         div.add(createContentParagraph("The variant calling of the sequencing data is based on reference genome version GRCh37."));
         div.add(createContentParagraph("Transcript list can be found on."));
-        div.add(createContentParagraph("hort descrip=on of the headers present in the VCF"));
+        div.add(createContentParagraph("Short description of the headers present in the VCF"));
         return div;
     }
 
