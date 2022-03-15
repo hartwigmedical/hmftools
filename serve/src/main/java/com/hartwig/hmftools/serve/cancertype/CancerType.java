@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class CancerType {
 
     @NotNull
-    public abstract String cancerType();
+    public abstract String name();
 
     @NotNull
     public abstract String doid();

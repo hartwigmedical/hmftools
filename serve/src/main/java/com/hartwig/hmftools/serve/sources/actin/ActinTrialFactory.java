@@ -22,7 +22,7 @@ public final class ActinTrialFactory {
 
         Set<CancerType> cancerTypeBlacklistings = Sets.newHashSet();
         cancerTypeBlacklistings.add(ImmutableCancerType.builder()
-                .cancerType("Hematologic cancer")
+                .name("Hematologic cancer")
                 .doid("2531")
                 .build());
 
@@ -32,7 +32,7 @@ public final class ActinTrialFactory {
                 .sourceUrls(Sets.newHashSet())
                 .treatment(actionTrial.trial())
                 .applicableCancerType(ImmutableCancerType.builder()
-                        .cancerType("Advanced Solid Tumor")
+                        .name("Advanced Solid Tumor")
                         .doid("162")
                         .build())
                 .blacklistCancerTypes(cancerTypeBlacklistings)

@@ -28,7 +28,7 @@ public class ActionableEventComparator implements Comparator<ActionableEvent> {
             return treatmentCompare;
         }
 
-        int cancerTypeCompare = event1.applicableCancerType().cancerType().compareTo(event2.applicableCancerType().cancerType());
+        int cancerTypeCompare = event1.applicableCancerType().name().compareTo(event2.applicableCancerType().name());
         if (cancerTypeCompare != 0) {
             return cancerTypeCompare;
         }

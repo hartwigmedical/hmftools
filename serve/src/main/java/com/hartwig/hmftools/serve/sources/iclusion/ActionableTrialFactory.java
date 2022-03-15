@@ -81,7 +81,7 @@ public class ActionableTrialFactory {
 
         if (!blacklistTumorLocations.equals(Sets.newHashSet()) && !blacklistedDoids.equals(Sets.newHashSet())){
             cancerTypeBlacklist.add(ImmutableCancerType.builder()
-                    .cancerType(urlsToString(blacklistTumorLocations))
+                    .name(urlsToString(blacklistTumorLocations))
                     .doid(urlsToString(blacklistedDoids))
                     .build());
         }
@@ -104,14 +104,14 @@ public class ActionableTrialFactory {
 
                 if (doidCorrected.equals("162")) {
                     cancerTypeBlacklist.add(ImmutableCancerType.builder()
-                            .cancerType("Hematologic cancer")
+                            .name("Hematologic cancer")
                             .doid("2531")
                             .build());
                 }
 
                 actionableTrials.add(actionableBuilder
                         .applicableCancerType(ImmutableCancerType.builder()
-                                .cancerType(tumorLocation.primaryTumorLocation())
+                                .name(tumorLocation.primaryTumorLocation())
                                 .doid(doidCorrected)
                                 .build())
                         .blacklistCancerTypes(cancerTypeBlacklist)

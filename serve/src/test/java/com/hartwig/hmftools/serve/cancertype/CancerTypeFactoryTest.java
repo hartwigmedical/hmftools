@@ -1,17 +1,17 @@
 package com.hartwig.hmftools.serve.cancertype;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
-import static org.junit.Assert.assertEquals;
 
 import com.beust.jcommander.internal.Sets;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class TumorLocationFactoryTest {
+public class CancerTypeFactoryTest {
 
     @Test
     public void canTestTumorLocationBlacklistingSingle() {
@@ -26,9 +26,7 @@ public class TumorLocationFactoryTest {
         cancerTypeBlacklist.add(tumorLocationBlacklisting("Hematologic cancer", "2531"));
         cancerTypeBlacklist.add(tumorLocationBlacklisting("Skin Melanoma", "8923"));
 
-        assertEquals("Hematologic cancer,2531;Skin Melanoma,8923",
-                CancerTypeFactory.extractCancerTypeBlacklist(cancerTypeBlacklist));
-
+        assertEquals("Hematologic cancer,2531;Skin Melanoma,8923", CancerTypeFactory.extractCancerTypeBlacklist(cancerTypeBlacklist));
     }
 
     @Test
@@ -51,7 +49,7 @@ public class TumorLocationFactoryTest {
 
         assertEquals(1, cancerTypeBlacklistList.size());
         CancerType tumorLocationBlacklisting = cancerTypeBlacklistList.get(0);
-        assertEquals("Hematologic cancer", tumorLocationBlacklisting.cancerType());
+        assertEquals("Hematologic cancer", tumorLocationBlacklisting.name());
         assertEquals("2531", tumorLocationBlacklisting.doid());
     }
 
@@ -63,11 +61,11 @@ public class TumorLocationFactoryTest {
 
         assertEquals(2, cancerTypeBlacklistList.size());
         CancerType tumorLocationBlacklisting1 = cancerTypeBlacklistList.get(0);
-        assertEquals("Hematologic cancer", tumorLocationBlacklisting1.cancerType());
+        assertEquals("Hematologic cancer", tumorLocationBlacklisting1.name());
         assertEquals("2531", tumorLocationBlacklisting1.doid());
 
         CancerType tumorLocationBlacklisting2 = cancerTypeBlacklistList.get(1);
-        assertEquals("Skin Melanoma", tumorLocationBlacklisting2.cancerType());
+        assertEquals("Skin Melanoma", tumorLocationBlacklisting2.name());
         assertEquals("8923", tumorLocationBlacklisting2.doid());
     }
 
@@ -79,24 +77,24 @@ public class TumorLocationFactoryTest {
 
         assertEquals(4, cancerTypeBlacklistList.size());
         CancerType tumorLocationBlacklisting1 = cancerTypeBlacklistList.get(0);
-        assertEquals("Hematologic cancer", tumorLocationBlacklisting1.cancerType());
+        assertEquals("Hematologic cancer", tumorLocationBlacklisting1.name());
         assertEquals("2531", tumorLocationBlacklisting1.doid());
 
         CancerType tumorLocationBlacklisting4 = cancerTypeBlacklistList.get(1);
-        assertEquals("Colorectal Cancer", tumorLocationBlacklisting4.cancerType());
+        assertEquals("Colorectal Cancer", tumorLocationBlacklisting4.name());
         assertEquals("1520", tumorLocationBlacklisting4.doid());
 
         CancerType tumorLocationBlacklisting2 = cancerTypeBlacklistList.get(2);
-        assertEquals("Skin Melanoma", tumorLocationBlacklisting2.cancerType());
+        assertEquals("Skin Melanoma", tumorLocationBlacklisting2.name());
         assertEquals("8923", tumorLocationBlacklisting2.doid());
 
         CancerType tumorLocationBlacklisting3 = cancerTypeBlacklistList.get(3);
-        assertEquals("Bladder Cancer", tumorLocationBlacklisting3.cancerType());
+        assertEquals("Bladder Cancer", tumorLocationBlacklisting3.name());
         assertEquals("11054", tumorLocationBlacklisting3.doid());
     }
 
     @NotNull
     public CancerType tumorLocationBlacklisting(@NotNull String tumorLocation, @NotNull String doid) {
-        return ImmutableCancerType.builder().cancerType(tumorLocation).doid(doid).build();
+        return ImmutableCancerType.builder().name(tumorLocation).doid(doid).build();
     }
 }

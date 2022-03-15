@@ -119,7 +119,7 @@ class ActionableEvidenceFactory {
                 for (String doid : cancerTypeEntry.getValue()) {
                     Set<CancerType> cancerTypeBlacklist = Sets.newHashSet();
                     cancerTypeBlacklist.add(ImmutableCancerType.builder()
-                            .cancerType(doid.equals("162") ? "Hematologic cancer" : Strings.EMPTY)
+                            .name(doid.equals("162") ? "Hematologic cancer" : Strings.EMPTY)
                             .doid(doid.equals("162") ? "2531" : Strings.EMPTY)
                             .build());
                     for (List<String> drugList : drugLists) {
@@ -127,7 +127,7 @@ class ActionableEvidenceFactory {
                                 .treatment(formatDrugList(drugList))
                                 .applicableCancerType(
                                         ImmutableCancerType.builder()
-                                                .cancerType(cancerType)
+                                                .name(cancerType)
                                                 .doid(doid)
                                                 .build())
                                 .blacklistCancerTypes(cancerTypeBlacklist).build());

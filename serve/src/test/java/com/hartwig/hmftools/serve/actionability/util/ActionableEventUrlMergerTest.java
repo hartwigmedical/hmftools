@@ -43,11 +43,11 @@ public class ActionableEventUrlMergerTest {
                         Sets.newHashSet(),
                         "treatment",
                         ImmutableCancerType.builder()
-                                .cancerType("applicable cancerType")
+                                .name("applicable cancerType")
                                 .doid("applicable doid")
                                 .build(),
                         Sets.newHashSet(ImmutableCancerType.builder()
-                                .cancerType("blacklist cancerType")
+                                .name("blacklist cancerType")
                                 .doid("blacklist doid")
                                 .build()),
                         EvidenceLevel.A,

@@ -275,11 +275,11 @@ public final class ServeTestFactory {
                 Sets.newHashSet(),
                 "treatment",
                 ImmutableCancerType.builder()
-                        .cancerType("applicable cancerType")
+                        .name("applicable name")
                         .doid("applicable doid")
                         .build(),
                 Sets.newHashSet(ImmutableCancerType.builder()
-                        .cancerType("blacklist cancertype")
+                        .name("blacklist name")
                         .doid("blacklist doid")
                         .build()),
                 EvidenceLevel.A,

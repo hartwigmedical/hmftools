@@ -72,7 +72,7 @@ public final class ActionableFileFunctions {
             @NotNull
             @Override
             public CancerType applicableCancerType() {
-                return ImmutableCancerType.builder().cancerType(values[startingPosition + 4]).doid(values[startingPosition + 5]).build();
+                return ImmutableCancerType.builder().name(values[startingPosition + 4]).doid(values[startingPosition + 5]).build();
             }
 
             @NotNull
@@ -109,7 +109,7 @@ public final class ActionableFileFunctions {
                 .add(event.sourceEvent())
                 .add(urlsToString(event.sourceUrls()))
                 .add(event.treatment())
-                .add(event.applicableCancerType().cancerType())
+                .add(event.applicableCancerType().name())
                 .add(event.applicableCancerType().doid())
                 .add(CancerTypeFactory.extractCancerTypeBlacklist(event.blacklistCancerTypes()))
                 .add(event.level().toString())

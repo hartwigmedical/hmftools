@@ -20,8 +20,8 @@ public final class CancerTypeFactory {
     public static String extractCancerTypeBlacklist(@NotNull Set<CancerType> tumorLocationBlacklistings) {
         StringJoiner joiner = new StringJoiner(DELIMITER_DIFFERENT_TUMOR);
         for (CancerType blackListTumorLocation : tumorLocationBlacklistings) {
-            if (!blackListTumorLocation.cancerType().equals(Strings.EMPTY) && !blackListTumorLocation.doid().equals(Strings.EMPTY)) {
-                joiner.add(blackListTumorLocation.cancerType() + DELIMITER_TUM_DOID + blackListTumorLocation.doid());
+            if (!blackListTumorLocation.name().equals(Strings.EMPTY) && !blackListTumorLocation.doid().equals(Strings.EMPTY)) {
+                joiner.add(blackListTumorLocation.name() + DELIMITER_TUM_DOID + blackListTumorLocation.doid());
             }
         }
         return joiner.toString();
@@ -36,7 +36,7 @@ public final class CancerTypeFactory {
             for (String tumorLocationDoidArray : splitTumorLocationString) {
                 String[] tumorLocationDoid = tumorLocationDoidArray.split(DELIMITER_TUM_DOID);
                 tumorLocationBlacklistingsList.add(ImmutableCancerType.builder()
-                        .cancerType(tumorLocationDoid[0])
+                        .name(tumorLocationDoid[0])
                         .doid(tumorLocationDoid[1])
                         .build());
             }

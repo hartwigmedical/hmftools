@@ -43,14 +43,8 @@ public class ActionableEventComparatorTest {
                 "rawInput",
                 Sets.newHashSet(),
                 treatment,
-                ImmutableCancerType.builder()
-                        .cancerType(applicableCancerType)
-                        .doid("applicable doid")
-                        .build(),
-                Sets.newHashSet(ImmutableCancerType.builder()
-                        .cancerType("blacklist cancerType")
-                        .doid("blacklist doid")
-                        .build()),
+                ImmutableCancerType.builder().name(applicableCancerType).doid("applicable doid").build(),
+                Sets.newHashSet(ImmutableCancerType.builder().name("blacklist cancerType").doid("blacklist doid").build()),
                 level,
                 direction,
                 Sets.newHashSet());

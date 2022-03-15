@@ -24,11 +24,11 @@ public class ActionableFileFunctionsTest {
                         Sets.newHashSet(),
                         "treatment",
                         ImmutableCancerType.builder()
-                                .cancerType("applicable cancerType")
+                                .name("applicable name")
                                 .doid("applicable doid")
                                 .build(),
                         Sets.newHashSet(ImmutableCancerType.builder()
-                                .cancerType("blacklist cancertype")
+                                .name("blacklist name")
                                 .doid("blacklist doid")
                                 .build()),
                         EvidenceLevel.C,
@@ -40,7 +40,7 @@ public class ActionableFileFunctionsTest {
 
         assertEquals(Knowledgebase.VICC_CGI, convertedEvent.source());
         assertEquals("treatment", convertedEvent.treatment());
-        assertEquals("applicable cancerType", convertedEvent.applicableCancerType().cancerType());
+        assertEquals("applicable name", convertedEvent.applicableCancerType().name());
         assertEquals("applicable doid", convertedEvent.applicableCancerType().doid());
         assertEquals(EvidenceLevel.C, convertedEvent.level());
         assertEquals(EvidenceDirection.RESISTANT, convertedEvent.direction());
