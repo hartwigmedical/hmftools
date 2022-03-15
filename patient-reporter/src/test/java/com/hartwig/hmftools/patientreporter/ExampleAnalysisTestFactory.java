@@ -179,6 +179,7 @@ public final class ExampleAnalysisTestFactory {
                 .pipelineVersion(pipelineVersion)
                 .peachGenotypes(peachGenotypes)
                 .reportDate(reportDate)
+                .isWGSreport(true)
                 .build();
     }
 

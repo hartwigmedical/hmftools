@@ -14,8 +14,8 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
-import com.hartwig.hmftools.serve.tumorlocation.ImmutableTumorLocation;
-import com.hartwig.hmftools.serve.tumorlocation.TumorLocation;
+import com.hartwig.hmftools.serve.cancertype.CancerType;
+import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.serve.sources.vicc.curation.DrugCurator;
 import com.hartwig.hmftools.serve.sources.vicc.curation.EvidenceLevelCurator;
@@ -28,7 +28,6 @@ import com.hartwig.hmftools.vicc.datamodel.civic.Civic;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.internal.$guava$.annotations.$VisibleForTesting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -105,7 +104,6 @@ class ActionableEvidenceFactory {
             level = evidenceLevelCurator.curate(entry.source(), entry.genes(), treatment, level, direction);
             List<List<String>> drugLists = drugCurator.curate(entry.source(), level, treatment);
 
-
             ImmutableActionableEvidence.Builder builder = ImmutableActionableEvidence.builder()
                     .source(fromViccSource(entry.source()))
                     .sourceEvent(rawInput)
@@ -117,20 +115,16 @@ class ActionableEvidenceFactory {
             for (Map.Entry<String, Set<String>> cancerTypeEntry : cancerTypeToDoidsMap.entrySet()) {
                 String cancerType = cancerTypeEntry.getKey();
                 for (String doid : cancerTypeEntry.getValue()) {
-                    Set<TumorLocation> tumorLocationBlacklistings = Sets.newHashSet();
-                    tumorLocationBlacklistings.add(ImmutableTumorLocation.builder()
-                            .cancerType(doid.equals("162") ? "Hematologic cancer" : Strings.EMPTY)
-                            .doid(doid.equals("162") ? "2531" : Strings.EMPTY)
-                            .build());
+                    Set<CancerType> blacklistedCancerTypes = Sets.newHashSet();
+                    if (doid.equals("162")) {
+                        blacklistedCancerTypes.add(ImmutableCancerType.builder().name("Hematologic cancer").doid("2531").build());
+                    }
+
                     for (List<String> drugList : drugLists) {
-                        actionableEvents.add(builder
-                                .treatment(formatDrugList(drugList))
-                                .whiteListCancerType(
-                                        ImmutableTumorLocation.builder()
-                                                .cancerType(cancerType)
-                                                .doid(doid)
-                                                .build())
-                                .blackListCancerTypes(tumorLocationBlacklistings).build());
+                        actionableEvents.add(builder.treatment(formatDrugList(drugList))
+                                .applicableCancerType(ImmutableCancerType.builder().name(cancerType).doid(doid).build())
+                                .blacklistCancerTypes(blacklistedCancerTypes)
+                                .build());
                     }
                 }
             }

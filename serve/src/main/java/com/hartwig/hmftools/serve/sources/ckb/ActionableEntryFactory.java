@@ -11,12 +11,11 @@ import com.hartwig.hmftools.ckb.datamodel.reference.Reference;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.serve.tumorlocation.ImmutableTumorLocation;
-import com.hartwig.hmftools.serve.tumorlocation.TumorLocation;
+import com.hartwig.hmftools.serve.cancertype.CancerType;
+import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -59,8 +58,7 @@ class ActionableEntryFactory {
     }
 
     @NotNull
-    @VisibleForTesting
-    public static Set<ActionableEntry> toActionableEntries(@NotNull CkbEntry entry, @NotNull String rawInput) {
+    public static Set<ActionableEntry> toActionableEntries(@NotNull CkbEntry entry) {
         Set<ActionableEntry> actionableEntries = Sets.newHashSet();
 
         for (Evidence evidence : entry.evidences()) {
@@ -73,45 +71,41 @@ class ActionableEntryFactory {
                     String treatment = evidence.therapy().therapyName();
                     String cancerType = evidence.indication().name();
 
-                    Set<String> urls = Sets.newHashSet();
+                    Set<String> evidenceUrls = Sets.newHashSet();
                     for (Reference reference : evidence.references()) {
                         if (reference.url() != null) {
-                            urls.add(reference.url());
+                            evidenceUrls.add(reference.url());
                         }
                     }
 
-                    int molecularProfileId = entry.profileId();
                     String doidKb = extractDoidKB(evidence.indication().termId());
 
+                    int molecularProfileId = entry.profileId();
                     String responseType = extractResponseType(evidence.responseType());
 
-                    Set<String> sourceLinks = Sets.newHashSet();
+                    Set<String> sourceUrls = Sets.newHashSet();
                     for (Drug drug : evidence.therapy().drugs()) {
-                        sourceLinks.add(
+                        sourceUrls.add(
                                 "https://ckbhome.jax.org/profileResponse/advancedEvidenceFind?molecularProfileId=" + molecularProfileId
                                         + "&drugId=" + drug.id() + "&doId=" + doidKb + "&responseType=" + responseType + "&evidenceType="
                                         + evidence.evidenceType());
                     }
 
-                    Set<TumorLocation> tumorLocationBlacklistings = Sets.newHashSet();
-                    tumorLocationBlacklistings.add(ImmutableTumorLocation.builder()
-                            .cancerType(doid.equals("162") ? "Hematologic cancer" : Strings.EMPTY)
-                            .doid(doid.equals("162") ? "2531" : Strings.EMPTY)
-                            .build());
+                    Set<CancerType> blacklistedCancerTypes = Sets.newHashSet();
+                    if (doid.equals("162")) {
+                        blacklistedCancerTypes.add(ImmutableCancerType.builder().name("Hematologic cancer").doid("2531").build());
+                    }
 
                     actionableEntries.add(ImmutableActionableEntry.builder()
                             .source(Knowledgebase.CKB)
-                            .sourceEvent(rawInput)
-                            .sourceUrls(sourceLinks)
+                            .sourceEvent(entry.variants().get(0).variant())
+                            .sourceUrls(sourceUrls)
                             .treatment(treatment)
-                            .whiteListCancerType(ImmutableTumorLocation.builder()
-                                    .cancerType(cancerType)
-                                    .doid(doid)
-                                    .build())
-                            .blackListCancerTypes(tumorLocationBlacklistings)
+                            .applicableCancerType(ImmutableCancerType.builder().name(cancerType).doid(doid).build())
+                            .blacklistCancerTypes(blacklistedCancerTypes)
                             .level(level)
                             .direction(direction)
-                            .evidenceUrls(urls)
+                            .evidenceUrls(evidenceUrls)
                             .build());
                 }
             }
@@ -167,21 +161,22 @@ class ActionableEntryFactory {
             if (source.equalsIgnoreCase("doid")) {
                 return id;
             } else if (source.equalsIgnoreCase("jax")) {
-                if (id.equals("10000003")) {
-                    // CKB uses this as Advanced Solid Tumor
-                    return "162";
-                } else if (id.equals("10000009")) {
-                    // CKB uses this as Squamous Cell Carcinoma of Unknown Primary
-                    return "1749";
-                } else if (id.equals("10000008")) {
-                    // CKB uses this as Adenocarcinoma of Unknown Primary
-                    return "299";
-                } else {
-                    // CKB uses 10000005 for configuring "Not a cancer". We can ignore these.
-                    if (!id.equals("10000005")) {
-                        LOGGER.warn("Unexpected DOID string annotated by CKB: '{}'", doidString);
-                    }
-                    return null;
+                switch (id) {
+                    case "10000003":
+                        // CKB uses this as Advanced Solid Tumor
+                        return "162";
+                    case "10000009":
+                        // CKB uses this as Squamous Cell Carcinoma of Unknown Primary
+                        return "1749";
+                    case "10000008":
+                        // CKB uses this as Adenocarcinoma of Unknown Primary
+                        return "299";
+                    default:
+                        // CKB uses 10000005 for configuring "Not a cancer". We can ignore these.
+                        if (!id.equals("10000005")) {
+                            LOGGER.warn("Unexpected DOID string annotated by CKB: '{}'", doidString);
+                        }
+                        return null;
                 }
             } else {
                 return null;

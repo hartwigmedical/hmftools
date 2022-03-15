@@ -27,10 +27,10 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ExtractionResult {
 
     @NotNull
-    public abstract List<EventInterpretation> eventInterpretation();
+    public abstract RefGenomeVersion refGenomeVersion();
 
     @NotNull
-    public abstract RefGenomeVersion refGenomeVersion();
+    public abstract List<EventInterpretation> eventInterpretations();
 
     @NotNull
     public abstract Set<KnownHotspot> knownHotspots();

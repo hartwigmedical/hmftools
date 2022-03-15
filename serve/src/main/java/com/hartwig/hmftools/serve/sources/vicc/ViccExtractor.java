@@ -85,7 +85,7 @@ public final class ViccExtractor {
 
         // Assume all VICC knowledgebases are on the same ref genome version
         ImmutableExtractionResult.Builder outputBuilder = ImmutableExtractionResult.builder()
-                .eventInterpretation(convertToEventInterpretation(resultsPerEntry))
+                .eventInterpretations(convertToEventInterpretations(resultsPerEntry))
                 .refGenomeVersion(Knowledgebase.VICC_CGI.refGenomeVersion())
                 .knownHotspots(convertToHotspots(resultsPerEntry))
                 .knownCodons(convertToCodons(resultsPerEntry))
@@ -109,7 +109,6 @@ public final class ViccExtractor {
         Map<Feature, TumorCharacteristic> characteristicsPerFeature = Maps.newHashMap();
         Map<Feature, ImmunoHLA> hlaPerFeature = Maps.newHashMap();
 
-        String rawInput = Strings.EMPTY;
         List<EventInterpretation> interpretation = Lists.newArrayList();
         for (Feature feature : entry.features()) {
             String gene = feature.geneSymbol();
@@ -117,15 +116,14 @@ public final class ViccExtractor {
                 LOGGER.warn("No gene configured for {}. Skipping!", feature);
             } else {
                 EventExtractorOutput extractorOutput =
-                        eventExtractor.extract(gene, entry.transcriptId(), feature.type(), feature.name(), Strings.EMPTY);
-                rawInput = feature.name();
+                        eventExtractor.extract(gene, entry.transcriptId(), feature.type(), feature.name(), null);
 
                 interpretation.add(ImmutableEventInterpretation.builder()
                         .source(ActionableEvidenceFactory.fromViccSource(entry.source()))
-                        .sourceEvent(rawInput)
-                        .interpretGene(gene)
-                        .interpretEvent(feature.name())
-                        .interpretEventType(feature.type())
+                        .sourceEvent(feature.name())
+                        .interpretedGene(gene)
+                        .interpretedEvent(feature.name())
+                        .interpretedEventType(feature.type())
                         .build());
                 if (extractorOutput.hotspots() != null) {
                     hotspotsPerFeature.put(feature, extractorOutput.hotspots());
@@ -168,7 +166,7 @@ public final class ViccExtractor {
                 && hlaPerFeature.isEmpty()) {
             actionableEvents = Sets.newHashSet();
         } else {
-            actionableEvents = actionableEvidenceFactory.toActionableEvents(entry, rawInput);
+            actionableEvents = actionableEvidenceFactory.toActionableEvents(entry, Strings.EMPTY);
         }
 
         return ImmutableViccExtractionResult.builder()
@@ -185,12 +183,12 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    private static List<EventInterpretation> convertToEventInterpretation(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
-        List<EventInterpretation> interpretation = Lists.newArrayList();
+    private static List<EventInterpretation> convertToEventInterpretations(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
+        List<EventInterpretation> interpretations = Lists.newArrayList();
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
-            interpretation = entry.getValue().eventInterpretation();
+            interpretations = entry.getValue().eventInterpretation();
         }
-        return interpretation;
+        return interpretations;
     }
 
     @NotNull

@@ -12,7 +12,7 @@ import com.hartwig.hmftools.serve.actionability.ActionabilityTestUtil;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
-import com.hartwig.hmftools.serve.tumorlocation.ImmutableTumorLocation;
+import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -42,12 +42,12 @@ public class ActionableEventUrlMergerTest {
                         "rawInput",
                         Sets.newHashSet(),
                         "treatment",
-                        ImmutableTumorLocation.builder()
-                                .cancerType("whitlist cancertype")
-                                .doid("whitlist doid")
+                        ImmutableCancerType.builder()
+                                .name("applicable cancerType")
+                                .doid("applicable doid")
                                 .build(),
-                        Sets.newHashSet(ImmutableTumorLocation.builder()
-                                .cancerType("blacklist cancertype")
+                        Sets.newHashSet(ImmutableCancerType.builder()
+                                .name("blacklist cancerType")
                                 .doid("blacklist doid")
                                 .build()),
                         EvidenceLevel.A,

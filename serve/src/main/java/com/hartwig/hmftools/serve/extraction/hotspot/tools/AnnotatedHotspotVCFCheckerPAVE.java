@@ -93,18 +93,23 @@ public class AnnotatedHotspotVCFCheckerPAVE {
                         break;
                     }
                     case NO_MATCH: {
-//                        LOGGER.warn("Could not match inputTranscript {}, input protein {} for input gene {}",
-//                                inputTranscript,
-//                                inputProteinAnnotation,
-//                                inputGene);
+                        //                        LOGGER.warn("Could not match inputTranscript {}, input protein {} for input gene {}",
+                        //                                inputTranscript,
+                        //                                inputProteinAnnotation,
+                        //                                inputGene);
 
                         for (VariantTranscriptImpact variantTranscriptImpact : annotations) {
                             if (variantTranscriptImpact.Transcript.equals(inputTranscript)) {
 
-                                LOGGER.warn("Could not match inputTranscript {}, paveTranscript {}, input protein {}, pave protein {}, pave coding {} for input gene {}, pave gene {}",
-                                        inputTranscript, variantTranscriptImpact.Transcript,
-                                        inputProteinAnnotation, variantTranscriptImpact.HgvsProtein,  variantTranscriptImpact.HgvsCoding,
-                                        inputGene, variantTranscriptImpact.GeneName);
+                                LOGGER.warn(
+                                        "Could not match inputTranscript {}, paveTranscript {}, input protein {}, pave protein {}, pave coding {} for input gene {}, pave gene {}",
+                                        inputTranscript,
+                                        variantTranscriptImpact.Transcript,
+                                        inputProteinAnnotation,
+                                        variantTranscriptImpact.HgvsProtein,
+                                        variantTranscriptImpact.HgvsCoding,
+                                        inputGene,
+                                        variantTranscriptImpact.GeneName);
 
                             }
                         }
@@ -190,9 +195,10 @@ public class AnnotatedHotspotVCFCheckerPAVE {
     }
 
     @NotNull
-    private MatchType matchAnnotation(@NotNull String transcript, @NotNull String inputAnnotation, @NotNull String PaveProteinAnnotation, @NotNull String effect) {
+    private MatchType matchAnnotation(@NotNull String transcript, @NotNull String inputAnnotation, @NotNull String PaveProteinAnnotation,
+            @NotNull String effect) {
         String curatedInputAnnotation = curateStartCodonAnnotation(inputAnnotation);
-        curatedInputAnnotation = curateSynomyous(curatedInputAnnotation, effect, PaveProteinAnnotation);
+        curatedInputAnnotation = curateSynonymous(curatedInputAnnotation, effect, PaveProteinAnnotation);
         if (curatedInputAnnotation.equals(PaveProteinAnnotation)) {
             return MatchType.IDENTICAL;
         }
@@ -221,7 +227,7 @@ public class AnnotatedHotspotVCFCheckerPAVE {
     }
 
     @NotNull
-    private static String curateSynomyous(@NotNull String serveAnnotation, @NotNull String effect, @NotNull String PaveProteinAnnotation) {
+    private static String curateSynonymous(@NotNull String serveAnnotation, @NotNull String effect, @NotNull String PaveProteinAnnotation) {
         if (effect.contains("synonymous_variant") || effect.contains("start_lost") || effect.contains("5_prime_UTR_variant")) {
             return PaveProteinAnnotation;
         } else {

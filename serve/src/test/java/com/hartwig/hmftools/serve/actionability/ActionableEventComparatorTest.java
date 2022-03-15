@@ -9,8 +9,9 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.serve.tumorlocation.ImmutableTumorLocation;
+import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -37,20 +38,14 @@ public class ActionableEventComparatorTest {
     }
 
     @NotNull
-    private static ActionableEvent create(@NotNull Knowledgebase source, @NotNull String treatment, @NotNull String whiteListCancerType,
+    private static ActionableEvent create(@NotNull Knowledgebase source, @NotNull String treatment, @NotNull String applicableCancerType,
             @NotNull EvidenceLevel level, @NotNull EvidenceDirection direction) {
         return ActionabilityTestUtil.create(source,
-                "rawInput",
+                Strings.EMPTY,
                 Sets.newHashSet(),
                 treatment,
-                ImmutableTumorLocation.builder()
-                        .cancerType(whiteListCancerType)
-                        .doid("whitlist doid")
-                        .build(),
-                Sets.newHashSet(ImmutableTumorLocation.builder()
-                        .cancerType("blacklist cancertype")
-                        .doid("blacklist doid")
-                        .build()),
+                ImmutableCancerType.builder().name(applicableCancerType).doid(Strings.EMPTY).build(),
+                Sets.newHashSet(),
                 level,
                 direction,
                 Sets.newHashSet());

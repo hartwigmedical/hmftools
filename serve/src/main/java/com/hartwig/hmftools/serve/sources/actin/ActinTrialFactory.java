@@ -6,8 +6,8 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.serve.tumorlocation.ImmutableTumorLocation;
-import com.hartwig.hmftools.serve.tumorlocation.TumorLocation;
+import com.hartwig.hmftools.serve.cancertype.CancerType;
+import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
 
 import org.jetbrains.annotations.NotNull;
@@ -20,9 +20,9 @@ public final class ActinTrialFactory {
     @NotNull
     public static ActinTrial toActinTrial(@NotNull ActinEntry actionTrial, @NotNull String rawInput) {
 
-        Set<TumorLocation> tumorLocationBlacklistings = Sets.newHashSet();
-        tumorLocationBlacklistings.add(ImmutableTumorLocation.builder()
-                .cancerType("Hematologic cancer")
+        Set<CancerType> cancerTypeBlacklistings = Sets.newHashSet();
+        cancerTypeBlacklistings.add(ImmutableCancerType.builder()
+                .name("Hematologic cancer")
                 .doid("2531")
                 .build());
 
@@ -31,11 +31,11 @@ public final class ActinTrialFactory {
                 .sourceEvent(rawInput)
                 .sourceUrls(Sets.newHashSet())
                 .treatment(actionTrial.trial())
-                .whiteListCancerType(ImmutableTumorLocation.builder()
-                        .cancerType("Advanced Solid Tumor")
+                .applicableCancerType(ImmutableCancerType.builder()
+                        .name("Advanced Solid Tumor")
                         .doid("162")
                         .build())
-                .blackListCancerTypes(tumorLocationBlacklistings)
+                .blacklistCancerTypes(cancerTypeBlacklistings)
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .evidenceUrls(Sets.newHashSet())

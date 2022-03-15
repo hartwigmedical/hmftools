@@ -202,8 +202,8 @@ HPV_POSITIVE | Evidence is applicable when viral presence of some form of HPV ha
 EBV_POSITIVE | Evidence is applicable when viral presence of some form of EBV has been found
 IMMUNO_HLA / Evidence is applicable in case of an HLA type match
 
-### HLA typering
-Every patient has a specific HLA Class type I in there germline. If this class matches to HLA class type I which is derived from the 
+### HLA typing
+Every patient has a specific HLA Class type I in their germline. If this class matches to HLA class type I which is derived from the 
 knowledgebase this patient is applicable for the evidence.
 
 ## Curation and harmonization of individual knowledgebases
@@ -265,7 +265,7 @@ HRD_SIGNATURE | HR Status = HRD
 TMB_OF_AT_LEAST_X | Tumor Mutational Burden (TMB) should be => X
 TML_OF_AT_LEAST_X | Tumor Mutational Load (TML) should be => X
 TML_OF_AT_MOST_X | TML should be <= X
-HAS_HLA_A_TYPE_X | HLA typering should be X   
+HAS_HLA_A_TYPE_X | HLA typing should be X   
 
 SERVE configures every trial to A-level evidence with responsive direction. The filtering is predominantly configurable rather than fixed
 in SERVE. The following filters can be configured in ACTIN:
@@ -386,7 +386,7 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   - Created a link of CKB of the evidence for CKB Boost (web based)
   - For actionable signatures evidences could be applicable with different cut-offs. Now supporting those cut-off values of the different signatures (eg. TML >= 140 )
   - Support the possibility to blacklist specific tumor locations for particular treatments
-  - Add an option to filter evidences when there are driver inconsistenties 
+  - Add an option to filter evidences when there are driver inconsistencies 
   - Support for curation the coordinates of genes because with ensembl data cache BRAF has the wrong coordinates
   - We support the interpretation of the new cancer type(DOIDs) of the CKB knowledgebase (JAX:10000009 and JAX:10000008)
 - [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.8)

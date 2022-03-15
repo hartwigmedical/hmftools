@@ -19,7 +19,7 @@ import com.hartwig.hmftools.serve.actionability.immuno.ImmutableActionableHLA;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.RangeType;
-import com.hartwig.hmftools.serve.tumorlocation.ImmutableTumorLocation;
+import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicAnnotation;
@@ -53,7 +53,7 @@ public final class ServeTestFactory {
     @NotNull
     public static ExtractionResult createResultForSource(@NotNull Knowledgebase source) {
         return ImmutableExtractionResult.builder()
-                .eventInterpretation(Lists.newArrayList())
+                .eventInterpretations(Lists.newArrayList())
                 .refGenomeVersion(source.refGenomeVersion())
                 .addKnownHotspots(createTestKnownHotspotForSource(source))
                 .addKnownCodons(createTestKnownCodonForSource(source))
@@ -274,12 +274,12 @@ public final class ServeTestFactory {
                 "rawInput",
                 Sets.newHashSet(),
                 "treatment",
-                ImmutableTumorLocation.builder()
-                        .cancerType("whitlist cancertype")
-                        .doid("whitlist doid")
+                ImmutableCancerType.builder()
+                        .name("applicable name")
+                        .doid("applicable doid")
                         .build(),
-                Sets.newHashSet(ImmutableTumorLocation.builder()
-                        .cancerType("blacklist cancertype")
+                Sets.newHashSet(ImmutableCancerType.builder()
+                        .name("blacklist name")
                         .doid("blacklist doid")
                         .build()),
                 EvidenceLevel.A,

@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.DriverGeneTestFactory;
 import com.hartwig.hmftools.serve.EnsemblDataCacheTestFactory;
-import com.hartwig.hmftools.serve.extraction.catalog.DealWithDriverInconsistentModeAnnotation;
+import com.hartwig.hmftools.serve.extraction.util.DriverInconsistencyMode;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilterAlgo;
@@ -31,31 +31,31 @@ public class CodonExtractorTest {
 
     @Test
     public void canCheckFilterNotInCatalog() {
-        CodonExtractor extractorFilter = createWithDriverGenes(createTestDriverGenes(), DealWithDriverInconsistentModeAnnotation.FILTER);
+        CodonExtractor extractorFilter = createWithDriverGenes(createTestDriverGenes(), DriverInconsistencyMode.FILTER);
         assertNull(extractorFilter.extract("EGFR", null, EventType.CODON, "R249"));
 
-        CodonExtractor extractorWarn = createWithDriverGenes(createTestDriverGenes(), DealWithDriverInconsistentModeAnnotation.WARN_ONLY);
+        CodonExtractor extractorWarn = createWithDriverGenes(createTestDriverGenes(), DriverInconsistencyMode.WARN_ONLY);
         assertEquals(1, extractorWarn.extract("EGFR", null, EventType.CODON, "R249").size());
 
-        CodonExtractor extractorIgnore = createWithDriverGenes(createTestDriverGenes(), DealWithDriverInconsistentModeAnnotation.IGNORE);
+        CodonExtractor extractorIgnore = createWithDriverGenes(createTestDriverGenes(), DriverInconsistencyMode.IGNORE);
         assertEquals(1, extractorIgnore.extract("EGFR", null, EventType.CODON, "R249").size());
     }
 
     @Test
     public void canCheckFilterInCatalog() {
-        CodonExtractor extractorFilter = createWithDriverGenes(createTestDriverGenes(), DealWithDriverInconsistentModeAnnotation.FILTER);
+        CodonExtractor extractorFilter = createWithDriverGenes(createTestDriverGenes(), DriverInconsistencyMode.FILTER);
         assertEquals(1, extractorFilter.extract("TP53", null, EventType.CODON, "R249").size());
 
-        CodonExtractor extractorWarn = createWithDriverGenes(createTestDriverGenes(), DealWithDriverInconsistentModeAnnotation.WARN_ONLY);
+        CodonExtractor extractorWarn = createWithDriverGenes(createTestDriverGenes(), DriverInconsistencyMode.WARN_ONLY);
         assertEquals(1, extractorWarn.extract("TP53", null, EventType.CODON, "R249").size());
 
-        CodonExtractor extractorIgnore = createWithDriverGenes(createTestDriverGenes(), DealWithDriverInconsistentModeAnnotation.IGNORE);
+        CodonExtractor extractorIgnore = createWithDriverGenes(createTestDriverGenes(), DriverInconsistencyMode.IGNORE);
         assertEquals(1, extractorIgnore.extract("TP53", null, EventType.CODON, "R249").size());
     }
 
     @Test
     public void canExtractSimpleCodon() {
-        CodonExtractor extractor = createWithDriverGenes(createTestDriverGenes(), DealWithDriverInconsistentModeAnnotation.IGNORE);
+        CodonExtractor extractor = createWithDriverGenes(createTestDriverGenes(), DriverInconsistencyMode.IGNORE);
         List<CodonAnnotation> codons = extractor.extract("TP53", null, EventType.CODON, "R249");
 
         assertEquals(1, codons.size());
@@ -69,7 +69,7 @@ public class CodonExtractorTest {
 
     @Test
     public void canExtractCodonOnMultipleExons() {
-        CodonExtractor extractor = createWithDriverGenes(createTestDriverGenes(), DealWithDriverInconsistentModeAnnotation.IGNORE);
+        CodonExtractor extractor = createWithDriverGenes(createTestDriverGenes(), DriverInconsistencyMode.IGNORE);
         List<CodonAnnotation> codons = extractor.extract("KRAS", null, EventType.CODON, "R97");
 
         assertEquals(2, codons.size());
@@ -89,19 +89,19 @@ public class CodonExtractorTest {
 
     @Test
     public void failsOnTranscriptMismatch() {
-        CodonExtractor extractor = createWithDriverGenes(createTestDriverGenes(), DealWithDriverInconsistentModeAnnotation.WARN_ONLY);
+        CodonExtractor extractor = createWithDriverGenes(createTestDriverGenes(), DriverInconsistencyMode.WARN_ONLY);
         assertNull(extractor.extract("KRAS", "not the canonical transcript", EventType.CODON, "R97"));
     }
 
     @Test
     public void failsOnUnresolvableCodonIndex() {
-        CodonExtractor extractor = createWithDriverGenes(createTestDriverGenes(), DealWithDriverInconsistentModeAnnotation.WARN_ONLY);
+        CodonExtractor extractor = createWithDriverGenes(createTestDriverGenes(), DriverInconsistencyMode.WARN_ONLY);
         assertNull(extractor.extract("KRAS", "ENST00000256078", EventType.CODON, "Not a codon"));
     }
 
     @Test
     public void failsOnNonExistingCodonIndex() {
-        CodonExtractor extractor = createWithDriverGenes(createTestDriverGenes(), DealWithDriverInconsistentModeAnnotation.WARN_ONLY);
+        CodonExtractor extractor = createWithDriverGenes(createTestDriverGenes(), DriverInconsistencyMode.WARN_ONLY);
         assertNull(extractor.extract("KRAS", "ENST00000256078", EventType.CODON, "R10000"));
     }
 
@@ -122,7 +122,7 @@ public class CodonExtractorTest {
 
     @NotNull
     private static CodonExtractor createWithDriverGenes(@NotNull List<DriverGene> driverGenes,
-            @NotNull DealWithDriverInconsistentModeAnnotation annotation) {
+            @NotNull DriverInconsistencyMode annotation) {
         return new CodonExtractor(new GeneChecker(Sets.newHashSet("TP53", "KRAS", "EGFR")),
                 new MutationTypeFilterAlgo(driverGenes),
                 EnsemblDataCacheTestFactory.create37(),

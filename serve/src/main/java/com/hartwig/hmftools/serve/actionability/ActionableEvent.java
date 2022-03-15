@@ -5,7 +5,7 @@ import java.util.Set;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.serve.tumorlocation.TumorLocation;
+import com.hartwig.hmftools.serve.cancertype.CancerType;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -24,10 +24,10 @@ public interface ActionableEvent {
     String treatment();
 
     @NotNull
-    TumorLocation whiteListCancerType();
+    CancerType applicableCancerType();
 
     @NotNull
-    Set<TumorLocation> blackListCancerTypes();
+    Set<CancerType> blacklistCancerTypes();
 
     @NotNull
     EvidenceLevel level();

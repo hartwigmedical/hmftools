@@ -54,8 +54,7 @@ public final class ActionableEventsLoader {
         List<ActionableCharacteristic> characteristics = ActionableCharacteristicFile.read(actionableCharacteristicTsv);
         LOGGER.info(" Loaded {} actionable tumor characteristics from {}", characteristics.size(), actionableCharacteristicTsv);
 
-        String actionableHLATsv =
-                ActionableHLAFile.actionableHLATsvPath(actionabilityDir, refGenomeVersion);
+        String actionableHLATsv = ActionableHLAFile.actionableHLATsvPath(actionabilityDir, refGenomeVersion);
         List<ActionableHLA> HLAs = ActionableHLAFile.read(actionableHLATsv);
         LOGGER.info(" Loaded {} actionable hla from {}", HLAs.size(), actionableHLATsv);
 

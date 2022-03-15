@@ -5,6 +5,7 @@ import java.nio.file.Files;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.patientreporter.panel.PanelFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 
 import org.apache.commons.cli.CommandLine;
@@ -53,6 +54,9 @@ public interface PatientReporterConfig {
     String PANEL = "panel";
     String PANEL_QC_FAIL = "panel_qc_fail";
     String PANEL_QC_FAIL_REASON = "panel_qc_fail_reason";
+    String PANEL_VCF_NAME = "panel_vcf_name";
+    String PANEL_GBASE = "gbase";
+    String PANEL_Q30 = "q30";
 
     // Params specific for actual patient reports
     String PURPLE_PURITY_TSV = "purple_purity_tsv"; // Also used for certain QC fail reports in case deep WGS is available.
@@ -118,6 +122,9 @@ public interface PatientReporterConfig {
         options.addOption(PANEL, false, "If set, generates a panel report.");
         options.addOption(PANEL_QC_FAIL, false, "If set, generates a qc-fail report.");
         options.addOption(PANEL_QC_FAIL_REASON, true, "One of: " + Strings.join(Lists.newArrayList(QCFailReason.validIdentifiers()), ','));
+        options.addOption(PANEL_VCF_NAME, true, "The name of the VCF file of the panel results.");
+        options.addOption(PANEL_GBASE, true, "The total Gbase of the panel sample.");
+        options.addOption(PANEL_Q30, true, "The total q30 of the panel sample.");
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
@@ -205,8 +212,17 @@ public interface PatientReporterConfig {
 
     boolean panelQcFail();
 
+    @NotNull
+    String panelVCFname();
+
+    @NotNull
+    String panelGbase();
+
+    @NotNull
+    String panelQ30();
+
     @Nullable
-    QCFailReason panelQcFailReason();
+    PanelFailReason panelQcFailReason();
 
     @NotNull
     String purplePurityTsv();
@@ -305,20 +321,32 @@ public interface PatientReporterConfig {
             }
         }
 
+        String panelVCFFile = Strings.EMPTY;
+        String panelGbase = Strings.EMPTY;
+        String panelQ30 = Strings.EMPTY;
+        String pipelineVersion = null;
+
         boolean isPanel = cmd.hasOption(PANEL);
         boolean isPanelQCFail = cmd.hasOption(PANEL_QC_FAIL);
-        QCFailReason panelQcFailReason = null;
+        PanelFailReason panelQcFailReason = null;
         if (isPanel) {
             if (isPanelQCFail) {
                 String qcFailReasonString = nonOptionalValue(cmd, PANEL_QC_FAIL_REASON);
-                qcFailReason = QCFailReason.fromIdentifier(qcFailReasonString);
-                if (qcFailReason == null) {
+                panelQcFailReason = PanelFailReason.fromIdentifier(qcFailReasonString);
+                if (panelQcFailReason == null) {
                     throw new ParseException("Did not recognize QC Fail reason: " + qcFailReasonString);
                 }
             }
+            if (requirePipelineVersion) {
+                pipelineVersion = nonOptionalFile(cmd, PIPELINE_VERSION_FILE);
+            }
+
+            panelVCFFile= nonOptionalValue(cmd, PANEL_VCF_NAME);
+            panelGbase = nonOptionalValue(cmd, PANEL_GBASE);
+            panelQ30 = nonOptionalValue(cmd, PANEL_Q30);
         }
 
-        String pipelineVersion = null;
+
         String purplePurityTsv = Strings.EMPTY;
         String purpleQcFile = Strings.EMPTY;
         String purpleSomaticDriverCatalogTsv = Strings.EMPTY;
@@ -394,6 +422,9 @@ public interface PatientReporterConfig {
                 .panel(isPanel)
                 .panelQcFail(isPanelQCFail)
                 .panelQcFailReason(panelQcFailReason)
+                .panelVCFname(panelVCFFile)
+                .panelGbase(panelGbase)
+                .panelQ30(panelQ30)
                 .purplePurityTsv(purplePurityTsv)
                 .purpleQcFile(purpleQcFile)
                 .purpleSomaticDriverCatalogTsv(purpleSomaticDriverCatalogTsv)

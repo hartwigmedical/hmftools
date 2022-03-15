@@ -48,7 +48,7 @@ public final class ActionableCharacteristicFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(FIELD_DELIMITER).add("annotation")
+        return new StringJoiner(FIELD_DELIMITER).add("name")
                 .add("comparator")
                 .add("cutoff")
                 .add(ActionableFileFunctions.header())

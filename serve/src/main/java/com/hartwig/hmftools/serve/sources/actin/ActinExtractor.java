@@ -44,25 +44,26 @@ public class ActinExtractor {
 
     @NotNull
     public ExtractionResult extract(@NotNull List<ActinEntry> entries) {
-        List<EventInterpretation> interpretation = Lists.newArrayList();
-        ProgressTracker tracker = new ProgressTracker("ACTIN", entries.size());
         List<ExtractionResult> extractions = Lists.newArrayList();
+
+        ProgressTracker tracker = new ProgressTracker("ACTIN", entries.size());
         for (ActinEntry entry : entries) {
             Set<String> events = ActinEventExtractor.extractEvents(entry);
             ActinTrial trial = ActinTrialFactory.toActinTrial(entry, entry.rule().name());
+
             for (String event : events) {
                 EventType type = ActinEventTypeExtractor.determineEventType(entry, event);
                 if (type == EventType.UNKNOWN) {
                     LOGGER.warn("No event type known for '{}' on '{}'", entry, entry.gene());
                 } else {
                     String gene = entry.gene() != null ? entry.gene() : "-";
-                    interpretation.add(ImmutableEventInterpretation.builder()
+                    EventInterpretation interpretation = ImmutableEventInterpretation.builder()
                             .source(Knowledgebase.ACTIN)
                             .sourceEvent(entry.rule().toString())
-                            .interpretGene(gene)
-                            .interpretEvent(event)
-                            .interpretEventType(type)
-                            .build());
+                            .interpretedGene(gene)
+                            .interpretedEvent(event)
+                            .interpretedEventType(type)
+                            .build();
 
                     extractions.add(toExtractionResult(trial,
                             eventExtractor.extract(gene, null, type, event, entry.mutation()),
@@ -78,7 +79,7 @@ public class ActinExtractor {
 
     @NotNull
     private static ExtractionResult toExtractionResult(@NotNull ActinTrial trial, @NotNull EventExtractorOutput extraction,
-            @NotNull List<EventInterpretation> interpretation) {
+            @NotNull EventInterpretation interpretation) {
         Set<ActionableHotspot> actionableHotspots = ActionableEventFactory.toActionableHotspots(trial, extraction.hotspots());
 
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
@@ -110,8 +111,8 @@ public class ActinExtractor {
         }
 
         return ImmutableExtractionResult.builder()
-                .eventInterpretation(interpretation)
                 .refGenomeVersion(Knowledgebase.ACTIN.refGenomeVersion())
+                .eventInterpretations(Lists.newArrayList(interpretation))
                 .actionableHotspots(actionableHotspots)
                 .actionableRanges(actionableRanges)
                 .actionableGenes(actionableGenes)

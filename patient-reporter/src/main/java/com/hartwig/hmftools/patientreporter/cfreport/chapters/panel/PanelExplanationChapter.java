@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters.panel;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.ReportChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
-import com.hartwig.hmftools.patientreporter.panel.PanelReport;
 import com.itextpdf.io.IOException;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Div;
@@ -14,13 +13,9 @@ import com.itextpdf.layout.property.UnitValue;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public class ExplanationChapter implements ReportChapter {
+public class PanelExplanationChapter implements ReportChapter {
 
-    @NotNull
-    private final PanelReport report;
-
-    public ExplanationChapter(@NotNull PanelReport report) {
-        this.report = report;
+    public PanelExplanationChapter() {
     }
 
     @NotNull
@@ -51,7 +46,7 @@ public class ExplanationChapter implements ReportChapter {
 
         div.add(createContentParagraph("The variant calling of the sequencing data is based on reference genome version GRCh37."));
         div.add(createContentParagraph("Transcript list can be found on."));
-        div.add(createContentParagraph("hort descrip=on of the headers present in the VCF"));
+        div.add(createContentParagraph("Short description of the headers present in the VCF"));
         return div;
     }
 

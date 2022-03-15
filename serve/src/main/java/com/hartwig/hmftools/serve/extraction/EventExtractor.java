@@ -48,7 +48,7 @@ public class EventExtractor {
 
     @NotNull
     public EventExtractorOutput extract(@NotNull String gene, @Nullable String transcriptId, @NotNull EventType type,
-            @NotNull String event, @NotNull String cutoff) {
+            @NotNull String event, @Nullable String cutoff) {
         return ImmutableEventExtractorOutput.builder()
                 .hotspots(hotspotExtractor.extract(gene, transcriptId, type, event))
                 .codons(codonExtractor.extract(gene, transcriptId, type, event))

@@ -7,7 +7,6 @@ import com.hartwig.hmftools.common.serve.classification.EventType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -51,7 +50,7 @@ public class TumorCharacteristicExtractor {
     }
 
     @Nullable
-    public TumorCharacteristic extract(@NotNull EventType type, @NotNull String event, @NotNull String cutoff) {
+    public TumorCharacteristic extract(@NotNull EventType type, @NotNull String event, @Nullable String cutoff) {
         if (type == EventType.CHARACTERISTIC) {
             TumorCharacteristicAnnotation characteristic = determineCharacteristic(event);
             if (characteristic == null) {
@@ -60,7 +59,7 @@ public class TumorCharacteristicExtractor {
                 TumorCharacteristicsComparator comparator = determineComparator(characteristic, cutoff);
                 Double interpretedCutoff = determineCutoff(characteristic, cutoff);
                 return ImmutableTumorCharacteristic.builder()
-                        .annotation(characteristic)
+                        .name(characteristic)
                         .comparator(comparator)
                         .cutoff(interpretedCutoff)
                         .build();
@@ -71,9 +70,9 @@ public class TumorCharacteristicExtractor {
 
     @Nullable
     @VisibleForTesting
-    public TumorCharacteristicsComparator determineComparator(@Nullable TumorCharacteristicAnnotation characteristic,
-            @NotNull String cutoff) {
-        if (!cutoff.equals(Strings.EMPTY)) {
+    static TumorCharacteristicsComparator determineComparator(@Nullable TumorCharacteristicAnnotation characteristic,
+            @Nullable String cutoff) {
+        if (cutoff != null) {
             String[] cutoffSplit = cutoff.split(" ");
 
             if (cutoff.equals("MSI high")) {
@@ -81,17 +80,18 @@ public class TumorCharacteristicExtractor {
             } else if (cutoff.equals("HRD pos")) {
                 return TumorCharacteristicsComparator.EQUAL_OR_GREATER;
             } else if (cutoffSplit.length == 3) {
-                if (cutoffSplit[1].equals(">=")) {
-                    return TumorCharacteristicsComparator.EQUAL_OR_GREATER;
-                } else if (cutoffSplit[1].equals("<=")) {
-                    return TumorCharacteristicsComparator.EQUAL_OR_LOWER;
-                } else if (cutoffSplit[1].equals("<")) {
-                    return TumorCharacteristicsComparator.LOWER;
-                } else if (cutoffSplit[1].equals(">")) {
-                    return TumorCharacteristicsComparator.GREATER;
-                } else {
-                    LOGGER.warn("Could not determine greater of smaller cut-off");
-                    return null;
+                switch (cutoffSplit[1]) {
+                    case ">=":
+                        return TumorCharacteristicsComparator.EQUAL_OR_GREATER;
+                    case "<=":
+                        return TumorCharacteristicsComparator.EQUAL_OR_LOWER;
+                    case "<":
+                        return TumorCharacteristicsComparator.LOWER;
+                    case ">":
+                        return TumorCharacteristicsComparator.GREATER;
+                    default:
+                        LOGGER.warn("Could not determine greater of smaller cut-off");
+                        return null;
                 }
             } else {
                 LOGGER.warn("cutoff value '{}' couldn't be determined", cutoff);
@@ -116,11 +116,11 @@ public class TumorCharacteristicExtractor {
 
     @Nullable
     @VisibleForTesting
-    public Double determineCutoff(@Nullable TumorCharacteristicAnnotation characteristic, @NotNull String cutoff) {
-        if (!cutoff.equals(Strings.EMPTY)) {
+    static Double determineCutoff(@Nullable TumorCharacteristicAnnotation characteristic, @Nullable String cutoff) {
+        if (cutoff != null) {
             String[] cutoffSplit = cutoff.split(" ");
             if (cutoff.equals("MSI high")) {
-                return (double) 4;
+                return 4D;
             } else if (cutoff.equals("HRD pos")) {
                 return 0.5;
             } else if (cutoffSplit.length == 3) {
@@ -132,13 +132,13 @@ public class TumorCharacteristicExtractor {
         } else {
             //HMF definitions cut-off
             if (characteristic == TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE) {
-                return (double) 4;
+                return 4D;
             } else if (characteristic == TumorCharacteristicAnnotation.MICROSATELLITE_STABLE) {
-                return (double) 4;
+                return 4D;
             } else if (characteristic == TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD) {
-                return (double) 140;
+                return 140D;
             } else if (characteristic == TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_LOAD) {
-                return (double) 140;
+                return 140D;
             } else if (characteristic == TumorCharacteristicAnnotation.HOMOLOGOUS_RECOMBINATION_DEFICIENT) {
                 return 0.5;
             } else {

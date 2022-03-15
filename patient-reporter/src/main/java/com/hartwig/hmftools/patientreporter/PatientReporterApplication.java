@@ -110,7 +110,17 @@ public class PatientReporterApplication {
 
     private void generatePanelAnalysedReport(@NotNull SampleMetadata sampleMetadata) throws IOException {
         PanelReporter reporter = new PanelReporter(buildBasePanelReportData(config), reportDate);
-        PanelReport report = reporter.run();
+        PanelReport report = reporter.run(sampleMetadata,
+                config.comments(),
+                config.isCorrectedReport(),
+                config.isCorrectedReportExtern(),
+                config.expectedPipelineVersion(),
+                config.overridePipelineVersion(),
+                config.pipelineVersionFile(),
+                config.requirePipelineVersionFile(),
+                config.panelVCFname(),
+                config.panelGbase(),
+                config.panelQ30());
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
         String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
@@ -121,7 +131,10 @@ public class PatientReporterApplication {
 
     private void generatePanelQCFail(@NotNull SampleMetadata sampleMetadata) throws IOException {
         PanelFailReporter reporter = new PanelFailReporter(buildBasePanelReportData(config), reportDate);
-        PanelFailReport report = reporter.run();
+        PanelFailReport report = reporter.run(sampleMetadata,
+                config.comments(),
+                config.isCorrectedReport(),
+                config.isCorrectedReportExtern(), config.panelQcFailReason());
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
         String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
