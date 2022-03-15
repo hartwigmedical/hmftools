@@ -131,23 +131,29 @@ public final class ActionabilityTestUtil {
                 return false;
             }
             final ActionableEventImpl that = (ActionableEventImpl) o;
-            return source == that.source && sourceEvent.equals(source == that.source) && sourceUrls.equals(that.sourceUrls)
-                    && treatment.equals(that.treatment) && applicableCancerType.equals(that.applicableCancerType)
+            return source == that.source && sourceEvent.equals(that.sourceEvent) && sourceUrls.equals(that.sourceUrls) && treatment.equals(
+                    that.treatment) && applicableCancerType.equals(that.applicableCancerType)
                     && blacklistCancerTypes.equals(that.blacklistCancerTypes) && level == that.level && direction == that.direction
                     && evidenceUrls.equals(that.evidenceUrls);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(source, sourceEvent, sourceUrls, treatment, applicableCancerType, blacklistCancerTypes, level, direction,
-
+            return Objects.hash(source,
+                    sourceEvent,
+                    sourceUrls,
+                    treatment,
+                    applicableCancerType,
+                    blacklistCancerTypes,
+                    level,
+                    direction,
                     evidenceUrls);
         }
 
         @Override
         public String toString() {
-            return "ActionableEventImpl{" + "source=" + source + ", sourceEvent='" + sourceEvent + ", sourceUrls=" + sourceUrls
-                    + ", treatment='" + treatment + ", applicableCancerType='" + applicableCancerType + ", blacklistCancerTypes='"
+            return "ActionableEventImpl{" + "source=" + source + ", sourceEvent='" + sourceEvent + '\'' + ", sourceUrls=" + sourceUrls
+                    + ", treatment='" + treatment + '\'' + ", applicableCancerType=" + applicableCancerType + ", blacklistCancerTypes="
                     + blacklistCancerTypes + ", level=" + level + ", direction=" + direction + ", evidenceUrls=" + evidenceUrls + '}';
         }
     }

@@ -2,6 +2,8 @@ package com.hartwig.hmftools.serve.actionability;
 
 import java.util.Comparator;
 
+import com.hartwig.hmftools.serve.cancertype.CancerType;
+
 import org.jetbrains.annotations.NotNull;
 
 public class ActionableEventComparator implements Comparator<ActionableEvent> {
@@ -28,11 +30,15 @@ public class ActionableEventComparator implements Comparator<ActionableEvent> {
             return treatmentCompare;
         }
 
-        int cancerTypeCompare = event1.applicableCancerType().name().compareTo(event2.applicableCancerType().name());
-        if (cancerTypeCompare != 0) {
-            return cancerTypeCompare;
+        return compareCancerTypes(event1.applicableCancerType(), event2.applicableCancerType());
+    }
+
+    private static int compareCancerTypes(@NotNull CancerType cancerType1, @NotNull CancerType cancerType2) {
+        int nameCompare = cancerType1.name().compareTo(cancerType2.name());
+        if (nameCompare != 0) {
+            return nameCompare;
         }
 
-        return event1.applicableCancerType().doid().compareTo(event2.applicableCancerType().doid());
+        return cancerType1.doid().compareTo(cancerType2.doid());
     }
 }
