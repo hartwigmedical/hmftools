@@ -32,7 +32,10 @@ import com.hartwig.hmftools.patientreporter.ReportData;
 import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.panel.ImmutablePanelFailReport;
 import com.hartwig.hmftools.patientreporter.panel.ImmutablePanelReport;
+import com.hartwig.hmftools.patientreporter.panel.PanelFailReason;
+import com.hartwig.hmftools.patientreporter.panel.PanelFailReport;
 import com.hartwig.hmftools.patientreporter.panel.PanelReport;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
@@ -45,7 +48,7 @@ import org.junit.Test;
 
 public class CFReportWriterTest {
 
-    private static final boolean WRITE_TO_PDF = false;
+    private static final boolean WRITE_TO_PDF = true;
     private static final boolean TIMESTAMP_FILES = false;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
@@ -294,7 +297,7 @@ public class CFReportWriterTest {
 
     @Test
     public void canGenerateSufficientTCPQCFailReport() throws IOException {
-        generateQCFailReport("CPCT03-sufficient_tcp_qc_failure-FOR-083",
+        generateQCFailReport("CPCT03-sufficient_tcp_qc_failure-FOR-083_Fail",
                 "60%",
                 "70%",
                 QCFailReason.SUFFICIENT_TCP_QC_FAILURE,
@@ -307,7 +310,7 @@ public class CFReportWriterTest {
 
     @Test
     public void canGenerateSufficientTCPQCFailReportPASS() throws IOException {
-        generateQCFailReport("CPCT03-sufficient_tcp_qc_failure-FOR-083",
+        generateQCFailReport("CPCT03-sufficient_tcp_qc_failure-FOR-083_Pass",
                 "60%",
                 "70%",
                 QCFailReason.SUFFICIENT_TCP_QC_FAILURE,
@@ -371,20 +374,68 @@ public class CFReportWriterTest {
     }
 
     @Test
-    public void canGeneratePanelReport() throws IOException {
-        generatePanelReport();
-    }
+    public void generatePanelReport() throws IOException {
+        SampleMetadata sampleMetadata = generateSampleMetadata("Sample_panel");
+        ReportData testReportData = PatientReporterTestFactory.loadTestReportData();
+        SampleReport sampleReport = generateSampleReport(sampleMetadata);
 
-    private static void generatePanelReport() throws IOException {
-        SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
-                .refSampleId("x")
-                .refSampleBarcode("FR12123488")
-                .tumorSampleId("testSample")
-                .tumorSampleBarcode("FR12345678")
+        PanelReport patientReport = ImmutablePanelReport.builder()
+                .sampleReport(sampleReport)
+                .qsFormNumber("form")
+                .VCFFilename("test.vcf")
+                .sampleGbase("100 GB")
+                .sampleQ30Value("90")
+                .isCorrectedReport(false)
+                .isCorrectedReportExtern(false)
+                .signaturePath(testReportData.signaturePath())
+                .logoRVAPath(testReportData.logoRVAPath())
+                .logoCompanyPath(testReportData.logoCompanyPath())
+                .udiDi("")
+                .reportDate(DataUtil.formatDate(LocalDate.now()))
                 .build();
 
+        String filename = testReportFilePath(patientReport);
+
+        CFReportWriter writer = testCFReportWriter();
+        writer.writePanelAnalysedReport(patientReport, filename);
+    }
+
+    @Test
+    public void generateFailPanelReport() throws IOException {
+        SampleMetadata sampleMetadata = generateSampleMetadata("sample_panel_failed");
         ReportData testReportData = PatientReporterTestFactory.loadTestReportData();
-        SampleReport sampleReport = ImmutableSampleReport.builder()
+
+        SampleReport sampleReport = generateSampleReport(sampleMetadata);
+        PanelFailReport patientReport = ImmutablePanelFailReport.builder()
+                .sampleReport(sampleReport)
+                .qsFormNumber("form")
+                .panelFailReason(PanelFailReason.PANEL_FAILURE)
+                .isCorrectedReport(false)
+                .isCorrectedReportExtern(false)
+                .signaturePath(testReportData.signaturePath())
+                .logoRVAPath(testReportData.logoRVAPath())
+                .logoCompanyPath(testReportData.logoCompanyPath())
+                .udiDi("")
+                .reportDate(DataUtil.formatDate(LocalDate.now()))
+                .build();
+
+        String filename = testReportFilePath(patientReport);
+
+        CFReportWriter writer = testCFReportWriter();
+        writer.writePanelQCFailReport(patientReport, filename);
+    }
+
+    private static SampleMetadata generateSampleMetadata(@NotNull String sampleId) {
+        return ImmutableSampleMetadata.builder()
+                .refSampleId("x")
+                .refSampleBarcode("FR12123488")
+                .tumorSampleId(sampleId)
+                .tumorSampleBarcode("FR12345678")
+                .build();
+    }
+
+    private static SampleReport generateSampleReport(@NotNull SampleMetadata sampleMetadata) {
+        return ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)
                 .patientPrimaryTumor(ImmutablePatientPrimaryTumor.builder()
                         .patientIdentifier("test")
@@ -410,36 +461,11 @@ public class CFReportWriterTest {
                 .hospitalPatientId("HOSP1")
                 .hospitalPathologySampleId("PA1")
                 .build();
-        PanelReport patientReport = ImmutablePanelReport.builder()
-                .sampleReport(sampleReport)
-                .qsFormNumber("form")
-                .VCFFilename("test.vcf")
-                .sampleGbase("100 GB")
-                .sampleQ30Value("90")
-                .isCorrectedReport(false)
-                .isCorrectedReportExtern(false)
-                .signaturePath(testReportData.signaturePath())
-                .logoRVAPath(testReportData.logoRVAPath())
-                .logoCompanyPath(testReportData.logoCompanyPath())
-                .udiDi("")
-                .reportDate(DataUtil.formatDate(LocalDate.now()))
-                .build();
-
-        String filename = testReportFilePath(patientReport);
-
-        CFReportWriter writer = testCFReportWriter();
-        writer.writePanelAnalysedReport(patientReport, filename);
     }
-
     private static void generateQCFailReport(@NotNull String sampleId, @NotNull String shallowSeqPurity, @Nullable String wgsPurityString,
             @NotNull QCFailReason reason, boolean correctedReport, boolean correctionReportExtern, @NotNull String comments,
             @NotNull LimsCohortConfig limsCohortConfig, @NotNull PurpleQCStatus purpleQCStatus) throws IOException {
-        SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
-                .refSampleId("x")
-                .refSampleBarcode("FR12123488")
-                .tumorSampleId(sampleId)
-                .tumorSampleBarcode("FR12345678")
-                .build();
+        SampleMetadata sampleMetadata = generateSampleMetadata(sampleId);
 
         SampleReport sampleReport = ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)
