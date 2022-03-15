@@ -188,7 +188,7 @@ public class VariantFilters
         }
 
         // MNV Tests
-        if(aboveMaxMnvNormalAltSupport(tier, normal, this.mConfig.MnvFilter))
+        if(aboveMaxMnvNormalAltSupport(tier, normal, mConfig.MnvFilter))
         {
             filters.add(SoftFilter.MAX_GERMLINE_ALT_SUPPORT.filterName());
         }
