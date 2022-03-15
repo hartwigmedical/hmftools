@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.DriverGeneTestFactory;
-import com.hartwig.hmftools.serve.extraction.catalog.DriverInconsistencyMode;
+import com.hartwig.hmftools.serve.extraction.util.DriverInconsistencyMode;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 
 import org.jetbrains.annotations.NotNull;

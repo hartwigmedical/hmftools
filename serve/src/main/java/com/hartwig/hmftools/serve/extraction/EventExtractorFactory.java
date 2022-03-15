@@ -10,7 +10,6 @@ import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
-import com.hartwig.hmftools.serve.extraction.catalog.DriverInconsistencyMode;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicExtractor;
 import com.hartwig.hmftools.serve.extraction.codon.CodonExtractor;
 import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberExtractor;
@@ -19,6 +18,7 @@ import com.hartwig.hmftools.serve.extraction.fusion.FusionExtractor;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelExtractor;
 import com.hartwig.hmftools.serve.extraction.hotspot.HotspotExtractor;
 import com.hartwig.hmftools.serve.extraction.immuno.ImmunoHLAExtractor;
+import com.hartwig.hmftools.serve.extraction.util.DriverInconsistencyMode;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilterAlgo;
 import com.hartwig.hmftools.serve.refgenome.RefGenomeResource;
@@ -44,26 +44,31 @@ public final class EventExtractorFactory {
         MutationTypeFilterAlgo mutationTypeFilterAlgo = new MutationTypeFilterAlgo(refGenomeResource.driverGenes());
         return new EventExtractor(new HotspotExtractor(exomeGeneChecker,
                 refGenomeResource.proteinResolver(),
-                config.proteinAnnotationExtractor(), driverInconsistencyMode,
+                config.proteinAnnotationExtractor(),
+                driverInconsistencyMode,
                 refGenomeResource.driverGenes()),
                 new CodonExtractor(exomeGeneChecker,
                         mutationTypeFilterAlgo,
-                        refGenomeResource.ensemblDataCache(), driverInconsistencyMode,
+                        refGenomeResource.ensemblDataCache(),
+                        driverInconsistencyMode,
                         refGenomeResource.driverGenes()),
                 new ExonExtractor(exomeGeneChecker,
                         mutationTypeFilterAlgo,
-                        refGenomeResource.ensemblDataCache(), driverInconsistencyMode,
+                        refGenomeResource.ensemblDataCache(),
+                        driverInconsistencyMode,
                         refGenomeResource.driverGenes()),
                 new GeneLevelExtractor(exomeGeneChecker,
                         fusionGeneChecker,
                         refGenomeResource.driverGenes(),
                         refGenomeResource.knownFusionCache(),
                         config.activatingGeneLevelKeyPhrases(),
-                        config.inactivatingGeneLevelKeyPhrases(), driverInconsistencyMode),
+                        config.inactivatingGeneLevelKeyPhrases(),
+                        driverInconsistencyMode),
                 new CopyNumberExtractor(exomeGeneChecker, refGenomeResource.driverGenes(), driverInconsistencyMode),
                 new FusionExtractor(fusionGeneChecker,
                         refGenomeResource.knownFusionCache(),
-                        config.exonicDelDupFusionKeyPhrases(), driverInconsistencyMode),
+                        config.exonicDelDupFusionKeyPhrases(),
+                        driverInconsistencyMode),
                 new TumorCharacteristicExtractor(config.microsatelliteUnstableEvents(),
                         config.microsatelliteStableEvents(),
                         config.highTumorMutationalLoadEvents(),

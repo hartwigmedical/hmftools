@@ -7,8 +7,7 @@ import java.util.Set;
 
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.serve.classification.EventType;
-import com.hartwig.hmftools.serve.extraction.catalog.DealWithDriverInconsistentMode;
-import com.hartwig.hmftools.serve.extraction.catalog.DriverInconsistencyMode;
+import com.hartwig.hmftools.serve.extraction.util.DriverInconsistencyMode;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 
 import org.apache.commons.compress.utils.Lists;
@@ -30,8 +29,7 @@ public class FusionExtractor {
     private final DriverInconsistencyMode driverInconsistencyMode;
 
     public FusionExtractor(@NotNull final GeneChecker geneChecker, @NotNull final KnownFusionCache knownFusionCache,
-            @NotNull final Set<String> exonicDelDupFusionKeyPhrases,
-            @NotNull final DriverInconsistencyMode driverInconsistencyMode) {
+            @NotNull final Set<String> exonicDelDupFusionKeyPhrases, @NotNull final DriverInconsistencyMode driverInconsistencyMode) {
         this.geneChecker = geneChecker;
         this.knownFusionCache = knownFusionCache;
         this.exonicDelDupFusionKeyPhrases = exonicDelDupFusionKeyPhrases;
@@ -190,25 +188,19 @@ public class FusionExtractor {
         }
 
         if (geneChecker.isValidGene(pair.geneUp()) && geneChecker.isValidGene(pair.geneDown())) {
-            if (DealWithDriverInconsistentMode.filterOnInconsistencies(driverInconsistencyMode)) {
-                if (!isIncludedSomewhereInFusionCache(pair.geneUp(), pair.geneDown())) {
-                    if (driverInconsistencyMode.logging() && driverInconsistencyMode.equals(
-                            DriverInconsistencyMode.WARN_ONLY)) {
-                        LOGGER.warn("Fusion event on fusion '{}-{}' is not part of the known fusion cache", pair.geneUp(), pair.geneDown());
-                        return pair;
-                    } else if (driverInconsistencyMode.logging() && driverInconsistencyMode.equals(
-                            DriverInconsistencyMode.FILTER)) {
-                        LOGGER.info("Fusion evnet filtered -- Fusion '{}-{}' is not part of the known fusion cache", pair.geneUp(), pair.geneDown());
-                        return null;
-                    }
-                } else {
-                    return pair;
+            if (driverInconsistencyMode.isActive() && !isIncludedSomewhereInFusionCache(pair.geneUp(), pair.geneDown())) {
+                if (driverInconsistencyMode == DriverInconsistencyMode.WARN_ONLY) {
+                    LOGGER.warn("Fusion event on fusion '{}-{}' is not part of the known fusion cache", pair.geneUp(), pair.geneDown());
+                } else if (driverInconsistencyMode == DriverInconsistencyMode.FILTER) {
+                    LOGGER.info("Fusion event filtered -- Fusion '{}-{}' is not part of the known fusion cache",
+                            pair.geneUp(),
+                            pair.geneDown());
+                    return null;
                 }
-            } else {
-                return pair;
-
             }
+            return pair;
         }
+
         return null;
     }
 

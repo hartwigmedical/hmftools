@@ -8,8 +8,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.serve.classification.EventPreprocessor;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.serve.extraction.catalog.DealWithDriverInconsistentMode;
-import com.hartwig.hmftools.serve.extraction.catalog.DriverInconsistencyMode;
+import com.hartwig.hmftools.serve.extraction.util.DriverInconsistencyMode;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 
 import org.apache.logging.log4j.LogManager;
@@ -32,8 +31,7 @@ public class HotspotExtractor {
     private final List<DriverGene> driverGenes;
 
     public HotspotExtractor(@NotNull final GeneChecker geneChecker, @NotNull final ProteinResolver proteinResolver,
-            @NotNull final EventPreprocessor proteinAnnotationExtractor,
-            @NotNull final DriverInconsistencyMode driverInconsistencyMode,
+            @NotNull final EventPreprocessor proteinAnnotationExtractor, @NotNull final DriverInconsistencyMode driverInconsistencyMode,
             @NotNull final List<DriverGene> driverGenes) {
         this.geneChecker = geneChecker;
         this.proteinResolver = proteinResolver;
@@ -58,24 +56,20 @@ public class HotspotExtractor {
             @NotNull String event) {
         if (type == EventType.HOTSPOT && geneChecker.isValidGene(gene)) {
             DriverCategory driverCategory = findByGene(driverGenes, gene);
-            if (DealWithDriverInconsistentMode.filterOnInconsistencies(driverInconsistencyMode)) { //filter + war_only
-                if (driverCategory != null) {
-                    return proteinResolver.resolve(gene, transcriptId, proteinAnnotationExtractor.apply(event));
-                } else {
-                    if (driverInconsistencyMode.logging() && driverInconsistencyMode.equals(
-                            DriverInconsistencyMode.WARN_ONLY)) {
-                        LOGGER.warn("Hotpot event on {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
-                        return proteinResolver.resolve(gene, transcriptId, proteinAnnotationExtractor.apply(event));
-                    } else if (driverInconsistencyMode.logging() && driverInconsistencyMode.equals(
-                            DriverInconsistencyMode.FILTER)) {
-                        LOGGER.info("Hotspot event filtered -- {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
-                        return null;
-                    }
+            if (driverCategory == null && driverInconsistencyMode.isActive()) {
+                if (driverInconsistencyMode == DriverInconsistencyMode.WARN_ONLY) {
+                    LOGGER.warn("Hotpot event on {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
+                } else if (driverInconsistencyMode == DriverInconsistencyMode.FILTER) {
+                    LOGGER.info("Hotspot event filtered -- {} on {} is not included in driver catalog and won't ever be reported.",
+                            type,
+                            gene);
+                    return null;
                 }
-            } else { //ignore
-                return proteinResolver.resolve(gene, transcriptId, proteinAnnotationExtractor.apply(event));
             }
+
+            return proteinResolver.resolve(gene, transcriptId, proteinAnnotationExtractor.apply(event));
         }
+
         return null;
     }
 }
