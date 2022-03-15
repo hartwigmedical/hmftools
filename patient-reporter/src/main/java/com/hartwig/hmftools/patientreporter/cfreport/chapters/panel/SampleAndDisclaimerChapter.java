@@ -112,8 +112,9 @@ public class SampleAndDisclaimerChapter implements ReportChapter {
         div.add(createContentParagraph("The results of this report and result file is based solely on the results of the DNA sequencing of "
                 + "the received tumor material"));
         div.add(createContentParagraph("Any clinical Interpretation of the result file is the responsibility of the hospital."));
-        div.add(createContentParagraph("Based on a tumor purity of at least 5%, the test has a sensitivity of >95% for detection of "
-                + "somatic variants and >95% for detection of translocations and gene copy number changes."));
+        //TODO: Determine cut offs
+        div.add(createContentParagraph("Based on a tumor purity of at least XX, the test has a sensitivity of XX for detection of "
+                + "somatic variants and XX for detection of translocations and gene copy number changes."));
         div.add(createContentParagraph("For feedback or complaints please contact ", ReportResources.CONTACT_EMAIL_QA + "."));
         div.add(createContentParagraph("For questions about the contents of this report, please contact ",
                 ReportResources.CONTACT_EMAIL_GENERAL + "."));
