@@ -134,11 +134,7 @@ public class PatientReporterApplication {
         PanelFailReport report = reporter.run(sampleMetadata,
                 config.comments(),
                 config.isCorrectedReport(),
-                config.isCorrectedReportExtern(),
-                config.expectedPipelineVersion(),
-                config.overridePipelineVersion(),
-                config.pipelineVersionFile(),
-                config.requirePipelineVersionFile());
+                config.isCorrectedReportExtern(), config.panelQcFailReason());
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
         String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);

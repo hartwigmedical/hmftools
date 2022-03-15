@@ -7,6 +7,7 @@ import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFunctions;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.common.pipeline.PipelineVersionFile;
+import com.hartwig.hmftools.patientreporter.QsFormNumber;
 import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SampleReportFactory;
@@ -57,7 +58,8 @@ public class PanelReporter {
 
         return ImmutablePanelReport.builder()
                 .sampleReport(sampleReport)
-                .qsFormNumber("form")
+                .qsFormNumber(QsFormNumber.FOR_080.display())
+                .pipelineVersion(pipelineVersion)
                 .VCFFilename(panelVCFname)
                 .sampleGbase(panelGbase)
                 .sampleQ30Value(panelQ30)

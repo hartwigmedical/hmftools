@@ -21,6 +21,9 @@ public abstract class PanelReport implements PatientReport {
     @NotNull
     public abstract String qsFormNumber();
 
+    @Nullable
+    public abstract String pipelineVersion();
+
     @NotNull
     public abstract String  VCFFilename();
 

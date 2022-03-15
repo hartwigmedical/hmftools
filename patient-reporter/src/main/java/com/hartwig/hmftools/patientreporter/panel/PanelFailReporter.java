@@ -7,10 +7,12 @@ import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFunctions;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.common.pipeline.PipelineVersionFile;
+import com.hartwig.hmftools.patientreporter.QsFormNumber;
 import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SampleReportFactory;
 import com.hartwig.hmftools.patientreporter.pipeline.PipelineVersion;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReporter;
 
 import org.apache.logging.log4j.LogManager;
@@ -33,20 +35,13 @@ public class PanelFailReporter {
 
     @NotNull
     public PanelFailReport run(@NotNull SampleMetadata sampleMetadata, @Nullable String comments, boolean correctedReport,
-            boolean correctedReportExtern, @NotNull String expectedPipelineVersion, boolean overridePipelineVersion,
-            @Nullable String pipelineVersionFile, boolean requirePipelineVersionFile) throws IOException {
+            boolean correctedReportExtern, @Nullable PanelFailReason reason )  {
         String patientId = reportData.limsModel().patientId(sampleMetadata.tumorSampleBarcode());
 
         PatientPrimaryTumor patientPrimaryTumor =
                 PatientPrimaryTumorFunctions.findPrimaryTumorForPatient(reportData.patientPrimaryTumors(), patientId);
         SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientPrimaryTumor);
 
-        String pipelineVersion = null;
-        if (requirePipelineVersionFile) {
-            assert pipelineVersionFile != null;
-            pipelineVersion = PipelineVersionFile.majorDotMinorVersion(pipelineVersionFile);
-            PipelineVersion.checkPipelineVersion(pipelineVersion, expectedPipelineVersion, overridePipelineVersion);
-        }
 
         LimsCohortConfig cohort = sampleReport.cohort();
 
@@ -56,7 +51,7 @@ public class PanelFailReporter {
 
         return ImmutablePanelFailReport.builder()
                 .sampleReport(sampleReport)
-                .qsFormNumber("form")
+                .qsFormNumber(reason.qcFormNumber())
                 .comments(Optional.ofNullable(comments))
                 .isCorrectedReport(correctedReport)
                 .isCorrectedReportExtern(correctedReportExtern)

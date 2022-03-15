@@ -28,6 +28,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed.TumorChar
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.failed.QCFailDisclaimerChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.failed.QCFailPGXChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.panel.PanelChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.panel.PanelExplanationChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.panel.PanelQCFailChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.panel.SampleAndDisclaimerChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.panel.SampleAndDisclaimerChapterFail;
@@ -93,7 +94,7 @@ public class CFReportWriter implements ReportWriter {
 
     @Override
     public void writePanelAnalysedReport(@NotNull PanelReport report, @NotNull String outputFilePath) throws IOException{
-        ReportChapter[] chapters = new ReportChapter[] { new PanelChapter(report), new com.hartwig.hmftools.patientreporter.cfreport.chapters.panel.ExplanationChapter(report),
+        ReportChapter[] chapters = new ReportChapter[] { new PanelChapter(report), new PanelExplanationChapter(),
                 new SampleAndDisclaimerChapter(report) };
 
         writeReport(report, chapters, outputFilePath);
