@@ -83,7 +83,7 @@ public class CkbExtractor {
             String transcript = null;
 
             EventExtractorOutput eventExtractorOutput = eventExtractor.extract(gene, transcript, entry.type(), event, null);
-            Set<? extends ActionableEvent> actionableEvents = ActionableEntryFactory.toActionableEntries(entry, variant.variant());
+            Set<? extends ActionableEvent> actionableEvents = ActionableEntryFactory.toActionableEntries(entry);
 
             interpretation.add(ImmutableEventInterpretation.builder()
                     .source(Knowledgebase.CKB)
@@ -103,7 +103,7 @@ public class CkbExtractor {
     @NotNull
     private static ExtractionResult toExtractionResult(@NotNull String gene, @NotNull String variant, @Nullable String transcript,
             @NotNull EventExtractorOutput output, @NotNull Set<? extends ActionableEvent> actionableEvents,
-            @NotNull List<EventInterpretation> interpretation) {
+            @NotNull List<EventInterpretation> interpretations) {
         Set<ActionableHotspot> actionableHotspots = Sets.newHashSet();
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
         Set<ActionableGene> actionableGenes = Sets.newHashSet();
@@ -138,7 +138,7 @@ public class CkbExtractor {
         }
 
         return ImmutableExtractionResult.builder()
-                .eventInterpretation(interpretation)
+                .eventInterpretations(interpretations)
                 .refGenomeVersion(Knowledgebase.CKB.refGenomeVersion())
                 .knownHotspots(convertToKnownHotspots(output.hotspots(), gene, variant, transcript))
                 .knownCodons(convertToKnownCodons(output.codons()))

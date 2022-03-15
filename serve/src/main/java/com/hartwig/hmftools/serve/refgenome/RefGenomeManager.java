@@ -81,6 +81,7 @@ public class RefGenomeManager {
         ExtractionResult filteredExtraction = conversionFilter.filter(extraction);
 
         return ImmutableExtractionResult.builder()
+                .eventInterpretations(filteredExtraction.eventInterpretations())
                 .refGenomeVersion(targetVersion)
                 .knownHotspots(converter.convertKnownHotspots(filteredExtraction.knownHotspots()))
                 .knownCodons(converter.convertKnownCodons(filteredExtraction.knownCodons()))
@@ -93,7 +94,6 @@ public class RefGenomeManager {
                 .actionableFusions(converter.convertActionableFusions(filteredExtraction.actionableFusions()))
                 .actionableCharacteristics(filteredExtraction.actionableCharacteristics())
                 .actionableHLA(filteredExtraction.actionableHLA())
-                .eventInterpretation(filteredExtraction.eventInterpretation())
                 .build();
     }
 

@@ -85,7 +85,7 @@ public final class ViccExtractor {
 
         // Assume all VICC knowledgebases are on the same ref genome version
         ImmutableExtractionResult.Builder outputBuilder = ImmutableExtractionResult.builder()
-                .eventInterpretation(convertToEventInterpretation(resultsPerEntry))
+                .eventInterpretations(convertToEventInterpretations(resultsPerEntry))
                 .refGenomeVersion(Knowledgebase.VICC_CGI.refGenomeVersion())
                 .knownHotspots(convertToHotspots(resultsPerEntry))
                 .knownCodons(convertToCodons(resultsPerEntry))
@@ -185,12 +185,12 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    private static List<EventInterpretation> convertToEventInterpretation(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
-        List<EventInterpretation> interpretation = Lists.newArrayList();
+    private static List<EventInterpretation> convertToEventInterpretations(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
+        List<EventInterpretation> interpretations = Lists.newArrayList();
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
-            interpretation = entry.getValue().eventInterpretation();
+            interpretations = entry.getValue().eventInterpretation();
         }
-        return interpretation;
+        return interpretations;
     }
 
     @NotNull

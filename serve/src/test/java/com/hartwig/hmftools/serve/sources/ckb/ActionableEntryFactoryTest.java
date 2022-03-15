@@ -14,21 +14,20 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 
-import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class ActionableEntryFactoryTest {
 
     @Test
-    public void testToActionableEntry() {
+    public void canCreateActionableEntries() {
         CkbEntry entryDeletion =
                 CkbTestFactory.createEntry("KRAS", "deletion", "KRAS deletion", "sensitive", "Emerging", "AB", "AB", "A", "DOID:162");
-        Set<ActionableEntry> entryDeletionSet = ActionableEntryFactory.toActionableEntries(entryDeletion, "KRAS deletion");
+        Set<ActionableEntry> entryDeletionSet = ActionableEntryFactory.toActionableEntries(entryDeletion);
         assertEquals(0, entryDeletionSet.size());
 
         CkbEntry entryCharacteristics =
                 CkbTestFactory.createEntry("-", "MSI neg", "MSI neg", "sensitive", "Actionable", "AB", "AB", "A", "DOID:162");
-        Set<ActionableEntry> entryCharacteristicsSet = ActionableEntryFactory.toActionableEntries(entryCharacteristics, "MSI neg");
+        Set<ActionableEntry> entryCharacteristicsSet = ActionableEntryFactory.toActionableEntries(entryCharacteristics);
         assertEquals(1, entryCharacteristicsSet.size());
         ActionableEntry characteristics = entryCharacteristicsSet.iterator().next();
         assertEquals("MSI neg", characteristics.sourceEvent());
@@ -42,7 +41,7 @@ public class ActionableEntryFactoryTest {
         assertEquals(EvidenceDirection.RESPONSIVE, characteristics.direction());
 
         CkbEntry entryAmplification = CkbTestFactory.createEntry("KRAS",
-                "amplification",
+                "KRAS amplification",
                 "KRAS amplification",
                 "sensitive",
                 "Actionable",
@@ -50,7 +49,7 @@ public class ActionableEntryFactoryTest {
                 "AB",
                 "A",
                 "DOID:163");
-        Set<ActionableEntry> entryAmplificationSet = ActionableEntryFactory.toActionableEntries(entryAmplification, "KRAS amplification");
+        Set<ActionableEntry> entryAmplificationSet = ActionableEntryFactory.toActionableEntries(entryAmplification);
         assertEquals(1, entryAmplificationSet.size());
         ActionableEntry amplification = entryAmplificationSet.iterator().next();
         assertEquals("KRAS amplification", amplification.sourceEvent());
@@ -58,14 +57,13 @@ public class ActionableEntryFactoryTest {
         assertEquals("AB", amplification.treatment());
         assertEquals("AB", amplification.applicableCancerType().name());
         assertEquals("163", amplification.applicableCancerType().doid());
-        assertEquals(Sets.newHashSet(ImmutableCancerType.builder().name(Strings.EMPTY).doid(Strings.EMPTY).build()),
-                amplification.blacklistCancerTypes());
+        assertTrue(amplification.blacklistCancerTypes().isEmpty());
         assertEquals(EvidenceLevel.A, amplification.level());
         assertEquals(EvidenceDirection.RESPONSIVE, amplification.direction());
 
         CkbEntry entryHotspot =
-                CkbTestFactory.createEntry("BRAF", "V600", "BRAF V600E", "sensitive", "Actionable", "AB", "AB", "A", "DOID:162");
-        Set<ActionableEntry> entryHotspotSet = ActionableEntryFactory.toActionableEntries(entryHotspot, "BRAF V600E");
+                CkbTestFactory.createEntry("BRAF", "BRAF V600E", "BRAF V600E", "sensitive", "Actionable", "AB", "AB", "A", "DOID:162");
+        Set<ActionableEntry> entryHotspotSet = ActionableEntryFactory.toActionableEntries(entryHotspot);
         assertEquals(1, entryHotspotSet.size());
         ActionableEntry hotspot = entryHotspotSet.iterator().next();
         assertEquals("BRAF V600E", hotspot.sourceEvent());
@@ -109,7 +107,7 @@ public class ActionableEntryFactoryTest {
     }
 
     @Test
-    public void canTestHasUsableEvidenceType() {
+    public void canDetermineIfHasUsableEvidenceType() {
         assertTrue(ActionableEntryFactory.hasUsableEvidenceType("Actionable"));
         assertFalse(ActionableEntryFactory.hasUsableEvidenceType("Prognostic"));
         assertFalse(ActionableEntryFactory.hasUsableEvidenceType("Emerging"));
@@ -118,7 +116,7 @@ public class ActionableEntryFactoryTest {
     }
 
     @Test
-    public void canTestResolveLevel() {
+    public void canResolveLevels() {
         assertNull(ActionableEntryFactory.resolveLevel("NA"));
         assertEquals(EvidenceLevel.A, ActionableEntryFactory.resolveLevel("A"));
         assertEquals(EvidenceLevel.B, ActionableEntryFactory.resolveLevel("B"));
@@ -127,7 +125,7 @@ public class ActionableEntryFactoryTest {
     }
 
     @Test
-    public void canTestResolveDirection() {
+    public void canResolveDirections() {
         assertNull(ActionableEntryFactory.resolveDirection(null));
         assertNull(ActionableEntryFactory.resolveDirection("unknown"));
         assertNull(ActionableEntryFactory.resolveDirection("not applicable"));
@@ -135,6 +133,7 @@ public class ActionableEntryFactoryTest {
         assertNull(ActionableEntryFactory.resolveDirection("no benefit"));
         assertNull(ActionableEntryFactory.resolveDirection("not predictive"));
         assertNull(ActionableEntryFactory.resolveDirection("decreased response"));
+
         assertEquals(EvidenceDirection.RESPONSIVE, ActionableEntryFactory.resolveDirection("sensitive"));
         assertEquals(EvidenceDirection.PREDICTED_RESPONSIVE, ActionableEntryFactory.resolveDirection("predicted - sensitive"));
         assertEquals(EvidenceDirection.RESISTANT, ActionableEntryFactory.resolveDirection("resistant"));

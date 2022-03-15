@@ -90,7 +90,7 @@ public class ExtractionResultWriter {
         ActionableHLAFile.write(actionableHLATsv, result.actionableHLA());
 
         String eventInterpretationTsv = EventInterpretationFile.eventInterpretationTsv(outputDir);
-        LOGGER.info(" Writing {} event interpretations to {}", result.eventInterpretation().size(), eventInterpretationTsv);
-        EventInterpretationFile.write(eventInterpretationTsv, result.eventInterpretation());
+        LOGGER.info(" Writing {} event interpretations to {}", result.eventInterpretations().size(), eventInterpretationTsv);
+        EventInterpretationFile.write(eventInterpretationTsv, result.eventInterpretations());
     }
 }

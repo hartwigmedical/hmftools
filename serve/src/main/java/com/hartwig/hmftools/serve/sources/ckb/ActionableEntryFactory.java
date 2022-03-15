@@ -16,7 +16,6 @@ import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -59,7 +58,7 @@ class ActionableEntryFactory {
     }
 
     @NotNull
-    public static Set<ActionableEntry> toActionableEntries(@NotNull CkbEntry entry, @NotNull String rawInput) {
+    public static Set<ActionableEntry> toActionableEntries(@NotNull CkbEntry entry) {
         Set<ActionableEntry> actionableEntries = Sets.newHashSet();
 
         for (Evidence evidence : entry.evidences()) {
@@ -72,45 +71,41 @@ class ActionableEntryFactory {
                     String treatment = evidence.therapy().therapyName();
                     String cancerType = evidence.indication().name();
 
-                    Set<String> urls = Sets.newHashSet();
+                    Set<String> evidenceUrls = Sets.newHashSet();
                     for (Reference reference : evidence.references()) {
                         if (reference.url() != null) {
-                            urls.add(reference.url());
+                            evidenceUrls.add(reference.url());
                         }
                     }
 
-                    int molecularProfileId = entry.profileId();
                     String doidKb = extractDoidKB(evidence.indication().termId());
 
+                    int molecularProfileId = entry.profileId();
                     String responseType = extractResponseType(evidence.responseType());
 
-                    Set<String> sourceLinks = Sets.newHashSet();
+                    Set<String> sourceUrls = Sets.newHashSet();
                     for (Drug drug : evidence.therapy().drugs()) {
-                        sourceLinks.add(
+                        sourceUrls.add(
                                 "https://ckbhome.jax.org/profileResponse/advancedEvidenceFind?molecularProfileId=" + molecularProfileId
                                         + "&drugId=" + drug.id() + "&doId=" + doidKb + "&responseType=" + responseType + "&evidenceType="
                                         + evidence.evidenceType());
                     }
 
-                    Set<CancerType> cancerTypeBlacklisting = Sets.newHashSet();
-                    cancerTypeBlacklisting.add(ImmutableCancerType.builder()
-                            .name(doid.equals("162") ? "Hematologic cancer" : Strings.EMPTY)
-                            .doid(doid.equals("162") ? "2531" : Strings.EMPTY)
-                            .build());
+                    Set<CancerType> blacklistedCancerTypes = Sets.newHashSet();
+                    if (doid.equals("162")) {
+                        blacklistedCancerTypes.add(ImmutableCancerType.builder().name("Hematologic cancer").doid("2531").build());
+                    }
 
                     actionableEntries.add(ImmutableActionableEntry.builder()
                             .source(Knowledgebase.CKB)
-                            .sourceEvent(rawInput)
-                            .sourceUrls(sourceLinks)
+                            .sourceEvent(entry.variants().get(0).variant())
+                            .sourceUrls(sourceUrls)
                             .treatment(treatment)
-                            .applicableCancerType(ImmutableCancerType.builder()
-                                    .name(cancerType)
-                                    .doid(doid)
-                                    .build())
-                            .blacklistCancerTypes(cancerTypeBlacklisting)
+                            .applicableCancerType(ImmutableCancerType.builder().name(cancerType).doid(doid).build())
+                            .blacklistCancerTypes(blacklistedCancerTypes)
                             .level(level)
                             .direction(direction)
-                            .evidenceUrls(urls)
+                            .evidenceUrls(evidenceUrls)
                             .build());
                 }
             }

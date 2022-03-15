@@ -53,7 +53,7 @@ public final class ServeTestFactory {
     @NotNull
     public static ExtractionResult createResultForSource(@NotNull Knowledgebase source) {
         return ImmutableExtractionResult.builder()
-                .eventInterpretation(Lists.newArrayList())
+                .eventInterpretations(Lists.newArrayList())
                 .refGenomeVersion(source.refGenomeVersion())
                 .addKnownHotspots(createTestKnownHotspotForSource(source))
                 .addKnownCodons(createTestKnownCodonForSource(source))

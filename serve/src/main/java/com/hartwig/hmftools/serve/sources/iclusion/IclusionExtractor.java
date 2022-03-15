@@ -87,7 +87,7 @@ public class IclusionExtractor {
 
     @NotNull
     private static ExtractionResult toExtractionResult(@NotNull List<ActionableTrial> actionableTrials,
-            @NotNull List<EventExtractorOutput> eventExtractions, @NotNull List<EventInterpretation> interpretation) {
+            @NotNull List<EventExtractorOutput> eventExtractions, @NotNull List<EventInterpretation> interpretations) {
         Set<ActionableHotspot> actionableHotspots = Sets.newHashSet();
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
         Set<ActionableGene> actionableGenes = Sets.newHashSet();
@@ -124,7 +124,7 @@ public class IclusionExtractor {
         }
 
         return ImmutableExtractionResult.builder()
-                .eventInterpretation(interpretation)
+                .eventInterpretations(interpretations)
                 .refGenomeVersion(Knowledgebase.ICLUSION.refGenomeVersion())
                 .actionableHotspots(actionableHotspots)
                 .actionableRanges(actionableRanges)

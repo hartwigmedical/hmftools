@@ -78,7 +78,7 @@ public class ActinExtractor {
 
     @NotNull
     private static ExtractionResult toExtractionResult(@NotNull ActinTrial trial, @NotNull EventExtractorOutput extraction,
-            @NotNull List<EventInterpretation> interpretation) {
+            @NotNull List<EventInterpretation> interpretations) {
         Set<ActionableHotspot> actionableHotspots = ActionableEventFactory.toActionableHotspots(trial, extraction.hotspots());
 
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
@@ -110,7 +110,7 @@ public class ActinExtractor {
         }
 
         return ImmutableExtractionResult.builder()
-                .eventInterpretation(interpretation)
+                .eventInterpretations(interpretations)
                 .refGenomeVersion(Knowledgebase.ACTIN.refGenomeVersion())
                 .actionableHotspots(actionableHotspots)
                 .actionableRanges(actionableRanges)
