@@ -113,6 +113,7 @@ public class AnalysedPatientReporter {
                 .udiDi(reportData.udiDi())
                 .peachGenotypes(peachGenotypesOverrule)
                 .reportDate(reportDate)
+                .isWGSreport(true)
                 .build();
 
         printReportState(report);

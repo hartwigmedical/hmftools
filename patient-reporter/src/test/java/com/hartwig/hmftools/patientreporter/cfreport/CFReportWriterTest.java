@@ -392,6 +392,8 @@ public class CFReportWriterTest {
                 .logoCompanyPath(testReportData.logoCompanyPath())
                 .udiDi("")
                 .reportDate(DataUtil.formatDate(LocalDate.now()))
+                .isWGSreport(false)
+                .comments("This is a test report")
                 .build();
 
         String filename = testReportFilePath(patientReport);
@@ -417,6 +419,8 @@ public class CFReportWriterTest {
                 .logoCompanyPath(testReportData.logoCompanyPath())
                 .udiDi("")
                 .reportDate(DataUtil.formatDate(LocalDate.now()))
+                .isWGSreport(false)
+                .comments("This is a test report")
                 .build();
 
         String filename = testReportFilePath(patientReport);
@@ -510,6 +514,7 @@ public class CFReportWriterTest {
                 .peachGenotypes(createTestPeachGenotypes())
                 .purpleQC(Sets.newHashSet(purpleQCStatus))
                 .reportDate(DataUtil.formatDate(LocalDate.now()))
+                .isWGSreport(true)
                 .build();
 
         String filename = testReportFilePath(patientReport);
