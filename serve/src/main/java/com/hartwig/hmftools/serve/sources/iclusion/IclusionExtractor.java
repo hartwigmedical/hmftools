@@ -47,14 +47,17 @@ public class IclusionExtractor {
     @NotNull
     public ExtractionResult extract(@NotNull List<IclusionTrial> trials) {
         // We assume filtered trials (no empty acronyms, only OR mutations, and no negated mutations
+        List<ExtractionResult> extractions = Lists.newArrayList();
 
         ProgressTracker tracker = new ProgressTracker("iClusion", trials.size());
-        List<ExtractionResult> extractions = Lists.newArrayList();
-        List<EventInterpretation> interpretation = Lists.newArrayList();
-        List<ActionableTrial> actionableTrials = Lists.newArrayList();
         for (IclusionTrial trial : trials) {
+            List<ActionableTrial> actionableTrials = actionableTrialFactory.toActionableTrials(trial);
+            for (ActionableTrial actionableTrial : actionableTrials) {
+                LOGGER.debug("Generated {} based off {}", actionableTrial, trial);
+            }
+
             List<EventExtractorOutput> eventExtractions = Lists.newArrayList();
-            String rawInput;
+            List<EventInterpretation> interpretations = Lists.newArrayList();
             for (IclusionMutationCondition mutationCondition : trial.mutationConditions()) {
                 for (IclusionMutation mutation : mutationCondition.mutations()) {
                     LOGGER.debug("Interpreting '{}' on '{}' for {}", mutation.name(), mutation.gene(), trial.acronym());
@@ -62,23 +65,17 @@ public class IclusionExtractor {
                         LOGGER.warn("No event type known for '{}' on '{}'", mutation.name(), mutation.gene());
                     }
                     eventExtractions.add(eventExtractor.extract(mutation.gene(), null, mutation.type(), mutation.name(), null));
-                    rawInput = mutation.name();
-                    interpretation.add(ImmutableEventInterpretation.builder()
+
+                    interpretations.add(ImmutableEventInterpretation.builder()
                             .source(Knowledgebase.ICLUSION)
                             .sourceEvent(mutation.name())
                             .interpretedGene(mutation.gene())
                             .interpretedEvent(mutation.name())
                             .interpretedEventType(mutation.type())
                             .build());
-
-                    actionableTrials = actionableTrialFactory.toActionableTrials(trial, rawInput);
-                    for (ActionableTrial actionableTrial : actionableTrials) {
-                        LOGGER.debug("Generated {} based off {}", actionableTrial, trial);
-                    }
-
                 }
             }
-            extractions.add(toExtractionResult(actionableTrials, eventExtractions, interpretation));
+            extractions.add(toExtractionResult(actionableTrials, eventExtractions, interpretations));
             tracker.update();
         }
 
@@ -124,8 +121,8 @@ public class IclusionExtractor {
         }
 
         return ImmutableExtractionResult.builder()
-                .eventInterpretations(interpretations)
                 .refGenomeVersion(Knowledgebase.ICLUSION.refGenomeVersion())
+                .eventInterpretations(interpretations)
                 .actionableHotspots(actionableHotspots)
                 .actionableRanges(actionableRanges)
                 .actionableGenes(actionableGenes)

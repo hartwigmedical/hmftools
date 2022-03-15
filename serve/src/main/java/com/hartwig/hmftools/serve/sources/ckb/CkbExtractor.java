@@ -65,7 +65,6 @@ public class CkbExtractor {
     @NotNull
     public ExtractionResult extract(@NotNull List<CkbEntry> ckbEntries) {
         List<ExtractionResult> extractions = Lists.newArrayList();
-        List<EventInterpretation> interpretation = Lists.newArrayList();
 
         ProgressTracker tracker = new ProgressTracker("CKB", ckbEntries.size());
         for (CkbEntry entry : ckbEntries) {
@@ -85,13 +84,14 @@ public class CkbExtractor {
             EventExtractorOutput eventExtractorOutput = eventExtractor.extract(gene, transcript, entry.type(), event, null);
             Set<? extends ActionableEvent> actionableEvents = ActionableEntryFactory.toActionableEntries(entry);
 
-            interpretation.add(ImmutableEventInterpretation.builder()
+            EventInterpretation interpretation  = ImmutableEventInterpretation.builder()
                     .source(Knowledgebase.CKB)
                     .sourceEvent(variant.variant())
                     .interpretedGene(gene)
                     .interpretedEvent(event)
                     .interpretedEventType(entry.type())
-                    .build());
+                    .build();
+
             extractions.add(toExtractionResult(gene, event, transcript, eventExtractorOutput, actionableEvents, interpretation));
 
             tracker.update();
@@ -103,7 +103,7 @@ public class CkbExtractor {
     @NotNull
     private static ExtractionResult toExtractionResult(@NotNull String gene, @NotNull String variant, @Nullable String transcript,
             @NotNull EventExtractorOutput output, @NotNull Set<? extends ActionableEvent> actionableEvents,
-            @NotNull List<EventInterpretation> interpretations) {
+            @NotNull EventInterpretation interpretation) {
         Set<ActionableHotspot> actionableHotspots = Sets.newHashSet();
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
         Set<ActionableGene> actionableGenes = Sets.newHashSet();
@@ -138,8 +138,8 @@ public class CkbExtractor {
         }
 
         return ImmutableExtractionResult.builder()
-                .eventInterpretations(interpretations)
                 .refGenomeVersion(Knowledgebase.CKB.refGenomeVersion())
+                .eventInterpretations(Lists.newArrayList(interpretation))
                 .knownHotspots(convertToKnownHotspots(output.hotspots(), gene, variant, transcript))
                 .knownCodons(convertToKnownCodons(output.codons()))
                 .knownExons(convertToKnownExons(output.exons()))

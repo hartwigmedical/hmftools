@@ -2,6 +2,7 @@ package com.hartwig.hmftools.serve.sources.vicc;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
 import java.util.Set;
@@ -51,8 +52,7 @@ public class ActionableEvidenceFactoryTest {
         assertEquals("Treatment", eventA.treatment());
         assertEquals(cancerTypeA, eventA.applicableCancerType().name());
         assertEquals("1", eventA.applicableCancerType().doid());
-        assertEquals(Sets.newHashSet(ImmutableCancerType.builder().name(Strings.EMPTY).doid(Strings.EMPTY).build()),
-                eventA.blacklistCancerTypes());
+        assertTrue(eventA.blacklistCancerTypes().isEmpty());
         assertEquals(EvidenceLevel.A, eventA.level());
         assertEquals(EvidenceDirection.RESPONSIVE, eventA.direction());
         assertEquals(Sets.newHashSet("url"), eventA.evidenceUrls());

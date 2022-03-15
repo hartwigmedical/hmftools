@@ -18,9 +18,11 @@ import com.hartwig.hmftools.serve.curation.DoidLookup;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class ActionableTrialFactory {
+
     private static final String DELIMITER = ",";
 
     private static final Logger LOGGER = LogManager.getLogger(ActionableTrialFactory.class);
@@ -33,21 +35,13 @@ public class ActionableTrialFactory {
     }
 
     @NotNull
-    private static String urlsToString(@NotNull Set<String> urls) {
-        StringJoiner joiner = new StringJoiner(DELIMITER);
-        for (String url : urls) {
-            joiner.add(url);
-        }
-        return joiner.toString();
-    }
+    public List<ActionableTrial> toActionableTrials(@NotNull IclusionTrial trial) {
+        Set<CancerType> blacklistedCancerTypes = Sets.newHashSet();
 
-    @NotNull
-    public List<ActionableTrial> toActionableTrials(@NotNull IclusionTrial trial, @NotNull String rawInput) {
-        Set<CancerType> cancerTypeBlacklist = Sets.newHashSet();
-
+        // Source event is appended later
         ImmutableActionableTrial.Builder actionableBuilder = ImmutableActionableTrial.builder()
                 .source(Knowledgebase.ICLUSION)
-                .sourceEvent(rawInput)
+                .sourceEvent(Strings.EMPTY)
                 .sourceUrls(Sets.newHashSet("https://trial-eye.com/hmf/" + trial.id()))
                 .treatment(trial.acronym())
                 .level(EvidenceLevel.B)
@@ -79,8 +73,8 @@ public class ActionableTrialFactory {
             }
         }
 
-        if (!blacklistTumorLocations.equals(Sets.newHashSet()) && !blacklistedDoids.equals(Sets.newHashSet())){
-            cancerTypeBlacklist.add(ImmutableCancerType.builder()
+        if (!blacklistTumorLocations.isEmpty() && !blacklistedDoids.isEmpty()) {
+            blacklistedCancerTypes.add(ImmutableCancerType.builder()
                     .name(urlsToString(blacklistTumorLocations))
                     .doid(urlsToString(blacklistedDoids))
                     .build());
@@ -103,19 +97,13 @@ public class ActionableTrialFactory {
                 String doidCorrected = extractDoid(doid);
 
                 if (doidCorrected.equals("162")) {
-                    cancerTypeBlacklist.add(ImmutableCancerType.builder()
-                            .name("Hematologic cancer")
-                            .doid("2531")
-                            .build());
+                    blacklistedCancerTypes.add(ImmutableCancerType.builder().name("Hematologic cancer").doid("2531").build());
                 }
 
-                actionableTrials.add(actionableBuilder
-                        .applicableCancerType(ImmutableCancerType.builder()
-                                .name(tumorLocation.primaryTumorLocation())
-                                .doid(doidCorrected)
-                                .build())
-                        .blacklistCancerTypes(cancerTypeBlacklist)
-                        .build());
+                actionableTrials.add(actionableBuilder.applicableCancerType(ImmutableCancerType.builder()
+                        .name(tumorLocation.primaryTumorLocation())
+                        .doid(doidCorrected)
+                        .build()).blacklistCancerTypes(blacklistedCancerTypes).build());
             }
         }
         return actionableTrials;
@@ -129,5 +117,14 @@ public class ActionableTrialFactory {
             doidCorrected = "162";
         }
         return doidCorrected;
+    }
+
+    @NotNull
+    private static String urlsToString(@NotNull Set<String> urls) {
+        StringJoiner joiner = new StringJoiner(DELIMITER);
+        for (String url : urls) {
+            joiner.add(url);
+        }
+        return joiner.toString();
     }
 }

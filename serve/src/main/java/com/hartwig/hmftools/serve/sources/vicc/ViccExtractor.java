@@ -109,7 +109,6 @@ public final class ViccExtractor {
         Map<Feature, TumorCharacteristic> characteristicsPerFeature = Maps.newHashMap();
         Map<Feature, ImmunoHLA> hlaPerFeature = Maps.newHashMap();
 
-        String rawInput = Strings.EMPTY;
         List<EventInterpretation> interpretation = Lists.newArrayList();
         for (Feature feature : entry.features()) {
             String gene = feature.geneSymbol();
@@ -118,11 +117,10 @@ public final class ViccExtractor {
             } else {
                 EventExtractorOutput extractorOutput =
                         eventExtractor.extract(gene, entry.transcriptId(), feature.type(), feature.name(), null);
-                rawInput = feature.name();
 
                 interpretation.add(ImmutableEventInterpretation.builder()
                         .source(ActionableEvidenceFactory.fromViccSource(entry.source()))
-                        .sourceEvent(rawInput)
+                        .sourceEvent(feature.name())
                         .interpretedGene(gene)
                         .interpretedEvent(feature.name())
                         .interpretedEventType(feature.type())
@@ -168,7 +166,7 @@ public final class ViccExtractor {
                 && hlaPerFeature.isEmpty()) {
             actionableEvents = Sets.newHashSet();
         } else {
-            actionableEvents = actionableEvidenceFactory.toActionableEvents(entry, rawInput);
+            actionableEvents = actionableEvidenceFactory.toActionableEvents(entry, Strings.EMPTY);
         }
 
         return ImmutableViccExtractionResult.builder()
