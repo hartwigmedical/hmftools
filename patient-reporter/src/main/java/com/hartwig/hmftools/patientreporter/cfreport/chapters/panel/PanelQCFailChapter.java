@@ -89,4 +89,3 @@ public class PanelQCFailChapter implements ReportChapter {
         return div;
     }
 }
-

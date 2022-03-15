@@ -5,6 +5,7 @@ import java.nio.file.Files;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.patientreporter.panel.PanelFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 
 import org.apache.commons.cli.CommandLine;
@@ -221,7 +222,7 @@ public interface PatientReporterConfig {
     String panelQ30();
 
     @Nullable
-    QCFailReason panelQcFailReason();
+    PanelFailReason panelQcFailReason();
 
     @NotNull
     String purplePurityTsv();
@@ -327,12 +328,12 @@ public interface PatientReporterConfig {
 
         boolean isPanel = cmd.hasOption(PANEL);
         boolean isPanelQCFail = cmd.hasOption(PANEL_QC_FAIL);
-        QCFailReason panelQcFailReason = null;
+        PanelFailReason panelQcFailReason = null;
         if (isPanel) {
             if (isPanelQCFail) {
                 String qcFailReasonString = nonOptionalValue(cmd, PANEL_QC_FAIL_REASON);
-                qcFailReason = QCFailReason.fromIdentifier(qcFailReasonString);
-                if (qcFailReason == null) {
+                panelQcFailReason = PanelFailReason.fromIdentifier(qcFailReasonString);
+                if (panelQcFailReason == null) {
                     throw new ParseException("Did not recognize QC Fail reason: " + qcFailReasonString);
                 }
             }
