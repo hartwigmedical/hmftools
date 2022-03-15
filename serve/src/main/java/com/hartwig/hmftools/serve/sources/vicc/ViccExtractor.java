@@ -123,9 +123,9 @@ public final class ViccExtractor {
                 interpretation.add(ImmutableEventInterpretation.builder()
                         .source(ActionableEvidenceFactory.fromViccSource(entry.source()))
                         .sourceEvent(rawInput)
-                        .interpretGene(gene)
-                        .interpretEvent(feature.name())
-                        .interpretEventType(feature.type())
+                        .interpretedGene(gene)
+                        .interpretedEvent(feature.name())
+                        .interpretedEventType(feature.type())
                         .build());
                 if (extractorOutput.hotspots() != null) {
                     hotspotsPerFeature.put(feature, extractorOutput.hotspots());

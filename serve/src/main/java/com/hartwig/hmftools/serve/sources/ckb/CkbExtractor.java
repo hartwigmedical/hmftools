@@ -88,9 +88,9 @@ public class CkbExtractor {
             interpretation.add(ImmutableEventInterpretation.builder()
                     .source(Knowledgebase.CKB)
                     .sourceEvent(variant.variant())
-                    .interpretGene(gene)
-                    .interpretEvent(event)
-                    .interpretEventType(entry.type())
+                    .interpretedGene(gene)
+                    .interpretedEvent(event)
+                    .interpretedEventType(entry.type())
                     .build());
             extractions.add(toExtractionResult(gene, event, transcript, eventExtractorOutput, actionableEvents, interpretation));
 

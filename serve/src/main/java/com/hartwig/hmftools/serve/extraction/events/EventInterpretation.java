@@ -19,11 +19,11 @@ public abstract class EventInterpretation {
     public abstract String sourceEvent();
 
     @NotNull
-    public abstract String interpretGene();
+    public abstract String interpretedGene();
 
     @NotNull
-    public abstract String interpretEvent();
+    public abstract String interpretedEvent();
 
     @NotNull
-    public abstract EventType interpretEventType();
+    public abstract EventType interpretedEventType();
 }

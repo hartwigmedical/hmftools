@@ -66,9 +66,9 @@ public class IclusionExtractor {
                     interpretation.add(ImmutableEventInterpretation.builder()
                             .source(Knowledgebase.ICLUSION)
                             .sourceEvent(mutation.name())
-                            .interpretGene(mutation.gene())
-                            .interpretEvent(mutation.name())
-                            .interpretEventType(mutation.type())
+                            .interpretedGene(mutation.gene())
+                            .interpretedEvent(mutation.name())
+                            .interpretedEventType(mutation.type())
                             .build());
 
                     actionableTrials = actionableTrialFactory.toActionableTrials(trial, rawInput);

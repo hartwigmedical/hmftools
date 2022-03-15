@@ -59,9 +59,9 @@ public class ActinExtractor {
                     interpretation.add(ImmutableEventInterpretation.builder()
                             .source(Knowledgebase.ACTIN)
                             .sourceEvent(entry.rule().toString())
-                            .interpretGene(gene)
-                            .interpretEvent(event)
-                            .interpretEventType(type)
+                            .interpretedGene(gene)
+                            .interpretedEvent(event)
+                            .interpretedEventType(type)
                             .build());
 
                     extractions.add(toExtractionResult(trial,
