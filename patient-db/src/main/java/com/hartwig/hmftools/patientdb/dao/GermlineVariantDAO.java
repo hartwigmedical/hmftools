@@ -20,6 +20,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStepN;
+import org.jooq.TableField;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -158,7 +159,7 @@ public class GermlineVariantDAO
                 variantImpact.CanonicalEffect,
                 variantImpact.CanonicalCodingEffect != CodingEffect.UNDEFINED ? variantImpact.CanonicalCodingEffect : Strings.EMPTY,
                 variantImpact.CanonicalHgvsCoding,
-                variantImpact.CanonicalHgvsProtein,
+                checkTrimHgsProteinString(variantImpact.CanonicalHgvsProtein, GERMLINEVARIANT.CANONICALHGVSPROTEINIMPACT),
                 variantImpact.CanonicalSpliceRegion,
                 variantImpact.OtherReportableEffects,
                 variantImpact.WorstCodingEffect != CodingEffect.UNDEFINED ? variantImpact.WorstCodingEffect : Strings.EMPTY,
@@ -170,6 +171,17 @@ public class GermlineVariantDAO
                 decorator.mappability(),
                 decorator.reported()
         );
+    }
+
+    protected static String checkTrimHgsProteinString(final String hgvsProteinStr, @NotNull TableField<?, String> field)
+    {
+        int maxLength = field.getDataType().length();
+
+        if(hgvsProteinStr.length() < maxLength)
+            return hgvsProteinStr;
+
+        String trimmedStr = hgvsProteinStr.substring(0, maxLength - 4);
+        return trimmedStr + "...";
     }
 
     public void writeGermlineSVs(final String sample, final List<LinxGermlineSv> germlineSVs)
