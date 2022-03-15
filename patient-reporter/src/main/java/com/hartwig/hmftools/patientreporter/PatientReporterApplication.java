@@ -131,7 +131,14 @@ public class PatientReporterApplication {
 
     private void generatePanelQCFail(@NotNull SampleMetadata sampleMetadata) throws IOException {
         PanelFailReporter reporter = new PanelFailReporter(buildBasePanelReportData(config), reportDate);
-        PanelFailReport report = reporter.run();
+        PanelFailReport report = reporter.run(sampleMetadata,
+                config.comments(),
+                config.isCorrectedReport(),
+                config.isCorrectedReportExtern(),
+                config.expectedPipelineVersion(),
+                config.overridePipelineVersion(),
+                config.pipelineVersionFile(),
+                config.requirePipelineVersionFile());
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
         String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);

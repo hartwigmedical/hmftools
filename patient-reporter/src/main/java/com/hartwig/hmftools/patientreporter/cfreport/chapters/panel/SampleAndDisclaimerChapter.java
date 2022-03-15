@@ -101,7 +101,7 @@ public class SampleAndDisclaimerChapter implements ReportChapter {
         Div div = createDisclaimerDiv();
 
         String pipelineVersion = "" == null ? "No pipeline version is known" : "";
-        div.add(createContentParagraph("This report is based on pipeline version ", pipelineVersion + "."));
+        div.add(createContentParagraphTwice("This report is based on pipeline version ", pipelineVersion,  " based on ", ""));
         div.add(createContentParagraph("No check is performed to verify the ‘primary tumor location’ and ‘primary tumor type’ information."));
         div.add(createContentParagraph("The results of this report and result file is based solely on the results of the DNA sequencing of "
                 + "the received tumor material"));
