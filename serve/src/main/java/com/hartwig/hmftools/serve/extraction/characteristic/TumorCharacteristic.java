@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class TumorCharacteristic {
 
     @Nullable
-    public abstract TumorCharacteristicAnnotation annotation();
+    public abstract TumorCharacteristicAnnotation name();
 
     @Nullable
     public abstract TumorCharacteristicsComparator comparator();

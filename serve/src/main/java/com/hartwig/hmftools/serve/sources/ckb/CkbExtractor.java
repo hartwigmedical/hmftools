@@ -48,7 +48,6 @@ import com.hartwig.hmftools.serve.util.ProgressTracker;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -58,12 +57,9 @@ public class CkbExtractor {
 
     @NotNull
     private final EventExtractor eventExtractor;
-    @NotNull
-    private final ActionableEntryFactory actionableEntryFactory;
 
-    public CkbExtractor(@NotNull final EventExtractor eventExtractor, @NotNull final ActionableEntryFactory actionableEntryFactory) {
+    public CkbExtractor(@NotNull final EventExtractor eventExtractor) {
         this.eventExtractor = eventExtractor;
-        this.actionableEntryFactory = actionableEntryFactory;
     }
 
     @NotNull
@@ -86,8 +82,8 @@ public class CkbExtractor {
 
             String transcript = null;
 
-            EventExtractorOutput eventExtractorOutput = eventExtractor.extract(gene, transcript, entry.type(), event, Strings.EMPTY);
-            Set<? extends ActionableEvent> actionableEvents = actionableEntryFactory.toActionableEntries(entry, variant.variant());
+            EventExtractorOutput eventExtractorOutput = eventExtractor.extract(gene, transcript, entry.type(), event, null);
+            Set<? extends ActionableEvent> actionableEvents = ActionableEntryFactory.toActionableEntries(entry, variant.variant());
 
             interpretation.add(ImmutableEventInterpretation.builder()
                     .source(Knowledgebase.CKB)

@@ -59,7 +59,6 @@ class ActionableEntryFactory {
     }
 
     @NotNull
-    @VisibleForTesting
     public static Set<ActionableEntry> toActionableEntries(@NotNull CkbEntry entry, @NotNull String rawInput) {
         Set<ActionableEntry> actionableEntries = Sets.newHashSet();
 

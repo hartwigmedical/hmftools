@@ -86,9 +86,7 @@ public class ExtractionResultWriter {
         ActionableCharacteristicFile.write(actionableCharacteristicTsv, result.actionableCharacteristics());
 
         String actionableHLATsv = ActionableHLAFile.actionableHLATsvPath(outputDir, refGenomeVersion);
-        LOGGER.info(" Writing {} actionable hla to {}",
-                result.actionableHLA().size(),
-                actionableHLATsv);
+        LOGGER.info(" Writing {} actionable hla to {}", result.actionableHLA().size(), actionableHLATsv);
         ActionableHLAFile.write(actionableHLATsv, result.actionableHLA());
 
         String eventInterpretationTsv = EventInterpretationFile.eventInterpretationTsv(outputDir);

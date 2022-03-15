@@ -28,7 +28,6 @@ import com.hartwig.hmftools.serve.util.ProgressTracker;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class IclusionExtractor {
@@ -55,14 +54,14 @@ public class IclusionExtractor {
         List<ActionableTrial> actionableTrials = Lists.newArrayList();
         for (IclusionTrial trial : trials) {
             List<EventExtractorOutput> eventExtractions = Lists.newArrayList();
-            String rawInput = Strings.EMPTY;
+            String rawInput;
             for (IclusionMutationCondition mutationCondition : trial.mutationConditions()) {
                 for (IclusionMutation mutation : mutationCondition.mutations()) {
                     LOGGER.debug("Interpreting '{}' on '{}' for {}", mutation.name(), mutation.gene(), trial.acronym());
                     if (mutation.type() == EventType.UNKNOWN) {
                         LOGGER.warn("No event type known for '{}' on '{}'", mutation.name(), mutation.gene());
                     }
-                    eventExtractions.add(eventExtractor.extract(mutation.gene(), null, mutation.type(), mutation.name(), Strings.EMPTY));
+                    eventExtractions.add(eventExtractor.extract(mutation.gene(), null, mutation.type(), mutation.name(), null));
                     rawInput = mutation.name();
                     interpretation.add(ImmutableEventInterpretation.builder()
                             .source(Knowledgebase.ICLUSION)
@@ -76,7 +75,6 @@ public class IclusionExtractor {
                     for (ActionableTrial actionableTrial : actionableTrials) {
                         LOGGER.debug("Generated {} based off {}", actionableTrial, trial);
                     }
-
 
                 }
             }
