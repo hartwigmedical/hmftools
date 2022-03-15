@@ -9,7 +9,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.extraction.catalog.DealWithDriverInconsistentMode;
-import com.hartwig.hmftools.serve.extraction.catalog.DealWithDriverInconsistentModeAnnotation;
+import com.hartwig.hmftools.serve.extraction.catalog.DriverInconsistencyMode;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 
 import org.apache.logging.log4j.LogManager;
@@ -33,19 +33,19 @@ public class GeneLevelExtractor {
     private final Set<String> activationKeyPhrases;
     @NotNull
     private final Set<String> inactivationKeyPhrases;
-    private final DealWithDriverInconsistentModeAnnotation dealWithDriverInconsistentModeAnnotation;
+    private final DriverInconsistencyMode driverInconsistencyMode;
 
     public GeneLevelExtractor(@NotNull final GeneChecker exomeGeneChecker, @NotNull final GeneChecker fusionGeneChecker,
             @NotNull final List<DriverGene> driverGenes, @NotNull final KnownFusionCache knownFusionCache,
             @NotNull final Set<String> activationKeyPhrases, @NotNull final Set<String> inactivationKeyPhrases,
-            @NotNull DealWithDriverInconsistentModeAnnotation dealWithDriverInconsistentModeAnnotation) {
+            @NotNull DriverInconsistencyMode driverInconsistencyMode) {
         this.exomeGeneChecker = exomeGeneChecker;
         this.fusionGeneChecker = fusionGeneChecker;
         this.driverGenes = driverGenes;
         this.knownFusionCache = knownFusionCache;
         this.activationKeyPhrases = activationKeyPhrases;
         this.inactivationKeyPhrases = inactivationKeyPhrases;
-        this.dealWithDriverInconsistentModeAnnotation = dealWithDriverInconsistentModeAnnotation;
+        this.driverInconsistencyMode = driverInconsistencyMode;
     }
 
     @Nullable
@@ -63,14 +63,14 @@ public class GeneLevelExtractor {
 
     @Nullable
     GeneLevelAnnotation extractPromiscuousFusion(@NotNull String gene) {
-        if (DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithDriverInconsistentModeAnnotation)) {
+        if (DealWithDriverInconsistentMode.filterOnInconsistencies(driverInconsistencyMode)) {
             if (!geneIsPresentInFusionCache(gene)) {
-                if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
-                        DealWithDriverInconsistentModeAnnotation.WARN_ONLY)) {
+                if (driverInconsistencyMode.logging() && driverInconsistencyMode.equals(
+                        DriverInconsistencyMode.WARN_ONLY)) {
                     LOGGER.warn("Promiscuous fusion '{}' is not present in the known fusion cache", gene);
                     return ImmutableGeneLevelAnnotation.builder().gene(gene).event(GeneLevelEvent.FUSION).build();
-                } else if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
-                        DealWithDriverInconsistentModeAnnotation.FILTER)) {
+                } else if (driverInconsistencyMode.logging() && driverInconsistencyMode.equals(
+                        DriverInconsistencyMode.FILTER)) {
                     LOGGER.info("Promiscuous fusion filtered -- Promiscuous fusion '{}' is not present in the known fusion cache", gene);
                     return null;
                 }
@@ -86,14 +86,14 @@ public class GeneLevelExtractor {
     @Nullable
     GeneLevelAnnotation extractWildTypeEvents(@NotNull String gene, @NotNull EventType type) {
         DriverCategory driverCategory = findByGene(driverGenes, gene);
-        if (DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithDriverInconsistentModeAnnotation)) {
+        if (DealWithDriverInconsistentMode.filterOnInconsistencies(driverInconsistencyMode)) {
             if (driverCategory == null) {
-                if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
-                        DealWithDriverInconsistentModeAnnotation.WARN_ONLY)) {
+                if (driverInconsistencyMode.logging() && driverInconsistencyMode.equals(
+                        DriverInconsistencyMode.WARN_ONLY)) {
                     LOGGER.warn("Wildtype event on {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
                     return ImmutableGeneLevelAnnotation.builder().gene(gene).event(GeneLevelEvent.WILD_TYPE).build();
-                } else if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
-                        DealWithDriverInconsistentModeAnnotation.FILTER)) {
+                } else if (driverInconsistencyMode.logging() && driverInconsistencyMode.equals(
+                        DriverInconsistencyMode.FILTER)) {
                     LOGGER.info("Wildtype event filtered -- {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
                     return null;
                 } else {
@@ -147,9 +147,9 @@ public class GeneLevelExtractor {
         }
 
 
-        if (DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithDriverInconsistentModeAnnotation)) {
-            if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
-                    DealWithDriverInconsistentModeAnnotation.WARN_ONLY)) {
+        if (DealWithDriverInconsistentMode.filterOnInconsistencies(driverInconsistencyMode)) {
+            if (driverInconsistencyMode.logging() && driverInconsistencyMode.equals(
+                    DriverInconsistencyMode.WARN_ONLY)) {
                 LOGGER.info(driverBasedEvent);
                 LOGGER.info(result);
                 if (driverBasedEvent == GeneLevelEvent.ANY_MUTATION) {
@@ -161,8 +161,8 @@ public class GeneLevelExtractor {
                             driverBasedEvent);
                 }
                 return ImmutableGeneLevelAnnotation.builder().gene(gene).event(result).build();
-            } else if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
-                    DealWithDriverInconsistentModeAnnotation.FILTER)) {
+            } else if (driverInconsistencyMode.logging() && driverInconsistencyMode.equals(
+                    DriverInconsistencyMode.FILTER)) {
 
                 if(driverBasedEvent == GeneLevelEvent.ANY_MUTATION) {
                     LOGGER.info("Gene level event filtered -- {} on {} is not included in driver catalog and won't ever be reported.", gene, result);

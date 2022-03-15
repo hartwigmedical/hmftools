@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.extraction.catalog.DealWithDriverInconsistentMode;
-import com.hartwig.hmftools.serve.extraction.catalog.DealWithDriverInconsistentModeAnnotation;
+import com.hartwig.hmftools.serve.extraction.catalog.DriverInconsistencyMode;
 import com.hartwig.hmftools.serve.extraction.util.EnsemblFunctions;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
@@ -35,18 +35,18 @@ public class CodonExtractor {
     @NotNull
     private final EnsemblDataCache ensemblDataCache;
     @NotNull
-    private final DealWithDriverInconsistentModeAnnotation dealWithDriverInconsistentModeAnnotation;
+    private final DriverInconsistencyMode driverInconsistencyMode;
     @NotNull
     private final List<DriverGene> driverGenes;
 
     public CodonExtractor(@NotNull final GeneChecker geneChecker, @NotNull final MutationTypeFilterAlgo mutationTypeFilterAlgo,
             @NotNull final EnsemblDataCache ensemblDataCache,
-            @NotNull final DealWithDriverInconsistentModeAnnotation dealWithDriverInconsistentModeAnnotation,
+            @NotNull final DriverInconsistencyMode driverInconsistencyMode,
             @NotNull final List<DriverGene> driverGenes) {
         this.geneChecker = geneChecker;
         this.mutationTypeFilterAlgo = mutationTypeFilterAlgo;
         this.ensemblDataCache = ensemblDataCache;
-        this.dealWithDriverInconsistentModeAnnotation = dealWithDriverInconsistentModeAnnotation;
+        this.driverInconsistencyMode = driverInconsistencyMode;
         this.driverGenes = driverGenes;
     }
 
@@ -67,13 +67,13 @@ public class CodonExtractor {
         if (type == EventType.CODON && geneChecker.isValidGene(gene)) {
 
             DriverCategory driverCategory = findByGene(driverGenes, gene);
-            if (DealWithDriverInconsistentMode.filterOnInconsistenties(dealWithDriverInconsistentModeAnnotation)) {
+            if (DealWithDriverInconsistentMode.filterOnInconsistencies(driverInconsistencyMode)) {
                 if (driverCategory == null) {
-                    if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
-                            DealWithDriverInconsistentModeAnnotation.WARN_ONLY)) {
+                    if (driverInconsistencyMode.logging() && driverInconsistencyMode.equals(
+                            DriverInconsistencyMode.WARN_ONLY)) {
                         LOGGER.warn("Codon event on {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
-                    } else if (dealWithDriverInconsistentModeAnnotation.logging() && dealWithDriverInconsistentModeAnnotation.equals(
-                            DealWithDriverInconsistentModeAnnotation.FILTER)) {
+                    } else if (driverInconsistencyMode.logging() && driverInconsistencyMode.equals(
+                            DriverInconsistencyMode.FILTER)) {
                         LOGGER.info("Codon event filtered -- {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
                         return null;
                     }

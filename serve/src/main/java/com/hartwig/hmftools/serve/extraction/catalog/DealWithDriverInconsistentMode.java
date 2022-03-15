@@ -2,15 +2,13 @@ package com.hartwig.hmftools.serve.extraction.catalog;
 
 import org.jetbrains.annotations.NotNull;
 
-public class DealWithDriverInconsistentMode {
+public final class DealWithDriverInconsistentMode {
 
-    public static boolean filterOnInconsistenties(@NotNull DealWithDriverInconsistentModeAnnotation annotation) {
-        switch (annotation) {
+    public static boolean filterOnInconsistencies(@NotNull DriverInconsistencyMode mode) {
+        switch (mode) {
             case FILTER:
             case WARN_ONLY:
                 return true;
-            case IGNORE:
-                return false;
             default:
                 return false;
         }
