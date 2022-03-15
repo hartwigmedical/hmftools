@@ -7,17 +7,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 
-import com.hartwig.hmftools.serve.sources.ckb.filter.CkbFilterEntry;
-import com.hartwig.hmftools.serve.sources.ckb.filter.CkbFilterType;
-import com.hartwig.hmftools.serve.sources.ckb.filter.ImmutableCkbFilterEntry;
-
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 public final class IclusionFilterFile {
 
     private IclusionFilterFile(){
-
     }
 
     @NotNull
@@ -45,5 +40,4 @@ public final class IclusionFilterFile {
                 .value(values[1])
                 .build();
     }
-
 }
