@@ -5,43 +5,37 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Sets;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class CancerTypeFactory {
 
-    private static final String DELIMITER_TUM_DOID = ",";
-    private static final String DELIMITER_DIFFERENT_TUMOR = ";";
+    private static final String DELIMITER_MULTIPLE_TYPES = ";";
+    private static final String SEPARATOR_NAME_AND_DOID = ",";
 
     private CancerTypeFactory() {
     }
 
     @NotNull
-    public static String extractCancerTypeBlacklist(@NotNull Set<CancerType> tumorLocationBlacklistings) {
-        StringJoiner joiner = new StringJoiner(DELIMITER_DIFFERENT_TUMOR);
-        for (CancerType blackListTumorLocation : tumorLocationBlacklistings) {
-            if (!blackListTumorLocation.name().equals(Strings.EMPTY) && !blackListTumorLocation.doid().equals(Strings.EMPTY)) {
-                joiner.add(blackListTumorLocation.name() + DELIMITER_TUM_DOID + blackListTumorLocation.doid());
-            }
+    public static String toString(@NotNull Set<CancerType> cancerTypes) {
+        StringJoiner joiner = new StringJoiner(DELIMITER_MULTIPLE_TYPES);
+        for (CancerType cancerType : cancerTypes) {
+            joiner.add(cancerType.name() + SEPARATOR_NAME_AND_DOID + cancerType.doid());
         }
         return joiner.toString();
     }
 
     @NotNull
-    public static Set<CancerType> readCancerTypeBlacklistString(@NotNull String tumorLocationBlacklistings) {
-        Set<CancerType> tumorLocationBlacklistingsList = Sets.newConcurrentHashSet();
-        if (!tumorLocationBlacklistings.isEmpty()) {
-            String[] splitTumorLocationString = tumorLocationBlacklistings.split(DELIMITER_DIFFERENT_TUMOR);
+    public static Set<CancerType> fromString(@NotNull String cancerTypeString) {
+        Set<CancerType> cancerTypes = Sets.newConcurrentHashSet();
+        if (!cancerTypeString.isEmpty()) {
+            String[] splitCancerTypeString = cancerTypeString.split(DELIMITER_MULTIPLE_TYPES);
 
-            for (String tumorLocationDoidArray : splitTumorLocationString) {
-                String[] tumorLocationDoid = tumorLocationDoidArray.split(DELIMITER_TUM_DOID);
-                tumorLocationBlacklistingsList.add(ImmutableCancerType.builder()
-                        .name(tumorLocationDoid[0])
-                        .doid(tumorLocationDoid[1])
-                        .build());
+            for (String cancerTypeEntry : splitCancerTypeString) {
+                String[] nameAndDoid = cancerTypeEntry.split(SEPARATOR_NAME_AND_DOID);
+                cancerTypes.add(ImmutableCancerType.builder().name(nameAndDoid[0]).doid(nameAndDoid[1]).build());
             }
         }
 
-        return tumorLocationBlacklistingsList;
+        return cancerTypes;
     }
 }

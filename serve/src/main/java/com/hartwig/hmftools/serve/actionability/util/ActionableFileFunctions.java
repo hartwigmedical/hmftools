@@ -12,7 +12,6 @@ import com.hartwig.hmftools.serve.cancertype.CancerType;
 import com.hartwig.hmftools.serve.cancertype.CancerTypeFactory;
 import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ActionableFileFunctions {
@@ -78,8 +77,7 @@ public final class ActionableFileFunctions {
             @NotNull
             @Override
             public Set<CancerType> blacklistCancerTypes() {
-                return values[startingPosition + 6].equals(Strings.EMPTY) ? CancerTypeFactory.readCancerTypeBlacklistString(values[
-                        startingPosition + 6]): Sets.newHashSet();
+                return CancerTypeFactory.fromString(values[startingPosition + 6]);
             }
 
             @NotNull
@@ -111,7 +109,7 @@ public final class ActionableFileFunctions {
                 .add(event.treatment())
                 .add(event.applicableCancerType().name())
                 .add(event.applicableCancerType().doid())
-                .add(CancerTypeFactory.extractCancerTypeBlacklist(event.blacklistCancerTypes()))
+                .add(CancerTypeFactory.toString(event.blacklistCancerTypes()))
                 .add(event.level().toString())
                 .add(event.direction().toString())
                 .add(urlsToString(event.evidenceUrls()))

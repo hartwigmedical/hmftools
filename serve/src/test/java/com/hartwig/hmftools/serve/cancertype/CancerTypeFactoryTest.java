@@ -2,8 +2,6 @@ package com.hartwig.hmftools.serve.cancertype;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 import com.beust.jcommander.internal.Sets;
@@ -14,87 +12,90 @@ import org.junit.Test;
 public class CancerTypeFactoryTest {
 
     @Test
-    public void canTestTumorLocationBlacklistingSingle() {
-        Set<CancerType> cancerTypeBlacklist = Sets.newHashSet();
-        cancerTypeBlacklist.add(tumorLocationBlacklisting("Hematologic cancer", "2531"));
-        assertEquals("Hematologic cancer,2531", CancerTypeFactory.extractCancerTypeBlacklist(cancerTypeBlacklist));
+    public void canConvertSingle() {
+        Set<CancerType> cancerTypes = Sets.newHashSet();
+        cancerTypes.add(create("Hematologic cancer", "2531"));
+        assertEquals("Hematologic cancer,2531", CancerTypeFactory.toString(cancerTypes));
     }
 
     @Test
-    public void canTestTumorLocationBlacklistingTwo() {
-        Set<CancerType> cancerTypeBlacklist = Sets.newHashSet();
-        cancerTypeBlacklist.add(tumorLocationBlacklisting("Hematologic cancer", "2531"));
-        cancerTypeBlacklist.add(tumorLocationBlacklisting("Skin Melanoma", "8923"));
+    public void canConvertTwo() {
+        Set<CancerType> cancerTypes = Sets.newHashSet();
+        cancerTypes.add(create("Hematologic cancer", "2531"));
+        cancerTypes.add(create("Skin Melanoma", "8923"));
 
-        assertEquals("Hematologic cancer,2531;Skin Melanoma,8923", CancerTypeFactory.extractCancerTypeBlacklist(cancerTypeBlacklist));
+        assertEquals("Hematologic cancer,2531;Skin Melanoma,8923", CancerTypeFactory.toString(cancerTypes));
     }
 
     @Test
-    public void canTestTumorLocationBlacklistingMultiple() {
-        Set<CancerType> cancerTypeBlacklist = Sets.newHashSet();
-        cancerTypeBlacklist.add(tumorLocationBlacklisting("Hematologic cancer", "2531"));
-        cancerTypeBlacklist.add(tumorLocationBlacklisting("Skin Melanoma", "8923"));
-        cancerTypeBlacklist.add(tumorLocationBlacklisting("Bladder Cancer", "11054"));
-        cancerTypeBlacklist.add(tumorLocationBlacklisting("Colorectal Cancer", "1520"));
+    public void canConvertMultiple() {
+        Set<CancerType> cancerTypes = Sets.newHashSet();
+        cancerTypes.add(create("Hematologic cancer", "2531"));
+        cancerTypes.add(create("Skin Melanoma", "8923"));
+        cancerTypes.add(create("Bladder Cancer", "11054"));
+        cancerTypes.add(create("Colorectal Cancer", "1520"));
 
         assertEquals("Hematologic cancer,2531;Colorectal Cancer,1520;Skin Melanoma,8923;Bladder Cancer,11054",
-                CancerTypeFactory.extractCancerTypeBlacklist(cancerTypeBlacklist));
+                CancerTypeFactory.toString(cancerTypes));
     }
 
     @Test
-    public void canTestReadTumorLocationBlacklistingSingle() {
-        String combinedTumorLocations = "Hematologic cancer,2531";
-        Set<CancerType> cancerTypeBlacklistSet = CancerTypeFactory.readCancerTypeBlacklistString(combinedTumorLocations);
-        List<CancerType> cancerTypeBlacklistList = new ArrayList<>(cancerTypeBlacklistSet);
+    public void canReadSingle() {
+        String combinedNameAndDoid = "Hematologic cancer,2531";
+        Set<CancerType> cancerTypes = CancerTypeFactory.fromString(combinedNameAndDoid);
 
-        assertEquals(1, cancerTypeBlacklistList.size());
-        CancerType tumorLocationBlacklisting = cancerTypeBlacklistList.get(0);
+        assertEquals(1, cancerTypes.size());
+        CancerType tumorLocationBlacklisting = cancerTypes.iterator().next();
         assertEquals("Hematologic cancer", tumorLocationBlacklisting.name());
         assertEquals("2531", tumorLocationBlacklisting.doid());
     }
 
     @Test
-    public void canTestReadTumorLocationBlacklistingTwo() {
-        String combinedTumorLocations = "Hematologic cancer,2531;Skin Melanoma,8923";
-        Set<CancerType> cancerTypeBlacklistSet = CancerTypeFactory.readCancerTypeBlacklistString(combinedTumorLocations);
-        List<CancerType> cancerTypeBlacklistList = new ArrayList<>(cancerTypeBlacklistSet);
+    public void canReadTwo() {
+        String combinedNamesAndDoids = "Hematologic cancer,2531;Skin Melanoma,8923";
+        Set<CancerType> cancerTypes = CancerTypeFactory.fromString(combinedNamesAndDoids);
 
-        assertEquals(2, cancerTypeBlacklistList.size());
-        CancerType tumorLocationBlacklisting1 = cancerTypeBlacklistList.get(0);
-        assertEquals("Hematologic cancer", tumorLocationBlacklisting1.name());
-        assertEquals("2531", tumorLocationBlacklisting1.doid());
+        assertEquals(2, cancerTypes.size());
+        CancerType cancerType1 = findByName(cancerTypes, "Hematologic cancer");
+        assertEquals("2531", cancerType1.doid());
 
-        CancerType tumorLocationBlacklisting2 = cancerTypeBlacklistList.get(1);
-        assertEquals("Skin Melanoma", tumorLocationBlacklisting2.name());
-        assertEquals("8923", tumorLocationBlacklisting2.doid());
+        CancerType cancerType2 = findByName(cancerTypes, "Skin Melanoma");
+        assertEquals("8923", cancerType2.doid());
     }
 
     @Test
-    public void canTestReadTumorLocationBlacklistingMultiple() {
-        String combinedTumorLocations = "Hematologic cancer,2531;Skin Melanoma,8923;Bladder Cancer,11054;Colorectal Cancer,1520";
-        Set<CancerType> cancerTypeBlacklistSet = CancerTypeFactory.readCancerTypeBlacklistString(combinedTumorLocations);
-        List<CancerType> cancerTypeBlacklistList = new ArrayList<>(cancerTypeBlacklistSet);
+    public void canReadMultiple() {
+        String combinedNamesAndDoids = "Hematologic cancer,2531;Skin Melanoma,8923;Bladder Cancer,11054;Colorectal Cancer,1520";
+        Set<CancerType> cancerTypes = CancerTypeFactory.fromString(combinedNamesAndDoids);
 
-        assertEquals(4, cancerTypeBlacklistList.size());
-        CancerType tumorLocationBlacklisting1 = cancerTypeBlacklistList.get(0);
-        assertEquals("Hematologic cancer", tumorLocationBlacklisting1.name());
-        assertEquals("2531", tumorLocationBlacklisting1.doid());
+        assertEquals(4, cancerTypes.size());
+        CancerType cancerType1 = findByName(cancerTypes, "Hematologic cancer");
+        assertEquals("2531", cancerType1.doid());
 
-        CancerType tumorLocationBlacklisting4 = cancerTypeBlacklistList.get(1);
-        assertEquals("Colorectal Cancer", tumorLocationBlacklisting4.name());
-        assertEquals("1520", tumorLocationBlacklisting4.doid());
+        CancerType cancerType2 = findByName(cancerTypes, "Colorectal Cancer");
+        assertEquals("1520", cancerType2.doid());
 
-        CancerType tumorLocationBlacklisting2 = cancerTypeBlacklistList.get(2);
-        assertEquals("Skin Melanoma", tumorLocationBlacklisting2.name());
-        assertEquals("8923", tumorLocationBlacklisting2.doid());
+        CancerType cancerType3 = findByName(cancerTypes, "Skin Melanoma");
+        assertEquals("8923", cancerType3.doid());
 
-        CancerType tumorLocationBlacklisting3 = cancerTypeBlacklistList.get(3);
-        assertEquals("Bladder Cancer", tumorLocationBlacklisting3.name());
-        assertEquals("11054", tumorLocationBlacklisting3.doid());
+        CancerType cancerType4 = findByName(cancerTypes, "Bladder Cancer");
+        assertEquals("11054", cancerType4.doid());
     }
 
     @NotNull
-    public CancerType tumorLocationBlacklisting(@NotNull String tumorLocation, @NotNull String doid) {
-        return ImmutableCancerType.builder().name(tumorLocation).doid(doid).build();
+    private static CancerType findByName(@NotNull Iterable<CancerType> cancerTypes, @NotNull String nameToFind) {
+        for (CancerType cancerType : cancerTypes) {
+            if (cancerType.name().equals(nameToFind)) {
+                return cancerType;
+            }
+        }
+
+        throw new IllegalStateException("Could not find cancerType with name: " + nameToFind);
+
+    }
+
+    @NotNull
+    private static CancerType create(@NotNull String name, @NotNull String doid) {
+        return ImmutableCancerType.builder().name(name).doid(doid).build();
     }
 }
