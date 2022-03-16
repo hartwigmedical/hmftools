@@ -105,8 +105,8 @@ public class CkbExtractorTest {
         List<CodonAnnotation> curatedCodons = CkbExtractor.curateCodons(codonAnnotations);
 
         CodonAnnotation codon1 = findByGene(curatedCodons, "BRAF");
-        assertEquals(140453135, codon1.start());
-        assertEquals(140453137, codon1.end());
+        assertEquals(140500319, codon1.start());
+        assertEquals(140500317, codon1.end());
 
         CodonAnnotation codon2 = findByGene(curatedCodons, "KRAS");
         assertEquals("KRAS", codon2.gene());

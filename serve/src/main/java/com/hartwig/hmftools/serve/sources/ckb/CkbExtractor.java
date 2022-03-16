@@ -113,7 +113,8 @@ public class CkbExtractor {
 
         for (CodonAnnotation codon: codonAnnotation) {
             if (codon.gene().equals("BRAF") && codon.rank() == 600) {
-                codons.add(ImmutableCodonAnnotation.builder().from(codon).start(140453135).end(140453137).build());
+                //BRAF is present on reverse strand
+                codons.add(ImmutableCodonAnnotation.builder().from(codon).start(140500319).end(140500317).build());
             } else {
                 codons.add(ImmutableCodonAnnotation.builder().from(codon).build());
             }
