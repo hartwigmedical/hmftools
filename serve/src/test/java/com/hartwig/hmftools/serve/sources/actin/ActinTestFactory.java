@@ -25,7 +25,7 @@ public final class ActinTestFactory {
     @NotNull
     public static ActinEntry createTestEntryWithData(@NotNull ActinRule actinRule, @NotNull String gene, @NotNull String mutation) {
         return ImmutableActinEntry.builder()
-                .trial(Strings.EMPTY)
+                .trial("A")
                 .rule(actinRule)
                 .gene(gene)
                 .mutation(mutation)

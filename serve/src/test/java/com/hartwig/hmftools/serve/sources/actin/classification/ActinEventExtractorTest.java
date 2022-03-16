@@ -42,5 +42,23 @@ public class ActinEventExtractorTest {
                 .build();
 
         assertEquals(Sets.newHashSet("wildtype"), ActinEventExtractor.extractEvents(trial2));
+
+        ActinEntry trial3 = ImmutableActinEntry.builder()
+                .trial("trial1")
+                .rule(ActinRule.MSI_SIGNATURE)
+                .gene("")
+                .mutation("msi high")
+                .build();
+
+        assertEquals(Sets.newHashSet("MSI_high msi high"), ActinEventExtractor.extractEvents(trial3));
+
+        ActinEntry trial4 = ImmutableActinEntry.builder()
+                .trial("trial1")
+                .rule(ActinRule.TML_OF_AT_LEAST_X)
+                .gene("")
+                .mutation("TML >= 450")
+                .build();
+
+        assertEquals(Sets.newHashSet("TML_high TML >= 450"), ActinEventExtractor.extractEvents(trial4));
     }
 }

@@ -52,6 +52,9 @@ public class ActinExtractor {
             ActinTrial trial = ActinTrialFactory.toActinTrial(entry, entry.rule().name());
 
             for (String event : events) {
+                if (event.split(" ").length > 1) {
+                    event = event.split(" ", 2)[0];
+                }
                 EventType type = ActinEventTypeExtractor.determineEventType(entry, event);
                 if (type == EventType.UNKNOWN) {
                     LOGGER.warn("No event type known for '{}' on '{}'", entry, entry.gene());
@@ -65,9 +68,7 @@ public class ActinExtractor {
                             .interpretedEventType(type)
                             .build();
 
-                    extractions.add(toExtractionResult(trial,
-                            eventExtractor.extract(gene, null, type, event),
-                            interpretation));
+                    extractions.add(toExtractionResult(trial, eventExtractor.extract(gene, null, type, event), interpretation));
                 }
             }
 

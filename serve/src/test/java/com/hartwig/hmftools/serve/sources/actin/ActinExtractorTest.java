@@ -12,13 +12,11 @@ import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinRule;
 
 import org.apache.commons.compress.utils.Lists;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class ActinExtractorTest {
 
     @Test
-    @Ignore
     public void canExtractFromACTINEntries() {
         EventClassifierConfig config = ActinClassificationConfig.build();
         ActinExtractor extractor = ActinExtractorFactory.buildActinExtractor(config, RefGenomeResourceTestFactory.buildTestResource37());
@@ -29,7 +27,8 @@ public class ActinExtractorTest {
         actinEntries.add(ActinTestFactory.createTestEntryWithData(ActinRule.FUSION_IN_GENE_X, "NTRK3", ""));
         actinEntries.add(ActinTestFactory.createTestEntryWithData(ActinRule.MUTATION_IN_GENE_X_OF_TYPE_Y, "BRAF", "V600X"));
         actinEntries.add(ActinTestFactory.createTestEntryWithData(ActinRule.MUTATION_IN_GENE_X_OF_TYPE_Y, "BRAF", "exon 2-4"));
-        actinEntries.add(ActinTestFactory.createTestEntryWithData(ActinRule.MSI_SIGNATURE, "", "MSI_high"));
+        actinEntries.add(ActinTestFactory.createTestEntryWithData(ActinRule.MSI_SIGNATURE, "", "MSI high"));
+        actinEntries.add(ActinTestFactory.createTestEntryWithData(ActinRule.TML_OF_AT_LEAST_X, "", "TML >= 450"));
         actinEntries.add(ActinTestFactory.createTestEntryWithData(ActinRule.SPECIFIC_FUSION_OF_X_TO_Y, "", "EML4-ALK"));
 
         ExtractionResult result = extractor.extract(actinEntries);
@@ -40,6 +39,6 @@ public class ActinExtractorTest {
         assertEquals(4, result.actionableRanges().size());
         assertEquals(2, result.actionableGenes().size());
         assertEquals(1, result.actionableFusions().size());
-        assertEquals(1, result.actionableCharacteristics().size());
+        assertEquals(2, result.actionableCharacteristics().size());
     }
 }
