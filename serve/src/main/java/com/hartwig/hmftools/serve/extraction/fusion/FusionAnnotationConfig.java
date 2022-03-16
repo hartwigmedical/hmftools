@@ -55,6 +55,7 @@ public final class FusionAnnotationConfig {
                 .maxExonDown(8)
                 .build();
         map.put("EGFRvIII", fusionEGFRvIII);
+        map.put("VIII", fusionEGFRvIII);
 
         KnownFusionPair fusionEGFRvV = ImmutableKnownFusionPair.builder()
                 .geneUp("EGFR")

@@ -186,7 +186,9 @@ public final class IclusionClassificationConfig {
 
     @NotNull
     private static Set<String> exonicDelDupFusionKeyPhrases() {
-        return Sets.newHashSet();
+        Set<String> set = Sets.newHashSet();
+        set.add("VIII");
+        return set;
     }
 
     @NotNull
