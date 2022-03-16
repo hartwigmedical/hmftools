@@ -158,8 +158,8 @@ public class GermlineVariantDAO
                 variantImpact.GenesAffected,
                 variantImpact.CanonicalEffect,
                 variantImpact.CanonicalCodingEffect != CodingEffect.UNDEFINED ? variantImpact.CanonicalCodingEffect : Strings.EMPTY,
-                variantImpact.CanonicalHgvsCoding,
-                checkTrimHgsProteinString(variantImpact.CanonicalHgvsProtein, GERMLINEVARIANT.CANONICALHGVSPROTEINIMPACT),
+                checkTrimHgsvString(variantImpact.CanonicalHgvsCoding, GERMLINEVARIANT.CANONICALHGVSCODINGIMPACT),
+                checkTrimHgsvString(variantImpact.CanonicalHgvsProtein, GERMLINEVARIANT.CANONICALHGVSPROTEINIMPACT),
                 variantImpact.CanonicalSpliceRegion,
                 variantImpact.OtherReportableEffects,
                 variantImpact.WorstCodingEffect != CodingEffect.UNDEFINED ? variantImpact.WorstCodingEffect : Strings.EMPTY,
@@ -173,14 +173,14 @@ public class GermlineVariantDAO
         );
     }
 
-    protected static String checkTrimHgsProteinString(final String hgvsProteinStr, @NotNull TableField<?, String> field)
+    protected static String checkTrimHgsvString(final String hgvsStr, @NotNull TableField<?, String> field)
     {
         int maxLength = field.getDataType().length();
 
-        if(hgvsProteinStr.length() < maxLength)
-            return hgvsProteinStr;
+        if(hgvsStr.length() < maxLength)
+            return hgvsStr;
 
-        String trimmedStr = hgvsProteinStr.substring(0, maxLength - 4);
+        String trimmedStr = hgvsStr.substring(0, maxLength - 4);
         return trimmedStr + "...";
     }
 

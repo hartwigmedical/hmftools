@@ -2,9 +2,8 @@ package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.common.genotype.GenotypeStatus.UNKNOWN;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.checkStringLength;
-import static com.hartwig.hmftools.patientdb.dao.GermlineVariantDAO.checkTrimHgsProteinString;
+import static com.hartwig.hmftools.patientdb.dao.GermlineVariantDAO.checkTrimHgsvString;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Germlinevariant.GERMLINEVARIANT;
 
 import static org.jooq.impl.DSL.count;
 
@@ -313,8 +312,8 @@ public class SomaticVariantDAO
                 variant.worstCodingEffect() != CodingEffect.UNDEFINED ? variant.worstCodingEffect() : Strings.EMPTY,
                 variant.canonicalEffect(),
                 variant.canonicalCodingEffect() != CodingEffect.UNDEFINED ? variant.canonicalCodingEffect() : Strings.EMPTY,
-                variant.canonicalHgvsCodingImpact(),
-                checkTrimHgsProteinString(variant.canonicalHgvsProteinImpact(), SOMATICVARIANT.CANONICALHGVSPROTEINIMPACT),
+                checkTrimHgsvString(variant.canonicalHgvsCodingImpact(), SOMATICVARIANT.CANONICALHGVSCODINGIMPACT),
+                checkTrimHgsvString(variant.canonicalHgvsProteinImpact(), SOMATICVARIANT.CANONICALHGVSPROTEINIMPACT),
                 variant.spliceRegion(),
                 variant.otherReportedEffects(),
                 variant.alleleReadCount(),
