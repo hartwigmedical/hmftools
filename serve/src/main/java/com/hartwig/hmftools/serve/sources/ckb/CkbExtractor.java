@@ -105,8 +105,12 @@ public class CkbExtractor {
 
     @VisibleForTesting
     @NotNull
-    public static List<CodonAnnotation> curateCodons(@NotNull List<CodonAnnotation> codonAnnotation) {
+    public static List<CodonAnnotation> curateCodons(@Nullable List<CodonAnnotation> codonAnnotation) {
         List<CodonAnnotation> codons = Lists.newArrayList();
+        if (codonAnnotation == null) {
+            return codons;
+        }
+
         for (CodonAnnotation codon: codonAnnotation) {
             if (codon.gene().equals("BRAF")) {
                 codons.add(ImmutableCodonAnnotation.builder().from(codon).transcript("ENST00000646891").build());
