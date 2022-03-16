@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
@@ -49,7 +50,6 @@ import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
-import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -158,7 +158,7 @@ public final class ViccExtractor {
                 }
 
                 return ImmutableViccExtractionResult.builder()
-                        .eventInterpretation(Lists.newArrayList())
+                        .eventInterpretations(Lists.newArrayList(interpretation))
                         .hotspotsPerFeature(hotspotsPerFeature)
                         .codonsPerFeature(codonsPerFeature)
                         .exonsPerFeature(exonsPerFeature)
@@ -166,6 +166,7 @@ public final class ViccExtractor {
                         .ampsDelsPerFeature(ampsDelsPerFeature)
                         .fusionsPerFeature(fusionsPerFeature)
                         .characteristicsPerFeature(characteristicsPerFeature)
+                        .HLAPerFeature(hlaPerFeature)
                         .actionableEvents(actionableEvents).build();
             }
 
@@ -177,7 +178,7 @@ public final class ViccExtractor {
     private static List<EventInterpretation> convertToEventInterpretations(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
         List<EventInterpretation> interpretations = Lists.newArrayList();
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
-            interpretations = entry.getValue().eventInterpretation();
+            interpretations = entry.getValue().eventInterpretations();
         }
         return interpretations;
     }

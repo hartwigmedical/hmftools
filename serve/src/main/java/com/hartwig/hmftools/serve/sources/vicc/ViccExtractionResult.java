@@ -13,6 +13,7 @@ import com.hartwig.hmftools.serve.extraction.events.EventInterpretation;
 import com.hartwig.hmftools.serve.extraction.exon.ExonAnnotation;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelAnnotation;
+import com.hartwig.hmftools.serve.extraction.immuno.ImmunoHLA;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 
 import org.immutables.value.Value;
@@ -22,10 +23,10 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-abstract class ViccExtractionResult {
+public abstract class ViccExtractionResult {
 
     @NotNull
-    public abstract List<EventInterpretation> eventInterpretation();
+    public abstract List<EventInterpretation> eventInterpretations();
 
     @NotNull
     public abstract Map<Feature, List<VariantHotspot>> hotspotsPerFeature();
@@ -47,6 +48,9 @@ abstract class ViccExtractionResult {
 
     @NotNull
     public abstract Map<Feature, TumorCharacteristic> characteristicsPerFeature();
+
+    @NotNull
+    public abstract Map<Feature, ImmunoHLA> HLAPerFeature();
 
     @NotNull
     public abstract Set<ActionableEvent> actionableEvents();
