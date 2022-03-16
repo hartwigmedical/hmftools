@@ -52,10 +52,12 @@ public class ActinExtractor {
             ActinTrial trial = ActinTrialFactory.toActinTrial(entry, entry.rule().name());
 
             for (String event : events) {
+                String eventType = event;
                 if (event.split(" ").length > 1) {
-                    event = event.split(" ", 2)[0];
+                    eventType = event.split(" ", 2)[0];
                 }
-                EventType type = ActinEventTypeExtractor.determineEventType(entry, event);
+
+                EventType type = ActinEventTypeExtractor.determineEventType(entry, eventType);
                 if (type == EventType.UNKNOWN) {
                     LOGGER.warn("No event type known for '{}' on '{}'", entry, entry.gene());
                 } else {
