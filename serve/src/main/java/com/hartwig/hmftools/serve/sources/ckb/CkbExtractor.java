@@ -3,6 +3,7 @@ package com.hartwig.hmftools.serve.sources.ckb;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.ckb.classification.CkbEventAndGeneExtractor;
@@ -11,6 +12,7 @@ import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.classification.EventType;
+import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
@@ -27,6 +29,7 @@ import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
 import com.hartwig.hmftools.serve.extraction.codon.CodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.codon.CodonFunctions;
+import com.hartwig.hmftools.serve.extraction.codon.ImmutableCodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableKnownCodon;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
 import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberFunctions;
@@ -100,6 +103,20 @@ public class CkbExtractor {
         return ExtractionFunctions.merge(extractions);
     }
 
+    @VisibleForTesting
+    @NotNull
+    public static List<CodonAnnotation> curateCodons(@NotNull List<CodonAnnotation> codonAnnotation) {
+        List<CodonAnnotation> codons = Lists.newArrayList();
+        for (CodonAnnotation codon: codonAnnotation) {
+            if (codon.gene().equals("BRAF")) {
+                codons.add(ImmutableCodonAnnotation.builder().from(codon).transcript("ENST00000646891").build());
+            } else {
+                codons.add(ImmutableCodonAnnotation.builder().from(codon).build());
+            }
+        }
+        return codons;
+    }
+
     @NotNull
     private static ExtractionResult toExtractionResult(@NotNull String gene, @NotNull String variant, @Nullable String transcript,
             @NotNull EventExtractorOutput output, @NotNull Set<? extends ActionableEvent> actionableEvents,
@@ -111,9 +128,13 @@ public class CkbExtractor {
         Set<ActionableCharacteristic> actionableCharacteristics = Sets.newHashSet();
         Set<ActionableHLA> actionableHLA = Sets.newHashSet();
 
+        List<CodonAnnotation> codons = Lists.newArrayList();
+
         for (ActionableEvent event : actionableEvents) {
+            codons = curateCodons(output.codons());
+
             actionableHotspots.addAll(ActionableEventFactory.toActionableHotspots(event, output.hotspots()));
-            actionableRanges.addAll(ActionableEventFactory.toActionableRanges(event, output.codons()));
+            actionableRanges.addAll(ActionableEventFactory.toActionableRanges(event, codons));
             actionableRanges.addAll(ActionableEventFactory.toActionableRanges(event, output.exons()));
 
             if (output.geneLevelEvent() != null) {
@@ -141,7 +162,7 @@ public class CkbExtractor {
                 .refGenomeVersion(Knowledgebase.CKB.refGenomeVersion())
                 .eventInterpretations(Lists.newArrayList(interpretation))
                 .knownHotspots(convertToKnownHotspots(output.hotspots(), gene, variant, transcript))
-                .knownCodons(convertToKnownCodons(output.codons()))
+                .knownCodons(convertToKnownCodons(codons))
                 .knownExons(convertToKnownExons(output.exons()))
                 .knownCopyNumbers(convertToKnownAmpsDels(output.knownCopyNumber()))
                 .knownFusionPairs(convertToKnownFusions(output.knownFusionPair()))
