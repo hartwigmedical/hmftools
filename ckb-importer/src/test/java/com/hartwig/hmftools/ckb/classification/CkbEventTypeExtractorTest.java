@@ -24,7 +24,7 @@ public class CkbEventTypeExtractorTest {
 
     @Test
     public void canClassifyCharacteristics() {
-        Variant characteristic = CkbTestFactory.createVariant("-", "MSI neg", "MSI neg", Strings.EMPTY);
+        Variant characteristic = CkbTestFactory.createVariant("-", "MSI_neg", "MSI_neg", Strings.EMPTY);
         assertEquals(EventType.CHARACTERISTIC, CkbEventTypeExtractor.classify(CkbTestFactory.createEntry(characteristic)));
     }
 }

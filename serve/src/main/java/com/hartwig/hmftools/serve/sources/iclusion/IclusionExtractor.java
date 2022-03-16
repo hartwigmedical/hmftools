@@ -51,31 +51,32 @@ public class IclusionExtractor {
 
         ProgressTracker tracker = new ProgressTracker("iClusion", trials.size());
         for (IclusionTrial trial : trials) {
-            List<ActionableTrial> actionableTrials = actionableTrialFactory.toActionableTrials(trial);
-            for (ActionableTrial actionableTrial : actionableTrials) {
-                LOGGER.debug("Generated {} based off {}", actionableTrial, trial);
-            }
 
-            List<EventExtractorOutput> eventExtractions = Lists.newArrayList();
-            List<EventInterpretation> interpretations = Lists.newArrayList();
             for (IclusionMutationCondition mutationCondition : trial.mutationConditions()) {
                 for (IclusionMutation mutation : mutationCondition.mutations()) {
+
+                    List<ActionableTrial> actionableTrials = actionableTrialFactory.toActionableTrials(trial, mutation.name());
+                    for (ActionableTrial actionableTrial : actionableTrials) {
+                        LOGGER.debug("Generated {} based off {}", actionableTrial, trial);
+                    }
+
                     LOGGER.debug("Interpreting '{}' on '{}' for {}", mutation.name(), mutation.gene(), trial.acronym());
                     if (mutation.type() == EventType.UNKNOWN) {
                         LOGGER.warn("No event type known for '{}' on '{}'", mutation.name(), mutation.gene());
                     }
-                    eventExtractions.add(eventExtractor.extract(mutation.gene(), null, mutation.type(), mutation.name()));
+                    EventExtractorOutput eventExtractorOutput = eventExtractor.extract(mutation.gene(), null, mutation.type(), mutation.name());
 
-                    interpretations.add(ImmutableEventInterpretation.builder()
+                    EventInterpretation interpretation  =  ImmutableEventInterpretation.builder()
                             .source(Knowledgebase.ICLUSION)
                             .sourceEvent(mutation.name())
                             .interpretedGene(mutation.gene())
                             .interpretedEvent(mutation.name())
                             .interpretedEventType(mutation.type())
-                            .build());
+                            .build();
+                    extractions.add(toExtractionResult(actionableTrials, eventExtractorOutput, interpretation));
                 }
             }
-            extractions.add(toExtractionResult(actionableTrials, eventExtractions, interpretations));
+
             tracker.update();
         }
 
@@ -84,7 +85,7 @@ public class IclusionExtractor {
 
     @NotNull
     private static ExtractionResult toExtractionResult(@NotNull List<ActionableTrial> actionableTrials,
-            @NotNull List<EventExtractorOutput> eventExtractions, @NotNull List<EventInterpretation> interpretations) {
+            @NotNull EventExtractorOutput eventExtractions, @NotNull EventInterpretation interpretation) {
         Set<ActionableHotspot> actionableHotspots = Sets.newHashSet();
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
         Set<ActionableGene> actionableGenes = Sets.newHashSet();
@@ -93,36 +94,36 @@ public class IclusionExtractor {
         Set<ActionableHLA> actionableHLA = Sets.newHashSet();
 
         for (ActionableTrial trial : actionableTrials) {
-            for (EventExtractorOutput extraction : eventExtractions) {
-                actionableHotspots.addAll(ActionableEventFactory.toActionableHotspots(trial, extraction.hotspots()));
-                actionableRanges.addAll(ActionableEventFactory.toActionableRanges(trial, extraction.codons()));
-                actionableRanges.addAll(ActionableEventFactory.toActionableRanges(trial, extraction.exons()));
 
-                if (extraction.geneLevelEvent() != null) {
-                    actionableGenes.add(ActionableEventFactory.geneLevelEventToActionableGene(trial, extraction.geneLevelEvent()));
+                actionableHotspots.addAll(ActionableEventFactory.toActionableHotspots(trial, eventExtractions.hotspots()));
+                actionableRanges.addAll(ActionableEventFactory.toActionableRanges(trial, eventExtractions.codons()));
+                actionableRanges.addAll(ActionableEventFactory.toActionableRanges(trial, eventExtractions.exons()));
+
+                if (eventExtractions.geneLevelEvent() != null) {
+                    actionableGenes.add(ActionableEventFactory.geneLevelEventToActionableGene(trial, eventExtractions.geneLevelEvent()));
                 }
 
-                if (extraction.knownCopyNumber() != null) {
-                    actionableGenes.add(ActionableEventFactory.copyNumberToActionableGene(trial, extraction.knownCopyNumber()));
+                if (eventExtractions.knownCopyNumber() != null) {
+                    actionableGenes.add(ActionableEventFactory.copyNumberToActionableGene(trial, eventExtractions.knownCopyNumber()));
                 }
 
-                if (extraction.knownFusionPair() != null) {
-                    actionableFusions.add(ActionableEventFactory.toActionableFusion(trial, extraction.knownFusionPair()));
+                if (eventExtractions.knownFusionPair() != null) {
+                    actionableFusions.add(ActionableEventFactory.toActionableFusion(trial, eventExtractions.knownFusionPair()));
                 }
 
-                if (extraction.characteristic() != null) {
-                    actionableCharacteristics.add(ActionableEventFactory.toActionableCharacteristic(trial, extraction.characteristic()));
+                if (eventExtractions.characteristic() != null) {
+                    actionableCharacteristics.add(ActionableEventFactory.toActionableCharacteristic(trial, eventExtractions.characteristic()));
                 }
 
-                if (extraction.hla() != null) {
-                    actionableHLA.add(ActionableEventFactory.toActionableHLa(trial, extraction.hla()));
+                if (eventExtractions.hla() != null) {
+                    actionableHLA.add(ActionableEventFactory.toActionableHLa(trial, eventExtractions.hla()));
                 }
-            }
+
         }
 
         return ImmutableExtractionResult.builder()
                 .refGenomeVersion(Knowledgebase.ICLUSION.refGenomeVersion())
-                .eventInterpretations(interpretations)
+                .eventInterpretations(Lists.newArrayList(interpretation))
                 .actionableHotspots(actionableHotspots)
                 .actionableRanges(actionableRanges)
                 .actionableGenes(actionableGenes)

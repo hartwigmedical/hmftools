@@ -52,8 +52,8 @@ import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class ViccExtractor {
 
@@ -98,7 +98,7 @@ public final class ViccExtractor {
         return ExtractionFunctions.consolidateActionableEvents(outputBuilder.build());
     }
 
-    @NotNull
+    @Nullable
     private ViccExtractionResult extractSingleEntry(@NotNull ViccEntry entry) {
         Map<Feature, List<VariantHotspot>> hotspotsPerFeature = Maps.newHashMap();
         Map<Feature, List<CodonAnnotation>> codonsPerFeature = Maps.newHashMap();
@@ -108,23 +108,23 @@ public final class ViccExtractor {
         Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
         Map<Feature, TumorCharacteristic> characteristicsPerFeature = Maps.newHashMap();
         Map<Feature, ImmunoHLA> hlaPerFeature = Maps.newHashMap();
-
-        List<EventInterpretation> interpretation = Lists.newArrayList();
         for (Feature feature : entry.features()) {
             String gene = feature.geneSymbol();
             if (gene == null) {
                 LOGGER.warn("No gene configured for {}. Skipping!", feature);
             } else {
-                EventExtractorOutput extractorOutput =
-                        eventExtractor.extract(gene, entry.transcriptId(), feature.type(), feature.name());
+                EventExtractorOutput extractorOutput = eventExtractor.extract(gene, entry.transcriptId(), feature.type(), feature.name());
 
-                interpretation.add(ImmutableEventInterpretation.builder()
+                EventInterpretation interpretation = ImmutableEventInterpretation.builder()
                         .source(ActionableEvidenceFactory.fromViccSource(entry.source()))
                         .sourceEvent(feature.name())
                         .interpretedGene(gene)
                         .interpretedEvent(feature.name())
                         .interpretedEventType(feature.type())
-                        .build());
+                        .build();
+
+                Set<ActionableEvent> actionableEvents = actionableEvidenceFactory.toActionableEvents(entry, feature.name());
+
                 if (extractorOutput.hotspots() != null) {
                     hotspotsPerFeature.put(feature, extractorOutput.hotspots());
                 }
@@ -156,30 +156,21 @@ public final class ViccExtractor {
                 if (extractorOutput.hla() != null) {
                     hlaPerFeature.put(feature, extractorOutput.hla());
                 }
+
+                return ImmutableViccExtractionResult.builder()
+                        .eventInterpretation(Lists.newArrayList())
+                        .hotspotsPerFeature(hotspotsPerFeature)
+                        .codonsPerFeature(codonsPerFeature)
+                        .exonsPerFeature(exonsPerFeature)
+                        .geneLevelEventsPerFeature(geneLevelEventsPerFeature)
+                        .ampsDelsPerFeature(ampsDelsPerFeature)
+                        .fusionsPerFeature(fusionsPerFeature)
+                        .characteristicsPerFeature(characteristicsPerFeature)
+                        .actionableEvents(actionableEvents).build();
             }
-        }
 
-        // We only need to resolve the actionable event in case we have extracted at least one feature interpretation.
-        Set<ActionableEvent> actionableEvents;
-        if (hotspotsPerFeature.isEmpty() && codonsPerFeature.isEmpty() && exonsPerFeature.isEmpty() && geneLevelEventsPerFeature.isEmpty()
-                && ampsDelsPerFeature.isEmpty() && fusionsPerFeature.isEmpty() && characteristicsPerFeature.isEmpty()
-                && hlaPerFeature.isEmpty()) {
-            actionableEvents = Sets.newHashSet();
-        } else {
-            actionableEvents = actionableEvidenceFactory.toActionableEvents(entry, Strings.EMPTY);
         }
-
-        return ImmutableViccExtractionResult.builder()
-                .eventInterpretation(interpretation)
-                .hotspotsPerFeature(hotspotsPerFeature)
-                .codonsPerFeature(codonsPerFeature)
-                .exonsPerFeature(exonsPerFeature)
-                .geneLevelEventsPerFeature(geneLevelEventsPerFeature)
-                .ampsDelsPerFeature(ampsDelsPerFeature)
-                .fusionsPerFeature(fusionsPerFeature)
-                .characteristicsPerFeature(characteristicsPerFeature)
-                .actionableEvents(actionableEvents)
-                .build();
+        return null;
     }
 
     @NotNull

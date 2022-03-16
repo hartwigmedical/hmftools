@@ -35,13 +35,13 @@ public class ActionableTrialFactory {
     }
 
     @NotNull
-    public List<ActionableTrial> toActionableTrials(@NotNull IclusionTrial trial) {
+    public List<ActionableTrial> toActionableTrials(@NotNull IclusionTrial trial, @NotNull String sourceEvent) {
         Set<CancerType> blacklistedCancerTypes = Sets.newHashSet();
 
         // Source event is appended later
         ImmutableActionableTrial.Builder actionableBuilder = ImmutableActionableTrial.builder()
                 .source(Knowledgebase.ICLUSION)
-                .sourceEvent(Strings.EMPTY)
+                .sourceEvent(sourceEvent)
                 .sourceUrls(Sets.newHashSet("https://trial-eye.com/hmf/" + trial.id()))
                 .treatment(trial.acronym())
                 .level(EvidenceLevel.B)
