@@ -60,7 +60,7 @@ public final class AmberQCFile {
         result.add("MeanBAF" + DELIMITER + FORMAT.format(check.meanBAF()));
         result.add("Contamination" + DELIMITER + FORMAT.format(check.contamination()));
         result.add("ConsanguinityProportion" + DELIMITER + FORMAT.format(check.consanguinityProportion()));
-        result.add("UniparentalDisomy" + DELIMITER + (check.uniparentalDisomy() != null ? check.uniparentalDisomy() : "null"));
+        result.add("UniparentalDisomy" + DELIMITER + (check.uniparentalDisomy() != null ? check.uniparentalDisomy() : "NONE"));
 
         return result;
     }

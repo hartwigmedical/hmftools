@@ -209,6 +209,7 @@ Peak memory is measure in gigabytes.
 - [3.8](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.8)
   - Added workaround for a bug in R copy_number module pcf function 
   - Fixed `NullPointerException` in tumor only mode
+  - Change QC file UniparentalDisomy prints NONE instead of null
 - [3.7](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.7)
   - Fixed `NullPointerException` when no `-ref_genome` argument is provided
 - [3.6](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.6)
