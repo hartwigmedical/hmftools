@@ -65,6 +65,9 @@ public class PonAnnotation
                 int reqSampleCount = Integer.parseInt(values[1]);
                 int reqMaxReads = Integer.parseInt(values[2]);
                 mPonFilters.put(tier, new PonFilters(reqSampleCount, reqMaxReads));
+
+                PV_LOGGER.info("loaded PON filter: tier({}) sampleCount({}) maxReads({})",
+                        tier, reqSampleCount, reqMaxReads);
             }
         }
         catch(Exception e)
