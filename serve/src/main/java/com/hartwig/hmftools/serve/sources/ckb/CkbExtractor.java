@@ -113,7 +113,7 @@ public class CkbExtractor {
 
         for (CodonAnnotation codon: codonAnnotation) {
             if (codon.gene().equals("BRAF")) {
-                codons.add(ImmutableCodonAnnotation.builder().from(codon).transcript("ENST00000288602").build());
+                codons.add(ImmutableCodonAnnotation.builder().from(codon).transcript("ENST00000646891").build());
             } else {
                 codons.add(ImmutableCodonAnnotation.builder().from(codon).build());
             }
