@@ -66,7 +66,7 @@ public class ActinExtractor {
                             .build();
 
                     extractions.add(toExtractionResult(trial,
-                            eventExtractor.extract(gene, null, type, event, entry.mutation()),
+                            eventExtractor.extract(gene, null, type, event),
                             interpretation));
                 }
             }

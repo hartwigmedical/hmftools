@@ -289,7 +289,7 @@ public final class ViccClassificationConfig {
     @NotNull
     private static Set<String> microsatelliteUnstableEvents() {
         Set<String> set = Sets.newHashSet();
-        set.add("Microsatellite Instability-High");
+        set.add("Microsatellite_Instability_High");
         return set;
     }
 

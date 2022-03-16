@@ -71,7 +71,7 @@ public class IclusionExtractorTest {
         entries.add(IclusionTestFactory.trialWithMutationsAndTumorLocation("trial",
                 Lists.newArrayList(or(Lists.newArrayList(ImmutableIclusionMutation.builder()
                         .gene("-")
-                        .name("MSI HIGH")
+                        .name("MSI_HIGH")
                         .negation(true)
                         .build()))), Lists.newArrayList(loc1)));
 

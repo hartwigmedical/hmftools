@@ -218,7 +218,7 @@ public final class IclusionClassificationConfig {
     @NotNull
     private static Set<String> microsatelliteUnstableEvents() {
         Set<String> set = Sets.newHashSet();
-        set.add("MSI HIGH");
+        set.add("MSI_HIGH");
         return set;
     }
 
@@ -230,7 +230,7 @@ public final class IclusionClassificationConfig {
     @NotNull
     private static Set<String> highTumorMutationalLoadEvents() {
         Set<String> set = Sets.newHashSet();
-        set.add("TumMutLoad HIGH");
+        set.add("TumMutLoad_HIGH");
         return set;
     }
 
@@ -252,7 +252,7 @@ public final class IclusionClassificationConfig {
     @NotNull
     private static Set<String> hrDeficiencyEvents() {
         Set<String> set = Sets.newHashSet();
-        set.add("HRD POSITIVE");
+        set.add("HRD_POSITIVE");
         return set;
     }
 
@@ -266,14 +266,14 @@ public final class IclusionClassificationConfig {
     @NotNull
     private static Set<String> hpvPositiveEvents() {
         Set<String> set = Sets.newHashSet();
-        set.add("HPV POSITIVE");
+        set.add("HPV_POSITIVE");
         return set;
     }
 
     @NotNull
     private static Set<String> ebvPositiveEvents() {
         Set<String> set = Sets.newHashSet();
-        set.add("EBV POSITIVE");
+        set.add("EBV_POSITIVE");
         return set;
     }
 

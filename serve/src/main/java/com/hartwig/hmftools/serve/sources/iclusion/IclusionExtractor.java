@@ -64,7 +64,7 @@ public class IclusionExtractor {
                     if (mutation.type() == EventType.UNKNOWN) {
                         LOGGER.warn("No event type known for '{}' on '{}'", mutation.name(), mutation.gene());
                     }
-                    eventExtractions.add(eventExtractor.extract(mutation.gene(), null, mutation.type(), mutation.name(), null));
+                    eventExtractions.add(eventExtractor.extract(mutation.gene(), null, mutation.type(), mutation.name()));
 
                     interpretations.add(ImmutableEventInterpretation.builder()
                             .source(Knowledgebase.ICLUSION)

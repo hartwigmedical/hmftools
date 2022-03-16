@@ -217,29 +217,29 @@ public class CkbClassificationConfig {
     @NotNull
     private static Set<String> microsatelliteUnstableEvents() {
         Set<String> set = Sets.newHashSet();
-        set.add("MSI high");
+        set.add("MSI_high");
         return set;
     }
 
     @NotNull
     private static Set<String> microsatelliteStableEvents() {
         Set<String> set = Sets.newHashSet();
-        set.add("MSI low");
-        set.add("MSI neg");
+        set.add("MSI_low");
+        set.add("MSI_neg");
         return set;
     }
 
     @NotNull
     private static Set<String> highTumorMutationalLoadEvents() {
         Set<String> set = Sets.newHashSet();
-        set.add("TMB high");
+        set.add("TMB_high");
         return set;
     }
 
     @NotNull
     private static Set<String> lowTumorMutationalLoadEvents() {
         Set<String> set = Sets.newHashSet();
-        set.add("TMB low");
+        set.add("TMB_low");
         return set;
     }
 

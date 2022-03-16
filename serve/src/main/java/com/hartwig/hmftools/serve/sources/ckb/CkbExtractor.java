@@ -81,7 +81,7 @@ public class CkbExtractor {
 
             String transcript = null;
 
-            EventExtractorOutput eventExtractorOutput = eventExtractor.extract(gene, transcript, entry.type(), event, null);
+            EventExtractorOutput eventExtractorOutput = eventExtractor.extract(gene, transcript, entry.type(), event);
             Set<? extends ActionableEvent> actionableEvents = ActionableEntryFactory.toActionableEntries(entry);
 
             EventInterpretation interpretation  = ImmutableEventInterpretation.builder()

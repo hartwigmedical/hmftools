@@ -116,7 +116,7 @@ public final class ViccExtractor {
                 LOGGER.warn("No gene configured for {}. Skipping!", feature);
             } else {
                 EventExtractorOutput extractorOutput =
-                        eventExtractor.extract(gene, entry.transcriptId(), feature.type(), feature.name(), null);
+                        eventExtractor.extract(gene, entry.transcriptId(), feature.type(), feature.name());
 
                 interpretation.add(ImmutableEventInterpretation.builder()
                         .source(ActionableEvidenceFactory.fromViccSource(entry.source()))

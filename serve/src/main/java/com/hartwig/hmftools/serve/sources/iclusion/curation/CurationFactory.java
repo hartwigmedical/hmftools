@@ -22,10 +22,10 @@ final class CurationFactory {
         MUTATION_MAPPINGS.put(new CurationEntry("MLL", "MLL-AF10"), new CurationEntry("KMT2A", "KMT2A-MLLT10"));
         MUTATION_MAPPINGS.put(new CurationEntry("MLL", "MLL-AF9"), new CurationEntry("KMT2A", "KMT2A-MLLT3"));
 
-        MUTATION_MAPPINGS.put(new CurationEntry("MSI", "HIGH"), new CurationEntry("-", "MSI HIGH"));
-        MUTATION_MAPPINGS.put(new CurationEntry("TumMutLoad", "HIGH"), new CurationEntry("-", "TumMutLoad HIGH"));
-        MUTATION_MAPPINGS.put(new CurationEntry("HRD", "POSITIVE"), new CurationEntry("-", "HRD POSITIVE"));
-        MUTATION_MAPPINGS.put(new CurationEntry("HPV", "POSITIVE"), new CurationEntry("-", "HPV POSITIVE"));
-        MUTATION_MAPPINGS.put(new CurationEntry("EBV", "POSITIVE"), new CurationEntry("-", "EBV POSITIVE"));
+        MUTATION_MAPPINGS.put(new CurationEntry("MSI", "HIGH"), new CurationEntry("-", "MSI_HIGH"));
+        MUTATION_MAPPINGS.put(new CurationEntry("TumMutLoad", "HIGH"), new CurationEntry("-", "TumMutLoad_HIGH"));
+        MUTATION_MAPPINGS.put(new CurationEntry("HRD", "POSITIVE"), new CurationEntry("-", "HRD_POSITIVE"));
+        MUTATION_MAPPINGS.put(new CurationEntry("HPV", "POSITIVE"), new CurationEntry("-", "HPV_POSITIVE"));
+        MUTATION_MAPPINGS.put(new CurationEntry("EBV", "POSITIVE"), new CurationEntry("-", "EBV_POSITIVE"));
     }
 }

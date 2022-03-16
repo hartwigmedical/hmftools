@@ -47,22 +47,22 @@ public final class ActinEventExtractor {
                 return Sets.newHashSet(ActinKeywords.WILDTYPE);
             }
             case MSI_SIGNATURE: {
-                return Sets.newHashSet(ActinKeywords.MSI_SIGNATURE);
+                return Sets.newHashSet(ActinKeywords.MSI_SIGNATURE + " " + entry.mutation());
             }
             case HRD_SIGNATURE: {
-                return Sets.newHashSet(ActinKeywords.HRD_SIGNATURE);
+                return Sets.newHashSet(ActinKeywords.HRD_SIGNATURE + " " + entry.mutation());
             }
             case TMB_OF_AT_LEAST_X: {
-                return Sets.newHashSet(ActinKeywords.TMB_HIGH);
+                return Sets.newHashSet(ActinKeywords.TMB_HIGH + " " + entry.mutation());
             }
             case TML_OF_AT_LEAST_X: {
-                return Sets.newHashSet(ActinKeywords.TML_HIGH);
+                return Sets.newHashSet(ActinKeywords.TML_HIGH + " " + entry.mutation());
             }
             case TML_OF_AT_MOST_X: {
-                return Sets.newHashSet(ActinKeywords.TML_LOW);
+                return Sets.newHashSet(ActinKeywords.TML_LOW + " " + entry.mutation());
             }
             case HAS_HLA_A_TYPE_X: {
-                return Sets.newHashSet(ActinKeywords.HLA_TYPE);
+                return Sets.newHashSet(ActinKeywords.HLA_TYPE + " " + entry.mutation());
             }
             default: {
                 throw new IllegalStateException("Unrecognized event: " + entry.rule());

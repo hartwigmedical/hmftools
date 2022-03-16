@@ -50,7 +50,7 @@ public class CkbExtractorTest {
                 "cancer",
                 "A",
                 "DOID:162"));
-        ckbEntries.add(CkbTestFactory.createEntry("-", "MSI high", "MSI high", "sensitive", "Actionable", "AB", "cancer", "A", "DOID:162"));
+        ckbEntries.add(CkbTestFactory.createEntry("-", "MSI_high", "MSI_high", "sensitive", "Actionable", "AB", "cancer", "A", "DOID:162"));
         ckbEntries.add(CkbTestFactory.createEntry("ALk",
                 "EML4-ALK",
                 "EML4-ALK Fusion",

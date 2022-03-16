@@ -34,7 +34,7 @@ public class ViccExtractorTest {
         entries.add(ViccTestFactory.testEntryWithGeneEventAndAssociation("BRAF", "V600", association));
         entries.add(ViccTestFactory.testEntryWithGeneEventAndAssociation("BRAF", "Exon 3 deletion", association));
         entries.add(ViccTestFactory.testEntryWithGeneEventAndAssociation("ALK", "EML4-ALK Fusion", association));
-        entries.add(ViccTestFactory.testEntryWithGeneEventAndAssociation("-", "Microsatellite Instability-High", association));
+        entries.add(ViccTestFactory.testEntryWithGeneEventAndAssociation("-", "Microsatellite_Instability_High", association));
 
         ExtractionResult result = extractor.extract(entries);
         assertEquals(1, result.knownHotspots().size());
