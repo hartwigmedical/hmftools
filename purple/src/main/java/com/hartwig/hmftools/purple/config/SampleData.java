@@ -40,9 +40,9 @@ public class SampleData
         FittingSomaticVariants = Lists.newArrayList();
     }
 
-    public void loadSomatics(final String somaticVcf, final ReferenceData referenceData, boolean tumorOnlyMode)
+    public void loadSomatics(final String somaticVcf, final ReferenceData referenceData)
     {
-        if(somaticVcf.isEmpty() || tumorOnlyMode)
+        if(somaticVcf.isEmpty())
             return;
 
         final SomaticVariantFactory factory = new SomaticVariantFactory(new PassingVariantFilter(), new SGTFilter());

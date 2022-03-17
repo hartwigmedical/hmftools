@@ -30,7 +30,7 @@ import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.purple.config.MiscConfig;
+import com.hartwig.hmftools.purple.config.FittingConfig;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegCopyNumberChangeFactory;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidy;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
@@ -61,7 +61,7 @@ public class RecoverStructuralVariants implements Closeable
     private int mCounter = 0;
 
     public RecoverStructuralVariants(
-            final MiscConfig config, final PurityAdjuster purityAdjuster, final String recoveryVCF, final List<PurpleCopyNumber> allCopyNumbers)
+            final FittingConfig config, final PurityAdjuster purityAdjuster, final String recoveryVCF, final List<PurpleCopyNumber> allCopyNumbers)
     {
         this(purityAdjuster,
                 new RecoveredVariantFactory(purityAdjuster, recoveryVCF, config.RecoveryMinMateQualScore, config.RecoveryMinSglQualScore),

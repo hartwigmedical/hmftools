@@ -97,35 +97,23 @@ public class FittedPurityFactory
     static boolean useRegionToFitPurity(boolean tumorOnlyMode, final CobaltChromosomes cobaltChromosomes, final ObservedRegion region)
     {
         if(region.bafCount() <= 0)
-        {
             return false;
-        }
 
         if(!positiveOrZero(region.observedTumorRatio()))
-        {
             return false;
-        }
 
         if(region.germlineStatus() != GermlineStatus.DIPLOID)
-        {
             return false;
-        }
 
         if(Doubles.greaterThan(region.observedTumorRatio(), MAX_TUMOR_RATIO_TO_FIT))
-        {
             return false;
-        }
 
         if(!cobaltChromosomes.contains(region.chromosome()))
-        {
             return false;
-        }
 
         CobaltChromosome chromosome = cobaltChromosomes.get(region.chromosome());
         if(tumorOnlyMode && chromosome.isAllosome())
-        {
             return false;
-        }
 
         return chromosome.isNormal() && chromosome.isDiploid();
     }

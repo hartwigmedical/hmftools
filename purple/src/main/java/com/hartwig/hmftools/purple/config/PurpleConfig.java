@@ -20,14 +20,13 @@ public class PurpleConfig
     public final String Version;
     public final String OutputDir;
 
-    public final boolean TumorOnlyMode;
     public final boolean RunDrivers;
     public final boolean DriversOnly;
 
     public final FittingConfig Fitting;
     public final SomaticFitConfig SomaticFitting;
-    public final MiscConfig Misc;
     public final ChartConfig Charting;
+    public final String TargetRegionsBed;
 
     private boolean mIsValid;
 
@@ -37,6 +36,7 @@ public class PurpleConfig
     private static final String OUTPUT_DIRECTORY = "output_dir";
     private static final String AMBER = "amber";
     private static final String COBALT = "cobalt";
+    private static final String TARGET_REGION_BED = "target_regions_bed";
 
     public static String RUN_DRIVERS = "run_drivers";
     public static String DRIVERS_ONLY = "drivers_only";
@@ -49,12 +49,13 @@ public class PurpleConfig
 
         final StringJoiner missingJoiner = new StringJoiner(", ");
 
-        RunDrivers = cmd.hasOption(RUN_DRIVERS);
-        DriversOnly = cmd.hasOption(DRIVERS_ONLY);
-
-        TumorId = parameter(cmd, TUMOR_SAMPLE, missingJoiner);
+        String tumorId = cmd.getOptionValue(TUMOR_SAMPLE);
         ReferenceId = cmd.getOptionValue(REF_SAMPLE);
-        TumorOnlyMode = ReferenceId == null;
+
+        TumorId = tumorId != null ? tumorId : ReferenceId;
+
+        if(TumorId == null)
+            missingJoiner.add(TUMOR_SAMPLE);
 
         String sampleDir = "";
 
@@ -85,53 +86,62 @@ public class PurpleConfig
             PPL_LOGGER.error("unable to write directory " + OutputDir);
         }
 
-        if(TumorOnlyMode)
-        {
-            PPL_LOGGER.info("tumor({}) only", TumorId);
-        }
-        else
-        {
-            PPL_LOGGER.info("reference({}) tumor({})", ReferenceId, TumorId);
-        }
-
         PPL_LOGGER.info("output directory: {}", OutputDir);
 
         Charting = new ChartConfig(cmd, OutputDir);
         Fitting = new FittingConfig(cmd);
         SomaticFitting = new SomaticFitConfig(cmd);
-        Misc = new MiscConfig(cmd);
+        TargetRegionsBed = cmd.getOptionValue(TARGET_REGION_BED);
+
+        RunDrivers = cmd.hasOption(RUN_DRIVERS);
+        DriversOnly = cmd.hasOption(DRIVERS_ONLY);
+
+        PPL_LOGGER.info("reference({}) tumor({}) {}",
+                ReferenceId != null ? ReferenceId : "NONE", TumorId != null ? TumorId : "NONE",
+                TargetRegionsBed != null ? "running on target-regions only" : "");
     }
 
     public boolean isValid() { return mIsValid; }
 
+    public boolean tumorOnlyMode() { return ReferenceId == null; }
+    public boolean germlineMode() { return TumorId.equals(ReferenceId); }
+    public boolean targetRegionsMode() { return TargetRegionsBed != null; }
+
+    public boolean fitWithSomatics() { return !tumorOnlyMode() && !germlineMode() && !targetRegionsMode(); }
+
     public static void addOptions(@NotNull Options options)
     {
-        options.addOption(REF_SAMPLE, true, "Name of the reference sample. This should correspond to the value used in AMBER and COBALT.");
-        options.addOption(TUMOR_SAMPLE, true, "Name of the tumor sample. This should correspond to the value used in AMBER and COBALT.");
+        options.addOption(
+                REF_SAMPLE, true,
+                "Name of the reference sample. This should correspond to the value used in Amber and Cobalt");
 
-        options.addOption(OUTPUT_DIRECTORY,
-                true,
+        options.addOption(
+                TUMOR_SAMPLE, true,
+                "Name of the tumor sample. This should correspond to the value used in Amber and Cobalt");
+
+        options.addOption(
+                OUTPUT_DIRECTORY, true,
                 "Path to the output directory. Required if <run_dir> not set, otherwise defaults to run_dir/purple/");
 
-        options.addOption(SAMPLE_DIR,
-                true,
-                "Path to the sample's directory where expect to find cobalt, amber, gridss etc directories");
+        options.addOption(
+                SAMPLE_DIR, true,
+                "Path to the sample's directory where expect to find Cobalt, Amber, Gripss etc directories");
 
-        options.addOption(COBALT,
-                true,
-                "Path to COBALT output directory. Required if <run_dir> not set, otherwise defaults to <run_dir>/cobalt.");
+        options.addOption(
+                COBALT, true,
+                "Path to Cobalt output directory. Required if <run_dir> not set, otherwise defaults to <run_dir>/cobalt");
 
-        options.addOption(AMBER,
-                true,
-                "Path to AMBER output directory. Required if <run_dir> not set, otherwise defaults to <run_dir>/amber");
+        options.addOption(
+                AMBER, true,
+                "Path to Amber output directory. Required if <run_dir> not set, otherwise defaults to <run_dir>/amber");
 
         options.addOption(RUN_DRIVERS, false, "Run driver routine");
         options.addOption(DRIVERS_ONLY, false, "Only run the driver routine");
+        options.addOption(TARGET_REGION_BED, true, "Target regions BED file");
 
         addDatabaseCmdLineArgs(options);
         FittingConfig.addOptions(options);
         SomaticFitConfig.addOptions(options);
-        MiscConfig.addOptions(options);
         ReferenceData.addOptions(options);
         ChartConfig.addOptions(options);
         SampleDataFiles.addOptions(options);

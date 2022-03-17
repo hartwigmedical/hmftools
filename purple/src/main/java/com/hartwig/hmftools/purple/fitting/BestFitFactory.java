@@ -109,7 +109,7 @@ public class BestFitFactory
             return builder.fit(lowestScoreFit).method(FittedPurityMethod.NORMAL).build();
         }
 
-        boolean useSomatics = !mConfig.TumorOnlyMode && exceedsPuritySpread && highlyDiploid;
+        boolean useSomatics = mConfig.fitWithSomatics() && exceedsPuritySpread && highlyDiploid;
 
         if(!useSomatics)
             return builder.fit(lowestScoreFit).method(FittedPurityMethod.NORMAL).build();

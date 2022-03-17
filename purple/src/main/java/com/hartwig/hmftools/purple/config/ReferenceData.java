@@ -136,16 +136,19 @@ public class ReferenceData
                 PPL_LOGGER.error(DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION + " is a mandatory argument when running drivers");
             }
 
-            if(somaticHotspotVcf.isEmpty())
+            if(!config.germlineMode())
             {
-                mIsValid = false;
-                PPL_LOGGER.error(SOMATIC_HOTSPOT + " is a mandatory argument when running drivers");
-            }
+                if(somaticHotspotVcf.isEmpty())
+                {
+                    mIsValid = false;
+                    PPL_LOGGER.error(SOMATIC_HOTSPOT + " is a mandatory argument when running drivers");
+                }
 
-            if(!new File(somaticHotspotVcf).exists())
-            {
-                mIsValid = false;
-                PPL_LOGGER.error("Unable to open " + SOMATIC_HOTSPOT + " file " + somaticHotspotVcf);
+                if(!new File(somaticHotspotVcf).exists())
+                {
+                    mIsValid = false;
+                    PPL_LOGGER.error("Unable to open " + SOMATIC_HOTSPOT + " file " + somaticHotspotVcf);
+                }
             }
 
             final List<DriverGene> driverGenes = Lists.newArrayList();

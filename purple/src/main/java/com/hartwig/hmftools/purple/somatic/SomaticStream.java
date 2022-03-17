@@ -170,7 +170,7 @@ public class SomaticStream implements Consumer<VariantContext>
 
             for(VariantContext context : vcfReader)
             {
-                if(mConfig.TumorOnlyMode && context.isFiltered())
+                if(mConfig.tumorOnlyMode() && context.isFiltered())
                     continue;
 
                 enricher.accept(context);
@@ -213,7 +213,7 @@ public class SomaticStream implements Consumer<VariantContext>
 
         // expect only pass or PON to be loaded into Purple
         // in tumor-only mode, the PON variants should be dropped
-        boolean writeToVcf = !mConfig.TumorOnlyMode || isPass;
+        boolean writeToVcf = !mConfig.tumorOnlyMode() || isPass;
 
         if(writeToVcf)
             mVcfWriter.add(context);

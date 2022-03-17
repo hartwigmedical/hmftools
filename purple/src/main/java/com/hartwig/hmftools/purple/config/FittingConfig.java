@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.purple.config;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.DEFAULT_RECOVERY_MIN_SGL_QUAL_SCORE;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -23,6 +25,9 @@ public class FittingConfig
     public final double PloidyPenaltyMajorAlleleSubOneMultiplier;
     public final double PloidyPenaltyMajorAlleleSubOneAdditional;
     public final double PloidyPenaltyBaselineDeviation;
+
+    public final int RecoveryMinMateQualScore;
+    public final int RecoveryMinSglQualScore;
 
     private static final String MIN_PURITY = "min_purity";
     private static final String MAX_PURITY = "max_purity";
@@ -55,6 +60,11 @@ public class FittingConfig
     double PLOIDY_PENALTY_SUB_MIN_ADDITIONAL_DEFAULT = 1.5;
     double PLOIDY_PENALTY_MIN_DEFAULT = 0.1;
 
+    // SV recovery
+    public static final String CFG_MIN_MATE_QUAL_SCORE = "recovery_mate_min_qual";
+    public static final String CFG_MIN_SGL_QUAL_SCORE = "recovery_sgl_min_qual";
+
+
     public FittingConfig(@NotNull final CommandLine cmd)
     {
         MinPurity = getConfigValue(cmd, MIN_PURITY, MIN_PURITY_DEFAULT);
@@ -82,6 +92,9 @@ public class FittingConfig
                 getConfigValue(cmd, PLOIDY_PENALTY_SUB_MIN_ADDITIONAL, PLOIDY_PENALTY_SUB_MIN_ADDITIONAL_DEFAULT);
 
         PloidyPenaltyBaselineDeviation = getConfigValue(cmd, PLOIDY_PENALTY_MIN, PLOIDY_PENALTY_MIN_DEFAULT);
+
+        RecoveryMinMateQualScore = getConfigValue(cmd, CFG_MIN_MATE_QUAL_SCORE, DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE);
+        RecoveryMinSglQualScore = getConfigValue(cmd, CFG_MIN_SGL_QUAL_SCORE, DEFAULT_RECOVERY_MIN_SGL_QUAL_SCORE);
     }
 
     public static void addOptions(@NotNull Options options)
@@ -109,5 +122,13 @@ public class FittingConfig
         options.addOption(PLOIDY_PENALTY_SUB_MIN_ADDITIONAL, true, "Additional penalty to apply to major allele < 1 or minor allele < 0");
         options.addOption(PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER, true, "Penalty multiplier applied to major allele < 1 ");
         options.addOption(PLOIDY_PENALTY_MIN, true, "Minimum ploidy penalty");
+
+        options.addOption(
+                CFG_MIN_MATE_QUAL_SCORE, true,
+                "SV recovery non-SGL min qual score (default " + DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE + ")");
+
+        options.addOption(
+                CFG_MIN_SGL_QUAL_SCORE, true,
+                "SV recovery SGL min qual score (default " + DEFAULT_RECOVERY_MIN_SGL_QUAL_SCORE + ")");
     }
 }
