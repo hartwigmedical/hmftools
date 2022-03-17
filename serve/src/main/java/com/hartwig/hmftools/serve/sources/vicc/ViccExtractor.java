@@ -70,32 +70,37 @@ public final class ViccExtractor {
     }
 
     @NotNull
+    private static ExtractionResult toExtractionResult(ViccExtractionResult resultsPerEntry, @NotNull ViccEntry entry) {
+        // Assume all VICC knowledgebases are on the same ref genome version
+        ImmutableExtractionResult.Builder outputBuilder = ImmutableExtractionResult.builder()
+                .eventInterpretations(Lists.newArrayList(resultsPerEntry.eventInterpretations()))
+                .refGenomeVersion(Knowledgebase.VICC_CGI.refGenomeVersion())
+                .knownHotspots(convertToHotspots(resultsPerEntry, entry))
+                .knownCodons(convertToCodons(resultsPerEntry, entry))
+                .knownExons(convertToExons(resultsPerEntry, entry))
+                .knownCopyNumbers(convertToKnownAmpsDels(resultsPerEntry, entry))
+                .knownFusionPairs(convertToKnownFusions(resultsPerEntry, entry));
+
+        addActionability(outputBuilder, resultsPerEntry);
+
+        return outputBuilder.build();
+    }
+
+    @NotNull
     public ExtractionResult extract(@NotNull List<ViccEntry> entries) {
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = Maps.newHashMap();
+        List<ExtractionResult> extractions = Lists.newArrayList();
 
         ProgressTracker tracker = new ProgressTracker("VICC", entries.size());
         for (ViccEntry entry : entries) {
             resultsPerEntry.put(entry, extractSingleEntry(entry));
+            extractions.add(toExtractionResult(extractSingleEntry(entry), entry));
             tracker.update();
         }
 
         actionableEvidenceFactory.evaluateCuration();
-
         ViccUtil.printExtractionResults(resultsPerEntry);
-
-        // Assume all VICC knowledgebases are on the same ref genome version
-        ImmutableExtractionResult.Builder outputBuilder = ImmutableExtractionResult.builder()
-                .eventInterpretations(convertToEventInterpretations(resultsPerEntry))
-                .refGenomeVersion(Knowledgebase.VICC_CGI.refGenomeVersion())
-                .knownHotspots(convertToHotspots(resultsPerEntry))
-                .knownCodons(convertToCodons(resultsPerEntry))
-                .knownExons(convertToExons(resultsPerEntry))
-                .knownCopyNumbers(convertToKnownAmpsDels(resultsPerEntry))
-                .knownFusionPairs(convertToKnownFusions(resultsPerEntry));
-
-        addActionability(outputBuilder, resultsPerEntry.values());
-
-        return ExtractionFunctions.consolidateActionableEvents(outputBuilder.build());
+        return ExtractionFunctions.merge(extractions);
     }
 
     @Nullable
@@ -167,7 +172,8 @@ public final class ViccExtractor {
                         .fusionsPerFeature(fusionsPerFeature)
                         .characteristicsPerFeature(characteristicsPerFeature)
                         .HLAPerFeature(hlaPerFeature)
-                        .actionableEvents(actionableEvents).build();
+                        .actionableEvents(actionableEvents)
+                        .build();
             }
 
         }
@@ -175,32 +181,20 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    private static List<EventInterpretation> convertToEventInterpretations(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
-        List<EventInterpretation> interpretations = Lists.newArrayList();
-        for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
-            interpretations = entry.getValue().eventInterpretations();
-        }
-        return interpretations;
-    }
-
-    @NotNull
-    private static Set<KnownHotspot> convertToHotspots(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
+    private static Set<KnownHotspot> convertToHotspots(@NotNull ViccExtractionResult resultsPerEntry, @NotNull ViccEntry entry) {
         ViccProteinAnnotationExtractor proteinExtractor = new ViccProteinAnnotationExtractor();
         Set<KnownHotspot> hotspots = Sets.newHashSet();
-        for (Map.Entry<ViccEntry, ViccExtractionResult> entryResult : resultsPerEntry.entrySet()) {
-            ViccEntry entry = entryResult.getKey();
-            Knowledgebase source = ViccSource.toKnowledgebase(entry.source());
-            for (Map.Entry<Feature, List<VariantHotspot>> featureResult : entryResult.getValue().hotspotsPerFeature().entrySet()) {
-                Feature feature = featureResult.getKey();
-                for (VariantHotspot hotspot : featureResult.getValue()) {
-                    hotspots.add(ImmutableKnownHotspot.builder()
-                            .from(hotspot)
-                            .addSources(source)
-                            .gene(feature.geneSymbol())
-                            .transcript(entry.transcriptId())
-                            .proteinAnnotation(proteinExtractor.apply(feature.name()))
-                            .build());
-                }
+        Knowledgebase source = ViccSource.toKnowledgebase(entry.source());
+        for (Map.Entry<Feature, List<VariantHotspot>> featureResult : resultsPerEntry.hotspotsPerFeature().entrySet()) {
+            Feature feature = featureResult.getKey();
+            for (VariantHotspot hotspot : featureResult.getValue()) {
+                hotspots.add(ImmutableKnownHotspot.builder()
+                        .from(hotspot)
+                        .addSources(source)
+                        .gene(feature.geneSymbol())
+                        .transcript(entry.transcriptId())
+                        .proteinAnnotation(proteinExtractor.apply(feature.name()))
+                        .build());
             }
         }
 
@@ -208,14 +202,13 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    private static Set<KnownCodon> convertToCodons(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
+    private static Set<KnownCodon> convertToCodons(@NotNull ViccExtractionResult resultsPerEntry, @NotNull ViccEntry entry) {
         Set<KnownCodon> codons = Sets.newHashSet();
-        for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
-            Knowledgebase source = ViccSource.toKnowledgebase(entry.getKey().source());
-            for (List<CodonAnnotation> annotations : entry.getValue().codonsPerFeature().values()) {
-                for (CodonAnnotation annotation : annotations) {
-                    codons.add(ImmutableKnownCodon.builder().annotation(annotation).addSources(source).build());
-                }
+
+        Knowledgebase source = ViccSource.toKnowledgebase(entry.source());
+        for (List<CodonAnnotation> annotations : resultsPerEntry.codonsPerFeature().values()) {
+            for (CodonAnnotation annotation : annotations) {
+                codons.add(ImmutableKnownCodon.builder().annotation(annotation).addSources(source).build());
             }
         }
 
@@ -223,14 +216,13 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    private static Set<KnownExon> convertToExons(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
+    private static Set<KnownExon> convertToExons(@NotNull ViccExtractionResult resultsPerEntry, @NotNull ViccEntry entry) {
         Set<KnownExon> exons = Sets.newHashSet();
-        for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
-            Knowledgebase source = ViccSource.toKnowledgebase(entry.getKey().source());
-            for (List<ExonAnnotation> annotations : entry.getValue().exonsPerFeature().values()) {
-                for (ExonAnnotation annotation : annotations) {
-                    exons.add(ImmutableKnownExon.builder().annotation(annotation).addSources(source).build());
-                }
+
+        Knowledgebase source = ViccSource.toKnowledgebase(entry.source());
+        for (List<ExonAnnotation> annotations : resultsPerEntry.exonsPerFeature().values()) {
+            for (ExonAnnotation annotation : annotations) {
+                exons.add(ImmutableKnownExon.builder().annotation(annotation).addSources(source).build());
             }
         }
 
@@ -238,50 +230,42 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    private static Set<KnownCopyNumber> convertToKnownAmpsDels(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
+    private static Set<KnownCopyNumber> convertToKnownAmpsDels(@NotNull ViccExtractionResult resultsPerEntry, @NotNull ViccEntry entry) {
         Set<KnownCopyNumber> copyNumbers = Sets.newHashSet();
-        for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
-            Knowledgebase source = ViccSource.toKnowledgebase(entry.getKey().source());
-            for (KnownCopyNumber copyNumber : entry.getValue().ampsDelsPerFeature().values()) {
-                copyNumbers.add(ImmutableKnownCopyNumber.builder().from(copyNumber).addSources(source).build());
-            }
+        Knowledgebase source = ViccSource.toKnowledgebase(entry.source());
+        for (KnownCopyNumber copyNumber : resultsPerEntry.ampsDelsPerFeature().values()) {
+            copyNumbers.add(ImmutableKnownCopyNumber.builder().from(copyNumber).addSources(source).build());
         }
 
         return CopyNumberFunctions.consolidate(copyNumbers);
     }
 
     @NotNull
-    private static Set<KnownFusionPair> convertToKnownFusions(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
+    private static Set<KnownFusionPair> convertToKnownFusions(@NotNull ViccExtractionResult resultsPerEntry, @NotNull ViccEntry entry) {
         Set<KnownFusionPair> fusions = Sets.newHashSet();
-        for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
-            Knowledgebase source = ViccSource.toKnowledgebase(entry.getKey().source());
-            for (KnownFusionPair fusionPair : entry.getValue().fusionsPerFeature().values()) {
-                fusions.add(ImmutableKnownFusionPair.builder().from(fusionPair).addSources(source).build());
-            }
+        Knowledgebase source = ViccSource.toKnowledgebase(entry.source());
+        for (KnownFusionPair fusionPair : resultsPerEntry.fusionsPerFeature().values()) {
+            fusions.add(ImmutableKnownFusionPair.builder().from(fusionPair).addSources(source).build());
         }
 
         return FusionFunctions.consolidate(fusions);
     }
 
-    private static void addActionability(@NotNull ImmutableExtractionResult.Builder outputBuilder,
-            @NotNull Iterable<ViccExtractionResult> results) {
+    private static void addActionability(@NotNull ImmutableExtractionResult.Builder outputBuilder, @NotNull ViccExtractionResult result) {
         Set<ActionableHotspot> actionableHotspots = Sets.newHashSet();
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
         Set<ActionableGene> actionableGenes = Sets.newHashSet();
         Set<ActionableFusion> actionableFusions = Sets.newHashSet();
         Set<ActionableCharacteristic> actionableCharacteristics = Sets.newHashSet();
 
-        for (ViccExtractionResult result : results) {
-            actionableHotspots.addAll(extractActionableHotspots(result.actionableEvents(), result.hotspotsPerFeature().values()));
-            actionableRanges.addAll(extractActionableRanges(result.actionableEvents(), result.codonsPerFeature().values()));
-            actionableRanges.addAll(extractActionableRanges(result.actionableEvents(), result.exonsPerFeature().values()));
-            actionableGenes.addAll(extractActionableAmpsDels(result.actionableEvents(), result.ampsDelsPerFeature().values()));
-            actionableGenes.addAll(extractActionableGeneLevelEvents(result.actionableEvents(),
-                    result.geneLevelEventsPerFeature().values()));
-            actionableFusions.addAll(extractActionableFusions(result.actionableEvents(), result.fusionsPerFeature().values()));
-            actionableCharacteristics.addAll(extractActionableCharacteristics(result.actionableEvents(),
-                    result.characteristicsPerFeature().values()));
-        }
+        actionableHotspots.addAll(extractActionableHotspots(result.actionableEvents(), result.hotspotsPerFeature().values()));
+        actionableRanges.addAll(extractActionableRanges(result.actionableEvents(), result.codonsPerFeature().values()));
+        actionableRanges.addAll(extractActionableRanges(result.actionableEvents(), result.exonsPerFeature().values()));
+        actionableGenes.addAll(extractActionableAmpsDels(result.actionableEvents(), result.ampsDelsPerFeature().values()));
+        actionableGenes.addAll(extractActionableGeneLevelEvents(result.actionableEvents(), result.geneLevelEventsPerFeature().values()));
+        actionableFusions.addAll(extractActionableFusions(result.actionableEvents(), result.fusionsPerFeature().values()));
+        actionableCharacteristics.addAll(extractActionableCharacteristics(result.actionableEvents(),
+                result.characteristicsPerFeature().values()));
 
         outputBuilder.actionableHotspots(actionableHotspots);
         outputBuilder.actionableRanges(actionableRanges);
