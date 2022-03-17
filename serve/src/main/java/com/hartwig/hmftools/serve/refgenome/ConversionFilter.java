@@ -38,6 +38,7 @@ class ConversionFilter {
                 .actionableRanges(filterActionableRanges(extractionResult.actionableRanges()))
                 .actionableGenes(filterActionableGenes(extractionResult.actionableGenes()))
                 .actionableFusions(filterActionableFusions(extractionResult.actionableFusions()))
+                .eventInterpretations(extractionResult.eventInterpretations())
                 .build();
     }
 
