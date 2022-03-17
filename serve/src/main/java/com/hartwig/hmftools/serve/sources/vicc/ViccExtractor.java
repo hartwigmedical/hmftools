@@ -85,6 +85,7 @@ public final class ViccExtractor {
         }
 
         actionableEvidenceFactory.evaluateCuration();
+        ViccUtil.printExtractionResults(resultsPerEntry);
         return ExtractionFunctions.merge(extractions);
     }
 
