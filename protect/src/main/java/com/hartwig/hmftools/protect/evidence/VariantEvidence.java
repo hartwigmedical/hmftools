@@ -74,19 +74,23 @@ public class VariantEvidence {
         List<ProtectEvidence> evidences = Lists.newArrayList();
         for (ActionableHotspot hotspot : hotspots) {
             if (hotspotMatch(variant, hotspot)) {
-                evidences.add(evidence(variant, germline, mayReport, hotspot));
+                evidences.add(evidence(variant, germline, mayReport, hotspot, driverInterpretation));
             }
         }
 
         for (ActionableRange range : ranges) {
             if (rangeMatch(variant, range)) {
-                evidences.add(evidence(variant, germline, mayReport, range));
+                evidences.add(evidence(variant, germline, mayReport, range, driverInterpretation));
             }
         }
 
         for (ActionableGene gene : genes) {
             if (geneMatch(variant, gene)) {
-                evidences.add(evidence(variant, germline, mayReport && driverInterpretation == DriverInterpretation.HIGH, gene));
+                evidences.add(evidence(variant,
+                        germline,
+                        mayReport && driverInterpretation == DriverInterpretation.HIGH,
+                        gene,
+                        driverInterpretation));
             }
         }
 
@@ -94,12 +98,14 @@ public class VariantEvidence {
     }
 
     @NotNull
-    private ProtectEvidence evidence(@NotNull Variant variant, boolean germline, boolean report, @NotNull ActionableEvent actionable) {
+    private ProtectEvidence evidence(@NotNull Variant variant, boolean germline, boolean report, @NotNull ActionableEvent actionable,
+            @NotNull DriverInterpretation driverInterpretation) {
         return personalizedEvidenceFactory.evidenceBuilder(actionable)
                 .gene(variant.gene())
                 .event(ProtectEventGenerator.variantEvent(variant))
                 .germline(germline)
                 .reported(report)
+                .eventIsHighDriver(EvidenceDriverLikelihood.interpretVariant(driverInterpretation))
                 .build();
     }
 

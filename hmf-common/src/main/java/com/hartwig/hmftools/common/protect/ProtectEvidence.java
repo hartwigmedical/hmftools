@@ -23,6 +23,9 @@ public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
     @NotNull
     public abstract String event();
 
+    @Nullable
+    public abstract Boolean eventIsHighDriver();
+
     @NotNull
     public abstract ProtectEvidenceType evidenceType();
 

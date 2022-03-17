@@ -61,6 +61,7 @@ public final class ProtectEvidenceFile {
         return new StringJoiner(FIELD_DELIMITER).add("gene")
                 .add("event")
                 .add("evidenceType")
+                .add("eventIsHighDriver")
                 .add("rangeRank")
                 .add("germline")
                 .add("reported")
@@ -96,6 +97,7 @@ public final class ProtectEvidenceFile {
                 .add(evidence.event())
                 .add(evidence.evidenceType().toString())
                 .add(nullToEmpty(evidence.rangeRank()))
+                .add(nullToEmpty(evidence.eventIsHighDriver()))
                 .add(String.valueOf(evidence.germline()))
                 .add(String.valueOf(evidence.reported()))
                 .add(evidence.treatment())
@@ -107,6 +109,11 @@ public final class ProtectEvidenceFile {
                 .add(evidence.sourceEvent())
                 .add(sourceUrlJoiner.toString())
                 .toString();
+    }
+
+    @NotNull
+    private static String nullToEmpty(@Nullable Boolean booleanValue) {
+        return booleanValue != null ? Boolean.toString(booleanValue) : Strings.EMPTY;
     }
 
     @NotNull
@@ -129,12 +136,16 @@ public final class ProtectEvidenceFile {
         String sourceEventField = values[fields.get("sourceEvent")];
         String sourceEvent = !sourceEventField.isEmpty() ? sourceEventField : Strings.EMPTY;
 
+        String eventIsHighDriverField = values[fields.get("eventIsHighDriver")];
+        Boolean eventIsHighDriver = !eventIsHighDriverField.isEmpty() ? Boolean.parseBoolean(eventIsHighDriverField) : null;
+
         String sourceUrlField = values[fields.get("sourceUrls")];
         Set<String> sourceUrlurls = !sourceUrlField.isEmpty() ? Sets.newHashSet(sourceUrlField.split(SUBFIELD_DELIMITER)) : Sets.newHashSet();
 
         return ImmutableProtectEvidence.builder()
                 .gene(emptyToNullString(values[fields.get("gene")]))
                 .event(values[fields.get("event")])
+                .eventIsHighDriver(eventIsHighDriver)
                 .evidenceType(ProtectEvidenceType.valueOf(values[fields.get("evidenceType")]))
                 .rangeRank(emptyToNullInteger(values[fields.get("rangeRank")]))
                 .germline(Boolean.parseBoolean(values[fields.get("germline")]))

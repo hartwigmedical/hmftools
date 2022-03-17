@@ -330,6 +330,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -344,6 +345,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -358,6 +360,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -372,6 +375,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.EXON_MUTATION)
                 .rangeRank(1)
                 .germline(false)
@@ -387,6 +391,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.CODON_MUTATION)
                 .rangeRank(600)
                 .germline(false)
@@ -404,6 +409,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -418,6 +424,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("PTEN")
                 .event("partial loss")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.DELETION)
                 .germline(false)
                 .reported(true)
@@ -442,6 +449,7 @@ public final class ExampleAnalysisTestFactory {
 
         trialsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -456,6 +464,7 @@ public final class ExampleAnalysisTestFactory {
 
         trialsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -470,6 +479,7 @@ public final class ExampleAnalysisTestFactory {
 
         trialsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -484,6 +494,7 @@ public final class ExampleAnalysisTestFactory {
 
         trialsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -498,6 +509,7 @@ public final class ExampleAnalysisTestFactory {
 
         trialsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -512,6 +524,7 @@ public final class ExampleAnalysisTestFactory {
 
         trialsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -525,6 +538,7 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         trialsOnLabel.add(onLabelBuilder.event("High tumor mutation load")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.SIGNATURE)
                 .germline(false)
                 .reported(true)
@@ -539,6 +553,7 @@ public final class ExampleAnalysisTestFactory {
 
         trialsOnLabel.add(onLabelBuilder.event("High tumor mutation load")
                 .evidenceType(ProtectEvidenceType.SIGNATURE)
+                .eventIsHighDriver(true)
                 .germline(false)
                 .reported(true)
                 .treatment("DRUP")
@@ -552,6 +567,7 @@ public final class ExampleAnalysisTestFactory {
 
         trialsOnLabel.add(onLabelBuilder.event("High tumor mutation load")
                 .evidenceType(ProtectEvidenceType.SIGNATURE)
+                .eventIsHighDriver(true)
                 .germline(false)
                 .reported(true)
                 .treatment("KEYNOTE-158")
@@ -565,6 +581,7 @@ public final class ExampleAnalysisTestFactory {
 
         trialsOnLabel.add(onLabelBuilder.gene("PTEN")
                 .evidenceType(ProtectEvidenceType.DELETION)
+                .eventIsHighDriver(true)
                 .event("partial loss")
                 .germline(false)
                 .reported(true)
@@ -589,6 +606,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -598,11 +616,13 @@ public final class ExampleAnalysisTestFactory {
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
                 .sourceEvent(Strings.EMPTY)
                 .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/13054"))
-                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/19603024", "http://www.ncbi.nlm.nih.gov/pubmed/19571295"))
+                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/19603024",
+                        "http://www.ncbi.nlm.nih.gov/pubmed/19571295"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -612,11 +632,13 @@ public final class ExampleAnalysisTestFactory {
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
                 .sourceEvent(Strings.EMPTY)
                 .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/13054"))
-                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/18682506", "http://www.ncbi.nlm.nih.gov/pubmed/21882184"))
+                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/18682506",
+                        "http://www.ncbi.nlm.nih.gov/pubmed/21882184"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -636,6 +658,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -650,6 +673,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -664,6 +688,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -678,6 +703,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -692,6 +718,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -709,6 +736,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -723,6 +751,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -732,11 +761,13 @@ public final class ExampleAnalysisTestFactory {
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
                 .sourceEvent(Strings.EMPTY)
                 .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/13054"))
-                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/18682506", "http://www.ncbi.nlm.nih.gov/pubmed/21882184"))
+                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/18682506",
+                        "http://www.ncbi.nlm.nih.gov/pubmed/21882184"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.CODON_MUTATION)
                 .rangeRank(600)
                 .germline(false)
@@ -752,6 +783,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
                 .event("partial loss")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.DELETION)
                 .germline(false)
                 .reported(true)
@@ -761,11 +793,13 @@ public final class ExampleAnalysisTestFactory {
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CGI))
                 .sourceEvent(Strings.EMPTY)
                 .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/13054"))
-                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/21163703", "http://www.ncbi.nlm.nih.gov/pubmed/19398573"))
+                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/21163703",
+                        "http://www.ncbi.nlm.nih.gov/pubmed/19398573"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
                 .event("partial loss")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.DELETION)
                 .germline(false)
                 .reported(true)
@@ -780,6 +814,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
                 .event("partial loss")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.DELETION)
                 .germline(false)
                 .reported(true)
@@ -794,6 +829,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
                 .event("partial loss")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.DELETION)
                 .germline(false)
                 .reported(true)
@@ -808,6 +844,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
                 .event("partial loss")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.DELETION)
                 .germline(false)
                 .reported(true)
@@ -817,7 +854,8 @@ public final class ExampleAnalysisTestFactory {
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
                 .sourceEvent(Strings.EMPTY)
                 .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/13054"))
-                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/24387334", "http://www.ncbi.nlm.nih.gov/pubmed/20813970"))
+                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/24387334",
+                        "http://www.ncbi.nlm.nih.gov/pubmed/20813970"))
                 .build());
 
         return evidenceItemsOffLabel;

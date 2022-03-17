@@ -41,6 +41,7 @@ public class PurpleSignatureEvidence {
                     if (purpleData.microsatelliteStatus() == MicrosatelliteStatus.MSI) {
                         ProtectEvidence evidence = personalizedEvidenceFactory.somaticReportableEvidence(signature)
                                 .event(MICROSATELLITE_UNSTABLE_EVENT)
+                                .eventIsHighDriver(EvidenceDriverLikelihood.interpretSignatures())
                                 .build();
                         result.add(evidence);
                     }
@@ -48,8 +49,10 @@ public class PurpleSignatureEvidence {
                 }
                 case HIGH_TUMOR_MUTATIONAL_LOAD: {
                     if (purpleData.tumorMutationalLoadStatus() == TumorMutationalStatus.HIGH) {
-                        ProtectEvidence evidence =
-                                personalizedEvidenceFactory.somaticReportableEvidence(signature).event(HIGH_TUMOR_LOAD_EVENT).build();
+                        ProtectEvidence evidence = personalizedEvidenceFactory.somaticReportableEvidence(signature)
+                                .event(HIGH_TUMOR_LOAD_EVENT)
+                                .eventIsHighDriver(EvidenceDriverLikelihood.interpretSignatures())
+                                .build();
                         result.add(evidence);
                     }
                     break;
