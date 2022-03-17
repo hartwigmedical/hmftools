@@ -77,12 +77,14 @@ public final class ViccExtractor {
         ProgressTracker tracker = new ProgressTracker("VICC", entries.size());
         for (ViccEntry entry : entries) {
             resultsPerEntry.put(entry, extractSingleEntry(entry));
-            extractions.add(toExtractionResult(extractSingleEntry(entry), entry));
+            for (Map.Entry<ViccEntry, ViccExtractionResult> entryResult : resultsPerEntry.entrySet()) {
+                extractions.add(toExtractionResult(entryResult.getValue(), entryResult.getKey()));
+            }
+
             tracker.update();
         }
 
         actionableEvidenceFactory.evaluateCuration();
-        ViccUtil.printExtractionResults(resultsPerEntry);
         return ExtractionFunctions.merge(extractions);
     }
 
