@@ -72,7 +72,7 @@ public final class EvidenceItems {
     public static Paragraph createLinksPublications(@NotNull ProtectEvidence evidence) {
         Paragraph paragraphPublications = new Paragraph();
         int number = 0;
-        for (String url : evidence.urls()) {
+        for (String url : evidence.evidenceUrls()) {
             if (!url.contains("google")) {
                 //Google urls are filtered out
                 number += 1;

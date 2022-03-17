@@ -68,16 +68,23 @@ public final class ProtectEvidenceFile {
                 .add("onLabel")
                 .add("level")
                 .add("direction")
+                .add("evidenceUrls")
                 .add("sources")
-                .add("urls")
+                .add("sourceEvent")
+                .add("sourceUrls")
                 .toString();
     }
 
     @NotNull
     private static String toLine(@NotNull ProtectEvidence evidence) {
-        StringJoiner urlJoiner = new StringJoiner(SUBFIELD_DELIMITER);
-        for (String url : evidence.urls()) {
-            urlJoiner.add(url);
+        StringJoiner evidenceUrlJoiner = new StringJoiner(SUBFIELD_DELIMITER);
+        for (String url : evidence.evidenceUrls()) {
+            evidenceUrlJoiner.add(url);
+        }
+
+        StringJoiner sourceUrlJoiner = new StringJoiner(SUBFIELD_DELIMITER);
+        for (String url : evidence.sourceUrls()) {
+            sourceUrlJoiner.add(url);
         }
 
         StringJoiner sourceJoiner = new StringJoiner(SUBFIELD_DELIMITER);
@@ -95,8 +102,10 @@ public final class ProtectEvidenceFile {
                 .add(String.valueOf(evidence.onLabel()))
                 .add(evidence.level().toString())
                 .add(evidence.direction().toString())
+                .add(evidenceUrlJoiner.toString())
                 .add(sourceJoiner.toString())
-                .add(urlJoiner.toString())
+                .add(evidence.sourceEvent())
+                .add(sourceUrlJoiner.toString())
                 .toString();
     }
 
@@ -114,8 +123,14 @@ public final class ProtectEvidenceFile {
     private static ProtectEvidence fromLine(@NotNull Map<String, Integer> fields, @NotNull String line) {
         String[] values = line.split(FIELD_DELIMITER, -1);
 
-        String urlField = values[fields.get("urls")];
-        Set<String> urls = !urlField.isEmpty() ? Sets.newHashSet(urlField.split(SUBFIELD_DELIMITER)) : Sets.newHashSet();
+        String evidenceUrlField = values[fields.get("evidenceUrls")];
+        Set<String> evidenceUrlurls = !evidenceUrlField.isEmpty() ? Sets.newHashSet(evidenceUrlField.split(SUBFIELD_DELIMITER)) : Sets.newHashSet();
+
+        String sourceEventField = values[fields.get("sourceEvent")];
+        String sourceEvent = !sourceEventField.isEmpty() ? sourceEventField : Strings.EMPTY;
+
+        String sourceUrlField = values[fields.get("sourceUrls")];
+        Set<String> sourceUrlurls = !sourceUrlField.isEmpty() ? Sets.newHashSet(sourceUrlField.split(SUBFIELD_DELIMITER)) : Sets.newHashSet();
 
         return ImmutableProtectEvidence.builder()
                 .gene(emptyToNullString(values[fields.get("gene")]))
@@ -128,8 +143,10 @@ public final class ProtectEvidenceFile {
                 .onLabel(Boolean.parseBoolean(values[fields.get("onLabel")]))
                 .level(EvidenceLevel.valueOf(values[fields.get("level")]))
                 .direction(EvidenceDirection.valueOf(values[fields.get("direction")]))
+                .evidenceUrls(evidenceUrlurls)
                 .sources(Knowledgebase.fromCommaSeparatedTechnicalDisplayString(values[fields.get("sources")]))
-                .urls(urls)
+                .sourceEvent(sourceEvent)
+                .sourceUrls(sourceUrlurls)
                 .build();
     }
 
