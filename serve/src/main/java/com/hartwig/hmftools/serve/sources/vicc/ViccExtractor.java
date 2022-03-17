@@ -70,23 +70,6 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    private static ExtractionResult toExtractionResult(ViccExtractionResult resultsPerEntry, @NotNull ViccEntry entry) {
-        // Assume all VICC knowledgebases are on the same ref genome version
-        ImmutableExtractionResult.Builder outputBuilder = ImmutableExtractionResult.builder()
-                .eventInterpretations(Lists.newArrayList(resultsPerEntry.eventInterpretations()))
-                .refGenomeVersion(Knowledgebase.VICC_CGI.refGenomeVersion())
-                .knownHotspots(convertToHotspots(resultsPerEntry, entry))
-                .knownCodons(convertToCodons(resultsPerEntry, entry))
-                .knownExons(convertToExons(resultsPerEntry, entry))
-                .knownCopyNumbers(convertToKnownAmpsDels(resultsPerEntry, entry))
-                .knownFusionPairs(convertToKnownFusions(resultsPerEntry, entry));
-
-        addActionability(outputBuilder, resultsPerEntry);
-
-        return outputBuilder.build();
-    }
-
-    @NotNull
     public ExtractionResult extract(@NotNull List<ViccEntry> entries) {
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = Maps.newHashMap();
         List<ExtractionResult> extractions = Lists.newArrayList();
@@ -101,6 +84,23 @@ public final class ViccExtractor {
         actionableEvidenceFactory.evaluateCuration();
         ViccUtil.printExtractionResults(resultsPerEntry);
         return ExtractionFunctions.merge(extractions);
+    }
+
+    @NotNull
+    private static ExtractionResult toExtractionResult(ViccExtractionResult resultsPerEntry, @NotNull ViccEntry entry) {
+        // Assume all VICC knowledgebases are on the same ref genome version
+        ImmutableExtractionResult.Builder outputBuilder = ImmutableExtractionResult.builder()
+                .eventInterpretations(Lists.newArrayList(resultsPerEntry.eventInterpretations()))
+                .refGenomeVersion(Knowledgebase.VICC_CGI.refGenomeVersion())
+                .knownHotspots(convertToHotspots(resultsPerEntry, entry))
+                .knownCodons(convertToCodons(resultsPerEntry, entry))
+                .knownExons(convertToExons(resultsPerEntry, entry))
+                .knownCopyNumbers(convertToKnownAmpsDels(resultsPerEntry, entry))
+                .knownFusionPairs(convertToKnownFusions(resultsPerEntry, entry));
+
+        addActionability(outputBuilder, resultsPerEntry);
+
+        return outputBuilder.build();
     }
 
     @Nullable
