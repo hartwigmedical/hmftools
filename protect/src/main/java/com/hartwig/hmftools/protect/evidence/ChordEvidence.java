@@ -34,13 +34,40 @@ public class ChordEvidence {
         List<ProtectEvidence> result = Lists.newArrayList();
         if (chordAnalysis.hrStatus() == ChordStatus.HR_DEFICIENT) {
             for (ActionableCharacteristic signature : actionableCharacteristics) {
-                result.add(personalizedEvidenceFactory.somaticReportableEvidence(signature)
-                        .event(HR_DEFICIENCY_EVENT)
-                        .eventIsHighDriver(EvidenceDriverLikelihood.interpretChord())
-                        .build());
+                switch (signature.comparator()) {
+                    case EQUAL_OR_LOWER:
+                        if (chordAnalysis.hrdValue() <= signature.cutoff()) {
+                            result.add(generateHRDEvidences(signature));
+                        }
+                        break;
+                    case EQUAL_OR_GREATER:
+                        if (chordAnalysis.hrdValue() >= signature.cutoff()) {
+                            result.add(generateHRDEvidences(signature));
+                        }
+                        break;
+                    case LOWER:
+                        if (chordAnalysis.hrdValue() < signature.cutoff()) {
+                            result.add(generateHRDEvidences(signature));
+                        }
+                        break;
+                    case GREATER:
+                        if (chordAnalysis.hrdValue() > signature.cutoff()) {
+                            result.add(generateHRDEvidences(signature));
+                        }
+                        break;
+                }
             }
         }
 
         return result;
     }
+
+    @NotNull
+    public ProtectEvidence generateHRDEvidences(@NotNull ActionableCharacteristic signature) {
+        return personalizedEvidenceFactory.somaticReportableEvidence(signature)
+                .event(HR_DEFICIENCY_EVENT)
+                .eventIsHighDriver(EvidenceDriverLikelihood.interpretChord())
+                .build();
+    }
+
 }
