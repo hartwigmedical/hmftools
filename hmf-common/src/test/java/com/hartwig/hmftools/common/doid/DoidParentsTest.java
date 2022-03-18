@@ -34,13 +34,13 @@ public class DoidParentsTest {
     }
 
     @NotNull
-    private static DoidEdge createParent(@NotNull String child, @NotNull String parent) {
+    public static DoidEdge createParent(@NotNull String child, @NotNull String parent) {
         String prefix = "http://purl.obolibrary.org/obo/DOID_";
         return createEdge(prefix + child, "is_a", prefix + parent);
     }
 
     @NotNull
-    private static DoidEdge createEdge(@NotNull String subject, @NotNull String pred, @NotNull String object) {
+    public static DoidEdge createEdge(@NotNull String subject, @NotNull String pred, @NotNull String object) {
         return ImmutableDoidEdge.builder().subject(subject).predicate(pred).object(object).build();
     }
 }
