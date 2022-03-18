@@ -112,6 +112,11 @@ public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
             return sourceEventCompare;
         }
 
+        int germlineCompare = -Boolean.compare(germline(), o.germline());
+        if (germlineCompare != 0) {
+            return germlineCompare;
+        }
+
         return 0;
     }
 
