@@ -1,11 +1,8 @@
 package com.hartwig.hmftools.sage.quality;
 
-import static java.lang.Math.max;
-
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletionException;
