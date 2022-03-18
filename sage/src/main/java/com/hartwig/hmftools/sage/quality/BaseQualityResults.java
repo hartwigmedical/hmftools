@@ -1,31 +1,35 @@
 package com.hartwig.hmftools.sage.quality;
 
-import static java.lang.Math.max;
+import java.util.Map;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 
 public class BaseQualityResults
 {
-    private final List<BaseQualityRegionCounter> mRegionCounters;
+    private final Map<BaseQualityKey,Integer> mCombinedQualityCounts;
+
     private PerformanceCounter mPerfCounter;
 
     public BaseQualityResults()
     {
-        mRegionCounters = Lists.newArrayList();
+        mCombinedQualityCounts = Maps.newHashMap();
         mPerfCounter = null;
     }
 
     public void clear()
     {
-        mRegionCounters.clear();
+        mCombinedQualityCounts.clear();
     }
 
-    public synchronized void addBaseQualityRegionCounter(final BaseQualityRegionCounter bqCounter)
+    public synchronized void addBaseQualityRegionCounter(final BaseQualityRegionCounter regionCounter)
     {
-        mRegionCounters.add(bqCounter);
+        for(QualityCounter counter : regionCounter.getQualityCounts())
+        {
+            BaseQualityKey key = counter.Key;
+            Integer count = mCombinedQualityCounts.get(key);
+            mCombinedQualityCounts.put(key, count != null ? count + counter.count() : counter.count());
+        }
     }
 
     public synchronized void addPerfCounter(final PerformanceCounter perfCounter)
@@ -40,7 +44,7 @@ public class BaseQualityResults
         }
     }
 
-    public List<BaseQualityRegionCounter> getRegionCounters() { return mRegionCounters; }
+    public Map<BaseQualityKey,Integer> getCombinedQualityCounts() { return mCombinedQualityCounts; }
 
     public void logPerfStats()
     {

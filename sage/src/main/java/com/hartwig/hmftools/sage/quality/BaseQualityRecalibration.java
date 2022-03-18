@@ -132,15 +132,8 @@ public class BaseQualityRecalibration
             }
         }
 
-        List<BaseQualityRegionCounter> regionCounters = mResults.getRegionCounters();
-
         // merge results for this sample across all regions
-        final Map<BaseQualityKey,Integer> allQualityCounts = Maps.newHashMap();
-
-        for(BaseQualityRegionCounter regionCounter : regionCounters)
-        {
-            mergeQualityCounts(allQualityCounts, regionCounter.getQualityCounts());
-        }
+        final Map<BaseQualityKey,Integer> allQualityCounts = mResults.getCombinedQualityCounts();
 
         final List<QualityRecalibrationRecord> records = convertToRecords(allQualityCounts);
 
@@ -161,17 +154,6 @@ public class BaseQualityRecalibration
         for(String sample : mConfig.TumorIds)
         {
             mSampleRecalibrationMap.put(sample, new QualityRecalibrationMap(Collections.emptyList()));
-        }
-    }
-
-    private void mergeQualityCounts(final Map<BaseQualityKey,Integer> allQualityCounts, final Collection<QualityCounter> qualityCounts)
-    {
-        for(QualityCounter counter : qualityCounts)
-        {
-            BaseQualityKey key = counter.Key; //withoutPosition(counter);
-            Integer count = allQualityCounts.get(key);
-
-            allQualityCounts.put(key, count != null ? count + counter.count() : counter.count());
         }
     }
 

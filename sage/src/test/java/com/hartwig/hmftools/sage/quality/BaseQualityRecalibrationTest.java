@@ -18,34 +18,43 @@ public class BaseQualityRecalibrationTest
     public void testBaseQualityCounts()
     {
         BaseQualityRegionCounter bqrCounter = new BaseQualityRegionCounter(
-                new SageConfig(), null, null, new ChrBaseRegion("1", 100, 1000),
+                new SageConfig(), null, null, new ChrBaseRegion("1", 100, 300),
                 new BaseQualityResults());
 
-        Map<Integer, Map<BaseQualityKey,Integer>> bqMap = bqrCounter.getQualityMap();
-
-        Map<BaseQualityKey,Integer> loc1 = Maps.newHashMap();
         int pos1 = 100;
         BaseQualityKey key1 = createKey('A', 'G', 30, pos1);
         BaseQualityKey key2 = createKey('A', 'A', 20, pos1);
         BaseQualityKey key3 = createKey('A', 'G', 15, pos1); // a repeated alt
-        loc1.put(key1, 1);
-        loc1.put(key2, 10);
-        loc1.put(key3, 3);
-        bqMap.put(pos1, loc1);
+
+        BaseQualityData bqData1 = bqrCounter.getOrCreateBaseQualData(pos1, key1.Ref, key1.TrinucleotideContext);
+
+        bqData1.processRead(key1.Alt, key1.Quality);
+
+        for(int i = 0; i < 10; ++i)
+        {
+            bqData1.processRead(key2.Alt, key2.Quality);
+        }
+
+        for(int i = 0; i < 3; ++i)
+        {
+            bqData1.processRead(key3.Alt, key3.Quality);
+        }
 
         // repeated alt at different locations
         int pos2 = 150;
-        Map<BaseQualityKey,Integer> loc2 = Maps.newHashMap();
         BaseQualityKey key4 = createKey('C', 'G', 25, pos2); // another repeated alt
-        loc2.put(key4, 4);
-        bqMap.put(pos2, loc2);
+        BaseQualityData bqData2 = bqrCounter.getOrCreateBaseQualData(pos2, key4.Ref, key4.TrinucleotideContext);
+
+        for(int i = 0; i < 4; ++i)
+        {
+            bqData2.processRead(key4.Alt, key4.Quality);
+        }
 
         int pos3 = 200;
-        Map<BaseQualityKey,Integer> loc3 = Maps.newHashMap();
         BaseQualityKey key5 = createKey('A', 'G', 20, pos3); // an alt but not repeated
-        loc3.put(key5, 1);
+        BaseQualityData bqData3 = bqrCounter.getOrCreateBaseQualData(pos3, key5.Ref, key5.TrinucleotideContext);
 
-        bqMap.put(pos3, loc3);
+        bqData3.processRead(key5.Alt, key5.Quality);
 
         bqrCounter.run();
 
@@ -71,7 +80,7 @@ public class BaseQualityRecalibrationTest
 
     private BaseQualityKey createKey(char ref, char alt, int qual, int pos)
     {
-        byte[] context = new byte[] { 65,  (byte)alt, 65};
+        byte[] context = new byte[] { 65,  (byte)ref, 65};
         return new BaseQualityKey((byte)ref, (byte)alt, context, (byte)qual);
     }
 
