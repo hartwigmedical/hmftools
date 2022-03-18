@@ -10,9 +10,12 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicAnnotation;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class ChordEvidence {
+    private static final Logger LOGGER = LogManager.getLogger(ChordEvidence.class);
 
     static final String HR_DEFICIENCY_EVENT = "HR deficiency";
 
@@ -55,6 +58,8 @@ public class ChordEvidence {
                             result.add(generateHRDEvidences(signature));
                         }
                         break;
+                    default:
+                        LOGGER.warn("Signature comparator is null");
                 }
             }
         }
