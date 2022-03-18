@@ -188,7 +188,7 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageAppendApplication
     -out /path/to/COLO829v003.sage.rna.vcf.gz
 ```
 
- # Read context 
+# Read context 
  The read context of a variant is the region surrounding it in the read where it was found.
  It must be sufficiently large to uniquely identify the variant from both the reference and other possible variants at that location regardless of local alignment.
  SAGE uses the read context to search for evidence supporting the variant and calculate the allelic depth and frequency.
@@ -645,18 +645,12 @@ bcftools filter -e 'PON_COUNT!="." && INFO/TIER!="HOTSPOT" && INFO/TIER!="PANEL"
 Pave is run over the output and then summarised for each variant with a separate post processing application.
 
 # Performance Characteristics
-Performance numbers were taken from a 72 core machine using paired normal tumor COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. 
-Elapsed time is measured in minutes. 
-CPU time is minutes spent in user mode. 
-Peak memory is measured in gigabytes.
+Time taken for Sage to run is proportional to the size of the BAM file and the number of threads used. Memory increases with number of threads. 
+Each chromosome is partitioned into blocks of 100K bases for each stage of processing.
 
-Threads | Elapsed Time| CPU Time | Peak Mem
----|---|---|---
-1 | 696 | 751 | 10
-8 | 98 | 776 | 13
-16 | 62 | 873 | 13 
-24 | 49 | 880 | 14 
-32 | 45 | 943 | 15
+Performance numbers were taken from a 24 core machine using paired normal tumor COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively.
+- elapsed time = 46 minutes
+- peak memory = 7GB
 
 # Version History and Download Links
 - [3.0](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.0_beta)
