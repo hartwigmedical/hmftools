@@ -13,7 +13,6 @@ public class BaseQualityData
     public final byte[] TrinucleotideContext;
 
     private final List<AltQualityCount> mAltQualityCounts;
-
     private boolean mHasIndel;
 
     public BaseQualityData(final int position, final byte ref, final byte[] trinucleotideContext)
@@ -21,23 +20,23 @@ public class BaseQualityData
         Position = position;
         Ref = ref;
         TrinucleotideContext = trinucleotideContext;
+
         mHasIndel = false;
         mAltQualityCounts = Lists.newArrayList();
     }
 
     public void processRead(byte alt, byte quality)
     {
-        AltQualityCount altQualityCount = mAltQualityCounts.stream()
-                .filter(x -> x.Alt == alt && x.Quality == quality).findFirst().orElse(null);
+        for(AltQualityCount altQualityCount : mAltQualityCounts)
+        {
+            if(altQualityCount.Alt == alt && altQualityCount.Quality == quality)
+            {
+                ++altQualityCount.Count;
+                return;
+            }
+        }
 
-        if(altQualityCount != null)
-        {
-            ++altQualityCount.Count;
-        }
-        else
-        {
-            mAltQualityCounts.add(new AltQualityCount(alt, quality));
-        }
+        mAltQualityCounts.add(new AltQualityCount(alt, quality));
     }
 
     public void setHasIndel() { mHasIndel = true; }
@@ -90,7 +89,5 @@ public class BaseQualityData
         }
 
         public String toString() { return String.format("alt(%s) qual(%d) count(%d)", (char)Alt, (int)Quality, Count); }
-
     }
-
 }

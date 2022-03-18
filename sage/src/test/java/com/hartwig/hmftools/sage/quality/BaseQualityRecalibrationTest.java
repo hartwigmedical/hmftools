@@ -4,9 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
-import java.util.Map;
 
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.SageConfig;
 
@@ -18,8 +16,9 @@ public class BaseQualityRecalibrationTest
     public void testBaseQualityCounts()
     {
         BaseQualityRegionCounter bqrCounter = new BaseQualityRegionCounter(
-                new SageConfig(), null, null, new ChrBaseRegion("1", 100, 300),
-                new BaseQualityResults());
+                new SageConfig(), null, null, new BaseQualityResults());
+
+        bqrCounter.initialise(new ChrBaseRegion("1", 100, 300));
 
         int pos1 = 100;
         BaseQualityKey key1 = createKey('A', 'G', 30, pos1);

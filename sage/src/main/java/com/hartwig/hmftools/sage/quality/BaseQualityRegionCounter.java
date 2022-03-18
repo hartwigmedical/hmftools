@@ -1,12 +1,14 @@
 package com.hartwig.hmftools.sage.quality;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletionException;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -31,33 +33,51 @@ import htsjdk.samtools.reference.ReferenceSequenceFile;
 public class BaseQualityRegionCounter implements CigarHandler
 {
     private final SamReader mBamReader;
-    private final ChrBaseRegion mRegion;
     private final ReferenceSequenceFile mRefGenome;
-    private final IndexedBases mIndexedBases;
     private final SageConfig mConfig;
     private final BaseQualityResults mResults;
 
-    private final Set<Integer> mIndelPositions = Sets.newHashSet();
+    private ChrBaseRegion mRegion;
+    private IndexedBases mIndexedBases;
 
     private final Set<QualityCounter> mQualityCounts; // summarised counts with position removed
+    private final Map<BaseQualityKey,Integer> mKeyCountsMap;
+    private int mPurgeIndex;
+    private int mMaxIndex;
 
     private BaseQualityData[] mBaseQualityData; // base-qual data by position for this region
 
+    private final PerformanceCounter mPerfCounter;
+    private int mReadCounter;
+
     private static final CigarElement SINGLE = new CigarElement(1, CigarOperator.M);
     private static final byte N = (byte) 'N';
-
-    private final PerformanceCounter mPerfCounter;
+    private static final int MAX_BASE_DATA_SIZE = 1000;
+    private static final int BASE_DATA_POS_BUFFER = 100;
 
     public BaseQualityRegionCounter(
-            final SageConfig config, final SamReader bamReader, final ReferenceSequenceFile refGenome, final ChrBaseRegion region,
+            final SageConfig config, final SamReader bamReader, final ReferenceSequenceFile refGenome,
             final BaseQualityResults results)
     {
         mConfig = config;
         mBamReader = bamReader;
 
-        mRegion = region;
         mRefGenome = refGenome;
         mResults = results;
+
+        mBaseQualityData = null;
+        mQualityCounts = Sets.newHashSet();
+        mKeyCountsMap = Maps.newHashMap();
+        mPurgeIndex = 0;
+        mMaxIndex = 0;
+
+        mPerfCounter = new PerformanceCounter("BaseQualBuild");
+        mReadCounter = 0;
+    }
+
+    public void initialise(final ChrBaseRegion region)
+    {
+        mRegion = region;
 
         if(mRefGenome != null)
         {
@@ -69,12 +89,25 @@ public class BaseQualityRegionCounter implements CigarHandler
             mIndexedBases = null;
         }
 
-        int regionPositionCount = region.baseLength();
-        mBaseQualityData = new BaseQualityData[regionPositionCount];
+        if(mBaseQualityData == null)
+        {
+            int regionPositionCount = region.baseLength();
+            mBaseQualityData = new BaseQualityData[regionPositionCount];
+        }
+        else
+        {
+            for(int i = 0; i < mBaseQualityData.length; ++i)
+            {
+                mBaseQualityData[i] = null;
+            }
 
-        mQualityCounts = Sets.newHashSet();
-
-        mPerfCounter = new PerformanceCounter("BaseQualBuild");
+            mKeyCountsMap.clear();
+            mQualityCounts.clear();
+            mReadCounter = 0;
+            mPurgeIndex = 0;
+            mMaxIndex = 0;
+            mPerfCounter.reset();
+        }
     }
 
     public Collection<QualityCounter> getQualityCounts() { return mQualityCounts; }
@@ -87,38 +120,47 @@ public class BaseQualityRegionCounter implements CigarHandler
 
         readBam();
 
-        Map<BaseQualityKey,Integer> countsMap = Maps.newHashMap();
-
-        for(BaseQualityData bqData : mBaseQualityData)
+        for(int i = mPurgeIndex; i <= mMaxIndex; ++i)
         {
-            if(bqData == null)
-                continue;
-
-            if(bqData.hasIndel())
-                continue;
-
-            Map<BaseQualityKey,Integer> keyCounts = bqData.formKeyCounts(mConfig.QualityRecalibration.MaxAltCount);
-
-            for(Map.Entry<BaseQualityKey,Integer> entry : keyCounts.entrySet())
-            {
-                Integer count = countsMap.get(entry.getKey());
-                countsMap.put(entry.getKey(), count != null ? count + entry.getValue() : entry.getValue());
-            }
+            mapBaseQualityData(mBaseQualityData[i]);
         }
 
-        for(Map.Entry<BaseQualityKey,Integer> entry : countsMap.entrySet())
+        for(Map.Entry<BaseQualityKey,Integer> entry : mKeyCountsMap.entrySet())
         {
             QualityCounter counter = new QualityCounter(entry.getKey());
             counter.increment(entry.getValue());
             mQualityCounts.add(counter);
         }
 
+        mKeyCountsMap.clear();
+
         mPerfCounter.stop();
+
+        if(mPerfCounter.getLastTime() > mConfig.PerfWarnTime)
+        {
+            SG_LOGGER.warn("BQR region({}) time({}) reads({})",
+                    mRegion, String.format("%.1f", mPerfCounter.getLastTime()), mReadCounter);
+        }
 
         mResults.addBaseQualityRegionCounter(this);
         mResults.addPerfCounter(mPerfCounter);
+    }
 
-        mBaseQualityData = null;
+    private void mapBaseQualityData(final BaseQualityData bqData)
+    {
+        if(bqData == null)
+            return;
+
+        if(bqData.hasIndel())
+            return;
+
+        Map<BaseQualityKey,Integer> keyCounts = bqData.formKeyCounts(mConfig.QualityRecalibration.MaxAltCount);
+
+        for(Map.Entry<BaseQualityKey,Integer> entry : keyCounts.entrySet())
+        {
+            Integer count = mKeyCountsMap.get(entry.getKey());
+            mKeyCountsMap.put(entry.getKey(), count != null ? count + entry.getValue() : entry.getValue());
+        }
     }
 
     private void readBam()
@@ -140,7 +182,11 @@ public class BaseQualityRegionCounter implements CigarHandler
 
     public void processRecord(@NotNull final SAMRecord record)
     {
+        ++mReadCounter;
         CigarTraversal.traverseCigar(record, this);
+
+        if(mReadCounter > 0 && (mReadCounter % 1000) == 0)
+            purgeBaseDataList(record.getAlignmentStart());
     }
 
     @Override
@@ -148,7 +194,6 @@ public class BaseQualityRegionCounter implements CigarHandler
     {
         // need to add one because indel is actually AFTER this by convention
         int indelPos = refPos + 1;
-        mIndelPositions.add(indelPos);
         handleAlignment(record, SINGLE, readIndex, refPos);
         markIndelPosition(indelPos);
     }
@@ -157,7 +202,6 @@ public class BaseQualityRegionCounter implements CigarHandler
     public void handleDelete(@NotNull final SAMRecord record, @NotNull final CigarElement e, final int readIndex, final int refPos)
     {
         int indelPos = refPos + 1;
-        mIndelPositions.add(indelPos);
         handleAlignment(record, SINGLE, readIndex, refPos);
         markIndelPosition(indelPos);
     }
@@ -167,20 +211,10 @@ public class BaseQualityRegionCounter implements CigarHandler
         if(!mRegion.containsPosition(position))
             return;
 
-        int posIndex = position - mRegion.start();
-
-        BaseQualityData baseQualityData = mBaseQualityData[posIndex];
-
-        if(baseQualityData == null)
-        {
-            byte ref = mIndexedBases.base(position);
-            byte[] trinucleotideContext = mIndexedBases.trinucleotideContext(position);
-
-            baseQualityData = new BaseQualityData(position, ref, trinucleotideContext);
-            mBaseQualityData[posIndex] = baseQualityData;
-        }
-
-        baseQualityData.setHasIndel();
+        byte ref = mIndexedBases.base(position);
+        byte[] trinucleotideContext = mIndexedBases.trinucleotideContext(position);
+        BaseQualityData bqData = getOrCreateBaseQualData(position, ref, trinucleotideContext);
+        bqData.setHasIndel();
     }
 
     @Override
@@ -188,7 +222,6 @@ public class BaseQualityRegionCounter implements CigarHandler
     {
         for(int i = 0; i < cigarElement.getLength(); i++)
         {
-            int readIndex = startReadIndex + i;
             int position = refPos + i;
 
             if(position > mRegion.end())
@@ -196,6 +229,8 @@ public class BaseQualityRegionCounter implements CigarHandler
 
             if(position < mRegion.start())
                 continue;
+
+            int readIndex = startReadIndex + i;
 
             byte ref = mIndexedBases.base(position);
             byte alt = record.getReadBases()[readIndex];
@@ -205,40 +240,25 @@ public class BaseQualityRegionCounter implements CigarHandler
             if(alt == N || !isValid(trinucleotideContext))
                 continue;
 
-            // missing old key(var(A->G) cxt(CAA) qual(37)) new count(139)
-            //if((char)ref != 'A' || (char)alt != 'G' || !new String(trinucleotideContext).equals("CAA") || (int)quality != 37)
-            //    continue;
-
             BaseQualityData baseQualityData = getOrCreateBaseQualData(position, ref, trinucleotideContext);
             baseQualityData.processRead(alt, quality);
+        }
+    }
 
-            /*
-            Map<BaseQualityKey,Integer> posCounts = mQualityMap.get(position);
+    private void purgeBaseDataList(int currentReadStartPos)
+    {
+        for(; mPurgeIndex <= mMaxIndex; ++mPurgeIndex)
+        {
+            BaseQualityData bqData = mBaseQualityData[mPurgeIndex];
 
-            if(posCounts == null)
-            {
-                posCounts = Maps.newHashMap();
-                mQualityMap.put(position, posCounts);
-            }
+            if(bqData == null)
+                continue;
 
-            boolean matched = false;
-            for(Map.Entry<BaseQualityKey,Integer> entry : posCounts.entrySet())
-            {
-                BaseQualityKey key = entry.getKey();
+            if(bqData.Position >= currentReadStartPos - BASE_DATA_POS_BUFFER)
+                break;
 
-                if(key.matches(ref, alt, quality, trinucleotideContext))
-                {
-                    entry.setValue(entry.getValue() + 1);
-                    matched = true;
-                    break;
-                }
-            }
-
-            if(!matched)
-            {
-                posCounts.put(new BaseQualityKey(ref, alt, trinucleotideContext, quality), 1);
-            }
-            */
+            mapBaseQualityData(bqData);
+            mBaseQualityData[mPurgeIndex] = null;
         }
     }
 
@@ -251,6 +271,7 @@ public class BaseQualityRegionCounter implements CigarHandler
         {
             baseQualityData = new BaseQualityData(position, ref, trinucleotideContext);
             mBaseQualityData[posIndex] = baseQualityData;
+            mMaxIndex = posIndex;
         }
 
         return baseQualityData;

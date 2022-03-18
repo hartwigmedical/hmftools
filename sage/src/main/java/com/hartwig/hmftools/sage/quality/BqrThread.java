@@ -23,6 +23,8 @@ public class BqrThread extends Thread
     private final Queue<PartitionTask> mRegions;
     private final BaseQualityResults mResults;
 
+    private final BaseQualityRegionCounter mRegionCounter; // will be reused for each region
+
     public BqrThread(
             final SageConfig config, final IndexedFastaSequenceFile refGenome, final String bamFile,
             final Queue<PartitionTask> regions, final BaseQualityResults results)
@@ -37,6 +39,8 @@ public class BqrThread extends Thread
                 .referenceSource(new ReferenceSource(mRefGenome))
                 .open(new File(bamFile));
 
+        mRegionCounter = new BaseQualityRegionCounter(mConfig, mBamReader, mRefGenome, mResults);
+
         start();
     }
 
@@ -48,8 +52,7 @@ public class BqrThread extends Thread
             {
                 PartitionTask partition = mRegions.remove();
 
-                BaseQualityRegionCounter regionCounter = new BaseQualityRegionCounter(
-                        mConfig, mBamReader, mRefGenome, partition.Partition, mResults);
+                mRegionCounter.initialise(partition.Partition);
 
                 if(partition.TaskId > 0 && (partition.TaskId % 100) == 0)
                 {
@@ -57,7 +60,7 @@ public class BqrThread extends Thread
                             partition.TaskId, mRegions.size());
                 }
 
-                regionCounter.run();
+                mRegionCounter.run();
             }
             catch(NoSuchElementException e)
             {
