@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Set;
 
-import com.beust.jcommander.internal.Sets;
+import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -92,6 +92,15 @@ public class CancerTypeFactoryTest {
 
         throw new IllegalStateException("Could not find cancerType with name: " + nameToFind);
 
+    }
+
+    @Test
+    public void canCreateDoidStrings() {
+        Set<CancerType> cancerTypes = Sets.newHashSet();
+        cancerTypes.add(create("Hematologic cancer", "2531"));
+        cancerTypes.add(create("Skin Melanoma", "8923"));
+        Set<String> doids = CancerTypeFactory.doidStrings(cancerTypes);
+        assertEquals(Sets.newHashSet("2531", "8923"), doids);
     }
 
     @NotNull

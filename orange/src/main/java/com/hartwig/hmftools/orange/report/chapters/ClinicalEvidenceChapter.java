@@ -190,19 +190,19 @@ public class ClinicalEvidenceChapter implements ReportChapter {
 
     @NotNull
     private static String url(@NotNull ProtectEvidence evidence) {
-        if (evidence.urls().isEmpty()) {
+        if (evidence.evidenceUrls().isEmpty()) {
             return Strings.EMPTY;
         }
 
         // We prefer pubmed URLs over all other URLs so if there is one pubmed then we use that.
-        for (String url : evidence.urls()) {
+        for (String url : evidence.evidenceUrls()) {
             if (url.contains("pubmed")) {
                 return url;
             }
         }
 
         // If there are no pubmeds, and the first url refers to google we remove it.
-        String url = evidence.urls().iterator().next();
+        String url = evidence.evidenceUrls().iterator().next();
         if (url.contains("google")) {
             return Strings.EMPTY;
         } else {

@@ -46,16 +46,22 @@ public class VirusEvidence {
             switch (virus.name()) {
                 case HPV_POSITIVE: {
                     if (!hpv.isEmpty()) {
-                        ProtectEvidence evidence =
-                                personalizedEvidenceFactory.somaticEvidence(virus).reported(reportHPV).event(HPV_POSITIVE_EVENT).build();
+                        ProtectEvidence evidence = personalizedEvidenceFactory.somaticEvidence(virus)
+                                .reported(reportHPV)
+                                .event(HPV_POSITIVE_EVENT)
+                                .eventIsHighDriver(EvidenceDriverLikelihood.interpretVirus())
+                                .build();
                         result.add(evidence);
                     }
                     break;
                 }
                 case EBV_POSITIVE: {
                     if (!ebv.isEmpty()) {
-                        ProtectEvidence evidence =
-                                personalizedEvidenceFactory.somaticEvidence(virus).reported(reportEBV).event(EBV_POSITIVE_EVENT).build();
+                        ProtectEvidence evidence = personalizedEvidenceFactory.somaticEvidence(virus)
+                                .reported(reportEBV)
+                                .event(EBV_POSITIVE_EVENT)
+                                .eventIsHighDriver(EvidenceDriverLikelihood.interpretVirus())
+                                .build();
                         result.add(evidence);
                     }
                     break;

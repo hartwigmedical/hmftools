@@ -38,4 +38,13 @@ public final class CancerTypeFactory {
 
         return cancerTypes;
     }
+
+    @NotNull
+    public static Set<String> doidStrings(@NotNull Set<CancerType> cancerTypes) {
+        Set<String> cancerTypeDoids = Sets.newConcurrentHashSet();
+        for (CancerType cancerType : cancerTypes) {
+            cancerTypeDoids.add(cancerType.doid());
+        }
+        return cancerTypeDoids;
+    }
 }

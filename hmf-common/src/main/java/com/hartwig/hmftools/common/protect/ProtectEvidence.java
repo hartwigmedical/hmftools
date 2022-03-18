@@ -23,6 +23,9 @@ public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
     @NotNull
     public abstract String event();
 
+    @Nullable
+    public abstract Boolean eventIsHighDriver();
+
     @NotNull
     public abstract ProtectEvidenceType evidenceType();
 
@@ -45,10 +48,17 @@ public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
     public abstract EvidenceDirection direction();
 
     @NotNull
+    public abstract Set<String> evidenceUrls();
+
+    @NotNull
     public abstract Set<Knowledgebase> sources();
 
     @NotNull
-    public abstract Set<String> urls();
+    public abstract String sourceEvent();
+
+    @NotNull
+    public abstract Set<String> sourceUrls();
+
 
     @Override
     public int compareTo(@NotNull final ProtectEvidence o) {

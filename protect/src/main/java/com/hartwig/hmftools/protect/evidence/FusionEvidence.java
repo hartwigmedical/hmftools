@@ -68,6 +68,7 @@ public class FusionEvidence {
                 .reported(fusion.reported())
                 .gene(geneFromActionable(actionable))
                 .event(ProtectEventGenerator.fusionEvent(fusion))
+                .eventIsHighDriver(EvidenceDriverLikelihood.interpretFusions(fusion.likelihood()))
                 .build();
     }
 

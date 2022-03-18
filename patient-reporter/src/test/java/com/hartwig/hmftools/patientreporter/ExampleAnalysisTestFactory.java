@@ -330,6 +330,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -337,11 +338,14 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CGI))
-                .urls(Lists.newArrayList("https://www.google.com/#q=FDA"))
+                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Sets.newHashSet())
                 .build());
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -349,11 +353,14 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CGI))
-                .urls(Lists.newArrayList("https://www.google.com/#q=FDA"))
+                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Sets.newHashSet())
                 .build());
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -361,11 +368,14 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CGI, Knowledgebase.VICC_CIVIC))
-                .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/25399551", "https://www.google.com/#q=FDA"))
+                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Sets.newHashSet())
                 .build());
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.EXON_MUTATION)
                 .rangeRank(1)
                 .germline(false)
@@ -374,11 +384,14 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CGI))
-                .urls(Lists.newArrayList("https://www.google.com/#q=FDA"))
+                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Sets.newHashSet())
                 .build());
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.CODON_MUTATION)
                 .rangeRank(600)
                 .germline(false)
@@ -387,13 +400,16 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CGI, Knowledgebase.VICC_CIVIC))
-                .urls(Lists.newArrayList("https://www.google.com/#q=NCCN",
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Sets.newHashSet())
+                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=NCCN",
                         "http://www.ncbi.nlm.nih.gov/pubmed/21639808",
                         "https://www.google.com/#q=FDA"))
                 .build());
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -401,11 +417,14 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
-                .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/24947927"))
+                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Sets.newHashSet())
                 .build());
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("PTEN")
                 .event("partial loss")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.DELETION)
                 .germline(false)
                 .reported(true)
@@ -413,7 +432,9 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
-                .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/25672916"))
+                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Sets.newHashSet())
                 .build());
 
         return evidenceItemsOnLabel;
@@ -428,6 +449,7 @@ public final class ExampleAnalysisTestFactory {
 
         trialsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -435,11 +457,14 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.ICLUSION))
-                .urls(Lists.newArrayList("https://trial-eye.com/hmf/13054"))
+                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/13054"))
                 .build());
 
         trialsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -447,11 +472,14 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.ICLUSION))
-                .urls(Lists.newArrayList("https://trial-eye.com/hmf/13660"))
+                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/13660"))
                 .build());
 
         trialsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -459,11 +487,14 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.ICLUSION))
-                .urls(Lists.newArrayList("https://iclusion.org/hmf/12301"))
+                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Lists.newArrayList("https://iclusion.org/hmf/12301"))
                 .build());
 
         trialsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -471,11 +502,14 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.ICLUSION))
-                .urls(Lists.newArrayList("https://trial-eye.com/hmf/12301"))
+                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/12301"))
                 .build());
 
         trialsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -483,11 +517,14 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.ICLUSION))
-                .urls(Lists.newArrayList("https://trial-eye.com/hmf/10299"))
+                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/10299"))
                 .build());
 
         trialsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -495,10 +532,13 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.ICLUSION))
-                .urls(Lists.newArrayList("https://trial-eye.com/hmf/11284"))
+                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/11284"))
                 .build());
 
         trialsOnLabel.add(onLabelBuilder.event("High tumor mutation load")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.SIGNATURE)
                 .germline(false)
                 .reported(true)
@@ -506,33 +546,42 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.ICLUSION))
-                .urls(Lists.newArrayList("https://trial-eye.com/hmf/11087"))
+                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/11087"))
                 .build());
 
         trialsOnLabel.add(onLabelBuilder.event("High tumor mutation load")
                 .evidenceType(ProtectEvidenceType.SIGNATURE)
+                .eventIsHighDriver(true)
                 .germline(false)
                 .reported(true)
                 .treatment("DRUP")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.ICLUSION))
-                .urls(Lists.newArrayList("https://trial-eye.com/hmf/10299"))
+                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/10299"))
                 .build());
 
         trialsOnLabel.add(onLabelBuilder.event("High tumor mutation load")
                 .evidenceType(ProtectEvidenceType.SIGNATURE)
+                .eventIsHighDriver(true)
                 .germline(false)
                 .reported(true)
                 .treatment("KEYNOTE-158")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.ICLUSION))
-                .urls(Lists.newArrayList("https://trial-eye.com/hmf/4866"))
+                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/4866"))
                 .build());
 
         trialsOnLabel.add(onLabelBuilder.gene("PTEN")
                 .evidenceType(ProtectEvidenceType.DELETION)
+                .eventIsHighDriver(true)
                 .event("partial loss")
                 .germline(false)
                 .reported(true)
@@ -540,7 +589,9 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.ICLUSION))
-                .urls(Lists.newArrayList("https://trial-eye.com/hmf/10299"))
+                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/10299"))
                 .build());
 
         return trialsOnLabel;
@@ -555,6 +606,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -562,11 +614,15 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
-                .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/19603024", "http://www.ncbi.nlm.nih.gov/pubmed/19571295"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/13054"))
+                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/19603024",
+                        "http://www.ncbi.nlm.nih.gov/pubmed/19571295"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -574,11 +630,15 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
-                .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/18682506", "http://www.ncbi.nlm.nih.gov/pubmed/21882184"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/13054"))
+                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/18682506",
+                        "http://www.ncbi.nlm.nih.gov/pubmed/21882184"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -586,7 +646,9 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CGI, Knowledgebase.VICC_CIVIC))
-                .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/19001320",
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/13054"))
+                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/19001320",
                         "http://www.ncbi.nlm.nih.gov/pubmed/20619739",
                         "http://www.ncbi.nlm.nih.gov/pubmed/19884556",
                         "http://www.ncbi.nlm.nih.gov/pubmed/21163703",
@@ -596,6 +658,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -603,11 +666,14 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
-                .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/27729313"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/13054"))
+                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/27729313"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -615,11 +681,14 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
-                .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/19603024"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/13054"))
+                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/19603024"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -627,11 +696,14 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
-                .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/19603024"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/13054"))
+                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/19603024"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -639,11 +711,14 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
-                .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/19603024"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/13054"))
+                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/19603024"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -651,7 +726,9 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CGI, Knowledgebase.VICC_CIVIC))
-                .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/21163703",
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/13054"))
+                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/21163703",
                         "http://www.ncbi.nlm.nih.gov/pubmed/23325582",
                         "http://www.ncbi.nlm.nih.gov/pubmed/19001320",
                         "http://www.ncbi.nlm.nih.gov/pubmed/20619739"))
@@ -659,6 +736,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -666,11 +744,14 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
-                .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/22492957"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/13054"))
+                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/22492957"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
@@ -678,11 +759,15 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
-                .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/18682506", "http://www.ncbi.nlm.nih.gov/pubmed/21882184"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/13054"))
+                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/18682506",
+                        "http://www.ncbi.nlm.nih.gov/pubmed/21882184"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.CODON_MUTATION)
                 .rangeRank(600)
                 .germline(false)
@@ -691,11 +776,14 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
-                .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/26287849"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/13054"))
+                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/26287849"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
                 .event("partial loss")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.DELETION)
                 .germline(false)
                 .reported(true)
@@ -703,11 +791,15 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CGI))
-                .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/21163703", "http://www.ncbi.nlm.nih.gov/pubmed/19398573"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/13054"))
+                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/21163703",
+                        "http://www.ncbi.nlm.nih.gov/pubmed/19398573"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
                 .event("partial loss")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.DELETION)
                 .germline(false)
                 .reported(true)
@@ -715,11 +807,14 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
-                .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/21163703"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/13054"))
+                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/21163703"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
                 .event("partial loss")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.DELETION)
                 .germline(false)
                 .reported(true)
@@ -727,11 +822,14 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
-                .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/23989949"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/13054"))
+                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/23989949"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
                 .event("partial loss")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.DELETION)
                 .germline(false)
                 .reported(true)
@@ -739,11 +837,14 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
-                .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/25300346"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/13054"))
+                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/25300346"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
                 .event("partial loss")
+                .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.DELETION)
                 .germline(false)
                 .reported(true)
@@ -751,7 +852,10 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
-                .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/24387334", "http://www.ncbi.nlm.nih.gov/pubmed/20813970"))
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Lists.newArrayList("https://trial-eye.com/hmf/13054"))
+                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/24387334",
+                        "http://www.ncbi.nlm.nih.gov/pubmed/20813970"))
                 .build());
 
         return evidenceItemsOffLabel;

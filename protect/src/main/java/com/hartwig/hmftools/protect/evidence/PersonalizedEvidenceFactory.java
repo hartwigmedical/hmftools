@@ -3,25 +3,37 @@ package com.hartwig.hmftools.protect.evidence;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
+import com.hartwig.hmftools.protect.ProtectApplication;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
+import com.hartwig.hmftools.serve.cancertype.CancerType;
+import com.hartwig.hmftools.serve.cancertype.CancerTypeFactory;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class PersonalizedEvidenceFactory {
+    private static final Logger LOGGER = LogManager.getLogger(PersonalizedEvidenceFactory.class);
 
     @NotNull
     private final Set<String> patientTumorDoids;
 
-    public PersonalizedEvidenceFactory(@NotNull final Set<String> patientTumorDoids) {
+    @NotNull
+    private final DoidParents doidParentModel;
+
+    public PersonalizedEvidenceFactory(@NotNull final Set<String> patientTumorDoids, @NotNull final DoidParents doidParentModel) {
         this.patientTumorDoids = patientTumorDoids;
+        this.doidParentModel = doidParentModel;
     }
 
     @NotNull
@@ -36,15 +48,39 @@ public class PersonalizedEvidenceFactory {
 
     @NotNull
     public ImmutableProtectEvidence.Builder evidenceBuilder(@NotNull ActionableEvent actionable) {
+
         return ImmutableProtectEvidence.builder()
                 .evidenceType(determineEvidenceType(actionable))
                 .rangeRank(determineRangeRank(actionable))
                 .treatment(actionable.treatment())
                 .level(actionable.level())
                 .direction(actionable.direction())
-                .onLabel(patientTumorDoids.contains(actionable.applicableCancerType().doid()))
+                .onLabel(determineBlacklistedEvidence(actionable.blacklistCancerTypes())
+                        && patientTumorDoids.contains(actionable.applicableCancerType().doid()))
+                .evidenceUrls(actionable.evidenceUrls())
                 .addSources(actionable.source())
-                .urls(actionable.evidenceUrls());
+                .sourceEvent(actionable.sourceEvent())
+                .sourceUrls(actionable.sourceUrls());
+    }
+
+    public boolean determineBlacklistedEvidence(@NotNull Set<CancerType> blacklistCancerTypes) {
+        boolean hasBlacklistedEvidence = false;
+        Set<String> blacklistDoids = CancerTypeFactory.doidStrings(blacklistCancerTypes);
+        Set<String> results = Sets.newHashSet();
+        LOGGER.info(" Starting doid resolving for patient with initial tumor doids '{}'", blacklistDoids);
+        for (String doid : blacklistDoids) {
+            results.add(doid);
+            results.addAll(doidParentModel.parents(doid));
+        }
+
+        for (String result : results) {
+            for (String doidPatient : patientTumorDoids) {
+                if (doidPatient.equals(result)) {
+                    hasBlacklistedEvidence = true;
+                }
+            }
+        }
+        return hasBlacklistedEvidence;
     }
 
     @VisibleForTesting

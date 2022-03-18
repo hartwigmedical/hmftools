@@ -87,7 +87,7 @@ public class CkbExtractor {
             EventExtractorOutput eventExtractorOutput = eventExtractor.extract(gene, transcript, entry.type(), event);
             Set<? extends ActionableEvent> actionableEvents = ActionableEntryFactory.toActionableEntries(entry);
 
-            EventInterpretation interpretation  = ImmutableEventInterpretation.builder()
+            EventInterpretation interpretation = ImmutableEventInterpretation.builder()
                     .source(Knowledgebase.CKB)
                     .sourceEvent(variant.variant())
                     .interpretedGene(gene)
@@ -111,10 +111,15 @@ public class CkbExtractor {
             return codons;
         }
 
-        for (CodonAnnotation codon: codonAnnotation) {
+        for (CodonAnnotation codon : codonAnnotation) {
             if (codon.gene().equals("BRAF") && codon.rank() == 600) {
                 //BRAF is present on reverse strand
-                codons.add(ImmutableCodonAnnotation.builder().from(codon).start(140500319).end(140500317).build());
+                codons.add(ImmutableCodonAnnotation.builder()
+                        .from(codon)
+                        .transcript("ENST00000646891")
+                        .start(140753335)
+                        .end(140753337)
+                        .build());
             } else {
                 codons.add(ImmutableCodonAnnotation.builder().from(codon).build());
             }

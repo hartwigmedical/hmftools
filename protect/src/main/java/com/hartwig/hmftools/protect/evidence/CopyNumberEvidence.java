@@ -53,6 +53,7 @@ public class CopyNumberEvidence {
                         .reported(report)
                         .gene(gainLoss.gene())
                         .event(ProtectEventGenerator.copyNumberEvent(gainLoss))
+                        .eventIsHighDriver(EvidenceDriverLikelihood.interpretCNV())
                         .build();
                 result.add(evidence);
             }

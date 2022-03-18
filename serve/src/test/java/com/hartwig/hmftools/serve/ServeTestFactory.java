@@ -23,6 +23,7 @@ import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicAnnotation;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicsComparator;
 import com.hartwig.hmftools.serve.extraction.codon.CodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableCodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableKnownCodon;
@@ -44,6 +45,7 @@ import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class ServeTestFactory {
 
@@ -156,11 +158,7 @@ public final class ServeTestFactory {
 
     @NotNull
     public static ActionableHotspot createTestActionableHotspotForSource(@NotNull Knowledgebase source) {
-        return ImmutableActionableHotspot.builder()
-                .from(createTestActionableHotspot())
-                .source(source)
-                .sourceEvent("test")
-                .build();
+        return ImmutableActionableHotspot.builder().from(createTestActionableHotspot()).source(source).sourceEvent("test").build();
     }
 
     @NotNull
@@ -176,11 +174,7 @@ public final class ServeTestFactory {
 
     @NotNull
     public static ActionableRange createTestActionableRangeForSource(@NotNull Knowledgebase source) {
-        return ImmutableActionableRange.builder()
-                .from(createTestActionableRange())
-                .source(source)
-                .sourceEvent("test")
-                .build();
+        return ImmutableActionableRange.builder().from(createTestActionableRange()).source(source).sourceEvent("test").build();
     }
 
     @NotNull
@@ -200,11 +194,7 @@ public final class ServeTestFactory {
 
     @NotNull
     public static ActionableGene createTestActionableGeneForSource(@NotNull Knowledgebase source) {
-        return ImmutableActionableGene.builder()
-                .from(createTestActionableGene())
-                .source(source)
-                .sourceEvent("test")
-                .build();
+        return ImmutableActionableGene.builder().from(createTestActionableGene()).source(source).sourceEvent("test").build();
     }
 
     @NotNull
@@ -218,11 +208,7 @@ public final class ServeTestFactory {
 
     @NotNull
     public static ActionableFusion createTestActionableFusionForSource(@NotNull Knowledgebase source) {
-        return ImmutableActionableFusion.builder()
-                .from(createTestActionableFusion())
-                .source(source)
-                .sourceEvent("test")
-                .build();
+        return ImmutableActionableFusion.builder().from(createTestActionableFusion()).source(source).sourceEvent("test").build();
     }
 
     @NotNull
@@ -233,29 +219,26 @@ public final class ServeTestFactory {
     @NotNull
     public static ActionableCharacteristic createTestActionableCharacteristicForSource(@NotNull Knowledgebase source) {
         return ImmutableActionableCharacteristic.builder()
-                .from(createTestActionableCharacteristic())
+                .from(createTestActionableCharacteristic(null, null))
                 .source(source)
                 .sourceEvent("test")
                 .build();
     }
 
     @NotNull
-    public static ActionableCharacteristic createTestActionableCharacteristic() {
+    public static ActionableCharacteristic createTestActionableCharacteristic(@Nullable TumorCharacteristicsComparator comparator,
+            @Nullable Double cutoff) {
         return ImmutableActionableCharacteristic.builder()
                 .from(createTestBaseEvent())
                 .name(TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE)
-                .comparator(null)
-                .cutoff(null)
+                .comparator(comparator)
+                .cutoff(cutoff)
                 .build();
     }
 
     @NotNull
     public static ActionableHLA createTestActionableImmunoHLAForSource(@NotNull Knowledgebase source) {
-        return ImmutableActionableHLA.builder()
-                .from(createTestActionableHLA())
-                .source(source)
-                .sourceEvent("test")
-                .build();
+        return ImmutableActionableHLA.builder().from(createTestActionableHLA()).source(source).sourceEvent("test").build();
     }
 
     @NotNull
@@ -274,14 +257,8 @@ public final class ServeTestFactory {
                 "rawInput",
                 Sets.newHashSet(),
                 "treatment",
-                ImmutableCancerType.builder()
-                        .name("applicable name")
-                        .doid("applicable doid")
-                        .build(),
-                Sets.newHashSet(ImmutableCancerType.builder()
-                        .name("blacklist name")
-                        .doid("blacklist doid")
-                        .build()),
+                ImmutableCancerType.builder().name("applicable name").doid("applicable doid").build(),
+                Sets.newHashSet(ImmutableCancerType.builder().name("blacklist name").doid("blacklist doid").build()),
                 EvidenceLevel.A,
                 EvidenceDirection.RESPONSIVE,
                 Sets.newHashSet());

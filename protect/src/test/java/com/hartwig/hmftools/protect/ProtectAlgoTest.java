@@ -3,9 +3,15 @@ package com.hartwig.hmftools.protect;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
+import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.doid.DoidEdge;
+import com.hartwig.hmftools.common.doid.DoidParents;
+import com.hartwig.hmftools.common.doid.DoidParentsTest;
+import com.hartwig.hmftools.common.doid.DoidTestFactory;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.serve.actionability.ActionableEvents;
 import com.hartwig.hmftools.serve.actionability.ActionableEventsLoader;
@@ -59,7 +65,15 @@ public class ProtectAlgoTest {
                 .build();
 
         ActionableEvents events = ActionableEventsLoader.readFromDir(config.serveActionabilityDir(), config.refGenomeVersion());
-        ProtectAlgo algo = ProtectAlgo.build(events, Sets.newHashSet());
+
+        List<DoidEdge> edges = Lists.newArrayList();
+        edges.add(DoidParentsTest.createParent("299", "305"));
+        edges.add(DoidParentsTest.createParent("305", "162"));
+        edges.add(DoidParentsTest.createEdge("305", "has_a", "162"));
+
+        DoidParents victim = DoidParents.fromEdges(edges);
+
+        ProtectAlgo algo = ProtectAlgo.build(events, Sets.newHashSet(), victim);
 
         assertNotNull(algo.run(config));
     }

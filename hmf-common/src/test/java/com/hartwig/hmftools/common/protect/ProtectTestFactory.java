@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.protect;
 
+import com.beust.jcommander.internal.Sets;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 
@@ -26,6 +27,9 @@ public final class ProtectTestFactory {
                 .treatment(Strings.EMPTY)
                 .onLabel(false)
                 .level(EvidenceLevel.A)
-                .direction(EvidenceDirection.RESPONSIVE);
+                .direction(EvidenceDirection.RESPONSIVE)
+                .evidenceUrls(Sets.newHashSet())
+                .sourceEvent(Strings.EMPTY)
+                .sourceUrls(Sets.newHashSet());
     }
 }

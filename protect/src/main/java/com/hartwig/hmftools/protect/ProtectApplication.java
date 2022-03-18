@@ -53,10 +53,14 @@ public class ProtectApplication {
 
     public void run() throws IOException {
         LOGGER.info("Running PROTECT algo on sample {} (with reference sample {})", config.tumorSampleId(), config.referenceSampleId());
-        Set<String> patientTumorDoids = patientTumorDoids(config);
+
+        LOGGER.info("Loading DOID file from {}", config.doidJsonFile());
+        DoidParents doidParentModel = DoidParents.fromEdges(DiseaseOntology.readDoidOwlEntryFromDoidJson(config.doidJsonFile()).edges());
+
+        Set<String> patientTumorDoids = patientTumorDoids(config, doidParentModel);
         ActionableEvents actionableEvents = ActionableEventsLoader.readFromDir(config.serveActionabilityDir(), config.refGenomeVersion());
 
-        ProtectAlgo algo = ProtectAlgo.build(actionableEvents, patientTumorDoids);
+        ProtectAlgo algo = ProtectAlgo.build(actionableEvents, patientTumorDoids, doidParentModel);
         List<ProtectEvidence> evidences = algo.run(config);
 
         String filename = ProtectEvidenceFile.generateFilename(config.outputDir(), config.tumorSampleId());
@@ -65,10 +69,8 @@ public class ProtectApplication {
     }
 
     @NotNull
-    private static Set<String> patientTumorDoids(@NotNull ProtectConfig config) throws IOException {
+    private static Set<String> patientTumorDoids(@NotNull ProtectConfig config, @NotNull DoidParents doidParentModel) {
         Set<String> result = Sets.newHashSet();
-        LOGGER.info("Loading DOID file from {}", config.doidJsonFile());
-        DoidParents doidParentModel = DoidParents.fromEdges(DiseaseOntology.readDoidOwlEntryFromDoidJson(config.doidJsonFile()).edges());
 
         Set<String> initialDoids = config.primaryTumorDoids();
         if (initialDoids.isEmpty()) {

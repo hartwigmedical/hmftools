@@ -23,7 +23,7 @@ public class ProtectEvidenceFileTest {
         // Check one case with multiple sources and urls separately.
         ProtectEvidence evidence = findByTreatment(evidences, "Dabrafenib + Trametinib");
         assertEquals(2, evidence.sources().size());
-        assertEquals(3, evidence.urls().size());
+        assertEquals(3, evidence.sourceUrls().size());
     }
 
     @NotNull

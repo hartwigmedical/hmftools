@@ -34,7 +34,7 @@ Whole exome sequenced (WES) data is not supported.
   + [9. Determine a QC Status for the tumor](#9-determine-a-qc-status-for-the-tumor)
   + [10. Somatic enrichment](#10-somatic-enrichment)
   + [11. Germline enrichment](#11-germline-enrichment)
-  + [12. Driver Catalog](#12-driver-catalog)
+  + [12. Driver Identification](#12-driver-identification)
 * [Output](#output)
   + [Files](#files)
   + [VCF](#VCF)
@@ -312,18 +312,6 @@ Tumor only mode impacts PURPLE in the following ways:
 ## Algorithm
 
 There are 12 key steps in the PURPLE pipeline described in detail below:
-1. Sex determination
-2. Segmentation
-3. Sample purity and ploidy fitting
-4. Copy number smoothing
-5. Inferring copy number for regions without read depth
-6. Allele specific copy number inferring
-7. Recovery of structural variants and filtering of single breakends
-8. Identification of germline copy number alterations that are homozygously deleted in the tumor
-9. QC Status for the tumor
-10. Somatic enrichment
-11. Germline enrichment
-12. Driver Catalog
 
 ### 1. Sex determination
 
@@ -624,7 +612,7 @@ The reported flag controls if the variant should appear in the driver catalog.  
 - 'WILDTYPE_LOST' - report only if the wildtype is predicted to be lost in the tumor for this gene either via LOH or a somatic 2nd hit
 - 'VARIANT_NOT_LOST' - report only if the variant is predicted to be NOT lost in the tumor for this gene:
 
-### 12. Driver Catalog
+### 12. Driver Identification
 
 PURPLE builds a catalog of drivers based on a configured gene panel.    PURPLE automatically assigns a driver likelihood of 1 to all significant amplifications (minimum exonic copy number > 3 * sample ploidy) and deletions (minimum exonic copy number < 0.5) that are reportable.  If the somatic VCF is SnpEff annotated, a driver likelihood is calculated for any point mutations in the gene panel.
 

@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class EvidenceConsolidation {
@@ -22,8 +23,12 @@ public final class EvidenceConsolidation {
     public static List<ProtectEvidence> consolidate(@NotNull List<ProtectEvidence> evidences) {
         Map<ProtectEvidence, ConsolidatedData> dataPerEvidence = Maps.newHashMap();
         for (ProtectEvidence evidence : evidences) {
-            ProtectEvidence strippedEvidence =
-                    ImmutableProtectEvidence.builder().from(evidence).urls(Sets.newHashSet()).sources(Sets.newHashSet()).build();
+            ProtectEvidence strippedEvidence = ImmutableProtectEvidence.builder()
+                    .from(evidence)
+                    .evidenceUrls(Sets.newHashSet())
+                    .sources(Sets.newHashSet())
+                    .sourceUrls(Sets.newHashSet())
+                    .build();
             ConsolidatedData data = dataPerEvidence.get(strippedEvidence);
             if (data == null) {
                 data = new ConsolidatedData();
@@ -36,8 +41,9 @@ public final class EvidenceConsolidation {
         for (Map.Entry<ProtectEvidence, ConsolidatedData> entry : dataPerEvidence.entrySet()) {
             consolidatedEvents.add(ImmutableProtectEvidence.builder()
                     .from(entry.getKey())
+                    .evidenceUrls(entry.getValue().evidenceUrls())
                     .sources(entry.getValue().sources())
-                    .urls(entry.getValue().urls())
+                    .sourceUrls(entry.getValue().sourceUrls())
                     .build());
         }
         return consolidatedEvents;
@@ -46,16 +52,24 @@ public final class EvidenceConsolidation {
     private static class ConsolidatedData {
 
         @NotNull
+        private final Set<String> evidenceUrls = Sets.newTreeSet();
+        @NotNull
         private final Set<Knowledgebase> sources = Sets.newTreeSet();
         @NotNull
-        private final Set<String> urls = Sets.newTreeSet();
+        private final Set<String> sourceUrls = Sets.newTreeSet();
 
         public ConsolidatedData() {
         }
 
         public void appendEvidence(@NotNull ProtectEvidence evidence) {
+            evidenceUrls.addAll(evidence.evidenceUrls());
             sources.addAll(evidence.sources());
-            urls.addAll(evidence.urls());
+            sourceUrls.addAll(evidence.sourceUrls());
+        }
+
+        @NotNull
+        public Set<String> evidenceUrls() {
+            return evidenceUrls;
         }
 
         @NotNull
@@ -64,8 +78,8 @@ public final class EvidenceConsolidation {
         }
 
         @NotNull
-        public Set<String> urls() {
-            return urls;
+        public Set<String> sourceUrls() {
+            return sourceUrls;
         }
     }
 }
