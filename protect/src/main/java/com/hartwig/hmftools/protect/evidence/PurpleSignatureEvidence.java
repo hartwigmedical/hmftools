@@ -11,9 +11,13 @@ import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicAnnotation;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class PurpleSignatureEvidence {
+
+    private static final Logger LOGGER = LogManager.getLogger(PurpleSignatureEvidence.class);
 
     static final String MICROSATELLITE_UNSTABLE_EVENT = "Microsatellite unstable";
     static final String HIGH_TUMOR_LOAD_EVENT = "High tumor mutation load";
@@ -61,6 +65,8 @@ public class PurpleSignatureEvidence {
                                 result.add(generateMSIEvidences(signatureMSI));
                             }
                             break;
+                        default:
+                            LOGGER.warn("Signature comparator is null");
                     }
                 }
             }
@@ -90,6 +96,8 @@ public class PurpleSignatureEvidence {
                                 result.add(generateMTLEvidences(signatureTML));
                             }
                             break;
+                        default:
+                            LOGGER.warn("Signature comparator is null");
                     }
                 }
             }
@@ -118,6 +126,8 @@ public class PurpleSignatureEvidence {
                             result.add(generateMTBEvidences(signatureTMB));
                         }
                         break;
+                    default:
+                        LOGGER.warn("Signature comparator is null");
                 }
             }
         }
