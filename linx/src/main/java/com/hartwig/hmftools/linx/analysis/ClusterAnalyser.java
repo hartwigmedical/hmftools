@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateRepl
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateTemplatedInsertions;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.reportUnderclustering;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.runAnnotation;
+import static com.hartwig.hmftools.linx.analysis.ClusterClassification.isFilteredResolvedType;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.annotateNearestSvData;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.associateBreakendCnEvents;
@@ -222,6 +223,9 @@ public class ClusterAnalyser {
 
         for(SvCluster cluster : mClusters)
         {
+            if(isFilteredResolvedType(cluster.getResolvedType()))
+                continue;
+
             if(!cluster.getDoubleMinuteSVs().isEmpty() || dmClusterIds.contains(cluster.id()))
                 mDmFinder.analyseCluster(cluster, true);
 
@@ -305,6 +309,9 @@ public class ClusterAnalyser {
 
         for(SvCluster cluster : mClusters)
         {
+            if(isFilteredResolvedType(cluster.getResolvedType()))
+                continue;
+
             if(checkDMs && isSimpleSingleSV(cluster))
             {
                 mDmFinder.analyseCluster(cluster);
