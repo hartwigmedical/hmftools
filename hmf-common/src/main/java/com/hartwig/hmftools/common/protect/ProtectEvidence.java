@@ -107,11 +107,6 @@ public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
             return directionCompare;
         }
 
-        int eventIsHighDriverCompare = eventIsHighDriver().compareTo(o.eventIsHighDriver());
-        if (eventIsHighDriverCompare != 0) {
-            return eventIsHighDriverCompare;
-        }
-
         int sourceEventCompare = sourceEvent().compareTo(o.sourceEvent());
         if (sourceEventCompare != 0) {
             return sourceEventCompare;
