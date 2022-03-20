@@ -46,7 +46,6 @@ To run SAGE in germline mode we use the following parameters:
 -ref_genome_version 37 
 -ref_genome /opt/resources/reference_genome/37/Homo_sapiens.GRCh37.GATK.illumina.fasta
 -ensembl_data_dir /path_to_ensmebl_cache/ \
--threads 8 
 -out /data/output/TUMOR_SAMPLE.sage.germline.vcf.gz 
 ``` 
 
