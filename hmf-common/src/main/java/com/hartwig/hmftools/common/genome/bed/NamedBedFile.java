@@ -26,29 +26,36 @@ import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.bed.BEDFeature;
 import htsjdk.tribble.readers.LineIterator;
 
-public final class NamedBedFile {
-
+public final class NamedBedFile
+{
     private static final Logger LOGGER = LogManager.getLogger(NamedBedFile.class);
     private static final String DELIMITER = "\t";
 
-    private NamedBedFile() {
+    private NamedBedFile()
+    {
     }
 
-    public static void writeUnnamedBedFile(@NotNull final String filename, @NotNull final List<GenomeRegion> regions) throws IOException {
+    public static void writeUnnamedBedFile(final String filename, final List<GenomeRegion> regions) throws IOException
+    {
         List<String> strings = regions.stream().map(NamedBedFile::asBed).collect(Collectors.toList());
         write(filename, strings);
     }
 
-    public static void writeBedFile(@NotNull final String filename, @NotNull final List<NamedBed> regions) throws IOException {
+    public static void writeBedFile(final String filename, final List<NamedBed> regions) throws IOException
+    {
         List<String> strings = regions.stream().map(NamedBedFile::asBed).collect(Collectors.toList());
         write(filename, strings);
     }
 
-    public static void write(@NotNull final String filename, @NotNull final List<String> lines) throws IOException {
-        try (FileOutputStream output = new FileOutputStream(filename)) {
+    public static void write(final String filename, final List<String> lines) throws IOException
+    {
+        try(FileOutputStream output = new FileOutputStream(filename))
+        {
             OutputStream transformedOutput = filename.endsWith(".gz") ? new GZIPOutputStream(output) : output;
-            try (Writer writer = new OutputStreamWriter(transformedOutput, StandardCharsets.UTF_8)) {
-                for (CharSequence line : lines) {
+            try(Writer writer = new OutputStreamWriter(transformedOutput, StandardCharsets.UTF_8))
+            {
+                for(CharSequence line : lines)
+                {
                     writer.append(line);
                     writer.append("\n");
                 }
@@ -58,22 +65,31 @@ public final class NamedBedFile {
     }
 
     @NotNull
-    public static List<NamedBed> readBedFile(@NotNull String bedFile) throws IOException {
+    public static List<NamedBed> readBedFile(String bedFile) throws IOException
+    {
         List<NamedBed> result = Lists.newArrayList();
         NamedBed prevRegion = null;
-        try (final AbstractFeatureReader<BEDFeature, LineIterator> reader = getFeatureReader(bedFile, new BEDCodec(), false)) {
-            for (final BEDFeature bedFeature : reader.iterator()) {
+        try(final AbstractFeatureReader<BEDFeature, LineIterator> reader = getFeatureReader(bedFile, new BEDCodec(), false))
+        {
+            for(final BEDFeature bedFeature : reader.iterator())
+            {
                 final NamedBed namedBed = fromBedFeature(bedFeature);
-                if (namedBed.end() < namedBed.start()) {
+                if(namedBed.end() < namedBed.start())
+                {
                     LOGGER.warn("Invalid genome region found in chromosome {}: start={}, end={}",
                             namedBed.chromosome(),
                             namedBed.start(),
                             namedBed.end());
-                } else {
-                    if (prevRegion != null && namedBed.chromosome().equals(prevRegion.chromosome())
-                            && prevRegion.end() >= namedBed.start()) {
+                }
+                else
+                {
+                    if(prevRegion != null && namedBed.chromosome().equals(prevRegion.chromosome())
+                            && prevRegion.end() >= namedBed.start())
+                    {
                         LOGGER.warn("BED file is not sorted, please fix! Current={}, Previous={}", namedBed, prevRegion);
-                    } else {
+                    }
+                    else
+                    {
                         result.add(namedBed);
                         prevRegion = namedBed;
                     }
@@ -84,8 +100,8 @@ public final class NamedBedFile {
         return result;
     }
 
-    @NotNull
-    static NamedBed fromBedFeature(@NotNull BEDFeature feature) {
+    static NamedBed fromBedFeature(BEDFeature feature)
+    {
         String name = feature.getName();
         return ImmutableNamedBed.builder()
                 .chromosome(feature.getContig())
@@ -95,16 +111,16 @@ public final class NamedBedFile {
                 .build();
     }
 
-    @NotNull
-    private static String asBed(@NotNull final GenomeRegion region) {
+    private static String asBed(final GenomeRegion region)
+    {
         return new StringJoiner(DELIMITER).add(region.chromosome())
                 .add(String.valueOf(region.start() - 1))
                 .add(String.valueOf(region.end()))
                 .toString();
     }
 
-    @NotNull
-    private static String asBed(@NotNull final NamedBed region) {
+    private static String asBed(final NamedBed region)
+    {
         return new StringJoiner(DELIMITER).add(region.chromosome())
                 .add(String.valueOf(region.start() - 1))
                 .add(String.valueOf(region.end()))

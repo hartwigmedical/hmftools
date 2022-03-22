@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.purple.purity;
 
+import static com.hartwig.hmftools.common.purple.purity.RunMode.TUMOR_GERMLINE;
+
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
@@ -16,6 +18,11 @@ public abstract class PurityContext {
     public abstract String version();
 
     public abstract Gender gender();
+
+    @NotNull
+    public abstract RunMode runMode();
+
+    public abstract boolean targeted();
 
     public abstract FittedPurity bestFit();
 

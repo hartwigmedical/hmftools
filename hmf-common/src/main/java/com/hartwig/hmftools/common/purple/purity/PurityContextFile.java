@@ -1,10 +1,14 @@
 package com.hartwig.hmftools.common.purple.purity;
 
+import static com.hartwig.hmftools.common.purple.PurpleCommon.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -17,96 +21,59 @@ import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class PurityContextFile {
-
+public final class PurityContextFile
+{
     private static final DecimalFormat FORMAT = PurpleCommon.decimalFormat("0.0000");
-    private static final String DELIMITER = "\t";
 
     private static final String EXTENSION = ".purple.purity.tsv";
-    private static final String EXTENSION_OLD = ".purple.purity";
 
-    @NotNull
-    public static PurityContext read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
+    public static PurityContext read(final String basePath, final String sample) throws IOException
+    {
         return readWithQC(PurpleQCFile.generateFilename(basePath, sample), generateFilenameForReading(basePath, sample));
     }
 
-    @NotNull
-    public static String generateFilenameForReading(@NotNull final String basePath, @NotNull final String sample) {
-        String filename = basePath + File.separator + sample + EXTENSION;
-        return (new File(filename).exists()) ? filename : basePath + File.separator + sample + EXTENSION_OLD;
+    public static String generateFilenameForReading(final String basePath, final String sample)
+    {
+        return basePath + File.separator + sample + EXTENSION;
     }
 
-    @NotNull
-    public static PurityContext readWithQC(@NotNull final String qcFilePath, @NotNull String filePath) throws IOException {
-        PurpleQC qc = PurpleQCFile.read(qcFilePath);
-        return fromLine(Files.readAllLines(new File(filePath).toPath()).get(1)).qc(qc).build();
-    }
-
-    @NotNull
-    @VisibleForTesting
-    static PurityContext fromLines(@NotNull List<String> qcLines, @NotNull List<String> fitLines)  {
-        final PurpleQC qc = PurpleQCFile.fromLines(qcLines);
-        return fromLine(fitLines.get(1)).qc(qc).build();
-    }
-
-    @NotNull
-    private static ImmutablePurityContext.Builder fromLine(@NotNull String line) {
-        final String[] values = line.split(DELIMITER);
-        ImmutablePurityContext.Builder builder = ImmutablePurityContext.builder()
-                .score(score(values))
-                .bestFit(bestFit(values))
-                .gender(gender(values))
-                .method(method(values))
-                .polyClonalProportion(polyClonalProportion(values))
-                .version(values[14])
-                .wholeGenomeDuplication(Boolean.parseBoolean(values[16]))
-                .microsatelliteIndelsPerMb(Double.parseDouble(values[17]))
-                .microsatelliteStatus(MicrosatelliteStatus.valueOf(values[18]))
-                .tumorMutationalLoad(tumorMutationalLoad(values[19]))
-                .tumorMutationalLoadStatus(TumorMutationalStatus.valueOf(values[20]))
-                .tumorMutationalBurdenPerMb(Double.parseDouble(values[21]))
-                .tumorMutationalBurdenStatus(TumorMutationalStatus.valueOf(values[22]))
-                .svTumorMutationalBurden(0);
-
-        if (values.length == 24) {
-            builder.svTumorMutationalBurden(Integer.parseInt(values[23]));
-        }
-
-        return builder;
-    }
-
-    public static void write(@NotNull final String basePath, @NotNull final String sample, @NotNull final PurityContext context)
-            throws IOException {
+    public static void write(final String basePath, final String sample, final PurityContext context) throws IOException
+    {
         PurpleQCFile.write(PurpleQCFile.generateFilename(basePath, sample), context.qc());
         writeBestPurity(basePath, sample, context);
     }
 
-    private static void writeBestPurity(@NotNull final String basePath, @NotNull final String sample, @NotNull final PurityContext context)
-            throws IOException {
+    private static void writeBestPurity(final String basePath, final String sample, final PurityContext context) throws IOException
+    {
         final String filePath = generateFilenameForWriting(basePath, sample);
         Files.write(new File(filePath).toPath(), toLines(context));
     }
 
     @NotNull
-    private static String generateFilenameForWriting(@NotNull final String basePath, @NotNull final String sample) {
+    private static String generateFilenameForWriting(final String basePath, final String sample)
+    {
         return basePath + File.separator + sample + EXTENSION;
     }
 
-    @NotNull
     @VisibleForTesting
-    static List<String> toLines(@NotNull final PurityContext context) {
+    static List<String> toLines(final PurityContext context)
+    {
         return Lists.newArrayList(header(), toString(context));
     }
 
     @NotNull
-    static String header() {
-        return new StringJoiner(DELIMITER, "", "").add("purity")
+    static String header()
+    {
+        return new StringJoiner(DELIMITER, "", "")
+                .add("purity")
                 .add("normFactor")
                 .add("score")
                 .add("diploidProportion")
                 .add("ploidy")
                 .add("gender")
                 .add("status")
+                .add("runMode")
+                .add("targeted")
                 .add("polyclonalProportion")
                 .add("minPurity")
                 .add("maxPurity")
@@ -128,16 +95,21 @@ public final class PurityContextFile {
     }
 
     @NotNull
-    static String toString(@NotNull final PurityContext context) {
+    static String toString(final PurityContext context)
+    {
         final FittedPurity purity = context.bestFit();
         final FittedPurityScore score = context.score();
-        return new StringJoiner(DELIMITER).add(FORMAT.format(purity.purity()))
+
+        return new StringJoiner(DELIMITER)
+                .add(FORMAT.format(purity.purity()))
                 .add(FORMAT.format(purity.normFactor()))
                 .add(FORMAT.format(purity.score()))
                 .add(FORMAT.format(purity.diploidProportion()))
                 .add(FORMAT.format(purity.ploidy()))
                 .add(String.valueOf(context.gender()))
                 .add(String.valueOf(context.method()))
+                .add(String.valueOf(context.runMode()))
+                .add(String.valueOf(context.targeted()))
                 .add(FORMAT.format(context.polyClonalProportion()))
                 .add(FORMAT.format(score.minPurity()))
                 .add(FORMAT.format(score.maxPurity()))
@@ -158,55 +130,61 @@ public final class PurityContextFile {
                 .toString();
     }
 
-    @NotNull
-    private static FittedPurity bestFit(@NotNull final String[] values) {
-        final ImmutableFittedPurity.Builder builder = ImmutableFittedPurity.builder()
-                .purity(Double.parseDouble(values[0]))
-                .normFactor(Double.parseDouble(values[1]))
-                .score(Double.parseDouble(values[2]))
-                .diploidProportion(Double.parseDouble(values[3]))
-                .ploidy(Double.parseDouble(values[4]))
-                .somaticPenalty(0);
+    public static PurityContext readWithQC(final String qcFilePath, String filePath) throws IOException
+    {
+        PurpleQC qc = PurpleQCFile.read(qcFilePath);
 
-        if (values.length > 15) {
-            builder.somaticPenalty(Double.parseDouble(values[15]));
-        }
+        List<String> lines = Files.readAllLines(new File(filePath).toPath());
+
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+        String[] values = lines.get(1).split(DELIMITER, -1);
+
+        ImmutablePurityContext.Builder builder = ImmutablePurityContext.builder();
+
+        builder.qc(qc);
+
+        FittedPurity fittedPurity = ImmutableFittedPurity.builder()
+                .purity(Double.parseDouble(values[fieldsIndexMap.get("purity")]))
+                .normFactor(Double.parseDouble(values[fieldsIndexMap.get("normFactor")]))
+                .score(Double.parseDouble(values[fieldsIndexMap.get("score")]))
+                .diploidProportion(Double.parseDouble(values[fieldsIndexMap.get("diploidProportion")]))
+                .ploidy(Double.parseDouble(values[fieldsIndexMap.get("ploidy")]))
+                .somaticPenalty(Double.parseDouble(values[fieldsIndexMap.get("somaticPenalty")]))
+                .build();
+
+        FittedPurityScore score = ImmutableFittedPurityScore.builder()
+                .minPurity(Double.parseDouble(values[fieldsIndexMap.get("minPurity")]))
+                .maxPurity(Double.parseDouble(values[fieldsIndexMap.get("maxPurity")]))
+                .minPloidy(Double.parseDouble(values[fieldsIndexMap.get("minPloidy")]))
+                .maxPloidy(Double.parseDouble(values[fieldsIndexMap.get("maxPloidy")]))
+                .minDiploidProportion(Double.parseDouble(values[fieldsIndexMap.get("minDiploidProportion")]))
+                .maxDiploidProportion(Double.parseDouble(values[fieldsIndexMap.get("maxDiploidProportion")]))
+                .build();
+
+        String tml =  values[fieldsIndexMap.get("tml")];
+        int tumorMutationalLoad = tml.contains(".") ?
+                Integer.parseInt(tml.substring(0, tml.indexOf("."))) : Integer.parseInt(tml);
+
+        RunMode runMode = fieldsIndexMap.containsKey("runMode") ?
+                RunMode.valueOf(values[fieldsIndexMap.get("runMode")]) : RunMode.TUMOR_GERMLINE;
+
+        builder.score(score)
+                .bestFit(fittedPurity)
+                .gender(Gender.valueOf(values[fieldsIndexMap.get("gender")]))
+                .method(FittedPurityMethod.valueOf(values[fieldsIndexMap.get("status")]))
+                .runMode(runMode)
+                .targeted(fieldsIndexMap.containsKey("targeted") ? Boolean.parseBoolean(values[fieldsIndexMap.get("targeted")]) : false)
+                .polyClonalProportion(Double.parseDouble(values[fieldsIndexMap.get("polyclonalProportion")]))
+                .version(values[fieldsIndexMap.get("version")])
+                .wholeGenomeDuplication(Boolean.parseBoolean(values[fieldsIndexMap.get("wholeGenomeDuplication")]))
+                .microsatelliteIndelsPerMb(Double.parseDouble(values[fieldsIndexMap.get("msIndelsPerMb")]))
+                .microsatelliteStatus(MicrosatelliteStatus.valueOf(values[fieldsIndexMap.get("msStatus")]))
+                .tumorMutationalLoad(tumorMutationalLoad)
+                .tumorMutationalLoadStatus(TumorMutationalStatus.valueOf(values[fieldsIndexMap.get("tmlStatus")]))
+                .tumorMutationalBurdenPerMb(Double.parseDouble(values[fieldsIndexMap.get("tmbPerMb")]))
+                .tumorMutationalBurdenStatus(TumorMutationalStatus.valueOf(values[fieldsIndexMap.get("tmbStatus")]))
+                .svTumorMutationalBurden(Integer.parseInt(values[fieldsIndexMap.get("svTumorMutationalBurden")]));
 
         return builder.build();
     }
-
-    @NotNull
-    private static Gender gender(@NotNull final String[] values) {
-        return Gender.valueOf(values[5]);
-    }
-
-    @NotNull
-    private static FittedPurityMethod method(@NotNull final String[] values) {
-        return FittedPurityMethod.valueOf(values[6]);
-    }
-
-    @NotNull
-    private static FittedPurityScore score(@NotNull final String[] values) {
-        return ImmutableFittedPurityScore.builder()
-                .minPurity(Double.parseDouble(values[8]))
-                .maxPurity(Double.parseDouble(values[9]))
-                .minPloidy(Double.parseDouble(values[10]))
-                .maxPloidy(Double.parseDouble(values[11]))
-                .minDiploidProportion(Double.parseDouble(values[12]))
-                .maxDiploidProportion(Double.parseDouble(values[13]))
-                .build();
-    }
-
-    private static double polyClonalProportion(@NotNull final String[] values) {
-        return Double.parseDouble(values[7]);
-    }
-
-    private static int tumorMutationalLoad(@NotNull final String tml) {
-        if (tml.contains(".")) {
-            return Integer.parseInt(tml.substring(0, tml.indexOf(".")));
-        }
-
-        return Integer.parseInt(tml);
-    }
-
 }

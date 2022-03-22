@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.purple.purity;
 
+import static com.hartwig.hmftools.common.purple.PurpleCommon.DELIMITER;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,35 +18,40 @@ import com.hartwig.hmftools.common.purple.PurpleQC;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class PurpleQCFile {
-
+public final class PurpleQCFile
+{
     private static final DecimalFormat FORMAT = PurpleCommon.decimalFormat("0.0000");
 
-    private static final String DELIMITER = "\t";
     private static final String EXTENSION = ".purple.qc";
 
-    private PurpleQCFile() {
+    private PurpleQCFile()
+    {
     }
 
     @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
+    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
+    {
         return basePath + File.separator + sample + EXTENSION;
     }
 
     @NotNull
-    public static PurpleQC read(@NotNull final String filename) throws IOException {
+    public static PurpleQC read(@NotNull final String filename) throws IOException
+    {
         return fromLines(Files.readAllLines(new File(filename).toPath()));
     }
 
-    public static void write(@NotNull final String fileName, @NotNull final PurpleQC check) throws IOException {
+    public static void write(@NotNull final String fileName, @NotNull final PurpleQC check) throws IOException
+    {
         Files.write(new File(fileName).toPath(), toLines(check));
     }
 
     @NotNull
-    static PurpleQC fromLines(@NotNull final List<String> lines) {
+    static PurpleQC fromLines(@NotNull final List<String> lines)
+    {
         final ImmutablePurpleQC.Builder builder = ImmutablePurpleQC.builder().amberMeanDepth(0);
 
-        if (lines.get(1).startsWith("SegmentPass")) {
+        if(lines.get(1).startsWith("SegmentPass"))
+        {
             // PURPLE 2.47
             builder.unsupportedCopyNumberSegments(Integer.parseInt(getValue(lines.get(5))))
                     .amberGender(Gender.valueOf(getValue(lines.get(7))))
@@ -54,7 +61,9 @@ public final class PurpleQCFile {
                     .purity(1)
                     .method(FittedPurityMethod.NORMAL)
                     .contamination(0);
-        } else {
+        }
+        else
+        {
             builder.method(FittedPurityMethod.valueOf(getValue(lines.get(1))))
                     .copyNumberSegments(Integer.parseInt(getValue(lines.get(2))))
                     .unsupportedCopyNumberSegments(Integer.parseInt(getValue(lines.get(3))))
@@ -66,7 +75,8 @@ public final class PurpleQCFile {
                     .germlineAberrations(GermlineAberration.fromString(getValue(lines.get(9))));
         }
 
-        if (lines.size() > 10) {
+        if(lines.size() > 10)
+        {
             builder.amberMeanDepth(Integer.parseInt(getValue(lines.get(10))));
         }
 
@@ -74,13 +84,15 @@ public final class PurpleQCFile {
     }
 
     @NotNull
-    private static String getValue(@NotNull String line) {
+    private static String getValue(@NotNull String line)
+    {
         return line.split(DELIMITER)[1];
     }
 
     @NotNull
     @VisibleForTesting
-    static List<String> toLines(@NotNull final PurpleQC check) {
+    static List<String> toLines(@NotNull final PurpleQC check)
+    {
         final List<String> result = Lists.newArrayList();
 
         result.add("QCStatus" + DELIMITER + check.toString());
