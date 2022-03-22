@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.healthchecker.runners.HealthCheckSampleConfiguration;
 
 import org.junit.Test;
 
@@ -16,12 +17,10 @@ public class HealthChecksApplicationTest {
 
     @Test
     public void runHealthCheckerInSomaticMode() throws IOException {
-        HealthChecksApplication app = new HealthChecksApplication("reference",
-                "tumor",
-                BASE_DIR + "metrics/reference.wgsmetrics",
-                BASE_DIR + "metrics/tumor.wgsmetrics",
-                BASE_DIR + "flagstat/reference.flagstat",
-                BASE_DIR + "flagstat/tumor.flagstat",
+        HealthChecksApplication app = new HealthChecksApplication(HealthCheckSampleConfiguration.of("reference",
+                BASE_DIR + "metrics" + "/reference.wgsmetrics",
+                BASE_DIR + "flagstat/reference.flagstat"),
+                HealthCheckSampleConfiguration.of("tumor", BASE_DIR + "metrics/tumor.wgsmetrics", BASE_DIR + "flagstat/tumor.flagstat"),
                 BASE_DIR + "purple",
                 OUTPUT_DIR);
 
@@ -29,14 +28,19 @@ public class HealthChecksApplicationTest {
     }
 
     @Test
-    public void runHealthCheckerInSingleSampleMode() throws IOException {
-        HealthChecksApplication app = new HealthChecksApplication("reference",
-                null,
-                BASE_DIR + "metrics/reference.wgsmetrics",
-                null,
-                BASE_DIR + "flagstat/reference.flagstat",
-                null,
-                null,
+    public void runHealthCheckerInGermlineOnlyMode() throws IOException {
+        HealthChecksApplication app = new HealthChecksApplication(HealthCheckSampleConfiguration.of("reference",
+                BASE_DIR + "metrics" + "/reference.wgsmetrics",
+                BASE_DIR + "flagstat/reference.flagstat"), null, null, OUTPUT_DIR);
+
+        app.run(WRITE_EVALUATION_FILE);
+    }
+
+    @Test
+    public void runHealthCheckerInTumorOnlyMode() throws IOException {
+        HealthChecksApplication app = new HealthChecksApplication(null,
+                HealthCheckSampleConfiguration.of("tumor", BASE_DIR + "metrics/tumor.wgsmetrics", BASE_DIR + "flagstat/tumor.flagstat"),
+                BASE_DIR + "purple",
                 OUTPUT_DIR);
 
         app.run(WRITE_EVALUATION_FILE);
