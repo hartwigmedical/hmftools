@@ -11,7 +11,6 @@ public interface GenomeRegion extends Comparable<GenomeRegion> {
     String chromosome();
 
     int start();
-
     int end();
 
     default int bases() {

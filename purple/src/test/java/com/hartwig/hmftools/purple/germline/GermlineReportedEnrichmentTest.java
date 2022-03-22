@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.enrich;
+package com.hartwig.hmftools.purple.germline;
 
 import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_BIALLELIC_FLAG;
 import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_VARIANT_CN_INFO;
@@ -28,10 +28,12 @@ import org.junit.Test;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class GermlineReportedEnrichmentTest {
+public class GermlineReportedEnrichmentTest
+{
 
     @Test
-    public void testReportHotspot() {
+    public void testReportHotspot()
+    {
         List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.NONE, DriverGeneGermlineReporting.ANY);
         GermlineReportedEnrichment victim =
@@ -44,7 +46,8 @@ public class GermlineReportedEnrichmentTest {
     }
 
     @Test
-    public void testDoNotReportFailedHotspot() {
+    public void testDoNotReportFailedHotspot()
+    {
         List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.NONE, DriverGeneGermlineReporting.ANY);
         GermlineReportedEnrichment victim =
@@ -59,7 +62,8 @@ public class GermlineReportedEnrichmentTest {
     }
 
     @Test
-    public void testDoNotReportHotspotWhenNone() {
+    public void testDoNotReportHotspotWhenNone()
+    {
         List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.NONE, DriverGeneGermlineReporting.NONE);
         GermlineReportedEnrichment victim =
@@ -72,7 +76,8 @@ public class GermlineReportedEnrichmentTest {
     }
 
     @Test
-    public void testDoNotReportSingleHotspotWhenNoMultipleHits() {
+    public void testDoNotReportSingleHotspotWhenNoMultipleHits()
+    {
         List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene =
                 createDriverGene("KD53", DriverGeneGermlineReporting.WILDTYPE_LOST, DriverGeneGermlineReporting.WILDTYPE_LOST);
@@ -88,7 +93,8 @@ public class GermlineReportedEnrichmentTest {
     }
 
     @Test
-    public void testDoNotReportSingleHotspotWhenMultipleHitsViaUnreportedVariant() {
+    public void testDoNotReportSingleHotspotWhenMultipleHitsViaUnreportedVariant()
+    {
         List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.NONE, DriverGeneGermlineReporting.WILDTYPE_LOST);
         GermlineReportedEnrichment victim =
@@ -103,7 +109,8 @@ public class GermlineReportedEnrichmentTest {
     }
 
     @Test
-    public void testReportHotspotWhenMultipleHits() {
+    public void testReportHotspotWhenMultipleHits()
+    {
         List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene =
                 createDriverGene("KD53", DriverGeneGermlineReporting.WILDTYPE_LOST, DriverGeneGermlineReporting.WILDTYPE_LOST);
@@ -119,7 +126,8 @@ public class GermlineReportedEnrichmentTest {
     }
 
     @Test
-    public void testReportHotspotWhenMultipleHitsWithSameLPS() {
+    public void testReportHotspotWhenMultipleHitsWithSameLPS()
+    {
         List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene =
                 createDriverGene("KD53", DriverGeneGermlineReporting.WILDTYPE_LOST, DriverGeneGermlineReporting.WILDTYPE_LOST);
@@ -135,7 +143,8 @@ public class GermlineReportedEnrichmentTest {
     }
 
     @Test
-    public void testReportUnknownFrameshift() {
+    public void testReportUnknownFrameshift()
+    {
         List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.ANY, DriverGeneGermlineReporting.NONE);
         GermlineReportedEnrichment victim =
@@ -148,7 +157,8 @@ public class GermlineReportedEnrichmentTest {
     }
 
     @Test
-    public void testReportPathogenic() {
+    public void testReportPathogenic()
+    {
         List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.ANY, DriverGeneGermlineReporting.NONE);
         GermlineReportedEnrichment victim =
@@ -161,7 +171,8 @@ public class GermlineReportedEnrichmentTest {
     }
 
     @Test
-    public void testReportBiallelicAsMultipleHit() {
+    public void testReportBiallelicAsMultipleHit()
+    {
         List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.ANY, DriverGeneGermlineReporting.WILDTYPE_LOST);
         GermlineReportedEnrichment victim =
@@ -174,7 +185,8 @@ public class GermlineReportedEnrichmentTest {
     }
 
     @Test
-    public void testIgnoreSinglePathogenicWhenNoMultipleHits() {
+    public void testIgnoreSinglePathogenicWhenNoMultipleHits()
+    {
         List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.WILDTYPE_LOST, DriverGeneGermlineReporting.NONE);
         GermlineReportedEnrichment victim =
@@ -187,7 +199,8 @@ public class GermlineReportedEnrichmentTest {
     }
 
     @Test
-    public void testSomaticCountTowardsMultipleHits() {
+    public void testSomaticCountTowardsMultipleHits()
+    {
         List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.WILDTYPE_LOST, DriverGeneGermlineReporting.NONE);
         GermlineReportedEnrichment victim =
@@ -200,7 +213,8 @@ public class GermlineReportedEnrichmentTest {
     }
 
     @Test
-    public void testVariantNotLost() {
+    public void testVariantNotLost()
+    {
         List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.VARIANT_NOT_LOST, DriverGeneGermlineReporting.NONE);
         GermlineReportedEnrichment victim =
@@ -216,7 +230,8 @@ public class GermlineReportedEnrichmentTest {
 
     @NotNull
     private static VariantContext createGermline(@NotNull String filter, @NotNull String gene, boolean biallelic, boolean isHotspot,
-            @NotNull String clinSig, @NotNull CodingEffect codingEffect, double variantCopyNumber) {
+            @NotNull String clinSig, @NotNull CodingEffect codingEffect, double variantCopyNumber)
+    {
         final String hotspotFlag = isHotspot ? HOTSPOT_FLAG : NEAR_HOTSPOT_FLAG;
         final String line =
                 "11\t1000\tCOSM123;COSM456\tG\tA\t100\t" + filter + "\t" + PURPLE_BIALLELIC_FLAG + "=" + biallelic + ";" + hotspotFlag
@@ -227,7 +242,8 @@ public class GermlineReportedEnrichmentTest {
 
     @NotNull
     private static VariantContext createGermline(@NotNull String filter, @NotNull String gene, boolean biallelic, boolean isHotspot,
-            @NotNull String clinSig, @NotNull CodingEffect codingEffect, double variantCopyNumber, int localPhaseSet) {
+            @NotNull String clinSig, @NotNull CodingEffect codingEffect, double variantCopyNumber, int localPhaseSet)
+    {
         final String hotspotFlag = isHotspot ? HOTSPOT_FLAG : NEAR_HOTSPOT_FLAG;
         final String line =
                 "11\t1000\tCOSM123;COSM456\tG\tA\t100\t" + filter + "\t" + PURPLE_BIALLELIC_FLAG + "=" + biallelic + ";" + hotspotFlag
@@ -239,7 +255,8 @@ public class GermlineReportedEnrichmentTest {
 
     @NotNull
     private static DriverGene createDriverGene(@NotNull String gene, @NotNull DriverGeneGermlineReporting variantReporting,
-            @NotNull DriverGeneGermlineReporting hotspotReporting) {
+            @NotNull DriverGeneGermlineReporting hotspotReporting)
+    {
         return ImmutableDriverGene.builder()
                 .gene(gene)
                 .reportDisruption(false)

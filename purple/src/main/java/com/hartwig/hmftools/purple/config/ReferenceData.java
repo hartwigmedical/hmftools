@@ -251,7 +251,7 @@ public class ReferenceData
 
 
 
-    public boolean isValid() { return mIsValid; }
+    public boolean isValid() { return mIsValid && TargetRegions.isValid(); }
 
     public static void addOptions(final Options options)
     {

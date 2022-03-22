@@ -46,9 +46,17 @@ public class TargetRegionsData
 
         loadTargetRegionsBed(bedFile);
         loadTargetRegionsRatios(ratiosFile);
+
+        if(!mTargetRegions.isEmpty())
+        {
+            PPL_LOGGER.info("loaded {} target regions from file({}) bases(total={} coding={}) ratios(tml={} tmb={} misIndels={})",
+                    mTargetRegions.values().stream().mapToInt(x -> x.size()).sum(), bedFile,
+                    mTotalBases, mCodingBases, mTmlRatio, mTmbRatio, mMsiIndelRatio);
+        }
     }
 
     public boolean hasTargetRegions() { return !mTargetRegions.isEmpty(); }
+    public boolean isValid() { return mIsValid; }
 
     public boolean inTargetRegions(final String chromsome, int position)
     {
@@ -114,9 +122,6 @@ public class TargetRegionsData
                 if(namedBed.name().contains(CODING_REGION_ID))
                     mCodingBases += namedBed.bases();
             }
-
-            PPL_LOGGER.info("loaded {} target regions from file({})",
-                    mTargetRegions.values().stream().mapToInt(x -> x.size()).sum(), bedFile);
         }
         catch (IOException e)
         {
@@ -148,6 +153,4 @@ public class TargetRegionsData
             }
         }
     }
-
-    public String toString() { return String.format("Tml({}) Tmb({}) MsiIndel({})", mTmlRatio, mTmbRatio, mMsiIndelRatio); }
 }

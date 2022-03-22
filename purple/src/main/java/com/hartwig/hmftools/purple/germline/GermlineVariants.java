@@ -117,7 +117,7 @@ public class GermlineVariants
         }
         catch(Exception e)
         {
-            PPL_LOGGER.error(" failed to enrich germline variants: {}", e.toString());
+            PPL_LOGGER.error("failed to enrich germline variants: {}", e.toString());
             e.printStackTrace();
         }
     }

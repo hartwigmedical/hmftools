@@ -10,12 +10,6 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.variant.enrich.GermlineGenotypeEnrichment;
-import com.hartwig.hmftools.common.variant.enrich.GermlineLowTumorVCNEnrichment;
-import com.hartwig.hmftools.common.variant.enrich.GermlinePathogenicEnrichment;
-import com.hartwig.hmftools.common.variant.enrich.GermlinePurityEnrichment;
-import com.hartwig.hmftools.common.variant.enrich.GermlineReportedEnrichment;
-import com.hartwig.hmftools.common.variant.enrich.GermlineRescueLowVAFEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
 import com.hartwig.hmftools.purple.somatic.VariantHotspotEnrichment;
@@ -102,7 +96,9 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment
         mLowTumorVCNEnrichment.flush();
 
         if(mSnpEffEnrichment != null)
+        {
             mSnpEffEnrichment.flush();
+        }
 
         mRefGenomeEnrichment.flush();
         mPathogenicEnrichment.flush();
@@ -118,7 +114,9 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment
         header = mRefGenomeEnrichment.enrichHeader(header);
 
         if(mSnpEffEnrichment != null)
+        {
             header = mSnpEffEnrichment.enrichHeader(header);
+        }
 
         header = mLowVafRescueEnrichment.enrichHeader(header);
         header = mLowTumorVCNEnrichment.enrichHeader(header);

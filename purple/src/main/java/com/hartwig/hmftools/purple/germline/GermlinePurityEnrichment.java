@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.enrich;
+package com.hartwig.hmftools.purple.germline;
 
 import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_AF_INFO;
 import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_BIALLELIC_FLAG;
@@ -22,6 +22,7 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.VariantHeader;
+import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -29,36 +30,41 @@ import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
 
-public class GermlinePurityEnrichment implements VariantContextEnrichment {
+public class GermlinePurityEnrichment implements VariantContextEnrichment
+{
+    private final String mVersion;
+    private final String mTumorSample;
+    private final String mReferenceSample;
+    private final PurityAdjuster mPurityAdjuster;
+    private final GenomeRegionSelector<PurpleCopyNumber> mCopyNumberSelector;
+    private final Consumer<VariantContext> mConsumer;
 
-    private final String version;
-    private final String tumorSample;
-    private final String referenceSample;
-    private final PurityAdjuster purityAdjuster;
-    private final GenomeRegionSelector<PurpleCopyNumber> copyNumberSelector;
-    private final Consumer<VariantContext> consumer;
-
-    public GermlinePurityEnrichment(final String purpleVersion, final String tumorSample, final String referenceSample,
-            final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers, final Consumer<VariantContext> consumer) {
-        this.version = purpleVersion;
-        this.tumorSample = tumorSample;
-        this.referenceSample = referenceSample;
-        this.purityAdjuster = purityAdjuster;
-        this.copyNumberSelector = GenomeRegionSelectorFactory.createImproved(Multimaps.fromRegions(copyNumbers));
-        this.consumer = consumer;
+    public GermlinePurityEnrichment(
+            final String purpleVersion, final String tumorSample, final String referenceSample,
+            final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers, final Consumer<VariantContext> consumer)
+    {
+        mVersion = purpleVersion;
+        mTumorSample = tumorSample;
+        mReferenceSample = referenceSample;
+        mPurityAdjuster = purityAdjuster;
+        mCopyNumberSelector = GenomeRegionSelectorFactory.createImproved(Multimaps.fromRegions(copyNumbers));
+        mConsumer = consumer;
     }
 
     @Override
-    public void accept(@NotNull final VariantContext variant) {
-        final Genotype tumorGenotype = variant.getGenotype(tumorSample);
-        final Genotype normalGenotype = variant.getGenotype(referenceSample);
-        if (tumorGenotype != null && normalGenotype != null && tumorGenotype.hasAD() && HumanChromosome.contains(variant.getContig())) {
+    public void accept(@NotNull final VariantContext variant)
+    {
+        final Genotype tumorGenotype = variant.getGenotype(mTumorSample);
+        final Genotype normalGenotype = variant.getGenotype(mReferenceSample);
+        if(tumorGenotype != null && normalGenotype != null && tumorGenotype.hasAD() && HumanChromosome.contains(variant.getContig()))
+        {
             final GenomePosition position = GenomePositions.create(variant.getContig(), variant.getStart());
             final AllelicDepth tumorDepth = AllelicDepth.fromGenotype(tumorGenotype);
             final GenotypeStatus germlineGenotype = GenotypeStatus.fromGenotype(normalGenotype);
 
-            Optional<PurpleCopyNumber> optionalPurpleCopyNumber = copyNumberSelector.select(position);
-            if (optionalPurpleCopyNumber.isPresent()) {
+            Optional<PurpleCopyNumber> optionalPurpleCopyNumber = mCopyNumberSelector.select(position);
+            if(optionalPurpleCopyNumber.isPresent())
+            {
                 PurpleCopyNumber purpleCopyNumber = optionalPurpleCopyNumber.get();
                 double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
                 double vaf = germlineGenotype == GenotypeStatus.HOM_ALT ? 1.0 : vaf(germlineGenotype, purpleCopyNumber, tumorDepth);
@@ -73,36 +79,44 @@ public class GermlinePurityEnrichment implements VariantContextEnrichment {
             }
         }
 
-        consumer.accept(variant);
+        mConsumer.accept(variant);
     }
 
     private double vaf(@NotNull final GenotypeStatus germlineGenotype, @NotNull PurpleCopyNumber purpleCopyNumber,
-            @NotNull AllelicDepth tumorDepth) {
-        if (tumorDepth.totalReadCount() == 0 || tumorDepth.alleleReadCount() == 0) {
+            @NotNull AllelicDepth tumorDepth)
+    {
+        if(tumorDepth.totalReadCount() == 0 || tumorDepth.alleleReadCount() == 0)
+        {
             return 0;
         }
 
-        if (Doubles.lessOrEqual(purpleCopyNumber.averageTumorCopyNumber(), 0.001)) {
+        if(Doubles.lessOrEqual(purpleCopyNumber.averageTumorCopyNumber(), 0.001))
+        {
             return 0;
         }
 
         double rawAF = tumorDepth.alleleFrequency();
         double constrainedCopyNumber = Math.max(0.001, purpleCopyNumber.averageTumorCopyNumber());
 
-        if (germlineGenotype.equals(GenotypeStatus.HET)) {
-            return purityAdjuster.purityAdjustedVAFWithHeterozygousNormal(purpleCopyNumber.chromosome(), constrainedCopyNumber, rawAF);
-        } else {
-            return purityAdjuster.purityAdjustedVAFWithHomozygousNormal(purpleCopyNumber.chromosome(), constrainedCopyNumber, rawAF);
+        if(germlineGenotype.equals(GenotypeStatus.HET))
+        {
+            return mPurityAdjuster.purityAdjustedVAFWithHeterozygousNormal(purpleCopyNumber.chromosome(), constrainedCopyNumber, rawAF);
+        }
+        else
+        {
+            return mPurityAdjuster.purityAdjustedVAFWithHomozygousNormal(purpleCopyNumber.chromosome(), constrainedCopyNumber, rawAF);
         }
     }
 
     @Override
-    public void flush() {
+    public void flush()
+    {
     }
 
     @NotNull
     @Override
-    public VCFHeader enrichHeader(@NotNull final VCFHeader template) {
-        return VariantHeader.germlineHeader(version, template);
+    public VCFHeader enrichHeader(@NotNull final VCFHeader template)
+    {
+        return VariantHeader.germlineHeader(mVersion, template);
     }
 }

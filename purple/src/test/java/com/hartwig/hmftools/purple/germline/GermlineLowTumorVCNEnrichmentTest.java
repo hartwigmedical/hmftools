@@ -1,11 +1,11 @@
-package com.hartwig.hmftools.common.variant.enrich;
+package com.hartwig.hmftools.purple.germline;
 
 import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_VARIANT_CN_INFO;
-import static com.hartwig.hmftools.common.variant.enrich.GermlineLowTumorVCNEnrichment.MIN_QUAL_HOTSPOT;
-import static com.hartwig.hmftools.common.variant.enrich.GermlineLowTumorVCNEnrichment.MIN_QUAL_OTHER;
-import static com.hartwig.hmftools.common.variant.enrich.GermlineLowTumorVCNEnrichment.MIN_TUMOR_VCN;
 import static com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment.HOTSPOT_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment.NEAR_HOTSPOT_FLAG;
+import static com.hartwig.hmftools.purple.germline.GermlineLowTumorVCNEnrichment.MIN_QUAL_HOTSPOT;
+import static com.hartwig.hmftools.purple.germline.GermlineLowTumorVCNEnrichment.MIN_QUAL_OTHER;
+import static com.hartwig.hmftools.purple.germline.GermlineLowTumorVCNEnrichment.MIN_TUMOR_VCN;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -17,38 +17,44 @@ import org.junit.Test;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class GermlineLowTumorVCNEnrichmentTest {
-
-    private static final double LOW_VN =  MIN_TUMOR_VCN - 0.1;
+public class GermlineLowTumorVCNEnrichmentTest
+{
+    private static final double LOW_VN = MIN_TUMOR_VCN - 0.1;
 
     @Test
-    public void testHighVariantCopyNumber() {
+    public void testHighVariantCopyNumber()
+    {
         assertFiltered(false, createVariant(MIN_QUAL_OTHER - 1, MIN_TUMOR_VCN, false));
     }
 
     @Test
-    public void testHotspot() {
+    public void testHotspot()
+    {
         assertFiltered(false, createVariant(MIN_QUAL_HOTSPOT, LOW_VN, true));
         assertFiltered(true, createVariant(MIN_QUAL_HOTSPOT - 1, LOW_VN, true));
     }
 
     @Test
-    public void testOther() {
+    public void testOther()
+    {
         assertFiltered(false, createVariant(MIN_QUAL_OTHER, LOW_VN, false));
         assertFiltered(true, createVariant(MIN_QUAL_OTHER - 1, LOW_VN, false));
         assertFiltered(true, createVariant(MIN_QUAL_HOTSPOT, LOW_VN, false));
     }
 
-    private void assertFiltered(boolean expectedFiltered, VariantContext victim) {
+    private void assertFiltered(boolean expectedFiltered, VariantContext victim)
+    {
         VariantContext updated = GermlineLowTumorVCNEnrichment.process(victim);
         assertEquals(expectedFiltered, updated.isFiltered());
-        if (expectedFiltered) {
+        if(expectedFiltered)
+        {
             assertTrue(updated.getFilters().contains(GermlineLowTumorVCNEnrichment.LOW_TUMOR_VCN_FILTER));
         }
     }
 
     @NotNull
-    private static VariantContext createVariant(double qual, double variantCopyNumber, boolean isHotspot) {
+    private static VariantContext createVariant(double qual, double variantCopyNumber, boolean isHotspot)
+    {
         final String hotspotFlag = isHotspot ? HOTSPOT_FLAG : NEAR_HOTSPOT_FLAG;
         final String line = "11\t1000\tCOSM123;COSM456\tG\tA\t" + qual + "\tPASS\t" + PURPLE_VARIANT_CN_INFO + "=" + variantCopyNumber + ";"
                 + hotspotFlag + "\tGT:AD:DP\t0/1:73,17:91";
