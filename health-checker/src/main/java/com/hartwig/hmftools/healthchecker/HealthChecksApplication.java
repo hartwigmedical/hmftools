@@ -87,7 +87,7 @@ public class HealthChecksApplication {
 
         String purpleDir = cmd.getOptionValue(PURPLE_DIR, null);
         new HealthChecksApplication(HealthCheckSampleConfiguration.of(tumorSample, tumorWgsMetricsFile, tumorFlagstat),
-                HealthCheckSampleConfiguration.of(refSample, refWgsMetricsFile, refWgsMetricsFile),
+                HealthCheckSampleConfiguration.of(refSample, refWgsMetricsFile, refFlagstat),
                 purpleDir,
                 outputDir).run(writeEvaluationFile);
     }

@@ -18,7 +18,7 @@ public class HealthChecksApplicationTest {
     @Test
     public void runHealthCheckerInSomaticMode() throws IOException {
         HealthChecksApplication app = new HealthChecksApplication(HealthCheckSampleConfiguration.of("reference",
-                BASE_DIR + "metrics" + "/reference.wgsmetrics",
+                BASE_DIR + "metrics/reference.wgsmetrics",
                 BASE_DIR + "flagstat/reference.flagstat"),
                 HealthCheckSampleConfiguration.of("tumor", BASE_DIR + "metrics/tumor.wgsmetrics", BASE_DIR + "flagstat/tumor.flagstat"),
                 BASE_DIR + "purple",
