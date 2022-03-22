@@ -32,6 +32,7 @@ final class GeneDataModelChecker {
         map.put("variants", true);
         map.put("molecularProfiles", true);
         map.put("categoryVariants", true);
+        map.put("curationPolicyInfo", true); //TODO implement
 
         return new JsonDatamodelChecker("GeneObject", map);
     }
