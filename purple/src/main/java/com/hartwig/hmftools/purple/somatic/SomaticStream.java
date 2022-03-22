@@ -80,8 +80,8 @@ public class SomaticStream implements Consumer<VariantContext>
         mOutputVCF = config.OutputDir + config.TumorId + PURPLE_SOMATIC_VCF_SUFFIX;
         mEnabled = !somaticVcfFilename.isEmpty();
         mInputVCF = somaticVcfFilename;
-        mTumorMutationalLoad = new TumorMutationalLoad();
-        mMicrosatelliteIndels = new MicrosatelliteIndels();
+        mTumorMutationalLoad = new TumorMutationalLoad(mReferenceData.TargetRegions);
+        mMicrosatelliteIndels = new MicrosatelliteIndels(mReferenceData.TargetRegions);
         mDrivers = new SomaticVariantDrivers(mGenePanel);
         mSomaticVariantFactory = SomaticVariantFactory.passOnlyInstance();
         mRChartData = new RChartData(config.OutputDir, config.TumorId);

@@ -350,6 +350,7 @@ public class PurpleApplication
                 .bestFit(bestFit.fit())
                 .method(bestFit.method())
                 .gender(cobaltGender)
+                .runMode(mConfig.runMode())
                 .score(bestFit.score())
                 .polyClonalProportion(polyclonalProportion(copyNumbers))
                 .wholeGenomeDuplication(wholeGenomeDuplication(copyNumbers))
@@ -361,6 +362,7 @@ public class PurpleApplication
                 .tumorMutationalBurdenStatus(somaticStream != null ? somaticStream.tumorMutationalBurdenPerMbStatus() : TumorMutationalStatus.UNKNOWN)
                 .svTumorMutationalBurden(somaticStream != null ? sampleData.SvCache.passingBnd() : 0)
                 .qc(qcChecks)
+                .targeted(mConfig.targetRegionsMode())
                 .build();
 
         // write fit results
@@ -368,12 +370,14 @@ public class PurpleApplication
         mPurpleVersion.write(mConfig.OutputDir);
         PurityContextFile.write(mConfig.OutputDir, tumorSample, purityContext);
         FittedPurityRangeFile.write(mConfig.OutputDir, tumorSample, bestFit.allFits());
-        PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorSample), copyNumbers);
-        GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorSample), geneCopyNumbers);
         SegmentFile.write(SegmentFile.generateFilename(mConfig.OutputDir, tumorSample), fittedRegions);
 
         if(!mConfig.germlineMode())
+        {
+            PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorSample), copyNumbers);
+            GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorSample), geneCopyNumbers);
             PeakModelFile.write(PeakModelFile.generateFilename(mConfig.OutputDir, tumorSample), somaticPeaks);
+        }
 
         List<GermlineDeletion> germlineDeletions = Lists.newArrayList();
         if(!mConfig.tumorOnlyMode())
@@ -392,9 +396,15 @@ public class PurpleApplication
 
             mDbAccess.writePurity(tumorSample, purityContext, qcChecks);
             mDbAccess.writeBestFitPerPurity(tumorSample, bestFit.bestFitPerPurity());
-            mDbAccess.writeCopynumbers(tumorSample, copyNumbers);
-            mDbAccess.writeGeneCopyNumbers(tumorSample, geneCopyNumbers);
-            mDbAccess.writeGermlineDeletions(tumorSample, germlineDeletions);
+
+            if(!mConfig.germlineMode())
+            {
+                mDbAccess.writeCopynumbers(tumorSample, copyNumbers);
+                mDbAccess.writeGeneCopyNumbers(tumorSample, geneCopyNumbers);
+            }
+
+            if(!mConfig.tumorOnlyMode())
+                mDbAccess.writeGermlineDeletions(tumorSample, germlineDeletions);
         }
 
         if(mConfig.Charting.Enabled || mConfig.Charting.CircosBinary.isPresent())

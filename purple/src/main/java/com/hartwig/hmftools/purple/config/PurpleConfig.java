@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 import java.io.File;
 import java.util.StringJoiner;
 
+import com.hartwig.hmftools.common.purple.purity.RunMode;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.jetbrains.annotations.NotNull;
@@ -108,6 +110,11 @@ public class PurpleConfig
     public boolean targetRegionsMode() { return TargetRegionsBed != null; }
 
     public boolean fitWithSomatics() { return !tumorOnlyMode() && !germlineMode() && !targetRegionsMode(); }
+
+    public RunMode runMode()
+    {
+        return tumorOnlyMode() ? RunMode.TUMOR : (germlineMode() ? RunMode.GERMLINE : RunMode.TUMOR_GERMLINE);
+    }
 
     public static void addOptions(@NotNull Options options)
     {

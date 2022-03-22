@@ -3,26 +3,22 @@ package com.hartwig.hmftools.purple.somatic;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_SEQUENCE_FLAG;
 
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.purple.config.TargetRegionsData;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
-import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
 public class MicrosatelliteIndels
 {
+    private final TargetRegionsData mTargetRegions;
     private int mIndelCount;
 
-    public static final double NUMBER_OF_MB_PER_GENOME = 2859D;
     private static final int MIN_SEQUENCE_LENGTH_FOR_LONG_REPEATS = 2;
     private static final int MAX_SEQUENCE_LENGTH_FOR_LONG_REPEATS = 4;
     private static final int MIN_REPEAT_COUNT_FOR_LONG_REPEATS = 4;
@@ -30,22 +26,31 @@ public class MicrosatelliteIndels
 
     private static final int MAX_REF_ALT_LENGTH = 50;
 
+    public MicrosatelliteIndels(final TargetRegionsData referenceData)
+    {
+        mTargetRegions = referenceData;
+        mIndelCount = 0;
+    }
+
     public double microsatelliteIndelsPerMb()
     {
-        return (double) mIndelCount / NUMBER_OF_MB_PER_GENOME;
+        return mTargetRegions.calcMsiIndels(mIndelCount);
     }
 
     public void processVariant(final VariantContext context)
     {
-        if(isValidIndel(context))
-        {
-            int repeatCount = context.getAttributeAsInt(REPEAT_COUNT_FLAG, 0);
-            int repeatSequenceLength = context.getAttributeAsString(REPEAT_SEQUENCE_FLAG, Strings.EMPTY).length();
+        if(!isValidIndel(context))
+            return;
 
-            if(repeatContextIsRelevant(repeatCount, repeatSequenceLength))
-            {
-                mIndelCount++;
-            }
+        if(mTargetRegions.hasTargetRegions() && !mTargetRegions.inTargetRegions(context.getContig(), context.getStart()))
+            return;
+
+        int repeatCount = context.getAttributeAsInt(REPEAT_COUNT_FLAG, 0);
+        int repeatSequenceLength = context.getAttributeAsString(REPEAT_SEQUENCE_FLAG, Strings.EMPTY).length();
+
+        if(repeatContextIsRelevant(repeatCount, repeatSequenceLength))
+        {
+            mIndelCount++;
         }
     }
 

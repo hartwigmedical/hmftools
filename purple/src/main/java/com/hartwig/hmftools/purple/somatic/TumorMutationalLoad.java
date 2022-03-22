@@ -3,23 +3,35 @@ package com.hartwig.hmftools.purple.somatic;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
+import com.hartwig.hmftools.purple.config.ReferenceData;
+import com.hartwig.hmftools.purple.config.TargetRegionsData;
 
 public class TumorMutationalLoad
 {
+    private final TargetRegionsData mTargetRegions;
     private int mLoad;
     private int mBurden;
 
-    public int load() {
-        return mLoad;
+    public TumorMutationalLoad(final TargetRegionsData targetRegions)
+    {
+        mTargetRegions = targetRegions;
+        mLoad = 0;
+        mBurden = 0;
+    }
+
+    public int load() { return mTargetRegions.calcTml(mLoad);
     }
 
     public double burdenPerMb()
     {
-        return mBurden / MicrosatelliteIndels.NUMBER_OF_MB_PER_GENOME;
+        return mTargetRegions.calcTmb(mBurden);
     }
 
-    public void processVariant(VariantContextDecorator variant)
+    public void processVariant(final VariantContextDecorator variant)
     {
+        if(mTargetRegions.hasTargetRegions() && !mTargetRegions.inTargetRegions(variant.chromosome(), variant.position()))
+            return;
+
         mBurden++;
 
         final VariantImpact variantImpact = variant.variantImpact();
