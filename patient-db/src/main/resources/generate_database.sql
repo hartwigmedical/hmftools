@@ -644,11 +644,12 @@ DROP TABLE IF EXISTS purity;
 CREATE TABLE purity
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    version VARCHAR(255) NOT NULL,
+    version VARCHAR(20) NOT NULL,
     sampleId varchar(50) NOT NULL,
-    gender varchar(255) NOT NULL,
-    fitMethod varchar(255) NOT NULL,
-    qcStatus varchar(255) NOT NULL,
+    gender varchar(20) NOT NULL,
+    runMode varchar(20) NOT NULL,
+    fitMethod varchar(20) NOT NULL,
+    qcStatus varchar(50) NOT NULL,
     purity DOUBLE PRECISION not null,
     normFactor DOUBLE PRECISION not null,
     score DOUBLE PRECISION not null,
@@ -675,7 +676,8 @@ CREATE TABLE purity
     unsupportedCopyNumberSegments INT not null DEFAULT 0,
     contamination DOUBLE PRECISION not null DEFAULT 0,
     germlineAberration varchar(255) not null DEFAULT "NONE",
-    amberGender varchar(255) NOT NULL,
+    amberGender varchar(20) NOT NULL,
+    targeted BOOLEAN not null,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );
