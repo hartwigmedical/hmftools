@@ -305,7 +305,7 @@ The following figure shows a number examples of synthetic events with the shards
 </p>
 
 #### Deletion Bridges, Anchor Distance & Overlapping Deletion Bridges
-We use the term ‘deletion bridge’ as defined previously [ref: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3673705/] to refer to sections of DNA loss between 2 breakpoints on the same paternal chromosome that are fused to other segments of the genome. GRIDSS provides an anchor support distance for each structural variant breakend which is the number of bases mapped to the reference genome at that breakend as part of the assembly contig, which is typically in a range from 29 bases (the minimum anchor distance for GRIDSS to be able to call) up to approximately 800 bases for short read sequencing. Any other breakend that falls within this anchor distance cannot be ‘cis’ phased with the variant as the contig was able to be mapped past the breakend and the 2 breakends are deemed to be ‘trans’ phased. Trans breakends within this distance range are common in cancer. One possibility is that the breakends could occur on the other paternal chromosome, but this highly unlikely as there is no reason to expect 2 different paternal chromosomes to both be damaged within a few hundred base region. Much more likely is that when the double stranded break occurred, that there was significant overlap between the break locations on the 2 strands and the shorter strand of each overlapping break end has been repaired prior to fusing with other regions of the genome . This is highly analogous to a deletion bridge except with small sections of replication of DNA instead of loss. Linx uses the term ‘overlapping deletion bridge’ to describe this breakend topology.
+We use the term ‘deletion bridge’ as defined previously [ref: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3673705/] to refer to sections of DNA loss between 2 breakpoints on the same paternal chromosome that are fused to other segments of the genome. GRIDSS provides an anchor support distance for each structural variant breakend which is the number of bases mapped to the reference genome at that breakend as part of the assembly contig, which is typically in a range from 29 bases (the minimum anchor distance for GRIDSS to be able to call) up to approximately 800 bases for short read sequencing. Any other breakend that falls within this anchor distance cannot be ‘cis’ phased with the variant as the contig was able to be mapped past the breakend and the 2 breakends are deemed to be ‘trans’ phased. Trans breakends within this distance range are common in cancer. One possibility is that the breakends could occur on the other paternal chromosome, but this highly unlikely as there is no reason to expect 2 different paternal chromosomes to both be damaged within a few hundred base region. Much more likely is that when the double stranded break occurred, that there was significant overlap between the break locations on the 2 strands and the shorter strand of each overlapping break end has been repaired prior to fusing with other regions of the genome. This is highly analogous to a deletion bridge except with small sections of replication of DNA instead of loss. Linx uses the term ‘overlapping deletion bridge’ to describe this breakend topology, and considers it a type of deletion bridge.
 
 #### Copy number conventions
 Linx determines the number of absolute copies of each rearrangement junction in a sample, and terms this as the “junction copy number” (JCN). PURPLE SV output provides both a raw estimate of the JCN (estimated from the purity adjusted VAF of the junction) as well as the change in copy number observed at each breakend. Linx uses both the raw estimate and the copy number change to predict both a JCN point estimate and uncertainty for each rearrangement junction.
@@ -711,14 +711,13 @@ The following data is captured for each templated insertion in a chain:
 Consecutive breakends with no more than 5kb between them or which are part of the same foldback inversion are grouped together into a local topology group and given an id. The number of TIs formed by chained segments wholly within the local topology group are counted and a topology type is given to the remaining variants based on the breakend orientations. The topology types are categorised as one of the following (after excluding all TIs)
 - TI_ONLY - All breakends in the group form templated insertions
 - ISOLATED_BE - One breakend only
-- DSB - A par of breakends forming a deletion bridge
+- DSB - A pair of breakends forming a deletion bridge
 - FOLDBACK - One foldback only
 - FOLDBACK_DSB - A foldback with the outer breakend forming a deletion bridge
 - SIMPLE_DUP - A single DUP of <5k bases
 - COMPLEX_LINE - Any other cluster that is resolved as LINE
 - COMPLEX_FOLDBACK - Any other cluster that includes a foldback
 - COMPLEX_OTHER - Any other cluster
-
 
 ### Gene impact and fusion prediction
 

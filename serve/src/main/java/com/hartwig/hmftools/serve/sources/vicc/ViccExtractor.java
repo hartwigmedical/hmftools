@@ -53,7 +53,6 @@ import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class ViccExtractor {
 
@@ -77,11 +76,11 @@ public final class ViccExtractor {
         ProgressTracker tracker = new ProgressTracker("VICC", entries.size());
         for (ViccEntry entry : entries) {
             resultsPerEntry.put(entry, extractSingleEntry(entry));
-            for (Map.Entry<ViccEntry, ViccExtractionResult> entryResult : resultsPerEntry.entrySet()) {
-                extractions.add(toExtractionResult(entryResult.getValue(), entryResult.getKey()));
-            }
-
             tracker.update();
+        }
+
+        for (Map.Entry<ViccEntry, ViccExtractionResult> entryResult : resultsPerEntry.entrySet()) {
+            extractions.add(toExtractionResult(entryResult.getValue(), entryResult.getKey()));
         }
 
         actionableEvidenceFactory.evaluateCuration();
@@ -106,7 +105,7 @@ public final class ViccExtractor {
         return outputBuilder.build();
     }
 
-    @Nullable
+    @NotNull
     private ViccExtractionResult extractSingleEntry(@NotNull ViccEntry entry) {
         Map<Feature, List<VariantHotspot>> hotspotsPerFeature = Maps.newHashMap();
         Map<Feature, List<CodonAnnotation>> codonsPerFeature = Maps.newHashMap();
@@ -116,6 +115,9 @@ public final class ViccExtractor {
         Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
         Map<Feature, TumorCharacteristic> characteristicsPerFeature = Maps.newHashMap();
         Map<Feature, ImmunoHLA> hlaPerFeature = Maps.newHashMap();
+        List<EventInterpretation> eventInterpretations = Lists.newArrayList();
+        ImmutableViccExtractionResult.Builder viccBuilderBuilder = ImmutableViccExtractionResult.builder();
+
         for (Feature feature : entry.features()) {
             String gene = feature.geneSymbol();
             if (gene == null) {
@@ -123,13 +125,13 @@ public final class ViccExtractor {
             } else {
                 EventExtractorOutput extractorOutput = eventExtractor.extract(gene, entry.transcriptId(), feature.type(), feature.name());
 
-                EventInterpretation interpretation = ImmutableEventInterpretation.builder()
+                eventInterpretations.add(ImmutableEventInterpretation.builder()
                         .source(ActionableEvidenceFactory.fromViccSource(entry.source()))
                         .sourceEvent(feature.name())
                         .interpretedGene(gene)
                         .interpretedEvent(feature.name())
                         .interpretedEventType(feature.type())
-                        .build();
+                        .build());
 
                 Set<ActionableEvent> actionableEvents = actionableEvidenceFactory.toActionableEvents(entry, feature.name());
 
@@ -165,22 +167,21 @@ public final class ViccExtractor {
                     hlaPerFeature.put(feature, extractorOutput.hla());
                 }
 
-                return ImmutableViccExtractionResult.builder()
-                        .eventInterpretations(Lists.newArrayList(interpretation))
-                        .hotspotsPerFeature(hotspotsPerFeature)
-                        .codonsPerFeature(codonsPerFeature)
-                        .exonsPerFeature(exonsPerFeature)
-                        .geneLevelEventsPerFeature(geneLevelEventsPerFeature)
-                        .ampsDelsPerFeature(ampsDelsPerFeature)
-                        .fusionsPerFeature(fusionsPerFeature)
-                        .characteristicsPerFeature(characteristicsPerFeature)
-                        .HLAPerFeature(hlaPerFeature)
-                        .actionableEvents(actionableEvents)
-                        .build();
-            }
+                viccBuilderBuilder.actionableEvents(actionableEvents);
 
+            }
         }
-        return null;
+        viccBuilderBuilder.eventInterpretations(eventInterpretations);
+        viccBuilderBuilder.hotspotsPerFeature(hotspotsPerFeature);
+        viccBuilderBuilder.codonsPerFeature(codonsPerFeature);
+        viccBuilderBuilder.exonsPerFeature(exonsPerFeature);
+        viccBuilderBuilder.geneLevelEventsPerFeature(geneLevelEventsPerFeature);
+        viccBuilderBuilder.ampsDelsPerFeature(ampsDelsPerFeature);
+        viccBuilderBuilder.fusionsPerFeature(fusionsPerFeature);
+        viccBuilderBuilder.characteristicsPerFeature(characteristicsPerFeature);
+        viccBuilderBuilder.HLAPerFeature(hlaPerFeature);
+
+        return viccBuilderBuilder.build();
     }
 
     @NotNull

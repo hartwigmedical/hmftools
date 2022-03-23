@@ -24,6 +24,9 @@ def read_prep_data(sample, sample_data):
         df_sample_selection = df.loc[df['DataType']=='combined classifier']
         df_sample_selection = df_sample_selection.sort_values('RefValue',ascending= False).head(3).reset_index(drop=True)
         df_sample_selection = df_sample_selection[df_sample_selection['RefValue']>10]
+        if len(df_sample_selection) == 0:
+            df_sample_selection = df.loc[df['DataType']=='combined classifier']
+            df_sample_selection = df_sample_selection.sort_values('RefValue',ascending= False).head(1).reset_index(drop=True)
         df_sample_selection['RefValue']= df_sample_selection['RefValue'].round(1)
         df_sample_selection = df_sample_selection.reset_index()
         df_sample_selection["index"] = df_sample_selection["index"]+1

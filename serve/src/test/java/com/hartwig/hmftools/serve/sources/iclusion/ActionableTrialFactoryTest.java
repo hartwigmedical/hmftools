@@ -55,8 +55,7 @@ public class ActionableTrialFactoryTest {
         assertEquals(treatment, actionableTrials.get(2).treatment());
         assertEquals(location2, actionableTrials.get(2).applicableCancerType().name());
         assertEquals(loc2Doid1, actionableTrials.get(2).applicableCancerType().doid());
-        assertEquals(Sets.newHashSet(ImmutableCancerType.builder().name("blacklistLocation").doid("blacklistDoid").build(),
-                        ImmutableCancerType.builder().name("Hematologic cancer").doid("2531").build()),
+        assertEquals(Sets.newHashSet(ImmutableCancerType.builder().name("blacklistLocation").doid("blacklistDoid").build()),
                 actionableTrials.get(2).blacklistCancerTypes());
 
         IclusionTrial trialOnlyBlacklist =
@@ -92,5 +91,7 @@ public class ActionableTrialFactoryTest {
     public void canExtractAndMapDoid() {
         assertEquals("0060463", ActionableTrialFactory.extractDoid("0060463"));
         assertEquals("162", ActionableTrialFactory.extractDoid("0050686"));
+        assertEquals("162", ActionableTrialFactory.extractDoid("UNKNOWN"));
+        assertEquals("162", ActionableTrialFactory.extractDoid("MESH: D009382"));
     }
 }

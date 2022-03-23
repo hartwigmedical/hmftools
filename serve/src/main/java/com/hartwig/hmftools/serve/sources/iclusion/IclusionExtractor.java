@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.serve.sources.iclusion;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -73,7 +74,8 @@ public class IclusionExtractor {
                             .interpretedEvent(mutation.name())
                             .interpretedEventType(mutation.type())
                             .build();
-                    extractions.add(toExtractionResult(actionableTrials, eventExtractorOutput, interpretation));
+                    Set<ActionableTrial> actionableTrialsUniq = new HashSet<>(actionableTrials);
+                    extractions.add(toExtractionResult(actionableTrialsUniq, eventExtractorOutput, interpretation));
                 }
             }
 
@@ -84,7 +86,7 @@ public class IclusionExtractor {
     }
 
     @NotNull
-    private static ExtractionResult toExtractionResult(@NotNull List<ActionableTrial> actionableTrials,
+    private static ExtractionResult toExtractionResult(@NotNull Set<ActionableTrial> actionableTrials,
             @NotNull EventExtractorOutput eventExtractions, @NotNull EventInterpretation interpretation) {
         Set<ActionableHotspot> actionableHotspots = Sets.newHashSet();
         Set<ActionableRange> actionableRanges = Sets.newHashSet();

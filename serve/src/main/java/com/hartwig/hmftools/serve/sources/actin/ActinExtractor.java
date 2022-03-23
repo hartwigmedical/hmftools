@@ -49,14 +49,14 @@ public class ActinExtractor {
         ProgressTracker tracker = new ProgressTracker("ACTIN", entries.size());
         for (ActinEntry entry : entries) {
             Set<String> events = ActinEventExtractor.extractEvents(entry);
-            ActinTrial trial = ActinTrialFactory.toActinTrial(entry, entry.rule().name());
+
 
             for (String event : events) {
                 String eventType = event;
                 if (event.split(" ").length > 1) {
                     eventType = event.split(" ", 2)[0];
                 }
-
+                ActinTrial trial = ActinTrialFactory.toActinTrial(entry, entry.rule() + " " + event);
                 EventType type = ActinEventTypeExtractor.determineEventType(entry, eventType);
                 if (type == EventType.UNKNOWN) {
                     LOGGER.warn("No event type known for '{}' on '{}'", entry, entry.gene());
@@ -64,7 +64,7 @@ public class ActinExtractor {
                     String gene = entry.gene() != null ? entry.gene() : "-";
                     EventInterpretation interpretation = ImmutableEventInterpretation.builder()
                             .source(Knowledgebase.ACTIN)
-                            .sourceEvent(entry.rule().toString())
+                            .sourceEvent(entry.rule() + " " + event)
                             .interpretedGene(gene)
                             .interpretedEvent(event)
                             .interpretedEventType(type)
