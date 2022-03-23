@@ -133,7 +133,7 @@ public class BaseQualityRegionCounter implements CigarHandler
 
         mPerfCounter.stop();
 
-        if(mPerfCounter.getLastTime() > mConfig.PerfWarnTime)
+        if(mConfig.PerfWarnTime > 0 && mPerfCounter.getLastTime() > mConfig.PerfWarnTime)
         {
             SG_LOGGER.warn("BQR region({}) time({}) reads({})",
                     mRegion, String.format("%.1f", mPerfCounter.getLastTime()), mReadCounter);
