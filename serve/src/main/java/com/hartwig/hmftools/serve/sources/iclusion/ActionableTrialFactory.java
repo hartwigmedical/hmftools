@@ -112,7 +112,7 @@ public class ActionableTrialFactory {
     @VisibleForTesting
     static String extractDoid(@NotNull String doid) {
         String doidCorrected = doid;
-        if (doidCorrected.equals("0050686")) {
+        if (doidCorrected.equals("0050686") || doidCorrected.equals("MESH: D009382") || doidCorrected.equals("UNKNOWN")) {
             doidCorrected = "162";
         }
         return doidCorrected;

@@ -92,5 +92,7 @@ public class ActionableTrialFactoryTest {
     public void canExtractAndMapDoid() {
         assertEquals("0060463", ActionableTrialFactory.extractDoid("0060463"));
         assertEquals("162", ActionableTrialFactory.extractDoid("0050686"));
+        assertEquals("162", ActionableTrialFactory.extractDoid("UNKNOWN"));
+        assertEquals("162", ActionableTrialFactory.extractDoid("MESH: D009382"));
     }
 }
