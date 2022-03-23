@@ -112,7 +112,7 @@ amber | Path to AMBER output. This should correspond to the output_dir used in A
 cobalt | Path to COBALT output. This should correspond to the output_dir used in COBALT.
 gc_profile | Path to GC profile.
 ref_genome | Path to reference genome fasta file.
-ref_genome_version | V37 (default) or V38
+ref_genome_version | 37 (default) or 38
 ensembl_data_dir | Path to Ensembl data cache
 
 The GC Profile file used by HMF (GC_profile.1000bp.37.cnp) is available to download from [HMFTools-Resources > Cobalt](https://resources.hartwigmedicalfoundation.nl). 
