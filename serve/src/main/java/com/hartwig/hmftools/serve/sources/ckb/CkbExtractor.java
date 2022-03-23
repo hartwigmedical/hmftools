@@ -2,6 +2,8 @@ package com.hartwig.hmftools.serve.sources.ckb;
 
 import java.util.List;
 import java.util.Set;
+import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -21,6 +23,7 @@ import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLA;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
+import com.hartwig.hmftools.serve.cancertype.CancerType;
 import com.hartwig.hmftools.serve.extraction.ActionableEventFactory;
 import com.hartwig.hmftools.serve.extraction.EventExtractor;
 import com.hartwig.hmftools.serve.extraction.EventExtractorOutput;
@@ -51,13 +54,14 @@ import com.hartwig.hmftools.serve.util.ProgressTracker;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class CkbExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(CkbExtractor.class);
-
+    private static final String DELIMETER = ",";
     @NotNull
     private final EventExtractor eventExtractor;
 
@@ -74,9 +78,10 @@ public class CkbExtractor {
             // Assume entries without variants are filtered out prior to extraction
             assert !entry.variants().isEmpty();
 
+            int variantCount = entry.variants().size();
             Variant variant = entry.variants().get(0);
-            String gene = CkbEventAndGeneExtractor.extractGene(variant);
-            String event = CkbEventAndGeneExtractor.extractEvent(variant);
+            String event = variantCount > 1 ? toString(entry.variants()) : CkbEventAndGeneExtractor.extractEvent(variant);
+            String gene = variantCount > 1 ? "Multiple" : CkbEventAndGeneExtractor.extractGene(variant);
 
             if (entry.type() == EventType.UNKNOWN) {
                 LOGGER.warn("No event type known for '{}' on '{}'", event, gene);
@@ -89,7 +94,7 @@ public class CkbExtractor {
 
             EventInterpretation interpretation = ImmutableEventInterpretation.builder()
                     .source(Knowledgebase.CKB)
-                    .sourceEvent(variant.variant())
+                    .sourceEvent(toString(entry.variants()))
                     .interpretedGene(gene)
                     .interpretedEvent(event)
                     .interpretedEventType(entry.type())
@@ -101,6 +106,15 @@ public class CkbExtractor {
         }
 
         return ExtractionFunctions.merge(extractions);
+    }
+
+    @NotNull
+    public static String toString(@NotNull List<Variant> variants) {
+        StringJoiner joiner = new StringJoiner(DELIMETER);
+        for (Variant variant : variants) {
+            joiner.add(variant.variant());
+        }
+        return joiner.toString();
     }
 
     @VisibleForTesting
