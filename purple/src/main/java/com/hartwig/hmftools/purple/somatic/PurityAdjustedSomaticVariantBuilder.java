@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant;
+package com.hartwig.hmftools.purple.somatic;
 
 import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_AF_INFO;
 import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_BIALLELIC_FLAG;

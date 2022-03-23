@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant;
+package com.hartwig.hmftools.purple.somatic;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

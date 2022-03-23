@@ -1,12 +1,10 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantHeader;
 
 import htsjdk.variant.variantcontext.VariantContext;

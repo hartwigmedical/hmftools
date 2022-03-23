@@ -27,6 +27,7 @@ import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleQC;
+import com.hartwig.hmftools.common.purple.purity.RunMode;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.linx.analysis.SvUtilities;
@@ -416,6 +417,8 @@ public class CnSegmentBuilder
         PurityContext purityContext = ImmutablePurityContext.builder()
                 .bestFit(fittedPurity)
                 .gender(gender)
+                .runMode(RunMode.TUMOR_GERMLINE)
+                .targeted(false)
                 .microsatelliteIndelsPerMb(0)
                 .microsatelliteStatus(UNKNOWN)
                 .polyClonalProportion(0)
