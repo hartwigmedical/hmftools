@@ -18,7 +18,6 @@ import com.hartwig.hmftools.serve.curation.DoidLookup;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class ActionableTrialFactory {
@@ -36,8 +35,6 @@ public class ActionableTrialFactory {
 
     @NotNull
     public List<ActionableTrial> toActionableTrials(@NotNull IclusionTrial trial, @NotNull String sourceEvent) {
-        Set<CancerType> blacklistedCancerTypes = Sets.newHashSet();
-
         ImmutableActionableTrial.Builder actionableBuilder = ImmutableActionableTrial.builder()
                 .source(Knowledgebase.ICLUSION)
                 .sourceEvent(sourceEvent)
@@ -48,8 +45,48 @@ public class ActionableTrialFactory {
                 .evidenceUrls(Sets.newHashSet());
 
         List<ActionableTrial> actionableTrials = Lists.newArrayList();
-        Set<String> blacklistTumorLocations = Sets.newHashSet();
+
+        Set<CancerType> blacklistTumorLocations = determineBlacklistedTumorLocations(trial);
+
+        for (IclusionTumorLocation tumorLocation : trial.tumorLocations()) {
+            Set<CancerType> blacklistTumorLocationsSolid = Sets.newHashSet();
+            Set<CancerType> blacklistTumorLocationsMerged = Sets.newHashSet();
+            List<String> doids = tumorLocation.doids();
+            if (doids.isEmpty()) {
+                Set<String> manualDoids = missingDoidLookup.lookupDoidsForCancerType(tumorLocation.primaryTumorLocation());
+                if (manualDoids == null) {
+                    LOGGER.warn("No doids could be derived for iClusion primary tumor location '{}'", tumorLocation.primaryTumorLocation());
+                } else {
+                    LOGGER.debug("Resolved doids to '{}' for iClusion primary tumor location '{}'",
+                            manualDoids,
+                            tumorLocation.primaryTumorLocation());
+                    doids = Lists.newArrayList(manualDoids.iterator());
+                }
+            }
+            for (String doid : doids) {
+                String doidCorrected = extractDoid(doid);
+
+                if (doidCorrected.equals("162")) {
+                    blacklistTumorLocationsSolid.add(ImmutableCancerType.builder().name("Hematologic cancer").doid("2531").build());
+                }
+
+                blacklistTumorLocationsMerged.addAll(blacklistTumorLocationsSolid);
+                blacklistTumorLocationsMerged.addAll(blacklistTumorLocations);
+
+                actionableTrials.add(actionableBuilder.applicableCancerType(ImmutableCancerType.builder()
+                        .name(tumorLocation.primaryTumorLocation())
+                        .doid(doidCorrected)
+                        .build()).blacklistCancerTypes(blacklistTumorLocationsMerged).build());
+            }
+        }
+        return actionableTrials;
+    }
+
+    @NotNull
+    public Set<CancerType> determineBlacklistedTumorLocations(@NotNull IclusionTrial trial) {
         Set<String> blacklistedDoids = Sets.newHashSet();
+        Set<String> blacklistTumorLocations = Sets.newHashSet();
+        Set<CancerType> blacklistedCancerTypes = Sets.newHashSet();
         for (IclusionTumorLocation blacklistTumorLocation : trial.blacklistedTumorLocations()) {
             List<String> blacklistDoids = blacklistTumorLocation.doids();
             blacklistTumorLocations.add(blacklistTumorLocation.primaryTumorLocation());
@@ -78,34 +115,7 @@ public class ActionableTrialFactory {
                     .doid(urlsToString(blacklistedDoids))
                     .build());
         }
-
-        for (IclusionTumorLocation tumorLocation : trial.tumorLocations()) {
-            List<String> doids = tumorLocation.doids();
-            if (doids.isEmpty()) {
-                Set<String> manualDoids = missingDoidLookup.lookupDoidsForCancerType(tumorLocation.primaryTumorLocation());
-                if (manualDoids == null) {
-                    LOGGER.warn("No doids could be derived for iClusion primary tumor location '{}'", tumorLocation.primaryTumorLocation());
-                } else {
-                    LOGGER.debug("Resolved doids to '{}' for iClusion primary tumor location '{}'",
-                            manualDoids,
-                            tumorLocation.primaryTumorLocation());
-                    doids = Lists.newArrayList(manualDoids.iterator());
-                }
-            }
-            for (String doid : doids) {
-                String doidCorrected = extractDoid(doid);
-
-                if (doidCorrected.equals("162")) {
-                    blacklistedCancerTypes.add(ImmutableCancerType.builder().name("Hematologic cancer").doid("2531").build());
-                }
-
-                actionableTrials.add(actionableBuilder.applicableCancerType(ImmutableCancerType.builder()
-                        .name(tumorLocation.primaryTumorLocation())
-                        .doid(doidCorrected)
-                        .build()).blacklistCancerTypes(blacklistedCancerTypes).build());
-            }
-        }
-        return actionableTrials;
+        return blacklistedCancerTypes;
     }
 
     @NotNull
