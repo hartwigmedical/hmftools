@@ -13,10 +13,8 @@ public class TsgImpactComparator implements Comparator<SomaticVariant>
         int firstWins = -1;
         int secondWins = 1;
 
-        if(o1.canonicalCodingEffect() == o2.canonicalCodingEffect()) // type no longer used to distinguish (o1.type() == o2.type())
-        {
+        if(o1.canonicalCodingEffect() == o2.canonicalCodingEffect() && o1.type() == o2.type())
             return 0;
-        }
 
         if(DriverImpact.isFrameshift(o1))
         {
@@ -53,6 +51,9 @@ public class TsgImpactComparator implements Comparator<SomaticVariant>
         {
             return secondWins;
         }
+
+        if(o1.canonicalCodingEffect() == o2.canonicalCodingEffect())
+            return 0;
 
         throw new UnsupportedOperationException();
     }
