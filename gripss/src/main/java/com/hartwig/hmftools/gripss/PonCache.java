@@ -4,6 +4,7 @@ import static java.lang.Integer.max;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -255,7 +256,7 @@ public class PonCache
 
         try
         {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+            BufferedReader fileReader = createBufferedReader(filename);
 
             int itemCount = 0;
             String line = null;
@@ -315,7 +316,7 @@ public class PonCache
 
         try
         {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+            BufferedReader fileReader = createBufferedReader(filename);
 
             int itemCount = 0;
             String line = null;
@@ -355,7 +356,7 @@ public class PonCache
                 lastRegion = region;
             }
 
-            GR_LOGGER.info("loaded {} germline SGL PON records from file", itemCount, filename);
+            GR_LOGGER.info("loaded {} germline SGL PON records from file({})", itemCount, filename);
         }
         catch(IOException e)
         {
