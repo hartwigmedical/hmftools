@@ -57,10 +57,18 @@ public class SampleData
             {
                 if(factory.test(variantContext))
                 {
-                    Optional<SomaticVariant> variant = factory.createVariant(SampleId, hotspotEnrichment.processVariant(variantContext));
+                    Optional<SomaticVariant> variantOptional = factory.createVariant(SampleId, variantContext);
 
-                    if(variant.isPresent() && variant.get().isSnp())
-                        FittingSomaticVariants.add(variant.get());
+                    if(variantOptional.isPresent())
+                    {
+                        SomaticVariant variant = variantOptional.get();
+
+                        if(variant.isSnp())
+                        {
+                            hotspotEnrichment.processVariant(variantContext);
+                            FittingSomaticVariants.add(variant);
+                        }
+                    }
                 }
             }
         }

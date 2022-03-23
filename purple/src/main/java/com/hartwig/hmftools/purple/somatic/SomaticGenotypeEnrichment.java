@@ -17,7 +17,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.vcf.VCFHeader;
 
-public class SomaticGenotypeEnrichment implements VariantContextEnrichment
+public class SomaticGenotypeEnrichment
 {
     enum SomaticGenotypeStatus
     {
@@ -25,30 +25,21 @@ public class SomaticGenotypeEnrichment implements VariantContextEnrichment
         HOM
     }
 
-    @NotNull
-    private static SomaticGenotypeStatus status(@NotNull AllelicDepth depth)
-    {
-        return depth.alleleReadCount() == depth.totalReadCount() ? SomaticGenotypeStatus.HOM : SomaticGenotypeStatus.HET;
-    }
-
     private final String mGermlineSample;
     private final String mTumorSample;
-    private final Consumer<VariantContext> mConsumer;
 
-    public SomaticGenotypeEnrichment(final String germlineSample, final String tumorSample, final Consumer<VariantContext> consumer)
+    public SomaticGenotypeEnrichment(final String germlineSample, final String tumorSample)
     {
         mGermlineSample = germlineSample;
         mTumorSample = tumorSample;
-        mConsumer = consumer;
     }
 
-    @Override
-    public void accept(@NotNull final VariantContext context)
+    public VariantContext processVariant(final VariantContext context)
     {
         Allele refAllele = context.getReference();
 
         if(context.getAlleles().size() < 2)
-            return;
+            return context;
 
         Allele altAllele = context.getAlternateAllele(0);
 
@@ -89,16 +80,6 @@ public class SomaticGenotypeEnrichment implements VariantContextEnrichment
         updatedGenotypes.add(tumorGenotype);
 
         VariantContextBuilder builder = new VariantContextBuilder(context).genotypes(updatedGenotypes);
-        mConsumer.accept(builder.make());
-    }
-
-    @Override
-    public void flush() {}
-
-    @NotNull
-    @Override
-    public VCFHeader enrichHeader(@NotNull final VCFHeader template)
-    {
-        return template;
+        return builder.make();
     }
 }

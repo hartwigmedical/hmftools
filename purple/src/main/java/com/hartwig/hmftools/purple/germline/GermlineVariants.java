@@ -52,7 +52,7 @@ public class GermlineVariants
         if(germlineVcf.isEmpty())
             return;
 
-        PPL_LOGGER.info("Loading germline variants from {}", germlineVcf);
+        PPL_LOGGER.info("loading germline variants from {}", germlineVcf);
 
         try
         {
@@ -112,10 +112,6 @@ public class GermlineVariants
             for(VariantContext context : vcfReader)
             {
                 enrichment.accept(context);
-
-
-
-
             }
 
             enrichment.flush();

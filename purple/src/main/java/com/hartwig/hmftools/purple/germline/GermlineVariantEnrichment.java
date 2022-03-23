@@ -30,12 +30,16 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment
     private final GermlineGenotypeEnrichment mGenotypeEnrichment;
     private final GermlineRescueLowVAF mLowVafRescueEnrichment;
 
+    private final Consumer<VariantContext> mConsumer;
+
     public GermlineVariantEnrichment(
             final String purpleVersion, final String referenceSample, final String tumorSample, final ReferenceData refData,
             final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers,
             final Multimap<Chromosome, VariantHotspot> germlineHotspots, final Set<String> somaticReportedGenes,
             boolean snpEffEnrichmentEnabled, final Consumer<VariantContext> consumer)
     {
+        mConsumer = consumer;
+
         final Set<String> germlineGenes = refData.DriverGenes.driverGenes().stream()
                 .filter(DriverGene::reportGermline).map(DriverGene::gene).collect(Collectors.toSet());
 
@@ -64,7 +68,8 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment
     {
         // the order matters
         VariantContext newContext = mGenotypeEnrichment.processVariant(context);
-        newContext = mHotspotEnrichment.processVariant(newContext);
+
+        mHotspotEnrichment.processVariant(newContext);
 
         mPurityEnrichment.processVariant(newContext);
         newContext = mLowVafRescueEnrichment.processVariant(newContext);
@@ -77,6 +82,8 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment
         mRefGenomeEnrichment.processVariant(newContext);
         GermlinePathogenicEnrichment.processVariant(newContext);
         mReportableEnrichment.processVariant(newContext);
+
+        mConsumer.accept(newContext);
     }
 
     @Override

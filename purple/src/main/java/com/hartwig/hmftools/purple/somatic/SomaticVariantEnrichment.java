@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.vcf.VCFHeader;
 
 public class SomaticVariantEnrichment implements VariantContextEnrichment
@@ -32,13 +33,17 @@ public class SomaticVariantEnrichment implements VariantContextEnrichment
     private final SnpEffEnrichment mSnpEffEnrichment;
     private final SomaticGenotypeEnrichment mGenotypeEnrichment;
 
+    private final Consumer<VariantContext> mConsumer;
+
     public SomaticVariantEnrichment(
             boolean hotspotEnabled, boolean snpEffEnrichmentEnabled, double clonalityBinWidth, final String purpleVersion,
             final String referenceId, final String tumorSample, final ReferenceData refData,
             final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers, final List<FittedRegion> fittedRegions,
             final Multimap<Chromosome, VariantHotspot> hotspots, final List<PeakModel> peakModel, final Consumer<VariantContext> consumer)
     {
-        mGenotypeEnrichment = new SomaticGenotypeEnrichment(referenceId, tumorSample, consumer);
+        mConsumer = consumer;
+
+        mGenotypeEnrichment = new SomaticGenotypeEnrichment(referenceId, tumorSample);
 
         mSubclonalLikelihoodEnrichment = new SubclonalLikelihoodEnrichment(clonalityBinWidth, peakModel);
 
@@ -66,7 +71,9 @@ public class SomaticVariantEnrichment implements VariantContextEnrichment
     @Override
     public void accept(@NotNull final VariantContext context)
     {
-        VariantContext newContext = mHotspotEnrichment.processVariant(context);
+        VariantContext newContext = new VariantContextBuilder(context).make();
+
+        mHotspotEnrichment.processVariant(newContext);
 
         if(mSnpEffEnrichment != null)
             mSnpEffEnrichment.processVariant(newContext);
@@ -79,13 +86,14 @@ public class SomaticVariantEnrichment implements VariantContextEnrichment
 
         mSubclonalLikelihoodEnrichment.processVariant(newContext);
 
-        mGenotypeEnrichment.accept(newContext);
+        mGenotypeEnrichment.processVariant(newContext);
+
+        mConsumer.accept(newContext);
     }
 
     @Override
     public void flush()
     {
-        mSomaticRefContextEnrichment.flush();
         mKataegisEnrichment.flush();
     }
 

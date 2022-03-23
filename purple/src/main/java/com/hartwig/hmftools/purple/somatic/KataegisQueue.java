@@ -65,8 +65,9 @@ public class KataegisQueue
 
             if(!mCandidate.test(first))
             {
+                VariantContext var = mBuffer.pollFirst();
                 if(mConsumer != null)
-                    mConsumer.accept(mBuffer.pollFirst());
+                    mConsumer.accept(var);
             }
             else
             {
@@ -90,8 +91,9 @@ public class KataegisQueue
                         peek.getCommonInfo().putAttribute(KATAEGIS_FLAG, mIdPrefix + "_" + identifier, true);
                     }
 
+                    VariantContext var = mBuffer.pollFirst();
                     if(mConsumer != null)
-                        mConsumer.accept(mBuffer.pollFirst());
+                        mConsumer.accept(var);
                 }
             }
         }

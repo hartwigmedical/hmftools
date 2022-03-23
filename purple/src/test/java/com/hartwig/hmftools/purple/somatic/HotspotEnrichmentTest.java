@@ -73,8 +73,8 @@ public class HotspotEnrichmentTest
         VariantContext v37Variant = createNonHotspotV37(variantStart, variantRef);
         VariantContext v38Variant = createNonHotspotV38(variantStart, variantRef);
 
-        v37Variant = enrichment.processVariant(v37Variant);
-        v38Variant = enrichment.processVariant(v38Variant);
+        enrichment.processVariant(v37Variant);
+        enrichment.processVariant(v38Variant);
 
         assertEquals(expected, Hotspot.fromVariant(v37Variant));
         assertEquals(expected, Hotspot.fromVariant(v38Variant));
