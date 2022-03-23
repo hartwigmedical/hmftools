@@ -59,7 +59,7 @@ public final class ActinEventExtractor {
                 return Sets.newHashSet(ActinKeywords.TML_HIGH + " " + entry.mutation());
             }
             case TML_OF_AT_MOST_X: {
-                return Sets.newHashSet(ActinKeywords.TML_LOW + " " + entry.mutation());
+                return Sets.newHashSet(ActinKeywords.TML_HIGH + " " + entry.mutation());
             }
             case HAS_HLA_A_TYPE_X: {
                 return Sets.newHashSet(ActinKeywords.HLA_TYPE + " " + entry.mutation());
