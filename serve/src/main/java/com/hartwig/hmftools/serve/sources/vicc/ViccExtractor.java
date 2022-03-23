@@ -115,6 +115,7 @@ public final class ViccExtractor {
         Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
         Map<Feature, TumorCharacteristic> characteristicsPerFeature = Maps.newHashMap();
         Map<Feature, ImmunoHLA> hlaPerFeature = Maps.newHashMap();
+        List<EventInterpretation> eventInterpretations = Lists.newArrayList();
         ImmutableViccExtractionResult.Builder viccBuilderBuilder = ImmutableViccExtractionResult.builder();
 
         for (Feature feature : entry.features()) {
@@ -124,13 +125,13 @@ public final class ViccExtractor {
             } else {
                 EventExtractorOutput extractorOutput = eventExtractor.extract(gene, entry.transcriptId(), feature.type(), feature.name());
 
-                EventInterpretation interpretation = ImmutableEventInterpretation.builder()
+                eventInterpretations.add(ImmutableEventInterpretation.builder()
                         .source(ActionableEvidenceFactory.fromViccSource(entry.source()))
                         .sourceEvent(feature.name())
                         .interpretedGene(gene)
                         .interpretedEvent(feature.name())
                         .interpretedEventType(feature.type())
-                        .build();
+                        .build());
 
                 Set<ActionableEvent> actionableEvents = actionableEvidenceFactory.toActionableEvents(entry, feature.name());
 
@@ -166,12 +167,11 @@ public final class ViccExtractor {
                     hlaPerFeature.put(feature, extractorOutput.hla());
                 }
 
-                viccBuilderBuilder.eventInterpretations(Lists.newArrayList(interpretation));
                 viccBuilderBuilder.actionableEvents(actionableEvents);
 
             }
         }
-
+        viccBuilderBuilder.eventInterpretations(eventInterpretations);
         viccBuilderBuilder.hotspotsPerFeature(hotspotsPerFeature);
         viccBuilderBuilder.codonsPerFeature(codonsPerFeature);
         viccBuilderBuilder.exonsPerFeature(exonsPerFeature);
