@@ -172,7 +172,7 @@ def create_conclusion_file(sample, df_spider, df_bars, output_dir):
 
 def create_chart_file(sample, df_spider, df_bars, output_dir, fig, gs):
     try:
-        fig.savefig(output_dir + sample + '.cuppa.chart.png', format='png', dpi=1200, bbox_inches='tight')
+        fig.savefig(output_dir + sample + '.cuppa.chart.png', format='png', dpi=600, bbox_inches='tight')
     except:
         os.remove(output_dir + sample + '.cuppa.conclusion.txt')
         print('[ERROR] the final chart could not be saved as a file. No output files generated. CUPPA-chart will end.')
