@@ -140,7 +140,7 @@ public class ChromosomePipeline implements AutoCloseable
 
         mVcfWriter.flushChromosome();
 
-        if(SG_LOGGER.isDebugEnabled())
+        if(mConfig.logPerfStats())
         {
             mRegionResults.logPerfCounters();
             SG_LOGGER.debug("chromosome({}) max memory({})", mChromosome, mRegionResults.maxMemoryUsage());

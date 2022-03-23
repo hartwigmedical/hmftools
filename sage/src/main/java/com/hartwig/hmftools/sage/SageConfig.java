@@ -333,6 +333,8 @@ public class SageConfig
         return false;
     }
 
+    public boolean logPerfStats() { return PerfWarnTime > 0; }
+
     public static Options createSageOptions()
     {
         final Options options = new Options();

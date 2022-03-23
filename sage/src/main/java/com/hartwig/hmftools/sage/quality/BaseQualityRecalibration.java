@@ -95,7 +95,7 @@ public class BaseQualityRecalibration
             processSample(mConfig.TumorIds.get(i), mConfig.TumorBams.get(i), regions);
         }
 
-        if(SG_LOGGER.isDebugEnabled())
+        if(mConfig.logPerfStats())
             mResults.logPerfStats();
 
         SG_LOGGER.info("base quality recalibration cache generated");

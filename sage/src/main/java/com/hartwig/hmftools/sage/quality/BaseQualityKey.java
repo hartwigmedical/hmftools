@@ -1,9 +1,5 @@
 package com.hartwig.hmftools.sage.quality;
 
-import java.util.Arrays;
-
-import com.google.common.primitives.Bytes;
-
 public class BaseQualityKey
 {
     public final byte Ref;
@@ -11,19 +7,13 @@ public class BaseQualityKey
     public final byte[] TrinucleotideContext;
     public final byte Quality;
 
-    private int mHashCode;
-
     public BaseQualityKey(final byte ref, final byte alt, final byte[] trinucleotideContext, final byte quality)
     {
         Ref = ref;
         Alt = alt;
         TrinucleotideContext = trinucleotideContext;
         Quality = quality;
-
-        mHashCode = calcHashCode();
     }
-
-    public int hashCode() { return mHashCode; }
 
     public boolean equals(final Object other)
     {
@@ -33,7 +23,9 @@ public class BaseQualityKey
         if (!(other instanceof BaseQualityKey))
             return false;
 
-        return hashCode() == other.hashCode();
+        BaseQualityKey otherKey = (BaseQualityKey)other;
+        return matches(otherKey.Ref, otherKey.Alt, otherKey.Quality, otherKey.TrinucleotideContext);
+        // return hashCode() == other.hashCode();
     }
 
     public boolean matches(byte ref, byte alt, byte quality, byte[] trinucleotideContext)
@@ -47,15 +39,4 @@ public class BaseQualityKey
 
     public String toString() { return String.format("var(%c->%c) cxt(%s) qual(%d)",
             (char)Ref, (char)Alt, TrinucleotideContext != null ? new String(TrinucleotideContext) : "", (int)Quality);}
-
-    private int calcHashCode()
-    {
-        int h = 5381;
-        h += (h << 5) + Bytes.hashCode(Ref);
-        h += (h << 5) + Bytes.hashCode(Alt);
-        h += (h << 5) + Bytes.hashCode(Quality);
-        h += (h << 5) + Arrays.hashCode(TrinucleotideContext);
-        return h;
-    }
-
 }
