@@ -32,20 +32,15 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
 
-public class SnpEffEnrichment implements VariantContextEnrichment
+public class SnpEffEnrichment
 {
-    private final Consumer<VariantContext> mConsumer;
-
     private final CanonicalAnnotation mCanonicalAnnotation;
     private final EnsemblDataCache mGeneTransCache;
     private final Map<String,List<String>> mOtherReportableTranscripts;
 
     public SnpEffEnrichment(
-            final Set<String> driverGenes, final EnsemblDataCache geneTransCache, final Map<String,List<String>> otherReportableTranscripts,
-            final Consumer<VariantContext> consumer)
+            final Set<String> driverGenes, final EnsemblDataCache geneTransCache, final Map<String,List<String>> otherReportableTranscripts)
     {
-        mConsumer = consumer;
-
         mOtherReportableTranscripts = otherReportableTranscripts;
 
         mGeneTransCache = geneTransCache;
@@ -70,17 +65,13 @@ public class SnpEffEnrichment implements VariantContextEnrichment
         mCanonicalAnnotation = new CanonicalAnnotation(driverGenes, transGeneMap);
     }
 
-    @Override
-    public void accept(@NotNull final VariantContext context)
+    public void processVariant(@NotNull final VariantContext context)
     {
         final VariantImpact variantImpact = formVariantImpact(context);
         VariantImpactSerialiser.writeImpactDetails(context, variantImpact);
-        mConsumer.accept(context);
     }
 
-    @NotNull
-    @Override
-    public VCFHeader enrichHeader(@NotNull final VCFHeader header)
+    public static VCFHeader enrichHeader(final VCFHeader header)
     {
         return VariantImpactSerialiser.writeHeader(header);
     }
@@ -190,8 +181,4 @@ public class SnpEffEnrichment implements VariantContextEnrichment
         CodingEffect effect = CodingEffectFactory.effect(context, transcriptRegion, annotation.consequences());
         return phasedInframeIndel && effect.equals(CodingEffect.NONSENSE_OR_FRAMESHIFT) ? CodingEffect.MISSENSE : effect;
     }
-
-    @Override
-    public void flush() {}
-
 }

@@ -13,17 +13,13 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.purple.fitting.ModifiableWeightedPloidy;
 import com.hartwig.hmftools.purple.fitting.PeakModel;
 import com.hartwig.hmftools.purple.fitting.PeakModelFactory;
-import com.hartwig.hmftools.common.variant.enrich.SomaticPurityEnrichment;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.config.SomaticFitConfig;
-
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
@@ -96,12 +92,11 @@ public class SomaticPeakStream
             };
 
             final SomaticPurityEnrichment somaticPurityEnrichment = new SomaticPurityEnrichment(
-                    mConfig.Version, mConfig.TumorId,
-                    purityAdjuster, copyNumbers, fittedRegions, consumer);
+                    mConfig.Version, mConfig.TumorId, purityAdjuster, copyNumbers, fittedRegions);
 
             for(VariantContext context : vcfReader)
             {
-                somaticPurityEnrichment.accept(context);
+                somaticPurityEnrichment.processVariant(context);
             }
 
             return new PeakModelFactory(

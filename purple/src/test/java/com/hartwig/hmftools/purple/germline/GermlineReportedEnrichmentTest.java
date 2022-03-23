@@ -2,8 +2,8 @@ package com.hartwig.hmftools.purple.germline;
 
 import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_BIALLELIC_FLAG;
 import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_VARIANT_CN_INFO;
-import static com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment.HOTSPOT_FLAG;
-import static com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment.NEAR_HOTSPOT_FLAG;
+import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT_FLAG;
+import static com.hartwig.hmftools.common.variant.Hotspot.NEAR_HOTSPOT_FLAG;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -30,202 +30,194 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public class GermlineReportedEnrichmentTest
 {
-
     @Test
     public void testReportHotspot()
     {
-        List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.NONE, DriverGeneGermlineReporting.ANY);
-        GermlineReportedEnrichment victim =
-                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet(), consumer::add);
-        victim.accept(createGermline("PASS", "KD53", false, true, "UNKNOWN", CodingEffect.NONE, 0.5));
+
+        GermlineReportedEnrichment victim = new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet());
+
+        VariantContext var = createGermline("PASS", "KD53", false, true, "UNKNOWN", CodingEffect.NONE, 0.5);
+        victim.processVariant(var);
         victim.flush();
 
-        assertEquals(1, consumer.size());
-        assertTrue(new VariantContextDecorator(consumer.get(0)).reported());
+        assertTrue(new VariantContextDecorator(var).reported());
     }
 
     @Test
     public void testDoNotReportFailedHotspot()
     {
-        List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.NONE, DriverGeneGermlineReporting.ANY);
-        GermlineReportedEnrichment victim =
-                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet(), consumer::add);
-        victim.accept(createGermline("PASS", "KD53", false, true, "UNKNOWN", CodingEffect.NONE, 0.5));
-        victim.accept(createGermline("FILTERED", "KD53", false, true, "UNKNOWN", CodingEffect.NONE, 0.5));
+        GermlineReportedEnrichment victim = new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet());
+
+        VariantContext var1 = createGermline("PASS", "KD53", false, true, "UNKNOWN", CodingEffect.NONE, 0.5);
+        VariantContext var2 = createGermline("FILTERED", "KD53", false, true, "UNKNOWN", CodingEffect.NONE, 0.5);
+        victim.processVariant(var1);
+        victim.processVariant(var2);
         victim.flush();
 
-        assertEquals(2, consumer.size());
-        assertTrue(new VariantContextDecorator(consumer.get(0)).reported());
-        assertFalse(new VariantContextDecorator(consumer.get(1)).reported());
+        assertTrue(new VariantContextDecorator(var1).reported());
+        assertFalse(new VariantContextDecorator(var2).reported());
     }
 
     @Test
     public void testDoNotReportHotspotWhenNone()
     {
-        List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.NONE, DriverGeneGermlineReporting.NONE);
-        GermlineReportedEnrichment victim =
-                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet(), consumer::add);
-        victim.accept(createGermline("PASS", "KD53", false, true, "UNKNOWN", CodingEffect.NONE, 0.5));
+        GermlineReportedEnrichment victim = new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet());
+
+        VariantContext var = createGermline("PASS", "KD53", false, true, "UNKNOWN", CodingEffect.NONE, 0.5);
+        victim.processVariant(var);
         victim.flush();
 
-        assertEquals(1, consumer.size());
-        assertFalse(new VariantContextDecorator(consumer.get(0)).reported());
+        assertFalse(new VariantContextDecorator(var).reported());
     }
 
     @Test
     public void testDoNotReportSingleHotspotWhenNoMultipleHits()
     {
-        List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene =
                 createDriverGene("KD53", DriverGeneGermlineReporting.WILDTYPE_LOST, DriverGeneGermlineReporting.WILDTYPE_LOST);
-        GermlineReportedEnrichment victim =
-                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet(), consumer::add);
-        victim.accept(createGermline("PASS", "KD53", false, true, "UNKNOWN", CodingEffect.NONE, 0.5));
-        victim.accept(createGermline("FILTERED", "KD53", false, false, "Pathogenic", CodingEffect.NONE, 0.5));
+        GermlineReportedEnrichment victim = new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet());
+
+        VariantContext var1 = createGermline("PASS", "KD53", false, true, "UNKNOWN", CodingEffect.NONE, 0.5);
+        VariantContext var2 = createGermline("FILTERED", "KD53", false, false, "Pathogenic", CodingEffect.NONE, 0.5);
+        victim.processVariant(var1);
+        victim.processVariant(var2);
         victim.flush();
 
-        assertEquals(2, consumer.size());
-        assertFalse(new VariantContextDecorator(consumer.get(0)).reported());
-        assertFalse(new VariantContextDecorator(consumer.get(1)).reported());
+        assertFalse(new VariantContextDecorator(var1).reported());
+        assertFalse(new VariantContextDecorator(var2).reported());
     }
 
     @Test
     public void testDoNotReportSingleHotspotWhenMultipleHitsViaUnreportedVariant()
     {
-        List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.NONE, DriverGeneGermlineReporting.WILDTYPE_LOST);
-        GermlineReportedEnrichment victim =
-                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet(), consumer::add);
-        victim.accept(createGermline("PASS", "KD53", false, true, "UNKNOWN", CodingEffect.NONE, 0.5));
-        victim.accept(createGermline("PASS", "KD53", false, false, "Pathogenic", CodingEffect.NONE, 0.5));
+        GermlineReportedEnrichment victim = new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet());
+
+        VariantContext var1 = createGermline("PASS", "KD53", false, true, "UNKNOWN", CodingEffect.NONE, 0.5);
+        VariantContext var2 = createGermline("PASS", "KD53", false, false, "Pathogenic", CodingEffect.NONE, 0.5);
+        victim.processVariant(var1);
+        victim.processVariant(var2);
         victim.flush();
 
-        assertEquals(2, consumer.size());
-        assertFalse(new VariantContextDecorator(consumer.get(0)).reported());
-        assertFalse(new VariantContextDecorator(consumer.get(1)).reported());
+        assertFalse(new VariantContextDecorator(var1).reported());
+        assertFalse(new VariantContextDecorator(var2).reported());
     }
 
     @Test
     public void testReportHotspotWhenMultipleHits()
     {
-        List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene =
                 createDriverGene("KD53", DriverGeneGermlineReporting.WILDTYPE_LOST, DriverGeneGermlineReporting.WILDTYPE_LOST);
-        GermlineReportedEnrichment victim =
-                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet(), consumer::add);
-        victim.accept(createGermline("PASS", "KD53", false, true, "UNKNOWN", CodingEffect.NONE, 0.5));
-        victim.accept(createGermline("PASS", "KD53", false, false, "Pathogenic", CodingEffect.NONE, 0.5));
+        GermlineReportedEnrichment victim = new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet());
+
+        VariantContext var1 = createGermline("PASS", "KD53", false, true, "UNKNOWN", CodingEffect.NONE, 0.5);
+        VariantContext var2 = createGermline("PASS", "KD53", false, false, "Pathogenic", CodingEffect.NONE, 0.5);
+        victim.processVariant(var1);
+        victim.processVariant(var2);
         victim.flush();
 
-        assertEquals(2, consumer.size());
-        assertTrue(new VariantContextDecorator(consumer.get(0)).reported());
-        assertTrue(new VariantContextDecorator(consumer.get(1)).reported());
+        assertTrue(new VariantContextDecorator(var1).reported());
+        assertTrue(new VariantContextDecorator(var2).reported());
     }
 
     @Test
     public void testReportHotspotWhenMultipleHitsWithSameLPS()
     {
-        List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene =
                 createDriverGene("KD53", DriverGeneGermlineReporting.WILDTYPE_LOST, DriverGeneGermlineReporting.WILDTYPE_LOST);
-        GermlineReportedEnrichment victim =
-                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet(), consumer::add);
-        victim.accept(createGermline("PASS", "KD53", false, true, "UNKNOWN", CodingEffect.NONE, 0.5, 4));
-        victim.accept(createGermline("PASS", "KD53", false, false, "Pathogenic", CodingEffect.NONE, 0.5, 4));
+        GermlineReportedEnrichment victim = new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet());
+
+        VariantContext var1 = createGermline("PASS", "KD53", false, true, "UNKNOWN", CodingEffect.NONE, 0.5, 4);
+        VariantContext var2 =createGermline("PASS", "KD53", false, false, "Pathogenic", CodingEffect.NONE, 0.5, 4) ;
+        victim.processVariant(var1);
+        victim.processVariant(var2);
         victim.flush();
 
-        assertEquals(2, consumer.size());
-        assertFalse(new VariantContextDecorator(consumer.get(0)).reported());
-        assertFalse(new VariantContextDecorator(consumer.get(1)).reported());
+        assertFalse(new VariantContextDecorator(var1).reported());
+        assertFalse(new VariantContextDecorator(var2).reported());
     }
 
     @Test
     public void testReportUnknownFrameshift()
     {
-        List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.ANY, DriverGeneGermlineReporting.NONE);
-        GermlineReportedEnrichment victim =
-                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet(), consumer::add);
-        victim.accept(createGermline("PASS", "KD53", false, false, "UNKNOWN", CodingEffect.NONSENSE_OR_FRAMESHIFT, 0.5));
+        GermlineReportedEnrichment victim = new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet());
+
+        VariantContext var = createGermline("PASS", "KD53", false, false, "UNKNOWN", CodingEffect.NONSENSE_OR_FRAMESHIFT, 0.5);
+        victim.processVariant(var);
         victim.flush();
 
-        assertEquals(1, consumer.size());
-        assertTrue(new VariantContextDecorator(consumer.get(0)).reported());
+        assertTrue(new VariantContextDecorator(var).reported());
     }
 
     @Test
     public void testReportPathogenic()
     {
-        List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.ANY, DriverGeneGermlineReporting.NONE);
-        GermlineReportedEnrichment victim =
-                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet(), consumer::add);
-        victim.accept(createGermline("PASS", "KD53", false, false, "Pathogenic", CodingEffect.NONE, 0.5));
+        GermlineReportedEnrichment victim = new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet());
+
+        VariantContext var = createGermline("PASS", "KD53", false, false, "Pathogenic", CodingEffect.NONE, 0.5);
+        victim.processVariant(var);
         victim.flush();
 
-        assertEquals(1, consumer.size());
-        assertTrue(new VariantContextDecorator(consumer.get(0)).reported());
+        assertTrue(new VariantContextDecorator(var).reported());
     }
 
     @Test
     public void testReportBiallelicAsMultipleHit()
     {
-        List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.ANY, DriverGeneGermlineReporting.WILDTYPE_LOST);
-        GermlineReportedEnrichment victim =
-                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet(), consumer::add);
-        victim.accept(createGermline("PASS", "KD53", true, false, "Pathogenic", CodingEffect.NONE, 0.5));
+        GermlineReportedEnrichment victim = new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet());
+
+        VariantContext var = createGermline("PASS", "KD53", true, false, "Pathogenic", CodingEffect.NONE, 0.5);
+        victim.processVariant(var);
         victim.flush();
 
-        assertEquals(1, consumer.size());
-        assertTrue(new VariantContextDecorator(consumer.get(0)).reported());
+        assertTrue(new VariantContextDecorator(var).reported());
     }
 
     @Test
     public void testIgnoreSinglePathogenicWhenNoMultipleHits()
     {
-        List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.WILDTYPE_LOST, DriverGeneGermlineReporting.NONE);
-        GermlineReportedEnrichment victim =
-                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet(), consumer::add);
-        victim.accept(createGermline("PASS", "KD53", false, false, "Pathogenic", CodingEffect.NONE, 0.5));
+        GermlineReportedEnrichment victim = new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet());
+        VariantContext var = createGermline("PASS", "KD53", false, false, "Pathogenic", CodingEffect.NONE, 0.5);
+        victim.processVariant(var);
         victim.flush();
 
-        assertEquals(1, consumer.size());
-        assertFalse(new VariantContextDecorator(consumer.get(0)).reported());
+        assertFalse(new VariantContextDecorator(var).reported());
     }
 
     @Test
     public void testSomaticCountTowardsMultipleHits()
     {
-        List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.WILDTYPE_LOST, DriverGeneGermlineReporting.NONE);
-        GermlineReportedEnrichment victim =
-                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Sets.newHashSet("KD53"), consumer::add);
-        victim.accept(createGermline("PASS", "KD53", false, false, "Pathogenic", CodingEffect.NONE, 0.5));
+        GermlineReportedEnrichment victim = new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Sets.newHashSet("KD53"));
+
+        VariantContext var = createGermline("PASS", "KD53", false, false, "Pathogenic", CodingEffect.NONE, 0.5);
+        victim.processVariant(var);
         victim.flush();
 
-        assertEquals(1, consumer.size());
-        assertTrue(new VariantContextDecorator(consumer.get(0)).reported());
+        assertTrue(new VariantContextDecorator(var).reported());
     }
 
     @Test
     public void testVariantNotLost()
     {
-        List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.VARIANT_NOT_LOST, DriverGeneGermlineReporting.NONE);
-        GermlineReportedEnrichment victim =
-                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Sets.newHashSet("KD53"), consumer::add);
-        victim.accept(createGermline("PASS", "KD53", false, false, "Pathogenic", CodingEffect.NONE, 0.4));
-        victim.accept(createGermline("PASS", "KD53", false, false, "Pathogenic", CodingEffect.NONE, 0.6));
+        GermlineReportedEnrichment victim = new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Sets.newHashSet("KD53"));
+
+        VariantContext var1 = createGermline("PASS", "KD53", false, false, "Pathogenic", CodingEffect.NONE, 0.4);
+        VariantContext var2 = createGermline("PASS", "KD53", false, false, "Pathogenic", CodingEffect.NONE, 0.6);
+        victim.processVariant(var1);
+        victim.processVariant(var2);
         victim.flush();
 
-        assertEquals(2, consumer.size());
-        assertFalse(new VariantContextDecorator(consumer.get(0)).reported());
-        assertTrue(new VariantContextDecorator(consumer.get(1)).reported());
+        assertFalse(new VariantContextDecorator(var1).reported());
+        assertTrue(new VariantContextDecorator(var2).reported());
     }
 
     @NotNull

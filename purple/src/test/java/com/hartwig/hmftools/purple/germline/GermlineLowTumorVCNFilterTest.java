@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.purple.germline;
 
 import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_VARIANT_CN_INFO;
-import static com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment.HOTSPOT_FLAG;
-import static com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment.NEAR_HOTSPOT_FLAG;
-import static com.hartwig.hmftools.purple.germline.GermlineLowTumorVCNEnrichment.MIN_QUAL_HOTSPOT;
-import static com.hartwig.hmftools.purple.germline.GermlineLowTumorVCNEnrichment.MIN_QUAL_OTHER;
-import static com.hartwig.hmftools.purple.germline.GermlineLowTumorVCNEnrichment.MIN_TUMOR_VCN;
+import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT_FLAG;
+import static com.hartwig.hmftools.common.variant.Hotspot.NEAR_HOTSPOT_FLAG;
+import static com.hartwig.hmftools.purple.germline.GermlineLowTumorVCNFilter.MIN_QUAL_HOTSPOT;
+import static com.hartwig.hmftools.purple.germline.GermlineLowTumorVCNFilter.MIN_QUAL_OTHER;
+import static com.hartwig.hmftools.purple.germline.GermlineLowTumorVCNFilter.MIN_TUMOR_VCN;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -17,7 +17,7 @@ import org.junit.Test;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class GermlineLowTumorVCNEnrichmentTest
+public class GermlineLowTumorVCNFilterTest
 {
     private static final double LOW_VN = MIN_TUMOR_VCN - 0.1;
 
@@ -44,11 +44,11 @@ public class GermlineLowTumorVCNEnrichmentTest
 
     private void assertFiltered(boolean expectedFiltered, VariantContext victim)
     {
-        VariantContext updated = GermlineLowTumorVCNEnrichment.process(victim);
+        VariantContext updated = GermlineLowTumorVCNFilter.processVariant(victim);
         assertEquals(expectedFiltered, updated.isFiltered());
         if(expectedFiltered)
         {
-            assertTrue(updated.getFilters().contains(GermlineLowTumorVCNEnrichment.LOW_TUMOR_VCN_FILTER));
+            assertTrue(updated.getFilters().contains(GermlineLowTumorVCNFilter.LOW_TUMOR_VCN_FILTER));
         }
     }
 

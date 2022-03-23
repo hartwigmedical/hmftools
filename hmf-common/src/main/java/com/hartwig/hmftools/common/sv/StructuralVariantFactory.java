@@ -70,6 +70,9 @@ public class StructuralVariantFactory
     private static final String UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE = "INSRMP";
     private static final String ANCHOR_SUPPORT_CIGAR = "SC";
 
+    // set by Purple
+    public static final String REF_CONTEXT_FLAG = "REFG";
+
     // Must match the small deldup threshold in Gripss
     private static final int SMALL_DELDUP_SIZE = 1000;
 

@@ -19,7 +19,7 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
 
-public class GermlineGenotypeEnrichment implements VariantContextEnrichment
+public class GermlineGenotypeEnrichment
 {
     public static final String LOW_VAF_FILTER = "LOW_VAF";
 
@@ -32,14 +32,11 @@ public class GermlineGenotypeEnrichment implements VariantContextEnrichment
 
     private final String mGermlineSample;
     private final String mTumorSample;
-    private final Consumer<VariantContext> mConsumer;
 
-    public GermlineGenotypeEnrichment(final String germlineSample, final String tumorSample,
-            final Consumer<VariantContext> consumer)
+    public GermlineGenotypeEnrichment(final String germlineSample, final String tumorSample)
     {
         mGermlineSample = germlineSample;
         mTumorSample = tumorSample;
-        mConsumer = consumer;
     }
 
     public static GermlineGenotypeStatus status(AllelicDepth depth)
@@ -64,8 +61,7 @@ public class GermlineGenotypeEnrichment implements VariantContextEnrichment
         return GermlineGenotypeStatus.HET;
     }
 
-    @Override
-    public void accept(final VariantContext context)
+    public VariantContext processVariant(final VariantContext context)
     {
         Genotype germlineGenotype = context.getGenotype(mGermlineSample);
         Genotype tumorGenotype = context.getGenotype(mTumorSample);
@@ -99,11 +95,9 @@ public class GermlineGenotypeEnrichment implements VariantContextEnrichment
         {
             builder.filter(LOW_VAF_FILTER);
         }
-        mConsumer.accept(builder.make());
-    }
 
-    @Override
-    public void flush() { }
+        return builder.make();
+    }
 
     static GermlineGenotypeStatus combined(GermlineGenotypeStatus germline, GermlineGenotypeStatus tumor)
     {
@@ -115,20 +109,18 @@ public class GermlineGenotypeEnrichment implements VariantContextEnrichment
         return germline;
     }
 
-    @NotNull
-    @Override
-    public VCFHeader enrichHeader(final VCFHeader template)
+    public static VCFHeader enrichHeader(final VCFHeader template)
     {
         template.addMetaDataLine(new VCFFilterHeaderLine(LOW_VAF_FILTER, "Germline variant has very low allelic frequency"));
         return template;
     }
 
-    static double homPoisson(AllelicDepth depth)
+    private static double homPoisson(AllelicDepth depth)
     {
         return new PoissonDistribution(depth.totalReadCount() / 2d).cumulativeProbability(depth.totalReadCount() - depth.alleleReadCount());
     }
 
-    static double lowVafPoisson(AllelicDepth depth)
+    private static double lowVafPoisson(AllelicDepth depth)
     {
         return new PoissonDistribution(depth.totalReadCount() / 2d).cumulativeProbability(depth.alleleReadCount());
     }

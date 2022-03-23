@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_VARIANT_C
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
@@ -22,37 +21,31 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.VariantHeader;
-import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
-
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
 
-public class GermlinePurityEnrichment implements VariantContextEnrichment
+public class GermlinePurityEnrichment
 {
     private final String mVersion;
     private final String mTumorSample;
     private final String mReferenceSample;
     private final PurityAdjuster mPurityAdjuster;
     private final GenomeRegionSelector<PurpleCopyNumber> mCopyNumberSelector;
-    private final Consumer<VariantContext> mConsumer;
 
     public GermlinePurityEnrichment(
             final String purpleVersion, final String tumorSample, final String referenceSample,
-            final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers, final Consumer<VariantContext> consumer)
+            final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers)
     {
         mVersion = purpleVersion;
         mTumorSample = tumorSample;
         mReferenceSample = referenceSample;
         mPurityAdjuster = purityAdjuster;
         mCopyNumberSelector = GenomeRegionSelectorFactory.createImproved(Multimaps.fromRegions(copyNumbers));
-        mConsumer = consumer;
     }
 
-    @Override
-    public void accept(@NotNull final VariantContext variant)
+    public void processVariant(final VariantContext variant)
     {
         final Genotype tumorGenotype = variant.getGenotype(mTumorSample);
         final Genotype normalGenotype = variant.getGenotype(mReferenceSample);
@@ -78,12 +71,9 @@ public class GermlinePurityEnrichment implements VariantContextEnrichment
                 variant.getCommonInfo().putAttribute(PURPLE_BIALLELIC_FLAG, biallelic);
             }
         }
-
-        mConsumer.accept(variant);
     }
 
-    private double vaf(@NotNull final GenotypeStatus germlineGenotype, @NotNull PurpleCopyNumber purpleCopyNumber,
-            @NotNull AllelicDepth tumorDepth)
+    private double vaf(final GenotypeStatus germlineGenotype, PurpleCopyNumber purpleCopyNumber, final AllelicDepth tumorDepth)
     {
         if(tumorDepth.totalReadCount() == 0 || tumorDepth.alleleReadCount() == 0)
         {
@@ -108,14 +98,7 @@ public class GermlinePurityEnrichment implements VariantContextEnrichment
         }
     }
 
-    @Override
-    public void flush()
-    {
-    }
-
-    @NotNull
-    @Override
-    public VCFHeader enrichHeader(@NotNull final VCFHeader template)
+    public VCFHeader enrichHeader(final VCFHeader template)
     {
         return VariantHeader.germlineHeader(mVersion, template);
     }

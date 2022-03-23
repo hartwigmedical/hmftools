@@ -28,7 +28,6 @@ import com.hartwig.hmftools.common.pathogenic.PathogenicSummary;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
 import com.hartwig.hmftools.common.pathogenic.Pathogenicity;
 import com.hartwig.hmftools.common.sage.SageMetaData;
-import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 
@@ -261,7 +260,7 @@ public class VariantContextDecorator implements GenomePosition
     @NotNull
     public Hotspot hotspot()
     {
-        return HotspotEnrichment.fromVariant(mContext);
+        return Hotspot.fromVariant(mContext);
     }
 
     public boolean isHotspot()

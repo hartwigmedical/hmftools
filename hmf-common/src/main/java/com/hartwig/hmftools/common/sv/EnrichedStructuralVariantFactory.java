@@ -1,10 +1,11 @@
 package com.hartwig.hmftools.common.sv;
 
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_CONTEXT_FLAG;
+
 import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.enrich.StructuralRefContextEnrichment;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -67,7 +68,7 @@ public final class EnrichedStructuralVariantFactory {
 
         final ImmutableEnrichedStructuralVariantLeg.Builder builder = ImmutableEnrichedStructuralVariantLeg.builder()
                 .from(leg)
-                .refGenomeContext(context.getAttributeAsString(StructuralRefContextEnrichment.REF_CONTEXT_FLAG, null))
+                .refGenomeContext(context.getAttributeAsString(REF_CONTEXT_FLAG, null))
                 .adjustedAlleleFrequency(!purpleAF.isEmpty() ? purpleAF.get(0) : null)
                 .adjustedCopyNumber(!purpleCN.isEmpty() ? purpleCN.get(0) : null)
                 .adjustedCopyNumberChange(!purpleCNChange.isEmpty() ? purpleCNChange.get(0) : null);

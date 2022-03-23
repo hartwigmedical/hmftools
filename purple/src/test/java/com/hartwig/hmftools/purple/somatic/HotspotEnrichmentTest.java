@@ -8,7 +8,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.test.VariantContextFromString;
-import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 
@@ -19,10 +18,12 @@ import org.junit.Test;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 
-public class HotspotEnrichmentTest {
+public class HotspotEnrichmentTest
+{
 
     @Test
-    public void testOverlap() {
+    public void testOverlap()
+    {
         final String hotspotRef = "GATTACA";
         final String variantRef = "T";
 
@@ -47,7 +48,8 @@ public class HotspotEnrichmentTest {
     }
 
     @Test
-    public void testExactMatch() {
+    public void testExactMatch()
+    {
         final String hotspotRef = "GATTACA";
 
         final VariantHotspot hotspot =
@@ -56,38 +58,39 @@ public class HotspotEnrichmentTest {
     }
 
     @Test
-    public void testFromVariant() {
+    public void testFromVariant()
+    {
         VariantContext variant = createNonHotspotV37(1, "G");
         VariantContext nonHotspot = new VariantContextBuilder(variant).attribute("HOTSPOT", false).make();
-        Assert.assertEquals(Hotspot.NON_HOTSPOT, HotspotEnrichment.fromVariant(nonHotspot));
+        Assert.assertEquals(Hotspot.NON_HOTSPOT, Hotspot.fromVariant(nonHotspot));
     }
 
-    private static void assertOverlap(@NotNull Hotspot expected, @NotNull VariantHotspot hotspot, int variantStart,
-            @NotNull String variantRef) {
-        final List<VariantContext> result = Lists.newArrayList();
-
+    private static void assertOverlap(Hotspot expected, VariantHotspot hotspot, int variantStart, String variantRef)
+    {
         final VariantHotspotEnrichment enrichment =
-                new VariantHotspotEnrichment(Multimaps.fromPositions(Lists.newArrayList(hotspot)), result::add);
+                new VariantHotspotEnrichment(Multimaps.fromPositions(Lists.newArrayList(hotspot)), true);
 
-        final VariantContext v37Variant = createNonHotspotV37(variantStart, variantRef);
-        final VariantContext v38Variant = createNonHotspotV38(variantStart, variantRef);
+        VariantContext v37Variant = createNonHotspotV37(variantStart, variantRef);
+        VariantContext v38Variant = createNonHotspotV38(variantStart, variantRef);
 
-        enrichment.accept(v37Variant);
-        enrichment.accept(v38Variant);
+        v37Variant = enrichment.processVariant(v37Variant);
+        v38Variant = enrichment.processVariant(v38Variant);
 
-        assertEquals(expected, HotspotEnrichment.fromVariant(result.get(0)));
-        assertEquals(expected, HotspotEnrichment.fromVariant(result.get(1)));
+        assertEquals(expected, Hotspot.fromVariant(v37Variant));
+        assertEquals(expected, Hotspot.fromVariant(v38Variant));
     }
 
     @NotNull
-    private static VariantContext createNonHotspotV37(int start, @NotNull final String ref) {
+    private static VariantContext createNonHotspotV37(int start, final String ref)
+    {
         final String line = "11\t" + start + "\tCOSM123;COSM456\t" + ref
                 + "\tA\t.\tPASS\tCOSM2ENST=COSM123|GENE_TRANS1|c.1A>G|p.E1E|1,COSM456|GENE_TRANS2|c.2A>G|p.E2E|1\tGT:AD:DP\t0/1:73,17:91";
         return VariantContextFromString.decode(line);
     }
 
     @NotNull
-    private static VariantContext createNonHotspotV38(int start, @NotNull final String ref) {
+    private static VariantContext createNonHotspotV38(int start, final String ref)
+    {
         final String line = "chr11\t" + start + "\tCOSM123;COSM456\t" + ref
                 + "\tA\t.\tPASS\tCOSM2ENST=COSM123|GENE_TRANS1|c.1A>G|p.E1E|1,COSM456|GENE_TRANS2|c.2A>G|p.E2E|1\tGT:AD:DP\t0/1:73,17:91";
         return VariantContextFromString.decode(line);

@@ -47,7 +47,7 @@ public class SampleData
 
         final SomaticVariantFactory factory = new SomaticVariantFactory(new PassingVariantFilter(), new SGTFilter());
 
-        final VariantHotspotEnrichment hotspotEnrichment = new VariantHotspotEnrichment(referenceData.SomaticHotspots, null);
+        final VariantHotspotEnrichment hotspotEnrichment = new VariantHotspotEnrichment(referenceData.SomaticHotspots, true);
 
         PPL_LOGGER.info("loading somatic variants from {}", somaticVcf);
 
@@ -57,7 +57,7 @@ public class SampleData
             {
                 if(factory.test(variantContext))
                 {
-                    Optional<SomaticVariant> variant = factory.createVariant(SampleId, hotspotEnrichment.enrich(variantContext));
+                    Optional<SomaticVariant> variant = factory.createVariant(SampleId, hotspotEnrichment.processVariant(variantContext));
 
                     if(variant.isPresent() && variant.get().isSnp())
                         FittingSomaticVariants.add(variant.get());

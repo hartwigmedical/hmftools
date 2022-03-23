@@ -13,8 +13,8 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public interface PurityAdjustedSomaticVariantBuilder {
-
+public interface PurityAdjustedSomaticVariantBuilder
+{
     PurityAdjustedSomaticVariantBuilder variantCopyNumber(double ploidy);
 
     PurityAdjustedSomaticVariantBuilder adjustedCopyNumber(double copyNumber);
@@ -28,41 +28,49 @@ public interface PurityAdjustedSomaticVariantBuilder {
     PurityAdjustedSomaticVariantBuilder biallelic(boolean biallelic);
 
     @NotNull
-    static PurityAdjustedSomaticVariantBuilder fromVariantContext(@NotNull final VariantContext builder) {
-        return new PurityAdjustedSomaticVariantBuilder() {
+    static PurityAdjustedSomaticVariantBuilder fromVariantContext(final VariantContext variantContext)
+    {
+        return new PurityAdjustedSomaticVariantBuilder()
+        {
             @Override
-            public PurityAdjustedSomaticVariantBuilder variantCopyNumber(final double ploidy) {
-                builder.getCommonInfo().putAttribute(PURPLE_VARIANT_CN_INFO, ploidy);
+            public PurityAdjustedSomaticVariantBuilder variantCopyNumber(final double ploidy)
+            {
+                variantContext.getCommonInfo().putAttribute(PURPLE_VARIANT_CN_INFO, ploidy);
                 return this;
             }
 
             @Override
-            public PurityAdjustedSomaticVariantBuilder adjustedCopyNumber(final double copyNumber) {
-                builder.getCommonInfo().putAttribute(PURPLE_CN_INFO, copyNumber);
+            public PurityAdjustedSomaticVariantBuilder adjustedCopyNumber(final double copyNumber)
+            {
+                variantContext.getCommonInfo().putAttribute(PURPLE_CN_INFO, copyNumber);
                 return this;
             }
 
             @Override
-            public PurityAdjustedSomaticVariantBuilder adjustedVAF(final double vaf) {
-                builder.getCommonInfo().putAttribute(PURPLE_AF_INFO, String.format("%.4f", vaf));
+            public PurityAdjustedSomaticVariantBuilder adjustedVAF(final double vaf)
+            {
+                variantContext.getCommonInfo().putAttribute(PURPLE_AF_INFO, String.format("%.4f", vaf));
                 return this;
             }
 
             @Override
-            public PurityAdjustedSomaticVariantBuilder minorAlleleCopyNumber(final double map) {
-                builder.getCommonInfo().putAttribute(PURPLE_MINOR_ALLELE_CN_INFO, map);
+            public PurityAdjustedSomaticVariantBuilder minorAlleleCopyNumber(final double map)
+            {
+                variantContext.getCommonInfo().putAttribute(PURPLE_MINOR_ALLELE_CN_INFO, map);
                 return this;
             }
 
             @Override
-            public PurityAdjustedSomaticVariantBuilder germlineStatus(@NotNull final GermlineStatus germlineStatus) {
-                builder.getCommonInfo().putAttribute(PURPLE_GERMLINE_INFO, germlineStatus.toString());
+            public PurityAdjustedSomaticVariantBuilder germlineStatus(@NotNull final GermlineStatus germlineStatus)
+            {
+                variantContext.getCommonInfo().putAttribute(PURPLE_GERMLINE_INFO, germlineStatus.toString());
                 return this;
             }
 
             @Override
-            public PurityAdjustedSomaticVariantBuilder biallelic(final boolean biallelic) {
-                builder.getCommonInfo().putAttribute(PURPLE_BIALLELIC_FLAG, biallelic);
+            public PurityAdjustedSomaticVariantBuilder biallelic(final boolean biallelic)
+            {
+                variantContext.getCommonInfo().putAttribute(PURPLE_BIALLELIC_FLAG, biallelic);
                 return this;
             }
         };

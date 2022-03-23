@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -21,40 +20,34 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
-import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
-
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class GermlineReportedEnrichment implements VariantContextEnrichment
+public class GermlineReportedEnrichment
 {
     private static final double MIN_VARIANT_COPY_NUMBER = 0.5;
 
-    private final Consumer<VariantContext> mConsumer;
     private final Map<String, DriverGene> mDriverGeneMap;
     private final Set<String> mSomaticKnockouts;
-    private final List<VariantContextDecorator> buffer = Lists.newArrayList();
+    private final List<VariantContextDecorator> mBuffer;
 
     public GermlineReportedEnrichment(
-            final List<DriverGene> driverGenes, final Set<String> somaticReportedGenes, final Consumer<VariantContext> consumer)
+            final List<DriverGene> driverGenes, final Set<String> somaticReportedGenes)
     {
-        mConsumer = consumer;
         mDriverGeneMap = driverGenes.stream().filter(DriverGene::reportGermline).collect(Collectors.toMap(DriverGene::gene, x -> x));
         mSomaticKnockouts = somaticReportedGenes;
+        mBuffer = Lists.newArrayList();
     }
 
-    @Override
-    public void accept(final VariantContext context)
+    public void processVariant(final VariantContext context)
     {
-        buffer.add(new VariantContextDecorator(context));
+        mBuffer.add(new VariantContextDecorator(context));
     }
 
-    @Override
-    public VCFHeader enrichHeader(final VCFHeader template)
+    public static VCFHeader enrichHeader(final VCFHeader template)
     {
         template.addMetaDataLine(new VCFInfoHeaderLine(REPORTED_FLAG, 0, VCFHeaderLineType.Flag, REPORTED_DESC));
         return template;
@@ -62,7 +55,7 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment
 
     public void flush()
     {
-        final List<VariantContextDecorator> germlineHits = buffer.stream().filter(x -> mDriverGeneMap.containsKey(x.gene())).filter(x ->
+        final List<VariantContextDecorator> germlineHits = mBuffer.stream().filter(x -> mDriverGeneMap.containsKey(x.gene())).filter(x ->
         {
             DriverGene driverGene = mDriverGeneMap.get(x.gene());
             return report(x,
@@ -71,7 +64,7 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment
                     Collections.emptySet());
         }).collect(Collectors.toList());
 
-        for(VariantContextDecorator variant : buffer)
+        for(VariantContextDecorator variant : mBuffer)
         {
             final Set<String> otherGermlineHits = germlineHits.stream()
                     .filter(x -> !x.equals(variant))
@@ -88,13 +81,11 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment
             {
                 variant.context().getCommonInfo().putAttribute(REPORTED_FLAG, true);
             }
-            mConsumer.accept(variant.context());
         }
 
-        buffer.clear();
+        mBuffer.clear();
     }
 
-    @NotNull
     private static DriverGeneGermlineReporting downgradeWildType(DriverGeneGermlineReporting reporting)
     {
         return reporting == WILDTYPE_LOST ? VARIANT_NOT_LOST : reporting;
@@ -116,44 +107,32 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment
         return report(variant, driverGene.reportGermlineHotspot(), driverGene.reportGermlineVariant(), genesWithMultipleUnphasedHits);
     }
 
-    private boolean report(VariantContextDecorator variant, DriverGeneGermlineReporting hotspotReporting,
-            DriverGeneGermlineReporting variantReporting, Set<String> genesWithMultipleUnphasedHits)
+    private boolean report(
+            final VariantContextDecorator variant, final DriverGeneGermlineReporting hotspotReporting,
+            final DriverGeneGermlineReporting variantReporting, final Set<String> genesWithMultipleUnphasedHits)
     {
         if(!variant.isPass())
-        {
             return false;
-        }
 
         if(!variant.isPathogenic())
-        {
             return false;
-        }
 
         final DriverGeneGermlineReporting reporting = variant.isHotspot() ? hotspotReporting : variantReporting;
+
         if(reporting == NONE)
-        {
             return false;
-        }
 
         if(reporting == ANY)
-        {
             return true;
-        }
 
         if(isVariantLost(variant, MIN_VARIANT_COPY_NUMBER))
-        {
             return false;
-        }
 
         if(reporting == VARIANT_NOT_LOST)
-        {
             return true;
-        }
 
         if(reporting == WILDTYPE_LOST)
-        {
             return variant.biallelic() || genesWithMultipleUnphasedHits.contains(variant.gene());
-        }
 
         return false;
     }

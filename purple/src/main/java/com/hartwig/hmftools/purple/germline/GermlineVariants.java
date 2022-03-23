@@ -99,6 +99,7 @@ public class GermlineVariants
                 {
                     mReportableVariants.add(context);
                 }
+
                 writer.add(context);
             };
 
@@ -107,9 +108,14 @@ public class GermlineVariants
                     mReferenceData.GermlineHotspots, somaticReportedGenes, !isPaveAnnotated, consumer);
 
             writer.writeHeader(enrichment.enrichHeader(vcfReader.getFileHeader()));
+
             for(VariantContext context : vcfReader)
             {
                 enrichment.accept(context);
+
+
+
+
             }
 
             enrichment.flush();

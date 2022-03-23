@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.variant;
 
 import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_GERMLINE_INFO;
-import static com.hartwig.hmftools.common.variant.enrich.Subclonality.SUBCLONAL_LIKELIHOOD_FLAG;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
@@ -11,7 +10,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
@@ -48,6 +46,7 @@ public class SomaticVariantFactory implements VariantContextFilter
     public static final String KATAEGIS_FLAG = "KT";
 
     public static final String PASS_FILTER = "PASS";
+    public static final String SUBCLONAL_LIKELIHOOD_FLAG = "SUBCL";
 
     @NotNull
     private final CompoundFilter mFilter;

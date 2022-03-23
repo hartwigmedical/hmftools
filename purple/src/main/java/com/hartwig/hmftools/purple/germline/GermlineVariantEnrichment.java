@@ -17,22 +17,18 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.purple.config.ReferenceData;
 import com.hartwig.hmftools.purple.somatic.SnpEffEnrichment;
 
-import org.jetbrains.annotations.NotNull;
-
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
 
 public class GermlineVariantEnrichment implements VariantContextEnrichment
 {
-    private final VariantContextEnrichment mPurityEnrichment;
-    private final VariantContextEnrichment mRefGenomeEnrichment;
-    private final VariantContextEnrichment mPathogenicEnrichment;
-    private final VariantContextEnrichment mSnpEffEnrichment;
-    private final VariantContextEnrichment mReportableEnrichment;
-    private final VariantContextEnrichment mHotspotEnrichment;
-    private final VariantContextEnrichment mGenotypeEnrichment;
-    private final VariantContextEnrichment mLowTumorVCNEnrichment;
-    private final VariantContextEnrichment mLowVafRescueEnrichment;
+    private final GermlinePurityEnrichment mPurityEnrichment;
+    private final SomaticRefContextEnrichment mRefGenomeEnrichment;
+    private final SnpEffEnrichment mSnpEffEnrichment;
+    private final GermlineReportedEnrichment mReportableEnrichment;
+    private final VariantHotspotEnrichment mHotspotEnrichment;
+    private final GermlineGenotypeEnrichment mGenotypeEnrichment;
+    private final GermlineRescueLowVAF mLowVafRescueEnrichment;
 
     public GermlineVariantEnrichment(
             final String purpleVersion, final String referenceSample, final String tumorSample, final ReferenceData refData,
@@ -43,69 +39,52 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment
         final Set<String> germlineGenes = refData.DriverGenes.driverGenes().stream()
                 .filter(DriverGene::reportGermline).map(DriverGene::gene).collect(Collectors.toSet());
 
-        // Hotspot must be before reportable
-        mReportableEnrichment = new GermlineReportedEnrichment(refData.DriverGenes.driverGenes(), somaticReportedGenes, consumer);
-        mPathogenicEnrichment = new GermlinePathogenicEnrichment(mReportableEnrichment);
-        mRefGenomeEnrichment = new SomaticRefContextEnrichment(refData.RefGenome, mPathogenicEnrichment);
+        mReportableEnrichment = new GermlineReportedEnrichment(refData.DriverGenes.driverGenes(), somaticReportedGenes);
+        mRefGenomeEnrichment = new SomaticRefContextEnrichment(refData.RefGenome, null);
 
         if(snpEffEnrichmentEnabled)
         {
-            mSnpEffEnrichment =
-                    new SnpEffEnrichment(germlineGenes, refData.GeneTransCache, refData.OtherReportableTranscripts, mRefGenomeEnrichment);
+            mSnpEffEnrichment = new SnpEffEnrichment(germlineGenes, refData.GeneTransCache, refData.OtherReportableTranscripts);
         }
         else
         {
             mSnpEffEnrichment = null;
         }
 
-        VariantContextEnrichment prevConsumer = mSnpEffEnrichment != null ? mSnpEffEnrichment : mRefGenomeEnrichment;
+        mLowVafRescueEnrichment = new GermlineRescueLowVAF(referenceSample);
 
-        // Purity must go before lowTumorVCNEnrichment
-        // Hotspot must be before lowTumorVCNEnrichment
-        mLowTumorVCNEnrichment = new GermlineLowTumorVCNEnrichment(prevConsumer);
+        mPurityEnrichment = new GermlinePurityEnrichment(purpleVersion, tumorSample, referenceSample, purityAdjuster, copyNumbers);
 
-        // Purity must go before lowVafRescue
-        // Genotype must go before lowVafRescue
-        mLowVafRescueEnrichment = new GermlineRescueLowVAFEnrichment(referenceSample, mLowTumorVCNEnrichment);
-
-        // Genotype must go before purity enrichment
-        mPurityEnrichment = new GermlinePurityEnrichment(purpleVersion,
-                tumorSample,
-                referenceSample,
-                purityAdjuster,
-                copyNumbers,
-                mLowVafRescueEnrichment);
-
-        mHotspotEnrichment = new VariantHotspotEnrichment(germlineHotspots, mPurityEnrichment);
-        mGenotypeEnrichment = new GermlineGenotypeEnrichment(referenceSample, tumorSample, mHotspotEnrichment);
+        mHotspotEnrichment = new VariantHotspotEnrichment(germlineHotspots, true);
+        mGenotypeEnrichment = new GermlineGenotypeEnrichment(referenceSample, tumorSample);
     }
 
     @Override
     public void accept(final VariantContext context)
     {
-        mGenotypeEnrichment.accept(context);
+        // the order matters
+        VariantContext newContext = mGenotypeEnrichment.processVariant(context);
+        newContext = mHotspotEnrichment.processVariant(newContext);
+
+        mPurityEnrichment.processVariant(newContext);
+        newContext = mLowVafRescueEnrichment.processVariant(newContext);
+
+        newContext = GermlineLowTumorVCNFilter.processVariant(newContext);
+
+        if(mSnpEffEnrichment != null)
+            mSnpEffEnrichment.processVariant(newContext);
+
+        mRefGenomeEnrichment.processVariant(newContext);
+        GermlinePathogenicEnrichment.processVariant(newContext);
+        mReportableEnrichment.processVariant(newContext);
     }
 
     @Override
     public void flush()
     {
-        mGenotypeEnrichment.flush();
-        mHotspotEnrichment.flush();
-        mPurityEnrichment.flush();
-        mLowVafRescueEnrichment.flush();
-        mLowTumorVCNEnrichment.flush();
-
-        if(mSnpEffEnrichment != null)
-        {
-            mSnpEffEnrichment.flush();
-        }
-
-        mRefGenomeEnrichment.flush();
-        mPathogenicEnrichment.flush();
         mReportableEnrichment.flush();
     }
 
-    @NotNull
     @Override
     public VCFHeader enrichHeader(final VCFHeader template)
     {
@@ -114,14 +93,11 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment
         header = mRefGenomeEnrichment.enrichHeader(header);
 
         if(mSnpEffEnrichment != null)
-        {
             header = mSnpEffEnrichment.enrichHeader(header);
-        }
 
-        header = mLowVafRescueEnrichment.enrichHeader(header);
-        header = mLowTumorVCNEnrichment.enrichHeader(header);
+        header = GermlineLowTumorVCNFilter.enrichHeader(header);
         header = mReportableEnrichment.enrichHeader(header);
         header = mGenotypeEnrichment.enrichHeader(header);
-        return mPathogenicEnrichment.enrichHeader(header);
+        return GermlinePathogenicEnrichment.enrichHeader(header);
     }
 }

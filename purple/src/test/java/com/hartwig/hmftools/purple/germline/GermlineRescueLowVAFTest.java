@@ -12,7 +12,7 @@ import org.junit.Test;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class GermlineRescueLowVAFEnrichmentTest
+public class GermlineRescueLowVAFTest
 {
     @Test
     public void testRestore()
@@ -24,7 +24,9 @@ public class GermlineRescueLowVAFEnrichmentTest
 
     private static void assertFiltered(boolean expectedFiltered, VariantContext victim)
     {
-        VariantContext updated = GermlineRescueLowVAFEnrichment.process(VariantContextFromString.SAMPLE, victim);
+        GermlineRescueLowVAF germlineRescueLowVAF = new GermlineRescueLowVAF(VariantContextFromString.SAMPLE);
+
+        VariantContext updated = germlineRescueLowVAF.processVariant(victim);
         assertEquals(expectedFiltered, updated.isFiltered());
         if(expectedFiltered)
         {
