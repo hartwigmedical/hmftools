@@ -39,14 +39,19 @@ def add_spider_plot(df_spider, fig, gs):
         angles += angles[:1]
         plt.xticks(angles[:-1], categories)
         for label, angle in zip(ax1.get_xticklabels(), angles):
-            if angle in (0, np.pi):
+            if angle == 0:
                 label.set_horizontalalignment('center')
-            elif 0 < angle < np.pi:
-                label.set_horizontalalignment('left')
+                label.set_verticalalignment('bottom')
             else:
-                label.set_horizontalalignment('right')
+                if angle == np.pi:
+                    label.set_horizontalalignment('center')
+                    label.set_verticalalignment('top')
+                elif 0 < angle < np.pi:
+                    label.set_horizontalalignment('left')
+                else:
+                    label.set_horizontalalignment('right')
         ax1.set_rlabel_position(90)
-        plt.yticks([0,20,40,60,80,100], ["0","20",'40','60','80','100'], color="#505050", size=10)
+        plt.yticks([20,40,60,80], ["20",'40','60','80'], color="#505050", size=10, va='bottom')
         plt.ylim(-6,100)
 
         # Add confidence
