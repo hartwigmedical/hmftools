@@ -31,7 +31,7 @@ public class SampleDataFiles
 
     static void addOptions(final Options options)
     {
-        options.addOption(SAMPLE_DIR, true,"Path to the sample's directory where expect to find cobalt, amber, gridss etc directories");
+        options.addOption(SAMPLE_DIR, true,"Path to the sample's directory where expect to find Cobalt, Amber, Gripss etc directories");
 
         options.addOption(COBALT,true,
                 "Path to COBALT output directory. Required if <run_dir> not set, otherwise defaults to <run_dir>/cobalt.");
@@ -49,16 +49,19 @@ public class SampleDataFiles
     {
         SampleDataDir = cmd.hasOption(SAMPLE_DIR) ? checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DIR)) : null;
 
-        if(SampleDataDir != null)
-        {
-            AmberDirectory = SampleDataDir + "amber/";
-            CobaltDirectory = SampleDataDir + "cobalt/";
-        }
-        else
-        {
+        if(cmd.hasOption(AMBER))
             AmberDirectory = cmd.getOptionValue(AMBER);
+        else if(SampleDataDir != null)
+            AmberDirectory = SampleDataDir + "amber/";
+        else
+            throw new ParseException("missing amber or sample_data_dir config");
+
+        if(cmd.hasOption(COBALT))
             CobaltDirectory = cmd.getOptionValue(COBALT);
-        }
+        else if(SampleDataDir != null)
+            CobaltDirectory = SampleDataDir + "cobalt/";
+        else
+            throw new ParseException("missing cobalt or sample_data_dir config");
 
         SvVcfFile = getFilename(cmd, STRUCTURAL_VARIANTS, SampleDataDir, sampleId, ".gripss.somatic.filtered.vcf.gz");
         RecoveredSvVcfFile = getFilename(cmd, STRUCTURAL_VARIANT_RECOVERY, SampleDataDir, sampleId, ".gripss.somatic.vcf.gz");

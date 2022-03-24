@@ -135,17 +135,6 @@ TUMOR.cobalt.ratio.tsv contains the counts and ratios of the reference and tumor
 
 TUMOR.cobalt.ratio.pcf and REFERENCE.cobalt.ratio.pcf contain the segmented regions determined from the ratios.
 
-## Migration to 1.9
-
-As germline aberrations only effect the final normalization it is possible to migrate existing COBALT output from versions 1.4 to 1.8 to 1.9 without having to re-examine the bams using the following command:
-
-```
-java -Xmx8G -Xms4G -cp ${cobalt_jar} com.hartwig.hmftools.cobalt.CountBamLinesMigration \
-    -reference COLO829R -tumor COLO829T \
-    -gc_profile /path/to/GC_profile.1000bp.37.cnp \
-    -input_dir /path/to/existing/cobalt/data/ \
-    -output_dir /path/to/new/cobalt/data/ 
-```
 
 ## Version History and Download Links
 - [1.12](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.12)
@@ -157,15 +146,3 @@ java -Xmx8G -Xms4G -cp ${cobalt_jar} com.hartwig.hmftools.cobalt.CountBamLinesMi
 - [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.9)
   - Alert user that gc_profile should be un-compressed before use
   - Add support for XXY, XYY, Female Mosaic X, and Trisomy 13,15,18,21,X
-- [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.8)
-  - Added `validation_stringency` parameter.
-  - Added explicit `stringsAsFactors = T` to R script
-- [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.7)
-  - Exit gracefully on exceptions
-  - Changed file names and headers for better consistency with other HMF tools
-- [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.6)
-  - CRAM support
-- 1.5
-  - Support for ref genome 38
-- 1.4
-  - Support for Klinefelter syndrome

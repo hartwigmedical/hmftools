@@ -3,6 +3,7 @@ package com.hartwig.hmftools.purple.segment;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
@@ -32,14 +33,14 @@ public class ClusterFactory
     }
 
     public ListMultimap<Chromosome, Cluster> cluster(final List<StructuralVariant> variants,
-            final Multimap<Chromosome, PCFPosition> pcfPositions, ListMultimap<Chromosome, CobaltRatio> ratios)
+            final Multimap<Chromosome, PCFPosition> pcfPositions, final Map<Chromosome,List<CobaltRatio>> ratios)
     {
         final Multimap<Chromosome, SVSegment> positions = Multimaps.fromPositions(SVSegmentFactory.create(variants));
         return cluster(positions, pcfPositions, ratios);
     }
 
     private ListMultimap<Chromosome, Cluster> cluster(final Multimap<Chromosome, SVSegment> variantPositions,
-            final Multimap<Chromosome, PCFPosition> pcfPositions, final ListMultimap<Chromosome, CobaltRatio> ratios)
+            final Multimap<Chromosome, PCFPosition> pcfPositions, final Map<Chromosome,List<CobaltRatio>> ratios)
     {
         ListMultimap<Chromosome, Cluster> clusters = ArrayListMultimap.create();
         for(Chromosome chromosome : pcfPositions.keySet())

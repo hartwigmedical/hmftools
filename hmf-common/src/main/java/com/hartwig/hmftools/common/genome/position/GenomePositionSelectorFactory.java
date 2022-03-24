@@ -53,6 +53,28 @@ public final class GenomePositionSelectorFactory {
     }
 
     @NotNull
+    public static <P extends GenomePosition> GenomePositionSelector<P> create(@NotNull final Map<Chromosome,List<P>> positions) {
+        final GenomePositionSelector<P> nullSelector = new NullGenomePositionSelector<>();
+
+        final Map<Chromosome, GenomePositionSelector<P>> chromosomeSelectors = Maps.newHashMap();
+        for (final Chromosome chromosome : positions.keySet()) {
+            chromosomeSelectors.put(chromosome, new GenomePositionSelectorListImpl<>(positions.get(chromosome)));
+        }
+        return new GenomePositionSelector<P>() {
+            @NotNull
+            @Override
+            public Optional<P> select(@NotNull final GenomePosition position) {
+                return chromosomeSelectors.getOrDefault(HumanChromosome.fromString(position.chromosome()), nullSelector).select(position);
+            }
+
+            @Override
+            public void select(final GenomeRegion region, final Consumer<P> handler) {
+                chromosomeSelectors.getOrDefault(HumanChromosome.fromString(region.chromosome()), nullSelector).select(region, handler);
+            }
+        };
+    }
+
+    @NotNull
     public static <P extends GenomePosition> GenomePositionSelector<P> create(@NotNull final Multimap<Chromosome, P> positions) {
         final GenomePositionSelector<P> nullSelector = new NullGenomePositionSelector<>();
 

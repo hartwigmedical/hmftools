@@ -35,10 +35,12 @@ public class PurpleSegmentFactory
         mLengths = lengths;
     }
 
-    public List<PurpleSegment> segment(final List<StructuralVariant> variants,
-            final Multimap<Chromosome, PCFPosition> pcfPositions, ListMultimap<Chromosome, CobaltRatio> ratios)
+    public List<PurpleSegment> segment(
+            final List<StructuralVariant> variants, final Multimap<Chromosome,PCFPosition> pcfPositions,
+            final Map<Chromosome,List<CobaltRatio>> ratios)
     {
-        final Multimap<Chromosome, Cluster> clusterMap = new ClusterFactory(mWindowSize).cluster(variants, pcfPositions, ratios);
+        ClusterFactory clusterFactory = new ClusterFactory(mWindowSize);
+        final Multimap<Chromosome, Cluster> clusterMap = clusterFactory.cluster(variants, pcfPositions, ratios);
         return segmentCluster(clusterMap);
     }
 
@@ -51,13 +53,11 @@ public class PurpleSegmentFactory
         return results;
     }
 
-    @NotNull
     private Multimap<Chromosome, PurpleSegment> segmentMap(final Multimap<Chromosome, Cluster> clusters)
     {
         final Multimap<Chromosome, PurpleSegment> segments = ArrayListMultimap.create();
         for(Chromosome chromosome : clusters.keySet())
         {
-
             GenomePosition length = mLengths.get(chromosome);
             GenomePosition centromere = mCentromeres.get(chromosome);
 
@@ -68,15 +68,12 @@ public class PurpleSegmentFactory
         return segments;
     }
 
-    @NotNull
     @VisibleForTesting
-    static List<PurpleSegment> create(final GenomePosition centromere, final GenomePosition length,
-            final Collection<Cluster> clusters)
+    static List<PurpleSegment> create(final GenomePosition centromere, final GenomePosition length, final Collection<Cluster> clusters)
     {
         return addCentromere(centromere, create(length, clusters));
     }
 
-    @NotNull
     private static List<PurpleSegment> create(final GenomePosition length, final Collection<Cluster> clusters)
     {
         final List<PurpleSegment> result = Lists.newArrayList();

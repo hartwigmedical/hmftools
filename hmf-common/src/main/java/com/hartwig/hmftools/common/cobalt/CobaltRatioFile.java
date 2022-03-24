@@ -23,6 +23,7 @@ import java.util.zip.GZIPOutputStream;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -59,14 +60,23 @@ public final class CobaltRatioFile
     }
 
     @NotNull
-    public static ListMultimap<Chromosome, CobaltRatio> read(final String filename) throws IOException
+    public static ListMultimap<Chromosome,CobaltRatio> read(final String filename) throws IOException
     {
-        return read(filename, null);
+        Map<Chromosome,List<CobaltRatio>> chrRatiosMap = read(filename, null);
+
+        final ListMultimap<Chromosome,CobaltRatio> result = ArrayListMultimap.create();
+
+        for(Map.Entry<Chromosome,List<CobaltRatio>> entry : chrRatiosMap.entrySet())
+        {
+            HumanChromosome chromosome = HumanChromosome.fromString(entry.getKey().toString());
+            entry.getValue().forEach(x -> result.put(chromosome, x));
+        }
+
+        return result;
     }
 
     @NotNull
-    public static ListMultimap<Chromosome, CobaltRatio> readTumorOnly(final String filename, final Gender gender)
-            throws IOException
+    public static Map<Chromosome,List<CobaltRatio>> readWithGender(final String filename, final Gender gender) throws IOException
     {
         return read(filename, gender);
     }
@@ -79,10 +89,10 @@ public final class CobaltRatioFile
     private static final String TUMOR_GC_RATIO= "tumorGCRatio";
     private static final String REF_GC_DIP_RATIO = "referenceGCDiploidRatio";
 
-    private static ListMultimap<Chromosome,CobaltRatio> read(final String filename, final Gender gender)
+    private static Map<Chromosome,List<CobaltRatio>> read(final String filename, final Gender gender)
             throws IOException
     {
-        ListMultimap<Chromosome,CobaltRatio> chrRatiosMap = ArrayListMultimap.create();
+        Map<Chromosome,List<CobaltRatio>> chrRatiosMap = Maps.newHashMap();
 
         BufferedReader reader = createBufferedReader(filename);
 
@@ -96,6 +106,9 @@ public final class CobaltRatioFile
         int refGcRatioIndex = fieldsIndexMap.get(REF_GC_RATIO);
         int tumorGcRatioIndex = fieldsIndexMap.get(TUMOR_GC_RATIO);
         int refGcDiplodRatioIndex = fieldsIndexMap.get(REF_GC_DIP_RATIO);
+
+        List<CobaltRatio> ratios = null;
+        String currentChromosome = "";
 
         while((line = reader.readLine()) != null)
         {
@@ -115,7 +128,14 @@ public final class CobaltRatioFile
                     .referenceGCDiploidRatio(genderAdjustedDiploidRatio(gender, chromosome, initialRefGCDiploidRatio))
                     .build();
 
-            chrRatiosMap.put(HumanChromosome.fromString(chromosome), ratio);
+            if(!currentChromosome.equals(chromosome))
+            {
+                currentChromosome = chromosome;
+                ratios = Lists.newArrayList();
+                chrRatiosMap.put(HumanChromosome.fromString(chromosome), ratios);
+            }
+
+            ratios.add(ratio);
         }
 
         return chrRatiosMap;

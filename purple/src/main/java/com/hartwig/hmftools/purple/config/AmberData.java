@@ -51,28 +51,28 @@ public class AmberData
         final String amberFilename = AmberBAFFile.generateAmberFilenameForReading(amberDirectory, sampleId);
         if(!new File(amberFilename).exists())
         {
-            throw new ParseException("Unable to open amber baf file: " + amberFilename);
+            throw new ParseException("Unable to open Amber BAF file: " + amberFilename);
         }
 
         final String pcfFilename = PCFFile.generateBAFFilename(amberDirectory, sampleId);
         if(!new File(pcfFilename).exists())
         {
-            throw new ParseException("Unable to open amber pcf file: " + pcfFilename);
+            throw new ParseException("Unable to open Amber PCF file: " + pcfFilename);
         }
 
         final String qcFile = AmberQCFile.generateFilename(amberDirectory, sampleId);
         if(!new File(qcFile).exists())
         {
-            throw new ParseException("Unable to open amber qc file: " + qcFile);
+            throw new ParseException("Unable to open Amber QC file: " + qcFile);
         }
 
-        PPL_LOGGER.info("reading amber QC from {}", qcFile);
+        PPL_LOGGER.info("reading Amber QC from {}", qcFile);
         Contamination = AmberQCFile.read(qcFile).contamination();
 
-        PPL_LOGGER.info("reading amber bafs from {}", amberFilename);
+        PPL_LOGGER.info("reading Amber BAFs from {}", amberFilename);
         ChromosomeBafs = AmberBAFFile.read(amberFilename);
 
-        PPL_LOGGER.info("reading amber pcfs from {}", pcfFilename);
+        PPL_LOGGER.info("reading Amber PCFs from {}", pcfFilename);
 
         TumorSegments = PCFFile.readPositions(WINDOW_SIZE, PCFSource.TUMOR_BAF, pcfFilename);
 
@@ -83,7 +83,7 @@ public class AmberData
                 .average()
                 .orElse(DEFAULT_READ_DEPTH));
 
-        PPL_LOGGER.info("average amber tumor depth is {} reads implying an ambiguous BAF of {}",
+        PPL_LOGGER.info("average Amber tumor depth is {} reads implying an ambiguous BAF of {}",
                 AverageTumorDepth, String.format("%.3f", ExpectedBAF.expectedBAF(AverageTumorDepth)));
 
         PatientGender = Gender.fromAmber(ChromosomeBafs);

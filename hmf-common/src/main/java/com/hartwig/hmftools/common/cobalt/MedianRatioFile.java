@@ -48,8 +48,8 @@ public final class MedianRatioFile
 
             ratios.add(ImmutableMedianRatio.builder()
                     .chromosome(values[fieldsIndexMap.get(CHROMOSOME)])
-                    .medianRatio(fieldsIndexMap.get(MEDIAN_RATIO))
-                    .count(fieldsIndexMap.get(COUNT)).build());
+                    .medianRatio(Double.parseDouble(values[fieldsIndexMap.get(MEDIAN_RATIO)]))
+                    .count(Integer.parseInt(values[fieldsIndexMap.get(COUNT)])).build());
         }
 
         return ratios;

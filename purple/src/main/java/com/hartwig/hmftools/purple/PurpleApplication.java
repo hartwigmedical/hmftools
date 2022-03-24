@@ -178,7 +178,7 @@ public class PurpleApplication
         PPL_LOGGER.info("Purple complete");
     }
 
-    private SampleData loadSampleData(final String referenceId, final String tumorSample, final SampleDataFiles sampleDataFiles)
+    private SampleData loadSampleData(final String referenceId, final String tumorId, final SampleDataFiles sampleDataFiles)
     {
         try
         {
@@ -187,19 +187,20 @@ public class PurpleApplication
             if(!mConfig.DriversOnly)
             {
                 // load amber and cobalt sample data
-                final AmberData amberData = new AmberData(tumorSample, sampleDataFiles.AmberDirectory);
+                final AmberData amberData = mConfig.germlineMode() ?
+                        new AmberData(referenceId, sampleDataFiles.AmberDirectory) : new AmberData(tumorId, sampleDataFiles.AmberDirectory);
 
                 final CobaltData cobaltData = new CobaltData(
-                        referenceId, tumorSample, sampleDataFiles.CobaltDirectory, amberData.PatientGender, mConfig.tumorOnlyMode());
+                        referenceId, tumorId, sampleDataFiles.CobaltDirectory, amberData.PatientGender, mConfig.tumorOnlyMode());
 
                 // load structural and somatic variants
-                final StructuralVariantCache svCache = createStructuralVariantCache(tumorSample, sampleDataFiles);
+                final StructuralVariantCache svCache = createStructuralVariantCache(tumorId, sampleDataFiles);
 
-                sampleData = new SampleData(referenceId, tumorSample, amberData, cobaltData, svCache);
+                sampleData = new SampleData(referenceId, tumorId, amberData, cobaltData, svCache);
             }
             else
             {
-                sampleData = new SampleData(referenceId, tumorSample, null, null, null);
+                sampleData = new SampleData(referenceId, tumorId, null, null, null);
             }
 
             if(!mConfig.tumorOnlyMode())
@@ -209,7 +210,8 @@ public class PurpleApplication
         }
         catch(Exception e)
         {
-            PPL_LOGGER.error("failed processing sample({}): {}", tumorSample, e.toString());
+            PPL_LOGGER.error("failed processing sample({}): {}", tumorId, e.toString());
+            e.printStackTrace();
             return null;
         }
     }

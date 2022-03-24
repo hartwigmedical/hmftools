@@ -3,6 +3,7 @@ package com.hartwig.hmftools.purple.region;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -44,7 +45,7 @@ public class ObservedRegionFactory
 
     public List<ObservedRegion> combine(
             final List<PurpleSegment> regions, final Multimap<Chromosome, AmberBAF> bafs,
-            final Multimap<Chromosome, CobaltRatio> ratios, final Multimap<Chromosome, GCProfile> gcProfiles)
+            final Map<Chromosome,List<CobaltRatio>> ratios, final Multimap<Chromosome, GCProfile> gcProfiles)
     {
         final List<ModifiableEnrichedRegion> result = Lists.newArrayList();
 
@@ -62,8 +63,8 @@ public class ObservedRegionFactory
             cobaltSelector.select(region, cobalt);
             gcSelector.select(region, gc);
 
-            double tumorRatio = cobalt.tumorMedianRatio();
-            // double tumorRatio = cobalt.tumorMeanRatio();
+            // double tumorRatio = cobalt.tumorMedianRatio();
+            double tumorRatio = cobalt.tumorMeanRatio();
             double normalRatio = cobalt.referenceMeanRatio();
             final ModifiableEnrichedRegion observedRegion = ModifiableEnrichedRegion.create()
                     .from(region)

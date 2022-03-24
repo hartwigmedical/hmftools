@@ -20,7 +20,6 @@ abstract class ExtendRegion
     {
         for(int i = 0; i < regions.size(); i++)
         {
-
             CombinedRegion region = regions.get(i);
             if(region.copyNumberMethod().equals(mMethod))
             {
