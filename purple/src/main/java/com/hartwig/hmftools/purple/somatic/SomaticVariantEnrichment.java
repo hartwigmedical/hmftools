@@ -26,7 +26,7 @@ import htsjdk.variant.vcf.VCFHeader;
 public class SomaticVariantEnrichment implements VariantContextEnrichment
 {
     private final SomaticPurityEnrichment mPurityEnrichment;
-    private final VariantHotspotEnrichment mHotspotEnrichment;
+    private final HotspotEnrichment mHotspotEnrichment;
     private final KataegisEnrichment mKataegisEnrichment;
     private final SomaticRefContextEnrichment mSomaticRefContextEnrichment;
     private final SubclonalLikelihoodEnrichment mSubclonalLikelihoodEnrichment;
@@ -65,7 +65,7 @@ public class SomaticVariantEnrichment implements VariantContextEnrichment
             mSnpEffEnrichment = null;
         }
 
-        mHotspotEnrichment = new VariantHotspotEnrichment(hotspots, hotspotEnabled);
+        mHotspotEnrichment = new HotspotEnrichment(hotspots, hotspotEnabled);
     }
 
     @Override
@@ -103,7 +103,7 @@ public class SomaticVariantEnrichment implements VariantContextEnrichment
         VCFHeader header = SomaticRefContextEnrichment.addHeader(template);
         header = KataegisEnrichment.enrichHeader(header);
         header = SubclonalLikelihoodEnrichment.enrichHeader(header);
-        header = VariantHotspotEnrichment.enrichHeader(header);
+        header = HotspotEnrichment.enrichHeader(header);
 
         if(mSnpEffEnrichment != null)
             header = SnpEffEnrichment.enrichHeader(header);

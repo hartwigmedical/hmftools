@@ -5,12 +5,11 @@ import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
-import com.hartwig.hmftools.purple.somatic.VariantHotspotEnrichment;
+import com.hartwig.hmftools.purple.somatic.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.filter.SGTFilter;
 import com.hartwig.hmftools.purple.StructuralVariantCache;
 
@@ -47,7 +46,7 @@ public class SampleData
 
         final SomaticVariantFactory factory = new SomaticVariantFactory(new PassingVariantFilter(), new SGTFilter());
 
-        final VariantHotspotEnrichment hotspotEnrichment = new VariantHotspotEnrichment(referenceData.SomaticHotspots, true);
+        final HotspotEnrichment hotspotEnrichment = new HotspotEnrichment(referenceData.SomaticHotspots, true);
 
         PPL_LOGGER.info("loading somatic variants from {}", somaticVcf);
 

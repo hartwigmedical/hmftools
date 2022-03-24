@@ -63,7 +63,6 @@ public class OncoDrivers
                 driverCatalog.add(geneDriver(
                         sampleSNVCount, sampleINDELCount, geneMissenseLikelihood, geneVariants, geneCopyNumber));
             }
-
         }
 
         return driverCatalog;

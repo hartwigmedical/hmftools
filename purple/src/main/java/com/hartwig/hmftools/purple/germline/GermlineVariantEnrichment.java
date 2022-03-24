@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
-import com.hartwig.hmftools.purple.somatic.VariantHotspotEnrichment;
+import com.hartwig.hmftools.purple.somatic.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.purple.config.ReferenceData;
 import com.hartwig.hmftools.purple.somatic.SnpEffEnrichment;
@@ -26,7 +26,7 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment
     private final SomaticRefContextEnrichment mRefGenomeEnrichment;
     private final SnpEffEnrichment mSnpEffEnrichment;
     private final GermlineReportedEnrichment mReportableEnrichment;
-    private final VariantHotspotEnrichment mHotspotEnrichment;
+    private final HotspotEnrichment mHotspotEnrichment;
     private final GermlineGenotypeEnrichment mGenotypeEnrichment;
     private final GermlineRescueLowVAF mLowVafRescueEnrichment;
 
@@ -59,7 +59,7 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment
 
         mPurityEnrichment = new GermlinePurityEnrichment(purpleVersion, tumorSample, referenceSample, purityAdjuster, copyNumbers);
 
-        mHotspotEnrichment = new VariantHotspotEnrichment(germlineHotspots, true);
+        mHotspotEnrichment = new HotspotEnrichment(germlineHotspots, true);
         mGenotypeEnrichment = new GermlineGenotypeEnrichment(referenceSample, tumorSample);
     }
 

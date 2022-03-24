@@ -2,8 +2,6 @@ package com.hartwig.hmftools.purple.somatic;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.List;
-
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
 import com.hartwig.hmftools.common.variant.Hotspot;
@@ -67,8 +65,8 @@ public class HotspotEnrichmentTest
 
     private static void assertOverlap(Hotspot expected, VariantHotspot hotspot, int variantStart, String variantRef)
     {
-        final VariantHotspotEnrichment enrichment =
-                new VariantHotspotEnrichment(Multimaps.fromPositions(Lists.newArrayList(hotspot)), true);
+        final HotspotEnrichment enrichment =
+                new HotspotEnrichment(Multimaps.fromPositions(Lists.newArrayList(hotspot)), true);
 
         VariantContext v37Variant = createNonHotspotV37(variantStart, variantRef);
         VariantContext v38Variant = createNonHotspotV38(variantStart, variantRef);

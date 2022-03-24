@@ -23,7 +23,7 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class VariantHotspotEnrichment
+public class HotspotEnrichment
 {
     // VCF FIELDS
     public static final int HOTSPOT_DISTANCE = 5;
@@ -33,7 +33,7 @@ public class VariantHotspotEnrichment
     private final Multimap<Chromosome,VariantHotspot> mHotspots;
     private final boolean mEnabled;
 
-    public VariantHotspotEnrichment(final Multimap<Chromosome, VariantHotspot> hotspots, boolean enabled)
+    public HotspotEnrichment(final Multimap<Chromosome, VariantHotspot> hotspots, boolean enabled)
     {
         mEnabled = enabled;
         mHotspots = hotspots;
@@ -56,27 +56,31 @@ public class VariantHotspotEnrichment
         int variantStart = variant.getStart();
         int variantEnd = variantStart + variant.getReference().length() - 1 + HOTSPOT_DISTANCE;
 
+        boolean nearHotspot = false;
+
         for(VariantHotspot hotspot : hotspots)
         {
             if(variantStart == hotspot.position() && hotspot.ref().equals(variant.getReference().getBaseString())
             && variant.getAlternateAlleles().stream().map(Allele::getBaseString).collect(Collectors.toList()).contains(hotspot.alt()))
             {
                 variant.getCommonInfo().putAttribute(HOTSPOT_FLAG, true);
-                break;
+                return;
             }
 
-            // long ponStart = hotspot.position();
             int hotspotEnd = hotspot.position() + hotspot.ref().length() - 1 + HOTSPOT_DISTANCE;
 
             if(positionsOverlap(variantStart, variantEnd, hotspot.position(), hotspotEnd))
             {
-                variant.getCommonInfo().putAttribute(NEAR_HOTSPOT_FLAG, true);
-                break;
+                nearHotspot = true;
+                // continue checking for exact matches
             }
 
             if(hotspot.position() > variantEnd)
                 break;
         }
+
+        if(nearHotspot)
+            variant.getCommonInfo().putAttribute(NEAR_HOTSPOT_FLAG, true);
     }
 
     public static VCFHeader enrichHeader(final VCFHeader template)

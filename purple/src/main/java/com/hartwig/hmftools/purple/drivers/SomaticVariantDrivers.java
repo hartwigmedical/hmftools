@@ -29,7 +29,7 @@ public class SomaticVariantDrivers
     private final Predicate<SomaticVariant> mOncoPredicate;
     private final Predicate<SomaticVariant> mTsgPredicate;
 
-    public SomaticVariantDrivers(@NotNull final DriverGenePanel panel)
+    public SomaticVariantDrivers(final DriverGenePanel panel)
     {
         mGenePanel = panel;
 
@@ -42,7 +42,7 @@ public class SomaticVariantDrivers
         mTsgPredicate = new ReportablePredicate(DriverCategory.TSG, panel.driverGenes());
     }
 
-    public boolean add(@NotNull final SomaticVariant variant)
+    public boolean add(final SomaticVariant variant)
     {
         if(!variant.isFiltered())
         {
