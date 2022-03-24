@@ -32,16 +32,6 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 public final class CandidateSerialization
 {
-    public static VariantHotspot toVariantHotspot(final VariantContext context)
-    {
-        return ImmutableVariantHotspotImpl.builder()
-                .chromosome(context.getContig())
-                .position(context.getStart())
-                .ref(context.getReference().getBaseString())
-                .alt(context.getAlternateAllele(0).getBaseString())
-                .build();
-    }
-
     public static Candidate toCandidate(final VariantContext context, final RefSequence refGenome)
     {
         final IndexedBases readBases = readBases(context);
@@ -75,7 +65,12 @@ public final class CandidateSerialization
 
     public static Candidate toCandidate(final VariantContext context, final IndexedBases readBases, final IndexedBases refBases)
     {
-        final VariantHotspot variant = toVariantHotspot(context);
+        final VariantHotspot variant = ImmutableVariantHotspotImpl.builder()
+                .chromosome(context.getContig())
+                .position(context.getStart())
+                .ref(context.getReference().getBaseString())
+                .alt(context.getAlternateAllele(0).getBaseString())
+                .build();
 
         final VariantTier tier = VariantTier.valueOf(context.getAttributeAsString(TIER, "LOW_CONFIDENCE"));
         final int repeatCount = context.getAttributeAsInt(READ_CONTEXT_REPEAT_COUNT, 0);

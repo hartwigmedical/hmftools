@@ -97,11 +97,12 @@ public class RegionAppendTask implements Callable
 
     public void createFinalVariants(final ReadContextCounters readContextCounters, final List<String> sampleIds)
     {
-        for(VariantContext origVariant : mOriginalVariants)
+        for(int i = 0; i < mOriginalVariants.size(); ++i)
         {
-            VariantHotspot variant = CandidateSerialization.toVariantHotspot(origVariant);
-            List<ReadContextCounter> counters = readContextCounters.getVariantReadCounters(variant);
-            mFinalVariants.add(addGenotype(origVariant, counters, sampleIds));
+            VariantContext origVariant = mOriginalVariants.get(i);
+
+            List<ReadContextCounter> sampleCounters = readContextCounters.getReadCounters(i); // getVariantReadCounters(variant);
+            mFinalVariants.add(addGenotype(origVariant, sampleCounters, sampleIds));
         }
     }
 
