@@ -52,6 +52,7 @@ import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ViccExtractor {
@@ -133,7 +134,8 @@ public final class ViccExtractor {
                         .interpretedEventType(feature.type())
                         .build());
 
-                Set<ActionableEvent> actionableEvents = actionableEvidenceFactory.toActionableEvents(entry, feature.name());
+                //TODO: sourceEvent will be empty in v1.9. Will be fixed later.
+                Set<ActionableEvent> actionableEvents = actionableEvidenceFactory.toActionableEvents(entry, Strings.EMPTY);
 
                 if (extractorOutput.hotspots() != null) {
                     hotspotsPerFeature.put(feature, extractorOutput.hotspots());
