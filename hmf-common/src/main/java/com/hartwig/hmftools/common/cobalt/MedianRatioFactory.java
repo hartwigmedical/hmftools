@@ -14,30 +14,38 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
-public final class MedianRatioFactory {
+public final class MedianRatioFactory
+{
 
-    private MedianRatioFactory() {
+    private MedianRatioFactory()
+    {
     }
 
     @NotNull
-    public static List<MedianRatio> createFromReadRatio(@NotNull Multimap<Chromosome, ReadRatio> ratios) {
+    public static List<MedianRatio> createFromReadRatio(@NotNull Multimap<Chromosome, ReadRatio> ratios)
+    {
         return create(ReadRatio::ratio, ratios);
     }
 
     @NotNull
-    public static List<MedianRatio> create(@NotNull Multimap<Chromosome, CobaltRatio> ratios) {
+    public static List<MedianRatio> create(@NotNull Multimap<Chromosome, CobaltRatio> ratios)
+    {
         return create(CobaltRatio::referenceGCRatio, ratios);
     }
 
     @NotNull
     public static <T extends GenomePosition> List<MedianRatio> create(@NotNull Function<T, Double> ratioFunction,
-            @NotNull Multimap<Chromosome, T> ratios) {
+            @NotNull Multimap<Chromosome, T> ratios)
+    {
         final List<MedianRatio> results = Lists.newArrayList();
 
-        for (Chromosome humanChromosome : HumanChromosome.values()) {
-            if (ratios.containsKey(humanChromosome)) {
+        for(Chromosome humanChromosome : HumanChromosome.values())
+        {
+            if(ratios.containsKey(humanChromosome))
+            {
                 final Collection<T> chromosomeRatios = ratios.get(humanChromosome);
-                if (!chromosomeRatios.isEmpty()) {
+                if(!chromosomeRatios.isEmpty())
+                {
                     final String contig =
                             chromosomeRatios.stream().findFirst().map(GenomePosition::chromosome).orElse(humanChromosome.toString());
                     final List<Double> contigRatios =

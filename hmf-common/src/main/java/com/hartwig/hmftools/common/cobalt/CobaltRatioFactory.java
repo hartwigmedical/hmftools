@@ -8,22 +8,27 @@ import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory
 
 import org.jetbrains.annotations.NotNull;
 
-public final class CobaltRatioFactory {
+public final class CobaltRatioFactory
+{
 
-    private CobaltRatioFactory() {
+    private CobaltRatioFactory()
+    {
     }
 
     @NotNull
     public static Multimap<Chromosome, CobaltRatio> merge(@NotNull final Multimap<Chromosome, CobaltCount> counts,
             @NotNull final Multimap<Chromosome, ReadRatio> referenceGCRatio, @NotNull final Multimap<Chromosome, ReadRatio> tumorGCRatio,
-            @NotNull final Multimap<Chromosome, ReadRatio> referenceGCDiploidRatio) {
+            @NotNull final Multimap<Chromosome, ReadRatio> referenceGCDiploidRatio)
+    {
         final Multimap<Chromosome, CobaltRatio> result = ArrayListMultimap.create();
         final GenomePositionSelector<ReadRatio> tumorGCRatioSelector = GenomePositionSelectorFactory.create(tumorGCRatio);
         final GenomePositionSelector<ReadRatio> referenceGCRatioSelector = GenomePositionSelectorFactory.create(referenceGCRatio);
         final GenomePositionSelector<ReadRatio> referenceGCDiploidRatioSelector =
                 GenomePositionSelectorFactory.create(referenceGCDiploidRatio);
-        for (Chromosome chromosome : counts.keySet()) {
-            for (CobaltCount count : counts.get(chromosome)) {
+        for(Chromosome chromosome : counts.keySet())
+        {
+            for(CobaltCount count : counts.get(chromosome))
+            {
                 final CobaltRatio ratio = ImmutableCobaltRatio.builder()
                         .from(count)
                         .tumorGCRatio(tumorGCRatioSelector.select(count).map(ReadRatio::ratio).orElse(-1D))

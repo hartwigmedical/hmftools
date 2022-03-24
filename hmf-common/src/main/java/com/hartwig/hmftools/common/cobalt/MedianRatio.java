@@ -6,8 +6,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface MedianRatio {
-
+public interface MedianRatio
+{
     @NotNull
     String chromosome();
 

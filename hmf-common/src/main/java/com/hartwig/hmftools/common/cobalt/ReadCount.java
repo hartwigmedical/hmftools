@@ -8,7 +8,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface ReadCount extends GenomePosition {
+public interface ReadCount extends GenomePosition
+{
 
     int readCount();
 }

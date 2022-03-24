@@ -6,8 +6,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface CobaltRatio extends CobaltCount {
-
+public interface CobaltRatio extends CobaltCount
+{
     double referenceGCRatio();
 
     double referenceGCDiploidRatio();

@@ -12,9 +12,11 @@ import org.jetbrains.annotations.NotNull;
 public class CobaltTestUtils
 {
     @NotNull
-    public static CobaltChromosomes female() {
+    public static CobaltChromosomes female()
+    {
         List<MedianRatio> ratios = Lists.newArrayList();
-        for (int i = 0; i < 22; i++) {
+        for(int i = 0; i < 22; i++)
+        {
             ratios.add(create(String.valueOf(i), 1, 1));
         }
 
@@ -23,9 +25,11 @@ public class CobaltTestUtils
     }
 
     @NotNull
-    public static CobaltChromosomes male() {
+    public static CobaltChromosomes male()
+    {
         List<MedianRatio> ratios = Lists.newArrayList();
-        for (int i = 0; i < 22; i++) {
+        for(int i = 0; i < 22; i++)
+        {
             ratios.add(create(String.valueOf(i), 1, 1));
         }
 
@@ -35,12 +39,14 @@ public class CobaltTestUtils
     }
 
     @NotNull
-    public static MedianRatio create(@NotNull String contig, double ratio) {
+    public static MedianRatio create(@NotNull String contig, double ratio)
+    {
         return create(contig, ratio, MIN_Y_COUNT);
     }
 
     @NotNull
-    public static MedianRatio create(@NotNull String contig, double ratio, int count) {
+    public static MedianRatio create(@NotNull String contig, double ratio, int count)
+    {
         return ImmutableMedianRatio.builder().count(count).chromosome(contig).medianRatio(ratio).build();
     }
 
