@@ -37,7 +37,6 @@ public final class AmberQCFile {
     private static AmberQC fromLines(@NotNull final List<String> lines) throws IOException {
         try {
             return ImmutableAmberQC.builder()
-                    .meanBAF(Double.parseDouble(getValue(lines.get(1))))
                     .contamination(lines.size() > 2 ? Double.parseDouble(getValue(lines.get(2))) : 0)
                     .consanguinityProportion(lines.size() > 3 ? Double.parseDouble(getValue(lines.get(3))) : 0)
                     .uniparentalDisomy(lines.size() > 4 ? lines.get(4) : null)
@@ -57,7 +56,6 @@ public final class AmberQCFile {
         final List<String> result = Lists.newArrayList();
 
         result.add("QCStatus" + DELIMITER + check.status());
-        result.add("MeanBAF" + DELIMITER + FORMAT.format(check.meanBAF()));
         result.add("Contamination" + DELIMITER + FORMAT.format(check.contamination()));
         result.add("ConsanguinityProportion" + DELIMITER + FORMAT.format(check.consanguinityProportion()));
         result.add("UniparentalDisomy" + DELIMITER + (check.uniparentalDisomy() != null ? check.uniparentalDisomy() : "NONE"));
