@@ -98,6 +98,9 @@ public final class IclusionClassificationConfig {
         Set<String> set = Sets.newHashSet();
         set.add("DELETION");
         set.add("INSERTION");
+        set.add("MUTATION");
+        set.add("ACTIVATING MUTATION");
+        set.add("mutation");
         return set;
     }
 
@@ -121,7 +124,10 @@ public final class IclusionClassificationConfig {
 
     @NotNull
     private static Set<String> geneLevelBlacklistKeyPhrases() {
-        return Sets.newHashSet();
+        Set<String> set = Sets.newHashSet();
+        set.add("EXON");
+        set.add("Exon");
+        return set;
     }
 
     @NotNull

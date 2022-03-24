@@ -152,7 +152,7 @@ public class GeneLevelExtractor {
                     return null;
                 } else if (result != driverBasedEvent) {
                     LOGGER.info(
-                            "Gene level event mismatch in driver gene event for '{}'. Event suggests {} while driver catalog suggests {}",
+                            "Gene level event filtered -- mismatch in driver gene event for '{}'. Event suggests {} while driver catalog suggests {}",
                             gene,
                             result,
                             driverBasedEvent);

@@ -56,7 +56,8 @@ public class IclusionExtractor {
             for (IclusionMutationCondition mutationCondition : trial.mutationConditions()) {
                 for (IclusionMutation mutation : mutationCondition.mutations()) {
 
-                    List<ActionableTrial> actionableTrials = actionableTrialFactory.toActionableTrials(trial, mutation.name());
+                    List<ActionableTrial> actionableTrials =
+                            actionableTrialFactory.toActionableTrials(trial, mutation.gene() + " " + mutation.name());
                     for (ActionableTrial actionableTrial : actionableTrials) {
                         LOGGER.debug("Generated {} based off {}", actionableTrial, trial);
                     }
@@ -65,9 +66,10 @@ public class IclusionExtractor {
                     if (mutation.type() == EventType.UNKNOWN) {
                         LOGGER.warn("No event type known for '{}' on '{}'", mutation.name(), mutation.gene());
                     }
-                    EventExtractorOutput eventExtractorOutput = eventExtractor.extract(mutation.gene(), null, mutation.type(), mutation.name());
+                    EventExtractorOutput eventExtractorOutput =
+                            eventExtractor.extract(mutation.gene(), null, mutation.type(), mutation.name());
 
-                    EventInterpretation interpretation  =  ImmutableEventInterpretation.builder()
+                    EventInterpretation interpretation = ImmutableEventInterpretation.builder()
                             .source(Knowledgebase.ICLUSION)
                             .sourceEvent(mutation.name())
                             .interpretedGene(mutation.gene())
@@ -97,29 +99,29 @@ public class IclusionExtractor {
 
         for (ActionableTrial trial : actionableTrials) {
 
-                actionableHotspots.addAll(ActionableEventFactory.toActionableHotspots(trial, eventExtractions.hotspots()));
-                actionableRanges.addAll(ActionableEventFactory.toActionableRanges(trial, eventExtractions.codons()));
-                actionableRanges.addAll(ActionableEventFactory.toActionableRanges(trial, eventExtractions.exons()));
+            actionableHotspots.addAll(ActionableEventFactory.toActionableHotspots(trial, eventExtractions.hotspots()));
+            actionableRanges.addAll(ActionableEventFactory.toActionableRanges(trial, eventExtractions.codons()));
+            actionableRanges.addAll(ActionableEventFactory.toActionableRanges(trial, eventExtractions.exons()));
 
-                if (eventExtractions.geneLevelEvent() != null) {
-                    actionableGenes.add(ActionableEventFactory.geneLevelEventToActionableGene(trial, eventExtractions.geneLevelEvent()));
-                }
+            if (eventExtractions.geneLevelEvent() != null) {
+                actionableGenes.add(ActionableEventFactory.geneLevelEventToActionableGene(trial, eventExtractions.geneLevelEvent()));
+            }
 
-                if (eventExtractions.knownCopyNumber() != null) {
-                    actionableGenes.add(ActionableEventFactory.copyNumberToActionableGene(trial, eventExtractions.knownCopyNumber()));
-                }
+            if (eventExtractions.knownCopyNumber() != null) {
+                actionableGenes.add(ActionableEventFactory.copyNumberToActionableGene(trial, eventExtractions.knownCopyNumber()));
+            }
 
-                if (eventExtractions.knownFusionPair() != null) {
-                    actionableFusions.add(ActionableEventFactory.toActionableFusion(trial, eventExtractions.knownFusionPair()));
-                }
+            if (eventExtractions.knownFusionPair() != null) {
+                actionableFusions.add(ActionableEventFactory.toActionableFusion(trial, eventExtractions.knownFusionPair()));
+            }
 
-                if (eventExtractions.characteristic() != null) {
-                    actionableCharacteristics.add(ActionableEventFactory.toActionableCharacteristic(trial, eventExtractions.characteristic()));
-                }
+            if (eventExtractions.characteristic() != null) {
+                actionableCharacteristics.add(ActionableEventFactory.toActionableCharacteristic(trial, eventExtractions.characteristic()));
+            }
 
-                if (eventExtractions.hla() != null) {
-                    actionableHLA.add(ActionableEventFactory.toActionableHLa(trial, eventExtractions.hla()));
-                }
+            if (eventExtractions.hla() != null) {
+                actionableHLA.add(ActionableEventFactory.toActionableHLa(trial, eventExtractions.hla()));
+            }
 
         }
 

@@ -4,10 +4,12 @@ import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.ckb.classification.CkbEventAndGeneExtractor;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.drug.Drug;
 import com.hartwig.hmftools.ckb.datamodel.evidence.Evidence;
 import com.hartwig.hmftools.ckb.datamodel.reference.Reference;
+import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
@@ -58,7 +60,7 @@ class ActionableEntryFactory {
     }
 
     @NotNull
-    public static Set<ActionableEntry> toActionableEntries(@NotNull CkbEntry entry) {
+    public static Set<ActionableEntry> toActionableEntries(@NotNull CkbEntry entry, @NotNull String gene) {
         Set<ActionableEntry> actionableEntries = Sets.newHashSet();
 
         for (Evidence evidence : entry.evidences()) {
@@ -96,9 +98,10 @@ class ActionableEntryFactory {
                         blacklistedCancerTypes.add(ImmutableCancerType.builder().name("Hematologic cancer").doid("2531").build());
                     }
 
+                    String formatGene = gene.isEmpty() ? "-" : gene;
                     actionableEntries.add(ImmutableActionableEntry.builder()
                             .source(Knowledgebase.CKB)
-                            .sourceEvent(entry.variants().get(0).variant())
+                            .sourceEvent(formatGene + " " + entry.variants().get(0).variant())
                             .sourceUrls(sourceUrls)
                             .treatment(treatment)
                             .applicableCancerType(ImmutableCancerType.builder().name(cancerType).doid(doid).build())

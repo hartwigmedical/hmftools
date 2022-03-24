@@ -56,7 +56,7 @@ public class ActinExtractor {
                 if (event.split(" ").length > 1) {
                     eventType = event.split(" ", 2)[0];
                 }
-                ActinTrial trial = ActinTrialFactory.toActinTrial(entry, entry.rule() + " " + event);
+                ActinTrial trial = ActinTrialFactory.toActinTrial(entry, entry.rule() + " " + entry.gene() + " " + event);
                 EventType type = ActinEventTypeExtractor.determineEventType(entry, eventType);
                 if (type == EventType.UNKNOWN) {
                     LOGGER.warn("No event type known for '{}' on '{}'", entry, entry.gene());
