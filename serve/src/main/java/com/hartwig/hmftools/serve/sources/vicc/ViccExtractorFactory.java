@@ -15,10 +15,11 @@ public final class ViccExtractorFactory {
     private ViccExtractorFactory() {
     }
 
+    // For VICC we want to deal with any driver inconsistency!
     @NotNull
     public static ViccExtractor buildViccExtractor(@NotNull EventClassifierConfig config, @NotNull RefGenomeResource refGenomeResource,
             @NotNull DoidLookup missingDoidLookup) {
-        return new ViccExtractor(EventExtractorFactory.create(config, refGenomeResource, DriverInconsistencyMode.FILTER),
+        return new ViccExtractor(EventExtractorFactory.create(config, refGenomeResource, DriverInconsistencyMode.IGNORE),
                 new ActionableEvidenceFactory(missingDoidLookup, new DrugCurator(), new EvidenceLevelCurator()));
     }
 }
