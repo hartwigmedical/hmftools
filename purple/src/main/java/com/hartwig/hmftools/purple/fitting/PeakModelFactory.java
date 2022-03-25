@@ -101,7 +101,7 @@ public class PeakModelFactory {
         // Scale results
         double totalModelWeight = peakModel.stream().filter(PeakModel::isValid).mapToDouble(PeakModel::bucketWeight).sum();
         double weightScalingFactor = initialWeight / totalModelWeight;
-        LOGGER.debug("Weight scaling factor {}", weightScalingFactor);
+        LOGGER.debug("Weight scaling factor {}", String.format("%.4f", weightScalingFactor));
 
         final List<PeakModel> all = peakModel.stream().map(x -> x.setBucketWeight(x.bucketWeight() * 1)).collect(Collectors.toList());
         if (hasValidSubclonalPeaks) {

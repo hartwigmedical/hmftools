@@ -63,13 +63,18 @@ public class SomaticPeakStream
             // gather up passing variants less than max ploidy
             final List<ModifiableWeightedPloidy> weightedPloidies = newArrayList();
 
-            final Consumer<VariantContext> consumer = context ->
+            final SomaticPurityEnrichment somaticPurityEnrichment = new SomaticPurityEnrichment(
+                    mConfig.Version, mConfig.TumorId, purityAdjuster, copyNumbers, fittedRegions);
+
+            for(VariantContext context : vcfReader)
             {
+                somaticPurityEnrichment.processVariant(context);
+
                 VariantContextDecorator decorator = new VariantContextDecorator(context);
 
                 if(Doubles.lessThan(decorator.variantCopyNumber(), mSomaticFitConfig.clonalityMaxPloidy())
-                && decorator.isPass()
-                && HumanChromosome.contains(decorator.chromosome()) && HumanChromosome.fromString(decorator.chromosome()).isAutosome())
+                        && decorator.isPass()
+                        && HumanChromosome.contains(decorator.chromosome()) && HumanChromosome.fromString(decorator.chromosome()).isAutosome())
                 {
                     AllelicDepth depth = decorator.allelicDepth(mConfig.TumorId);
                     weightedPloidies.add(ModifiableWeightedPloidy.create()
@@ -89,14 +94,6 @@ public class SomaticPeakStream
                         mSnpCount++;
                     }
                 }
-            };
-
-            final SomaticPurityEnrichment somaticPurityEnrichment = new SomaticPurityEnrichment(
-                    mConfig.Version, mConfig.TumorId, purityAdjuster, copyNumbers, fittedRegions);
-
-            for(VariantContext context : vcfReader)
-            {
-                somaticPurityEnrichment.processVariant(context);
             }
 
             return new PeakModelFactory(
