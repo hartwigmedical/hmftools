@@ -136,7 +136,7 @@ public final class ViccExtractor {
 
                 //TODO: sourceEvent will be empty in v1.9. Will be fixed later.
                 String sourceEvent = gene + " " + feature.name();
-                Set<ActionableEvent> actionableEvents = actionableEvidenceFactory.toActionableEvents(entry, sourceEvent);
+                Set<ActionableEvent> actionableEvents = actionableEvidenceFactory.toActionableEvents(entry, Strings.EMPTY);
 
                 if (extractorOutput.hotspots() != null) {
                     hotspotsPerFeature.put(feature, extractorOutput.hotspots());
