@@ -1,14 +1,5 @@
 ## Adding relevant drug classes of therapies
 
-DROP TABLE IF EXISTS treatmentApproachEvidence;
-CREATE TABLE treatmentApproachEvidence
-(   evidenceId int NOT NULL,
-    treatmentApproachEvidenceId int NOT NULL,
-    PRIMARY KEY (evidenceId, treatmentApproachEvidenceId),
-    FOREIGN KEY (evidenceId) REFERENCES evidence(id),
-    FOREIGN KEY (treatmentApproachEvidenceId) REFERENCES treatmentApproach(id)
-);
-
 DROP TABLE IF EXISTS treatmentApproach;
 CREATE TABLE treatmentApproach
 (   id int NOT NULL AUTO_INCREMENT,
@@ -16,6 +7,15 @@ CREATE TABLE treatmentApproach
     createDate DATE NOT NULL,
     updateDate DATE,
     PRIMARY KEY (id)
+);
+
+DROP TABLE IF EXISTS treatmentApproachEvidence;
+CREATE TABLE treatmentApproachEvidence
+(   evidenceId int NOT NULL,
+    treatmentApproachEvidenceId int NOT NULL,
+    PRIMARY KEY (evidenceId, treatmentApproachEvidenceId),
+    FOREIGN KEY (evidenceId) REFERENCES evidence(id),
+    FOREIGN KEY (treatmentApproachEvidenceId) REFERENCES treatmentApproach(id)
 );
 
 DROP TABLE IF EXISTS treatmentApproachDrugClass;
