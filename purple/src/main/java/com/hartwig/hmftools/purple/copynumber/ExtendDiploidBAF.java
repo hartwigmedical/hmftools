@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 
-class ExtendDiploidBAF
+public class ExtendDiploidBAF
 {
     // LOH Parameters
     private static final double LOH_COPY_NUMBER = 0.5;
@@ -32,7 +32,7 @@ class ExtendDiploidBAF
 
     private final Map<Integer,Integer> mSimpleDupMap = Maps.newHashMap();
 
-    ExtendDiploidBAF(@NotNull final List<StructuralVariant> simpleVariants)
+    public ExtendDiploidBAF(@NotNull final List<StructuralVariant> simpleVariants)
     {
         for(StructuralVariant simpleVariant : simpleVariants)
         {

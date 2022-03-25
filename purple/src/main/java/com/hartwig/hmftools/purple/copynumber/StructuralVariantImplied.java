@@ -21,7 +21,7 @@ import com.hartwig.hmftools.common.sv.StructuralVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-class StructuralVariantImplied
+public class StructuralVariantImplied
 {
     @NotNull
     private final StructuralVariantLegPloidyFactory<CombinedRegion> mSvPloidyFactory;

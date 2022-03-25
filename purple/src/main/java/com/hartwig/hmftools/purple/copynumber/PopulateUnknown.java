@@ -8,17 +8,16 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 
-class PopulateUnknown
+public class PopulateUnknown
 {
     private final CobaltChromosomes mCobaltChromosomes;
 
-    PopulateUnknown(final CobaltChromosomes cobaltChromosomes)
+    public PopulateUnknown(final CobaltChromosomes cobaltChromosomes)
     {
         mCobaltChromosomes = cobaltChromosomes;
     }
 
-    @NotNull
-    List<CombinedRegion> populateUnknown(@NotNull final List<CombinedRegion> regions)
+    public List<CombinedRegion> populateUnknown(@NotNull final List<CombinedRegion> regions)
     {
         for(int i = 0; i < regions.size(); i++)
         {

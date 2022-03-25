@@ -155,7 +155,7 @@ public class ExtendLongArmTest
                 .support(support)
                 .build();
 
-        return new CombinedRegionImpl(region);
+        return new CombinedRegion(region);
     }
 
     @NotNull

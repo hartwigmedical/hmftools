@@ -6,8 +6,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
-import com.hartwig.hmftools.purple.copynumber.CombinedRegion;
-import com.hartwig.hmftools.purple.copynumber.CombinedRegionImpl;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Ignore;
@@ -41,7 +39,7 @@ public class CombinedRegionTest
                 .depthWindowCount(2)
                 .germlineStatus(GermlineStatus.DIPLOID)
                 .build();
-        final CombinedRegion region = new CombinedRegionImpl(somaticRegion);
+        final CombinedRegion region = new CombinedRegion(somaticRegion);
         assertEquals(2, region.region().depthWindowCount());
 
         final FittedRegion amplificationRegion = createDefaultFittedRegion("1", 1, 1000)
@@ -74,7 +72,7 @@ public class CombinedRegionTest
     public void doNotIncludeZeroCopyNumber()
     {
         final FittedRegion startRegion = create(1, 100, 200, 0.5, 0);
-        CombinedRegion builder = new CombinedRegionImpl(startRegion);
+        CombinedRegion builder = new CombinedRegion(startRegion);
         assertAverages(builder, 0.5, 0);
 
         builder.extendWithWeightedAverage(create(201, 300, 200, 1, 2));
@@ -95,7 +93,7 @@ public class CombinedRegionTest
     @NotNull
     private static CombinedRegion createCombinedFittedRegion(int start, int end, double copyNumber)
     {
-        return new CombinedRegionImpl(create(start, end, copyNumber));
+        return new CombinedRegion(create(start, end, copyNumber));
     }
 
     @NotNull

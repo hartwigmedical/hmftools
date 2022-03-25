@@ -42,7 +42,8 @@ public class PeakModelFactory {
     }
 
     @NotNull
-    public List<PeakModel> model(@NotNull final List<ModifiableWeightedPloidy> weightedPloidies) {
+    public List<PeakModel> model(@NotNull final List<ModifiableWeightedPloidy> weightedPloidies)
+    {
         boolean hasValidSubclonalPeaks = false;
         final WeightedPloidyHistogram residualHistogram = new WeightedPloidyHistogram(0.85, modelWidth);
         double[] residualHistogramActual = residualHistogram.histogram(weightedPloidies);

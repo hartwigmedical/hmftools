@@ -16,7 +16,7 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 
-class ExtendDiploid
+public class ExtendDiploid
 {
     private enum Direction
     {
@@ -43,7 +43,7 @@ class ExtendDiploid
     private final int mCentromereMinTumorCount;
     private final CopyNumberTolerance mTolerance;
 
-    ExtendDiploid(final CopyNumberTolerance tolerance, final int minTumorCount, final int minTumorCountAtCentromere)
+    public ExtendDiploid(final CopyNumberTolerance tolerance, final int minTumorCount, final int minTumorCountAtCentromere)
     {
         mMinTumorCount = minTumorCount;
         mCentromereMinTumorCount = minTumorCountAtCentromere;
@@ -51,7 +51,7 @@ class ExtendDiploid
     }
 
     @NotNull
-    List<CombinedRegion> extendDiploid(final Collection<FittedRegion> fittedRegions)
+    public List<CombinedRegion> extendDiploid(final Collection<FittedRegion> fittedRegions)
     {
         final boolean bafWeighted = fittedRegions.stream().anyMatch(x -> x.bafCount() >= MIN_BAF_COUNT_TO_WEIGH_WITH_BAF);
 
@@ -59,7 +59,7 @@ class ExtendDiploid
 
         for(FittedRegion fittedRegion : fittedRegions)
         {
-            regions.add(new CombinedRegionImpl(bafWeighted, fittedRegion));
+            regions.add(new CombinedRegion(bafWeighted, fittedRegion));
         }
 
         int highestConfidenceIndex = nextIndex(regions);
