@@ -23,7 +23,7 @@
  Resources for v1.0 can be found on https://github.com/hartwigmedical/hmftools/releases/tag/ckb-importer-v1.0
 
 ## Version History and Download Links
-- [1.3] (Upcoming)
+- [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/ckb-importer-v1.3)
   - Implemention treatment approches of the evidence into the datamodel
   - Study phase could be nullable 
 - [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/ckb-importer-v1.2)
