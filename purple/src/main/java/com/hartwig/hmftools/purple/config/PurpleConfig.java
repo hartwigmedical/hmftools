@@ -107,6 +107,10 @@ public class PurpleConfig
 
     public boolean tumorOnlyMode() { return ReferenceId == null; }
     public boolean germlineMode() { return TumorId.equals(ReferenceId); }
+
+    public boolean runTumor() { return !germlineMode(); }
+    public boolean runGermline() { return !tumorOnlyMode(); }
+
     public boolean targetRegionsMode() { return TargetRegionsBed != null; }
 
     public boolean fitWithSomatics() { return !tumorOnlyMode() && !germlineMode() && !targetRegionsMode(); }
