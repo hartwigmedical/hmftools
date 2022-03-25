@@ -65,7 +65,7 @@ public final class CobaltRatioFile
     @NotNull
     public static ListMultimap<Chromosome,CobaltRatio> read(final String filename) throws IOException
     {
-        Map<Chromosome,List<CobaltRatio>> chrRatiosMap = read(filename, null);
+        Map<Chromosome,List<CobaltRatio>> chrRatiosMap = read(filename, null, true);
 
         final ListMultimap<Chromosome,CobaltRatio> result = ArrayListMultimap.create();
 
@@ -79,9 +79,10 @@ public final class CobaltRatioFile
     }
 
     @NotNull
-    public static Map<Chromosome,List<CobaltRatio>> readWithGender(final String filename, final Gender gender) throws IOException
+    public static Map<Chromosome,List<CobaltRatio>> readWithGender(final String filename, final Gender gender, boolean hasReference)
+            throws IOException
     {
-        return read(filename, gender);
+        return read(filename, gender, hasReference);
     }
 
     private static final String CHROMOSOME = "chromosome";
@@ -92,7 +93,7 @@ public final class CobaltRatioFile
     private static final String TUMOR_GC_RATIO= "tumorGCRatio";
     private static final String REF_GC_DIP_RATIO = "referenceGCDiploidRatio";
 
-    private static Map<Chromosome,List<CobaltRatio>> read(final String filename, final Gender gender)
+    private static Map<Chromosome,List<CobaltRatio>> read(final String filename, final Gender gender, boolean hasReference)
             throws IOException
     {
         Map<Chromosome,List<CobaltRatio>> chrRatiosMap = Maps.newHashMap();
@@ -126,9 +127,9 @@ public final class CobaltRatioFile
                     .position(Integer.parseInt(values[posIndex]))
                     .referenceReadCount(Integer.parseInt(values[refReadCountIndex]))
                     .tumorReadCount(Integer.parseInt(values[tumorReadCountIndex].trim()))
-                    .referenceGCRatio(genderAdjustedDiploidRatio(gender, chromosome, initialRefGCRatio))
+                    .referenceGCRatio(genderAdjustedDiploidRatio(gender, chromosome, initialRefGCRatio, hasReference))
                     .tumorGCRatio(Double.parseDouble(values[tumorGcRatioIndex].trim()))
-                    .referenceGCDiploidRatio(genderAdjustedDiploidRatio(gender, chromosome, initialRefGCDiploidRatio))
+                    .referenceGCDiploidRatio(genderAdjustedDiploidRatio(gender, chromosome, initialRefGCDiploidRatio, hasReference))
                     .build();
 
             if(!currentChromosome.equals(chromosome))
@@ -201,9 +202,10 @@ public final class CobaltRatioFile
                 .toString();
     }
 
-    private static double genderAdjustedDiploidRatio(@Nullable final Gender gender, final String contig, double initialRatio)
+    private static double genderAdjustedDiploidRatio(
+            @Nullable final Gender gender, final String contig, double initialRatio, boolean hasReference)
     {
-        if(gender == null || Doubles.lessOrEqual(initialRatio, 0) || !HumanChromosome.contains(contig))
+        if(gender == null || !HumanChromosome.contains(contig))
         {
             return initialRatio;
         }
@@ -218,6 +220,9 @@ public final class CobaltRatioFile
         {
             return gender.equals(Gender.FEMALE) ? 0 : 0.5;
         }
+
+        if(!hasReference && initialRatio < 0)
+            return 1;
 
         return initialRatio;
     }

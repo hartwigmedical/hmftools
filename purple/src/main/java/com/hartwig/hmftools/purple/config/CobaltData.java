@@ -56,7 +56,7 @@ public class CobaltData
             }
 
             PPL_LOGGER.info("reading Cobalt ratios from {}", cobaltFilename);
-            Ratios = CobaltRatioFile.readWithGender(cobaltFilename, tumorOnlyMode ? amberGender : null);
+            Ratios = CobaltRatioFile.readWithGender(cobaltFilename, tumorOnlyMode ? amberGender : null, !tumorOnlyMode);
 
             PPL_LOGGER.info("reading Cobalt tumor segments from {}", tumorSegmentFile);
             TumorSegments = PCFFile.readPositions(WINDOW_SIZE, PCFSource.TUMOR_RATIO, tumorSegmentFile);
