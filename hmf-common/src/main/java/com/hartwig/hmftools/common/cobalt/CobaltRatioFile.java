@@ -39,6 +39,9 @@ public final class CobaltRatioFile
 
     private static final String EXTENSION = ".cobalt.ratio.tsv";
 
+    @Deprecated
+    public static final String TUMOR_ONLY_REFERENCE_SAMPLE = "DIPLOID";
+
     @NotNull
     public static String generateFilenameForWriting(final String basePath, final String sample)
     {
