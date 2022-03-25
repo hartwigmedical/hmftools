@@ -55,7 +55,7 @@ class AmberPersistence
             double consanguinityProportion, @Nullable Chromosome uniparentalDisomy) throws IOException
     {
         final double contamination = new TumorContaminationModel().contamination(contaminationRecords);
-        final AmberQC qcStats = AmberQCFactory.create(contamination, result, consanguinityProportion,
+        final AmberQC qcStats = AmberQCFactory.create(contamination, consanguinityProportion,
                 uniparentalDisomy != null ? uniparentalDisomy.toString() : null);
         final String qcFilename = AmberQCFile.generateFilename(mConfig.OutputDir, mConfig.TumorId);
         AmberQCFile.write(qcFilename, qcStats);
