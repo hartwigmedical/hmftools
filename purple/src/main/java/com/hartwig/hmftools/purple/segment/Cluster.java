@@ -3,30 +3,49 @@ package com.hartwig.hmftools.purple.segment;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.common.utils.pcf.PCFSource;
 
-import org.immutables.value.Value;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-@Value.Immutable
-@Value.Modifiable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-abstract class Cluster implements GenomeRegion
+public class Cluster implements GenomeRegion
 {
-    @NotNull
-    public abstract List<PCFPosition> pcfPositions();
+    public final String Chromosome;
+    public final int Start;
+    public int End;
+    public final List<PCFPosition> PcfPositions;
+    public final List<SVSegment> Variants;
 
-    @NotNull
-    public abstract List<SVSegment> variants();
-
-    @NotNull
-    public List<GenomePosition> ratios()
+    public Cluster(final String chromosome, final int start, final int end)
     {
-        return pcfPositions().stream().filter(x -> !x.Source.equals(PCFSource.TUMOR_BAF)).collect(Collectors.toList());
+        Chromosome = chromosome;
+        Start = start;
+        End = end;
+        PcfPositions = Lists.newArrayList();
+        Variants = Lists.newArrayList();
     }
 
+    public List<GenomePosition> ratios()
+    {
+        return PcfPositions.stream().filter(x -> !x.Source.equals(PCFSource.TUMOR_BAF)).collect(Collectors.toList());
+    }
+
+    @Override
+    public String chromosome()
+    {
+        return Chromosome;
+    }
+
+    @Override
+    public int start()
+    {
+        return Start;
+    }
+
+    @Override
+    public int end()
+    {
+        return End;
+    }
 }

@@ -39,7 +39,7 @@ public class PurpleSegmentFactoryTest
     @Test
     public void testSingleSV()
     {
-        final List<Cluster> clusters = Lists.newArrayList(cluster(17001, 18881).build());
+        final List<Cluster> clusters = Lists.newArrayList(cluster(17001, 18881));
         final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, clusters);
         assertEquals(3, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
@@ -50,7 +50,7 @@ public class PurpleSegmentFactoryTest
     @Test
     public void testSVAtCentromere()
     {
-        final List<Cluster> clusters = Lists.newArrayList(cluster(17001, CHROMOSOME_CENTROMERE.position()).build());
+        final List<Cluster> clusters = Lists.newArrayList(cluster(17001, CHROMOSOME_CENTROMERE.position()));
         final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, clusters);
         assertEquals(2, segments.size());
 
@@ -61,9 +61,12 @@ public class PurpleSegmentFactoryTest
     @Test
     public void testSingleSVWithRatioSupport()
     {
-        final Cluster cluster = addRatios(cluster(17002, 18881), 17050, 19000).build();
+        final Cluster cluster = cluster(17002, 18881);
+        addRatios(cluster, 17050, 19000);
+
         final List<PurpleSegment> segments =
                 PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, Lists.newArrayList(cluster));
+
         assertEquals(3, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
         assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_CENTROMERE.position() - 1, true, BND);
@@ -73,8 +76,13 @@ public class PurpleSegmentFactoryTest
     @Test
     public void testMultipleSVAtSamePosition()
     {
-        final List<Cluster> clusters = Lists.newArrayList(cluster(17001, 18881).addVariants(variant(18881)).build());
+        Cluster cluster = cluster(17001, 18881);
+        cluster.Variants.add(variant(18881));
+
+        final List<Cluster> clusters = Lists.newArrayList(cluster);
+
         final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, clusters);
+
         assertEquals(3, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
         assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_CENTROMERE.position() - 1, false, MULTIPLE);
@@ -84,8 +92,12 @@ public class PurpleSegmentFactoryTest
     @Test
     public void testMultipleSVInSameCluster()
     {
-        final List<Cluster> clusters = Lists.newArrayList(cluster(17001, 18881).addVariants(variant(19991)).build());
+        Cluster cluster = cluster(17001, 18881);
+        cluster.Variants.add(variant(19991));
+        final List<Cluster> clusters = Lists.newArrayList(cluster);
+
         final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, clusters);
+
         assertEquals(4, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
         assertPurpleSegment(segments.get(1), 18881, 19990, false, BND);
@@ -96,60 +108,56 @@ public class PurpleSegmentFactoryTest
     @Test
     public void testRatiosOnly()
     {
-        final Cluster cluster = addRatios(cluster(17002), 18881, 19000).build();
+        final Cluster cluster = cluster(17002);
+        addRatios(cluster, 18881, 19000);
+
         final List<PurpleSegment> segments =
                 PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, Lists.newArrayList(cluster));
+
         assertEquals(3, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
         assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_CENTROMERE.position() - 1, true, NONE);
         assertPurpleSegment(segments.get(2), CHROMOSOME_CENTROMERE.position(), CHROMOSOME_LENGTH.position(), true, CENTROMERE);
     }
 
-    private static void assertPurpleSegment(@NotNull final PurpleSegment victim, int start, int end, boolean ratioSupport,
-            @NotNull final SegmentSupport support)
+    private static void assertPurpleSegment(final PurpleSegment victim, int start, int end, boolean ratioSupport, final SegmentSupport support)
     {
         assertEquals(start, victim.start());
         assertEquals(end, victim.end());
-        assertEquals(ratioSupport, victim.ratioSupport());
-        assertEquals(support, victim.support());
+        assertEquals(ratioSupport, victim.RatioSupport);
+        assertEquals(support, victim.Support);
     }
 
     @NotNull
-    private static ImmutableCluster.Builder cluster(int start)
+    private static Cluster cluster(int start)
     {
-        return ImmutableCluster.builder().chromosome(CHROMOSOME_LENGTH.chromosome()).start(start).end(start);
+        return new Cluster(CHROMOSOME_LENGTH.chromosome(), start, start);
     }
 
     @NotNull
-    private static ImmutableCluster.Builder cluster(int start, int... variants)
+    private static Cluster cluster(int start, int... variants)
     {
-        ImmutableCluster.Builder builder = cluster(start);
+        Cluster cluster = cluster(start);
         for(int position : variants)
         {
-            builder.addVariants(variant(position));
+            cluster.Variants.add(variant(position));
         }
 
-        return builder;
+        return cluster;
     }
 
     @NotNull
-    private static ImmutableCluster.Builder addRatios(@NotNull ImmutableCluster.Builder builder, int... ratios)
+    private static void addRatios(final Cluster cluster, int... ratios)
     {
         for(int position : ratios)
         {
-            builder.addPcfPositions(new PCFPosition(PCFSource.TUMOR_RATIO, CHROMOSOME_LENGTH.chromosome(), position));
+            cluster.PcfPositions.add(new PCFPosition(PCFSource.TUMOR_RATIO, CHROMOSOME_LENGTH.chromosome(), position));
         }
-
-        return builder;
     }
 
     @NotNull
     private static SVSegment variant(int position)
     {
-        return ImmutableSVSegment.builder()
-                .chromosome(CHROMOSOME_LENGTH.chromosome())
-                .position(position)
-                .type(StructuralVariantType.BND)
-                .build();
+        return new SVSegment(CHROMOSOME_LENGTH.chromosome(), position, StructuralVariantType.BND);
     }
 }

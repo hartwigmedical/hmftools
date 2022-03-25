@@ -73,14 +73,14 @@ public class ObservedRegionFactory
                     .setObservedTumorRatio(tumorRatio)
                     .setObservedNormalRatio(normalRatio)
                     .setUnnormalisedObservedNormalRatio(cobalt.unnormalisedReferenceMeanRatio())
-                    .setRatioSupport(region.ratioSupport())
-                    .setSupport(region.support())
+                    .setRatioSupport(region.RatioSupport)
+                    .setSupport(region.Support)
                     .setDepthWindowCount(cobalt.tumorCount())
                     .setGcContent(gc.averageGCContent())
                     .setGermlineStatus(mStatusFactory.status(region, normalRatio, tumorRatio))
-                    .setSvCluster(region.svCluster())
-                    .setMinStart(region.minStart())
-                    .setMaxStart(region.maxStart());
+                    .setSvCluster(region.SvCluster)
+                    .setMinStart(region.MinStart)
+                    .setMaxStart(region.MaxStart);
 
             result.add(observedRegion);
         }

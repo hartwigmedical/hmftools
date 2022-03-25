@@ -3,33 +3,53 @@ package com.hartwig.hmftools.purple.segment;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
-import org.immutables.value.Value;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+public class PurpleSegment implements GenomeRegion
+{
+    public final String Chromosome;
+    public int Start;
+    public int End;
 
-@Value.Immutable
-@Value.Modifiable
-@Value.Style(allParameters = true,
-             passAnnotations = { NotNull.class, Nullable.class })
-public abstract class PurpleSegment implements GenomeRegion {
+    public boolean RatioSupport;
+    public SegmentSupport Support;
+    public boolean SvCluster;
+    public int MinStart;
+    public int MaxStart;
 
-    @NotNull
+    public PurpleSegment(
+            final String chromosome, final int start, final int end, final boolean ratioSupport,
+            final SegmentSupport support, final boolean svCluster, final int minStart, final int maxStart)
+    {
+        Chromosome = chromosome;
+        Start = start;
+        End = end;
+        RatioSupport = ratioSupport;
+        Support = support;
+        SvCluster = svCluster;
+        MinStart = minStart;
+        MaxStart = maxStart;
+    }
+
+    public static PurpleSegment from(final PurpleSegment ref)
+    {
+        return new PurpleSegment(
+                ref.Chromosome, ref.Start, ref.End, ref.RatioSupport, ref.Support, ref.SvCluster, ref.MinStart, ref.MaxStart);
+    }
+
     @Override
-    public abstract String chromosome();
+    public String chromosome()
+    {
+        return Chromosome;
+    }
 
     @Override
-    public abstract int start();
+    public int start()
+    {
+        return Start;
+    }
 
     @Override
-    public abstract int end();
-
-    public abstract boolean ratioSupport();
-
-    public abstract SegmentSupport support();
-
-    public abstract boolean svCluster();
-
-    public abstract int minStart();
-
-    public abstract int maxStart();
+    public int end()
+    {
+        return End;
+    }
 }

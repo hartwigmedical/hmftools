@@ -3,14 +3,25 @@ package com.hartwig.hmftools.purple.segment;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
-import org.immutables.value.Value;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+public class SVSegment implements GenomePosition
+{
+    public final String Chromosome;
+    public final int Position;
+    public final StructuralVariantType Type;
 
-@Value.Immutable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-abstract class SVSegment implements GenomePosition {
+    public SVSegment(final String chromosome, final int position, final StructuralVariantType type)
+    {
+        Chromosome = chromosome;
+        Position = position;
+        Type = type;
+    }
 
-    @NotNull
-    public abstract StructuralVariantType type();
+    @Override
+    public String chromosome() { return Chromosome; }
+
+    @Override
+    public int position()
+    {
+        return Position;
+    }
 }

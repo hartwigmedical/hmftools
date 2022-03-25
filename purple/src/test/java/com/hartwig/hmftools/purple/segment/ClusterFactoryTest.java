@@ -187,7 +187,7 @@ public class ClusterFactoryTest
     @NotNull
     private static SVSegment createSVPosition(int position)
     {
-        return ImmutableSVSegment.builder().chromosome(CHROM).position(position).type(StructuralVariantType.BND).build();
+        return new SVSegment(CHROM, position, StructuralVariantType.BND);
     }
 
     @NotNull
@@ -236,13 +236,13 @@ public class ClusterFactoryTest
     @Nullable
     private static Integer firstVariant(@NotNull Cluster cluster)
     {
-        return cluster.variants().isEmpty() ? null : cluster.variants().get(0).position();
+        return cluster.Variants.isEmpty() ? null : cluster.Variants.get(0).position();
     }
 
     @Nullable
     private static Integer finalVariant(@NotNull Cluster cluster)
     {
-        return cluster.variants().isEmpty() ? null : cluster.variants().get(cluster.variants().size() - 1).position();
+        return cluster.Variants.isEmpty() ? null : cluster.Variants.get(cluster.Variants.size() - 1).position();
     }
 
     @Nullable

@@ -65,7 +65,7 @@ public class ClusterFactory
         final List<Cluster> result = Lists.newArrayList();
 
         int cobaltIndex = 0;
-        ModifiableCluster segment = null;
+        Cluster segment = null;
         for(GenomePosition position : allPositions)
         {
             if(position.position() == 1)
@@ -86,20 +86,19 @@ public class ClusterFactory
                 {
                     result.add(segment);
                 }
-                segment = ModifiableCluster.create()
-                        .setChromosome(position.chromosome())
-                        .setStart(earliestDetectableCopyNumberChangePosition);
+
+                segment = new Cluster(position.chromosome(), earliestDetectableCopyNumberChangePosition, 0);
             }
 
-            segment.setEnd(position.position());
+            segment.End = position.position();
 
             if(position instanceof SVSegment)
             {
-                segment.addVariants((SVSegment) position);
+                segment.Variants.add((SVSegment) position);
             }
             else
             {
-                segment.addPcfPositions((PCFPosition) position);
+                segment.PcfPositions.add((PCFPosition) position);
             }
         }
         if(segment != null)

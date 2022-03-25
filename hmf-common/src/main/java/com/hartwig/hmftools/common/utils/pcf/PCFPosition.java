@@ -2,8 +2,8 @@ package com.hartwig.hmftools.common.utils.pcf;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
-public class PCFPosition implements GenomePosition {
-
+public class PCFPosition implements GenomePosition
+{
     public final PCFSource Source;
     public final String Chromosome;
     public final int Position;
