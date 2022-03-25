@@ -7,7 +7,6 @@ import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
@@ -36,7 +35,7 @@ public class PurpleSegmentFactory
     }
 
     public List<PurpleSegment> segment(
-            final List<StructuralVariant> variants, final Multimap<Chromosome,PCFPosition> pcfPositions,
+            final List<StructuralVariant> variants, final Multimap<Chromosome, PCFPosition> pcfPositions,
             final Map<Chromosome,List<CobaltRatio>> ratios)
     {
         ClusterFactory clusterFactory = new ClusterFactory(mWindowSize);
@@ -134,12 +133,12 @@ public class PurpleSegmentFactory
     private static ModifiablePurpleSegment create(String chromosome, int start, final List<PCFPosition> pcfPositions)
     {
         int minStart = pcfPositions.stream()
-                .filter(x -> x.source() == PCFSource.TUMOR_RATIO)
+                .filter(x -> x.Source == PCFSource.TUMOR_RATIO)
                 .mapToInt(PCFPosition::minPosition)
                 .min()
                 .orElse(start);
         int maxStart = pcfPositions.stream()
-                .filter(x -> x.source() == PCFSource.TUMOR_RATIO)
+                .filter(x -> x.Source == PCFSource.TUMOR_RATIO)
                 .mapToInt(PCFPosition::maxPosition)
                 .max()
                 .orElse(start);

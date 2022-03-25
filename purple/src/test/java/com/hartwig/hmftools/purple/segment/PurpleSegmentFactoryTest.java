@@ -15,7 +15,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
-import com.hartwig.hmftools.common.utils.pcf.ImmutablePCFPosition;
+import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.common.utils.pcf.PCFSource;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
@@ -137,13 +137,7 @@ public class PurpleSegmentFactoryTest
     {
         for(int position : ratios)
         {
-            builder.addPcfPositions(ImmutablePCFPosition.builder()
-                    .chromosome(CHROMOSOME_LENGTH.chromosome())
-                    .position(position)
-                    .source(PCFSource.TUMOR_RATIO)
-                    .minPosition(0)
-                    .maxPosition(0)
-                    .build());
+            builder.addPcfPositions(new PCFPosition(PCFSource.TUMOR_RATIO, CHROMOSOME_LENGTH.chromosome(), position));
         }
 
         return builder;

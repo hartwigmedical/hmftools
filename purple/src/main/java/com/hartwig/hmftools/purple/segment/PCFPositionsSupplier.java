@@ -8,7 +8,6 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.purple.config.AmberData;
 import com.hartwig.hmftools.purple.config.CobaltData;
-import org.jetbrains.annotations.NotNull;
 
 public final class PCFPositionsSupplier
 {

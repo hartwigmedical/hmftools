@@ -30,9 +30,9 @@ public class CobaltData
 
     public final Map<Chromosome,List<CobaltRatio>> Ratios;
 
-    public final Multimap<Chromosome,PCFPosition> TumorSegments;
+    public final Multimap<Chromosome, PCFPosition> TumorSegments;
 
-    public final Multimap<Chromosome,PCFPosition> ReferenceSegments;
+    public final Multimap<Chromosome, PCFPosition> ReferenceSegments;
 
     public final Gender gender() { return CobaltChromosomes.gender(); }
 

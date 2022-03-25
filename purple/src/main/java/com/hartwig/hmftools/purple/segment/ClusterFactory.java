@@ -19,8 +19,6 @@ import com.hartwig.hmftools.common.utils.collection.Multimaps;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 
-import org.jetbrains.annotations.NotNull;
-
 public class ClusterFactory
 {
     private final int mWindowSize;
@@ -56,8 +54,8 @@ public class ClusterFactory
     }
 
     @VisibleForTesting
-    List<Cluster> cluster(final Collection<SVSegment> variantPositions,
-            final Collection<PCFPosition> pcfPositions, final List<CobaltRatio> cobaltRatios)
+    List<Cluster> cluster(
+            final Collection<SVSegment> variantPositions, final Collection<PCFPosition> pcfPositions, final List<CobaltRatio> cobaltRatios)
     {
         final List<GenomePosition> allPositions = Lists.newArrayList();
         allPositions.addAll(variantPositions);

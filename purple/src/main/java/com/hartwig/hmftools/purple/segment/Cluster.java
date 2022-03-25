@@ -26,7 +26,7 @@ abstract class Cluster implements GenomeRegion
     @NotNull
     public List<GenomePosition> ratios()
     {
-        return pcfPositions().stream().filter(x -> !x.source().equals(PCFSource.TUMOR_BAF)).collect(Collectors.toList());
+        return pcfPositions().stream().filter(x -> !x.Source.equals(PCFSource.TUMOR_BAF)).collect(Collectors.toList());
     }
 
 }

@@ -2,19 +2,44 @@ package com.hartwig.hmftools.common.utils.pcf;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
-import org.immutables.value.Value;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+public class PCFPosition implements GenomePosition {
 
-@Value.Immutable
-@Value.Modifiable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class PCFPosition implements GenomePosition {
+    public final PCFSource Source;
+    public final String Chromosome;
+    public final int Position;
 
-    @NotNull
-    public abstract PCFSource source();
+    private int mMinPosition;
+    private int mMaxPosition;
 
-    public abstract int minPosition();
+    public PCFPosition(final PCFSource source, final String chromosome, final int position)
+    {
+        Source = source;
+        Chromosome = chromosome;
+        Position = position;
+        mMinPosition = position;
+        mMaxPosition = position;
+    }
 
-    public abstract int maxPosition();
+    public int minPosition() { return mMinPosition; }
+    public int maxPosition() { return mMaxPosition; }
+
+    public void setMinPosition(int position) { mMinPosition = position; }
+    public void setMaxPosition(int position) { mMaxPosition = position; }
+
+    @Override
+    public String chromosome()
+    {
+        return Chromosome;
+    }
+
+    @Override
+    public int position()
+    {
+        return Position;
+    }
+
+    public String toString()
+    {
+        return String.format("src(%s) pos(%s:%d) range(%d - %d)", Source, Chromosome, Position, mMinPosition, mMaxPosition);
+    }
 }

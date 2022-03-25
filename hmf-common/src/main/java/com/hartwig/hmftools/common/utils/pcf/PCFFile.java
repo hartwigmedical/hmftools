@@ -3,7 +3,9 @@ package com.hartwig.hmftools.common.utils.pcf;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Comparator;
 import java.util.List;
+import java.util.function.Function;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -11,118 +13,158 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.genome.window.Window;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-public final class PCFFile {
-
+public final class PCFFile
+{
     private static final String DELIMITER = "\t";
     private static final String HEADER_PREFIX = "sampleID";
     private static final String RATIO_EXTENSION = ".cobalt.ratio.pcf";
     private static final String BAF_EXTENSION = ".amber.baf.pcf";
 
-    private PCFFile() {
-    }
-
     @NotNull
-    public static String generateRatioFilename(@NotNull final String basePath, @NotNull final String sample) {
+    public static String generateRatioFilename(final String basePath, final String sample)
+    {
         return basePath + File.separator + sample + RATIO_EXTENSION;
     }
 
     @NotNull
-    public static String generateBAFFilename(@NotNull final String basePath, @NotNull final String sample) {
+    public static String generateBAFFilename(final String basePath, final String sample)
+    {
         return basePath + File.separator + sample + BAF_EXTENSION;
     }
 
     @NotNull
-    public static ListMultimap<Chromosome, PCFPosition> readPositions(int windowSize, @NotNull PCFSource source,
-            @NotNull final String filename) throws IOException {
+    public static ListMultimap<Chromosome, PCFPosition> readPositions(int windowSize, final PCFSource source, final String filename) throws IOException
+    {
         ListMultimap<Chromosome, PCFPosition> result = ArrayListMultimap.create();
         final Window window = new Window(windowSize);
-        @Nullable
-        ModifiablePCFPosition builder = null;
+
+        PCFPosition pcfPosition = null;
 
         String prevChromosome = Strings.EMPTY;
         int minPosition = 1;
-        List<ModifiablePCFPosition> chromosomeResult = Lists.newArrayList();
+        List<PCFPosition> chromosomeResult = Lists.newArrayList();
 
-        for (String line : Files.readAllLines(new File(filename).toPath())) {
-            if (!line.startsWith(HEADER_PREFIX)) {
+        for(String line : Files.readAllLines(new File(filename).toPath()))
+        {
+            if(!line.startsWith(HEADER_PREFIX))
+            {
                 String[] values = line.split(DELIMITER);
                 final String chromosomeName = values[1];
-                if (HumanChromosome.contains(chromosomeName)) {
-
-                    if (!chromosomeName.equals(prevChromosome)) {
-                        if (builder != null) {
-                            chromosomeResult.add(builder);
-                            result.putAll(HumanChromosome.fromString(prevChromosome), PCFMerge.merge(chromosomeResult));
+                if(HumanChromosome.contains(chromosomeName))
+                {
+                    if(!chromosomeName.equals(prevChromosome))
+                    {
+                        if(pcfPosition != null)
+                        {
+                            chromosomeResult.add(pcfPosition);
+                            result.putAll(HumanChromosome.fromString(prevChromosome), mergePositions(chromosomeResult));
                         }
                         chromosomeResult.clear();
-                        builder = null;
+                        pcfPosition = null;
                         minPosition = 1;
                         prevChromosome = chromosomeName;
                     }
 
                     int start = window.start(Integer.parseInt(values[3]));
                     int end = window.start(Integer.parseInt(values[4])) + windowSize;
-                    if (builder != null) {
-                        chromosomeResult.add(builder.setMaxPosition(start));
+                    if(pcfPosition != null)
+                    {
+                        pcfPosition.setMaxPosition(start);
+                        chromosomeResult.add(pcfPosition);
                     }
 
-                    chromosomeResult.add(ModifiablePCFPosition.create()
-                            .setChromosome(chromosomeName)
-                            .setSource(source)
-                            .setPosition(start)
-                            .setMinPosition(minPosition)
-                            .setMaxPosition(start));
+                    pcfPosition = new PCFPosition(source, chromosomeName, start);
+                    pcfPosition.setMinPosition(minPosition);
+                    pcfPosition.setMaxPosition(start);
+
+                    chromosomeResult.add(pcfPosition);
 
                     minPosition = end;
-                    builder = ModifiablePCFPosition.create()
-                            .setChromosome(chromosomeName)
-                            .setSource(source)
-                            .setPosition(end)
-                            .setMinPosition(end)
-                            .setMaxPosition(end);
+
+                    pcfPosition = new PCFPosition(source, chromosomeName, end);
+                    pcfPosition.setMinPosition(end);
+                    pcfPosition.setMaxPosition(end);
                 }
             }
         }
 
-        if (builder != null) {
-            chromosomeResult.add(builder);
-            result.putAll(HumanChromosome.fromString(prevChromosome), PCFMerge.merge(chromosomeResult));
+        if(pcfPosition != null)
+        {
+            chromosomeResult.add(pcfPosition);
+            result.putAll(HumanChromosome.fromString(prevChromosome), mergePositions(chromosomeResult));
         }
 
         return result;
     }
 
-    @NotNull
-    public static Multimap<String, GenomeRegion> read(int windowSize, @NotNull final String filename) throws IOException {
+    public static Multimap<String, GenomeRegion> read(int windowSize, final String filename) throws IOException
+    {
         return fromLines(windowSize, Files.readAllLines(new File(filename).toPath()));
     }
 
-    @NotNull
-    private static Multimap<String, GenomeRegion> fromLines(int windowSize, @NotNull List<String> lines) {
+    private static Multimap<String, GenomeRegion> fromLines(int windowSize, List<String> lines)
+    {
         Multimap<String, GenomeRegion> result = ArrayListMultimap.create();
-        for (String line : lines) {
-            if (!line.startsWith(HEADER_PREFIX)) {
-                final PCFRegion region = fromString(windowSize, line);
+        for(String line : lines)
+        {
+            if(!line.startsWith(HEADER_PREFIX))
+            {
+                final GenomeRegion region = fromString(windowSize, line);
                 result.put(region.chromosome(), region);
             }
         }
         return result;
     }
 
-    @NotNull
-    private static PCFRegion fromString(int windowSize, @NotNull final String line) {
+    private static GenomeRegion fromString(int windowSize, final String line)
+    {
         String[] values = line.split(DELIMITER);
-        return ImmutablePCFRegion.builder()
-                .chromosome(values[1])
-                .start(Integer.parseInt(values[3]))
-                .end(Integer.parseInt(values[4]) + windowSize - 1)
-                .build();
+        String chromosome = values[1];
+        int posStart = Integer.parseInt(values[3]);
+        int posEnd = Integer.parseInt(values[4]) + windowSize - 1;
+        return GenomeRegions.create(chromosome, posStart, posEnd);
     }
+
+    private static final Comparator<PCFPosition> COMPARE = Comparator.comparing(
+            (Function<PCFPosition, String>) GenomePosition::chromosome).thenComparingLong(GenomePosition::position);
+
+    private static List<PCFPosition> mergePositions(final List<PCFPosition> positions)
+    {
+        positions.sort(COMPARE);
+
+        int i = 0;
+        while(i < positions.size() - 1)
+        {
+            PCFPosition current = positions.get(i);
+            PCFPosition next = positions.get(i + 1);
+
+            if(current.chromosome().equals(next.chromosome()) && current.position() == next.position())
+            {
+                current.setMinPosition(Math.max(current.minPosition(), next.minPosition()));
+                current.setMaxPosition(Math.min(current.maxPosition(), next.maxPosition()));
+                positions.remove(i + 1);
+            }
+            else if(current.chromosome().equals(next.chromosome()))
+            {
+                current.setMaxPosition(Math.min(current.maxPosition(), next.position()));
+                next.setMinPosition(Math.max(next.minPosition(), current.position()));
+                i++;
+            }
+            else
+            {
+                i++;
+            }
+        }
+
+        return positions;
+    }
+
 }

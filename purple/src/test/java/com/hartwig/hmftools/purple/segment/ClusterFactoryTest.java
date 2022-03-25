@@ -8,7 +8,6 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.purple.PurpleTestUtils;
-import com.hartwig.hmftools.common.utils.pcf.ImmutablePCFPosition;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.common.utils.pcf.PCFSource;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
@@ -231,13 +230,7 @@ public class ClusterFactoryTest
     @NotNull
     private static PCFPosition ratio(int position)
     {
-        return ImmutablePCFPosition.builder()
-                .chromosome(CHROM)
-                .position(position)
-                .source(PCFSource.TUMOR_RATIO)
-                .minPosition(0)
-                .maxPosition(0)
-                .build();
+        return new PCFPosition(PCFSource.TUMOR_RATIO, CHROM, position);
     }
 
     @Nullable
