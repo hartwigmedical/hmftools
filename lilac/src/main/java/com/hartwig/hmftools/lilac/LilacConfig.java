@@ -4,14 +4,12 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SOMATIC_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
@@ -93,8 +91,8 @@ public class LilacConfig
     private static final String RNA_BAM = "rna_bam";
     private static final String RUN_ID = "run_id";
 
-    private static final String GENE_COPY_NUMBER = "gene_copy_number_file";
-    private static final String SOMATIC_VARIANTS = "somatic_variants_file";
+    private static final String SOMATIC_VCF = "somatic_vcf";
+    private static final String GENE_COPY_NUMBER = "gene_copy_number";
 
     // constant overrides
     private static final String MIN_BASE_QUAL = "min_base_qual";
@@ -147,8 +145,10 @@ public class LilacConfig
             ReferenceBam = cmd.getOptionValue(REFERENCE_BAM, "");
             TumorBam = cmd.getOptionValue(TUMOR_BAM, "");
             RnaBam = cmd.getOptionValue(RNA_BAM, "");
+
+            SomaticVariantsFile = cmd.getOptionValue(SOMATIC_VCF, "");
             CopyNumberFile = cmd.getOptionValue(GENE_COPY_NUMBER, "");
-            SomaticVariantsFile = cmd.getOptionValue(SOMATIC_VARIANTS, "");
+
             OutputDir = parseOutputDir(cmd);
         }
 
@@ -305,12 +305,13 @@ public class LilacConfig
         options.addOption(ACTUAL_ALLELES, true,"Comma separated known actual alleles for the sample");
         options.addOption(RESTRICTED_ALLELES, true,"Comma separated restricted analysis allele list");
         options.addOption(MAX_ELIM_CANDIDATES, true, "Revert to only common alleles if candidate allele count exceeds this after elimination");
-        options.addOption(GENE_COPY_NUMBER, true,"Path to gene copy number file");
-        options.addOption(SOMATIC_VARIANTS, true,"Path to somatic VCF");
+        options.addOption(GENE_COPY_NUMBER, true,"Deprecated, use 'gene_copy_number instead': Path to gene copy number file ");
+        options.addOption(SOMATIC_VCF, true,"Path to somatic VCF");
         options.addOption(DEBUG_PHASING, false, "More detailed logging of phasing");
         options.addOption(RUN_VALIDATION, false, "Run validation checks");
         options.addOption(THREADS, true,"Number of threads");
         options.addOption(WRITE_ALL_FILES, false,"Write more detailed output files");
+
         addRefGenomeConfig(options);
         addOutputDir(options);
         addLoggingOptions(options);
