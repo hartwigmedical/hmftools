@@ -84,6 +84,6 @@ public class CobaltData
         }
 
         final List<MedianRatio> medianRatios = MedianRatioFactory.create(Ratios);
-        CobaltChromosomes = new CobaltChromosomes(medianRatios);
+        CobaltChromosomes = new CobaltChromosomes(medianRatios, !tumorOnlyMode);
     }
 }

@@ -50,6 +50,11 @@ public class CobaltChromosomes
      */
     public CobaltChromosomes(final Collection<MedianRatio> unfiltered)
     {
+        this(unfiltered, true);
+    }
+
+    public CobaltChromosomes(final Collection<MedianRatio> unfiltered, boolean calcAberrations)
+    {
         final List<MedianRatio> ratios =
                 unfiltered.stream().filter(x -> !isContig(x.chromosome(), "Y") || x.count() >= MIN_Y_COUNT).collect(Collectors.toList());
 
@@ -71,7 +76,9 @@ public class CobaltChromosomes
             boolean isX = isContig(contig, "X");
             boolean isY = isContig(contig, "Y");
 
-            final GermlineAberration aberration = aberration(isFemale, contig, ratio.medianRatio(), minAutosomeRatio);
+            final GermlineAberration aberration = calcAberrations ?
+                    aberration(isFemale, contig, ratio.medianRatio(), minAutosomeRatio) : GermlineAberration.NONE;
+
             final double typicalRatio = typicalRatio(isFemale, contig);
             final double actualRatio = actualRatio(aberration, typicalRatio, ratio.medianRatio());
 
