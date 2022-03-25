@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.amber;
 
+import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
+
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -12,7 +14,6 @@ import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
-import com.hartwig.hmftools.common.genome.region.GenomeRegionsBuilder;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
 
@@ -42,14 +43,9 @@ public class TumorBAFEvidence implements Callable<TumorBAFEvidence>
         mBamFile = bamFile;
         mSamReaderFactory = samReaderFactory;
 
-        final GenomeRegionsBuilder builder = new GenomeRegionsBuilder(typicalReadDepth);
-        for(BaseDepth bafRegion : baseDepths)
-        {
-            builder.addPosition(bafRegion);
-        }
+        mBafRegions = GenomeRegions.fromSortedGenomePositions(typicalReadDepth, baseDepths);
 
-        mBafRegions = builder.build();
-        mEvidence = baseDepths.stream().map(TumorBAFFactory::create).collect(Collectors.toList());
+        mEvidence = baseDepths.stream().sorted().map(TumorBAFFactory::create).collect(Collectors.toList());
         mSelector = GenomePositionSelectorFactory.create(Multimaps.fromPositions(mEvidence));
         mBamSlicer = new BamSlicer(minMappingQuality);
     }
@@ -69,10 +65,12 @@ public class TumorBAFEvidence implements Callable<TumorBAFEvidence>
     @Override
     public TumorBAFEvidence call() throws Exception
     {
+        AMB_LOGGER.info("tumor bam process start");
         try(SamReader reader = mSamReaderFactory.open(new File(mBamFile)))
         {
             mBamSlicer.sliceNoDups(reader, mBafRegions, this::processRecord);
         }
+        AMB_LOGGER.info("tumor bam process end");
 
         return this;
     }
@@ -87,4 +85,42 @@ public class TumorBAFEvidence implements Callable<TumorBAFEvidence>
     {
         return GenomeRegions.create(record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd());
     }
+
+    /*
+    private void processRecord(@NotNull final SAMRecord record)
+    {
+        if (!record.getContig().equals(mChromosome))
+            return;
+
+        // use binary search on the evidence list
+        // we rely on the fact that they all come from same chromosome
+        int lowerBound = Collections.binarySearch(mEvidence, GenomePositions.create(record.getContig(), record.getAlignmentStart()),
+                Comparator.comparingInt(GenomePosition::position));
+
+        if (lowerBound < 0)
+        {
+            // if can't find it then binarySearch returns -(insertion point) - 1
+            // so x = -(insertion point) - 1
+            //  insertion point = -x - 1
+            lowerBound = -lowerBound - 1;
+        }
+
+        for (int i = lowerBound; i < mEvidence.size(); ++i)
+        {
+            ModifiableTumorBAF e = mEvidence.get(i);
+
+            if (e.position() < record.getAlignmentStart())
+            {
+                continue;
+            }
+            if (e.position() > record.getAlignmentEnd())
+            {
+                break;
+            }
+
+            // here includes all positions in [align start, align end]
+            mBafFactory.addEvidence(e, record);
+        }
+    }
+     */
 }

@@ -37,27 +37,23 @@ class AmberPersistence
 
     void persistBAF(@NotNull final List<AmberBAF> result) throws IOException, InterruptedException
     {
-        final String filename = AmberBAFFile.generateAmberFilenameForWriting(mConfig.OutputDir, mConfig.TumorId);
+        final String filename = AmberBAFFile.generateAmberFilenameForWriting(mConfig.OutputDir, mConfig.getSampleId());
         AmberBAFFile.write(filename, result);
 
-        AMB_LOGGER.info("Applying pcf segmentation");
-        new BAFSegmentation(mConfig.OutputDir).applySegmentation(mConfig.TumorId, filename);
+        if (mConfig.TumorId != null)
+        {
+            AMB_LOGGER.info("Applying pcf segmentation");
+            new BAFSegmentation(mConfig.OutputDir).applySegmentation(mConfig.TumorId, filename);
+        }
     }
 
-    void persistBafVcf(@NotNull final List<TumorBAF> tumorBAFList, final AmberHetNormalEvidence amberHetNormalEvidence)
-    {
-        final String outputVcf = mConfig.OutputDir + File.separator + mConfig.TumorId + ".amber.baf.vcf.gz";
-        AMB_LOGGER.info("Writing {} BAF records to {}", tumorBAFList.size(), outputVcf);
-        new AmberVCF(mConfig).writeBAF(outputVcf, tumorBAFList, amberHetNormalEvidence);
-    }
-
-    void persistQC(@NotNull final List<AmberBAF> result, @NotNull final List<TumorContamination> contaminationRecords,
+    void persistQC(@NotNull final List<TumorContamination> contaminationRecords,
             double consanguinityProportion, @Nullable Chromosome uniparentalDisomy) throws IOException
     {
         final double contamination = new TumorContaminationModel().contamination(contaminationRecords);
         final AmberQC qcStats = AmberQCFactory.create(contamination, consanguinityProportion,
                 uniparentalDisomy != null ? uniparentalDisomy.toString() : null);
-        final String qcFilename = AmberQCFile.generateFilename(mConfig.OutputDir, mConfig.TumorId);
+        final String qcFilename = AmberQCFile.generateFilename(mConfig.OutputDir, mConfig.getSampleId());
         AmberQCFile.write(qcFilename, qcStats);
     }
 
