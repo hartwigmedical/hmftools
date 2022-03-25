@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
@@ -32,18 +33,32 @@ public final class ReportableHomozygousDisruptionFactory {
 
     @NotNull
     private static List<ReportableHomozygousDisruption> extractHomozygousDisruptions(@NotNull List<DriverCatalog> linxDriversCatalog) {
-        return linxDriversCatalog.stream()
-                .filter(x -> x.driver() == DriverType.HOM_DUP_DISRUPTION || x.driver() == DriverType.HOM_DEL_DISRUPTION)
-                .map(ReportableHomozygousDisruptionFactory::create)
-                .collect(Collectors.toList());
+        for (DriverCatalog driver : linxDriversCatalog) {
+            if (!driver.gene().equals("CDKN2A") && driver.isCanonical() || driver.gene().equals("CDKN2A") && driver.isCanonical()
+                    || driver.gene().equals("CDKN2A") && driver.isCanonical()) {
+                return linxDriversCatalog.stream()
+                        .filter(x -> x.driver() == DriverType.HOM_DUP_DISRUPTION || x.driver() == DriverType.HOM_DEL_DISRUPTION)
+                        .map(ReportableHomozygousDisruptionFactory::create)
+                        .collect(Collectors.toList());
+            }
+        }
+        return Lists.newArrayList();
+
     }
 
     @NotNull
     private static ReportableHomozygousDisruption create(@NotNull DriverCatalog driverCatalog) {
+        String formatGene = driverCatalog.gene();
+        if (formatGene.equals("CDKN2A") && driverCatalog.isCanonical()) {
+            formatGene = driverCatalog.gene() + " (P16)";
+        } else if (formatGene.equals("CDKN2A") && !driverCatalog.isCanonical()) {
+            formatGene = driverCatalog.gene() + " (P14ARF)";
+        }
+
         return ImmutableReportableHomozygousDisruption.builder()
                 .chromosome(driverCatalog.chromosome())
                 .chromosomeBand(driverCatalog.chromosomeBand())
-                .gene(driverCatalog.gene())
+                .gene(formatGene)
                 .build();
     }
 }

@@ -46,7 +46,12 @@ public final class ReportableVariantFactory {
                     throw new IllegalStateException("Could not find driver entry for variant on gene '" + variant.gene() + "'");
                 }
 
-                ReportableVariant reportable = fromVariant(variant, source).driverLikelihood(geneDriver.driverLikelihood()).build();
+                SomaticVariant variantCorrect = ImmutableSomaticVariantImpl.builder()
+                        .from(variant)
+                        .gene(formatGene(geneDriver))
+                        .build();
+
+                ReportableVariant reportable = fromVariant(variantCorrect, source).driverLikelihood(geneDriver.driverLikelihood()).build();
                 result.add(reportable);
             }
         }
@@ -54,11 +59,25 @@ public final class ReportableVariantFactory {
     }
 
     @NotNull
+    private static String formatGene(@NotNull DriverCatalog driverCatalog) {
+            String formatGene = driverCatalog.gene();
+            if (formatGene.equals("CDKN2A") && driverCatalog.isCanonical()) {
+                formatGene = driverCatalog.gene() + " (P16)";
+            } else if (formatGene.equals("CDKN2A") && !driverCatalog.isCanonical()) {
+                formatGene = driverCatalog.gene() + " (P14ARF)";
+            }
+
+        return formatGene;
+    }
+
+    @NotNull
     private static Map<String, DriverCatalog> toDriverMap(@NotNull List<DriverCatalog> driverCatalog) {
         Map<String, DriverCatalog> map = Maps.newHashMap();
         for (DriverCatalog driver : driverCatalog) {
             boolean genePresent = map.containsKey(driver.gene());
-            if (!genePresent || (genePresent && driver.isCanonical())) {
+            if (!genePresent || (genePresent && driver.isCanonical() && !driver.gene().equals("CDKN2A")) || (genePresent
+                    && driver.isCanonical() && driver.gene().equals("CDKN2A")) || (genePresent && !driver.isCanonical() && driver.gene()
+                    .equals("CDKN2A"))) {
                 map.put(driver.gene(), driver);
             }
         }
