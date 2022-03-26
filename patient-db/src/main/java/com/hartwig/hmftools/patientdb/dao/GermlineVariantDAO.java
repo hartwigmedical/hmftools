@@ -154,7 +154,7 @@ public class GermlineVariantDAO
                 pathogenicSummary.clinvarInfo(),
                 pathogenicSummary.pathogenicity().toString(),
                 decorator.isPathogenic(),
-                variantImpact.gene(),
+                variantImpact.CanonicalGeneName,
                 variantImpact.GenesAffected,
                 variantImpact.CanonicalEffect,
                 variantImpact.CanonicalCodingEffect != CodingEffect.UNDEFINED ? variantImpact.CanonicalCodingEffect : Strings.EMPTY,

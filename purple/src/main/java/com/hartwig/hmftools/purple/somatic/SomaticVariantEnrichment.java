@@ -23,7 +23,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.vcf.VCFHeader;
 
-public class SomaticVariantEnrichment implements VariantContextEnrichment
+public class SomaticVariantEnrichment
 {
     private final SomaticPurityEnrichment mPurityEnrichment;
     private final HotspotEnrichment mHotspotEnrichment;
@@ -33,16 +33,12 @@ public class SomaticVariantEnrichment implements VariantContextEnrichment
     private final SnpEffEnrichment mSnpEffEnrichment;
     private final SomaticGenotypeEnrichment mGenotypeEnrichment;
 
-    private final Consumer<VariantContext> mConsumer;
-
     public SomaticVariantEnrichment(
             boolean hotspotEnabled, boolean snpEffEnrichmentEnabled, double clonalityBinWidth, final String purpleVersion,
             final String referenceId, final String tumorSample, final ReferenceData refData,
             final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers, final List<FittedRegion> fittedRegions,
-            final Multimap<Chromosome, VariantHotspot> hotspots, final List<PeakModel> peakModel, final Consumer<VariantContext> consumer)
+            final Multimap<Chromosome, VariantHotspot> hotspots, final List<PeakModel> peakModel)
     {
-        mConsumer = consumer;
-
         mGenotypeEnrichment = new SomaticGenotypeEnrichment(referenceId, tumorSample);
 
         mSubclonalLikelihoodEnrichment = new SubclonalLikelihoodEnrichment(clonalityBinWidth, peakModel);
@@ -68,12 +64,9 @@ public class SomaticVariantEnrichment implements VariantContextEnrichment
         mHotspotEnrichment = new HotspotEnrichment(hotspots, hotspotEnabled);
     }
 
-    @Override
-    public void accept(@NotNull final VariantContext context)
+    public void enrich(final SomaticData variant)
     {
-        VariantContext newContext = new VariantContextBuilder(context).make();
-
-        mHotspotEnrichment.processVariant(newContext);
+        VariantContext newContext = variant.newContext();
 
         if(mSnpEffEnrichment != null)
             mSnpEffEnrichment.processVariant(newContext);
@@ -82,23 +75,20 @@ public class SomaticVariantEnrichment implements VariantContextEnrichment
 
         mKataegisEnrichment.processVariant(newContext);
 
-        mPurityEnrichment.processVariant(newContext);
+        // has occurred earlier now
+        // mPurityEnrichment.processVariant(newContext);
 
         mSubclonalLikelihoodEnrichment.processVariant(newContext);
 
         mGenotypeEnrichment.processVariant(newContext);
-
-        mConsumer.accept(newContext);
     }
 
-    @Override
     public void flush()
     {
         mKataegisEnrichment.flush();
     }
 
-    @Override
-    public VCFHeader enrichHeader(final VCFHeader template)
+    public VCFHeader populateHeader(final VCFHeader template)
     {
         VCFHeader header = SomaticRefContextEnrichment.addHeader(template);
         header = KataegisEnrichment.enrichHeader(header);

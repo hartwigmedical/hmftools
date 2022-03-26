@@ -22,7 +22,6 @@ public enum DriverImpact
         return select(variant.type(), variant.canonicalCodingEffect());
     }
 
-
     @NotNull
     public static DriverImpact select(final VariantType variantType, final CodingEffect canonicalCodingEffect)
     {
@@ -75,27 +74,27 @@ public enum DriverImpact
         return isSplice(variant.canonicalCodingEffect());
     }
 
-    static boolean isFrameshift(VariantType variantType, CodingEffect canonicalCodingEffect)
+    public static boolean isFrameshift(VariantType variantType, CodingEffect canonicalCodingEffect)
     {
         return variantType == VariantType.INDEL && canonicalCodingEffect == CodingEffect.NONSENSE_OR_FRAMESHIFT;
     }
 
-    static boolean isNonsense(VariantType variantType, CodingEffect canonicalCodingEffect)
+    public static boolean isNonsense(VariantType variantType, CodingEffect canonicalCodingEffect)
     {
         return variantType != VariantType.INDEL && canonicalCodingEffect == CodingEffect.NONSENSE_OR_FRAMESHIFT;
     }
 
-    static boolean isMissense(VariantType variantType, CodingEffect canonicalCodingEffect)
+    public static boolean isMissense(VariantType variantType, CodingEffect canonicalCodingEffect)
     {
         return variantType != VariantType.INDEL && canonicalCodingEffect == CodingEffect.MISSENSE;
     }
 
-    static boolean isInframe(VariantType variantType, CodingEffect canonicalCodingEffect)
+    public static boolean isInframe(VariantType variantType, CodingEffect canonicalCodingEffect)
     {
         return variantType == VariantType.INDEL && canonicalCodingEffect == CodingEffect.MISSENSE;
     }
 
-    static boolean isSplice(CodingEffect canonicalCodingEffect)
+    public static boolean isSplice(CodingEffect canonicalCodingEffect)
     {
         return canonicalCodingEffect == CodingEffect.SPLICE;
     }

@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.purple.drivers;
 
+import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.groupByImpact;
+import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.isReportable;
+
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -19,6 +22,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.ReportablePredicate;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.purple.somatic.SomaticData;
 
 import org.apache.logging.log4j.util.Strings;
 
@@ -26,26 +30,40 @@ public class TsgDrivers
 {
     private final ReportablePredicate mReportablePredicate;
     private final Map<String, DndsDriverGeneLikelihood> mLikelihoodsByGene;
+    private final List<SomaticData> mReportableVariants;
 
     public TsgDrivers(final DriverGenePanel genePanel)
     {
         mLikelihoodsByGene = genePanel.tsgLikelihood();
         mReportablePredicate = new ReportablePredicate(DriverCategory.TSG, genePanel.driverGenes());
+        mReportableVariants = Lists.newArrayList();
     }
 
-    public List<DriverCatalog> drivers(
-            final List<SomaticVariant> variants, final Map<String,List<GeneCopyNumber>> geneCopyNumberMap,
+    public boolean checkVariant(final SomaticData variant)
+    {
+        if(isReportable(mReportablePredicate, variant))
+        {
+            mReportableVariants.add(variant);
+            return true;
+        }
+
+        return false;
+    }
+
+    public List<DriverCatalog> findDrivers(
+            final Map<String,List<GeneCopyNumber>> geneCopyNumberMap,
             final Map<VariantType,Integer> variantTypeCounts, final Map<VariantType,Integer> variantTypeCountsBiallelic)
     {
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
-        final Map<String, List<SomaticVariant>> codingVariants = codingVariantsByGene(variants);
+        final Map<String,List<SomaticData>> codingVariants = mReportableVariants.stream()
+                .collect(Collectors.groupingBy(SomaticData::gene));
 
         for(String gene : codingVariants.keySet())
         {
             final DndsDriverGeneLikelihood likelihood = mLikelihoodsByGene.get(gene);
 
-            final List<SomaticVariant> geneVariants = codingVariants.get(gene);
+            final List<SomaticData> geneVariants = codingVariants.get(gene);
 
             List<GeneCopyNumber> geneCopyNumbers = geneCopyNumberMap.get(gene);
 
@@ -62,14 +80,14 @@ public class TsgDrivers
     }
 
     public static DriverCatalog geneDriver(
-            final DndsDriverGeneLikelihood likelihood, final List<SomaticVariant> geneVariants, final Map<VariantType, Integer> standardCounts,
+            final DndsDriverGeneLikelihood likelihood, final List<SomaticData> geneVariants, final Map<VariantType, Integer> standardCounts,
             final Map<VariantType,Integer> biallelicCounts, final GeneCopyNumber geneCopyNumber)
     {
         geneVariants.sort(new TsgImpactComparator());
 
-        SomaticVariant topVariant = geneVariants.get(0);
+        SomaticData topVariant = geneVariants.get(0);
 
-        final Map<DriverImpact,Integer> variantCounts = DriverCatalogFactory.driverImpactCount(geneVariants);
+        Map<DriverImpact,Integer> variantCounts = groupByImpact(geneVariants);
         int missenseVariants = variantCounts.getOrDefault(DriverImpact.MISSENSE, 0);
         int nonsenseVariants = variantCounts.getOrDefault(DriverImpact.NONSENSE, 0);
         int spliceVariants = variantCounts.getOrDefault(DriverImpact.SPLICE, 0);
@@ -90,22 +108,22 @@ public class TsgDrivers
                 .splice(spliceVariants)
                 .inframe(inframeVariants)
                 .frameshift(frameshiftVariants)
-                .biallelic(geneVariants.stream().anyMatch(SomaticVariant::biallelic))
+                .biallelic(geneVariants.stream().anyMatch(SomaticData::biallelic))
                 .minCopyNumber(geneCopyNumber == null ? 0 : geneCopyNumber.minCopyNumber())
                 .maxCopyNumber(geneCopyNumber == null ? 0 : geneCopyNumber.maxCopyNumber())
                 .likelihoodMethod(LikelihoodMethod.DNDS);
 
-        if(geneVariants.stream().anyMatch(SomaticVariant::isHotspot))
+        if(geneVariants.stream().anyMatch(SomaticData::isHotspot))
         {
             return builder.likelihoodMethod(LikelihoodMethod.HOTSPOT).build();
         }
 
-        if(geneVariants.stream().anyMatch(x -> x.biallelic() && !DriverImpact.isMissense(x)))
+        if(geneVariants.stream().anyMatch(x -> x.biallelic() && !DriverImpact.isMissense(x.type(), x.variantImpact().CanonicalCodingEffect)))
         {
             return builder.likelihoodMethod(LikelihoodMethod.BIALLELIC).build();
         }
 
-        final DriverImpact firstImpact = DriverImpact.select(topVariant);
+        final DriverImpact firstImpact = DriverImpact.select(topVariant.type(), topVariant.variantImpact().CanonicalCodingEffect);
         final DndsDriverImpactLikelihood firstImpactLikelihood = likelihood.select(firstImpact);
         final int firstVariantTypeCount = variantCount(topVariant.biallelic(), topVariant, standardCounts, biallelicCounts);
 
@@ -121,9 +139,9 @@ public class TsgDrivers
         }
 
         // MultiHit
-        SomaticVariant secondVariant = geneVariants.get(1);
+        SomaticData secondVariant = geneVariants.get(1);
 
-        final DriverImpact secondImpact = DriverImpact.select(secondVariant);
+        final DriverImpact secondImpact = DriverImpact.select(secondVariant.type(), secondVariant.variantImpact().CanonicalCodingEffect);
 
         final DndsDriverImpactLikelihood secondImpactLikelihood = likelihood.select(secondImpact);
 
@@ -163,13 +181,8 @@ public class TsgDrivers
         return DriverCatalogFactory.probabilityDriverVariant(sampleCount, likelihood);
     }
 
-    private <T extends SomaticVariant> Map<String, List<T>> codingVariantsByGene(final List<T> variants)
-    {
-        return variants.stream().filter(mReportablePredicate).collect(Collectors.groupingBy(SomaticVariant::gene));
-    }
-
     private static int variantCount(
-            boolean useBiallelic, final SomaticVariant variant,
+            boolean useBiallelic, final SomaticData variant,
             final Map<VariantType, Integer> standard, final Map<VariantType, Integer> biallelic)
     {
         final Map<VariantType, Integer> map;

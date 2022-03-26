@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 
-public class ReportablePredicate implements Predicate<SomaticVariant>
+public class ReportablePredicate
 {
     public static final int MAX_ONCO_REPEAT_COUNT = 7;
 
@@ -27,14 +27,6 @@ public class ReportablePredicate implements Predicate<SomaticVariant>
                 .collect(Collectors.toMap(DriverGene::gene, x -> x));
 
         mMaxRepeatCount = type == DriverCategory.ONCO ? MAX_ONCO_REPEAT_COUNT : -1;
-    }
-
-    @Override
-    public boolean test(final SomaticVariant variant)
-    {
-        return test(
-                variant.gene(), variant.type(), variant.repeatCount(), variant.isHotspot(),
-                variant.canonicalCodingEffect(), variant.canonicalEffect());
     }
 
     public boolean test(

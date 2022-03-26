@@ -26,8 +26,8 @@ import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.collection.Downsample;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.purple.region.FittedRegionFactory;
+import com.hartwig.hmftools.purple.somatic.SomaticData;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -45,7 +45,7 @@ public class FittedPurityFactory
     @NotNull
     private final FittedRegionFactory mFittedRegionFactory;
     private final ExecutorService mExecutorService;
-    private final Collection<SomaticVariant> mVariants;
+    private final List<SomaticData> mVariants;
 
     private final List<FittedPurity> mAll = Lists.newArrayList();
     private final List<ObservedRegion> mFilteredRegions = Lists.newArrayList();
@@ -58,7 +58,7 @@ public class FittedPurityFactory
             final ExecutorService executorService, final CobaltChromosomes cobaltChromosomes, final double minPurity,
             final double maxPurity, final double purityIncrements, final double minPloidy, final double maxPloidy,
             final double somaticPenaltyWeight, final boolean tumorOnlyMode, final FittedRegionFactory fittedRegionFactory,
-            final Collection<ObservedRegion> observedRegions, final Collection<SomaticVariant> variants)
+            final Collection<ObservedRegion> observedRegions, final List<SomaticData> variants)
             throws ExecutionException, InterruptedException
     {
         mExecutorService = executorService;
@@ -70,8 +70,8 @@ public class FittedPurityFactory
         mCobaltChromosomes = cobaltChromosomes;
         mPloidyRange = ploidyRange(minPloidy, maxPloidy);
 
-        final List<SomaticVariant> filteredVariants = Lists.newArrayList();
-        final GenomePositionSelector<SomaticVariant> variantSelector = GenomePositionSelectorFactory.create(variants);
+        final List<SomaticData> filteredVariants = Lists.newArrayList();
+        final GenomePositionSelector<SomaticData> variantSelector = GenomePositionSelectorFactory.create(variants);
 
         int accumulatedBafCount = 0;
         double accumulatedWeightedRatio = 0;
@@ -169,7 +169,6 @@ public class FittedPurityFactory
         return 1d * value * bafCount / mTotalBAFCount;
     }
 
-    @NotNull
     private FittedPurity fitPurity(final double purity, final double normFactor)
     {
         ImmutableFittedPurity.Builder builder = ImmutableFittedPurity.builder().purity(purity).normFactor(normFactor);
@@ -194,10 +193,9 @@ public class FittedPurityFactory
         }
 
         final PurityAdjuster purityAdjuster = new PurityAdjusterAbnormalChromosome(purity, normFactor, mCobaltChromosomes.chromosomes());
-        final double somaticPenalty = Doubles.greaterThan(mSomaticPenaltyWeight, 0) ? mSomaticPenaltyWeight * SomaticPenaltyFactory.penalty(
-                purityAdjuster,
-                fittedRegions,
-                mVariants) : 0;
+
+        final double somaticPenalty = Doubles.greaterThan(mSomaticPenaltyWeight, 0) ?
+                mSomaticPenaltyWeight * SomaticPenaltyFactory.calcPenalty(purityAdjuster, fittedRegions, mVariants) : 0;
 
         return builder.score(eventPenalty * deviationPenalty + somaticPenalty)
                 .diploidProportion(diploidProportion)
@@ -206,8 +204,7 @@ public class FittedPurityFactory
                 .build();
     }
 
-    @NotNull
-    static List<Double> ploidyRange(double minPloidy, double maxPloidy)
+    protected static List<Double> ploidyRange(double minPloidy, double maxPloidy)
     {
         List<Double> results = Lists.newArrayList();
         results.addAll(sequence(Math.max(0, minPloidy), Math.min(3, maxPloidy), 0.02));
@@ -218,7 +215,6 @@ public class FittedPurityFactory
         return results;
     }
 
-    @NotNull
     private static List<Double> sequence(double inclusiveMin, double exclusiveMax, double increment)
     {
         List<Double> results = Lists.newArrayList();

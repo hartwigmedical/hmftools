@@ -33,11 +33,6 @@ public class VariantImpact
         GenesAffected = genesAffected;
     }
 
-    public String gene()
-    {
-        return CanonicalGeneName;
-    }
-
     public boolean equals(final VariantImpact other)
     {
         return CanonicalGeneName.equals(other.CanonicalGeneName) &&

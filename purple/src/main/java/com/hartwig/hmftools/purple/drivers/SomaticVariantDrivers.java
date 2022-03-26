@@ -3,17 +3,21 @@ package com.hartwig.hmftools.purple.drivers;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.drivercatalog.DriverImpact;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.ReportablePredicate;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.common.variant.impact.VariantImpact;
+import com.hartwig.hmftools.purple.somatic.SomaticData;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -21,13 +25,13 @@ public class SomaticVariantDrivers
 {
     private final DriverGenePanel mGenePanel;
 
-    private final List<SomaticVariant> mTsgVariants;
-    private final List<SomaticVariant> mOncoVariants;
+    private final List<SomaticData> mTsgVariants;
+    private final List<SomaticData> mOncoVariants;
     private final Map<VariantType,Integer> mVariantTypeCounts;
     private final Map<VariantType,Integer> mVariantTypeCountsBiallelic;
 
-    private final Predicate<SomaticVariant> mOncoPredicate;
-    private final Predicate<SomaticVariant> mTsgPredicate;
+    private final OncoDrivers mOncoDrivers;
+    private final TsgDrivers mTsgDrivers;
 
     public SomaticVariantDrivers(final DriverGenePanel panel)
     {
@@ -38,46 +42,62 @@ public class SomaticVariantDrivers
         mVariantTypeCounts = Maps.newHashMap();
         mVariantTypeCountsBiallelic = Maps.newHashMap();
 
-        mOncoPredicate = new ReportablePredicate(DriverCategory.ONCO, panel.driverGenes());
-        mTsgPredicate = new ReportablePredicate(DriverCategory.TSG, panel.driverGenes());
+        mOncoDrivers = new OncoDrivers(panel);
+        mTsgDrivers = new TsgDrivers(panel);
     }
 
-    public boolean add(final SomaticVariant variant)
+    public boolean checkSomaticVariant(final SomaticData variant)
     {
-        if(!variant.isFiltered())
+        // return true if the variant is a reportable TSG or onocogene
+        if(variant.isFiltered())
+            return false;
+
+        mVariantTypeCounts.compute(variant.type(), (key, oldValue) -> Optional.ofNullable(oldValue).orElse(0) + 1);
+
+        if(variant.biallelic())
         {
-            mVariantTypeCounts.compute(variant.type(), (key, oldValue) -> Optional.ofNullable(oldValue).orElse(0) + 1);
-            if(variant.biallelic())
-            {
-                mVariantTypeCountsBiallelic.compute(variant.type(), (key, oldValue) -> Optional.ofNullable(oldValue).orElse(0) + 1);
-            }
-
-            if(mOncoPredicate.test(variant))
-            {
-                mOncoVariants.add(variant);
-                return true;
-            }
-
-            if(mTsgPredicate.test(variant))
-            {
-                mTsgVariants.add(variant);
-                return true;
-            }
+            mVariantTypeCountsBiallelic.compute(variant.type(), (key, oldValue) -> Optional.ofNullable(oldValue).orElse(0) + 1);
         }
+
+        if(mOncoDrivers.checkVariant(variant))
+            return true;
+
+        if(mTsgDrivers.checkVariant(variant))
+            return true;
 
         return false;
     }
 
-    public List<DriverCatalog> build(final Map<String,List<GeneCopyNumber>> geneCopyNumberMap)
+    protected static boolean isReportable(final ReportablePredicate predicate, final SomaticData variant)
     {
-        final OncoDrivers oncoDrivers = new OncoDrivers(mGenePanel);
-        final TsgDrivers tsgDrivers = new TsgDrivers(mGenePanel);
+        final VariantImpact variantImpact = variant.variantImpact();
 
+        return predicate.test(
+                variantImpact.CanonicalGeneName, variant.type(), variant.decorator().repeatCount(), variant.isHotspot(),
+                variantImpact.CanonicalCodingEffect, variantImpact.CanonicalEffect);
+    }
+
+    public List<DriverCatalog> buildCatalog(final Map<String,List<GeneCopyNumber>> geneCopyNumberMap)
+    {
         final List<DriverCatalog> result = Lists.newArrayList();
 
-        result.addAll(oncoDrivers.drivers(mOncoVariants, geneCopyNumberMap, mVariantTypeCounts));
-        result.addAll(tsgDrivers.drivers(mTsgVariants, geneCopyNumberMap, mVariantTypeCounts, mVariantTypeCountsBiallelic));
+        result.addAll(mOncoDrivers.findDrivers(geneCopyNumberMap, mVariantTypeCounts));
+        result.addAll(mTsgDrivers.findDrivers(geneCopyNumberMap, mVariantTypeCounts, mVariantTypeCountsBiallelic));
 
         return result;
+    }
+
+    protected static Map<DriverImpact,Integer> groupByImpact(final List<SomaticData> variants)
+    {
+        Map<DriverImpact,Integer> map = Maps.newHashMap();
+
+        for(SomaticData variant : variants)
+        {
+            DriverImpact driverImpact = DriverImpact.select(variant.type(), variant.variantImpact().CanonicalCodingEffect);
+            Integer count = map.get(driverImpact);
+            map.put(driverImpact, count != null ? count + 1 : 1);
+        }
+
+        return map;
     }
 }

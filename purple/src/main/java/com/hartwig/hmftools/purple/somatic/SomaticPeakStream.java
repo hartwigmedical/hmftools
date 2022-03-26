@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.purple.SomaticVariantCache;
 import com.hartwig.hmftools.purple.fitting.ModifiableWeightedPloidy;
 import com.hartwig.hmftools.purple.fitting.PeakModel;
 import com.hartwig.hmftools.purple.fitting.PeakModelFactory;
@@ -29,75 +30,42 @@ public class SomaticPeakStream
     private final SomaticFitConfig mSomaticFitConfig;
     private final PurpleConfig mConfig;
 
-    private int mIndelCount;
-    private int mSnpCount;
-
     public SomaticPeakStream(final PurpleConfig config)
     {
         mSomaticFitConfig = config.SomaticFitting;
         mConfig = config;
     }
 
-    public int indelCount()
+    public List<PeakModel> somaticPeakModel(final SomaticVariantCache somaticVariants)
     {
-        return mIndelCount;
-    }
-
-    public int snpCount()
-    {
-        return mSnpCount;
-    }
-
-    public List<PeakModel> somaticPeakModel(
-            final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers,
-            final List<FittedRegion> fittedRegions, final String somaticVcfFile)
-    {
-        mIndelCount = 0;
-        mSnpCount = 0;
-
-        if(somaticVcfFile.isEmpty())
+        if(!somaticVariants.hasData())
             return Lists.newArrayList();
 
-        try (VCFFileReader vcfReader = new VCFFileReader(new File(somaticVcfFile), false))
+        final List<ModifiableWeightedPloidy> weightedPloidies = newArrayList();
+
+        for(SomaticData variant : somaticVariants.variants())
         {
-            // gather up passing variants less than max ploidy
-            final List<ModifiableWeightedPloidy> weightedPloidies = newArrayList();
+            if(!variant.isPass())
+                continue;
 
-            final SomaticPurityEnrichment somaticPurityEnrichment = new SomaticPurityEnrichment(
-                    mConfig.Version, mConfig.TumorId, purityAdjuster, copyNumbers, fittedRegions);
+            if(variant.variantCopyNumber() >= mSomaticFitConfig.clonalityMaxPloidy())
+                continue;
 
-            for(VariantContext context : vcfReader)
+            if(!HumanChromosome.contains(variant.chromosome()) || !HumanChromosome.fromString(variant.chromosome()).isAutosome())
+                continue;
+
+            AllelicDepth depth = variant.tumorAlleleDepth();
+
+            if(depth != null)
             {
-                somaticPurityEnrichment.processVariant(context);
-
-                VariantContextDecorator decorator = new VariantContextDecorator(context);
-
-                if(Doubles.lessThan(decorator.variantCopyNumber(), mSomaticFitConfig.clonalityMaxPloidy())
-                        && decorator.isPass()
-                        && HumanChromosome.contains(decorator.chromosome()) && HumanChromosome.fromString(decorator.chromosome()).isAutosome())
-                {
-                    AllelicDepth depth = decorator.allelicDepth(mConfig.TumorId);
-                    weightedPloidies.add(ModifiableWeightedPloidy.create()
-                            .from(depth)
-                            .setPloidy(decorator.variantCopyNumber())
-                            .setWeight(1));
-                }
-
-                if(decorator.isPass())
-                {
-                    if(decorator.type() == VariantType.INDEL)
-                    {
-                        mIndelCount++;
-                    }
-                    else
-                    {
-                        mSnpCount++;
-                    }
-                }
+                weightedPloidies.add(ModifiableWeightedPloidy.create()
+                        .from(depth)
+                        .setPloidy(variant.variantCopyNumber())
+                        .setWeight(1));
             }
-
-            return new PeakModelFactory(
-                    mSomaticFitConfig.clonalityMaxPloidy(), mSomaticFitConfig.clonalityBinWidth()).model(weightedPloidies);
         }
+
+        return new PeakModelFactory(
+                mSomaticFitConfig.clonalityMaxPloidy(), mSomaticFitConfig.clonalityBinWidth()).model(weightedPloidies);
     }
 }

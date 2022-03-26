@@ -8,6 +8,7 @@ import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
@@ -20,7 +21,6 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.test.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
 
-import org.apache.commons.compress.utils.Lists;
 import org.junit.Test;
 
 public class ReportablePredicateTest {
@@ -41,8 +41,13 @@ public class ReportablePredicateTest {
 
         ReportablePredicate oncoPredicate = new ReportablePredicate(ONCO, genePanel.driverGenes());
 
-        assertTrue(oncoPredicate.test(variant));
-        assertFalse(oncoPredicate.test(variantLargeRepeatCount));
+        assertTrue(oncoPredicate.test(
+                variant.gene(), variant.type(), variant.repeatCount(), variant.isHotspot(),
+                variant.canonicalCodingEffect(), variant.canonicalEffect()));
+
+        assertFalse(oncoPredicate.test(
+                variantLargeRepeatCount.gene(), variantLargeRepeatCount.type(), variantLargeRepeatCount.repeatCount(),
+                variantLargeRepeatCount.isHotspot(), variantLargeRepeatCount.canonicalCodingEffect(), variantLargeRepeatCount.canonicalEffect()));
     }
 
     private DriverGenePanel loadTestPanel()

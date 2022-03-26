@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
-import com.hartwig.hmftools.purple.config.ReferenceData;
 import com.hartwig.hmftools.purple.config.TargetRegionsData;
 
 public class TumorMutationalLoad
@@ -27,7 +25,7 @@ public class TumorMutationalLoad
         return mTargetRegions.calcTmb(mBurden);
     }
 
-    public void processVariant(final VariantContextDecorator variant)
+    public void processVariant(final SomaticData variant)
     {
         if(mTargetRegions.hasTargetRegions() && !mTargetRegions.inTargetRegions(variant.chromosome(), variant.position()))
             return;

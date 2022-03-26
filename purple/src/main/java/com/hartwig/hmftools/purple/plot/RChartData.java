@@ -9,15 +9,12 @@ import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.purple.somatic.SomaticData;
 
 import htsjdk.variant.variantcontext.CommonInfo;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -39,9 +36,9 @@ public class RChartData
         mFilename = outputDirectory + File.separator + tumorSample + ".purple.somatic.hist.tsv";
     }
 
-    public void processVariant(final VariantContext somaticVariant)
+    public void processVariant(final SomaticData variant)
     {
-        somaticVariantCopyNumberPdf(somaticVariant);
+        somaticVariantCopyNumberPdf(variant.newContext());
     }
 
     public void write() throws IOException
@@ -83,12 +80,6 @@ public class RChartData
 
         final String key = variantCopyNumberBucket + ">" + copyNumberBucket;
         mSomaticHistogram.computeIfAbsent(key, x -> new AtomicInteger()).incrementAndGet();
-    }
-
-    private static boolean isPassing(final VariantContext somaticVariant)
-    {
-        final Set<String> filters = somaticVariant.getFilters();
-        return filters.isEmpty() || (filters.size() == 1 && filters.contains("PASS"));
     }
 
     static int bucket(double value, double binWidth)

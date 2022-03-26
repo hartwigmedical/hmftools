@@ -1,0 +1,132 @@
+package com.hartwig.hmftools.purple;
+
+import static com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact.VAR_TRANS_IMPACT_ANNOATATION;
+import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
+
+import java.io.File;
+import java.util.List;
+
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
+import com.hartwig.hmftools.common.variant.filter.NTFilter;
+import com.hartwig.hmftools.common.variant.filter.SGTFilter;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.purple.config.PurpleConfig;
+import com.hartwig.hmftools.purple.somatic.HotspotEnrichment;
+import com.hartwig.hmftools.purple.somatic.SomaticData;
+import com.hartwig.hmftools.purple.somatic.SomaticPurityEnrichment;
+
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.filter.CompoundFilter;
+import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeader;
+
+public class SomaticVariantCache
+{
+    private final PurpleConfig mConfig;
+
+    private final CompoundFilter mFilter;
+
+    private final List<SomaticData> mVariants;
+    private final List<SomaticData> mFittingVariants; // pass and SNVs only
+
+    private VCFHeader mVcfHeader;
+
+    // counts for plot & chart down-sampling
+    private int mIndelCount;
+    private int mSnpCount;
+
+    public SomaticVariantCache(final PurpleConfig config)
+    {
+        mConfig = config;
+
+        mFilter = new CompoundFilter(true);
+        mFilter.add(new SGTFilter());
+        mFilter.add(new HumanChromosomeFilter());
+        mFilter.add(new NTFilter());
+
+        mVariants = Lists.newArrayList();
+        mFittingVariants = Lists.newArrayList();
+        mIndelCount = 0;
+        mSnpCount = 0;
+        mVcfHeader = null;
+    }
+
+    public boolean hasData() { return !mVariants.isEmpty(); }
+    public List<SomaticData> variants() { return mVariants; }
+    public List<SomaticData> fittingVariants() { return mFittingVariants; }
+
+    public int snpCount() { return mSnpCount; }
+    public int indelCount() { return mIndelCount; }
+
+    public void loadSomatics(final String somaticVcf, final ListMultimap<Chromosome,VariantHotspot> somaticHotspots)
+    {
+        if(somaticVcf.isEmpty())
+            return;
+
+        // final SomaticVariantFactory factory = new SomaticVariantFactory(new PassingVariantFilter(), new SGTFilter());
+
+        final HotspotEnrichment hotspotEnrichment = new HotspotEnrichment(somaticHotspots, true);
+
+        VCFFileReader vcfReader = new VCFFileReader(new File(somaticVcf), false);
+        mVcfHeader = vcfReader.getHeader();
+
+        for(VariantContext variantContext : vcfReader)
+        {
+            SomaticData variant = new SomaticData(variantContext, mConfig.TumorId);
+            mVariants.add(variant);
+
+            // hotspot status is used in fitting as well as during and for enrichment
+            hotspotEnrichment.processVariant(variantContext);
+
+            if(isFittingCandidate(variant))
+                mFittingVariants.add(variant);
+
+            if(variant.isPass())
+            {
+                if(variant.type() == VariantType.INDEL)
+                    mIndelCount++;
+                else
+                    mSnpCount++;
+            }
+        }
+
+        PPL_LOGGER.info("load somatic variants({} pass={}) from {}", mVariants.size(), mFittingVariants.size(), somaticVcf);
+    }
+
+    public VCFHeader getVcfHeader() { return mVcfHeader; }
+
+    public void purityEnrich(final SomaticPurityEnrichment purityEnrichment)
+    {
+        mVariants.forEach(x -> purityEnrichment.processVariant(x.context()));
+    }
+
+    private boolean isFittingCandidate(final SomaticData variant)
+    {
+        if(variant.type() != VariantType.SNP)
+            return false;
+
+        if(!variant.isPass())
+            return false;
+
+        if(!mFilter.test(variant.context()))
+            return false;
+
+        if(!hasTumorDepth(variant))
+            return false;
+
+        return true;
+    }
+
+    private boolean hasTumorDepth(final SomaticData variant)
+    {
+        if(!mConfig.runTumor() || !variant.hasAlleleDepth())
+            return false;
+
+        return variant.tumorAlleleDepth().totalReadCount() > 0;
+    }
+}

@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.purple.drivers;
 
+import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT;
+import static com.hartwig.hmftools.purple.TestUtils.createVariant;
+
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Lists;
@@ -12,9 +15,8 @@ import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsDriverImpactL
 import com.hartwig.hmftools.common.drivercatalog.dnds.ModifiableDndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.test.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.purple.somatic.SomaticData;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
@@ -28,25 +30,25 @@ public class OncoDriversTest
     private static final int INDEL_SAMPLE_COUNT = 1000;
     private static final double PASSENGERS_PER_MUTATION = 9.26e-08;
 
-    private SomaticVariant frameshiftHotspot;
-    private SomaticVariant frameshiftNearHotspot;
-    private SomaticVariant inframe;
-    private SomaticVariant unKnownInframe;
-    private SomaticVariant frameshift;
-    private SomaticVariant missense;
+    private SomaticData frameshiftHotspot;
+    private SomaticData frameshiftNearHotspot;
+    private SomaticData inframe;
+    private SomaticData unKnownInframe;
+    private SomaticData frameshift;
+    private SomaticData missense;
     private DndsDriverGeneLikelihood likelihood;
 
     @Before
     public void setup()
     {
         likelihood = createGeneLikelihood(0.002, 0.003, 0.002, 0.001);
-        frameshiftHotspot = create(VariantType.INDEL, CodingEffect.NONSENSE_OR_FRAMESHIFT, 3, Hotspot.HOTSPOT);
-        frameshiftNearHotspot = create(VariantType.INDEL, CodingEffect.NONSENSE_OR_FRAMESHIFT, 3, Hotspot.NEAR_HOTSPOT);
+        frameshiftHotspot = createVariant(VariantType.INDEL, CodingEffect.NONSENSE_OR_FRAMESHIFT, 3, HOTSPOT, 0.5);
+        frameshiftNearHotspot = createVariant(VariantType.INDEL, CodingEffect.NONSENSE_OR_FRAMESHIFT, 3, Hotspot.NEAR_HOTSPOT, 0.5);
 
-        inframe = create(VariantType.INDEL, CodingEffect.MISSENSE, 3, Hotspot.NON_HOTSPOT);
-        unKnownInframe = create(VariantType.INDEL, CodingEffect.MISSENSE, OncoDrivers.MAX_REPEAT_COUNT + 1, Hotspot.NON_HOTSPOT);
-        frameshift = create(VariantType.INDEL, CodingEffect.NONSENSE_OR_FRAMESHIFT, 3, Hotspot.NON_HOTSPOT);
-        missense = create(VariantType.SNP, CodingEffect.MISSENSE, 0, Hotspot.NON_HOTSPOT);
+        inframe = createVariant(VariantType.INDEL, CodingEffect.MISSENSE, 3, Hotspot.NON_HOTSPOT, 0.5);
+        unKnownInframe = createVariant(VariantType.INDEL, CodingEffect.MISSENSE, OncoDrivers.MAX_REPEAT_COUNT + 1, Hotspot.NON_HOTSPOT, 0.5);
+        frameshift = createVariant(VariantType.INDEL, CodingEffect.NONSENSE_OR_FRAMESHIFT, 3, Hotspot.NON_HOTSPOT, 0.5);
+        missense = createVariant(VariantType.SNP, CodingEffect.MISSENSE, 0, Hotspot.NON_HOTSPOT, 0.5);
     }
 
     @Test
@@ -122,19 +124,6 @@ public class OncoDriversTest
         return ImmutableDndsDriverImpactLikelihood.builder()
                 .driversPerSample(pDriver)
                 .passengersPerMutation(PASSENGERS_PER_MUTATION)
-                .build();
-    }
-
-    @NotNull
-    private static SomaticVariant create(@NotNull VariantType type, @NotNull CodingEffect codingEffect, int repeatCount,
-            @NotNull Hotspot hotspot)
-    {
-        return SomaticVariantTestBuilderFactory.create()
-                .type(type)
-                .canonicalCodingEffect(codingEffect)
-                .repeatCount(repeatCount)
-                .hotspot(hotspot)
-                .biallelic(false)
                 .build();
     }
 

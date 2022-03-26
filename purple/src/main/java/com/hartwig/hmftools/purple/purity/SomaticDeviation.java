@@ -11,7 +11,7 @@ import com.google.common.cache.RemovalNotification;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.purple.somatic.SomaticData;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
 import org.apache.logging.log4j.LogManager;
@@ -33,7 +33,7 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer>
                 {
 
                     @Override
-                    public Integer load(@NotNull final Double p)
+                    public Integer load(final Double p)
                     {
                         final BinomialDistribution dist = new BinomialDistribution(TRIALS, Math.min(1, p));
                         return dist.inverseCumulativeProbability(0.999);
@@ -41,18 +41,18 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer>
                 });
     }
 
-    public double deviationFromMax(@NotNull final PurityAdjuster purityAdjuster, @NotNull final FittedRegion region,
-            @NotNull final SomaticVariant variant)
+    public double deviationFromMax(final PurityAdjuster purityAdjuster, final FittedRegion region, final SomaticData variant)
     {
         double normalCopyNumber = purityAdjuster.germlineCopyNumber(region.chromosome());
         double constrainedMajorAllelePloidy = Math.max(0, region.majorAlleleCopyNumber());
         double constrainedTumorCopyNumber = Math.max(0, region.tumorCopyNumber());
 
-        return deviationFromMax(purityAdjuster, normalCopyNumber, variant, constrainedTumorCopyNumber, constrainedMajorAllelePloidy);
+        return deviationFromMax(
+                purityAdjuster, normalCopyNumber, variant.tumorAlleleDepth(), constrainedTumorCopyNumber, constrainedMajorAllelePloidy);
     }
 
     @VisibleForTesting
-    double deviationFromMax(@NotNull final PurityAdjuster purityAdjuster, double normalCopyNumber, @NotNull final AllelicDepth depth,
+    double deviationFromMax(final PurityAdjuster purityAdjuster, double normalCopyNumber, final AllelicDepth depth,
             double tumorCopyNumber, double tumorMajorAllelePloidy)
     {
         double maxConceivablePloidy =
@@ -63,7 +63,7 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer>
     }
 
     @VisibleForTesting
-    double maxConceivablePloidy(@NotNull final PurityAdjuster purityAdjuster, double normalCopyNumber, @NotNull final AllelicDepth depth,
+    double maxConceivablePloidy(final PurityAdjuster purityAdjuster, double normalCopyNumber, final AllelicDepth depth,
             double tumorCopyNumber, double tumorMajorAllelePloidy)
     {
         final int maxConceivableReads =
@@ -74,7 +74,7 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer>
     }
 
     @VisibleForTesting
-    int maxConceivableReads(@NotNull final PurityAdjuster purityAdjuster, double normalCopyNumber, @NotNull final AllelicDepth depth,
+    int maxConceivableReads(final PurityAdjuster purityAdjuster, double normalCopyNumber, final AllelicDepth depth,
             double tumorCopyNumber, double tumorMajorAllelePloidy)
     {
         double expectedVAF = purityAdjuster.expectedFrequency(normalCopyNumber, 0, tumorCopyNumber, tumorMajorAllelePloidy);
@@ -83,7 +83,7 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer>
     }
 
     @Override
-    public void onRemoval(@NotNull final RemovalNotification<Double, Integer> removalNotification)
+    public void onRemoval(final RemovalNotification<Double, Integer> removalNotification)
     {
         if(!mErrorLogged)
         {

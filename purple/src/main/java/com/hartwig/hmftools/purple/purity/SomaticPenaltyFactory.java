@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.purple.purity;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
@@ -8,22 +9,18 @@ import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.purple.somatic.SomaticData;
 
 import org.jetbrains.annotations.NotNull;
 
-final class SomaticPenaltyFactory
+public final class SomaticPenaltyFactory
 {
-    private SomaticPenaltyFactory()
-    {
-    }
-
-    public static double penalty(
-            @NotNull PurityAdjuster purityAdjuster, @NotNull Collection<FittedRegion> regions,
-            @NotNull Collection<SomaticVariant> variants)
+    public static double calcPenalty(
+            final PurityAdjuster purityAdjuster, final Collection<FittedRegion> regions, final List<SomaticData> variants)
     {
         final SomaticDeviation somaticDeviation = SomaticDeviation.INSTANCE;
 
-        final GenomePositionSelector<SomaticVariant> variantSelector = GenomePositionSelectorFactory.create(variants);
+        final GenomePositionSelector<SomaticData> variantSelector = GenomePositionSelectorFactory.create(variants);
         double score = 0;
         int variantCount = 0;
 
@@ -38,7 +35,7 @@ final class SomaticPenaltyFactory
         return variantCount == 0 ? 0 : score / variantCount;
     }
 
-    private static class SomaticVariantConsumer implements Consumer<SomaticVariant>
+    private static class SomaticVariantConsumer implements Consumer<SomaticData>
     {
         final PurityAdjuster mPurityAdjuster;
         private final SomaticDeviation mSomaticDeviation;
@@ -46,8 +43,8 @@ final class SomaticPenaltyFactory
         private double mScore;
         private int mVariants;
 
-        private SomaticVariantConsumer(final PurityAdjuster purityAdjuster, final SomaticDeviation somaticDeviation,
-                final FittedRegion region)
+        private SomaticVariantConsumer(
+                final PurityAdjuster purityAdjuster, final SomaticDeviation somaticDeviation, final FittedRegion region)
         {
             mPurityAdjuster = purityAdjuster;
             mSomaticDeviation = somaticDeviation;
@@ -55,7 +52,7 @@ final class SomaticPenaltyFactory
         }
 
         @Override
-        public void accept(final SomaticVariant variant)
+        public void accept(final SomaticData variant)
         {
             mScore += mSomaticDeviation.deviationFromMax(mPurityAdjuster, mRegion, variant);
             mVariants++;

@@ -3,56 +3,61 @@ package com.hartwig.hmftools.purple.drivers;
 import java.util.Comparator;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverImpact;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.purple.somatic.SomaticData;
 
-public class TsgImpactComparator implements Comparator<SomaticVariant>
+public class TsgImpactComparator implements Comparator<SomaticData>
 {
     @Override
-    public int compare(final SomaticVariant o1, final SomaticVariant o2)
+    public int compare(final SomaticData o1, final SomaticData o2)
     {
         int firstWins = -1;
         int secondWins = 1;
 
-        if(o1.canonicalCodingEffect() == o2.canonicalCodingEffect() && o1.type() == o2.type())
+        CodingEffect codingEffect1 = o1.variantImpact().CanonicalCodingEffect;
+        CodingEffect codingEffect2 = o2.variantImpact().CanonicalCodingEffect;
+
+        if(codingEffect1 == codingEffect2 && o1.type() == o2.type())
             return 0;
 
-        if(DriverImpact.isFrameshift(o1))
+        if(DriverImpact.isFrameshift(o1.type(), codingEffect1))
         {
             return firstWins;
         }
-        else if(DriverImpact.isFrameshift(o2))
+        else if(DriverImpact.isFrameshift(o2.type(), codingEffect2))
         {
             return secondWins;
         }
 
-        if(DriverImpact.isNonsense(o1))
+        if(DriverImpact.isNonsense(o1.type(), codingEffect1))
         {
             return firstWins;
         }
-        else if(DriverImpact.isNonsense(o2))
+        else if(DriverImpact.isNonsense(o2.type(), codingEffect2))
         {
             return secondWins;
         }
 
-        if(DriverImpact.isSplice(o1))
+        if(DriverImpact.isSplice(codingEffect1))
         {
             return firstWins;
         }
-        else if(DriverImpact.isSplice(o2))
+        else if(DriverImpact.isSplice(codingEffect2))
         {
             return secondWins;
         }
 
-        if(DriverImpact.isMissense(o1))
+        if(DriverImpact.isMissense(o1.type(), codingEffect1))
         {
             return firstWins;
         }
-        else if(DriverImpact.isMissense(o2))
+        else if(DriverImpact.isMissense(o2.type(), codingEffect2))
         {
             return secondWins;
         }
 
-        if(o1.canonicalCodingEffect() == o2.canonicalCodingEffect())
+        if(codingEffect1 == codingEffect2)
             return 0;
 
         throw new UnsupportedOperationException();

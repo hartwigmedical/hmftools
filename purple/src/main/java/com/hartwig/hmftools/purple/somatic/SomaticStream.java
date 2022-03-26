@@ -5,18 +5,15 @@ import static com.hartwig.hmftools.common.variant.VariantHeader.REPORTED_FLAG;
 import static com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact.VAR_TRANS_IMPACT_ANNOATATION;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.variant.VariantHeader;
+import com.hartwig.hmftools.purple.SomaticVariantCache;
 import com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -24,8 +21,6 @@ import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.purple.config.ReferenceData;
@@ -35,24 +30,21 @@ import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.plot.RChartData;
 
-import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
-import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 
-public class SomaticStream implements Consumer<VariantContext>
+public class SomaticStream
 {
     private final ReferenceData mReferenceData;
     private final PurpleConfig mConfig;
 
-    private final String mInputVCF;
     private boolean mEnabled;
     private final String mOutputVCF;
     private final TumorMutationalLoad mTumorMutationalLoad;
     private final MicrosatelliteIndels mMicrosatelliteIndels;
     private final SomaticVariantDrivers mDrivers;
-    private final SomaticVariantFactory mSomaticVariantFactory;
+    private final SomaticVariantCache mSomaticVariants;
     private final RChartData mRChartData;
     private final DriverGenePanel mGenePanel;
     private final List<PeakModel> mPeakModel;
@@ -69,8 +61,8 @@ public class SomaticStream implements Consumer<VariantContext>
     private static final int CHART_DOWNSAMPLE_FACTOR = 25000; // eg for 50K variants, only every second will be kept for plotting
 
     public SomaticStream(
-            final PurpleConfig config, final ReferenceData referenceData,
-            int snpCount, int indelCount, final List<PeakModel> peakModel, final String somaticVcfFilename)
+            final PurpleConfig config, final ReferenceData referenceData, final SomaticVariantCache somaticVariants,
+            final List<PeakModel> peakModel)
     {
         mReferenceData = referenceData;
         mConfig = config;
@@ -78,18 +70,17 @@ public class SomaticStream implements Consumer<VariantContext>
         mGenePanel = referenceData.DriverGenes;
         mPeakModel = peakModel;
         mOutputVCF = config.OutputDir + config.TumorId + PURPLE_SOMATIC_VCF_SUFFIX;
-        mEnabled = !somaticVcfFilename.isEmpty();
-        mInputVCF = somaticVcfFilename;
+        mEnabled = somaticVariants.hasData();
         mTumorMutationalLoad = new TumorMutationalLoad(mReferenceData.TargetRegions);
         mMicrosatelliteIndels = new MicrosatelliteIndels(mReferenceData.TargetRegions);
         mDrivers = new SomaticVariantDrivers(mGenePanel);
-        mSomaticVariantFactory = SomaticVariantFactory.passOnlyInstance();
+        mSomaticVariants = somaticVariants;
         mRChartData = new RChartData(config.OutputDir, config.TumorId);
 
         mReportedGenes = Sets.newHashSet();
         mDownsampledVariants = Lists.newArrayList();
-        mSnpMod = snpCount <= CHART_DOWNSAMPLE_FACTOR ? 1 : snpCount / CHART_DOWNSAMPLE_FACTOR;
-        mIndelMod = indelCount <= CHART_DOWNSAMPLE_FACTOR ? 1 : indelCount / CHART_DOWNSAMPLE_FACTOR;
+        mSnpMod = somaticVariants.snpCount() <= CHART_DOWNSAMPLE_FACTOR ? 1 : somaticVariants.snpCount() / CHART_DOWNSAMPLE_FACTOR;
+        mIndelMod = somaticVariants.indelCount() <= CHART_DOWNSAMPLE_FACTOR ? 1 : somaticVariants.indelCount() / CHART_DOWNSAMPLE_FACTOR;
 
         mVcfWriter = null;
     }
@@ -124,9 +115,9 @@ public class SomaticStream implements Consumer<VariantContext>
         return mEnabled ? TumorMutationalStatus.fromLoad(tumorMutationalLoad()) : TumorMutationalStatus.UNKNOWN;
     }
 
-    public List<DriverCatalog> drivers(final Map<String,List<GeneCopyNumber>> geneCopyNumberMap)
+    public List<DriverCatalog> buildDrivers(final Map<String,List<GeneCopyNumber>> geneCopyNumberMap)
     {
-        return mDrivers.build(geneCopyNumberMap);
+        return mDrivers.buildCatalog(geneCopyNumberMap);
     }
 
     public Set<String> reportedGenes()
@@ -144,9 +135,8 @@ public class SomaticStream implements Consumer<VariantContext>
 
         try
         {
-            VCFFileReader vcfReader = new VCFFileReader(new File(mInputVCF), false);
-
-            boolean isPaveAnnotated = vcfReader.getFileHeader().hasInfoLine(VAR_TRANS_IMPACT_ANNOATATION);
+            VCFHeader readHeader = mSomaticVariants.getVcfHeader();
+            boolean isPaveAnnotated = readHeader.hasInfoLine(VAR_TRANS_IMPACT_ANNOATATION);
 
             if(!isPaveAnnotated)
             {
@@ -160,20 +150,22 @@ public class SomaticStream implements Consumer<VariantContext>
             final SomaticVariantEnrichment enricher = new SomaticVariantEnrichment(
                     mConfig.RunDrivers, !isPaveAnnotated, mConfig.SomaticFitting.clonalityBinWidth(), mConfig.Version,
                     mConfig.ReferenceId, mConfig.TumorId, mReferenceData, purityAdjuster, copyNumbers, fittedRegions,
-                    mReferenceData.SomaticHotspots, mPeakModel, this::accept);
+                    mReferenceData.SomaticHotspots, mPeakModel);
 
-            final VCFHeader header = enricher.enrichHeader(vcfReader.getFileHeader());
+            final VCFHeader header = enricher.populateHeader(readHeader);
             mVcfWriter.writeHeader(header);
+
+            boolean tumorOnly = mConfig.tumorOnlyMode();
 
             int flushCount = 10000;
             int varCount = 0;
 
-            for(VariantContext context : vcfReader)
+            for(SomaticData variant : mSomaticVariants.variants())
             {
-                if(mConfig.tumorOnlyMode() && context.isFiltered())
+                if(tumorOnly && variant.isFiltered())
                     continue;
 
-                enricher.accept(context);
+                enricher.enrich(variant);
                 ++varCount;
 
                 if(varCount > 0 && (varCount % flushCount) == 0)
@@ -182,7 +174,28 @@ public class SomaticStream implements Consumer<VariantContext>
                 }
             }
 
-            enricher.flush();
+            enricher.flush(); // finalise any enrichment routines with queued variants
+
+            // write enriched variants to VCF
+            for(SomaticData variant : mSomaticVariants.variants())
+            {
+                boolean isValidChromosome = HumanChromosome.contains(variant.chromosome());
+
+                if(isValidChromosome && variant.isPass())
+                {
+                    mTumorMutationalLoad.processVariant(variant);
+                    mMicrosatelliteIndels.processVariant(variant);
+                    checkDrivers(variant, true); // sets reportable flag if applicable
+
+                    mRChartData.processVariant(variant);
+                    checkChartDownsampling(variant);
+                }
+
+                // expect only pass or PON to be loaded into Purple - in tumor-only mode, the PON variants should be dropped
+                if(!tumorOnly || variant.isPass())
+                    mVcfWriter.add(variant.newContext());
+            }
+
             mVcfWriter.close();
             mRChartData.write();
         }
@@ -192,77 +205,18 @@ public class SomaticStream implements Consumer<VariantContext>
         }
     }
 
-    public void accept(final VariantContext context)
+    private void checkDrivers(final SomaticData variant, boolean updateVcf)
     {
-        // post-enrichment processing
-        VariantContextDecorator variant = new VariantContextDecorator(context);
+        boolean reported = mDrivers.checkSomaticVariant(variant);
 
-        boolean isValidChromosome = HumanChromosome.contains(variant.chromosome());
-        boolean isPass = variant.isPass();
-
-        if(isValidChromosome && isPass)
+        if(reported && updateVcf)
         {
-            mTumorMutationalLoad.processVariant(variant);
-            mMicrosatelliteIndels.processVariant(context);
-            checkDrivers(context, variant, true);
-
-            mRChartData.processVariant(context);
-            checkChartDownsampling(variant);
-        }
-
-
-        // expect only pass or PON to be loaded into Purple
-        // in tumor-only mode, the PON variants should be dropped
-        boolean writeToVcf = !mConfig.tumorOnlyMode() || isPass;
-
-        if(writeToVcf)
-            mVcfWriter.add(context);
-    }
-
-    public int loadVariantsForDrivers(final String somaticVcf)
-    {
-        if(somaticVcf.isEmpty())
-            return 0;
-
-        PPL_LOGGER.info("Loading somatic variants from {}", somaticVcf);
-        int variantCount = 0;
-
-        try
-        {
-            VCFFileReader vcfReader = new VCFFileReader(new File(somaticVcf), false);
-
-            for(VariantContext context : vcfReader)
-            {
-                VariantContextDecorator variant = new VariantContextDecorator(context);
-                checkDrivers(context, variant, false);
-                ++variantCount;
-            }
-        }
-        catch(Exception e)
-        {
-            PPL_LOGGER.error("failed to read somatic VCF from file({}): {}", somaticVcf, e.toString());
-        }
-
-        return variantCount;
-    }
-
-    private void checkDrivers(final VariantContext context, final VariantContextDecorator variant, boolean updateVcf)
-    {
-        Optional<SomaticVariant> somaticVariant = mSomaticVariantFactory.createVariant(mConfig.TumorId, context);
-
-        if(somaticVariant.isPresent())
-        {
-            boolean reported = mDrivers.add(somaticVariant.get());
-
-            if(reported && updateVcf)
-            {
-                context.getCommonInfo().putAttribute(REPORTED_FLAG, true);
-                mReportedGenes.add(variant.gene());
-            }
+            variant.newContext().getCommonInfo().putAttribute(REPORTED_FLAG, true);
+            mReportedGenes.add(variant.decorator().gene());
         }
     }
 
-    private void checkChartDownsampling(final VariantContextDecorator variant)
+    private void checkChartDownsampling(final SomaticData variant)
     {
         if(mConfig.Charting.disabled())
             return;
@@ -272,14 +226,14 @@ public class SomaticStream implements Consumer<VariantContext>
             mIndelCount++;
 
             if(mIndelCount % mIndelMod == 0)
-                mDownsampledVariants.add(variant);
+                mDownsampledVariants.add(variant.decorator());
         }
         else
         {
             mSnpCount++;
 
             if(mSnpCount % mSnpMod == 0)
-                mDownsampledVariants.add(variant);
+                mDownsampledVariants.add(variant.decorator());
         }
     }
 }

@@ -1,7 +1,8 @@
 package com.hartwig.hmftools.purple.drivers;
 
+import static com.hartwig.hmftools.common.variant.Hotspot.NON_HOTSPOT;
+import static com.hartwig.hmftools.purple.TestUtils.createVariant;
 import static com.hartwig.hmftools.purple.drivers.TsgDriversTest.countMap;
-import static com.hartwig.hmftools.purple.drivers.TsgDriversTest.create;
 import static com.hartwig.hmftools.purple.drivers.TsgDriversTest.createLikelihood;
 
 import static org.junit.Assert.assertTrue;
@@ -15,8 +16,8 @@ import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood
 import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.purple.somatic.SomaticData;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -44,8 +45,8 @@ public class TsgMultiHitTest {
     public void testMultiHitIsNeverLessThanEquivalentMissense() {
         Map<VariantType,Integer> counts = countMap(83135, 241917);
 
-        SomaticVariant missense = create(VariantType.SNP, CodingEffect.MISSENSE, false, 0.5);
-        SomaticVariant frameshift = create(VariantType.INDEL, CodingEffect.NONSENSE_OR_FRAMESHIFT, false, 0.5);
+        SomaticData missense = createVariant(VariantType.SNP, CodingEffect.MISSENSE, 0, NON_HOTSPOT, 0.5);
+        SomaticData frameshift = createVariant(VariantType.INDEL, CodingEffect.NONSENSE_OR_FRAMESHIFT, 0, NON_HOTSPOT, 0.5);
 
         DriverCatalog multiFrameshift =
                 TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(frameshift, frameshift), counts, counts, null);

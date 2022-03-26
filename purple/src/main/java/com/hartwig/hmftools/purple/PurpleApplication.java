@@ -29,10 +29,13 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import com.beust.jcommander.internal.Sets;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
@@ -53,6 +56,7 @@ import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.region.SegmentFile;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.purple.config.AmberData;
 import com.hartwig.hmftools.purple.config.CobaltData;
@@ -75,6 +79,7 @@ import com.hartwig.hmftools.purple.purity.FittedPurityFactory;
 import com.hartwig.hmftools.purple.recovery.RecoverStructuralVariants;
 import com.hartwig.hmftools.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.purple.somatic.SomaticPeakStream;
+import com.hartwig.hmftools.purple.somatic.SomaticPurityEnrichment;
 import com.hartwig.hmftools.purple.somatic.SomaticStream;
 
 import org.apache.commons.cli.CommandLine;
@@ -177,6 +182,8 @@ public class PurpleApplication
         {
             SampleData sampleData = null;
 
+            final SomaticVariantCache somaticVariantCache = new SomaticVariantCache(mConfig);
+
             if(!mConfig.DriversOnly)
             {
                 // load amber and cobalt sample data
@@ -188,15 +195,15 @@ public class PurpleApplication
                 // load structural and somatic variants
                 final StructuralVariantCache svCache = createStructuralVariantCache(tumorId, sampleDataFiles);
 
-                sampleData = new SampleData(referenceId, tumorId, amberData, cobaltData, svCache);
+                sampleData = new SampleData(referenceId, tumorId, amberData, cobaltData, svCache, somaticVariantCache);
             }
             else
             {
-                sampleData = new SampleData(referenceId, tumorId, null, null, null);
+                sampleData = new SampleData(referenceId, tumorId, null, null, null, somaticVariantCache);
             }
 
             if(mConfig.runTumor())
-                sampleData.loadSomatics(sampleDataFiles.SomaticVcfFile, mReferenceData);
+                somaticVariantCache.loadSomatics(sampleDataFiles.SomaticVcfFile, mReferenceData.SomaticHotspots);
 
             return sampleData;
         }
@@ -309,6 +316,8 @@ public class PurpleApplication
                 amberData.Contamination, bestFit, amberGender, cobaltGender, copyNumbers, geneCopyNumbers,
                 cobaltChromosomes.germlineAberrations(), amberData.AverageTumorDepth);
 
+        final SomaticVariantCache somaticCache = sampleData.SomaticCache;
+
         SomaticStream somaticStream = null;
         final List<PeakModel> somaticPeaks = Lists.newArrayList();
 
@@ -317,16 +326,19 @@ public class PurpleApplication
             PPL_LOGGER.info("modelling somatic peaks");
             final SomaticPeakStream somaticPeakStream = new SomaticPeakStream(mConfig);
 
-            somaticPeaks.addAll(somaticPeakStream.somaticPeakModel(
-                    purityAdjuster, copyNumbers, enrichedFittedRegions, sampleDataFiles.SomaticVcfFile));
+            final SomaticPurityEnrichment somaticPurityEnrichment = new SomaticPurityEnrichment(
+                    mConfig.Version, mConfig.TumorId, purityAdjuster, copyNumbers, fittedRegions);
+
+            sampleData.SomaticCache.purityEnrich(somaticPurityEnrichment);
+
+            List<PeakModel> peakModelValues = somaticPeakStream.somaticPeakModel(somaticCache);
+            somaticPeaks.addAll(peakModelValues);
 
             // at the moment the enriching of somatic variants is also contributing to the purity context, so it cannot be done afterwards
             // if the read and write process were split then so could the fitting and enriching steps
             PPL_LOGGER.info("enriching somatic variants");
 
-            somaticStream = new SomaticStream(
-                    mConfig, mReferenceData, somaticPeakStream.snpCount(), somaticPeakStream.indelCount(),
-                    somaticPeaks, sampleDataFiles.SomaticVcfFile);
+            somaticStream = new SomaticStream(mConfig, mReferenceData, somaticCache, somaticPeaks);
 
             somaticStream.processAndWrite(purityAdjuster, copyNumbers, enrichedFittedRegions);
 
@@ -411,12 +423,12 @@ public class PurpleApplication
         {
             String somaticVcf = purpleDataPath + tumorSample + PURPLE_SOMATIC_VCF_SUFFIX;
 
-            // the counts passed in here are only for down-sampling for charting, which is not relevant for drivers
-            somaticStream = new SomaticStream(
-                    mConfig, mReferenceData, 0, 0, null, somaticVcf);
+            SomaticVariantCache somaticVariantCache = new SomaticVariantCache(mConfig);
+            ListMultimap<Chromosome, VariantHotspot> emptyHotspots = ArrayListMultimap.create(); // already annotated in VCF
+            somaticVariantCache.loadSomatics(somaticVcf, emptyHotspots);
 
-            int somaticVariantCount = somaticStream.loadVariantsForDrivers(somaticVcf);
-            PPL_LOGGER.info("loaded {} somatic variants", somaticVariantCount);
+            // the counts passed in here are only for down-sampling for charting, which is not relevant for drivers
+            somaticStream = new SomaticStream(mConfig, mReferenceData, somaticVariantCache, null);
         }
 
         if(mConfig.runGermline())
@@ -459,7 +471,7 @@ public class PurpleApplication
 
         if(mConfig.runTumor())
         {
-            somaticDriverCatalog.addAll(somaticStream.drivers(geneCopyNumberMap));
+            somaticDriverCatalog.addAll(somaticStream.buildDrivers(geneCopyNumberMap));
 
             final CNADrivers cnaDrivers = new CNADrivers(purityContext.qc().status(), mReferenceData.DriverGenes);
 
@@ -532,7 +544,7 @@ public class PurpleApplication
                 mConfig.tumorOnlyMode(),
                 fittedRegionFactory,
                 observedRegions,
-                sampleData.FittingSomaticVariants);
+                sampleData.SomaticCache.fittingVariants());
 
         fitCandidates.addAll(fittedPurityFactory.all());
 
@@ -541,7 +553,7 @@ public class PurpleApplication
                 sampleData.Amber.minSomaticTotalReadCount(),
                 sampleData.Amber.maxSomaticTotalReadCount(),
                 fitCandidates,
-                sampleData.FittingSomaticVariants,
+                sampleData.SomaticCache.fittingVariants(),
                 structuralVariants,
                 observedRegions);
 

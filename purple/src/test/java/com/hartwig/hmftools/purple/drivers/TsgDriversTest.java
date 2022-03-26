@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.purple.drivers;
 
+import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT;
+import static com.hartwig.hmftools.common.variant.Hotspot.NON_HOTSPOT;
+import static com.hartwig.hmftools.purple.TestUtils.createVariant;
+
 import static org.junit.Assert.assertEquals;
 
 import java.util.Map;
@@ -12,12 +16,9 @@ import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsDriverImpactLikelihood;
-import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.test.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.purple.somatic.SomaticData;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
@@ -27,11 +28,11 @@ import org.junit.Test;
 public class TsgDriversTest {
 
     private DndsDriverGeneLikelihood geneLikelihood;
-    private SomaticVariant missense;
-    private SomaticVariant nonsense;
-    private SomaticVariant indel;
-    private SomaticVariant hotspot;
-    private SomaticVariant biallelic;
+    private SomaticData missense;
+    private SomaticData nonsense;
+    private SomaticData indel;
+    private SomaticData hotspot;
+    private SomaticData biallelic;
 
     @Before
     public void setup() {
@@ -47,11 +48,11 @@ public class TsgDriversTest {
                 .indel(indelLikelihood)
                 .build();
 
-        missense = create(VariantType.SNP, CodingEffect.MISSENSE, false, 0.5);
-        nonsense = create(VariantType.SNP, CodingEffect.NONSENSE_OR_FRAMESHIFT, false, 0.5);
-        indel = create(VariantType.INDEL, CodingEffect.NONSENSE_OR_FRAMESHIFT, false, 0.5);
-        hotspot = create(VariantType.INDEL, CodingEffect.MISSENSE, true, 0.5);
-        biallelic = create(VariantType.MNP, CodingEffect.NONSENSE_OR_FRAMESHIFT, false, 0.9);
+        missense = createVariant(VariantType.SNP, CodingEffect.MISSENSE, 0, NON_HOTSPOT, 0.5);
+        nonsense = createVariant(VariantType.SNP, CodingEffect.NONSENSE_OR_FRAMESHIFT, 0, NON_HOTSPOT, 0.5);
+        indel = createVariant(VariantType.INDEL, CodingEffect.NONSENSE_OR_FRAMESHIFT, 0, NON_HOTSPOT, 0.5);
+        hotspot = createVariant(VariantType.INDEL, CodingEffect.MISSENSE, 0, HOTSPOT, 0.5);
+        biallelic = createVariant(VariantType.MNP, CodingEffect.NONSENSE_OR_FRAMESHIFT, 0, NON_HOTSPOT, 0.9);
     }
 
     @Test
@@ -116,20 +117,6 @@ public class TsgDriversTest {
         return ImmutableDndsDriverImpactLikelihood.builder()
                 .driversPerSample(pDriver)
                 .passengersPerMutation(pVariantNonDriver)
-                .build();
-    }
-
-    @NotNull
-    static SomaticVariant create(@NotNull VariantType type, @NotNull CodingEffect codingEffect, boolean hotspot, double vaf) {
-        boolean biallelic = Doubles.greaterOrEqual(2 * vaf, 1.5);
-        return SomaticVariantTestBuilderFactory.create()
-                .type(type)
-                .canonicalCodingEffect(codingEffect)
-                .hotspot(hotspot ? Hotspot.HOTSPOT : Hotspot.NON_HOTSPOT)
-                .adjustedCopyNumber(2)
-                .adjustedVAF(vaf)
-                .variantCopyNumber(2 * vaf)
-                .biallelic(biallelic)
                 .build();
     }
 

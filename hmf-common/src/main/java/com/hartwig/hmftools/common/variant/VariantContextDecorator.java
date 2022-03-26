@@ -153,7 +153,7 @@ public class VariantContextDecorator implements GenomePosition
     @NotNull
     public String gene()
     {
-        return variantImpact().gene();
+        return variantImpact().CanonicalGeneName;
     }
 
     @NotNull
@@ -188,10 +188,7 @@ public class VariantContextDecorator implements GenomePosition
         return mContext.getAttributeAsDouble(PURPLE_AF_INFO, 0);
     }
 
-    public boolean biallelic()
-    {
-        return mContext.getAttributeAsBoolean(PURPLE_BIALLELIC_FLAG, false);
-    }
+    public boolean biallelic() { return mContext.getAttributeAsBoolean(PURPLE_BIALLELIC_FLAG, false); }
 
     public double minorAlleleCopyNumber()
     {

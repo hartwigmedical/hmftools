@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.kde.KernelEstimator;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.purple.somatic.SomaticData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,7 +25,7 @@ final class SomaticKernelDensityPeaks
     private static final double KERNEL_BANDWIDTH = 0.03;
 
     public static Optional<FittedPurity> fitPurity(
-            @NotNull final List<FittedPurity> allCandidates, @NotNull final List<SomaticVariant> variants,
+            final List<FittedPurity> allCandidates, final List<SomaticData> variants,
             int minVariants, double minPeak, double minPurity, double maxPurity)
     {
         if(variants.size() < minVariants)
@@ -97,12 +98,12 @@ final class SomaticKernelDensityPeaks
         return diploidCandidates.stream().filter(x -> Doubles.equal(x.purity(), purity)).findFirst();
     }
 
-    public static List<SomaticPeak> findSomaticPeaks(@NotNull final List<? extends AllelicDepth> variants)
+    public static List<SomaticPeak> findSomaticPeaks(final List<SomaticData> variants)
     {
-        return findPeaks(variants.stream().map(AllelicDepth::alleleFrequency).collect(Collectors.toList()));
+        return findPeaks(variants.stream().map(x -> x.alleleFrequency()).collect(Collectors.toList()));
     }
 
-    public static List<SomaticPeak> findPeaks(@NotNull final List<Double> sample)
+    public static List<SomaticPeak> findPeaks(final List<Double> sample)
     {
         final KernelEstimator estimator = new KernelEstimator(0.001, KERNEL_BANDWIDTH);
         sample.forEach(x -> estimator.addValue(x, 1.0D));

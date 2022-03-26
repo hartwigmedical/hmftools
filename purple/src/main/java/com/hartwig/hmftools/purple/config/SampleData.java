@@ -9,6 +9,7 @@ import java.util.Optional;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.purple.SomaticVariantCache;
 import com.hartwig.hmftools.purple.somatic.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.filter.SGTFilter;
 import com.hartwig.hmftools.purple.StructuralVariantCache;
@@ -25,10 +26,11 @@ public class SampleData
     public final AmberData Amber;
     public final CobaltData Cobalt;
     public final StructuralVariantCache SvCache;
-    public final List<SomaticVariant> FittingSomaticVariants;
+    public final SomaticVariantCache SomaticCache;
 
-    public SampleData(final String referenceId, final String sampleId,
-            final AmberData amber, final CobaltData cobalt, final StructuralVariantCache svCache)
+    public SampleData(
+            final String referenceId, final String sampleId, final AmberData amber, final CobaltData cobalt,
+            final StructuralVariantCache svCache, final SomaticVariantCache somaticCache)
     {
         ReferenceId = referenceId;
         SampleId = sampleId;
@@ -36,9 +38,10 @@ public class SampleData
         Amber = amber;
         Cobalt = cobalt;
         SvCache = svCache;
-        FittingSomaticVariants = Lists.newArrayList();
+        SomaticCache = somaticCache;
     }
 
+    /*
     public void loadSomatics(final String somaticVcf, final ReferenceData referenceData)
     {
         if(somaticVcf.isEmpty())
@@ -72,4 +75,5 @@ public class SampleData
             }
         }
     }
+    */
 }
