@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.vcf;
 
+import static com.hartwig.hmftools.common.variant.VariantHeader.PASS;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -37,7 +39,6 @@ public class VariantVCF implements AutoCloseable
     public static final String READ_CONTEXT_LEFT_FLANK = "RC_LF";
     public static final String READ_CONTEXT_RIGHT_FLANK = "RC_RF";
     public static final String READ_CONTEXT_INDEX = "RC_IDX";
-    public static final String PASS = "PASS";
 
     public static final String DEDUP_MNV_FILTER = "dedupMnv";
     public static final String DEDUP_MIXED_GERMLINE_SOMATIC_FILTER = "dedupMixedGermlineSomatic";

@@ -9,6 +9,7 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class VariantHeader {
 
+    public static final String PASS = "PASS";
     public static final String REPORTED_FLAG = "REPORTED";
     public static final String PURPLE_AF_INFO = "PURPLE_AF";
     public static final String PURPLE_CN_INFO = "PURPLE_CN";

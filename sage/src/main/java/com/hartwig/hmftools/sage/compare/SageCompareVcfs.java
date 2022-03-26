@@ -20,6 +20,7 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import static com.hartwig.hmftools.common.variant.VariantHeader.PASS;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.compare.DiffType.ALLELE_DEPTH;
 import static com.hartwig.hmftools.sage.compare.DiffType.FILTER_DIFF;
@@ -27,11 +28,9 @@ import static com.hartwig.hmftools.sage.compare.DiffType.FILTER_PASS;
 import static com.hartwig.hmftools.sage.compare.DiffType.LOCAL_PHASE;
 import static com.hartwig.hmftools.sage.compare.DiffType.NO_NEW;
 import static com.hartwig.hmftools.sage.compare.DiffType.NO_ORIG;
-import static com.hartwig.hmftools.sage.compare.DiffType.OTHER_VALUE;
 import static com.hartwig.hmftools.sage.compare.DiffType.QUAL;
 import static com.hartwig.hmftools.sage.compare.DiffType.TIER;
 import static com.hartwig.hmftools.sage.compare.DiffType.hasValueDiff;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.PASS;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
