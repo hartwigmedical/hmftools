@@ -53,6 +53,23 @@ public class ReportableVariantFactoryTest {
     }
 
     @Test
+    public void canResolveReportableFromCDKN2A() {
+        double likelihood = 0.6;
+        String gene = "CDKN2A";
+        SomaticVariant variant2 = SomaticVariantTestBuilderFactory.create().reported(true).gene(gene).build();
+
+        DriverCatalog driverCDKN2A = ImmutableDriverCatalog.builder()
+                .from(createCanonicalSomaticMutationEntryForGene(gene, likelihood))
+                .isCanonical(false)
+                .build();
+        List<ReportableVariant> reportable3 =
+                ReportableVariantFactory.toReportableSomaticVariants(Lists.newArrayList(variant2), Lists.newArrayList(driverCDKN2A));
+
+        assertEquals(1, reportable3.size());
+        assertEquals("CDKN2A (P14ARF)", reportable3.get(0).gene());
+    }
+
+    @Test
     public void canResolveReportableFromNonCanonicalDrivers() {
         String gene = "gene";
         SomaticVariant variant = SomaticVariantTestBuilderFactory.create().reported(true).gene(gene).build();
