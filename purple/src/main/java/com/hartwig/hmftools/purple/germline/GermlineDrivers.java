@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.purple.germline;
 
-import static java.util.stream.Collectors.counting;
-import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
@@ -10,9 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.DriverImpact;
@@ -20,15 +18,9 @@ import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.genome.region.TranscriptRegion;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import htsjdk.variant.variantcontext.VariantContext;
 
 public class GermlineDrivers
 {
@@ -40,10 +32,9 @@ public class GermlineDrivers
                 .filter(DriverGene::reportGermline).collect(toMap(DriverGene::gene, DriverGene::likelihoodType));
     }
 
-    public List<DriverCatalog> findDrivers(final List<VariantContext> variants, final Map<String,List<GeneCopyNumber>> geneCopyNumberMap)
+    public List<DriverCatalog> findDrivers(final List<GermlineVariant> variants, final Map<String,List<GeneCopyNumber>> geneCopyNumberMap)
     {
-        final List<VariantContextDecorator> decoratedVariants = variants.stream().map(VariantContextDecorator::new).collect(toList());
-        final Set<String> genes = decoratedVariants.stream().map(VariantContextDecorator::gene).collect(toSet());
+        final Set<String> genes = variants.stream().map(GermlineVariant::gene).collect(toSet());
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
         for(String gene : genes)
@@ -52,7 +43,7 @@ public class GermlineDrivers
             GeneCopyNumber geneCopyNumber = geneCopyNumberMap.get(gene).get(0);
 
             DriverCategory category = mDriverCatalogMap.get(gene);
-            List<VariantContextDecorator> geneVariants = decoratedVariants.stream().filter(x -> x.gene().equals(gene)).collect(toList());
+            List<GermlineVariant> geneVariants = variants.stream().filter(x -> x.gene().equals(gene)).collect(toList());
 
             if(category != null)
                 driverCatalog.add(germlineDriver(category, gene, geneVariants, geneCopyNumber));
@@ -61,12 +52,18 @@ public class GermlineDrivers
         return new ArrayList<>(driverCatalog);
     }
 
-    static DriverCatalog germlineDriver(DriverCategory category, final String gene,
-            final List<VariantContextDecorator> geneVariants, final GeneCopyNumber geneCopyNumber)
+    static DriverCatalog germlineDriver(
+            final DriverCategory category, final String gene,
+            final List<GermlineVariant> geneVariants, final GeneCopyNumber geneCopyNumber)
     {
-        final Map<DriverImpact,Integer> variantCounts =
-                geneVariants.stream().collect(groupingBy(VariantContextDecorator::impact, counting()))
-                        .entrySet().stream().collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue().intValue()));
+        Map<DriverImpact,Integer> variantCounts = Maps.newHashMap();
+
+        for(GermlineVariant variant : geneVariants)
+        {
+            DriverImpact driverImpact = DriverImpact.select(variant.type(), variant.variantImpact().CanonicalCodingEffect);
+            Integer count = variantCounts.get(driverImpact);
+            variantCounts.put(driverImpact, count != null ? count + 1 : 1);
+        }
 
         int missenseVariants = variantCounts.getOrDefault(DriverImpact.MISSENSE, 0);
         int nonsenseVariants = variantCounts.getOrDefault(DriverImpact.NONSENSE, 0);
@@ -88,7 +85,7 @@ public class GermlineDrivers
                 .splice(spliceVariants)
                 .inframe(inframeVariants)
                 .frameshift(frameshiftVariants)
-                .biallelic(geneVariants.stream().anyMatch(VariantContextDecorator::biallelic))
+                .biallelic(geneVariants.stream().anyMatch(GermlineVariant::biallelic))
                 .minCopyNumber(geneCopyNumber == null ? 0 : geneCopyNumber.minCopyNumber())
                 .maxCopyNumber(geneCopyNumber == null ? 0 : geneCopyNumber.maxCopyNumber())
                 .likelihoodMethod(LikelihoodMethod.GERMLINE);

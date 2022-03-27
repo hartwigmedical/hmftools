@@ -1,15 +1,14 @@
 package com.hartwig.hmftools.purple.germline;
 
+import static com.hartwig.hmftools.common.variant.VariantHeader.PASS;
+
 import java.util.List;
-import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
-import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
 
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.math3.distribution.PoissonDistribution;
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
@@ -61,8 +60,9 @@ public class GermlineGenotypeEnrichment
         return GermlineGenotypeStatus.HET;
     }
 
-    public VariantContext processVariant(final VariantContext context)
+    public void processVariant(final GermlineVariant variant)
     {
+        VariantContext context = variant.context();
         Genotype germlineGenotype = context.getGenotype(mGermlineSample);
         Genotype tumorGenotype = context.getGenotype(mTumorSample);
         AllelicDepth germlineDepth = AllelicDepth.fromGenotype(germlineGenotype);
@@ -94,9 +94,12 @@ public class GermlineGenotypeEnrichment
         if(status.equals(GermlineGenotypeStatus.LOW_VAF))
         {
             builder.filter(LOW_VAF_FILTER);
+            variant.filters().remove(PASS);
+            variant.filters().add(LOW_VAF_FILTER);
         }
 
-        return builder.make();
+        VariantContext newContext = builder.make();
+        variant.setContext(newContext);
     }
 
     static GermlineGenotypeStatus combined(GermlineGenotypeStatus germline, GermlineGenotypeStatus tumor)

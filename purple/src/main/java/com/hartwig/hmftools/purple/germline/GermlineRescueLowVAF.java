@@ -1,15 +1,11 @@
 package com.hartwig.hmftools.purple.germline;
 
-import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_VARIANT_CN_INFO;
-
-import java.util.Set;
+import static com.hartwig.hmftools.common.variant.VariantHeader.PASS;
 
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 
 import htsjdk.variant.variantcontext.Genotype;
-import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 public class GermlineRescueLowVAF
 {
@@ -23,20 +19,18 @@ public class GermlineRescueLowVAF
         mGermlineSample = germlineSample;
     }
 
-    public VariantContext processVariant(final VariantContext context)
+    public void processVariant(final GermlineVariant variant)
     {
-        Set<String> filters = context.getFilters();
-        if(filters.size() == 1 && filters.contains(GermlineGenotypeEnrichment.LOW_VAF_FILTER))
+        if(variant.filters().size() == 1 && variant.filters().contains(GermlineGenotypeEnrichment.LOW_VAF_FILTER))
         {
-            Genotype germlineGenotype = context.getGenotype(mGermlineSample);
+            Genotype germlineGenotype = variant.getGenotype(mGermlineSample);
             AllelicDepth germlineDepth = AllelicDepth.fromGenotype(germlineGenotype);
-            double variantCopyNumber = context.getAttributeAsDouble(PURPLE_VARIANT_CN_INFO, 0.0);
-            if(germlineDepth.alleleReadCount() >= MIN_ALLELE_READ_COUNT && Doubles.greaterOrEqual(variantCopyNumber, MIN_VCN))
+
+            if(germlineDepth.alleleReadCount() >= MIN_ALLELE_READ_COUNT && Doubles.greaterOrEqual(variant.copyNumber(), MIN_VCN))
             {
-                return new VariantContextBuilder(context).passFilters().make();
+                variant.filters().clear();
+                variant.filters().add(PASS);
             }
         }
-
-        return context;
     }
 }

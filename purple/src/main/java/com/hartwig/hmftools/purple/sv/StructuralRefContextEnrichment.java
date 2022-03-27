@@ -8,7 +8,6 @@ import java.util.function.Consumer;
 import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
 
 import org.apache.commons.math3.util.Pair;
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.VariantContext;

@@ -14,7 +14,6 @@ import org.junit.Test;
 
 public class GermlineGenotypeEnrichmentTest
 {
-
     @Test
     public void testCombinedStatus()
     {

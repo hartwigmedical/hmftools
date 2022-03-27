@@ -56,7 +56,7 @@ public class SomaticData implements GenomePosition
     public boolean isPass() { return mDecorator.isPass(); }
     public boolean isFiltered() { return !isPass(); }
 
-    public double variantCopyNumber() { return mDecorator.variantCopyNumber(); }
+    public double copyNumber() { return mDecorator.variantCopyNumber(); }
 
     public boolean isHotspot() { return mContext.hasAttribute(HOTSPOT_FLAG); }
     public boolean biallelic() { return mDecorator.biallelic(); }

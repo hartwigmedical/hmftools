@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple.germline;
 
+import static com.hartwig.hmftools.common.variant.VariantHeader.PASS;
 import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_VARIANT_CN_INFO;
 import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT_FLAG;
 import static com.hartwig.hmftools.common.variant.Hotspot.NEAR_HOTSPOT_FLAG;
@@ -42,13 +43,18 @@ public class GermlineLowTumorVCNFilterTest
         assertFiltered(true, createVariant(MIN_QUAL_HOTSPOT, LOW_VN, false));
     }
 
-    private void assertFiltered(boolean expectedFiltered, VariantContext victim)
+    private void assertFiltered(boolean expectedFiltered, VariantContext variantContext)
     {
-        VariantContext updated = GermlineLowTumorVCNFilter.processVariant(victim);
-        assertEquals(expectedFiltered, updated.isFiltered());
+        GermlineVariant variant = new GermlineVariant(variantContext);
+        GermlineLowTumorVCNFilter.processVariant(variant);
+
         if(expectedFiltered)
         {
-            assertTrue(updated.getFilters().contains(GermlineLowTumorVCNFilter.LOW_TUMOR_VCN_FILTER));
+            assertTrue(variant.filters().contains(GermlineLowTumorVCNFilter.LOW_TUMOR_VCN_FILTER));
+        }
+        else
+        {
+            assertTrue(variant.isPass());
         }
     }
 

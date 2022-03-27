@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple.germline;
 
+import static com.hartwig.hmftools.common.variant.VariantHeader.PASS;
 import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_VARIANT_CN_INFO;
 
 import static org.junit.Assert.assertEquals;
@@ -22,15 +23,20 @@ public class GermlineRescueLowVAFTest
         assertFiltered(false, createVariant(0.5, 3));
     }
 
-    private static void assertFiltered(boolean expectedFiltered, VariantContext victim)
+    private static void assertFiltered(boolean expectedFiltered, VariantContext variantContext)
     {
         GermlineRescueLowVAF germlineRescueLowVAF = new GermlineRescueLowVAF(VariantContextFromString.SAMPLE);
 
-        VariantContext updated = germlineRescueLowVAF.processVariant(victim);
-        assertEquals(expectedFiltered, updated.isFiltered());
+        GermlineVariant variant = new GermlineVariant(variantContext);
+        germlineRescueLowVAF.processVariant(variant);
+
         if(expectedFiltered)
         {
-            assertTrue(updated.getFilters().contains(GermlineGenotypeEnrichment.LOW_VAF_FILTER));
+            assertTrue(variant.filters().contains(GermlineGenotypeEnrichment.LOW_VAF_FILTER));
+        }
+        else
+        {
+            assertTrue(variant.isPass());
         }
     }
 
@@ -40,6 +46,7 @@ public class GermlineRescueLowVAFTest
         final String line =
                 "11\t1000\tCOSM123;COSM456\tG\tA\t100\t" + GermlineGenotypeEnrichment.LOW_VAF_FILTER + "\t" + PURPLE_VARIANT_CN_INFO + "="
                         + variantCopyNumber + ";NEAR_HOTSPOT\tGT:AD:DP\t0/1:73," + alleleReadCount + ":91";
+
         return VariantContextFromString.decode(line);
     }
 }

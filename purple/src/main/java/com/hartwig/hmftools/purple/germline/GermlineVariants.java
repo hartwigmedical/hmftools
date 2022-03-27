@@ -5,10 +5,8 @@ import static com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -17,12 +15,13 @@ import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.config.ReferenceData;
 
 import org.apache.commons.compress.utils.Lists;
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeader;
 
 public class GermlineVariants
 {
@@ -30,7 +29,8 @@ public class GermlineVariants
     private final ReferenceData mReferenceData;
     private final String mVersion;
 
-    private final List<VariantContext> mReportableVariants;
+    private final List<GermlineVariant> mVariants;
+    private final List<GermlineVariant> mReportableVariants;
 
     public GermlineVariants(final PurpleConfig config, final ReferenceData referenceData, final String version)
     {
@@ -38,21 +38,24 @@ public class GermlineVariants
         mConfig = config;
         mVersion = version;
 
+        mVariants = Lists.newArrayList();
         mReportableVariants = Lists.newArrayList();
     }
 
-    @NotNull
-    public List<VariantContext> reportableVariants()
+    public List<GermlineVariant> reportableVariants()
     {
         return mReportableVariants;
     }
 
     public void loadReportableVariants(final String germlineVcf)
     {
+        loadGermlineVariants(germlineVcf, true);
+    }
+
+    private void loadGermlineVariants(final String germlineVcf, boolean checkReported)
+    {
         if(germlineVcf.isEmpty())
             return;
-
-        PPL_LOGGER.info("loading germline variants from {}", germlineVcf);
 
         try
         {
@@ -60,8 +63,24 @@ public class GermlineVariants
 
             for(VariantContext context : vcfReader)
             {
-                if(context.getAttributeAsBoolean(VariantHeader.REPORTED_FLAG, false))
-                    mReportableVariants.add(context);
+                if(checkReported && !context.getAttributeAsBoolean(VariantHeader.REPORTED_FLAG, false))
+                    continue;
+
+                GermlineVariant variant = new GermlineVariant(context);
+
+                if(checkReported)
+                    mReportableVariants.add(variant);
+                else
+                    mVariants.add(variant);
+            }
+
+            if(checkReported)
+            {
+                PPL_LOGGER.info("load {} reported germline variants from {}", mReportableVariants.size(), germlineVcf);
+            }
+            else
+            {
+                PPL_LOGGER.info("load {} germline variants from {}", mVariants.size(), germlineVcf);
             }
         }
         catch(Exception e)
@@ -81,7 +100,7 @@ public class GermlineVariants
 
         final String outputVCF = mConfig.OutputDir + File.separator + tumorSample + PURPLE_GERMLINE_VCF_SUFFIX;
 
-        PPL_LOGGER.info("loading germline variants from {}", germlineVcf);
+        loadGermlineVariants(germlineVcf, false);
 
         try
         {
@@ -93,6 +112,29 @@ public class GermlineVariants
                     .setOption(htsjdk.variant.variantcontext.writer.Options.ALLOW_MISSING_FIELDS_IN_HEADER)
                     .build();
 
+            final GermlineVariantEnrichment enrichment = new GermlineVariantEnrichment(
+                    mVersion, referenceId, tumorSample, mReferenceData, purityAdjuster, copyNumbers,
+                    mReferenceData.GermlineHotspots, somaticReportedGenes, !isPaveAnnotated);
+
+            VCFHeader header = enrichment.enrichHeader(vcfReader.getFileHeader());
+            writer.writeHeader(header);
+
+            for(GermlineVariant variant : mVariants)
+            {
+                enrichment.enrichVariant(variant);
+            }
+
+            enrichment.flush();
+
+            for(GermlineVariant variant : mVariants)
+            {
+                VariantContext newContext = new VariantContextBuilder(variant.context()).filters(variant.filters()).make();
+                writer.add(newContext);
+            }
+
+            writer.close();
+
+            /*
             final Consumer<VariantContext> consumer = context ->
             {
                 if(context.getAttributeAsBoolean(VariantHeader.REPORTED_FLAG, false))
@@ -103,19 +145,18 @@ public class GermlineVariants
                 writer.add(context);
             };
 
-            final GermlineVariantEnrichment enrichment = new GermlineVariantEnrichment(
-                    mVersion, referenceId, tumorSample, mReferenceData, purityAdjuster, copyNumbers,
-                    mReferenceData.GermlineHotspots, somaticReportedGenes, !isPaveAnnotated, consumer);
-
-            writer.writeHeader(enrichment.enrichHeader(vcfReader.getFileHeader()));
 
             for(VariantContext context : vcfReader)
             {
+                GermlineData variant = new GermlineData(context, null);
+
                 enrichment.accept(context);
             }
 
             enrichment.flush();
             writer.close();
+
+            */
         }
         catch(Exception e)
         {

@@ -2,7 +2,6 @@ package com.hartwig.hmftools.purple.germline;
 
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Multimap;
@@ -11,7 +10,6 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
-import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
 import com.hartwig.hmftools.purple.somatic.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.purple.config.ReferenceData;
@@ -20,7 +18,7 @@ import com.hartwig.hmftools.purple.somatic.SnpEffEnrichment;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
 
-public class GermlineVariantEnrichment implements VariantContextEnrichment
+public class GermlineVariantEnrichment
 {
     private final GermlinePurityEnrichment mPurityEnrichment;
     private final SomaticRefContextEnrichment mRefGenomeEnrichment;
@@ -30,16 +28,12 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment
     private final GermlineGenotypeEnrichment mGenotypeEnrichment;
     private final GermlineRescueLowVAF mLowVafRescueEnrichment;
 
-    private final Consumer<VariantContext> mConsumer;
-
     public GermlineVariantEnrichment(
             final String purpleVersion, final String referenceSample, final String tumorSample, final ReferenceData refData,
             final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers,
             final Multimap<Chromosome, VariantHotspot> germlineHotspots, final Set<String> somaticReportedGenes,
-            boolean snpEffEnrichmentEnabled, final Consumer<VariantContext> consumer)
+            boolean snpEffEnrichmentEnabled)
     {
-        mConsumer = consumer;
-
         final Set<String> germlineGenes = refData.DriverGenes.driverGenes().stream()
                 .filter(DriverGene::reportGermline).map(DriverGene::gene).collect(Collectors.toSet());
 
@@ -63,36 +57,31 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment
         mGenotypeEnrichment = new GermlineGenotypeEnrichment(referenceSample, tumorSample);
     }
 
-    @Override
-    public void accept(final VariantContext context)
+    public void enrichVariant(final GermlineVariant variant)
     {
-        // the order matters
-        VariantContext newContext = mGenotypeEnrichment.processVariant(context);
+        // enrich the variant's original context so subsequent calls to get copy number and hotspot status are valid
+        mGenotypeEnrichment.processVariant(variant);
 
-        mHotspotEnrichment.processVariant(newContext);
+        mHotspotEnrichment.processVariant(variant.context());
+        mPurityEnrichment.processVariant(variant.context());
 
-        mPurityEnrichment.processVariant(newContext);
-        newContext = mLowVafRescueEnrichment.processVariant(newContext);
+        mLowVafRescueEnrichment.processVariant(variant);
 
-        newContext = GermlineLowTumorVCNFilter.processVariant(newContext);
+        GermlineLowTumorVCNFilter.processVariant(variant);
 
         if(mSnpEffEnrichment != null)
-            mSnpEffEnrichment.processVariant(newContext);
+            mSnpEffEnrichment.processVariant(variant.context());
 
-        mRefGenomeEnrichment.processVariant(newContext);
-        GermlinePathogenicEnrichment.processVariant(newContext);
-        mReportableEnrichment.processVariant(newContext);
-
-        mConsumer.accept(newContext);
+        mRefGenomeEnrichment.processVariant(variant.context());
+        GermlinePathogenicEnrichment.processVariant(variant.context());
+        mReportableEnrichment.processVariant(variant);
     }
 
-    @Override
     public void flush()
     {
         mReportableEnrichment.flush();
     }
 
-    @Override
     public VCFHeader enrichHeader(final VCFHeader template)
     {
         VCFHeader header = mPurityEnrichment.enrichHeader(template);
