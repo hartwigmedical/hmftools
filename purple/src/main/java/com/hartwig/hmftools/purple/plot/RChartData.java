@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.purple.somatic.SomaticData;
+import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 import htsjdk.variant.variantcontext.CommonInfo;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -36,7 +36,7 @@ public class RChartData
         mFilename = outputDirectory + File.separator + tumorSample + ".purple.somatic.hist.tsv";
     }
 
-    public void processVariant(final SomaticData variant)
+    public void processVariant(final SomaticVariant variant)
     {
         somaticVariantCopyNumberPdf(variant.context());
     }

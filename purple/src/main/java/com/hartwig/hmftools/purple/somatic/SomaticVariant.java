@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 
-public class SomaticData implements GenomePosition
+public class SomaticVariant implements GenomePosition
 {
     private final VariantContext mOriginalContext;
     private VariantContext mContext;
@@ -21,7 +21,7 @@ public class SomaticData implements GenomePosition
     private VariantContextDecorator mDecorator;
     private final AllelicDepth mTumorAllelicDepth;
 
-    public SomaticData(final VariantContext context, final String sampleId)
+    public SomaticVariant(final VariantContext context, final String sampleId)
     {
         mOriginalContext = context;
         setContext(context);

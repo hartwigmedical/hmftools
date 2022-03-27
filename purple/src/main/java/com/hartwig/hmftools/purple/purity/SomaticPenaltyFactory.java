@@ -8,16 +8,16 @@ import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.purple.somatic.SomaticData;
+import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 public final class SomaticPenaltyFactory
 {
     public static double calcPenalty(
-            final PurityAdjuster purityAdjuster, final Collection<FittedRegion> regions, final List<SomaticData> variants)
+            final PurityAdjuster purityAdjuster, final Collection<FittedRegion> regions, final List<SomaticVariant> variants)
     {
         final SomaticDeviation somaticDeviation = SomaticDeviation.INSTANCE;
 
-        final GenomePositionSelector<SomaticData> variantSelector = GenomePositionSelectorFactory.create(variants);
+        final GenomePositionSelector<SomaticVariant> variantSelector = GenomePositionSelectorFactory.create(variants);
         double score = 0;
         int variantCount = 0;
 
@@ -32,7 +32,7 @@ public final class SomaticPenaltyFactory
         return variantCount == 0 ? 0 : score / variantCount;
     }
 
-    private static class SomaticVariantConsumer implements Consumer<SomaticData>
+    private static class SomaticVariantConsumer implements Consumer<SomaticVariant>
     {
         final PurityAdjuster mPurityAdjuster;
         private final SomaticDeviation mSomaticDeviation;
@@ -49,7 +49,7 @@ public final class SomaticPenaltyFactory
         }
 
         @Override
-        public void accept(final SomaticData variant)
+        public void accept(final SomaticVariant variant)
         {
             mScore += mSomaticDeviation.deviationFromMax(mPurityAdjuster, mRegion, variant);
             mVariants++;

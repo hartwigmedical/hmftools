@@ -27,7 +27,7 @@ public class SomaticGenotypeEnrichment
         mTumorSample = tumorSample;
     }
 
-    public void processVariant(final SomaticData variant)
+    public void processVariant(final SomaticVariant variant)
     {
         VariantContext origContext = variant.context();
         Allele refAllele = origContext.getReference();

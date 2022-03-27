@@ -16,7 +16,7 @@ import com.hartwig.hmftools.common.drivercatalog.dnds.ModifiableDndsDriverGeneLi
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.purple.somatic.SomaticData;
+import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
@@ -30,12 +30,12 @@ public class OncoDriversTest
     private static final int INDEL_SAMPLE_COUNT = 1000;
     private static final double PASSENGERS_PER_MUTATION = 9.26e-08;
 
-    private SomaticData frameshiftHotspot;
-    private SomaticData frameshiftNearHotspot;
-    private SomaticData inframe;
-    private SomaticData unKnownInframe;
-    private SomaticData frameshift;
-    private SomaticData missense;
+    private SomaticVariant frameshiftHotspot;
+    private SomaticVariant frameshiftNearHotspot;
+    private SomaticVariant inframe;
+    private SomaticVariant unKnownInframe;
+    private SomaticVariant frameshift;
+    private SomaticVariant missense;
     private DndsDriverGeneLikelihood likelihood;
 
     @Before

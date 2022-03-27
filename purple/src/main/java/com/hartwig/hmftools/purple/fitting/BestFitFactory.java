@@ -27,7 +27,7 @@ import com.hartwig.hmftools.common.purple.purity.ImmutableBestFit;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
-import com.hartwig.hmftools.purple.somatic.SomaticData;
+import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
@@ -44,7 +44,7 @@ public class BestFitFactory
     private int mSvFragmentReadCount;
     private int mSomaticHotspotCount;
     private int mAlleleReadCountTotal;
-    private final List<SomaticData> mVariantsInReadCountRange;
+    private final List<SomaticVariant> mVariantsInReadCountRange;
 
     private static final double PERCENT_RANGE = 0.1;
     private static final double ABS_RANGE = 0.0005;
@@ -54,7 +54,7 @@ public class BestFitFactory
 
     public BestFitFactory(
             final PurpleConfig config, int minReadCount, int maxReadCount,
-            @NotNull final List<FittedPurity> allCandidates, final List<SomaticData> somatics,
+            @NotNull final List<FittedPurity> allCandidates, final List<SomaticVariant> somatics,
             final List<StructuralVariant> structuralVariants, final List<ObservedRegion> observedRegions)
     {
         mConfig = config;
@@ -78,7 +78,7 @@ public class BestFitFactory
     public BestFit bestFit() { return mBestFit; }
 
     private BestFit determineBestFit(
-            final List<FittedPurity> allCandidates, final List<SomaticData> somatics,
+            final List<FittedPurity> allCandidates, final List<SomaticVariant> somatics,
             final List<StructuralVariant> structuralVariants, final List<ObservedRegion> observedRegions)
     {
         Collections.sort(allCandidates);
@@ -133,7 +133,7 @@ public class BestFitFactory
     }
 
     private boolean hasTumor(
-            final List<SomaticData> somatics, final List<StructuralVariant> structuralVariants, final List<ObservedRegion> observedRegions)
+            final List<SomaticVariant> somatics, final List<StructuralVariant> structuralVariants, final List<ObservedRegion> observedRegions)
     {
         setSvSummary(structuralVariants);
         setSomaticSummary(somatics);
@@ -216,9 +216,9 @@ public class BestFitFactory
         }
     }
 
-    private void setSomaticSummary(final List<SomaticData> somatics)
+    private void setSomaticSummary(final List<SomaticVariant> somatics)
     {
-        for(SomaticData variant : somatics)
+        for(SomaticVariant variant : somatics)
         {
             if(!variant.isPass() || variant.type() != VariantType.SNP)
                 continue;

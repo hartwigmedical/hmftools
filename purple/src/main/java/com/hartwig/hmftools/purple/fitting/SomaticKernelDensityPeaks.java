@@ -12,7 +12,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.kde.KernelEstimator;
-import com.hartwig.hmftools.purple.somatic.SomaticData;
+import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -21,7 +21,7 @@ final class SomaticKernelDensityPeaks
     private static final double KERNEL_BANDWIDTH = 0.03;
 
     public static Optional<FittedPurity> fitPurity(
-            final List<FittedPurity> allCandidates, final List<SomaticData> variants,
+            final List<FittedPurity> allCandidates, final List<SomaticVariant> variants,
             int minVariants, double minPeak, double minPurity, double maxPurity)
     {
         if(variants.size() < minVariants)
@@ -94,7 +94,7 @@ final class SomaticKernelDensityPeaks
         return diploidCandidates.stream().filter(x -> Doubles.equal(x.purity(), purity)).findFirst();
     }
 
-    public static List<SomaticPeak> findSomaticPeaks(final List<SomaticData> variants)
+    public static List<SomaticPeak> findSomaticPeaks(final List<SomaticVariant> variants)
     {
         return findPeaks(variants.stream().map(x -> x.alleleFrequency()).collect(Collectors.toList()));
     }

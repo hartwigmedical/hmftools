@@ -159,7 +159,7 @@ public class SomaticStream
             int flushCount = 10000;
             int varCount = 0;
 
-            for(SomaticData variant : mSomaticVariants.variants())
+            for(SomaticVariant variant : mSomaticVariants.variants())
             {
                 if(tumorOnly && variant.isFiltered())
                     continue;
@@ -176,7 +176,7 @@ public class SomaticStream
             enricher.flush(); // finalise any enrichment routines with queued variants
 
             // write enriched variants to VCF
-            for(SomaticData variant : mSomaticVariants.variants())
+            for(SomaticVariant variant : mSomaticVariants.variants())
             {
                 boolean isValidChromosome = HumanChromosome.contains(variant.chromosome());
 
@@ -204,7 +204,7 @@ public class SomaticStream
         }
     }
 
-    private void checkDrivers(final SomaticData variant, boolean updateVcf)
+    private void checkDrivers(final SomaticVariant variant, boolean updateVcf)
     {
         boolean reported = mDrivers.checkSomaticVariant(variant);
 
@@ -215,7 +215,7 @@ public class SomaticStream
         }
     }
 
-    private void checkChartDownsampling(final SomaticData variant)
+    private void checkChartDownsampling(final SomaticVariant variant)
     {
         if(mConfig.Charting.disabled())
             return;

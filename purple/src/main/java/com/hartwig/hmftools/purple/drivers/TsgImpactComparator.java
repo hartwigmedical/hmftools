@@ -4,12 +4,12 @@ import java.util.Comparator;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverImpact;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.purple.somatic.SomaticData;
+import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
-public class TsgImpactComparator implements Comparator<SomaticData>
+public class TsgImpactComparator implements Comparator<SomaticVariant>
 {
     @Override
-    public int compare(final SomaticData o1, final SomaticData o2)
+    public int compare(final SomaticVariant o1, final SomaticVariant o2)
     {
         int firstWins = -1;
         int secondWins = 1;

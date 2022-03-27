@@ -22,7 +22,7 @@ public class SubclonalLikelihoodEnrichment
         mSubclonalLikelihood = new SubclonalLikelihood(binWidth, peakModel);
     }
 
-    public void processVariant(final SomaticData variant)
+    public void processVariant(final SomaticVariant variant)
     {
         double copyNumber = variant.copyNumber();
         double subclonalLikelihood = Math.round(mSubclonalLikelihood.subclonalLikelihood(copyNumber) * 1000d) / 1000d;

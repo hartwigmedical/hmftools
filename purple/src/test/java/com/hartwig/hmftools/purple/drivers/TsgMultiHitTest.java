@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsDriverGeneLik
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.purple.somatic.SomaticData;
+import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -45,8 +45,8 @@ public class TsgMultiHitTest {
     public void testMultiHitIsNeverLessThanEquivalentMissense() {
         Map<VariantType,Integer> counts = countMap(83135, 241917);
 
-        SomaticData missense = createVariant(VariantType.SNP, CodingEffect.MISSENSE, 0, NON_HOTSPOT, 0.5);
-        SomaticData frameshift = createVariant(VariantType.INDEL, CodingEffect.NONSENSE_OR_FRAMESHIFT, 0, NON_HOTSPOT, 0.5);
+        SomaticVariant missense = createVariant(VariantType.SNP, CodingEffect.MISSENSE, 0, NON_HOTSPOT, 0.5);
+        SomaticVariant frameshift = createVariant(VariantType.INDEL, CodingEffect.NONSENSE_OR_FRAMESHIFT, 0, NON_HOTSPOT, 0.5);
 
         DriverCatalog multiFrameshift =
                 TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(frameshift, frameshift), counts, counts, null);

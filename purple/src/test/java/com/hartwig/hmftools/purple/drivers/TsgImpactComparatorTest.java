@@ -17,7 +17,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.test.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.purple.somatic.SomaticData;
+import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
@@ -25,12 +25,12 @@ import org.junit.Test;
 
 public class TsgImpactComparatorTest {
 
-    private SomaticData missense;
-    private SomaticData nonsense;
-    private SomaticData spliceIndel;
-    private SomaticData spliceSNP;
-    private SomaticData frameshift;
-    private SomaticData inframe;
+    private SomaticVariant missense;
+    private SomaticVariant nonsense;
+    private SomaticVariant spliceIndel;
+    private SomaticVariant spliceSNP;
+    private SomaticVariant frameshift;
+    private SomaticVariant inframe;
 
     @Before
     public void setup() {
@@ -54,7 +54,7 @@ public class TsgImpactComparatorTest {
 
     @Test
     public void testSorting() {
-        List<SomaticData> list = Lists.newArrayList(missense, nonsense, spliceIndel, spliceSNP, inframe, frameshift);
+        List<SomaticVariant> list = Lists.newArrayList(missense, nonsense, spliceIndel, spliceSNP, inframe, frameshift);
         Collections.shuffle(list);
 
         list.sort(new TsgImpactComparator());

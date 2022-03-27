@@ -20,7 +20,7 @@ import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
-import com.hartwig.hmftools.purple.somatic.SomaticData;
+import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
@@ -34,7 +34,7 @@ public final class TestUtils
     private static final String SAMPLE_ID = "SAMPLE_ID";
     private static final String TEST_GENE_01 = "GENE_01";
 
-    public static SomaticData createVariant(
+    public static SomaticVariant createVariant(
             final VariantType type, final CodingEffect codingEffect, int repeatCount, Hotspot hotspot, double vaf)
     {
         VariantContext context = createDefaultContext(type);
@@ -66,7 +66,7 @@ public final class TestUtils
 
         writeImpactDetails(context, impact);
 
-        return new SomaticData(context, SAMPLE_ID);
+        return new SomaticVariant(context, SAMPLE_ID);
     }
 
     public static VariantContext createDefaultContext(final VariantType type)

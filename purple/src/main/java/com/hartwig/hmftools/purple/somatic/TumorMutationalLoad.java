@@ -25,7 +25,7 @@ public class TumorMutationalLoad
         return mTargetRegions.calcTmb(mBurden);
     }
 
-    public void processVariant(final SomaticData variant)
+    public void processVariant(final SomaticVariant variant)
     {
         if(mTargetRegions.hasTargetRegions() && !mTargetRegions.inTargetRegions(variant.chromosome(), variant.position()))
             return;

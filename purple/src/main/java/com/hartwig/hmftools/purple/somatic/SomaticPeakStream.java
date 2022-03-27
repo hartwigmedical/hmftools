@@ -30,7 +30,7 @@ public class SomaticPeakStream
 
         final List<ModifiableWeightedPloidy> weightedPloidies = newArrayList();
 
-        for(SomaticData variant : somaticVariants.variants())
+        for(SomaticVariant variant : somaticVariants.variants())
         {
             if(!variant.isPass())
                 continue;

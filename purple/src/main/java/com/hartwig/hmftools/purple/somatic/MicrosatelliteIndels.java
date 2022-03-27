@@ -37,7 +37,7 @@ public class MicrosatelliteIndels
         return mTargetRegions.calcMsiIndels(mIndelCount);
     }
 
-    public void processVariant(final SomaticData variant)
+    public void processVariant(final SomaticVariant variant)
     {
         final VariantContext context = variant.context();
 

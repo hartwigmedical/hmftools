@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.variant.filter.SGTFilter;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.somatic.HotspotEnrichment;
-import com.hartwig.hmftools.purple.somatic.SomaticData;
+import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 import com.hartwig.hmftools.purple.somatic.SomaticPurityEnrichment;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -29,8 +29,8 @@ public class SomaticVariantCache
 
     private final CompoundFilter mFilter;
 
-    private final List<SomaticData> mVariants;
-    private final List<SomaticData> mFittingVariants; // pass and SNVs only
+    private final List<SomaticVariant> mVariants;
+    private final List<SomaticVariant> mFittingVariants; // pass and SNVs only
 
     private VCFHeader mVcfHeader;
 
@@ -55,8 +55,8 @@ public class SomaticVariantCache
     }
 
     public boolean hasData() { return !mVariants.isEmpty(); }
-    public List<SomaticData> variants() { return mVariants; }
-    public List<SomaticData> fittingVariants() { return mFittingVariants; }
+    public List<SomaticVariant> variants() { return mVariants; }
+    public List<SomaticVariant> fittingVariants() { return mFittingVariants; }
 
     public int snpCount() { return mSnpCount; }
     public int indelCount() { return mIndelCount; }
@@ -75,7 +75,7 @@ public class SomaticVariantCache
 
         for(VariantContext variantContext : vcfReader)
         {
-            SomaticData variant = new SomaticData(variantContext, mConfig.TumorId);
+            SomaticVariant variant = new SomaticVariant(variantContext, mConfig.TumorId);
             mVariants.add(variant);
 
             // hotspot status is used in fitting as well as during and for enrichment
@@ -103,7 +103,7 @@ public class SomaticVariantCache
         mVariants.forEach(x -> purityEnrichment.processVariant(x.context()));
     }
 
-    private boolean isFittingCandidate(final SomaticData variant)
+    private boolean isFittingCandidate(final SomaticVariant variant)
     {
         if(variant.type() != VariantType.SNP)
             return false;
@@ -120,7 +120,7 @@ public class SomaticVariantCache
         return true;
     }
 
-    private boolean hasTumorDepth(final SomaticData variant)
+    private boolean hasTumorDepth(final SomaticVariant variant)
     {
         if(!mConfig.runTumor() || !variant.hasAlleleDepth())
             return false;

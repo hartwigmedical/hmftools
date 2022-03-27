@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
-import com.hartwig.hmftools.purple.somatic.SomaticData;
+import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
 
@@ -36,7 +36,7 @@ public class SomaticPurityFitter
     }
 
     public Optional<FittedPurity> fromSomatics(
-            final List<SomaticData> variants, final List<StructuralVariant> structuralVariants, final List<FittedPurity> allCandidates)
+            final List<SomaticVariant> variants, final List<StructuralVariant> structuralVariants, final List<FittedPurity> allCandidates)
     {
         if(variants.size() < mKdMinSomatics)
         {
@@ -64,7 +64,7 @@ public class SomaticPurityFitter
 
         double maxHotspotVaf = 0;
 
-        for(SomaticData variant : variants)
+        for(SomaticVariant variant : variants)
         {
             if(!variant.isPass() || !variant.isHotspot())
                 continue;

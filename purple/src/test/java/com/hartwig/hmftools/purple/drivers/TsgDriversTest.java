@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsDriverGeneLik
 import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.purple.somatic.SomaticData;
+import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
@@ -28,11 +28,11 @@ import org.junit.Test;
 public class TsgDriversTest {
 
     private DndsDriverGeneLikelihood geneLikelihood;
-    private SomaticData missense;
-    private SomaticData nonsense;
-    private SomaticData indel;
-    private SomaticData hotspot;
-    private SomaticData biallelic;
+    private SomaticVariant missense;
+    private SomaticVariant nonsense;
+    private SomaticVariant indel;
+    private SomaticVariant hotspot;
+    private SomaticVariant biallelic;
 
     @Before
     public void setup() {

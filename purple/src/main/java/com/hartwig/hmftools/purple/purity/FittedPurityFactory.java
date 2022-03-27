@@ -27,7 +27,7 @@ import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.collection.Downsample;
 import com.hartwig.hmftools.purple.region.FittedRegionFactory;
-import com.hartwig.hmftools.purple.somatic.SomaticData;
+import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -45,7 +45,7 @@ public class FittedPurityFactory
     @NotNull
     private final FittedRegionFactory mFittedRegionFactory;
     private final ExecutorService mExecutorService;
-    private final List<SomaticData> mVariants;
+    private final List<SomaticVariant> mVariants;
 
     private final List<FittedPurity> mAll = Lists.newArrayList();
     private final List<ObservedRegion> mFilteredRegions = Lists.newArrayList();
@@ -58,7 +58,7 @@ public class FittedPurityFactory
             final ExecutorService executorService, final CobaltChromosomes cobaltChromosomes, final double minPurity,
             final double maxPurity, final double purityIncrements, final double minPloidy, final double maxPloidy,
             final double somaticPenaltyWeight, final boolean tumorOnlyMode, final FittedRegionFactory fittedRegionFactory,
-            final Collection<ObservedRegion> observedRegions, final List<SomaticData> variants)
+            final Collection<ObservedRegion> observedRegions, final List<SomaticVariant> variants)
             throws ExecutionException, InterruptedException
     {
         mExecutorService = executorService;
@@ -70,8 +70,8 @@ public class FittedPurityFactory
         mCobaltChromosomes = cobaltChromosomes;
         mPloidyRange = ploidyRange(minPloidy, maxPloidy);
 
-        final List<SomaticData> filteredVariants = Lists.newArrayList();
-        final GenomePositionSelector<SomaticData> variantSelector = GenomePositionSelectorFactory.create(variants);
+        final List<SomaticVariant> filteredVariants = Lists.newArrayList();
+        final GenomePositionSelector<SomaticVariant> variantSelector = GenomePositionSelectorFactory.create(variants);
 
         int accumulatedBafCount = 0;
         double accumulatedWeightedRatio = 0;

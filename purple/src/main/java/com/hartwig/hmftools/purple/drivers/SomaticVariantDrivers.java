@@ -13,14 +13,14 @@ import com.hartwig.hmftools.common.drivercatalog.panel.ReportablePredicate;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
-import com.hartwig.hmftools.purple.somatic.SomaticData;
+import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 public class SomaticVariantDrivers
 {
     private final DriverGenePanel mGenePanel;
 
-    private final List<SomaticData> mTsgVariants;
-    private final List<SomaticData> mOncoVariants;
+    private final List<SomaticVariant> mTsgVariants;
+    private final List<SomaticVariant> mOncoVariants;
     private final Map<VariantType,Integer> mVariantTypeCounts;
     private final Map<VariantType,Integer> mVariantTypeCountsBiallelic;
 
@@ -40,7 +40,7 @@ public class SomaticVariantDrivers
         mTsgDrivers = new TsgDrivers(panel);
     }
 
-    public boolean checkSomaticVariant(final SomaticData variant)
+    public boolean checkSomaticVariant(final SomaticVariant variant)
     {
         // return true if the variant is a reportable TSG or onocogene
         if(variant.isFiltered())
@@ -62,7 +62,7 @@ public class SomaticVariantDrivers
         return false;
     }
 
-    protected static boolean isReportable(final ReportablePredicate predicate, final SomaticData variant)
+    protected static boolean isReportable(final ReportablePredicate predicate, final SomaticVariant variant)
     {
         final VariantImpact variantImpact = variant.variantImpact();
 
@@ -81,11 +81,11 @@ public class SomaticVariantDrivers
         return result;
     }
 
-    protected static Map<DriverImpact,Integer> groupByImpact(final List<SomaticData> variants)
+    protected static Map<DriverImpact,Integer> groupByImpact(final List<SomaticVariant> variants)
     {
         Map<DriverImpact,Integer> map = Maps.newHashMap();
 
-        for(SomaticData variant : variants)
+        for(SomaticVariant variant : variants)
         {
             DriverImpact driverImpact = DriverImpact.select(variant.type(), variant.variantImpact().CanonicalCodingEffect);
             Integer count = map.get(driverImpact);

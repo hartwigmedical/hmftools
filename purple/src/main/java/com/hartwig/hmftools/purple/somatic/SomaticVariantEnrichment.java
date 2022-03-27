@@ -52,7 +52,7 @@ public class SomaticVariantEnrichment
         }
     }
 
-    public void enrich(final SomaticData variant)
+    public void enrich(final SomaticVariant variant)
     {
         if(mSnpEffEnrichment != null)
             mSnpEffEnrichment.processVariant(variant.context());
