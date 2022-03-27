@@ -5,10 +5,8 @@ import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.SUBCLONA
 import java.util.List;
 
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.purple.fitting.PeakModel;
 
-import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
@@ -24,14 +22,14 @@ public class SubclonalLikelihoodEnrichment
         mSubclonalLikelihood = new SubclonalLikelihood(binWidth, peakModel);
     }
 
-    public void processVariant(final VariantContext context)
+    public void processVariant(final SomaticData variant)
     {
-        VariantContextDecorator decorator = new VariantContextDecorator(context);
-            double subclonalLikelihood = Math.round(mSubclonalLikelihood.subclonalLikelihood(decorator.variantCopyNumber()) * 1000d) / 1000d;
+        double copyNumber = variant.copyNumber();
+        double subclonalLikelihood = Math.round(mSubclonalLikelihood.subclonalLikelihood(copyNumber) * 1000d) / 1000d;
 
         if(!Doubles.isZero(subclonalLikelihood))
         {
-            context.getCommonInfo().putAttribute(SUBCLONAL_LIKELIHOOD_FLAG, subclonalLikelihood);
+            variant.context().getCommonInfo().putAttribute(SUBCLONAL_LIKELIHOOD_FLAG, subclonalLikelihood);
         }
     }
 

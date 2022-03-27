@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import java.util.List;
-import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 
 import org.apache.commons.compress.utils.Lists;
 
@@ -28,21 +27,22 @@ public class SomaticGenotypeEnrichment
         mTumorSample = tumorSample;
     }
 
-    public VariantContext processVariant(final VariantContext context)
+    public void processVariant(final SomaticData variant)
     {
-        Allele refAllele = context.getReference();
+        VariantContext origContext = variant.context();
+        Allele refAllele = origContext.getReference();
 
-        if(context.getAlleles().size() < 2)
-            return context;
+        if(origContext.getAlleles().size() < 2)
+            return;
 
-        Allele altAllele = context.getAlternateAllele(0);
+        Allele altAllele = origContext.getAlternateAllele(0);
 
         List<Genotype> updatedGenotypes = Lists.newArrayList();
 
         // set the germline status if present
-        if(mGermlineSample != null && !mGermlineSample.isEmpty() && context.getGenotype(mGermlineSample) != null)
+        if(mGermlineSample != null && !mGermlineSample.isEmpty() && origContext.getGenotype(mGermlineSample) != null)
         {
-            Genotype germlineGT = context.getGenotype(mGermlineSample);
+            Genotype germlineGT = origContext.getGenotype(mGermlineSample);
 
             List<Allele> germlineAlleles = Lists.newArrayList();
             germlineAlleles.add(refAllele);
@@ -54,9 +54,9 @@ public class SomaticGenotypeEnrichment
         }
 
         // set the tumor status
-        VariantContextDecorator variant = new VariantContextDecorator(context);
+        // VariantContextDecorator variant = new VariantContextDecorator(context);
 
-        Genotype tumorGT = context.getGenotype(mTumorSample);
+        Genotype tumorGT = origContext.getGenotype(mTumorSample);
         SomaticGenotypeStatus tumorStatus = variant.biallelic() ? SomaticGenotypeStatus.HOM : SomaticGenotypeStatus.HET;
 
         List<Allele> tumorAlleles = Lists.newArrayList();
@@ -73,7 +73,8 @@ public class SomaticGenotypeEnrichment
         final Genotype tumorGenotype = new GenotypeBuilder(tumorGT).alleles(tumorAlleles).make();
         updatedGenotypes.add(tumorGenotype);
 
-        VariantContextBuilder builder = new VariantContextBuilder(context).genotypes(updatedGenotypes);
-        return builder.make();
+        VariantContextBuilder builder = new VariantContextBuilder(origContext).genotypes(updatedGenotypes);
+        VariantContext newContext = builder.make();
+        variant.setContext(newContext);
     }
 }

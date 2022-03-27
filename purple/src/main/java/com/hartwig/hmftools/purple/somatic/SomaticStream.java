@@ -148,9 +148,8 @@ public class SomaticStream
                     .build();
 
             final SomaticVariantEnrichment enricher = new SomaticVariantEnrichment(
-                    mConfig.RunDrivers, !isPaveAnnotated, mConfig.SomaticFitting.clonalityBinWidth(), mConfig.Version,
-                    mConfig.ReferenceId, mConfig.TumorId, mReferenceData, purityAdjuster, copyNumbers, fittedRegions,
-                    mReferenceData.SomaticHotspots, mPeakModel);
+                    !isPaveAnnotated, mConfig.SomaticFitting.clonalityBinWidth(), mConfig.Version,
+                    mConfig.ReferenceId, mConfig.TumorId, mReferenceData, purityAdjuster, copyNumbers, fittedRegions, mPeakModel);
 
             final VCFHeader header = enricher.populateHeader(readHeader);
             mVcfWriter.writeHeader(header);
@@ -193,7 +192,7 @@ public class SomaticStream
 
                 // expect only pass or PON to be loaded into Purple - in tumor-only mode, the PON variants should be dropped
                 if(!tumorOnly || variant.isPass())
-                    mVcfWriter.add(variant.newContext());
+                    mVcfWriter.add(variant.context());
             }
 
             mVcfWriter.close();
@@ -211,7 +210,7 @@ public class SomaticStream
 
         if(reported && updateVcf)
         {
-            variant.newContext().getCommonInfo().putAttribute(REPORTED_FLAG, true);
+            variant.context().getCommonInfo().putAttribute(REPORTED_FLAG, true);
             mReportedGenes.add(variant.decorator().gene());
         }
     }

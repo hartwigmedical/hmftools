@@ -25,7 +25,6 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.purple.purity.FittedPurityScoreFactory;
 import com.hartwig.hmftools.common.purple.purity.ImmutableBestFit;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.somatic.SomaticData;

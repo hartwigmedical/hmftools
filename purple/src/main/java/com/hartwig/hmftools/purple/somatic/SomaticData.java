@@ -13,32 +13,30 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 public class SomaticData implements GenomePosition
 {
-    private final VariantContext mContext;
-    private VariantContext mNewContext;
+    private final VariantContext mOriginalContext;
+    private VariantContext mContext;
 
     private final String mChromosome;
     private final int mPosition;
-    private final VariantContextDecorator mDecorator;
+    private VariantContextDecorator mDecorator;
     private final AllelicDepth mTumorAllelicDepth;
 
     public SomaticData(final VariantContext context, final String sampleId)
     {
-        mContext = context;
+        mOriginalContext = context;
+        setContext(context);
         mDecorator = new VariantContextDecorator(context);
-        mChromosome = mContext.getContig();
-        mPosition = mContext.getStart();
+        mChromosome = mOriginalContext.getContig();
+        mPosition = mOriginalContext.getStart();
         mTumorAllelicDepth = sampleId != null ? mDecorator.allelicDepth(sampleId) :  null;
-        mNewContext = null;
     }
 
     public VariantContext context() { return mContext; }
 
-    public VariantContext newContext()
+    public void setContext(final VariantContext context)
     {
-        if(mNewContext == null)
-            mNewContext = new VariantContextBuilder(mContext).make();
-
-        return mNewContext;
+        mContext = context;
+        mDecorator = new VariantContextDecorator(context);
     }
 
     @Override

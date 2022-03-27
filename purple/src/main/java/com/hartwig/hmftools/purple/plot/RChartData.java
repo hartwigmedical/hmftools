@@ -38,7 +38,7 @@ public class RChartData
 
     public void processVariant(final SomaticData variant)
     {
-        somaticVariantCopyNumberPdf(variant.newContext());
+        somaticVariantCopyNumberPdf(variant.context());
     }
 
     public void write() throws IOException

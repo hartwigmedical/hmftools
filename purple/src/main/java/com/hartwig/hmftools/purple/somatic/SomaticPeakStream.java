@@ -17,12 +17,10 @@ import com.hartwig.hmftools.purple.config.SomaticFitConfig;
 public class SomaticPeakStream
 {
     private final SomaticFitConfig mSomaticFitConfig;
-    private final PurpleConfig mConfig;
 
     public SomaticPeakStream(final PurpleConfig config)
     {
         mSomaticFitConfig = config.SomaticFitting;
-        mConfig = config;
     }
 
     public List<PeakModel> somaticPeakModel(final SomaticVariantCache somaticVariants)

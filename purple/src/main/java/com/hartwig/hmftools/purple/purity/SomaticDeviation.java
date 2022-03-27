@@ -14,9 +14,6 @@ import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.purple.somatic.SomaticData;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 public enum SomaticDeviation implements RemovalListener<Double, Integer>
 {

@@ -4,7 +4,6 @@ import java.util.Comparator;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverImpact;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.purple.somatic.SomaticData;
 
 public class TsgImpactComparator implements Comparator<SomaticData>
