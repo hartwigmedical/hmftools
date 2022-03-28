@@ -117,6 +117,10 @@ public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
             return germlineCompare;
         }
 
+        int isHighDriverCompare = compareBoolean(eventIsHighDriver(), o.eventIsHighDriver());
+        if (isHighDriverCompare != 0) {
+            return isHighDriverCompare;
+        }
         return 0;
     }
 
@@ -129,6 +133,18 @@ public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
             return 1;
         } else {
             return int1.compareTo(int2);
+        }
+    }
+
+    public static int compareBoolean(@Nullable Boolean boolean1, @Nullable Boolean boolean2) {
+        if (Objects.equals(boolean1, boolean2)) {
+            return 0;
+        } else if (boolean1 == null) {
+            return -1;
+        } else if (boolean2 == null) {
+            return 1;
+        } else {
+            return boolean1.compareTo(boolean2);
         }
     }
 }
