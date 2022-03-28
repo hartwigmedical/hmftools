@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.KATAEGIS_FLAG;
+import static com.hartwig.hmftools.common.variant.VariantHeader.PASS;
 
 import java.util.Set;
-import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
 
@@ -24,12 +24,12 @@ public class KataegisEnrichment
     public KataegisEnrichment()
     {
         mReverseDetector = new KataegisQueue("REV", KataegisEnrichment::isReverseCandidate, null);
-        mForwardDetector = new KataegisQueue("FWD", KataegisEnrichment::isForwardCandidate, mReverseDetector::accept);
+        mForwardDetector = new KataegisQueue("FWD", KataegisEnrichment::isForwardCandidate, mReverseDetector::processVariant);
     }
 
-    public void processVariant(final VariantContext context)
+    public void processVariant(final SomaticVariant variant)
     {
-        mForwardDetector.accept(context);
+        mForwardDetector.processVariant(variant);
     }
 
     public void flush()
@@ -44,31 +44,29 @@ public class KataegisEnrichment
         return template;
     }
 
-    private static boolean isForwardCandidate(final VariantContext context)
+    private static boolean isForwardCandidate(final SomaticVariant variant)
     {
-        final boolean altMatch =
-                context.getAlternateAlleles().stream().anyMatch(x -> x.getBaseString().equals("T") || x.getBaseString().equals("G"));
+        final VariantContext context = variant.context();
+
+        final boolean altMatch = context.getAlternateAlleles().stream()
+                .anyMatch(x -> x.getBaseString().equals("T") || x.getBaseString().equals("G"));
 
         final String triContext = context.getAttributeAsString(SomaticRefContextEnrichment.TRINUCLEOTIDE_FLAG, Strings.EMPTY);
         final boolean triMatch = triContext.startsWith("TC");
 
-        return isNotFiltered(context) && triMatch && altMatch;
+        return variant.isPass() && triMatch && altMatch;
     }
 
-    private static boolean isReverseCandidate(final VariantContext context)
+    private static boolean isReverseCandidate(final SomaticVariant variant)
     {
-        final boolean altMatch =
-                context.getAlternateAlleles().stream().anyMatch(x -> x.getBaseString().equals("C") || x.getBaseString().equals("A"));
+        final VariantContext context = variant.context();
+
+        final boolean altMatch = context.getAlternateAlleles().stream()
+                .anyMatch(x -> x.getBaseString().equals("C") || x.getBaseString().equals("A"));
 
         final String triContext = context.getAttributeAsString(SomaticRefContextEnrichment.TRINUCLEOTIDE_FLAG, Strings.EMPTY);
         final boolean triMatch = triContext.endsWith("GA");
 
-        return isNotFiltered(context) && triMatch && altMatch;
-    }
-
-    private static boolean isNotFiltered(final VariantContext context)
-    {
-        final Set<String> filters = context.getFilters();
-        return filters.isEmpty() || (filters.size() == 1 && filters.contains("PASS"));
+        return variant.isPass() && triMatch && altMatch;
     }
 }

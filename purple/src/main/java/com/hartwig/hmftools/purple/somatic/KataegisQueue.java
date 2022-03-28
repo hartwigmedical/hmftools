@@ -1,16 +1,12 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.KATAEGIS_FLAG;
+import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import htsjdk.variant.variantcontext.VariantContext;
 
 public class KataegisQueue
 {
@@ -18,29 +14,29 @@ public class KataegisQueue
     static final long MAX_AVG_DISTANCE = 1000;
     static final int MIN_COUNT = 3;
 
-    private final Predicate<VariantContext> mCandidate;
+    private final Predicate<SomaticVariant> mCandidate;
 
-    @Nullable
-    private final Consumer<VariantContext> mConsumer;
-    private final Deque<VariantContext> mBuffer;
+    private final Consumer<SomaticVariant> mConsumer;
+    private final Deque<SomaticVariant> mBuffer;
     private final String mIdPrefix;
 
-    private int identifier = 0;
+    private int mIdentifier;
 
-    public KataegisQueue(final String idPrefix, final Predicate<VariantContext> candidate, final Consumer<VariantContext> consumer)
+    public KataegisQueue(final String idPrefix, final Predicate<SomaticVariant> candidate, final Consumer<SomaticVariant> consumer)
     {
         mCandidate = candidate;
         mConsumer = consumer;
         mIdPrefix = idPrefix;
         mBuffer = new ArrayDeque<>();
+        mIdentifier = 0;
     }
 
-    public void accept(final VariantContext context)
+    public void processVariant(final SomaticVariant context)
     {
         if(!mBuffer.isEmpty())
         {
-            final VariantContext previous = mBuffer.peekLast();
-            if(context.getStart() - previous.getStart() > MAX_ABS_DISTANCE || !previous.getContig().equals(context.getContig()))
+            final SomaticVariant previous = mBuffer.peekLast();
+            if(context.position() - previous.position() > MAX_ABS_DISTANCE || !previous.chromosome().equals(context.chromosome()))
             {
                 flush();
             }
@@ -61,11 +57,11 @@ public class KataegisQueue
     {
         if(!mBuffer.isEmpty())
         {
-            final VariantContext first = mBuffer.peekFirst();
+            final SomaticVariant first = mBuffer.peekFirst();
 
             if(!mCandidate.test(first))
             {
-                VariantContext var = mBuffer.pollFirst();
+                SomaticVariant var = mBuffer.pollFirst();
                 if(mConsumer != null)
                     mConsumer.accept(var);
             }
@@ -75,23 +71,24 @@ public class KataegisQueue
                 final boolean isWindowViable = window.isViable(MIN_COUNT, MAX_AVG_DISTANCE);
                 if(isWindowViable)
                 {
-                    identifier++;
+                    mIdentifier++;
                 }
 
                 while(!mBuffer.isEmpty())
                 {
-                    final VariantContext peek = mBuffer.peekFirst();
-                    if(peek.getStart() > window.end())
+                    final SomaticVariant peek = mBuffer.peekFirst();
+                    if(peek.position() > window.end())
                     {
                         return;
                     }
 
                     if(isWindowViable && mCandidate.test(peek))
                     {
-                        peek.getCommonInfo().putAttribute(KATAEGIS_FLAG, mIdPrefix + "_" + identifier, true);
+                        peek.context().getCommonInfo().putAttribute(KATAEGIS_FLAG, mIdPrefix + "_" + mIdentifier, true);
+                        PPL_LOGGER.debug("var({}) added kataegis flag: {}", peek, peek.context().getAttribute(KATAEGIS_FLAG));
                     }
 
-                    VariantContext var = mBuffer.pollFirst();
+                    SomaticVariant var = mBuffer.pollFirst();
                     if(mConsumer != null)
                         mConsumer.accept(var);
                 }
@@ -99,21 +96,21 @@ public class KataegisQueue
         }
     }
 
-    private KataegisWindow longestViableWindow(final VariantContext first)
+    private KataegisWindow longestViableWindow(final SomaticVariant first)
     {
         KataegisWindow result = new KataegisWindow(first);
         final KataegisWindow window = new KataegisWindow(first);
 
-        for(VariantContext context : mBuffer)
+        for(SomaticVariant variant : mBuffer)
         {
-            if(context.getStart() - window.end() > MAX_ABS_DISTANCE)
+            if(variant.position() - window.end() > MAX_ABS_DISTANCE)
             {
                 return result;
             }
 
-            if(mCandidate.test(context))
+            if(mCandidate.test(variant))
             {
-                window.add(context);
+                window.add(variant);
             }
 
             if(window.isViable(MIN_COUNT, MAX_AVG_DISTANCE))

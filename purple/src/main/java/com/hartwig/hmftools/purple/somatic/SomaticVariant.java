@@ -25,7 +25,6 @@ public class SomaticVariant implements GenomePosition
     {
         mOriginalContext = context;
         setContext(context);
-        mDecorator = new VariantContextDecorator(context);
         mChromosome = mOriginalContext.getContig();
         mPosition = mOriginalContext.getStart();
         mTumorAllelicDepth = sampleId != null ? mDecorator.allelicDepth(sampleId) :  null;
@@ -36,7 +35,7 @@ public class SomaticVariant implements GenomePosition
     public void setContext(final VariantContext context)
     {
         mContext = context;
-        mDecorator = new VariantContextDecorator(context);
+        mDecorator = new VariantContextDecorator(mContext);
     }
 
     @Override
@@ -65,4 +64,10 @@ public class SomaticVariant implements GenomePosition
     public double alleleFrequency() { return mTumorAllelicDepth != null ? mTumorAllelicDepth.alleleFrequency() : 0; }
     public int totalReadCount() { return mTumorAllelicDepth != null ? mTumorAllelicDepth.totalReadCount() : 0; }
     public int alleleReadCount() { return mTumorAllelicDepth != null ? mTumorAllelicDepth.alleleReadCount() : 0; }
+
+    public String toString()
+    {
+        return String.format("%s %s:%d %s>%s filter(%s)",
+                type(), chromosome(), position(), mDecorator.ref(), mDecorator.alt(), mDecorator.filter());
+    }
 }

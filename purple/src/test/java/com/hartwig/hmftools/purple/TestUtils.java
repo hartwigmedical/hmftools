@@ -31,7 +31,7 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 public final class TestUtils
 {
-    private static final String SAMPLE_ID = "SAMPLE_ID";
+    public static final String SAMPLE_ID = "SAMPLE_ID";
     private static final String TEST_GENE_01 = "GENE_01";
 
     public static SomaticVariant createVariant(

@@ -59,7 +59,7 @@ public class SomaticVariantEnrichment
 
         mSomaticRefContextEnrichment.processVariant(variant.context());
 
-        mKataegisEnrichment.processVariant(variant.context());
+        mKataegisEnrichment.processVariant(variant);
 
         mSubclonalLikelihoodEnrichment.processVariant(variant);
 

@@ -2,46 +2,53 @@ package com.hartwig.hmftools.purple.somatic;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class KataegisWindow {
+public class KataegisWindow
+{
+    private final int mPosStart;
+    private int mPosEnd;
+    private int mCount;
 
-    private final String contig;
-    private final long start;
-
-    private long end;
-    private int count;
-
-    KataegisWindow(final VariantContext context) {
-        this.contig = context.getContig();
-        this.start = context.getStart();
-        this.end = this.start;
-        this.count = 0;
+    public KataegisWindow(final SomaticVariant variant)
+    {
+        mPosStart = variant.position();
+        mPosEnd = mPosStart;
+        mCount = 0;
     }
 
-    KataegisWindow(final KataegisWindow window) {
-        this.contig = window.contig;
-        this.start = window.start;
-        this.end = window.end;
-        this.count = window.count;
+    public KataegisWindow(final KataegisWindow window)
+    {
+        mPosStart = window.start();
+        mPosEnd = window.end();
+        mCount = window.mCount;
     }
 
-    public void add(final VariantContext context) {
-        this.count++;
-        this.end = context.getStart();
+    public void add(final SomaticVariant variant)
+    {
+        mCount++;
+        mPosEnd = variant.position();
     }
 
-    public int count() {
-        return count;
+    public int count()
+    {
+        return mCount;
     }
 
-    public long end() {
-        return end;
+    public int start()
+    {
+        return mPosEnd;
+    }
+    public int end()
+    {
+        return mPosEnd;
     }
 
-    boolean isViable(int minCount, long maxAverageDistance) {
+    boolean isViable(int minCount, long maxAverageDistance)
+    {
         return count() >= minCount && averageDistance() <= maxAverageDistance;
     }
 
-    long averageDistance() {
-        return count == 0 || count == 1 ? 0 : Math.round(1d * (end - start) / (count - 1));
+    long averageDistance()
+    {
+        return mCount == 0 || mCount == 1 ? 0 : Math.round(1d * (mPosEnd - mPosStart) / (mCount - 1));
     }
 }

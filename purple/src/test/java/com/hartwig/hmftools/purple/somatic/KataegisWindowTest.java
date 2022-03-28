@@ -6,12 +6,13 @@ import org.junit.Test;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class KataegisWindowTest {
-
+public class KataegisWindowTest
+{
     @Test
-    public void testAvgDistance() {
-        final VariantContext context1 = KataegisQueueTest.create("1", 1000, false);
-        final VariantContext context2 = KataegisQueueTest.create("1", 1100, false);
+    public void testAvgDistance()
+    {
+        final SomaticVariant context1 = KataegisQueueTest.create("1", 1000, false);
+        final SomaticVariant context2 = KataegisQueueTest.create("1", 1100, false);
 
         final KataegisWindow window = new KataegisWindow(context1);
         assertEquals(0, window.count());
@@ -26,9 +27,11 @@ public class KataegisWindowTest {
     }
 
     @Test
-    public void testAvgDistanceRounding() {
+    public void testAvgDistanceRounding()
+    {
         final KataegisWindow window = new KataegisWindow(KataegisQueueTest.create("1", 54730299, false));
-        for (int i = 0; i < 177; i++) {
+        for(int i = 0; i < 177; i++)
+        {
             window.add(KataegisQueueTest.create("1", 54906422, false));
         }
         assertEquals(1001, window.averageDistance());
