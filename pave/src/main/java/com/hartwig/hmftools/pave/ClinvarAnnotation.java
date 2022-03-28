@@ -61,7 +61,7 @@ public class ClinvarAnnotation
 
         for(ClinvarEntry entry : entries)
         {
-            if(variant.Position == entry.Position && variant.Ref.equals(entry.Ref) && variant.Alt.equals(entry.Alt))
+            if(entry.matches(variant))
             {
                 variant.context().getCommonInfo().putAttribute(CLNSIG, entry.Significance);
 
@@ -110,15 +110,14 @@ public class ClinvarAnnotation
                 int position = context.getStart();
                 String ref = context.getReference().getBaseString();
                 String alt = context.getAlternateAlleles().get(0).toString();
+
                 String significance = context.getAttributeAsString(CLNSIG, "");
                 String conflict = context.getAttributeAsString(CLNSIGCONF, "");
-
-                // TODO: convert list to sub-items or take the first?
 
                 if(significance.isEmpty() && conflict.isEmpty())
                     continue;
 
-                entries.add(new ClinvarEntry(position, ref, alt, significance, conflict));
+                entries.add(new ClinvarEntry(position, ref, alt, stripBrackets(significance), stripBrackets(conflict)));
             }
 
             PV_LOGGER.info("loaded {} Clinvar entries from file({})",
@@ -128,6 +127,11 @@ public class ClinvarAnnotation
         {
             PV_LOGGER.error("failed to read Clinvar VCF file: {}",  e.toString());
         }
+    }
+
+    private static String stripBrackets(final String clinvarStr)
+    {
+        return clinvarStr.replaceAll("\\[", "").replaceAll("\\]", "");
     }
 
     private class ClinvarEntry
@@ -145,6 +149,11 @@ public class ClinvarAnnotation
             Alt = alt;
             Significance = significance;
             Conflict = conflict;
+        }
+
+        public boolean matches(final VariantData variant)
+        {
+            return variant.Position == Position && variant.Ref.equals(Ref) && variant.Alt.equals(Alt);
         }
 
         public String toString() { return String.format("%d %s>%s details(%s - %s)",

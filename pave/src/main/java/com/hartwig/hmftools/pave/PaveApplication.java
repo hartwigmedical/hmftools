@@ -57,6 +57,7 @@ public class PaveApplication
     private final PonAnnotation mPonArtefacts;
     private final Mappability mMappability;
     private final ClinvarAnnotation mClinvar;
+    private final Blacklistings mBlacklistings;
 
     private VcfWriter mVcfWriter;
     private BufferedWriter mCsvTranscriptWriter;
@@ -78,6 +79,7 @@ public class PaveApplication
 
         mMappability = new Mappability(cmd);
         mClinvar = new ClinvarAnnotation(cmd);
+        mBlacklistings = new Blacklistings(cmd);
 
         mImpactBuilder = new VariantImpactBuilder(mGeneDataCache);
 
@@ -223,6 +225,7 @@ public class PaveApplication
         mGnomadAnnotation.annotateVariant(variant);
         mMappability.annotateVariant(variant);
         mClinvar.annotateVariant(variant);
+        mBlacklistings.annotateVariant(variant);
 
         mPon.annotateVariant(variant);
 
@@ -299,8 +302,10 @@ public class PaveApplication
         PV_LOGGER.info("writing VCF file({})", outputVcfFilename);
 
         mVcfWriter = new VcfWriter(outputVcfFilename, mConfig.VcfFile);
+
         mVcfWriter.writeHeader(
-                version.version(), mGnomadAnnotation.hasData(), mPon.isEnabled(), mMappability.hasData(), mClinvar.hasData());
+                version.version(), mGnomadAnnotation.hasData(), mPon.isEnabled(), mMappability.hasData(),
+                mClinvar.hasData(), mBlacklistings.hasData());
     }
 
     private void initialiseTranscriptWriter()

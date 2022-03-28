@@ -40,7 +40,8 @@ public class VcfWriter
     }
 
     public final void writeHeader(
-            final String paveVersion, boolean hasGnomadFrequency, boolean hasPon, boolean hasMappability, boolean hasClinvar)
+            final String paveVersion, boolean hasGnomadFrequency, boolean hasPon, boolean hasMappability, boolean hasClinvar,
+            boolean hasBlacklistings)
     {
         VCFHeader newHeader = new VCFHeader(mHeader.getFileHeader());
         newHeader.addMetaDataLine(new VCFHeaderLine("PaveVersion", paveVersion));
@@ -66,6 +67,11 @@ public class VcfWriter
         if(hasClinvar)
         {
             ClinvarAnnotation.addHeader(newHeader);
+        }
+
+        if(hasBlacklistings)
+        {
+            Blacklistings.addHeader(newHeader);
         }
 
         mWriter.writeHeader(newHeader);
