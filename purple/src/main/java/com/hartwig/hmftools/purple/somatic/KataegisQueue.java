@@ -85,7 +85,7 @@ public class KataegisQueue
                     if(isWindowViable && mCandidate.test(peek))
                     {
                         peek.context().getCommonInfo().putAttribute(KATAEGIS_FLAG, mIdPrefix + "_" + mIdentifier, true);
-                        PPL_LOGGER.debug("var({}) added kataegis flag: {}", peek, peek.context().getAttribute(KATAEGIS_FLAG));
+                        // PPL_LOGGER.debug("var({}) added kataegis flag: {}", peek, peek.context().getAttribute(KATAEGIS_FLAG));
                     }
 
                     SomaticVariant var = mBuffer.pollFirst();

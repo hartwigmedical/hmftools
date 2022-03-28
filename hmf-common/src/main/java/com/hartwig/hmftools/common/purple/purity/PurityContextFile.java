@@ -120,11 +120,11 @@ public final class PurityContextFile
                 .add(String.valueOf(context.version()))
                 .add(FORMAT.format(purity.somaticPenalty()))
                 .add(String.valueOf(context.wholeGenomeDuplication()))
-                .add(String.valueOf(context.microsatelliteIndelsPerMb()))
+                .add(FORMAT.format(context.microsatelliteIndelsPerMb()))
                 .add(String.valueOf(context.microsatelliteStatus()))
                 .add(String.valueOf(context.tumorMutationalLoad()))
                 .add(String.valueOf(context.tumorMutationalLoadStatus()))
-                .add(String.valueOf(context.tumorMutationalBurdenPerMb()))
+                .add(FORMAT.format(context.tumorMutationalBurdenPerMb()))
                 .add(String.valueOf(context.tumorMutationalBurdenStatus()))
                 .add(String.valueOf(context.svTumorMutationalBurden()))
                 .toString();

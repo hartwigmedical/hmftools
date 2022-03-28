@@ -66,8 +66,6 @@ public class SomaticVariantCache
         if(somaticVcf.isEmpty())
             return;
 
-        // final SomaticVariantFactory factory = new SomaticVariantFactory(new PassingVariantFilter(), new SGTFilter());
-
         final HotspotEnrichment hotspotEnrichment = new HotspotEnrichment(somaticHotspots, true);
 
         VCFFileReader vcfReader = new VCFFileReader(new File(somaticVcf), false);
@@ -93,7 +91,7 @@ public class SomaticVariantCache
             }
         }
 
-        PPL_LOGGER.info("load somatic variants({} pass={}) from {}", mVariants.size(), mFittingVariants.size(), somaticVcf);
+        PPL_LOGGER.info("loaded somatic variants({} pass={}) from {}", mVariants.size(), mFittingVariants.size(), somaticVcf);
     }
 
     public VCFHeader getVcfHeader() { return mVcfHeader; }
