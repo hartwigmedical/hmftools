@@ -14,6 +14,10 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
+import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFInfoHeaderLine;
+
 public class Mappability
 {
     private BufferedReader mFileReader;
@@ -22,8 +26,8 @@ public class Mappability
     private List<MapEntry> mEntries;
     private MapEntry mNextChromosomeEntry;
 
-    private static final int MAX_LIST_COUNT = 3;
-    private static final String MAPPABILITY_FILE = "mappability_file";
+    private static final int MAX_LIST_COUNT = 1000;
+    private static final String MAPPABILITY_BED = "mappability_bed";
 
     public static final String MAPPABILITY = "MAPPABILITY";
     public static final String MAPPABILITY_DESC = "GEM mappability in 150 base window";
@@ -36,9 +40,9 @@ public class Mappability
         mEntries = Lists.newArrayList();
         mNextChromosomeEntry = null;
 
-        if(cmd.hasOption(MAPPABILITY_FILE))
+        if(cmd.hasOption(MAPPABILITY_BED))
         {
-            initialiseFile(cmd.getOptionValue(MAPPABILITY_FILE));
+            initialiseFile(cmd.getOptionValue(MAPPABILITY_BED));
         }
     }
 
@@ -83,9 +87,14 @@ public class Mappability
         return false;
     }
 
+    public static void addHeader(final VCFHeader header)
+    {
+        header.addMetaDataLine(new VCFInfoHeaderLine(MAPPABILITY, 1, VCFHeaderLineType.Float, MAPPABILITY_DESC));
+    }
+
     public static void addCmdLineArgs(Options options)
     {
-        options.addOption(MAPPABILITY_FILE, true, "Mappability file");
+        options.addOption(MAPPABILITY_BED, true, "Mappability BED file");
     }
 
     private void initialiseFile(final String filename)
@@ -101,7 +110,7 @@ public class Mappability
         }
         catch(IOException e)
         {
-            PV_LOGGER.error("failed to load PON file({}): {}", filename, e.toString());
+            PV_LOGGER.error("failed to load mappability file({}): {}", filename, e.toString());
         }
     }
 
@@ -172,8 +181,8 @@ public class Mappability
 
     private class MapEntry
     {
-        ChrBaseRegion Region;
-        double Mappability;
+        public final ChrBaseRegion Region;
+        public final double Mappability;
 
         public MapEntry(final ChrBaseRegion region, final double mappability)
         {

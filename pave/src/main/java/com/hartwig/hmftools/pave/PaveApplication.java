@@ -16,8 +16,8 @@ import static com.hartwig.hmftools.pave.PaveConfig.PON_FILTERS;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 import static com.hartwig.hmftools.pave.PaveUtils.createRightAlignedVariant;
+import static com.hartwig.hmftools.pave.PonAnnotation.PON_ARTEFACT_FILTER;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
-import static com.hartwig.hmftools.pave.VcfWriter.PON_ARTEFACT_FILTER;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
@@ -56,6 +56,7 @@ public class PaveApplication
     private final PonAnnotation mPon;
     private final PonAnnotation mPonArtefacts;
     private final Mappability mMappability;
+    private final ClinvarAnnotation mClinvar;
 
     private VcfWriter mVcfWriter;
     private BufferedWriter mCsvTranscriptWriter;
@@ -76,6 +77,7 @@ public class PaveApplication
         mPonArtefacts = new PonAnnotation(cmd.getOptionValue(PON_ARTEFACTS_FILE), false);
 
         mMappability = new Mappability(cmd);
+        mClinvar = new ClinvarAnnotation(cmd);
 
         mImpactBuilder = new VariantImpactBuilder(mGeneDataCache);
 
@@ -143,7 +145,7 @@ public class PaveApplication
         }
         catch(IOException e)
         {
-            PV_LOGGER.error(" failed to read somatic VCF file({}): {}", mConfig.VcfFile, e.toString());
+            PV_LOGGER.error("failed to read somatic VCF file({}): {}", mConfig.VcfFile, e.toString());
         }
 
         PV_LOGGER.info("sample({}) processed {} variants", sampleId, variantCount);
@@ -220,6 +222,7 @@ public class PaveApplication
     {
         mGnomadAnnotation.annotateVariant(variant);
         mMappability.annotateVariant(variant);
+        mClinvar.annotateVariant(variant);
 
         mPon.annotateVariant(variant);
 
@@ -296,7 +299,8 @@ public class PaveApplication
         PV_LOGGER.info("writing VCF file({})", outputVcfFilename);
 
         mVcfWriter = new VcfWriter(outputVcfFilename, mConfig.VcfFile);
-        mVcfWriter.writeHeader(version.version(), mGnomadAnnotation.hasData(), mPon.isEnabled(), mMappability.hasData());
+        mVcfWriter.writeHeader(
+                version.version(), mGnomadAnnotation.hasData(), mPon.isEnabled(), mMappability.hasData(), mClinvar.hasData());
     }
 
     private void initialiseTranscriptWriter()

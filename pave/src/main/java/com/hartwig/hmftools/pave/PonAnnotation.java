@@ -3,7 +3,6 @@ package com.hartwig.hmftools.pave;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.ITEM_DELIM;
-import static com.hartwig.hmftools.pave.VcfWriter.PON_FILTER;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,6 +12,11 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.VariantTier;
+
+import htsjdk.variant.vcf.VCFFilterHeaderLine;
+import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class PonAnnotation
 {
@@ -26,6 +30,11 @@ public class PonAnnotation
     private boolean mHasValidData;
 
     private final Map<VariantTier,PonFilters> mPonFilters;
+
+    public static final String PON_COUNT = "PON_COUNT";
+    public static final String PON_MAX = "PON_MAX";
+    public static final String PON_FILTER = "PON";
+    public static final String PON_ARTEFACT_FILTER = "PONArtefact";
 
     public PonAnnotation(final String filename, boolean loadOnDemand)
     {
@@ -252,6 +261,19 @@ public class PonAnnotation
             mHasValidData = false;
             return;
         }
+    }
+
+    public static void addHeader(final VCFHeader header)
+    {
+        header.addMetaDataLine(new VCFInfoHeaderLine(
+                PON_COUNT, 1, VCFHeaderLineType.Integer, "Cohort frequency for variant"));
+
+        header.addMetaDataLine(new VCFInfoHeaderLine(
+                PON_MAX, 1, VCFHeaderLineType.Integer, "Max read depth in any sample with variant"));
+
+        header.addMetaDataLine(new VCFFilterHeaderLine(PON_ARTEFACT_FILTER, "Filter PON artefact"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(PON_FILTER, "Filter PON variant"));
+
     }
 
     private class PonFilters

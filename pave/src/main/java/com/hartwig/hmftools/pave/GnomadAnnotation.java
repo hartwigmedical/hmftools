@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
-import static com.hartwig.hmftools.pave.VcfWriter.PON_GNOMAD_FILTER;
 import static com.hartwig.hmftools.pave.external.GnomadCacheBuilder.GNOMAD_FILE_ID;
 import static com.hartwig.hmftools.pave.external.GnomadCacheBuilder.formFileId;
 
@@ -27,6 +26,11 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
+import htsjdk.variant.vcf.VCFFilterHeaderLine;
+import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFInfoHeaderLine;
+
 public class GnomadAnnotation
 {
     private final Map<String,Map<Integer,List<GnomadVariant>>> mFrequencies;
@@ -39,6 +43,9 @@ public class GnomadAnnotation
     public static final String GNOMAD_FREQUENCY_DIR = "gnomad_freq_dir";
     private static final String GNOMAD_LOAD_CHR_ON_DEMAND = "gnomad_load_chr_on_demand";
     private static final String GNOMAD_PON_FILTER = "gnomad_pon_filter";
+
+    public static final String GNOMAD_FREQ = "GND_FREQ";
+    public static final String PON_GNOMAD_FILTER = "PONGnomad";
 
     private static final double DEFAULT_PON_FILTER_THRESHOLD = 0.00015;
 
@@ -269,6 +276,14 @@ public class GnomadAnnotation
         options.addOption(GNOMAD_FREQUENCY_DIR, true, "Gnomad frequency directory");
         options.addOption(GNOMAD_LOAD_CHR_ON_DEMAND, false, "Gnomad load frequency files by chromosome on demand");
         options.addOption(GNOMAD_PON_FILTER, true, "Gnomad PON frequency filter (default: 0.00015)");
+    }
+
+    public static void addHeader(final VCFHeader header)
+    {
+        header.addMetaDataLine(new VCFInfoHeaderLine(
+                GNOMAD_FREQ, 1, VCFHeaderLineType.Float, "Gnomad variant frequency"));
+
+        header.addMetaDataLine(new VCFFilterHeaderLine(PON_GNOMAD_FILTER, "Filter Gnoamd PON"));
     }
 
     private class GnomadVariant

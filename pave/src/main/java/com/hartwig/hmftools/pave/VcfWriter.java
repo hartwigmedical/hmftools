@@ -1,7 +1,8 @@
 package com.hartwig.hmftools.pave;
 
-import static com.hartwig.hmftools.pave.Mappability.MAPPABILITY_DESC;
-import static com.hartwig.hmftools.pave.Mappability.MAPPABILITY;
+import static com.hartwig.hmftools.pave.GnomadAnnotation.GNOMAD_FREQ;
+import static com.hartwig.hmftools.pave.PonAnnotation.PON_COUNT;
+import static com.hartwig.hmftools.pave.PonAnnotation.PON_MAX;
 
 import java.io.File;
 import java.util.List;
@@ -17,25 +18,15 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
-import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLine;
-import htsjdk.variant.vcf.VCFHeaderLineType;
-import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class VcfWriter
 {
     private final VCFFileReader mHeader;
     private final VariantContextWriter mWriter;
 
-    public static final String PON_COUNT = "PON_COUNT";
-    public static final String PON_MAX = "PON_MAX";
-    public static final String GNOMAD_FREQ = "GND_FREQ";
-
     public static final String PASS = "PASS";
-    public static final String PON_FILTER = "PON";
-    public static final String PON_GNOMAD_FILTER = "PONGnomad";
-    public static final String PON_ARTEFACT_FILTER = "PONArtefact";
 
     public VcfWriter(final String outputVCF, final String templateVCF)
     {
@@ -48,7 +39,8 @@ public class VcfWriter
                 .build();
     }
 
-    public final void writeHeader(final String paveVersion, boolean hasGnomadFrequency, boolean hasPon, boolean hasMappability)
+    public final void writeHeader(
+            final String paveVersion, boolean hasGnomadFrequency, boolean hasPon, boolean hasMappability, boolean hasClinvar)
     {
         VCFHeader newHeader = new VCFHeader(mHeader.getFileHeader());
         newHeader.addMetaDataLine(new VCFHeaderLine("PaveVersion", paveVersion));
@@ -58,28 +50,22 @@ public class VcfWriter
 
         if(hasPon)
         {
-            newHeader.addMetaDataLine(new VCFInfoHeaderLine(
-                    PON_COUNT, 1, VCFHeaderLineType.Integer, "Cohort frequency for variant"));
-
-            newHeader.addMetaDataLine(new VCFInfoHeaderLine(
-                    PON_MAX, 1, VCFHeaderLineType.Integer, "Max read depth in any sample with variant"));
-
-            newHeader.addMetaDataLine(new VCFFilterHeaderLine(PON_ARTEFACT_FILTER, "Filter PON artefact"));
-            newHeader.addMetaDataLine(new VCFFilterHeaderLine(PON_FILTER, "Filter PON variant"));
+            PonAnnotation.addHeader(newHeader);
         }
 
         if(hasGnomadFrequency)
         {
-            newHeader.addMetaDataLine(new VCFInfoHeaderLine(
-                    GNOMAD_FREQ, 1, VCFHeaderLineType.Float, "Gnomad variant frequency"));
-
-            newHeader.addMetaDataLine(new VCFFilterHeaderLine(PON_GNOMAD_FILTER, "Filter Gnoamd PON"));
+            GnomadAnnotation.addHeader(newHeader);
         }
 
         if(hasMappability)
         {
-            newHeader.addMetaDataLine(new VCFInfoHeaderLine(
-                    MAPPABILITY, 1, VCFHeaderLineType.Float, MAPPABILITY_DESC));
+            Mappability.addHeader(newHeader);
+        }
+
+        if(hasClinvar)
+        {
+            ClinvarAnnotation.addHeader(newHeader);
         }
 
         mWriter.writeHeader(newHeader);

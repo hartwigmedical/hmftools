@@ -103,6 +103,7 @@ public class PaveConfig
 
         GnomadAnnotation.addCmdLineArgs(options);
         Mappability.addCmdLineArgs(options);
+        ClinvarAnnotation.addCmdLineArgs(options);
 
         addOutputDir(options);
         addLoggingOptions(options);
