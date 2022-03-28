@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.purple.config.PurpleConstants.WINDOW_SIZE;
 import java.io.File;
 import java.io.IOException;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
@@ -46,20 +47,8 @@ public class AmberData
         return (int) Math.ceil(MAX_SOMATIC_TOTAL_READ_COUNT_PROPORTION * AverageTumorDepth);
     }
 
-    public AmberData(final String sampleId, final String amberDirectory) throws ParseException, IOException
+    public AmberData(final String sampleId, final String amberDirectory, final boolean germlineOnlyMode) throws ParseException, IOException
     {
-        final String amberFilename = AmberBAFFile.generateAmberFilenameForReading(amberDirectory, sampleId);
-        if(!new File(amberFilename).exists())
-        {
-            throw new ParseException("Unable to open Amber BAF file: " + amberFilename);
-        }
-
-        final String pcfFilename = PCFFile.generateBAFFilename(amberDirectory, sampleId);
-        if(!new File(pcfFilename).exists())
-        {
-            throw new ParseException("Unable to open Amber PCF file: " + pcfFilename);
-        }
-
         final String qcFile = AmberQCFile.generateFilename(amberDirectory, sampleId);
         if(!new File(qcFile).exists())
         {
@@ -69,12 +58,31 @@ public class AmberData
         PPL_LOGGER.info("reading Amber QC from {}", qcFile);
         Contamination = AmberQCFile.read(qcFile).contamination();
 
+        final String amberFilename = AmberBAFFile.generateAmberFilenameForReading(amberDirectory, sampleId);
+        if(!new File(amberFilename).exists())
+        {
+            throw new ParseException("Unable to open Amber BAF file: " + amberFilename);
+        }
+
         PPL_LOGGER.info("reading Amber BAFs from {}", amberFilename);
-        ChromosomeBafs = AmberBAFFile.read(amberFilename);
+        ChromosomeBafs = AmberBAFFile.read(amberFilename, !germlineOnlyMode);
 
-        PPL_LOGGER.info("reading Amber PCFs from {}", pcfFilename);
+        if(!germlineOnlyMode)
+        {
+            final String pcfFilename = PCFFile.generateBAFFilename(amberDirectory, sampleId);
+            if(!new File(pcfFilename).exists())
+            {
+                throw new ParseException("Unable to open Amber PCF file: " + pcfFilename);
+            }
 
-        TumorSegments = PCFFile.readPositions(WINDOW_SIZE, PCFSource.TUMOR_BAF, pcfFilename);
+            PPL_LOGGER.info("reading Amber PCFs from {}", pcfFilename);
+
+            TumorSegments = PCFFile.readPositions(WINDOW_SIZE, PCFSource.TUMOR_BAF, pcfFilename);
+        }
+        else
+        {
+            TumorSegments = ArrayListMultimap.create();
+        }
 
         AverageTumorDepth = (int) Math.round(ChromosomeBafs.values()
                 .stream()

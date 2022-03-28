@@ -187,10 +187,12 @@ public class PurpleApplication
             if(!mConfig.DriversOnly)
             {
                 // load amber and cobalt sample data
-                final AmberData amberData = new AmberData(mConfig.germlineMode() ? referenceId : tumorId, sampleDataFiles.AmberDirectory);
+                final AmberData amberData = new AmberData(
+                        mConfig.germlineMode() ? referenceId : tumorId, sampleDataFiles.AmberDirectory, mConfig.germlineMode());
 
                 final CobaltData cobaltData = new CobaltData(
-                        referenceId, tumorId, sampleDataFiles.CobaltDirectory, amberData.PatientGender, mConfig.tumorOnlyMode());
+                        referenceId, tumorId, sampleDataFiles.CobaltDirectory, amberData.PatientGender,
+                        mConfig.tumorOnlyMode(), mConfig.germlineMode());
 
                 // load structural and somatic variants
                 final StructuralVariantCache svCache = createStructuralVariantCache(tumorId, sampleDataFiles);

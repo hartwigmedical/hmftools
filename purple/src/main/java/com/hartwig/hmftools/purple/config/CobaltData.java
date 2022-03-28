@@ -38,34 +38,33 @@ public class CobaltData
 
     public CobaltData(
             final String referenceId, final String tumorId, final String cobaltDirectory,
-            final Gender amberGender, final boolean tumorOnlyMode)
+            final Gender amberGender, final boolean tumorOnlyMode, final boolean germlineOnlyMode)
             throws ParseException, IOException
     {
         if(tumorId != null)
         {
-            final String cobaltFilename = CobaltRatioFile.generateFilenameForReading(cobaltDirectory, tumorId);
-            if(!new File(cobaltFilename).exists())
-            {
-                throw new ParseException("uable to open Cobalt ratio file: " + cobaltFilename);
-            }
-
             final String tumorSegmentFile = PCFFile.generateRatioFilename(cobaltDirectory, tumorId);
             if(!new File(tumorSegmentFile).exists())
             {
                 throw new ParseException("unable to open Cobalt tumor pcf file: " + tumorSegmentFile);
             }
 
-            PPL_LOGGER.info("reading Cobalt ratios from {}", cobaltFilename);
-            Ratios = CobaltRatioFile.readWithGender(cobaltFilename, tumorOnlyMode ? amberGender : null, !tumorOnlyMode);
-
             PPL_LOGGER.info("reading Cobalt tumor segments from {}", tumorSegmentFile);
             TumorSegments = PCFFile.readPositions(WINDOW_SIZE, PCFSource.TUMOR_RATIO, tumorSegmentFile);
         }
         else
         {
-            Ratios = Maps.newHashMap();
             TumorSegments = ArrayListMultimap.create();
         }
+
+        final String cobaltFilename = CobaltRatioFile.generateFilenameForReading(cobaltDirectory, tumorId);
+        if(!new File(cobaltFilename).exists())
+        {
+            throw new ParseException("uable to open Cobalt ratio file: " + cobaltFilename);
+        }
+
+        PPL_LOGGER.info("reading Cobalt ratios from {}", cobaltFilename);
+        Ratios = CobaltRatioFile.readWithGender(cobaltFilename, tumorOnlyMode ? amberGender : null, !tumorOnlyMode, !germlineOnlyMode);
 
         if(referenceId != null)
         {
