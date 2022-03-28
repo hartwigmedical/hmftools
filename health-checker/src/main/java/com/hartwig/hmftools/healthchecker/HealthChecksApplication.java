@@ -72,11 +72,6 @@ public class HealthChecksApplication {
 
         boolean writeEvaluationFile = !cmd.hasOption(DO_NOT_WRITE_EVALUATION_FILE);
         String outputDir = cmd.hasOption(OUTPUT_DIR) ? cmd.getOptionValue(OUTPUT_DIR) : null;
-        if (writeEvaluationFile && outputDir == null) {
-            HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp(APPLICATION, options);
-            System.exit(1);
-        }
 
         String refSample = cmd.getOptionValue(REF_SAMPLE, null);
         String refFlagstat = cmd.getOptionValue(REF_FLAGSTAT_FILE, null);
@@ -85,9 +80,17 @@ public class HealthChecksApplication {
         String tumorWgsMetricsFile = cmd.getOptionValue(TUMOR_WGS_METRICS_FILE, null);
         String tumorFlagstat = cmd.getOptionValue(TUMOR_FLAGSTAT_FILE, null);
 
+        if (missingSampleArgument(refSample, refFlagstat, refWgsMetricsFile) || missingSampleArgument(tumorSample,
+                tumorFlagstat,
+                tumorWgsMetricsFile) || writeEvaluationFile && outputDir == null) {
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp(APPLICATION, options);
+            System.exit(1);
+        }
+
         String purpleDir = cmd.getOptionValue(PURPLE_DIR, null);
-        new HealthChecksApplication(HealthCheckSampleConfiguration.of(tumorSample, tumorWgsMetricsFile, tumorFlagstat),
-                HealthCheckSampleConfiguration.of(refSample, refWgsMetricsFile, refFlagstat),
+        new HealthChecksApplication(HealthCheckSampleConfiguration.of(refSample, refWgsMetricsFile, refFlagstat),
+                HealthCheckSampleConfiguration.of(tumorSample, tumorWgsMetricsFile, tumorFlagstat),
                 purpleDir,
                 outputDir).run(writeEvaluationFile);
     }
@@ -105,6 +108,13 @@ public class HealthChecksApplication {
         options.addOption(DO_NOT_WRITE_EVALUATION_FILE, false, "Do not write final success or failure file");
         options.addOption(OUTPUT_DIR, true, "The directory where health checker will write output to");
         return options;
+    }
+
+    private static boolean missingSampleArgument(final String sample, final String flagstat, final String wgsMetricsFile) {
+        if (sample != null || flagstat != null || wgsMetricsFile != null) {
+            return sample == null || flagstat == null || wgsMetricsFile == null;
+        }
+        return false;
     }
 
     @VisibleForTesting
