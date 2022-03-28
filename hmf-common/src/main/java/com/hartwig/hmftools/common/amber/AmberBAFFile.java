@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +28,8 @@ public final class AmberBAFFile
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
 
     private static final String DELIMITER = "\t";
-    private static final String AMBER_EXTENSION = ".amber.baf.tsv";
+    private static final String AMBER_EXTENSION = ".amber.baf.tsv.gz";
+    private static final String AMBER_EXTENSION_OLD = ".amber.baf.tsv";
 
     @NotNull
     public static String generateAmberFilenameForWriting(final String basePath, final String sample)
@@ -38,7 +40,12 @@ public final class AmberBAFFile
     @NotNull
     public static String generateAmberFilenameForReading(final String basePath, final String sample)
     {
-        return basePath + File.separator + sample + AMBER_EXTENSION;
+        String filename = basePath + File.separator + sample + AMBER_EXTENSION;
+
+        if(Files.exists(Paths.get(filename)))
+            return filename;
+
+        return basePath + File.separator + sample + AMBER_EXTENSION_OLD;
     }
 
     private static final String CHROMOSOME = "chromosome";
@@ -51,7 +58,7 @@ public final class AmberBAFFile
     private static final String NORM_DEPTH = "normalDepth";
 
     @NotNull
-    public static Multimap<Chromosome,AmberBAF> read(final String fileName) throws IOException
+    public static Multimap<Chromosome,AmberBAF> read(final String fileName, boolean hasTumor) throws IOException
     {
         ListMultimap<Chromosome,AmberBAF> chrBafMap = ArrayListMultimap.create();
 
@@ -73,10 +80,12 @@ public final class AmberBAFFile
 
             String chromosome = values[chrIndex];
 
+            double tumorBAF = hasTumor ? Double.parseDouble(values[tumorBafIndex]) : 0.5;
+
             AmberBAF amberBAF = ImmutableAmberBAF.builder()
                     .chromosome(chromosome)
                     .position(Integer.parseInt(values[posIndex]))
-                    .tumorBAF(Double.parseDouble(values[tumorBafIndex]))
+                    .tumorBAF(tumorBAF)
                     .tumorDepth(Integer.parseInt(values[tumorDepthIndex]))
                     .normalBAF(Double.parseDouble(values[normBafIndex]))
                     .normalDepth(Integer.parseInt(values[normDepthIndex]))
