@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.pave;
 
-import static java.lang.Math.max;
-
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
@@ -11,7 +9,6 @@ import static com.hartwig.hmftools.pave.external.GnomadCacheBuilder.GNOMAD_FILE_
 import static com.hartwig.hmftools.pave.external.GnomadCacheBuilder.formFileId;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;

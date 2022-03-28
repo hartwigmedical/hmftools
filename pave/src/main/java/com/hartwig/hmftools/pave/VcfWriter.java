@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.pave;
 
+import static com.hartwig.hmftools.pave.Mappability.MAPPABILITY_DESC;
+import static com.hartwig.hmftools.pave.Mappability.MAPPABILITY;
+
 import java.io.File;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +48,7 @@ public class VcfWriter
                 .build();
     }
 
-    public final void writeHeader(final String paveVersion, boolean hasGnomadFrequency, boolean hasPon)
+    public final void writeHeader(final String paveVersion, boolean hasGnomadFrequency, boolean hasPon, boolean hasMappability)
     {
         VCFHeader newHeader = new VCFHeader(mHeader.getFileHeader());
         newHeader.addMetaDataLine(new VCFHeaderLine("PaveVersion", paveVersion));
@@ -71,6 +74,12 @@ public class VcfWriter
                     GNOMAD_FREQ, 1, VCFHeaderLineType.Float, "Gnomad variant frequency"));
 
             newHeader.addMetaDataLine(new VCFFilterHeaderLine(PON_GNOMAD_FILTER, "Filter Gnoamd PON"));
+        }
+
+        if(hasMappability)
+        {
+            newHeader.addMetaDataLine(new VCFInfoHeaderLine(
+                    MAPPABILITY, 1, VCFHeaderLineType.Float, MAPPABILITY_DESC));
         }
 
         mWriter.writeHeader(newHeader);
