@@ -112,6 +112,12 @@ urls | A list of urls with additional information about the evidence | https://p
 
 ## Version History and Download Links
 - [2.1] (Upcoming)
+  - Add the raw input string of the input knowledgebases
+  - Add the CKB advanced source link
+  - Supporting tumor location blacklisting 
+  - Support the 2 proteins of CDKN2A
+  - Support the different comparators of signatures
+  - Determine evidence is based on a high driver event 
 - [2.0](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v2.0)
    - New datamodel supporting evidence types, range ranks and explicit genes. 
    - Support for virus interpreter v1.2
