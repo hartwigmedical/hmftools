@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.hla.HlaCommon.hlaChromosome;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
@@ -40,6 +41,7 @@ import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.hla.HlaCommon;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
 import com.hartwig.hmftools.purple.germline.GermlineDeletionFrequency;
@@ -196,6 +198,9 @@ public class ReferenceData
         OtherReportableTranscripts = Maps.newHashMap();
         GeneTransCache = new EnsemblDataCache(cmd.getOptionValue(ENSEMBL_DATA_DIR, ""), RefGenVersion);
         loadGeneTransCache();
+
+        if(config.tumorOnlyMode())
+            HlaCommon.populateGeneData(GeneTransCache.getChrGeneDataMap().get(hlaChromosome(RefGenVersion)));
 
         SomaticHotspots = ArrayListMultimap.create();
         GermlineHotspots = ArrayListMultimap.create();

@@ -2,6 +2,8 @@ package com.hartwig.hmftools.purple.somatic;
 
 import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT_FLAG;
 
+import java.util.Set;
+
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
@@ -9,7 +11,6 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 public class SomaticVariant implements GenomePosition
 {

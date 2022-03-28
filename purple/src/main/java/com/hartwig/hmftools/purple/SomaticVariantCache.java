@@ -8,6 +8,7 @@ import java.util.List;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.hla.HlaCommon;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
@@ -19,6 +20,7 @@ import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 import com.hartwig.hmftools.purple.somatic.SomaticPurityEnrichment;
 
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
@@ -71,13 +73,20 @@ public class SomaticVariantCache
         VCFFileReader vcfReader = new VCFFileReader(new File(somaticVcf), false);
         mVcfHeader = vcfReader.getHeader();
 
+        boolean tumorOnly = mConfig.tumorOnlyMode();
+
         for(VariantContext variantContext : vcfReader)
         {
             SomaticVariant variant = new SomaticVariant(variantContext, mConfig.TumorId);
+
+            if(tumorOnly && HlaCommon.containsPosition(variant)) // ignore these completely
+                continue;
+
             mVariants.add(variant);
 
             // hotspot status is used in fitting as well as during and for enrichment
             hotspotEnrichment.processVariant(variantContext);
+
 
             if(isFittingCandidate(variant))
                 mFittingVariants.add(variant);
