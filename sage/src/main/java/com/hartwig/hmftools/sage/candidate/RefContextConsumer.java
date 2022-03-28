@@ -14,6 +14,7 @@ import java.util.function.Function;
 import com.beust.jcommander.internal.Sets;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.hla.HlaCommon;
 import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.samtools.CigarTraversal;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
@@ -139,9 +140,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
     private boolean exceedsQualityCheck(final SAMRecord record, int numberOfEvents)
     {
         // ignore HLA genes
-        if(mConfig.Quality.HighlyPolymorphicGenes.stream()
-            .anyMatch(x -> record.getContig().equals(x.Chromosome)
-                    && positionsOverlap(record.getStart(), record.getEnd(), x.GeneStart, x.GeneEnd)))
+        if(HlaCommon.overlaps(record.getContig(), record.getStart(), record.getEnd()))
         {
             return true;
         }

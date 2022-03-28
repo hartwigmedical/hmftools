@@ -6,20 +6,23 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
+
 import org.jetbrains.annotations.NotNull;
 
-public final class HlaFiles {
-
-    private HlaFiles() {
+public final class HlaFiles
+{
+    @NotNull
+    public static List<HlaTypeDetails> typeDetails(final String lilacFile) throws IOException
+    {
+        // never used in production, may revisit
+        return Lists.newArrayList();
+        //return Files.readAllLines(new File(lilacFile).toPath()).stream().skip(1).map(HlaFiles::fromString).collect(Collectors.toList());
     }
 
     @NotNull
-    public static List<HlaTypeDetails> typeDetails(@NotNull final String lilacFile) throws IOException {
-        return Files.readAllLines(new File(lilacFile).toPath()).stream().skip(1).map(HlaFiles::fromString).collect(Collectors.toList());
-    }
-
-    @NotNull
-    private static HlaTypeDetails fromString(String line) {
+    private static HlaTypeDetails fromString(String line)
+    {
         String[] split = line.split("\t");
         return ImmutableHlaTypeDetails.builder()
                 .type(split[0])
@@ -39,14 +42,16 @@ public final class HlaFiles {
     }
 
     @NotNull
-    public static HlaType type(@NotNull final String lilacFile, @NotNull final String lilacQc) throws IOException {
+    public static HlaType type(final String lilacFile, final String lilacQc) throws IOException
+    {
         String[] qcLines = Files.readAllLines(new File(lilacQc).toPath()).get(1).split("\t");
         String qcStatus = qcLines[0];
         int qcVariants = Integer.parseInt(qcLines[18]);
 
         List<String> alleles =
                 Files.readAllLines(new File(lilacFile).toPath()).stream().skip(1).map(x -> x.split("\t")[0]).collect(Collectors.toList());
-        if (alleles.size() != 6) {
+        if(alleles.size() != 6)
+        {
             throw new IllegalStateException();
         }
 

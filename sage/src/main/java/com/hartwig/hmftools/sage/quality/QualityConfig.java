@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.hla.HlaCommon;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -25,10 +26,7 @@ public class QualityConfig
     public final int DistanceFromReadEdgeFixedPenalty;
     public final int MapQualityFixedPenalty;
     public final int MapQualityReadEventsPenalty;
-    public final List<GeneData> HighlyPolymorphicGenes;
     public final int MapQualityImproperPairPenalty;
-
-    private final Set<String> mHighlyPolymorphicGeneNames;
 
     private static final String JITTER_PENALTY = "jitter_penalty";
     private static final String JITTER_MIN_REPEAT_COUNT = "jitter_min_repeat_count";
@@ -37,7 +35,6 @@ public class QualityConfig
     private static final String MAP_QUAL_FIXED_PENALTY = "map_qual_fixed_penalty";
     private static final String MAP_QUAL_IMPROPER_PAIR_PENALTY = "map_qual_improper_pair_penalty";
     private static final String MAP_QUAL_READ_EVENTS_PENALTY = "map_qual_read_events_penalty";
-    private static final String HIGHLY_POLYMORPHIC_GENES = "highly_polymorphic_genes";
 
     private static final double DEFAULT_JITTER_PENALTY = 0.25;
     private static final int DEFAULT_JITTER_MIN_REPEAT_COUNT = 3;
@@ -46,15 +43,9 @@ public class QualityConfig
     private static final int DEFAULT_MAP_QUAL_FIXED_PENALTY = 15;
     private static final int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
     private static final int DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 8;
-    private static final String DEFAULT_HIGHLY_POLYMORPHIC_GENES = "HLA-A,HLA-B,HLA-C,HLA-DQA1,HLA-DQB1,HLA-DRB1";
 
     public QualityConfig(final CommandLine cmd)
     {
-        mHighlyPolymorphicGeneNames = Arrays.stream(cmd.getOptionValue(HIGHLY_POLYMORPHIC_GENES, DEFAULT_HIGHLY_POLYMORPHIC_GENES)
-                .split(",")).collect(Collectors.toSet());
-
-        HighlyPolymorphicGenes = Lists.newArrayList();
-
         JitterPenalty = getConfigValue(cmd, JITTER_PENALTY, DEFAULT_JITTER_PENALTY);
         JitterMinRepeatCount = getConfigValue(cmd, JITTER_MIN_REPEAT_COUNT, DEFAULT_JITTER_MIN_REPEAT_COUNT);
         BaseQualityFixedPenalty = getConfigValue(cmd, BASE_QUAL_FIXED_PENALTY, DEFAULT_BASE_QUAL_FIXED_PENALTY);
@@ -62,12 +53,6 @@ public class QualityConfig
         MapQualityFixedPenalty = getConfigValue(cmd, MAP_QUAL_FIXED_PENALTY, DEFAULT_MAP_QUAL_FIXED_PENALTY);
         MapQualityReadEventsPenalty = getConfigValue(cmd, MAP_QUAL_READ_EVENTS_PENALTY, DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY);
         MapQualityImproperPairPenalty = getConfigValue(cmd, MAP_QUAL_IMPROPER_PAIR_PENALTY, DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY);
-    }
-
-    public void populateGeneData(final List<GeneData> geneDataList)
-    {
-        HighlyPolymorphicGenes.addAll(geneDataList.stream()
-                .filter(x -> mHighlyPolymorphicGeneNames.contains(x.GeneName)).collect(Collectors.toList()));
     }
 
     public QualityConfig()
@@ -78,23 +63,17 @@ public class QualityConfig
         DistanceFromReadEdgeFixedPenalty = DEFAULT_READ_EDGE_FIXED_PENALTY;
         MapQualityFixedPenalty = DEFAULT_MAP_QUAL_FIXED_PENALTY;
         MapQualityReadEventsPenalty = DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY;
-        HighlyPolymorphicGenes = Lists.newArrayList();
-        mHighlyPolymorphicGeneNames = Sets.newHashSet();
         MapQualityImproperPairPenalty = DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY;
     }
 
     public boolean isHighlyPolymorphic(final GenomePosition position)
     {
-        return HighlyPolymorphicGenes.stream()
-                .anyMatch(x -> position.chromosome().equals(x.Chromosome) && positionWithin(position.position(), x.GeneStart, x.GeneEnd));
+        return HlaCommon.containsPosition(position);
     }
 
     public static Options createOptions()
     {
         final Options options = new Options();
-        options.addOption(HIGHLY_POLYMORPHIC_GENES,
-                true,
-                "Genes to exclude event distance penalty [" + DEFAULT_HIGHLY_POLYMORPHIC_GENES + "]");
 
         options.addOption(JITTER_PENALTY,
                 true,

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage;
 
+import static com.hartwig.hmftools.common.hla.HlaCommon.hlaChromosome;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
@@ -21,6 +22,7 @@ import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.hla.HlaCommon;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
@@ -58,6 +60,8 @@ public class ReferenceData
         GeneDataCache = new EnsemblDataCache(cmd, config.RefGenVersion);
         ChromosomeTranscripts = Maps.newHashMap();
         loadGeneData();
+
+        HlaCommon.populateGeneData(GeneDataCache.getChrGeneDataMap().get(hlaChromosome(config.RefGenVersion)));
     }
 
     public static IndexedFastaSequenceFile loadRefGenome(final String refGenomeFile)
@@ -89,11 +93,6 @@ public class ReferenceData
                 continue;
 
             List<GeneData> geneDataList = entry.getValue();
-
-            if(!mConfig.AppendMode)
-            {
-                mConfig.Quality.populateGeneData(geneDataList);
-            }
 
             List<TranscriptData> transDataList = Lists.newArrayList();
             ChromosomeTranscripts.put(chromosome, transDataList);
