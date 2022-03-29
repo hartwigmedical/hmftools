@@ -1,24 +1,18 @@
 package com.hartwig.hmftools.common.amber;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.*;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
-import java.util.zip.GZIPOutputStream;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -68,7 +62,7 @@ public final class AmberBAFFile
     {
         ListMultimap<Chromosome,AmberBAF> chrBafMap = ArrayListMultimap.create();
 
-        try(BufferedReader reader = createBufferedReader(fileName))
+        try(BufferedReader reader = fileName.endsWith(".gz") ? createGzipBufferedReader(fileName) : createBufferedReader(fileName))
         {
 
             String line = reader.readLine();
@@ -107,10 +101,7 @@ public final class AmberBAFFile
 
     public static void write(final String filename, final List<AmberBAF> bafs) throws IOException
     {
-        OutputStream outputStream = new FileOutputStream(filename);
-        if (filename.endsWith(".gz"))
-            outputStream = new GZIPOutputStream(outputStream);
-        try (Writer writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8))
+        try (Writer writer = createGzipBufferedWriter(filename))
         {
             for (String line : toLines(bafs))
             {
