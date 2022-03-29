@@ -2,41 +2,26 @@ package com.hartwig.hmftools.amber;
 
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
 
-import java.util.concurrent.Callable;
-
 import com.google.common.base.Strings;
 
 import org.jetbrains.annotations.NotNull;
 
 public class AmberTaskCompletion
 {
-    private int mExpected;
-    private int mComplete;
+    private final int mExpected;
     private double mPreviousPercentComplete;
 
-    public AmberTaskCompletion()
+    public AmberTaskCompletion(int numTasks)
     {
-        mExpected = 0;
-        mComplete = 0;
+        mExpected = numTasks;
         mPreviousPercentComplete = 0;
     }
 
-    public <T> Callable<T> task(@NotNull final Callable<T> callable)
+    public void progress(int numRemainingTasks)
     {
-        mExpected++;
-
-        return () ->
-        {
-            T result = callable.call();
-            completed();
-            return result;
-        };
-    }
-
-    private void completed()
-    {
-        double percentComplete = ((double) ++mComplete) / mExpected;
-        if(mExpected == mComplete || percentComplete > mPreviousPercentComplete + 0.1)
+        double percentComplete = 1.0 - (double)numRemainingTasks / mExpected;
+        if (percentComplete - mPreviousPercentComplete >= 0.05 ||
+            mPreviousPercentComplete != 1.0 && percentComplete == 1.0)
         {
             AMB_LOGGER.info("{}", complete(percentComplete));
             mPreviousPercentComplete = percentComplete;

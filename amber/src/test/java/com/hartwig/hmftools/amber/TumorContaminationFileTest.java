@@ -7,6 +7,7 @@ import java.util.Random;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.amber.BaseDepth;
+import com.hartwig.hmftools.common.amber.BaseDepthData;
 import com.hartwig.hmftools.common.amber.ModifiableBaseDepth;
 
 import org.jetbrains.annotations.NotNull;
@@ -29,13 +30,13 @@ public class TumorContaminationFileTest
     {
         final BaseDepth template = createRandom(random);
 
-        final BaseDepth normalDepth = ModifiableBaseDepth.create()
+        final BaseDepthData normalDepth = ModifiableBaseDepth.create()
                 .from(template)
                 .setReadDepth(random.nextInt())
                 .setRefSupport(random.nextInt())
                 .setAltSupport(random.nextInt());
 
-        final BaseDepth tumorDepth = ModifiableBaseDepth.create()
+        final BaseDepthData tumorDepth = ModifiableBaseDepth.create()
                 .from(template)
                 .setReadDepth(random.nextInt())
                 .setRefSupport(random.nextInt())

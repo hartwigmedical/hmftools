@@ -108,10 +108,6 @@ public class AmberConfig
         return samples;
     }
 
-    public int typicalReadDepth()
-    {
-        return DEFAULT_TYPICAL_READ_DEPTH;
-    }
     public int minPartition()
     {
         return DEFAULT_MIN_PARTITION;

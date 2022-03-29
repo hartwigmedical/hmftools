@@ -10,16 +10,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadFactory;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParametersDelegate;
@@ -32,7 +25,6 @@ import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.amber.BaseDepthFactory;
 import com.hartwig.hmftools.common.amber.TumorBAF;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.config.DeclaredOrderParameterComparator;
 import com.hartwig.hmftools.common.utils.config.LoggingOptions;
@@ -51,12 +43,11 @@ public class AmberApplication implements AutoCloseable
     @ParametersDelegate
     private final LoggingOptions mLoggingOptions = new LoggingOptions();
 
-    private ExecutorService mExecutorService;
     private AmberPersistence mPersistence;
     private VersionInfo mVersionInfo;
     private ListMultimap<Chromosome,AmberSite> mChromosomeSites;
 
-    public int run() throws IOException, InterruptedException, ExecutionException
+    public int run() throws IOException, InterruptedException
     {
         mLoggingOptions.setLogLevel();
 
@@ -64,9 +55,6 @@ public class AmberApplication implements AutoCloseable
         AMB_LOGGER.info("AMBER version: {}", mVersionInfo.version());
 
         mPersistence = new AmberPersistence(mConfig);
-
-        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("worker-%d").build();
-        mExecutorService = Executors.newFixedThreadPool(mConfig.ThreadCount, namedThreadFactory);
 
         AMB_LOGGER.info("Loading vcf file {}", mConfig.BafLociPath);
         mChromosomeSites = AmberSiteFactory.sites(mConfig.BafLociPath);
@@ -92,50 +80,52 @@ public class AmberApplication implements AutoCloseable
         return 0;
     }
 
-    private void runGermlineOnly() throws InterruptedException, ExecutionException, IOException
+    private void runGermlineOnly() throws InterruptedException, IOException
     {
-        GermlineProcessor germlineProcessor = new GermlineProcessor(mConfig, readerFactory(mConfig), mExecutorService, mChromosomeSites);
+        AmberGermline germline = new AmberGermline(mConfig, readerFactory(mConfig), mChromosomeSites);
 
-        final List<AmberBAF> amberBAFList = germlineProcessor.getHeterozygousLoci().values().stream().map(AmberBAF::create)
-                .filter(AmberApplication::isValid).sorted().collect(toList());
+        final List<AmberBAF> amberBAFList = germline.getHeterozygousLoci().values().stream().map(AmberBAF::create)
+                .filter(AmberUtils::isValid).sorted().collect(toList());
 
-        mPersistence.persistQC(Collections.emptyList(), germlineProcessor.getConsanguinityProportion(), germlineProcessor.getUniparentalDisomy());
+        mPersistence.persistQC(Collections.emptyList(), germline.getConsanguinityProportion(), germline.getUniparentalDisomy());
         mPersistence.persistVersionInfo(mVersionInfo);
-        mPersistence.persistSnpCheck(germlineProcessor.getSnpCheckedLoci());
+        mPersistence.persistSnpCheck(germline.getSnpCheckedLoci());
         mPersistence.persistBAF(amberBAFList);
-        mPersistence.persistHomozygousRegions(germlineProcessor.getRegionsOfHomozygosity());
+        mPersistence.persistHomozygousRegions(germline.getRegionsOfHomozygosity());
     }
 
-    private void runNormalMode() throws InterruptedException, ExecutionException, IOException
+    private void runNormalMode() throws InterruptedException, IOException
     {
         final SamReaderFactory readerFactory = readerFactory(mConfig);
 
-        GermlineProcessor germlineProcessor = new GermlineProcessor(mConfig, readerFactory(mConfig), mExecutorService, mChromosomeSites);
+        AmberGermline germline = new AmberGermline(mConfig, readerFactory, mChromosomeSites);
 
-        final ListMultimap<Chromosome, TumorBAF> tumorBAFMap = tumorBAF(readerFactory, germlineProcessor.getHeterozygousLoci());
-        final List<TumorBAF> tumorBAFList = tumorBAFMap.values().stream().sorted().collect(toList());
-        final List<AmberBAF> amberBAFList = tumorBAFList.stream().map(AmberBAF::create).filter(AmberApplication::isValid).collect(toList());
+        AmberTumor tumor = new AmberTumor(mConfig, readerFactory,
+                germline.getHeterozygousLoci(), germline.getHomozygousLoci());
 
-        final ListMultimap<Chromosome, TumorContamination> tumorContamination = contamination(readerFactory,
-                germlineProcessor.getHomozygousLoci());
-        final List<TumorContamination> contaminationList = new ArrayList<>(tumorContamination.values());
+        final List<TumorBAF> tumorBAFList = tumor.getBafs().values().stream().sorted().collect(toList());
+        final List<AmberBAF> amberBAFList = tumorBAFList.stream().map(AmberBAF::create).filter(AmberUtils::isValid).collect(toList());
 
-        mPersistence.persistQC(contaminationList, germlineProcessor.getConsanguinityProportion(), germlineProcessor.getUniparentalDisomy());
+        final List<TumorContamination> contaminationList = new ArrayList<>(tumor.getContamination().values());
+
+        mPersistence.persistQC(contaminationList, germline.getConsanguinityProportion(), germline.getUniparentalDisomy());
         mPersistence.persistVersionInfo(mVersionInfo);
         mPersistence.persistContamination(contaminationList);
-        mPersistence.persistSnpCheck(germlineProcessor.getSnpCheckedLoci());
+        mPersistence.persistSnpCheck(germline.getSnpCheckedLoci());
         mPersistence.persistBAF(amberBAFList);
-        mPersistence.persistHomozygousRegions(germlineProcessor.getRegionsOfHomozygosity());
+        mPersistence.persistHomozygousRegions(germline.getRegionsOfHomozygosity());
     }
 
-    private void runTumorOnly() throws InterruptedException, ExecutionException, IOException
+    private void runTumorOnly() throws InterruptedException, IOException
     {
         final SamReaderFactory readerFactory = readerFactory(mConfig);
 
         final ListMultimap<Chromosome, BaseDepth> allNormal = emptyNormalHetSites(mChromosomeSites);
-        final ListMultimap<Chromosome, TumorBAF> tumorBAFMap = tumorBAF(readerFactory, allNormal);
 
-        final List<TumorBAF> tumorBAFList = tumorBAFMap.values()
+        // no homozygous sites
+        AmberTumor tumor = new AmberTumor(mConfig, readerFactory, allNormal, ArrayListMultimap.create());
+
+        final List<TumorBAF> tumorBAFList = tumor.getBafs().values()
                 .stream()
                 .filter(x -> x.tumorRefSupport() >= mConfig.TumorOnlyMinSupport)
                 .filter(x -> x.tumorAltSupport() >= mConfig.TumorOnlyMinSupport)
@@ -162,80 +152,6 @@ public class AmberApplication implements AutoCloseable
         return result;
     }
 
-    private ListMultimap<Chromosome, TumorBAF> tumorBAF(final SamReaderFactory readerFactory,
-            final ListMultimap<Chromosome, BaseDepth> normalHetSites) throws ExecutionException, InterruptedException
-    {
-        final int partitionSize = Math.max(mConfig.minPartition(), normalHetSites.values().size() / mConfig.ThreadCount);
-
-        AMB_LOGGER.info("Processing {} heterozygous sites in tumor bam {}", normalHetSites.values().size(), mConfig.TumorBamPath);
-        final AmberTaskCompletion completion = new AmberTaskCompletion();
-
-        final List<Future<TumorBAFEvidence>> futures = new ArrayList<>();
-        for(final Chromosome chromosome : normalHetSites.keySet())
-        {
-            for(final List<BaseDepth> chromosomeBafPoints : Lists.partition(normalHetSites.get(chromosome), partitionSize))
-            {
-                if(!chromosomeBafPoints.isEmpty())
-                {
-                    final String contig = chromosomeBafPoints.get(0).chromosome();
-                    final TumorBAFEvidence evidence = new TumorBAFEvidence(mConfig.typicalReadDepth(),
-                            mConfig.MinMappingQuality,
-                            mConfig.MinBaseQuality,
-                            contig,
-                            mConfig.TumorBamPath,
-                            readerFactory,
-                            chromosomeBafPoints);
-                    futures.add(mExecutorService.submit(completion.task(evidence)));
-                }
-            }
-        }
-
-        final ListMultimap<Chromosome, TumorBAF> result = ArrayListMultimap.create();
-        AmberUtils.getFuture(futures).forEach(x -> result.putAll(HumanChromosome.fromString(x.contig()), x.evidence()));
-
-        return result;
-    }
-
-    private ListMultimap<Chromosome, TumorContamination> contamination(
-            final SamReaderFactory readerFactory,
-            final ListMultimap<Chromosome, BaseDepth> normalHomSites) throws ExecutionException, InterruptedException
-    {
-        final int partitionSize = Math.max(mConfig.minPartition(), normalHomSites.values().size() / mConfig.ThreadCount);
-
-        AMB_LOGGER.info("Processing {} homozygous sites in tumor bam {} for contamination", normalHomSites.size(), mConfig.TumorBamPath);
-        final AmberTaskCompletion completion = new AmberTaskCompletion();
-
-        final List<Future<TumorContaminationEvidence>> futures = new ArrayList<>();
-        for(final Chromosome chromosome : normalHomSites.keySet())
-        {
-            for(final List<BaseDepth> chromosomeBafPoints : Lists.partition(normalHomSites.get(chromosome), partitionSize))
-            {
-                if(!chromosomeBafPoints.isEmpty())
-                {
-                    final String contig = chromosomeBafPoints.get(0).chromosome();
-                    final TumorContaminationEvidence evidence = new TumorContaminationEvidence(mConfig.typicalReadDepth(),
-                            mConfig.MinMappingQuality,
-                            mConfig.MinBaseQuality,
-                            contig,
-                            mConfig.TumorBamPath,
-                            readerFactory,
-                            chromosomeBafPoints);
-                    futures.add(mExecutorService.submit(completion.task(evidence)));
-                }
-            }
-        }
-
-        final ListMultimap<Chromosome, TumorContamination> result = ArrayListMultimap.create();
-        AmberUtils.getFuture(futures).forEach(x -> result.putAll(HumanChromosome.fromString(x.contig()), x.evidence()));
-
-        return result;
-    }
-
-    private static boolean isValid(final AmberBAF baf)
-    {
-        return Double.isFinite(baf.tumorBAF()) & Double.isFinite(baf.normalBAF());
-    }
-
     private static SamReaderFactory readerFactory(final AmberConfig config)
     {
         final SamReaderFactory readerFactory = SamReaderFactory.make().validationStringency(config.Stringency);
@@ -249,11 +165,10 @@ public class AmberApplication implements AutoCloseable
     @Override
     public void close()
     {
-        mExecutorService.shutdown();
         AMB_LOGGER.info("Complete");
     }
 
-    public static void main(final String... args) throws IOException, InterruptedException, ExecutionException
+    public static void main(final String... args) throws IOException, InterruptedException
     {
         AmberApplication amberApp = new AmberApplication();
         JCommander commander = JCommander.newBuilder()
