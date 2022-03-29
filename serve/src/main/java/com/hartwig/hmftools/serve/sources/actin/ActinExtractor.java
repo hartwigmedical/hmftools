@@ -66,13 +66,18 @@ public class ActinExtractor {
 
     @NotNull
     private ExtractionResult toExtractionResult(@NotNull ActinEntry entry, @NotNull String event, @NotNull EventType type) {
-        String gene = entry.gene() != null ? entry.gene() : "-";
+        String gene;
+        String sourceEvent;
+
+        if (entry.gene() != null) {
+            gene = entry.gene();
+            sourceEvent = entry.rule() + ": " + entry.gene() + " " + entry.mutation();
+        } else {
+            gene = "-";
+            sourceEvent = entry.rule() + ": " + entry.mutation();
+        }
 
         EventExtractorOutput extraction = eventExtractor.extract(gene, null, type, event);
-
-        String sourceEvent = entry.rule() + " " + gene + " " + entry.mutation();
-        ActinTrial trial = ActinTrialFactory.toActinTrial(entry, sourceEvent);
-
         EventInterpretation interpretation = ImmutableEventInterpretation.builder()
                 .source(Knowledgebase.ACTIN)
                 .sourceEvent(sourceEvent)
@@ -81,7 +86,7 @@ public class ActinExtractor {
                 .interpretedEventType(type)
                 .build();
 
-        return toExtractionResult(trial, extraction, interpretation);
+        return toExtractionResult(ActinTrialFactory.toActinTrial(entry, sourceEvent), extraction, interpretation);
     }
 
     @NotNull
