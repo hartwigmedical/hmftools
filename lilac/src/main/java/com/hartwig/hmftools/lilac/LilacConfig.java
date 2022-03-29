@@ -142,8 +142,19 @@ public class LilacConfig
         else
         {
             SampleDataDir = "";
-            ReferenceBam = cmd.getOptionValue(REFERENCE_BAM, "");
-            TumorBam = cmd.getOptionValue(TUMOR_BAM, "");
+
+            if(!cmd.hasOption(REFERENCE_BAM) && cmd.hasOption(TUMOR_BAM))
+            {
+                // interpret this as tumor-only mode
+                ReferenceBam = cmd.getOptionValue(TUMOR_BAM, "");
+                TumorBam = "";
+            }
+            else
+            {
+                ReferenceBam = cmd.getOptionValue(REFERENCE_BAM, "");
+                TumorBam = cmd.getOptionValue(TUMOR_BAM, "");
+            }
+
             RnaBam = cmd.getOptionValue(RNA_BAM, "");
 
             SomaticVariantsFile = cmd.getOptionValue(SOMATIC_VCF, "");
