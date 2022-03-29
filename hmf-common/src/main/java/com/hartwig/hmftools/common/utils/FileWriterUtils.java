@@ -125,5 +125,4 @@ public final class FileWriterUtils
 
         return fieldsIndexMap;
     }
-
 }
