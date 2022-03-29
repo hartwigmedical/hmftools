@@ -50,8 +50,6 @@ public class CobaltApplication implements AutoCloseable
     @ParametersDelegate
     private final LoggingOptions mLoggingOptions = new LoggingOptions();
 
-    private VersionInfo mVersionInfo;
-
     public static void main(final String... args) throws IOException, ExecutionException, InterruptedException
     {
         final CobaltApplication application = new CobaltApplication();
@@ -82,22 +80,17 @@ public class CobaltApplication implements AutoCloseable
         mConfig.validate();
         mLoggingOptions.setLogLevel();
 
-        mVersionInfo = new VersionInfo("cobalt.version");
+        VersionInfo mVersionInfo = new VersionInfo("cobalt.version");
         CB_LOGGER.info("COBALT version: {}", mVersionInfo.version());
 
-        if(mConfig.ReferenceBamPath != null && !mConfig.RefGenomePath.isEmpty() && !new File(mConfig.GcProfilePath).exists())
+        if (mConfig.RefGenomePath != null && !(new File(mConfig.RefGenomePath).exists()))
         {
             throw new IOException("Unable to locate ref genome file " + mConfig.RefGenomePath);
         }
 
-        if (mConfig.TumorOnly)
-        {
-            mConfig.ReferenceId = CobaltRatioFile.TUMOR_ONLY_REFERENCE_SAMPLE;
-        }
-
         CB_LOGGER.info("Reading GC Profile from {}", mConfig.GcProfilePath);
 
-        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("-%d").build();
+        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("worker-%d").build();
         ExecutorService executorService = Executors.newFixedThreadPool(mConfig.ThreadCount, namedThreadFactory);
 
         final Multimap<Chromosome, GCProfile> gcProfiles = GCProfileFactory.loadGCContent(WINDOW_SIZE, mConfig.GcProfilePath);
@@ -107,20 +100,29 @@ public class CobaltApplication implements AutoCloseable
         final SamReaderFactory readerFactory = readerFactory(mConfig);
 
         final CountSupplier countSupplier = new CountSupplier(
-                mConfig.TumorId, mConfig.OutputDir, WINDOW_SIZE, mConfig.MinMappingQuality,
+                WINDOW_SIZE, mConfig.MinMappingQuality,
                 executorService, readerFactory);
         
-        final Multimap<Chromosome, CobaltCount> readCounts = mConfig.TumorOnly
-                ? countSupplier.tumorOnly(mConfig.TumorBamPath)
-                : countSupplier.pairedTumorNormal(mConfig.ReferenceBamPath, mConfig.TumorBamPath);
+        final Multimap<Chromosome, CobaltCount> readCounts = countSupplier.generateCounts(mConfig.ReferenceBamPath, mConfig.TumorBamPath);
 
         final RatioSupplier ratioSupplier = new RatioSupplier(mConfig.ReferenceId, mConfig.TumorId, mConfig.OutputDir);
 
-        final Multimap<Chromosome, CobaltRatio> ratios = mConfig.TumorOnly
-                ? ratioSupplier.tumorOnly(diploidBedFile, gcProfiles, readCounts)
-                : ratioSupplier.tumorNormalPair(gcProfiles, readCounts);
+        Multimap<Chromosome, CobaltRatio> ratios;
 
-        final String outputFilename = CobaltRatioFile.generateFilenameForWriting(mConfig.OutputDir, mConfig.TumorId);
+        switch (mConfig.mode())
+        {
+            case TUMOR_ONLY:
+                ratios = ratioSupplier.tumorOnly(diploidBedFile, gcProfiles, readCounts);
+                break;
+            case GERMLIHE_ONLY:
+                ratios = ratioSupplier.germlineOnly(gcProfiles, readCounts);
+                break;
+            default:
+                ratios = ratioSupplier.tumorNormalPair(gcProfiles, readCounts);
+        }
+
+        final String outputFilename = CobaltRatioFile.generateFilenameForWriting(
+                mConfig.OutputDir, mConfig.TumorId != null ? mConfig.TumorId : mConfig.ReferenceId);
         CB_LOGGER.info("Persisting cobalt ratios to {}", outputFilename);
         mVersionInfo.write(mConfig.OutputDir);
         CobaltRatioFile.write(outputFilename, ratios);
@@ -129,6 +131,8 @@ public class CobaltApplication implements AutoCloseable
 
         executorService.shutdown();
 
+        CB_LOGGER.info("Complete");
+
         return 0;
     }
 
@@ -136,7 +140,7 @@ public class CobaltApplication implements AutoCloseable
     private static List<BEDFeature> diploidBedFile(CobaltConfig config) throws IOException
     {
         List<BEDFeature> result = new ArrayList<>();
-        if(!config.TumorOnly)
+        if(config.mode() != CobaltConfig.Mode.TUMOR_ONLY)
         {
             return result;
         }

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cobalt.ratio;
 
 import java.util.Optional;
+import java.util.function.Function;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
@@ -12,22 +13,18 @@ import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
 
-import org.jetbrains.annotations.NotNull;
-
 public class GCRatioSupplier
 {
-    private final GCMedianReadCount mTumorGCMedianReadCount;
-    private final GCMedianReadCount mReferenceGCMedianReadCount;
-    private final ListMultimap<Chromosome, ReadRatio> mTumorRatios;
-    private final ListMultimap<Chromosome, ReadRatio> mReferenceRatios;
+    private final GCMedianReadCount mGCMedianReadCount;
+    private final ListMultimap<Chromosome, ReadRatio> mGcRatios;
 
     public GCRatioSupplier(
-            final Multimap<Chromosome, GCProfile> gcProfiles, final Multimap<Chromosome, CobaltCount> counts)
+            final Multimap<Chromosome, GCProfile> gcProfiles, final Multimap<Chromosome, CobaltCount> counts,
+            Function<CobaltCount, Integer> readCountGetter)
     {
         final GenomeRegionSelector<GCProfile> gcProfileSelector = GenomeRegionSelectorFactory.createImproved(gcProfiles);
 
-        final GCRatioNormalization tumorRatiosBuilder = new GCRatioNormalization();
-        final GCRatioNormalization referenceRatiosBuilder = new GCRatioNormalization();
+        final GCRatioNormalization gcRatioNormalization = new GCRatioNormalization();
 
         for(Chromosome chromosome : counts.keySet())
         {
@@ -37,36 +34,22 @@ public class GCRatioSupplier
                 if(optionalGCProfile.isPresent())
                 {
                     final GCProfile gcProfile = optionalGCProfile.get();
-                    referenceRatiosBuilder.addPosition(chromosome, gcProfile, cobaltPosition.referenceReadCount());
-                    tumorRatiosBuilder.addPosition(chromosome, gcProfile, cobaltPosition.tumorReadCount());
+                    gcRatioNormalization.addPosition(chromosome, gcProfile, readCountGetter.apply(cobaltPosition));
                 }
             }
         }
 
-        mReferenceGCMedianReadCount = referenceRatiosBuilder.gcMedianReadCount();
-        mReferenceRatios = referenceRatiosBuilder.build(mReferenceGCMedianReadCount);
-
-        mTumorGCMedianReadCount = tumorRatiosBuilder.gcMedianReadCount();
-        mTumorRatios = tumorRatiosBuilder.build(mTumorGCMedianReadCount);
+        mGCMedianReadCount = gcRatioNormalization.gcMedianReadCount();
+        mGcRatios = gcRatioNormalization.build(mGCMedianReadCount);
     }
 
-    ListMultimap<Chromosome, ReadRatio> referenceRatios()
+    ListMultimap<Chromosome, ReadRatio> gcRatios()
     {
-        return mReferenceRatios;
+        return mGcRatios;
     }
 
-    GCMedianReadCount referenceGCMedianReadCount()
+    GCMedianReadCount gcMedianReadCount()
     {
-        return mReferenceGCMedianReadCount;
-    }
-
-    ListMultimap<Chromosome, ReadRatio> tumorRatios()
-    {
-        return mTumorRatios;
-    }
-
-    GCMedianReadCount tumorGCMedianReadCount()
-    {
-        return mTumorGCMedianReadCount;
+        return mGCMedianReadCount;
     }
 }

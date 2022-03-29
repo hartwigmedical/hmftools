@@ -19,8 +19,15 @@ public class RatioSegmentation
             final String reference, final String tumor) throws ExecutionException, InterruptedException
     {
         final List<Future<Object>> futures = Lists.newArrayList();
-        futures.add(executorService.submit(() -> ratioSegmentation(outputDir, ratioFile, reference, "referenceGCDiploidRatio")));
-        futures.add(executorService.submit(() -> ratioSegmentation(outputDir, ratioFile, tumor, "tumorGCRatio")));
+
+        if (reference != null)
+        {
+            futures.add(executorService.submit(() -> ratioSegmentation(outputDir, ratioFile, reference, "referenceGCDiploidRatio")));
+        }
+        if (tumor != null)
+        {
+            futures.add(executorService.submit(() -> ratioSegmentation(outputDir, ratioFile, tumor, "tumorGCRatio")));
+        }
 
         for(Future<Object> future : futures)
         {

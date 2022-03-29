@@ -10,10 +10,10 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.ListMultimap;
+import com.hartwig.hmftools.cobalt.ratio.MedianRatioFactory;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.cobalt.MedianRatio;
-import com.hartwig.hmftools.common.cobalt.MedianRatioFactory;
 import com.hartwig.hmftools.common.cobalt.MedianRatioFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;

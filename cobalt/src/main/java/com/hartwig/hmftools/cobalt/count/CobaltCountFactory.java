@@ -1,7 +1,10 @@
-package com.hartwig.hmftools.common.cobalt;
+package com.hartwig.hmftools.cobalt.count;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.cobalt.CobaltCount;
+import com.hartwig.hmftools.common.cobalt.ImmutableCobaltRatio;
+import com.hartwig.hmftools.common.cobalt.ReadCount;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
@@ -45,6 +48,23 @@ public final class CobaltCountFactory
             {
                 int tumorReadCount = tumorCountSelector.select(referenceReadCount).map(ReadCount::readCount).orElse(0);
                 final CobaltCount position = fromReference(referenceReadCount, tumorReadCount);
+                result.put(chromosome, position);
+            }
+        }
+
+        return result;
+    }
+
+    @NotNull
+    public static Multimap<Chromosome, CobaltCount> referenceOnly(@NotNull final Multimap<Chromosome, ReadCount> referenceCount)
+    {
+        final Multimap<Chromosome, CobaltCount> result = ArrayListMultimap.create();
+
+        for (Chromosome chromosome : referenceCount.keySet())
+        {
+            for (ReadCount referenceReadCount : referenceCount.get(chromosome))
+            {
+                final CobaltCount position = fromReference(referenceReadCount, -1);
                 result.put(chromosome, position);
             }
         }

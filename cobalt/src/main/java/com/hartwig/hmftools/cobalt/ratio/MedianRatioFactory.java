@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.cobalt;
+package com.hartwig.hmftools.cobalt.ratio;
 
 import java.util.Collection;
 import java.util.List;
@@ -6,9 +6,11 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.cobalt.CobaltRatio;
+import com.hartwig.hmftools.common.cobalt.ImmutableMedianRatio;
+import com.hartwig.hmftools.common.cobalt.MedianRatio;
+import com.hartwig.hmftools.common.cobalt.ReadRatio;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
