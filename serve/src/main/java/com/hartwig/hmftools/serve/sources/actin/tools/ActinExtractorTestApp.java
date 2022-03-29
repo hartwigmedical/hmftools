@@ -23,7 +23,6 @@ import com.hartwig.hmftools.serve.refgenome.RefGenomeResource;
 import com.hartwig.hmftools.serve.sources.actin.ActinExtractor;
 import com.hartwig.hmftools.serve.sources.actin.ActinExtractorFactory;
 import com.hartwig.hmftools.serve.sources.actin.ActinReader;
-import com.hartwig.hmftools.serve.sources.actin.ActinUtils;
 import com.hartwig.hmftools.serve.sources.actin.classification.ActinClassificationConfig;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
 
