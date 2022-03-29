@@ -15,7 +15,7 @@ public final class WholeGenomeDuplication
     public static final double MIN_AVERAGE_PLOIDY = 1.5;
     public static final int MIN_DUPLICATED_AUTOSOMES = 11;
 
-    public static boolean wholeGenomeDuplication(@NotNull final List<PurpleCopyNumber> copyNumbers)
+    public static boolean wholeGenomeDuplication(final List<PurpleCopyNumber> copyNumbers)
     {
         return duplicatedAutosomes(copyNumbers) >= MIN_DUPLICATED_AUTOSOMES;
     }

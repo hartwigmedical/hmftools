@@ -68,52 +68,52 @@ public class GermlineDeletionDrivers
             if(region.germlineStatus() != HOM_DELETION && region.germlineStatus() != HET_DELETION)
                 continue;
 
-            String chromosome = region.chromosome();
-            int regionStart = (int)region.start();
-            int regionEnd = (int)region.end();
-
-            // find the overlapping / matching copy number region
-            // both copy numbers and fitted regions are ordered by chromosome and position
             PurpleCopyNumber matchedCopyNumber = null;
 
-            if(!currentCnChromosome.equals(chromosome))
+            if(!copyNumbers.isEmpty())
             {
-                for(int index = cnChrStartIndex; index < copyNumbers.size(); ++index)
+                String chromosome = region.chromosome();
+                int regionStart = region.start();
+                int regionEnd = region.end();
+
+                // find the overlapping / matching copy number region (skipped for germline-only)
+                // both copy numbers and fitted regions are ordered by chromosome and position
+                if(!currentCnChromosome.equals(chromosome))
+                {
+                    for(int index = cnChrStartIndex; index < copyNumbers.size(); ++index)
+                    {
+                        PurpleCopyNumber copyNumber = copyNumbers.get(index);
+
+                        if(copyNumber.chromosome().equals(chromosome) && !currentCnChromosome.equals(chromosome))
+                        {
+                            currentCnChromosome = chromosome;
+                            cnChrStartIndex = index;
+                        }
+                        else if(currentCnChromosome.equals(chromosome) && !copyNumber.chromosome().equals(chromosome))
+                        {
+                            cnChrEndIndex = index - 1;
+                            break;
+                        }
+                    }
+                }
+
+                if(cnChrEndIndex < cnChrStartIndex)
+                    cnChrEndIndex = copyNumbers.size() - 1;
+
+                for(int index = cnChrStartIndex; index <= cnChrEndIndex; ++index)
                 {
                     PurpleCopyNumber copyNumber = copyNumbers.get(index);
 
-                    if(copyNumber.chromosome().equals(chromosome) && !currentCnChromosome.equals(chromosome))
+                    if(!copyNumber.chromosome().equals(chromosome))
+                        break;
+
+                    if(positionsOverlap(copyNumber.start(), (int) copyNumber.end(), regionStart, regionEnd))
                     {
-                        currentCnChromosome = chromosome;
-                        cnChrStartIndex = index;
-                    }
-                    else if(currentCnChromosome.equals(chromosome) && !copyNumber.chromosome().equals(chromosome))
-                    {
-                        cnChrEndIndex = index - 1;
+                        matchedCopyNumber = copyNumber;
                         break;
                     }
                 }
             }
-
-            if(cnChrEndIndex < cnChrStartIndex)
-                cnChrEndIndex = copyNumbers.size() - 1;
-
-            for(int index = cnChrStartIndex; index <= cnChrEndIndex; ++index)
-            {
-                PurpleCopyNumber copyNumber = copyNumbers.get(index);
-
-                if(!copyNumber.chromosome().equals(chromosome))
-                    break;
-
-                if(positionsOverlap((int)copyNumber.start(), (int)copyNumber.end(), regionStart, regionEnd))
-                {
-                    matchedCopyNumber = copyNumber;
-                    break;
-                }
-            }
-
-            if(matchedCopyNumber == null)
-                continue;
 
             findOverlappingDriverGene(region, matchedCopyNumber);
         }
@@ -132,13 +132,16 @@ public class GermlineDeletionDrivers
             filters.add(FILTER_REGION_LENGTH);
         }
 
-        // Filter (pass, minLength, inconsistentTumorCN,highNormalRatio)
-        double cnInconsistency = region.refNormalisedCopyNumber() - copyNumber.majorAlleleCopyNumber();
-        double cnLimit = max(GERMLINE_DEL_CN_CONSISTENCY_MIN, copyNumber.majorAlleleCopyNumber() * GERMLINE_DEL_CN_CONSISTENCY_MACN_PERC);
-
-        if(cnInconsistency > cnLimit)
+        if(copyNumber != null)
         {
-            filters.add(FILTER_CN_INCONSISTENCY);
+            double cnInconsistency = region.refNormalisedCopyNumber() - copyNumber.majorAlleleCopyNumber();
+            double cnLimit =
+                    max(GERMLINE_DEL_CN_CONSISTENCY_MIN, copyNumber.majorAlleleCopyNumber() * GERMLINE_DEL_CN_CONSISTENCY_MACN_PERC);
+
+            if(cnInconsistency > cnLimit)
+            {
+                filters.add(FILTER_CN_INCONSISTENCY);
+            }
         }
 
         if(region.observedNormalRatio() > GERMLINE_DEL_NORMAL_RATIO)
@@ -162,8 +165,8 @@ public class GermlineDeletionDrivers
         if(geneDataList == null)
             return;
 
-        int regionLowerPos = (int)region.start() - GERMLINE_DEL_GENE_BUFFER;
-        int regionHighPos = (int)region.end() + GERMLINE_DEL_GENE_BUFFER;
+        int regionLowerPos = region.start() - GERMLINE_DEL_GENE_BUFFER;
+        int regionHighPos = region.end() + GERMLINE_DEL_GENE_BUFFER;
 
         // find overlapping driver genes
         List<GeneData> overlappingGenes = Lists.newArrayList();

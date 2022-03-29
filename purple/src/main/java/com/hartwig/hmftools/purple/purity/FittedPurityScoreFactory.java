@@ -42,7 +42,7 @@ public final class FittedPurityScoreFactory
         return builder.build();
     }
 
-    public static double polyclonalProportion(@NotNull final Collection<PurpleCopyNumber> regions)
+    public static double polyclonalProportion(final Collection<PurpleCopyNumber> regions)
     {
         int polyclonalCount = 0;
         int totalCount = 0;
