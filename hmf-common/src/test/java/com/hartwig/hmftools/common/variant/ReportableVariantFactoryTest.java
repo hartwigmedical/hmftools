@@ -80,12 +80,6 @@ public class ReportableVariantFactoryTest {
                 .isCanonical(false)
                 .build();
 
-        List<ReportableVariant> reportable =
-                ReportableVariantFactory.toReportableSomaticVariants(Lists.newArrayList(variant), Lists.newArrayList(driverNonCanonical));
-
-        assertEquals(1, reportable.size());
-        assertEquals(likelihood, reportable.get(0).driverLikelihood(), EPSILON);
-
         double likelihoodCanonical = 0.5;
         DriverCatalog driverCanonical = createCanonicalSomaticMutationEntryForGene(gene, likelihoodCanonical);
         List<ReportableVariant> reportable2 = ReportableVariantFactory.toReportableSomaticVariants(Lists.newArrayList(variant),

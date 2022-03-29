@@ -8,10 +8,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.purple.PurpleDataLoader;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class ReportableVariantFactory {
+    private static final Logger LOGGER = LogManager.getLogger(ReportableVariantFactory.class);
 
     private ReportableVariantFactory() {
     }
@@ -46,26 +50,22 @@ public final class ReportableVariantFactory {
                     throw new IllegalStateException("Could not find driver entry for variant on gene '" + variant.gene() + "'");
                 }
 
-                SomaticVariant variantCorrect = ImmutableSomaticVariantImpl.builder()
-                        .from(variant)
-                        .gene(formatGene(geneDriver))
-                        .build();
+                SomaticVariant variantCorrect = ImmutableSomaticVariantImpl.builder().from(variant).gene(formatGene(geneDriver)).build();
 
                 ReportableVariant reportable = fromVariant(variantCorrect, source).driverLikelihood(geneDriver.driverLikelihood()).build();
                 result.add(reportable);
             }
-        }
-        return result;
+        } return result;
     }
 
     @NotNull
     private static String formatGene(@NotNull DriverCatalog driverCatalog) {
-            String formatGene = driverCatalog.gene();
-            if (formatGene.equals("CDKN2A") && driverCatalog.isCanonical()) {
-                formatGene = driverCatalog.gene() + " (P16)";
-            } else if (formatGene.equals("CDKN2A") && !driverCatalog.isCanonical()) {
-                formatGene = driverCatalog.gene() + " (P14ARF)";
-            }
+        String formatGene = driverCatalog.gene();
+        if (formatGene.equals("CDKN2A") && driverCatalog.isCanonical()) {
+            formatGene = driverCatalog.gene() + " (P16)";
+        } else if (formatGene.equals("CDKN2A") && !driverCatalog.isCanonical()) {
+            formatGene = driverCatalog.gene() + " (P14ARF)";
+        }
 
         return formatGene;
     }
@@ -75,9 +75,10 @@ public final class ReportableVariantFactory {
         Map<String, DriverCatalog> map = Maps.newHashMap();
         for (DriverCatalog driver : driverCatalog) {
             boolean genePresent = map.containsKey(driver.gene());
-            if (!genePresent || (genePresent && driver.isCanonical() && !driver.gene().equals("CDKN2A")) || (genePresent
-                    && driver.isCanonical() && driver.gene().equals("CDKN2A")) || (genePresent && !driver.isCanonical() && driver.gene()
-                    .equals("CDKN2A"))) {
+            if (!genePresent || (genePresent && driver.isCanonical()) && !driver.gene().equals("CDKN2A")) {
+                map.put(driver.gene(), driver);
+            }
+            if (driver.gene().equals("CDKN2A")) {
                 map.put(driver.gene(), driver);
             }
         }

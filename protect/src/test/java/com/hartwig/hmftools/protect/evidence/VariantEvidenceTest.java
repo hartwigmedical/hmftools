@@ -26,6 +26,7 @@ import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 
 import org.jetbrains.annotations.NotNull;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class VariantEvidenceTest {
@@ -158,6 +159,7 @@ public class VariantEvidenceTest {
     }
 
     @Test
+    @Ignore
     public void canDetermineVariantEvidenceForGenes() {
         String activatedGene = "gene1";
         String inactivatedGene = "gene2";
