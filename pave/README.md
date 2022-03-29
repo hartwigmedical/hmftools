@@ -41,19 +41,17 @@ sample | Sample ID
 vcf_file | Input somatic variant VCF
 ref_genome | Reference genome fasta file
 ensembl_data_dir | Path to Ensembl data cache directory
+ref_genome_version | 37 (default) or 38
 output_dir | Output directory for VCF and transcript CSV
 
 ### Optional Arguments
 
 Argument | Description 
 ---|---
-ref_genome_version | 37 (default) or 38
 output_vcf_file | Specify the output VCF filename
 only_canonical | Only annotate impacts on canonical transcripts
 read_pass_only | Only process passing variants
 write_pass_only | Only write passing variants
-pon_file | PON file to annotate variants (see file format below)
-pon_filters | Apply PON filters (see details below)
 write_transcript_csv | Write a detailed CSV file for each impacted transcript
 
 ```
@@ -65,6 +63,19 @@ java -jar pave.jar
   -ref_genome_version [37 or 38] 
   -output_dir /path_to_write_data_files/ 
 ```
+
+### Optional Annotations
+The following annotations can be applied by PAVE:
+
+Argument | Description | VCF Tag
+---|---|---
+pon_file | PON file to annotate variants (see file format below) | PON_COUNT, PON_MAX
+pon_filters | Apply PON filters (see details below) | Filter 'PON'
+mappability_bed | BED file with mappability values | MAPPABILITY=value
+clinvar_vcf | VCF from Clinvar database | Writes CLNSIG=significance and CLNSIGCONF=conflicting info
+blacklist_bed | BED file with blacklist entries | BLACKLIST_BED
+blacklist_vcf | VCF file with blacklist entries | BLACKLIST_VCF
+
 
 ## Overview and algorithm
 

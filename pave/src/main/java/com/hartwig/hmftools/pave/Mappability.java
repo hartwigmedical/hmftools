@@ -10,7 +10,6 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.commons.cli.CommandLine;
