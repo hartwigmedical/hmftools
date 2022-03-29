@@ -24,7 +24,6 @@ import com.hartwig.hmftools.serve.extraction.events.ImmutableEventInterpretation
 import com.hartwig.hmftools.serve.sources.actin.classification.ActinEventExtractor;
 import com.hartwig.hmftools.serve.sources.actin.classification.ActinEventTypeExtractor;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
-import com.hartwig.hmftools.serve.sources.ckb.CkbExtractor;
 import com.hartwig.hmftools.serve.util.ProgressTracker;
 
 import org.apache.logging.log4j.LogManager;
@@ -33,7 +32,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class ActinExtractor {
 
-    private static final Logger LOGGER = LogManager.getLogger(CkbExtractor.class);
+    private static final Logger LOGGER = LogManager.getLogger(ActinExtractor.class);
 
     @NotNull
     private final EventExtractor eventExtractor;
@@ -49,7 +48,6 @@ public class ActinExtractor {
         ProgressTracker tracker = new ProgressTracker("ACTIN", entries.size());
         for (ActinEntry entry : entries) {
             Set<String> events = ActinEventExtractor.extractEvents(entry);
-
 
             for (String event : events) {
                 String eventType = event;
