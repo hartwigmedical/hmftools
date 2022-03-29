@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -11,7 +12,6 @@ import java.util.concurrent.Future;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.cobalt.CobaltCount;
 import com.hartwig.hmftools.common.cobalt.ReadCount;
@@ -105,11 +105,11 @@ public class CountSupplier
     private List<Future<ChromosomeReadCount>> createFutures(
             final SamReaderFactory readerFactory, final File file, final List<ChromosomeLength> lengths)
     {
-        final List<Future<ChromosomeReadCount>> futures = Lists.newArrayList();
+        final List<Future<ChromosomeReadCount>> futures = new ArrayList<>();
         for(ChromosomeLength chromosome : lengths)
         {
             final ChromosomeReadCount callable = new ChromosomeReadCount(
-                    file, readerFactory, chromosome.chromosome(), chromosome.length(), mWindowSize, mMinMappingQuality);
+                    file, readerFactory, chromosome.chromosome(), mWindowSize, mMinMappingQuality);
 
             futures.add(mExecutorService.submit(callable));
         }

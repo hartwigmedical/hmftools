@@ -23,7 +23,6 @@ public class ChromosomeReadCount implements Callable<ChromosomeReadCount>
     private final File mInputFile;
     private final SamReaderFactory mReaderFactory;
     private final String mChromosome;
-    private final int mChromosomeLength;
     private final List<ReadCount> mResults;
     private final int mMinMappingQuality;
     private final Window mWindow;
@@ -33,12 +32,11 @@ public class ChromosomeReadCount implements Callable<ChromosomeReadCount>
 
     public ChromosomeReadCount(
             final File inputFile, final SamReaderFactory readerFactory, final String chromosome,
-            final int chromosomeLength, final int windowSize, final int minMappingQuality)
+            final int windowSize, final int minMappingQuality)
     {
         mInputFile = inputFile;
         mReaderFactory = readerFactory;
         mChromosome = chromosome;
-        mChromosomeLength = chromosomeLength;
         mMinMappingQuality = minMappingQuality;
         mWindow = new Window(windowSize);
         mResults = Lists.newArrayList();
@@ -105,117 +103,8 @@ public class ChromosomeReadCount implements Callable<ChromosomeReadCount>
                 && !(record.getReadUnmappedFlag() || record.getDuplicateReadFlag() || record.isSecondaryOrSupplementary());
     }
 
-    private int lastWindowPosition()
-    {
-        return windowPosition(mChromosomeLength);
-    }
-
     private int windowPosition(int position)
     {
         return mWindow.start(position);
     }
 }
-
-/*
-
-public class ChromosomeReadCount implements Callable<ChromosomeReadCount>
-{
-    private final File mInputFile;
-    private final SamReaderFactory mReaderFactory;
-    private final String mChromosome;
-    private final int mChromosomeLength;
-    private final List<ReadCount> mResults;
-    private final int mMinMappingQuality;
-    private final Window mWindow;
-
-    private int mStart;
-    private int mCount;
-
-    public ChromosomeReadCount(
-            final File inputFile, final SamReaderFactory readerFactory, final String chromosome,
-            final int chromosomeLength, final int windowSize, final int minMappingQuality)
-    {
-        mInputFile = inputFile;
-        mReaderFactory = readerFactory;
-        mChromosome = chromosome;
-        mChromosomeLength = chromosomeLength;
-        mMinMappingQuality = minMappingQuality;
-        mWindow = new Window(windowSize);
-        mResults = Lists.newArrayList();
-
-        mStart = 1;
-        mCount = -1;
-    }
-
-    @Override
-    public ChromosomeReadCount call() throws Exception
-    {
-        CB_LOGGER.info("Generating windows on chromosome {}", mChromosome);
-
-        try(final SamReader reader = mReaderFactory.open(mInputFile))
-        {
-            final SAMRecordIterator iterator = reader.query(mChromosome, 0, 0, true);
-            while(iterator.hasNext())
-            {
-                addRecord(iterator.next());
-            }
-        }
-        return this;
-    }
-
-    public Chromosome chromosome()
-    {
-        return HumanChromosome.fromString(mChromosome);
-    }
-
-    public List<ReadCount> readCount()
-    {
-        addReadCount(mStart, mCount);
-
-        int lastWindowPosition = lastWindowPosition();
-        if(mResults.get(mResults.size() - 1).position() < lastWindowPosition)
-        {
-            addReadCount(lastWindowPosition, -1);
-        }
-
-        return mResults;
-    }
-
-    private void addRecord(final SAMRecord record)
-    {
-        if(!isEligible(record))
-            return;
-
-        int window = windowPosition(record.getAlignmentStart());
-        if(mStart != window)
-        {
-            addReadCount(mStart, mCount);
-            mStart = window;
-            mCount = 0;
-        }
-
-        mCount++;
-    }
-
-    private void addReadCount(int position, int count)
-    {
-        mResults.add(ImmutableReadCount.builder().chromosome(mChromosome).position(position).readCount(count).build());
-    }
-
-    private boolean isEligible(final SAMRecord record)
-    {
-        return record.getMappingQuality() >= mMinMappingQuality
-                && !(record.getReadUnmappedFlag() || record.getDuplicateReadFlag() || record.isSecondaryOrSupplementary());
-    }
-
-    private int lastWindowPosition()
-    {
-        return windowPosition(mChromosomeLength);
-    }
-
-    private int windowPosition(int position)
-    {
-        return mWindow.start(position);
-    }
-}
-*/
