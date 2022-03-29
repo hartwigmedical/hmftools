@@ -1,18 +1,17 @@
 package com.hartwig.hmftools.pave;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
-import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -29,6 +28,7 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 public class ClinvarAnnotation
 {
     private final Map<String,List<ClinvarEntry>> mChrEntries;
+    private boolean mHasValidData;
 
     private static final String CLINVAR_VCF = "clinvar_vcf";
 
@@ -41,6 +41,7 @@ public class ClinvarAnnotation
     public ClinvarAnnotation(final CommandLine cmd)
     {
         mChrEntries = Maps.newHashMap();
+        mHasValidData = true;
 
         if(cmd.hasOption(CLINVAR_VCF))
         {
@@ -49,6 +50,7 @@ public class ClinvarAnnotation
     }
 
     public boolean hasData() { return !mChrEntries.isEmpty(); }
+    public boolean hasValidData() { return mHasValidData; }
 
     public void annotateVariant(final VariantData variant)
     {
@@ -89,6 +91,12 @@ public class ClinvarAnnotation
         if(filename == null)
             return;
 
+        if(!Files.exists(Paths.get(filename)))
+        {
+            mHasValidData = false;
+            return;
+        }
+
         try
         {
             final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(
@@ -126,6 +134,7 @@ public class ClinvarAnnotation
         catch(IOException e)
         {
             PV_LOGGER.error("failed to read Clinvar VCF file: {}",  e.toString());
+            mHasValidData = false;
         }
     }
 

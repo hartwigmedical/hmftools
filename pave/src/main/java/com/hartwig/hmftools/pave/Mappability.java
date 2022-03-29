@@ -5,6 +5,8 @@ import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -25,9 +27,10 @@ public class Mappability
     private int mCurrentIndex;
     private List<MapEntry> mEntries;
     private MapEntry mNextChromosomeEntry;
+    private boolean mHasValidData;
 
     private static final int MAX_LIST_COUNT = 1000;
-    private static final String MAPPABILITY_BED = "mappability_bed";
+    public static final String MAPPABILITY_BED = "mappability_bed";
 
     public static final String MAPPABILITY = "MAPPABILITY";
     public static final String MAPPABILITY_DESC = "GEM mappability in 150 base window";
@@ -39,6 +42,7 @@ public class Mappability
         mCurrentIndex = 0;
         mEntries = Lists.newArrayList();
         mNextChromosomeEntry = null;
+        mHasValidData = true;
 
         if(cmd.hasOption(MAPPABILITY_BED))
         {
@@ -47,26 +51,27 @@ public class Mappability
     }
 
     public boolean hasData() { return mFileReader != null; }
+    public boolean hasValidData() { return mHasValidData; }
 
     public void annotateVariant(final VariantData variant)
     {
         if(mFileReader == null && mEntries.isEmpty())
             return;
 
-        String chromosome = RefGenomeFunctions.stripChrPrefix(variant.Chromosome);
-
         while(!mEntries.isEmpty() || mFileReader != null)
         {
-            if(checkEntries(variant, chromosome))
-                break;
+            if(checkEntries(variant))
+                return;
 
-            loadEntries(chromosome);
+            loadEntries(variant.Chromosome);
         }
+
+        PV_LOGGER.warn("variant({}) no mappability entry found", variant);
     }
 
-    private boolean checkEntries(final VariantData variant, final String chromosome)
+    private boolean checkEntries(final VariantData variant)
     {
-        if(!chromosome.equals(mCurrentChromosome))
+        if(!variant.Chromosome.equals(mCurrentChromosome))
             return false;
 
         if(mEntries.isEmpty() || mEntries.get(mEntries.size() - 1).Region.end() < variant.Position)
@@ -80,6 +85,14 @@ public class Mappability
             {
                 variant.context().getCommonInfo().putAttribute(MAPPABILITY, entry.Mappability);
                 mCurrentIndex = i;
+                return true;
+            }
+
+            // take previous if the next is past this variant
+            if(variant.Position < entry.Region.start() && i > 0)
+            {
+                MapEntry prevEntry = mEntries.get(i - 1);
+                variant.context().getCommonInfo().putAttribute(MAPPABILITY, prevEntry.Mappability);
                 return true;
             }
         }
@@ -102,15 +115,23 @@ public class Mappability
         if(filename == null)
             return;
 
+        if(!Files.exists(Paths.get(filename)))
+        {
+            mHasValidData = false;
+            return;
+        }
+
         try
         {
             mFileReader = createBufferedReader(filename);
 
-            loadEntries("1");
+            if(mFileReader != null)
+                PV_LOGGER.info("loaded mappability file({})", filename);
         }
         catch(IOException e)
         {
             PV_LOGGER.error("failed to load mappability file({}): {}", filename, e.toString());
+            mHasValidData = false;
         }
     }
 
@@ -137,7 +158,14 @@ public class Mappability
 
             while((line = mFileReader.readLine()) != null)
             {
-                final String[] values = line.split("\t", -1); // eg: 1       0       10000   id-1    0.000000
+                final String[] values = line.split("\t", -1); // eg: 1       0       10000   0.000000
+
+                if(values.length != 4)
+                {
+                    mHasValidData = false;
+                    mFileReader = null;
+                    return;
+                }
 
                 String chromosome = values[0];
 
@@ -153,7 +181,7 @@ public class Mappability
 
                 MapEntry entry = new MapEntry(
                         new ChrBaseRegion(chromosome, Integer.parseInt(values[1]) + 1, Integer.parseInt(values[2])),
-                        Double.parseDouble(values[4]));
+                        Double.parseDouble(values[3]));
 
                 if(chromosome.equals(requestedChromosome))
                 {
@@ -174,7 +202,8 @@ public class Mappability
         }
         catch(IOException e)
         {
-            PV_LOGGER.error("failed to load mappabililty file: {}", e.toString());
+            PV_LOGGER.error("failed to load mappability file: {}", e.toString());
+            mHasValidData = false;
             return;
         }
     }

@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.pave.PaveConstants.ITEM_DELIM;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -133,6 +135,12 @@ public class PonAnnotation
     {
         if(filename == null)
             return;
+
+        if(!Files.exists(Paths.get(filename)))
+        {
+            mHasValidData = false;
+            return;
+        }
 
         try
         {
@@ -273,7 +281,6 @@ public class PonAnnotation
 
         header.addMetaDataLine(new VCFFilterHeaderLine(PON_ARTEFACT_FILTER, "Filter PON artefact"));
         header.addMetaDataLine(new VCFFilterHeaderLine(PON_FILTER, "Filter PON variant"));
-
     }
 
     private class PonFilters

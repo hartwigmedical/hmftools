@@ -27,6 +27,7 @@ public class Blacklistings
 {
     private final List<ChrBaseRegion> mBedRegions;
     private final List<VcfEntry> mVcfEntries;
+    private boolean mHasValidData;
 
     private static final String BLACKLIST_BED = "blacklist_bed";
     private static final String BLACKLIST_VCF = "blacklist_vcf";
@@ -38,6 +39,7 @@ public class Blacklistings
     {
         mBedRegions = Lists.newArrayList();
         mVcfEntries = Lists.newArrayList();
+        mHasValidData = true;
 
         if(cmd.hasOption(BLACKLIST_BED))
         {
@@ -51,6 +53,7 @@ public class Blacklistings
     }
 
     public boolean hasData() { return !mBedRegions.isEmpty() || !mVcfEntries.isEmpty(); }
+    public boolean hasValidData() { return mHasValidData; }
 
     public void annotateVariant(final VariantData variant)
     {
@@ -70,6 +73,12 @@ public class Blacklistings
         if(filename == null)
             return;
 
+        if(!Files.exists(Paths.get(filename)))
+        {
+            mHasValidData = false;
+            return;
+        }
+
         try
         {
             List<String> lines = Files.readAllLines(Paths.get(filename));
@@ -86,6 +95,7 @@ public class Blacklistings
         catch(IOException e)
         {
             PV_LOGGER.error("failed to load Blacklist BED file: {}", e.toString());
+            mHasValidData = false;
         }
     }
 
@@ -93,6 +103,12 @@ public class Blacklistings
     {
         if(filename == null)
             return;
+
+        if(!Files.exists(Paths.get(filename)))
+        {
+            mHasValidData = false;
+            return;
+        }
 
         try
         {
@@ -113,6 +129,7 @@ public class Blacklistings
         catch(IOException e)
         {
             PV_LOGGER.error("failed to load Blacklist BED file: {}", e.toString());
+            mHasValidData = false;
         }
     }
 

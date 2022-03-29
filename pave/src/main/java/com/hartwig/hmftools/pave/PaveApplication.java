@@ -114,6 +114,24 @@ public class PaveApplication
             System.exit(1);
         }
 
+        if(!mMappability.hasValidData())
+        {
+            PV_LOGGER.error("invalid mappability data, exiting");
+            System.exit(1);
+        }
+
+        if(!mClinvar.hasValidData())
+        {
+            PV_LOGGER.error("invalid Clinvar data, exiting");
+            System.exit(1);
+        }
+
+        if(!mBlacklistings.hasValidData())
+        {
+            PV_LOGGER.error("invalid blacklistings data, exiting");
+            System.exit(1);
+        }
+
         processVcfFile(mConfig.SampleId);
 
         closeBufferedWriter(mCsvTranscriptWriter);
