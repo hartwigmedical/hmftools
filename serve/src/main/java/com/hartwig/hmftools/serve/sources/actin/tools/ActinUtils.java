@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.sources.actin;
+package com.hartwig.hmftools.serve.sources.actin.tools;
 
 import java.io.File;
 import java.io.IOException;

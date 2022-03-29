@@ -14,7 +14,7 @@ final class ActinKeywords {
     public static final String TMB_HIGH = "TMB_high";
     public static final String TML_HIGH = "TML_high";
     public static final String TML_LOW = "TML_low";
-    public static final String HLA_TYPE = "HLA type";
+    public static final String HLA_TYPE = "HLA_type";
 
     private ActinKeywords() {
     }

@@ -7,7 +7,7 @@ import com.hartwig.hmftools.serve.refgenome.RefGenomeResource;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ActinExtractorFactory {
+public final class ActinExtractorFactory {
 
     private ActinExtractorFactory() {
     }

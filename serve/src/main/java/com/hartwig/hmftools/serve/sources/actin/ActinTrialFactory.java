@@ -18,23 +18,16 @@ public final class ActinTrialFactory {
     }
 
     @NotNull
-    public static ActinTrial toActinTrial(@NotNull ActinEntry actionTrial, @NotNull String rawInput) {
-
+    public static ActinTrial toActinTrial(@NotNull ActinEntry entry, @NotNull String sourceEvent) {
         Set<CancerType> cancerTypeBlacklistings = Sets.newHashSet();
-        cancerTypeBlacklistings.add(ImmutableCancerType.builder()
-                .name("Hematologic cancer")
-                .doid("2531")
-                .build());
+        cancerTypeBlacklistings.add(ImmutableCancerType.builder().name("Hematologic cancer").doid("2531").build());
 
         return ImmutableActinTrial.builder()
                 .source(Knowledgebase.ACTIN)
-                .sourceEvent(rawInput)
+                .sourceEvent(sourceEvent)
                 .sourceUrls(Sets.newHashSet())
-                .treatment(actionTrial.trial())
-                .applicableCancerType(ImmutableCancerType.builder()
-                        .name("Advanced Solid Tumor")
-                        .doid("162")
-                        .build())
+                .treatment(entry.trial())
+                .applicableCancerType(ImmutableCancerType.builder().name("Advanced Solid Tumor").doid("162").build())
                 .blacklistCancerTypes(cancerTypeBlacklistings)
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)

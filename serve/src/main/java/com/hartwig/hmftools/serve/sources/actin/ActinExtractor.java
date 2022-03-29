@@ -24,7 +24,6 @@ import com.hartwig.hmftools.serve.extraction.events.ImmutableEventInterpretation
 import com.hartwig.hmftools.serve.sources.actin.classification.ActinEventExtractor;
 import com.hartwig.hmftools.serve.sources.actin.classification.ActinEventTypeExtractor;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
-import com.hartwig.hmftools.serve.sources.ckb.CkbExtractor;
 import com.hartwig.hmftools.serve.util.ProgressTracker;
 
 import org.apache.logging.log4j.LogManager;
@@ -33,7 +32,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class ActinExtractor {
 
-    private static final Logger LOGGER = LogManager.getLogger(CkbExtractor.class);
+    private static final Logger LOGGER = LogManager.getLogger(ActinExtractor.class);
 
     @NotNull
     private final EventExtractor eventExtractor;
@@ -50,27 +49,12 @@ public class ActinExtractor {
         for (ActinEntry entry : entries) {
             Set<String> events = ActinEventExtractor.extractEvents(entry);
 
-
             for (String event : events) {
-                String eventType = event;
-                if (event.split(" ").length > 1) {
-                    eventType = event.split(" ", 2)[0];
-                }
-                ActinTrial trial = ActinTrialFactory.toActinTrial(entry, entry.rule() + " " + entry.gene() + " " + event);
-                EventType type = ActinEventTypeExtractor.determineEventType(entry, eventType);
+                EventType type = ActinEventTypeExtractor.determineEventType(entry, event);
                 if (type == EventType.UNKNOWN) {
-                    LOGGER.warn("No event type known for '{}' on '{}'", entry, entry.gene());
+                    LOGGER.warn("No event type known for '{}'", entry);
                 } else {
-                    String gene = entry.gene() != null ? entry.gene() : "-";
-                    EventInterpretation interpretation = ImmutableEventInterpretation.builder()
-                            .source(Knowledgebase.ACTIN)
-                            .sourceEvent(entry.rule() + " " + event)
-                            .interpretedGene(gene)
-                            .interpretedEvent(event)
-                            .interpretedEventType(type)
-                            .build();
-
-                    extractions.add(toExtractionResult(trial, eventExtractor.extract(gene, null, type, event), interpretation));
+                    extractions.add(toExtractionResult(entry, event, type));
                 }
             }
 
@@ -78,6 +62,31 @@ public class ActinExtractor {
         }
 
         return ExtractionFunctions.merge(extractions);
+    }
+
+    @NotNull
+    private ExtractionResult toExtractionResult(@NotNull ActinEntry entry, @NotNull String event, @NotNull EventType type) {
+        String gene;
+        String sourceEvent;
+
+        if (entry.gene() != null) {
+            gene = entry.gene();
+            sourceEvent = entry.rule() + ": " + entry.gene() + " " + entry.mutation();
+        } else {
+            gene = "-";
+            sourceEvent = entry.rule() + ": " + entry.mutation();
+        }
+
+        EventExtractorOutput extraction = eventExtractor.extract(gene, null, type, event);
+        EventInterpretation interpretation = ImmutableEventInterpretation.builder()
+                .source(Knowledgebase.ACTIN)
+                .sourceEvent(sourceEvent)
+                .interpretedGene(gene)
+                .interpretedEvent(event)
+                .interpretedEventType(type)
+                .build();
+
+        return toExtractionResult(ActinTrialFactory.toActinTrial(entry, sourceEvent), extraction, interpretation);
     }
 
     @NotNull

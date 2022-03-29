@@ -11,6 +11,7 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ActinTrial implements ActionableEvent {
 
+
 }
 
 

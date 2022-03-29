@@ -9,8 +9,8 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.FileWriterUtils;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class ActinFileReader {
 
@@ -48,8 +48,8 @@ public final class ActinFileReader {
                 .build();
     }
 
-    @NotNull
+    @Nullable
     private static String emptyToNull(@NotNull String value) {
-        return !value.isEmpty() ? value : Strings.EMPTY;
+        return !value.isEmpty() ? value : null;
     }
 }
