@@ -14,6 +14,6 @@ public final class ActinExtractorFactory {
 
     @NotNull
     public static ActinExtractor buildActinExtractor(@NotNull EventClassifierConfig config, @NotNull RefGenomeResource refGenomeResource) {
-        return new ActinExtractor(EventExtractorFactory.create(config, refGenomeResource, DriverInconsistencyMode.FILTER));
+        return new ActinExtractor(EventExtractorFactory.create(config, refGenomeResource, DriverInconsistencyMode.WARN_ONLY));
     }
 }
