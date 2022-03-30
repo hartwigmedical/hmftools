@@ -67,7 +67,11 @@ public class PersonalizedEvidenceFactory {
         boolean hasBlacklistedEvidence = false;
         Set<String> blacklistDoids = CancerTypeFactory.doidStrings(blacklistCancerTypes);
         Set<String> results = Sets.newHashSet();
-        LOGGER.info(" Starting doid resolving for patient with initial tumor doids '{}'", blacklistDoids);
+
+        if (!blacklistDoids.isEmpty()) {
+            LOGGER.info(" Starting doid resolving for blacklisting evidence  '{}'", blacklistDoids);
+        }
+
         for (String doid : blacklistDoids) {
             results.add(doid);
             results.addAll(doidParentModel.parents(doid));
