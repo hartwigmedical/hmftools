@@ -3,7 +3,6 @@ package com.hartwig.hmftools.serve.sources.ckb;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -14,7 +13,6 @@ import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.classification.EventType;
-import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
@@ -23,7 +21,6 @@ import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLA;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
-import com.hartwig.hmftools.serve.cancertype.CancerType;
 import com.hartwig.hmftools.serve.extraction.ActionableEventFactory;
 import com.hartwig.hmftools.serve.extraction.EventExtractor;
 import com.hartwig.hmftools.serve.extraction.EventExtractorOutput;
@@ -54,14 +51,13 @@ import com.hartwig.hmftools.serve.util.ProgressTracker;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class CkbExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(CkbExtractor.class);
-    private static final String DELIMETER = ",";
+    private static final String DELIMITER = ",";
     @NotNull
     private final EventExtractor eventExtractor;
 
@@ -90,11 +86,11 @@ public class CkbExtractor {
             String transcript = null;
 
             EventExtractorOutput eventExtractorOutput = eventExtractor.extract(gene, transcript, entry.type(), event);
-            Set<? extends ActionableEvent> actionableEvents = ActionableEntryFactory.toActionableEntries(entry, gene);
+            Set<ActionableEntry> actionableEvents = ActionableEntryFactory.toActionableEntries(entry, gene);
 
             EventInterpretation interpretation = ImmutableEventInterpretation.builder()
                     .source(Knowledgebase.CKB)
-                    .sourceEvent(toString(entry.variants()))
+                    .sourceEvent(event)
                     .interpretedGene(gene)
                     .interpretedEvent(event)
                     .interpretedEventType(entry.type())
@@ -110,35 +106,11 @@ public class CkbExtractor {
 
     @NotNull
     public static String toString(@NotNull List<Variant> variants) {
-        StringJoiner joiner = new StringJoiner(DELIMETER);
+        StringJoiner joiner = new StringJoiner(DELIMITER);
         for (Variant variant : variants) {
             joiner.add(variant.variant());
         }
         return joiner.toString();
-    }
-
-    @VisibleForTesting
-    @NotNull
-    public static List<CodonAnnotation> curateCodons(@Nullable List<CodonAnnotation> codonAnnotation) {
-        List<CodonAnnotation> codons = Lists.newArrayList();
-        if (codonAnnotation == null) {
-            return codons;
-        }
-
-        for (CodonAnnotation codon : codonAnnotation) {
-            if (codon.gene().equals("BRAF") && codon.rank() == 600) {
-                //BRAF is present on reverse strand
-                codons.add(ImmutableCodonAnnotation.builder()
-                        .from(codon)
-                        .transcript("ENST00000646891")
-                        .start(140753335)
-                        .end(140753337)
-                        .build());
-            } else {
-                codons.add(ImmutableCodonAnnotation.builder().from(codon).build());
-            }
-        }
-        return codons;
     }
 
     @NotNull
@@ -197,6 +169,29 @@ public class CkbExtractor {
                 .actionableCharacteristics(actionableCharacteristics)
                 .actionableHLA(actionableHLA)
                 .build();
+    }
+
+    @VisibleForTesting
+    @Nullable
+    static List<CodonAnnotation> curateCodons(@Nullable List<CodonAnnotation> codonAnnotations) {
+        if (codonAnnotations == null) {
+            return null;
+        }
+
+        List<CodonAnnotation> curatedCodons = Lists.newArrayList();
+        for (CodonAnnotation codon : codonAnnotations) {
+            if (codon.gene().equals("BRAF") && codon.rank() == 600) {
+                curatedCodons.add(ImmutableCodonAnnotation.builder()
+                        .from(codon)
+                        .transcript("ENST00000646891")
+                        .start(140753335)
+                        .end(140753337)
+                        .build());
+            } else {
+                curatedCodons.add(codon);
+            }
+        }
+        return curatedCodons;
     }
 
     @NotNull
