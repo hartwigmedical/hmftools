@@ -193,7 +193,8 @@ public class PurpleApplication
             {
                 // load amber and cobalt sample data
                 final AmberData amberData = new AmberData(
-                        mConfig.germlineMode() ? referenceId : tumorId, sampleDataFiles.AmberDirectory, mConfig.germlineMode());
+                        mConfig.germlineMode() ? referenceId : tumorId, sampleDataFiles.AmberDirectory, mConfig.germlineMode(),
+                        mReferenceData.RefGenVersion);
 
                 final CobaltData cobaltData = new CobaltData(
                         referenceId, tumorId, sampleDataFiles.CobaltDirectory, amberData.PatientGender,

@@ -62,9 +62,9 @@ public abstract class PurpleQC {
         return status().size() == 1 && status().contains(PurpleQCStatus.PASS);
     }
 
-    boolean genderPass() {
-        return cobaltGender().equals(amberGender()) || germlineAberrations().contains(GermlineAberration.KLINEFELTER)
-                || cobaltGender().equals(Gender.MALE_KLINEFELTER);
+    boolean genderPass()
+    {
+        return cobaltGender().equals(amberGender()) || germlineAberrations().contains(GermlineAberration.KLINEFELTER);
     }
 
     public abstract int copyNumberSegments();

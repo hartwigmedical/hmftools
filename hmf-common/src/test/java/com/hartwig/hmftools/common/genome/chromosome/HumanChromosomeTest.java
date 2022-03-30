@@ -55,7 +55,6 @@ public class HumanChromosomeTest {
     @Test
     public void testIsDiploid() {
         assertTrue(HumanChromosome._X.isDiploid(Gender.FEMALE));
-        assertTrue(HumanChromosome._X.isDiploid(Gender.MALE_KLINEFELTER));
         assertFalse(HumanChromosome._X.isDiploid(Gender.MALE));
         assertFalse(HumanChromosome._Y.isDiploid(Gender.MALE));
         assertFalse(HumanChromosome._Y.isDiploid(Gender.FEMALE));
