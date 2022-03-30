@@ -14,6 +14,7 @@ public final class CkbExtractorFactory {
 
     @NotNull
     public static CkbExtractor buildCkbExtractor(@NotNull EventClassifierConfig config, @NotNull RefGenomeResource refGenomeResource) {
-        return new CkbExtractor(EventExtractorFactory.create(config, refGenomeResource, DriverInconsistencyMode.FILTER));
+        // We want to capture all events from CKB, so ignore driver inconsistencies
+        return new CkbExtractor(EventExtractorFactory.create(config, refGenomeResource, DriverInconsistencyMode.IGNORE));
     }
 }
