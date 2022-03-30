@@ -21,10 +21,10 @@ public final class DoidLookupFactory {
     }
 
     @NotNull
-    public static DoidLookup buildFromMappingTsv(@NotNull String configTsvPath) throws IOException {
+    public static DoidLookup buildFromMappingTsv(@NotNull String mappingTsvPath) throws IOException {
         Map<String, Set<String>> cancerTypeToDoidsMapping = Maps.newHashMap();
 
-        List<String> lines = Files.readAllLines(new File(configTsvPath).toPath());
+        List<String> lines = Files.readAllLines(new File(mappingTsvPath).toPath());
         // Skip header
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(FIELD_DELIMITER);

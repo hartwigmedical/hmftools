@@ -7,6 +7,7 @@ import java.util.StringJoiner;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.ckb.classification.CkbConstants;
 import com.hartwig.hmftools.ckb.classification.CkbEventAndGeneExtractor;
 import com.hartwig.hmftools.ckb.classification.CkbProteinAnnotationExtractor;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
@@ -76,27 +77,32 @@ public class CkbExtractor {
 
             int variantCount = entry.variants().size();
             Variant variant = entry.variants().get(0);
-            String event = variantCount > 1 ? toString(entry.variants()) : CkbEventAndGeneExtractor.extractEvent(variant);
+            String event = variantCount > 1 ? concat(entry.variants()) : CkbEventAndGeneExtractor.extractEvent(variant);
             String gene = variantCount > 1 ? "Multiple" : CkbEventAndGeneExtractor.extractGene(variant);
 
             if (entry.type() == EventType.UNKNOWN) {
                 LOGGER.warn("No event type known for '{}' on '{}'", event, gene);
+            } else {
+                EventExtractorOutput extraction = eventExtractor.extract(gene, null, entry.type(), event);
+                String sourceEvent;
+                if (!gene.equals(CkbConstants.NO_GENE)) {
+                    sourceEvent = gene + " " + event;
+                } else {
+                    sourceEvent = event;
+                }
+
+                Set<ActionableEntry> actionableEvents = ActionableEntryFactory.toActionableEntries(entry, sourceEvent);
+
+                EventInterpretation interpretation = ImmutableEventInterpretation.builder()
+                        .source(Knowledgebase.CKB)
+                        .sourceEvent(sourceEvent)
+                        .interpretedGene(gene)
+                        .interpretedEvent(event)
+                        .interpretedEventType(entry.type())
+                        .build();
+
+                extractions.add(toExtractionResult(gene, event, null, extraction, actionableEvents, interpretation));
             }
-
-            String transcript = null;
-
-            EventExtractorOutput eventExtractorOutput = eventExtractor.extract(gene, transcript, entry.type(), event);
-            Set<ActionableEntry> actionableEvents = ActionableEntryFactory.toActionableEntries(entry, gene);
-
-            EventInterpretation interpretation = ImmutableEventInterpretation.builder()
-                    .source(Knowledgebase.CKB)
-                    .sourceEvent(event)
-                    .interpretedGene(gene)
-                    .interpretedEvent(event)
-                    .interpretedEventType(entry.type())
-                    .build();
-
-            extractions.add(toExtractionResult(gene, event, transcript, eventExtractorOutput, actionableEvents, interpretation));
 
             tracker.update();
         }
@@ -105,7 +111,7 @@ public class CkbExtractor {
     }
 
     @NotNull
-    public static String toString(@NotNull List<Variant> variants) {
+    private static String concat(@NotNull List<Variant> variants) {
         StringJoiner joiner = new StringJoiner(DELIMITER);
         for (Variant variant : variants) {
             joiner.add(variant.variant());
@@ -115,7 +121,7 @@ public class CkbExtractor {
 
     @NotNull
     private static ExtractionResult toExtractionResult(@NotNull String gene, @NotNull String variant, @Nullable String transcript,
-            @NotNull EventExtractorOutput output, @NotNull Set<? extends ActionableEvent> actionableEvents,
+            @NotNull EventExtractorOutput output, @NotNull Set<ActionableEntry> actionableEvents,
             @NotNull EventInterpretation interpretation) {
         Set<ActionableHotspot> actionableHotspots = Sets.newHashSet();
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
