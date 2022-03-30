@@ -2,7 +2,6 @@ package com.hartwig.hmftools.serve.sources.iclusion;
 
 import java.util.List;
 import java.util.Set;
-import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
@@ -22,9 +21,11 @@ import org.jetbrains.annotations.NotNull;
 
 public class ActionableTrialFactory {
 
-    private static final String DELIMITER = ",";
-
     private static final Logger LOGGER = LogManager.getLogger(ActionableTrialFactory.class);
+
+    static final String CANCER_DOID = "162";
+
+    static final CancerType HEMATOLOGIC_CANCER_TYPE = ImmutableCancerType.builder().name("Hematologic cancer").doid("2531").build();
 
     @NotNull
     private final DoidLookup missingDoidLookup;
@@ -35,7 +36,32 @@ public class ActionableTrialFactory {
 
     @NotNull
     public List<ActionableTrial> toActionableTrials(@NotNull IclusionTrial trial, @NotNull String sourceEvent) {
-        ImmutableActionableTrial.Builder actionableBuilder = ImmutableActionableTrial.builder()
+        ImmutableActionableTrial.Builder actionableBuilder = toActionableBuilder(trial, sourceEvent);
+
+        Set<CancerType> blacklistCancerTypes = determineBlacklistedCancerTypes(trial);
+
+        List<ActionableTrial> actionableTrials = Lists.newArrayList();
+        for (IclusionTumorLocation tumorLocation : trial.tumorLocations()) {
+            for (String doid : determineDoids(tumorLocation)) {
+                String doidCurated = curateDoid(doid);
+                CancerType applicable = ImmutableCancerType.builder().name(tumorLocation.primaryTumorLocation()).doid(doidCurated).build();
+
+                Set<CancerType> finalBlacklistedCancerTypes = Sets.newHashSet(blacklistCancerTypes.iterator());
+                if (doidCurated.equals(CANCER_DOID)) {
+                    finalBlacklistedCancerTypes.add(HEMATOLOGIC_CANCER_TYPE);
+                }
+
+                actionableTrials.add(actionableBuilder.applicableCancerType(applicable)
+                        .blacklistCancerTypes(finalBlacklistedCancerTypes)
+                        .build());
+            }
+        }
+        return actionableTrials;
+    }
+
+    @NotNull
+    private static ImmutableActionableTrial.Builder toActionableBuilder(@NotNull IclusionTrial trial, @NotNull String sourceEvent) {
+        return ImmutableActionableTrial.builder()
                 .source(Knowledgebase.ICLUSION)
                 .sourceEvent(sourceEvent)
                 .sourceUrls(Sets.newHashSet("https://trial-eye.com/hmf/" + trial.id()))
@@ -43,97 +69,49 @@ public class ActionableTrialFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .evidenceUrls(Sets.newHashSet());
-
-        List<ActionableTrial> actionableTrials = Lists.newArrayList();
-
-        Set<CancerType> blacklistTumorLocations = determineBlacklistedTumorLocations(trial);
-
-        for (IclusionTumorLocation tumorLocation : trial.tumorLocations()) {
-            Set<CancerType> blacklistTumorLocationsSolid = Sets.newHashSet();
-            Set<CancerType> blacklistTumorLocationsMerged = Sets.newHashSet();
-            List<String> doids = tumorLocation.doids();
-            if (doids.isEmpty()) {
-                Set<String> manualDoids = missingDoidLookup.lookupDoidsForCancerType(tumorLocation.primaryTumorLocation());
-                if (manualDoids == null) {
-                    LOGGER.warn("No doids could be derived for iClusion primary tumor location '{}'", tumorLocation.primaryTumorLocation());
-                } else {
-                    LOGGER.debug("Resolved doids to '{}' for iClusion primary tumor location '{}'",
-                            manualDoids,
-                            tumorLocation.primaryTumorLocation());
-                    doids = Lists.newArrayList(manualDoids.iterator());
-                }
-            }
-            for (String doid : doids) {
-                String doidCorrected = extractDoid(doid);
-
-                if (doidCorrected.equals("162")) {
-                    blacklistTumorLocationsSolid.add(ImmutableCancerType.builder().name("Hematologic cancer").doid("2531").build());
-                }
-
-                blacklistTumorLocationsMerged.addAll(blacklistTumorLocationsSolid);
-                blacklistTumorLocationsMerged.addAll(blacklistTumorLocations);
-
-                actionableTrials.add(actionableBuilder.applicableCancerType(ImmutableCancerType.builder()
-                        .name(tumorLocation.primaryTumorLocation())
-                        .doid(doidCorrected)
-                        .build()).blacklistCancerTypes(blacklistTumorLocationsMerged).build());
-            }
-        }
-        return actionableTrials;
     }
 
     @NotNull
-    public Set<CancerType> determineBlacklistedTumorLocations(@NotNull IclusionTrial trial) {
-        Set<String> blacklistedDoids = Sets.newHashSet();
-        Set<String> blacklistTumorLocations = Sets.newHashSet();
+    private Set<CancerType> determineBlacklistedCancerTypes(@NotNull IclusionTrial trial) {
         Set<CancerType> blacklistedCancerTypes = Sets.newHashSet();
         for (IclusionTumorLocation blacklistTumorLocation : trial.blacklistedTumorLocations()) {
-            List<String> blacklistDoids = blacklistTumorLocation.doids();
-            blacklistTumorLocations.add(blacklistTumorLocation.primaryTumorLocation());
-            if (blacklistDoids.isEmpty()) {
-                Set<String> manualDoidsBlacklist =
-                        missingDoidLookup.lookupDoidsForCancerType(blacklistTumorLocation.primaryTumorLocation());
-                if (manualDoidsBlacklist == null) {
-                    LOGGER.warn("No doids could be derived for iClusion primary tumor location '{}'",
-                            blacklistTumorLocation.primaryTumorLocation());
-                } else {
-                    LOGGER.debug("Resolved doids to '{}' for iClusion primary tumor location '{}'",
-                            manualDoidsBlacklist,
-                            blacklistTumorLocation.primaryTumorLocation());
-                    blacklistDoids = Lists.newArrayList(manualDoidsBlacklist.iterator());
-                }
-            }
-            for (String doid : blacklistDoids) {
-                String doidCorrected = extractDoid(doid);
-                blacklistedDoids.add(doidCorrected);
+            for (String doid : determineDoids(blacklistTumorLocation)) {
+                blacklistedCancerTypes.add(ImmutableCancerType.builder()
+                        .name(blacklistTumorLocation.primaryTumorLocation())
+                        .doid(curateDoid(doid))
+                        .build());
             }
         }
 
-        if (!blacklistTumorLocations.isEmpty() && !blacklistedDoids.isEmpty()) {
-            blacklistedCancerTypes.add(ImmutableCancerType.builder()
-                    .name(urlsToString(blacklistTumorLocations))
-                    .doid(urlsToString(blacklistedDoids))
-                    .build());
-        }
         return blacklistedCancerTypes;
     }
 
     @NotNull
-    @VisibleForTesting
-    static String extractDoid(@NotNull String doid) {
-        String doidCorrected = doid;
-        if (doidCorrected.equals("0050686") || doidCorrected.equals("MESH: D009382") || doidCorrected.equals("UNKNOWN")) {
-            doidCorrected = "162";
+    private List<String> determineDoids(@NotNull IclusionTumorLocation tumorLocation) {
+        if (!tumorLocation.doids().isEmpty()) {
+            return tumorLocation.doids();
         }
-        return doidCorrected;
+
+        Set<String> manualDoids = missingDoidLookup.lookupDoidsForCancerType(tumorLocation.primaryTumorLocation());
+        if (manualDoids == null) {
+            LOGGER.warn("No doids could be derived for iClusion primary tumor location '{}'", tumorLocation.primaryTumorLocation());
+            manualDoids = Sets.newHashSet();
+        } else {
+            LOGGER.debug("Resolved doids to '{}' for iClusion primary tumor location '{}'",
+                    manualDoids,
+                    tumorLocation.primaryTumorLocation());
+        }
+
+        return Lists.newArrayList(manualDoids.iterator());
     }
 
     @NotNull
-    private static String urlsToString(@NotNull Set<String> urls) {
-        StringJoiner joiner = new StringJoiner(DELIMITER);
-        for (String url : urls) {
-            joiner.add(url);
+    @VisibleForTesting
+    static String curateDoid(@NotNull String doid) {
+        if (doid.equals("0050686") || doid.equals("MESH: D009382") || doid.equals("UNKNOWN")) {
+            return CANCER_DOID;
+        } else {
+            return doid;
         }
-        return joiner.toString();
     }
 }
