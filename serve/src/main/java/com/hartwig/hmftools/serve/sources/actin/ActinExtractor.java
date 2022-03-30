@@ -130,7 +130,7 @@ public class ActinExtractor {
 
         return ImmutableExtractionResult.builder()
                 .refGenomeVersion(Knowledgebase.ACTIN.refGenomeVersion())
-                .eventInterpretations(Lists.newArrayList(interpretation))
+                .addEventInterpretations((interpretation))
                 .actionableHotspots(actionableHotspots)
                 .actionableRanges(actionableRanges)
                 .actionableGenes(actionableGenes)

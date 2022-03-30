@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.classification.EventType;
+import com.hartwig.hmftools.iclusion.classification.IclusionConstants;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionMutation;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionMutationCondition;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
@@ -71,7 +72,13 @@ public class IclusionExtractor {
 
     @NotNull
     private ExtractionResult extract(@NotNull IclusionTrial trial, @NotNull IclusionMutation mutation) {
-        String sourceEvent = mutation.gene() + " " + mutation.name();
+        String sourceEvent;
+        if (!mutation.gene().equals(IclusionConstants.NO_GENE)) {
+            sourceEvent = mutation.gene() + " " + mutation.name();
+        } else {
+            sourceEvent = mutation.name();
+        }
+
         List<ActionableTrial> actionableTrials = actionableTrialFactory.toActionableTrials(trial, sourceEvent);
         for (ActionableTrial actionableTrial : actionableTrials) {
             LOGGER.debug("Generated {} based off {}", actionableTrial, trial);
@@ -128,7 +135,7 @@ public class IclusionExtractor {
 
         return ImmutableExtractionResult.builder()
                 .refGenomeVersion(Knowledgebase.ICLUSION.refGenomeVersion())
-                .eventInterpretations(Lists.newArrayList(interpretation))
+                .addEventInterpretations(interpretation)
                 .actionableHotspots(actionableHotspots)
                 .actionableRanges(actionableRanges)
                 .actionableGenes(actionableGenes)

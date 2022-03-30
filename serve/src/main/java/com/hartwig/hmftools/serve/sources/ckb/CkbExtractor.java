@@ -162,7 +162,7 @@ public class CkbExtractor {
 
         return ImmutableExtractionResult.builder()
                 .refGenomeVersion(Knowledgebase.CKB.refGenomeVersion())
-                .eventInterpretations(Lists.newArrayList(interpretation))
+                .addEventInterpretations(interpretation)
                 .knownHotspots(convertToKnownHotspots(output.hotspots(), gene, variant, transcript))
                 .knownCodons(convertToKnownCodons(codons))
                 .knownExons(convertToKnownExons(output.exons()))

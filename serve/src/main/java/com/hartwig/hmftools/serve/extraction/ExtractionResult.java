@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.serve.extraction;
 
-import java.util.List;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -30,7 +29,7 @@ public abstract class ExtractionResult {
     public abstract RefGenomeVersion refGenomeVersion();
 
     @NotNull
-    public abstract List<EventInterpretation> eventInterpretations();
+    public abstract Set<EventInterpretation> eventInterpretations();
 
     @NotNull
     public abstract Set<KnownHotspot> knownHotspots();
