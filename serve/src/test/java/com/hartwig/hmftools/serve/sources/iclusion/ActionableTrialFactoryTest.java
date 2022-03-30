@@ -98,7 +98,7 @@ public class ActionableTrialFactoryTest {
     public void canCurateDoids() {
         assertEquals("0060463", ActionableTrialFactory.curateDoid("0060463"));
         assertEquals("162", ActionableTrialFactory.curateDoid("0050686"));
-        assertEquals("162", ActionableTrialFactory.curateDoid("UNKNOWN"));
-        assertEquals("162", ActionableTrialFactory.curateDoid("MESH: D009382"));
+        assertEquals("0050686", ActionableTrialFactory.curateDoid("UNKNOWN"));
+        assertEquals("0050686", ActionableTrialFactory.curateDoid("MESH: D009382"));
     }
 }
