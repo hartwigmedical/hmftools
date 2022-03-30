@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 public class LongestSegment
 {
     // longest segment algorithm where the average value of the segment
-    // is <= averageL
+    // is >= averageL
     // this can be reduced to the longest segment where the sum is <= 0
     //
     // @return Range of the segment if found, null otherwise
@@ -46,7 +46,13 @@ public class LongestSegment
 
         for (int i = 1; i <= a.length; ++i)
         {
+            // update the cumulative sum
             c[i] = c[i - 1] + a[i - 1];
+
+            // update the safest index
+            // what we want to do, is to be able to tell where the biggest
+            // sum is so far on the fly
+            // m[i] stores the index where the biggest sum is
             if (c[i - 1] < c[m[i - 1]])
             {
                 m[i] = i - 1;
@@ -55,6 +61,11 @@ public class LongestSegment
             {
                 m[i] = m[i - 1];
             }
+
+            // a(x, y) is the longest segment we found so far
+            // what we want to test now, is whether there is a longer segment
+            // than x, y, and that has to include i, since this is the only thing
+            // that has changed
             int k = i - y + x - 1;
             while (k > 0)
             {
