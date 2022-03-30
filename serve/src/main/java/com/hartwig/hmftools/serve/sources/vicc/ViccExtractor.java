@@ -76,12 +76,11 @@ public final class ViccExtractor {
 
         ProgressTracker tracker = new ProgressTracker("VICC", entries.size());
         for (ViccEntry entry : entries) {
-            resultsPerEntry.put(entry, extractSingleEntry(entry));
-            tracker.update();
-        }
+            ViccExtractionResult extraction = extractSingleEntry(entry);
+            resultsPerEntry.put(entry, extraction);
+            extractions.add(toExtractionResult(entry, extraction));
 
-        for (Map.Entry<ViccEntry, ViccExtractionResult> entryResult : resultsPerEntry.entrySet()) {
-            extractions.add(toExtractionResult(entryResult.getValue(), entryResult.getKey()));
+            tracker.update();
         }
 
         actionableEvidenceFactory.evaluateCuration();
@@ -90,18 +89,18 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    private static ExtractionResult toExtractionResult(ViccExtractionResult resultsPerEntry, @NotNull ViccEntry entry) {
+    private static ExtractionResult toExtractionResult(@NotNull ViccEntry entry, @NotNull ViccExtractionResult extraction) {
         // Assume all VICC knowledgebases are on the same ref genome version
         ImmutableExtractionResult.Builder outputBuilder = ImmutableExtractionResult.builder()
-                .eventInterpretations(Lists.newArrayList(resultsPerEntry.eventInterpretations()))
+                .eventInterpretations(extraction.eventInterpretations())
                 .refGenomeVersion(Knowledgebase.VICC_CGI.refGenomeVersion())
-                .knownHotspots(convertToHotspots(resultsPerEntry, entry))
-                .knownCodons(convertToCodons(resultsPerEntry, entry))
-                .knownExons(convertToExons(resultsPerEntry, entry))
-                .knownCopyNumbers(convertToKnownAmpsDels(resultsPerEntry, entry))
-                .knownFusionPairs(convertToKnownFusions(resultsPerEntry, entry));
+                .knownHotspots(convertToHotspots(extraction, entry))
+                .knownCodons(convertToCodons(extraction, entry))
+                .knownExons(convertToExons(extraction, entry))
+                .knownCopyNumbers(convertToKnownAmpsDels(extraction, entry))
+                .knownFusionPairs(convertToKnownFusions(extraction, entry));
 
-        addActionability(outputBuilder, resultsPerEntry);
+        addActionability(outputBuilder, extraction);
 
         return outputBuilder.build();
     }
@@ -174,6 +173,7 @@ public final class ViccExtractor {
 
             }
         }
+
         viccBuilderBuilder.eventInterpretations(eventInterpretations);
         viccBuilderBuilder.hotspotsPerFeature(hotspotsPerFeature);
         viccBuilderBuilder.codonsPerFeature(codonsPerFeature);
