@@ -6,9 +6,9 @@ import java.util.List;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
 import com.hartwig.hmftools.serve.sources.iclusion.curation.IclusionCurator;
+import com.hartwig.hmftools.serve.sources.iclusion.filter.IclusionFilter;
 import com.hartwig.hmftools.serve.sources.iclusion.filter.IclusionFilterEntry;
 import com.hartwig.hmftools.serve.sources.iclusion.filter.IclusionFilterFile;
-import com.hartwig.hmftools.serve.sources.iclusion.filter.IclusionFilter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,7 +22,8 @@ public final class IclusionReader {
     }
 
     @NotNull
-    public static List<IclusionTrial> readAndCurate(@NotNull String iClusionTrialTsv, @NotNull String iClusionFilterTsv) throws IOException {
+    public static List<IclusionTrial> readAndCurate(@NotNull String iClusionTrialTsv, @NotNull String iClusionFilterTsv)
+            throws IOException {
         LOGGER.info("Reading iClusion trial TSV from '{}'", iClusionTrialTsv);
         List<IclusionTrial> trials = IclusionTrialFile.read(iClusionTrialTsv);
         LOGGER.info(" Read {} trials", trials.size());
@@ -50,8 +51,8 @@ public final class IclusionReader {
     }
 
     @NotNull
-    private static List<IclusionTrial> filter(@NotNull List<IclusionTrial> trials, @NotNull List<IclusionFilterEntry> iClusionFilterTrials) {
-        IclusionFilter filter = new IclusionFilter(iClusionFilterTrials);
+    private static List<IclusionTrial> filter(@NotNull List<IclusionTrial> trials, @NotNull List<IclusionFilterEntry> filterEntries) {
+        IclusionFilter filter = new IclusionFilter(filterEntries);
 
         LOGGER.info("Filtering {} iClusion entries", trials.size());
         List<IclusionTrial> filteredTrials = filter.run(trials);

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.sources.ckb;
+package com.hartwig.hmftools.serve.sources.ckb.tools;
 
 import java.io.File;
 import java.io.IOException;

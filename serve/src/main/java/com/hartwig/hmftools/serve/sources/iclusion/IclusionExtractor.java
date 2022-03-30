@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.serve.sources.iclusion;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -52,32 +51,15 @@ public class IclusionExtractor {
 
         ProgressTracker tracker = new ProgressTracker("iClusion", trials.size());
         for (IclusionTrial trial : trials) {
-
             for (IclusionMutationCondition mutationCondition : trial.mutationConditions()) {
                 for (IclusionMutation mutation : mutationCondition.mutations()) {
-
-                    List<ActionableTrial> actionableTrials =
-                            actionableTrialFactory.toActionableTrials(trial, mutation.gene() + " " + mutation.name());
-                    for (ActionableTrial actionableTrial : actionableTrials) {
-                        LOGGER.debug("Generated {} based off {}", actionableTrial, trial);
-                    }
-
                     LOGGER.debug("Interpreting '{}' on '{}' for {}", mutation.name(), mutation.gene(), trial.acronym());
+
                     if (mutation.type() == EventType.UNKNOWN) {
                         LOGGER.warn("No event type known for '{}' on '{}'", mutation.name(), mutation.gene());
+                    } else {
+                        extractions.add(extract(trial, mutation));
                     }
-                    EventExtractorOutput eventExtractorOutput =
-                            eventExtractor.extract(mutation.gene(), null, mutation.type(), mutation.name());
-
-                    EventInterpretation interpretation = ImmutableEventInterpretation.builder()
-                            .source(Knowledgebase.ICLUSION)
-                            .sourceEvent(mutation.name())
-                            .interpretedGene(mutation.gene())
-                            .interpretedEvent(mutation.name())
-                            .interpretedEventType(mutation.type())
-                            .build();
-                    Set<ActionableTrial> actionableTrialsUniq = new HashSet<>(actionableTrials);
-                    extractions.add(toExtractionResult(actionableTrialsUniq, eventExtractorOutput, interpretation));
                 }
             }
 
@@ -88,8 +70,29 @@ public class IclusionExtractor {
     }
 
     @NotNull
-    private static ExtractionResult toExtractionResult(@NotNull Set<ActionableTrial> actionableTrials,
-            @NotNull EventExtractorOutput eventExtractions, @NotNull EventInterpretation interpretation) {
+    private ExtractionResult extract(@NotNull IclusionTrial trial, @NotNull IclusionMutation mutation) {
+        String sourceEvent = mutation.gene() + " " + mutation.name();
+        List<ActionableTrial> actionableTrials = actionableTrialFactory.toActionableTrials(trial, sourceEvent);
+        for (ActionableTrial actionableTrial : actionableTrials) {
+            LOGGER.debug("Generated {} based off {}", actionableTrial, trial);
+        }
+
+        EventExtractorOutput extraction = eventExtractor.extract(mutation.gene(), null, mutation.type(), mutation.name());
+
+        EventInterpretation interpretation = ImmutableEventInterpretation.builder()
+                .source(Knowledgebase.ICLUSION)
+                .sourceEvent(sourceEvent)
+                .interpretedGene(mutation.gene())
+                .interpretedEvent(mutation.name())
+                .interpretedEventType(mutation.type())
+                .build();
+
+        return toExtractionResult(actionableTrials, extraction, interpretation);
+    }
+
+    @NotNull
+    private static ExtractionResult toExtractionResult(@NotNull List<ActionableTrial> actionableTrials,
+            @NotNull EventExtractorOutput extraction, @NotNull EventInterpretation interpretation) {
         Set<ActionableHotspot> actionableHotspots = Sets.newHashSet();
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
         Set<ActionableGene> actionableGenes = Sets.newHashSet();
@@ -98,31 +101,29 @@ public class IclusionExtractor {
         Set<ActionableHLA> actionableHLA = Sets.newHashSet();
 
         for (ActionableTrial trial : actionableTrials) {
+            actionableHotspots.addAll(ActionableEventFactory.toActionableHotspots(trial, extraction.hotspots()));
+            actionableRanges.addAll(ActionableEventFactory.toActionableRanges(trial, extraction.codons()));
+            actionableRanges.addAll(ActionableEventFactory.toActionableRanges(trial, extraction.exons()));
 
-            actionableHotspots.addAll(ActionableEventFactory.toActionableHotspots(trial, eventExtractions.hotspots()));
-            actionableRanges.addAll(ActionableEventFactory.toActionableRanges(trial, eventExtractions.codons()));
-            actionableRanges.addAll(ActionableEventFactory.toActionableRanges(trial, eventExtractions.exons()));
-
-            if (eventExtractions.geneLevelEvent() != null) {
-                actionableGenes.add(ActionableEventFactory.geneLevelEventToActionableGene(trial, eventExtractions.geneLevelEvent()));
+            if (extraction.geneLevelEvent() != null) {
+                actionableGenes.add(ActionableEventFactory.geneLevelEventToActionableGene(trial, extraction.geneLevelEvent()));
             }
 
-            if (eventExtractions.knownCopyNumber() != null) {
-                actionableGenes.add(ActionableEventFactory.copyNumberToActionableGene(trial, eventExtractions.knownCopyNumber()));
+            if (extraction.knownCopyNumber() != null) {
+                actionableGenes.add(ActionableEventFactory.copyNumberToActionableGene(trial, extraction.knownCopyNumber()));
             }
 
-            if (eventExtractions.knownFusionPair() != null) {
-                actionableFusions.add(ActionableEventFactory.toActionableFusion(trial, eventExtractions.knownFusionPair()));
+            if (extraction.knownFusionPair() != null) {
+                actionableFusions.add(ActionableEventFactory.toActionableFusion(trial, extraction.knownFusionPair()));
             }
 
-            if (eventExtractions.characteristic() != null) {
-                actionableCharacteristics.add(ActionableEventFactory.toActionableCharacteristic(trial, eventExtractions.characteristic()));
+            if (extraction.characteristic() != null) {
+                actionableCharacteristics.add(ActionableEventFactory.toActionableCharacteristic(trial, extraction.characteristic()));
             }
 
-            if (eventExtractions.hla() != null) {
-                actionableHLA.add(ActionableEventFactory.toActionableHLa(trial, eventExtractions.hla()));
+            if (extraction.hla() != null) {
+                actionableHLA.add(ActionableEventFactory.toActionableHLa(trial, extraction.hla()));
             }
-
         }
 
         return ImmutableExtractionResult.builder()
