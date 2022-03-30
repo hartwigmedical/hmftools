@@ -17,7 +17,8 @@ public class EventKeyTest {
     public void canCreateUniqueEventSet() {
         List<ProtectEvidence> evidences = Lists.newArrayList();
 
-        ProtectEvidence evidence1 = ProtectTestFactory.testEvidenceBuilder().gene("Gene1").event("Event 1").build();
+        ProtectEvidence evidence1 =
+                ProtectTestFactory.testEvidenceBuilder().gene("Gene1").transcript("123").isCanonical(true).event("Event 1").build();
         evidences.add(evidence1);
         evidences.add(evidence1);
         evidences.add(evidence1);
@@ -28,7 +29,8 @@ public class EventKeyTest {
         assertEquals("Gene1", key.gene());
         assertEquals("Event 1", key.event());
 
-        ProtectEvidence evidence2 = ProtectTestFactory.testEvidenceBuilder().gene(null).event("Event 2").build();
+        ProtectEvidence evidence2 =
+                ProtectTestFactory.testEvidenceBuilder().gene(null).event("Event 2").build();
         evidences.add(evidence2);
         evidences.add(evidence2);
         evidences.add(evidence2);

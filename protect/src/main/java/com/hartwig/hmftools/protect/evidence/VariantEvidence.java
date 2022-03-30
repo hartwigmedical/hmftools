@@ -102,6 +102,8 @@ public class VariantEvidence {
             @NotNull DriverInterpretation driverInterpretation) {
         return personalizedEvidenceFactory.evidenceBuilder(actionable)
                 .gene(variant.gene())
+                .transcript(variant.transcript())
+                .isCanonical(variant.isCanonical())
                 .event(ProtectEventGenerator.variantEvent(variant))
                 .germline(germline)
                 .reported(report)
@@ -115,26 +117,15 @@ public class VariantEvidence {
     }
 
     private static boolean rangeMatch(@NotNull Variant variant, @NotNull ActionableRange range) {
-        String geneFormat = variant.gene();
-        if (variant.gene().startsWith("CDKN2A")) {
-            geneFormat = variant.gene().split(" ")[0];
-        }
-
-        return variant.chromosome().equals(range.chromosome()) && geneFormat.equals(range.gene()) && variant.position() >= range.start()
+               return variant.chromosome().equals(range.chromosome()) && variant.gene().equals(range.gene()) && variant.position() >= range.start()
                 && variant.position() <= range.end() && meetsMutationTypeFilter(variant, range.mutationType());
     }
 
     private static boolean geneMatch(@NotNull Variant variant, @NotNull ActionableGene gene) {
-
-        String geneFormat = variant.gene();
-        if (variant.gene().startsWith("CDKN2A")) {
-            geneFormat = variant.gene().split(" ")[0];
-        }
-
         assert gene.event() == GeneLevelEvent.ACTIVATION || gene.event() == GeneLevelEvent.INACTIVATION
                 || gene.event() == GeneLevelEvent.ANY_MUTATION;
 
-        return gene.gene().equals(geneFormat) && meetsMutationTypeFilter(variant, MutationTypeFilter.ANY);
+        return gene.gene().equals(variant.gene()) && meetsMutationTypeFilter(variant, MutationTypeFilter.ANY);
     }
 
     private static boolean meetsMutationTypeFilter(@NotNull Variant variant, @NotNull MutationTypeFilter filter) {

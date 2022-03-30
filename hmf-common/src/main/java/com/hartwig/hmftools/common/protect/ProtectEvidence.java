@@ -20,6 +20,12 @@ public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
     @Nullable
     public abstract String gene();
 
+    @Nullable
+    public abstract String transcript();
+
+    @Nullable
+    public abstract Boolean isCanonical();
+
     @NotNull
     public abstract String event();
 
@@ -72,9 +78,24 @@ public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
             return geneCompare;
         }
 
+        int transcriptCompare = StringUtils.compare(transcript(), o.transcript());
+        if (transcriptCompare != 0) {
+            return transcriptCompare;
+        }
+
+        int isCanonicalCompare = compareBoolean(isCanonical(), o.isCanonical());
+        if (isCanonicalCompare != 0) {
+            return isCanonicalCompare;
+        }
+
         int eventCompare = event().compareTo(o.event());
         if (eventCompare != 0) {
             return eventCompare;
+        }
+
+        int sourceEventCompare = sourceEvent().compareTo(o.sourceEvent());
+        if (sourceEventCompare != 0) {
+            return sourceEventCompare;
         }
 
         int evidenceTypeCompare = evidenceType().compareTo(o.evidenceType());
@@ -107,16 +128,6 @@ public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
             return directionCompare;
         }
 
-        int sourceEventCompare = sourceEvent().compareTo(o.sourceEvent());
-        if (sourceEventCompare != 0) {
-            return sourceEventCompare;
-        }
-
-        int germlineCompare = -Boolean.compare(germline(), o.germline());
-        if (germlineCompare != 0) {
-            return germlineCompare;
-        }
-
         return 0;
     }
 
@@ -129,6 +140,18 @@ public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
             return 1;
         } else {
             return int1.compareTo(int2);
+        }
+    }
+
+    public static int compareBoolean(@Nullable Boolean boolean1, @Nullable Boolean boolean2) {
+        if (Objects.equals(boolean1, boolean2)) {
+            return 0;
+        } else if (boolean1 == null) {
+            return -1;
+        } else if (boolean2 == null) {
+            return 1;
+        } else {
+            return boolean1.compareTo(boolean2);
         }
     }
 }

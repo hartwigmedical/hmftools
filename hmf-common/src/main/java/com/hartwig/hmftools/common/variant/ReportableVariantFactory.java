@@ -46,28 +46,16 @@ public final class ReportableVariantFactory {
                     throw new IllegalStateException("Could not find driver entry for variant on gene '" + variant.gene() + "'");
                 }
 
-                SomaticVariant variantCorrect = ImmutableSomaticVariantImpl.builder()
-                        .from(variant)
-                        .gene(formatGene(geneDriver))
-                        .build();
+                SomaticVariant variantCorrect = ImmutableSomaticVariantImpl.builder().from(variant).gene(geneDriver.gene()).build();
 
-                ReportableVariant reportable = fromVariant(variantCorrect, source).driverLikelihood(geneDriver.driverLikelihood()).build();
+                ReportableVariant reportable = fromVariant(variantCorrect, source).driverLikelihood(geneDriver.driverLikelihood())
+                        .transcript(geneDriver.transcript())
+                        .isCanonical(geneDriver.isCanonical())
+                        .build();
                 result.add(reportable);
             }
         }
         return result;
-    }
-
-    @NotNull
-    private static String formatGene(@NotNull DriverCatalog driverCatalog) {
-            String formatGene = driverCatalog.gene();
-            if (formatGene.equals("CDKN2A") && driverCatalog.isCanonical()) {
-                formatGene = driverCatalog.gene() + " (P16)";
-            } else if (formatGene.equals("CDKN2A") && !driverCatalog.isCanonical()) {
-                formatGene = driverCatalog.gene() + " (P14ARF)";
-            }
-
-        return formatGene;
     }
 
     @NotNull
@@ -121,6 +109,8 @@ public final class ReportableVariantFactory {
                 .type(variant.type())
                 .source(source)
                 .gene(variant.gene())
+                .transcript(variant.transcript())
+                .isCanonical(variant.isCanonical())
                 .chromosome(variant.chromosome())
                 .position(variant.position())
                 .ref(variant.ref())

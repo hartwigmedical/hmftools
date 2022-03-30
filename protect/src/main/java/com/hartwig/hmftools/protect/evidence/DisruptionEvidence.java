@@ -40,17 +40,13 @@ public class DisruptionEvidence {
 
     @NotNull
     private List<ProtectEvidence> evidence(@NotNull ReportableHomozygousDisruption reportable) {
-
-        String geneFormat = reportable.gene();
-        if (reportable.gene().startsWith("CDKN2A")) {
-            geneFormat = reportable.gene().split(" ")[0];
-        }
-
         List<ProtectEvidence> result = Lists.newArrayList();
         for (ActionableGene actionable : actionableGenes) {
             if (actionable.gene().equals(reportable.gene())) {
                 ProtectEvidence evidence = personalizedEvidenceFactory.somaticReportableEvidence(actionable)
-                        .gene(geneFormat)
+                        .gene(reportable.gene())
+                        .transcript(reportable.transcript())
+                        .isCanonical(reportable.isCanonical())
                         .event(HOMOZYGOUS_DISRUPTION_EVENT)
                         .eventIsHighDriver(EvidenceDriverLikelihood.interpretDisruptions())
                         .build();

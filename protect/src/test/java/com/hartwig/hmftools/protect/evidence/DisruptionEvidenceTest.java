@@ -61,6 +61,12 @@ public class DisruptionEvidenceTest {
 
     @NotNull
     private static ReportableHomozygousDisruption create(@NotNull String gene) {
-        return ImmutableReportableHomozygousDisruption.builder().chromosome(Strings.EMPTY).chromosomeBand(Strings.EMPTY).gene(gene).build();
+        return ImmutableReportableHomozygousDisruption.builder()
+                .chromosome(Strings.EMPTY)
+                .chromosomeBand(Strings.EMPTY)
+                .gene(gene)
+                .transcript("123")
+                .isCanonical(true)
+                .build();
     }
 }

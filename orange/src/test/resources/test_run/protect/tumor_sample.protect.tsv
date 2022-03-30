@@ -1,2 +1,2 @@
-gene	event	eventIsHighDriver	evidenceType	rangeRank	germline	reported	treatment	onLabel	level	direction	evidenceUrls	sources	sourceEvent	sourceUrls
-BRAF	p.Val600Glu	true	HOTSPOT_MUTATION		false	true	Cobimetinib + Vemurafenib	true	A	RESPONSIVE		vicc_cgi	hotspot	https://www.google.com/#q=FDA
+gene	transcript	isCanonical	event	eventIsHighDriver	evidenceType	rangeRank	germline	reported	treatment	onLabel	level	direction	evidenceUrls	sources	sourceEvent	sourceUrls
+BRAF	123	true	p.Val600Glu	true	HOTSPOT_MUTATION		false	true	Cobimetinib + Vemurafenib	true	A	RESPONSIVE		vicc_cgi	hotspot	https://www.google.com/#q=FDA

@@ -138,6 +138,8 @@ public final class OrangeReportTestFactory {
 
         evidences.add(ProtectTestFactory.testEvidenceBuilder()
                 .gene("USH2A")
+                .transcript("123")
+                .isCanonical(true)
                 .event("c.8558+420_8558+442delCCGATACGATGAAAGAAAAGAGC")
                 .build());
 
@@ -161,7 +163,6 @@ public final class OrangeReportTestFactory {
                 .build());
 
         return ImmutableVirusInterpreterData.builder().reportableViruses(reportableViruses).build();
-
 
     }
 }

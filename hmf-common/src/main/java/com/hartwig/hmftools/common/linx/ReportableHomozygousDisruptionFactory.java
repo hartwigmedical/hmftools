@@ -48,17 +48,13 @@ public final class ReportableHomozygousDisruptionFactory {
 
     @NotNull
     private static ReportableHomozygousDisruption create(@NotNull DriverCatalog driverCatalog) {
-        String formatGene = driverCatalog.gene();
-        if (formatGene.equals("CDKN2A") && driverCatalog.isCanonical()) {
-            formatGene = driverCatalog.gene() + " (P16)";
-        } else if (formatGene.equals("CDKN2A") && !driverCatalog.isCanonical()) {
-            formatGene = driverCatalog.gene() + " (P14ARF)";
-        }
 
         return ImmutableReportableHomozygousDisruption.builder()
                 .chromosome(driverCatalog.chromosome())
                 .chromosomeBand(driverCatalog.chromosomeBand())
-                .gene(formatGene)
+                .gene(driverCatalog.gene())
+                .transcript(driverCatalog.transcript())
+                .isCanonical(driverCatalog.isCanonical())
                 .build();
     }
 }

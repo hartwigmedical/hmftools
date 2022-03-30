@@ -21,8 +21,8 @@ public class EvidenceReportingCurationTest {
         String gene1 = "any gene";
         String gene2 = "TP53";
 
-        ProtectEvidence evidence1 = testEvidenceBuilder().gene(gene1).reported(true).build();
-        ProtectEvidence evidence2 = testEvidenceBuilder().gene(gene2).reported(true).build();
+        ProtectEvidence evidence1 = testEvidenceBuilder().gene(gene1).transcript("123").isCanonical(true).reported(true).build();
+        ProtectEvidence evidence2 = testEvidenceBuilder().gene(gene2).transcript("123").isCanonical(true).reported(true).build();
 
         List<ProtectEvidence> evidence = EvidenceReportingCuration.applyReportingBlacklist(Lists.newArrayList(evidence1, evidence2));
         assertEquals(2, evidence.size());
