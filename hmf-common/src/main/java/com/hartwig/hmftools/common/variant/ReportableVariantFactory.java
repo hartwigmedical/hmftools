@@ -75,9 +75,9 @@ public final class ReportableVariantFactory {
         Map<String, DriverCatalog> map = Maps.newHashMap();
         for (DriverCatalog driver : driverCatalog) {
             boolean genePresent = map.containsKey(driver.gene());
-            if (!genePresent || (genePresent && driver.isCanonical() && !driver.gene().equals("CDKN2A")) || (genePresent
-                    && driver.isCanonical() && driver.gene().equals("CDKN2A")) || (genePresent && !driver.isCanonical() && driver.gene()
-                    .equals("CDKN2A"))) {
+            if (driver.gene().equals("CDKN2A")) {
+                map.put(driver.gene(), driver);
+            } else if (!genePresent || (genePresent && driver.isCanonical())) {
                 map.put(driver.gene(), driver);
             }
         }
