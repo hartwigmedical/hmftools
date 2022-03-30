@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
 import com.hartwig.hmftools.serve.extraction.codon.CodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
@@ -26,7 +25,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ViccExtractionResult {
 
     @NotNull
-    public abstract List<EventInterpretation> eventInterpretations();
+    public abstract Map<Feature, EventInterpretation> eventInterpretationPerFeature();
 
     @NotNull
     public abstract Map<Feature, List<VariantHotspot>> hotspotsPerFeature();
@@ -53,5 +52,5 @@ public abstract class ViccExtractionResult {
     public abstract Map<Feature, ImmunoHLA> HLAPerFeature();
 
     @NotNull
-    public abstract Set<ActionableEvent> actionableEvents();
+    public abstract Set<ActionableEvidence> actionableEvidence();
 }

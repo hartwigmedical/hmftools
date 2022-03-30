@@ -13,7 +13,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.cancertype.CancerType;
 import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
@@ -28,6 +27,7 @@ import com.hartwig.hmftools.vicc.datamodel.civic.Civic;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.internal.$guava$.annotations.$VisibleForTesting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -87,8 +87,8 @@ class ActionableEvidenceFactory {
     }
 
     @NotNull
-    public Set<ActionableEvent> toActionableEvents(@NotNull ViccEntry entry, @NotNull String rawInput) {
-        Set<ActionableEvent> actionableEvents = Sets.newHashSet();
+    public Set<ActionableEvidence> toActionableEvidence(@NotNull ViccEntry entry) {
+        Set<ActionableEvidence> actionableEvidences = Sets.newHashSet();
 
         boolean isSupportive = isSupportiveEntry(entry);
         String treatment = reformatDrugLabels(entry.association().drugLabels());
@@ -104,9 +104,10 @@ class ActionableEvidenceFactory {
             level = evidenceLevelCurator.curate(entry.source(), entry.genes(), treatment, level, direction);
             List<List<String>> drugLists = drugCurator.curate(entry.source(), level, treatment);
 
+            // Source event is populated later for VICC
             ImmutableActionableEvidence.Builder builder = ImmutableActionableEvidence.builder()
                     .source(fromViccSource(entry.source()))
-                    .sourceEvent(rawInput)
+                    .sourceEvent(Strings.EMPTY)
                     .sourceUrls(Sets.newHashSet())
                     .level(level)
                     .direction(direction)
@@ -121,7 +122,7 @@ class ActionableEvidenceFactory {
                     }
 
                     for (List<String> drugList : drugLists) {
-                        actionableEvents.add(builder.treatment(formatDrugList(drugList))
+                        actionableEvidences.add(builder.treatment(formatDrugList(drugList))
                                 .applicableCancerType(ImmutableCancerType.builder().name(cancerType).doid(doid).build())
                                 .blacklistCancerTypes(blacklistedCancerTypes)
                                 .build());
@@ -130,7 +131,7 @@ class ActionableEvidenceFactory {
             }
         }
 
-        return actionableEvents;
+        return actionableEvidences;
     }
 
     private static boolean isSupportiveEntry(@NotNull ViccEntry entry) {
