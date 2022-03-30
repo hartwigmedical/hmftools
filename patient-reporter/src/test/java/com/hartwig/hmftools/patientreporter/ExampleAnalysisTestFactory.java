@@ -329,6 +329,8 @@ public final class ExampleAnalysisTestFactory {
                 ImmutableProtectEvidence.builder().evidenceType(ProtectEvidenceType.ANY_MUTATION).onLabel(true);
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .transcript("123")
+                .isCanonical(true)
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
@@ -344,6 +346,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .transcript("123")
+                .isCanonical(true)
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
@@ -359,6 +363,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .transcript("123")
+                .isCanonical(true)
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
@@ -374,6 +380,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .transcript("123")
+                .isCanonical(true)
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.EXON_MUTATION)
@@ -390,6 +398,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .transcript("123")
+                .isCanonical(true)
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.CODON_MUTATION)
@@ -408,6 +418,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .transcript("123")
+                .isCanonical(true)
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
@@ -423,6 +435,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("PTEN")
+                .transcript("123")
+                .isCanonical(true)
                 .event("partial loss")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.DELETION)
@@ -448,6 +462,8 @@ public final class ExampleAnalysisTestFactory {
                 ImmutableProtectEvidence.builder().evidenceType(ProtectEvidenceType.ANY_MUTATION).onLabel(true);
 
         trialsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .transcript("123")
+                .isCanonical(true)
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
@@ -463,6 +479,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         trialsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .transcript("123")
+                .isCanonical(true)
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
@@ -478,6 +496,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         trialsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .transcript("123")
+                .isCanonical(true)
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
@@ -493,6 +513,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         trialsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .transcript("123")
+                .isCanonical(true)
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
@@ -508,6 +530,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         trialsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .transcript("123")
+                .isCanonical(true)
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
@@ -523,6 +547,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         trialsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .transcript("123")
+                .isCanonical(true)
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
@@ -580,6 +606,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         trialsOnLabel.add(onLabelBuilder.gene("PTEN")
+                .transcript("123")
+                .isCanonical(true)
                 .evidenceType(ProtectEvidenceType.DELETION)
                 .eventIsHighDriver(true)
                 .event("partial loss")
@@ -605,6 +633,8 @@ public final class ExampleAnalysisTestFactory {
                 ImmutableProtectEvidence.builder().evidenceType(ProtectEvidenceType.ANY_MUTATION).onLabel(false);
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .transcript("123")
+                .isCanonical(true)
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
@@ -621,6 +651,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .transcript("123")
+                .isCanonical(true)
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
@@ -637,6 +669,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .transcript("123")
+                .isCanonical(true)
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
@@ -657,6 +691,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .transcript("123")
+                .isCanonical(true)
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
@@ -672,6 +708,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .transcript("123")
+                .isCanonical(true)
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
@@ -687,6 +725,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .transcript("123")
+                .isCanonical(true)
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
@@ -702,6 +742,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .transcript("123")
+                .isCanonical(true)
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
@@ -717,6 +759,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .transcript("123")
+                .isCanonical(true)
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
@@ -735,6 +779,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .transcript("123")
+                .isCanonical(true)
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
@@ -750,6 +796,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .transcript("123")
+                .isCanonical(true)
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
@@ -766,6 +814,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .transcript("123")
+                .isCanonical(true)
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.CODON_MUTATION)
@@ -782,6 +832,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
+                .transcript("123")
+                .isCanonical(true)
                 .event("partial loss")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.DELETION)
@@ -798,6 +850,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
+                .transcript("123")
+                .isCanonical(true)
                 .event("partial loss")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.DELETION)
@@ -813,6 +867,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
+                .transcript("123")
+                .isCanonical(true)
                 .event("partial loss")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.DELETION)
@@ -828,6 +884,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
+                .transcript("123")
+                .isCanonical(true)
                 .event("partial loss")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.DELETION)
@@ -843,6 +901,8 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
+                .transcript("123")
+                .isCanonical(true)
                 .event("partial loss")
                 .eventIsHighDriver(true)
                 .evidenceType(ProtectEvidenceType.DELETION)
@@ -867,6 +927,8 @@ public final class ExampleAnalysisTestFactory {
         ReportableVariant variant1 = ImmutableReportableVariant.builder()
                 .source(ReportableVariantSource.SOMATIC)
                 .gene("BRAF")
+                .transcript("123")
+                .isCanonical(true)
                 .genotypeStatus(GenotypeStatus.HOM_REF)
                 .chromosome("7")
                 .position(140453136)
@@ -892,6 +954,8 @@ public final class ExampleAnalysisTestFactory {
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
                 .source(forceCDKN2AVariantToBeGermline ? ReportableVariantSource.GERMLINE : ReportableVariantSource.SOMATIC)
                 .gene("CDKN2A")
+                .transcript("123")
+                .isCanonical(true)
                 .genotypeStatus(GenotypeStatus.HOM_REF)
                 .chromosome("9")
                 .position(21971153)
@@ -917,6 +981,8 @@ public final class ExampleAnalysisTestFactory {
         ReportableVariant variant3 = ImmutableReportableVariant.builder()
                 .source(ReportableVariantSource.SOMATIC)
                 .gene("TERT")
+                .transcript("123")
+                .isCanonical(true)
                 .genotypeStatus(GenotypeStatus.HOM_REF)
                 .chromosome("5")
                 .position(1295228)
@@ -942,6 +1008,8 @@ public final class ExampleAnalysisTestFactory {
         ReportableVariant variant4 = ImmutableReportableVariant.builder()
                 .source(ReportableVariantSource.SOMATIC)
                 .gene("SF3B1")
+                .transcript("123")
+                .isCanonical(true)
                 .genotypeStatus(GenotypeStatus.HOM_REF)
                 .chromosome("2")
                 .position(198266779)
@@ -967,6 +1035,8 @@ public final class ExampleAnalysisTestFactory {
         ReportableVariant variant5 = ImmutableReportableVariant.builder()
                 .source(ReportableVariantSource.SOMATIC)
                 .gene("TP63")
+                .transcript("123")
+                .isCanonical(true)
                 .genotypeStatus(GenotypeStatus.HOM_REF)
                 .chromosome("3")
                 .position(189604330)
@@ -998,6 +1068,8 @@ public final class ExampleAnalysisTestFactory {
                 .chromosome("10")
                 .chromosomeBand("q23.31")
                 .gene("PTEN")
+                .transcript("123")
+                .isCanonical(true)
                 .minCopies(0)
                 .maxCopies(2)
                 .interpretation(CopyNumberInterpretation.PARTIAL_LOSS)
@@ -1087,6 +1159,8 @@ public final class ExampleAnalysisTestFactory {
                 .chromosome("8")
                 .chromosomeBand("p22")
                 .gene("SGCZ")
+                .transcript("123")
+                .isCanonical(true)
                 .build());
     }
 

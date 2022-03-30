@@ -49,6 +49,8 @@ public final class PurpleTestFactory {
                 .chromosome(Strings.EMPTY)
                 .chromosomeBand(Strings.EMPTY)
                 .gene(gene)
+                .transcript("123")
+                .isCanonical(true)
                 .interpretation(interpretation)
                 .minCopies(1)
                 .maxCopies(1)

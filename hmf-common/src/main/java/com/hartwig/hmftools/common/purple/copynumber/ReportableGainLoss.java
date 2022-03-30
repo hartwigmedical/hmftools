@@ -21,6 +21,12 @@ public abstract class ReportableGainLoss {
     @NotNull
     public abstract String gene();
 
+    @NotNull
+    public abstract String transcript();
+
+    @NotNull
+    public abstract Boolean isCanonical();
+
     public abstract long minCopies();
 
     public abstract long maxCopies();

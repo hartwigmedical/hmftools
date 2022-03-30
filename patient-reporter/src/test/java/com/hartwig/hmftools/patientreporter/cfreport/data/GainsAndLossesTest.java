@@ -92,6 +92,8 @@ public class GainsAndLossesTest {
                 .chromosome(chromosome)
                 .chromosomeBand(chromosomeBand)
                 .gene(Strings.EMPTY)
+                .transcript(Strings.EMPTY)
+                .isCanonical(false)
                 .minCopies(0)
                 .maxCopies(0)
                 .interpretation(CopyNumberInterpretation.FULL_GAIN)

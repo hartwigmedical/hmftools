@@ -46,17 +46,14 @@ public class CopyNumberEvidence {
 
     @NotNull
     private List<ProtectEvidence> evidence(@NotNull ReportableGainLoss gainLoss, boolean report) {
-        String geneFormat = gainLoss.gene();
-        if (gainLoss.gene().startsWith("CDKN2A")) {
-            geneFormat = gainLoss.gene().split(" ")[0];
-        }
-
         List<ProtectEvidence> result = Lists.newArrayList();
         for (ActionableGene actionable : actionableGenes) {
-            if (actionable.gene().equals(geneFormat) && isTypeMatch(actionable, gainLoss)) {
+            if (actionable.gene().equals(gainLoss.gene()) && isTypeMatch(actionable, gainLoss)) {
                 ProtectEvidence evidence = personalizedEvidenceFactory.somaticEvidence(actionable)
                         .reported(report)
                         .gene(gainLoss.gene())
+                        .transcript(gainLoss.transcript())
+                        .isCanonical(gainLoss.isCanonical())
                         .event(ProtectEventGenerator.copyNumberEvent(gainLoss))
                         .eventIsHighDriver(EvidenceDriverLikelihood.interpretCNV())
                         .build();
