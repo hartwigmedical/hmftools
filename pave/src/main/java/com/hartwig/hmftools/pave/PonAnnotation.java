@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createGzipBufferedReader;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.ITEM_DELIM;
 
@@ -144,7 +145,7 @@ public class PonAnnotation
 
         try
         {
-            mFileReader = createBufferedReader(filename);
+            mFileReader = filename.endsWith(".gz") ? createGzipBufferedReader(filename) : createBufferedReader(filename);
 
             String line = mFileReader.readLine();
             final String[] values = line.split("\t", -1);
@@ -283,7 +284,7 @@ public class PonAnnotation
         header.addMetaDataLine(new VCFFilterHeaderLine(PON_FILTER, "Filter PON variant"));
     }
 
-    private class PonFilters
+    private static class PonFilters
     {
         public final int RequiredSampleCount;
         public final int RequiredMaxReadCount;

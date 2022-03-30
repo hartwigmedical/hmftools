@@ -1,12 +1,9 @@
 package com.hartwig.hmftools.common.sequence;
 
 import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertFalse;
-import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
 
-import org.apache.logging.log4j.Level;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -15,7 +12,7 @@ public class SequenceAlignerTest
     @Before
     public void setUp()
     {
-        org.apache.logging.log4j.core.config.Configurator.setRootLevel(Level.TRACE);
+        // org.apache.logging.log4j.core.config.Configurator.setRootLevel(Level.TRACE);
     }
 
     @Test

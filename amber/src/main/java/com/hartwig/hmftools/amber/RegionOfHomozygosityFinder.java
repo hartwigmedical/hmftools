@@ -4,16 +4,12 @@ import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
 import static com.hartwig.hmftools.common.utils.collection.Multimaps.filterEntries;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.zip.GZIPOutputStream;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.io.Files;
@@ -29,11 +25,6 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import tech.tablesaw.api.BooleanColumn;
-import tech.tablesaw.api.IntColumn;
-import tech.tablesaw.api.StringColumn;
-import tech.tablesaw.api.Table;
 
 /**
  * Regions of Homozygosity(ROH) Algorithm
@@ -257,7 +248,7 @@ public class RegionOfHomozygosityFinder
         }
         catch (java.io.IOException e)
         {
-            AMB_LOGGER.error("unable to create temp file for bed resource loading: {}", e);
+            AMB_LOGGER.error("unable to create temp file for bed resource loading: {}", e.getMessage());
         }
 
         // now add all of the centromere

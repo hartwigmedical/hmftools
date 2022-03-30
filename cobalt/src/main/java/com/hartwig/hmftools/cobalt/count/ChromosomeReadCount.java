@@ -13,8 +13,6 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.window.Window;
 
-import org.jetbrains.annotations.NotNull;
-
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
@@ -25,7 +23,6 @@ public class ChromosomeReadCount implements Callable<ChromosomeReadCount>
     private final File mInputFile;
     private final SamReaderFactory mReaderFactory;
     private final String mChromosome;
-    private final int mChromosomeLength;
     private final List<ReadCount> mResults;
     private final int mMinMappingQuality;
     private final Window mWindow;
@@ -35,18 +32,17 @@ public class ChromosomeReadCount implements Callable<ChromosomeReadCount>
 
     public ChromosomeReadCount(
             final File inputFile, final SamReaderFactory readerFactory, final String chromosome,
-            final int chromosomeLength, final int windowSize, final int minMappingQuality)
+            final int windowSize, final int minMappingQuality)
     {
         mInputFile = inputFile;
         mReaderFactory = readerFactory;
         mChromosome = chromosome;
-        mChromosomeLength = chromosomeLength;
         mMinMappingQuality = minMappingQuality;
         mWindow = new Window(windowSize);
         mResults = Lists.newArrayList();
 
         mStart = 1;
-        mCount = -1;
+        mCount = 0;
     }
 
     @Override
@@ -62,6 +58,8 @@ public class ChromosomeReadCount implements Callable<ChromosomeReadCount>
                 addRecord(iterator.next());
             }
         }
+        // finalise the last window
+        addReadCountIfNonZero(mStart, mCount);
         return this;
     }
 
@@ -72,14 +70,6 @@ public class ChromosomeReadCount implements Callable<ChromosomeReadCount>
 
     public List<ReadCount> readCount()
     {
-        addReadCount(mStart, mCount);
-
-        int lastWindowPosition = lastWindowPosition();
-        if(mResults.get(mResults.size() - 1).position() < lastWindowPosition)
-        {
-            addReadCount(lastWindowPosition, -1);
-        }
-
         return mResults;
     }
 
@@ -91,7 +81,7 @@ public class ChromosomeReadCount implements Callable<ChromosomeReadCount>
         int window = windowPosition(record.getAlignmentStart());
         if(mStart != window)
         {
-            addReadCount(mStart, mCount);
+            addReadCountIfNonZero(mStart, mCount);
             mStart = window;
             mCount = 0;
         }
@@ -99,20 +89,18 @@ public class ChromosomeReadCount implements Callable<ChromosomeReadCount>
         mCount++;
     }
 
-    private void addReadCount(int position, int count)
+    private void addReadCountIfNonZero(int position, int count)
     {
-        mResults.add(ImmutableReadCount.builder().chromosome(mChromosome).position(position).readCount(count).build());
+        if (count > 0)
+        {
+            mResults.add(ImmutableReadCount.builder().chromosome(mChromosome).position(position).readCount(count).build());
+        }
     }
 
     private boolean isEligible(final SAMRecord record)
     {
         return record.getMappingQuality() >= mMinMappingQuality
                 && !(record.getReadUnmappedFlag() || record.getDuplicateReadFlag() || record.isSecondaryOrSupplementary());
-    }
-
-    private int lastWindowPosition()
-    {
-        return windowPosition(mChromosomeLength);
     }
 
     private int windowPosition(int position)

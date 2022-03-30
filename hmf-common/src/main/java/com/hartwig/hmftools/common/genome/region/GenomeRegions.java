@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.common.genome.region;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -114,5 +116,56 @@ public class GenomeRegions {
         }
 
         return -1;
+    }
+
+    /**
+     * Create genome regions from a sorted list of genome positions. This version is much faster then using
+     * GenomeRegionsBuilder and add positions one by one.
+     *
+     * @param minGap                  minimum gap between the returned genome regions.
+     * @param sortedGenomePositions   input list must be sorted.
+     * @return genome regions         list of genome region that contains all input genome positions.
+     */
+    public static List<GenomeRegion> fromSortedGenomePositions(int minGap, final List<? extends GenomePosition> sortedGenomePositions)
+    {
+        List<GenomeRegion> genomeRegions = new ArrayList<>();
+
+        String chromosome = null;
+        int start = -1;
+        int end = -1;
+
+        for (GenomePosition position : sortedGenomePositions)
+        {
+            if (chromosome == null || !chromosome.equals(position.chromosome()) || end + minGap < position.position())
+            {
+                if (chromosome != null)
+                {
+                    // we finalise previous one
+                    genomeRegions.add(GenomeRegions.create(chromosome, start, end));
+                }
+
+                chromosome = position.chromosome();
+                start = position.position();
+                end = position.position();
+                continue;
+            }
+
+            if (end > position.position())
+            {
+                // this means the input genome positions are not sorted
+                throw new IllegalArgumentException("Genome position going backwards, input might not be sorted");
+            }
+
+            // add to existing region
+            end = position.position();
+        }
+
+        if (chromosome != null)
+        {
+            // we finalise last one
+            genomeRegions.add(GenomeRegions.create(chromosome, start, end));
+        }
+
+        return genomeRegions;
     }
 }

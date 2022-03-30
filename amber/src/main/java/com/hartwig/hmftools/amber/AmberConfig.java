@@ -23,20 +23,20 @@ public class AmberConfig
 {
     public static final int DEFAULT_THREADS = 1;
 
-    @Parameter(names = "-tumor", required = true, description = "Name of tumor sample")
+    @Parameter(names = "-tumor", description = "Name of tumor sample")
     public String TumorId;
 
-    @Parameter(names = "-loci", required = true, description = "Path to BAF loci vcf file")
-    public String BafLociPath;
-
-    @Parameter(names = "-tumor_bam", required = true, description = "Path to indexed tumor bam file")
+    @Parameter(names = "-tumor_bam", description = "Path to indexed tumor bam/cram file")
     public String TumorBamPath;
 
     @Parameter(names = "-reference", description = "Name of reference sample")
     public List<String> ReferenceIds = new ArrayList<>();
 
-    @Parameter(names = "-reference_bam", description = "Path to reference bam file")
+    @Parameter(names = "-reference_bam", description = "Path to reference bam/cram file")
     public List<String> ReferenceBamPath = new ArrayList<>();
+
+    @Parameter(names = "-loci", required = true, description = "Path to BAF loci vcf file")
+    public String BafLociPath;
 
     @Parameter(names = "-" + REF_GENOME,
                description = "Path to the reference genome fasta file. Required only when using CRAM files.")
@@ -108,22 +108,35 @@ public class AmberConfig
         return samples;
     }
 
-    public int typicalReadDepth()
-    {
-        return DEFAULT_TYPICAL_READ_DEPTH;
-    }
     public int minPartition()
     {
         return DEFAULT_MIN_PARTITION;
     }
 
-    public boolean isTumorOnly() { return ReferenceBamPath.isEmpty(); }
+    public boolean isTumorOnly() { return ReferenceBamPath.isEmpty() && TumorBamPath != null; }
+
+    public boolean isGermlineOnly()
+    {
+        return !ReferenceBamPath.isEmpty() && TumorBamPath == null;
+    }
+
+    // use the tumor id if it is not null, otherwise primary reference Id
+    public String getSampleId()
+    {
+        return TumorId != null ? TumorId : primaryReference();
+    }
 
     public boolean isValid()
     {
         if(ReferenceIds.size() != ReferenceBamPath.size())
         {
             AMB_LOGGER.error("Each reference sample must have matching bam");
+            return false;
+        }
+
+        if ((TumorId == null) != (TumorBamPath == null))
+        {
+            AMB_LOGGER.error("Unmatched: TumorId: {} and TumorBamPath: {}", TumorId, TumorBamPath);
             return false;
         }
 
@@ -135,7 +148,7 @@ public class AmberConfig
             return false;
         }
 
-        if(!new File(TumorBamPath).exists())
+        if(TumorBamPath != null && !new File(TumorBamPath).exists())
         {
             AMB_LOGGER.error("Unable to locate tumor bam file {}", TumorBamPath);
             return false;

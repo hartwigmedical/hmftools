@@ -1,21 +1,21 @@
 package com.hartwig.hmftools.common.amber;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.*;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.io.Writer;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.primitives.Doubles;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
@@ -62,36 +62,38 @@ public final class AmberBAFFile
     {
         ListMultimap<Chromosome,AmberBAF> chrBafMap = ArrayListMultimap.create();
 
-        BufferedReader reader = createBufferedReader(fileName);
-
-        String line = reader.readLine();
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, DELIMITER);
-
-        int chrIndex = fieldsIndexMap.get(CHROMOSOME);
-        int posIndex = fieldsIndexMap.get(POSITION);
-        int tumorBafIndex = fieldsIndexMap.get(TUMOR_BAF);
-        int tumorDepthIndex = fieldsIndexMap.get(TUMOR_DEPTH);
-        int normBafIndex = fieldsIndexMap.get(NORM_BAF);
-        int normDepthIndex = fieldsIndexMap.get(NORM_DEPTH);
-
-        while((line = reader.readLine()) != null)
+        try(BufferedReader reader = fileName.endsWith(".gz") ? createGzipBufferedReader(fileName) : createBufferedReader(fileName))
         {
-            String[] values = line.split(DELIMITER, -1);
 
-            String chromosome = values[chrIndex];
+            String line = reader.readLine();
+            Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(line, DELIMITER);
 
-            double tumorBAF = hasTumor ? Double.parseDouble(values[tumorBafIndex]) : 0.5;
+            int chrIndex = fieldsIndexMap.get(CHROMOSOME);
+            int posIndex = fieldsIndexMap.get(POSITION);
+            int tumorBafIndex = fieldsIndexMap.get(TUMOR_BAF);
+            int tumorDepthIndex = fieldsIndexMap.get(TUMOR_DEPTH);
+            int normBafIndex = fieldsIndexMap.get(NORM_BAF);
+            int normDepthIndex = fieldsIndexMap.get(NORM_DEPTH);
 
-            AmberBAF amberBAF = ImmutableAmberBAF.builder()
-                    .chromosome(chromosome)
-                    .position(Integer.parseInt(values[posIndex]))
-                    .tumorBAF(tumorBAF)
-                    .tumorDepth(Integer.parseInt(values[tumorDepthIndex]))
-                    .normalBAF(Double.parseDouble(values[normBafIndex]))
-                    .normalDepth(Integer.parseInt(values[normDepthIndex]))
-                    .build();
+            while((line = reader.readLine()) != null)
+            {
+                String[] values = line.split(DELIMITER, -1);
 
-            chrBafMap.put(HumanChromosome.fromString(chromosome), amberBAF);
+                String chromosome = values[chrIndex];
+
+                double tumorBAF = hasTumor ? Double.parseDouble(values[tumorBafIndex]) : 0.5;
+
+                AmberBAF amberBAF = ImmutableAmberBAF.builder()
+                        .chromosome(chromosome)
+                        .position(Integer.parseInt(values[posIndex]))
+                        .tumorBAF(tumorBAF)
+                        .tumorDepth(Integer.parseInt(values[tumorDepthIndex]))
+                        .normalBAF(Double.parseDouble(values[normBafIndex]))
+                        .normalDepth(Integer.parseInt(values[normDepthIndex]))
+                        .build();
+
+                chrBafMap.put(HumanChromosome.fromString(chromosome), amberBAF);
+            }
         }
 
         return chrBafMap;
@@ -99,13 +101,19 @@ public final class AmberBAFFile
 
     public static void write(final String filename, final List<AmberBAF> bafs) throws IOException
     {
-        Files.write(new File(filename).toPath(), toLines(bafs));
+        try (Writer writer = createGzipBufferedWriter(filename))
+        {
+            for (String line : toLines(bafs))
+            {
+                writer.write(line + '\n');
+            }
+        }
     }
 
     @NotNull
     private static List<String> toLines(final List<AmberBAF> bafs)
     {
-        final List<String> lines = Lists.newArrayList();
+        final List<String> lines = new ArrayList<>();
         lines.add(header());
         bafs.stream().map(AmberBAFFile::toString).forEach(lines::add);
         return lines;

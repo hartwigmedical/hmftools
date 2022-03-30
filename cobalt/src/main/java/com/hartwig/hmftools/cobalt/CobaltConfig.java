@@ -15,12 +15,18 @@ import htsjdk.samtools.ValidationStringency;
 
 public class CobaltConfig
 {
+    public enum Mode
+    {
+        TUMOR_GERMLINE,
+        TUMOR_ONLY,
+        GERMLIHE_ONLY
+    }
+
     private static final int DEFAULT_THREADS = 4;
 
     public static final String TUMOR = "-tumor";
     public static final String REFERENCE = "-reference";
 
-    private static final String TUMOR_ONLY = "-tumor_only";
     private static final String TUMOR_ONLY_DIPLOID_BED = "-tumor_only_diploid_bed";
     private static final String REFERENCE_BAM = "-reference_bam";
     private static final String TUMOR_BAM = "-tumor_bam";
@@ -41,10 +47,10 @@ public class CobaltConfig
     @Parameter(names = REFERENCE_BAM, description = "Path to reference bam file")
     public String ReferenceBamPath;
 
-    @Parameter(names = TUMOR, required = true, description = "Name of tumor sample")
+    @Parameter(names = TUMOR, description = "Name of tumor sample")
     public String TumorId;
 
-    @Parameter(names = TUMOR_BAM, required = true, description = "Path to tumor bam file")
+    @Parameter(names = TUMOR_BAM, description = "Path to tumor bam file")
     public String TumorBamPath;
 
     @Parameter(names = "-" + REF_GENOME,
@@ -66,10 +72,6 @@ public class CobaltConfig
                description = "SAM validation strategy")
     public ValidationStringency Stringency = ValidationStringency.DEFAULT_STRINGENCY;
 
-    @Parameter(names = TUMOR_ONLY,
-               description = "Tumor only mode")
-    public boolean TumorOnly = false;
-
     @Parameter(names = TUMOR_ONLY_DIPLOID_BED,
                description = "Diploid regions for tumor-only mode")
     public String TumorOnlyDiploidBed;
@@ -82,12 +84,8 @@ public class CobaltConfig
 
     public void validate() throws ParameterException
     {
-        if (TumorOnly)
+        if (ReferenceId == null)
         {
-            if (ReferenceId != null)
-            {
-                throw new ParameterException(String.format("%s option not allowed in tumor only mode", REFERENCE));
-            }
             if (ReferenceBamPath != null)
             {
                 throw new ParameterException(String.format("%s option not allowed in tumor only mode", REFERENCE_BAM));
@@ -96,6 +94,14 @@ public class CobaltConfig
         else if (TumorOnlyDiploidBed != null)
         {
             throw new ParameterException(String.format("%s option is only allowed in tumor only mode", TUMOR_ONLY_DIPLOID_BED));
+        }
+
+        if (TumorId == null)
+        {
+            if (TumorBamPath != null)
+            {
+                throw new ParameterException(String.format("%s option not allowed in germline only mode", TUMOR_BAM));
+            }
         }
 
         if (!checkCreateOutputDir(OutputDir))
@@ -107,5 +113,18 @@ public class CobaltConfig
         {
             throw new ParameterException(String.format("invalid GC-profile file(%s), must be uncompressed", GcProfilePath));
         }
+    }
+
+    public Mode mode()
+    {
+        if (ReferenceId != null && TumorId == null)
+        {
+            return Mode.GERMLIHE_ONLY;
+        }
+        if (ReferenceId == null && TumorId != null)
+        {
+            return Mode.TUMOR_ONLY;
+        }
+        return Mode.TUMOR_GERMLINE;
     }
 }

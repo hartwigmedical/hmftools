@@ -4,16 +4,18 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import com.google.common.collect.Maps;
 
@@ -68,41 +70,51 @@ public final class FileWriterUtils
         return outputDir + File.separator;
     }
 
+    // Note: if filename ends with .gz returns a Gzipped buffered reader
+    @NotNull
     public static BufferedReader createBufferedReader(final String filename) throws IOException
     {
-        Reader reader = filename.endsWith(".gz") ?
-                new InputStreamReader(new GZIPInputStream(new FileInputStream(filename))) : new FileReader(filename);
-
-        return new BufferedReader(reader);
+        InputStream inputStream = new FileInputStream(filename);
+        if(filename.endsWith(".gz"))
+        {
+            inputStream = new GZIPInputStream(inputStream);
+        }
+        return new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
     }
 
     @NotNull
     public static BufferedWriter createBufferedWriter(final String outputFile, boolean appendIfExists) throws IOException
     {
-        Path outputPath = Paths.get(outputFile);
+        return new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile, appendIfExists), StandardCharsets.UTF_8));
+    }
 
-        if (Files.exists(outputPath))
-        {
-            if (appendIfExists)
-            {
-                return Files.newBufferedWriter(outputPath, StandardOpenOption.APPEND);
-            }
-            else
-            {
-                return Files.newBufferedWriter(outputPath, StandardOpenOption.TRUNCATE_EXISTING);
-            }
-        }
-        else
-        {
-            return Files.newBufferedWriter(outputPath, StandardOpenOption.CREATE);
-        }
+    // overwrite if file exists
+    @NotNull
+    public static BufferedWriter createBufferedWriter(final String outputFile) throws IOException
+    {
+        return createBufferedWriter(outputFile, false);
+    }
+
+    @NotNull
+    public static BufferedReader createGzipBufferedReader(final String filename) throws IOException
+    {
+        InputStream inputStream = new FileInputStream(filename);
+        inputStream = new GZIPInputStream(inputStream);
+        return new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+    }
+
+    @NotNull
+    public static BufferedWriter createGzipBufferedWriter(final String outputFile) throws IOException
+    {
+        OutputStream outputStream = new FileOutputStream(outputFile);
+        outputStream = new GZIPOutputStream(outputStream);
+        return new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
     }
 
     public static void closeBufferedWriter(BufferedWriter writer)
     {
         if(writer == null)
             return;
-
         try
         {
             writer.close();

@@ -13,8 +13,6 @@ import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
-import org.jetbrains.annotations.NotNull;
-
 public final class DiploidRatioSupplier
 {
     public static ListMultimap<Chromosome, ReadRatio> calcDiploidRatioResults(
