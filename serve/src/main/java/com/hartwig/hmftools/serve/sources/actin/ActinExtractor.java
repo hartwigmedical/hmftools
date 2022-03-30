@@ -71,10 +71,16 @@ public class ActinExtractor {
 
         if (entry.gene() != null) {
             gene = entry.gene();
-            sourceEvent = entry.rule() + ": " + entry.gene() + " " + entry.mutation();
+            sourceEvent = entry.rule() + ": " + entry.gene();
+            if (entry.mutation() != null) {
+                sourceEvent += (" " + entry.mutation());
+            }
         } else {
             gene = "-";
-            sourceEvent = entry.rule() + ": " + entry.mutation();
+            sourceEvent = entry.rule().toString();
+            if (entry.mutation() != null) {
+                sourceEvent += (": " + entry.mutation());
+            }
         }
 
         EventExtractorOutput extraction = eventExtractor.extract(gene, null, type, event);
