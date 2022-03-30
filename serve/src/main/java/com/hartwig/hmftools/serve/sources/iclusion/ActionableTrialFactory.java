@@ -24,6 +24,7 @@ public class ActionableTrialFactory {
     private static final Logger LOGGER = LogManager.getLogger(ActionableTrialFactory.class);
 
     static final String CANCER_DOID = "162";
+    static final String ORGAN_SYSTEM_CANCER_DOID = "0050686";
 
     static final CancerType HEMATOLOGIC_CANCER_TYPE = ImmutableCancerType.builder().name("Hematologic cancer").doid("2531").build();
 
@@ -108,8 +109,10 @@ public class ActionableTrialFactory {
     @NotNull
     @VisibleForTesting
     static String curateDoid(@NotNull String doid) {
-        if (doid.equals("0050686") || doid.equals("MESH: D009382") || doid.equals("UNKNOWN")) {
+        if (doid.equals("0050686")) {
             return CANCER_DOID;
+        } else if (doid.equals("MESH: D009382") || doid.equals("UNKNOWN")) {
+            return ORGAN_SYSTEM_CANCER_DOID;
         } else {
             return doid;
         }
