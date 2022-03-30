@@ -22,6 +22,8 @@ import com.hartwig.hmftools.common.utils.collection.Multimaps;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.VariantHeader;
 
+import org.jetbrains.annotations.Nullable;
+
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
@@ -36,7 +38,7 @@ public class GermlinePurityEnrichment
 
     public GermlinePurityEnrichment(
             final String purpleVersion, final String tumorSample, final String referenceSample,
-            final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers)
+            @Nullable  final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers)
     {
         mVersion = purpleVersion;
         mTumorSample = tumorSample;
@@ -47,6 +49,16 @@ public class GermlinePurityEnrichment
 
     public void processVariant(final VariantContext variant)
     {
+        if(mPurityAdjuster == null)
+        {
+            variant.getCommonInfo().putAttribute(PURPLE_VARIANT_CN_INFO, 1);
+            variant.getCommonInfo().putAttribute(PURPLE_CN_INFO, 2);
+            variant.getCommonInfo().putAttribute(PURPLE_AF_INFO, 0.5);
+            variant.getCommonInfo().putAttribute(PURPLE_MINOR_ALLELE_CN_INFO, 1);
+            variant.getCommonInfo().putAttribute(PURPLE_BIALLELIC_FLAG, false);
+            return;
+        }
+
         final Genotype tumorGenotype = variant.getGenotype(mTumorSample);
         final Genotype normalGenotype = variant.getGenotype(mReferenceSample);
         if(tumorGenotype != null && normalGenotype != null && tumorGenotype.hasAD() && HumanChromosome.contains(variant.getContig()))

@@ -15,6 +15,8 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.purple.config.ReferenceData;
 import com.hartwig.hmftools.purple.somatic.SnpEffEnrichment;
 
+import org.jetbrains.annotations.Nullable;
+
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
 
@@ -30,7 +32,7 @@ public class GermlineVariantEnrichment
 
     public GermlineVariantEnrichment(
             final String purpleVersion, final String referenceSample, final String tumorSample, final ReferenceData refData,
-            final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers,
+            @Nullable final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers,
             final Multimap<Chromosome, VariantHotspot> germlineHotspots, final Set<String> somaticReportedGenes,
             boolean snpEffEnrichmentEnabled)
     {
@@ -63,6 +65,7 @@ public class GermlineVariantEnrichment
         mGenotypeEnrichment.processVariant(variant);
 
         mHotspotEnrichment.processVariant(variant.context());
+
         mPurityEnrichment.processVariant(variant.context());
 
         mLowVafRescueEnrichment.processVariant(variant);

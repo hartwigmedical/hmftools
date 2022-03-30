@@ -15,6 +15,7 @@ import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.config.ReferenceData;
 
 import org.apache.commons.compress.utils.Lists;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
@@ -90,7 +91,7 @@ public class GermlineVariants
     }
 
     public void processAndWrite(
-            final String referenceId, final String tumorSample, final String germlineVcf, final PurityAdjuster purityAdjuster,
+            final String referenceId, final String tumorSample, final String germlineVcf, @Nullable final PurityAdjuster purityAdjuster,
             final List<PurpleCopyNumber> copyNumbers, final Set<String> somaticReportedGenes)
     {
         mReportableVariants.clear();

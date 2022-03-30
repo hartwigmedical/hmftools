@@ -397,9 +397,6 @@ public class PurpleApplication
                     .build();
 
             fittedRegions.addAll(fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), observedRegions));
-
-            purityAdjuster =
-                    new PurityAdjusterAbnormalChromosome(fittedPurity.purity(), fittedPurity.normFactor(), cobaltChromosomes.chromosomes());
         }
 
         PPL_LOGGER.info("generating QC Stats");

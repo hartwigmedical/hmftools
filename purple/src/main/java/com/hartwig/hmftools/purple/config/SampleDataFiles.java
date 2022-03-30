@@ -34,7 +34,7 @@ public class SampleDataFiles
         options.addOption(SAMPLE_DIR, true,"Path to the sample's directory where expect to find Cobalt, Amber, Gripss etc directories");
 
         options.addOption(COBALT,true,
-                "Path to COBALT output directory. Required if <run_dir> not set, otherwise defaults to <run_dir>/cobalt.");
+                "Path to COBALT output directory. Required if <run_dir> not set, otherwise defaults to <run_dir>/cobalt");
 
         options.addOption(AMBER, true,
                 "Path to AMBER output directory. Required if <run_dir> not set, otherwise defaults to <run_dir>/amber");
@@ -63,7 +63,7 @@ public class SampleDataFiles
         else
             throw new ParseException("missing cobalt or sample_data_dir config");
 
-        SvVcfFile = getFilename(cmd, STRUCTURAL_VARIANTS, SampleDataDir, sampleId, ".gripss.somatic.filtered.vcf.gz");
+        SvVcfFile = getFilename(cmd, STRUCTURAL_VARIANTS, SampleDataDir, sampleId, ".gripss.filtered.somatic.vcf.gz");
         RecoveredSvVcfFile = getFilename(cmd, STRUCTURAL_VARIANT_RECOVERY, SampleDataDir, sampleId, ".gripss.somatic.vcf.gz");
         SomaticVcfFile = getFilename(cmd, SOMATIC_VARIANTS, SampleDataDir, sampleId, ".sage.somatic.filtered.pave.vcf.gz");
         GermlineVcfFile = getFilename(cmd, GERMLINE_VARIANTS, SampleDataDir, sampleId, ".sage.germline.filtered.pave.vcf.gz");

@@ -125,7 +125,8 @@ public final class CobaltRatioFile
             double initialRefGCDiploidRatio = Double.parseDouble(values[refGcDiplodRatioIndex]);
 
             double refGcRatio = genderAdjustedDiploidRatio(gender, chromosome, initialRefGCRatio, hasReference);
-            double tumorGCRatio = hasTumor ? Double.parseDouble(values[tumorGcRatioIndex]) : refGcRatio;
+            double refGcDiploadRatio = genderAdjustedDiploidRatio(gender, chromosome, initialRefGCDiploidRatio, hasReference);
+            double tumorGCRatio = hasTumor ? Double.parseDouble(values[tumorGcRatioIndex]) : refGcDiploadRatio;
 
             CobaltRatio ratio = ImmutableCobaltRatio.builder()
                     .chromosome(chromosome)
@@ -134,7 +135,7 @@ public final class CobaltRatioFile
                     .tumorReadCount(Integer.parseInt(values[tumorReadCountIndex]))
                     .tumorGCRatio(tumorGCRatio)
                     .referenceGCRatio(refGcRatio)
-                    .referenceGCDiploidRatio(genderAdjustedDiploidRatio(gender, chromosome, initialRefGCDiploidRatio, hasReference))
+                    .referenceGCDiploidRatio(refGcDiploadRatio)
                     .build();
 
             if(!currentChromosome.equals(chromosome))
