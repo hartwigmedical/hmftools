@@ -508,11 +508,7 @@ public class ClusterAnnotations
     {
         if(cluster.getSvCount() == 1 || cluster.getResolvedType() == LINE)
             return;
-
-        // cluster.getArmGroups().forEach(x -> x.populateClusterMetrics(cluster.getMetrics()));
-
         cluster.getMetrics().populate(cluster, chrBreakendMap);
-
     }
 
     private static final int INCONSISTENT_ARM = -2;

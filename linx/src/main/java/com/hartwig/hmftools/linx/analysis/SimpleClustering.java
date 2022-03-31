@@ -76,7 +76,7 @@ public class SimpleClustering implements CohortFileInterface
         mClusteringIndex = 0;
     }
 
-    public void clusterByProximity(List<SvCluster> clusters)
+    public void clusterByProximity(final List<SvCluster> clusters)
     {
         int proximityDistance = mConfig.ProximityDistance;
 

@@ -286,8 +286,9 @@ public class FusionDisruptionAnalyser
         }
     }
 
-    public void run(final String sampleId, final List<SvVarData> svList,
-            final List<SvCluster> clusters, Map<String, List<SvBreakend>> chrBreakendMap)
+    public void run(
+            final String sampleId, final List<SvVarData> svList, final List<SvCluster> clusters,
+            final Map<String,List<SvBreakend>> chrBreakendMap)
     {
         mPerfCounter.start();
 

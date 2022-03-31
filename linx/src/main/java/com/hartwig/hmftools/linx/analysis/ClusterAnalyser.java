@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateRepl
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateTemplatedInsertions;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.reportUnderclustering;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.runAnnotation;
-import static com.hartwig.hmftools.linx.analysis.ClusterClassification.isFilteredResolvedType;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.annotateNearestSvData;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.associateBreakendCnEvents;
@@ -55,6 +54,7 @@ public class ClusterAnalyser {
 
     private String mSampleId;
     private final List<SvCluster> mClusters;
+    private final List<SvCluster> mArtifactClusters; // excluded from all analysis, but written as output
     private final List<SvVarData> mAllVariants;
     private final ChainFinder mChainFinder;
 
@@ -70,6 +70,7 @@ public class ClusterAnalyser {
         mConfig = config;
         mState = new ClusteringState();
         mClusters = Lists.newArrayList();
+        mArtifactClusters = Lists.newArrayList();
 
         mFilters = new SvFiltering(mState);
         mSimpleClustering = new SimpleClustering(mConfig, mState, cohortDataWriter);
@@ -128,11 +129,22 @@ public class ClusterAnalyser {
         mAllVariants.clear();
         mAllVariants.addAll(allVariants);
         mClusters.clear();
+        mArtifactClusters.clear();
         mSimpleClustering.initialise(sampleId);
         mChainFinder.setSampleId(sampleId);
     }
 
     public final List<SvCluster> getClusters() { return mClusters; }
+
+    public final List<SvCluster> getAllClusters()
+    {
+        if(mArtifactClusters.isEmpty())
+            return mClusters;
+
+        List<SvCluster> allClusters = Lists.newArrayList(mClusters);
+        allClusters.addAll(mArtifactClusters);
+        return allClusters;
+    }
 
     public void preClusteringPreparation()
     {
@@ -154,10 +166,14 @@ public class ClusterAnalyser {
             return clusterAndAnalyseGermline();
 
         mClusters.clear();
+        mArtifactClusters.clear();
         mDmFinder.clear();
 
         mPcClustering.start();
-        mFilters.clusterExcludedVariants(mClusters);
+
+        mFilters.clusterExcludedVariants(mArtifactClusters);
+        mArtifactClusters.forEach(x -> buildArmClusters(x)); // excluded from further analysis
+
         mSimpleClustering.clusterByProximity(mClusters);
         mClusters.stream().filter(x -> x.getSvCount() > 1).forEach(x -> x.updateClusterDetails());
         mPcClustering.pause();
@@ -223,9 +239,6 @@ public class ClusterAnalyser {
 
         for(SvCluster cluster : mClusters)
         {
-            if(isFilteredResolvedType(cluster.getResolvedType()))
-                continue;
-
             if(!cluster.getDoubleMinuteSVs().isEmpty() || dmClusterIds.contains(cluster.id()))
                 mDmFinder.analyseCluster(cluster, true);
 
@@ -257,9 +270,11 @@ public class ClusterAnalyser {
     public boolean clusterAndAnalyseGermline()
     {
         mClusters.clear();
+        mArtifactClusters.clear();
 
         mPcClustering.start();
-        mFilters.clusterExcludedVariants(mClusters);
+        mFilters.clusterExcludedVariants(mArtifactClusters);
+        mArtifactClusters.forEach(x -> buildArmClusters(x));
         mSimpleClustering.clusterByProximity(mClusters);
         mClusters.stream().filter(x -> x.getSvCount() > 1).forEach(x -> x.updateClusterDetails());
         mPcClustering.pause();
@@ -309,9 +324,6 @@ public class ClusterAnalyser {
 
         for(SvCluster cluster : mClusters)
         {
-            if(isFilteredResolvedType(cluster.getResolvedType()))
-                continue;
-
             if(checkDMs && isSimpleSingleSV(cluster))
             {
                 mDmFinder.analyseCluster(cluster);

@@ -57,7 +57,7 @@ public class FilteringTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        assertEquals(3, tester.getClusters().size());
+        assertEquals(3, tester.getAllClusters().size());
 
         assertTrue(tester.hasClusterWithSVs(Lists.newArrayList(var1, var3, var4, var6)));
 
@@ -88,7 +88,7 @@ public class FilteringTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        assertEquals(2, tester.getClusters().size());
+        assertEquals(2, tester.getAllClusters().size());
 
         assertTrue(tester.hasClusterWithSVs(Lists.newArrayList(var2, var3)));
 
@@ -138,7 +138,7 @@ public class FilteringTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        assertEquals(5, tester.getClusters().size());
+        assertEquals(5, tester.getAllClusters().size());
 
         assertTrue(tester.hasClusterWithSVs(Lists.newArrayList(var0)));
         assertTrue(tester.hasClusterWithSVs(Lists.newArrayList(var2, var4, var5)));
@@ -190,7 +190,7 @@ public class FilteringTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        assertEquals(5, tester.getClusters().size());
+        assertEquals(5, tester.getAllClusters().size());
     }
 
 }

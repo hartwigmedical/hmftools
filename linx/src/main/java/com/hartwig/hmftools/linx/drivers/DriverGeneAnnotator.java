@@ -96,7 +96,7 @@ public class DriverGeneAnnotator implements CohortFileInterface
 
     public final List<DriverGeneData> getDriverGeneDataList() { return mDataCache.getDriverGeneDataList(); }
 
-    public void annotateSVs(final String sampleId, final Map<String, List<SvBreakend>> chrBreakendMap)
+    public void annotateSVs(final String sampleId, final Map<String,List<SvBreakend>> chrBreakendMap)
     {
         mPerfCounter.start();
 
@@ -122,7 +122,7 @@ public class DriverGeneAnnotator implements CohortFileInterface
         // - AMPs
         // - DELs
 
-        for (final DriverCatalog driverGene : mDataCache.getDriverCatalog())
+        for(final DriverCatalog driverGene : mDataCache.getDriverCatalog())
         {
             if(!driverTypeHandled(driverGene))
                 continue;

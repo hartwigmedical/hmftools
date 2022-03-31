@@ -138,13 +138,6 @@ public class SvFiltering
                     mExcludedSVs.put(var, PAIR_INF);
                     mExcludedSVs.put(nextVar, PAIR_INF);
 
-                    /* creating a cluster creates downstream issues - simpler to leave unclustered
-                    SvCluster newCluster = new SvCluster(mState.getNextClusterId());
-                    newCluster.addVariant(var);
-                    newCluster.addVariant(nextVar);
-                    newCluster.setResolved(true, PAIR_INF);
-                    */
-
                     continue;
                 }
 
@@ -246,7 +239,7 @@ public class SvFiltering
         }
     }
 
-    public void clusterExcludedVariants(List<SvCluster> clusters)
+    public void clusterExcludedVariants(final List<SvCluster> clusters)
     {
         for(Map.Entry<SvVarData,ResolvedType> excludedSv : mExcludedSVs.entrySet())
         {

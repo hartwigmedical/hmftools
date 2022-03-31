@@ -240,7 +240,7 @@ public class SampleAnalyser implements Callable
             mDriverGeneAnnotator.annotateSVs(mCurrentSampleId, getChrBreakendMap());
 
         if(mConfig.RunFusions || mConfig.IsGermline)
-            mFusionAnalyser.run(mCurrentSampleId, mAllVariants, getClusters(), getChrBreakendMap());
+            mFusionAnalyser.run(mCurrentSampleId, mAllVariants, mAnalyser.getClusters(), getChrBreakendMap());
 
         writeOutput();
         close();
@@ -249,7 +249,10 @@ public class SampleAnalyser implements Callable
     }
 
     public final List<SvVarData> getVariants() { return mAllVariants; }
-    public final List<SvCluster> getClusters() { return mAnalyser.getClusters(); }
+
+    // public final List<SvCluster> getClusters() { return mAnalyser.getClusters(); }
+    // public final List<SvCluster> getAllClusters() { return mAnalyser.getAllClusters(); }
+
     public boolean inValidState() { return mIsValid; }
     public final Map<String, List<SvBreakend>> getChrBreakendMap() { return mAnalyser.getState().getChrBreakendMap(); }
 
@@ -314,14 +317,14 @@ public class SampleAnalyser implements Callable
 
         mAnalyser.annotateClusters();
 
-        mSvAnnotators.PseudoGeneFinder.checkPseudoGeneAnnotations(getClusters(), mVisSampleData);
+        mSvAnnotators.PseudoGeneFinder.checkPseudoGeneAnnotations(mAnalyser.getClusters(), mVisSampleData);
 
         if(mSvAnnotators.IndelAnnotator != null)
         {
             mSvAnnotators.IndelAnnotator.loadIndels(mCurrentSampleId);
 
             if(!mSvAnnotators.IndelAnnotator.exceedsThresholds())
-                getClusters().forEach(x -> mSvAnnotators.IndelAnnotator.annotateCluster(x));
+                mAnalyser.getClusters().forEach(x -> mSvAnnotators.IndelAnnotator.annotateCluster(x));
         }
 
         mPerfCounters.get(PERF_COUNTER_ANNOTATE).stop();
@@ -338,15 +341,17 @@ public class SampleAnalyser implements Callable
 
         boolean prepareSampleData = mConfig.isSingleSample() || mConfig.UploadToDB;
 
+        List<SvCluster> allClusters = mAnalyser.getAllClusters();
+
         final List<LinxSvAnnotation> linxSvData = prepareSampleData ? generateSvDataOutput() : null;
-        final List<LinxCluster> clusterData = prepareSampleData ? generateClusterOutput() : null;
+        final List<LinxCluster> clusterData = prepareSampleData ? generateClusterOutput(allClusters) : null;
         final List<LinxLink> linksData = prepareSampleData ? generateLinksOutput() : null;
 
         if(mCohortDataWriter.writeCohortFiles())
         {
             mCohortDataWriter.writeSvData(mCurrentSampleId, mAllVariants);
             mCohortDataWriter.writeLinksData(mCurrentSampleId, mAnalyser.getClusters());
-            mCohortDataWriter.writeClusterData(mCurrentSampleId, mAnalyser.getClusters());
+            mCohortDataWriter.writeClusterData(mCurrentSampleId, allClusters);
         }
 
         mCohortDataWriter.getVisWriter().writeOutput(
@@ -519,11 +524,11 @@ public class SampleAnalyser implements Callable
         return linxSvData;
     }
 
-    private List<LinxCluster> generateClusterOutput()
+    private List<LinxCluster> generateClusterOutput(final List<SvCluster> allClusters)
     {
         final List<LinxCluster> clusterData = Lists.newArrayList();
 
-        for(final SvCluster cluster : getClusters())
+        for(final SvCluster cluster : allClusters)
         {
             final String superType = getClusterCategory(cluster);
 
@@ -544,7 +549,7 @@ public class SampleAnalyser implements Callable
     {
         final List<LinxLink> linksData = Lists.newArrayList();
 
-        for(final SvCluster cluster : getClusters())
+        for(final SvCluster cluster : mAnalyser.getClusters())
         {
             List<SvChain> chains = cluster.getChains();
 

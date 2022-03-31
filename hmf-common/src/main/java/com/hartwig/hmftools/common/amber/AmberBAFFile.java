@@ -64,7 +64,6 @@ public final class AmberBAFFile
 
         try(BufferedReader reader = fileName.endsWith(".gz") ? createGzipBufferedReader(fileName) : createBufferedReader(fileName))
         {
-
             String line = reader.readLine();
             Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(line, DELIMITER);
 

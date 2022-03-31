@@ -154,7 +154,7 @@ public class ComplexMergeRuleTest
 
         tester.Analyser.clusterAndAnalyse();
 
-        assertEquals(4, tester.getClusters().size());
+        assertEquals(4, tester.getAllClusters().size());
 
         SvCluster mainCluster = tester.findClusterWithSVs(Lists.newArrayList(consec1, consec2, consec3, overlap1, overlap2));
 

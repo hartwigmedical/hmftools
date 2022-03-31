@@ -173,6 +173,7 @@ public class LinxTester
     }
 
     public final List<SvCluster> getClusters() { return Analyser.getClusters(); }
+    public final List<SvCluster> getAllClusters() { return Analyser.getAllClusters(); }
 
     public boolean hasClusterWithSVs(final List<SvVarData> svList)
     {
@@ -181,7 +182,7 @@ public class LinxTester
 
     public final SvCluster findClusterWithSVs(final List<SvVarData> svList)
     {
-        for(final SvCluster cluster : Analyser.getClusters())
+        for(final SvCluster cluster : Analyser.getAllClusters())
         {
             if(cluster.getSvCount() != svList.size())
                 continue;
