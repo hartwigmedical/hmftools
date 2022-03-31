@@ -80,7 +80,7 @@ public class GeneLevelExtractor {
 
         if (driverCategory == null && driverInconsistencyMode.isActive()) {
             if (driverInconsistencyMode == DriverInconsistencyMode.WARN_ONLY) {
-                LOGGER.warn("Wildtype event on {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
+                LOGGER.warn("Wildtype event {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
             } else if (driverInconsistencyMode == DriverInconsistencyMode.FILTER) {
                 LOGGER.info("Wildtype event filtered -- {} on {} is not included in driver catalog and won't ever be reported.",
                         type,
@@ -133,8 +133,6 @@ public class GeneLevelExtractor {
 
         if (driverInconsistencyMode.isActive()) {
             if (driverInconsistencyMode == DriverInconsistencyMode.WARN_ONLY) {
-                LOGGER.info(driverBasedEvent);
-                LOGGER.info(result);
                 if (driverBasedEvent == GeneLevelEvent.ANY_MUTATION) {
                     LOGGER.warn("Gene level event on gene {} not present in driver catalog. {} will never be reported", gene, result);
                 } else if (result != driverBasedEvent) {
@@ -147,12 +145,12 @@ public class GeneLevelExtractor {
             } else if (driverInconsistencyMode == DriverInconsistencyMode.FILTER) {
                 if (driverBasedEvent == GeneLevelEvent.ANY_MUTATION) {
                     LOGGER.info("Gene level event filtered -- {} on {} is not included in driver catalog and won't ever be reported.",
-                            gene,
-                            result);
+                            result,
+                            gene);
                     return null;
                 } else if (result != driverBasedEvent) {
                     LOGGER.info(
-                            "Gene level event filtered -- mismatch in driver gene event for '{}'. Event suggests {} while driver catalog suggests {}",
+                            "Gene level event filtered -- Mismatch in driver gene event for '{}'. Event suggests {} while driver catalog suggests {}",
                             gene,
                             result,
                             driverBasedEvent);

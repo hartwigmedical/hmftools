@@ -27,7 +27,6 @@ import com.hartwig.hmftools.serve.refgenome.RefGenomeResource;
 import com.hartwig.hmftools.serve.sources.iclusion.IclusionExtractor;
 import com.hartwig.hmftools.serve.sources.iclusion.IclusionExtractorFactory;
 import com.hartwig.hmftools.serve.sources.iclusion.IclusionReader;
-import com.hartwig.hmftools.serve.sources.iclusion.IclusionUtil;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;

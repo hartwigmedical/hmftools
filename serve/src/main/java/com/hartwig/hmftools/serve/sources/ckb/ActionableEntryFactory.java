@@ -1,15 +1,15 @@
 package com.hartwig.hmftools.serve.sources.ckb;
 
+import java.util.List;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.ckb.classification.CkbEventAndGeneExtractor;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.drug.Drug;
 import com.hartwig.hmftools.ckb.datamodel.evidence.Evidence;
 import com.hartwig.hmftools.ckb.datamodel.reference.Reference;
-import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
@@ -60,77 +60,77 @@ class ActionableEntryFactory {
     }
 
     @NotNull
-    public static Set<ActionableEntry> toActionableEntries(@NotNull CkbEntry entry, @NotNull String gene) {
+    public static Set<ActionableEntry> toActionableEntries(@NotNull CkbEntry entry, @NotNull String sourceEvent) {
         Set<ActionableEntry> actionableEntries = Sets.newHashSet();
 
-        for (Evidence evidence : entry.evidences()) {
-            if (hasUsableEvidenceType(evidence.evidenceType())) {
-                EvidenceLevel level = resolveLevel(evidence.ampCapAscoEvidenceLevel());
-                EvidenceDirection direction = resolveDirection(evidence.responseType());
-                String doid = extractDoid(evidence.indication().termId());
+        for (Evidence evidence : evidencesWithUsableType(entry.evidences())) {
+            EvidenceLevel level = resolveLevel(evidence.ampCapAscoEvidenceLevel());
+            EvidenceDirection direction = resolveDirection(evidence.responseType());
+            String doid = extractAndCurateDoid(evidence.indication().termId());
 
-                if (level != null && direction != null && doid != null) {
-                    String treatment = evidence.therapy().therapyName();
-                    String cancerType = evidence.indication().name();
+            if (level != null && direction != null && doid != null) {
+                String treatment = evidence.therapy().therapyName();
+                String cancerType = evidence.indication().name();
 
-                    Set<String> evidenceUrls = Sets.newHashSet();
-                    for (Reference reference : evidence.references()) {
-                        if (reference.url() != null) {
-                            evidenceUrls.add(reference.url());
-                        }
+                Set<String> evidenceUrls = Sets.newHashSet();
+                for (Reference reference : evidence.references()) {
+                    if (reference.url() != null) {
+                        evidenceUrls.add(reference.url());
                     }
-
-                    String doidKb = extractDoidKB(evidence.indication().termId());
-
-                    int molecularProfileId = entry.profileId();
-                    String responseType = extractResponseType(evidence.responseType());
-
-                    Set<String> sourceUrls = Sets.newHashSet();
-                    for (Drug drug : evidence.therapy().drugs()) {
-                        sourceUrls.add(
-                                "https://ckbhome.jax.org/profileResponse/advancedEvidenceFind?molecularProfileId=" + molecularProfileId
-                                        + "&drugId=" + drug.id() + "&doId=" + doidKb + "&responseType=" + responseType + "&evidenceType="
-                                        + evidence.evidenceType());
-                    }
-
-                    Set<CancerType> blacklistedCancerTypes = Sets.newHashSet();
-                    if (doid.equals("162")) {
-                        blacklistedCancerTypes.add(ImmutableCancerType.builder().name("Hematologic cancer").doid("2531").build());
-                    }
-
-                    String formatGene = gene.isEmpty() ? "-" : gene;
-                    actionableEntries.add(ImmutableActionableEntry.builder()
-                            .source(Knowledgebase.CKB)
-                            .sourceEvent(formatGene + " " + entry.variants().get(0).variant())
-                            .sourceUrls(sourceUrls)
-                            .treatment(treatment)
-                            .applicableCancerType(ImmutableCancerType.builder().name(cancerType).doid(doid).build())
-                            .blacklistCancerTypes(blacklistedCancerTypes)
-                            .level(level)
-                            .direction(direction)
-                            .evidenceUrls(evidenceUrls)
-                            .build());
                 }
+
+                String sourceCancerTypeId = extractSourceCancerTypeId(evidence.indication().termId());
+
+                String responseType = toUrlString(evidence.responseType());
+
+                Set<String> sourceUrls = Sets.newHashSet();
+                for (Drug drug : evidence.therapy().drugs()) {
+                    sourceUrls.add("https://ckbhome.jax.org/profileResponse/advancedEvidenceFind?molecularProfileId=" + entry.profileId()
+                            + "&drugId=" + drug.id() + "&doId=" + sourceCancerTypeId + "&responseType=" + responseType + "&evidenceType="
+                            + evidence.evidenceType());
+                }
+
+                Set<CancerType> blacklistedCancerTypes = Sets.newHashSet();
+                if (doid.equals("162")) {
+                    blacklistedCancerTypes.add(ImmutableCancerType.builder().name("Hematologic cancer").doid("2531").build());
+                }
+
+                actionableEntries.add(ImmutableActionableEntry.builder()
+                        .source(Knowledgebase.CKB)
+                        .sourceEvent(sourceEvent)
+                        .sourceUrls(sourceUrls)
+                        .treatment(treatment)
+                        .applicableCancerType(ImmutableCancerType.builder().name(cancerType).doid(doid).build())
+                        .blacklistCancerTypes(blacklistedCancerTypes)
+                        .level(level)
+                        .direction(direction)
+                        .evidenceUrls(evidenceUrls)
+                        .build());
             }
         }
         return actionableEntries;
     }
 
     @NotNull
-    @VisibleForTesting
-    public static String extractResponseType(@NotNull String responseType) {
-        if (responseType.equals("predicted - sensitive")) {
-            return "predicted+-+sensitive";
-        } else if (responseType.equals("predicted - resistant")) {
-            return "predicted+-+resistant";
-        } else {
-            return responseType;
+    private static List<Evidence> evidencesWithUsableType(@NotNull List<Evidence> evidences) {
+        List<Evidence> filtered = Lists.newArrayList();
+        for (Evidence evidence : evidences) {
+            if (hasUsableEvidenceType(evidence.evidenceType())) {
+                filtered.add(evidence);
+            }
         }
+        return filtered;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static String toUrlString(@NotNull String string) {
+        return string.replaceAll(" ", "+");
     }
 
     @Nullable
     @VisibleForTesting
-    static String extractDoidKB(@Nullable String doidString) {
+    static String extractSourceCancerTypeId(@Nullable String doidString) {
         if (doidString == null) {
             return null;
         }
@@ -152,7 +152,7 @@ class ActionableEntryFactory {
 
     @Nullable
     @VisibleForTesting
-    static String extractDoid(@Nullable String doidString) {
+    static String extractAndCurateDoid(@Nullable String doidString) {
         if (doidString == null) {
             return null;
         }
@@ -191,7 +191,7 @@ class ActionableEntryFactory {
     }
 
     @VisibleForTesting
-    public static boolean hasUsableEvidenceType(@NotNull String evidenceType) {
+    static boolean hasUsableEvidenceType(@NotNull String evidenceType) {
         if (USABLE_EVIDENCE_TYPES.contains(evidenceType)) {
             return true;
         } else {
@@ -204,7 +204,7 @@ class ActionableEntryFactory {
 
     @Nullable
     @VisibleForTesting
-    public static EvidenceLevel resolveLevel(@Nullable String evidenceLabel) {
+    static EvidenceLevel resolveLevel(@Nullable String evidenceLabel) {
         if (evidenceLabel == null || evidenceLabel.equals("NA")) {
             return null;
         }
@@ -217,6 +217,7 @@ class ActionableEntryFactory {
     }
 
     @Nullable
+    @VisibleForTesting
     static EvidenceDirection resolveDirection(@Nullable String direction) {
         if (direction == null) {
             return null;

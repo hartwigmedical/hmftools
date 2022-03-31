@@ -15,7 +15,7 @@ public final class ViccExtractorFactory {
     private ViccExtractorFactory() {
     }
 
-    // For VICC we want to deal with any driver inconsistency!
+    // For VICC we want to explicitly deal with any driver inconsistency!
     @NotNull
     public static ViccExtractor buildViccExtractor(@NotNull EventClassifierConfig config, @NotNull RefGenomeResource refGenomeResource,
             @NotNull DoidLookup missingDoidLookup) {

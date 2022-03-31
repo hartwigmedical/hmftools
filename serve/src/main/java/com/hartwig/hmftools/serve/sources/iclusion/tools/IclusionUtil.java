@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.sources.iclusion;
+package com.hartwig.hmftools.serve.sources.iclusion.tools;
 
 import java.io.File;
 import java.io.IOException;

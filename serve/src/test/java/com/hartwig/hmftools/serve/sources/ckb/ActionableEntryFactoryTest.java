@@ -31,7 +31,7 @@ public class ActionableEntryFactoryTest {
         Set<ActionableEntry> entryCharacteristicsSet = ActionableEntryFactory.toActionableEntries(entryCharacteristics, Strings.EMPTY);
         assertEquals(1, entryCharacteristicsSet.size());
         ActionableEntry characteristics = entryCharacteristicsSet.iterator().next();
-        assertEquals("- MSI neg", characteristics.sourceEvent());
+        assertEquals(Strings.EMPTY, characteristics.sourceEvent());
         assertEquals(Knowledgebase.CKB, characteristics.source());
         assertEquals("AB", characteristics.treatment());
         assertEquals("AB", characteristics.applicableCancerType().name());
@@ -53,7 +53,7 @@ public class ActionableEntryFactoryTest {
         Set<ActionableEntry> entryAmplificationSet = ActionableEntryFactory.toActionableEntries(entryAmplification, "KRAS");
         assertEquals(1, entryAmplificationSet.size());
         ActionableEntry amplification = entryAmplificationSet.iterator().next();
-        assertEquals("KRAS KRAS amplification", amplification.sourceEvent());
+        assertEquals("KRAS", amplification.sourceEvent());
         assertEquals(Knowledgebase.CKB, amplification.source());
         assertEquals("AB", amplification.treatment());
         assertEquals("AB", amplification.applicableCancerType().name());
@@ -67,7 +67,7 @@ public class ActionableEntryFactoryTest {
         Set<ActionableEntry> entryHotspotSet = ActionableEntryFactory.toActionableEntries(entryHotspot, "BRAF");
         assertEquals(1, entryHotspotSet.size());
         ActionableEntry hotspot = entryHotspotSet.iterator().next();
-        assertEquals("BRAF BRAF V600E", hotspot.sourceEvent());
+        assertEquals("BRAF", hotspot.sourceEvent());
         assertEquals(Knowledgebase.CKB, hotspot.source());
         assertEquals("AB", hotspot.treatment());
         assertEquals("AB", hotspot.applicableCancerType().name());
@@ -79,32 +79,32 @@ public class ActionableEntryFactoryTest {
     }
 
     @Test
-    public void canExtractAndMapDoid() {
-        assertNull(ActionableEntryFactory.extractDoid(null));
-        assertNull(ActionableEntryFactory.extractDoid("not a doid"));
+    public void canExtractAndCurateDoid() {
+        assertNull(ActionableEntryFactory.extractAndCurateDoid(null));
+        assertNull(ActionableEntryFactory.extractAndCurateDoid("not a doid"));
 
-        assertEquals("0060463", ActionableEntryFactory.extractDoid("DOID:0060463"));
-        assertEquals("162", ActionableEntryFactory.extractDoid("JAX:10000003"));
-        assertEquals("1749", ActionableEntryFactory.extractDoid("JAX:10000009"));
-        assertEquals("299", ActionableEntryFactory.extractDoid("JAX:10000008"));
-        assertNull(ActionableEntryFactory.extractDoid("JAX:10000004"));
+        assertEquals("0060463", ActionableEntryFactory.extractAndCurateDoid("DOID:0060463"));
+        assertEquals("162", ActionableEntryFactory.extractAndCurateDoid("JAX:10000003"));
+        assertEquals("1749", ActionableEntryFactory.extractAndCurateDoid("JAX:10000009"));
+        assertEquals("299", ActionableEntryFactory.extractAndCurateDoid("JAX:10000008"));
+        assertNull(ActionableEntryFactory.extractAndCurateDoid("JAX:10000004"));
     }
 
     @Test
-    public void canExtractAndMapDoidKB() {
-        assertNull(ActionableEntryFactory.extractDoidKB(null));
-        assertNull(ActionableEntryFactory.extractDoidKB("not a doid"));
+    public void canExtractSourceCancerTypeID() {
+        assertNull(ActionableEntryFactory.extractSourceCancerTypeId(null));
+        assertNull(ActionableEntryFactory.extractSourceCancerTypeId("not a doid"));
 
-        assertEquals("0060463", ActionableEntryFactory.extractDoidKB("DOID:0060463"));
-        assertEquals("10000003", ActionableEntryFactory.extractDoidKB("JAX:10000003"));
+        assertEquals("0060463", ActionableEntryFactory.extractSourceCancerTypeId("DOID:0060463"));
+        assertEquals("10000003", ActionableEntryFactory.extractSourceCancerTypeId("JAX:10000003"));
     }
 
     @Test
-    public void canExtractResponseType() {
-        assertEquals("predicted+-+sensitive", ActionableEntryFactory.extractResponseType("predicted - sensitive"));
-        assertEquals("predicted+-+resistant", ActionableEntryFactory.extractResponseType("predicted - resistant"));
-        assertEquals("resistant", ActionableEntryFactory.extractResponseType("resistant"));
-        assertEquals("sensitive", ActionableEntryFactory.extractResponseType("sensitive"));
+    public void canConvertToUrlString() {
+        assertEquals("predicted+-+sensitive", ActionableEntryFactory.toUrlString("predicted - sensitive"));
+        assertEquals("predicted+-+resistant", ActionableEntryFactory.toUrlString("predicted - resistant"));
+        assertEquals("resistant", ActionableEntryFactory.toUrlString("resistant"));
+        assertEquals("sensitive", ActionableEntryFactory.toUrlString("sensitive"));
     }
 
     @Test

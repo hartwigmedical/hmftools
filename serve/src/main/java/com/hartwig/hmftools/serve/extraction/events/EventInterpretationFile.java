@@ -13,7 +13,7 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public class EventInterpretationFile {
+public final class EventInterpretationFile {
 
     private static final String EVENT_INTERPRETATION_TSV = "EventInterpretation.tsv";
 

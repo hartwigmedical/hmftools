@@ -52,6 +52,8 @@ public class CopyNumberEvidence {
                 ProtectEvidence evidence = personalizedEvidenceFactory.somaticEvidence(actionable)
                         .reported(report)
                         .gene(gainLoss.gene())
+                        .transcript(gainLoss.transcript())
+                        .isCanonical(gainLoss.isCanonical())
                         .event(ProtectEventGenerator.copyNumberEvent(gainLoss))
                         .eventIsHighDriver(EvidenceDriverLikelihood.interpretCNV())
                         .build();

@@ -59,6 +59,8 @@ public final class ProtectEvidenceFile {
     @NotNull
     private static String header() {
         return new StringJoiner(FIELD_DELIMITER).add("gene")
+                .add("transcript")
+                .add("isCanonical")
                 .add("event")
                 .add("evidenceType")
                 .add("eventIsHighDriver")
@@ -94,6 +96,8 @@ public final class ProtectEvidenceFile {
         }
 
         return new StringJoiner(FIELD_DELIMITER).add(nullToEmpty(evidence.gene()))
+                .add(evidence.transcript())
+                .add(String.valueOf(evidence.isCanonical()))
                 .add(evidence.event())
                 .add(evidence.evidenceType().toString())
                 .add(nullToEmpty(evidence.rangeRank()))
@@ -142,8 +146,13 @@ public final class ProtectEvidenceFile {
         String sourceUrlField = values[fields.get("sourceUrls")];
         Set<String> sourceUrlurls = !sourceUrlField.isEmpty() ? Sets.newHashSet(sourceUrlField.split(SUBFIELD_DELIMITER)) : Sets.newHashSet();
 
+        String transcriptField = values[fields.get("transcript")];
+        String transcript = !transcriptField.isEmpty() ? transcriptField : Strings.EMPTY;
+
         return ImmutableProtectEvidence.builder()
                 .gene(emptyToNullString(values[fields.get("gene")]))
+                .transcript(transcript)
+                .isCanonical(Boolean.parseBoolean(values[fields.get("isCanonical")]))
                 .event(values[fields.get("event")])
                 .eventIsHighDriver(eventIsHighDriver)
                 .evidenceType(ProtectEvidenceType.valueOf(values[fields.get("evidenceType")]))

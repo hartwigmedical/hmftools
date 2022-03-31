@@ -28,8 +28,7 @@ public class IclusionExtractorTest {
                 RefGenomeResourceTestFactory.buildTestResource37(),
                 DoidLookupTestFactory.dummy());
 
-        IclusionTumorLocation loc1 =
-                ImmutableIclusionTumorLocation.builder().primaryTumorLocation("ptum").addDoids("162").build();
+        IclusionTumorLocation loc1 = ImmutableIclusionTumorLocation.builder().primaryTumorLocation("ptum").addDoids("162").build();
 
         List<IclusionTrial> entries = Lists.newArrayList();
         entries.add(IclusionTestFactory.trialWithMutationsAndTumorLocation("trial",
@@ -37,46 +36,54 @@ public class IclusionExtractorTest {
                         .gene("KIT")
                         .name("KIT AMPLIFICATION")
                         .negation(true)
-                        .build()))), Lists.newArrayList(loc1)));
+                        .build()))),
+                Lists.newArrayList(loc1)));
         entries.add(IclusionTestFactory.trialWithMutationsAndTumorLocation("trial",
                 Lists.newArrayList(or(Lists.newArrayList(ImmutableIclusionMutation.builder()
                         .gene("BRAF")
                         .name("V600E")
                         .negation(false)
-                        .build()))), Lists.newArrayList(loc1)));
+                        .build()))),
+                Lists.newArrayList(loc1)));
         entries.add(IclusionTestFactory.trialWithMutationsAndTumorLocation("trial",
                 Lists.newArrayList(or(Lists.newArrayList(ImmutableIclusionMutation.builder()
                         .gene("NTRK3")
                         .name("NTRK3 FUSION")
                         .negation(true)
-                        .build()))), Lists.newArrayList(loc1)));
+                        .build()))),
+                Lists.newArrayList(loc1)));
         entries.add(IclusionTestFactory.trialWithMutationsAndTumorLocation("trial",
                 Lists.newArrayList(or(Lists.newArrayList(ImmutableIclusionMutation.builder()
                         .gene("BRAF")
                         .name("V600")
                         .negation(true)
-                        .build()))), Lists.newArrayList(loc1)));
+                        .build()))),
+                Lists.newArrayList(loc1)));
         entries.add(IclusionTestFactory.trialWithMutationsAndTumorLocation("trial",
                 Lists.newArrayList(or(Lists.newArrayList(ImmutableIclusionMutation.builder()
                         .gene("BRAF")
                         .name("EXON 1 DELETION")
                         .negation(true)
-                        .build()))), Lists.newArrayList(loc1)));
+                        .build()))),
+                Lists.newArrayList(loc1)));
         entries.add(IclusionTestFactory.trialWithMutationsAndTumorLocation("trial",
                 Lists.newArrayList(or(Lists.newArrayList(ImmutableIclusionMutation.builder()
                         .gene("ALK")
                         .name("EML4-ALK Fusion")
                         .negation(true)
-                        .build()))), Lists.newArrayList(loc1)));
+                        .build()))),
+                Lists.newArrayList(loc1)));
         entries.add(IclusionTestFactory.trialWithMutationsAndTumorLocation("trial",
                 Lists.newArrayList(or(Lists.newArrayList(ImmutableIclusionMutation.builder()
                         .gene("-")
                         .name("MSI_HIGH")
                         .negation(true)
-                        .build()))), Lists.newArrayList(loc1)));
+                        .build()))),
+                Lists.newArrayList(loc1)));
 
         ExtractionResult result = extractor.extract(entries);
-        // Iclusion don't extract known events
+
+        // Iclusion doesn't extract known events
         assertEquals(0, result.knownHotspots().size());
         assertEquals(0, result.knownCopyNumbers().size());
         assertEquals(0, result.knownFusionPairs().size());

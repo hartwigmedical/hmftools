@@ -2,11 +2,14 @@ package com.hartwig.hmftools.common.linx;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalogKey;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 
 import org.apache.logging.log4j.LogManager;
@@ -33,32 +36,27 @@ public final class ReportableHomozygousDisruptionFactory {
 
     @NotNull
     private static List<ReportableHomozygousDisruption> extractHomozygousDisruptions(@NotNull List<DriverCatalog> linxDriversCatalog) {
+        List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         for (DriverCatalog driver : linxDriversCatalog) {
-            if (!driver.gene().equals("CDKN2A") && driver.isCanonical() || driver.gene().equals("CDKN2A") && driver.isCanonical()
-                    || driver.gene().equals("CDKN2A") && driver.isCanonical()) {
-                return linxDriversCatalog.stream()
-                        .filter(x -> x.driver() == DriverType.HOM_DUP_DISRUPTION || x.driver() == DriverType.HOM_DEL_DISRUPTION)
-                        .map(ReportableHomozygousDisruptionFactory::create)
-                        .collect(Collectors.toList());
+            DriverCatalogKey key = DriverCatalogKey.create(driver.gene(), driver.transcript());
+
+            if ((driver.driver() == DriverType.HOM_DUP_DISRUPTION || driver.driver() == DriverType.HOM_DEL_DISRUPTION)
+                    && DriverCatalogKey.create(driver.gene(), driver.transcript()).equals(key)) {
+                homozygousDisruptions.add(create(driver));
             }
         }
-        return Lists.newArrayList();
-
+        return homozygousDisruptions;
     }
 
     @NotNull
     private static ReportableHomozygousDisruption create(@NotNull DriverCatalog driverCatalog) {
-        String formatGene = driverCatalog.gene();
-        if (formatGene.equals("CDKN2A") && driverCatalog.isCanonical()) {
-            formatGene = driverCatalog.gene() + " (P16)";
-        } else if (formatGene.equals("CDKN2A") && !driverCatalog.isCanonical()) {
-            formatGene = driverCatalog.gene() + " (P14ARF)";
-        }
 
         return ImmutableReportableHomozygousDisruption.builder()
                 .chromosome(driverCatalog.chromosome())
                 .chromosomeBand(driverCatalog.chromosomeBand())
-                .gene(formatGene)
+                .gene(driverCatalog.gene())
+                .transcript(driverCatalog.transcript())
+                .isCanonical(driverCatalog.isCanonical())
                 .build();
     }
 }

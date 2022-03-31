@@ -1,2 +1,2 @@
-gene	event	eventIsHighDriver	evidenceType	rangeRank	germline	reported	treatment	onLabel	level	direction	evidenceUrls	sources	sourceEvent	sourceUrls
-A	p.1M	true	ANY_MUTATION		true	true	Olaparib	false	A	RESPONSIVE		vicc_cgi	mut	A
+gene	transcript	isCanonical	event	eventIsHighDriver	evidenceType	rangeRank	germline	reported	treatment	onLabel	level	direction	evidenceUrls	sources	sourceEvent	sourceUrls
+A	123	true	p.1M	true	ANY_MUTATION		true	true	Olaparib	false	A	RESPONSIVE		vicc_cgi	mut	A

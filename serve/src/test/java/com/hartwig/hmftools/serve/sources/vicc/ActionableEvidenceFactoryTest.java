@@ -11,7 +11,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 import com.hartwig.hmftools.serve.curation.DoidLookupTestFactory;
 import com.hartwig.hmftools.serve.sources.vicc.curation.DrugCurator;
@@ -20,7 +19,6 @@ import com.hartwig.hmftools.vicc.datamodel.Association;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -45,10 +43,10 @@ public class ActionableEvidenceFactoryTest {
                 "url");
 
         ViccEntry entry = ViccTestFactory.testEntryWithGeneEventAndAssociation("gene", "event", actionable);
-        Set<ActionableEvent> events = factory.toActionableEvents(entry, Strings.EMPTY);
-        assertEquals(2, events.size());
+        Set<ActionableEvidence> evidences = factory.toActionableEvidence(entry);
+        assertEquals(2, evidences.size());
 
-        ActionableEvent eventA = findByCancerType(events, cancerTypeA);
+        ActionableEvidence eventA = findByCancerType(evidences, cancerTypeA);
         assertEquals("Treatment", eventA.treatment());
         assertEquals(cancerTypeA, eventA.applicableCancerType().name());
         assertEquals("1", eventA.applicableCancerType().doid());
@@ -57,7 +55,7 @@ public class ActionableEvidenceFactoryTest {
         assertEquals(EvidenceDirection.RESPONSIVE, eventA.direction());
         assertEquals(Sets.newHashSet("url"), eventA.evidenceUrls());
 
-        ActionableEvent eventB = findByCancerType(events, cancerTypeB);
+        ActionableEvidence eventB = findByCancerType(evidences, cancerTypeB);
         assertEquals("Treatment", eventB.treatment());
         assertEquals(cancerTypeB, eventB.applicableCancerType().name());
         assertEquals("162", eventB.applicableCancerType().doid());
@@ -70,13 +68,13 @@ public class ActionableEvidenceFactoryTest {
     }
 
     @NotNull
-    private static ActionableEvent findByCancerType(@NotNull Iterable<ActionableEvent> events, @NotNull String cancerType) {
-        for (ActionableEvent event : events) {
+    private static ActionableEvidence findByCancerType(@NotNull Iterable<ActionableEvidence> evidences, @NotNull String cancerType) {
+        for (ActionableEvidence event : evidences) {
             if (event.applicableCancerType().name().equals(cancerType)) {
                 return event;
             }
         }
-        throw new IllegalStateException("Could not resolve event with cancer type: " + cancerType);
+        throw new IllegalStateException("Could not resolve evidence with cancer type: " + cancerType);
     }
 
     @Test
@@ -144,27 +142,27 @@ public class ActionableEvidenceFactoryTest {
                 .kbSpecificObject(ViccTestFactory.testEntryWithCivicEvidenceDirection("Does Not Support").kbSpecificObject())
                 .build();
 
-        assertEquals(0, factory.toActionableEvents(doesNotSupport, Strings.EMPTY).size());
+        assertEquals(0, factory.toActionableEvidence(doesNotSupport).size());
 
         ViccEntry supports = ImmutableViccEntry.builder()
                 .from(actionable)
                 .kbSpecificObject(ViccTestFactory.testEntryWithCivicEvidenceDirection("Supports").kbSpecificObject())
                 .build();
 
-        assertEquals(1, factory.toActionableEvents(supports, Strings.EMPTY).size());
+        assertEquals(1, factory.toActionableEvidence(supports).size());
 
         ViccEntry undefined = ImmutableViccEntry.builder()
                 .from(actionable)
                 .kbSpecificObject(ViccTestFactory.testEntryWithCivicEvidenceDirection(null).kbSpecificObject())
                 .build();
 
-        assertEquals(1, factory.toActionableEvents(undefined, Strings.EMPTY).size());
+        assertEquals(1, factory.toActionableEvidence(undefined).size());
 
         ViccEntry notRecognized = ImmutableViccEntry.builder()
                 .from(actionable)
                 .kbSpecificObject(ViccTestFactory.testEntryWithCivicEvidenceDirection("Not a direction").kbSpecificObject())
                 .build();
 
-        assertEquals(1, factory.toActionableEvents(notRecognized, Strings.EMPTY).size());
+        assertEquals(1, factory.toActionableEvidence(notRecognized).size());
     }
 }

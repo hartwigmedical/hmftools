@@ -84,10 +84,10 @@ public class IclusionFilter {
 
     public void reportUnusedFilterEntries() {
         int unusedFilterEntryCount = 0;
-        for (IclusionFilterEntry entry : filters) {
-            if (!usedFilters.contains(entry)) {
+        for (IclusionFilterEntry filter : filters) {
+            if (!usedFilters.contains(filter)) {
                 unusedFilterEntryCount++;
-                LOGGER.warn(" Filter entry '{}' hasn't been used for iClusion filtering", entry);
+                LOGGER.warn(" Filter entry '{}' hasn't been used for iClusion filtering", filter);
             }
         }
 
@@ -95,10 +95,10 @@ public class IclusionFilter {
     }
 
     private boolean include(@NotNull IclusionMutation mutation) {
-        for (IclusionFilterEntry filterEntry : filters) {
-            boolean filterMatches = isMatch(filterEntry, mutation);
+        for (IclusionFilterEntry filter : filters) {
+            boolean filterMatches = isMatch(filter, mutation);
             if (filterMatches) {
-                usedFilters.add(filterEntry);
+                usedFilters.add(filter);
                 return false;
             }
         }
@@ -106,18 +106,18 @@ public class IclusionFilter {
         return true;
     }
 
-    private boolean isMatch(@NotNull IclusionFilterEntry filterEntry, @NotNull IclusionMutation mutation) {
-        switch (filterEntry.type()) {
+    private boolean isMatch(@NotNull IclusionFilterEntry filter, @NotNull IclusionMutation mutation) {
+        switch (filter.type()) {
             case FILTER_EVENT_WITH_KEYWORD: {
                 String evaluation = mutation.name();
-                return evaluation.equals(filterEntry.value());
+                return evaluation.equals(filter.value());
             }
             case FILTER_VARIANT_ON_GENE: {
                 String evaluation = mutation.gene() + " " + mutation.name();
-                return evaluation.equals(filterEntry.value());
+                return evaluation.equals(filter.value());
             }
             default: {
-                LOGGER.warn("Filter entry found with unrecognized type: {}", filterEntry);
+                LOGGER.warn("Filter entry found with unrecognized type: {}", filter);
                 return false;
             }
         }

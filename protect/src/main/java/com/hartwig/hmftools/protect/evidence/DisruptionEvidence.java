@@ -45,6 +45,8 @@ public class DisruptionEvidence {
             if (actionable.gene().equals(reportable.gene())) {
                 ProtectEvidence evidence = personalizedEvidenceFactory.somaticReportableEvidence(actionable)
                         .gene(reportable.gene())
+                        .transcript(reportable.transcript())
+                        .isCanonical(reportable.isCanonical())
                         .event(HOMOZYGOUS_DISRUPTION_EVENT)
                         .eventIsHighDriver(EvidenceDriverLikelihood.interpretDisruptions())
                         .build();

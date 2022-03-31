@@ -4,15 +4,14 @@ import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalogKey;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
@@ -21,6 +20,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGenePanel;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.GenerateCnPerChromosome;
@@ -210,16 +210,15 @@ public final class PurpleDataLoader {
 
     @NotNull
     private static List<ReportableGainLoss> extractGainsLosses(@NotNull List<DriverCatalog> drivers) {
+        List<ReportableGainLoss> gainsLoss = Lists.newArrayList();
         for (DriverCatalog driver : drivers) {
-            if (!driver.gene().equals("CDKN2A") && driver.isCanonical() || driver.gene().equals("CDKN2A") && driver.isCanonical()
-                    || driver.gene().equals("CDKN2A") && driver.isCanonical()) {
-                return drivers.stream()
-                        .filter(x -> x.driver() == DriverType.AMP || x.driver() == DriverType.PARTIAL_AMP || x.driver() == DriverType.DEL)
-                        .map(PurpleDataLoader::toReportableGainLoss)
-                        .collect(Collectors.toList());
+            DriverCatalogKey key = DriverCatalogKey.create(driver.gene(), driver.transcript());
+            if ((driver.driver() == DriverType.AMP || driver.driver() == DriverType.PARTIAL_AMP || driver.driver() == DriverType.DEL)
+                    && DriverCatalogKey.create(driver.gene(), driver.transcript()).equals(key)) {
+                gainsLoss.add(toReportableGainLoss(driver));
             }
         }
-        return Lists.newArrayList();
+        return gainsLoss;
     }
 
     @NotNull
@@ -253,17 +252,12 @@ public final class PurpleDataLoader {
 
     @NotNull
     private static ReportableGainLoss toReportableGainLoss(@NotNull DriverCatalog driver) {
-        String formatGene = driver.gene();
-        if (formatGene.equals("CDKN2A") && driver.isCanonical()) {
-            formatGene = driver.gene() + " (P16)";
-        } else if (formatGene.equals("CDKN2A") && !driver.isCanonical()) {
-            formatGene = driver.gene() + " (P14ARF)";
-        }
-
         return ImmutableReportableGainLoss.builder()
                 .chromosome(driver.chromosome())
                 .chromosomeBand(driver.chromosomeBand())
-                .gene(formatGene)
+                .gene(driver.gene())
+                .transcript(driver.transcript())
+                .isCanonical(driver.isCanonical())
                 .interpretation(CopyNumberInterpretation.fromCNADriver(driver))
                 .minCopies(Math.round(Math.max(0, driver.minCopyNumber())))
                 .maxCopies(Math.round(Math.max(0, driver.maxCopyNumber())))

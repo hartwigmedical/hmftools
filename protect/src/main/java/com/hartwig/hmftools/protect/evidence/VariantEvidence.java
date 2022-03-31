@@ -102,6 +102,8 @@ public class VariantEvidence {
             @NotNull DriverInterpretation driverInterpretation) {
         return personalizedEvidenceFactory.evidenceBuilder(actionable)
                 .gene(variant.gene())
+                .transcript(variant.transcript())
+                .isCanonical(variant.isCanonical())
                 .event(ProtectEventGenerator.variantEvent(variant))
                 .germline(germline)
                 .reported(report)
@@ -115,7 +117,7 @@ public class VariantEvidence {
     }
 
     private static boolean rangeMatch(@NotNull Variant variant, @NotNull ActionableRange range) {
-        return variant.chromosome().equals(range.chromosome()) && variant.gene().equals(range.gene()) && variant.position() >= range.start()
+               return variant.chromosome().equals(range.chromosome()) && variant.gene().equals(range.gene()) && variant.position() >= range.start()
                 && variant.position() <= range.end() && meetsMutationTypeFilter(variant, range.mutationType());
     }
 

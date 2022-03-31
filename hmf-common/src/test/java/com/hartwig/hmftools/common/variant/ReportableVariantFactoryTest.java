@@ -3,9 +3,11 @@ package com.hartwig.hmftools.common.variant;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalogKey;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
@@ -21,14 +23,37 @@ public class ReportableVariantFactoryTest {
     private static final double EPSILON = 1.0e-10;
 
     @Test
+    public void canMapDriverCatalog() {
+        String gene1 = "CDKN2A";
+        String gene2 = "BRAF";
+        double likelihood = 0.6;
+
+        DriverCatalog driverGene1 = createCanonicalSomaticMutationEntryForGene(gene1, likelihood, "transcript1");
+        DriverCatalog driverGene2 = createCanonicalSomaticMutationEntryForGene(gene1, likelihood, "transcript2");
+        DriverCatalog driverGene3 = createCanonicalSomaticMutationEntryForGene(gene2, likelihood, "transcript3");
+        List<DriverCatalog> mergedDriverCatalog = Lists.newArrayList(driverGene1, driverGene2, driverGene3);
+
+
+        DriverCatalogKey driverCatalogKey1 = DriverCatalogKey.create(gene1, "transcript1");
+        DriverCatalogKey driverCatalogKey2 = DriverCatalogKey.create(gene1, "transcript2");
+        DriverCatalogKey driverCatalogKey3 = DriverCatalogKey.create(gene2, "transcript3");
+
+        Map<DriverCatalogKey, DriverCatalog> driverMap = ReportableVariantFactory.toDriverMap(mergedDriverCatalog);
+
+        assertEquals(driverGene1, driverMap.get(driverCatalogKey1));
+        assertEquals(driverGene2, driverMap.get(driverCatalogKey2));
+        assertEquals(driverGene3, driverMap.get(driverCatalogKey3));
+    }
+
+    @Test
     public void canResolveReportableSomaticVariants() {
         String gene1 = "gene1";
         String gene2 = "gene2";
-        SomaticVariant variant1 = SomaticVariantTestBuilderFactory.create().reported(true).gene(gene1).build();
-        SomaticVariant variant2 = SomaticVariantTestBuilderFactory.create().reported(false).gene(gene2).build();
+        SomaticVariant variant1 = SomaticVariantTestBuilderFactory.create().reported(true).gene(gene1).transcript("transcript1").build();
+        SomaticVariant variant2 = SomaticVariantTestBuilderFactory.create().reported(false).gene(gene2).transcript("transcript2").build();
 
         double likelihood = 0.6;
-        DriverCatalog driverGene1 = createCanonicalSomaticMutationEntryForGene(gene1, likelihood);
+        DriverCatalog driverGene1 = createCanonicalSomaticMutationEntryForGene(gene1, likelihood, "transcript1");
 
         List<ReportableVariant> reportable = ReportableVariantFactory.toReportableSomaticVariants(Lists.newArrayList(variant1, variant2),
                 Lists.newArrayList(driverGene1));
@@ -40,9 +65,9 @@ public class ReportableVariantFactoryTest {
     @Test
     public void canResolveGermlineVariantsWithMultipleDrivers() {
         String gene = "gene";
-        SomaticVariant variant = SomaticVariantTestBuilderFactory.create().reported(true).gene(gene).build();
+        SomaticVariant variant = SomaticVariantTestBuilderFactory.create().reported(true).gene(gene).transcript("transcript1").build();
 
-        DriverCatalog driver1 = createCanonicalGermlineMutationEntryForGene(gene, 0.6);
+        DriverCatalog driver1 = createCanonicalGermlineMutationEntryForGene(gene, 0.6, "transcript1");
         DriverCatalog driver2 =
                 ImmutableDriverCatalog.builder().from(driver1).driver(DriverType.GERMLINE_DELETION).driverLikelihood(1D).build();
 
@@ -53,30 +78,13 @@ public class ReportableVariantFactoryTest {
     }
 
     @Test
-    public void canResolveReportableFromCDKN2A() {
-        double likelihood = 0.6;
-        String gene = "CDKN2A";
-        SomaticVariant variant2 = SomaticVariantTestBuilderFactory.create().reported(true).gene(gene).build();
-
-        DriverCatalog driverCDKN2A = ImmutableDriverCatalog.builder()
-                .from(createCanonicalSomaticMutationEntryForGene(gene, likelihood))
-                .isCanonical(false)
-                .build();
-        List<ReportableVariant> reportable3 =
-                ReportableVariantFactory.toReportableSomaticVariants(Lists.newArrayList(variant2), Lists.newArrayList(driverCDKN2A));
-
-        assertEquals(1, reportable3.size());
-        assertEquals("CDKN2A (P14ARF)", reportable3.get(0).gene());
-    }
-
-    @Test
     public void canResolveReportableFromNonCanonicalDrivers() {
         String gene = "gene";
-        SomaticVariant variant = SomaticVariantTestBuilderFactory.create().reported(true).gene(gene).build();
+        SomaticVariant variant = SomaticVariantTestBuilderFactory.create().reported(true).gene(gene).transcript("transcript1").build();
 
         double likelihood = 0.6;
         DriverCatalog driverNonCanonical = ImmutableDriverCatalog.builder()
-                .from(createCanonicalSomaticMutationEntryForGene(gene, likelihood))
+                .from(createCanonicalSomaticMutationEntryForGene(gene, likelihood, "transcript1"))
                 .isCanonical(false)
                 .build();
 
@@ -87,8 +95,9 @@ public class ReportableVariantFactoryTest {
         assertEquals(likelihood, reportable.get(0).driverLikelihood(), EPSILON);
 
         double likelihoodCanonical = 0.5;
-        DriverCatalog driverCanonical = createCanonicalSomaticMutationEntryForGene(gene, likelihoodCanonical);
-        List<ReportableVariant> reportable2 = ReportableVariantFactory.toReportableSomaticVariants(Lists.newArrayList(variant),
+        SomaticVariant variant2 = SomaticVariantTestBuilderFactory.create().reported(true).gene(gene).transcript("transcript2").build();
+        DriverCatalog driverCanonical = createCanonicalSomaticMutationEntryForGene(gene, likelihoodCanonical, "transcript2");
+        List<ReportableVariant> reportable2 = ReportableVariantFactory.toReportableSomaticVariants(Lists.newArrayList(variant2),
                 Lists.newArrayList(driverNonCanonical, driverCanonical));
 
         assertEquals(1, reportable2.size());
@@ -96,21 +105,23 @@ public class ReportableVariantFactoryTest {
     }
 
     @NotNull
-    private static DriverCatalog createCanonicalSomaticMutationEntryForGene(@NotNull String gene, double likelihood) {
-        return create(gene, likelihood, DriverType.MUTATION);
+    private static DriverCatalog createCanonicalSomaticMutationEntryForGene(@NotNull String gene, double likelihood,
+            @NotNull String transcript) {
+        return create(gene, likelihood, DriverType.MUTATION, transcript);
     }
 
     @NotNull
-    private static DriverCatalog createCanonicalGermlineMutationEntryForGene(@NotNull String gene, double likelihood) {
-        return create(gene, likelihood, DriverType.GERMLINE_MUTATION);
+    private static DriverCatalog createCanonicalGermlineMutationEntryForGene(@NotNull String gene, double likelihood,
+            @NotNull String transcript) {
+        return create(gene, likelihood, DriverType.GERMLINE_MUTATION, transcript);
     }
 
-    private static DriverCatalog create(@NotNull String gene, double likelihood, @NotNull DriverType type) {
+    private static DriverCatalog create(@NotNull String gene, double likelihood, @NotNull DriverType type, @NotNull String transcript) {
         return ImmutableDriverCatalog.builder()
                 .chromosome(Strings.EMPTY)
                 .chromosomeBand(Strings.EMPTY)
                 .gene(gene)
-                .transcript("")
+                .transcript(transcript)
                 .isCanonical(true)
                 .driver(type)
                 .category(DriverCategory.ONCO)
