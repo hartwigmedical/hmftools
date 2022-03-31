@@ -649,7 +649,7 @@ CREATE TABLE purity
     gender varchar(20) NOT NULL,
     runMode varchar(20) NOT NULL,
     fitMethod varchar(20) NOT NULL,
-    qcStatus varchar(50) NOT NULL,
+    qcStatus varchar(255) NOT NULL,
     purity DOUBLE PRECISION not null,
     normFactor DOUBLE PRECISION not null,
     score DOUBLE PRECISION not null,

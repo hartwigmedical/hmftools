@@ -26,6 +26,5 @@ ALTER TABLE purity
     CHANGE COLUMN gender gender varchar(20) NOT NULL,
     CHANGE COLUMN fitMethod fitMethod varchar(20) NOT NULL,
     ADD COLUMN runMode VARCHAR(20) NOT NULL after fitMethod,
-    CHANGE COLUMN qcStatus qcStatus varchar(50) NOT NULL,
     CHANGE COLUMN amberGender amberGender varchar(20) NOT NULL,
     ADD COLUMN targeted BOOLEAN not null;
