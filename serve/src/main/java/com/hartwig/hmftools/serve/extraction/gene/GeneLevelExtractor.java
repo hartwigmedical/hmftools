@@ -50,7 +50,7 @@ public class GeneLevelExtractor {
     @Nullable
     public GeneLevelAnnotation extract(@NotNull String gene, @NotNull EventType type, @NotNull String event) {
         if (type == EventType.WILD_TYPE && exomeGeneChecker.isValidGene(gene)) {
-            return extractWildTypeEvents(gene, type);
+            return extractWildTypeEvent(gene, type);
         } else if (type == EventType.GENE_LEVEL && exomeGeneChecker.isValidGene(gene)) {
             return extractGeneLevelEvent(gene, event);
         } else if (type == EventType.PROMISCUOUS_FUSION && fusionGeneChecker.isValidGene(gene)) {
@@ -75,7 +75,7 @@ public class GeneLevelExtractor {
     }
 
     @Nullable
-    GeneLevelAnnotation extractWildTypeEvents(@NotNull String gene, @NotNull EventType type) {
+    GeneLevelAnnotation extractWildTypeEvent(@NotNull String gene, @NotNull EventType type) {
         DriverCategory driverCategory = findByGene(driverGenes, gene);
 
         if (driverCategory == null && driverInconsistencyMode.isActive()) {

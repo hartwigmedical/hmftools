@@ -54,8 +54,7 @@ public final class ExtractionFunctions {
         RefGenomeVersion version = uniqueVersion(results);
         ImmutableExtractionResult.Builder mergedBuilder = ImmutableExtractionResult.builder().refGenomeVersion(version);
 
-        Set<EventInterpretation> eventInterpretations = Sets.newHashSet();
-
+        Set<EventInterpretation> allEventInterpretations = Sets.newHashSet();
         Set<KnownHotspot> allHotspots = Sets.newHashSet();
         Set<KnownCodon> allCodons = Sets.newHashSet();
         Set<KnownExon> allExons = Sets.newHashSet();
@@ -63,8 +62,7 @@ public final class ExtractionFunctions {
         Set<KnownFusionPair> allFusionPairs = Sets.newHashSet();
 
         for (ExtractionResult result : results) {
-            eventInterpretations.addAll(result.eventInterpretations());
-
+            allEventInterpretations.addAll(result.eventInterpretations());
             allHotspots.addAll(result.knownHotspots());
             allCodons.addAll(result.knownCodons());
             allExons.addAll(result.knownExons());
@@ -79,12 +77,12 @@ public final class ExtractionFunctions {
             mergedBuilder.addAllActionableHLA(result.actionableHLA());
         }
 
-        ExtractionResult mergedResult = mergedBuilder.knownHotspots(HotspotFunctions.consolidate(allHotspots))
+        ExtractionResult mergedResult = mergedBuilder.eventInterpretations(allEventInterpretations)
+                .knownHotspots(HotspotFunctions.consolidate(allHotspots))
                 .knownCodons(CodonFunctions.consolidate(allCodons))
                 .knownExons(ExonFunctions.consolidate(allExons))
                 .knownCopyNumbers(CopyNumberFunctions.consolidate(allCopyNumbers))
                 .knownFusionPairs(FusionFunctions.consolidate(allFusionPairs))
-                .eventInterpretations(eventInterpretations)
                 .build();
 
         return consolidateActionableEvents(mergedResult);
