@@ -1,6 +1,6 @@
 gene	event	source	sourceEvent	sourceUrls	treatment	applicableCancerType	applicableDoid	blacklistCancerTypes	level	direction	evidenceUrls
 ALK	FUSION	VICC_CGI	fusion	http	Crizotinib	Lung Adenocarcinoma	X		A	RESPONSIVE	https
-BRCA1	INACTIVATION	VICC_CGI	inac	http	DRUP	Solid Tumors	X	Hematologic cancer,2531	B	RESPONSIVE	http
+BRCA1	INACTIVATION	VICC_CGI	inact	http	DRUP	Solid Tumors	X	Hematologic cancer,2531	B	RESPONSIVE	http
 ERBB2	AMPLIFICATION	VICC_CGI	amp	http	Trastuzumab	Breast Cancer	X		A	RESPONSIVE	http
 ERBB2	AMPLIFICATION	VICC_CGI	amp	http	Panitumumab	Colorectal Cancer	X		B	RESISTANT	http
 FGFR2	FUSION	VICC_CGI	fusion	http	Erdafitinib	Bladder Cancer	X		B	RESPONSIVE

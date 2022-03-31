@@ -217,11 +217,11 @@ public class GeneLevelExtractorTest {
         GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("NOTCH1", "MET"),
                 DriverInconsistencyMode.IGNORE);
         assertEquals(ImmutableGeneLevelAnnotation.builder().gene("MET").event(GeneLevelEvent.WILD_TYPE).build(),
-                geneLevelExtractor.extractWildTypeEvents("MET", EventType.WILD_TYPE));
+                geneLevelExtractor.extractWildTypeEvent("MET", EventType.WILD_TYPE));
         assertEquals(ImmutableGeneLevelAnnotation.builder().gene("AB").event(GeneLevelEvent.WILD_TYPE).build(),
-                geneLevelExtractor.extractWildTypeEvents("AB", EventType.WILD_TYPE));
+                geneLevelExtractor.extractWildTypeEvent("AB", EventType.WILD_TYPE));
         assertNotEquals(ImmutableGeneLevelAnnotation.builder().gene("AB").event(GeneLevelEvent.WILD_TYPE).build(),
-                geneLevelExtractor.extractWildTypeEvents("TP53", EventType.WILD_TYPE));
+                geneLevelExtractor.extractWildTypeEvent("TP53", EventType.WILD_TYPE));
     }
 
     @Test

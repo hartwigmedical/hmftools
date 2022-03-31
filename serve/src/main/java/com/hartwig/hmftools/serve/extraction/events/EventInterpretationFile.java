@@ -30,6 +30,7 @@ public final class EventInterpretationFile {
         List<String> lines = Lists.newArrayList();
         lines.add(header());
         lines.addAll(toLines(eventInterpretations));
+
         Files.write(new File(eventInterpretationTsv).toPath(), lines);
     }
 
