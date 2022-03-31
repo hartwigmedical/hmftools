@@ -4,11 +4,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalogKey;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ReportableVariantFactory {
@@ -35,39 +41,39 @@ public final class ReportableVariantFactory {
     @NotNull
     private static List<ReportableVariant> toReportableVariants(@NotNull List<SomaticVariant> variants,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull ReportableVariantSource source) {
-        Map<String, DriverCatalog> geneDriverMap = toDriverMap(driverCatalog);
-
+        Map<DriverCatalogKey, DriverCatalog> geneDriverMap = toDriverMap(driverCatalog);
         List<ReportableVariant> result = Lists.newArrayList();
+
         for (SomaticVariant variant : variants) {
             if (variant.reported()) {
-                DriverCatalog geneDriver = geneDriverMap.get(variant.gene());
+                ImmutableReportableVariant.Builder reportable = ImmutableReportableVariant.builder();
+                for (DriverCatalog driver : driverCatalog) {
+                    DriverCatalogKey key = DriverCatalogKey.create(driver.gene(), driver.transcript());
+                    DriverCatalog geneDriver = geneDriverMap.get(key);
+                    if (geneDriver == null) {
+                        throw new IllegalStateException("Could not find driver entry for variant on gene '" + variant.gene() + "'");
+                    }
 
-                if (geneDriver == null) {
-                    throw new IllegalStateException("Could not find driver entry for variant on gene '" + variant.gene() + "'");
+                    SomaticVariant variantCorrect = ImmutableSomaticVariantImpl.builder().from(variant).gene(geneDriver.gene()).build();
+                    ImmutableReportableVariant.Builder build =
+                            fromVariant(variantCorrect, source).driverLikelihood(geneDriver.driverLikelihood());
+                    reportable.from(build.build()).transcript(geneDriver.transcript()).isCanonical(geneDriver.isCanonical());
                 }
 
-                SomaticVariant variantCorrect = ImmutableSomaticVariantImpl.builder().from(variant).gene(geneDriver.gene()).build();
-
-                ReportableVariant reportable = fromVariant(variantCorrect, source).driverLikelihood(geneDriver.driverLikelihood())
-                        .transcript(geneDriver.transcript())
-                        .isCanonical(geneDriver.isCanonical())
-                        .build();
-                result.add(reportable);
+                result.add(reportable.build());
             }
         }
+
         return result;
     }
 
     @NotNull
-    private static Map<String, DriverCatalog> toDriverMap(@NotNull List<DriverCatalog> driverCatalog) {
-        Map<String, DriverCatalog> map = Maps.newHashMap();
+    @VisibleForTesting
+    static Map<DriverCatalogKey, DriverCatalog> toDriverMap(@NotNull List<DriverCatalog> driverCatalog) {
+        Map<DriverCatalogKey, DriverCatalog> map = Maps.newHashMap();
         for (DriverCatalog driver : driverCatalog) {
-            boolean genePresent = map.containsKey(driver.gene());
-            if (driver.gene().equals("CDKN2A")) {
-                map.put(driver.gene(), driver);
-            } else if (!genePresent || (genePresent && driver.isCanonical())) {
-                map.put(driver.gene(), driver);
-            }
+            DriverCatalogKey key = DriverCatalogKey.create(driver.gene(), driver.transcript());
+            map.put(key, driver);
         }
         return map;
     }
