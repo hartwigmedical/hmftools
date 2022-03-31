@@ -56,7 +56,7 @@ public class EvidenceDriverLikelihood {
     }
 
     public static boolean interpretVirus() {
-        //We use only high driver virusses for evidence matching
+        //We use only high driver viruses for evidence matching
         return true;
     }
 }
