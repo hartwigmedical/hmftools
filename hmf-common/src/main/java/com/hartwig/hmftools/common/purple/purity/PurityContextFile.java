@@ -72,8 +72,6 @@ public final class PurityContextFile
                 .add("ploidy")
                 .add("gender")
                 .add("status")
-                .add("runMode")
-                .add("targeted")
                 .add("polyclonalProportion")
                 .add("minPurity")
                 .add("maxPurity")
@@ -91,6 +89,8 @@ public final class PurityContextFile
                 .add("tmbPerMb")
                 .add("tmbStatus")
                 .add("svTumorMutationalBurden")
+                .add("runMode")
+                .add("targeted")
                 .toString();
     }
 
@@ -108,8 +108,6 @@ public final class PurityContextFile
                 .add(FORMAT.format(purity.ploidy()))
                 .add(String.valueOf(context.gender()))
                 .add(String.valueOf(context.method()))
-                .add(String.valueOf(context.runMode()))
-                .add(String.valueOf(context.targeted()))
                 .add(FORMAT.format(context.polyClonalProportion()))
                 .add(FORMAT.format(score.minPurity()))
                 .add(FORMAT.format(score.maxPurity()))
@@ -127,6 +125,8 @@ public final class PurityContextFile
                 .add(FORMAT.format(context.tumorMutationalBurdenPerMb()))
                 .add(String.valueOf(context.tumorMutationalBurdenStatus()))
                 .add(String.valueOf(context.svTumorMutationalBurden()))
+                .add(String.valueOf(context.runMode()))
+                .add(String.valueOf(context.targeted()))
                 .toString();
     }
 

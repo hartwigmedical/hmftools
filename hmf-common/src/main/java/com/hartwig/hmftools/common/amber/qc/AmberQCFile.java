@@ -46,7 +46,7 @@ public final class AmberQCFile
         {
             String uniparentalDisomy = getValue(lines, UNIPARENTAL_DISOMY, null);
 
-            if(uniparentalDisomy.equals(UNIPARENTAL_DISOMY_NONE))
+            if(uniparentalDisomy != null && uniparentalDisomy.equals(UNIPARENTAL_DISOMY_NONE))
                 uniparentalDisomy = null;
 
             return ImmutableAmberQC.builder()
