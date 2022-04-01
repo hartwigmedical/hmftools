@@ -56,7 +56,7 @@ public final class EvidenceSelector {
     public static List<ProtectEvidence> trialsOnly(@NotNull List<ProtectEvidence> evidences) {
         List<ProtectEvidence> filtered = Lists.newArrayList();
         for (ProtectEvidence evidence : evidences) {
-            if (hasTrialSource(evidence.sources())) {
+            if (hasTrialSource(evidence.protectSources().sources())) {
                 filtered.add(evidence);
             }
         }
@@ -67,7 +67,7 @@ public final class EvidenceSelector {
     public static List<ProtectEvidence> noTrials(@NotNull List<ProtectEvidence> evidences) {
         List<ProtectEvidence> filtered = Lists.newArrayList();
         for (ProtectEvidence evidence : evidences) {
-            if (!hasTrialSource(evidence.sources())) {
+            if (!hasTrialSource(evidence.protectSources().sources())) {
                 filtered.add(evidence);
             }
         }

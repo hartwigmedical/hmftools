@@ -17,7 +17,7 @@ public final class ClinicalTrialFactory {
     public static List<ProtectEvidence> extractOnLabelTrials(@NotNull List<ProtectEvidence> evidenceItems) {
         List<ProtectEvidence> trials = Lists.newArrayList();
         for (ProtectEvidence evidence : evidenceItems) {
-            if (evidence.sources().contains(Knowledgebase.ICLUSION) && evidence.onLabel()) {
+            if (evidence.protectSources().sources().contains(Knowledgebase.ICLUSION) && evidence.onLabel()) {
                 trials.add(evidence);
             }
         }

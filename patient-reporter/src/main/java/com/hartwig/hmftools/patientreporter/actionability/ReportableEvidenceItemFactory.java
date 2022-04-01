@@ -17,7 +17,7 @@ public final class ReportableEvidenceItemFactory {
     public static List<ProtectEvidence> extractNonTrialsOnLabel(@NotNull List<ProtectEvidence> evidenceItems) {
         List<ProtectEvidence> nonTrials = Lists.newArrayList();
         for (ProtectEvidence evidence: evidenceItems) {
-            if (!evidence.sources().contains(Knowledgebase.ICLUSION) && evidence.onLabel()){
+            if (!evidence.protectSources().sources().contains(Knowledgebase.ICLUSION) && evidence.onLabel()){
                 nonTrials.add(evidence);
             }
         }
@@ -28,7 +28,7 @@ public final class ReportableEvidenceItemFactory {
     public static List<ProtectEvidence> extractNonTrialsOffLabel(@NotNull List<ProtectEvidence> evidenceItems) {
         List<ProtectEvidence> nonTrials = Lists.newArrayList();
         for (ProtectEvidence evidence: evidenceItems) {
-            if (!evidence.sources().contains(Knowledgebase.ICLUSION) && !evidence.onLabel()){
+            if (!evidence.protectSources().sources().contains(Knowledgebase.ICLUSION) && !evidence.onLabel()){
                 nonTrials.add(evidence);
             }
         }

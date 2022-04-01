@@ -53,12 +53,12 @@ class ProtectDAO {
     private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep14 inserter, @NotNull String sample,
             @NotNull ProtectEvidence evidence) {
         StringJoiner urlJoiner = new StringJoiner(",");
-        for (String url : evidence.sourceUrls()) {
+        for (String url : evidence.protectSources().sourceUrls()) {
             urlJoiner.add(url);
         }
 
         StringJoiner sourceJoiner = new StringJoiner(",");
-        for (Knowledgebase source : evidence.sources()) {
+        for (Knowledgebase source : evidence.protectSources().sources()) {
             sourceJoiner.add(source.technicalDisplay());
         }
 

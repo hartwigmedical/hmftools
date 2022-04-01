@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.protect.ImmutableProtectSource;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectTestFactory;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
@@ -22,28 +23,28 @@ public class ReportableEvidenceItemFactoryTest {
                 .treatment("A")
                 .onLabel(true)
                 .level(EvidenceLevel.A)
-                .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
+                .protectSources(ImmutableProtectSource.builder().addSources(Knowledgebase.VICC_CIVIC).build())
                 .build();
         ProtectEvidence item2 = ProtectTestFactory.testEvidenceBuilder()
                 .event("A")
                 .treatment("A")
                 .onLabel(true)
                 .level(EvidenceLevel.A)
-                .sources(Sets.newHashSet(Knowledgebase.VICC_CGI))
+                .protectSources(ImmutableProtectSource.builder().addSources(Knowledgebase.VICC_CGI).build())
                 .build();
         ProtectEvidence item3 = ProtectTestFactory.testEvidenceBuilder()
                 .event("B")
                 .treatment("B")
                 .onLabel(true)
                 .level(EvidenceLevel.A)
-                .sources(Sets.newHashSet(Knowledgebase.ICLUSION))
+                .protectSources(ImmutableProtectSource.builder().addSources(Knowledgebase.ICLUSION).build())
                 .build();
         ProtectEvidence item4 = ProtectTestFactory.testEvidenceBuilder()
                 .event("C")
                 .treatment("C")
                 .onLabel(true)
                 .level(EvidenceLevel.C)
-                .sources(Sets.newHashSet(Knowledgebase.VICC_CGI))
+                .protectSources(ImmutableProtectSource.builder().addSources(Knowledgebase.VICC_CGI).build())
                 .build();
 
         List<ProtectEvidence> nonTrials =
