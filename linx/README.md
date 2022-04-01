@@ -590,7 +590,7 @@ Merge any non-resolved breakend to a cluster which straddles it immediately on b
 ##### Breakends straddled by foldbacks (FOLDBACK_BE)
 Merge any non resolved breakend into a cluster which has 2 different foldbacks straddling it immediately on both sides and at least one of the foldbacks faces the breakend.
 
-##### Extended chainable proximity for complex and incomplete events (EXT_PROXIMITY)
+##### Extended chainable proximity for complex and incomplete events (TI_JCN_MATCH)
 Merge any neighbouring non resolved clusters that are within 5M bases and which have facing flanking breakends on each cluster which could form a templated insertion with matching JCN. In the case of a foldback the JCN of the facing breakend is also permitted to match 2x the JCN.
 
 ### Chaining of Derivative Chromosomes
