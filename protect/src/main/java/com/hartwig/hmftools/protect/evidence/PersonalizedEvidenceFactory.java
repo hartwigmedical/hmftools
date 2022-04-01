@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.protect.evidence;
 
 import java.util.Set;
+import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
@@ -50,6 +51,12 @@ public class PersonalizedEvidenceFactory {
     @NotNull
     public ImmutableProtectEvidence.Builder evidenceBuilder(@NotNull ActionableEvent actionable) {
 
+        StringJoiner sourceUrlJoiner = new StringJoiner(",");
+        for (String url: actionable.sourceUrls()) {
+            sourceUrlJoiner.add(url);
+        }
+
+
         return ImmutableProtectEvidence.builder()
                 .evidenceType(determineEvidenceType(actionable))
                 .rangeRank(determineRangeRank(actionable))
@@ -62,7 +69,7 @@ public class PersonalizedEvidenceFactory {
                 .protectSources(ImmutableProtectSource.builder()
                         .addSources(actionable.source())
                         .addSourceEvent(actionable.sourceEvent())
-                        .addSourceUrls(actionable.sourceUrls().toString())
+                        .addSourceUrls(sourceUrlJoiner.toString())
                         .build());
     }
 
