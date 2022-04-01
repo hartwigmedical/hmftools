@@ -15,6 +15,8 @@ public final class VariantTestFactory {
         return ImmutableReportableVariant.builder()
                 .source(ReportableVariantSource.SOMATIC)
                 .gene(Strings.EMPTY)
+                .transcript("transcript")
+                .isCanonical(true)
                 .genotypeStatus(GenotypeStatus.UNKNOWN)
                 .chromosome(Strings.EMPTY)
                 .position(0)

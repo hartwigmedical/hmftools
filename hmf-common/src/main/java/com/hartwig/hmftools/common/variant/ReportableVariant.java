@@ -19,14 +19,10 @@ public abstract class ReportableVariant implements Variant {
     @Override
     public abstract String gene();
 
-    //Is nullable for unreportable variants
-    @Nullable
-    @Override
+    @NotNull
     public abstract String transcript();
 
-    //Is nullable for unreportable variants
-    @Nullable
-    @Override
+    @NotNull
     public abstract Boolean isCanonical();
 
     @NotNull

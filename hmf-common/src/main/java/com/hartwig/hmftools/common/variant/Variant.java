@@ -13,12 +13,6 @@ public interface Variant extends GenomePosition, AllelicDepth {
     @NotNull
     String gene();
 
-    @Nullable
-    String transcript();
-
-    @Nullable
-    Boolean isCanonical();
-
     @NotNull
     String ref();
 

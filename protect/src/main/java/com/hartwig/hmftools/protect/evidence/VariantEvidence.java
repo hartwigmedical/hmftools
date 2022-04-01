@@ -58,11 +58,18 @@ public class VariantEvidence {
             evidences.addAll(evidence(reportableVariant,
                     reportableVariant.driverLikelihoodInterpretation(),
                     reportableVariant.source() == ReportableVariantSource.GERMLINE,
-                    true));
+                    true,
+                    reportableVariant.transcript(),
+                    reportableVariant.isCanonical()));
         }
 
         for (SomaticVariant unreportedVariant : unreportedSomaticVariants) {
-            evidences.addAll(evidence(unreportedVariant, DriverInterpretation.LOW, false, false));
+            evidences.addAll(evidence(unreportedVariant,
+                    DriverInterpretation.LOW,
+                    false,
+                    false,
+                    unreportedVariant.canonicalTranscript(),
+                    true));
         }
 
         return evidences;
@@ -70,17 +77,17 @@ public class VariantEvidence {
 
     @NotNull
     private List<ProtectEvidence> evidence(@NotNull Variant variant, @NotNull DriverInterpretation driverInterpretation, boolean germline,
-            boolean mayReport) {
+            boolean mayReport, @NotNull String transcript, boolean isCanonical) {
         List<ProtectEvidence> evidences = Lists.newArrayList();
         for (ActionableHotspot hotspot : hotspots) {
             if (hotspotMatch(variant, hotspot)) {
-                evidences.add(evidence(variant, germline, mayReport, hotspot, driverInterpretation));
+                evidences.add(evidence(variant, germline, mayReport, hotspot, driverInterpretation, transcript, isCanonical));
             }
         }
 
         for (ActionableRange range : ranges) {
             if (rangeMatch(variant, range)) {
-                evidences.add(evidence(variant, germline, mayReport, range, driverInterpretation));
+                evidences.add(evidence(variant, germline, mayReport, range, driverInterpretation, transcript, isCanonical));
             }
         }
 
@@ -90,7 +97,7 @@ public class VariantEvidence {
                         germline,
                         mayReport && driverInterpretation == DriverInterpretation.HIGH,
                         gene,
-                        driverInterpretation));
+                        driverInterpretation, transcript, isCanonical));
             }
         }
 
@@ -99,11 +106,11 @@ public class VariantEvidence {
 
     @NotNull
     private ProtectEvidence evidence(@NotNull Variant variant, boolean germline, boolean report, @NotNull ActionableEvent actionable,
-            @NotNull DriverInterpretation driverInterpretation) {
+            @NotNull DriverInterpretation driverInterpretation, @NotNull String transcript, boolean isCanonical) {
         return personalizedEvidenceFactory.evidenceBuilder(actionable)
                 .gene(variant.gene())
-                .transcript(variant.transcript())
-                .isCanonical(variant.isCanonical())
+                .transcript(transcript)
+                .isCanonical(isCanonical)
                 .event(ProtectEventGenerator.variantEvent(variant))
                 .germline(germline)
                 .reported(report)
@@ -117,7 +124,7 @@ public class VariantEvidence {
     }
 
     private static boolean rangeMatch(@NotNull Variant variant, @NotNull ActionableRange range) {
-               return variant.chromosome().equals(range.chromosome()) && variant.gene().equals(range.gene()) && variant.position() >= range.start()
+        return variant.chromosome().equals(range.chromosome()) && variant.gene().equals(range.gene()) && variant.position() >= range.start()
                 && variant.position() <= range.end() && meetsMutationTypeFilter(variant, range.mutationType());
     }
 
