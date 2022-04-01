@@ -117,6 +117,7 @@ public final class ReportableVariantFactory {
                 .position(variant.position())
                 .ref(variant.ref())
                 .alt(variant.alt())
+                .otherReportedEffects(variant.otherReportedEffects())
                 .canonicalTranscript(variant.canonicalTranscript())
                 .canonicalEffect(variant.canonicalEffect())
                 .canonicalCodingEffect(variant.canonicalCodingEffect())

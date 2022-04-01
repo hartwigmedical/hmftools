@@ -66,6 +66,9 @@ public abstract class ReportableVariant implements Variant {
     @Override
     public abstract String canonicalHgvsProteinImpact();
 
+    @NotNull
+    public abstract String otherReportedEffects();
+
     @Override
     public abstract int totalReadCount();
 

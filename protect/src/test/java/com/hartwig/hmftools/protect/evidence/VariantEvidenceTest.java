@@ -93,6 +93,13 @@ public class VariantEvidenceTest {
     }
 
     @Test
+    public void canDetermineCodingEffectOther() {
+        assertEquals(CodingEffect.NONSENSE_OR_FRAMESHIFT,
+                VariantEvidence.extractCodingEffectOther(
+                        "ENST00000579755|c.246_247delCG|p.Gly83fs|frameshift_variant|NONSENSE_OR_FRAMESHIFT"));
+    }
+
+    @Test
     public void canDetermineVariantEvidenceForRanges() {
         String gene = "gene";
         String chromosome = "1";
