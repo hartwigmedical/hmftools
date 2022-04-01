@@ -38,7 +38,8 @@ public final class MedianRatioFactory
         {
             final List<CobaltRatio> ratios = chrRatiosMap.get(chromosome);
 
-            final String contig = chromosome.toString();
+            final String chromosomeStr =
+                    ratios.stream().findFirst().map(GenomePosition::chromosome).orElse(chromosome.toString());
 
             final List<Double> contigRatios = ratios.stream()
                     .map(x -> x.referenceGCRatio()).filter(Doubles::positive).collect(Collectors.toList());
@@ -48,7 +49,7 @@ public final class MedianRatioFactory
             final double medianRatio = count > 0 ? Doubles.median(contigRatios) : 0;
 
             results.add(ImmutableMedianRatio.builder()
-                    .chromosome(contig)
+                    .chromosome(chromosomeStr)
                     .medianRatio(medianRatio)
                     .count(count)
                     .build());

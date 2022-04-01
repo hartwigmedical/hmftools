@@ -276,6 +276,12 @@ public class PurpleApplication
         PPL_LOGGER.info("applying segmentation");
         final List<ObservedRegion> observedRegions = mSegmentation.createSegments(sampleData.SvCache.variants(), amberData, cobaltData);
 
+        if(observedRegions.isEmpty())
+        {
+            PPL_LOGGER.warn("no observed regions created");
+            System.exit(0);
+        }
+
         PPL_LOGGER.info("purple output directory: {}", mConfig.OutputDir);
         mPurpleVersion.write(mConfig.OutputDir);
 

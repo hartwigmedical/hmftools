@@ -244,17 +244,15 @@ public class ReferenceData
                     additionalTransNames.size(), OtherReportableTranscripts.size());
 
             GeneTransCache.setRequiredData(true, false, false, true);
-            GeneTransCache.load(true);
-            GeneTransCache.loadTranscriptData(Lists.newArrayList(), additionalTransNames);
+            mIsValid &= GeneTransCache.load(true);
+            mIsValid &= GeneTransCache.loadTranscriptData(Lists.newArrayList(), additionalTransNames);
         }
         else
         {
             GeneTransCache.setRequiredData(true, false, false, true);
-            GeneTransCache.load(false);
+            mIsValid &= GeneTransCache.load(false);
         }
     }
-
-
 
     public boolean isValid() { return mIsValid && TargetRegions.isValid(); }
 

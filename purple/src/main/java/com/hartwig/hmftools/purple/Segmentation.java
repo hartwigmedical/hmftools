@@ -10,6 +10,7 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.gc.GCProfileFactory;
+import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.purple.config.AmberData;
@@ -23,7 +24,7 @@ import com.hartwig.hmftools.purple.segment.PCFPositionsSupplier;
 
 import org.jetbrains.annotations.NotNull;
 
-class Segmentation
+public class Segmentation
 {
     private final Multimap<Chromosome, GCProfile> mGcProfiles;
     private final ReferenceData mReferenceData;
@@ -38,7 +39,6 @@ class Segmentation
         mGcProfiles = GCProfileFactory.loadGCContent(mWindowSize, referenceData.GcProfileFilename);
     }
 
-    @NotNull
     public List<ObservedRegion> createSegments(
             final List<StructuralVariant> structuralVariants, final AmberData amberData, final CobaltData cobaltData)
     {
@@ -49,8 +49,7 @@ class Segmentation
 
         final List<PurpleSegment> segments = factory.segment(structuralVariants, pcfPositions, cobaltData.Ratios);
 
-        final ObservedRegionFactory observedRegionFactory =
-                new ObservedRegionFactory(mWindowSize, cobaltData.CobaltChromosomes);
+        final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(mWindowSize, cobaltData.CobaltChromosomes);
 
         return observedRegionFactory.combine(segments, amberData.ChromosomeBafs, cobaltData.Ratios, mGcProfiles);
     }
