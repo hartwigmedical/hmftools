@@ -3,23 +3,12 @@ package com.hartwig.hmftools.amber;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
-import com.hartwig.hmftools.common.amber.BaseDepth;
-import com.hartwig.hmftools.common.amber.BaseDepthFactory;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-
-import htsjdk.variant.vcf.VCFFileReader;
 
 public class RegionOfHomozygosityFinderTest
 {
@@ -32,7 +21,7 @@ public class RegionOfHomozygosityFinderTest
     }
 
     @Test
-    public void testFindRegionSample()
+    public void testFindRegionSample() throws IOException
     {
         int minHomozygousRegionSize = 200;
         int minSnpLociCount = 5;
@@ -87,7 +76,7 @@ public class RegionOfHomozygosityFinderTest
 
     @Test
     // test case where there are 3 hets scattered inside the window
-    public void testFindRegionHetsInWindow()
+    public void testFindRegionHetsInWindow() throws IOException
     {
         int minHomozygousRegionSize = 200;
         int minSnpLociCount = 5;
@@ -163,30 +152,5 @@ public class RegionOfHomozygosityFinderTest
         regions = finder.findRegionsForChromosome(HumanChromosome._1, bafSites);
 
         assertEquals(regions.size(), 0);
-    }
-
-    // case by loading COLO829 data from file
-    public void testUsingBaseDepthFiles() throws IOException
-    {
-        String dir = "COLO829/amber/";
-        String refSample = "COLO829v003R";
-
-        RegionOfHomozygosityFinder
-                finder = new RegionOfHomozygosityFinder(RefGenomeVersion.V37, AmberConstants.DEFAULT_MIN_DEPTH_PERCENTAGE, AmberConstants.DEFAULT_MAX_DEPTH_PERCENTAGE);
-
-        String amberSnpPath = dir + refSample + ".amber.unfiltered.vcf.gz";
-
-        ListMultimap<Chromosome, BaseDepth> baseDepths = ArrayListMultimap.create();
-
-        try (final VCFFileReader fileReader = new VCFFileReader(new File(amberSnpPath), false))
-        {
-            fileReader.iterator().stream().map(BaseDepthFactory::fromVariantContext).forEach(
-                    o -> baseDepths.put(HumanChromosome.fromString(o.chromosome()), o));
-        }
-
-        var regions = finder.findRegions(baseDepths);
-        assertFalse(regions.isEmpty());
-
-        RegionOfHomozygosityFile.write(dir + refSample + ".amber_unittest.homozygous_regions.tsv", regions);
     }
 }

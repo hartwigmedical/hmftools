@@ -9,6 +9,8 @@ import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.tribble.AbstractFeatureReader;
@@ -18,6 +20,8 @@ import htsjdk.variant.vcf.VCFCodec;
 
 public final class AmberSiteFactory
 {
+    public static final Logger LOGGER = LogManager.getLogger(AmberSiteFactory.class);
+
     @NotNull
     public static AmberSite tumorSite(@NotNull final TumorBAF baseDepth)
     {
@@ -66,6 +70,8 @@ public final class AmberSiteFactory
                 }
             }
         }
+
+        LOGGER.info("loaded {} baf loci", result.size());
 
         return result;
     }

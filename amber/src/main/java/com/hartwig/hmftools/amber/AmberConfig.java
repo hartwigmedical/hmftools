@@ -56,6 +56,10 @@ public class AmberConfig
                description = "Min VAF in ref and alt in tumor only mode")
     public double TumorOnlyMinVaf = DEFAULT_TUMOR_ONLY_MIN_VAF;
 
+    @Parameter(names = "-tumor_only_min_depth",
+               description = "Min depth in tumor only mode")
+    public int TumorOnlyMinDepth = DEFAULT_TUMOR_ONLY_MIN_DEPTH;
+
     @Parameter(names = "-min_base_quality",
                description = "Minimum quality for a base to be considered")
     public int MinBaseQuality = DEFAULT_MIN_BASE_QUALITY;
@@ -89,9 +93,10 @@ public class AmberConfig
     public int ThreadCount = DEFAULT_THREADS;
 
     @Parameter(names = "-" + RefGenomeVersion.REF_GENOME_VERSION,
+               required = true,
                description = RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC,
                converter = RefGenomeVersionConverter.class)
-    public RefGenomeVersion refGenomeVersion = RefGenomeVersion.V37;
+    public RefGenomeVersion refGenomeVersion;
 
     public static final Logger AMB_LOGGER = LogManager.getLogger(AmberConfig.class);
 
@@ -106,11 +111,6 @@ public class AmberConfig
         samples.addAll(ReferenceIds);
         samples.add(TumorId);
         return samples;
-    }
-
-    public int minPartition()
-    {
-        return DEFAULT_MIN_PARTITION;
     }
 
     public boolean isTumorOnly() { return ReferenceBamPath.isEmpty() && TumorBamPath != null; }
