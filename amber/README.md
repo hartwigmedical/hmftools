@@ -38,6 +38,7 @@ This is the default and recommended mode.
 | tumor_bam     | Path to indexed tumor BAM file                                                             |
 | output_dir    | Path to the output directory. This directory will be created if it does not already exist. |
 | loci          | Path to vcf file containing likely heterozygous sites (see below). Gz files supported.     |
+| ref_genome_version | One of `37` or `38`. Required only when using CRAM files.                             |
 
 The vcf file used by HMF (GermlineHetPon.37.vcf.gz) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
 The sites were chosen by running the GATK HaplotypeCaller over 1700 germline samples and then selecting all SNP sites which are heterozygous in 800 to 900 of the samples. 
@@ -60,7 +61,6 @@ AMBER supports both BAM and CRAM file formats.
 | min_het_af_percent    | 0.4     | Minimum allelic frequency to be considered heterozygous                                           |
 | max_het_af_percent    | 0.65    | Maximum allelic frequency to be considered heterozygous                                           |
 | ref_genome            | NA      | Path to the reference genome fasta file. Required only when using CRAM files.                     |
-| ref_genome_version    | NA      | One of `37` or `38`. Required only when using CRAM files.                                         |
 | validation_stringency | STRICT  | SAM validation strategy: STRICT, SILENT, LENIENT                                                  |
 
 ### Example Usage
