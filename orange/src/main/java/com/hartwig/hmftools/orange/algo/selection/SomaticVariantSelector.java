@@ -62,6 +62,10 @@ public final class SomaticVariantSelector {
 
     @NotNull
     private static ReportableVariant toReportable(@NotNull SomaticVariant variant) {
-        return ReportableVariantFactory.fromVariant(variant, ReportableVariantSource.SOMATIC).driverLikelihood(Double.NaN).build();
+        return ReportableVariantFactory.fromVariant(variant, ReportableVariantSource.SOMATIC)
+                .driverLikelihood(Double.NaN)
+                .transcript(variant.canonicalTranscript())
+                .isCanonical(true)
+                .build();
     }
 }

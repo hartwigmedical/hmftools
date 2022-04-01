@@ -26,11 +26,16 @@ public final class GermlineVariantSelector {
             if (isHotspot) {
                 filtered.add(toReportable(variant));
             }
-        } return filtered;
+        }
+        return filtered;
     }
 
     @NotNull
     private static ReportableVariant toReportable(@NotNull SomaticVariant variant) {
-        return ReportableVariantFactory.fromVariant(variant, ReportableVariantSource.GERMLINE).driverLikelihood(Double.NaN).build();
+        return ReportableVariantFactory.fromVariant(variant, ReportableVariantSource.GERMLINE)
+                .driverLikelihood(Double.NaN)
+                .transcript(variant.canonicalTranscript())
+                .isCanonical(true)
+                .build();
     }
 }

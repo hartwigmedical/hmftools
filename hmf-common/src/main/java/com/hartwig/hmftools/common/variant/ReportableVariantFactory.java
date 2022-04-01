@@ -10,11 +10,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogKey;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
-import com.hartwig.hmftools.common.protect.ProtectEvidence;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ReportableVariantFactory {
@@ -56,8 +52,10 @@ public final class ReportableVariantFactory {
 
                     SomaticVariant variantCorrect = ImmutableSomaticVariantImpl.builder().from(variant).gene(geneDriver.gene()).build();
                     ImmutableReportableVariant.Builder build =
-                            fromVariant(variantCorrect, source).driverLikelihood(geneDriver.driverLikelihood());
-                    reportable.from(build.build()).transcript(geneDriver.transcript()).isCanonical(geneDriver.isCanonical());
+                            fromVariant(variantCorrect, source).driverLikelihood(geneDriver.driverLikelihood())
+                                    .transcript(geneDriver.transcript())
+                                    .isCanonical(geneDriver.isCanonical());
+                    reportable.from(build.build());
                 }
 
                 result.add(reportable.build());
@@ -115,8 +113,6 @@ public final class ReportableVariantFactory {
                 .type(variant.type())
                 .source(source)
                 .gene(variant.gene())
-                .transcript(variant.transcript())
-                .isCanonical(variant.isCanonical())
                 .chromosome(variant.chromosome())
                 .position(variant.position())
                 .ref(variant.ref())
