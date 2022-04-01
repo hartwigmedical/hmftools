@@ -151,7 +151,7 @@ public class VariantEvidence {
     @NotNull
     @VisibleForTesting
     static CodingEffect extractCodingEffectOther(@NotNull String otherReportedEffects) {
-        return CodingEffect.valueOf(otherReportedEffects.split("\\|")[4]);
+        return !otherReportedEffects.isEmpty() ? CodingEffect.valueOf(otherReportedEffects.split("\\|")[4]) : CodingEffect.UNDEFINED;
     }
 
     private static boolean meetsMutationTypeFilter(@NotNull Variant variant, @NotNull MutationTypeFilter filter, boolean isCanonical,

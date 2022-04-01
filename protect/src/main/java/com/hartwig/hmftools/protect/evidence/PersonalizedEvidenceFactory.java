@@ -6,6 +6,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
+import com.hartwig.hmftools.common.protect.ImmutableProtectSource;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.protect.ProtectApplication;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
@@ -58,9 +59,11 @@ public class PersonalizedEvidenceFactory {
                 .onLabel(determineBlacklistedEvidence(actionable.blacklistCancerTypes())
                         && patientTumorDoids.contains(actionable.applicableCancerType().doid()))
                 .evidenceUrls(actionable.evidenceUrls())
-                .addSources(actionable.source())
-                .sourceEvent(actionable.sourceEvent())
-                .sourceUrls(actionable.sourceUrls());
+                .protectSources(ImmutableProtectSource.builder()
+                        .addSources(actionable.source())
+                        .addSourceEvent(actionable.sourceEvent())
+                        .addSourceUrls(actionable.sourceUrls().toString())
+                        .build());
     }
 
     public boolean determineBlacklistedEvidence(@NotNull Set<CancerType> blacklistCancerTypes) {

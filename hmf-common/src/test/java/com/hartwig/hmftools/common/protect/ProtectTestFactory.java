@@ -29,7 +29,6 @@ public final class ProtectTestFactory {
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .evidenceUrls(Sets.newHashSet())
-                .sourceEvent(Strings.EMPTY)
-                .sourceUrls(Sets.newHashSet());
+                .protectSources(ImmutableProtectSource.builder().build());
     }
 }
