@@ -7,10 +7,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.cobalt.ImmutableReadCount;
-import com.hartwig.hmftools.common.cobalt.ReadCount;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.cobalt.Chromosome;
 import com.hartwig.hmftools.common.genome.window.Window;
 
 import htsjdk.samtools.SAMRecord;
@@ -18,11 +15,14 @@ import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
+// read bam file to find the count for a given chromsome
+// always return a value for each window, even for window without any read
+// it will still create a ReadCount of 0
 public class ChromosomeReadCount implements Callable<ChromosomeReadCount>
 {
     private final File mInputFile;
     private final SamReaderFactory mReaderFactory;
-    private final String mChromosome;
+    private final Chromosome mChromosome;
     private final List<ReadCount> mResults;
     private final int mMinMappingQuality;
     private final Window mWindow;
@@ -31,7 +31,7 @@ public class ChromosomeReadCount implements Callable<ChromosomeReadCount>
     private int mCount;
 
     public ChromosomeReadCount(
-            final File inputFile, final SamReaderFactory readerFactory, final String chromosome,
+            final File inputFile, final SamReaderFactory readerFactory, final Chromosome chromosome,
             final int windowSize, final int minMappingQuality)
     {
         mInputFile = inputFile;
@@ -52,20 +52,20 @@ public class ChromosomeReadCount implements Callable<ChromosomeReadCount>
 
         try(final SamReader reader = mReaderFactory.open(mInputFile))
         {
-            final SAMRecordIterator iterator = reader.query(mChromosome, 0, 0, true);
+            final SAMRecordIterator iterator = reader.query(mChromosome.contig, 0, 0, true);
             while(iterator.hasNext())
             {
                 addRecord(iterator.next());
             }
         }
         // finalise the last window
-        addReadCountIfNonZero(mStart, mCount);
+        addReadCount(mStart, mCount);
         return this;
     }
 
     public Chromosome chromosome()
     {
-        return HumanChromosome.fromString(mChromosome);
+        return mChromosome;
     }
 
     public List<ReadCount> readCount()
@@ -79,22 +79,19 @@ public class ChromosomeReadCount implements Callable<ChromosomeReadCount>
             return;
 
         int window = windowPosition(record.getAlignmentStart());
-        if(mStart != window)
+        while (mStart != window)
         {
-            addReadCountIfNonZero(mStart, mCount);
-            mStart = window;
+            addReadCount(mStart, mCount);
+            mStart += mWindow.getSize();
             mCount = 0;
         }
 
         mCount++;
     }
 
-    private void addReadCountIfNonZero(int position, int count)
+    private void addReadCount(int position, int count)
     {
-        if (count > 0)
-        {
-            mResults.add(ImmutableReadCount.builder().chromosome(mChromosome).position(position).readCount(count).build());
-        }
+        mResults.add(ImmutableReadCount.builder().chromosome(mChromosome.contig).position(position).readCount(count).build());
     }
 
     private boolean isEligible(final SAMRecord record)

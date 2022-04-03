@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.genome.gc;
+package com.hartwig.hmftools.cobalt.count;
 
 import static org.junit.Assert.assertEquals;
 
@@ -59,7 +59,40 @@ public class ReadCountMedianTest {
         assertMedian(130);
     }
 
+    private void addReads(int[] reads) {
+        for (int i : reads)
+            victim.addRead(i);
+    }
+
     private void assertMedian(int expectedMedian) {
-        assertEquals(expectedMedian, victim.median());
+        assertEquals(expectedMedian, victim.median(), 1e-10);
+    }
+
+    private void assertModMedian(double expectedModMedian) {
+        assertEquals(expectedModMedian, victim.interpolatedMedian(), 1e-10);
+    }
+
+    @Test
+    public void testModMedian1() {
+        addReads(new int[] { 2, 3, 1, 4, 5 });
+        assertModMedian(3);
+    }
+
+    @Test
+    public void testModMedian2() {
+        addReads(new int[] { 1, 2, 3, 4 });
+        assertModMedian(2.5);
+    }
+
+    @Test
+    public void testModMedian3() {
+        addReads(new int[] { 1, 2, 2, 3, 3 });
+        assertModMedian(2.25);
+    }
+
+    @Test
+    public void testModMedian4() {
+        addReads(new int[] { 1, 2, 2, 2, 3, 3 });
+        assertModMedian(2.16666666667);
     }
 }

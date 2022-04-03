@@ -1,40 +1,42 @@
 package com.hartwig.hmftools.cobalt.ratio;
 
-import java.util.Optional;
-import java.util.function.Function;
+import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 
-import com.google.common.collect.ListMultimap;
+import java.util.Optional;
+
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.cobalt.CobaltCount;
+import com.hartwig.hmftools.cobalt.Chromosome;
+import com.hartwig.hmftools.cobalt.count.ReadCount;
 import com.hartwig.hmftools.common.cobalt.ReadRatio;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.gc.GCMedianReadCount;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
 
-public class GCRatioSupplier
+public class GcNormalizedRatioBuilder implements RatioBuilder
 {
     private final GCMedianReadCount mGCMedianReadCount;
-    private final ListMultimap<Chromosome, ReadRatio> mGcRatios;
+    private final ArrayListMultimap<Chromosome, ReadRatio> mGcRatios;
 
-    public GCRatioSupplier(
-            final Multimap<Chromosome, GCProfile> gcProfiles, final Multimap<Chromosome, CobaltCount> counts,
-            Function<CobaltCount, Integer> readCountGetter)
+    public GcNormalizedRatioBuilder(
+            final Multimap<Chromosome, GCProfile> gcProfiles, final Multimap<Chromosome, ReadCount> counts)
     {
-        final GenomeRegionSelector<GCProfile> gcProfileSelector = GenomeRegionSelectorFactory.createImproved(gcProfiles);
+        CB_LOGGER.info("Applying ratio gc normalization");
+
+        final GenomeRegionSelector<GCProfile> gcProfileSelector = GenomeRegionSelectorFactory.create(gcProfiles.values());
 
         final GCRatioNormalization gcRatioNormalization = new GCRatioNormalization();
 
         for(Chromosome chromosome : counts.keySet())
         {
-            for(CobaltCount cobaltPosition : counts.get(chromosome))
+            for(ReadCount readCount : counts.get(chromosome))
             {
-                final Optional<GCProfile> optionalGCProfile = gcProfileSelector.select(cobaltPosition);
+                final Optional<GCProfile> optionalGCProfile = gcProfileSelector.select(readCount);
                 if(optionalGCProfile.isPresent())
                 {
                     final GCProfile gcProfile = optionalGCProfile.get();
-                    gcRatioNormalization.addPosition(chromosome, gcProfile, readCountGetter.apply(cobaltPosition));
+                    gcRatioNormalization.addPosition(chromosome, gcProfile, readCount.readCount());
                 }
             }
         }
@@ -43,12 +45,13 @@ public class GCRatioSupplier
         mGcRatios = gcRatioNormalization.build(mGCMedianReadCount);
     }
 
-    ListMultimap<Chromosome, ReadRatio> gcRatios()
+    @Override
+    public ArrayListMultimap<Chromosome, ReadRatio> ratios()
     {
         return mGcRatios;
     }
 
-    GCMedianReadCount gcMedianReadCount()
+    public GCMedianReadCount gcMedianReadCount()
     {
         return mGCMedianReadCount;
     }

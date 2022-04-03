@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.cobalt;
+package com.hartwig.hmftools.cobalt.count;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 

@@ -27,17 +27,17 @@ public class GCMedianReadCountFileTest {
 
     private static void testMinMax(@NotNull final GCMedianReadCount victim, int expectedMin, int expectedMax) {
         for (int i = 0; i < 20; i++) {
-            assertEquals(expectedMin, victim.medianReadCount(new ImmutableGCBucket(i)));
+            assertEquals(expectedMin, victim.medianReadCount(new ImmutableGCBucket(i)), 1e-10);
         }
 
-        assertEquals(1144, victim.medianReadCount(new ImmutableGCBucket(20)));
-        assertEquals(994, victim.medianReadCount(new ImmutableGCBucket(30)));
-        assertEquals(-1, victim.medianReadCount(new ImmutableGCBucket(40)));
-        assertEquals(894, victim.medianReadCount(new ImmutableGCBucket(50)));
-        assertEquals(880, victim.medianReadCount(new ImmutableGCBucket(60)));
+        assertEquals(1144, victim.medianReadCount(new ImmutableGCBucket(20)), 1e-10);
+        assertEquals(994, victim.medianReadCount(new ImmutableGCBucket(30)), 1e-10);
+        assertEquals(-1, victim.medianReadCount(new ImmutableGCBucket(40)), 1e-10);
+        assertEquals(894, victim.medianReadCount(new ImmutableGCBucket(50)), 1e-10);
+        assertEquals(880, victim.medianReadCount(new ImmutableGCBucket(60)), 1e-10);
 
         for (int i = 61; i <= 100; i++) {
-            assertEquals(expectedMax, victim.medianReadCount(new ImmutableGCBucket(i)));
+            assertEquals(expectedMax, victim.medianReadCount(new ImmutableGCBucket(i)), 1e-10);
         }
     }
 }

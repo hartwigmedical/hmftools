@@ -3,8 +3,8 @@ package com.hartwig.hmftools.cobalt.count;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -13,103 +13,82 @@ import java.util.concurrent.Future;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.cobalt.CobaltCount;
-import com.hartwig.hmftools.common.cobalt.ReadCount;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLength;
-import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLengthFactory;
+import com.hartwig.hmftools.cobalt.Chromosome;
 
 import org.jetbrains.annotations.Nullable;
 
-import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
 public class CountSupplier
 {
     private final int mWindowSize;
     private final int mMinMappingQuality;
+    Multimap<Chromosome, ReadCount> mReferenceCounts = null;
+    Multimap<Chromosome, ReadCount> mTumorCounts = null;
     private final ExecutorService mExecutorService;
     private final SamReaderFactory mReaderFactory;
+    private final Collection<Chromosome> mChromosomes;
+
+    public Multimap<Chromosome, ReadCount> getReferenceCounts() { return mReferenceCounts; }
+    public Multimap<Chromosome, ReadCount> getTumorCounts() { return mTumorCounts; }
 
     public CountSupplier(
             final int windowSize, final int minMappingQuality,
-            final ExecutorService executorService, final SamReaderFactory readerFactory)
+            final ExecutorService executorService, final SamReaderFactory readerFactory,
+            final Collection<Chromosome> chromosomes)
     {
         mWindowSize = windowSize;
         mMinMappingQuality = minMappingQuality;
         mExecutorService = executorService;
         mReaderFactory = readerFactory;
+        mChromosomes = chromosomes;
     }
 
-    public Multimap<Chromosome, CobaltCount> generateCounts(
+    public void generateCounts(
             @Nullable final String referenceBam, @Nullable final String tumorBam)
-            throws IOException, ExecutionException, InterruptedException
+            throws ExecutionException, InterruptedException
     {
         if (referenceBam == null && tumorBam == null)
         {
             CB_LOGGER.error("No bam file supplied");
-            return null;
-        }
-
-        final List<ChromosomeLength> lengths;
-        try(SamReader reader = mReaderFactory.open(new File(tumorBam != null ? tumorBam : referenceBam)))
-        {
-            lengths = ChromosomeLengthFactory.create(reader.getFileHeader());
+            return;
         }
 
         List<Future<ChromosomeReadCount>> tumorFutures = null;
         List<Future<ChromosomeReadCount>> referenceFutures = null;
-        Multimap<Chromosome, ReadCount> tumorCounts = null;
-        Multimap<Chromosome, ReadCount> referenceCounts = null;
 
         if (tumorBam != null)
         {
             CB_LOGGER.info("Calculating Read Count from {}", tumorBam);
-            tumorFutures = createFutures(mReaderFactory, new File(tumorBam), lengths);
+            tumorFutures = createFutures(mReaderFactory, new File(tumorBam));
         }
 
         if (referenceBam != null)
         {
             CB_LOGGER.info("Calculating Read Count from {}", referenceBam);
-            referenceFutures = createFutures(mReaderFactory, new File(referenceBam), lengths);
+            referenceFutures = createFutures(mReaderFactory, new File(referenceBam));
         }
 
         if (tumorFutures != null)
         {
-            tumorCounts = fromFutures(tumorFutures);
+            mTumorCounts = fromFutures(tumorFutures);
         }
         if (referenceFutures != null)
         {
-            referenceCounts = fromFutures(referenceFutures);
+            mReferenceCounts = fromFutures(referenceFutures);
         }
 
         CB_LOGGER.info("Read Count Complete");
-
-        if (tumorBam != null)
-        {
-            if (referenceBam != null)
-            {
-                return CobaltCountFactory.pairedTumorNormal(referenceCounts, tumorCounts);
-            }
-            else
-            {
-                return CobaltCountFactory.tumorOnly(tumorCounts);
-            }
-        }
-        else
-        {
-            return CobaltCountFactory.referenceOnly(referenceCounts);
-        }
     }
 
     private List<Future<ChromosomeReadCount>> createFutures(
-            final SamReaderFactory readerFactory, final File file, final List<ChromosomeLength> lengths)
+            final SamReaderFactory readerFactory, final File file)
     {
         final List<Future<ChromosomeReadCount>> futures = new ArrayList<>();
-        for(ChromosomeLength chromosome : lengths)
+        for(Chromosome chromosome : mChromosomes)
         {
             final ChromosomeReadCount callable = new ChromosomeReadCount(
-                    file, readerFactory, chromosome.chromosome(), mWindowSize, mMinMappingQuality);
+                    file, readerFactory, chromosome, mWindowSize, mMinMappingQuality);
 
             futures.add(mExecutorService.submit(callable));
         }

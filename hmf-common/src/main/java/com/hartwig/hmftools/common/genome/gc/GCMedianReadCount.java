@@ -1,16 +1,32 @@
 package com.hartwig.hmftools.common.genome.gc;
 
+import java.util.Map;
+
 import org.jetbrains.annotations.NotNull;
 
-public interface GCMedianReadCount {
+public class GCMedianReadCount {
 
-    int meanReadCount();
+    private final double mean;
+    private final double median;
+    private final Map<GCBucket, Double> medianReadCountPerGCBucket;
 
-    int medianReadCount();
+    public GCMedianReadCount(final double mean, final double median, final Map<GCBucket, Double> medianReadCountPerGCBucket) {
+        this.mean = mean;
+        this.median = median;
+        this.medianReadCountPerGCBucket = medianReadCountPerGCBucket;
+    }
 
-    int medianReadCount(@NotNull GCBucket bucket);
+    public double meanReadCount() {
+        return mean;
+    }
 
-    default int medianReadCount(@NotNull GCProfile profile) {
+    public double medianReadCount() {
+        return median;
+    }
+
+    public double medianReadCount(@NotNull final GCBucket bucket) { return medianReadCountPerGCBucket.getOrDefault(bucket, -1.0); }
+
+    public double medianReadCount(@NotNull GCProfile profile) {
         return medianReadCount(GCBucket.create(profile));
     }
 }

@@ -1,10 +1,13 @@
-package com.hartwig.hmftools.common.genome.gc;
+package com.hartwig.hmftools.cobalt.count;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.cobalt.ReadCount;
+import com.hartwig.hmftools.common.genome.gc.GCBucket;
+import com.hartwig.hmftools.common.genome.gc.GCMedianReadCount;
+import com.hartwig.hmftools.common.genome.gc.GCProfile;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -37,12 +40,12 @@ public class GCMedianReadCountBuilder {
 
     @NotNull
     public GCMedianReadCount build() {
-        final Map<GCBucket, Integer> gcBucketMeans = Maps.newHashMap();
+        final Map<GCBucket, Double> gcBucketMeans = new HashMap<>();
         for (GCBucket gcBucket : medianPerGCBucket.keySet()) {
-            gcBucketMeans.put(gcBucket, medianPerGCBucket.get(gcBucket).median());
+            gcBucketMeans.put(gcBucket, medianPerGCBucket.get(gcBucket).interpolatedMedian());
         }
 
-        return new GCMedianReadCountImpl(medianSample.mean(), medianSample.median(), gcBucketMeans);
+        return new GCMedianReadCount(medianSample.mean(), medianSample.interpolatedMedian(), gcBucketMeans);
     }
 }
 
