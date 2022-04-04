@@ -45,7 +45,8 @@ public final class ReportableHomozygousDisruptionFactory {
         for (DriverCatalogKey key : keys) {
             DriverCatalog geneDriver = geneDriverMap.get(key);
             if (geneDriver == null) {
-                throw new IllegalStateException("Could not find driver entry for homozygous disruption on gene '" + geneDriver.gene() + "'");
+                throw new IllegalStateException(
+                        "Could not find driver entry for homozygous disruption on gene '" + geneDriver.gene() + "'");
             }
             if (geneDriver.driver() == DriverType.HOM_DUP_DISRUPTION || geneDriver.driver() == DriverType.HOM_DEL_DISRUPTION) {
                 homozygousDisruptions.add(create(geneDriver));
