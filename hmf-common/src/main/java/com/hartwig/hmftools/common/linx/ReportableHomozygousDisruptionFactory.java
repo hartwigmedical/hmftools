@@ -3,13 +3,15 @@ package com.hartwig.hmftools.common.linx;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogKey;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalogMap;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 
 import org.apache.logging.log4j.LogManager;
@@ -37,14 +39,16 @@ public final class ReportableHomozygousDisruptionFactory {
     @NotNull
     private static List<ReportableHomozygousDisruption> extractHomozygousDisruptions(@NotNull List<DriverCatalog> linxDriversCatalog) {
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
-        for (DriverCatalog driver : linxDriversCatalog) {
-            DriverCatalogKey key = DriverCatalogKey.create(driver.gene(), driver.transcript());
+        Set<DriverCatalogKey> keys = DriverCatalogKey.buildUniqueKeysSet(linxDriversCatalog);
+        Map<DriverCatalogKey, DriverCatalog> geneDriverMap = DriverCatalogMap.toDriverMap(linxDriversCatalog);
 
-            if ((driver.driver() == DriverType.HOM_DUP_DISRUPTION || driver.driver() == DriverType.HOM_DEL_DISRUPTION)
-                    && DriverCatalogKey.create(driver.gene(), driver.transcript()).equals(key)) {
-                homozygousDisruptions.add(create(driver));
+        for (DriverCatalogKey key : keys) {
+            DriverCatalog geneDriver = geneDriverMap.get(key);
+            if (geneDriver.driver() == DriverType.HOM_DUP_DISRUPTION || geneDriver.driver() == DriverType.HOM_DEL_DISRUPTION) {
+                homozygousDisruptions.add(create(geneDriver));
             }
         }
+
         return homozygousDisruptions;
     }
 

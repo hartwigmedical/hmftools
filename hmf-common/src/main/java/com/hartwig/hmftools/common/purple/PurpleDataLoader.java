@@ -4,14 +4,16 @@ import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogKey;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalogMap;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
@@ -20,7 +22,6 @@ import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGenePanel;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.GenerateCnPerChromosome;
@@ -211,11 +212,14 @@ public final class PurpleDataLoader {
     @NotNull
     private static List<ReportableGainLoss> extractGainsLosses(@NotNull List<DriverCatalog> drivers) {
         List<ReportableGainLoss> gainsLoss = Lists.newArrayList();
-        for (DriverCatalog driver : drivers) {
-            DriverCatalogKey key = DriverCatalogKey.create(driver.gene(), driver.transcript());
-            if ((driver.driver() == DriverType.AMP || driver.driver() == DriverType.PARTIAL_AMP || driver.driver() == DriverType.DEL)
-                    && DriverCatalogKey.create(driver.gene(), driver.transcript()).equals(key)) {
-                gainsLoss.add(toReportableGainLoss(driver));
+        Set<DriverCatalogKey> keys = DriverCatalogKey.buildUniqueKeysSet(drivers);
+        Map<DriverCatalogKey, DriverCatalog> geneDriverMap = DriverCatalogMap.toDriverMap(drivers);
+
+        for (DriverCatalogKey key : keys) {
+            DriverCatalog geneDriver = geneDriverMap.get(key);
+            if (geneDriver.driver() == DriverType.AMP || geneDriver.driver() == DriverType.PARTIAL_AMP
+                    || geneDriver.driver() == DriverType.DEL) {
+                gainsLoss.add(toReportableGainLoss(geneDriver));
             }
         }
         return gainsLoss;
