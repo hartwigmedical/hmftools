@@ -27,6 +27,7 @@ public class FilterConfig
     public final int HardMinTumorRawAltSupport;
     public final int HardMinTumorRawBaseQuality;
     public final int FilteredMaxNormalAltSupport;
+    public final int ReferenceSampleCount;
 
     public final SoftFilterConfig SoftHotspotFilter;
     public final SoftFilterConfig SoftPanelFilter;
@@ -42,6 +43,7 @@ public class FilterConfig
     private static final String HARD_MIN_TUMOR_RAW_ALT_SUPPORT = "hard_min_tumor_raw_alt_support";
     private static final String HARD_MIN_TUMOR_RAW_BASE_QUALITY = "hard_min_tumor_raw_base_quality";
     private static final String FILTERED_MAX_NORMAL_ALT_SUPPORT = "filtered_max_normal_alt_support";
+    private static final String REF_SAMPLE_COUNT = "ref_sample_count";
 
     private static final boolean DEFAULT_SOFT_FILTER_ENABLED = true;
     private static final boolean DEFAULT_HARD_FILTER_ENABLED = false;
@@ -61,6 +63,7 @@ public class FilterConfig
         SoftPanelFilter = new SoftFilterConfig(cmd, "panel", DEFAULT_PANEL_FILTER);
         SoftHighConfidenceFilter = new SoftFilterConfig(cmd, "high_confidence", DEFAULT_HIGH_CONFIDENCE_FILTER);
         SoftLowConfidenceFilter = new SoftFilterConfig(cmd, "low_confidence", DEFAULT_LOW_CONFIDENCE_FILTER);
+        ReferenceSampleCount = getConfigValue(cmd, REF_SAMPLE_COUNT, 1);
     }
 
     public FilterConfig()
@@ -77,6 +80,7 @@ public class FilterConfig
         SoftHighConfidenceFilter = DEFAULT_HIGH_CONFIDENCE_FILTER;
         SoftLowConfidenceFilter = DEFAULT_LOW_CONFIDENCE_FILTER;
         FilteredMaxNormalAltSupport = DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT;
+        ReferenceSampleCount = 1;
     }
 
     public static Options createOptions()
@@ -92,6 +96,7 @@ public class FilterConfig
                 "Hard minimum tumor raw alt support [" + DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT + "]");
         options.addOption(HARD_MIN_TUMOR_RAW_BASE_QUALITY, true,
                 "Hard minimum tumor raw base quality [" + DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY + "]");
+        options.addOption(REF_SAMPLE_COUNT, true, "Number of reference samples for applying turmor-reference filters (default=1)");
 
         SoftFilterConfig.createOptions("hotspot", DEFAULT_HOTSPOT_FILTER).getOptions().forEach(options::addOption);
         SoftFilterConfig.createOptions("panel", DEFAULT_PANEL_FILTER).getOptions().forEach(options::addOption);

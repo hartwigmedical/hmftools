@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_VAF_SKIP
 import static com.hartwig.hmftools.sage.SageConstants.NORMAL_RAW_ALT_BQ_MAX;
 
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
@@ -88,7 +89,8 @@ public class VariantFilters
 
         final Set<String> variantFilters = variant.filters();
 
-        final ReadContextCounter normal = !variant.isNormalEmpty() ? variant.normalReadCounters().get(0) : null;
+        final List<ReadContextCounter> normalReadCounters = variant.normalReadCounters();
+        int maxNormalSamples = min(normalReadCounters.size(), mConfig.ReferenceSampleCount);
 
         // where there are multiple tumor samples, if any of them pass then clear any filters from the others
         for(ReadContextCounter tumorReadContextCounter : variant.tumorReadCounters())
@@ -97,8 +99,9 @@ public class VariantFilters
 
             applyTumorFilters(tier, softFilterConfig, tumorReadContextCounter, tumorFilters);
 
-            if(normal != null)
+            for(int i = 0; i < maxNormalSamples; ++i)
             {
+                ReadContextCounter normal = normalReadCounters.get(i);
                 applyTumorNormalFilters(tier, softFilterConfig, normal, tumorReadContextCounter, tumorFilters);
             }
 
