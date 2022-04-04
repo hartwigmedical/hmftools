@@ -16,6 +16,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
+import com.hartwig.hmftools.common.protect.ImmutableProtectSource;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
@@ -46,19 +47,19 @@ public class EvidenceReportingFunctionsTest {
         List<ProtectEvidence> hartwigEvidences = Lists.newArrayList(ImmutableProtectEvidence.builder()
                         .from(onLabelResponsiveB)
                         .treatment("treatment A")
-                        .addSources(Knowledgebase.HARTWIG_CURATED)
+                        .protectSources(ImmutableProtectSource.builder().addSources(Knowledgebase.HARTWIG_CURATED).build())
                         .build(),
                 ImmutableProtectEvidence.builder()
                         .from(onLabelResponsiveC)
                         .treatment("treatment B")
                         .direction(RESPONSIVE)
-                        .addSources(Knowledgebase.HARTWIG_CURATED)
+                        .protectSources(ImmutableProtectSource.builder().addSources(Knowledgebase.HARTWIG_CURATED).build())
                         .build(),
                 ImmutableProtectEvidence.builder()
                         .from(offLabelResponsiveC)
                         .treatment("treatment C")
                         .direction(PREDICTED_RESPONSIVE)
-                        .addSources(Knowledgebase.HARTWIG_CURATED)
+                        .protectSources(ImmutableProtectSource.builder().addSources(Knowledgebase.HARTWIG_CURATED).build())
                         .build());
         List<ProtectEvidence> hartwigFiltered = EvidenceReportingFunctions.applyReportingAlgo(hartwigEvidences);
         assertEquals(3, hartwigFiltered.size());
@@ -67,19 +68,19 @@ public class EvidenceReportingFunctionsTest {
         List<ProtectEvidence> viccEvidences = Lists.newArrayList(ImmutableProtectEvidence.builder()
                         .from(onLabelResponsiveB)
                         .treatment("treatment A")
-                        .addSources(Knowledgebase.VICC_CGI)
+                        .protectSources(ImmutableProtectSource.builder().addSources(Knowledgebase.VICC_CGI).build())
                         .build(),
                 ImmutableProtectEvidence.builder()
                         .from(onLabelResponsiveC)
                         .treatment("treatment B")
                         .direction(RESPONSIVE)
-                        .addSources(Knowledgebase.VICC_CGI)
+                        .protectSources(ImmutableProtectSource.builder().addSources(Knowledgebase.VICC_CGI).build())
                         .build(),
                 ImmutableProtectEvidence.builder()
                         .from(offLabelResponsiveC)
                         .treatment("treatment C")
                         .direction(PREDICTED_RESPONSIVE)
-                        .addSources(Knowledgebase.VICC_CGI)
+                        .protectSources(ImmutableProtectSource.builder().addSources(Knowledgebase.VICC_CGI).build())
                         .build());
         List<ProtectEvidence> viccFiltered = EvidenceReportingFunctions.applyReportingAlgo(viccEvidences);
         assertEquals(3, viccFiltered.size());
@@ -88,19 +89,19 @@ public class EvidenceReportingFunctionsTest {
         List<ProtectEvidence> ckbEvidences = Lists.newArrayList(ImmutableProtectEvidence.builder()
                         .from(onLabelResponsiveB)
                         .treatment("treatment A")
-                        .addSources(Knowledgebase.CKB)
+                        .protectSources(ImmutableProtectSource.builder().addSources(Knowledgebase.CKB).build())
                         .build(),
                 ImmutableProtectEvidence.builder()
                         .from(onLabelResponsiveC)
                         .treatment("treatment B")
                         .direction(RESPONSIVE)
-                        .addSources(Knowledgebase.CKB)
+                        .protectSources(ImmutableProtectSource.builder().addSources(Knowledgebase.CKB).build())
                         .build(),
                 ImmutableProtectEvidence.builder()
                         .from(offLabelResponsiveC)
                         .treatment("treatment C")
                         .direction(PREDICTED_RESPONSIVE)
-                        .addSources(Knowledgebase.CKB)
+                        .protectSources(ImmutableProtectSource.builder().addSources(Knowledgebase.CKB).build())
                         .build());
         List<ProtectEvidence> ckbFiltered = EvidenceReportingFunctions.applyReportingAlgo(ckbEvidences);
         assertEquals(3, ckbFiltered.size());
@@ -152,14 +153,23 @@ public class EvidenceReportingFunctionsTest {
         String event3 = "event3";
         String event4 = "event4";
 
-        ProtectEvidence evidence1 =
-                testEvidenceBuilder().event(event1).addSources(Knowledgebase.ICLUSION).reported(true).onLabel(true).build();
-        ProtectEvidence evidence2 =
-                testEvidenceBuilder().event(event2).addSources(Knowledgebase.ICLUSION).reported(true).onLabel(false).build();
-        ProtectEvidence evidence3 =
-                testEvidenceBuilder().event(event3).addSources(Knowledgebase.VICC_CGI).reported(true).onLabel(false).build();
+        ProtectEvidence evidence1 = testEvidenceBuilder().event(event1)
+                .protectSources(ImmutableProtectSource.builder().addSources(Knowledgebase.ICLUSION).build())
+                .reported(true)
+                .onLabel(true)
+                .build();
+        ProtectEvidence evidence2 = testEvidenceBuilder().event(event2)
+                .protectSources(ImmutableProtectSource.builder().addSources(Knowledgebase.ICLUSION).build())
+                .reported(true)
+                .onLabel(false)
+                .build();
+        ProtectEvidence evidence3 = testEvidenceBuilder().event(event3)
+                .protectSources(ImmutableProtectSource.builder().addSources(Knowledgebase.VICC_CGI).build())
+                .reported(true)
+                .onLabel(false)
+                .build();
         ProtectEvidence evidence4 = testEvidenceBuilder().event(event4)
-                .addSources(Knowledgebase.VICC_CGI, Knowledgebase.ICLUSION)
+                .protectSources(ImmutableProtectSource.builder().addSources(Knowledgebase.ICLUSION, Knowledgebase.VICC_CGI).build())
                 .reported(true)
                 .onLabel(false)
                 .build();

@@ -57,14 +57,7 @@ public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
     public abstract Set<String> evidenceUrls();
 
     @NotNull
-    public abstract Set<Knowledgebase> sources();
-
-    @NotNull
-    public abstract String sourceEvent();
-
-    @NotNull
-    public abstract Set<String> sourceUrls();
-
+    public abstract ProtectSource protectSources();
 
     @Override
     public int compareTo(@NotNull final ProtectEvidence o) {
@@ -91,11 +84,6 @@ public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
         int eventCompare = event().compareTo(o.event());
         if (eventCompare != 0) {
             return eventCompare;
-        }
-
-        int sourceEventCompare = sourceEvent().compareTo(o.sourceEvent());
-        if (sourceEventCompare != 0) {
-            return sourceEventCompare;
         }
 
         int evidenceTypeCompare = evidenceType().compareTo(o.evidenceType());

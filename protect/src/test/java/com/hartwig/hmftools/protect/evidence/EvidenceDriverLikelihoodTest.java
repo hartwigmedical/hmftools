@@ -27,7 +27,7 @@ public class EvidenceDriverLikelihoodTest {
     public void canInterpretFusions(){
         assertTrue(EvidenceDriverLikelihood.interpretFusions(FusionLikelihoodType.HIGH));
         assertFalse(EvidenceDriverLikelihood.interpretFusions(FusionLikelihoodType.LOW));
-        assertNull(EvidenceDriverLikelihood.interpretFusions(FusionLikelihoodType.NA));
+        assertFalse(EvidenceDriverLikelihood.interpretFusions(FusionLikelihoodType.NA));
     }
 
     @Test

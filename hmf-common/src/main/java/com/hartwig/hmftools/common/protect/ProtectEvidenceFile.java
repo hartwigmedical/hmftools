@@ -85,14 +85,21 @@ public final class ProtectEvidenceFile {
             evidenceUrlJoiner.add(url);
         }
 
+        StringJoiner sourceJoiner = new StringJoiner(SUBFIELD_DELIMITER);
+        StringJoiner sourceEventJoiner = new StringJoiner(SUBFIELD_DELIMITER);
         StringJoiner sourceUrlJoiner = new StringJoiner(SUBFIELD_DELIMITER);
-        for (String url : evidence.sourceUrls()) {
+
+        for (Knowledgebase sources : evidence.protectSources().sources()) {
+            sourceJoiner.add(sources.technicalDisplay());
+        }
+
+        for (String url : evidence.protectSources().sourceUrls()) {
             sourceUrlJoiner.add(url);
         }
 
-        StringJoiner sourceJoiner = new StringJoiner(SUBFIELD_DELIMITER);
-        for (Knowledgebase source : evidence.sources()) {
-            sourceJoiner.add(source.technicalDisplay());
+        for (String sourceEvent : evidence.protectSources().sourceEvent()) {
+            sourceEventJoiner.add(sourceEvent);
+
         }
 
         return new StringJoiner(FIELD_DELIMITER).add(nullToEmpty(evidence.gene()))
@@ -110,7 +117,7 @@ public final class ProtectEvidenceFile {
                 .add(evidence.direction().toString())
                 .add(evidenceUrlJoiner.toString())
                 .add(sourceJoiner.toString())
-                .add(evidence.sourceEvent())
+                .add(sourceEventJoiner.toString())
                 .add(sourceUrlJoiner.toString())
                 .toString();
     }
@@ -135,16 +142,19 @@ public final class ProtectEvidenceFile {
         String[] values = line.split(FIELD_DELIMITER, -1);
 
         String evidenceUrlField = values[fields.get("evidenceUrls")];
-        Set<String> evidenceUrlurls = !evidenceUrlField.isEmpty() ? Sets.newHashSet(evidenceUrlField.split(SUBFIELD_DELIMITER)) : Sets.newHashSet();
-
-        String sourceEventField = values[fields.get("sourceEvent")];
-        String sourceEvent = !sourceEventField.isEmpty() ? sourceEventField : Strings.EMPTY;
+        Set<String> evidenceUrlurls =
+                !evidenceUrlField.isEmpty() ? Sets.newHashSet(evidenceUrlField.split(SUBFIELD_DELIMITER)) : Sets.newHashSet();
 
         String eventIsHighDriverField = values[fields.get("eventIsHighDriver")];
         Boolean eventIsHighDriver = !eventIsHighDriverField.isEmpty() ? Boolean.parseBoolean(eventIsHighDriverField) : null;
 
         String sourceUrlField = values[fields.get("sourceUrls")];
-        Set<String> sourceUrlurls = !sourceUrlField.isEmpty() ? Sets.newHashSet(sourceUrlField.split(SUBFIELD_DELIMITER)) : Sets.newHashSet();
+        Set<String> sourceUrlurls =
+                !sourceUrlField.isEmpty() ? Sets.newHashSet(sourceUrlField.split(SUBFIELD_DELIMITER)) : Sets.newHashSet();
+
+        String sourceEventField = values[fields.get("sourceEvent")];
+        Set<String> sourceEvent =
+                !sourceEventField.isEmpty() ? Sets.newHashSet(sourceEventField.split(SUBFIELD_DELIMITER)) : Sets.newHashSet();
 
         String transcriptField = values[fields.get("transcript")];
         String transcript = !transcriptField.isEmpty() ? transcriptField : Strings.EMPTY;
@@ -164,9 +174,11 @@ public final class ProtectEvidenceFile {
                 .level(EvidenceLevel.valueOf(values[fields.get("level")]))
                 .direction(EvidenceDirection.valueOf(values[fields.get("direction")]))
                 .evidenceUrls(evidenceUrlurls)
-                .sources(Knowledgebase.fromCommaSeparatedTechnicalDisplayString(values[fields.get("sources")]))
-                .sourceEvent(sourceEvent)
-                .sourceUrls(sourceUrlurls)
+                .protectSources(ImmutableProtectSource.builder()
+                        .sources(Knowledgebase.fromCommaSeparatedTechnicalDisplayString(values[fields.get("sources")]))
+                        .sourceEvent(sourceEvent)
+                        .sourceUrls(sourceUrlurls)
+                        .build())
                 .build();
     }
 

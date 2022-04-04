@@ -32,9 +32,8 @@ public class EvidenceDriverLikelihood {
             case HIGH:
                 return true;
             case LOW:
-                return false;
             case NA:
-                return null;
+                return false;
             default:
                 return null;
         }
