@@ -61,6 +61,7 @@ Argument | Default | Description
 ---|---|---
 reference | NA | Comma separated names of the reference sample
 reference_bam | NA | Comma separated paths to indexed reference BAM file
+ref_sample_count | 1 | Controls the set of ref samples used for tumor-normal soft-filtering. Zero means none will be used.)
 resource_dir | None | Path to all resource files, in which case specify the file names only for ref_genome, hotspots, panel_bed and high_confidence_bed  
 threads | 2 | Number of threads to use
 max_read_depth | 1000 | Maximum number of reads to look for evidence of any `HIGH_CONFIDENCE` or `LOW_CONFIDENCE` variant. Reads in excess of this are ignored.  
