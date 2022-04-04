@@ -30,6 +30,7 @@ public class FilterConstants
     public final int PonDistance;
     public final List<ChrBaseRegion> PolyGcRegions;
     public final ChrBaseRegion LowQualRegion;
+    public final boolean FilterSGLs;
 
     // filters which only apply when reference is present:
     // minNormalCoverage, minRelativeCoverage, maxNormalSupport, shortSRNormalSupport, discordantPairSupport
@@ -98,6 +99,7 @@ public class FilterConstants
     public static final String MAX_HOM_LENGTH_SHORT_INV_CFG = "max_hom_length_short_inv";
     public static final String MIN_LENGTH_CFG = "min_length";
     public static final String PON_DISTANCE = "pon_distance";
+    private static final String FILTER_SGLS = "filter_sgls";
 
     public static FilterConstants from(final CommandLine cmd)
     {
@@ -121,14 +123,15 @@ public class FilterConstants
                 Integer.parseInt(cmd.getOptionValue(MAX_HOM_LENGTH_SHORT_INV_CFG, String.valueOf(DEFAULT_MAX_HOM_LENGTH_SHORT_INV))),
                 Integer.parseInt(cmd.getOptionValue(MIN_LENGTH_CFG, String.valueOf(DEFAULT_MIN_LENGTH))),
                 Integer.parseInt(cmd.getOptionValue(PON_DISTANCE, String.valueOf(DEFAULT_PON_DISTANCE))),
-                refGenVersion == V37 ? POLY_G_REGIONS_V37 : POLY_G_REGIONS_V38, refGenVersion == V37 ? PMS2_V37 : PMS2_V38);
+                refGenVersion == V37 ? POLY_G_REGIONS_V37 : POLY_G_REGIONS_V38, refGenVersion == V37 ? PMS2_V37 : PMS2_V38,
+                cmd.hasOption(FILTER_SGLS));
     }
 
     public FilterConstants(
             int minTumorQual, int hardMaxNormalAbsoluteSupport, double hardMaxNormalRelativeSupport, double softMaxNormalRelativeSupport,
             double minNormalCoverage, double minTumorAfBreakend, double minTumorAfBreakpoint, double maxShortStrandBias,
             int minQualBreakend, int minQualBreakpoint, int minQualRescueLine, int maxHomLengthShortInv,
-            int minLength, int ponDistance, final List<ChrBaseRegion> polyGcRegions, final ChrBaseRegion lowQualRegion)
+            int minLength, int ponDistance, final List<ChrBaseRegion> polyGcRegions, final ChrBaseRegion lowQualRegion, boolean filterSGLs)
     {
         MinTumorQual = minTumorQual;
         HardMaxNormalAbsoluteSupport = hardMaxNormalAbsoluteSupport;
@@ -146,6 +149,7 @@ public class FilterConstants
         PonDistance = ponDistance;
         PolyGcRegions = polyGcRegions;
         LowQualRegion = lowQualRegion;
+        FilterSGLs = filterSGLs;
     }
 
     public boolean matchesPolyGRegion(final String chromosome, int position)
@@ -168,6 +172,7 @@ public class FilterConstants
         options.addOption(MAX_HOM_LENGTH_SHORT_INV_CFG, true, "Max homology length short inversion");
         options.addOption(MIN_LENGTH_CFG, true, "Min length");
         options.addOption(PON_DISTANCE, true, "PON permitted margin");
+        options.addOption(FILTER_SGLS, false, "Filter SGLs from VCF, intended for tumor-only mode");
     }
 
 }

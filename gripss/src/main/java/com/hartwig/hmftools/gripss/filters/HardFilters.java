@@ -1,16 +1,13 @@
 package com.hartwig.hmftools.gripss.filters;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.parseRefAlt;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BQ;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BVF;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_QUAL;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_VF;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.isMobileLineElement;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.sglFragmentCount;
 
-import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
 import com.hartwig.hmftools.gripss.common.VariantAltInsertCoords;
 import com.hartwig.hmftools.gripss.common.VcfUtils;
 import com.hartwig.hmftools.gripss.common.GenotypeIds;
@@ -29,6 +26,9 @@ public class HardFilters
 
     public boolean isFiltered(final VariantContext variant, final GenotypeIds genotypeIds, boolean isSgl)
     {
+        if(isSgl && mFilterConstants.FilterSGLs)
+            return true;
+
         // the following hard filters are applied:
         // - below min tumor qual
         // - excessive normal support
