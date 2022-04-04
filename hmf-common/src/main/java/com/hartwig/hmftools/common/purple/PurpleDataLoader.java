@@ -217,6 +217,10 @@ public final class PurpleDataLoader {
 
         for (DriverCatalogKey key : keys) {
             DriverCatalog geneDriver = geneDriverMap.get(key);
+            if (geneDriver == null) {
+                throw new IllegalStateException("Could not find driver entry for CNV on gene '" + geneDriver.gene() + "'");
+            }
+
             if (geneDriver.driver() == DriverType.AMP || geneDriver.driver() == DriverType.PARTIAL_AMP
                     || geneDriver.driver() == DriverType.DEL) {
                 gainsLoss.add(toReportableGainLoss(geneDriver));
