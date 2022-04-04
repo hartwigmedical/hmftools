@@ -2,17 +2,17 @@
 ##INFO=<ID=WHITELIST,Number=0,Type=Flag,Description="Whitelisted hotspot">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
 1	45797760	.	T	C	.	.	WHITELIST
-                                                                                                                                      1	98045449	.	G	C	.	.	WHITELIST
-                                                                                                                                      2	234665782	.	G	A	.	.	WHITELIST
-                                                                                                                                      2	234668879	.	CAT	C	.	.	WHITELIST
-                                                                                                                                      2	234668879	.	C	CAT	.	.	WHITELIST
-                                                                                                                                      2	234668879	.	C	CATAT	.	.	WHITELIST
-                                                                                                                                      3	10191605	.	C	T	.	.	WHITELIST
-                                                                                                                                      7	99382096	.	C	T	.	.	WHITELIST
-                                                                                                                                      7	99366316	.	G	A	.	.	WHITELIST
-                                                                                                                                      7	99270539	.	C	T	.	.	WHITELIST
-                                                                                                                                      13	32953884	.	C	T	.	.	WHITELIST
-                                                                                                                                      22	42524947	.	C	T	.	.	WHITELIST
-                                                                                                                                      22	42525035	.	C	T	.	.	WHITELIST
-                                                                                                                                      22	42525035	.	C	A	.	.	WHITELIST
-                                                                                                                                      22	42523805	.	C	T	.	.	WHITELIST
+1	98045449	.	G	C	.	.	WHITELIST
+2	234665782	.	G	A	.	.	WHITELIST
+2	234668879	.	CAT	C	.	.	WHITELIST
+2	234668879	.	C	CAT	.	.	WHITELIST
+2	234668879	.	C	CATAT	.	.	WHITELIST
+3	10191605	.	C	T	.	.	WHITELIST
+7	99382096	.	C	T	.	.	WHITELIST
+7	99366316	.	G	A	.	.	WHITELIST
+7	99270539	.	C	T	.	.	WHITELIST
+13	32953884	.	C	T	.	.	WHITELIST
+22	42524947	.	C	T	.	.	WHITELIST
+22	42525035	.	C	T	.	.	WHITELIST
+22	42525035	.	C	A	.	.	WHITELIST
+22	42523805	.	C	T	.	.	WHITELIST
