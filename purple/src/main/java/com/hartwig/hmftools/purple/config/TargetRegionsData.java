@@ -38,9 +38,9 @@ public class TargetRegionsData
     {
         mTotalBases = 0;
         mCodingBases = 0;
-        mTmlRatio = 0;
-        mTmbRatio = 0;
-        mMsiIndelRatio = 0;
+        mTmlRatio = 1;
+        mTmbRatio = 1;
+        mMsiIndelRatio = 1;
         mTargetRegions = Maps.newHashMap();
         mIsValid = true;
 
@@ -83,7 +83,7 @@ public class TargetRegionsData
             return rawTmb / MB_PER_GENOME;
 
         // # of variants in targetedRegions * RefGenomeSize / TargetRegionSize * Constant
-        return rawTmb * MB_PER_GENOME * 1e6 / mTotalBases * mTmbRatio;
+        return rawTmb * MB_PER_GENOME / mTotalBases * mTmbRatio;
     }
 
     public double calcMsiIndels(int rawCount)
@@ -92,7 +92,7 @@ public class TargetRegionsData
             return (double) rawCount / MB_PER_GENOME;
 
         // # of MSI indels in targetedRegions  * RefGenomeSize / TargetRegionSize * Constant
-        return rawCount * MB_PER_GENOME * 1e6 / mTotalBases * mMsiIndelRatio;
+        return rawCount * MB_PER_GENOME / mTotalBases * mMsiIndelRatio;
     }
 
     private void loadTargetRegionsBed(final String bedFile)
@@ -103,7 +103,6 @@ public class TargetRegionsData
         try
         {
             List<NamedBed> namedBedRecords = readBedFile(bedFile);
-            int totalRegionSize = 0;
 
             for(NamedBed namedBed : namedBedRecords)
             {

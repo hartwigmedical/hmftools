@@ -17,8 +17,7 @@ public class TumorMutationalLoad
         mBurden = 0;
     }
 
-    public int load() { return mTargetRegions.calcTml(mLoad);
-    }
+    public int load() { return mTargetRegions.calcTml(mLoad); }
 
     public double burdenPerMb()
     {

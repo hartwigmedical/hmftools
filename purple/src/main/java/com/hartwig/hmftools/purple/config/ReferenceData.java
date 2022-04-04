@@ -199,7 +199,7 @@ public class ReferenceData
         GeneTransCache = new EnsemblDataCache(cmd.getOptionValue(ENSEMBL_DATA_DIR, ""), RefGenVersion);
         loadGeneTransCache();
 
-        if(config.tumorOnlyMode())
+        if(mIsValid && config.tumorOnlyMode())
             HlaCommon.populateGeneData(GeneTransCache.getChrGeneDataMap().get(hlaChromosome(RefGenVersion)));
 
         SomaticHotspots = ArrayListMultimap.create();

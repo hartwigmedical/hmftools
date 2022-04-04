@@ -85,7 +85,7 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer>
         if(!mErrorLogged)
         {
             mErrorLogged = true;
-            PPL_LOGGER.warn("Somatic deviation cache limit exceeded. This indicates a potential performance issue but will otherwise not effect any calculations.");
+            PPL_LOGGER.debug("somatic deviation cache limit exceeded");
         }
     }
 }
