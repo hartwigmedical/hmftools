@@ -2,7 +2,7 @@
 
 Linx is an annotation, interpretation and [visualisation](./README_VIS.md) tool for structural variants. The primary function of Linx is grouping together individual SV calls into distinct events and properly classify and annotating the event to understand both its mechanism and genomic impact.
 
-Whilst Linx is designed primarily for somatic SV, it can also be run in a more limited [germline mode](./README_GERMLINE.md) to annotate and intepret germline rearrangements
+Whilst Linx is designed primarily for somatic SV, it can also be run in a more limited [germline mode](./README_GERMLINE.md) to annotate and interpret germline rearrangements
 
 ## Contents
 
@@ -50,7 +50,7 @@ Reference files are available for ref genome 19/37 and 38 [HMFTools-Resources](h
 - GenePanel: HMF driver genes
 - KnownFusions: HMF known fusion data
 - Linx: fragile sites, LINE source regions and replication origins
-- Ensembl: cached Ensembl files.   Instructions for how to genereate can be found [here](https://github.com/hartwigmedical/hmftools/tree/master/gene-utils#generating-cached-ensembl-data-files)
+- Ensembl: cached Ensembl files.   Instructions for how to generate can be found [here](https://github.com/hartwigmedical/hmftools/tree/master/gene-utils#generating-cached-ensembl-data-files)
  
 ### Example Usage
 This is a typical command to run LINX for a single sample from PURPLE output.
@@ -253,7 +253,7 @@ FivePrimeBreakendId | Id of the 5' breakend in the fusion
 ThreePrimeBreakendId | Id of the 3' breakend in the fusion
 Name | Name of the fusion in the form 5'GENE_3'GENE
 Reported | True if the fusion meets all reportable fusion criteria for Linx
-ReportedType | If one or both of the genes matches  a promiscuous gene or known rearrangement in the HMF fusion knowledgebase, then the type of reportable gene pair:  f 'KNOWN_PAIR', 'PROMISCUOUS_5', 'PROMISCUOUS_3', 'PROMISCUOUS_BOTH', 'EXON_DEL_DUP', 'IG_PROMISCUOUS', 'IG_KNOWN_PAIR', KNOWN_PAIR_UNMMABLE_3' or 'NONE' (if no match is found)
+ReportedType | If one or both of the genes matches  a promiscuous gene or known rearrangement in the HMF fusion knowledgebase, then the type of reportable gene pair:  f 'KNOWN_PAIR', 'PROMISCUOUS_5', 'PROMISCUOUS_3', 'PROMISCUOUS_BOTH', 'EXON_DEL_DUP', 'IG_PROMISCUOUS', 'IG_KNOWN_PAIR', KNOWN_PAIR_UNMAPPABLE_3' or 'NONE' (if no match is found)
 Phased | Set to 1 if a phased fusion can be formed (after allowing for exon skipping)
 ChainLength | 0 for simple fusions.  If fusion is chained equal to the total length of segments chained between 5' and 3' partners
 ChainLinks | 0 for simple fusions.  If fusion is chained equal to the number of segments chained between 5' and 3' partners
@@ -781,7 +781,7 @@ Notes:
 (5) Coding Intronic to non-coding allowed only when transcript starts on 1st base of the next downstream exon - in this case we fuse to the first base of the gene which is allowed.
 
 ##### Special rules for IG rearrangements
-In the special case of IG enhancer rearrangements, the rearrangement normally occurs either between the ‘D’ and ‘J’ region (due to RAG mediation D-J recombination failure – common in IGH-BCL2 fusions) or in the switch region just upstream of the constant regions (due to failure of isoform switching mechanisms – common in IGH-MYC rearrangements). In the former case, the Eµ enhancer is the likely driver of elevated expression whereas in the latter the driver is likely the alpha 1,2 & 3 regulatory region enhancer [ref: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6199666/]. To predict a relevant rearrangement, Linx onlyrequires that the breakend in IG is oriented downstream towards the enhancer regions and is is prior to the 1st coding base of the 3’ gene partner.   There is no requirement for consecutive splice acceptor and donors.
+In the special case of IG enhancer rearrangements, the rearrangement normally occurs either between the ‘D’ and ‘J’ region (due to RAG mediation D-J recombination failure – common in IGH-BCL2 fusions) or in the switch region just upstream of the constant regions (due to failure of isoform switching mechanisms – common in IGH-MYC rearrangements). In the former case, the Eµ enhancer is the likely driver of elevated expression whereas in the latter the driver is likely the alpha 1,2 & 3 regulatory region enhancer [ref: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6199666/]. To predict a relevant rearrangement, Linx only requires that the breakend in IG is oriented downstream towards the enhancer regions and is is prior to the 1st coding base of the 3’ gene partner.   There is no requirement for consecutive splice acceptor and donors.
 
 ##### Special rules for single breakends which align to a site which forms a pathogenic fusion
 The post processing steps of GRIDSS annotate the best alignments for the insert sequence of single breakends which cannot be uniquely mapped. If any single breakend has an alignment which would create fusion matching a known fusion or a known IG rearrangement in our knowledge base then that fusion is called as if the single breakend was a translocation to that alignment. 
@@ -805,7 +805,7 @@ Each candidate chained splice acceptor and splice donor fusion pair may have mul
 - Best 5’ partner transcript ranked by canonical, then longest protein coding, then longest
 - If multiple chains link the same 2 genes then they are prioritised again according to the above logic.
 
-For IG enhancer rearrangenemts, the canonical transcript is reported for all 3' gene partners.
+For IG enhancer rearrangements, the canonical transcript is reported for all 3' gene partners.
 
 ##### Reportable fusions
 In addition to predicting fusions, Linx also tries to identify likely viable pathogenic fusions and marks as reportable. To maximise precision whilst ensuring high impact fusions are always likely to be reported, the criteria vary by fusion type with more relaxed criteria for known pathogenic pairs due to high prior likelihood. High impact promiscuous fusion partners which may be clinically relevant (including NTRK1-3, BRAF, RET, ROS1, ALK) also have more relaxed criteria

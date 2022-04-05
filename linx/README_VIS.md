@@ -356,7 +356,7 @@ track, decreases the relative size of the segment track and increases the max nu
 ```
 
 <p align="center">
-    <img src="../extended-docs/linx/tmpress2erg.png" width="600" alt="TMPRSS2-ERG">
+    <img src="../extended-docs/linx/tmprss2erg.png" width="600" alt="TMPRSS2-ERG">
 </p>
 
 # Breakage Fusion Bridge Demonstration
