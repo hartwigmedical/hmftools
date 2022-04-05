@@ -2,13 +2,14 @@ package com.hartwig.hmftools.common.variant;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogKey;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalogMap;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 
 import org.jetbrains.annotations.NotNull;
@@ -37,19 +38,19 @@ public final class ReportableVariantFactory {
     @NotNull
     private static List<ReportableVariant> toReportableVariants(@NotNull List<SomaticVariant> variants,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull ReportableVariantSource source) {
-        Map<DriverCatalogKey, DriverCatalog> geneDriverMap = toDriverMap(driverCatalog);
+        Map<DriverCatalogKey, DriverCatalog> geneDriverMap = DriverCatalogMap.toDriverMap(driverCatalog);
         List<ReportableVariant> result = Lists.newArrayList();
+
+        Set<DriverCatalogKey> keys = DriverCatalogKey.buildUniqueKeysSet(geneDriverMap);
 
         for (SomaticVariant variant : variants) {
             if (variant.reported()) {
                 ImmutableReportableVariant.Builder reportable = ImmutableReportableVariant.builder();
-                for (DriverCatalog driver : driverCatalog) {
-                    DriverCatalogKey key = DriverCatalogKey.create(driver.gene(), driver.transcript());
+                for (DriverCatalogKey key : keys) {
                     DriverCatalog geneDriver = geneDriverMap.get(key);
                     if (geneDriver == null) {
                         throw new IllegalStateException("Could not find driver entry for variant on gene '" + variant.gene() + "'");
                     }
-
                     SomaticVariant variantCorrect = ImmutableSomaticVariantImpl.builder().from(variant).gene(geneDriver.gene()).build();
                     ImmutableReportableVariant.Builder build =
                             fromVariant(variantCorrect, source).driverLikelihood(geneDriver.driverLikelihood())
@@ -63,17 +64,6 @@ public final class ReportableVariantFactory {
         }
 
         return result;
-    }
-
-    @NotNull
-    @VisibleForTesting
-    static Map<DriverCatalogKey, DriverCatalog> toDriverMap(@NotNull List<DriverCatalog> driverCatalog) {
-        Map<DriverCatalogKey, DriverCatalog> map = Maps.newHashMap();
-        for (DriverCatalog driver : driverCatalog) {
-            DriverCatalogKey key = DriverCatalogKey.create(driver.gene(), driver.transcript());
-            map.put(key, driver);
-        }
-        return map;
     }
 
     @NotNull
