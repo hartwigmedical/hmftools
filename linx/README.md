@@ -461,7 +461,7 @@ To allow for accurate chaining we would like to have a single consolidated JCN e
 We use 3 steps in the process:
 
 ##### 1. Estimate an uncertainty for copy number change at each breakend
-For this use the principle that the uncertainty in copy number change is driver primarily by the uncertainty in the copy number of the least confident adjacent copy number region which in turn is driven primarily by the number or read depth windows used to estimate the length of the adjacent regions. 
+For this use the principle that the uncertainty in copy number change is driven primarily by the uncertainty in the copy number of the least confident adjacent copy number region which in turn is driven primarily by the number or read depth windows used to estimate the length of the adjacent regions. 
 
 Hence we use the following formula to calculate a copy number uncertainty:
 
