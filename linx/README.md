@@ -582,7 +582,7 @@ We don’t cluster other common sequences such as telomeric sequences, Sine/Alu 
 
 
 #### Incomplete and small complex cluster merging 
-These rules are implemented to merge small unresolve with 3 or less variants to other unresolved clusters with an arbitrary cluster size where the location and orientation of proximate or overlapping breakends between the 2 clusters indicates that they may be linked. 
+These rules are implemented to merge small unresolved clusters with 3 or less variants to other unresolved clusters with an arbitrary cluster size where the location and orientation of proximate or overlapping breakends between the 2 clusters indicates that they may be linked. 
 
 ##### Breakends straddled by consecutive same orientation breakends (SAME_ORIENT_BE)
 Merge any non-resolved breakend to a cluster which straddles it immediately on both sides with 2 breakends facing the same direction, and where the facing breakends have matching JCN.
