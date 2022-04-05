@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.copynumber;
 
-import static com.hartwig.hmftools.common.purple.PurpleTestUtils.createDefaultFittedRegion;
+import static com.hartwig.hmftools.purple.TestUtils.createDefaultFittedRegion;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -8,8 +8,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.purple.PurityAdjusterTypicalChromosome;
 import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
+import com.hartwig.hmftools.purple.region.FittedRegion;
+import com.hartwig.hmftools.purple.region.ImmutableFittedRegion;
 
 import org.junit.Before;
 import org.junit.Test;

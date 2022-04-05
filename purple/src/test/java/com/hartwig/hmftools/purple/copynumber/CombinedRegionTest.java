@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.purple.copynumber;
 
-import static com.hartwig.hmftools.common.purple.PurpleTestUtils.createDefaultFittedRegion;
+import static com.hartwig.hmftools.purple.TestUtils.createDefaultFittedRegion;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.purple.region.GermlineStatus;
+import com.hartwig.hmftools.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Ignore;

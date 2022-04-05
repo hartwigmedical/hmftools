@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple.tools;
 
-import static com.hartwig.hmftools.common.purple.region.GermlineStatus.HET_DELETION;
-import static com.hartwig.hmftools.common.purple.region.GermlineStatus.HOM_DELETION;
+import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
+import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.tools.GermlineGeneAnalyser.writeGeneOverlapData;
@@ -20,8 +20,8 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
-import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.purple.region.SegmentFile;
+import com.hartwig.hmftools.purple.region.FittedRegion;
+import com.hartwig.hmftools.purple.segment.SegmentFile;
 
 import org.apache.commons.compress.utils.Lists;
 

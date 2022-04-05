@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.copynumber;
 
-import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.purple.region.FittedRegion;
 
 import org.jetbrains.annotations.NotNull;
 

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.purple.fitting;
 
 import static java.util.stream.Collectors.toList;
 
-import static com.hartwig.hmftools.common.purple.region.GermlineStatus.DIPLOID;
+import static com.hartwig.hmftools.common.purple.GermlineStatus.DIPLOID;
 import static com.hartwig.hmftools.common.utils.Doubles.lessOrEqual;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleCommon.formatPurity;
@@ -20,7 +20,7 @@ import com.hartwig.hmftools.common.purple.purity.BestFit;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
-import com.hartwig.hmftools.common.purple.region.ObservedRegion;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.purple.purity.FittedPurityScoreFactory;
 import com.hartwig.hmftools.common.purple.purity.ImmutableBestFit;

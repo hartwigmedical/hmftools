@@ -52,7 +52,7 @@ public class SageAppendApplication
     private final String mInputVcf;
     private final IndexedFastaSequenceFile mRefGenome;
 
-    private static final double MIN_PRIOR_VERSION = 3.0;
+    private static final double MIN_PRIOR_VERSION = 2.8;
     private static final String INPUT_VCF = "input_vcf";
 
     public SageAppendApplication(final Options options, final String... args) throws ParseException, IOException
@@ -92,23 +92,39 @@ public class SageAppendApplication
 
         long startTime = System.currentTimeMillis();
 
-        final AbstractFeatureReader<VariantContext, LineIterator> vcfReader = AbstractFeatureReader.getFeatureReader(
-                mInputVcf, new VCFCodec(), false);
+        final List<VariantContext> existingVariants = Lists.newArrayList();
 
-        VCFHeader inputHeader = (VCFHeader) vcfReader.getHeader();
-        if(!validateInputHeader(inputHeader))
+        VCFHeader inputHeader = null;
+
+        try
         {
+            AbstractFeatureReader<VariantContext, LineIterator> vcfReader = AbstractFeatureReader.getFeatureReader(
+                    mInputVcf, new VCFCodec(), false);
+
+            inputHeader = (VCFHeader)vcfReader.getHeader();
+            if(!validateInputHeader(inputHeader))
+            {
+                System.exit(1);
+            }
+
+            existingVariants.addAll(verifyAndReadExisting(vcfReader));
+            vcfReader.close();
+        }
+        catch(Exception e)
+        {
+            SG_LOGGER.error("failed to read input VCF({})", mInputVcf, e.toString());
+            e.printStackTrace();
             System.exit(1);
         }
 
         SG_LOGGER.info("writing to file: {}", mConfig.OutputFile);
         final VariantVCF outputVCF = new VariantVCF(mRefGenome, mConfig, inputHeader);
 
-        final List<VariantContext> existingVariants = verifyAndReadExisting(vcfReader);
-
-        if(existingVariants == null)
+        if(existingVariants.isEmpty())
         {
-            System.exit(1);
+            outputVCF.close();
+            SG_LOGGER.info("input VCF empty", existingVariants.size());
+            return;
         }
 
         SG_LOGGER.info("loaded {} variants", existingVariants.size());
@@ -159,7 +175,6 @@ public class SageAppendApplication
             }
         }
 
-        vcfReader.close();
         outputVCF.close();
 
         mRefGenome.close();
@@ -168,26 +183,18 @@ public class SageAppendApplication
         SG_LOGGER.info("completed in {} seconds", String.format("%.1f",timeTaken / 1000.0));
     }
 
-    private List<VariantContext> verifyAndReadExisting(final AbstractFeatureReader<VariantContext, LineIterator> vcfReader)
+    private List<VariantContext> verifyAndReadExisting(final AbstractFeatureReader<VariantContext, LineIterator> vcfReader) throws IOException
     {
-        try
+        List<VariantContext> result = Lists.newArrayList();
+
+        VCFHeader header = (VCFHeader) vcfReader.getHeader();
+
+        for(VariantContext variantContext : vcfReader.iterator())
         {
-            List<VariantContext> result = Lists.newArrayList();
-
-            VCFHeader header = (VCFHeader) vcfReader.getHeader();
-
-            for(VariantContext variantContext : vcfReader.iterator())
-            {
-                result.add(variantContext.fullyDecode(header, false));
-            }
-
-            return result;
+            result.add(variantContext.fullyDecode(header, false));
         }
-        catch(IOException e)
-        {
-            SG_LOGGER.error("failed to read intput VCF: {}", e.toString());
-            return null;
-        }
+
+        return result;
     }
 
     private boolean validateInputHeader(VCFHeader header)

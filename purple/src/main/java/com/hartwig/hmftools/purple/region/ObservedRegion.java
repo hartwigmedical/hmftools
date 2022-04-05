@@ -1,6 +1,7 @@
-package com.hartwig.hmftools.common.purple.region;
+package com.hartwig.hmftools.purple.region;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 public interface ObservedRegion extends GenomeRegion {

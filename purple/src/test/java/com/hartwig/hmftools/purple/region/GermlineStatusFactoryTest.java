@@ -1,16 +1,16 @@
 package com.hartwig.hmftools.purple.region;
 
-import static com.hartwig.hmftools.common.purple.region.GermlineStatus.AMPLIFICATION;
-import static com.hartwig.hmftools.common.purple.region.GermlineStatus.DIPLOID;
-import static com.hartwig.hmftools.common.purple.region.GermlineStatus.HET_DELETION;
-import static com.hartwig.hmftools.common.purple.region.GermlineStatus.HOM_DELETION;
-import static com.hartwig.hmftools.common.purple.region.GermlineStatus.NOISE;
-import static com.hartwig.hmftools.common.purple.region.GermlineStatus.UNKNOWN;
+import static com.hartwig.hmftools.common.purple.GermlineStatus.AMPLIFICATION;
+import static com.hartwig.hmftools.common.purple.GermlineStatus.DIPLOID;
+import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
+import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
+import static com.hartwig.hmftools.common.purple.GermlineStatus.NOISE;
+import static com.hartwig.hmftools.common.purple.GermlineStatus.UNKNOWN;
 
 import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.cobalt.CobaltTestUtils;
-import com.hartwig.hmftools.common.purple.region.GermlineStatus;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

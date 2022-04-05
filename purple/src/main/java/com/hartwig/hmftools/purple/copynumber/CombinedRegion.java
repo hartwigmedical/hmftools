@@ -5,13 +5,11 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
-import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.purple.region.GermlineStatus;
-import com.hartwig.hmftools.common.purple.region.ModifiableFittedRegion;
+import com.hartwig.hmftools.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
-
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.purple.region.ModifiableFittedRegion;
 
 public class CombinedRegion implements GenomeRegion
 {
