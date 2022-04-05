@@ -31,12 +31,10 @@ public class GeneDataCache
 {
     private final EnsemblDataCache mEnsemblDataCache;
 
+    private final String mDriverGeneFile;
     private final List<DriverGene> mDriverGenes;
     private final Set<String> mDriverGeneNames;
     private final Map<String,List<String>> mOtherReportableTranscripts;
-
-    private final Set<String> mMissingTranscripts; // no longer in Ensembl
-    private final Map<String,TranscriptData> mTranscriptDataMap; // transcripts keyed by trans name, built on demand
 
     private final GeneNameMapping mGeneNameMapping; // only relevant when converting from or checking SnpEff names
 
@@ -53,13 +51,10 @@ public class GeneDataCache
     {
         mEnsemblDataCache = new EnsemblDataCache(ensemblDir, refGenVersion);
 
+        mDriverGeneFile = driverGeneFile;
         mDriverGenes = Lists.newArrayList();
         mDriverGeneNames = Sets.newHashSet();
         mOtherReportableTranscripts = Maps.newHashMap();
-        loadDriverGenes(driverGeneFile);
-
-        mTranscriptDataMap = Maps.newHashMap();
-        mMissingTranscripts = Sets.newHashSet();
 
         mUseIndexing = useIndexing;
         mCurrentChromosome = null;
@@ -78,12 +73,18 @@ public class GeneDataCache
 
     public boolean loadCache(boolean canonicalOnly, boolean onlyDriverGenes)
     {
+        if(!loadDriverGenes(mDriverGeneFile))
+            return false;
+
         mEnsemblDataCache.setRequiredData(true, false, false, canonicalOnly);
 
         if(onlyDriverGenes)
         {
             if(!mEnsemblDataCache.load(true))
+            {
+                PV_LOGGER.error("invalid Ensembl data cache");
                 return false;
+            }
 
             for(String geneName : mDriverGeneNames)
             {
@@ -92,7 +93,7 @@ public class GeneDataCache
                 if(geneData == null)
                 {
                     PV_LOGGER.error("gene({}) missing from Ensembl cache", geneName);
-                    continue;
+                    return false;
                 }
             }
 
@@ -107,7 +108,10 @@ public class GeneDataCache
         else
         {
             if(!mEnsemblDataCache.load(false))
+            {
+                PV_LOGGER.error("invalid Ensembl data cache");
                 return false;
+            }
         }
 
         mEnsemblDataCache.createGeneIdDataMap();
@@ -115,10 +119,10 @@ public class GeneDataCache
         return true;
     }
 
-    private void loadDriverGenes(final String driverGeneFile)
+    private boolean loadDriverGenes(final String driverGeneFile)
     {
         if(driverGeneFile == null || driverGeneFile.isEmpty())
-            return;
+            return true;
 
         try
         {
@@ -141,7 +145,10 @@ public class GeneDataCache
         catch (IOException e)
         {
             PV_LOGGER.error("failed to load driver gene panel file({}): {}", driverGeneFile, e.toString());
+            return false;
         }
+
+        return true;
     }
 
     public List<TranscriptData> findTranscripts(final String geneId, int startPosition, int endPosition)
@@ -154,28 +161,6 @@ public class GeneDataCache
         return transDataList.stream()
                 .filter(x -> withinTransRange(x, startPosition, endPosition))
                 .collect(Collectors.toList());
-    }
-
-    public TranscriptData getTranscriptData(final String geneId, final String transName)
-    {
-        if(mMissingTranscripts.contains(transName))
-            return null;
-
-        TranscriptData transData = mTranscriptDataMap.get(transName);
-
-        if(transData != null)
-            return transData;
-
-        transData = mEnsemblDataCache.getTranscriptData(geneId, transName);
-
-        if(transData == null)
-        {
-            mMissingTranscripts.add(transName);
-            return null;
-        }
-
-        mTranscriptDataMap.put(transName, transData);
-        return transData;
     }
 
     public List<GeneData> findGenes(final String chromosome, int startPosition, int endPosition)

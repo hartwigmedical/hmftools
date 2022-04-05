@@ -104,7 +104,7 @@ public class PaveApplication
 
         if(!mGeneDataCache.loadCache(mConfig.OnlyCanonical, false))
         {
-            PV_LOGGER.error("Ensembl data cache loading failed, exiting");
+            PV_LOGGER.error("gene data cache loading failed, exiting");
             System.exit(1);
         }
 
