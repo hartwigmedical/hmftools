@@ -43,8 +43,7 @@ public class HaplotypeQC
 
     public List<String> header()
     {
-        return Lists.newArrayList(
-                "UnusedHaplotypes", "UnusedHaplotypeMaxFrags");
+        return Lists.newArrayList("UnusedHaplotypes", "UnusedHaplotypeMaxFrags");
     }
 
     public List<String> body()
@@ -119,7 +118,7 @@ public class HaplotypeQC
             {
                 maxSupport = max(maxSupport, unmatched.matchingFragmentCount());
                 unusedCount++;
-                LL_LOGGER.warn("  UNMATCHED_HAPLTOYPE {}", unmatched);
+                LL_LOGGER.info("  UNMATCHED_HAPLTOYPE {}", unmatched);
             }
         }
 
