@@ -122,8 +122,7 @@ public final class EvidenceReportingFunctions {
 
                 if (highestOffLabel.isHigher(evidence.level())) {
                     return false;
-                }
-                 if (highestOnLabel == null || highestOffLabel.isHigher(highestOnLabel)) {
+                } else if (highestOnLabel == null || highestOffLabel.isHigher(highestOnLabel)) {
                     return highestOnLabel == null || highestOffLabel.isHigher(highestOnLabel);
                 }
             }
