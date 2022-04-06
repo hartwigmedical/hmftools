@@ -378,6 +378,8 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   - The actionable output is the database that [PROTECT](../protect/README.md) bases its clinical evidence matching on.
   
 ## Version History and Download Links
+- [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.10)
+  - Solve issues of v1.9
 - [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.9)
   - Support the raw input string of the input knowledgebases to the actionable output files
   - Support wild-type events as gene level evidences 
