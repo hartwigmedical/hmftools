@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.protect;
 import java.util.Objects;
 import java.util.Set;
 
-import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 
@@ -32,12 +31,6 @@ public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
     @Nullable
     public abstract Boolean eventIsHighDriver();
 
-    @NotNull
-    public abstract ProtectEvidenceType evidenceType();
-
-    @Nullable
-    public abstract Integer rangeRank();
-
     public abstract boolean germline();
 
     public abstract boolean reported();
@@ -57,7 +50,7 @@ public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
     public abstract Set<String> evidenceUrls();
 
     @NotNull
-    public abstract ProtectSource protectSources();
+    public abstract Set<ProtectSource> protectSources();
 
     @Override
     public int compareTo(@NotNull final ProtectEvidence o) {
@@ -86,16 +79,6 @@ public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
             return eventCompare;
         }
 
-        int evidenceTypeCompare = evidenceType().compareTo(o.evidenceType());
-        if (evidenceTypeCompare != 0) {
-            return evidenceTypeCompare;
-        }
-
-        int rangeRankCompare = compareInteger(rangeRank(), o.rangeRank());
-        if (rangeRankCompare != 0) {
-            return rangeRankCompare;
-        }
-
         int levelCompare = level().compareTo(o.level());
         if (levelCompare != 0) {
             return levelCompare;
@@ -117,18 +100,6 @@ public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
         }
 
         return 0;
-    }
-
-    public static int compareInteger(@Nullable Integer int1, @Nullable Integer int2) {
-        if (Objects.equals(int1, int2)) {
-            return 0;
-        } else if (int1 == null) {
-            return -1;
-        } else if (int2 == null) {
-            return 1;
-        } else {
-            return int1.compareTo(int2);
-        }
     }
 
     public static int compareBoolean(@Nullable Boolean boolean1, @Nullable Boolean boolean2) {

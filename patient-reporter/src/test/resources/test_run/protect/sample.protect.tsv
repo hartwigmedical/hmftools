@@ -1,2 +1,2 @@
-gene	transcript	isCanonical	event	eventIsHighDriver	evidenceType	rangeRank	germline	reported	treatment	onLabel	level	direction	evidenceUrls	sources	sourceEvent	sourceUrls
-A	123	true	p.1M	true	ANY_MUTATION		true	true	Olaparib	false	A	RESPONSIVE		vicc_cgi	mut	A
+gene	transcript	isCanonical	event	eventIsHighDriver	germline	reported	treatment	onLabel	level	direction	evidenceUrls	sources
+BRAF	123	true	p.Val600Glu	true	false	true	Cobimetinib + Vemurafenib	false	A	RESPONSIVE	url	vicc_cgi|hotspot|https://www.google.com/#q=FDA|HOTSPOT_MUTATION||

@@ -11,6 +11,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
+import com.hartwig.hmftools.common.protect.ProtectSource;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -223,10 +224,13 @@ public class ClinicalEvidenceFunctions {
     private static String determineEvidenceType(@NotNull ProtectEvidence evidence) {
 
         String evidenceRank = Strings.EMPTY;
-        String evidenceSource = evidence.evidenceType().display();
-        if (evidence.evidenceType().equals(ProtectEvidenceType.CODON_MUTATION) || evidence.evidenceType()
-                .equals(ProtectEvidenceType.EXON_MUTATION)) {
-            evidenceRank = String.valueOf(evidence.rangeRank());
+        String evidenceSource = Strings.EMPTY;
+        for (ProtectSource source: evidence.protectSources()) {
+            evidenceSource = source.evidenceType().display();
+            if (source.evidenceType().equals(ProtectEvidenceType.CODON_MUTATION) || source.evidenceType()
+                    .equals(ProtectEvidenceType.EXON_MUTATION)) {
+                evidenceRank = String.valueOf(source.rangeRank());
+            }
         }
 
         String evidenceMerged;
