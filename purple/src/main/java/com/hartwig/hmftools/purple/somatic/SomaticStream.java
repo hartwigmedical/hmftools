@@ -20,7 +20,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.purple.config.ReferenceData;
@@ -128,7 +128,7 @@ public class SomaticStream
     public List<VariantContextDecorator> downsampledVariants() { return mDownsampledVariants; }
 
     public void processAndWrite(
-            final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers, final List<FittedRegion> fittedRegions)
+            final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers, final List<ObservedRegion> fittedRegions)
     {
         if(!mEnabled || mPeakModel == null)
             return;

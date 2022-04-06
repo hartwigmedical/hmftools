@@ -3,10 +3,10 @@ package com.hartwig.hmftools.purple.copynumber;
 import java.util.List;
 
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
-import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.purple.region.GermlineStatus;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -31,7 +31,7 @@ class ExtendNonDiploid extends ExtendRegion
         for(int i = 0; i < regions.size(); i++)
         {
             CombinedRegion region = regions.get(i);
-            FittedRegion next = i < regions.size() - 1 ? regions.get(i + 1).region() : null;
+            ObservedRegion next = i < regions.size() - 1 ? regions.get(i + 1).region() : null;
             if(region.copyNumberMethod().equals(CopyNumberMethod.UNKNOWN) && isEligible(region.region(), next))
             {
                 region.setTumorCopyNumber(CopyNumberMethod.NON_DIPLOID, region.region().refNormalisedCopyNumber());
@@ -40,20 +40,20 @@ class ExtendNonDiploid extends ExtendRegion
         return super.extend(regions);
     }
 
-    static boolean isEligible(@NotNull final FittedRegion region, @Nullable final FittedRegion neighbour)
+    static boolean isEligible(@NotNull final ObservedRegion region, @Nullable final ObservedRegion neighbour)
     {
         return Doubles.greaterThan(region.observedTumorRatio(), region.observedNormalRatio()) && !region.germlineStatus()
                 .equals(GermlineStatus.DIPLOID) && !region.germlineStatus().equals(GermlineStatus.NOISE) && region.depthWindowCount() > 0
                 && !isBoundByCentromere(region, neighbour) && isBoundBySV(region, neighbour);
     }
 
-    private static boolean isBoundByCentromere(@NotNull final FittedRegion region, @Nullable final FittedRegion neighbour)
+    private static boolean isBoundByCentromere(@NotNull final ObservedRegion region, @Nullable final ObservedRegion neighbour)
     {
         return region.support().equals(SegmentSupport.CENTROMERE) || (neighbour != null && neighbour.support()
                 .equals(SegmentSupport.CENTROMERE));
     }
 
-    private static boolean isBoundBySV(@NotNull final FittedRegion region, @Nullable final FittedRegion neighbour)
+    private static boolean isBoundBySV(@NotNull final ObservedRegion region, @Nullable final ObservedRegion neighbour)
     {
         return region.support().isSV() || (neighbour != null && neighbour.support().isSV());
     }

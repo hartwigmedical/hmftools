@@ -10,8 +10,7 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.gc.GCProfileFactory;
-import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.common.purple.region.ObservedRegion;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.purple.config.AmberData;
 import com.hartwig.hmftools.purple.config.CobaltData;
@@ -21,8 +20,6 @@ import com.hartwig.hmftools.purple.segment.PurpleSegment;
 import com.hartwig.hmftools.purple.segment.PurpleSegmentFactory;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.purple.segment.PCFPositionsSupplier;
-
-import org.jetbrains.annotations.NotNull;
 
 public class Segmentation
 {
@@ -44,8 +41,8 @@ public class Segmentation
     {
         final Multimap<Chromosome, PCFPosition> pcfPositions = PCFPositionsSupplier.createPositions(amberData, cobaltData);
 
-        final PurpleSegmentFactory factory = new PurpleSegmentFactory(mWindowSize,
-                mReferenceData.Centromeres, mReferenceData.ChromosomeLengths);
+        final PurpleSegmentFactory factory = new PurpleSegmentFactory(
+                mWindowSize, mReferenceData.Centromeres, mReferenceData.ChromosomeLengths);
 
         final List<PurpleSegment> segments = factory.segment(structuralVariants, pcfPositions, cobaltData.Ratios);
 

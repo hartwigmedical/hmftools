@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.copynumber;
 
-import static com.hartwig.hmftools.common.purple.PurpleTestUtils.createDefaultFittedRegion;
+import static com.hartwig.hmftools.purple.TestUtils.createDefaultFittedRegion;
 
 import static org.junit.Assert.assertEquals;
 
@@ -10,8 +10,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurityAdjusterTypicalChromosome;
 import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.purple.region.GermlineStatus;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
@@ -30,8 +30,8 @@ public class ExtendDiploidTest
     @Test
     public void testFavourTumorRatioCountOverLength()
     {
-        final FittedRegion dubious1 = createDubiousRegion(1, 50000, 2, 10, 0);
-        final FittedRegion dubious2 = createDubiousRegion(50001, 60000, 3, 20, 0);
+        final ObservedRegion dubious1 = createDubiousRegion(1, 50000, 2, 10, 0);
+        final ObservedRegion dubious2 = createDubiousRegion(50001, 60000, 3, 20, 0);
 
         final List<CombinedRegion> result = PURE_VICTIM.extendDiploid(Lists.newArrayList(dubious1, dubious2));
         assertEquals(1, result.size());
@@ -41,10 +41,10 @@ public class ExtendDiploidTest
     @Test
     public void testCentromereIsDubious()
     {
-        final FittedRegion valid = createValidSomatic(1, 10000, 1, 1, SegmentSupport.TELOMERE);
-        final FittedRegion dubiousCentromere = createRegion(10001, 20000, 4, 8, 0, SegmentSupport.CENTROMERE);
-        final FittedRegion dubious1 = createRegion(20001, 30000, 4, 9, 0, SegmentSupport.NONE);
-        final FittedRegion dubious2 = createRegion(30001, 40000, 4, 10, 0, SegmentSupport.NONE);
+        final ObservedRegion valid = createValidSomatic(1, 10000, 1, 1, SegmentSupport.TELOMERE);
+        final ObservedRegion dubiousCentromere = createRegion(10001, 20000, 4, 8, 0, SegmentSupport.CENTROMERE);
+        final ObservedRegion dubious1 = createRegion(20001, 30000, 4, 9, 0, SegmentSupport.NONE);
+        final ObservedRegion dubious2 = createRegion(30001, 40000, 4, 10, 0, SegmentSupport.NONE);
 
         final List<CombinedRegion> result = PURE_VICTIM.extendDiploid(Lists.newArrayList(valid, dubiousCentromere, dubious1, dubious2));
         assertEquals(2, result.size());
@@ -55,9 +55,9 @@ public class ExtendDiploidTest
     @Test
     public void testDubiousRegionGetsIncludedFromLeft()
     {
-        final FittedRegion somaticLeft = createValidSomatic(1, 10000, 3.0, 50, SegmentSupport.BND);
-        final FittedRegion dubious = createDubiousRegion(10001, 20000, 2.0, 10);
-        final FittedRegion somaticRight = createValidSomatic(20001, 30000, 3.0, 40, SegmentSupport.NONE);
+        final ObservedRegion somaticLeft = createValidSomatic(1, 10000, 3.0, 50, SegmentSupport.BND);
+        final ObservedRegion dubious = createDubiousRegion(10001, 20000, 2.0, 10);
+        final ObservedRegion somaticRight = createValidSomatic(20001, 30000, 3.0, 40, SegmentSupport.NONE);
 
         final List<CombinedRegion> result = PURE_VICTIM.extendDiploid(Lists.newArrayList(somaticLeft, dubious, somaticRight));
         assertEquals(1, result.size());
@@ -67,9 +67,9 @@ public class ExtendDiploidTest
     @Test
     public void testDubiousRegionGetsIncludedFromRight()
     {
-        final FittedRegion somaticLeft = createValidSomatic(1, 10000, 3.0, 30, SegmentSupport.BND);
-        final FittedRegion dubious = createDubiousRegion(10001, 20000, 2.0, 10);
-        final FittedRegion somaticRight = createValidSomatic(20001, 30000, 3.0, 40, SegmentSupport.NONE);
+        final ObservedRegion somaticLeft = createValidSomatic(1, 10000, 3.0, 30, SegmentSupport.BND);
+        final ObservedRegion dubious = createDubiousRegion(10001, 20000, 2.0, 10);
+        final ObservedRegion somaticRight = createValidSomatic(20001, 30000, 3.0, 40, SegmentSupport.NONE);
 
         final List<CombinedRegion> result = PURE_VICTIM.extendDiploid(Lists.newArrayList(somaticLeft, dubious, somaticRight));
         assertEquals(1, result.size());
@@ -79,9 +79,9 @@ public class ExtendDiploidTest
     @Test
     public void testDubiousRegionGetsExcludedBecauseOfSV()
     {
-        final FittedRegion somaticLeft = createValidSomatic(1, 10000, 3.0, 50, SegmentSupport.BND);
-        final FittedRegion dubious = createDubiousRegion(10001, 20000, 2.0, 10);
-        final FittedRegion somaticRight = createValidSomatic(20001, 30000, 3.0, 40, SegmentSupport.BND);
+        final ObservedRegion somaticLeft = createValidSomatic(1, 10000, 3.0, 50, SegmentSupport.BND);
+        final ObservedRegion dubious = createDubiousRegion(10001, 20000, 2.0, 10);
+        final ObservedRegion somaticRight = createValidSomatic(20001, 30000, 3.0, 40, SegmentSupport.BND);
 
         final List<CombinedRegion> result = PURE_VICTIM.extendDiploid(Lists.newArrayList(somaticLeft, dubious, somaticRight));
         assertEquals(3, result.size());
@@ -90,11 +90,11 @@ public class ExtendDiploidTest
     @Test
     public void testMultipleDubiousRegionsGetIncluded()
     {
-        final FittedRegion somaticLeft = createValidSomatic(1, 10000, 3.0, 50, SegmentSupport.BND);
-        final FittedRegion dubious1 = createDubiousRegion(10001, 11000, 2.0, 20);
-        final FittedRegion dubious2 = createDubiousRegion(11001, 12000, 2.0, 9);
-        final FittedRegion dubious3 = createDubiousRegion(12001, 20000, 2.0, 20);
-        final FittedRegion somaticRight = createValidSomatic(20001, 30000, 3.0, 40, SegmentSupport.NONE);
+        final ObservedRegion somaticLeft = createValidSomatic(1, 10000, 3.0, 50, SegmentSupport.BND);
+        final ObservedRegion dubious1 = createDubiousRegion(10001, 11000, 2.0, 20);
+        final ObservedRegion dubious2 = createDubiousRegion(11001, 12000, 2.0, 9);
+        final ObservedRegion dubious3 = createDubiousRegion(12001, 20000, 2.0, 20);
+        final ObservedRegion somaticRight = createValidSomatic(20001, 30000, 3.0, 40, SegmentSupport.NONE);
 
         final List<CombinedRegion> result =
                 PURE_VICTIM.extendDiploid(Lists.newArrayList(somaticLeft, dubious1, dubious2, dubious3, somaticRight));
@@ -105,11 +105,11 @@ public class ExtendDiploidTest
     @Test
     public void testDubiousRegionGetsExcludedBecauseOfTooManyConsecutiveRatioCounts()
     {
-        final FittedRegion somaticLeft = createValidSomatic(1, 10000, 3.0, 50, SegmentSupport.BND);
-        final FittedRegion dubious1 = createDubiousRegion(10001, 11000, 2.0, 20);
-        final FittedRegion dubious2 = createDubiousRegion(11001, 12000, 2.0, 10);
-        final FittedRegion dubious3 = createDubiousRegion(12001, 20000, 2.0, 20);
-        final FittedRegion somaticRight = createValidSomatic(20001, 30000, 3.0, 40, SegmentSupport.NONE);
+        final ObservedRegion somaticLeft = createValidSomatic(1, 10000, 3.0, 50, SegmentSupport.BND);
+        final ObservedRegion dubious1 = createDubiousRegion(10001, 11000, 2.0, 20);
+        final ObservedRegion dubious2 = createDubiousRegion(11001, 12000, 2.0, 10);
+        final ObservedRegion dubious3 = createDubiousRegion(12001, 20000, 2.0, 20);
+        final ObservedRegion somaticRight = createValidSomatic(20001, 30000, 3.0, 40, SegmentSupport.NONE);
 
         final List<CombinedRegion> result =
                 PURE_VICTIM.extendDiploid(Lists.newArrayList(somaticLeft, dubious1, dubious2, dubious3, somaticRight));
@@ -122,11 +122,11 @@ public class ExtendDiploidTest
     @Test
     public void testTowardsCentromere()
     {
-        final FittedRegion somaticLeft = createValidSomatic(1, 10000, 3.0, 50, SegmentSupport.BND);
-        final FittedRegion dubious1 = createDubiousRegion(10001, 11000, 2.0, 11);
-        final FittedRegion dubious2 = createDubiousRegion(11001, 12000, 2.0, 11);
-        final FittedRegion dubious3 = createDubiousRegion(12001, 20000, 2.0, 11);
-        final FittedRegion somaticRight = createValidSomatic(20001, 30000, 3.0, 40, SegmentSupport.CENTROMERE);
+        final ObservedRegion somaticLeft = createValidSomatic(1, 10000, 3.0, 50, SegmentSupport.BND);
+        final ObservedRegion dubious1 = createDubiousRegion(10001, 11000, 2.0, 11);
+        final ObservedRegion dubious2 = createDubiousRegion(11001, 12000, 2.0, 11);
+        final ObservedRegion dubious3 = createDubiousRegion(12001, 20000, 2.0, 11);
+        final ObservedRegion somaticRight = createValidSomatic(20001, 30000, 3.0, 40, SegmentSupport.CENTROMERE);
 
         final List<CombinedRegion> result =
                 PURE_VICTIM.extendDiploid(Lists.newArrayList(somaticLeft, dubious1, dubious2, dubious3, somaticRight));
@@ -138,11 +138,11 @@ public class ExtendDiploidTest
     @Test
     public void testTooBigTowardsCentromere()
     {
-        final FittedRegion somaticLeft = createValidSomatic(1, 10000, 3.0, 50, SegmentSupport.BND);
-        final FittedRegion dubious1 = createDubiousRegion(10001, 11000, 2.0, 21);
-        final FittedRegion dubious2 = createDubiousRegion(11001, 12000, 2.0, 21);
-        final FittedRegion dubious3 = createDubiousRegion(12001, 20000, 2.0, 21);
-        final FittedRegion somaticRight = createValidSomatic(20001, 30000, 3.0, 40, SegmentSupport.CENTROMERE);
+        final ObservedRegion somaticLeft = createValidSomatic(1, 10000, 3.0, 50, SegmentSupport.BND);
+        final ObservedRegion dubious1 = createDubiousRegion(10001, 11000, 2.0, 21);
+        final ObservedRegion dubious2 = createDubiousRegion(11001, 12000, 2.0, 21);
+        final ObservedRegion dubious3 = createDubiousRegion(12001, 20000, 2.0, 21);
+        final ObservedRegion somaticRight = createValidSomatic(20001, 30000, 3.0, 40, SegmentSupport.CENTROMERE);
 
         final List<CombinedRegion> result =
                 PURE_VICTIM.extendDiploid(Lists.newArrayList(somaticLeft, dubious1, dubious2, dubious3, somaticRight));
@@ -155,9 +155,9 @@ public class ExtendDiploidTest
     @Test
     public void testInvalidGermlineGetsIgnored()
     {
-        final FittedRegion somatic = createFittedRegion(1, 10000, 3.0, GermlineStatus.DIPLOID, SegmentSupport.BND);
-        final FittedRegion germline = createFittedRegion(10001, 20000, 4, GermlineStatus.AMPLIFICATION, SegmentSupport.NONE);
-        final List<FittedRegion> regions = Lists.newArrayList(somatic, germline);
+        final ObservedRegion somatic = createFittedRegion(1, 10000, 3.0, GermlineStatus.DIPLOID, SegmentSupport.BND);
+        final ObservedRegion germline = createFittedRegion(10001, 20000, 4, GermlineStatus.AMPLIFICATION, SegmentSupport.NONE);
+        final List<ObservedRegion> regions = Lists.newArrayList(somatic, germline);
 
         final List<CombinedRegion> result = PURE_VICTIM.extendDiploid(regions);
         assertEquals(1, result.size());
@@ -167,9 +167,9 @@ public class ExtendDiploidTest
     @Test
     public void testInvalidGermlineIsKeptWithSVSupport()
     {
-        final FittedRegion somatic = createFittedRegion(1, 10000, 3.0, GermlineStatus.DIPLOID, SegmentSupport.BND);
-        final FittedRegion germline = createFittedRegion(10001, 20000, 4.0, GermlineStatus.AMPLIFICATION, SegmentSupport.BND);
-        final List<FittedRegion> regions = Lists.newArrayList(somatic, germline);
+        final ObservedRegion somatic = createFittedRegion(1, 10000, 3.0, GermlineStatus.DIPLOID, SegmentSupport.BND);
+        final ObservedRegion germline = createFittedRegion(10001, 20000, 4.0, GermlineStatus.AMPLIFICATION, SegmentSupport.BND);
+        final List<ObservedRegion> regions = Lists.newArrayList(somatic, germline);
 
         final List<CombinedRegion> result = PURE_VICTIM.extendDiploid(regions);
         assertEquals(2, result.size());
@@ -185,64 +185,64 @@ public class ExtendDiploidTest
     }
 
     @NotNull
-    private static FittedRegion createFittedRegion(int start, int end, double tumorCopyNumber, GermlineStatus status,
+    private static ObservedRegion createFittedRegion(int start, int end, double tumorCopyNumber, GermlineStatus status,
             SegmentSupport support)
     {
         return createFittedRegion(start, end, tumorCopyNumber, 1.1, status, support);
     }
 
     @NotNull
-    private static FittedRegion createValidSomatic(int start, int end, double copyNumber, int bafCount, SegmentSupport support)
+    private static ObservedRegion createValidSomatic(int start, int end, double copyNumber, int bafCount, SegmentSupport support)
     {
-        return createDefaultFittedRegion(CHROMOSOME, start, end)
-                .germlineStatus(GermlineStatus.DIPLOID)
-                .tumorCopyNumber(copyNumber)
-                .refNormalisedCopyNumber(copyNumber)
-                .observedNormalRatio(0.5)
-                .bafCount(bafCount)
-                .support(support)
-                .depthWindowCount(MIN_TUMOR_COUNT_AT_CENTROMERE)
-                .build();
+        ObservedRegion region = createDefaultFittedRegion(CHROMOSOME, start, end);
+        region.setGermlineStatus(GermlineStatus.DIPLOID);
+        region.setTumorCopyNumber(copyNumber);
+        region.setRefNormalisedCopyNumber(copyNumber);
+        region.setObservedNormalRatio(0.5);
+        region.setBafCount(bafCount);
+        region.setSupport(support);
+        region.setDepthWindowCount(MIN_TUMOR_COUNT_AT_CENTROMERE);
+        return region;
     }
 
     @NotNull
-    private static FittedRegion createDubiousRegion(int start, int end, double copyNumber, int ratioCount)
+    private static ObservedRegion createDubiousRegion(int start, int end, double copyNumber, int ratioCount)
     {
         return createDubiousRegion(start, end, copyNumber, ratioCount, 1);
     }
 
     @NotNull
-    private static FittedRegion createDubiousRegion(int start, int end, double copyNumber, int ratioCount, int bafCount)
+    private static ObservedRegion createDubiousRegion(int start, int end, double copyNumber, int ratioCount, int bafCount)
     {
         return createRegion(start, end, copyNumber, ratioCount, bafCount, SegmentSupport.NONE);
     }
 
     @NotNull
-    private static FittedRegion createRegion(int start, int end, double copyNumber, int ratioCount, int bafCount,
+    private static ObservedRegion createRegion(int start, int end, double copyNumber, int ratioCount, int bafCount,
             SegmentSupport support)
     {
-        return createDefaultFittedRegion(CHROMOSOME, start, end)
-                .germlineStatus(GermlineStatus.DIPLOID)
-                .tumorCopyNumber(copyNumber)
-                .refNormalisedCopyNumber(copyNumber)
-                .observedNormalRatio(0.5)
-                .bafCount(bafCount)
-                .support(support)
-                .depthWindowCount(ratioCount)
-                .build();
+        ObservedRegion region = createDefaultFittedRegion(CHROMOSOME, start, end);
+        region.setGermlineStatus(GermlineStatus.DIPLOID);
+        region.setTumorCopyNumber(copyNumber);
+        region.setRefNormalisedCopyNumber(copyNumber);
+        region.setObservedNormalRatio(0.5);
+        region.setBafCount(bafCount);
+        region.setSupport(support);
+        region.setDepthWindowCount(ratioCount);
+        return region;
     }
 
     @NotNull
-    private static FittedRegion createFittedRegion(int start, int end, double tumorCopyNumber, double observedNormalRatio,
+    private static ObservedRegion createFittedRegion(int start, int end, double tumorCopyNumber, double observedNormalRatio,
             GermlineStatus status, SegmentSupport support)
     {
-        return createDefaultFittedRegion(CHROMOSOME, start, end)
-                .germlineStatus(status)
-                .tumorCopyNumber(tumorCopyNumber)
-                .refNormalisedCopyNumber(tumorCopyNumber)
-                .observedNormalRatio(observedNormalRatio)
-                .bafCount(50)
-                .support(support)
-                .build();
+        ObservedRegion region = createDefaultFittedRegion(CHROMOSOME, start, end);
+        region.setGermlineStatus(status);
+        region.setTumorCopyNumber(tumorCopyNumber);
+        region.setRefNormalisedCopyNumber(tumorCopyNumber);
+        region.setObservedNormalRatio(observedNormalRatio);
+        region.setBafCount(50);
+        region.setSupport(support);
+        return region;
     }
 }

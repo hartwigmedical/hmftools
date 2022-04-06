@@ -14,13 +14,18 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
+
+import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
@@ -123,6 +128,25 @@ public final class TestUtils
                 .log10PError(logError)
                 .unfiltered()
                 .make(true);
+    }
+
+    public static ObservedRegion createObservedRegion(@NotNull final String chromosome, final int start, final int end)
+    {
+        return new ObservedRegion(
+                chromosome, start, end, true, SegmentSupport.NONE, 1, 0.5, 1,
+                1, 1, 1, GermlineStatus.DIPLOID, false,
+                0.93, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0);
+    }
+
+    @NotNull
+    public static ObservedRegion createDefaultFittedRegion(@NotNull final String chromosome, final int start, final int end)
+    {
+        return new ObservedRegion(
+                chromosome, start, end, true, SegmentSupport.NONE, 1, 0.5, 1,
+                1, 1, 1, GermlineStatus.DIPLOID, false,
+                0.93, 0, 0, 0, 0, 0,
+                0, 2, 2, 0.5, 0, 0);
     }
 
 }

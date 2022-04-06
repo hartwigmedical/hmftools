@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.germline;
 
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
@@ -76,7 +77,7 @@ public class GermlinePonCache
 
         try
         {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+            BufferedReader fileReader = createBufferedReader(filename);
 
             int itemCount = 0;
             String line = fileReader.readLine();
@@ -124,7 +125,7 @@ public class GermlinePonCache
 
         try
         {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+            BufferedReader fileReader = createBufferedReader(filename);
 
             int itemCount = 0;
             String line = fileReader.readLine();

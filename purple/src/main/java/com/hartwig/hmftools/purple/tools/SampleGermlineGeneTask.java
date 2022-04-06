@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple.tools;
 
-import static com.hartwig.hmftools.common.purple.region.GermlineStatus.HET_DELETION;
-import static com.hartwig.hmftools.common.purple.region.GermlineStatus.HOM_DELETION;
+import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
+import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.tools.GermlineGeneAnalyser.writeGeneOverlapData;
@@ -20,8 +20,8 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
-import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.purple.region.SegmentFile;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
+import com.hartwig.hmftools.purple.segment.SegmentFile;
 
 import org.apache.commons.compress.utils.Lists;
 
@@ -70,11 +70,11 @@ public class SampleGermlineGeneTask implements Callable
     private void processSample(final String sampleId)
     {
         final Map<String,List<PurpleCopyNumber>> copyNumberMap = Maps.newHashMap();
-        final Map<String,List<FittedRegion>> fittedRegionMap = Maps.newHashMap();
+        final Map<String,List<ObservedRegion>> fittedRegionMap = Maps.newHashMap();
 
         loadPurpleData(sampleId, copyNumberMap, fittedRegionMap);
 
-        for(Map.Entry<String,List<FittedRegion>> entry : fittedRegionMap.entrySet())
+        for(Map.Entry<String,List<ObservedRegion>> entry : fittedRegionMap.entrySet())
         {
             String chromosome = entry.getKey();
 
@@ -84,7 +84,7 @@ public class SampleGermlineGeneTask implements Callable
             if(copyNumbers == null || geneDataList == null)
                 continue;
 
-            for(FittedRegion region : entry.getValue())
+            for(ObservedRegion region : entry.getValue())
             {
                 if(region.germlineStatus() != HOM_DELETION && region.germlineStatus() != HET_DELETION)
                     continue;
@@ -134,7 +134,7 @@ public class SampleGermlineGeneTask implements Callable
 
     private void loadPurpleData(
             final String sampleId, final Map<String,List<PurpleCopyNumber>> copyNumberMap,
-            final Map<String,List<FittedRegion>> fittedRegionMap)
+            final Map<String,List<ObservedRegion>> fittedRegionMap)
     {
         String samplePurpleDir = mPurpleDir.contains("*") ? mPurpleDir.replaceAll("\\*", sampleId) : mPurpleDir;
 
@@ -143,13 +143,13 @@ public class SampleGermlineGeneTask implements Callable
             List<PurpleCopyNumber> allCopyNumbers = PurpleCopyNumberFile.read(
                     PurpleCopyNumberFile.generateFilenameForReading(samplePurpleDir, sampleId));
 
-            List<FittedRegion> fittedRegions = SegmentFile.read(SegmentFile.generateFilename(samplePurpleDir, sampleId)).stream()
+            List<ObservedRegion> fittedRegions = SegmentFile.read(SegmentFile.generateFilename(samplePurpleDir, sampleId)).stream()
                 .filter(x -> x.germlineStatus() == HET_DELETION || x.germlineStatus() == HOM_DELETION)
                 .collect(Collectors.toList());
 
-            for(FittedRegion region : fittedRegions)
+            for(ObservedRegion region : fittedRegions)
             {
-                List<FittedRegion> regions = fittedRegionMap.get(region.chromosome());
+                List<ObservedRegion> regions = fittedRegionMap.get(region.chromosome());
 
                 if(regions == null)
                 {

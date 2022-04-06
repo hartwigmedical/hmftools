@@ -5,8 +5,8 @@ import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SOMATIC_VCF
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.purple.gene.GeneCopyNumber.listToMap;
 import static com.hartwig.hmftools.common.purple.purity.FittedPurityMethod.NORMAL;
-import static com.hartwig.hmftools.common.purple.region.GermlineStatus.HET_DELETION;
-import static com.hartwig.hmftools.common.purple.region.GermlineStatus.HOM_DELETION;
+import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
+import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_URL;
@@ -56,9 +56,9 @@ import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
-import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.purple.region.ObservedRegion;
-import com.hartwig.hmftools.common.purple.region.SegmentFile;
+import com.hartwig.hmftools.purple.region.FittedRegionFactory;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
+import com.hartwig.hmftools.purple.segment.SegmentFile;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -82,7 +82,7 @@ import com.hartwig.hmftools.purple.germline.GermlineVariants;
 import com.hartwig.hmftools.purple.plot.Charts;
 import com.hartwig.hmftools.purple.purity.FittedPurityFactory;
 import com.hartwig.hmftools.purple.recovery.RecoverStructuralVariants;
-import com.hartwig.hmftools.purple.region.FittedRegionFactory;
+import com.hartwig.hmftools.purple.region.ObservedRegionFactory;
 import com.hartwig.hmftools.purple.somatic.SomaticPeakStream;
 import com.hartwig.hmftools.purple.somatic.SomaticPurityEnrichment;
 import com.hartwig.hmftools.purple.somatic.SomaticStream;
@@ -287,7 +287,7 @@ public class PurpleApplication
 
         final List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
         final List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
-        final List<FittedRegion> fittedRegions = Lists.newArrayList();
+        final List<ObservedRegion> fittedRegions = Lists.newArrayList();
 
         BestFit bestFit = null;
         FittedPurity fittedPurity = null;
@@ -342,7 +342,7 @@ public class PurpleApplication
             copyNumbers.addAll(copyNumberFactory.copyNumbers());
             sampleData.SvCache.inferMissingVariant(copyNumbers);
 
-            final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions, copyNumbers);
+            final List<ObservedRegion> enrichedObservedRegions = updateRegionsWithCopyNumbers(fittedRegions, copyNumbers);
 
             geneCopyNumbers.addAll(GeneCopyNumberFactory.geneCopyNumbers(mReferenceData.GeneTransCache, copyNumbers));
 
@@ -365,7 +365,7 @@ public class PurpleApplication
 
             somaticStream = new SomaticStream(mConfig, mReferenceData, somaticCache, somaticPeaks);
 
-            somaticStream.processAndWrite(purityAdjuster, copyNumbers, enrichedFittedRegions);
+            somaticStream.processAndWrite(purityAdjuster, copyNumbers, enrichedObservedRegions);
 
             sampleData.SvCache.write(purityAdjuster, copyNumbers, mConfig.tumorOnlyMode());
 
@@ -497,7 +497,7 @@ public class PurpleApplication
         final List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(
                 PurpleCopyNumberFile.generateFilenameForReading(purpleDataPath, tumorSample));
 
-        final List<FittedRegion> fittedRegions = SegmentFile.read(SegmentFile.generateFilename(purpleDataPath, tumorSample)).stream()
+        final List<ObservedRegion> fittedRegions = SegmentFile.read(SegmentFile.generateFilename(purpleDataPath, tumorSample)).stream()
                 .filter(x -> x.germlineStatus() == HET_DELETION || x.germlineStatus() == HOM_DELETION)
                 .collect(Collectors.toList());
 
@@ -509,7 +509,7 @@ public class PurpleApplication
 
     private void findDrivers(
             final String tumorSample, final PurityContext purityContext, final List<PurpleCopyNumber> copyNumbers,
-            final List<GeneCopyNumber> geneCopyNumbers, final List<FittedRegion> fittedRegions,
+            final List<GeneCopyNumber> geneCopyNumbers, final List<ObservedRegion> fittedRegions,
             @Nullable final SomaticStream somaticStream) throws IOException
     {
         final List<DriverCatalog> somaticDriverCatalog = Lists.newArrayList();

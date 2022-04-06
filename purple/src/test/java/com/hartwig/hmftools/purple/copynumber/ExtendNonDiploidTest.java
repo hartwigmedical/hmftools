@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.copynumber;
 
-import static com.hartwig.hmftools.common.purple.PurpleTestUtils.createDefaultFittedRegion;
+import static com.hartwig.hmftools.purple.TestUtils.createDefaultFittedRegion;
 import static com.hartwig.hmftools.purple.copynumber.ExtendLongArmTest.assertCombinedRegion;
 import static com.hartwig.hmftools.purple.copynumber.ExtendLongArmTest.createCombinedRegion;
 
@@ -12,9 +12,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
-import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.purple.region.GermlineStatus;
-import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
@@ -22,45 +21,56 @@ import org.junit.Test;
 
 public class ExtendNonDiploidTest
 {
-
     @Test
     public void testIsEligible()
     {
-        final FittedRegion eligible = createFittedRegion(GermlineStatus.HET_DELETION, SegmentSupport.BND);
-        final FittedRegion centromere = ImmutableFittedRegion.builder().from(eligible).support(SegmentSupport.CENTROMERE).build();
+        final ObservedRegion eligible = createFittedRegion(GermlineStatus.HET_DELETION, SegmentSupport.BND);
+        final ObservedRegion centromere = ObservedRegion.from(eligible);
+        centromere.setSupport(SegmentSupport.CENTROMERE);
 
         assertTrue(ExtendNonDiploid.isEligible(eligible, null));
         assertTrue(ExtendNonDiploid.isEligible(eligible, eligible));
-        assertTrue(ExtendNonDiploid.isEligible(ImmutableFittedRegion.builder()
-                .from(eligible)
-                .germlineStatus(GermlineStatus.AMPLIFICATION)
-                .build(), null));
-        assertTrue(ExtendNonDiploid.isEligible(ImmutableFittedRegion.builder()
-                .from(eligible)
-                .germlineStatus(GermlineStatus.HOM_DELETION)
-                .build(), null));
-        assertTrue(ExtendNonDiploid.isEligible(ImmutableFittedRegion.builder()
-                .from(eligible)
-                .germlineStatus(GermlineStatus.UNKNOWN)
-                .build(), null));
 
-        assertTrue(ExtendNonDiploid.isEligible(ImmutableFittedRegion.builder()
-                .from(eligible)
-                .support(SegmentSupport.NONE)
-                .build(), eligible));
+        ObservedRegion newRegion = ObservedRegion.from(eligible);
+        newRegion.setGermlineStatus(GermlineStatus.AMPLIFICATION);
+        assertTrue(ExtendNonDiploid.isEligible(newRegion, null));
+
+        newRegion.setGermlineStatus(GermlineStatus.HOM_DELETION);
+        assertTrue(ExtendNonDiploid.isEligible(newRegion, null));
+
+        newRegion.setGermlineStatus(GermlineStatus.UNKNOWN);
+        assertTrue(ExtendNonDiploid.isEligible(newRegion, null));
+
+        newRegion.setGermlineStatus(GermlineStatus.HOM_DELETION);
+        newRegion.setSupport(SegmentSupport.NONE);
+        assertTrue(ExtendNonDiploid.isEligible(newRegion, eligible));
 
         assertFalse(ExtendNonDiploid.isEligible(eligible, centromere));
         assertFalse(ExtendNonDiploid.isEligible(centromere, eligible));
 
-        assertFalse(ExtendNonDiploid.isEligible(ImmutableFittedRegion.builder().from(eligible).germlineStatus(GermlineStatus.NOISE).build(), null));
-        assertFalse(ExtendNonDiploid.isEligible(ImmutableFittedRegion.builder().from(eligible).support(SegmentSupport.NONE).build(), null));
-        assertFalse(ExtendNonDiploid.isEligible(ImmutableFittedRegion.builder()
-                .from(eligible)
-                .germlineStatus(GermlineStatus.DIPLOID)
-                .build(), null));
-        assertFalse(ExtendNonDiploid.isEligible(ImmutableFittedRegion.builder().from(eligible).depthWindowCount(0).build(), null));
-        assertFalse(ExtendNonDiploid.isEligible(ImmutableFittedRegion.builder().from(eligible).observedTumorRatio(0.9).build(), null));
-        assertFalse(ExtendNonDiploid.isEligible(ImmutableFittedRegion.builder().from(eligible).observedNormalRatio(1.2).build(), null));
+        newRegion = ObservedRegion.from(eligible);
+        newRegion.setGermlineStatus(GermlineStatus.NOISE);
+        assertFalse(ExtendNonDiploid.isEligible(newRegion, null));
+
+        newRegion = ObservedRegion.from(eligible);
+        newRegion.setSupport(SegmentSupport.NONE);
+        assertFalse(ExtendNonDiploid.isEligible(newRegion, null));
+
+        newRegion = ObservedRegion.from(eligible);
+        newRegion.setGermlineStatus(GermlineStatus.DIPLOID);
+        assertFalse(ExtendNonDiploid.isEligible(newRegion, null));
+
+        newRegion = ObservedRegion.from(eligible);
+        newRegion.setDepthWindowCount(0);
+        assertFalse(ExtendNonDiploid.isEligible(newRegion, null));
+
+        newRegion = ObservedRegion.from(eligible);
+        newRegion.setObservedTumorRatio(0.9);
+        assertFalse(ExtendNonDiploid.isEligible(newRegion, null));
+
+        newRegion = ObservedRegion.from(eligible);
+        newRegion.setObservedNormalRatio(1.2);
+        assertFalse(ExtendNonDiploid.isEligible(newRegion, null));
     }
 
     @Test
@@ -122,14 +132,14 @@ public class ExtendNonDiploidTest
     }
 
     @NotNull
-    private static FittedRegion createFittedRegion(GermlineStatus status, SegmentSupport support)
+    private static ObservedRegion createFittedRegion(GermlineStatus status, SegmentSupport support)
     {
-        return createDefaultFittedRegion("1", 1, 1000)
-                .depthWindowCount(1)
-                .observedNormalRatio(1)
-                .observedTumorRatio(1.1)
-                .germlineStatus(status)
-                .support(support)
-                .build();
+        ObservedRegion region = createDefaultFittedRegion("1", 1, 1000);
+        region.setDepthWindowCount(1);
+        region.setObservedNormalRatio(1);
+        region.setObservedTumorRatio(1.1);
+        region.setGermlineStatus(status);
+        region.setSupport(support);
+        return region;
     }
 }

@@ -99,6 +99,12 @@ public class GripssApplication
             System.exit(1);
         }
 
+        if(!mPonCache.hasValidData())
+        {
+            GR_LOGGER.error("invalid PON cache, exiting");
+            System.exit(1);
+        }
+
         processVcf(mConfig.VcfFile);
     }
 

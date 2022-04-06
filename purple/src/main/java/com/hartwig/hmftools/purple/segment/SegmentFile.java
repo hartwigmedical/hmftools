@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.region;
+package com.hartwig.hmftools.purple.segment;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 
@@ -12,7 +12,9 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -28,7 +30,7 @@ public final class SegmentFile
         return basePath + File.separator + sample + EXTENSION;
     }
 
-    public static void write(@NotNull final String filePath, @NotNull Collection<FittedRegion> fittedRegions) throws IOException
+    public static void write(@NotNull final String filePath, @NotNull Collection<ObservedRegion> fittedRegions) throws IOException
     {
         final Collection<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -37,12 +39,12 @@ public final class SegmentFile
     }
 
     @NotNull
-    public static List<FittedRegion> read(final String filePath) throws IOException
+    public static List<ObservedRegion> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    private static List<FittedRegion> fromLines(final List<String> lines)
+    private static List<ObservedRegion> fromLines(final List<String> lines)
     {
         final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
         lines.remove(0);
@@ -72,46 +74,45 @@ public final class SegmentFile
         int minStartIndex = fieldsIndexMap.get("minStart");
         int maxStartIndex = fieldsIndexMap.get("maxStart");
 
-        List<FittedRegion> regions = Lists.newArrayList();
+        List<ObservedRegion> regions = Lists.newArrayList();
 
         for(final String line : lines)
         {
             String[] values = line.split(DELIMITER, -1);
 
-            final ImmutableFittedRegion.Builder builder = ImmutableFittedRegion.builder()
-                    .chromosome(values[chrIndex])
-                    .start(Integer.parseInt(values[startIndex]))
-                    .end(Integer.parseInt(values[endIndex]))
-                    .germlineStatus(GermlineStatus.valueOf(values[germlineStatusIndex]))
-                    .bafCount(Integer.parseInt(values[bafCountIndex]))
-                    .observedBAF(Double.parseDouble(values[observedBAFIndex]))
-                    .minorAlleleCopyNumberDeviation(Double.parseDouble(values[minorAlleleCopyNumberDeviationIndex]))
-                    .observedTumorRatio(Double.parseDouble(values[observedTumorRatioIndex]))
-                    .observedNormalRatio(Double.parseDouble(values[observedNormalRatioIndex]))
-                    .unnormalisedObservedNormalRatio(Double.parseDouble(values[unnormalisedObservedNormalRatioIndex]))
-                    .majorAlleleCopyNumberDeviation(Double.parseDouble(values[majorAlleleCopyNumberDeviationIndex]))
-                    .deviationPenalty(Double.parseDouble(values[deviationPenaltyIndex]))
-                    .tumorCopyNumber(Double.parseDouble(values[tumorCopyNumberIndex]))
-                    .fittedTumorCopyNumber(Double.parseDouble(values[fittedTumorCopyNumberIndex]))
-                    .fittedBAF(Double.parseDouble(values[fittedBAFIndex]))
-                    .refNormalisedCopyNumber(Double.parseDouble(values[refNormalisedCopyNumberIndex]))
-                    .ratioSupport(Boolean.parseBoolean(values[ratioSupportIndex]))
-                    .support(SegmentSupport.valueOf(values[supportIndex]))
-                    .depthWindowCount(Integer.parseInt(values[depthWindowCountIndex]))
-                    .tumorBAF(Double.parseDouble(values[tumorBAFIndex]))
-                    .gcContent(Double.parseDouble(values[gcContentIndex]))
-                    .eventPenalty(Double.parseDouble(values[eventPenaltyIndex]))
-                    .minStart(Integer.parseInt(values[minStartIndex]))
-                    .maxStart(Integer.parseInt(values[maxStartIndex]))
-                    .svCluster(false);
+            final ObservedRegion region = new ObservedRegion(
+                    values[chrIndex],
+                    Integer.parseInt(values[startIndex]),
+                    Integer.parseInt(values[endIndex]),
+                    Boolean.parseBoolean(values[ratioSupportIndex]),
+                    SegmentSupport.valueOf(values[supportIndex]),
+                    Integer.parseInt(values[bafCountIndex]),
+                    Double.parseDouble(values[observedBAFIndex]),
+                    Integer.parseInt(values[depthWindowCountIndex]),
+                    Double.parseDouble(values[observedTumorRatioIndex]),
+                    Double.parseDouble(values[observedNormalRatioIndex]),
+                    Double.parseDouble(values[unnormalisedObservedNormalRatioIndex]),
+                    GermlineStatus.valueOf(values[germlineStatusIndex]),
+                    false,
+                    Double.parseDouble(values[gcContentIndex]),
+                    Integer.parseInt(values[minStartIndex]),
+                    Integer.parseInt(values[maxStartIndex]),
+                    Double.parseDouble(values[minorAlleleCopyNumberDeviationIndex]),
+                    Double.parseDouble(values[majorAlleleCopyNumberDeviationIndex]),
+                    Double.parseDouble(values[deviationPenaltyIndex]),
+                    Double.parseDouble(values[eventPenaltyIndex]),
+                    Double.parseDouble(values[refNormalisedCopyNumberIndex]),
+                    Double.parseDouble(values[tumorCopyNumberIndex]),
+                    Double.parseDouble(values[tumorBAFIndex]),
+                    Double.parseDouble(values[fittedTumorCopyNumberIndex]),
+                    Double.parseDouble(values[fittedBAFIndex]));
 
-            regions.add(builder.build());
+            regions.add(region);
         }
 
         return regions;
     }
 
-    @NotNull
     private static String header()
     {
         return new StringJoiner(DELIMITER, "", "")
@@ -144,36 +145,35 @@ public final class SegmentFile
                 .toString();
     }
 
-    @NotNull
-    static String toString(@NotNull final FittedRegion copyNumber)
+    private static String toString(final ObservedRegion region)
     {
         return new StringJoiner(DELIMITER)
-                .add(copyNumber.chromosome())
-                .add(String.valueOf(copyNumber.start()))
-                .add(String.valueOf(copyNumber.end()))
-                .add(String.valueOf(copyNumber.germlineStatus()))
-                .add(String.valueOf(copyNumber.bafCount()))
-                .add(FORMAT.format(copyNumber.observedBAF()))
-                .add(FORMAT.format(copyNumber.minorAlleleCopyNumber()))
-                .add(FORMAT.format(copyNumber.minorAlleleCopyNumberDeviation()))
-                .add(FORMAT.format(copyNumber.observedTumorRatio()))
-                .add(FORMAT.format(copyNumber.observedNormalRatio()))
-                .add(FORMAT.format(copyNumber.unnormalisedObservedNormalRatio()))
-                .add(FORMAT.format(copyNumber.majorAlleleCopyNumber()))
-                .add(FORMAT.format(copyNumber.majorAlleleCopyNumberDeviation()))
-                .add(FORMAT.format(copyNumber.deviationPenalty()))
-                .add(FORMAT.format(copyNumber.tumorCopyNumber()))
-                .add(FORMAT.format(copyNumber.fittedTumorCopyNumber()))
-                .add(FORMAT.format(copyNumber.fittedBAF()))
-                .add(FORMAT.format(copyNumber.refNormalisedCopyNumber()))
-                .add(String.valueOf(copyNumber.ratioSupport()))
-                .add(String.valueOf(copyNumber.support()))
-                .add(String.valueOf(copyNumber.depthWindowCount()))
-                .add(FORMAT.format(copyNumber.tumorBAF()))
-                .add(FORMAT.format(copyNumber.gcContent()))
-                .add(FORMAT.format(copyNumber.eventPenalty()))
-                .add(String.valueOf(copyNumber.minStart()))
-                .add(String.valueOf(copyNumber.maxStart()))
+                .add(region.chromosome())
+                .add(String.valueOf(region.start()))
+                .add(String.valueOf(region.end()))
+                .add(String.valueOf(region.germlineStatus()))
+                .add(String.valueOf(region.bafCount()))
+                .add(FORMAT.format(region.observedBAF()))
+                .add(FORMAT.format(region.minorAlleleCopyNumber()))
+                .add(FORMAT.format(region.minorAlleleCopyNumberDeviation()))
+                .add(FORMAT.format(region.observedTumorRatio()))
+                .add(FORMAT.format(region.observedNormalRatio()))
+                .add(FORMAT.format(region.unnormalisedObservedNormalRatio()))
+                .add(FORMAT.format(region.majorAlleleCopyNumber()))
+                .add(FORMAT.format(region.majorAlleleCopyNumberDeviation()))
+                .add(FORMAT.format(region.deviationPenalty()))
+                .add(FORMAT.format(region.tumorCopyNumber()))
+                .add(FORMAT.format(region.fittedTumorCopyNumber()))
+                .add(FORMAT.format(region.fittedBAF()))
+                .add(FORMAT.format(region.refNormalisedCopyNumber()))
+                .add(String.valueOf(region.ratioSupport()))
+                .add(String.valueOf(region.support()))
+                .add(String.valueOf(region.depthWindowCount()))
+                .add(FORMAT.format(region.tumorBAF()))
+                .add(FORMAT.format(region.gcContent()))
+                .add(FORMAT.format(region.eventPenalty()))
+                .add(String.valueOf(region.minStart()))
+                .add(String.valueOf(region.maxStart()))
                 .toString();
     }
 }

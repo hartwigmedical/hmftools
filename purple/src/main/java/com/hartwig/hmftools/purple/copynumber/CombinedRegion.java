@@ -5,33 +5,34 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
-import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.purple.region.GermlineStatus;
-import com.hartwig.hmftools.common.purple.region.ModifiableFittedRegion;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
-
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 public class CombinedRegion implements GenomeRegion
 {
-    private final ModifiableFittedRegion mCombined;
+    private final ObservedRegion mCombined;
 
-    private CopyNumberMethod mCopyNumberMethod = CopyNumberMethod.UNKNOWN;
+    private CopyNumberMethod mCopyNumberMethod;
     private boolean mInferredBAF;
-    private final List<FittedRegion> mRegions = Lists.newArrayList();
-    private int mUnweightedCount = 1;
+    private final List<ObservedRegion> mRegions;
+    private int mUnweightedCount;
     private final boolean mIsBafWeighted;
-    private SegmentSupport mGermlineEndSupport = SegmentSupport.UNKNOWN;
 
-    public CombinedRegion(final FittedRegion region)
+    public CombinedRegion(final ObservedRegion region)
     {
         this(true, region);
     }
 
-    CombinedRegion(boolean isBafWeighed, final FittedRegion region)
+    public CombinedRegion(boolean isBafWeighed, final ObservedRegion region)
     {
-        mCombined = ModifiableFittedRegion.create().from(region);
+        mCombined = ObservedRegion.from(region);
+
+        mCopyNumberMethod = CopyNumberMethod.UNKNOWN;
+        mRegions = Lists.newArrayList();
+        mUnweightedCount = 1;
+
         mIsBafWeighted = isBafWeighed;
 
         if(region.germlineStatus() != GermlineStatus.DIPLOID)
@@ -55,7 +56,7 @@ public class CombinedRegion implements GenomeRegion
         return mInferredBAF;
     }
 
-    public List<FittedRegion> regions() { return mRegions; }
+    public List<ObservedRegion> regions() { return mRegions; }
 
     public double tumorCopyNumber() { return mCombined.tumorCopyNumber(); }
 
@@ -79,9 +80,9 @@ public class CombinedRegion implements GenomeRegion
         mCopyNumberMethod = copyNumberMethod;
     }
 
-    public FittedRegion region() { return mCombined; }
+    public ObservedRegion region() { return mCombined; }
 
-    public void extend(final FittedRegion region)
+    public void extend(final ObservedRegion region)
     {
         mCombined.setStart(Math.min(mCombined.start(), region.start()));
         mCombined.setEnd(Math.max(mCombined.end(), region.end()));
@@ -100,7 +101,7 @@ public class CombinedRegion implements GenomeRegion
         }
     }
 
-    public void extendWithUnweightedAverage(final FittedRegion region)
+    public void extendWithUnweightedAverage(final ObservedRegion region)
     {
         extend(region);
         applyDepthWindowCountWeights(region, mUnweightedCount, 1);
@@ -108,7 +109,7 @@ public class CombinedRegion implements GenomeRegion
         mUnweightedCount++;
     }
 
-    public void extendWithWeightedAverage(final FittedRegion region)
+    public void extendWithWeightedAverage(final ObservedRegion region)
     {
         mCombined.setGermlineStatus(GermlineStatus.DIPLOID);
 
@@ -127,7 +128,7 @@ public class CombinedRegion implements GenomeRegion
         extend(region);
     }
 
-    private void applyBafCountWeights(final FittedRegion region, long currentWeight, long newWeight)
+    private void applyBafCountWeights(final ObservedRegion region, long currentWeight, long newWeight)
     {
         if(!Doubles.isZero(region.observedBAF()))
         {
@@ -142,7 +143,7 @@ public class CombinedRegion implements GenomeRegion
         mCombined.setBafCount(mCombined.bafCount() + region.bafCount());
     }
 
-    private void applyDepthWindowCountWeights(final FittedRegion region, long currentWeight, long newWeight)
+    private void applyDepthWindowCountWeights(final ObservedRegion region, long currentWeight, long newWeight)
     {
 
         if(!Doubles.isZero(region.tumorCopyNumber()))

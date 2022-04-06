@@ -8,10 +8,6 @@ import com.hartwig.hmftools.common.cobalt.ImmutableCobaltRatio;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
-import com.hartwig.hmftools.common.purple.region.GermlineStatus;
-import com.hartwig.hmftools.common.purple.region.ImmutableEnrichedRegion;
-import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
-import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantImpl;
 import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantLegImpl;
@@ -76,27 +72,6 @@ public class PurpleTestUtils
     }
 
     @NotNull
-    public static ImmutableEnrichedRegion.Builder createObservedRegion(@NotNull final String chromosome, final int start, final int end) {
-        return ImmutableEnrichedRegion.builder()
-                .observedBAF(0.5)
-                .bafCount(1)
-                .chromosome(chromosome)
-                .start(start)
-                .end(end)
-                .observedTumorRatio(1)
-                .depthWindowCount(1)
-                .observedNormalRatio(1)
-                .unnormalisedObservedNormalRatio(1)
-                .ratioSupport(true)
-                .svCluster(false)
-                .minStart(0)
-                .maxStart(0)
-                .germlineStatus(GermlineStatus.DIPLOID)
-                .gcContent(0.93)
-                .support(SegmentSupport.NONE);
-    }
-
-    @NotNull
     public static ImmutableStructuralVariantImpl.Builder createStructuralVariant(@NotNull final String startChromosome,
             final int startPosition, @NotNull final String endChromosome, final int endPosition,
             @NotNull final StructuralVariantType type, double startVaf, double endVaf) {
@@ -146,25 +121,6 @@ public class PurpleTestUtils
                 .start(createStartLeg(startChromosome, startPosition, StructuralVariantType.BND).alleleFrequency(startVaf).build())
                 .startContext(dummyContext())
                 .imprecise(false);
-    }
-
-    @NotNull
-    public static ImmutableFittedRegion.Builder createDefaultFittedRegion(@NotNull final String chromosome, final int start,
-            final int end) {
-        final ObservedRegion observedRegion = PurpleTestUtils.createObservedRegion(chromosome, start, end).build();
-        return ImmutableFittedRegion.builder()
-                .from(observedRegion)
-                .tumorCopyNumber(2)
-                .tumorBAF(0.5)
-                .fittedBAF(0)
-                .fittedTumorCopyNumber(0)
-                .deviationPenalty(0)
-                .minorAlleleCopyNumberDeviation(0)
-                .majorAlleleCopyNumberDeviation(0)
-                .refNormalisedCopyNumber(2)
-                .ratioSupport(true)
-                .support(SegmentSupport.NONE)
-                .eventPenalty(0);
     }
 
     @NotNull

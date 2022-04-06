@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_GERMLINE_
 import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_MINOR_ALLELE_CN_INFO;
 import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_VARIANT_CN_INFO;
 
-import com.hartwig.hmftools.common.purple.region.GermlineStatus;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 
 import org.jetbrains.annotations.NotNull;
 

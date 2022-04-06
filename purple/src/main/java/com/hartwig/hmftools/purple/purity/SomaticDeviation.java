@@ -9,8 +9,8 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
-import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
@@ -38,7 +38,7 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer>
                 });
     }
 
-    public double deviationFromMax(final PurityAdjuster purityAdjuster, final FittedRegion region, final SomaticVariant variant)
+    public double deviationFromMax(final PurityAdjuster purityAdjuster, final ObservedRegion region, final SomaticVariant variant)
     {
         double normalCopyNumber = purityAdjuster.germlineCopyNumber(region.chromosome());
         double constrainedMajorAllelePloidy = Math.max(0, region.majorAlleleCopyNumber());

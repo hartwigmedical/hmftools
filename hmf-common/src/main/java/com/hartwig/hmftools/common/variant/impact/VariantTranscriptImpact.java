@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLineCount;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
@@ -38,13 +39,12 @@ public class VariantTranscriptImpact {
     public static final String VAR_TRANS_IMPACT_ITEM_DELIM = "|";
 
     public static void writeHeader(final VCFHeader header) {
-        StringJoiner fields = new StringJoiner(", ");
+        StringJoiner fields = new StringJoiner("|");
         List<String> fieldItems = Lists.newArrayList("Gene", "GeneName", "Transcript", "Effects", "SpliceRegion", "HGVS.c", "HGVS.p");
         fieldItems.forEach(x -> fields.add(x));
 
-        header.addMetaDataLine(new VCFInfoHeaderLine(VAR_TRANS_IMPACT_ANNOATATION,
-                fieldItems.size(),
-                VCFHeaderLineType.String,
+        header.addMetaDataLine(new VCFInfoHeaderLine(
+                VAR_TRANS_IMPACT_ANNOATATION, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String,
                 String.format("Transcript impact [%s]", fields.toString())));
     }
 

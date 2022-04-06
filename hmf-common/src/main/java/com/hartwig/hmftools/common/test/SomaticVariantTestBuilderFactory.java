@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.test;
 
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
-import com.hartwig.hmftools.common.purple.region.GermlineStatus;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;

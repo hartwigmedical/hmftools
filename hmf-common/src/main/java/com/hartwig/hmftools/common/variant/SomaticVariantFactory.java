@@ -13,7 +13,7 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
-import com.hartwig.hmftools.common.purple.region.GermlineStatus;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;

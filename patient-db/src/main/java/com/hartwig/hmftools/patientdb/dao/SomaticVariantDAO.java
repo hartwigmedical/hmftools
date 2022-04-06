@@ -16,7 +16,7 @@ import com.hartwig.hmftools.common.drivercatalog.dnds.DndsMutationalLoad;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsVariant;
 import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsMutationalLoad;
 import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsVariant;
-import com.hartwig.hmftools.common.purple.region.GermlineStatus;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;

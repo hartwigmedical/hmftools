@@ -40,6 +40,7 @@ public class PonCache
     private int mCurrentSvIndex;
     private String mCurrentSglChromosome;
     private int mCurrentSglIndex;
+    private boolean mHasValidData;
 
     private static final String GERMLINE_PON_BED_SV_FILE = "pon_sv_file";
     private static final String GERMLINE_PON_BED_SGL_FILE = "pon_sgl_file";
@@ -56,6 +57,7 @@ public class PonCache
     {
         mSvRegions = Maps.newHashMap();
         mSglRegions = Maps.newHashMap();
+        mHasValidData = true;
 
         mPositionMargin = margin;
 
@@ -70,6 +72,8 @@ public class PonCache
         mCurrentSglIndex = 0;
         mCurrentSvIndex = 0;
     }
+
+    public boolean hasValidData() { return mHasValidData; }
 
     public int getPonCount(final SvData var)
     {
@@ -305,6 +309,7 @@ public class PonCache
         catch(IOException e)
         {
             GR_LOGGER.error("failed to load germline SV PON file({}): {}", filename, e.toString());
+            mHasValidData = false;
             return;
         }
     }
@@ -361,6 +366,7 @@ public class PonCache
         catch(IOException e)
         {
             GR_LOGGER.error("failed to load germline SGL PON file({}): {}", filename, e.toString());
+            mHasValidData = false;
             return;
         }
     }

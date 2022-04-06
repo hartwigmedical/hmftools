@@ -70,18 +70,6 @@ public final class FileWriterUtils
         return outputDir + File.separator;
     }
 
-    // Note: if filename ends with .gz returns a Gzipped buffered reader
-    @NotNull
-    public static BufferedReader createBufferedReader(final String filename) throws IOException
-    {
-        InputStream inputStream = new FileInputStream(filename);
-        if(filename.endsWith(".gz"))
-        {
-            inputStream = new GZIPInputStream(inputStream);
-        }
-        return new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-    }
-
     @NotNull
     public static BufferedWriter createBufferedWriter(final String outputFile, boolean appendIfExists) throws IOException
     {
@@ -93,6 +81,18 @@ public final class FileWriterUtils
     public static BufferedWriter createBufferedWriter(final String outputFile) throws IOException
     {
         return createBufferedWriter(outputFile, false);
+    }
+
+    // Note: if filename ends with .gz returns a Gzipped buffered reader
+    @NotNull
+    public static BufferedReader createBufferedReader(final String filename) throws IOException
+    {
+        InputStream inputStream = new FileInputStream(filename);
+        if(filename.endsWith(".gz"))
+        {
+            inputStream = new GZIPInputStream(inputStream);
+        }
+        return new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
     }
 
     @NotNull

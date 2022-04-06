@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.config.ReferenceData;
 import com.hartwig.hmftools.purple.fitting.PeakModel;
 import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
@@ -26,7 +26,7 @@ public class SomaticVariantEnrichment
     public SomaticVariantEnrichment(
             boolean snpEffEnrichmentEnabled, double clonalityBinWidth, final String purpleVersion,
             final String referenceId, final String tumorSample, final ReferenceData refData,
-            final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers, final List<FittedRegion> fittedRegions,
+            final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers, final List<ObservedRegion> fittedRegions,
             final List<PeakModel> peakModel)
     {
         mGenotypeEnrichment = new SomaticGenotypeEnrichment(referenceId, tumorSample);

@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.variant.VariantHeader;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -16,7 +16,7 @@ public class SomaticPurityEnrichment
     private final PurityAdjustedSomaticVariantFactory mFactory;
 
     public SomaticPurityEnrichment(final String purpleVersion, final String sample, final PurityAdjuster purityAdjuster,
-            final List<PurpleCopyNumber> copyNumbers, final List<FittedRegion> fittedRegions)
+            final List<PurpleCopyNumber> copyNumbers, final List<ObservedRegion> fittedRegions)
     {
         mPurpleVersion = purpleVersion;
         mFactory = new PurityAdjustedSomaticVariantFactory(sample, purityAdjuster, copyNumbers, fittedRegions);

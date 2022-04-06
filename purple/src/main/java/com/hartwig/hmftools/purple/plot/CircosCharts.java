@@ -24,8 +24,7 @@ import com.hartwig.hmftools.common.circos.CircosSNPWriter;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.purple.region.ObservedRegion;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.collection.Downsample;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
@@ -62,7 +61,7 @@ public class CircosCharts
             final String referenceId, final String sampleId,
             final Gender gender, final List<PurpleCopyNumber> copyNumber,
             final List<VariantContextDecorator> somaticVariants, final List<StructuralVariant> structuralVariants,
-            final List<FittedRegion> regions, final List<AmberBAF> bafs) throws IOException
+            final List<ObservedRegion> regions, final List<AmberBAF> bafs) throws IOException
     {
         mCurrentReferenceId = referenceId;
         mCurrentSampleId = sampleId;
@@ -77,7 +76,7 @@ public class CircosCharts
         writeCopyNumbers(copyNumber);
         writeEnrichedSomatics(somatics);
         writeStructuralVariants(structuralVariants);
-        writeFittedRegions(Downsample.downsample(MAX_PLOT_POINTS, regions));
+        writeObservedRegions(Downsample.downsample(MAX_PLOT_POINTS, regions));
         writeBafs(Downsample.downsample(MAX_PLOT_POINTS, bafs));
     }
 
@@ -118,7 +117,7 @@ public class CircosCharts
         CircosLinkWriter.writeVariants(mBaseCircosTumorSample + ".link.circos", structuralVariants);
     }
 
-    private void writeFittedRegions(final List<FittedRegion> fittedRegions) throws IOException
+    private void writeObservedRegions(final List<ObservedRegion> fittedRegions) throws IOException
     {
         CircosFileWriter.writeRegions(mBaseCircosReferenceSample + ".ratio.circos",
                 fittedRegions.stream().filter(x -> Doubles.positive(x.unnormalisedObservedNormalRatio())).collect(Collectors.toList()),

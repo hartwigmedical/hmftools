@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.copynumber;
 
-import static com.hartwig.hmftools.common.purple.PurpleTestUtils.createDefaultFittedRegion;
+import static com.hartwig.hmftools.purple.TestUtils.createDefaultFittedRegion;
 
 import static org.apache.commons.math3.util.Precision.EPSILON;
 import static org.junit.Assert.assertEquals;
@@ -19,11 +19,11 @@ import com.hartwig.hmftools.common.purple.PurpleTestUtils;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidy;
 import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -132,11 +132,10 @@ public class StructuralVariantImpliedTest
     @NotNull
     private static CombinedRegion copyNumber(int start, int end, double copyNumber, SegmentSupport support)
     {
-        final FittedRegion region = createDefaultFittedRegion(CONTIG, start, end)
-                .tumorCopyNumber(copyNumber)
-                .tumorBAF(0.5)
-                .support(support)
-                .build();
+        final ObservedRegion region = createDefaultFittedRegion(CONTIG, start, end);
+        region.setTumorCopyNumber(copyNumber);
+        region.setTumorBAF(0.5);
+        region.setSupport(support);
 
         final CombinedRegion result = new CombinedRegion(region);
         if(Doubles.positive(copyNumber))

@@ -33,7 +33,7 @@ public class TumorMutationalLoad
 
         final VariantImpact variantImpact = variant.variantImpact();
 
-        if (variantImpact.WorstCodingEffect.equals(CodingEffect.MISSENSE))
+        if(variantImpact.WorstCodingEffect.equals(CodingEffect.MISSENSE))
             mLoad++;
     }
 }

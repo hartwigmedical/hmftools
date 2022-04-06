@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.purple.copynumber;
 
-import static com.hartwig.hmftools.common.purple.PurpleTestUtils.createDefaultFittedRegion;
+import static com.hartwig.hmftools.purple.TestUtils.createDefaultFittedRegion;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.purple.region.GermlineStatus;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Ignore;
@@ -35,25 +35,23 @@ public class CombinedRegionTest
     @Test
     public void testDepthWindowCountSummationOnlyAppliesToSomatic()
     {
-        final FittedRegion somaticRegion = createDefaultFittedRegion("1", 2001, 3000)
-                .depthWindowCount(2)
-                .germlineStatus(GermlineStatus.DIPLOID)
-                .build();
+        final ObservedRegion somaticRegion = createDefaultFittedRegion("1", 2001, 3000);
+        somaticRegion.setDepthWindowCount(2);
+        somaticRegion.setGermlineStatus(GermlineStatus.DIPLOID);
+
         final CombinedRegion region = new CombinedRegion(somaticRegion);
         assertEquals(2, region.region().depthWindowCount());
 
-        final FittedRegion amplificationRegion = createDefaultFittedRegion("1", 1, 1000)
-                .depthWindowCount(2)
-                .germlineStatus(GermlineStatus.AMPLIFICATION)
-                .build();
+        final ObservedRegion amplificationRegion = createDefaultFittedRegion("1", 1, 1000);
+        amplificationRegion.setDepthWindowCount(2);
+        amplificationRegion.setGermlineStatus(GermlineStatus.AMPLIFICATION);
 
         region.extend(amplificationRegion);
         assertEquals(2, region.region().depthWindowCount());
 
-        final FittedRegion germlineRegion = createDefaultFittedRegion("1", 1001, 2000)
-                .depthWindowCount(2)
-                .germlineStatus(GermlineStatus.AMPLIFICATION)
-                .build();
+        final ObservedRegion germlineRegion = createDefaultFittedRegion("1", 1001, 2000);
+        germlineRegion.setDepthWindowCount(2);
+        germlineRegion.setGermlineStatus(GermlineStatus.AMPLIFICATION);
         region.extend(germlineRegion);
         assertEquals(2, region.region().depthWindowCount());
     }
@@ -71,7 +69,7 @@ public class CombinedRegionTest
     @Test
     public void doNotIncludeZeroCopyNumber()
     {
-        final FittedRegion startRegion = create(1, 100, 200, 0.5, 0);
+        final ObservedRegion startRegion = create(1, 100, 200, 0.5, 0);
         CombinedRegion builder = new CombinedRegion(startRegion);
         assertAverages(builder, 0.5, 0);
 
@@ -84,7 +82,7 @@ public class CombinedRegionTest
         assertAverages(victim.region(), expectedBAF, expectedCopyNumber);
     }
 
-    private static void assertAverages(@NotNull FittedRegion victim, double expectedBAF, double expectedCopyNumber)
+    private static void assertAverages(@NotNull ObservedRegion victim, double expectedBAF, double expectedCopyNumber)
     {
         assertEquals(expectedBAF, victim.observedBAF(), EPSILON);
         assertEquals(expectedCopyNumber, victim.tumorCopyNumber(), EPSILON);
@@ -97,25 +95,25 @@ public class CombinedRegionTest
     }
 
     @NotNull
-    private static FittedRegion create(int start, int end, double copyNumber)
+    private static ObservedRegion create(int start, int end, double copyNumber)
     {
         return create("1", start, end, 0, 0, copyNumber);
     }
 
     @NotNull
-    private static FittedRegion create(int start, int end, int bafCount, double baf, double copyNumber)
+    private static ObservedRegion create(int start, int end, int bafCount, double baf, double copyNumber)
     {
         return create("1", start, end, bafCount, baf, copyNumber);
     }
 
     @NotNull
-    private static FittedRegion create(@NotNull String chromosome, int start, int end, int bafCount, double baf, double tumorCopyNumber)
+    private static ObservedRegion create(@NotNull String chromosome, int start, int end, int bafCount, double baf, double tumorCopyNumber)
     {
-        return createDefaultFittedRegion(chromosome, start, end)
-                .bafCount(bafCount)
-                .observedBAF(baf)
-                .tumorCopyNumber(tumorCopyNumber)
-                .refNormalisedCopyNumber(tumorCopyNumber)
-                .build();
+        ObservedRegion region = createDefaultFittedRegion(chromosome, start, end);
+        region.setBafCount(bafCount);
+        region.setObservedBAF(baf);
+        region.setTumorCopyNumber(tumorCopyNumber);
+        region.setRefNormalisedCopyNumber(tumorCopyNumber);
+        return region;
     }
 }

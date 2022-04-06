@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.tools;
 
-import com.hartwig.hmftools.common.purple.region.GermlineStatus;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 
 public class GermlineDeletion
 {

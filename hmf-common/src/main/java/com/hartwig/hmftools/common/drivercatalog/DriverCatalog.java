@@ -17,7 +17,7 @@ public interface DriverCatalog
     @NotNull
     String gene();
 
-    @Nullable
+    @NotNull
     String transcript();
 
     @NotNull

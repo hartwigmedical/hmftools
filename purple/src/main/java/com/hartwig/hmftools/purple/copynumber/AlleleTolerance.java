@@ -2,8 +2,8 @@ package com.hartwig.hmftools.purple.copynumber;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
-import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -23,7 +23,7 @@ public class AlleleTolerance implements CopyNumberTolerance
     }
 
     @Override
-    public boolean inTolerance(@NotNull final FittedRegion first, @NotNull final FittedRegion second)
+    public boolean inTolerance(final ObservedRegion first, final ObservedRegion second)
     {
         double purityAdjustment = purityAdjustment(mPurityAdjuster);
 
@@ -61,7 +61,7 @@ public class AlleleTolerance implements CopyNumberTolerance
         return copyNumberInTolerance || refNormalisedCopyNumberInTolerance;
     }
 
-    private static double purityAdjustment(@NotNull final PurityAdjuster purityAdjuster)
+    private static double purityAdjustment(final PurityAdjuster purityAdjuster)
     {
         return Math.max(1, MAX_DEVIATION_ADJUSTMENT / purityAdjuster.purity());
     }

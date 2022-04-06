@@ -21,14 +21,10 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.genome.window.Window;
-import com.hartwig.hmftools.common.purple.region.GermlineStatus;
-import com.hartwig.hmftools.common.purple.region.ModifiableEnrichedRegion;
-import com.hartwig.hmftools.common.purple.region.ObservedRegion;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.purple.segment.PurpleSegment;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
-
-import org.jetbrains.annotations.NotNull;
 
 public class ObservedRegionFactory
 {
@@ -47,7 +43,7 @@ public class ObservedRegionFactory
             final List<PurpleSegment> regions, final Multimap<Chromosome, AmberBAF> bafs,
             final Map<Chromosome,List<CobaltRatio>> ratios, final Multimap<Chromosome, GCProfile> gcProfiles)
     {
-        final List<ModifiableEnrichedRegion> result = Lists.newArrayList();
+        final List<ObservedRegion> result = Lists.newArrayList();
 
         final GenomePositionSelector<CobaltRatio> cobaltSelector = GenomePositionSelectorFactory.create(ratios);
         final GenomePositionSelector<AmberBAF> bafSelector = GenomePositionSelectorFactory.create(bafs);
@@ -66,21 +62,12 @@ public class ObservedRegionFactory
             // double tumorRatio = cobalt.tumorMedianRatio();
             double tumorRatio = cobalt.tumorMeanRatio();
             double normalRatio = cobalt.referenceMeanRatio();
-            final ModifiableEnrichedRegion observedRegion = ModifiableEnrichedRegion.create()
-                    .from(region)
-                    .setBafCount(baf.count())
-                    .setObservedBAF(baf.medianBaf())
-                    .setObservedTumorRatio(tumorRatio)
-                    .setObservedNormalRatio(normalRatio)
-                    .setUnnormalisedObservedNormalRatio(cobalt.unnormalisedReferenceMeanRatio())
-                    .setRatioSupport(region.RatioSupport)
-                    .setSupport(region.Support)
-                    .setDepthWindowCount(cobalt.tumorCount())
-                    .setGcContent(gc.averageGCContent())
-                    .setGermlineStatus(mStatusFactory.status(region, normalRatio, tumorRatio))
-                    .setSvCluster(region.SvCluster)
-                    .setMinStart(region.MinStart)
-                    .setMaxStart(region.MaxStart);
+            GermlineStatus germlineStatus = mStatusFactory.status(region, normalRatio, tumorRatio);
+
+            final ObservedRegion observedRegion = new ObservedRegion(
+                    region.chromosome(), region.start(), region.end(), region.RatioSupport, region.Support, baf.count(), baf.medianBaf(),
+                    cobalt.tumorCount(), tumorRatio, normalRatio, cobalt.unnormalisedReferenceMeanRatio(), germlineStatus,
+                    region.SvCluster, gc.averageGCContent(), region.MinStart, region.MaxStart);
 
             result.add(observedRegion);
         }
@@ -88,17 +75,16 @@ public class ObservedRegionFactory
         return extendMinSupport(result);
     }
 
-    @NotNull
-    static List<ObservedRegion> extendMinSupport(final List<ModifiableEnrichedRegion> modifiables)
+    public static List<ObservedRegion> extendMinSupport(final List<ObservedRegion> modifiables)
     {
         for(int i = 0; i < modifiables.size(); i++)
         {
-            final ModifiableEnrichedRegion target = modifiables.get(i);
+            final ObservedRegion target = modifiables.get(i);
             if(target.support() == SegmentSupport.NONE && target.germlineStatus() == GermlineStatus.DIPLOID)
             {
                 for(int j = i - 1; j >= 0; j--)
                 {
-                    final ModifiableEnrichedRegion prior = modifiables.get(j);
+                    final ObservedRegion prior = modifiables.get(j);
                     if(prior.germlineStatus() == GermlineStatus.DIPLOID)
                     {
                         break;
