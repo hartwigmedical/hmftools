@@ -31,7 +31,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.gene.GermlineDetectionMethod;
-import com.hartwig.hmftools.purple.region.FittedRegion;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 
 public class GermlineDeletionDrivers
@@ -57,13 +57,13 @@ public class GermlineDeletionDrivers
     public List<GermlineDeletion> getDeletions() { return mDeletions; }
     public List<DriverCatalog> getDrivers() { return mDrivers; }
 
-    public void findDeletions(final List<PurpleCopyNumber> copyNumbers, final List<FittedRegion> fittedRegions)
+    public void findDeletions(final List<PurpleCopyNumber> copyNumbers, final List<ObservedRegion> fittedRegions)
     {
         int cnChrStartIndex = 0;
         int cnChrEndIndex = 0;
         String currentCnChromosome = "";
 
-        for(FittedRegion region : fittedRegions)
+        for(ObservedRegion region : fittedRegions)
         {
             if(region.germlineStatus() != HOM_DELETION && region.germlineStatus() != HET_DELETION)
                 continue;
@@ -123,7 +123,7 @@ public class GermlineDeletionDrivers
     private static final String FILTER_COHORT_FREQ = "COHORT_FREQ";
     private static final String FILTER_REGION_LENGTH = "MIN_LENGTH";
 
-    private List<String> checkFilters(final FittedRegion region, final PurpleCopyNumber copyNumber, int cohortFrequency)
+    private List<String> checkFilters(final ObservedRegion region, final PurpleCopyNumber copyNumber, int cohortFrequency)
     {
         final List<String> filters = Lists.newArrayList();
 
@@ -157,7 +157,7 @@ public class GermlineDeletionDrivers
         return filters;
     }
 
-    private void findOverlappingDriverGene(final FittedRegion region, final PurpleCopyNumber matchedCopyNumber)
+    private void findOverlappingDriverGene(final ObservedRegion region, final PurpleCopyNumber matchedCopyNumber)
     {
         // now find genes
         List<GeneData> geneDataList = mGeneDataCache.getChrGeneDataMap().get(region.chromosome());

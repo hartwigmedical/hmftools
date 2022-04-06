@@ -7,13 +7,13 @@ import java.util.function.Consumer;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
-import com.hartwig.hmftools.purple.region.FittedRegion;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 public final class SomaticPenaltyFactory
 {
     public static double calcPenalty(
-            final PurityAdjuster purityAdjuster, final Collection<FittedRegion> regions, final List<SomaticVariant> variants)
+            final PurityAdjuster purityAdjuster, final Collection<ObservedRegion> regions, final List<SomaticVariant> variants)
     {
         final SomaticDeviation somaticDeviation = SomaticDeviation.INSTANCE;
 
@@ -21,7 +21,7 @@ public final class SomaticPenaltyFactory
         double score = 0;
         int variantCount = 0;
 
-        for(FittedRegion region : regions)
+        for(ObservedRegion region : regions)
         {
             SomaticVariantConsumer consumer = new SomaticVariantConsumer(purityAdjuster, somaticDeviation, region);
             variantSelector.select(region, consumer);
@@ -36,12 +36,12 @@ public final class SomaticPenaltyFactory
     {
         final PurityAdjuster mPurityAdjuster;
         private final SomaticDeviation mSomaticDeviation;
-        private final FittedRegion mRegion;
+        private final ObservedRegion mRegion;
         private double mScore;
         private int mVariants;
 
         private SomaticVariantConsumer(
-                final PurityAdjuster purityAdjuster, final SomaticDeviation somaticDeviation, final FittedRegion region)
+                final PurityAdjuster purityAdjuster, final SomaticDeviation somaticDeviation, final ObservedRegion region)
         {
             mPurityAdjuster = purityAdjuster;
             mSomaticDeviation = somaticDeviation;

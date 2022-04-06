@@ -22,8 +22,6 @@ import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
-import com.hartwig.hmftools.purple.region.ImmutableEnrichedRegion;
-import com.hartwig.hmftools.purple.region.ImmutableFittedRegion;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
@@ -132,43 +130,23 @@ public final class TestUtils
                 .make(true);
     }
 
-    public static ImmutableEnrichedRegion.Builder createObservedRegion(@NotNull final String chromosome, final int start, final int end) {
-        return ImmutableEnrichedRegion.builder()
-                .observedBAF(0.5)
-                .bafCount(1)
-                .chromosome(chromosome)
-                .start(start)
-                .end(end)
-                .observedTumorRatio(1)
-                .depthWindowCount(1)
-                .observedNormalRatio(1)
-                .unnormalisedObservedNormalRatio(1)
-                .ratioSupport(true)
-                .svCluster(false)
-                .minStart(0)
-                .maxStart(0)
-                .germlineStatus(GermlineStatus.DIPLOID)
-                .gcContent(0.93)
-                .support(SegmentSupport.NONE);
+    public static ObservedRegion createObservedRegion(@NotNull final String chromosome, final int start, final int end)
+    {
+        return new ObservedRegion(
+                chromosome, start, end, true, SegmentSupport.NONE, 1, 0.5, 1,
+                1, 1, 1, GermlineStatus.DIPLOID, false,
+                0.93, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0);
     }
 
     @NotNull
-    public static ImmutableFittedRegion.Builder createDefaultFittedRegion(@NotNull final String chromosome, final int start,
-            final int end) {
-        final ObservedRegion observedRegion = createObservedRegion(chromosome, start, end).build();
-        return ImmutableFittedRegion.builder()
-                .from(observedRegion)
-                .tumorCopyNumber(2)
-                .tumorBAF(0.5)
-                .fittedBAF(0)
-                .fittedTumorCopyNumber(0)
-                .deviationPenalty(0)
-                .minorAlleleCopyNumberDeviation(0)
-                .majorAlleleCopyNumberDeviation(0)
-                .refNormalisedCopyNumber(2)
-                .ratioSupport(true)
-                .support(SegmentSupport.NONE)
-                .eventPenalty(0);
+    public static ObservedRegion createDefaultFittedRegion(@NotNull final String chromosome, final int start, final int end)
+    {
+        return new ObservedRegion(
+                chromosome, start, end, true, SegmentSupport.NONE, 1, 0.5, 1,
+                1, 1, 1, GermlineStatus.DIPLOID, false,
+                0.93, 0, 0, 0, 0, 0,
+                0, 2, 2, 0.5, 0, 0);
     }
 
 }

@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.purple.region.FittedRegion;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
@@ -23,24 +23,24 @@ public class PurityAdjustedSomaticVariantFactory
 {
     private final PurityAdjuster mPurityAdjuster;
     private final GenomeRegionSelector<PurpleCopyNumber> mCopyNumberSelector;
-    private final GenomeRegionSelector<FittedRegion> mFittedRegionSelector;
+    private final GenomeRegionSelector<ObservedRegion> mObservedRegionSelector;
     private final String mSample;
 
     public PurityAdjustedSomaticVariantFactory(
             final String sample, final PurityAdjuster purityAdjuster,
-            final List<PurpleCopyNumber> copyNumbers, final List<FittedRegion> fittedRegions)
+            final List<PurpleCopyNumber> copyNumbers, final List<ObservedRegion> fittedRegions)
     {
         this(sample, purityAdjuster, Multimaps.fromRegions(copyNumbers), Multimaps.fromRegions(fittedRegions));
     }
 
     private PurityAdjustedSomaticVariantFactory(
             final String sample, final PurityAdjuster purityAdjuster,
-            final Multimap<Chromosome, PurpleCopyNumber> copyNumbers, final Multimap<Chromosome, FittedRegion> fittedRegions)
+            final Multimap<Chromosome, PurpleCopyNumber> copyNumbers, final Multimap<Chromosome, ObservedRegion> fittedRegions)
     {
         mSample = sample;
         mPurityAdjuster = purityAdjuster;
         mCopyNumberSelector = GenomeRegionSelectorFactory.createImproved(copyNumbers);
-        mFittedRegionSelector = GenomeRegionSelectorFactory.createImproved(fittedRegions);
+        mObservedRegionSelector = GenomeRegionSelectorFactory.createImproved(fittedRegions);
     }
 
     public VariantContext enrich(final VariantContext variant)
@@ -64,7 +64,7 @@ public class PurityAdjustedSomaticVariantFactory
     private void enrich(final GenomePosition position, final AllelicDepth depth, final PurityAdjustedSomaticVariantBuilder builder)
     {
         mCopyNumberSelector.select(position).ifPresent(x -> applyPurityAdjustment(x, depth, builder));
-        mFittedRegionSelector.select(position).ifPresent(x -> builder.germlineStatus(x.germlineStatus()));
+        mObservedRegionSelector.select(position).ifPresent(x -> builder.germlineStatus(x.germlineStatus()));
     }
 
     private void applyPurityAdjustment(

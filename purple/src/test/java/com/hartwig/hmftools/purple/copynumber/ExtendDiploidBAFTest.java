@@ -12,8 +12,8 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -118,10 +118,10 @@ public class ExtendDiploidBAFTest
     @Test
     public void testMinorOrMajorMovedTargetPloidyWithCommonMinor()
     {
-        final FittedRegion left = create(1.01, 2.01);
-        final FittedRegion right = create(1.02, 3.02);
-        final FittedRegion sourceLikeLeft = create(1.03, 2.03);
-        final FittedRegion sourceLikeRight = create(1.04, 3.04);
+        final ObservedRegion left = create(1.01, 2.01);
+        final ObservedRegion right = create(1.02, 3.02);
+        final ObservedRegion sourceLikeLeft = create(1.03, 2.03);
+        final ObservedRegion sourceLikeRight = create(1.04, 3.04);
 
         assertEquals(1.01, ExtendDiploidBAF.minorOrMajorMovedTargetPloidy(left, left, right), EPSILON);
         assertEquals(1.02, ExtendDiploidBAF.minorOrMajorMovedTargetPloidy(right, left, right), EPSILON);
@@ -133,10 +133,10 @@ public class ExtendDiploidBAFTest
     @Test
     public void testMinorOrMajorMovedTargetPloidyWithCommonMajor()
     {
-        final FittedRegion left = create(1.01, 2.01);
-        final FittedRegion right = create(0.02, 2.02);
-        final FittedRegion sourceLikeLeft = create(1.03, 2.03);
-        final FittedRegion sourceLikeRight = create(0.04, 2.04);
+        final ObservedRegion left = create(1.01, 2.01);
+        final ObservedRegion right = create(0.02, 2.02);
+        final ObservedRegion sourceLikeLeft = create(1.03, 2.03);
+        final ObservedRegion sourceLikeRight = create(0.04, 2.04);
 
         assertEquals(2.01, ExtendDiploidBAF.minorOrMajorMovedTargetPloidy(left, left, right), EPSILON);
         assertEquals(2.02, ExtendDiploidBAF.minorOrMajorMovedTargetPloidy(right, left, right), EPSILON);
@@ -148,10 +148,10 @@ public class ExtendDiploidBAFTest
     @Test
     public void testMinorOrMajorMovedTargetPloidyWithMajorMinorCross()
     {
-        final FittedRegion left = create(1.01, 2.01);
-        final FittedRegion right = create(2.02, 3.02);
-        final FittedRegion sourceLikeLeft = create(1.03, 2.03);
-        final FittedRegion sourceLikeRight = create(2.04, 3.04);
+        final ObservedRegion left = create(1.01, 2.01);
+        final ObservedRegion right = create(2.02, 3.02);
+        final ObservedRegion sourceLikeLeft = create(1.03, 2.03);
+        final ObservedRegion sourceLikeRight = create(2.04, 3.04);
 
         assertEquals(2.01, ExtendDiploidBAF.minorOrMajorMovedTargetPloidy(left, left, right), EPSILON);
         assertEquals(2.02, ExtendDiploidBAF.minorOrMajorMovedTargetPloidy(right, left, right), EPSILON);
@@ -163,10 +163,10 @@ public class ExtendDiploidBAFTest
     @Test
     public void testMinorOrMajorMovedTargetPloidyWithMinorMajorCross()
     {
-        final FittedRegion left = create(1.01, 2.01);
-        final FittedRegion right = create(0.02, 1.02);
-        final FittedRegion sourceLikeLeft = create(0.03, 1.03);
-        final FittedRegion sourceLikeRight = create(0.04, 1.04);
+        final ObservedRegion left = create(1.01, 2.01);
+        final ObservedRegion right = create(0.02, 1.02);
+        final ObservedRegion sourceLikeLeft = create(0.03, 1.03);
+        final ObservedRegion sourceLikeRight = create(0.04, 1.04);
 
         assertEquals(1.01, ExtendDiploidBAF.minorOrMajorMovedTargetPloidy(left, left, right), EPSILON);
         assertEquals(1.02, ExtendDiploidBAF.minorOrMajorMovedTargetPloidy(right, left, right), EPSILON);
@@ -187,29 +187,31 @@ public class ExtendDiploidBAFTest
     @NotNull
     private static CombinedRegion create(int start, int end, SegmentSupport support, int bafCount)
     {
-        return new CombinedRegion(createDefaultFittedRegion("1", start, end)
-                .support(support)
-                .bafCount(bafCount)
-                .build());
+        ObservedRegion region = createDefaultFittedRegion("1", start, end);
+        region.setSupport(support);
+        region.setBafCount(bafCount);
+        return new CombinedRegion(region);
     }
 
     @NotNull
     private static CombinedRegion create(int start, int end, SegmentSupport support, int bafCount, double baf, double copyNumber)
     {
-        return new CombinedRegion(createDefaultFittedRegion("1", start, end)
-                .support(support)
-                .bafCount(bafCount)
-                .tumorBAF(baf)
-                .tumorCopyNumber(copyNumber)
-                .build());
+        ObservedRegion region = createDefaultFittedRegion("1", start, end);
+        region.setSupport(support);
+        region.setBafCount(bafCount);
+        region.setTumorBAF(baf);
+        region.setTumorCopyNumber(copyNumber);
+        return new CombinedRegion(region);
     }
 
     @NotNull
-    private static FittedRegion create(double minorAllele, double majorAllele)
+    private static ObservedRegion create(double minorAllele, double majorAllele)
     {
         double copyNumber = minorAllele + majorAllele;
         double baf = majorAllele / copyNumber;
-
-        return createDefaultFittedRegion("1", 1, 1000).tumorBAF(baf).tumorCopyNumber(copyNumber).build();
+        ObservedRegion region = createDefaultFittedRegion("1", 1, 1000);
+        region.setTumorBAF(baf);
+        region.setTumorCopyNumber(copyNumber);
+        return region;
     }
 }

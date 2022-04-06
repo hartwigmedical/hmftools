@@ -21,12 +21,11 @@ import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurityAdjusterAbnormalChromosome;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
-import com.hartwig.hmftools.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
+import com.hartwig.hmftools.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.collection.Downsample;
-import com.hartwig.hmftools.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
@@ -177,10 +176,10 @@ public class FittedPurityFactory
         double diploidProportion = 0;
         double averagePloidy = 0;
 
-        final List<FittedRegion> fittedRegions = Lists.newArrayList();
+        final List<ObservedRegion> fittedRegions = Lists.newArrayList();
         for(final ObservedRegion enrichedRegion : mFilteredRegions)
         {
-            final FittedRegion fittedRegion = mFittedRegionFactory.fitRegion(purity, normFactor, enrichedRegion);
+            final ObservedRegion fittedRegion = mFittedRegionFactory.fitRegion(purity, normFactor, enrichedRegion);
             eventPenalty += weightWithBaf(fittedRegion.eventPenalty(), enrichedRegion.bafCount());
             deviationPenalty += weightWithBaf(fittedRegion.deviationPenalty(), enrichedRegion.bafCount());
             averagePloidy += weightWithBaf(fittedRegion.tumorCopyNumber(), enrichedRegion.bafCount());

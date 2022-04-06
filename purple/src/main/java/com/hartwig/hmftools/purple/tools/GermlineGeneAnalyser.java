@@ -25,7 +25,7 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.purple.region.FittedRegion;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 
 import org.apache.commons.cli.CommandLine;
@@ -137,7 +137,7 @@ public class GermlineGeneAnalyser
     }
 
     public synchronized static void writeGeneOverlapData(
-            final BufferedWriter writer, final String sampleId, final FittedRegion region, final PurpleCopyNumber copyNumber,
+            final BufferedWriter writer, final String sampleId, final ObservedRegion region, final PurpleCopyNumber copyNumber,
             final GeneData geneData, final TranscriptData transData, final List<ExonData> overlappedExons)
     {
         try

@@ -8,7 +8,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
-import com.hartwig.hmftools.purple.region.FittedRegion;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
@@ -149,12 +149,10 @@ public class ExtendLongArmTest
     private static CombinedRegion createCombinedRegion(String chromosome, int start, int end, double copyNumber, double baf,
             SegmentSupport support)
     {
-        final FittedRegion region = createDefaultFittedRegion(chromosome, start, end)
-                .tumorCopyNumber(copyNumber)
-                .tumorBAF(baf)
-                .support(support)
-                .build();
-
+        final ObservedRegion region = createDefaultFittedRegion(chromosome, start, end);
+        region.setTumorCopyNumber(copyNumber);
+        region.setTumorBAF(baf);
+        region.setSupport(support);
         return new CombinedRegion(region);
     }
 

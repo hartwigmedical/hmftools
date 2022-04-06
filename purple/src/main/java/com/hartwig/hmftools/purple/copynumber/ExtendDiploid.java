@@ -10,9 +10,9 @@ import java.util.function.IntUnaryOperator;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
-import com.hartwig.hmftools.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -51,13 +51,13 @@ public class ExtendDiploid
     }
 
     @NotNull
-    public List<CombinedRegion> extendDiploid(final Collection<FittedRegion> fittedRegions)
+    public List<CombinedRegion> extendDiploid(final Collection<ObservedRegion> fittedRegions)
     {
         final boolean bafWeighted = fittedRegions.stream().anyMatch(x -> x.bafCount() >= MIN_BAF_COUNT_TO_WEIGH_WITH_BAF);
 
         final List<CombinedRegion> regions = Lists.newLinkedList();
 
-        for(FittedRegion fittedRegion : fittedRegions)
+        for(ObservedRegion fittedRegion : fittedRegions)
         {
             regions.add(new CombinedRegion(bafWeighted, fittedRegion));
         }
@@ -113,7 +113,7 @@ public class ExtendDiploid
     private boolean merge(final List<CombinedRegion> regions, final Direction direction, int targetIndex)
     {
         final CombinedRegion target = regions.get(targetIndex);
-        final FittedRegion neighbour = regions.get(direction.moveIndex(targetIndex)).region();
+        final ObservedRegion neighbour = regions.get(direction.moveIndex(targetIndex)).region();
 
         if(Extend.doNotExtend(target, neighbour))
             return false;
@@ -154,12 +154,12 @@ public class ExtendDiploid
         return false;
     }
 
-    private boolean isValid(int minTumorCount, final FittedRegion region)
+    private boolean isValid(int minTumorCount, final ObservedRegion region)
     {
         return region.germlineStatus() == GermlineStatus.DIPLOID && (region.support().isSV() || region.depthWindowCount() >= minTumorCount);
     }
 
-    private boolean isDubious(int minTumorCount, final FittedRegion region)
+    private boolean isDubious(int minTumorCount, final ObservedRegion region)
     {
         return region.germlineStatus() == GermlineStatus.DIPLOID && !region.support().isSV() && region.depthWindowCount() < minTumorCount;
     }
@@ -169,7 +169,7 @@ public class ExtendDiploid
     {
         for(int i = direction.moveIndex(targetIndex); i >= 0 && i < regions.size(); i = direction.moveIndex(i))
         {
-            final FittedRegion neighbour = regions.get(i).region();
+            final ObservedRegion neighbour = regions.get(i).region();
 
             if(neighbour.support() == SegmentSupport.CENTROMERE)
                 return true;
@@ -188,7 +188,7 @@ public class ExtendDiploid
         final CombinedRegion target = regions.get(targetIndex);
         for(int i = direction.moveIndex(targetIndex); i >= 0 && i < regions.size(); i = direction.moveIndex(i))
         {
-            final FittedRegion neighbour = regions.get(i).region();
+            final ObservedRegion neighbour = regions.get(i).region();
 
             // Coming from left to right, EXCLUDE neighbour from decision on break.
             if(neighbour.start() > target.start())
@@ -237,7 +237,7 @@ public class ExtendDiploid
         return dubiousCount < minTumorCount;
     }
 
-    private boolean inTolerance(final FittedRegion left, final FittedRegion right)
+    private boolean inTolerance(final ObservedRegion left, final ObservedRegion right)
     {
         return mTolerance.inTolerance(left, right);
     }
@@ -254,7 +254,7 @@ public class ExtendDiploid
         for(int i = 0; i < regions.size(); i++)
         {
             final CombinedRegion combined = regions.get(i);
-            final FittedRegion region = combined.region();
+            final ObservedRegion region = combined.region();
             if(!combined.isProcessed() && region.germlineStatus().equals(GermlineStatus.DIPLOID))
             {
 
@@ -275,7 +275,7 @@ public class ExtendDiploid
         return indexOfLargestBaf > -1 ? indexOfLargestBaf : (indexOfTumorRatioCount > -1 ? indexOfTumorRatioCount : indexOfLargestLength);
     }
 
-    private static String toString(FittedRegion region)
+    private static String toString(final ObservedRegion region)
     {
         return MoreObjects.toStringHelper("FittedRegion")
                 .omitNullValues()

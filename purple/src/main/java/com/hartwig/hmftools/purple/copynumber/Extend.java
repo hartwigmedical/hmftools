@@ -1,18 +1,16 @@
 package com.hartwig.hmftools.purple.copynumber;
 
-import com.hartwig.hmftools.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
-
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 final class Extend
 {
-    static boolean doNotExtend(@NotNull final CombinedRegion target, @NotNull final FittedRegion neighbour)
+    static boolean doNotExtend(final CombinedRegion target, final ObservedRegion neighbour)
     {
         return breakForCentromereStart(target, neighbour) || breakForStructuralVariant(target, neighbour);
     }
 
-    private static boolean breakForCentromereStart(@NotNull final CombinedRegion target, @NotNull final FittedRegion neighbour)
+    private static boolean breakForCentromereStart(final CombinedRegion target, final ObservedRegion neighbour)
     {
         if(target.start() < neighbour.start())
         {
@@ -22,7 +20,7 @@ final class Extend
         return target.region().support() == SegmentSupport.CENTROMERE;
     }
 
-    private static boolean breakForStructuralVariant(@NotNull final CombinedRegion target, @NotNull final FittedRegion neighbour)
+    private static boolean breakForStructuralVariant(final CombinedRegion target, final ObservedRegion neighbour)
     {
         if(target.start() < neighbour.start())
         {

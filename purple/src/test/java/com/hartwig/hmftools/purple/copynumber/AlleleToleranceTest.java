@@ -8,8 +8,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.purple.PurityAdjusterTypicalChromosome;
 import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.purple.region.FittedRegion;
-import com.hartwig.hmftools.purple.region.ImmutableFittedRegion;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -27,30 +26,32 @@ public class AlleleToleranceTest
     @Test
     public void testMinObservedBafDeviation()
     {
-        FittedRegion left = createBafRegion(1000, 1, 0);
-        FittedRegion right = createBafRegion(1000, 0.5, 0);
+        ObservedRegion left = createBafRegion(1000, 1, 0);
+        ObservedRegion right = createBafRegion(1000, 0.5, 0);
         assertTrue(victim.inTolerance(left, right));
 
-        left = ImmutableFittedRegion.copyOf(left).withObservedBAF(0.031);
+        left = ObservedRegion.from(left);
+        left.setObservedBAF(0.031);
         assertFalse(victim.inTolerance(left, right));
     }
 
     @Test
     public void testMinBafCount()
     {
-        FittedRegion left = createBafRegion(0, 1, 0.031);
-        FittedRegion right = createBafRegion(1000, 0.5, 0);
+        ObservedRegion left = createBafRegion(0, 1, 0.031);
+        ObservedRegion right = createBafRegion(1000, 0.5, 0);
         assertTrue(victim.inTolerance(left, right));
 
-        left = ImmutableFittedRegion.copyOf(left).withBafCount(1000);
+        left = ObservedRegion.from(left);
+        left.setBafCount(1000);
         assertFalse(victim.inTolerance(left, right));
     }
 
     @Test
     public void testRelativeChange()
     {
-        FittedRegion left = createCopyNumberRegion(1000, 10, 10);
-        FittedRegion right = createCopyNumberRegion(1000, 9.1, 9.1);
+        ObservedRegion left = createCopyNumberRegion(1000, 10, 10);
+        ObservedRegion right = createCopyNumberRegion(1000, 9.1, 9.1);
         assertTrue(victim.inTolerance(left, right));
 
         left = createCopyNumberRegion(1000, 2, 2);
@@ -64,25 +65,25 @@ public class AlleleToleranceTest
         assertEquals(6, AlleleTolerance.relativeCopyNumberChange(2.5, -0.5), 0.01);
     }
 
-    private static FittedRegion createBafRegion(int bafCount, double tumorBaf, double observedBaf)
+    private static ObservedRegion createBafRegion(int bafCount, double tumorBaf, double observedBaf)
     {
-        return createDefaultFittedRegion("1", 100, 200)
-                .bafCount(bafCount)
-                .tumorBAF(tumorBaf)
-                .observedBAF(observedBaf)
-                .tumorCopyNumber(2)
-                .refNormalisedCopyNumber(2)
-                .depthWindowCount(100)
-                .build();
+        ObservedRegion region = createDefaultFittedRegion("1", 100, 200);
+        region.setBafCount(bafCount);
+        region.setTumorBAF(tumorBaf);
+        region.setObservedBAF(observedBaf);
+        region.setTumorCopyNumber(2);
+        region.setRefNormalisedCopyNumber(2);
+        region.setDepthWindowCount(100);
+        return region;
     }
 
-    private static FittedRegion createCopyNumberRegion(int depthWindowCount, double copyNumber, double refCopyNumber)
+    private static ObservedRegion createCopyNumberRegion(int depthWindowCount, double copyNumber, double refCopyNumber)
     {
-        return createDefaultFittedRegion("1", 100, 200)
-                .bafCount(0)
-                .tumorCopyNumber(copyNumber)
-                .refNormalisedCopyNumber(refCopyNumber)
-                .depthWindowCount(depthWindowCount)
-                .build();
+        ObservedRegion region = createDefaultFittedRegion("1", 100, 200);
+        region.setBafCount(0);
+        region.setTumorCopyNumber(copyNumber);
+        region.setRefNormalisedCopyNumber(refCopyNumber);
+        region.setDepthWindowCount(depthWindowCount);
+        return region;
     }
 }

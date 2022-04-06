@@ -15,10 +15,10 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -45,7 +45,7 @@ public class PurpleCopyNumberFactory
         mCobaltChromosomes = cobaltChromosomes;
     }
 
-    public void invoke(final List<FittedRegion> fittedRegions, final List<StructuralVariant> structuralVariants)
+    public void invoke(final List<ObservedRegion> fittedRegions, final List<StructuralVariant> structuralVariants)
     {
         mSomaticCopyNumbers.clear();
 
@@ -58,7 +58,7 @@ public class PurpleCopyNumberFactory
 
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
-            final List<FittedRegion> chromosomeFittedRegions =
+            final List<ObservedRegion> chromosomeFittedRegions =
                     fittedRegions.stream().filter(matchesChromosome(chromosome)).collect(toList());
 
             final List<CombinedRegion> diploidExtended = extendDiploid.extendDiploid(chromosomeFittedRegions);

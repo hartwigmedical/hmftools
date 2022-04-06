@@ -38,19 +38,19 @@ public class FittedRegionFactory
         mAmbiguousBaf = ExpectedBAF.expectedBAF(averageReadDepth);
     }
 
-    public List<FittedRegion> fitRegion(double purity, double normFactor, @NotNull final Collection<ObservedRegion> observedRegions)
+    public List<ObservedRegion> fitRegion(double purity, double normFactor, @NotNull final Collection<ObservedRegion> observedRegions)
     {
         final Predicate<ObservedRegion> valid = observedRegion -> isAllowedRegion(mCobaltChromosomes, observedRegion);
         return observedRegions.stream().filter(valid).map(x -> fitRegion(purity, normFactor, x)).collect(Collectors.toList());
     }
 
     @VisibleForTesting
-    static boolean isAllowedRegion(@NotNull final CobaltChromosomes cobaltChromosomes, @NotNull final GenomeRegion region)
+    static boolean isAllowedRegion(@NotNull final CobaltChromosomes cobaltChromosomes, final GenomeRegion region)
     {
         return cobaltChromosomes.contains(region.chromosome());
     }
 
-    public FittedRegion fitRegion(final double purity, final double normFactor, final @NotNull ObservedRegion observedRegion)
+    public ObservedRegion fitRegion(final double purity, final double normFactor, final ObservedRegion observedRegion)
     {
         final PurityAdjuster purityAdjuster = new PurityAdjusterAbnormalChromosome(purity, normFactor, mCobaltChromosomes.chromosomes());
 
@@ -70,19 +70,18 @@ public class FittedRegionFactory
         final double eventPenalty = EventPenalty.penalty(mPloidyPenaltyFactor, majorAllelePloidy, minorAllelePloidy);
         final double deviationPenalty = (minorAllelePloidyDeviation + majorAllelePloidyDeviation) * observedBAF;
 
-        ImmutableFittedRegion.Builder builder = ImmutableFittedRegion.builder()
-                .from(observedRegion)
-                .fittedBAF(0)
-                .fittedTumorCopyNumber(0)
-                .tumorCopyNumber(impliedCopyNumber)
-                .tumorBAF(impliedBAF)
-                .refNormalisedCopyNumber(Doubles.replaceNaNWithZero(refNormalisedCopyNumber))
-                .minorAlleleCopyNumberDeviation(minorAllelePloidyDeviation)
-                .majorAlleleCopyNumberDeviation(majorAllelePloidyDeviation)
-                .deviationPenalty(deviationPenalty)
-                .eventPenalty(eventPenalty);
+        ObservedRegion fittedRegion = ObservedRegion.from(observedRegion);
 
-        return builder.build();
+        fittedRegion.setTumorCopyNumber(impliedCopyNumber);
+
+        fittedRegion.setTumorBAF(impliedBAF);
+        fittedRegion.setRefNormalisedCopyNumber(Doubles.replaceNaNWithZero(refNormalisedCopyNumber));
+        fittedRegion.setMinorAlleleCopyNumberDeviation(minorAllelePloidyDeviation);
+        fittedRegion.setMajorAlleleCopyNumberDeviation(majorAllelePloidyDeviation);
+        fittedRegion.setDeviationPenalty(deviationPenalty);
+        fittedRegion.setEventPenalty(eventPenalty);
+
+        return fittedRegion;
     }
 
     private double impliedBaf(final PurityAdjuster purityAdjuster, final String chromosome, final double copyNumber,
