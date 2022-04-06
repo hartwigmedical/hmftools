@@ -33,7 +33,7 @@ public class EvidenceConsolidationTest {
 
         ProtectEvidence evidence1 = testEvidenceBuilder().treatment(treatment1)
                 .protectSources(Sets.newHashSet(ImmutableProtectSource.builder()
-                        .sources(source1)
+                        .source(source1)
                         .sourceEvent("amp")
                         .addSourceUrls(url1)
                         .evidenceType(ProtectEvidenceType.AMPLIFICATION)
@@ -41,7 +41,7 @@ public class EvidenceConsolidationTest {
                 .build();
         ProtectEvidence evidence2 = testEvidenceBuilder().treatment(treatment1)
              .protectSources(Sets.newHashSet(ImmutableProtectSource.builder()
-                        .sources(source2)
+                        .source(source2)
                         .sourceEvent("amp")
                         .addSourceUrls(url1)
                         .evidenceType(ProtectEvidenceType.DELETION)
@@ -49,7 +49,7 @@ public class EvidenceConsolidationTest {
                 .build();
         ProtectEvidence evidence3 = testEvidenceBuilder().treatment(treatment2)
                 .protectSources(Sets.newHashSet(ImmutableProtectSource.builder()
-                        .sources(source2)
+                        .source(source2)
                         .sourceEvent("amp")
                         .addSourceUrls(url3)
                         .evidenceType(ProtectEvidenceType.AMPLIFICATION)
@@ -63,14 +63,14 @@ public class EvidenceConsolidationTest {
         assertEquals(2, consolidatedEvidence1.protectSources().size());
 
         ProtectSource protectSource1 = findBySource(consolidatedEvidence1.protectSources(), Knowledgebase.VICC_CGI);
-        assertEquals(Knowledgebase.VICC_CGI, protectSource1.sources());
+        assertEquals(Knowledgebase.VICC_CGI, protectSource1.source());
         assertEquals("amp", protectSource1.sourceEvent());
         assertEquals(Sets.newHashSet(url1), protectSource1.sourceUrls());
         assertEquals(ProtectEvidenceType.AMPLIFICATION, protectSource1.evidenceType());
         assertNull(protectSource1.rangeRank());
 
         ProtectSource protectSource2 = findBySource(consolidatedEvidence1.protectSources(), Knowledgebase.VICC_CIVIC);
-        assertEquals(Knowledgebase.VICC_CIVIC, protectSource2.sources());
+        assertEquals(Knowledgebase.VICC_CIVIC, protectSource2.source());
         assertEquals("amp", protectSource2.sourceEvent());
         assertEquals(Sets.newHashSet(url1), protectSource2.sourceUrls());
         assertEquals(ProtectEvidenceType.DELETION, protectSource2.evidenceType());
@@ -81,7 +81,7 @@ public class EvidenceConsolidationTest {
         assertEquals(1, consolidatedEvidence2.protectSources().size());
 
         ProtectSource protectSource3 = findBySource(consolidatedEvidence2.protectSources(), Knowledgebase.VICC_CIVIC);
-        assertEquals(Knowledgebase.VICC_CIVIC, protectSource3.sources());
+        assertEquals(Knowledgebase.VICC_CIVIC, protectSource3.source());
         assertEquals("amp", protectSource3.sourceEvent());
         assertEquals(Sets.newHashSet(url3), protectSource3.sourceUrls());
         assertEquals(ProtectEvidenceType.AMPLIFICATION, protectSource3.evidenceType());
@@ -102,7 +102,7 @@ public class EvidenceConsolidationTest {
     @NotNull
     private static ProtectSource findBySource(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase source) {
         for (ProtectSource protectSource : sources) {
-            if (protectSource.sources() == source) {
+            if (protectSource.source() == source) {
                 return protectSource;
             }
         }

@@ -19,7 +19,7 @@ public final class ClinicalTrialFactory {
         List<ProtectEvidence> trials = Lists.newArrayList();
         for (ProtectEvidence evidence : evidenceItems) {
             for (ProtectSource protectSource: evidence.protectSources()) {
-                if (protectSource.sources() == Knowledgebase.ICLUSION && evidence.onLabel()) {
+                if (protectSource.source() == Knowledgebase.ICLUSION && evidence.onLabel()) {
                     trials.add(evidence);
                 }
             }

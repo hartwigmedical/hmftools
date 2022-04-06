@@ -19,7 +19,7 @@ public final class ReportableEvidenceItemFactory {
         List<ProtectEvidence> nonTrials = Lists.newArrayList();
         for (ProtectEvidence evidence: evidenceItems) {
             for (ProtectSource source: evidence.protectSources()) {
-                if (source.sources() != Knowledgebase.ICLUSION && evidence.onLabel()){
+                if (source.source() != Knowledgebase.ICLUSION && evidence.onLabel()){
                     nonTrials.add(evidence);
                 }
             }
@@ -32,7 +32,7 @@ public final class ReportableEvidenceItemFactory {
         List<ProtectEvidence> nonTrials = Lists.newArrayList();
         for (ProtectEvidence evidence: evidenceItems) {
             for (ProtectSource source: evidence.protectSources()) {
-                if (source.sources() != Knowledgebase.ICLUSION && !evidence.onLabel()){
+                if (source.source() != Knowledgebase.ICLUSION && !evidence.onLabel()){
                     nonTrials.add(evidence);
                 }
             }

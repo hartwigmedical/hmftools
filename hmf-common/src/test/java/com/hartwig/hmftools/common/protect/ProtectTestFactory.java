@@ -25,7 +25,7 @@ public final class ProtectTestFactory {
 
         Set<ProtectSource> source = Sets.newHashSet();
         source.add(ImmutableProtectSource.builder()
-                .sources(Knowledgebase.CKB)
+                .source(Knowledgebase.CKB)
                 .sourceEvent("hotspot")
                 .sourceUrls(Sets.newHashSet())
                 .evidenceType(ProtectEvidenceType.ANY_MUTATION)

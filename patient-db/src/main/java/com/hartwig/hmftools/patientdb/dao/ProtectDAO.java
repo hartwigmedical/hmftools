@@ -58,7 +58,7 @@ class ProtectDAO {
             for (String url : protectSource.sourceUrls()) {
                 urlJoiner.add(url);
             }
-            String knowledgebase = protectSource.sources().technicalDisplay();
+            String knowledgebase = protectSource.source().technicalDisplay();
             String evidenceType = protectSource.evidenceType().display();
             Integer rank = protectSource.rangeRank();
 

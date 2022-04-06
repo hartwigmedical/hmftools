@@ -77,7 +77,7 @@ public class PersonalizedEvidenceFactory {
         ProtectEvidenceType evidenceType = determineEvidenceType(actionable);
 
         ProtectSource protectSource = ImmutableProtectSource.builder()
-                .sources(source)
+                .source(source)
                 .sourceEvent(sourceEvent)
                 .sourceUrls(sourceUrls)
                 .evidenceType(evidenceType)

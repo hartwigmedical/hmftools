@@ -51,7 +51,7 @@ public final class EvidenceReportingFunctions {
     private static boolean meetsMaxReportableLevelForKnowledgebases(@NotNull ProtectEvidence evidence) {
         EvidenceLevel lowestMaxReportingLevel = EvidenceLevel.A;
         for (ProtectSource source : evidence.protectSources()) {
-            Knowledgebase knowledgebase = source.sources();
+            Knowledgebase knowledgebase = source.source();
             EvidenceLevel maxLevelForSource = evidence.direction().isCertain()
                     ? knowledgebase.maxCertainEvidenceReportingLevel()
                     : knowledgebase.maxPredictedEvidenceReportingLevel();
@@ -147,7 +147,7 @@ public final class EvidenceReportingFunctions {
 
     private static boolean isExclusiveTrialEvidence(@NotNull ProtectEvidence evidence) {
         for (ProtectSource source : evidence.protectSources()) {
-            if (!TRIAL_SOURCES.contains(source.sources())) {
+            if (!TRIAL_SOURCES.contains(source.source())) {
                 return false;
             }
         }

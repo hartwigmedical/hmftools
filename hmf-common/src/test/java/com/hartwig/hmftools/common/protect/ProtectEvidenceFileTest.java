@@ -30,7 +30,7 @@ public class ProtectEvidenceFileTest {
         List<ProtectSource> evidence1_source1List = Lists.newArrayList(evidence1.protectSources());
         ProtectSource evidence1_source1 = findBySource(evidence1_source1List, Knowledgebase.VICC_CGI);
 
-        assertEquals(Knowledgebase.VICC_CGI, evidence1_source1.sources());
+        assertEquals(Knowledgebase.VICC_CGI, evidence1_source1.source());
         assertEquals("hotspot", evidence1_source1.sourceEvent());
         assertEquals(Sets.newHashSet("https://www.google.com/#q=FDA"),
                 evidence1_source1.sourceUrls());
@@ -44,7 +44,7 @@ public class ProtectEvidenceFileTest {
         List<ProtectSource> evidence2_source1List = Lists.newArrayList(evidence2.protectSources());
         ProtectSource evidence2_source1 = findBySource(evidence2_source1List, Knowledgebase.VICC_CGI);
 
-        assertEquals(Knowledgebase.VICC_CGI, evidence2_source1.sources());
+        assertEquals(Knowledgebase.VICC_CGI, evidence2_source1.source());
         assertEquals("hotspot", evidence2_source1.sourceEvent());
         assertEquals(Sets.newHashSet("https://www.google.com/#q=FDA", "https://www.google.com/#q=NCCN"),
                 evidence2_source1.sourceUrls());
@@ -58,7 +58,7 @@ public class ProtectEvidenceFileTest {
         List<ProtectSource> evidence3_source1List = Lists.newArrayList(evidence3.protectSources());
         ProtectSource source3_evidence1 = findBySource(evidence3_source1List, Knowledgebase.VICC_CGI);
 
-        assertEquals(Knowledgebase.VICC_CGI, source3_evidence1.sources());
+        assertEquals(Knowledgebase.VICC_CGI, source3_evidence1.source());
         assertEquals("hotspot", source3_evidence1.sourceEvent());
         assertEquals(Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/25399551", "http://www.ncbi.nlm.nih.gov/pubmed/27283860"),
                 source3_evidence1.sourceUrls());
@@ -66,7 +66,7 @@ public class ProtectEvidenceFileTest {
         assertNull(source3_evidence1.rangeRank());
 
         ProtectSource source3_evidence2 = findBySource(evidence3_source1List, Knowledgebase.VICC_CIVIC);
-        assertEquals(Knowledgebase.VICC_CIVIC, source3_evidence2.sources());
+        assertEquals(Knowledgebase.VICC_CIVIC, source3_evidence2.source());
         assertEquals("hotspot", source3_evidence2.sourceEvent());
         assertEquals(Sets.newHashSet("https://www.google.com/#q=FDA"),
                 source3_evidence2.sourceUrls());
@@ -80,7 +80,7 @@ public class ProtectEvidenceFileTest {
         List<ProtectSource> evidence4_source_1_list = Lists.newArrayList(evidence4.protectSources());
         ProtectSource evidence4_source_1 = findBySource(evidence4_source_1_list, Knowledgebase.VICC_CGI);
 
-        assertEquals(Knowledgebase.VICC_CGI, evidence4_source_1.sources());
+        assertEquals(Knowledgebase.VICC_CGI, evidence4_source_1.source());
         assertEquals("hotspot", evidence4_source_1.sourceEvent());
         assertEquals(Sets.newHashSet("https://www.google.com/#q=FDA"),
                 evidence4_source_1.sourceUrls());
@@ -94,7 +94,7 @@ public class ProtectEvidenceFileTest {
         List<ProtectSource> evidence5_source_1_list = Lists.newArrayList(evidence5.protectSources());
         ProtectSource evidence5_source1 = findBySource(evidence5_source_1_list, Knowledgebase.VICC_CGI);
 
-        assertEquals(Knowledgebase.VICC_CGI, evidence5_source1.sources());
+        assertEquals(Knowledgebase.VICC_CGI, evidence5_source1.source());
         assertEquals("hotspot", evidence5_source1.sourceEvent());
         assertEquals(Sets.newHashSet("https://www.google.com/#q=FDA"),
                 evidence5_source1.sourceUrls());
@@ -116,7 +116,7 @@ public class ProtectEvidenceFileTest {
     @NotNull
     private static ProtectSource findBySource(@NotNull List<ProtectSource> sources, @NotNull Knowledgebase evidenceSource) {
         for (ProtectSource source : sources) {
-            if (source.sources() == evidenceSource) {
+            if (source.source() == evidenceSource) {
                 return source;
             }
         }

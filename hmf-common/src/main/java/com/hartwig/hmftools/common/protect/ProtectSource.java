@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ProtectSource {
 
     @NotNull
-    public abstract Knowledgebase sources();
+    public abstract Knowledgebase source();
 
     @NotNull
     public abstract String sourceEvent();

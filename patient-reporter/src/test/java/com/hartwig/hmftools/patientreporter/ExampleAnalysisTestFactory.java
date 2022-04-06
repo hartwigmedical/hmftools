@@ -332,7 +332,7 @@ public final class ExampleAnalysisTestFactory {
 
         for (Knowledgebase knowledgebase : sources) {
             protectSources.add(ImmutableProtectSource.builder()
-                    .sources(knowledgebase)
+                    .source(knowledgebase)
                     .sourceEvent(Strings.EMPTY)
                     .sourceUrls(Sets.newHashSet())
                     .evidenceType(protectEvidenceType)

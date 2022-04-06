@@ -122,7 +122,7 @@ public final class ProtectEvidenceFile {
             }
 
             protectSources.add(ImmutableProtectSource.builder()
-                    .sources(Knowledgebase.lookupKnowledgebase(items[0]))
+                    .source(Knowledgebase.lookupKnowledgebase(items[0]))
                     .sourceEvent(items[1])
                     .sourceUrls(urlSet.stream().sorted().collect(Collectors.toList()))
                     .evidenceType(ProtectEvidenceType.valueOf(items[3]))
@@ -137,7 +137,7 @@ public final class ProtectEvidenceFile {
 
         for (ProtectSource source : protectSources) {
             StringJoiner urls = new StringJoiner(SOURCE_SUBFIELD_ITEM_DELIMITER);
-            sj.add(source.sources().reportDisplay());
+            sj.add(source.source().reportDisplay());
             sj.add(source.sourceEvent());
             for (String sourceUrl : source.sourceUrls()) {
                 urls.add(sourceUrl);

@@ -161,7 +161,7 @@ public class FusionEvidenceTest {
     @NotNull
     private static ProtectSource findBySource(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase source) {
         for (ProtectSource protectSource : sources) {
-            if (protectSource.sources() == source) {
+            if (protectSource.source() == source) {
                 return protectSource;
             }
         }

@@ -30,7 +30,7 @@ public class ClinicalTrialFactoryTest {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .protectSources(Sets.newHashSet(ImmutableProtectSource.builder()
-                        .sources(Knowledgebase.ICLUSION)
+                        .source(Knowledgebase.ICLUSION)
                         .sourceEvent(Strings.EMPTY)
                         .sourceUrls(Sets.newHashSet())
                         .evidenceType(ProtectEvidenceType.AMPLIFICATION)
