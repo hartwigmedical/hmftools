@@ -137,7 +137,7 @@ public final class ProtectEvidenceFile {
         for (ProtectSource source : protectSources) {
 
             StringJoiner urls = new StringJoiner(SUBFIELD_DELIMITER);
-            sb.append(source.source() == null ? Strings.EMPTY : source.source().technicalDisplay()).append(SOURCE_SUBFIELD_ITEM_DELIMITER);
+            sb.append(source.source().technicalDisplay()).append(SOURCE_SUBFIELD_ITEM_DELIMITER);
             sb.append(source.sourceEvent()).append(SOURCE_SUBFIELD_ITEM_DELIMITER);
             for (String sourceUrl : source.sourceUrls()) {
                 urls.add(sourceUrl);

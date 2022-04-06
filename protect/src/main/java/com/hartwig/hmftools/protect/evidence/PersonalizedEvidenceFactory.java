@@ -87,7 +87,7 @@ public class PersonalizedEvidenceFactory {
     }
 
     public boolean determineBlacklistedEvidence(@NotNull Set<CancerType> blacklistCancerTypes) {
-        boolean hasBlacklistedEvidence = false;
+        boolean hasBlacklistedEvidence = true;
         Set<String> blacklistDoids = CancerTypeFactory.doidStrings(blacklistCancerTypes);
         Set<String> results = Sets.newHashSet();
 
@@ -103,7 +103,7 @@ public class PersonalizedEvidenceFactory {
         for (String result : results) {
             for (String doidPatient : patientTumorDoids) {
                 if (doidPatient.equals(result)) {
-                    hasBlacklistedEvidence = true;
+                    hasBlacklistedEvidence = false;
                 }
             }
         }
