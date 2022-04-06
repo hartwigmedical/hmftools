@@ -145,6 +145,7 @@ public final class ProtectEvidenceFile {
             sj.add(urls.toString());
             sj.add(source.evidenceType().display());
             sj.add(String.valueOf(source.rangeRank()));
+            sj.add(SOURCE_SUBFIELD_DELIMITER);
         }
         return sj.toString();
     }
