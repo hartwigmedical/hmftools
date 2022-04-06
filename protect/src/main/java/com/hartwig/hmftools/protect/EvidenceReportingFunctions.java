@@ -113,6 +113,8 @@ public final class EvidenceReportingFunctions {
 
                 if (highestOnLabel.isHigher(evidence.level())) {
                     return false;
+                } else if(highestOnLabel == highestOffLabel) {
+                    return true;
                 } else if (highestOffLabel == null || highestOnLabel.isHigher(highestOffLabel)) {
                     return highestOffLabel == null || highestOnLabel.isHigher(highestOffLabel);
                 }
@@ -121,6 +123,8 @@ public final class EvidenceReportingFunctions {
                 assert highestOffLabel != null;
 
                 if (highestOffLabel.isHigher(evidence.level())) {
+                    return false;
+                } else if(highestOnLabel == highestOffLabel) {
                     return false;
                 } else if (highestOnLabel == null || highestOffLabel.isHigher(highestOnLabel)) {
                     return highestOnLabel == null || highestOffLabel.isHigher(highestOnLabel);
