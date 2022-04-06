@@ -11,6 +11,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.protect.ImmutableProtectSource;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.common.protect.ProtectTestFactory;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
@@ -20,6 +21,7 @@ import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantSource;
 import com.hartwig.hmftools.common.variant.VariantTestFactory;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -73,7 +75,12 @@ public class ConsentFilterFunctionsTest {
                 .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(ImmutableProtectSource.builder().addSources(Knowledgebase.ICLUSION).build())
+                .protectSources(Sets.newHashSet(ImmutableProtectSource.builder()
+                        .sources(Knowledgebase.ICLUSION)
+                        .sourceEvent(Strings.EMPTY)
+                        .sourceUrls(Sets.newHashSet())
+                        .evidenceType(ProtectEvidenceType.AMPLIFICATION)
+                        .build()))
                 .build();
 
         List<ProtectEvidence> withNotify = ConsentFilterFunctions.filterEvidenceForGermlineConsent(Lists.newArrayList(evidence),

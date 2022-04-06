@@ -90,7 +90,7 @@ public enum Knowledgebase {
     }
 
     @Nullable
-    private static Knowledgebase lookupKnowledgebase(@NotNull String technicalDisplay) {
+    public static Knowledgebase lookupKnowledgebase(@NotNull String technicalDisplay) {
         for (Knowledgebase knowledgebase : Knowledgebase.values()) {
             if (knowledgebase.technicalDisplay().equals(technicalDisplay)) {
                 return knowledgebase;

@@ -7,6 +7,7 @@ import java.util.Set;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.protect.ProtectSource;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 
 import org.apache.commons.compress.utils.Lists;
@@ -56,7 +57,7 @@ public final class EvidenceSelector {
     public static List<ProtectEvidence> trialsOnly(@NotNull List<ProtectEvidence> evidences) {
         List<ProtectEvidence> filtered = Lists.newArrayList();
         for (ProtectEvidence evidence : evidences) {
-            if (hasTrialSource(evidence.protectSources().sources())) {
+            if (hasTrialSource(evidence.protectSources())) {
                 filtered.add(evidence);
             }
         }
@@ -67,20 +68,21 @@ public final class EvidenceSelector {
     public static List<ProtectEvidence> noTrials(@NotNull List<ProtectEvidence> evidences) {
         List<ProtectEvidence> filtered = Lists.newArrayList();
         for (ProtectEvidence evidence : evidences) {
-            if (!hasTrialSource(evidence.protectSources().sources())) {
+            if (!hasTrialSource(evidence.protectSources())) {
                 filtered.add(evidence);
             }
         }
         return filtered;
     }
 
-    private static boolean hasTrialSource(@NotNull Set<Knowledgebase> sources) {
-        for (Knowledgebase trialSource : TRIAL_SOURCES) {
-            if (sources.contains(trialSource)) {
-                return true;
+    private static boolean hasTrialSource(@NotNull Set<ProtectSource> sources) {
+        for (ProtectSource protectSource: sources) {
+            for (Knowledgebase trialSource : TRIAL_SOURCES) {
+                if (trialSource.technicalDisplay().contains(protectSource.sources().technicalDisplay())) {
+                    return true;
+                }
             }
         }
-
         return false;
     }
 

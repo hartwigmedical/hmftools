@@ -14,11 +14,17 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ProtectSource {
 
     @NotNull
-    public abstract Set<Knowledgebase> sources();
+    public abstract Knowledgebase sources();
 
     @NotNull
-    public abstract Set<String> sourceEvent();
+    public abstract String sourceEvent();
 
     @NotNull
     public abstract Set<String> sourceUrls();
+
+    @NotNull
+    public abstract ProtectEvidenceType evidenceType();
+
+    @Nullable
+    public abstract Integer rangeRank();
 }

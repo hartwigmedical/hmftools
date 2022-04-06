@@ -8,11 +8,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
-import com.hartwig.hmftools.common.protect.ImmutableProtectSource;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.common.protect.ProtectSource;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class EvidenceConsolidation {
@@ -27,7 +25,7 @@ public final class EvidenceConsolidation {
             ProtectEvidence strippedEvidence = ImmutableProtectEvidence.builder()
                     .from(evidence)
                     .evidenceUrls(Sets.newHashSet())
-                    .protectSources(ImmutableProtectSource.builder().build())
+                    .protectSources(Sets.newHashSet())
                     .build();
             ConsolidatedData data = dataPerEvidence.get(strippedEvidence);
             if (data == null) {
@@ -42,11 +40,7 @@ public final class EvidenceConsolidation {
             consolidatedEvents.add(ImmutableProtectEvidence.builder()
                     .from(entry.getKey())
                     .evidenceUrls(entry.getValue().evidenceUrls())
-                    .protectSources(ImmutableProtectSource.builder()
-                            .sources(entry.getValue().sources())
-                            .sourceEvent(entry.getValue().sourceEvent())
-                            .sourceUrls(entry.getValue().sourceUrls())
-                            .build())
+                    .protectSources(entry.getValue().protectSources())
                     .build());
         }
         return consolidatedEvents;
@@ -57,20 +51,14 @@ public final class EvidenceConsolidation {
         @NotNull
         private final Set<String> evidenceUrls = Sets.newTreeSet();
         @NotNull
-        private final Set<Knowledgebase> sources = Sets.newTreeSet();
-        @NotNull
-        private final Set<String> sourceEvent = Sets.newTreeSet();
-        @NotNull
-        private final Set<String> sourceUrls = Sets.newTreeSet();
+        private final Set<ProtectSource> protectSources = Sets.newHashSet();
 
         public ConsolidatedData() {
         }
 
         public void appendEvidence(@NotNull ProtectEvidence evidence) {
             evidenceUrls.addAll(evidence.evidenceUrls());
-            sources.addAll(evidence.protectSources().sources());
-            sourceEvent.addAll(evidence.protectSources().sourceEvent());
-            sourceUrls.addAll(evidence.protectSources().sourceUrls());
+            protectSources.addAll(evidence.protectSources());
         }
 
         @NotNull
@@ -79,18 +67,8 @@ public final class EvidenceConsolidation {
         }
 
         @NotNull
-        public Set<Knowledgebase> sources() {
-            return sources;
-        }
-
-        @NotNull
-        public Set<String> sourceEvent() {
-            return sourceEvent;
-        }
-
-        @NotNull
-        public Set<String> sourceUrls() {
-            return sourceUrls;
+        public Set<ProtectSource> protectSources() {
+            return protectSources;
         }
     }
 }
