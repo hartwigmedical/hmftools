@@ -110,9 +110,22 @@ public final class EvidenceReportingFunctions {
         if (evidence.reported()) {
             if (evidence.onLabel()) {
                 assert highestOnLabel != null;
-                return evidence.level() == highestOnLabel;
-            } else if (evidence.level() == highestOffLabel) {
-                return highestOnLabel == null || evidence.level().isHigher(highestOnLabel);
+
+                if (highestOnLabel.isHigher(evidence.level())) {
+                    return false;
+                } else if (highestOffLabel == null || highestOnLabel.isHigher(highestOffLabel)) {
+                    return highestOffLabel == null || highestOnLabel.isHigher(highestOffLabel);
+                }
+
+            } else {
+                assert highestOffLabel != null;
+
+                if (highestOffLabel.isHigher(evidence.level())) {
+                    return false;
+                }
+                 if (highestOnLabel == null || highestOffLabel.isHigher(highestOnLabel)) {
+                    return highestOnLabel == null || highestOffLabel.isHigher(highestOnLabel);
+                }
             }
         }
         return false;
