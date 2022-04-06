@@ -124,7 +124,6 @@ public class EvidenceReportingFunctionsTest {
     }
 
     @Test
-    @Ignore
     public void reportHighestOffLabelIfHigherThanOnLabel() {
         List<ProtectEvidence> evidence = Lists.newArrayList(onLabelResponsiveC, offLabelResponsiveA, offLabelResponsiveB);
         List<ProtectEvidence> filtered = EvidenceReportingFunctions.applyReportingAlgo(evidence);
@@ -222,6 +221,6 @@ public class EvidenceReportingFunctionsTest {
 
     @NotNull
     private static ProtectEvidence createTestEvidence(boolean onLabel, @NotNull EvidenceDirection direction, @NotNull EvidenceLevel level) {
-        return testEvidenceBuilder().onLabel(onLabel).level(level).direction(direction).build();
+        return testEvidenceBuilder().onLabel(onLabel).level(level).direction(direction).treatment("A").build();
     }
 }
