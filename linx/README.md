@@ -767,7 +767,7 @@ For each single SV and for every facing pair of SVs in the same chain identify a
 - 3’ gene partner must have coding bases
 - 5’ gene partner transcript must have one of the following ensembl biotypes: ‘protein_coding’, ’retained_intron’, ’processed_transcript’, ’nonsense_mediated_decay’, ’lincRNA’
 - The upstream breakend must fall within the 5’ partner transcript and be disruptive to the transcript. 
-- The downstream breakend must fall either within the 5’ gene or within 100kb upstream. 
+- The downstream breakend must fall either within the 3’ gene or within 100kb upstream. 
 - The combined length of all segments in the chain must be less than 150kb.
 - The SV or chain must join appropriate contexts of the 5’ and 3’ genes (see table below) and for coding regions must be inframe after allowing for any skipped exons. For exonic to exonic fusions exact base phasing is also checked as splice acceptor to splice donor phasing. The following table shows allowed contexts:
 
