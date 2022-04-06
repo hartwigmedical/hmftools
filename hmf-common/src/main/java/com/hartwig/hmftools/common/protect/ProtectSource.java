@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ProtectSource {
 
-    @NotNull
+    @Nullable
     public abstract Knowledgebase source();
 
     @NotNull

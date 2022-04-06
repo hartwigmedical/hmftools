@@ -126,28 +126,28 @@ public final class ProtectEvidenceFile {
                     .sourceEvent(items[1])
                     .sourceUrls(urlSet.stream().sorted().collect(Collectors.toList()))
                     .evidenceType(ProtectEvidenceType.valueOf(items[3]))
-                    .rangeRank(emptyToNullInteger(items[4]))
+                    .rangeRank(emptyToNullInteger(items[4] == null ? Strings.EMPTY : items[4]))
                     .build());
         }
         return protectSources;
     }
 
     public static String toData(final Set<ProtectSource> protectSources) {
-        StringJoiner sj = new StringJoiner(SOURCE_SUBFIELD_ITEM_DELIMITER);
-
+        StringBuilder sb = new StringBuilder();
         for (ProtectSource source : protectSources) {
-            StringJoiner urls = new StringJoiner(SOURCE_SUBFIELD_ITEM_DELIMITER);
-            sj.add(source.source().technicalDisplay());
-            sj.add(source.sourceEvent());
+
+            StringJoiner urls = new StringJoiner(SUBFIELD_DELIMITER);
+            sb.append(source.source() == null ? Strings.EMPTY : source.source().technicalDisplay()).append(SOURCE_SUBFIELD_ITEM_DELIMITER);
+            sb.append(source.sourceEvent()).append(SOURCE_SUBFIELD_ITEM_DELIMITER);
             for (String sourceUrl : source.sourceUrls()) {
                 urls.add(sourceUrl);
             }
-            sj.add(urls.toString());
-            sj.add(source.evidenceType().display());
-            sj.add(String.valueOf(source.rangeRank()));
-            sj.add(SOURCE_SUBFIELD_DELIMITER);
+            sb.append(urls).append(SOURCE_SUBFIELD_ITEM_DELIMITER);
+            sb.append(source.evidenceType()).append(SOURCE_SUBFIELD_ITEM_DELIMITER);
+            sb.append(source.rangeRank() == null ? Strings.EMPTY : String.valueOf(source.rangeRank())).append(SOURCE_SUBFIELD_DELIMITER);
         }
-        return sj.toString();
+
+        return sb.toString();
     }
 
     @NotNull
