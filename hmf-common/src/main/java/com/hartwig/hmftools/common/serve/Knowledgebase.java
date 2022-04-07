@@ -23,7 +23,8 @@ public enum Knowledgebase {
     VICC_CGI(RefGenomeVersion.V37, "vicc_cgi", "CGI", EvidenceLevel.B, EvidenceLevel.B),
     VICC_CIVIC(RefGenomeVersion.V37, "vicc_civic", "CIViC", EvidenceLevel.B, EvidenceLevel.B),
     VICC_JAX(RefGenomeVersion.V37, "vicc_jax", "CKB Core", EvidenceLevel.B, EvidenceLevel.B),
-    VICC_ONCOKB(RefGenomeVersion.V37, "vicc_oncokb", "OncoKB", EvidenceLevel.B, EvidenceLevel.B);
+    VICC_ONCOKB(RefGenomeVersion.V37, "vicc_oncokb", "OncoKB", EvidenceLevel.B, EvidenceLevel.B),
+    UNKNOWN(RefGenomeVersion.V37, "unknown", "Unkown", EvidenceLevel.D, EvidenceLevel.D);
 
     private static final Logger LOGGER = LogManager.getLogger(Knowledgebase.class);
 
@@ -79,7 +80,7 @@ public enum Knowledgebase {
 
         for (String technicalDisplay : knowledgebases.split(",")) {
             Knowledgebase knowledgebase = lookupKnowledgebase(technicalDisplay);
-            if (knowledgebase != null) {
+            if (knowledgebase != Knowledgebase.UNKNOWN) {
                 consolidated.add(knowledgebase);
             } else {
                 LOGGER.warn("Could not resolve knowledgebase with display '{}'", knowledgebase);
@@ -89,14 +90,14 @@ public enum Knowledgebase {
         return consolidated;
     }
 
-    @Nullable
+    @NotNull
     public static Knowledgebase lookupKnowledgebase(@NotNull String technicalDisplay) {
         for (Knowledgebase knowledgebase : Knowledgebase.values()) {
             if (knowledgebase.technicalDisplay().equals(technicalDisplay)) {
                 return knowledgebase;
             }
         }
-        return null;
+        return Knowledgebase.UNKNOWN;
     }
 
     @NotNull

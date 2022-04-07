@@ -56,14 +56,11 @@ public class PersonalizedEvidenceFactory {
         for (String url : actionable.sourceUrls()) {
             sourceUrlJoiner.add(url);
         }
-
         return ImmutableProtectEvidence.builder()
                 .treatment(actionable.treatment())
-                .onLabel(determineBlacklistedEvidence(actionable.blacklistCancerTypes())
-                        && patientTumorDoids.contains(actionable.applicableCancerType().doid()))
+                .onLabel(determineOnlabel(actionable.applicableCancerType(), actionable.blacklistCancerTypes()))
                 .level(actionable.level())
                 .direction(actionable.direction())
-                .evidenceUrls(actionable.evidenceUrls())
                 .protectSources(determineProtectSources(actionable));
     }
 
@@ -75,19 +72,26 @@ public class PersonalizedEvidenceFactory {
         Set<String> sourceUrls = actionable.sourceUrls();
         Integer rank = determineRangeRank(actionable);
         ProtectEvidenceType evidenceType = determineEvidenceType(actionable);
+        Set<String> evidenceUrls = actionable.evidenceUrls();
 
         ProtectSource protectSource = ImmutableProtectSource.builder()
                 .source(source)
                 .sourceEvent(sourceEvent)
                 .sourceUrls(sourceUrls)
                 .evidenceType(evidenceType)
-                .rangeRank(rank).build();
+                .rangeRank(rank)
+                .evidenceUrls(evidenceUrls)
+                .build();
         protectSources.add(protectSource);
         return protectSources;
     }
 
+    public boolean determineOnlabel(@NotNull CancerType applicableCancerType, @NotNull Set<CancerType> blacklistCancerTypes) {
+        return !determineBlacklistedEvidence(blacklistCancerTypes) && patientTumorDoids.contains(applicableCancerType.doid());
+    }
+
     public boolean determineBlacklistedEvidence(@NotNull Set<CancerType> blacklistCancerTypes) {
-        boolean hasBlacklistedEvidence = true;
+        boolean hasBlacklistedEvidence = false;
         Set<String> blacklistDoids = CancerTypeFactory.doidStrings(blacklistCancerTypes);
         Set<String> results = Sets.newHashSet();
 
@@ -97,13 +101,12 @@ public class PersonalizedEvidenceFactory {
 
         for (String doid : blacklistDoids) {
             results.add(doid);
-            results.addAll(doidParentModel.parents(doid));
         }
 
         for (String result : results) {
             for (String doidPatient : patientTumorDoids) {
                 if (doidPatient.equals(result)) {
-                    hasBlacklistedEvidence = false;
+                    hasBlacklistedEvidence = true;
                 }
             }
         }

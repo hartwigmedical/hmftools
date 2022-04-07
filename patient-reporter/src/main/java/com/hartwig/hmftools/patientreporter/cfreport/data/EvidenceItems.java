@@ -7,6 +7,7 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.protect.ProtectSource;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.itextpdf.kernel.pdf.action.PdfAction;
@@ -72,19 +73,21 @@ public final class EvidenceItems {
     public static Paragraph createLinksPublications(@NotNull ProtectEvidence evidence) {
         Paragraph paragraphPublications = new Paragraph();
         int number = 0;
-        for (String url : evidence.evidenceUrls()) {
-            if (!url.contains("google")) {
-                //Google urls are filtered out
-                number += 1;
-                if (!paragraphPublications.isEmpty()) {
-                    paragraphPublications.add(new Text(", "));
-                }
+        for (ProtectSource source : evidence.protectSources()) {
+            for (String url : source.evidenceUrls()) {
+                if (!url.contains("google")) {
+                    //Google urls are filtered out
+                    number += 1;
+                    if (!paragraphPublications.isEmpty()) {
+                        paragraphPublications.add(new Text(", "));
+                    }
 
-                paragraphPublications.add(new Text(Integer.toString(number)).addStyle(ReportResources.urlStyle())
-                        .setAction(PdfAction.createURI(url))).setFixedLeading(ReportResources.BODY_TEXT_LEADING);
+                    paragraphPublications.add(new Text(Integer.toString(number)).addStyle(ReportResources.urlStyle())
+                            .setAction(PdfAction.createURI(url))).setFixedLeading(ReportResources.BODY_TEXT_LEADING);
+                }
             }
         }
+
         return paragraphPublications;
     }
-
 }
