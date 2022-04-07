@@ -17,13 +17,10 @@ import com.hartwig.hmftools.common.purple.purity.BestFit;
 import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.purple.purity.RunMode;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.somatic.SomaticStream;
-
-import org.jetbrains.annotations.NotNull;
 
 public final class PurpleSummaryData
 {
@@ -65,7 +62,7 @@ public final class PurpleSummaryData
                 .score(bestFit.score())
                 .polyClonalProportion(polyclonalProportion(copyNumbers))
                 .wholeGenomeDuplication(wholeGenomeDuplication(copyNumbers))
-                .microsatelliteIndelsPerMb(somaticStream != null ? somaticStream.microsatelliteIndelsPerMb() : 0)
+                .microsatelliteIndelsPerMb(somaticStream != null ? somaticStream.msiIndelsPerMb() : 0)
                 .microsatelliteStatus(somaticStream != null ? somaticStream.microsatelliteStatus() : MicrosatelliteStatus.UNKNOWN)
                 .tumorMutationalLoad(somaticStream != null ? somaticStream.tumorMutationalLoad() : 0)
                 .tumorMutationalLoadStatus(somaticStream != null ? somaticStream.tumorMutationalLoadStatus() : TumorMutationalStatus.UNKNOWN)

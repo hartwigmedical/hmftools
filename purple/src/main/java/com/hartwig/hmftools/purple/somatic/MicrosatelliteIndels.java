@@ -44,7 +44,7 @@ public class MicrosatelliteIndels
         if(!isValidIndel(context))
             return;
 
-        if(mTargetRegions.hasTargetRegions() && !mTargetRegions.inTargetRegions(context.getContig(), context.getStart()))
+        if(mTargetRegions.hasTargetRegions() && !mTargetRegions.inTargetRegions(context.getContig(), context.getStart(), true))
             return;
 
         int repeatCount = context.getAttributeAsInt(REPEAT_COUNT_FLAG, 0);

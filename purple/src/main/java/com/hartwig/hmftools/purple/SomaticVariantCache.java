@@ -87,8 +87,7 @@ public class SomaticVariantCache
             // hotspot status is used in fitting as well as during and for enrichment
             hotspotEnrichment.processVariant(variantContext);
 
-
-            if(isFittingCandidate(variant))
+            if(!tumorOnly && isFittingCandidate(variant))
                 mFittingVariants.add(variant);
 
             if(variant.isPass())

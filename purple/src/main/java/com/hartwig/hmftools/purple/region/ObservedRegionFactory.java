@@ -178,6 +178,9 @@ public class ObservedRegionFactory
         {
             if(mWindow.end(ratio.position()) <= mRegion.end())
             {
+                if(ratio.referenceGCDiploidRatio() < 0)
+                    return;
+
                 mReferenceAccumulator.add(ratio.referenceGCDiploidRatio());
                 mUnnormalisedReferenceAccumulator.add(ratio.referenceGCRatio());
                 mTumorAccumulator.add(ratio.tumorGCRatio(), true);

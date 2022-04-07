@@ -85,19 +85,22 @@ public class SomaticStream
         mVcfWriter = null;
     }
 
-    public double microsatelliteIndelsPerMb()
+    public double msiIndelsPerMb()
     {
         return mMicrosatelliteIndels.microsatelliteIndelsPerMb();
     }
 
     public MicrosatelliteStatus microsatelliteStatus()
     {
-        return mEnabled ? MicrosatelliteStatus.fromIndelsPerMb(microsatelliteIndelsPerMb()) : MicrosatelliteStatus.UNKNOWN;
+        return mEnabled ? MicrosatelliteStatus.fromIndelsPerMb(msiIndelsPerMb()) : MicrosatelliteStatus.UNKNOWN;
     }
 
     public double tumorMutationalBurdenPerMb()
     {
-        return mTumorMutationalLoad.burdenPerMb();
+        if(!mReferenceData.TargetRegions.hasTargetRegions())
+            return mTumorMutationalLoad.burdenPerMb();
+
+        return mReferenceData.TargetRegions.calcTmb(tumorMutationalLoad(), msiIndelsPerMb());
     }
 
     public int tumorMutationalLoad()

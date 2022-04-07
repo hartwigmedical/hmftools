@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.somatic;
 
+import static com.hartwig.hmftools.purple.config.PurpleConstants.MB_PER_GENOME;
+
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.purple.config.TargetRegionsData;
@@ -21,12 +23,12 @@ public class TumorMutationalLoad
 
     public double burdenPerMb()
     {
-        return mTargetRegions.calcTmb(mBurden);
+        return mBurden / MB_PER_GENOME;
     }
 
     public void processVariant(final SomaticVariant variant)
     {
-        if(mTargetRegions.hasTargetRegions() && !mTargetRegions.inTargetRegions(variant.chromosome(), variant.position()))
+        if(mTargetRegions.hasTargetRegions() && !mTargetRegions.inTargetRegions(variant.chromosome(), variant.position(), false))
             return;
 
         mBurden++;
