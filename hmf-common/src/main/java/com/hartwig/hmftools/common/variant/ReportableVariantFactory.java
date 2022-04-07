@@ -12,9 +12,12 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalogKey;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogMap;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class ReportableVariantFactory {
+    private static final Logger LOGGER = LogManager.getLogger(ReportableVariantFactory.class);
 
     private ReportableVariantFactory() {
     }
@@ -41,24 +44,18 @@ public final class ReportableVariantFactory {
         Map<DriverCatalogKey, DriverCatalog> geneDriverMap = DriverCatalogMap.toDriverMap(driverCatalog);
         List<ReportableVariant> result = Lists.newArrayList();
 
-        Set<DriverCatalogKey> keys = DriverCatalogKey.buildUniqueKeysSet(geneDriverMap);
-
         for (SomaticVariant variant : variants) {
             if (variant.reported()) {
                 ImmutableReportableVariant.Builder reportable = ImmutableReportableVariant.builder();
-                for (DriverCatalogKey key : keys) {
-                    DriverCatalog geneDriver = geneDriverMap.get(key);
-                    if (geneDriver == null) {
-                        throw new IllegalStateException("Could not find driver entry for variant on gene '" + variant.gene() + "'");
-                    }
-                    SomaticVariant variantCorrect = ImmutableSomaticVariantImpl.builder().from(variant).gene(geneDriver.gene()).build();
-                    ImmutableReportableVariant.Builder build =
-                            fromVariant(variantCorrect, source).driverLikelihood(geneDriver.driverLikelihood())
-                                    .transcript(geneDriver.transcript())
-                                    .isCanonical(geneDriver.isCanonical());
-                    reportable.from(build.build());
-                }
+                String transcript = variant.otherReportedEffects().isEmpty()
+                        ? variant.canonicalTranscript()
+                        : variant.otherReportedEffects().split("\\|")[0];
+                DriverCatalog geneDriver = geneDriverMap.get(DriverCatalogKey.create(variant.gene(), transcript));
 
+                ImmutableReportableVariant.Builder build = fromVariant(variant, source).driverLikelihood(geneDriver.driverLikelihood())
+                        .transcript(geneDriver.transcript())
+                        .isCanonical(geneDriver.isCanonical());
+                reportable.from(build.build());
                 result.add(reportable.build());
             }
         }
