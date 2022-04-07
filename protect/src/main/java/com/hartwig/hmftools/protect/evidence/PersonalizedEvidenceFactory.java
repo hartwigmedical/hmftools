@@ -56,7 +56,6 @@ public class PersonalizedEvidenceFactory {
         for (String url : actionable.sourceUrls()) {
             sourceUrlJoiner.add(url);
         }
-
         return ImmutableProtectEvidence.builder()
                 .treatment(actionable.treatment())
                 .onLabel(determineOnlabel(actionable.applicableCancerType(), actionable.blacklistCancerTypes()))
@@ -102,7 +101,6 @@ public class PersonalizedEvidenceFactory {
 
         for (String doid : blacklistDoids) {
             results.add(doid);
-            results.addAll(doidParentModel.parents(doid));
         }
 
         for (String result : results) {
