@@ -59,8 +59,7 @@ public class PersonalizedEvidenceFactory {
 
         return ImmutableProtectEvidence.builder()
                 .treatment(actionable.treatment())
-                .onLabel(determineBlacklistedEvidence(actionable.blacklistCancerTypes())
-                        && patientTumorDoids.contains(actionable.applicableCancerType().doid()))
+                .onLabel(determineOnlabel(actionable.applicableCancerType(), actionable.blacklistCancerTypes()))
                 .level(actionable.level())
                 .direction(actionable.direction())
                 .evidenceUrls(actionable.evidenceUrls())
@@ -86,8 +85,13 @@ public class PersonalizedEvidenceFactory {
         return protectSources;
     }
 
+    public boolean determineOnlabel(@NotNull CancerType applicableCancerType, @NotNull Set<CancerType> blacklistCancerTypes) {
+        return !determineBlacklistedEvidence(blacklistCancerTypes)
+                && patientTumorDoids.contains(applicableCancerType.doid());
+    }
+
     public boolean determineBlacklistedEvidence(@NotNull Set<CancerType> blacklistCancerTypes) {
-        boolean hasBlacklistedEvidence = true;
+        boolean hasBlacklistedEvidence = false;
         Set<String> blacklistDoids = CancerTypeFactory.doidStrings(blacklistCancerTypes);
         Set<String> results = Sets.newHashSet();
 
@@ -103,7 +107,7 @@ public class PersonalizedEvidenceFactory {
         for (String result : results) {
             for (String doidPatient : patientTumorDoids) {
                 if (doidPatient.equals(result)) {
-                    hasBlacklistedEvidence = false;
+                    hasBlacklistedEvidence = true;
                 }
             }
         }
