@@ -80,7 +80,7 @@ public enum Knowledgebase {
 
         for (String technicalDisplay : knowledgebases.split(",")) {
             Knowledgebase knowledgebase = lookupKnowledgebase(technicalDisplay);
-            if (knowledgebase == Knowledgebase.UNKNOWN) {
+            if (knowledgebase != Knowledgebase.UNKNOWN) {
                 consolidated.add(knowledgebase);
             } else {
                 LOGGER.warn("Could not resolve knowledgebase with display '{}'", knowledgebase);
