@@ -139,6 +139,7 @@ public final class ProtectEvidenceFile {
         for (ProtectSource source : protectSources) {
 
             StringJoiner urls = new StringJoiner(SUBFIELD_DELIMITER);
+            StringJoiner evidenceUrls = new StringJoiner(SUBFIELD_DELIMITER);
             sb.append(source.source().technicalDisplay()).append(SOURCE_SUBFIELD_ITEM_DELIMITER);
             sb.append(source.sourceEvent()).append(SOURCE_SUBFIELD_ITEM_DELIMITER);
             for (String sourceUrl : source.sourceUrls()) {
@@ -148,7 +149,10 @@ public final class ProtectEvidenceFile {
             sb.append(source.evidenceType()).append(SOURCE_SUBFIELD_ITEM_DELIMITER);
             sb.append(source.rangeRank() == null ? Strings.EMPTY : String.valueOf(source.rangeRank()))
                     .append(SOURCE_SUBFIELD_ITEM_DELIMITER);
-            sb.append(source.evidenceUrls()).append(SOURCE_SUBFIELD_DELIMITER);
+            for (String url : source.evidenceUrls()) {
+                evidenceUrls.add(url);
+            }
+            sb.append(SOURCE_SUBFIELD_DELIMITER);
         }
 
         return sb.toString();
