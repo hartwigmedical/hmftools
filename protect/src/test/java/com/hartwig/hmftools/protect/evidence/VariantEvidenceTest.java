@@ -5,10 +5,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
+import com.hartwig.hmftools.common.protect.ProtectSource;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.test.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
@@ -43,6 +46,7 @@ public class VariantEvidenceTest {
                 .position(position)
                 .ref(ref)
                 .alt(alt)
+                .source(Knowledgebase.CKB)
                 .build();
 
         VariantEvidence variantEvidence = new VariantEvidence(EvidenceTestFactory.createTestEvidenceFactory(),
@@ -84,12 +88,18 @@ public class VariantEvidenceTest {
         ProtectEvidence reportedEvidence = findByGene(evidences, "reportable");
         assertTrue(reportedEvidence.reported());
         assertEquals(variantMatch.gene(), reportedEvidence.gene());
-        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, reportedEvidence.evidenceType());
+
+        assertEquals(reportedEvidence.protectSources().size(), 1);
+        ProtectSource protectSourceReportedEvidence = findBySource(reportedEvidence.protectSources(), Knowledgebase.CKB);
+        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, protectSourceReportedEvidence.evidenceType());
 
         ProtectEvidence unreportedEvidence = findByGene(evidences, "unreported");
         assertFalse(unreportedEvidence.reported());
         assertEquals(unreportedMatch.gene(), unreportedEvidence.gene());
-        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, unreportedEvidence.evidenceType());
+
+        assertEquals(unreportedEvidence.protectSources().size(), 1);
+        ProtectSource protectSourceUnreportedEvidence = findBySource(unreportedEvidence.protectSources(), Knowledgebase.CKB);
+        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, protectSourceUnreportedEvidence.evidenceType());
     }
 
     @Test
@@ -114,6 +124,7 @@ public class VariantEvidenceTest {
                 .start(start)
                 .end(end)
                 .mutationType(mutationTypeFilter)
+                .source(Knowledgebase.CKB)
                 .build();
 
         VariantEvidence variantEvidence = new VariantEvidence(EvidenceTestFactory.createTestEvidenceFactory(),
@@ -161,7 +172,10 @@ public class VariantEvidenceTest {
         assertEquals(1, evidences.size());
         ProtectEvidence evidence = findByGene(evidences, gene);
         assertTrue(evidence.reported());
-        assertEquals(ProtectEvidenceType.EXON_MUTATION, evidence.evidenceType());
+
+        assertEquals(evidence.protectSources().size(), 1);
+        ProtectSource protectSourceUnreportedEvidence = findBySource(evidence.protectSources(), Knowledgebase.CKB);
+        assertEquals(ProtectEvidenceType.EXON_MUTATION, protectSourceUnreportedEvidence.evidenceType());
     }
 
     @Test
@@ -174,16 +188,19 @@ public class VariantEvidenceTest {
                 .from(ServeTestFactory.createTestActionableGene())
                 .gene(activatedGene)
                 .event(GeneLevelEvent.ACTIVATION)
+                .source(Knowledgebase.CKB)
                 .build();
         ActionableGene actionableGene2 = ImmutableActionableGene.builder()
                 .from(ServeTestFactory.createTestActionableGene())
                 .gene(inactivatedGene)
                 .event(GeneLevelEvent.INACTIVATION)
+                .source(Knowledgebase.CKB)
                 .build();
         ActionableGene actionableGene3 = ImmutableActionableGene.builder()
                 .from(ServeTestFactory.createTestActionableGene())
                 .gene(amplifiedGene)
                 .event(GeneLevelEvent.AMPLIFICATION)
+                .source(Knowledgebase.CKB)
                 .build();
 
         VariantEvidence variantEvidence = new VariantEvidence(EvidenceTestFactory.createTestEvidenceFactory(),
@@ -211,11 +228,17 @@ public class VariantEvidenceTest {
 
         ProtectEvidence actEvidence = findByGene(evidences, activatedGene);
         assertTrue(actEvidence.reported());
-        assertEquals(ProtectEvidenceType.ACTIVATION, actEvidence.evidenceType());
+
+        assertEquals(actEvidence.protectSources().size(), 1);
+        ProtectSource protectSourceActEvidence = findBySource(actEvidence.protectSources(), Knowledgebase.CKB);
+        assertEquals(ProtectEvidenceType.ACTIVATION, protectSourceActEvidence.evidenceType());
 
         ProtectEvidence inactEvidence = findByGene(evidences, inactivatedGene);
         assertFalse(inactEvidence.reported());
-        assertEquals(ProtectEvidenceType.INACTIVATION, inactEvidence.evidenceType());
+
+        assertEquals(inactEvidence.protectSources().size(), 1);
+        ProtectSource protectSourceInacEvidence = findBySource(inactEvidence.protectSources(), Knowledgebase.CKB);
+        assertEquals(ProtectEvidenceType.INACTIVATION, protectSourceInacEvidence.evidenceType());
     }
 
     @NotNull
@@ -237,5 +260,16 @@ public class VariantEvidenceTest {
                 .gene(gene)
                 .driverLikelihood(driverLikelihood)
                 .build();
+    }
+
+    @NotNull
+    private static ProtectSource findBySource(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase source) {
+        for (ProtectSource protectSource : sources) {
+            if (protectSource.source() == source) {
+                return protectSource;
+            }
+        }
+
+        throw new IllegalStateException("Could not find evidence with source: " + source);
     }
 }

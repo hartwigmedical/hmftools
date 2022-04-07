@@ -5,12 +5,15 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
+import com.hartwig.hmftools.common.protect.ProtectSource;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.serve.ServeTestFactory;
@@ -34,16 +37,19 @@ public class FusionEvidenceTest {
                 .from(ServeTestFactory.createTestActionableGene())
                 .gene(genePromiscuous)
                 .event(GeneLevelEvent.FUSION)
+                .source(Knowledgebase.ACTIN)
                 .build();
         ActionableGene amp = ImmutableActionableGene.builder()
                 .from(ServeTestFactory.createTestActionableGene())
                 .gene(genePromiscuous)
                 .event(GeneLevelEvent.AMPLIFICATION)
+                .source(Knowledgebase.CKB)
                 .build();
         ActionableFusion fusion = ImmutableActionableFusion.builder()
                 .from(ServeTestFactory.createTestActionableFusion())
                 .geneUp(geneUp)
                 .geneDown(geneDown)
+                .source(Knowledgebase.CKB)
                 .build();
 
         FusionEvidence fusionEvidence = new FusionEvidence(EvidenceTestFactory.createTestEvidenceFactory(),
@@ -63,15 +69,24 @@ public class FusionEvidenceTest {
 
         ProtectEvidence evidence1 = findByFusion(evidences, reportedFusionMatch);
         assertTrue(evidence1.reported());
-        assertEquals(ProtectEvidenceType.FUSION_PAIR, evidence1.evidenceType());
+
+        assertEquals(evidence1.protectSources().size(), 1);
+        ProtectSource evidence1ProtectSource = findBySource(evidence1.protectSources(), Knowledgebase.CKB);
+        assertEquals(ProtectEvidenceType.FUSION_PAIR, evidence1ProtectSource.evidenceType());
 
         ProtectEvidence evidence2 = findByFusion(evidences, reportedPromiscuousMatch);
         assertTrue(evidence2.reported());
-        assertEquals(ProtectEvidenceType.PROMISCUOUS_FUSION, evidence2.evidenceType());
+
+        assertEquals(evidence2.protectSources().size(), 1);
+        ProtectSource evidence2ProtectSource = findBySource(evidence2.protectSources(), Knowledgebase.ACTIN);
+        assertEquals(ProtectEvidenceType.PROMISCUOUS_FUSION, evidence2ProtectSource.evidenceType());
 
         ProtectEvidence evidence3 = findByFusion(evidences, unreportedPromiscuousMatch);
         assertFalse(evidence3.reported());
-        assertEquals(ProtectEvidenceType.PROMISCUOUS_FUSION, evidence3.evidenceType());
+
+        assertEquals(evidence3.protectSources().size(), 1);
+        ProtectSource evidence3ProtectSource = findBySource(evidence3.protectSources(), Knowledgebase.ACTIN);
+        assertEquals(ProtectEvidenceType.PROMISCUOUS_FUSION, evidence3ProtectSource.evidenceType());
     }
 
     @NotNull
@@ -141,5 +156,16 @@ public class FusionEvidenceTest {
                 .geneStart(geneStart)
                 .geneEnd(geneEnd)
                 .reported(reported);
+    }
+
+    @NotNull
+    private static ProtectSource findBySource(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase source) {
+        for (ProtectSource protectSource : sources) {
+            if (protectSource.source() == source) {
+                return protectSource;
+            }
+        }
+
+        throw new IllegalStateException("Could not find evidence with source: " + source);
     }
 }

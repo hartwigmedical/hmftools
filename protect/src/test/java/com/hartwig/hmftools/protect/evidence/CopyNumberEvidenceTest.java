@@ -4,13 +4,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
+import com.hartwig.hmftools.common.protect.ProtectSource;
 import com.hartwig.hmftools.common.purple.PurpleTestFactory;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.serve.ServeTestFactory;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
@@ -29,16 +32,19 @@ public class CopyNumberEvidenceTest {
                 .from(ServeTestFactory.createTestActionableGene())
                 .gene(geneAmp)
                 .event(GeneLevelEvent.AMPLIFICATION)
+                .source(Knowledgebase.CKB)
                 .build();
         ActionableGene inactivation = ImmutableActionableGene.builder()
                 .from(ServeTestFactory.createTestActionableGene())
                 .gene(geneDel)
                 .event(GeneLevelEvent.INACTIVATION)
+                .source(Knowledgebase.CKB)
                 .build();
         ActionableGene fusion = ImmutableActionableGene.builder()
                 .from(ServeTestFactory.createTestActionableGene())
                 .gene(geneAmp)
                 .event(GeneLevelEvent.FUSION)
+                .source(Knowledgebase.CKB)
                 .build();
 
         CopyNumberEvidence copyNumberEvidence =
@@ -57,12 +63,18 @@ public class CopyNumberEvidenceTest {
         ProtectEvidence ampEvidence = find(evidences, geneAmp);
         assertTrue(ampEvidence.reported());
         assertEquals(reportableAmp.gene(), ampEvidence.gene());
-        assertEquals(ProtectEvidenceType.AMPLIFICATION, ampEvidence.evidenceType());
+
+        assertEquals(ampEvidence.protectSources().size(), 1);
+        ProtectSource protectSourceAmpEvidence = findBySource(ampEvidence.protectSources(), Knowledgebase.CKB);
+        assertEquals(ProtectEvidenceType.AMPLIFICATION, protectSourceAmpEvidence.evidenceType());
 
         ProtectEvidence delEvidence = find(evidences, geneDel);
         assertTrue(delEvidence.reported());
         assertEquals(reportableDel.gene(), delEvidence.gene());
-        assertEquals(ProtectEvidenceType.INACTIVATION, delEvidence.evidenceType());
+
+        assertEquals(delEvidence.protectSources().size(), 1);
+        ProtectSource protectSourceDelEvidence = findBySource(delEvidence.protectSources(), Knowledgebase.CKB);
+        assertEquals(ProtectEvidenceType.INACTIVATION, protectSourceDelEvidence.evidenceType());
     }
 
     @NotNull
@@ -74,5 +86,16 @@ public class CopyNumberEvidenceTest {
         }
 
         throw new IllegalStateException("Could not find evidence for gene: " + geneToFind);
+    }
+
+    @NotNull
+    private static ProtectSource findBySource(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase source) {
+        for (ProtectSource protectSource : sources) {
+            if (protectSource.source() == source) {
+                return protectSource;
+            }
+        }
+
+        throw new IllegalStateException("Could not find evidence with source: " + source);
     }
 }

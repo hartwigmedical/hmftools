@@ -747,13 +747,13 @@ As well as attempting to predict all fusion events, Linx uses the configured lis
 To produce the list of known fusions provided with Linx, a broad literature search was performed to find a comprehensive list of well-known fusions that are highly likely to be pathogenic. The criteria used for inclusion of a particular fusion in the curated list was either multiple independent reports of the fusion, or single case reports with either convincing demonstration of the pathogenicity in a model system or clear response to a therapy targeted to the specific fusion. 
 
 The curated fusions were classified into 3 categories:
-- Known fusions (n= 396) – these are transcript fusions which fuse either the coding regions of 2 genes to form a novel protein or the 5’ UTR regions of 2 genes which may lead to increased expression of the 3’ partner. A well-known example is TMPRSS2_ERG
-- Known IG enhancer rearrangements (n= 17) – these are structural rearrangements in B-Cell lymphomas and leukemias that relocate enhancers from one of the @IG regions (IGH,IGK,IGL) to increase expression of a 3’ partner. A well-known example is @IGH-MYC
-- Known exon deletions & duplications (n=11) – these are deletions or duplications of exons in specific exon ranges of a handful of genes which are known or highly likely to be pathogenic. Common examples are EGFR vII and vIII
+- Known fusions (n=408) – these are transcript fusions which fuse either the coding regions of 2 genes to form a novel protein or the 5’ UTR regions of 2 genes which may lead to increased expression of the 3’ partner. A well-known example is TMPRSS2_ERG
+- Known IG enhancer rearrangements (n=20) – these are structural rearrangements in B-Cell lymphomas and leukemias that relocate enhancers from one of the @IG regions (IGH,IGK,IGL) to increase expression of a 3’ partner. A well-known example is @IGH-MYC
+- Known exon deletions & duplications (n=13) – these are deletions or duplications of exons in specific exon ranges of a handful of genes which are known or highly likely to be pathogenic. Common examples are EGFR vII and vIII
 
 A set of ‘promiscuous’ fusion partners was also determined from this list so that potential novel fusions with fusion partners that have been identified in multiple fusions previously can also be reported as potentially pathogenic. Any gene which was identified in 3 or more known fusions was marked as a promiscuous 5’ partner and likewise if it was identified in 3 or more known fusions in our curated list was marked as a promiscuous 3’ partner. MYC and CRLF4 were also marked as 3’ promiscuous since they feature in known fusions with both IG enhancer and known fusions. FGFR1 is also added as a 5’ promiscuous partner. 
 
-For 12 promiscuous fusion partners {FGFR1, FGFR2, FGFR3, TMPRSS2, SLC45A3, HMGA2,BRAF, RET, ALK, ROS1, ETV1, ETV4} a specific exon range has been identified as highly promiscuous and is identified in the knowledge base. Fusion reporting criteria are relaxed in these ranges.  10 promiscuous 3’ genes {BRAF ,RET ,ROS1 ,ALK ,MET ,NRG1 , NRTK1, NTRK2 & NTRK3) are marked as ‘high impact’ and also have special treatment in the fusion reporting logic. 
+For 12 promiscuous fusion partners {FGFR1, FGFR2, FGFR3, TMPRSS2, SLC45A3, HMGA2, BRAF, RET, ALK, ROS1, ETV1, ETV4} a specific exon range has been identified as highly promiscuous and is identified in the knowledge base. Fusion reporting criteria are relaxed in these ranges.  9 promiscuous 3’ genes {BRAF, RET, ROS1, ALK, MET, NRG1, NRTK1, NTRK2, NTRK3) are marked as ‘high impact’ and also have special treatment in the fusion reporting logic. 
 
 A section of @IGH gene stretching from the diversity region to the end of the constant region was also marked as a ‘promiscuous IG partner’ as it features in many IG fusions.
 
@@ -767,7 +767,7 @@ For each single SV and for every facing pair of SVs in the same chain identify a
 - 3’ gene partner must have coding bases
 - 5’ gene partner transcript must have one of the following ensembl biotypes: ‘protein_coding’, ’retained_intron’, ’processed_transcript’, ’nonsense_mediated_decay’, ’lincRNA’
 - The upstream breakend must fall within the 5’ partner transcript and be disruptive to the transcript. 
-- The downstream breakend must fall either within the 5’ gene or within 100kb upstream. 
+- The downstream breakend must fall either within the 3’ gene or within 100kb upstream. 
 - The combined length of all segments in the chain must be less than 150kb.
 - The SV or chain must join appropriate contexts of the 5’ and 3’ genes (see table below) and for coding regions must be inframe after allowing for any skipped exons. For exonic to exonic fusions exact base phasing is also checked as splice acceptor to splice donor phasing. The following table shows allowed contexts:
 

@@ -4,12 +4,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.linx.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
+import com.hartwig.hmftools.common.protect.ProtectSource;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.serve.ServeTestFactory;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
@@ -30,16 +33,19 @@ public class DisruptionEvidenceTest {
                 .from(ServeTestFactory.createTestActionableGene())
                 .gene(geneAmp)
                 .event(GeneLevelEvent.AMPLIFICATION)
+                .source(Knowledgebase.CKB)
                 .build();
         ActionableGene inactivation = ImmutableActionableGene.builder()
                 .from(ServeTestFactory.createTestActionableGene())
                 .gene(geneInact)
                 .event(GeneLevelEvent.INACTIVATION)
+                .source(Knowledgebase.CKB)
                 .build();
         ActionableGene deletion = ImmutableActionableGene.builder()
                 .from(ServeTestFactory.createTestActionableGene())
                 .gene(geneDel)
                 .event(GeneLevelEvent.DELETION)
+                .source(Knowledgebase.CKB)
                 .build();
 
         DisruptionEvidence disruptionEvidence =
@@ -56,7 +62,10 @@ public class DisruptionEvidenceTest {
         assertTrue(evidence.reported());
         assertEquals(geneInact, evidence.gene());
         assertEquals(DisruptionEvidence.HOMOZYGOUS_DISRUPTION_EVENT, evidence.event());
-        assertEquals(ProtectEvidenceType.INACTIVATION, evidence.evidenceType());
+
+        assertEquals(evidence.protectSources().size(), 1);
+        ProtectSource protectSource = findBySource(evidence.protectSources(), Knowledgebase.CKB);
+        assertEquals(ProtectEvidenceType.INACTIVATION, protectSource.evidenceType());
     }
 
     @NotNull
@@ -68,5 +77,16 @@ public class DisruptionEvidenceTest {
                 .transcript("123")
                 .isCanonical(true)
                 .build();
+    }
+
+    @NotNull
+    private static ProtectSource findBySource(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase source) {
+        for (ProtectSource protectSource : sources) {
+            if (protectSource.source() == source) {
+                return protectSource;
+            }
+        }
+
+        throw new IllegalStateException("Could not find evidence with source: " + source);
     }
 }

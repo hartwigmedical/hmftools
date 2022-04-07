@@ -8,7 +8,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.common.protect.ProtectSource;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
@@ -170,10 +170,10 @@ public class ClinicalEvidenceChapter implements ReportChapter {
             event = AminoAcids.forceSingleLetterProteinAnnotation(event);
         }
         StringJoiner sources = new StringJoiner(", ");
-        for (Knowledgebase source : evidence.protectSources().sources()) {
-            sources.add(source.reportDisplay());
+        for (ProtectSource source : evidence.protectSources()) {
+            sources.add(source.source().reportDisplay());
         }
-        return event + " (" + evidence.level().toString() + " - " + sources.toString() + ")";
+        return event + " (" + evidence.level() + " - " + sources + ")";
     }
 
     @NotNull

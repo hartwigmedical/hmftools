@@ -8,10 +8,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.ImmutableProtectSource;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.common.protect.ProtectTestFactory;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 
+import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class ReportableEvidenceItemFactoryTest {
@@ -23,28 +25,48 @@ public class ReportableEvidenceItemFactoryTest {
                 .treatment("A")
                 .onLabel(true)
                 .level(EvidenceLevel.A)
-                .protectSources(ImmutableProtectSource.builder().addSources(Knowledgebase.VICC_CIVIC).build())
+                .protectSources(Sets.newHashSet(ImmutableProtectSource.builder()
+                        .source(Knowledgebase.VICC_CIVIC)
+                        .sourceEvent(Strings.EMPTY)
+                        .sourceUrls(Sets.newHashSet())
+                        .evidenceType(ProtectEvidenceType.AMPLIFICATION)
+                        .build()))
                 .build();
         ProtectEvidence item2 = ProtectTestFactory.testEvidenceBuilder()
                 .event("A")
                 .treatment("A")
                 .onLabel(true)
                 .level(EvidenceLevel.A)
-                .protectSources(ImmutableProtectSource.builder().addSources(Knowledgebase.VICC_CGI).build())
+                .protectSources(Sets.newHashSet(ImmutableProtectSource.builder()
+                        .source(Knowledgebase.VICC_CGI)
+                        .sourceEvent(Strings.EMPTY)
+                        .sourceUrls(Sets.newHashSet())
+                        .evidenceType(ProtectEvidenceType.AMPLIFICATION)
+                        .build()))
                 .build();
         ProtectEvidence item3 = ProtectTestFactory.testEvidenceBuilder()
                 .event("B")
                 .treatment("B")
                 .onLabel(true)
                 .level(EvidenceLevel.A)
-                .protectSources(ImmutableProtectSource.builder().addSources(Knowledgebase.ICLUSION).build())
+                .protectSources(Sets.newHashSet(ImmutableProtectSource.builder()
+                        .source(Knowledgebase.ICLUSION)
+                        .sourceEvent(Strings.EMPTY)
+                        .sourceUrls(Sets.newHashSet())
+                        .evidenceType(ProtectEvidenceType.AMPLIFICATION)
+                        .build()))
                 .build();
         ProtectEvidence item4 = ProtectTestFactory.testEvidenceBuilder()
                 .event("C")
                 .treatment("C")
                 .onLabel(true)
                 .level(EvidenceLevel.C)
-                .protectSources(ImmutableProtectSource.builder().addSources(Knowledgebase.VICC_CGI).build())
+                .protectSources(Sets.newHashSet(ImmutableProtectSource.builder()
+                        .source(Knowledgebase.VICC_CGI)
+                        .sourceEvent(Strings.EMPTY)
+                        .sourceUrls(Sets.newHashSet())
+                        .evidenceType(ProtectEvidenceType.AMPLIFICATION)
+                        .build()))
                 .build();
 
         List<ProtectEvidence> nonTrials =

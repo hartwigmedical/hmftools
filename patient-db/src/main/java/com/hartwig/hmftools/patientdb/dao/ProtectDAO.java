@@ -10,7 +10,7 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Iterables;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.common.protect.ProtectSource;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -53,29 +53,30 @@ class ProtectDAO {
     private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep14 inserter, @NotNull String sample,
             @NotNull ProtectEvidence evidence) {
         StringJoiner urlJoiner = new StringJoiner(",");
-        for (String url : evidence.protectSources().sourceUrls()) {
-            urlJoiner.add(url);
-        }
 
-        StringJoiner sourceJoiner = new StringJoiner(",");
-        for (Knowledgebase source : evidence.protectSources().sources()) {
-            sourceJoiner.add(source.technicalDisplay());
-        }
+        for (ProtectSource protectSource : evidence.protectSources()) {
+            for (String url : protectSource.sourceUrls()) {
+                urlJoiner.add(url);
+            }
+            String knowledgebase = protectSource.source().technicalDisplay();
+            String evidenceType = protectSource.evidenceType().display();
+            Integer rank = protectSource.rangeRank();
 
-        inserter.values(sample,
-                evidence.gene(),
-                evidence.event(),
-                evidence.evidenceType().toString(),
-                evidence.rangeRank(),
-                evidence.germline(),
-                evidence.reported(),
-                evidence.treatment(),
-                evidence.onLabel(),
-                evidence.level().toString(),
-                evidence.direction().toString(),
-                sourceJoiner.toString(),
-                urlJoiner.toString(),
-                timestamp);
+            inserter.values(sample,
+                    evidence.gene(),
+                    evidence.event(),
+                    evidenceType,
+                    rank,
+                    evidence.germline(),
+                    evidence.reported(),
+                    evidence.treatment(),
+                    evidence.onLabel(),
+                    evidence.level().toString(),
+                    evidence.direction().toString(),
+                    knowledgebase,
+                    urlJoiner.toString(),
+                    timestamp);
+        }
     }
 
     void deleteEvidenceForSample(@NotNull String sample) {
