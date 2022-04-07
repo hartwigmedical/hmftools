@@ -27,4 +27,7 @@ public abstract class ProtectSource {
 
     @Nullable
     public abstract Integer rangeRank();
+
+    @NotNull
+    public abstract Set<String> evidenceUrls();
 }

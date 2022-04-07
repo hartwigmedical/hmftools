@@ -29,6 +29,7 @@ public final class ProtectTestFactory {
                 .sourceEvent("hotspot")
                 .sourceUrls(Sets.newHashSet())
                 .evidenceType(ProtectEvidenceType.ANY_MUTATION)
+                        .evidenceUrls(Sets.newHashSet())
                 .build());
 
         return ImmutableProtectEvidence.builder()
@@ -39,7 +40,6 @@ public final class ProtectTestFactory {
                 .onLabel(false)
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .evidenceUrls(Sets.newHashSet())
                 .protectSources(source);
     }
 }

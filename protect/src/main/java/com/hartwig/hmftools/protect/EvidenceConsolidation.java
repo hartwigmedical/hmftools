@@ -24,7 +24,6 @@ public final class EvidenceConsolidation {
         for (ProtectEvidence evidence : evidences) {
             ProtectEvidence strippedEvidence = ImmutableProtectEvidence.builder()
                     .from(evidence)
-                    .evidenceUrls(Sets.newHashSet())
                     .protectSources(Sets.newHashSet())
                     .build();
             ConsolidatedData data = dataPerEvidence.get(strippedEvidence);
@@ -39,7 +38,6 @@ public final class EvidenceConsolidation {
         for (Map.Entry<ProtectEvidence, ConsolidatedData> entry : dataPerEvidence.entrySet()) {
             consolidatedEvents.add(ImmutableProtectEvidence.builder()
                     .from(entry.getKey())
-                    .evidenceUrls(entry.getValue().evidenceUrls())
                     .protectSources(entry.getValue().protectSources())
                     .build());
         }
@@ -49,21 +47,13 @@ public final class EvidenceConsolidation {
     private static class ConsolidatedData {
 
         @NotNull
-        private final Set<String> evidenceUrls = Sets.newTreeSet();
-        @NotNull
         private final Set<ProtectSource> protectSources = Sets.newHashSet();
 
         public ConsolidatedData() {
         }
 
         public void appendEvidence(@NotNull ProtectEvidence evidence) {
-            evidenceUrls.addAll(evidence.evidenceUrls());
             protectSources.addAll(evidence.protectSources());
-        }
-
-        @NotNull
-        public Set<String> evidenceUrls() {
-            return evidenceUrls;
         }
 
         @NotNull

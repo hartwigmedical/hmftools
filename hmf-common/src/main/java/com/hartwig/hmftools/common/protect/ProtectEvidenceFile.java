@@ -5,6 +5,8 @@ import static com.hartwig.hmftools.common.sv.linx.LinxCluster.DELIMITER;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -71,18 +73,12 @@ public final class ProtectEvidenceFile {
                 .add("onLabel")
                 .add("level")
                 .add("direction")
-                .add("evidenceUrls")
                 .add("sources")
                 .toString();
     }
 
     @NotNull
     private static String toLine(@NotNull ProtectEvidence evidence) {
-        StringJoiner evidenceUrlJoiner = new StringJoiner(SUBFIELD_DELIMITER);
-        for (String url : evidence.evidenceUrls()) {
-            evidenceUrlJoiner.add(url);
-        }
-
         return new StringJoiner(FIELD_DELIMITER).add(nullToEmpty(evidence.gene()))
                 .add(evidence.transcript())
                 .add(String.valueOf(evidence.isCanonical()))
@@ -94,7 +90,6 @@ public final class ProtectEvidenceFile {
                 .add(String.valueOf(evidence.onLabel()))
                 .add(evidence.level().toString())
                 .add(evidence.direction().toString())
-                .add(evidenceUrlJoiner.toString())
                 .add(toData(evidence.protectSources()))
                 .toString();
     }
@@ -121,12 +116,19 @@ public final class ProtectEvidenceFile {
                 urlSet.add(url);
             }
 
+            String[] urlsEvidence = items[5].split(SUBFIELD_DELIMITER);
+            Set<String> urlSetEvidence = Sets.newHashSet();
+            for (String url : urlsEvidence) {
+                urlSetEvidence.add(url);
+            }
+
             protectSources.add(ImmutableProtectSource.builder()
                     .source(Knowledgebase.lookupKnowledgebase(items[0]))
                     .sourceEvent(items[1])
                     .sourceUrls(urlSet.stream().sorted().collect(Collectors.toList()))
                     .evidenceType(ProtectEvidenceType.valueOf(items[3]))
                     .rangeRank(emptyToNullInteger(items[4] == null ? Strings.EMPTY : items[4]))
+                    .evidenceUrls(urlSetEvidence)
                     .build());
         }
         return protectSources;
@@ -144,7 +146,9 @@ public final class ProtectEvidenceFile {
             }
             sb.append(urls).append(SOURCE_SUBFIELD_ITEM_DELIMITER);
             sb.append(source.evidenceType()).append(SOURCE_SUBFIELD_ITEM_DELIMITER);
-            sb.append(source.rangeRank() == null ? Strings.EMPTY : String.valueOf(source.rangeRank())).append(SOURCE_SUBFIELD_DELIMITER);
+            sb.append(source.rangeRank() == null ? Strings.EMPTY : String.valueOf(source.rangeRank()))
+                    .append(SOURCE_SUBFIELD_ITEM_DELIMITER);
+            sb.append(source.evidenceUrls()).append(SOURCE_SUBFIELD_DELIMITER);
         }
 
         return sb.toString();
@@ -153,10 +157,6 @@ public final class ProtectEvidenceFile {
     @NotNull
     private static ProtectEvidence fromLine(@NotNull Map<String, Integer> fields, @NotNull String line) {
         String[] values = line.split(FIELD_DELIMITER, -1);
-
-        String evidenceUrlField = values[fields.get("evidenceUrls")];
-        Set<String> evidenceUrlurls =
-                !evidenceUrlField.isEmpty() ? Sets.newHashSet(evidenceUrlField.split(SUBFIELD_DELIMITER)) : Sets.newHashSet();
 
         String eventIsHighDriverField = values[fields.get("eventIsHighDriver")];
         Boolean eventIsHighDriver = !eventIsHighDriverField.isEmpty() ? Boolean.parseBoolean(eventIsHighDriverField) : null;
@@ -177,7 +177,6 @@ public final class ProtectEvidenceFile {
                 .onLabel(Boolean.parseBoolean(values[fields.get("onLabel")]))
                 .level(EvidenceLevel.valueOf(values[fields.get("level")]))
                 .direction(EvidenceDirection.valueOf(values[fields.get("direction")]))
-                .evidenceUrls(evidenceUrlurls)
                 .protectSources(sources)
                 .build();
     }

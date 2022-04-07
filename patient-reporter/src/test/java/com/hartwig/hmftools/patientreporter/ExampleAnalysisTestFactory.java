@@ -337,6 +337,7 @@ public final class ExampleAnalysisTestFactory {
                     .sourceUrls(Sets.newHashSet())
                     .evidenceType(protectEvidenceType)
                     .rangeRank(rank)
+                    .evidenceUrls(Sets.newHashSet())
                     .build());
         }
         return protectSources;
@@ -358,7 +359,6 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Cobimetinib + Vemurafenib")
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC, Knowledgebase.VICC_CGI),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
@@ -374,7 +374,6 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Dabrafenib")
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC, Knowledgebase.VICC_CGI),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
@@ -393,7 +392,6 @@ public final class ExampleAnalysisTestFactory {
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC, Knowledgebase.VICC_CGI),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
-                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
                 .build());
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
@@ -406,7 +404,6 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Trametinib")
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI), ProtectEvidenceType.EXON_MUTATION, 1))
                 .build());
 
@@ -420,9 +417,6 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Vemurafenib")
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=NCCN",
-                        "http://www.ncbi.nlm.nih.gov/pubmed/21639808",
-                        "https://www.google.com/#q=FDA"))
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI), ProtectEvidenceType.CODON_MUTATION, 600))
                 .build());
 
@@ -436,7 +430,6 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("RO4987655")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
@@ -452,7 +445,6 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Buparlisib + Carboplatin + Paclitaxel")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI), ProtectEvidenceType.DELETION, null))
                 .build());
 
@@ -475,7 +467,6 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Array 818-103")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
@@ -491,7 +482,6 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("CLXH254C12201")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
@@ -507,7 +497,6 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("COWBOY")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
@@ -523,7 +512,6 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("COWBOY")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
@@ -539,7 +527,6 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("DRUP")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
@@ -555,7 +542,6 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("EBIN (EORTC-1612-MG)")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
@@ -568,7 +554,6 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("BASKET OF BASKETS (VHIO17002)")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION), ProtectEvidenceType.SIGNATURE, null))
                 .build());
 
@@ -579,7 +564,6 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("DRUP")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION), ProtectEvidenceType.SIGNATURE, null))
                 .build());
 
@@ -590,7 +574,6 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("KEYNOTE-158")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION), ProtectEvidenceType.SIGNATURE, null))
                 .build());
 
@@ -604,7 +587,6 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("DRUP")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .evidenceUrls(Lists.newArrayList("https://www.google.com/#q=FDA"))
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION), ProtectEvidenceType.DELETION, null))
                 .build());
 
@@ -627,8 +609,6 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Bevacizumab")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
-                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/19603024",
-                        "http://www.ncbi.nlm.nih.gov/pubmed/19571295"))
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
@@ -647,8 +627,6 @@ public final class ExampleAnalysisTestFactory {
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
-                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/18682506",
-                        "http://www.ncbi.nlm.nih.gov/pubmed/21882184"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
@@ -664,12 +642,6 @@ public final class ExampleAnalysisTestFactory {
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
-                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/19001320",
-                        "http://www.ncbi.nlm.nih.gov/pubmed/20619739",
-                        "http://www.ncbi.nlm.nih.gov/pubmed/19884556",
-                        "http://www.ncbi.nlm.nih.gov/pubmed/21163703",
-                        "http://www.ncbi.nlm.nih.gov/pubmed/23325582",
-                        "http://www.ncbi.nlm.nih.gov/pubmed/25666295"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
@@ -685,7 +657,6 @@ public final class ExampleAnalysisTestFactory {
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
-                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/27729313"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
@@ -701,7 +672,6 @@ public final class ExampleAnalysisTestFactory {
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
-                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/19603024"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
@@ -717,7 +687,6 @@ public final class ExampleAnalysisTestFactory {
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
-                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/19603024"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
@@ -733,7 +702,6 @@ public final class ExampleAnalysisTestFactory {
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
-                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/19603024"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
@@ -749,10 +717,6 @@ public final class ExampleAnalysisTestFactory {
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI, Knowledgebase.VICC_CIVIC),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
-                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/21163703",
-                        "http://www.ncbi.nlm.nih.gov/pubmed/23325582",
-                        "http://www.ncbi.nlm.nih.gov/pubmed/19001320",
-                        "http://www.ncbi.nlm.nih.gov/pubmed/20619739"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
@@ -768,7 +732,6 @@ public final class ExampleAnalysisTestFactory {
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
-                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/22492957"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
@@ -784,8 +747,6 @@ public final class ExampleAnalysisTestFactory {
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
-                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/18682506",
-                        "http://www.ncbi.nlm.nih.gov/pubmed/21882184"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
@@ -799,7 +760,6 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI), ProtectEvidenceType.CODON_MUTATION, 600))
-                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/26287849"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
@@ -813,8 +773,6 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI), ProtectEvidenceType.DELETION, null))
-                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/21163703",
-                        "http://www.ncbi.nlm.nih.gov/pubmed/19398573"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
@@ -828,7 +786,6 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC), ProtectEvidenceType.DELETION, null))
-                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/21163703"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
@@ -842,7 +799,6 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC), ProtectEvidenceType.DELETION, null))
-                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/23989949"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
@@ -856,7 +812,6 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC), ProtectEvidenceType.DELETION, null))
-                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/25300346"))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
@@ -870,8 +825,6 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC), ProtectEvidenceType.DELETION, null))
-                .evidenceUrls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/24387334",
-                        "http://www.ncbi.nlm.nih.gov/pubmed/20813970"))
                 .build());
 
         return evidenceItemsOffLabel;
