@@ -10,39 +10,30 @@ import static com.hartwig.hmftools.common.purple.GermlineStatus.UNKNOWN;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.purple.segment.PurpleSegment;
 import com.hartwig.hmftools.common.utils.Doubles;
 
-import org.jetbrains.annotations.NotNull;
-
-class GermlineStatusFactory
+public class GermlineStatusFactory
 {
     private static final double GERMLINE_HOM_DELETION_THRESHOLD = 0.1;
     private static final double GERMLINE_HET_DELETION_THRESHOLD = 0.85;
     private static final double GERMLINE_AMPLIFICATION_THRESHOLD = 1.15;
     private static final double GERMLINE_NOISE_THRESHOLD = 2.2;
 
-    private final CobaltChromosomes cobaltChromosomes;
+    private final CobaltChromosomes mCobaltChromosomes;
 
-    GermlineStatusFactory(final CobaltChromosomes cobaltChromosomes)
+    public GermlineStatusFactory(final CobaltChromosomes cobaltChromosomes)
     {
-        this.cobaltChromosomes = cobaltChromosomes;
+        mCobaltChromosomes = cobaltChromosomes;
     }
 
-    GermlineStatus status(@NotNull final PurpleSegment segment, final double normalRatio, final double tumorRatio)
+    public GermlineStatus calcStatus(final String contig, final double normalRatio, final double tumorRatio, int depthWindowCount)
     {
-        return fromRatio(segment.chromosome(), normalRatio, tumorRatio);
-    }
-
-    @NotNull
-    GermlineStatus fromRatio(final String contig, final double normalRatio, final double tumorRatio)
-    {
-        if(Doubles.isZero(normalRatio) || !cobaltChromosomes.contains(contig))
+        if(Doubles.isZero(normalRatio) || !mCobaltChromosomes.contains(contig) || depthWindowCount == 0)
         {
             return UNKNOWN;
         }
 
-        final CobaltChromosome chromosome = cobaltChromosomes.get(contig);
+        final CobaltChromosome chromosome = mCobaltChromosomes.get(contig);
         double adjustment = chromosome.actualRatio();
 
         double adjustedHomDeletionThreshold = GERMLINE_HOM_DELETION_THRESHOLD * adjustment;

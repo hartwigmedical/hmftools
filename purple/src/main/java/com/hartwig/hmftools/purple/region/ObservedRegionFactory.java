@@ -59,14 +59,15 @@ public class ObservedRegionFactory
             cobaltSelector.select(region, cobalt);
             gcSelector.select(region, gc);
 
-            // double tumorRatio = cobalt.tumorMedianRatio();
-            double tumorRatio = cobalt.tumorMeanRatio();
+            double tumorRatio = cobalt.tumorMedianRatio();
+            // double tumorRatio = cobalt.tumorMeanRatio();
             double normalRatio = cobalt.referenceMeanRatio();
-            GermlineStatus germlineStatus = mStatusFactory.status(region, normalRatio, tumorRatio);
+            int depthWindowCount = cobalt.tumorCount();
+            GermlineStatus germlineStatus = mStatusFactory.calcStatus(region.chromosome(), normalRatio, tumorRatio, depthWindowCount);
 
             final ObservedRegion observedRegion = new ObservedRegion(
                     region.chromosome(), region.start(), region.end(), region.RatioSupport, region.Support, baf.count(), baf.medianBaf(),
-                    cobalt.tumorCount(), tumorRatio, normalRatio, cobalt.unnormalisedReferenceMeanRatio(), germlineStatus,
+                    depthWindowCount, tumorRatio, normalRatio, cobalt.unnormalisedReferenceMeanRatio(), germlineStatus,
                     region.SvCluster, gc.averageGCContent(), region.MinStart, region.MaxStart);
 
             result.add(observedRegion);
@@ -170,10 +171,7 @@ public class ObservedRegionFactory
         double tumorMeanRatio() { return mTumorAccumulator.meanRatio(); }
         double tumorMedianRatio() { return mTumorAccumulator.medianRatio(); }
 
-        int tumorCount()
-        {
-            return mTumorAccumulator.count();
-        }
+        int tumorCount() { return mTumorAccumulator.count(); }
 
         @Override
         public void accept(final CobaltRatio ratio)

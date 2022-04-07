@@ -43,28 +43,6 @@ public class ObservedRegion implements GenomeRegion
     private static final double MAX_DIPLOID_COPY_NUMBER = 1.2;
     private static final double MIN_DIPLOID_COPY_NUMBER = 0.8;
 
-    public static ObservedRegion from(final ObservedRegion other)
-    {
-        return new ObservedRegion(
-                other.chromosome(), other.start(), other.end(),
-                other.ratioSupport(), other.support(), other.bafCount(), other.observedBAF(), other.depthWindowCount(),
-                other.observedTumorRatio(), other.observedNormalRatio(), other.unnormalisedObservedNormalRatio(), other.germlineStatus(),
-                other.svCluster(), other.gcContent(), other.minStart(), other.maxStart(), other.minorAlleleCopyNumberDeviation(),
-                other.majorAlleleCopyNumberDeviation(), other.deviationPenalty(), other.eventPenalty(),
-                other.refNormalisedCopyNumber(), other.tumorCopyNumber(), other.tumorBAF(), other.fittedTumorCopyNumber(), other.fittedBAF());
-    }
-
-    public ObservedRegion(final String chromosome, final int posStart, final int posEnd, final boolean ratioSupport,
-            final SegmentSupport support, final int bafCount, final double observedBAF, final int depthWindowCount,
-            final double observedTumorRatio, final double observedNormalRatio, final double unnormalisedObservedNormalRatio,
-            final GermlineStatus germlineStatus, final boolean svCluster, final double gcContent, final int minStart, final int maxStart)
-    {
-        this(chromosome, posStart, posEnd, ratioSupport, support, bafCount, observedBAF, depthWindowCount, observedTumorRatio,
-                observedNormalRatio, unnormalisedObservedNormalRatio, germlineStatus, svCluster, gcContent, minStart, maxStart,
-                0, 0, 0, 0, 0,
-                0, 0,0, 0);
-    }
-
     public ObservedRegion(final String chromosome, final int posStart, final int posEnd, final boolean ratioSupport,
             final SegmentSupport support, final int bafCount, final double observedBAF, final int depthWindowCount,
             final double observedTumorRatio, final double observedNormalRatio, final double unnormalisedObservedNormalRatio,
@@ -101,6 +79,27 @@ public class ObservedRegion implements GenomeRegion
         mFittedBAF = fittedBAF;
     }
 
+    public static ObservedRegion from(final ObservedRegion other)
+    {
+        return new ObservedRegion(
+                other.chromosome(), other.start(), other.end(),
+                other.ratioSupport(), other.support(), other.bafCount(), other.observedBAF(), other.depthWindowCount(),
+                other.observedTumorRatio(), other.observedNormalRatio(), other.unnormalisedObservedNormalRatio(), other.germlineStatus(),
+                other.svCluster(), other.gcContent(), other.minStart(), other.maxStart(), other.minorAlleleCopyNumberDeviation(),
+                other.majorAlleleCopyNumberDeviation(), other.deviationPenalty(), other.eventPenalty(),
+                other.refNormalisedCopyNumber(), other.tumorCopyNumber(), other.tumorBAF(), other.fittedTumorCopyNumber(), other.fittedBAF());
+    }
+
+    public ObservedRegion(final String chromosome, final int posStart, final int posEnd, final boolean ratioSupport,
+            final SegmentSupport support, final int bafCount, final double observedBAF, final int depthWindowCount,
+            final double observedTumorRatio, final double observedNormalRatio, final double unnormalisedObservedNormalRatio,
+            final GermlineStatus germlineStatus, final boolean svCluster, final double gcContent, final int minStart, final int maxStart)
+    {
+        this(chromosome, posStart, posEnd, ratioSupport, support, bafCount, observedBAF, depthWindowCount, observedTumorRatio,
+                observedNormalRatio, unnormalisedObservedNormalRatio, germlineStatus, svCluster, gcContent, minStart, maxStart,
+                0, 0, 0, 0, 0,
+                0, 0,0, 0);
+    }
     @Override
     public String chromosome() { return mChromosome; }
 
@@ -133,13 +132,14 @@ public class ObservedRegion implements GenomeRegion
     public void setObservedNormalRatio(double ratio) { mObservedNormalRatio = ratio; }
 
     public double unnormalisedObservedNormalRatio() { return mUnnormalisedObservedNormalRatio; }
-    public void setUnnormalisedObservedNormalRatio(double ratio) { mUnnormalisedObservedNormalRatio = ratio; }
 
     public GermlineStatus germlineStatus() { return mGermlineStatus; }
-    public void setGermlineStatus(final GermlineStatus status) { mGermlineStatus = status; }
+    public void setGermlineStatus(final GermlineStatus status)
+    {
+        mGermlineStatus = status;
+    }
 
     public boolean svCluster() { return mSvCluster; }
-    public void setSvCluster(boolean svCluster) { mSvCluster = svCluster; }
 
     public double gcContent() { return mGcContent; }
     public void setGcContent(double content) { mGcContent = content; }
@@ -189,4 +189,10 @@ public class ObservedRegion implements GenomeRegion
                 && Doubles.lessOrEqual(minorAlleleCopyNumber(), MAX_DIPLOID_COPY_NUMBER);
     }
 
+    public String toString()
+    {
+        return String.format("loc(%s: %d - %d) ratio(%s) seg(%s) status(%s) baf(%d obs=%.2f) cn(%.2f ref=%.2f baf=%.2f) fit(%.2f baf=%.2f)",
+                mChromosome, mPosStart, mPosEnd, mRatioSupport, mSupport, mGermlineStatus, mBafCount, mObservedBAF,
+                mTumorCopyNumber, mRefNormalisedCopyNumber, mTumorBAF, mFittedTumorCopyNumber, mFittedBAF);
+    }
 }

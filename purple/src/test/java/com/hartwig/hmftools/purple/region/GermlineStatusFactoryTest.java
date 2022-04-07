@@ -79,21 +79,21 @@ public class GermlineStatusFactoryTest
 
     private void assertStatus(@NotNull final String chromosome, final double ratio, @NotNull final GermlineStatus expected)
     {
-        assertEquals(expected, maleVictim.fromRatio(chromosome, ratio, 0.01));
+        assertEquals(expected, maleVictim.calcStatus(chromosome, ratio, 0.01, 1));
         if(chromosome.equals("Y"))
         {
-            assertEquals(UNKNOWN, femaleVictim.fromRatio(chromosome, ratio, 0.01));
+            assertEquals(UNKNOWN, femaleVictim.calcStatus(chromosome, ratio, 0.01, 1));
         }
         else
         {
-            assertEquals(expected, femaleVictim.fromRatio(chromosome, ratio, 0.01));
+            assertEquals(expected, femaleVictim.calcStatus(chromosome, ratio, 0.01, 1));
         }
     }
 
     private void assertStatus(@NotNull final String chromosome, final double ratio, @NotNull final GermlineStatus expectedMale,
             @NotNull final GermlineStatus expectedFemale)
     {
-        assertEquals(expectedMale, maleVictim.fromRatio(chromosome, ratio, 0.01));
-        assertEquals(expectedFemale, femaleVictim.fromRatio(chromosome, ratio, 0.01));
+        assertEquals(expectedMale, maleVictim.calcStatus(chromosome, ratio, 0.01, 1));
+        assertEquals(expectedFemale, femaleVictim.calcStatus(chromosome, ratio, 0.01, 1));
     }
 }

@@ -64,7 +64,7 @@ public class CobaltData
         }
 
         PPL_LOGGER.info("reading Cobalt ratios from {}", cobaltFilename);
-        Ratios = CobaltRatioFile.readWithGender(cobaltFilename, tumorOnlyMode ? amberGender : null, !tumorOnlyMode, !germlineOnlyMode);
+        Ratios = CobaltRatioFile.readWithGender(cobaltFilename, tumorOnlyMode ? amberGender : null, !germlineOnlyMode);
 
         if(referenceId != null)
         {

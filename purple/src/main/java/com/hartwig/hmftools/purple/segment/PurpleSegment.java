@@ -52,4 +52,9 @@ public class PurpleSegment implements GenomeRegion
     {
         return End;
     }
+
+    public String toString()
+    {
+        return String.format("loc(%s: %d - %d) ratio(%s) seg(%s)", Chromosome, Start, End, RatioSupport, Support);
+    }
 }
