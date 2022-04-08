@@ -66,8 +66,6 @@ public class MicrosatelliteIndels
         if(repeatContextIsRelevant(repeatCount, repeatSequenceLength))
         {
             mIndelCount++;
-
-            PPL_LOGGER.debug("MSI Indel({}) qual({})", variant.toString(), String.format("%.2f", variant.decorator().qual()));
         }
     }
 
