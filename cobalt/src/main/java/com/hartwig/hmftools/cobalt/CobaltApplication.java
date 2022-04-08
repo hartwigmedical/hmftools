@@ -6,11 +6,10 @@ import static com.hartwig.hmftools.cobalt.RatioSegmentation.applyRatioSegmentati
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
-import java.util.StringJoiner;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -19,9 +18,7 @@ import java.util.concurrent.ThreadFactory;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParametersDelegate;
 import com.beust.jcommander.UnixStyleUsageFormatter;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.cobalt.count.CountSupplier;
 import com.hartwig.hmftools.cobalt.targeted.TargetRegionEnrichment;
@@ -30,7 +27,6 @@ import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLengthFactory;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.gc.GCProfileFactory;
 import com.hartwig.hmftools.common.utils.config.DeclaredOrderParameterComparator;
@@ -54,7 +50,8 @@ public class CobaltApplication implements AutoCloseable
 
     public static void main(final String... args) throws IOException, ExecutionException, InterruptedException
     {
-        CB_LOGGER.info("{}", String.join(" ", args));
+        CB_LOGGER.info("{}", LocalDate.now());
+        CB_LOGGER.info("args: {}", String.join(" ", args));
 
         final CobaltApplication application = new CobaltApplication();
         JCommander commander = JCommander.newBuilder()

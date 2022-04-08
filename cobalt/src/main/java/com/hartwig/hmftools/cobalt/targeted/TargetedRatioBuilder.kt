@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.cobalt.ReadRatio
 import com.hartwig.hmftools.common.genome.position.GenomePosition
 import com.hartwig.hmftools.common.genome.window.Window
 import com.hartwig.hmftools.common.utils.Doubles
+import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
 import kotlin.math.roundToInt
 
@@ -104,23 +105,26 @@ class TargetedRatioBuilder(
         rawRatios: ListMultimap<Chromosome, ReadRatio>)
     {
         // find all the ratios that are inside the target enriched regions
+        // we filter out all the regions with 0 gc normalised ratios, as they do not actually
+        // correctly reflect the amount of enrichment, and also very rare
         val targetRegionsGcRatios: List<Double> = rawRatios.entries()
-            .filter { (_, value): Map.Entry<Chromosome, ReadRatio> ->
-                targetRelativeEnrichment.containsKey(
-                    value)
+            .filter { (_, readRatio): Map.Entry<Chromosome, ReadRatio> ->
+                readRatio.ratio() > 0.0 && targetRelativeEnrichment.containsKey(readRatio)
             }
             .map { (_, value): Map.Entry<Chromosome, ReadRatio> -> value.ratio() }
 
-        val targetRegionGcRatioMedian: Double = if (targetRegionsGcRatios.isNotEmpty())
+        var targetRegionGcRatioMedian = 1.0
+
+        if (targetRegionsGcRatios.isNotEmpty())
         {
-            Doubles.median(targetRegionsGcRatios)
+            targetRegionGcRatioMedian = Doubles.median(targetRegionsGcRatios)
         }
         else
         {
             sLogger.warn("target region gc ratios is empty")
-            1.0
         }
-        sLogger.info("targeted mode GC ratio median: {}", targetRegionGcRatioMedian)
+
+        sLogger.printf(Level.INFO, "targeted mode GC ratio median: %.3f", targetRegionGcRatioMedian)
         mOnTargetRatios.clear()
         for ((key, value) in rawRatios.entries())
         {
