@@ -5,6 +5,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.flagstat.FlagstatQC;
 import com.hartwig.hmftools.common.metrics.WGSMetricQC;
 import com.hartwig.hmftools.common.purple.PurpleQC;
+import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.healthchecker.result.QCValue;
 
 import org.apache.logging.log4j.LogManager;
@@ -86,14 +87,14 @@ final class HealthCheckEvaluation {
 
     private static boolean checkPurpleContamination(@NotNull String value) {
         double contamination = Double.parseDouble(value);
-        if (contamination <= PurpleQC.MAX_CONTAMINATION) {
-            LOGGER.info("QC PASS - Contamination of {} is lower than {}", value, PurpleQC.MAX_CONTAMINATION);
+        if (contamination <= PurpleQCStatus.MAX_CONTAMINATION) {
+            LOGGER.info("QC PASS - Contamination of {} is lower than {}", value, PurpleQCStatus.MAX_CONTAMINATION);
             if (contamination > 0) {
                 LOGGER.warn("  But contamination is higher than 0!");
             }
             return true;
         } else {
-            LOGGER.info("QC FAIL - Contamination of {} is higher than {}", value, PurpleQC.MAX_CONTAMINATION);
+            LOGGER.info("QC FAIL - Contamination of {} is higher than {}", value, PurpleQCStatus.MAX_CONTAMINATION);
             return false;
         }
     }

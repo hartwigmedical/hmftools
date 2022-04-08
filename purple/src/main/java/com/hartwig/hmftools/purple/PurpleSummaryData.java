@@ -10,6 +10,7 @@ import java.util.Set;
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
+import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -26,16 +27,22 @@ public final class PurpleSummaryData
 {
     public static PurpleQC createQC(double contamination, final BestFit bestFit, final Gender amberGender, final Gender cobaltGender,
             final List<PurpleCopyNumber> copyNumbers, final List<GeneCopyNumber> geneCopyNumbers,
-            final Set<GermlineAberration> aberrations, int amberMeanDepth)
+            final Set<GermlineAberration> aberrations, int amberMeanDepth, int maxDeletedGenes)
     {
         boolean containsAnySvSupport = copyNumbers.stream().anyMatch(PurpleCopyNumber::svSupport);
 
         int unsupportedCopyNumberSegments = containsAnySvSupport ? (int) copyNumbers.stream()
                 .filter(x -> x.segmentStartSupport() == NONE && x.segmentEndSupport() == NONE)
                 .count() : 0;
+
         int deletedGenes = CNADrivers.deletedGenes(geneCopyNumbers);
 
+        Set<PurpleQCStatus> statusSet = PurpleQCStatus.calcStatus(
+                PurpleQCStatus.genderPass(amberGender, cobaltGender, aberrations),
+                unsupportedCopyNumberSegments, deletedGenes, bestFit.fit().purity(), bestFit.method(), contamination, maxDeletedGenes);
+
         return ImmutablePurpleQC.builder()
+                .status(statusSet)
                 .method(bestFit.method())
                 .contamination(contamination)
                 .cobaltGender(cobaltGender)

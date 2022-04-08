@@ -15,6 +15,8 @@ public class PurpleConstants
     public static final double NO_TUMOR_DEPTH_RATIO_MIN = 0.8;
     public static final double NO_TUMOR_DEPTH_RATIO_MAX = 1.2;
 
+    public static final int TARGET_REGIONS_MAX_DELETED_GENES = 1500;
+
     // somatic fitting
     public static final double SNV_HOTSPOT_VAF_PROBABILITY = 0.01;
     public static final int SNV_HOTSPOT_MAX_SNV_COUNT = 2000;

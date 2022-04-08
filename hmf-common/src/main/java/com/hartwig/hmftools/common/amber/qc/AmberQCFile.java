@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.amber.qc;
 
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.getValue;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -7,6 +9,7 @@ import java.text.DecimalFormat;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.FileReaderUtils;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -44,14 +47,14 @@ public final class AmberQCFile
     {
         try
         {
-            String uniparentalDisomy = getValue(lines, UNIPARENTAL_DISOMY, null);
+            String uniparentalDisomy = getValue(lines, UNIPARENTAL_DISOMY, null, DELIMITER);
 
             if(uniparentalDisomy != null && uniparentalDisomy.equals(UNIPARENTAL_DISOMY_NONE))
                 uniparentalDisomy = null;
 
             return ImmutableAmberQC.builder()
-                    .contamination(Double.parseDouble(getValue(lines, CONTAMINATION, "0")))
-                    .consanguinityProportion(Double.parseDouble(getValue(lines, CONSANGUINITY_PROPORTION, "0")))
+                    .contamination(Double.parseDouble(getValue(lines, CONTAMINATION, "0", DELIMITER)))
+                    .consanguinityProportion(Double.parseDouble(getValue(lines, CONSANGUINITY_PROPORTION, "0", DELIMITER)))
                     .uniparentalDisomy(uniparentalDisomy)
                     .build();
         }
@@ -59,18 +62,6 @@ public final class AmberQCFile
         {
             throw new IOException(String.format("Unable to parse amber qc file with %s lines.", lines.size()));
         }
-    }
-
-    private static String getValue(final List<String> lines, final String field, final String defaultValue)
-    {
-        for(String line : lines)
-        {
-            String[] values = line.split(DELIMITER, -1);
-            if(values[0].equals(field))
-                return values[1];
-        }
-
-        return defaultValue;
     }
 
     @NotNull

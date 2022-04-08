@@ -125,6 +125,7 @@ public final class FileWriterUtils
         }
     }
 
+    @Deprecated
     public static Map<String,Integer> createFieldsIndexMap(final String fieldsHeader, final String delimiter)
     {
         final String[] items = fieldsHeader.split(delimiter,-1);
