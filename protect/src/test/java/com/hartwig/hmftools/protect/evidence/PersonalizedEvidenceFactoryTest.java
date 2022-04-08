@@ -45,15 +45,9 @@ public class PersonalizedEvidenceFactoryTest {
 
     @NotNull
     public PersonalizedEvidenceFactory createPersonalizedEvidenceFactory(@NotNull String patientDoid) {
-        List<DoidEdge> edges = Lists.newArrayList();
-        edges.add(DoidParentsTest.createParent("162", "10283"));
-        edges.add(DoidParentsTest.createParent("305", "162"));
-        edges.add(DoidParentsTest.createEdge("305", "has_a", "162"));
-
-        DoidParents victim = DoidParents.fromEdges(edges);
 
         Set<String> patientTumorDoids = Sets.newHashSet(patientDoid);
-        return new PersonalizedEvidenceFactory(patientTumorDoids, victim);
+        return new PersonalizedEvidenceFactory(patientTumorDoids);
     }
 
     @NotNull

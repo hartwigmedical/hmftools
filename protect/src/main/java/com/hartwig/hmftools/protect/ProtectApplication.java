@@ -60,7 +60,7 @@ public class ProtectApplication {
         Set<String> patientTumorDoids = patientTumorDoids(config, doidParentModel);
         ActionableEvents actionableEvents = ActionableEventsLoader.readFromDir(config.serveActionabilityDir(), config.refGenomeVersion());
 
-        ProtectAlgo algo = ProtectAlgo.build(actionableEvents, patientTumorDoids, doidParentModel);
+        ProtectAlgo algo = ProtectAlgo.build(actionableEvents, patientTumorDoids);
         List<ProtectEvidence> evidences = algo.run(config);
 
         String filename = ProtectEvidenceFile.generateFilename(config.outputDir(), config.tumorSampleId());

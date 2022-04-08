@@ -5,7 +5,6 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ImmutableProtectSource;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
@@ -31,12 +30,8 @@ public class PersonalizedEvidenceFactory {
     @NotNull
     private final Set<String> patientTumorDoids;
 
-    @NotNull
-    private final DoidParents doidParentModel;
-
-    public PersonalizedEvidenceFactory(@NotNull final Set<String> patientTumorDoids, @NotNull final DoidParents doidParentModel) {
+    public PersonalizedEvidenceFactory(@NotNull final Set<String> patientTumorDoids) {
         this.patientTumorDoids = patientTumorDoids;
-        this.doidParentModel = doidParentModel;
     }
 
     @NotNull

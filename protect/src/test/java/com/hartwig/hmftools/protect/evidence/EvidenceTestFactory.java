@@ -18,13 +18,6 @@ public final class EvidenceTestFactory {
     @NotNull
     public static PersonalizedEvidenceFactory createTestEvidenceFactory() {
 
-        List<DoidEdge> edges = Lists.newArrayList();
-        edges.add(DoidParentsTest.createParent("299", "305"));
-        edges.add(DoidParentsTest.createParent("305", "162"));
-        edges.add(DoidParentsTest.createEdge("305", "has_a", "162"));
-
-        DoidParents victim = DoidParents.fromEdges(edges);
-
-        return new PersonalizedEvidenceFactory(Sets.newHashSet(), victim);
+        return new PersonalizedEvidenceFactory(Sets.newHashSet("162"));
     }
 }
