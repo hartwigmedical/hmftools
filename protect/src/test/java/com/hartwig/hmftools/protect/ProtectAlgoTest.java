@@ -66,14 +66,7 @@ public class ProtectAlgoTest {
 
         ActionableEvents events = ActionableEventsLoader.readFromDir(config.serveActionabilityDir(), config.refGenomeVersion());
 
-        List<DoidEdge> edges = Lists.newArrayList();
-        edges.add(DoidParentsTest.createParent("299", "305"));
-        edges.add(DoidParentsTest.createParent("305", "162"));
-        edges.add(DoidParentsTest.createEdge("305", "has_a", "162"));
-
-        DoidParents victim = DoidParents.fromEdges(edges);
-
-        ProtectAlgo algo = ProtectAlgo.build(events, Sets.newHashSet(), victim);
+        ProtectAlgo algo = ProtectAlgo.build(events, Sets.newHashSet("162"));
 
         assertNotNull(algo.run(config));
     }

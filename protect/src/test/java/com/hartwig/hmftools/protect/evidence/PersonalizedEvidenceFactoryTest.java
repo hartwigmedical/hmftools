@@ -45,15 +45,9 @@ public class PersonalizedEvidenceFactoryTest {
 
     @NotNull
     public PersonalizedEvidenceFactory createPersonalizedEvidenceFactory(@NotNull String patientDoid) {
-        List<DoidEdge> edges = Lists.newArrayList();
-        edges.add(DoidParentsTest.createParent("162", "10283"));
-        edges.add(DoidParentsTest.createParent("305", "162"));
-        edges.add(DoidParentsTest.createEdge("305", "has_a", "162"));
-
-        DoidParents victim = DoidParents.fromEdges(edges);
 
         Set<String> patientTumorDoids = Sets.newHashSet(patientDoid);
-        return new PersonalizedEvidenceFactory(patientTumorDoids, victim);
+        return new PersonalizedEvidenceFactory(patientTumorDoids);
     }
 
     @NotNull
@@ -83,32 +77,36 @@ public class PersonalizedEvidenceFactoryTest {
         PersonalizedEvidenceFactory factoryOnlabelMatching = createPersonalizedEvidenceFactory("162");
         ActionableHotspot hotspotOnLabelMatching = createActionableHotspot("", "", "Cancer", "162");
         assertTrue(factoryOnlabelMatching.determineOnlabel(hotspotOnLabelMatching.applicableCancerType(),
-                hotspotOnLabelMatching.blacklistCancerTypes()));
+                hotspotOnLabelMatching.blacklistCancerTypes(),
+                "treatment"));
 
         PersonalizedEvidenceFactory factoryNotBlacklisted = createPersonalizedEvidenceFactory("10283");
         ActionableHotspot hotspotNotBlacklisted = createActionableHotspot("Breast", "0060081", "prostate", "10283");
         assertTrue(factoryNotBlacklisted.determineOnlabel(hotspotNotBlacklisted.applicableCancerType(),
-                hotspotNotBlacklisted.blacklistCancerTypes()));
+                hotspotNotBlacklisted.blacklistCancerTypes(),
+                "treatment"));
 
         PersonalizedEvidenceFactory factoryBlacklisted = createPersonalizedEvidenceFactory("10283");
         ActionableHotspot hotspotBlacklisted = createActionableHotspot("Prostate", "10283", "Cancer", "162");
         assertFalse(factoryBlacklisted.determineOnlabel(hotspotBlacklisted.applicableCancerType(),
-                hotspotBlacklisted.blacklistCancerTypes()));
+                hotspotBlacklisted.blacklistCancerTypes(),
+                "treatment"));
     }
 
     @Test
     public void canDetermineBlacklistedEvidence() {
         PersonalizedEvidenceFactory factoryBlacklisted = createPersonalizedEvidenceFactory("10283");
         ActionableHotspot hotspotBlacklisted = createActionableHotspot("Prostate", "10283", "Cancer", "162");
-        assertTrue(factoryBlacklisted.determineBlacklistedEvidence(hotspotBlacklisted.blacklistCancerTypes()));
+        assertTrue(factoryBlacklisted.determineBlacklistedEvidence(hotspotBlacklisted.blacklistCancerTypes(), "treatment"));
 
         PersonalizedEvidenceFactory factoryNotMatchWithBlacklisted = createPersonalizedEvidenceFactory("0060081");
         ActionableHotspot hotspotNotMatchWithBlacklisted = createActionableHotspot("Prostate", "10283", "Cancer", "162");
-        assertFalse(factoryNotMatchWithBlacklisted.determineBlacklistedEvidence(hotspotNotMatchWithBlacklisted.blacklistCancerTypes()));
+        assertFalse(factoryNotMatchWithBlacklisted.determineBlacklistedEvidence(hotspotNotMatchWithBlacklisted.blacklistCancerTypes(),
+                "treatment"));
 
         PersonalizedEvidenceFactory factoryNotBlacklisted = createPersonalizedEvidenceFactory("10383");
         ActionableHotspot hotspotNotBlacklisted = createActionableHotspot("", "", "Cancer", "162");
-        assertFalse(factoryNotBlacklisted.determineBlacklistedEvidence(hotspotNotBlacklisted.blacklistCancerTypes()));
+        assertFalse(factoryNotBlacklisted.determineBlacklistedEvidence(hotspotNotBlacklisted.blacklistCancerTypes(), "treatment"));
     }
 
     @Test

@@ -5,7 +5,6 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ImmutableProtectSource;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
@@ -31,12 +30,8 @@ public class PersonalizedEvidenceFactory {
     @NotNull
     private final Set<String> patientTumorDoids;
 
-    @NotNull
-    private final DoidParents doidParentModel;
-
-    public PersonalizedEvidenceFactory(@NotNull final Set<String> patientTumorDoids, @NotNull final DoidParents doidParentModel) {
+    public PersonalizedEvidenceFactory(@NotNull final Set<String> patientTumorDoids) {
         this.patientTumorDoids = patientTumorDoids;
-        this.doidParentModel = doidParentModel;
     }
 
     @NotNull
@@ -58,7 +53,7 @@ public class PersonalizedEvidenceFactory {
         }
         return ImmutableProtectEvidence.builder()
                 .treatment(actionable.treatment())
-                .onLabel(determineOnlabel(actionable.applicableCancerType(), actionable.blacklistCancerTypes()))
+                .onLabel(determineOnlabel(actionable.applicableCancerType(), actionable.blacklistCancerTypes(), actionable.treatment()))
                 .level(actionable.level())
                 .direction(actionable.direction())
                 .protectSources(determineProtectSources(actionable));
@@ -86,31 +81,27 @@ public class PersonalizedEvidenceFactory {
         return protectSources;
     }
 
-    public boolean determineOnlabel(@NotNull CancerType applicableCancerType, @NotNull Set<CancerType> blacklistCancerTypes) {
-        return !determineBlacklistedEvidence(blacklistCancerTypes) && patientTumorDoids.contains(applicableCancerType.doid());
+    public boolean determineOnlabel(@NotNull CancerType applicableCancerType, @NotNull Set<CancerType> blacklistCancerTypes,
+            @NotNull String treatment) {
+        //TODO filter for blacklisting in v2.2. Should be analyzed in more depth
+        return patientTumorDoids.contains(applicableCancerType.doid());
     }
 
-    public boolean determineBlacklistedEvidence(@NotNull Set<CancerType> blacklistCancerTypes) {
-        boolean hasBlacklistedEvidence = false;
+    public boolean determineBlacklistedEvidence(@NotNull Set<CancerType> blacklistCancerTypes, @NotNull String treatment) {
         Set<String> blacklistDoids = CancerTypeFactory.doidStrings(blacklistCancerTypes);
-        Set<String> results = Sets.newHashSet();
 
         if (!blacklistDoids.isEmpty()) {
-            LOGGER.info(" Starting doid resolving for blacklisting evidence  '{}'", blacklistDoids);
+            LOGGER.info(" Starting doid resolving for blacklisting evidence  '{}' for treatment '{}'", blacklistDoids, treatment);
         }
 
-        for (String doid : blacklistDoids) {
-            results.add(doid);
-        }
-
-        for (String result : results) {
+        for (String result : blacklistDoids) {
             for (String doidPatient : patientTumorDoids) {
                 if (doidPatient.equals(result)) {
-                    hasBlacklistedEvidence = true;
+                    return true;
                 }
             }
         }
-        return hasBlacklistedEvidence;
+        return false;
     }
 
     @VisibleForTesting

@@ -3,21 +3,14 @@ package com.hartwig.hmftools.common.variant;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalogKey;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalogMap;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogMapTest;
-import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.test.SomaticVariantTestBuilderFactory;
 
-import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class ReportableVariantFactoryTest {
@@ -62,12 +55,16 @@ public class ReportableVariantFactoryTest {
     @Test
     public void canResolveReportableFromNonCanonicalDrivers() {
         String gene = "gene";
-        SomaticVariant variant =
-                SomaticVariantTestBuilderFactory.create().reported(true).gene(gene).canonicalTranscript("transcript1").build();
+        SomaticVariant variant = SomaticVariantTestBuilderFactory.create()
+                .reported(true)
+                .gene(gene)
+                .canonicalTranscript("transcript1")
+                .otherReportedEffects("ENST00000579755|c.246_247delCG|p.Gly83fs|frameshift_variant|NONSENSE_OR_FRAMESHIFT")
+                .build();
 
         double likelihood = 0.6;
         DriverCatalog driverNonCanonical = ImmutableDriverCatalog.builder()
-                .from(DriverCatalogMapTest.createCanonicalSomaticMutationEntryForGene(gene, likelihood, "transcript1"))
+                .from(DriverCatalogMapTest.createCanonicalSomaticMutationEntryForGene(gene, likelihood, "ENST00000579755"))
                 .isCanonical(false)
                 .build();
 
@@ -77,15 +74,21 @@ public class ReportableVariantFactoryTest {
         assertEquals(1, reportable.size());
         assertEquals(likelihood, reportable.get(0).driverLikelihood(), EPSILON);
 
-        double likelihoodCanonical = 0.5;
-        SomaticVariant variant2 =
-                SomaticVariantTestBuilderFactory.create().reported(true).gene(gene).canonicalTranscript("transcript2").build();
-        DriverCatalog driverCanonical =
-                DriverCatalogMapTest.createCanonicalSomaticMutationEntryForGene(gene, likelihoodCanonical, "transcript2");
+        double likelihoodCanonical = 0.6;
+        SomaticVariant variant2 = SomaticVariantTestBuilderFactory.create()
+                .reported(true)
+                .gene(gene)
+                .canonicalTranscript("transcript2")
+                .otherReportedEffects("ENST00000579755|c.246_247delCG|p.Gly83fs|frameshift_variant|NONSENSE_OR_FRAMESHIFT")
+                .build();
+        DriverCatalog driverCanonical = ImmutableDriverCatalog.builder()
+                .from(DriverCatalogMapTest.createCanonicalSomaticMutationEntryForGene(gene, likelihoodCanonical, "transcript2"))
+                .isCanonical(true)
+                .build();
         List<ReportableVariant> reportable2 = ReportableVariantFactory.toReportableSomaticVariants(Lists.newArrayList(variant2),
                 Lists.newArrayList(driverNonCanonical, driverCanonical));
 
-        assertEquals(1, reportable2.size());
+        assertEquals(2, reportable2.size());
         assertEquals(likelihoodCanonical, reportable2.get(0).driverLikelihood(), EPSILON);
     }
 }

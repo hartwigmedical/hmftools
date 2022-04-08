@@ -24,6 +24,7 @@ import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class VariantEvidence {
@@ -84,13 +85,27 @@ public class VariantEvidence {
         List<ProtectEvidence> evidences = Lists.newArrayList();
         for (ActionableHotspot hotspot : hotspots) {
             if (hotspotMatch(variant, hotspot)) {
-                evidences.add(evidence(variant, germline, mayReport, hotspot, driverInterpretation, transcript, isCanonical));
+                evidences.add(evidence(variant,
+                        germline,
+                        mayReport,
+                        hotspot,
+                        driverInterpretation,
+                        transcript,
+                        isCanonical,
+                        otherReportedEffects));
             }
         }
 
         for (ActionableRange range : ranges) {
             if (rangeMatch(variant, range, isCanonical, otherReportedEffects)) {
-                evidences.add(evidence(variant, germline, mayReport, range, driverInterpretation, transcript, isCanonical));
+                evidences.add(evidence(variant,
+                        germline,
+                        mayReport,
+                        range,
+                        driverInterpretation,
+                        transcript,
+                        isCanonical,
+                        otherReportedEffects));
             }
         }
 
@@ -102,7 +117,8 @@ public class VariantEvidence {
                         gene,
                         driverInterpretation,
                         transcript,
-                        isCanonical));
+                        isCanonical,
+                        otherReportedEffects));
             }
         }
 
@@ -111,16 +127,25 @@ public class VariantEvidence {
 
     @NotNull
     private ProtectEvidence evidence(@NotNull Variant variant, boolean germline, boolean report, @NotNull ActionableEvent actionable,
-            @NotNull DriverInterpretation driverInterpretation, @NotNull String transcript, boolean isCanonical) {
+            @NotNull DriverInterpretation driverInterpretation, @NotNull String transcript, boolean isCanonical,
+            @NotNull String otherReportedEffects) {
+
         return personalizedEvidenceFactory.evidenceBuilder(actionable)
                 .gene(variant.gene())
                 .transcript(transcript)
                 .isCanonical(isCanonical)
-                .event(ProtectEventGenerator.variantEvent(variant))
+                .event(determineEvent(isCanonical, variant, otherReportedEffects))
                 .germline(germline)
                 .reported(report)
                 .eventIsHighDriver(EvidenceDriverLikelihood.interpretVariant(driverInterpretation))
                 .build();
+    }
+
+    @VisibleForTesting
+    static String determineEvent(boolean isCanonical, @NotNull Variant variant, @NotNull String otherReportedEffects) {
+        return isCanonical
+                ? ProtectEventGenerator.variantEvent(variant)
+                : ProtectEventGenerator.variantEventNonCanonical(otherReportedEffects);
     }
 
     private static boolean hotspotMatch(@NotNull Variant variant, @NotNull ActionableHotspot hotspot) {

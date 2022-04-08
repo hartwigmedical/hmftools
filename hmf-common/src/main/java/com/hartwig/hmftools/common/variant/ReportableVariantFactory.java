@@ -46,20 +46,39 @@ public final class ReportableVariantFactory {
 
         for (SomaticVariant variant : variants) {
             if (variant.reported()) {
-                ImmutableReportableVariant.Builder reportable = ImmutableReportableVariant.builder();
-                String transcript = variant.otherReportedEffects().isEmpty()
-                        ? variant.canonicalTranscript()
-                        : variant.otherReportedEffects().split("\\|")[0];
-                DriverCatalog geneDriver = geneDriverMap.get(DriverCatalogKey.create(variant.gene(), transcript));
 
-                ImmutableReportableVariant.Builder build = fromVariant(variant, source).driverLikelihood(geneDriver.driverLikelihood())
-                        .transcript(geneDriver.transcript())
-                        .isCanonical(geneDriver.isCanonical());
-                reportable.from(build.build());
-                result.add(reportable.build());
+                for (DriverCatalog catalog : geneDriverMap.values()) {
+                    ImmutableReportableVariant.Builder reportable = ImmutableReportableVariant.builder();
+                    if (catalog.isCanonical()) {
+                        if (variant.gene().equals(catalog.gene()) && variant.canonicalTranscript().equals(catalog.transcript())) {
+                            DriverCatalog geneDriver =
+                                    geneDriverMap.get(DriverCatalogKey.create(variant.gene(), variant.canonicalTranscript()));
+
+                            ImmutableReportableVariant.Builder build =
+                                    fromVariant(variant, source).driverLikelihood(geneDriver.driverLikelihood())
+                                            .transcript(geneDriver.transcript())
+                                            .isCanonical(geneDriver.isCanonical());
+                            reportable.from(build.build());
+                            result.add(reportable.build());
+                        }
+                    } else {
+                        if (variant.gene().equals(catalog.gene()) && !variant.otherReportedEffects().isEmpty()
+                                && variant.otherReportedEffects().split("\\|")[0].equals(catalog.transcript())) {
+
+                            DriverCatalog geneDriver = geneDriverMap.get(DriverCatalogKey.create(variant.gene(),
+                                    variant.otherReportedEffects().split("\\|")[0]));
+
+                            ImmutableReportableVariant.Builder build =
+                                    fromVariant(variant, source).driverLikelihood(geneDriver.driverLikelihood())
+                                            .transcript(geneDriver.transcript())
+                                            .isCanonical(geneDriver.isCanonical());
+                            reportable.from(build.build());
+                            result.add(reportable.build());
+                        }
+                    }
+                }
             }
         }
-
         return result;
     }
 

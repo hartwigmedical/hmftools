@@ -110,6 +110,50 @@ public class VariantEvidenceTest {
     }
 
     @Test
+    public void canDetermineEvent() {
+        ReportableVariant variantProtein = ImmutableReportableVariant.builder()
+                .from(VariantTestFactory.createTestReportableVariant())
+                .canonicalHgvsProteinImpact("p.?")
+                .build();
+
+        ReportableVariant variantCoding = ImmutableReportableVariant.builder()
+                .from(VariantTestFactory.createTestReportableVariant())
+                .canonicalHgvsProteinImpact("c.100 A>T")
+                .build();
+
+        ReportableVariant variantEffect = ImmutableReportableVariant.builder()
+                .from(VariantTestFactory.createTestReportableVariant())
+                .canonicalHgvsProteinImpact("splice_variant")
+                .build();
+
+        assertEquals("p.Gly83fs",
+                VariantEvidence.determineEvent(false,
+                        variantProtein,
+                        "ENST00000579755|c.246_247delCG|p.Gly83fs|frameshift_variant|NONSENSE_OR_FRAMESHIFT"));
+        assertEquals("c.246_247delCG",
+                VariantEvidence.determineEvent(false,
+                        variantCoding,
+                        "ENST00000579755|c.246_247delCG||frameshift_variant|NONSENSE_OR_FRAMESHIFT"));
+        assertEquals("frameshift_variant",
+                VariantEvidence.determineEvent(false,
+                        variantEffect,
+                        "ENST00000579755|||frameshift_variant|NONSENSE_OR_FRAMESHIFT"));
+
+        assertEquals("p.?",
+                VariantEvidence.determineEvent(true,
+                        variantProtein,
+                        "ENST00000579755|c.246_247delCG|p.Gly83fs|frameshift_variant|NONSENSE_OR_FRAMESHIFT"));
+        assertEquals("c.100 A>T",
+                VariantEvidence.determineEvent(true,
+                        variantCoding,
+                        "ENST00000579755|c.246_247delCG||frameshift_variant|NONSENSE_OR_FRAMESHIFT"));
+        assertEquals("splice_variant",
+                VariantEvidence.determineEvent(true,
+                        variantEffect,
+                        "ENST00000579755|||frameshift_variant|NONSENSE_OR_FRAMESHIFT"));
+    }
+
+    @Test
     public void canDetermineVariantEvidenceForRanges() {
         String gene = "gene";
         String chromosome = "1";
