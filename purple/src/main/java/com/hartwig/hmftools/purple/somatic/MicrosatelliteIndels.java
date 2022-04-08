@@ -2,6 +2,7 @@ package com.hartwig.hmftools.purple.somatic;
 
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_SEQUENCE_FLAG;
+import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 
 import java.util.stream.Collectors;
 
@@ -25,6 +26,7 @@ public class MicrosatelliteIndels
     private static final int MIN_REPEAT_COUNT_FOR_SHORT_REPEATS = 5;
 
     private static final int MAX_REF_ALT_LENGTH = 50;
+    private static final double MIN_TARGET_REGIONS_AF = 0.15;
 
     public MicrosatelliteIndels(final TargetRegionsData referenceData)
     {
@@ -32,7 +34,12 @@ public class MicrosatelliteIndels
         mIndelCount = 0;
     }
 
-    public double microsatelliteIndelsPerMb()
+    public int msiIndelCount()
+    {
+        return mIndelCount;
+    }
+
+    public double msiIndelsPerMb()
     {
         return mTargetRegions.calcMsiIndels(mIndelCount);
     }
@@ -44,8 +51,14 @@ public class MicrosatelliteIndels
         if(!isValidIndel(context))
             return;
 
-        if(mTargetRegions.hasTargetRegions() && !mTargetRegions.inTargetRegions(context.getContig(), context.getStart(), true))
-            return;
+        if(mTargetRegions.hasTargetRegions())
+        {
+            if(!mTargetRegions.isTargetRegionsMsiIndel(context.getContig(), context.getStart()))
+                return;
+
+            if(variant.alleleFrequency() < MIN_TARGET_REGIONS_AF)
+                return;
+        }
 
         int repeatCount = context.getAttributeAsInt(REPEAT_COUNT_FLAG, 0);
         int repeatSequenceLength = context.getAttributeAsString(REPEAT_SEQUENCE_FLAG, Strings.EMPTY).length();
@@ -53,6 +66,8 @@ public class MicrosatelliteIndels
         if(repeatContextIsRelevant(repeatCount, repeatSequenceLength))
         {
             mIndelCount++;
+
+            PPL_LOGGER.debug("MSI Indel({}) qual({})", variant.toString(), String.format("%.2f", variant.decorator().qual()));
         }
     }
 

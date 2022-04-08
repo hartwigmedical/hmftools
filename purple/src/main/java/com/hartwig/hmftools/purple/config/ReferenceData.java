@@ -81,7 +81,10 @@ public class ReferenceData
     private static final String SOMATIC_HOTSPOT = "somatic_hotspots";
     private static final String GERMLINE_HOTSPOT = "germline_hotspots";
     private static final String GC_PROFILE = "gc_profile";
+
+    public static final String TARGET_REGION_BED = "target_regions_bed";
     private static final String TARGET_REGIONS_RATIOS = "target_regions_ratios";
+    private static final String TARGET_REGION_MSI_INDELS = "target_regions_msi_indels";
 
     public ReferenceData(final CommandLine cmd, final PurpleConfig config)
     {
@@ -221,7 +224,11 @@ public class ReferenceData
 
         CohortGermlineDeletions = new GermlineDeletionFrequency(cmd.getOptionValue(COHORT_DEL_FREQ_FILE));
 
-        TargetRegions = new TargetRegionsData(config.tumorOnlyMode(), config.TargetRegionsBed, cmd.getOptionValue(TARGET_REGIONS_RATIOS));
+        TargetRegions = new TargetRegionsData(
+                config.tumorOnlyMode(),
+                cmd.getOptionValue(TARGET_REGION_BED),
+                cmd.getOptionValue(TARGET_REGIONS_RATIOS),
+                cmd.getOptionValue(TARGET_REGION_MSI_INDELS));
     }
 
     private void loadGeneTransCache()
@@ -265,7 +272,9 @@ public class ReferenceData
         options.addOption(GERMLINE_HOTSPOT, true, "Path to germline hotspot VCF");
         options.addOption(GC_PROFILE, true, "Path to GC profile");
         options.addOption(COHORT_DEL_FREQ_FILE, true, "Path to cohort germline deletions frequency file");
+        options.addOption(TARGET_REGION_BED, true, "Target regions BED file");
         options.addOption(TARGET_REGIONS_RATIOS, true, "Path to target regions ratios file");
+        options.addOption(TARGET_REGION_MSI_INDELS, true, "Path to target regions MSI INDELs file");
         EnsemblDataCache.addEnsemblDir(options);
         DriverGenePanelConfig.addGenePanelOption(false, options);
     }

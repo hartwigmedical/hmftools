@@ -56,7 +56,6 @@ public class SomaticFitConfig
         HighlyDiploidPercentage = getConfigValue(cmd, HIGHLY_DIPLOID_PERCENTAGE, HIGHLY_DIPLOID_PERCENTAGE_DEFAULT);
     }
 
-
     public static void addOptions(@NotNull Options options)
     {
         options.addOption(SOMATIC_MIN_PEAK, true,

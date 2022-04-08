@@ -19,16 +19,19 @@ public class TumorMutationalLoad
         mBurden = 0;
     }
 
-    public int load() { return mTargetRegions.calcTml(mLoad); }
-
-    public double burdenPerMb()
+    public int load()
     {
-        return mBurden / MB_PER_GENOME;
+        return mLoad;
     }
+    public int burden() { return mBurden; }
+
+    public int tml() { return mTargetRegions.calcTml(mLoad); }
+
+    public double burdenPerMb() { return mBurden / MB_PER_GENOME; }
 
     public void processVariant(final SomaticVariant variant)
     {
-        if(mTargetRegions.hasTargetRegions() && !mTargetRegions.inTargetRegions(variant.chromosome(), variant.position(), false))
+        if(mTargetRegions.hasTargetRegions() && !mTargetRegions.inTargetRegions(variant.chromosome(), variant.position()))
             return;
 
         mBurden++;

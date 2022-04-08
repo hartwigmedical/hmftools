@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.genome.bed.NamedBedFile.readBedFile;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
@@ -19,14 +20,12 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 public class TargetRegionsData
 {
     private final boolean mTumorOnly;
     private final Map<String,List<NamedBed>> mTargetRegions;
-    private final Map<String,List<NamedBed>> mMsiTargetRegions;
+    private final Map<String,List<Integer>> mTargetRegionsMsiIndels;
 
     private int mTotalBases;
     private int mCodingBases;
@@ -38,9 +37,8 @@ public class TargetRegionsData
     private boolean mIsValid;
 
     private static final String CODING_REGION_ID = "CODING";
-    private static final String MSI_REGION_ID = "MSI";
 
-    public TargetRegionsData(boolean tumorOnly, final String bedFile, final String ratiosFile)
+    public TargetRegionsData(boolean tumorOnly, final String bedFile, final String ratiosFile, final String msiIndelsFile)
     {
         mTumorOnly = tumorOnly;
         mTotalBases = 0;
@@ -49,24 +47,35 @@ public class TargetRegionsData
         mTmbRatio = 1;
         mMsiIndelRatio = 1;
         mTargetRegions = Maps.newHashMap();
-        mMsiTargetRegions = Maps.newHashMap();
+        mTargetRegionsMsiIndels = Maps.newHashMap();
         mIsValid = true;
 
         loadTargetRegionsBed(bedFile);
+        loadTargetRegionsMsiIndels(msiIndelsFile);
         loadTargetRegionsRatios(ratiosFile);
     }
 
     public boolean hasTargetRegions() { return !mTargetRegions.isEmpty(); }
     public boolean isValid() { return mIsValid; }
 
-    public boolean inTargetRegions(final String chromsome, int position, boolean isMsi)
+    public boolean inTargetRegions(final String chromsome, int position)
     {
-        final List<NamedBed> chrRegions = isMsi ? mMsiTargetRegions.get(chromsome) : mTargetRegions.get(chromsome);
+        final List<NamedBed> chrRegions = mTargetRegions.get(chromsome);
 
         if(chrRegions == null)
             return false;
 
         return chrRegions.stream().anyMatch(x -> positionWithin(position, x.start(), x.end()));
+    }
+
+    public boolean isTargetRegionsMsiIndel(final String chromsome, int position)
+    {
+        final List<Integer> chrRegions = mTargetRegionsMsiIndels.get(chromsome);
+
+        if(chrRegions == null)
+            return false;
+
+        return chrRegions.stream().anyMatch(x -> position == x);
     }
 
     public int calcTml(int rawTml)
@@ -95,13 +104,13 @@ public class TargetRegionsData
 
     public double calcMsiIndels(int rawCount)
     {
-        if(mMsiTargetRegions.isEmpty() && !mTumorOnly)
+        if(mTargetRegionsMsiIndels.isEmpty() && !mTumorOnly)
             return (double) rawCount / MB_PER_GENOME;
 
         double adjusted = rawCount;
 
         // # of MSI indels in MSI-marked target regions  * Constant
-        if(!mMsiTargetRegions.isEmpty())
+        if(!mTargetRegionsMsiIndels.isEmpty())
             adjusted *= mMsiIndelRatio;
 
         // if(mTumorOnly)
@@ -134,29 +143,58 @@ public class TargetRegionsData
 
                 if(namedBed.name().contains(CODING_REGION_ID))
                     mCodingBases += namedBed.bases();
-
-                if(namedBed.name().contains(MSI_REGION_ID))
-                {
-                    List<NamedBed> msiRegions = mMsiTargetRegions.get(namedBed.chromosome());
-
-                    if(msiRegions == null)
-                    {
-                        msiRegions = Lists.newArrayList();
-                        mMsiTargetRegions.put(namedBed.chromosome(), msiRegions);
-                    }
-
-                    msiRegions.add(namedBed);
-                }
             }
 
-            PPL_LOGGER.info("loaded {} target regions bases(total={} coding={}) msiRegions({}) from file({})",
-                    mTargetRegions.values().stream().mapToInt(x -> x.size()).sum(),
-                    mTotalBases, mCodingBases, mMsiTargetRegions.values().stream().mapToInt(x -> x.size()).sum(), bedFile);
+            PPL_LOGGER.info("loaded {} target regions bases(total={} coding={}) from file({})",
+                    mTargetRegions.values().stream().mapToInt(x -> x.size()).sum(), mTotalBases, mCodingBases, bedFile);
         }
         catch (IOException e)
         {
             mIsValid = false;
             PPL_LOGGER.error("failed to load target regions BED file: {}", e.toString());
+        }
+    }
+
+    private void loadTargetRegionsMsiIndels(final String filename)
+    {
+        if(filename != null)
+        {
+            try
+            {
+                List<String> lines = Files.readAllLines(Paths.get(filename));
+
+                String header = lines.get(0);
+                lines.remove(0);
+                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, "\t");
+                int chrIndex = fieldsIndexMap.get("Chromosome");
+                int posIndex = fieldsIndexMap.get("Position");
+
+                for(String line : lines)
+                {
+                    String[] values = line.split("\t", -1);
+
+                    String chromosome = values[chrIndex];
+                    int position = Integer.parseInt(values[posIndex]);
+
+                    List<Integer> positions = mTargetRegionsMsiIndels.get(chromosome);
+
+                    if(positions == null)
+                    {
+                        positions = Lists.newArrayList();
+                        mTargetRegionsMsiIndels.put(chromosome, positions);
+                    }
+
+                    positions.add(position);
+                }
+
+                PPL_LOGGER.info("loaded {} MSI INDELs from file({})",
+                        mTargetRegionsMsiIndels.values().stream().mapToInt(x -> x.size()).sum(), filename);
+            }
+            catch(IOException e)
+            {
+                mIsValid = false;
+                PPL_LOGGER.error("failed to load target regions ratios file: {}", e.toString());
+            }
         }
     }
 

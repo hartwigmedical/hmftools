@@ -87,7 +87,7 @@ public class SomaticStream
 
     public double msiIndelsPerMb()
     {
-        return mMicrosatelliteIndels.microsatelliteIndelsPerMb();
+        return mMicrosatelliteIndels.msiIndelsPerMb();
     }
 
     public MicrosatelliteStatus microsatelliteStatus()
@@ -105,7 +105,7 @@ public class SomaticStream
 
     public int tumorMutationalLoad()
     {
-        return mTumorMutationalLoad.load();
+        return mTumorMutationalLoad.tml();
     }
 
     public TumorMutationalStatus tumorMutationalBurdenPerMbStatus()
@@ -200,6 +200,11 @@ public class SomaticStream
 
             mVcfWriter.close();
             mRChartData.write();
+
+            PPL_LOGGER.info(String.format("load(%d tml=%d) burden(%d perMb=%.4f) msiIndels(%d perMb=%.4f)",
+                    mTumorMutationalLoad.load(), mTumorMutationalLoad.tml(),
+                    mTumorMutationalLoad.burden(), tumorMutationalBurdenPerMb(),
+                    mMicrosatelliteIndels.msiIndelCount(), mMicrosatelliteIndels.msiIndelsPerMb()));
         }
         catch(IOException e)
         {

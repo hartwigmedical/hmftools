@@ -105,7 +105,7 @@ public class AmberData
         return (int) Math.ceil(MAX_SOMATIC_TOTAL_READ_COUNT_PROPORTION * AverageTumorDepth);
     }
 
-    private static final double MIN_BAF_PERC = 0.002;
+    private static final double MIN_BAF_PERC = 0.01;
     private static final BaseRegion PSEUDOAUTOSOMAL_REGION_V37 = new BaseRegion(2699520, 155260560);
     private static final BaseRegion PSEUDOAUTOSOMAL_REGION_V38 = new BaseRegion(2781479, 156030895);
 

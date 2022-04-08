@@ -70,7 +70,7 @@ public final class PurpleSummaryData
                 .tumorMutationalBurdenStatus(somaticStream != null ? somaticStream.tumorMutationalBurdenPerMbStatus() : TumorMutationalStatus.UNKNOWN)
                 .svTumorMutationalBurden(svCache.passingBnd())
                 .qc(qcChecks)
-                .targeted(config.targetRegionsMode())
+                .targeted(config.TargetRegionsMode)
                 .build();
     }
 }

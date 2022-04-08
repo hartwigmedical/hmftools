@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.config.ReferenceData.TARGET_REGION_BED;
 
 import java.io.File;
 import java.util.StringJoiner;
@@ -28,7 +29,7 @@ public class PurpleConfig
     public final FittingConfig Fitting;
     public final SomaticFitConfig SomaticFitting;
     public final ChartConfig Charting;
-    public final String TargetRegionsBed;
+    public final boolean TargetRegionsMode;
 
     private boolean mIsValid;
 
@@ -38,7 +39,6 @@ public class PurpleConfig
     private static final String OUTPUT_DIRECTORY = "output_dir";
     private static final String AMBER = "amber";
     private static final String COBALT = "cobalt";
-    private static final String TARGET_REGION_BED = "target_regions_bed";
 
     public static String RUN_DRIVERS = "run_drivers";
     public static String DRIVERS_ONLY = "drivers_only";
@@ -93,14 +93,14 @@ public class PurpleConfig
         Charting = new ChartConfig(cmd, OutputDir);
         Fitting = new FittingConfig(cmd);
         SomaticFitting = new SomaticFitConfig(cmd);
-        TargetRegionsBed = cmd.getOptionValue(TARGET_REGION_BED);
+        TargetRegionsMode = cmd.hasOption(TARGET_REGION_BED);
 
         RunDrivers = cmd.hasOption(RUN_DRIVERS);
         DriversOnly = cmd.hasOption(DRIVERS_ONLY);
 
         PPL_LOGGER.info("reference({}) tumor({}) {}",
                 ReferenceId != null ? ReferenceId : "NONE", TumorId != null ? TumorId : "NONE",
-                TargetRegionsBed != null ? "running on target-regions only" : "");
+                TargetRegionsMode ? "running on target-regions only" : "");
     }
 
     public boolean isValid() { return mIsValid; }
@@ -111,9 +111,7 @@ public class PurpleConfig
     public boolean runTumor() { return !germlineMode(); }
     public boolean runGermline() { return !tumorOnlyMode(); }
 
-    public boolean targetRegionsMode() { return TargetRegionsBed != null; }
-
-    public boolean fitWithSomatics() { return !tumorOnlyMode() && !germlineMode() && !targetRegionsMode(); }
+    public boolean fitWithSomatics() { return !tumorOnlyMode() && !germlineMode() && !TargetRegionsMode; }
 
     public RunMode runMode()
     {
@@ -148,7 +146,6 @@ public class PurpleConfig
 
         options.addOption(RUN_DRIVERS, false, "Run driver routine");
         options.addOption(DRIVERS_ONLY, false, "Only run the driver routine");
-        options.addOption(TARGET_REGION_BED, true, "Target regions BED file");
 
         addDatabaseCmdLineArgs(options);
         FittingConfig.addOptions(options);
