@@ -163,11 +163,11 @@ data class TealParams
     var germlineDuplicateProportion: Double = 0.0,
 
     @Parameter(names = [REF_MEAN_READS_PER_KB], description = "Mean reads per KB of the reference sample")
-    var germlineMeanReadsPerKb: Int? = null,
+    var germlineMeanReadsPerKb: Double? = null,
 
     @Parameter(names = ["-reference_gc50_reads_per_kb"],
         description = "GC 50 reads per KB of the reference sample. Defaults to mean reads per KB if not provided")
-    var germlineGc50ReadsPerKb: Int? = null,
+    var germlineGc50ReadsPerKb: Double? = null,
 
     @Parameter(names = ["-tumor_purity"],
         description = "Purity of the tumor sample")
@@ -182,10 +182,10 @@ data class TealParams
     var tumorDuplicateProportion: Double = 0.0,
 
     @Parameter(names = [TUMOR_MEAN_READS_PER_KB], description = "Mean reads per KB of the tumor sample")
-    var tumorMeanReadsPerKb: Int? = null,
+    var tumorMeanReadsPerKb: Double? = null,
 
     @Parameter(names = ["-tumor_gc50_reads_per_kb"], description = "GC 50 reads per KB. Defaults to mean reads per KB if not provided")
-    var tumorGc50ReadsPerKb: Int? = null
+    var tumorGc50ReadsPerKb: Double? = null
 )
 {
     // validate the params, throw ParameterException if fails
