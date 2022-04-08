@@ -69,8 +69,7 @@ public enum RefGenomeVersion
         }
     }
 
-    @NotNull
-    public String addVersionToFilePath(@NotNull String filePath)
+    public String addVersionToFilePath(final String filePath)
     {
         String modifiedFilePath = filePath;
         if (filePath.endsWith(GZIP_EXTENSION))
