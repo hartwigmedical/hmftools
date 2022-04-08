@@ -19,7 +19,7 @@ import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.tools.StringUtils;
 
-public class CommonUtils
+public final class CommonUtils
 {
     public static final Logger GU_LOGGER = LogManager.getLogger(CommonUtils.class);
 

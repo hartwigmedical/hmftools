@@ -1,11 +1,17 @@
 package com.hartwig.hmftools.geneutils.drivers;
 
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
+
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
@@ -26,49 +32,36 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.compress.utils.Lists;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
 public class GenerateDriverGeneFiles
 {
-    private static final Logger LOGGER = LogManager.getLogger(GenerateDriverGeneFiles.class);
+    private final String mDriverGenePanelFile;
+    private final String mResourceRepoDir;
+    private final String mOutputDir;
 
-    private static final String NEW_DRIVER_GENE_PANEL_37_TSV = "new_driver_gene_panel_37_tsv";
+    private static final String DRIVER_GENE_PANEL_TSV = "driver_gene_panel";
     private static final String RESOURCE_REPO_DIR = "resource_repo_dir";
 
-    public static void main(String[] args) throws IOException, ParseException
+    public GenerateDriverGeneFiles(final CommandLine cmd)
     {
-        // See also https://github.com/hartwigmedical/scratchpad/tree/master/genePanel
-        Options options = createOptions();
-        CommandLine cmd = new DefaultParser().parse(options, args);
+        GU_LOGGER.info("starting driver gene panel generation");
 
-        LOGGER.info("Starting driver gene panel generation");
-
-        new GenerateDriverGeneFiles(cmd.getOptionValue(NEW_DRIVER_GENE_PANEL_37_TSV), cmd.getOptionValue(RESOURCE_REPO_DIR)).run();
-
-        LOGGER.info("Complete");
-    }
-
-    private final String mNewDriverGenePanel37Tsv;
-    private final String mResourceRepoDir;
-
-    public GenerateDriverGeneFiles(final String newDriverGenePanel37Tsv, final String resourceRepoDir)
-    {
-        mNewDriverGenePanel37Tsv = newDriverGenePanel37Tsv;
-        mResourceRepoDir = resourceRepoDir;
+        mDriverGenePanelFile = cmd.getOptionValue(DRIVER_GENE_PANEL_TSV);
+        mResourceRepoDir = cmd.getOptionValue(RESOURCE_REPO_DIR);
+        mOutputDir = parseOutputDir(cmd);
     }
 
     public void run() throws IOException
     {
-        List<DriverGene> v37DriverGenes = DriverGeneFile.read(mNewDriverGenePanel37Tsv);
-        LOGGER.info("Loaded {} driver genes from {}", v37DriverGenes.size(), mNewDriverGenePanel37Tsv);
+        List<DriverGene> driverGenes = DriverGeneFile.read(mDriverGenePanelFile);
+        GU_LOGGER.info("loaded {} driver genes from {}", driverGenes.size(), mDriverGenePanelFile);
 
+        /*
         GeneNameMapping37to38 geneNameMapping = GeneNameMapping37to38.loadFromEmbeddedResource();
         List<DriverGene> v38DriverGenes = Lists.newArrayList();
-        for(DriverGene input : v37DriverGenes)
+        for(DriverGene input : driverGenes)
         {
             String v37Gene = input.gene();
             String v38Gene = geneNameMapping.v38Gene(input.gene());
@@ -78,7 +71,7 @@ public class GenerateDriverGeneFiles
             }
             else if(v38Gene.equals("NA"))
             {
-                LOGGER.debug(" Excluding: {}", v37Gene);
+                GU_LOGGER.debug(" Excluding: {}", v37Gene);
             }
             else
             {
@@ -86,9 +79,10 @@ public class GenerateDriverGeneFiles
                 v38DriverGenes.add(converted);
             }
         }
+        */
 
-        process(RefGenomeVersion.V37, v37DriverGenes);
-        process(RefGenomeVersion.V38, v38DriverGenes);
+        process(RefGenomeVersion.V37, driverGenes);
+        process(RefGenomeVersion.V38, driverGenes);
     }
 
     public void process(final RefGenomeVersion refGenomeVersion, final List<DriverGene> driverGenes) throws IOException
@@ -102,7 +96,7 @@ public class GenerateDriverGeneFiles
         String clinvarFile = refGenomeVersion == RefGenomeVersion.V37
                 ? mResourceRepoDir + "/sage/37/clinvar.37.vcf.gz"
                 : mResourceRepoDir + "/sage/38/clinvar.38.vcf.gz";
-        LOGGER.info(" Located clinvar file for {} at {}", refGenomeVersion, clinvarFile);
+        GU_LOGGER.info(" Located clinvar file for {} at {}", refGenomeVersion, clinvarFile);
 
         String driverGeneFile = refGenomeVersion.addVersionToFilePath(genePanelDir + "/DriverGenePanel.tsv");
         String somaticCodingWithoutUtr = refGenomeVersion.addVersionToFilePath(sageDir + "/ActionableCodingPanel.somatic.bed.gz");
@@ -128,23 +122,23 @@ public class GenerateDriverGeneFiles
                 refGenomeVersion == RefGenomeVersion.V37 ? HmfGenePanelSupplier.allGeneList37() : HmfGenePanelSupplier.allGeneList38();
 
         // Write out driver gene panel
-        LOGGER.info(" Writing {} {} bed file at {}", refGenomeVersion, "somatic", somaticCodingWithoutUtr);
+        GU_LOGGER.info("writing {} {} bed file at {}", refGenomeVersion, "somatic", somaticCodingWithoutUtr);
         createNamedBedFiles(false, somaticCodingWithoutUtr, somaticGenes, transcripts);
 
-        LOGGER.info(" Writing {} {} coverage bed file at {}", refGenomeVersion, "germline", germlineCodingWithoutUtr);
+        GU_LOGGER.info("writing {} {} coverage bed file at {}", refGenomeVersion, "germline", germlineCodingWithoutUtr);
         createNamedBedFiles(false, germlineCodingWithoutUtr, allGenes, transcripts);
 
-        LOGGER.info(" Writing {} {} bed file at {}", refGenomeVersion, "germline", germlineCodingWithUtr);
+        GU_LOGGER.info("writing {} {} bed file at {}", refGenomeVersion, "germline", germlineCodingWithUtr);
         List<GenomeRegion> germlinePanel = createUnnamedBedFiles(true, germlineCodingWithUtr, allGenes, transcripts);
 
-        LOGGER.info(" Writing {} germline hotspots at {}", refGenomeVersion, germlineHotspotFile);
+        GU_LOGGER.info("writing {} germline hotspots at {}", refGenomeVersion, germlineHotspotFile);
         List<GenomeRegion> germlineHotspots =
                 new GermlineHotspotVCF(germlineHotspotGenes(driverGenes)).process(clinvarFile, germlineHotspotFile);
 
-        LOGGER.info(" Writing {} germline slice file at {}", refGenomeVersion, germlineSliceFile);
+        GU_LOGGER.info("writing {} germline slice file at {}", refGenomeVersion, germlineSliceFile);
         createSliceFile(germlineSliceFile, germlinePanel, germlineHotspots, qualityRecalibrationRegions);
 
-        LOGGER.info(" Writing {} germline blacklist file at {}", refGenomeVersion, germlineBlacklistFile);
+        GU_LOGGER.info("writing {} germline blacklist file at {}", refGenomeVersion, germlineBlacklistFile);
         List<VariantContext> germlineBlackList =
                 refGenomeVersion == RefGenomeVersion.V37 ? GermlineResources.blacklist37() : GermlineResources.blacklist38();
         GermlineBlacklistVCF.process(germlineBlacklistFile, germlineBlackList);
@@ -165,14 +159,16 @@ public class GenerateDriverGeneFiles
         NamedBedFile.writeUnnamedBedFile(file, combined);
     }
 
-    private static void createNamedBedFiles(boolean includeUTR, final String file, final Set<String> genes,
+    private static void createNamedBedFiles(
+            boolean includeUTR, final String file, final Set<String> genes,
             final List<HmfTranscriptRegion> transcripts) throws IOException
     {
         List<NamedBed> somaticBed = HmfExonPanelBed.createNamedCodingRegions(includeUTR, genes, transcripts);
         NamedBedFile.writeBedFile(file, somaticBed);
     }
 
-    private static List<GenomeRegion> createUnnamedBedFiles(boolean includeUTR, final String file, final Set<String> genes,
+    private static List<GenomeRegion> createUnnamedBedFiles(
+            boolean includeUTR, final String file, final Set<String> genes,
             final List<HmfTranscriptRegion> transcripts) throws IOException
     {
         List<GenomeRegion> somaticBed = HmfExonPanelBed.createUnnamedCodingRegions(includeUTR, genes, transcripts);
@@ -227,12 +223,24 @@ public class GenerateDriverGeneFiles
         return GenerateDriverGeneFiles.class.getResource(location).toString();
     }
 
+    public static void main(String[] args) throws IOException, ParseException
+    {
+        // See also https://github.com/hartwigmedical/scratchpad/tree/master/genePanel
+        Options options = createOptions();
+        CommandLine cmd = new DefaultParser().parse(options, args);
+
+        GenerateDriverGeneFiles generator = new GenerateDriverGeneFiles(cmd);
+        generator.run();
+    }
+
     private static Options createOptions()
     {
         Options options = new Options();
 
-        options.addOption(NEW_DRIVER_GENE_PANEL_37_TSV, true, "File containing the driver gene panel for 37");
+        options.addOption(DRIVER_GENE_PANEL_TSV, true, "File containing the driver gene panel for 37");
         options.addOption(RESOURCE_REPO_DIR, true, "The directory holding the public hmf resources repo");
+        addOutputDir(options);
+        addLoggingOptions(options);
 
         return options;
     }
