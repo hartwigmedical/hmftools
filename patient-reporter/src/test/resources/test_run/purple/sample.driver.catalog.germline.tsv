@@ -1,2 +1,2 @@
-chromosome	chromosomeBand	gene	driver	category	likelihoodMethod	driverLikelihood	dndsLikelihood	missense	nonsense	splice	inframe	frameshift	biallelic	minCopyNumber	maxCopyNumber
-3	p13-p14.1	MITF	GERMLINE	ONCO	GERMLINE	1.0000	0.0000	1	0	0	0	0	false	3.1577	3.1577
+chromosome	chromosomeBand	gene	transcript	isCanonical	driver	category	likelihoodMethod	driverLikelihood	dndsLikelihood	missense	nonsense	splice	inframe	frameshift	biallelic	minCopyNumber	maxCopyNumber
+3	p13-p14.1	MITF	ENST00000352241	true	GERMLINE	ONCO	GERMLINE	1.0000	0.0000	1	0	0	0	0	false	3.1577	3.1577

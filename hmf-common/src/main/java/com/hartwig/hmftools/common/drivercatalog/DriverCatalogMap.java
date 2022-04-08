@@ -10,9 +10,6 @@ import org.jetbrains.annotations.NotNull;
 
 public final class DriverCatalogMap {
 
-    private DriverCatalogMap() {
-    }
-
     @NotNull
     @VisibleForTesting
     public static Map<DriverCatalogKey, DriverCatalog> toDriverMap(@NotNull List<DriverCatalog> driverCatalog) {

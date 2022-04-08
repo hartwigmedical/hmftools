@@ -15,18 +15,18 @@ public class DriverCatalogKey {
     @Nullable
     private final String gene;
     @NotNull
-    private final String transript;
+    private final String transcript;
 
-    private DriverCatalogKey(@Nullable final String gene, @NotNull final String transript) {
+    private DriverCatalogKey(@Nullable final String gene, @NotNull final String transcript) {
         this.gene = gene;
-        this.transript = transript;
+        this.transcript = transcript;
     }
 
     @NotNull
     public static Set<DriverCatalogKey> buildUniqueKeysSet(@NotNull Map<DriverCatalogKey, DriverCatalog> geneDriverMap) {
         Set<DriverCatalogKey> keys = Sets.newHashSet();
         for (Map.Entry<DriverCatalogKey, DriverCatalog> entry : geneDriverMap.entrySet()) {
-            keys.add(create(entry.getKey().gene, entry.getKey().transript));
+            keys.add(create(entry.getKey().gene, entry.getKey().transcript));
         }
         return keys;
     }
@@ -54,16 +54,16 @@ public class DriverCatalogKey {
             return false;
         }
         final DriverCatalogKey that = (DriverCatalogKey) o;
-        return Objects.equals(gene, that.gene) && transript.equals(that.transript);
+        return Objects.equals(gene, that.gene) && transcript.equals(that.transcript);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(gene, transript);
+        return Objects.hash(gene, transcript);
     }
 
     @Override
     public String toString() {
-        return "DriverCatalogKey{" + "gene='" + gene + '\'' + ", transript='" + transript + '\'' + '}';
+        return String.format("gene(%s) transcript(%s)", gene, transcript);
     }
 }

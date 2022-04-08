@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.common.drivercatalog;
 
-import static com.hartwig.hmftools.common.drivercatalog.DriverType.GERMLINE_MUTATION;
-import static com.hartwig.hmftools.common.drivercatalog.DriverType.HOM_DEL_DISRUPTION;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.checkConvertType;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
 import java.io.IOException;
