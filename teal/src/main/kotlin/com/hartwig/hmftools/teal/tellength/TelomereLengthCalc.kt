@@ -18,8 +18,8 @@ class TelomereLengthCalc(
     val purity: Double,
     val ploidy: Double,
     val duplicateProportion: Double,
-    val meanReadsPerKb: Int,
-    val gc50ReadsPerKb: Int,
+    val meanReadsPerKb: Double,
+    val gc50ReadsPerKb: Double,
     val germlineTelomereLength: Double?)
 {
     private val logger = LogManager.getLogger(javaClass)
@@ -205,8 +205,8 @@ class TelomereLengthCalc(
         row.setDouble("purity", purity)
         row.setDouble("ploidy", ploidy)
         row.setDouble("duplicateProportion", duplicateProportion)
-        row.setInt("meanReadsPerKb", meanReadsPerKb)
-        row.setInt("gc50ReadsPerKb", gc50ReadsPerKb)
+        row.setDouble("meanReadsPerKb", meanReadsPerKb)
+        row.setDouble("gc50ReadsPerKb", gc50ReadsPerKb)
 
         try
         {

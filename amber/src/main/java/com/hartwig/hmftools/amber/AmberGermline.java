@@ -5,9 +5,9 @@ import static java.util.stream.Collectors.toList;
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
 import static com.hartwig.hmftools.common.utils.collection.Multimaps.filterEntries;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -50,7 +50,7 @@ public class AmberGermline
     Chromosome getUniparentalDisomy() { return mUniparentalDisomy; }
 
     AmberGermline(final AmberConfig config, SamReaderFactory readerFactory, ListMultimap<Chromosome,AmberSite> chromosomeSites)
-            throws InterruptedException
+            throws InterruptedException, IOException
     {
         mConfig = config;
 

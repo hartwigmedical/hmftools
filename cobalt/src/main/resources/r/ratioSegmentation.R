@@ -3,6 +3,8 @@ args <- commandArgs(trailing = T)
 ratioFile <- args[1]
 column <- args[2]
 pcfFile <- args[3]
+gamma <- as.numeric(args[4])
+#gamma <- 100
 kmin <- 1
 
 library(dplyr)
@@ -23,7 +25,7 @@ ratio <- ratio[! is.nan(ratio$S1),]
 ratio <- ratio[, c("chromosome", "position", "S1")]
 
 ratio$chromosome <- gsub(chromosomePrefix, "", ratio$chromosome, ignore.case = T)
-ratio.seg <- pcf(ratio, verbose = FALSE, gamma = 100, kmin = kmin)
+ratio.seg <- pcf(ratio, verbose = FALSE, gamma = gamma, kmin = kmin)
 
 # copynumber pcf seems to have a bug that causes issue when n.probes == 1
 # we correct it by setting mean to tumorModifiedBAF 

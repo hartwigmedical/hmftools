@@ -25,6 +25,7 @@ import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.amber.BaseDepthFactory;
 import com.hartwig.hmftools.common.amber.TumorBAF;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.config.DeclaredOrderParameterComparator;
 import com.hartwig.hmftools.common.utils.config.LoggingOptions;
@@ -120,13 +121,14 @@ public class AmberApplication implements AutoCloseable
     {
         final SamReaderFactory readerFactory = readerFactory(mConfig);
 
-        final ListMultimap<Chromosome, BaseDepth> allNormal = emptyNormalHetSites(mChromosomeSites);
+        final ListMultimap<Chromosome, BaseDepth> allNormal = hetLociTumorOnly();
 
         // no homozygous sites
         AmberTumor tumor = new AmberTumor(mConfig, readerFactory, allNormal, ArrayListMultimap.create());
 
         final List<TumorBAF> tumorBAFList = tumor.getBafs().values()
                 .stream()
+                .filter(x -> x.tumorReadDepth() >= mConfig.TumorOnlyMinDepth)
                 .filter(x -> x.tumorRefSupport() >= mConfig.TumorOnlyMinSupport)
                 .filter(x -> x.tumorAltSupport() >= mConfig.TumorOnlyMinSupport)
                 .filter(x -> isFinite(x.refFrequency()) && Doubles.greaterOrEqual(x.refFrequency(), mConfig.TumorOnlyMinVaf))
@@ -141,14 +143,39 @@ public class AmberApplication implements AutoCloseable
         mPersistence.persistBAF(amberBAFList);
     }
 
-    private ListMultimap<Chromosome, BaseDepth> emptyNormalHetSites(final ListMultimap<Chromosome, AmberSite> sites)
+    // the heterozygous loci snp list that we use contains some regions that could be noisy.
+    // this is not a problem if we use those to identify loci that are heterozygous in the
+    // germline sample. However, in tumor only mode we would be better off removing those
+    // regions.
+    private ListMultimap<Chromosome, BaseDepth> hetLociTumorOnly() throws IOException
     {
+        List<GenomeRegion> excludedRegions = loadTumorOnlyExcludedSnp();
         final ListMultimap<Chromosome, BaseDepth> result = ArrayListMultimap.create();
-        for(Chromosome chromosome : sites.keySet())
-        {
-            result.putAll(chromosome, sites.get(chromosome).stream().map(BaseDepthFactory::fromAmberSite).collect(toList()));
-        }
+        int numBlackListed = 0;
 
+        // filter out everything in loaded genome positions that are in these regions
+        for (var entry : mChromosomeSites.entries())
+        {
+            // check against black list
+            boolean blacklisted = false;
+            for (GenomeRegion gr : excludedRegions)
+            {
+                if (gr.contains(entry.getValue()))
+                {
+                    blacklisted = true;
+                    break;
+                }
+            }
+            if (blacklisted)
+            {
+                numBlackListed++;
+            }
+            else
+            {
+                result.put(entry.getKey(), BaseDepthFactory.fromAmberSite(entry.getValue()));
+            }
+        }
+        AMB_LOGGER.info("removed {} blacklisted loci, {} remaining", numBlackListed, result.size());
         return result;
     }
 
@@ -160,6 +187,23 @@ public class AmberApplication implements AutoCloseable
             return readerFactory.referenceSource(new ReferenceSource(new File(config.RefGenomePath)));
         }
         return readerFactory;
+    }
+
+    private List<GenomeRegion> loadTumorOnlyExcludedSnp() throws IOException
+    {
+        String resourcePath = null;
+        switch (mConfig.refGenomeVersion)
+        {
+            case V37:
+            case HG19:
+                // we don't have excluded region for v37 genome
+                return Collections.emptyList();
+            case V38:
+                resourcePath = "tumorOnlyExcludedSnp.38.bed";
+                break;
+        }
+
+        return AmberUtils.loadBedFromResource(resourcePath);
     }
 
     @Override

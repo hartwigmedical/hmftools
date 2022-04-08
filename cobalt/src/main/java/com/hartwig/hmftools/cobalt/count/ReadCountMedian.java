@@ -1,5 +1,7 @@
-package com.hartwig.hmftools.common.genome.gc;
+package com.hartwig.hmftools.cobalt.count;
 
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeSet;
 
@@ -24,11 +26,55 @@ class ReadCountMedian {
         sum += read;
     }
 
-    int mean() {
-        return count == 0 ? 0 : (int) (sum / count);
+    double mean() {
+        return count == 0 ? 0 : ((double)sum / count);
     }
 
-    int median() {
+    double interpolatedMedian() {
+        List<InnerReadCount> readCountList = new ArrayList<>(readCount.values());
+        if (readCountList.isEmpty()) {
+            return 0;
+        }
+        readCountList.sort(null);
+
+        double median = 0.0;
+
+        // now count how many are below, how many are above
+        int countBelowMed = 0;
+        int countAboveMed = 0;
+
+        int cumulativeCount = 0;
+
+        for (var itr = readCountList.iterator(); itr.hasNext();) {
+
+            InnerReadCount c = itr.next();
+
+            // corner case, if count exactly equals then median is
+            // the average of this number and the next
+            if (cumulativeCount + c.count == count / 2.0)
+            {
+                return (c.read + itr.next().read) * 0.5;
+            }
+
+            if (cumulativeCount + c.count > count / 2.0)
+            {
+                // we found the median, also found the number of values less than median
+                median = c.read;
+                countBelowMed = cumulativeCount;
+                countAboveMed = count - c.count - countBelowMed;
+                break;
+            }
+
+            cumulativeCount += c.count;
+        }
+
+        double l = ((double)countBelowMed) / count;
+        double r = ((double)countAboveMed) / count;
+
+        return median - 0.5 + (0.5 - l) / (1 - l - r);
+    }
+
+    double median() {
         TreeSet<InnerReadCount> sortedSet = Sets.newTreeSet(readCount.values());
         if (sortedSet.isEmpty()) {
             return 0;

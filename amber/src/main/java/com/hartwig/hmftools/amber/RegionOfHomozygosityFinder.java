@@ -1,9 +1,8 @@
 package com.hartwig.hmftools.amber;
 
-import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
 import static com.hartwig.hmftools.common.utils.collection.Multimaps.filterEntries;
 
-import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -12,9 +11,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 import com.google.common.collect.ListMultimap;
-import com.google.common.io.Files;
 import com.hartwig.hmftools.common.amber.BaseDepth;
-import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
@@ -71,7 +68,7 @@ public class RegionOfHomozygosityFinder
     public RegionOfHomozygosityFinder(RefGenomeVersion refGenomeVersion,
             double minDepthPercent, double maxDepthPercent,
             int minHomozygousRegionSize,
-            int minSnpLociCount, int siteWindowSize, int maxHetInWindow)
+            int minSnpLociCount, int siteWindowSize, int maxHetInWindow) throws IOException
     {
         mRefGenomeVersion = refGenomeVersion;
         mMinDepthPercent = minDepthPercent;
@@ -83,7 +80,7 @@ public class RegionOfHomozygosityFinder
         loadExcludedRegions();
     }
 
-    public RegionOfHomozygosityFinder(RefGenomeVersion refGenomeVersion, double minDepthPercent, double maxDepthPercent)
+    public RegionOfHomozygosityFinder(RefGenomeVersion refGenomeVersion, double minDepthPercent, double maxDepthPercent) throws IOException
     {
         this(refGenomeVersion,
                 minDepthPercent, maxDepthPercent,
@@ -214,9 +211,8 @@ public class RegionOfHomozygosityFinder
     //
 
     // load excluded regions from resource files
-    public void loadExcludedRegions()
+    public void loadExcludedRegions() throws IOException
     {
-        List<GenomeRegion> excludedRegions = new ArrayList<>();
         String resourcePath = null;
         switch (mRefGenomeVersion)
         {
@@ -229,27 +225,7 @@ public class RegionOfHomozygosityFinder
                 break;
         }
 
-        java.io.InputStream bedStream = RegionOfHomozygosityFinder.class.getClassLoader().getResourceAsStream(resourcePath);
-
-        if (bedStream == null)
-        {
-            AMB_LOGGER.error("unable to load resource bed file: {}", resourcePath);
-            return;
-        }
-
-        File tempFile;
-        // write the resource out to a temp file and read it back
-        try
-        {
-            tempFile = java.io.File.createTempFile("amber-roh-region-bed", null);
-            tempFile.deleteOnExit();
-            Files.write(bedStream.readAllBytes(), tempFile);
-            excludedRegions.addAll(NamedBedFile.readBedFile(tempFile.getPath()));
-        }
-        catch (java.io.IOException e)
-        {
-            AMB_LOGGER.error("unable to create temp file for bed resource loading: {}", e.getMessage());
-        }
+        List<GenomeRegion> excludedRegions = AmberUtils.loadBedFromResource(resourcePath);
 
         // now add all of the centromere
         RefGenomeCoordinates refCcoord;

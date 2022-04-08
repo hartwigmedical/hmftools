@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.cobalt;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +13,6 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.utils.Doubles;
 
-import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 public final class MedianRatioFactory
@@ -32,7 +32,7 @@ public final class MedianRatioFactory
     @NotNull
     public static List<MedianRatio> create(final Map<Chromosome,List<CobaltRatio>> chrRatiosMap)
     {
-        final List<MedianRatio> results = Lists.newArrayList();
+        final List<MedianRatio> results = new ArrayList<>();
 
         for(Chromosome chromosome : chrRatiosMap.keySet())
         {
@@ -62,7 +62,7 @@ public final class MedianRatioFactory
     public static <T extends GenomePosition> List<MedianRatio> create(@NotNull Function<T, Double> ratioFunction,
             @NotNull Multimap<Chromosome, T> ratios)
     {
-        final List<MedianRatio> results = Lists.newArrayList();
+        final List<MedianRatio> results = new ArrayList<>();
 
         for(Chromosome humanChromosome : HumanChromosome.values())
         {

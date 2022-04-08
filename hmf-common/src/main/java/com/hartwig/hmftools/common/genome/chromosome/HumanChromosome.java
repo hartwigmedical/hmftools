@@ -35,10 +35,12 @@ public enum HumanChromosome implements Chromosome {
 
     private final boolean isAutosome;
     private final boolean isAllosome;
+    private final String name;
 
     HumanChromosome(final boolean isAutosome, boolean isAllosome) {
         this.isAutosome = isAutosome;
         this.isAllosome = isAllosome;
+        name = name().substring(1).intern();
     }
 
     @Override
@@ -90,7 +92,7 @@ public enum HumanChromosome implements Chromosome {
 
     @Override
     public String toString() {
-        return name().substring(1);
+        return name;
     }
 
     private static boolean isNumeric(String str) {

@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +22,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.Gender;
@@ -146,18 +146,13 @@ public final class CobaltRatioFile
         return chrRatiosMap;
     }
 
-    public static void write(final String fileName, Multimap<Chromosome, CobaltRatio> ratios) throws IOException
+    public static void write(final String fileName, Collection<CobaltRatio> ratios) throws IOException
     {
-        List<CobaltRatio> sorted = new ArrayList<>(ratios.values());
+        List<CobaltRatio> sorted = new ArrayList<>(ratios);
         Collections.sort(sorted);
-        write(fileName, sorted);
-    }
-
-    private static void write(final String fileName, List<CobaltRatio> ratios) throws IOException
-    {
         try(Writer writer = createGzipBufferedWriter(fileName))
         {
-            for(String line : toLines(ratios))
+            for(String line : toLines(sorted))
             {
                 writer.write(line + '\n');
             }

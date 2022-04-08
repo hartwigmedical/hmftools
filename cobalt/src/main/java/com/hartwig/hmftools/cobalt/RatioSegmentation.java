@@ -16,17 +16,17 @@ public class RatioSegmentation
 {
     public static void applyRatioSegmentation(
             final ExecutorService executorService, final String outputDir, final String ratioFile,
-            final String reference, final String tumor) throws ExecutionException, InterruptedException
+            final String reference, final String tumor, int gamma) throws ExecutionException, InterruptedException
     {
         final List<Future<Object>> futures = Lists.newArrayList();
 
         if (reference != null)
         {
-            futures.add(executorService.submit(() -> ratioSegmentation(outputDir, ratioFile, reference, "referenceGCDiploidRatio")));
+            futures.add(executorService.submit(() -> ratioSegmentation(outputDir, ratioFile, reference, "referenceGCDiploidRatio", gamma)));
         }
         if (tumor != null)
         {
-            futures.add(executorService.submit(() -> ratioSegmentation(outputDir, ratioFile, tumor, "tumorGCRatio")));
+            futures.add(executorService.submit(() -> ratioSegmentation(outputDir, ratioFile, tumor, "tumorGCRatio", gamma)));
         }
 
         for(Future<Object> future : futures)
@@ -38,11 +38,11 @@ public class RatioSegmentation
     }
 
     private static Object ratioSegmentation(
-            final String outputDir, final String ratioFile, final String sample, final String column)
+            final String outputDir, final String ratioFile, final String sample, final String column, int gamma)
             throws IOException, InterruptedException
     {
         final String pcfFile = PCFFile.generateRatioFilename(outputDir, sample);
-        int result = RExecutor.executeFromClasspath("r/ratioSegmentation.R", ratioFile, column, pcfFile);
+        int result = RExecutor.executeFromClasspath("r/ratioSegmentation.R", ratioFile, column, pcfFile, String.valueOf(gamma));
         if(result != 0)
         {
             throw new IOException("R execution failed. Unable to complete segmentation.");

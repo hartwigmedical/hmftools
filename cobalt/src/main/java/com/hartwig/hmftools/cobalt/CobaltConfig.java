@@ -5,6 +5,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
 
+import java.io.File;
+
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 
@@ -76,6 +78,14 @@ public class CobaltConfig
                description = "Diploid regions for tumor-only mode")
     public String TumorOnlyDiploidBed;
 
+    @Parameter(names = "-target_region",
+               description = "Input tsv file for genome regions enrichment in targeted mode")
+    public String TargetRegionPath;
+
+    @Parameter(names = "-pcf_gamma",
+               description = "Gamma value we pass to copynumber PCF")
+    public int PcfGamma = CobaltConstants.DEFAULT_PCF_GAMMA;
+
     public static final Logger CB_LOGGER = LogManager.getLogger(CobaltConfig.class);
 
     public CobaltConfig()
@@ -89,6 +99,14 @@ public class CobaltConfig
             if (ReferenceBamPath != null)
             {
                 throw new ParameterException(String.format("%s option not allowed in tumor only mode", REFERENCE_BAM));
+            }
+            if (TumorOnlyDiploidBed == null)
+            {
+                throw new ParameterException(String.format("missing required option %s in tumor only mode", TUMOR_ONLY_DIPLOID_BED));
+            }
+            if (!new File(TumorOnlyDiploidBed).exists())
+            {
+                throw new ParameterException(String.format("diploid bed file %s does not exist", TumorOnlyDiploidBed));
             }
         }
         else if (TumorOnlyDiploidBed != null)
@@ -112,6 +130,11 @@ public class CobaltConfig
         if (GcProfilePath.endsWith(".gz"))
         {
             throw new ParameterException(String.format("invalid GC-profile file(%s), must be uncompressed", GcProfilePath));
+        }
+
+        if (RefGenomePath != null && !(new File(RefGenomePath).exists()))
+        {
+            throw new ParameterException("Unable to locate ref genome file: " + RefGenomePath);
         }
     }
 
