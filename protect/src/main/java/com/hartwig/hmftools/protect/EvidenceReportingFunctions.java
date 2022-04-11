@@ -12,11 +12,15 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectSource;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.serve.refgenome.liftover.LiftOverAlgo;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class EvidenceReportingFunctions {
+    private static final Logger LOGGER = LogManager.getLogger(EvidenceReportingFunctions.class);
 
     private static final Set<Knowledgebase> TRIAL_SOURCES = Sets.newHashSet(Knowledgebase.ICLUSION, Knowledgebase.ACTIN);
 
@@ -109,25 +113,18 @@ public final class EvidenceReportingFunctions {
             @Nullable EvidenceLevel highestOffLabel) {
         if (evidence.reported()) {
             if (evidence.onLabel()) {
-                assert highestOnLabel != null;
 
-                if (highestOnLabel.isHigher(evidence.level())) {
-                    return false;
-                } else if(highestOnLabel == highestOffLabel) {
-                    return true;
-                } else if (highestOffLabel == null || highestOnLabel.isHigher(highestOffLabel)) {
-                    return highestOffLabel == null || highestOnLabel.isHigher(highestOffLabel);
+                assert highestOnLabel != null;
+                if (highestOffLabel == null || evidence.level().isHigher(highestOffLabel) || evidence.level() == highestOffLabel) {
+                    return evidence.level() == highestOnLabel;
                 }
 
             } else {
                 assert highestOffLabel != null;
-
-                if (highestOffLabel.isHigher(evidence.level())) {
+                if (evidence.level() == highestOnLabel) {
                     return false;
-                } else if(highestOnLabel == highestOffLabel) {
-                    return false;
-                } else if (highestOnLabel == null || highestOffLabel.isHigher(highestOnLabel)) {
-                    return highestOnLabel == null || highestOffLabel.isHigher(highestOnLabel);
+                } else if (highestOnLabel == null || evidence.level().isHigher(highestOnLabel)) {
+                    return evidence.level() == highestOffLabel;
                 }
             }
         }
