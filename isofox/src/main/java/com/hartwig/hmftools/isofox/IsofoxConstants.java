@@ -2,6 +2,7 @@ package com.hartwig.hmftools.isofox;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
@@ -51,4 +52,6 @@ public class IsofoxConstants
             geneIds.add("ENSG00000265735");
         }
     }
+
+    public static final List<String> ENRICHED_GENE_CHROMOSOMES = Lists.newArrayList("14", "3", "6", "9");
 }

@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_NOVEL_SJ_DISTANCE;
-import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionContext.EXONIC;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionContext.SPLICE_JUNC;
@@ -60,7 +60,7 @@ public class AltSpliceJunctionFinder
 
     public AltSpliceJunctionFinder(final IsofoxConfig config, final BufferedWriter writer)
     {
-        mEnabled = config.runFunction(NOVEL_LOCATIONS);
+        mEnabled = config.runFunction(ALT_SPLICE_JUNCTIONS);
         mConfig = config;
         mAltSpliceJunctions = Lists.newArrayList();
         mWriter = writer;

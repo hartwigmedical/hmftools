@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.NONE;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.getHighestMatchType;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.cigarFromStr;
+import static com.hartwig.hmftools.isofox.common.CommonUtils.cigarFromStr;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 

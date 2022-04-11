@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_NOVEL_SJ_DISTANCE;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
-import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
@@ -65,7 +65,7 @@ public class ChimericReadTracker
     {
         mConfig = config;
         mRunFusions = mConfig.Functions.contains(FUSIONS);
-        mEnabled = mRunFusions || mConfig.Functions.contains(NOVEL_LOCATIONS);
+        mEnabled = mRunFusions || mConfig.Functions.contains(ALT_SPLICE_JUNCTIONS);
 
         mKnownPairGeneIds = Lists.newArrayList();
         mChimericStats = new ChimericStats();

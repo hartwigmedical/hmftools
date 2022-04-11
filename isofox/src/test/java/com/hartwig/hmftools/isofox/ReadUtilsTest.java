@@ -7,8 +7,8 @@ import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
 import static com.hartwig.hmftools.isofox.TestUtils.createReadRecord;
 import static com.hartwig.hmftools.isofox.TestUtils.createRegion;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.markRegionBases;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.deriveCommonRegions;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.findStringOverlaps;
+import static com.hartwig.hmftools.isofox.common.CommonUtils.deriveCommonRegions;
+import static com.hartwig.hmftools.isofox.common.CommonUtils.findStringOverlaps;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

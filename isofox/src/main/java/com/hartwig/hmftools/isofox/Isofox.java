@@ -6,10 +6,10 @@ import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
 import static com.hartwig.hmftools.common.utils.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.isofox.BamFragmentReader.PERF_FIT;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.createCmdLineOptions;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.validConfigPaths;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_CHROMOSOMES;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_GC_COUNTS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_TRANS_COUNTS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.isofox.TaskType.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs.setConfigFragmentLengthData;
 import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.writeReadGcRatioCounts;
 import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
+import static com.hartwig.hmftools.isofox.common.PerformanceTracking.logMemory;
 import static com.hartwig.hmftools.isofox.expression.TranscriptExpression.calcTpmFactors;
 import static com.hartwig.hmftools.isofox.expression.TranscriptExpression.setTranscriptsPerMillion;
 import static com.hartwig.hmftools.isofox.results.SummaryStats.createSummaryStats;
@@ -46,6 +47,7 @@ import com.hartwig.hmftools.isofox.adjusts.GcTranscriptCalculator;
 import com.hartwig.hmftools.isofox.common.BamReadCounter;
 import com.hartwig.hmftools.isofox.common.FragmentType;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.isofox.common.PerformanceTracking;
 import com.hartwig.hmftools.isofox.expression.ExpectedCountsCache;
 import com.hartwig.hmftools.isofox.expression.ExpressionCacheTask;
 import com.hartwig.hmftools.isofox.expression.GeneCollectionSummary;
@@ -73,12 +75,14 @@ public class Isofox
 
     private int mMaxObservedReadLength;
     private final List<FragmentSize> mFragmentLengthDistribution;
+    private final PerformanceTracking mPerfTracking;
 
     public Isofox(final IsofoxConfig config, final CommandLine cmd)
     {
         mConfig = config;
 
         mResultsWriter = new ResultsWriter(mConfig);
+        mPerfTracking = new PerformanceTracking(mConfig);
 
         mGeneTransCache = new EnsemblDataCache(cmd, config.RefGenVersion);
 
@@ -170,6 +174,8 @@ public class Isofox
                 mResultsWriter.close();
                 return true;
             }
+
+            logMemory(mConfig, "CalcFragLengths");
         }
 
         final List<BamFragmentReader> chrTasks = Lists.newArrayList();
@@ -177,10 +183,7 @@ public class Isofox
         final List<String> chromosomes = Lists.newArrayList();
 
         // process any enriched genes first, then add the rest in order of decreasing length
-        chromosomes.add(mConfig.RefGenVersion.versionedChromosome("14"));
-        chromosomes.add(mConfig.RefGenVersion.versionedChromosome("3"));
-        chromosomes.add(mConfig.RefGenVersion.versionedChromosome("6"));
-        chromosomes.add(mConfig.RefGenVersion.versionedChromosome("9"));
+        ENRICHED_GENE_CHROMOSOMES.forEach(x -> chromosomes.add(mConfig.RefGenVersion.versionedChromosome(x)));
 
         Arrays.stream(HumanChromosome.values())
                 .map(chromosome -> mConfig.RefGenVersion.versionedChromosome(chromosome.toString()))
@@ -210,10 +213,14 @@ public class Isofox
         int totalReadsProcessed = chrTasks.stream().mapToInt(x -> x.totalReadCount()).sum();
         ISF_LOGGER.info("read {} total BAM records", totalReadsProcessed);
 
+        logMemory(mConfig, "BamReading");
+
         if(!mConfig.runFusionsOnly())
         {
             // post processing for summary stats and gene expression data
             processBamFragments(chrTasks, callableList);
+
+            logMemory(mConfig, "Transcripts");
         }
 
         if(mConfig.runFunction(FUSIONS))
@@ -223,12 +230,14 @@ public class Isofox
             chrTasks.forEach(x -> chimericStats.merge(x.getChimericStats()));
             ISF_LOGGER.info("overall chimeric stats: {}", chimericStats);
             mFusionTaskManager.close();
+
+            logMemory(mConfig, "Fusions");
         }
 
         final List<PerformanceCounter[]> perfCounters = chrTasks.stream().map(x -> x.getPerfCounters()).collect(Collectors.toList());
         chrTasks.clear();
 
-        logPerformanceStats(perfCounters);
+        mPerfTracking.logPerformanceStats(perfCounters);
         return true;
     }
 
@@ -248,7 +257,7 @@ public class Isofox
         chrTasks.forEach(x -> nonEnrichedGcRatioCounts.mergeRatioCounts(x.getNonEnrichedGcRatioCounts().getCounts()));
         double medianGCRatio = nonEnrichedGcRatioCounts.getPercentileRatio(0.5);
 
-        if (mConfig.ApplyGcBiasAdjust)
+        if(mConfig.ApplyGcBiasAdjust)
         {
             applyGcAdjustments(chrTasks, callableList, nonEnrichedGcRatioCounts);
         }
@@ -262,7 +271,7 @@ public class Isofox
             mResultsWriter.writeSummaryStats(summaryStats);
         }
 
-        if (mConfig.WriteGcData)
+        if(mConfig.WriteGcData)
         {
             GcRatioCounts combinedGcRatioCounts = new GcRatioCounts();
             chrTasks.forEach(x -> combinedGcRatioCounts.mergeRatioCounts(x.getGcRatioCounts().getCounts()));
@@ -274,10 +283,10 @@ public class Isofox
             convertToPercentages(percentData);
             writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "ALL_PERC", percentData, true);
 
-            if (!mConfig.EnrichedGeneIds.isEmpty())
+            if(!mConfig.EnrichedGeneIds.isEmpty())
                 writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "NON_ENRICHED", nonEnrichedGcRatioCounts.getCounts(), false);
 
-            if (mConfig.ApplyGcBiasAdjust)
+            if(mConfig.ApplyGcBiasAdjust)
             {
                 writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "TRANS_FIT_EXPECTED",
                         mGcTranscriptCalcs.getTranscriptFitGcCounts().getCounts(), false);
@@ -384,7 +393,7 @@ public class Isofox
             setConfigFragmentLengthData(mConfig, mFragmentLengthDistribution);
         }
 
-        if (mConfig.WriteFragmentLengths)
+        if(mConfig.WriteFragmentLengths)
         {
             FragmentSizeCalcs.writeFragmentLengths(mConfig, mFragmentLengthDistribution);
         }
@@ -489,7 +498,7 @@ public class Isofox
             return;
         }
 
-        ISF_LOGGER.info("Isofox RNA analysis complete");
+        ISF_LOGGER.info("Isofox analysis complete");
     }
 
     @NotNull
@@ -499,36 +508,5 @@ public class Isofox
         return parser.parse(options, args);
     }
 
-    private void logPerformanceStats(final List<PerformanceCounter[]> perfCounters)
-    {
-        final PerformanceCounter[] combinedPc = perfCounters.get(0);
-
-        for(int i = 1; i < perfCounters.size(); ++i)
-        {
-            final PerformanceCounter[] chrPCs = perfCounters.get(i);
-
-            for(int j = 0; j < combinedPc.length; ++j)
-            {
-                combinedPc[j].merge(chrPCs[j]);
-            }
-        }
-
-        Arrays.stream(combinedPc).forEach(x -> x.logStats());
-
-        if(mConfig.RunPerfChecks)
-        {
-            // log 10 slowest times and their interval names
-            final List<Double> fitTimes = combinedPc[PERF_FIT].getTimes();
-            final List<String> fitGenes = combinedPc[PERF_FIT].getTimeNames();
-
-            if(fitTimes.size() >= 10 && fitGenes.size() == fitTimes.size())
-            {
-                for (int i = fitTimes.size() - 1; i >= fitTimes.size() - 10; --i)
-                {
-                    ISF_LOGGER.info(String.format("fit times: geneSet(%s) time(%.3f)", fitGenes.get(i), fitTimes.get(i)));
-                }
-            }
-        }
-    }
 
 }

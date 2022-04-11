@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.rna.GeneExpressionFile.GENE_DATA_FILE_
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.RETAINED_INTRONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.UNMAPPED_READS;
@@ -141,7 +141,7 @@ public class ResultsWriter
             if(mConfig.WriteSpliceSiteData)
                 mSpliceSiteWriter = SpliceSiteCounter.createWriter(mConfig);
 
-            if(mConfig.runFunction(NOVEL_LOCATIONS))
+            if(mConfig.runFunction(ALT_SPLICE_JUNCTIONS))
                 mAltSpliceJunctionWriter = AltSpliceJunctionFinder.createWriter(mConfig);
 
             if(mConfig.runFunction(RETAINED_INTRONS))

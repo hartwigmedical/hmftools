@@ -5,15 +5,21 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
-import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.RETAINED_INTRONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_TRANS_COUNTS;
 import static com.hartwig.hmftools.isofox.common.GeneReadData.createGeneReadData;
+import static com.hartwig.hmftools.isofox.common.PerformanceTracking.PERF_FIT;
+import static com.hartwig.hmftools.isofox.common.PerformanceTracking.PERF_FUSIONS;
+import static com.hartwig.hmftools.isofox.common.PerformanceTracking.PERF_GC_ADJUST;
+import static com.hartwig.hmftools.isofox.common.PerformanceTracking.PERF_NOVEL_LOCATIONS;
+import static com.hartwig.hmftools.isofox.common.PerformanceTracking.PERF_READS;
+import static com.hartwig.hmftools.isofox.common.PerformanceTracking.PERF_TOTAL;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findUniqueBases;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.getChromosomeLength;
+import static com.hartwig.hmftools.isofox.common.CommonUtils.getChromosomeLength;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
@@ -31,6 +37,7 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.common.FragmentType;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
+import com.hartwig.hmftools.isofox.common.PerformanceTracking;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.expression.ExpectedCountsCache;
 import com.hartwig.hmftools.isofox.expression.ExpectedRatesData;
@@ -82,14 +89,6 @@ public class BamFragmentReader implements Callable
     private TaskType mCurrentTaskType;
     private boolean mIsValid;
 
-    private static final int PERF_TOTAL = 0;
-    private static final int PERF_READS = 1;
-    private static final int PERF_NOVEL_LOCATIONS = 2;
-    public static final int PERF_FIT = 3;
-    public static final int PERF_GC_ADJUST = 4;
-    public static final int PERF_FUSIONS = 5;
-    private static final int PERF_MAX = PERF_FUSIONS+1;
-
     private final PerformanceCounter[] mPerfCounters;
 
     public BamFragmentReader(
@@ -131,16 +130,7 @@ public class BamFragmentReader implements Callable
         mFusionTaskManager = fusionManager;
         mFusionFinder = mFusionTaskManager != null ? mFusionTaskManager.createFusionFinder(mChromosome) : null;
 
-        mPerfCounters = new PerformanceCounter[PERF_MAX];
-        mPerfCounters[PERF_TOTAL] = new PerformanceCounter("Total");
-        mPerfCounters[PERF_READS] = new PerformanceCounter("ReadCounts");
-        mPerfCounters[PERF_NOVEL_LOCATIONS] = new PerformanceCounter("NovelLocations");
-        mPerfCounters[PERF_FIT] = new PerformanceCounter("ExpressFit");
-        mPerfCounters[PERF_FUSIONS] = new PerformanceCounter("Fusions");
-        mPerfCounters[PERF_GC_ADJUST] = new PerformanceCounter("GcAdjust");
-
-        if(mConfig.RunPerfChecks)
-            mPerfCounters[PERF_FIT].setSortTimes(true);
+        mPerfCounters = PerformanceTracking.createPerfCounters();
 
         mIsValid = true;
     }
@@ -479,7 +469,7 @@ public class BamFragmentReader implements Callable
 
     private void postBamReadNovelLocations(final GeneCollection geneCollection)
     {
-        if(!mConfig.runFunction(NOVEL_LOCATIONS) && !mConfig.runFunction(RETAINED_INTRONS))
+        if(!mConfig.runFunction(ALT_SPLICE_JUNCTIONS) && !mConfig.runFunction(RETAINED_INTRONS))
             return;
 
         mPerfCounters[PERF_NOVEL_LOCATIONS].start();

@@ -6,19 +6,14 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_ID;
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_VAR_INFO;
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_VAR_TYPE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.bam.BamRecordUtils.generateMappedCoords;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.cigarFromStr;
+import static com.hartwig.hmftools.isofox.common.CommonUtils.cigarFromStr;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentSupport.EXACT_MATCH;
 
 import java.util.List;
-import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.neo.RnaNeoEpitope;

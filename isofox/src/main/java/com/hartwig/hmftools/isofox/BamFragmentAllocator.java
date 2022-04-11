@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MULTI_MAP_QUALITY_THRESHOLD;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
-import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.UNMAPPED_READS;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.DISCORDANT;
@@ -26,7 +26,7 @@ import static com.hartwig.hmftools.isofox.common.ReadRecord.getUniqueValidRegion
 import static com.hartwig.hmftools.isofox.common.ReadRecord.markRegionBases;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.validTranscriptType;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.deriveCommonRegions;
+import static com.hartwig.hmftools.isofox.common.CommonUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.OTHER_TRANS;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -85,7 +85,7 @@ public class BamFragmentAllocator
 
     // state relating to the current gene
     private GeneCollection mCurrentGenes;
-    private final FragmentTracker mFragmentReads; // delay processing of read until both have been read
+    private final FragmentTracker mFragmentReads; // cache of single read until both are available - ie a fragment
 
     private int mGeneReadCount;
     private int mTotalBamReadCount;
@@ -138,7 +138,7 @@ public class BamFragmentAllocator
         // duplicates aren't counted towards fusions so can be ignored if only running fusions
         // reads with supplementary alignment data are only used for fusions
         boolean keepDuplicates = mConfig.runFunction(TRANSCRIPT_COUNTS);
-        boolean keepSupplementaries = mRunFusions || mConfig.runFunction(NOVEL_LOCATIONS) || mConfig.runFunction(UNMAPPED_READS);
+        boolean keepSupplementaries = mRunFusions || mConfig.runFunction(ALT_SPLICE_JUNCTIONS) || mConfig.runFunction(UNMAPPED_READS);
         boolean keepSecondaries = mConfig.ApplyMapQualityAdjust;
         int minMapQuality = keepSecondaries ? 0 : SINGLE_MAP_QUALITY;
 

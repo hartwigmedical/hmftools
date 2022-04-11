@@ -2,6 +2,7 @@ package com.hartwig.hmftools.isofox.common;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -11,6 +12,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 
 import java.util.List;
 
@@ -19,12 +21,13 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.isofox.IsofoxConfig;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 
-public class RnaUtils
+public class CommonUtils
 {
     public static List<int[]> deriveCommonRegions(final List<int[]> regions1, final List<int[]> regions2)
     {
@@ -271,4 +274,5 @@ public class RnaUtils
 
         return new Cigar(cigarElements);
     }
+
 }

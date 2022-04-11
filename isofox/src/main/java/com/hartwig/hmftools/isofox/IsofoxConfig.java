@@ -11,8 +11,6 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG19
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_LEVEL;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadGeneIdsFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
@@ -29,7 +27,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConstants.EXCLUDED_REGION_1_REF_
 import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_GC_COUNTS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_TRANS_COUNTS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
-import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.RETAINED_INTRONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.STATISTICS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
@@ -39,7 +37,6 @@ import static com.hartwig.hmftools.isofox.results.ResultsWriter.SUB_ITEM_DELIM;
 import static com.hartwig.hmftools.isofox.unmapped.UmrCohortFrequency.UMR_COHORT_FREQUENCY_FILE;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -190,7 +187,7 @@ public class IsofoxConfig
         else
         {
             Functions.add(TRANSCRIPT_COUNTS);
-            Functions.add(NOVEL_LOCATIONS);
+            Functions.add(ALT_SPLICE_JUNCTIONS);
             Functions.add(FUSIONS);
         }
 
@@ -457,8 +454,6 @@ public class IsofoxConfig
 
     public boolean requireGcRatioCalcs() { return WriteGcData || ApplyGcBiasAdjust; }
 
-    public boolean hasExcludedEnrichedGenes() { return !EnrichedGeneIds.isEmpty() || !ExcludedGeneIds.isEmpty(); }
-
     public boolean containsExcludedEnrichedGene(final String geneId)
     {
         return ExcludedGeneIds.contains(geneId) || EnrichedGeneIds.contains(geneId);
@@ -494,7 +489,7 @@ public class IsofoxConfig
 
         Functions = Lists.newArrayList();
         Functions.add(TRANSCRIPT_COUNTS);
-        Functions.add(NOVEL_LOCATIONS);
+        Functions.add(ALT_SPLICE_JUNCTIONS);
         Functions.add(RETAINED_INTRONS);
 
         RestrictedGeneIds = Lists.newArrayList();
