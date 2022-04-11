@@ -1,12 +1,14 @@
 package com.hartwig.hmftools.amber;
 
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import tech.tablesaw.api.*;
-
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.jetbrains.annotations.NotNull;
 
 public final class RegionOfHomozygosityFile
@@ -20,40 +22,25 @@ public final class RegionOfHomozygosityFile
 
     public static void write(@NotNull final String filename, @NotNull final List<RegionOfHomozygosity> regions) throws IOException
     {
-        tech.tablesaw.io.csv.CsvWriteOptions writeOptions = tech.tablesaw.io.csv.CsvWriteOptions.builder(filename).separator('\t').build();
-        toTable(regions).write().csv(writeOptions);
-    }
-
-    @NotNull
-    static Table toTable(@NotNull final List<RegionOfHomozygosity> regions)
-    {
-        final Table table = tech.tablesaw.api.Table.create();
-
-        table.addColumns(StringColumn.create("Chromosome"),
-                IntColumn.create("StartPosition"),
-                IntColumn.create("EndPosition"),
-                IntColumn.create("SNPCount"),
-                IntColumn.create("HomCount"),
-                IntColumn.create("HetCount"),
-                IntColumn.create("UnclearCount"),
-                StringColumn.create("Filter"));
-
-        for (RegionOfHomozygosity region : regions)
+        CSVFormat csvFormat = CSVFormat.Builder.create()
+                .setDelimiter('\t').setRecordSeparator('\n')
+                .setHeader(
+                        "chromosome", "startPosition", "endPosition", "snpCount", "homCount", "hetCount", "filter")
+                .build();
+        try (CSVPrinter csvPrinter = csvFormat.print(createBufferedWriter(filename)))
         {
-            populateRow(table.appendRow(), region);
+            for (RegionOfHomozygosity region : regions)
+            {
+                csvPrinter.print(region.getChromosome().toString());
+                csvPrinter.print(region.getStart());
+                csvPrinter.print(region.getEnd());
+                csvPrinter.print(region.getSnpCount());
+                csvPrinter.print(region.getNumHomozygous());
+                csvPrinter.print(region.getNumHeterozygous());
+                csvPrinter.print(softFilter(region));
+                csvPrinter.println();
+            }
         }
-        return table;
-    }
-
-    private static void populateRow(@NotNull final Row row, @NotNull final RegionOfHomozygosity region)
-    {
-        row.setString("Chromosome", region.getChromosome().toString());
-        row.setInt("StartPosition", region.getStart());
-        row.setInt("EndPosition", region.getEnd());
-        row.setInt("SNPCount", region.getSnpCount());
-        row.setInt("HomCount", region.getNumHomozygous());
-        row.setInt("HetCount", region.getNumHeterozygous());
-        row.setString("Filter", softFilter(region));
     }
 
     // we have several soft filters
