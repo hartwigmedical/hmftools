@@ -216,7 +216,7 @@ public class ExpectedRatesGenerator
         {
             formTranscriptDefinitions(mTransCategoryCounts, mCurrentExpRatesData);
 
-            if(mConfig.ApplyExpectedRates)
+            if(mConfig.applyExpectedCounts())
                 mCurrentExpRatesData.getTranscriptDefinitions().cacheTranspose();
 
             if(mConfig.WriteExpectedRates)

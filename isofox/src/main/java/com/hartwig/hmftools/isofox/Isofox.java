@@ -94,9 +94,9 @@ public class Isofox
         mGeneTransCache.setRequiredData(true, false, false, mConfig.CanonicalTranscriptOnly);
         mGeneTransCache.load(false);
 
-        mExpectedCountsCache = mConfig.ExpCountsFile != null || mConfig.ApplyGcBiasAdjust ? new ExpectedCountsCache(mConfig) : null;
+        mExpectedCountsCache = mConfig.ExpCountsFile != null || mConfig.applyGcBiasAdjust() ? new ExpectedCountsCache(mConfig) : null;
 
-        mGcTranscriptCalcs = mConfig.runFunction(EXPECTED_GC_COUNTS) || mConfig.ApplyGcBiasAdjust ?
+        mGcTranscriptCalcs = mConfig.runFunction(EXPECTED_GC_COUNTS) || mConfig.applyGcBiasAdjust() ?
                 new GcTranscriptCalculator(mConfig, mGeneTransCache) : null;
 
         mFusionTaskManager = mConfig.runFunction(FUSIONS) ? new FusionTaskManager(mConfig, mGeneTransCache) : null;
@@ -257,7 +257,7 @@ public class Isofox
         chrTasks.forEach(x -> nonEnrichedGcRatioCounts.mergeRatioCounts(x.getNonEnrichedGcRatioCounts().getCounts()));
         double medianGCRatio = nonEnrichedGcRatioCounts.getPercentileRatio(0.5);
 
-        if(mConfig.ApplyGcBiasAdjust)
+        if(mConfig.applyGcBiasAdjust())
         {
             applyGcAdjustments(chrTasks, callableList, nonEnrichedGcRatioCounts);
         }
@@ -286,7 +286,7 @@ public class Isofox
             if(!mConfig.EnrichedGeneIds.isEmpty())
                 writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "NON_ENRICHED", nonEnrichedGcRatioCounts.getCounts(), false);
 
-            if(mConfig.ApplyGcBiasAdjust)
+            if(mConfig.applyGcBiasAdjust())
             {
                 writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "TRANS_FIT_EXPECTED",
                         mGcTranscriptCalcs.getTranscriptFitGcCounts().getCounts(), false);

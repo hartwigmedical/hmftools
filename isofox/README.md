@@ -39,7 +39,7 @@ STAR allows setting of the '—outFilterMultimapNmax ‘ parameter to specify th
 ## Configuration
 The 3 core functions of Isofox are controlled by the 'functions' argument:
 - TRANSCRIPT_COUNTS: calculate gene and transcript expression
-- NOVEL_LOCATIONS: find and annotate alternate splice junctions
+- ALT_SPLICE_JUNCTIONS: find and annotate alternate splice junctions
 - RETAINED_INTRONS: identify retained introns
 - FUSIONS: identify fusions
 
@@ -54,7 +54,7 @@ bam_file | Input BAM file - must be sorted, preferably with duplicates marked an
 ref_genome | Reference genome fasta file
 ref_genome_version | 37 (default) or 38
 ensembl_data_dir | Directory for Ensembl reference files - see instructions for generation or access below.
-functions | List separated by ';', default is 'TRANSCRIPT_COUNTS;NOVEL_LOCATIONS;FUSIONS;RETAINED_INTRONS'. Other values: EXPECTED_GC_COUNTS, EXPECTED_TRANS_COUNTS, STATISTICS and READ_COUNTS.
+functions | List separated by ';', default is 'TRANSCRIPT_COUNTS;ALT_SPLICE_JUNCTIONS;FUSIONS;RETAINED_INTRONS'. Other values: EXPECTED_GC_COUNTS, EXPECTED_TRANS_COUNTS, STATISTICS and READ_COUNTS.
 
 ### Optional
 Argument | Description
@@ -84,19 +84,15 @@ The output file is approximately 120MB.
 
 Argument | Description
 ---|---
-apply_calc_frag_lengths | Use the actual fragment length distribution to adjust  
 frag_length_min_count | Minimum number of fragments to observe for length distributon calcs, default = 1M 
-apply_exp_rates | Calculate TPM using expectation maximisation routine
 exp_rate_frag_lengths | Discrete buckets for fragment lengths, either with frequency specified or left as zero if to be calculated (ie with -apply_calc_frag_lengths). eg '50-0;75-0;100-0;125-0;150-0;200-0;250-0;300-0;400-0;550-0' 
 exp_counts_file | Pre-computed expected counts per transcript and gene
-apply_gc_bias_adjust | Adjusted transcript counts by actual vs expected GC ratio distribution
 exp_gc_ratios_file | Pre-computed expected GC ratio counts per transcript
 read_length | Expected RNA read length (eg 76 or 151), will be computed if not provided
 long_frag_limit | Default 550 bases, fragments longer than this without a splice junction are not considered to support a gene for the purposes of expression
 single_map_qual | Default 255, discard reads with map quality below this unless using the config 'apply_map_qual_adjust'
 apply_map_qual_adjust | Include multi-mapped fragments in transcript counting, weighted by inverse of # multi-mapped locations
 enriched_gene_ids | By default includes: ENSG00000265150;ENSG00000258486;ENSG00000202198;ENSG00000266037;ENSG00000263740;ENSG00000265735
-gc_ratio_bucket | Default 0.01 ie percentiles. Ratio unit for GC distribution.
 
 ### Optional output files:
 By default the following files are not generated.
@@ -129,18 +125,13 @@ Running all functions:
 ```
 java -jar isofox.jar 
     -sample SAMPLE_ID 
-    -functions "TRANSCRIPT_COUNTS;NOVEL_LOCATIONS;FUSIONS"
+    -functions "TRANSCRIPT_COUNTS;ALT_SPLICE_JUNCTIONS;FUSIONS"
     -bam_file /path_to_bam/sample.bam 
     -ref_genome /path_to_ref_files/ref-genome.fasta 
     -ensembl_data_dir /path_ensembl_data_cache_files/ 
-    -apply_calc_frag_lengths 
-    -apply_exp_rates 
     -read_length 151
     -exp_counts_file /path_to_ref_files/read_151_exp_counts.csv 
-    -apply_gc_bias_adjust 
     -exp_gc_ratios_file /path_to_ref_files/read_100_exp_gc_ratios.csv 
-    -long_frag_limit 550 
-    -apply_map_qual_adjust 
     -output_dir /path_to_output_data/ 
     -threads 10 
 ```
@@ -156,7 +147,6 @@ java -jar isofox.jar
     -ensembl_data_dir /path_ensembl_data_cache_files/ 
     -output_dir /path_to_output_data/ 
     -read_length 151 
-    -long_frag_limit 550 
     -known_fusion_file /path_to_fusion_ref_files/known_fusion_data.csv
     -threads 10 
 ```
@@ -178,7 +168,6 @@ java -jar isofox.jar
     -output_dir /path_to_output_data/ 
     -ensembl_data_dir /path_ensembl_data_cache_files/ 
     -read_length 151 
-    -long_frag_limit 550 
     -exp_rate_frag_lengths "50-0;75-0;100-0;125-0;150-0;200-0;250-0;300-0;400-0;550-0" 
     -threads 10 
 ```

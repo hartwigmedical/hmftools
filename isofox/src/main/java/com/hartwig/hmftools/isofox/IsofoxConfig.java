@@ -18,7 +18,6 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_FRAG_LENGTH_MIN_COUNT;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_GC_RATIO_BUCKET;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MAX_FRAGMENT_SIZE;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.EXCLUDED_REGION_1_REF_19;
@@ -88,7 +87,6 @@ public class IsofoxConfig
     private static final String FRAG_LENGTHS_BY_GENE = "frag_length_by_gene";
 
     private static final String WRITE_GC_DATA = "write_gc_data";
-    private static final String GC_RATIO_BUCKET_SIZE = "gc_ratio_bucket";
 
     // expected expression config
     private static final String EXP_COUNTS_FILE = "exp_counts_file";
@@ -96,7 +94,6 @@ public class IsofoxConfig
     private static final String APPLY_EXP_RATES = "apply_exp_rates";
     private static final String READ_LENGTH = "read_length";
     private static final String ER_FRAGMENT_LENGTHS = "exp_rate_frag_lengths";
-    private static final String APPLY_FRAG_LENGTH_ADJUSTMENT = "apply_calc_frag_lengths";
     private static final String APPLY_GC_BIAS_ADJUSTMENT = "apply_gc_bias_adjust";
     private static final String WRITE_EXPECTED_RATES = "write_exp_rates";
     private static final String WRITE_TRANS_COMBO_DATA = "write_trans_combo_data";
@@ -109,7 +106,7 @@ public class IsofoxConfig
     private static final String SPECIFIC_REGIONS = "specific_regions";
     private static final String GENE_READ_LIMIT = "gene_read_limit";
     private static final String RUN_VALIDATIONS = "validate";
-    private static final String PERF_CHECKS = "perf_checks";
+    private static final String PERF_CHECKS = "run_perf_checks";
     private static final String THREADS = "threads";
 
     public final String SampleId;
@@ -141,10 +138,7 @@ public class IsofoxConfig
     public final String NeoEpitopeFile;
     public final String UnmappedCohortFreqFile;
     public final String ExpGcRatiosFile;
-    public final boolean ApplyExpectedRates;
     public final boolean ApplyFragmentLengthAdjust;
-    public final boolean ApplyMapQualityAdjust;
-    public final boolean ApplyGcBiasAdjust;
     public int ReadLength;
     public final List<FragmentSize> FragmentSizeData;
     public final boolean WriteExpectedRates;
@@ -155,7 +149,6 @@ public class IsofoxConfig
     public final boolean WriteFragmentLengthsByGene;
 
     public final boolean WriteGcData;
-    public static double GC_RATIO_BUCKET = DEFAULT_GC_RATIO_BUCKET;
 
     public final FusionConfig Fusions;
 
@@ -265,11 +258,7 @@ public class IsofoxConfig
         WriteTransComboData = cmd.hasOption(WRITE_TRANS_COMBO_DATA);
         WriteGcData = cmd.hasOption(WRITE_GC_DATA);
 
-        GC_RATIO_BUCKET = cmd.hasOption(GC_RATIO_BUCKET_SIZE) ?
-                Double.parseDouble(cmd.getOptionValue(GC_RATIO_BUCKET_SIZE)) : DEFAULT_GC_RATIO_BUCKET;
-
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
-        ApplyExpectedRates = cmd.hasOption(APPLY_EXP_RATES);
         ExpCountsFile = cmd.getOptionValue(EXP_COUNTS_FILE);
         ExpGcRatiosFile = cmd.getOptionValue(EXP_GC_RATIOS_FILE);
         NeoEpitopeFile = cmd.getOptionValue(NEO_EPITOPE_FILE);
@@ -277,12 +266,10 @@ public class IsofoxConfig
 
         WriteExpectedRates = cmd.hasOption(WRITE_EXPECTED_RATES);
 
-        ApplyFragmentLengthAdjust = cmd.hasOption(APPLY_FRAG_LENGTH_ADJUSTMENT);
+        ApplyFragmentLengthAdjust = ExpCountsFile != null;
         int defaultFragLengthSamplingCount = ApplyFragmentLengthAdjust ? DEFAULT_FRAG_LENGTH_MIN_COUNT : 0;
         FragmentLengthSamplingCount = Integer.parseInt(cmd.getOptionValue(FRAG_LENGTH_MIN_COUNT, String.valueOf(defaultFragLengthSamplingCount)));
 
-        ApplyMapQualityAdjust = cmd.hasOption(APPLY_MQ_ADJUST);
-        ApplyGcBiasAdjust = cmd.hasOption(APPLY_GC_BIAS_ADJUSTMENT);
         ReadLength = Integer.parseInt(cmd.getOptionValue(READ_LENGTH, "0"));
         FragmentSizeData = Lists.newArrayList();
 
@@ -375,17 +362,6 @@ public class IsofoxConfig
             return true;
         }
 
-        if(ApplyExpectedRates && ExpCountsFile == null)
-        {
-            if(ReadLength == 0 || FragmentSizeData.isEmpty())
-            {
-                ISF_LOGGER.error("invalid read or fragment lengths for generating expected trans rates");
-                return false;
-            }
-
-            return true;
-        }
-
         if(BamFile == null || BamFile.isEmpty() || !Files.exists(Paths.get(BamFile)))
         {
             if(!runFusionsOnly() || Fusions.ChimericReadsFile == null)
@@ -452,7 +428,9 @@ public class IsofoxConfig
         return WriteFragmentLengths || FragmentLengthSamplingCount > 0;
     }
 
-    public boolean requireGcRatioCalcs() { return WriteGcData || ApplyGcBiasAdjust; }
+    public boolean requireGcRatioCalcs() { return WriteGcData || ExpGcRatiosFile != null; }
+    public boolean applyGcBiasAdjust() { return ExpGcRatiosFile != null; }
+    public boolean applyExpectedCounts() { return ExpCountsFile != null; }
 
     public boolean containsExcludedEnrichedGene(final String geneId)
     {
@@ -507,7 +485,6 @@ public class IsofoxConfig
         DropDuplicates = false;
         MarkDuplicates = false;
 
-        ApplyExpectedRates = false;
         ReadLength = 0;
         FragmentSizeData = Lists.newArrayList();
         ExpCountsFile = null;
@@ -525,8 +502,6 @@ public class IsofoxConfig
 
         WriteExpectedRates = false;
         ApplyFragmentLengthAdjust = false;
-        ApplyMapQualityAdjust = false;
-        ApplyGcBiasAdjust = false;
         OutputIdentifier = null;
         WriteFragmentLengthsByGene = false;
         FragmentLengthSamplingCount = 0;
@@ -568,7 +543,6 @@ public class IsofoxConfig
         options.addOption(WRITE_FRAG_LENGTHS, false, "Write intronic fragment lengths to log");
 
         options.addOption(WRITE_GC_DATA, false, "Write GC ratio counts from all genic reads");
-        options.addOption(GC_RATIO_BUCKET_SIZE, true, "Rounding size for GC-calcs (default=0.01");
 
         options.addOption(APPLY_EXP_RATES, false, "Generate expected expression rates for transcripts");
         options.addOption(EXP_COUNTS_FILE, true, "File with generated expected expression rates per transcript");
@@ -577,7 +551,6 @@ public class IsofoxConfig
         options.addOption(UMR_COHORT_FREQUENCY_FILE, true, "Unmapped reads cohort frequency file");
         options.addOption(READ_LENGTH, true, "Sample sequencing read length (eg 76 or 151 bases");
         options.addOption(SINGLE_MAP_QUAL, true, "Optional - map quality for reads mapped to a single location (default=255)");
-        options.addOption(APPLY_FRAG_LENGTH_ADJUSTMENT, false, "Use sample fragment length distribution in expected rate calcs");
         options.addOption(APPLY_MQ_ADJUST, false, "Use read map quality to adjust expected counts");
         options.addOption(APPLY_GC_BIAS_ADJUSTMENT, false, "Use GC Bias adjustments in expected rate calcs");
 

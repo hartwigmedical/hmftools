@@ -64,7 +64,6 @@ public class BamFragmentReader implements Callable
 
     private final BamFragmentAllocator mBamFragmentAllocator;
     private final TranscriptExpression mExpTransRates;
-    private final ExpectedRatesGenerator mExpRatesGenerator;
     private final GcTranscriptCalculator mTranscriptGcRatios;
     private final ExpectedCountsCache mExpectedCountsCache;
 
@@ -113,11 +112,7 @@ public class BamFragmentReader implements Callable
         mBamFragmentAllocator.registerKnownFusionPairs(mGeneTransCache);
 
         mGcRatioCounts = mBamFragmentAllocator.getGcRatioCounts();
-        mExpTransRates = mConfig.ApplyExpectedRates ? new TranscriptExpression(mConfig, mExpectedCountsCache, resultsWriter) : null;
-
-        mExpRatesGenerator = (mConfig.ApplyExpectedRates && mConfig.ExpCountsFile == null) || mConfig.runFunction(EXPECTED_TRANS_COUNTS)
-                ? new ExpectedRatesGenerator(mConfig, resultsWriter) : null;
-
+        mExpTransRates = mConfig.ExpCountsFile != null ? new TranscriptExpression(mConfig, mExpectedCountsCache, resultsWriter) : null;
         mTranscriptGcRatios = transcriptGcCalcs;
 
         mGeneCollectionSummaryData = Lists.newArrayList();
@@ -409,13 +404,6 @@ public class BamFragmentReader implements Callable
 
             mPerfCounters[PERF_FIT].start();
 
-            if (mExpRatesGenerator != null)
-            {
-                // generate expected rates data if the cache file hasn't been loaded
-                mExpRatesGenerator.generateExpectedRates(geneCollection);
-                expRatesData = mExpRatesGenerator.getExpectedRatesData();
-            }
-
             final Map<Integer,String> transIdMap = Maps.newHashMap();
             geneCollection.getTranscripts().forEach(x -> transIdMap.put(x.TransId, x.TransName));
             mExpTransRates.runTranscriptEstimation(transIdMap, geneCollectionSummary, expRatesData, false);
@@ -463,7 +451,7 @@ public class BamFragmentReader implements Callable
         geneCollectionSummary.allocateResidualsToGenes();
         mResultsWriter.writeGeneCollectionData(geneCollection);
 
-        if(!mConfig.ApplyGcBiasAdjust)
+        if(!mConfig.applyGcBiasAdjust())
             geneCollectionSummary.TransCategoryCounts.clear();
     }
 

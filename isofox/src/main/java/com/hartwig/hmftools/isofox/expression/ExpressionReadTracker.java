@@ -144,7 +144,7 @@ public class ExpressionReadTracker
         {
             transComboCounts = new CategoryCountsData(transcripts, geneIds);
 
-            if(mGcRatioCounts != null && mConfig.ApplyGcBiasAdjust)
+            if(mGcRatioCounts != null && mConfig.applyGcBiasAdjust())
                 transComboCounts.initialiseGcRatioCounts(mGcRatioCounts.getCounts().length);
 
             mTransComboData.add(transComboCounts);
@@ -220,7 +220,7 @@ public class ExpressionReadTracker
 
         double fragmentCount = 1;
 
-        if(minMapQuality <= MULTI_MAP_QUALITY_THRESHOLD && mConfig.ApplyMapQualityAdjust)
+        if(minMapQuality <= MULTI_MAP_QUALITY_THRESHOLD)
         {
             if(minMapQuality == 3)
                 fragmentCount = 0.5;
@@ -250,7 +250,7 @@ public class ExpressionReadTracker
                 }
             }
 
-            if(mConfig.ApplyGcBiasAdjust)
+            if(mConfig.applyGcBiasAdjust())
                 catCounts.addGcRatioCounts(count, gcRatioIndices, gcRatioCounts);
             else
                 catCounts.addCounts(count);

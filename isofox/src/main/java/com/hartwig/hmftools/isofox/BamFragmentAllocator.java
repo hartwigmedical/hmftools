@@ -139,7 +139,7 @@ public class BamFragmentAllocator
         // reads with supplementary alignment data are only used for fusions
         boolean keepDuplicates = mConfig.runFunction(TRANSCRIPT_COUNTS);
         boolean keepSupplementaries = mRunFusions || mConfig.runFunction(ALT_SPLICE_JUNCTIONS) || mConfig.runFunction(UNMAPPED_READS);
-        boolean keepSecondaries = mConfig.ApplyMapQualityAdjust;
+        boolean keepSecondaries = true; // now always used
         int minMapQuality = keepSecondaries ? 0 : SINGLE_MAP_QUALITY;
 
         mBamSlicer = new BamSlicer(minMapQuality, keepDuplicates, keepSupplementaries, keepSecondaries);

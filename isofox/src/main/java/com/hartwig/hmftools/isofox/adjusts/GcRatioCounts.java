@@ -10,8 +10,8 @@ import static com.hartwig.hmftools.common.utils.VectorUtils.sumVectors;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.GC_RATIO_BUCKET;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.GC_RATIO_BUCKET;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

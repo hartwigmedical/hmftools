@@ -106,7 +106,7 @@ public class TranscriptExpression
             return;
         }
 
-        if (!checkCached && mConfig.ApplyGcBiasAdjust) // cache the generated data since it will be used again in GC adjustment calcs
+        if(!checkCached && mConfig.applyGcBiasAdjust()) // cache the generated data since it will be used again in GC adjustment calcs
             mExpectedRatesDataMap.put(geneSummaryData.ChrId, mCurrentExpRatesData);
 
         final double[] transComboCounts = generateReadCounts(geneSummaryData);
@@ -149,7 +149,7 @@ public class TranscriptExpression
         if(mConfig.WriteTransComboData)
         {
             writeCategoryCounts(mResultsWriter.getCategoryCountsWriter(), geneSummaryData.ChrId, mCurrentExpRatesData.Categories,
-                    geneSummaryData.TransCategoryCounts, transComboCounts, fittedCounts, mConfig.ApplyGcBiasAdjust);
+                    geneSummaryData.TransCategoryCounts, transComboCounts, fittedCounts, mConfig.applyGcBiasAdjust());
         }
     }
 
@@ -343,9 +343,7 @@ public class TranscriptExpression
         {
             double skippedPerc = skippedComboCounts/totalCounts;
 
-            Level logLevel = skippedPerc > 0.1 && skippedComboCounts > 100 ? WARN : DEBUG;
-
-            ISF_LOGGER.log(logLevel, String.format("gene(%d:%s) categories(act=%d exp=%d trans+genes=%d) skippedCounts(%d perc=%.3f of total=%.0f)",
+            ISF_LOGGER.debug(String.format("gene(%d:%s) categories(act=%d exp=%d trans+genes=%d) skippedCounts(%d perc=%.3f of total=%.0f)",
                     geneSummaryData.GeneIds.size(), geneSummaryData.GeneNames,
                     geneSummaryData.TransCategoryCounts.size(), mCurrentExpRatesData.Categories.size(),
                     mCurrentExpRatesData.TranscriptIds.size(), skippedComboCounts, skippedPerc, totalCounts));
@@ -366,7 +364,7 @@ public class TranscriptExpression
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
             writer.write("GenesId,Category,Count,FitCount");
 
-            if(config.ApplyGcBiasAdjust)
+            if(config.applyGcBiasAdjust())
             {
                 GcRatioCounts tmp = new GcRatioCounts();
 
