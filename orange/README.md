@@ -94,6 +94,9 @@ investigate potential causes for QC failure.
  - BQR plots from both reference and tumor sample from [SAGE](../sage)
 
 ### Version History and Download Links
+- [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.7)
+  - Support for Protect v2.1
+  - Support multiple LPS per variant in SAGE
 - [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.6)
   - Transform germline variants to somatic in case germline is switched off (somatic findings + drivers on front page)
   - Add "upstream" to variant details in case variant is upstream without annotation
