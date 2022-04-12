@@ -112,6 +112,7 @@ urls | A list of urls with additional information about the evidence | https://p
 
 ## Version History and Download Links
 - [2.1](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v2.1)
+  - Coming soon
 - [2.0](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v2.0)
    - New datamodel supporting evidence types, range ranks and explicit genes. 
    - Support for virus interpreter v1.2
