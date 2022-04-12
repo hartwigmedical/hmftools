@@ -130,7 +130,7 @@ public class EvidenceReportingFunctionsTest {
         assertEquals(3, filtered.size());
         assertTrue(filtered.contains(offLabelResponsiveA));
         assertFalse(filtered.contains(offLabelResponsiveB));
-        assertFalse(filtered.contains(onLabelResponsiveC));
+        assertTrue(filtered.contains(onLabelResponsiveC));
     }
 
     @Test

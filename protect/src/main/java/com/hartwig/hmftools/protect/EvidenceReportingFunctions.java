@@ -113,18 +113,11 @@ public final class EvidenceReportingFunctions {
             @Nullable EvidenceLevel highestOffLabel) {
         if (evidence.reported()) {
             if (evidence.onLabel()) {
-
                 assert highestOnLabel != null;
-                if (highestOffLabel == null || evidence.level().isHigher(highestOffLabel) || evidence.level() == highestOffLabel) {
-                    return evidence.level() == highestOnLabel;
-                }
-
+                return evidence.level() == highestOnLabel;
             } else {
-                assert highestOffLabel != null;
-                if (evidence.level() == highestOnLabel) {
-                    return false;
-                } else if (highestOnLabel == null || evidence.level().isHigher(highestOnLabel)) {
-                    return evidence.level() == highestOffLabel;
+                if (evidence.level() == highestOffLabel) {
+                    return highestOnLabel == null || evidence.level().isHigher(highestOnLabel);
                 }
             }
         }
