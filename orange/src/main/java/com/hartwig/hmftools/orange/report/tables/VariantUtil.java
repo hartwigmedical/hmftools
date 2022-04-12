@@ -75,14 +75,26 @@ final class VariantUtil {
     @NotNull
     public static String variantField(@NotNull ReportableVariant variant) {
         String consequence;
-        if (!variant.canonicalHgvsProteinImpact().isEmpty()) {
-            consequence = AminoAcids.forceSingleLetterProteinAnnotation(variant.canonicalHgvsProteinImpact());
-        } else if (!variant.canonicalHgvsCodingImpact().isEmpty()) {
-            consequence = variant.canonicalHgvsCodingImpact();
-        } else if (variant.canonicalEffect().equals(UPSTREAM_GENE_VARIANT)) {
-            consequence = "upstream";
+        if (variant.isCanonical()) {
+            if (!variant.canonicalHgvsProteinImpact().isEmpty()) {
+                consequence = AminoAcids.forceSingleLetterProteinAnnotation(variant.canonicalHgvsProteinImpact());
+            } else if (!variant.canonicalHgvsCodingImpact().isEmpty()) {
+                consequence = variant.canonicalHgvsCodingImpact();
+            } else if (variant.canonicalEffect().equals(UPSTREAM_GENE_VARIANT)) {
+                consequence = "upstream";
+            } else {
+                consequence = variant.canonicalEffect();
+            }
         } else {
-            consequence = variant.canonicalEffect();
+            if (!variant.otherReportedEffects().split("\\|")[2].isEmpty()) {
+                consequence = AminoAcids.forceSingleLetterProteinAnnotation(variant.otherReportedEffects().split("\\|")[2]);
+            } else if (!variant.otherReportedEffects().split("\\|")[1].isEmpty()) {
+                consequence = variant.otherReportedEffects().split("\\|")[1];
+            } else if (variant.otherReportedEffects().split("\\|")[3].equals(UPSTREAM_GENE_VARIANT)) {
+                consequence = "upstream";
+            } else {
+                consequence = variant.otherReportedEffects().split("\\|")[3];
+            }
         }
 
         return variant.gene() + " " + consequence;
