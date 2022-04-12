@@ -578,8 +578,7 @@ We therefore merge any cluster with less than or equal to 1 non single breakend 
 
 To protect against false positives and joining complex clusters that both touch repeats, but otherwise don’t appear to overlap, we avoid clustering 2 clusters which already have multiple non single breakends. 
 
-We don’t cluster other common sequences such as telomeric sequences, Sine/Alu or LINE/L1 as these tend to be associated with genom
-
+We don’t cluster other common sequences such as telomeric sequences, Sine/Alu or LINE/L1 as these tend to be associated with genome-wide deregulation.
 
 #### Incomplete and small complex cluster merging 
 These rules are implemented to merge small unresolved clusters with 3 or less variants to other unresolved clusters with an arbitrary cluster size where the location and orientation of proximate or overlapping breakends between the 2 clusters indicates that they may be linked. 
