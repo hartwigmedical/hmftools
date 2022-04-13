@@ -1,4 +1,5 @@
 ####
+# SQL updates for Pipeline release 5.28 which only support PROTECT v2.1
 # PROTECT
 
 DROP TABLE IF EXISTS protect;
