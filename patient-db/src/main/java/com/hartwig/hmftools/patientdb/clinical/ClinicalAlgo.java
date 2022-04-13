@@ -111,6 +111,17 @@ public class ClinicalAlgo {
         List<Patient> opticPatients = readLimsPatients(samplesPerPatient, "OPTIC", consentConfigMap);
         LOGGER.info(" Finished curation of {} OPTIC patients", opticPatients.size());
 
+        LOGGER.info("Interpreting and curating data for GAYA patients");
+        List<Patient> gayaPatients = readLimsPatients(samplesPerPatient, "GAYA", consentConfigMap);
+        LOGGER.info(" Finished curation of {} GAYA patients", gayaPatients.size());
+
+        LOGGER.info("Interpreting and curating data for OMIC patients");
+        List<Patient> omicPatients = readLimsPatients(samplesPerPatient, "OMIC", consentConfigMap);
+        LOGGER.info(" Finished curation of {} OMIC patients", omicPatients.size());
+
+        LOGGER.info("Interpreting and curating data for TARGTO patients");
+        List<Patient> targtoPatients = readLimsPatients(samplesPerPatient, "TARGTO", consentConfigMap);
+        LOGGER.info(" Finished curation of {} TARGTO patients", targtoPatients.size());
 
         List<Patient> mergedPatients = Lists.newArrayList();
         mergedPatients.addAll(cpctPatients);
@@ -121,6 +132,9 @@ public class ClinicalAlgo {
         mergedPatients.addAll(sherpaPatients);
         mergedPatients.addAll(glowPatients);
         mergedPatients.addAll(opticPatients);
+        mergedPatients.addAll(gayaPatients);
+        mergedPatients.addAll(omicPatients);
+        mergedPatients.addAll(targtoPatients);
         mergedPatients.addAll(readColoPatients(lims));
         return mergedPatients;
     }
