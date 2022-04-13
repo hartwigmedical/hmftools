@@ -98,17 +98,28 @@ PROTECT produces a tsv with every applicable evidence after consolidation has be
 Field  | Description | Example
 ---|---|---
 gene | The gene which is impact by the genomic event (empty for signatures) | BRAF
+transcript | The impacted transcript of the genomic event | ENST00000288602
+isCanonical | Shows if the impacted transcript is canonical | true/false
 event  | The genomic event for which evidence is applicable | p.Val600Glu
-evidenceType | The source evidence type where this evidence is based on | CODON 
-rangeRank  | In case of EXON or CODON, the index of the exon or codon on which this evidence was based | 600
+eventIsHighDriver | Shows is the genomic event is a driver event in the tumor | true/false
 germline | Whether the genomic event is present in the germline or was acquired somatically | true/false
 reported | Whether the evidence passed all filters for reporting | true/false
 treatment | Name of the treatment (trial or drug(s)) | Vemurafenib
-onLabel | Whether the evidence is valid for the specific tumor for which the match has been made | true/false 
+onLabel | Whether the evidence is valid for the specific tumor for which the match has been made | true/false
 level | Evidence level (from A (highest) to D (lowest)) | A
 direction | Whether the evidence is responsive or resistant | RESPONSIVE
-sources | A list of sources from where the evidence has been extracted | vicc_cgi,vicc_civic
-urls | A list of urls with additional information about the evidence | https://pubmed.ncbi.nlm.nih.gov
+sources | A list of various information from the source | RESPONSIVE
+
+The list sources contains de following information which is seperate by a semicolon.
+
+Field  | Description | Example
+---|---|---
+source | The source from where the evidence has been extracted | ckb
+sourceEvent | The interpret string which is extracted from the source | ckb
+sourceUrls | A list of urls of the extracted evidence | true/false
+evidenceType  | The source evidence type where this evidence is based on | CODON
+rangeRank | In case of EXON or CODON, the index of the exon or codon on which this evidence was based | 600
+evidenceUrls | A list of urls with additional information about the evidence | https://pubmed.ncbi.nlm.nih.gov
 
 ## Version History and Download Links
 - [2.1](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v2.1)
