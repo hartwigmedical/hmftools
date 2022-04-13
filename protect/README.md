@@ -108,16 +108,16 @@ treatment | Name of the treatment (trial or drug(s)) | Vemurafenib
 onLabel | Whether the evidence is valid for the specific tumor for which the match has been made | true/false
 level | Evidence level (from A (highest) to D (lowest)) | A
 direction | Whether the evidence is responsive or resistant | RESPONSIVE
-sources | A list of various information from the source | RESPONSIVE
+sources | A list of various information from the source | ckb|BRAF V600X|https://ckb.jax.org|CODON_MUTATION|600|https://pubmed.ncbi.nlm.nih.gov;
 
 The list sources contains de following information which is seperate by a semicolon.
 
 Field  | Description | Example
 ---|---|---
 source | The source from where the evidence has been extracted | ckb
-sourceEvent | The interpret string which is extracted from the source | ckb
-sourceUrls | A list of urls of the extracted evidence | true/false
-evidenceType  | The source evidence type where this evidence is based on | CODON
+sourceEvent | The interpret string which is extracted from the source | BRAF V600X
+sourceUrls | A list of urls of the extracted evidence | https://ckb.jax.org
+evidenceType  | The source evidence type where this evidence is based on | CODON_MUTATION
 rangeRank | In case of EXON or CODON, the index of the exon or codon on which this evidence was based | 600
 evidenceUrls | A list of urls with additional information about the evidence | https://pubmed.ncbi.nlm.nih.gov
 
