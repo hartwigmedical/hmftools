@@ -168,14 +168,17 @@ public final class ProtectEvidenceFile {
         String eventIsHighDriverField = values[fields.get("eventIsHighDriver")];
         Boolean eventIsHighDriver = !eventIsHighDriverField.isEmpty() ? Boolean.parseBoolean(eventIsHighDriverField) : null;
 
+        String eventIsCanonicaField = values[fields.get("isCanonical")];
+        Boolean isCanonical = !eventIsCanonicaField.isEmpty() ? Boolean.parseBoolean(eventIsCanonicaField) : null;
+
         String transcriptField = values[fields.get("transcript")];
         String transcript = !transcriptField.isEmpty() ? transcriptField : Strings.EMPTY;
 
         Set<ProtectSource> sources = fromData(values[fields.get("sources")]);
         return ImmutableProtectEvidence.builder()
                 .gene(emptyToNullString(values[fields.get("gene")]))
-                .transcript(transcript)
-                .isCanonical(Boolean.parseBoolean(values[fields.get("isCanonical")]))
+                .transcript(emptyToNullString(transcript))
+                .isCanonical(isCanonical)
                 .event(values[fields.get("event")])
                 .eventIsHighDriver(eventIsHighDriver)
                 .germline(Boolean.parseBoolean(values[fields.get("germline")]))
