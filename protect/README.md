@@ -54,8 +54,8 @@ viral presence is only reported in case the virus itself is reported and has bee
 
 #### Signatures
 
-Evidence on signatures is matched based on the interpretation of the algorithm producing the signature. For example, when CHORD suggests a
-sample is HR deficient, any evidence for HR deficiency is considered applicable.
+Evidence on signatures is matched based on the interpretation of the algorithm producing the signature. 
+Any evidence is considered applicable if the tumor signature(s) meets the signature rules as defined as part of the SERVE evidence rule. 
 
 ## Determining whether evidence is on-label
 
@@ -73,21 +73,20 @@ Some additional notes:
 
 ## Evidence consolidation, filtering and reporting
 
-After evidence has been collected based on the five distinct categories of genomic mutations and has been labeled as on-label or off-label,
+After evidence has been collected based on the six distinct categories of genomic mutations and has been labeled as on-label or off-label,
 evidence is consolidated and evaluated for reporting. The following steps are executed:
- 1. Evidence is consolidated on source level. If the exact same evidence for the same event is found across multiple sources, 
- this evidence is consolidated in a single instance of applicable evidence. PROTECT has no preference for any source, though sorts sources 
- alphabetically for consistency.
- 1. Evidence is filtered for reporting in case they are based on genomic events that are not reportable.
- 1. Evidence is filtered for reporting based on the maximum configured reporting level for the evidence.
+ 1. Evidence is consolidated if the exact same evidence for the same interpret event is found across multiple sources, 
+ this evidence is consolidated in a single instance of applicable evidence. The different source information is merged into a list. 
+ 2. Evidence is filtered for reporting in case they are based on genomic events that are not reportable.
+ 3. Evidence is filtered for reporting based on the maximum configured reporting level for the evidence.
      - For CKB C evidence is reported, or up to B for predicted evidence
      - For VICC and iClusion evidence is reported up to B level.
      - For all other sources evidence is reported for A level only.
- 1. For every gene/event/treatment/direction combination only the highest level of evidence is reported:
-     - All separate responsive and resistant directions are grouped for this filtering step. 
+ 4. For every gene/event/treatment/direction combination only the highest on-label level of evidence is reported:
+     - All separate responsive and resistant directions are grouped for this filtering step.
      - Off-label evidence is only reported in case the evidence level is higher than the highest on-label evidence.
- 1. Clinical trials are only reported when they are on-label.
- 1. There is some evidence that is never reported regardless of what event caused them or what their evidence level is. These are:
+ 5. Clinical trials are only reported when they are on-label.
+ 6. There is some evidence that is never reported regardless of what event caused them or what their evidence level is. These are:
     - Evidence based on an event affecting TP53.
     - Evidence for non-specific chemotherapy, aspirin or steroids. 
     
@@ -123,7 +122,11 @@ evidenceUrls | A list of urls with additional information about the evidence | h
 
 ## Version History and Download Links
 - [2.1](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v2.1)
-  - Coming soon
+  - Support the determining if evidence is based on a high driver event 
+  - Extract the impacted transcript ID of the genomic event (especially for determine if the event is based on CDKN2A p14Arf/CDKN2A p16)
+  - Determe if the genomic event is based on the canonical transcript 
+  - Support the new protect model, include the sources information 
+  - Support the comparator/cut-offs for signatures which is evidence specific
 - [2.0](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v2.0)
    - New datamodel supporting evidence types, range ranks and explicit genes. 
    - Support for virus interpreter v1.2
