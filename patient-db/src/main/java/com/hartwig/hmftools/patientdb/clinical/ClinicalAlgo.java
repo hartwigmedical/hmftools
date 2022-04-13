@@ -92,12 +92,25 @@ public class ClinicalAlgo {
         LOGGER.info(" Finished curation of {} WIDE patients", widePatients.size());
 
         LOGGER.info("Interpreting and curating data for CORE patients");
-        List<Patient> corePatients = readCoreAndActinPatients(samplesPerPatient, "CORE", consentConfigMap);
+        List<Patient> corePatients = readLimsPatients(samplesPerPatient, "CORE", consentConfigMap);
         LOGGER.info(" Finished curation of {} CORE patients", corePatients.size());
 
         LOGGER.info("Interpreting and curating data for ACTIN patients");
-        List<Patient> actinPatients = readCoreAndActinPatients(samplesPerPatient, "ACTIN", consentConfigMap);
+        List<Patient> actinPatients = readLimsPatients(samplesPerPatient, "ACTIN", consentConfigMap);
         LOGGER.info(" Finished curation of {} ACTIN patients", actinPatients.size());
+
+        LOGGER.info("Interpreting and curating data for SHERPA patients");
+        List<Patient> sherpaPatients = readLimsPatients(samplesPerPatient, "SHERPA", consentConfigMap);
+        LOGGER.info(" Finished curation of {} SHERPA patients", sherpaPatients.size());
+
+        LOGGER.info("Interpreting and curating data for GLOW patients");
+        List<Patient> glowPatients = readLimsPatients(samplesPerPatient, "GLOW", consentConfigMap);
+        LOGGER.info(" Finished curation of {} GLOW patients", glowPatients.size());
+
+        LOGGER.info("Interpreting and curating data for OPTIC patients");
+        List<Patient> opticPatients = readLimsPatients(samplesPerPatient, "OPTIC", consentConfigMap);
+        LOGGER.info(" Finished curation of {} OPTIC patients", opticPatients.size());
+
 
         List<Patient> mergedPatients = Lists.newArrayList();
         mergedPatients.addAll(cpctPatients);
@@ -105,6 +118,9 @@ public class ClinicalAlgo {
         mergedPatients.addAll(widePatients);
         mergedPatients.addAll(corePatients);
         mergedPatients.addAll(actinPatients);
+        mergedPatients.addAll(sherpaPatients);
+        mergedPatients.addAll(glowPatients);
+        mergedPatients.addAll(opticPatients);
         mergedPatients.addAll(readColoPatients(lims));
         return mergedPatients;
     }
@@ -146,7 +162,7 @@ public class ClinicalAlgo {
     }
 
     @NotNull
-    private List<Patient> readCoreAndActinPatients(@NotNull Map<String, List<SampleData>> samplesPerPatient, @NotNull String cohort,
+    private List<Patient> readLimsPatients(@NotNull Map<String, List<SampleData>> samplesPerPatient, @NotNull String cohort,
             Map<String, ConsentConfig> consentConfigMap) {
         List<Patient> patients = Lists.newArrayList();
         CorePatientReader corePatientReader = new CorePatientReader(primaryTumorCurator);
