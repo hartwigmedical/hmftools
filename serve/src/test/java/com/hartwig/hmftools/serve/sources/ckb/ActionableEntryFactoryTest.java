@@ -36,8 +36,9 @@ public class ActionableEntryFactoryTest {
         assertEquals("AB", characteristics.treatment());
         assertEquals("AB", characteristics.applicableCancerType().name());
         assertEquals("162", characteristics.applicableCancerType().doid());
-        assertEquals(Sets.newHashSet(ImmutableCancerType.builder().name("Hematologic cancer").doid("2531").build()),
-                characteristics.blacklistCancerTypes());
+        assertEquals(Sets.newHashSet(ImmutableCancerType.builder().name("Refractory hematologic cancer").doid("712").build(),
+                ImmutableCancerType.builder().name("Bone marrow cancer").doid("4960").build(),
+                ImmutableCancerType.builder().name("Leukemia").doid("1240").build()), characteristics.blacklistCancerTypes());
         assertEquals(EvidenceLevel.A, characteristics.level());
         assertEquals(EvidenceDirection.RESPONSIVE, characteristics.direction());
 
@@ -72,7 +73,9 @@ public class ActionableEntryFactoryTest {
         assertEquals("AB", hotspot.treatment());
         assertEquals("AB", hotspot.applicableCancerType().name());
         assertEquals("162", hotspot.applicableCancerType().doid());
-        assertEquals(Sets.newHashSet(ImmutableCancerType.builder().name("Hematologic cancer").doid("2531").build()),
+        assertEquals(Sets.newHashSet(ImmutableCancerType.builder().name("Refractory hematologic cancer").doid("712").build(),
+                        ImmutableCancerType.builder().name("Bone marrow cancer").doid("4960").build(),
+                        ImmutableCancerType.builder().name("Leukemia").doid("1240").build()),
                 hotspot.blacklistCancerTypes());
         assertEquals(EvidenceLevel.A, characteristics.level());
         assertEquals(EvidenceDirection.RESPONSIVE, characteristics.direction());

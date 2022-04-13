@@ -42,8 +42,10 @@ public class ActionableTrialFactoryTest {
         assertEquals(treatment, actionableTrials.get(0).treatment());
         assertEquals(location1, actionableTrials.get(0).applicableCancerType().name());
         assertEquals(loc1Doid1, actionableTrials.get(0).applicableCancerType().doid());
-        assertEquals(Sets.newHashSet(ImmutableCancerType.builder().name(blacklistLocation1).doid(blacklistDoid1).build(),
-                ActionableTrialFactory.HEMATOLOGIC_CANCER_TYPE), actionableTrials.get(0).blacklistCancerTypes());
+        assertEquals(Sets.newHashSet(ActionableTrialFactory.REFRACTORY_HEMATOLOGIC_TYPE,
+                ImmutableCancerType.builder().name(blacklistLocation1).doid(blacklistDoid1).build(),
+                ActionableTrialFactory.BONE_MARROW_TYPE,
+                ActionableTrialFactory.LEUKEMIA_TYPE), actionableTrials.get(0).blacklistCancerTypes());
 
         assertEquals(treatment, actionableTrials.get(1).treatment());
         assertEquals(location1, actionableTrials.get(1).applicableCancerType().name());
@@ -90,8 +92,9 @@ public class ActionableTrialFactoryTest {
         assertEquals("trial", actionableTrialsWithCancer.get(0).treatment());
         assertEquals("cancer", actionableTrialsWithCancer.get(0).applicableCancerType().name());
         assertEquals(ActionableTrialFactory.CANCER_DOID, actionableTrialsWithCancer.get(0).applicableCancerType().doid());
-        assertEquals(Sets.newHashSet(ActionableTrialFactory.HEMATOLOGIC_CANCER_TYPE),
-                actionableTrialsWithCancer.get(0).blacklistCancerTypes());
+        assertEquals(Sets.newHashSet(ActionableTrialFactory.REFRACTORY_HEMATOLOGIC_TYPE,
+                ActionableTrialFactory.BONE_MARROW_TYPE,
+                ActionableTrialFactory.LEUKEMIA_TYPE), actionableTrialsWithCancer.get(0).blacklistCancerTypes());
     }
 
     @Test
