@@ -44,6 +44,12 @@ public abstract class HospitalModel {
     @NotNull
     abstract Map<String, HospitalPersons> hospitalPersonsGENAYA();
 
+    @NotNull
+    abstract Map<String, HospitalPersons> hospitalPersonsOMIC();
+
+    @NotNull
+    abstract Map<String, HospitalPersons> hospitalPersonsTARGTO();
+
 
     @NotNull
     abstract Map<String, String> sampleToHospitalMapping();
@@ -115,6 +121,10 @@ public abstract class HospitalModel {
                 return hospitalPersonsSHERPA().get(hospitalId);
             case "GENAYA":
                 return hospitalPersonsGENAYA().get(hospitalId);
+            case "OMIC":
+                return hospitalPersonsOMIC().get(hospitalId);
+            case "TARGTO":
+                return hospitalPersonsTARGTO().get(hospitalId);
             default:
                 return null;
         }

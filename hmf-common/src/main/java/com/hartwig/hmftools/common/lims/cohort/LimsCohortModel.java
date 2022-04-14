@@ -75,7 +75,11 @@ public abstract class LimsCohortModel {
             return "SHERPA";
         } else if (sampleId.startsWith("GAYA")) {
             return "GENAYA";
-        } else {
+        } else if (sampleId.startsWith("OMIC")) {
+            return "OMIC";
+        } else if (sampleId.startsWith("TARG")) {
+            return "TARGTO";
+        }else {
             return null;
         }
     }

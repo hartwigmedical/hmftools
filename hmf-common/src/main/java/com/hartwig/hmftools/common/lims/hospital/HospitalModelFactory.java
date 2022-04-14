@@ -27,6 +27,8 @@ public final class HospitalModelFactory {
     private static final String HOSPITAL_OPTIC_TSV = "hospital_optic.tsv";
     private static final String HOSPITAL_SHERPA_TSV = "hospital_sherpa.tsv";
     private static final String HOSPITAL_GENAYA_TSV = "hospital_genaya.tsv";
+    private static final String HOSPITAL_OMIC_TSV = "hospital_omic.tsv";
+    private static final String HOSPITAL_TARGTO_TSV = "hospital_targto.tsv";
     private static final String SAMPLE_HOSPITAL_MAPPING_TSV = "sample_hospital_mapping.tsv";
 
     private static final int HOSPITAL_ADDRESS_ID_COLUMN = 0;
@@ -65,6 +67,8 @@ public final class HospitalModelFactory {
         String hospitalPersonsOPTICTsv = limsDirectory + File.separator + HOSPITAL_OPTIC_TSV;
         String hospitalPersonsSHERPATsv = limsDirectory + File.separator + HOSPITAL_SHERPA_TSV;
         String hospitalPersonsGENAYATsv = limsDirectory + File.separator + HOSPITAL_GENAYA_TSV;
+        String hospitalPersonsOmicTsv = limsDirectory + File.separator + HOSPITAL_OMIC_TSV;
+        String hospitalPersonsTargtoTsv = limsDirectory + File.separator + HOSPITAL_TARGTO_TSV;
 
         String sampleHospitalMappingTsv = limsDirectory + File.separator + SAMPLE_HOSPITAL_MAPPING_TSV;
 
@@ -87,6 +91,10 @@ public final class HospitalModelFactory {
                 readFromHospitalPersonsTsv(hospitalPersonsSHERPATsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP_ACTIN, "SHERPA");
         Map<String, HospitalPersons> hospitalPersonsGENAYA =
                 readFromHospitalPersonsTsv(hospitalPersonsGENAYATsv, HOSPITAL_PERSONS_FIELD_COUNT_COREDB, "GENAYA");
+        Map<String, HospitalPersons> hospitalPersonsOmic =
+                readFromHospitalPersonsTsv(hospitalPersonsOmicTsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP_ACTIN, "OMIC");
+        Map<String, HospitalPersons> hospitalPersonsTargto =
+                readFromHospitalPersonsTsv(hospitalPersonsTargtoTsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP_ACTIN, "TARGTO");
         Map<String, String> sampleHospitalMapping = readFromSampleToHospitalMappingTsv(sampleHospitalMappingTsv);
 
         HospitalModel hospitalModel = ImmutableHospitalModel.builder()
@@ -100,6 +108,8 @@ public final class HospitalModelFactory {
                 .hospitalPersonsOPTIC(hospitalPersonsOPTIC)
                 .hospitalPersonsSHERPA(hospitalPersonsSHERPA)
                 .hospitalPersonsGENAYA(hospitalPersonsGENAYA)
+                .hospitalPersonsOMIC(hospitalPersonsOmic)
+                .hospitalPersonsTARGTO(hospitalPersonsTargto)
                 .sampleToHospitalMapping(sampleHospitalMapping)
                 .build();
 

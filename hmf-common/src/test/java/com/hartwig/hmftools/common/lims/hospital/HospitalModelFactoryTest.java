@@ -123,6 +123,26 @@ public class HospitalModelFactoryTest {
     }
 
     @Test
+    public void canReadHospitalContactOMIC() throws IOException {
+        Map<String, HospitalPersons> hospitalContactOMIC =
+                HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_omic.tsv", 2, "OMIC");
+        assertEquals(1, hospitalContactOMIC.size());
+
+        HospitalPersons genaya = hospitalContactOMIC.get("01");
+        assertEquals("Someone", genaya.hospitalPI());
+    }
+
+    @Test
+    public void canReadHospitalContactTARGTO() throws IOException {
+        Map<String, HospitalPersons> hospitalContactTARGTO =
+                HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_targto.tsv", 2, "TARGTO");
+        assertEquals(1, hospitalContactTARGTO.size());
+
+        HospitalPersons genaya = hospitalContactTARGTO.get("01");
+        assertEquals("Someone", genaya.hospitalPI());
+    }
+
+    @Test
     public void canReadHospitalContactWIDE() throws IOException {
         Map<String, HospitalPersons> hospitalContactWIDE =
                 HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_wide.tsv", 4, "WIDE");
