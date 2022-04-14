@@ -18,7 +18,6 @@ public interface PanelData {
     @NotNull
     String signaturePath();
 
-
     @NotNull
     String logoCompanyPath();
 }

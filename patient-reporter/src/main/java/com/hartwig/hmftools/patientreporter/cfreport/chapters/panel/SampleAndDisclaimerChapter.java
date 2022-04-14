@@ -76,6 +76,7 @@ public class SampleAndDisclaimerChapter implements ReportChapter {
                 DataUtil.formatDate(sampleReport.tumorArrivalDate()),
                 " with internal tumor barcode ",
                 sampleReport.tumorSampleBarcode()));
+        div.add(createContentParagraph("The results stated in this report are based on the tested tumor sample."));
         div.add(createContentParagraph("This experiment is performed according to lab procedures: ", sampleReport.labProcedures()));
         String whoVerified = "This report was generated " + report.user();
 
