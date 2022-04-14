@@ -198,7 +198,7 @@ Hotspots are assigned a driver likelihood of 1.
 
 The driver gene panel (DriverGenePanel.37.tsv) and 38 equivalent is also available from [HMFTools-Resources > Gene Panel](https://resources.hartwigmedicalfoundation.nl)
 
-Note that generating the driver catalog for SNVs assumes that the VCF has been annotated with SNPEFF.
+Note that generating the driver catalog for SNVs assumes that the VCF has been annotated with [PAVE](../pave/README.md).
 
 ## Input
 
@@ -614,7 +614,7 @@ The reported flag controls if the variant should appear in the driver catalog.  
 
 ### 12. Driver Identification
 
-PURPLE builds a catalog of drivers based on a configured gene panel.    PURPLE automatically assigns a driver likelihood of 1 to all significant amplifications (minimum exonic copy number > 3 * sample ploidy) and deletions (minimum exonic copy number < 0.5) that are reportable.  If the somatic VCF is SnpEff annotated, a driver likelihood is calculated for any point mutations in the gene panel.
+PURPLE builds a catalog of drivers based on a configured gene panel.    PURPLE automatically assigns a driver likelihood of 1 to all significant amplifications (minimum exonic copy number > 3 * sample ploidy) and deletions (minimum exonic copy number < 0.5) that are reportable.  If the somatic VCF is [PAVE](../pave/README.md) annotated, a driver likelihood is calculated for any point mutations in the gene panel.
 
 A detailed description of the driver catalog is available [here](./DriverCatalog.md).
 
@@ -728,7 +728,7 @@ MinMinorAllelePloidy | 0 | Minimum allele copy number found over the gene exons 
 #### Driver Catalog File
 
 The driver catalog file `TUMOR.driver.catalog.somatic.tsv` contains significant amplifications (minimum exonic copy number > 3 * sample ploidy) and deletions (minimum exonic copy number < 0.5) that occur in the HMF gene panel.
-If the supplied somatic VCF has been enriched with SnpEff, the driver catalog file will also include a likelihood of any point mutations in the gene panel. 
+If the supplied somatic VCF has been enriched with [PAVE](../pave/README.md), the driver catalog file will also include a likelihood of any point mutations in the gene panel. 
 
 If a germline variant VCF is supplied then Purple will also produce a driver catalog for those, named `TUMOR.driver.catalog.germline.tsv`. 
 
