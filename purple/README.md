@@ -426,7 +426,7 @@ First PURPLE groups all somatic SNV by VAF with 0.6 x AverageTumorDepth < totalR
 
 If (somatic fitted purity and the copy number fitted purity are both < 0.17 AND the somatic purity > copy number purity) OR if there are no SNV that meet the VAF criteria, then use the copy number fit and set fitMethod = NORMAL.   Otherwise use the somatic fitted purity, set ploidy =2 and set fit method = SOMATIC.
 
-Finally, in case of tumors with very low SNV counts (<1000 total SNV) but with known hotpsot mutations, PURPLE checks if the VAF of any hotspot mutations is not outside the expected distribution of the fitted somatic VAF peak (p<0.01).  If the VAF of the hotspot is significantly higher than the fitted VAF peak, then PURPLE sets the purity to 2x maximum hotspot VAF. 
+Finally, in case of tumors with very low SNV counts (<1000 total SNV) but with known hotspot mutations, PURPLE checks if the VAF of any hotspot mutations is not outside the expected distribution of the fitted somatic VAF peak (p<0.01).  If the VAF of the hotspot is significantly higher than the fitted VAF peak, then PURPLE sets the purity to 2x maximum hotspot VAF. 
 
 ### 4. Copy Number Smoothing 
 
@@ -507,7 +507,7 @@ Eligible recovery candidates must:
 3. Have a minQual > 300 (breakpoints) or 800 (single breakends)
 4. Have a junction copy number of at least 50% of the unexplained copy number change and of at least 0.5.
 
-In both siuations, if no suitable SV candidate is found to help explain the copy number discrepancy, a single ended breakend will be inferred (with type = 'INF') at that position.
+In both situations, if no suitable SV candidate is found to help explain the copy number discrepancy, a single ended breakend will be inferred (with type = 'INF') at that position.
 
 Following the successful recovery any structural variants we will rerun the segmentation, copy number smoothing and minor allele copy number smoothing with the updated structural variants to produce a final set of copy number segments and breakpoints. Note that the purity estimation does not change.
 
