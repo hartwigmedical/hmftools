@@ -68,9 +68,6 @@ public class PanelChapter implements ReportChapter {
         div.add(new Paragraph("Data result file information").addStyle(ReportResources.dataHighlightStyle()));
         div.add(createContentParagraph("VCF file name: ", report.VCFFilename()));
 
-        div.add(new Paragraph("Generated data information").addStyle(ReportResources.dataHighlightStyle()));
-        div.add(createContentParagraph("Gbase: ", report.sampleGbase()));
-        div.add(createContentParagraph("Q30 value: ", report.sampleQ30Value()));
         return div;
     }
 

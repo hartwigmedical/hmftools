@@ -42,10 +42,13 @@ public class PanelExplanationChapter implements ReportChapter {
     private static Div createExplanationDiv() {
         Div div = new Div();
 
-        div.add(new Paragraph("Details on the Result File").addStyle(ReportResources.smallBodyHeadingStyle()));
-
-        div.add(createContentParagraph("The variant calling of the sequencing data is based on reference genome version GRCh37."));
+        div.add(new Paragraph("Details on the report general ").addStyle(ReportResources.smallBodyHeadingStyle()));
+        div.add(createContentParagraph("The variant calling of the sequencing data is based on reference genome version GRCh38."));
         div.add(createContentParagraph("Transcript list can be found on."));
+
+        div.add(new Paragraph("").addStyle(ReportResources.smallBodyHeadingStyle()));
+
+        div.add(new Paragraph("Details on the VCF file").addStyle(ReportResources.smallBodyHeadingStyle()));
         div.add(createContentParagraph("Short description of the headers present in the VCF"));
         return div;
     }
