@@ -53,7 +53,7 @@ public class SampleAndDisclaimerChapterFail implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell().add(createDisclaimerColumn()));
         reportDocument.add(table);
 
-        reportDocument.add(ReportSignature.createSignatureDiv(report.logoRVAPath(), report.signaturePath(), true));
+        reportDocument.add(ReportSignature.createSignatureDivPanel(report.signaturePath()));
         reportDocument.add(ReportSignature.createEndOfReportIndication());
     }
 

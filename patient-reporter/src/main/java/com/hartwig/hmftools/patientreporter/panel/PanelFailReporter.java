@@ -56,7 +56,6 @@ public class PanelFailReporter {
                 .isCorrectedReport(correctedReport)
                 .isCorrectedReportExtern(correctedReportExtern)
                 .signaturePath(reportData.signaturePath())
-                .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
                 .reportDate(reportDate)
                 .build();

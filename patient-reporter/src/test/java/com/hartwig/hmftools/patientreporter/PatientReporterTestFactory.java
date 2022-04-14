@@ -72,8 +72,6 @@ public final class PatientReporterTestFactory {
                 .panel(false)
                 .panelQcFail(false)
                 .panelVCFname(Strings.EMPTY)
-                .panelGbase(Strings.EMPTY)
-                .panelQ30(Strings.EMPTY)
                 .purplePurityTsv(PURPLE_PURITY_TSV)
                 .purpleQcFile(PURPLE_QC_FILE)
                 .purpleSomaticDriverCatalogTsv(PURPLE_SOMATIC_DRIVER_CATALOG_TSV)

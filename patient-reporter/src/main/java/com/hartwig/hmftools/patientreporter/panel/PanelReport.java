@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class PanelReport implements PatientReport {
+public abstract class PanelReport implements com.hartwig.hmftools.patientreporter.PanelReport {
 
     @Override
     @NotNull
@@ -27,12 +27,6 @@ public abstract class PanelReport implements PatientReport {
     @NotNull
     public abstract String  VCFFilename();
 
-    @NotNull
-    public abstract String sampleGbase();
-
-    @NotNull
-    public abstract String sampleQ30Value();
-
     @Override
     @NotNull
     public abstract Optional<String> comments();
@@ -46,10 +40,6 @@ public abstract class PanelReport implements PatientReport {
     @Override
     @NotNull
     public abstract String signaturePath();
-
-    @Override
-    @NotNull
-    public abstract String logoRVAPath();
 
     @Override
     @NotNull

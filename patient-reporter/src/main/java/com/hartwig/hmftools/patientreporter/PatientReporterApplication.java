@@ -118,12 +118,10 @@ public class PatientReporterApplication {
                 config.overridePipelineVersion(),
                 config.pipelineVersionFile(),
                 config.requirePipelineVersionFile(),
-                config.panelVCFname(),
-                config.panelGbase(),
-                config.panelQ30());
+                config.panelVCFname());
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
-        String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
+        String outputFilePath = generateOutputFilePathForPanelReport(config.outputDirReport(), report);
 
         reportWriter.writePanelAnalysedReport(report, outputFilePath);
 
@@ -134,10 +132,11 @@ public class PatientReporterApplication {
         PanelFailReport report = reporter.run(sampleMetadata,
                 config.comments(),
                 config.isCorrectedReport(),
-                config.isCorrectedReportExtern(), config.panelQcFailReason());
+                config.isCorrectedReportExtern(),
+                config.panelQcFailReason());
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
-        String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
+        String outputFilePath = generateOutputFilePathForPanelReport(config.outputDirReport(), report);
 
         reportWriter.writePanelQCFailReport(report, outputFilePath);
     }
@@ -175,6 +174,12 @@ public class PatientReporterApplication {
     @NotNull
     private static String generateOutputFilePathForPatientReport(@NotNull String outputDirReport, @NotNull PatientReport patientReport) {
         return outputDirReport + File.separator + OutputFileUtil.generateOutputFileNameForPdfReport(patientReport);
+    }
+
+    @NotNull
+    private static String generateOutputFilePathForPanelReport(@NotNull String outputDirReport,
+            @NotNull com.hartwig.hmftools.patientreporter.PanelReport panelReport) {
+        return outputDirReport + File.separator + OutputFileUtil.generateOutputFileNameForPdfReportPanel(panelReport);
     }
 
     @NotNull

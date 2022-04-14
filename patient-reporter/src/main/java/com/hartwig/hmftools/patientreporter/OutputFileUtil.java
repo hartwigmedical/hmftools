@@ -28,6 +28,22 @@ public final class OutputFileUtil {
     }
 
     @NotNull
+    public static String generateOutputFileNameForPdfReportPanel(@NotNull PanelReport report) {
+        SampleReport sampleReport = report.sampleReport();
+        LimsCohortConfig cohort = report.sampleReport().cohort();
+
+        String filePrefix =
+                cohort.requireHospitalId() ? sampleReport.tumorSampleId() + "_"
+                        + sampleReport.hospitalPatientId().replace(" ", "_") : sampleReport.tumorSampleId();
+
+        String fileSuffix = report.isCorrectedReport() ? "_corrected.pdf" : ".pdf";
+
+        String failPrefix = report instanceof QCFailReport ? "_failed" : Strings.EMPTY;
+
+        return filePrefix + failPrefix + "_oncopanel_result_report" + fileSuffix;
+    }
+
+    @NotNull
     public static String generateOutputFileNameForJson(@NotNull PatientReport report) {
         String filePrefix = report.sampleReport().tumorSampleId() + "_" + report.sampleReport().tumorSampleBarcode();
         String failPrefix = report instanceof QCFailReport ? "_failed" : Strings.EMPTY;
