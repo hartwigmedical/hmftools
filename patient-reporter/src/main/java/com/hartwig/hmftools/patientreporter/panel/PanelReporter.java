@@ -57,7 +57,7 @@ public class PanelReporter {
 
         return ImmutablePanelReport.builder()
                 .sampleReport(sampleReport)
-                .qsFormNumber(QsFormNumber.FOR_080.display())
+                .qsFormNumber(QsFormNumber.FOR_344.display())
                 .pipelineVersion(pipelineVersion)
                 .VCFFilename(panelVCFname)
                 .comments(Optional.ofNullable(comments))

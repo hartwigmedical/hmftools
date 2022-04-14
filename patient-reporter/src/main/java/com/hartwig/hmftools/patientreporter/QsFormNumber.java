@@ -9,7 +9,7 @@ public enum QsFormNumber {
     FOR_102("HMF-FOR-102"),
     FOR_080("HMF-FOR-080"),
     FOR_209("HMF-FOR-209"),
-    FOR_344("HMF-FOR-244"),
+    FOR_344("HMF-FOR-344"),
     FOR_345("HMF-FOR-345");
 
     @NotNull
