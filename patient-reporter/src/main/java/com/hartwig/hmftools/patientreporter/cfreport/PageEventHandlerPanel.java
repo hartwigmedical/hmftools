@@ -1,11 +1,9 @@
 package com.hartwig.hmftools.patientreporter.cfreport;
 
 import com.hartwig.hmftools.patientreporter.PanelReport;
-import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Footer;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Header;
 import com.hartwig.hmftools.patientreporter.cfreport.components.SidePanel;
-import com.hartwig.hmftools.patientreporter.cfreport.components.SidePanelPanel;
 import com.itextpdf.kernel.events.Event;
 import com.itextpdf.kernel.events.IEventHandler;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
@@ -55,7 +53,7 @@ class PageEventHandlerPanel implements IEventHandler {
                 createChapterBookmark(documentEvent.getDocument(), chapterTitle);
             }
 
-            SidePanelPanel.renderSidePanel(page, patientReport, fullSidebar, fullSidebarContent);
+            SidePanel.renderSidePanelPanelReport(page, patientReport, fullSidebar, fullSidebarContent);
             footer.renderFooter(page, !fullSidebar);
         }
     }

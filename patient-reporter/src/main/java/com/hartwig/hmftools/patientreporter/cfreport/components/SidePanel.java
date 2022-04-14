@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
+import com.hartwig.hmftools.patientreporter.PanelReport;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.SampleReport;
@@ -24,9 +25,29 @@ public final class SidePanel {
     private SidePanel() {
     }
 
-    public static void renderSidePanel(@NotNull PdfPage page, @NotNull PatientReport patientReport, boolean fullHeight,
+    public static void renderSidePatientReport(@NotNull PdfPage page, @NotNull PatientReport patientReport, boolean fullHeight,
             boolean fullContent) {
-        SampleReport sampleReport = patientReport.sampleReport();
+        renderSidePanel(page,
+                patientReport.sampleReport(),
+                patientReport.reportDate(),
+                patientReport.qsFormNumber(),
+                fullHeight,
+                fullContent);
+    }
+
+    public static void renderSidePanelPanelReport(@NotNull PdfPage page, @NotNull PanelReport patientReport, boolean fullHeight,
+            boolean fullContent) {
+        renderSidePanel(page,
+                patientReport.sampleReport(),
+                patientReport.reportDate(),
+                patientReport.qsFormNumber(),
+                fullHeight,
+                fullContent);
+
+    }
+
+    public static void renderSidePanel(@NotNull PdfPage page, @NotNull SampleReport sampleReport, @NotNull String reportDate,
+            @NotNull String qsFormNumber, boolean fullHeight, boolean fullContent) {
         PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
         Rectangle pageSize = page.getPageSize();
         renderBackgroundRect(fullHeight, canvas, pageSize);
@@ -36,7 +57,7 @@ public final class SidePanel {
         Canvas cv = new Canvas(canvas, page.getDocument(), page.getPageSize());
 
         cv.add(createSidePanelDiv(++sideTextIndex, "HMF sample id", sampleReport.tumorSampleId()));
-        cv.add(createSidePanelDiv(++sideTextIndex, "Report date", patientReport.reportDate()));
+        cv.add(createSidePanelDiv(++sideTextIndex, "Report date", reportDate));
 
         LimsCohortConfig cohort = sampleReport.cohort();
 
@@ -59,8 +80,8 @@ public final class SidePanel {
 
         if (page.getDocument().getNumberOfPages() == 1) {
             String reporterVersion = PatientReporterApplication.VERSION != null ? PatientReporterApplication.VERSION : "X.X";
-            cv.add(new Paragraph(patientReport.qsFormNumber() + " v" + reporterVersion).setFixedPosition(
-                    pageSize.getWidth() - RECTANGLE_WIDTH + 4, 40, 60)
+            cv.add(new Paragraph(qsFormNumber + " v" + reporterVersion).setFixedPosition(
+                            pageSize.getWidth() - RECTANGLE_WIDTH + 4, 40, 60)
                     .setRotationAngle(Math.PI / 2)
                     .setFontColor(ReportResources.PALETTE_LIGHT_GREY)
                     .setFontSize(6));
