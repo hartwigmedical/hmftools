@@ -562,7 +562,7 @@ public class CFReportWriterTest {
 
     @NotNull
     private static String testReportFilePathPanel(@NotNull com.hartwig.hmftools.patientreporter.PanelReport patientReport) {
-        String fileName = OutputFileUtil.generateOutputFileNameForPdfReportPanel(patientReport);
+        String fileName = OutputFileUtil.generateOutputFileNameForPdfPanelResultReport(patientReport);
         String newFileName = fileName;
         if (TIMESTAMP_FILES) {
             int extensionStart = fileName.lastIndexOf('.');
