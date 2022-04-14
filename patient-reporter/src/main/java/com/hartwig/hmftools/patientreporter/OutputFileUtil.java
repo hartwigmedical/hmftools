@@ -28,7 +28,7 @@ public final class OutputFileUtil {
     }
 
     @NotNull
-    public static String generateOutputFileNameForPdfReportPanel(@NotNull PanelReport report) {
+    public static String generateOutputFileNameForPdfPanelResultReport(@NotNull PanelReport report) {
         SampleReport sampleReport = report.sampleReport();
         LimsCohortConfig cohort = report.sampleReport().cohort();
 

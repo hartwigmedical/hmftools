@@ -121,7 +121,7 @@ public class PatientReporterApplication {
                 config.panelVCFname());
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
-        String outputFilePath = generateOutputFilePathForPanelReport(config.outputDirReport(), report);
+        String outputFilePath = generateOutputFilePathForPanelResultReport(config.outputDirReport(), report);
 
         reportWriter.writePanelAnalysedReport(report, outputFilePath);
 
@@ -136,7 +136,7 @@ public class PatientReporterApplication {
                 config.panelQcFailReason());
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
-        String outputFilePath = generateOutputFilePathForPanelReport(config.outputDirReport(), report);
+        String outputFilePath = generateOutputFilePathForPanelResultReport(config.outputDirReport(), report);
 
         reportWriter.writePanelQCFailReport(report, outputFilePath);
     }
@@ -177,9 +177,9 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static String generateOutputFilePathForPanelReport(@NotNull String outputDirReport,
+    private static String generateOutputFilePathForPanelResultReport(@NotNull String outputDirReport,
             @NotNull com.hartwig.hmftools.patientreporter.PanelReport panelReport) {
-        return outputDirReport + File.separator + OutputFileUtil.generateOutputFileNameForPdfReportPanel(panelReport);
+        return outputDirReport + File.separator + OutputFileUtil.generateOutputFileNameForPdfPanelResultReport(panelReport);
     }
 
     @NotNull
