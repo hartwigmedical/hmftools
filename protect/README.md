@@ -84,7 +84,7 @@ evidence is consolidated and evaluated for reporting. The following steps are ex
      - For all other sources evidence is reported for A level only.
  4. For every gene/event/treatment/direction combination only the highest on-label level of evidence is reported:
      - All separate responsive and resistant directions are grouped for this filtering step.
-     - Off-label evidence is only reported in case the evidence level is higher than the highest on-label evidence.
+     - Off-label evidence is only reported in case there is no on-label evidence or the evidence level is higher than the highest on-label evidence.
  5. Clinical trials are only reported when they are on-label.
  6. There is some evidence that is never reported regardless of what event caused them or what their evidence level is. These are:
     - Evidence based on an event affecting TP53.
