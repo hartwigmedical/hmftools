@@ -78,6 +78,7 @@ public interface PatientReporterConfig {
     // Resources used for generating an analysed patient report
     String GERMLINE_REPORTING_TSV = "germline_reporting_tsv";
     String SAMPLE_SUMMARY_TSV = "sample_summary_tsv";
+    String SAMPLE_SPECIAL_REMARK_TSV = "sample_special_remark_tsv";
 
     // Some additional optional params and flags
     String COMMENTS = "comments";
@@ -142,6 +143,7 @@ public interface PatientReporterConfig {
 
         options.addOption(GERMLINE_REPORTING_TSV, true, "Path towards a TSV containing germline reporting config.");
         options.addOption(SAMPLE_SUMMARY_TSV, true, "Path towards a TSV containing the (clinical) summaries of the samples.");
+        options.addOption(SAMPLE_SPECIAL_REMARK_TSV, true, "Path towards a TSV containing the special remarks of the samples.");
 
         options.addOption(COMMENTS, true, "Additional comments to be added to the report (optional).");
         options.addOption(CORRECTED_REPORT, false, "If provided, generate a corrected report with corrected name");
@@ -271,6 +273,9 @@ public interface PatientReporterConfig {
     @NotNull
     String sampleSummaryTsv();
 
+    @NotNull
+    String sampleSpecialRemarkTsv();
+
     @Nullable
     String comments();
 
@@ -354,6 +359,7 @@ public interface PatientReporterConfig {
 
         String germlineReportingTsv = Strings.EMPTY;
         String sampleSummaryTsv = Strings.EMPTY;
+        String sampleSpecialRemarkTsv = Strings.EMPTY;
 
         if (isQCFail && qcFailReason.isDeepWGSDataAvailable()) {
             if (requirePipelineVersion) {
@@ -388,6 +394,7 @@ public interface PatientReporterConfig {
 
             germlineReportingTsv = nonOptionalFile(cmd, GERMLINE_REPORTING_TSV);
             sampleSummaryTsv = nonOptionalFile(cmd, SAMPLE_SUMMARY_TSV);
+            sampleSpecialRemarkTsv = nonOptionalFile(cmd, SAMPLE_SPECIAL_REMARK_TSV);
         }
 
         return ImmutablePatientReporterConfig.builder()
@@ -429,6 +436,7 @@ public interface PatientReporterConfig {
                 .protectEvidenceTsv(protectEvidenceTsv)
                 .germlineReportingTsv(germlineReportingTsv)
                 .sampleSummaryTsv(sampleSummaryTsv)
+                .sampleSpecialRemarkTsv(sampleSpecialRemarkTsv)
                 .comments(cmd.getOptionValue(COMMENTS))
                 .isCorrectedReport(cmd.hasOption(CORRECTED_REPORT))
                 .isCorrectedReportExtern(cmd.hasOption(CORRECTED_REPORT_EXTERN))

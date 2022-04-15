@@ -245,6 +245,7 @@ public class PatientReporterApplication {
     private static AnalysedReportData buildAnalysedReportData(@NotNull PatientReporterConfig config) throws IOException {
         return AnalysedReportDataLoader.buildFromFiles(buildBaseReportData(config),
                 config.germlineReportingTsv(),
-                config.sampleSummaryTsv());
+                config.sampleSummaryTsv(),
+                config.sampleSpecialRemarkTsv());
     }
 }

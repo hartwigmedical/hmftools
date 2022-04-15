@@ -57,6 +57,7 @@ public class AnalysedPatientReporter {
         SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientPrimaryTumor);
 
         String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId(), sampleReport.cohort());
+        String specialRemark = reportData.specialRemarkModel().findSpecialRemarkForSample(sampleMetadata.tumorSampleId());
 
         String pipelineVersion = null;
         if (config.requirePipelineVersionFile()) {
@@ -100,6 +101,7 @@ public class AnalysedPatientReporter {
                 .sampleReport(sampleReport)
                 .qsFormNumber(qcForm)
                 .clinicalSummary(clinicalSummary)
+                .specialRemark(specialRemark)
                 .pipelineVersion(pipelineVersion)
                 .genomicAnalysis(curateGeneName)
                 .molecularTissueOrigin(curateGeneName.purpleQCStatus().contains(PurpleQCStatus.FAIL_CONTAMINATION)
@@ -153,6 +155,8 @@ public class AnalysedPatientReporter {
         LOGGER.info(" Shallow seq purity: {}", report.sampleReport().shallowSeqPurityString());
         LOGGER.info(" Lab SOPs used: {}", report.sampleReport().labProcedures());
         LOGGER.info(" Clinical summary present: {}", (!report.clinicalSummary().isEmpty() ? "yes" : "no"));
+        LOGGER.info(" Special remark present: {}", (!report.specialRemark().isEmpty() ? "yes" : "no"));
+
         LOGGER.info(" Cohort: {}", report.sampleReport().cohort().cohortId());
         LOGGER.info(" Germline reporting level: {}", report.sampleReport().germlineReportingLevel());
 

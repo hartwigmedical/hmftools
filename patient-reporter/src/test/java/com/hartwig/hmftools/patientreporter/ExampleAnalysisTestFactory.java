@@ -135,6 +135,8 @@ public final class ExampleAnalysisTestFactory {
             clinicalSummary = Strings.EMPTY;
         }
 
+        String specialremark = "This is a special remark";
+
         GenomicAnalysis analysis = ImmutableGenomicAnalysis.builder()
                 .purpleQCStatus(Sets.newHashSet(purpleQCStatus))
                 .impliedPurity(config.impliedTumorPurity())
@@ -170,6 +172,7 @@ public final class ExampleAnalysisTestFactory {
                 .sampleReport(sampleReport)
                 .qsFormNumber(config.qcForNumber().display())
                 .clinicalSummary(clinicalSummary)
+                .specialRemark(specialremark)
                 .genomicAnalysis(analysis)
                 .circosPath(REPORTER_CONFIG.purpleCircosPlot())
                 .molecularTissueOrigin(molecularTissueOrigin)
