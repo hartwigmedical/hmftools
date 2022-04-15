@@ -1131,7 +1131,7 @@ public final class ExampleAnalysisTestFactory {
                 .svId(1)
                 .clusterId(2)
                 .transcriptId(Strings.EMPTY)
-                .canonical(true)
+                .isCanonical(true)
                 .build();
 
         return Lists.newArrayList(disruption1);

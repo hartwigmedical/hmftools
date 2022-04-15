@@ -133,9 +133,9 @@ public final class CurationFunction {
     static List<ReportableGeneDisruption> curateGeneDisruptions(@NotNull List<ReportableGeneDisruption> geneDisruptions) {
         List<ReportableGeneDisruption> curateGeneDisruptions = Lists.newArrayList();
         for (ReportableGeneDisruption disruption : geneDisruptions) {
-            if (disruption.gene().equals(GENE_CDKN2A) && disruption.canonical()) {
+            if (disruption.gene().equals(GENE_CDKN2A) && disruption.isCanonical()) {
                 curateGeneDisruptions.add(ImmutableReportableGeneDisruption.builder().from(disruption).gene(GENE_CDKN2A_CANONICAL).build());
-            } else if (disruption.gene().equals(GENE_CDKN2A) && !disruption.canonical()) {
+            } else if (disruption.gene().equals(GENE_CDKN2A) && !disruption.isCanonical()) {
                 curateGeneDisruptions.add(ImmutableReportableGeneDisruption.builder()
                         .from(disruption)
                         .gene(GENE_CDKN2A_NON_CANONICAL)

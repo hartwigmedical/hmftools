@@ -155,7 +155,7 @@ public class CurationFunctionTest {
     @NotNull
     private static String findByGeneGDisruption(List<ReportableGeneDisruption> curate, @NotNull String gene, boolean isCanonical) {
         for (ReportableGeneDisruption disruption : curate) {
-            if (disruption.gene().equals(gene) && disruption.canonical() == isCanonical) {
+            if (disruption.gene().equals(gene) && disruption.isCanonical() == isCanonical) {
                 return disruption.gene();
             }
         }
@@ -281,9 +281,9 @@ public class CurationFunctionTest {
 
     @NotNull
     public List<ReportableGeneDisruption> geneDisruption() {
-        ReportableGeneDisruption disruption1 = createTestReportableGeneDisruptionBuilder().gene("NRAS").canonical(true).build();
-        ReportableGeneDisruption disruption2 = createTestReportableGeneDisruptionBuilder().gene("CDKN2A").canonical(true).build();
-        ReportableGeneDisruption disruption3 = createTestReportableGeneDisruptionBuilder().gene("CDKN2A").canonical(false).build();
+        ReportableGeneDisruption disruption1 = createTestReportableGeneDisruptionBuilder().gene("NRAS").isCanonical(true).build();
+        ReportableGeneDisruption disruption2 = createTestReportableGeneDisruptionBuilder().gene("CDKN2A").isCanonical(true).build();
+        ReportableGeneDisruption disruption3 = createTestReportableGeneDisruptionBuilder().gene("CDKN2A").isCanonical(false).build();
         return Lists.newArrayList(disruption1, disruption2, disruption3);
     }
 

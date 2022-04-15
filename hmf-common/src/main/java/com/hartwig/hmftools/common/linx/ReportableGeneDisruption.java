@@ -18,7 +18,7 @@ public abstract class ReportableGeneDisruption {
     @NotNull
     public abstract String transcriptId();
 
-    public abstract boolean canonical();
+    public abstract boolean isCanonical();
 
     @NotNull
     public abstract String range();
