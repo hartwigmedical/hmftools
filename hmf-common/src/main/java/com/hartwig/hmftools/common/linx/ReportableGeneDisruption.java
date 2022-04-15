@@ -16,6 +16,11 @@ public abstract class ReportableGeneDisruption {
     public abstract String gene();
 
     @NotNull
+    public abstract String transcriptId();
+
+    public abstract boolean canonical();
+
+    @NotNull
     public abstract String range();
 
     @NotNull

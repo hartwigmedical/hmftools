@@ -45,6 +45,8 @@ public final class ReportableGeneDisruptionFactory {
                 reportableDisruptions.add(ImmutableReportableGeneDisruption.builder()
                         .location(primaryDisruptionLeft.chromosome() + primaryDisruptionLeft.chrBand())
                         .gene(primaryDisruptionLeft.gene())
+                        .transcriptId(primaryDisruptionLeft.transcriptId())
+                        .canonical(primaryDisruptionLeft.canonical())
                         .type(primaryDisruptionLeft.type())
                         .range(rangeField(pairedDisruption))
                         .junctionCopyNumber(primaryDisruptionLeft.junctionCopyNumber())
@@ -57,6 +59,8 @@ public final class ReportableGeneDisruptionFactory {
                 reportableDisruptions.add(ImmutableReportableGeneDisruption.builder()
                         .location(primaryDisruptionLeft.chromosome() + primaryDisruptionLeft.chrBand())
                         .gene(primaryDisruptionLeft.gene())
+                        .transcriptId(primaryDisruptionLeft.transcriptId())
+                        .canonical(primaryDisruptionLeft.canonical())
                         .type(primaryDisruptionLeft.type())
                         .range(rangeField(pairedDisruption))
                         .junctionCopyNumber(primaryDisruptionLeft.junctionCopyNumber())
@@ -69,7 +73,6 @@ public final class ReportableGeneDisruptionFactory {
         }
         return reportableDisruptions;
     }
-
 
     public static Integer determineClusterId(@NotNull LinxBreakend primaryDisruptionLeft, @NotNull List<LinxSvAnnotation> linxSvs) {
         for (LinxSvAnnotation linxSvAnnotation : linxSvs) {
