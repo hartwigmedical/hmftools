@@ -97,7 +97,7 @@ public class BamReadCounter implements Callable
         {
             currentGeneIndex = findNextOverlappingGenes(mGeneDataList, currentGeneIndex, overlappingGenes);
 
-            if(overlappingGenes.stream().anyMatch(x -> mConfig.EnrichedGeneIds.contains(x.GeneId)))
+            if(overlappingGenes.stream().anyMatch(x -> mConfig.Filters.EnrichedGeneIds.contains(x.GeneId)))
                 continue;
 
             mCurrentGenesRange[SE_START] = 0;

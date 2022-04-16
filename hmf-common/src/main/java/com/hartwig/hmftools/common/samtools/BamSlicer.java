@@ -52,13 +52,13 @@ public class BamSlicer
         if(queryIntervals == null)
             return;
 
-        try (final SAMRecordIterator iterator = samReader.queryOverlapping(queryIntervals))
+        try(final SAMRecordIterator iterator = samReader.queryOverlapping(queryIntervals))
         {
-            while (!mConsumerHalt && iterator.hasNext())
+            while(!mConsumerHalt && iterator.hasNext())
             {
                 final SAMRecord record = iterator.next();
 
-                if (passesFilters(record))
+                if(passesFilters(record))
                 {
                     consumer.accept(record);
                 }
@@ -88,7 +88,7 @@ public class BamSlicer
         if(queryIntervals == null)
             return records;
 
-        try (final SAMRecordIterator iterator = samReader.queryOverlapping(queryIntervals))
+        try(final SAMRecordIterator iterator = samReader.queryOverlapping(queryIntervals))
         {
             while (iterator.hasNext())
             {
@@ -116,12 +116,12 @@ public class BamSlicer
     {
         final QueryInterval[] queryIntervals = new QueryInterval[regions.size()];
 
-        for (int i = 0; i < regions.size(); ++i)
+        for(int i = 0; i < regions.size(); ++i)
         {
             final ChrBaseRegion region = regions.get(i);
             int sequenceIndex = header.getSequenceIndex(region.Chromosome);
 
-            if (sequenceIndex < 0)
+            if(sequenceIndex < 0)
             {
                 logger.error("cannot find sequence index for chromosome {} in bam header", region.Chromosome);
                 return null;

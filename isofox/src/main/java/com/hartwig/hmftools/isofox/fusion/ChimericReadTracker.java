@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.isofox.fusion;
 
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -143,9 +144,29 @@ public class ChimericReadTracker
         mCandidateRealignedReadMap.put(read1.Id, new ReadGroup(read1, read2));
     }
 
+    private boolean inExcludedRegion(final ReadRecord read, boolean checkMate)
+    {
+        // check the read and its supplementary data if present
+        if(mGeneCollection.inEnrichedRegion(read.PosStart, read.PosEnd))
+            return true;
+
+        if(checkMate && mConfig.Filters.skipRead(read.mateChromosome(), read.mateStartPosition()))
+            return true;
+
+        if(read.hasSuppAlignment())
+        {
+            SupplementaryReadData suppData = SupplementaryReadData.from(read.getSuppAlignment());
+
+            if(suppData != null && mConfig.Filters.skipRead(suppData.Chromosome, suppData.Position))
+                return true;
+        }
+
+        return false;
+    }
+
     public void addChimericReadPair(final ReadRecord read1, final ReadRecord read2)
     {
-        if(mGeneCollection.inEnrichedRegion(read1.PosStart, read1.PosEnd) || mGeneCollection.inEnrichedRegion(read2.PosStart, read2.PosEnd))
+        if(inExcludedRegion(read1, false) || inExcludedRegion(read2, false))
             return;
 
         if(!read1.isDuplicate() && !read2.isDuplicate())
@@ -197,7 +218,7 @@ public class ChimericReadTracker
         {
             final ReadRecord read = (ReadRecord)object;
 
-            if(read.isMateUnmapped() || mGeneCollection.inEnrichedRegion(read.PosStart, read.PosEnd))
+            if(read.isMateUnmapped() || inExcludedRegion(read, true))
                 continue;
 
             if(!read.isDuplicate())

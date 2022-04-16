@@ -80,7 +80,7 @@ public class ChimericReadTest
         ReadRecord read1 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
         read1.setFlag(FIRST_OF_PAIR, true);
         ReadRecord read2 = createMappedRead(readId, gc1, 1081, 1100, createCigar(0, 20, 20));
-        read2.setSuppAlignment("supp");
+        read2.setSuppAlignment(TEST_SUPP_DATA);
 
         chimericRT.addChimericReadPair(read1, read2);
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
@@ -94,7 +94,7 @@ public class ChimericReadTest
         chimericRT.clear();
 
         ReadRecord read3 = createMappedRead(++readId, gc1, 1081, 1100, createCigar(0, 20, 20));
-        read3.setSuppAlignment("supp");
+        read3.setSuppAlignment(TEST_SUPP_DATA);
         fragTracker.checkRead(read3);
 
         // realignable read pair supporting a junction
@@ -112,6 +112,8 @@ public class ChimericReadTest
         assertEquals(1, chimericRT.getJunctionPositions().size());
         assertEquals(1100, chimericRT.getJunctionPositions().iterator().next().intValue());
     }
+
+    public static final String TEST_SUPP_DATA = "21;42870046;-;46S30M;255;0;";
 
     @Test
     public void testSameGeneCollection()

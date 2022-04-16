@@ -109,11 +109,11 @@ public class NeoEpitopeReader
 
     private boolean filterOnRestrictedGenes(final NeoEpitopeData neData)
     {
-        if(mConfig.RestrictedGeneIds.isEmpty())
+        if(mConfig.Filters.RestrictedGeneIds.isEmpty())
             return true;
 
-        return mConfig.RestrictedGeneIds.contains(neData.Source.GeneIds[FS_UP])
-                && mConfig.RestrictedGeneIds.contains(neData.Source.GeneIds[FS_DOWN]);
+        return mConfig.Filters.RestrictedGeneIds.contains(neData.Source.GeneIds[FS_UP])
+                && mConfig.Filters.RestrictedGeneIds.contains(neData.Source.GeneIds[FS_DOWN]);
     }
 
     public void calcFragmentSupport()

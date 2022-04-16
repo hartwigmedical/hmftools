@@ -103,7 +103,7 @@ public class PerformanceTracking
         if(!config.RunPerfChecks)
             return;
 
-        ISF_LOGGER.info("stage({}) memory({})", stage, calcCurrentMemoryUsage(false));
+        ISF_LOGGER.info("stage({}) memory({})", stage, calcCurrentMemoryUsage(true));
     }
 
 }

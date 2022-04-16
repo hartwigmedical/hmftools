@@ -83,7 +83,7 @@ public class ExpressionCacheTask implements Callable
 
             for(GeneReadData geneReadData : geneReadDataList)
             {
-                if(mConfig.EnrichedGeneIds.contains(geneReadData.GeneData.GeneId))
+                if(mConfig.Filters.EnrichedGeneIds.contains(geneReadData.GeneData.GeneId))
                 {
                     geneCollection.setEnrichedTranscripts(mGeneTransCache.getTranscripts(geneReadData.GeneData.GeneId));
                 }

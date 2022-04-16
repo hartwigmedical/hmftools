@@ -86,13 +86,15 @@ public class Isofox
 
         mGeneTransCache = new EnsemblDataCache(cmd, config.RefGenVersion);
 
-        if(!mConfig.RestrictedGeneIds.isEmpty())
+        if(!mConfig.Filters.RestrictedGeneIds.isEmpty())
         {
-            mGeneTransCache.setRestrictedGeneIdList(mConfig.RestrictedGeneIds);
+            mGeneTransCache.setRestrictedGeneIdList(mConfig.Filters.RestrictedGeneIds);
         }
 
         mGeneTransCache.setRequiredData(true, false, false, mConfig.CanonicalTranscriptOnly);
         mGeneTransCache.load(false);
+
+        mConfig.Filters.buildGeneRegions(mGeneTransCache);
 
         mExpectedCountsCache = mConfig.ExpCountsFile != null || mConfig.applyGcBiasAdjust() ? new ExpectedCountsCache(mConfig) : null;
 
@@ -283,7 +285,7 @@ public class Isofox
             convertToPercentages(percentData);
             writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "ALL_PERC", percentData, true);
 
-            if(!mConfig.EnrichedGeneIds.isEmpty())
+            if(!mConfig.Filters.EnrichedGeneIds.isEmpty())
                 writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "NON_ENRICHED", nonEnrichedGcRatioCounts.getCounts(), false);
 
             if(mConfig.applyGcBiasAdjust())
@@ -304,7 +306,7 @@ public class Isofox
         final List<GeneCollectionSummary> geneSummaryData = Lists.newArrayList();
         chrTasks.stream().forEach(x -> geneSummaryData.addAll(x.getGeneCollectionSummaryData()));
 
-        double[] tpmFactors = calcTpmFactors(geneSummaryData, mConfig.EnrichedGeneIds);
+        double[] tpmFactors = calcTpmFactors(geneSummaryData, mConfig.Filters.EnrichedGeneIds);
         chrTasks.forEach(x -> setTranscriptsPerMillion(x.getGeneCollectionSummaryData(), tpmFactors));
 
         chrTasks.forEach(x -> x.writeResults());
@@ -332,21 +334,21 @@ public class Isofox
 
     private Map<String,List<GeneData>> getChromosomeGeneLists()
     {
-        if(mConfig.SpecificRegions.isEmpty() && mConfig.SpecificChromosomes.isEmpty())
+        if(mConfig.Filters.SpecificRegions.isEmpty() && mConfig.Filters.SpecificChromosomes.isEmpty())
             return mGeneTransCache.getChrGeneDataMap();
 
         final Map<String,List<GeneData>> chrGeneMap = Maps.newHashMap();
 
-        if(mConfig.SpecificRegions.isEmpty())
+        if(mConfig.Filters.SpecificRegions.isEmpty())
         {
             mGeneTransCache.getChrGeneDataMap().entrySet().stream()
-                    .filter(x -> mConfig.SpecificChromosomes.contains(x.getKey()))
+                    .filter(x -> mConfig.Filters.SpecificChromosomes.contains(x.getKey()))
                     .filter(x -> !x.getValue().isEmpty())
                     .forEach(x -> chrGeneMap.put(x.getKey(), x.getValue()));
         }
         else
         {
-            for(final ChrBaseRegion region : mConfig.SpecificRegions)
+            for(final ChrBaseRegion region : mConfig.Filters.SpecificRegions)
             {
                 List<GeneData> geneDataList = mGeneTransCache.getChrGeneDataMap().get(region.Chromosome);
 

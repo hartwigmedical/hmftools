@@ -124,9 +124,7 @@ public class FragmentSizeCalcs implements Callable
     @Override
     public Long call()
     {
-        mPerfCounter.start();
         calcSampleFragmentSize();
-        mPerfCounter.stop();
         return (long)0;
     }
 
@@ -139,7 +137,7 @@ public class FragmentSizeCalcs implements Callable
         }
 
         // walk through each chromosome, taking groups of overlapping genes together
-        ISF_LOGGER.info("calculating fragment size for chromosome({}) geneCount({})", mChromosome, mGeneDataList.size());
+        ISF_LOGGER.debug("calculating fragment size for chromosome({}) geneCount({})", mChromosome, mGeneDataList.size());
 
         List<int[]> excludedRegions = generateExcludedRegions();
 
@@ -151,7 +149,7 @@ public class FragmentSizeCalcs implements Callable
         {
             currentGeneIndex = findNextOverlappingGenes(mGeneDataList, currentGeneIndex, overlappingGenes);
 
-            if(overlappingGenes.stream().anyMatch(x -> mConfig.containsExcludedEnrichedGene(x.GeneId)))
+            if(overlappingGenes.stream().anyMatch(x -> mConfig.Filters.containsExcludedEnrichedGene(x.GeneId)))
                 continue;
 
             mCurrentTransDataList.clear();
@@ -248,7 +246,7 @@ public class FragmentSizeCalcs implements Callable
     {
         // create a buffer around the enriched gene to avoid excessive reads in this vicinity
         final List<int[]> excludedRegions = Lists.newArrayList();
-        for(final String geneId : mConfig.EnrichedGeneIds)
+        for(final String geneId : mConfig.Filters.EnrichedGeneIds)
         {
             final GeneData geneData = mGeneTransCache.getGeneDataById(geneId);
             if(geneData == null)

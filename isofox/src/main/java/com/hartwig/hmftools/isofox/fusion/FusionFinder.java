@@ -23,6 +23,8 @@ import static com.hartwig.hmftools.isofox.fusion.FusionUtils.checkMissingGeneDat
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 import static com.hartwig.hmftools.isofox.fusion.ReadGroup.mergeChimericReadMaps;
 
+import static org.apache.logging.log4j.Level.INFO;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,6 +45,8 @@ import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
+import org.apache.logging.log4j.Level;
+
 public class FusionFinder implements Callable
 {
     private final String mTaskId;
@@ -62,13 +66,12 @@ public class FusionFinder implements Callable
     private final Map<String,List<FusionFragment>> mRealignCandidateFragments; // keyed by chr + gene collectionId
 
     private final FusionWriter mFusionWriter;
-    private final FusionGeneFilters mGeneFilters;
 
     private final PerformanceCounter mPerfCounter;
 
     public FusionFinder(
             final String taskId, final IsofoxConfig config, final EnsemblDataCache geneTransCache,
-            final FusionGeneFilters fusionGeneFilters, final PassingFusions passingFusions, final FusionWriter fusionWriter)
+            final PassingFusions passingFusions, final FusionWriter fusionWriter)
     {
         mTaskId = taskId;
         mConfig = config;
@@ -87,7 +90,6 @@ public class FusionFinder implements Callable
         mRealignCandidateFragments = Maps.newHashMap();
 
         mFusionWriter = fusionWriter;
-        mGeneFilters = fusionGeneFilters;
 
         mPerfCounter = new PerformanceCounter("FusionTask");
    }
@@ -285,31 +287,25 @@ public class FusionFinder implements Callable
         mPerfCounter.start();
 
         // first turn them into fragments, then look for fusions
-        ISF_LOGGER.debug("chr({}) processing {} {} chimeric read groups",
+        Level logLevel = isInterChromosomal ? Level.INFO : Level.DEBUG;
+        ISF_LOGGER.log(logLevel, "task({}) processing {} {} chimeric read groups",
                 mTaskId, readGroups.size(), isInterChromosomal ? "inter-chromosome" : "local");
 
         int readGroupCount = 0;
-        int nextLog = LOG_COUNT;
 
         for(ReadGroup readGroup : readGroups)
         {
             ++readGroupCount;
 
-            if(readGroupCount >= nextLog)
+            if(readGroupCount > 0 && (readGroupCount % LOG_COUNT) == 0)
             {
-                nextLog += LOG_COUNT;
-                ISF_LOGGER.info("chr({}) processed {} {} chimeric read groups",
-                        mTaskId, isInterChromosomal ? "inter-chromosome" : "local", readGroupCount);
+                ISF_LOGGER.info("task({}) processed {} {} chimeric read groups",
+                        mTaskId, readGroupCount, isInterChromosomal ? "inter-chromosome" : "local");
             }
 
             final List<ReadRecord> reads = readGroup.Reads;
 
-            if(reads.get(0).Id.equals(LOG_READ_ID))
-            {
-                ISF_LOGGER.debug("specific read: {}", reads.get(0));
-            }
-
-            if(reads.stream().anyMatch(x -> mGeneFilters.skipRead(x.mateChromosome(), x.mateStartPosition())))
+            if(reads.stream().anyMatch(x -> mConfig.Filters.skipRead(x.mateChromosome(), x.mateStartPosition())))
                 continue;
 
             FusionFragment fragment = new FusionFragment(readGroup);
@@ -333,7 +329,7 @@ public class FusionFinder implements Callable
 
         if(readGroupCount > LOG_COUNT)
         {
-            ISF_LOGGER.info("{}: fusion task complete, fusions({}) unassigned(disc={} realgn={})",
+            ISF_LOGGER.info("task({}) fusion task complete, fusions({}) unassigned(disc={} realgn={})",
                     mTaskId, mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum(),
                     mDiscordantFragments.values().stream().mapToInt(x -> x.size()).sum(),
                     mRealignCandidateFragments.values().stream().mapToInt(x -> x.size()).sum());
@@ -403,7 +399,7 @@ public class FusionFinder implements Callable
             }
         }
 
-        ISF_LOGGER.debug("{}: chimeric fragments({} disc={} candRealgn={} junc={}) fusions(loc={} gene={} total={})",
+        ISF_LOGGER.debug("task({}) chimeric fragments({} disc={} candRealgn={} junc={}) fusions(loc={} gene={} total={})",
                 mTaskId, mAllFragments.size(), mDiscordantFragments.values().stream().mapToInt(x -> x.size()).sum(),
                 mRealignCandidateFragments.values().stream().mapToInt(x -> x.size()).sum(), junctioned,
                 mFusionCandidates.size(), mFusionsByGene.size(), mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum());
@@ -440,7 +436,7 @@ public class FusionFinder implements Callable
 
             List<FusionData> passingFusions = mPassingFusions.findPassingFusions(allFusions);
 
-            ISF_LOGGER.debug("{}: passing fusions({}) from total({})", passingFusions.size(), allFusions.size());
+            ISF_LOGGER.debug("task({}) passing fusions({}) from total({})", mTaskId, passingFusions.size(), allFusions.size());
 
             mFusionWriter.writeFusionData(allFusions, passingFusions, mFusionCandidates);
         }

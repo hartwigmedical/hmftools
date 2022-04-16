@@ -136,17 +136,17 @@ public class GeneCollection
 
     public void markEnrichedAndExcludedGenes(final IsofoxConfig config, final EnsemblDataCache geneTransCache)
     {
-        if(!config.ExcludedGeneIds.isEmpty() && mGeneIds.stream().anyMatch(x -> config.ExcludedGeneIds.contains(x)))
+        if(!config.Filters.ExcludedGeneIds.isEmpty() && mGeneIds.stream().anyMatch(x -> config.Filters.ExcludedGeneIds.contains(x)))
         {
             mContainsExcludedGene = true;
         }
 
-        if(config.EnrichedGeneIds.isEmpty())
+        if(config.Filters.EnrichedGeneIds.isEmpty())
             return;
 
         for(GeneReadData geneReadData : mGenes)
         {
-            if(config.EnrichedGeneIds.contains(geneReadData.GeneData.GeneId))
+            if(config.Filters.EnrichedGeneIds.contains(geneReadData.GeneData.GeneId))
             {
                 mEnrichedTranscripts = Lists.newArrayList(geneTransCache.getTranscripts(geneReadData.GeneData.GeneId));
                 mEnrichedRegion = new int[SE_PAIR];

@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.isofox.IsofoxFunction.RETAINED_INTRONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
-import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_TRANS_COUNTS;
 import static com.hartwig.hmftools.isofox.common.GeneReadData.createGeneReadData;
 import static com.hartwig.hmftools.isofox.common.PerformanceTracking.PERF_FIT;
 import static com.hartwig.hmftools.isofox.common.PerformanceTracking.PERF_FUSIONS;
@@ -18,6 +17,7 @@ import static com.hartwig.hmftools.isofox.common.PerformanceTracking.PERF_GC_ADJ
 import static com.hartwig.hmftools.isofox.common.PerformanceTracking.PERF_NOVEL_LOCATIONS;
 import static com.hartwig.hmftools.isofox.common.PerformanceTracking.PERF_READS;
 import static com.hartwig.hmftools.isofox.common.PerformanceTracking.PERF_TOTAL;
+import static com.hartwig.hmftools.isofox.common.PerformanceTracking.logMemory;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findUniqueBases;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.getChromosomeLength;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -41,7 +41,6 @@ import com.hartwig.hmftools.isofox.common.PerformanceTracking;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.expression.ExpectedCountsCache;
 import com.hartwig.hmftools.isofox.expression.ExpectedRatesData;
-import com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator;
 import com.hartwig.hmftools.isofox.expression.TranscriptExpression;
 import com.hartwig.hmftools.isofox.expression.GeneCollectionSummary;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
@@ -178,14 +177,17 @@ public class BamFragmentReader implements Callable
         int nextLogCount = 100;
         int lastGeneCollectionEndPosition = 1;
 
-        boolean genesFiltered = !mConfig.RestrictedGeneIds.isEmpty() || !mConfig.SpecificRegions.isEmpty();
+        boolean genesFiltered = !mConfig.Filters.RestrictedGeneIds.isEmpty() || !mConfig.Filters.SpecificRegions.isEmpty();
 
         while(mCurrentGeneIndex < mGeneDataList.size())
         {
             mCurrentGeneIndex = findNextOverlappingGenes(mGeneDataList, mCurrentGeneIndex, overlappingGenes);
 
-            if(!mConfig.ExcludedGeneIds.isEmpty() && overlappingGenes.stream().anyMatch(x -> mConfig.ExcludedGeneIds.contains(x.GeneId)))
+            if(!mConfig.Filters.ExcludedGeneIds.isEmpty()
+            && overlappingGenes.stream().anyMatch(x -> mConfig.Filters.ExcludedGeneIds.contains(x.GeneId)))
+            {
                 continue;
+            }
 
             final List<GeneReadData> geneReadDataList = createGeneReadData(overlappingGenes, mGeneTransCache);
 
@@ -225,7 +227,6 @@ public class BamFragmentReader implements Callable
 
             mPerfCounters[PERF_TOTAL].start();
 
-            // at the moment it is one or the other
             analyseBamReads(geneCollection);
 
             mPerfCounters[PERF_TOTAL].stop();
@@ -238,7 +239,7 @@ public class BamFragmentReader implements Callable
 
             lastGeneCollectionEndPosition = geneCollection.regionBounds()[SE_END] + 1;
 
-            if (mGenesProcessed >= nextLogCount)
+            if(mGenesProcessed >= nextLogCount)
             {
                 nextLogCount += 100;
                 ISF_LOGGER.info("chr({}) processed {} of {} genes", mChromosome, mGenesProcessed, mGeneDataList.size());
@@ -264,14 +265,13 @@ public class BamFragmentReader implements Callable
             // first organise incomplete reads into the chromosomes which they want to link to
             final Map<String,Map<String,ReadGroup>> chrIncompleteReadsGroups = mFusionFinder.extractIncompleteReadGroups(mChromosome);
             final Map<String,List<FusionFragment>> racFragments = mFusionFinder.extractRealignCandidateFragments(chrIncompleteReadsGroups);
-            // final Map<String,List<FusionFragment>> racFragments = mFusionFinder.getRealignCandidateFragments();
 
             final List<ReadGroup> interChromosomalGroups = mFusionTaskManager.addIncompleteReadGroup(
                     mChromosome, chrIncompleteReadsGroups, racFragments);
 
             if(!interChromosomalGroups.isEmpty())
             {
-                ISF_LOGGER.info("chr({}) processing {} inter-chromosomal groups", mChromosome, interChromosomalGroups.size());
+                // ISF_LOGGER.info("chr({}) processing {} inter-chromosomal groups", mChromosome, interChromosomalGroups.size());
 
                 mFusionFinder.processInterChromosomalReadGroups(interChromosomalGroups);
 
@@ -286,6 +286,8 @@ public class BamFragmentReader implements Callable
         {
             ISF_LOGGER.info("chr({}) processing complete", mChromosome);
         }
+
+        logMemory(mConfig, String.format("chr(%s)-Complete", mChromosome));
     }
 
     public static int findNextOverlappingGenes(
@@ -317,7 +319,7 @@ public class BamFragmentReader implements Callable
         // cache reference bases for comparison with read bases
         if(mConfig.RefGenomeFile != null)
         {
-            for (RegionReadData region : geneCollection.getExonRegions())
+            for(RegionReadData region : geneCollection.getExonRegions())
             {
                 final String regionRefBases = mConfig.RefGenome.getBaseString(region.chromosome(), region.start(), region.end());
                 region.setRefBases(regionRefBases);
@@ -378,12 +380,12 @@ public class BamFragmentReader implements Callable
 
         mGeneCollectionSummaryData.add(geneCollectionSummary);
 
-        if (ISF_LOGGER.isDebugEnabled())
+        if(ISF_LOGGER.isDebugEnabled())
         {
             double allCategoryTotals = mBamFragmentAllocator.getTransComboData().stream()
                     .mapToDouble(x -> x.fragmentCount()).sum();
 
-            if (allCategoryTotals > 0)
+            if(allCategoryTotals > 0)
             {
                 double transCategoryTotals = mBamFragmentAllocator.getTransComboData().stream()
                         .filter(x -> !x.transcriptIds().isEmpty())
@@ -398,7 +400,7 @@ public class BamFragmentReader implements Callable
                     mGeneCollectionSummaryData.stream().mapToInt(x -> x.TransCategoryCounts.size()).sum());
         }
 
-        if (mExpTransRates != null)
+        if(mExpTransRates != null)
         {
             ExpectedRatesData expRatesData = null;
 
@@ -411,39 +413,40 @@ public class BamFragmentReader implements Callable
             mPerfCounters[PERF_FIT].stop();
         }
 
-        for (GeneReadData geneReadData : geneCollection.genes())
+        for(GeneReadData geneReadData : geneCollection.genes())
         {
             collectResults(geneCollection, geneCollectionSummary, geneReadData);
 
-            if (mConfig.WriteExonData)
+            if(mConfig.WriteExonData)
             {
                 geneReadData.getTranscripts().forEach(x -> mResultsWriter.writeExonData(geneReadData, x));
             }
         }
 
-        if (!mConfig.EnrichedGeneIds.isEmpty())
+        if(!mConfig.Filters.EnrichedGeneIds.isEmpty())
         {
-            int enrichedGeneFragments = geneCollection.genes().stream().anyMatch(x -> mConfig.EnrichedGeneIds.contains(x.GeneData.GeneId))
+            int enrichedGeneFragments = geneCollection.genes().stream()
+                    .anyMatch(x -> mConfig.Filters.EnrichedGeneIds.contains(x.GeneData.GeneId))
                     ? geneCollection.getCounts()[typeAsInt(TOTAL)] : 0;
 
-            if (enrichedGeneFragments > 0)
+            if(enrichedGeneFragments > 0)
             {
                 mEnrichedGenesFragmentCount += enrichedGeneFragments;
             }
             else
             {
-                if (mBamFragmentAllocator.getGeneGcRatioCounts() != null)
+                if(mBamFragmentAllocator.getGeneGcRatioCounts() != null)
                     mNonEnrichedGcRatioCounts.mergeRatioCounts(mBamFragmentAllocator.getGeneGcRatioCounts().getCounts());
             }
         }
         else
         {
             // take them all
-            if (mBamFragmentAllocator.getGeneGcRatioCounts() != null)
+            if(mBamFragmentAllocator.getGeneGcRatioCounts() != null)
                 mNonEnrichedGcRatioCounts.mergeRatioCounts(mBamFragmentAllocator.getGeneGcRatioCounts().getCounts());
         }
 
-        for (int i = 0; i < mCombinedFragmentCounts.length; ++i)
+        for(int i = 0; i < mCombinedFragmentCounts.length; ++i)
         {
             mCombinedFragmentCounts[i] += geneCollection.getCounts()[i];
         }
@@ -488,9 +491,16 @@ public class BamFragmentReader implements Callable
                 geneCollection, mBamFragmentAllocator.getBaseDepth(),
                 mBamFragmentAllocator.getChimericReadTracker().getReadMap());
 
+        mChimericStats.merge(mBamFragmentAllocator.getChimericReadTracker().getStats());
+
+        if(completeReadGroups.size() >= 10000)
+        {
+            ISF_LOGGER.info("chr({}) genes({}) found {} local chimeric read groups, stats: {}",
+                    mChromosome, geneCollection.geneNames(), completeReadGroups.size(), mChimericStats);
+        }
+
         mFusionFinder.processLocalReadGroups(completeReadGroups);
 
-        mChimericStats.merge(mBamFragmentAllocator.getChimericReadTracker().getStats());
         mPerfCounters[PERF_FUSIONS].pause();
     }
 
@@ -524,7 +534,7 @@ public class BamFragmentReader implements Callable
     private void collectResults(
             final GeneCollection geneCollection, final GeneCollectionSummary geneCollectionSummary, final GeneReadData geneReadData)
     {
-        for (final TranscriptData transData : geneReadData.getTranscripts())
+        for(final TranscriptData transData : geneReadData.getTranscripts())
         {
             final TranscriptResult results = new TranscriptResult(geneCollection, geneReadData, transData, mConfig.FragmentSizeData);
 
@@ -547,7 +557,7 @@ public class BamFragmentReader implements Callable
     {
         for(final GeneCollectionSummary geneCollectionResult : mGeneCollectionSummaryData)
         {
-            for (final GeneResult geneResult : geneCollectionResult.GeneResults)
+            for(final GeneResult geneResult : geneCollectionResult.GeneResults)
             {
                 mResultsWriter.writeGeneResult(geneResult);
             }

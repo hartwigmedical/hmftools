@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.EXCLUDED_GENE_ID_FILE;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_ID_FILE;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.EXPRESSION_DISTRIBUTION;
@@ -23,6 +22,7 @@ import static com.hartwig.hmftools.isofox.cohort.AnalysisType.GENE_EXPRESSION_CO
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.GENE_EXPRESSION_MATRIX;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.TRANSCRIPT_EXPRESSION_MATRIX;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.getIsofoxFileId;
+import static com.hartwig.hmftools.isofox.common.GeneRegionFilters.EXCLUDED_GENE_ID_FILE;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;

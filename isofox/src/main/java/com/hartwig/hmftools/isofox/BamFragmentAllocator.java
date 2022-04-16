@@ -137,7 +137,7 @@ public class BamFragmentAllocator
 
         // duplicates aren't counted towards fusions so can be ignored if only running fusions
         // reads with supplementary alignment data are only used for fusions
-        boolean keepDuplicates = mConfig.runFunction(TRANSCRIPT_COUNTS);
+        boolean keepDuplicates = mRunFusions || mConfig.runFunction(TRANSCRIPT_COUNTS);
         boolean keepSupplementaries = mRunFusions || mConfig.runFunction(ALT_SPLICE_JUNCTIONS) || mConfig.runFunction(UNMAPPED_READS);
         boolean keepSecondaries = true; // now always used
         int minMapQuality = keepSecondaries ? 0 : SINGLE_MAP_QUALITY;
@@ -213,10 +213,10 @@ public class BamFragmentAllocator
         mValidReadStartRegion[SE_START] = geneRegion.start();
         mValidReadStartRegion[SE_END] = geneRegion.end();
 
-        if(mConfig.ExcludedRegion != null && geneRegion.overlaps(mConfig.ExcludedRegion))
+        if(mConfig.Filters.ExcludedRegion != null && geneRegion.overlaps(mConfig.Filters.ExcludedRegion))
         {
             // special handling to avoid any specified enriched region (in this case LINC00486's poly-G sequence)
-            mExcludedRegion = mConfig.ExcludedRegion;
+            mExcludedRegion = mConfig.Filters.ExcludedRegion;
             final ChrBaseRegion preRegion = new ChrBaseRegion(geneRegion.Chromosome, geneRegion.start(), mExcludedRegion.start() - 100);
             final ChrBaseRegion postRegion = new ChrBaseRegion(geneRegion.Chromosome, mExcludedRegion.end() + 100, geneRegion.end());
             mBamSlicer.slice(mSamReader, Lists.newArrayList(preRegion), this::processSamRecord);
@@ -254,7 +254,7 @@ public class BamFragmentAllocator
         if(!positionWithin(record.getStart(), mValidReadStartRegion[SE_START], mValidReadStartRegion[SE_END]))
             return;
 
-        if(excludeRegion(record))
+        if(inExcludeRegion(record))
             return;
 
         if(mCurrentGenes.inEnrichedRegion(record.getStart(), record.getEnd()))
@@ -693,13 +693,19 @@ public class BamFragmentAllocator
         return transcriptBases;
     }
 
-    private boolean excludeRegion(final SAMRecord record)
+    private boolean inExcludeRegion(final SAMRecord record)
     {
         if(mExcludedRegion == null)
             return false;
 
-        return (mExcludedRegion.containsPosition(record.getStart()) || mExcludedRegion.containsPosition(record.getEnd())
-                || mExcludedRegion.containsPosition(record.getMateAlignmentStart()));
+        if(mExcludedRegion.containsPosition(record.getStart()) || mExcludedRegion.containsPosition(record.getEnd()))
+            return true;
+
+        // check the mate as well
+        if(record.getContig() != null && mConfig.Filters.ExcludedRegion.containsPosition(record.getMateReferenceName(), record.getMateAlignmentStart()))
+            return true;
+
+        return false;
     }
 
     private void processEnrichedRegionRead(final SAMRecord record)

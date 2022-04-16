@@ -173,11 +173,49 @@ public class FusionWriter
             }
 
             mFragmentWriter.newLine();
-
         }
         catch (IOException e)
         {
             ISF_LOGGER.error("failed to write chimeric fragment data: {}", e.toString());
+            return;
+        }
+    }
+
+    public void writeIncompleteGroupReads(final List<ReadGroup> incompleteGroups)
+    {
+        try
+        {
+            final String outputFileName = mConfig.formOutputFile("incomplete_chim_group_reads.csv");
+
+            BufferedWriter writer = createBufferedWriter(outputFileName, false);
+            writer.write("ReadId,ReadGroupSize,Chromosome,PosStart,PosEnd,Cigar,InsertSize");
+            writer.write(",MateChr,MatePosStart,FirstInPair,ReadReversed,SuppData,GeneCollectionStart,GeneCollectionEnd");
+            writer.newLine();
+
+            for(ReadGroup readGroup : incompleteGroups)
+            {
+                for(ReadRecord read : readGroup.Reads)
+                {
+                    if(mConfig.Filters.excludeChromosome(read.mateChromosome()))
+                        continue;
+
+                    writer.write(String.format("%s,%d,%s,%d,%d,%s,%d",
+                            read.Id, readGroup.size(), read.Chromosome, read.PosStart, read.PosEnd, read.Cigar.toString(),
+                            read.fragmentInsertSize()));
+
+                    writer.write(String.format(",%s,%d,%s,%s,%s,%d,%d",
+                            read.mateChromosome(), read.mateStartPosition(), read.isFirstOfPair(), read.isReadReversed(),
+                            read.getSuppAlignmentCsv(), read.getGeneCollectons()[SE_START], read.getGeneCollectons()[SE_END]));
+
+                    writer.newLine();
+                }
+            }
+
+            writer.close();
+        }
+        catch (IOException e)
+        {
+            ISF_LOGGER.error("failed to write incomplete chimeric fragment data: {}", e.toString());
             return;
         }
     }

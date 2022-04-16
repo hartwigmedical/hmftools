@@ -29,7 +29,6 @@ public class FusionTaskManager
 
     private final List<FusionFinder> mFusionTasks;
     private final FusionWriter mFusionWriter;
-    private final FusionGeneFilters mGeneFilters;
     private final PassingFusions mPassingFusions;
 
     private final Map<String,List<FusionFragment>> mRealignCandidateMap;
@@ -44,8 +43,6 @@ public class FusionTaskManager
 
         mFusionTasks = Lists.newArrayList();
 
-        mGeneFilters = new FusionGeneFilters(config, geneTransCache);
-
         mPassingFusions = new PassingFusions(config.Fusions.KnownFusions, config.Fusions.CohortFile);
 
         mRealignCandidateMap = Maps.newHashMap();
@@ -57,7 +54,7 @@ public class FusionTaskManager
 
     public FusionFinder createFusionFinder(final String id)
     {
-        return new FusionFinder(id, mConfig, mGeneTransCache, mGeneFilters, mPassingFusions, mFusionWriter);
+        return new FusionFinder(id, mConfig, mGeneTransCache, mPassingFusions, mFusionWriter);
     }
 
     public synchronized List<ReadGroup> addIncompleteReadGroup(
@@ -106,9 +103,10 @@ public class FusionTaskManager
         // exclude duplicate reads now that group is known (since not all reads are marked as duplicates)
         completeGroups = completeGroups.stream().filter(x -> !x.isDuplicate()).collect(Collectors.toList());
 
+        int partialGroupCount = chrIncompleteGroups.values().stream().mapToInt(x -> x.size()).sum();
+
         ISF_LOGGER.info("chr({}) chimeric groups(partial={} complete={}) total incomplete({} -> {}) racFrags({} new={})",
-                chromosome, chrIncompleteGroups.size(), completeGroups.size(), prevIncomplete, newIncomplete,
-                totalRacFrags, newRacFrags);
+                chromosome, partialGroupCount, completeGroups.size(), prevIncomplete, newIncomplete, totalRacFrags, newRacFrags);
 
         return completeGroups;
     }
@@ -120,13 +118,43 @@ public class FusionTaskManager
         long unfusedRacFrags = mRealignCandidateMap.values().stream()
                 .mapToLong(x -> x.stream().filter(y -> y.assignedFusions().isEmpty()).count()).sum();
 
-        int incompleteGroups = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
+        int incompleteGroupCount = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
 
-        ISF_LOGGER.info("all fusion tasks complete - unfused RAC frags({}) incompleteGroups({})", unfusedRacFrags, incompleteGroups);
+        ISF_LOGGER.info("all fusion tasks complete - unfused RAC frags({}) incompleteGroups({})", unfusedRacFrags, incompleteGroupCount);
 
         // write any unassigned RAC fragments
         mFusionWriter.writeUnfusedFragments(mRealignCandidateMap);
         mFusionWriter.close();
+
+        if(mConfig.RunPerfChecks)
+        {
+            List<ReadGroup> incompleteGroups = Lists.newArrayList();
+
+            for(Map.Entry<String,Map<String,ReadGroup>> chrEntry : mIncompleteReadGroups.entrySet())
+            {
+                String chromosome = chrEntry.getKey();
+
+                if(mConfig.Filters.excludeChromosome(chromosome))
+                    continue;
+
+                Map<String, ReadGroup> rgMap = chrEntry.getValue();
+                for(ReadGroup readGroup : rgMap.values())
+                {
+                    if(!mConfig.Filters.SpecificChromosomes.isEmpty())
+                    {
+                        if(readGroup.Reads.stream().anyMatch(x -> !mConfig.Filters.SpecificChromosomes.contains(x.mateChromosome())))
+                            continue;
+                    }
+
+                    if(!skipMissingReads(readGroup.Reads))
+                    {
+                        incompleteGroups.add(readGroup);
+                    }
+                }
+            }
+
+            mFusionWriter.writeIncompleteGroupReads(incompleteGroups);
+        }
     }
 
     private static final int LOG_COUNT = 100000;
@@ -144,7 +172,6 @@ public class FusionTaskManager
         int missingSuppReads = 0;
 
         int readGroupCount = 0;
-        int nextLog = LOG_COUNT;
 
         final Map<String,List<FusionFragment>> chrPairFragments = Maps.newHashMap();
 
@@ -152,21 +179,15 @@ public class FusionTaskManager
         {
             ++readGroupCount;
 
-            if(readGroupCount >= nextLog)
+            if(readGroupCount > 0 && (readGroupCount % LOG_COUNT) == 0)
             {
-                nextLog += LOG_COUNT;
                 ISF_LOGGER.info("processed {} chimeric read groups", readGroupCount);
             }
 
             boolean isComplete = readGroup.isComplete();
             final List<ReadRecord> reads = readGroup.Reads;
 
-            if(reads.get(0).Id.equals(LOG_READ_ID))
-            {
-                ISF_LOGGER.debug("specific read: {}", reads.get(0));
-            }
-
-            if(reads.stream().anyMatch(x -> mGeneFilters.skipRead(x.mateChromosome(), x.mateStartPosition())))
+            if(reads.stream().anyMatch(x -> mConfig.Filters.skipRead(x.mateChromosome(), x.mateStartPosition())))
             {
                 ++skipped;
                 continue;
@@ -275,7 +296,7 @@ public class FusionTaskManager
             {
                 SupplementaryReadData suppData = SupplementaryReadData.from(read.getSuppAlignment());
 
-                if(mGeneFilters.skipRead(suppData.Chromosome, suppData.Position))
+                if(mConfig.Filters.skipRead(suppData.Chromosome, suppData.Position))
                     return true;
 
                 ISF_LOGGER.debug("read({}) missing supp({})", read, suppData);
