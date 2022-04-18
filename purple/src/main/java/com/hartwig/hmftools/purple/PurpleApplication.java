@@ -183,46 +183,37 @@ public class PurpleApplication
         PPL_LOGGER.info("Purple complete");
     }
 
-    private SampleData loadSampleData(final String referenceId, final String tumorId, final SampleDataFiles sampleDataFiles)
+    private SampleData loadSampleData(final String referenceId, final String tumorId, final SampleDataFiles sampleDataFiles) throws Exception
     {
-        try
+        SampleData sampleData = null;
+
+        final SomaticVariantCache somaticVariantCache = new SomaticVariantCache(mConfig);
+
+        if(!mConfig.DriversOnly)
         {
-            SampleData sampleData = null;
+            // load amber and cobalt sample data
+            final AmberData amberData = new AmberData(
+                    mConfig.germlineMode() ? referenceId : tumorId, sampleDataFiles.AmberDirectory, mConfig.germlineMode(),
+                    mReferenceData.RefGenVersion);
 
-            final SomaticVariantCache somaticVariantCache = new SomaticVariantCache(mConfig);
+            final CobaltData cobaltData = new CobaltData(
+                    referenceId, tumorId, sampleDataFiles.CobaltDirectory, amberData.PatientGender,
+                    mConfig.tumorOnlyMode(), mConfig.germlineMode());
 
-            if(!mConfig.DriversOnly)
-            {
-                // load amber and cobalt sample data
-                final AmberData amberData = new AmberData(
-                        mConfig.germlineMode() ? referenceId : tumorId, sampleDataFiles.AmberDirectory, mConfig.germlineMode(),
-                        mReferenceData.RefGenVersion);
+            // load structural and somatic variants
+            final StructuralVariantCache svCache = createStructuralVariantCache(tumorId, sampleDataFiles);
 
-                final CobaltData cobaltData = new CobaltData(
-                        referenceId, tumorId, sampleDataFiles.CobaltDirectory, amberData.PatientGender,
-                        mConfig.tumorOnlyMode(), mConfig.germlineMode());
-
-                // load structural and somatic variants
-                final StructuralVariantCache svCache = createStructuralVariantCache(tumorId, sampleDataFiles);
-
-                sampleData = new SampleData(referenceId, tumorId, amberData, cobaltData, svCache, somaticVariantCache);
-            }
-            else
-            {
-                sampleData = new SampleData(referenceId, tumorId, null, null, null, somaticVariantCache);
-            }
-
-            if(mConfig.runTumor())
-                somaticVariantCache.loadSomatics(sampleDataFiles.SomaticVcfFile, mReferenceData.SomaticHotspots);
-
-            return sampleData;
+            sampleData = new SampleData(referenceId, tumorId, amberData, cobaltData, svCache, somaticVariantCache);
         }
-        catch(Exception e)
+        else
         {
-            PPL_LOGGER.error("failed processing sample({}): {}", tumorId, e.toString());
-            e.printStackTrace();
-            return null;
+            sampleData = new SampleData(referenceId, tumorId, null, null, null, somaticVariantCache);
         }
+
+        if(mConfig.runTumor())
+            somaticVariantCache.loadSomatics(sampleDataFiles.SomaticVcfFile, mReferenceData.SomaticHotspots);
+
+        return sampleData;
     }
 
     private void processSample(final String referenceId, final String tumorSample)
@@ -239,7 +230,7 @@ public class PurpleApplication
                 final SampleData sampleData = loadSampleData(referenceId, tumorSample, sampleDataFiles);
 
                 if(sampleData == null)
-                    return;
+                    System.exit(1);
 
                 performFit(referenceId, tumorSample, sampleDataFiles, sampleData);
             }
@@ -467,7 +458,7 @@ public class PurpleApplication
         }
     }
 
-    private void findDrivers(final String tumorSample) throws IOException
+    private void findDrivers(final String tumorSample) throws Exception
     {
         final String purpleDataPath = mConfig.OutputDir;
         SomaticStream somaticStream = null;

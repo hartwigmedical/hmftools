@@ -48,51 +48,44 @@ public class GermlineVariants
         return mReportableVariants;
     }
 
-    public void loadReportableVariants(final String germlineVcf)
+    public void loadReportableVariants(final String germlineVcf) throws Exception
     {
         loadGermlineVariants(germlineVcf, true);
     }
 
-    private void loadGermlineVariants(final String germlineVcf, boolean checkReported)
+    private void loadGermlineVariants(final String germlineVcf, boolean checkReported) throws Exception
     {
         if(germlineVcf.isEmpty())
             return;
 
-        try
+        VCFFileReader vcfReader = new VCFFileReader(new File(germlineVcf), false);
+
+        for(VariantContext context : vcfReader)
         {
-            VCFFileReader vcfReader = new VCFFileReader(new File(germlineVcf), false);
+            if(checkReported && !context.getAttributeAsBoolean(VariantHeader.REPORTED_FLAG, false))
+                continue;
 
-            for(VariantContext context : vcfReader)
-            {
-                if(checkReported && !context.getAttributeAsBoolean(VariantHeader.REPORTED_FLAG, false))
-                    continue;
-
-                GermlineVariant variant = new GermlineVariant(context);
-
-                if(checkReported)
-                    mReportableVariants.add(variant);
-                else
-                    mVariants.add(variant);
-            }
+            GermlineVariant variant = new GermlineVariant(context);
 
             if(checkReported)
-            {
-                PPL_LOGGER.info("load {} reported germline variants from {}", mReportableVariants.size(), germlineVcf);
-            }
+                mReportableVariants.add(variant);
             else
-            {
-                PPL_LOGGER.info("load {} germline variants from {}", mVariants.size(), germlineVcf);
-            }
+                mVariants.add(variant);
         }
-        catch(Exception e)
+
+        if(checkReported)
         {
-            PPL_LOGGER.error("failed to read germline VCF from file({}): {}", germlineVcf, e.toString());
+            PPL_LOGGER.info("load {} reported germline variants from {}", mReportableVariants.size(), germlineVcf);
+        }
+        else
+        {
+            PPL_LOGGER.info("load {} germline variants from {}", mVariants.size(), germlineVcf);
         }
     }
 
     public void processAndWrite(
             final String referenceId, final String tumorSample, final String germlineVcf, @Nullable final PurityAdjuster purityAdjuster,
-            final List<PurpleCopyNumber> copyNumbers, final Set<String> somaticReportedGenes)
+            final List<PurpleCopyNumber> copyNumbers, final Set<String> somaticReportedGenes) throws Exception
     {
         mReportableVariants.clear();
 
@@ -103,66 +96,34 @@ public class GermlineVariants
 
         loadGermlineVariants(germlineVcf, false);
 
-        try
+        VCFFileReader vcfReader = new VCFFileReader(new File(germlineVcf), false);
+
+        boolean isPaveAnnotated = vcfReader.getFileHeader().hasInfoLine(VAR_TRANS_IMPACT_ANNOATATION);
+
+        VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputVCF)
+                .setOption(htsjdk.variant.variantcontext.writer.Options.ALLOW_MISSING_FIELDS_IN_HEADER)
+                .build();
+
+        final GermlineVariantEnrichment enrichment = new GermlineVariantEnrichment(
+                mVersion, referenceId, tumorSample, mReferenceData, purityAdjuster, copyNumbers,
+                mReferenceData.GermlineHotspots, somaticReportedGenes, !isPaveAnnotated);
+
+        VCFHeader header = enrichment.enrichHeader(vcfReader.getFileHeader());
+        writer.writeHeader(header);
+
+        for(GermlineVariant variant : mVariants)
         {
-            VCFFileReader vcfReader = new VCFFileReader(new File(germlineVcf), false);
-
-            boolean isPaveAnnotated = vcfReader.getFileHeader().hasInfoLine(VAR_TRANS_IMPACT_ANNOATATION);
-
-            VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputVCF)
-                    .setOption(htsjdk.variant.variantcontext.writer.Options.ALLOW_MISSING_FIELDS_IN_HEADER)
-                    .build();
-
-            final GermlineVariantEnrichment enrichment = new GermlineVariantEnrichment(
-                    mVersion, referenceId, tumorSample, mReferenceData, purityAdjuster, copyNumbers,
-                    mReferenceData.GermlineHotspots, somaticReportedGenes, !isPaveAnnotated);
-
-            VCFHeader header = enrichment.enrichHeader(vcfReader.getFileHeader());
-            writer.writeHeader(header);
-
-            for(GermlineVariant variant : mVariants)
-            {
-                enrichment.enrichVariant(variant);
-            }
-
-            enrichment.flush();
-
-            for(GermlineVariant variant : mVariants)
-            {
-                VariantContext newContext = new VariantContextBuilder(variant.context()).filters(variant.filters()).make();
-                writer.add(newContext);
-            }
-
-            writer.close();
-
-            /*
-            final Consumer<VariantContext> consumer = context ->
-            {
-                if(context.getAttributeAsBoolean(VariantHeader.REPORTED_FLAG, false))
-                {
-                    mReportableVariants.add(context);
-                }
-
-                writer.add(context);
-            };
-
-
-            for(VariantContext context : vcfReader)
-            {
-                GermlineData variant = new GermlineData(context, null);
-
-                enrichment.accept(context);
-            }
-
-            enrichment.flush();
-            writer.close();
-
-            */
+            enrichment.enrichVariant(variant);
         }
-        catch(Exception e)
+
+        enrichment.flush();
+
+        for(GermlineVariant variant : mVariants)
         {
-            PPL_LOGGER.error("failed to enrich germline variants: {}", e.toString());
-            e.printStackTrace();
+            VariantContext newContext = new VariantContextBuilder(variant.context()).filters(variant.filters()).make();
+            writer.add(newContext);
         }
+
+        writer.close();
     }
 }
