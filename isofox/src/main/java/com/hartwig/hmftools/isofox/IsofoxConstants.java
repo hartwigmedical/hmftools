@@ -51,5 +51,28 @@ public class IsofoxConstants
         }
     }
 
-    public static final List<String> ENRICHED_GENE_CHROMOSOMES = Lists.newArrayList("14", "3", "6", "9");
+    public static final List<String> ENRICHED_GENE_CHROMOSOMES = Lists.newArrayList("14", "22", "2", "3", "6", "9");
+
+    // HLA region: chr 6: 29690552-33111102
+    // IG regions: chr 14:106032614-107288051, chr22: 22380474-23265085
+    public static void populateImmuneRegions(final List<ChrBaseRegion> regions, final RefGenomeVersion version)
+    {
+        if(version == RefGenomeVersion.V38)
+        {
+            regions.add(new ChrBaseRegion("chr2", 88857161, 90315836));
+            regions.add(new ChrBaseRegion("chr6", 29722775, 33143325));
+            regions.add(new ChrBaseRegion("chr14", 105586437, 106879844));
+            regions.add(new ChrBaseRegion("chr22", 22026076, 22922913));
+        }
+        else
+        {
+            regions.add(new ChrBaseRegion("2", 89156674, 90538397));
+            regions.add(new ChrBaseRegion("6", 29690552, 33111102));
+            regions.add(new ChrBaseRegion("14", 106032614, 107288051));
+            regions.add(new ChrBaseRegion("22", 22380474, 23265085));
+        }
+    }
+
+
+
 }

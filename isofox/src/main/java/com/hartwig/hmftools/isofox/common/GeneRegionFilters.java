@@ -35,6 +35,7 @@ public class GeneRegionFilters
 
     public final List<ChrBaseRegion> RestrictedGeneRegions; // limit analysis to these regions only
     public final List<ChrBaseRegion> ExcludedGeneRegions; // exclude these regions based on geneId, enriched or excluded regions
+    public final List<ChrBaseRegion> ImmuneGeneRegions;
 
     public final RefGenomeVersion mRefGenomeVersion;
 
@@ -55,6 +56,7 @@ public class GeneRegionFilters
 
         ExcludedGeneRegions = Lists.newArrayList();
         RestrictedGeneRegions = Lists.newArrayList();
+        ImmuneGeneRegions = Lists.newArrayList();
 
         mRefGenomeVersion = refGenomeVersion;
         ExcludedRegion = refGenomeVersion.is37() ? EXCLUDED_REGION_1_REF_37 : EXCLUDED_REGION_1_REF_38;
@@ -79,6 +81,8 @@ public class GeneRegionFilters
         {
             IsofoxConstants.populateEnrichedGeneIds(EnrichedGeneIds, mRefGenomeVersion);
         }
+
+        IsofoxConstants.populateImmuneRegions(ImmuneGeneRegions, mRefGenomeVersion);
 
         if(cmd.hasOption(GENE_ID_FILE))
         {

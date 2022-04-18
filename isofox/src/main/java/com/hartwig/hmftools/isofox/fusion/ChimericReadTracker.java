@@ -144,26 +144,6 @@ public class ChimericReadTracker
         mCandidateRealignedReadMap.put(read1.Id, new ReadGroup(read1, read2));
     }
 
-    private boolean inExcludedRegion(final ReadRecord read, boolean checkMate)
-    {
-        // check the read and its supplementary data if present
-        if(mGeneCollection.inEnrichedRegion(read.PosStart, read.PosEnd))
-            return true;
-
-        if(checkMate && mConfig.Filters.skipRead(read.mateChromosome(), read.mateStartPosition()))
-            return true;
-
-        if(read.hasSuppAlignment())
-        {
-            SupplementaryReadData suppData = SupplementaryReadData.from(read.getSuppAlignment());
-
-            if(suppData != null && mConfig.Filters.skipRead(suppData.Chromosome, suppData.Position))
-                return true;
-        }
-
-        return false;
-    }
-
     public void addChimericReadPair(final ReadRecord read1, final ReadRecord read2)
     {
         if(inExcludedRegion(read1, false) || inExcludedRegion(read2, false))
@@ -310,6 +290,41 @@ public class ChimericReadTracker
             mChimericStats.clear();
             mDuplicateReadIds.clear();
         }
+    }
+
+    private boolean inExcludedRegion(final ReadRecord read, boolean checkMate)
+    {
+        // check the read and its supplementary data if present
+        if(mGeneCollection.inEnrichedRegion(read.PosStart, read.PosEnd))
+            return true;
+
+        if(checkMate && mConfig.Filters.skipRead(read.mateChromosome(), read.mateStartPosition()))
+            return true;
+
+        boolean inImmuneRegion = mConfig.Filters.ImmuneGeneRegions.stream()
+                .anyMatch(x -> x.Chromosome.equals(read.Chromosome) && positionsOverlap(read.PosStart, read.PosEnd, x.start(), x.end()));
+
+        if(inImmuneRegion
+        && mConfig.Filters.ImmuneGeneRegions.stream().anyMatch(x -> x.containsPosition(read.mateChromosome(), read.mateStartPosition())))
+        {
+            return true;
+        }
+
+        if(read.hasSuppAlignment())
+        {
+            SupplementaryReadData suppData = SupplementaryReadData.from(read.getSuppAlignment());
+
+            if(suppData != null && mConfig.Filters.skipRead(suppData.Chromosome, suppData.Position))
+                return true;
+
+            if(inImmuneRegion && suppData != null
+            && mConfig.Filters.ImmuneGeneRegions.stream().anyMatch(x -> x.containsPosition(suppData.Chromosome, suppData.Position)))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private boolean keepChimericGroup(final List<ReadRecord> reads, boolean readGroupComplete)
