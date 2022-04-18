@@ -75,10 +75,10 @@
         <paddle.version>1.0</paddle.version>
         <patient-db.version>3.69</patient-db.version>
         <patient-reporter.version>7.25</patient-reporter.version>
-        <pave.version>1.2</pave.version>
+        <pave.version>1.2.1</pave.version>
         <protect.version>2.1</protect.version>
-        <purple.version>3.4</purple.version>
-        <sage.version>3.0</sage.version>
+        <purple.version>3.4.1</purple.version>
+        <sage.version>3.0.1</sage.version>
         <sigs.version>1.0</sigs.version>
         <serve.version>1.10</serve.version>
         <sv-tools.version>1.0</sv-tools.version>
