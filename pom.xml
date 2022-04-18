@@ -73,7 +73,7 @@
         <neo.version>1.0</neo.version>
         <orange.version>1.7</orange.version>
         <paddle.version>1.0</paddle.version>
-        <patient-db.version>3.68</patient-db.version>
+        <patient-db.version>3.69</patient-db.version>
         <patient-reporter.version>7.25</patient-reporter.version>
         <pave.version>1.2</pave.version>
         <protect.version>2.1</protect.version>
@@ -94,7 +94,7 @@
         <google.gson.version>2.8.9</google.gson.version>
         <apache.commons.lang3.version>3.6</apache.commons.lang3.version>
         <apache.commons.math3.version>3.6</apache.commons.math3.version>
-        <apache.commons.csv.version>1.5</apache.commons.csv.version>
+        <apache.commons.csv.version>1.9.0</apache.commons.csv.version>
         <apache.commons.dbcp2.version>2.1.1</apache.commons.dbcp2.version>
         <apache.log4j.version>2.17.1</apache.log4j.version>
         <apache.lucene.version>7.1.0</apache.lucene.version>

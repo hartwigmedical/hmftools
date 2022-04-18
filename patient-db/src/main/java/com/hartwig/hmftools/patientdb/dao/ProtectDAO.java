@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.protect.ProtectSource;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep14;
+import org.jooq.InsertValuesStep19;
 
 class ProtectDAO {
 
@@ -30,33 +30,43 @@ class ProtectDAO {
 
         Timestamp timestamp = new Timestamp(new Date().getTime());
         for (List<ProtectEvidence> batch : Iterables.partition(evidence, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep14 inserter = context.insertInto(PROTECT,
+            InsertValuesStep19 inserter = context.insertInto(PROTECT,
                     PROTECT.SAMPLEID,
                     PROTECT.GENE,
+                    PROTECT.TRANSCRIPT,
+                    PROTECT.ISCANONICAL,
                     PROTECT.EVENT,
-                    PROTECT.EVIDENCETYPE,
-                    PROTECT.RANGERANK,
+                    PROTECT.EVENTISHIGHDRIVER,
                     PROTECT.GERMLINE,
                     PROTECT.REPORTED,
                     PROTECT.TREATMENT,
                     PROTECT.ONLABEL,
                     PROTECT.LEVEL,
                     PROTECT.DIRECTION,
-                    PROTECT.SOURCES,
-                    PROTECT.URLS,
+                    PROTECT.SOURCE,
+                    PROTECT.SOURCEEVENT,
+                    PROTECT.SOURCEURLS,
+                    PROTECT.EVIDENCETYPE,
+                    PROTECT.RANGERANK,
+                    PROTECT.EVIDENCEURLS,
                     PROTECT.MODIFIED);
             batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
             inserter.execute();
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep14 inserter, @NotNull String sample,
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep19 inserter, @NotNull String sample,
             @NotNull ProtectEvidence evidence) {
-        StringJoiner urlJoiner = new StringJoiner(",");
 
         for (ProtectSource protectSource : evidence.protectSources()) {
-            for (String url : protectSource.sourceUrls()) {
-                urlJoiner.add(url);
+            StringJoiner sourceUrlJoiner = new StringJoiner(",");
+            StringJoiner evidenceUrlJoiner = new StringJoiner(",");
+            for (String sourceUrl : protectSource.sourceUrls()) {
+                sourceUrlJoiner.add(sourceUrl);
+            }
+
+            for (String evidenceUrl : protectSource.evidenceUrls()) {
+                evidenceUrlJoiner.add(evidenceUrl);
             }
             String knowledgebase = protectSource.source().technicalDisplay();
             String evidenceType = protectSource.evidenceType().display();
@@ -64,9 +74,10 @@ class ProtectDAO {
 
             inserter.values(sample,
                     evidence.gene(),
+                    evidence.transcript(),
+                    evidence.isCanonical(),
                     evidence.event(),
-                    evidenceType,
-                    rank,
+                    evidence.eventIsHighDriver(),
                     evidence.germline(),
                     evidence.reported(),
                     evidence.treatment(),
@@ -74,7 +85,11 @@ class ProtectDAO {
                     evidence.level().toString(),
                     evidence.direction().toString(),
                     knowledgebase,
-                    urlJoiner.toString(),
+                    protectSource.sourceEvent(),
+                    sourceUrlJoiner.toString(),
+                    evidenceType,
+                    rank,
+                    evidenceUrlJoiner.toString(),
                     timestamp);
         }
     }

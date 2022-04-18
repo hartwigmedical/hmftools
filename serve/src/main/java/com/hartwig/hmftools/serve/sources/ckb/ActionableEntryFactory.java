@@ -92,7 +92,9 @@ class ActionableEntryFactory {
 
                 Set<CancerType> blacklistedCancerTypes = Sets.newHashSet();
                 if (doid.equals("162")) {
-                    blacklistedCancerTypes.add(ImmutableCancerType.builder().name("Hematologic cancer").doid("2531").build());
+                    blacklistedCancerTypes.add(ImmutableCancerType.builder().name("Leukemia").doid("1240").build());
+                    blacklistedCancerTypes.add(ImmutableCancerType.builder().name("Refractory hematologic cancer").doid("712").build());
+                    blacklistedCancerTypes.add(ImmutableCancerType.builder().name("Bone marrow cancer").doid("4960").build());
                 }
 
                 actionableEntries.add(ImmutableActionableEntry.builder()

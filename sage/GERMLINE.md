@@ -21,7 +21,7 @@ A select number of [whitelist](../hmf-common/src/main/java/com/hartwig/hmftools/
 
 ## BlackList
 [Blacklisted](../hmf-common/src/main/java/com/hartwig/hmftools/common/drivercatalog/panel/GermlineBlacklistVCF.java) variants are not reported as pathogenic.  
-Neither are BRCA variants in the range 13:32972625-32972907 (or v38 -> chr13:32398488-32398770).
+Neither are BRCA2 variants in the range 13:32972625-32972907 (or v38 -> chr13:32398488-32398770).
 
 ## Parameters
 To run SAGE in germline mode we use the following parameters:
@@ -59,7 +59,7 @@ These changes disable the germline filters (which is actually the tumor).
 - Re-arrange sample names to be reference first then tumor
 - Annotate with mappability
 - Annotate with clinvar
-- Annotate with blacklist bed file (brca locations)
+- Annotate with blacklist bed file (BRCA2 locations)
 - Annotate with blacklist vcf file
 - Annotate with Pave (see https://github.com/hartwigmedical/hmftools/tree/master/pave)
 
