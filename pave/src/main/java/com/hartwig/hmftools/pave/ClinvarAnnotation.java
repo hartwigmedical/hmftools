@@ -140,7 +140,7 @@ public class ClinvarAnnotation
 
     private static String stripBrackets(final String clinvarStr)
     {
-        return clinvarStr.replaceAll("\\[", "").replaceAll("\\]", "");
+        return clinvarStr.replaceAll("\\[", "").replaceAll("\\]", "").replaceAll(" ", "");
     }
 
     private class ClinvarEntry
