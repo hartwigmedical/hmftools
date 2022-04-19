@@ -7,18 +7,19 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.genome.region.TranscriptRegion;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 
-// soon to be deprecated
 public class CanonicalAnnotation
 {
     private final Set<String> mDriverCatalogGenes;
     private final Map<String, String> mTranscriptGeneMap;
 
+    /*
     public CanonicalAnnotation(final Set<String> driverGenes, final List<HmfTranscriptRegion> transcripts)
     {
         mDriverCatalogGenes = driverGenes;
@@ -26,6 +27,7 @@ public class CanonicalAnnotation
         mTranscriptGeneMap = transcripts.stream()
                 .collect(Collectors.toMap(TranscriptRegion::transName, TranscriptRegion::geneName));
     }
+    */
 
     public CanonicalAnnotation(final Set<String> driverGenes, final Map<String,String> transGeneMap)
     {

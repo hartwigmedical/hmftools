@@ -550,4 +550,25 @@ public class EnsemblDataCache
         return domainPositions;
     }
 
+    public Map<String,String> createTransGeneNamesMap()
+    {
+        Map<String,String> transGeneMap = Maps.newHashMap();
+
+        for(List<GeneData> geneDataList : mChrGeneDataMap.values())
+        {
+            for(GeneData geneData : geneDataList)
+            {
+                List<TranscriptData> transDataList = getTranscripts(geneData.GeneId);
+
+                for(TranscriptData tranData : transDataList)
+                {
+                    if(tranData.IsCanonical)
+                        transGeneMap.put(tranData.TransName, geneData.GeneName);
+                }
+            }
+        }
+
+        return transGeneMap;
+    }
+
 }

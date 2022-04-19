@@ -33,41 +33,4 @@ public class CanonicalAnnotationTest {
         assertEquals("ENST00000361570", CanonicalAnnotation.trimEnsembleVersion("ENST00000361570"));
         assertEquals("ENST00000361570", CanonicalAnnotation.trimEnsembleVersion("ENST00000361570.v8"));
     }
-
-    @Test
-    public void favourDriverCatalogGenes() {
-        SnpEffAnnotation nonCanonicalDriverGene =
-                createSnpEffAnnotation("ATP1A1", "ENST00000295598", VariantConsequence.MISSENSE_VARIANT);
-        SnpEffAnnotation noDriverGene = createSnpEffAnnotation("AL136376.1", "ENST00000598661", VariantConsequence.MISSENSE_VARIANT);
-        SnpEffAnnotation canonicalDriverGene = createSnpEffAnnotation("ATP1A1", "ENST00000537345", VariantConsequence.MISSENSE_VARIANT);
-
-        CanonicalAnnotation victim = new CanonicalAnnotation(driverGenes, transcripts);
-        assertEquals(Optional.empty(), victim.pickCanonicalFavourDriverGene(Lists.newArrayList(nonCanonicalDriverGene)));
-
-        Optional<SnpEffAnnotation> annotationSecond =
-                victim.pickCanonicalFavourDriverGene(Lists.newArrayList(nonCanonicalDriverGene, noDriverGene));
-        assertTrue(annotationSecond.isPresent());
-        assertEquals(noDriverGene, annotationSecond.get());
-
-        Optional<SnpEffAnnotation> annotationThird =
-                victim.pickCanonicalFavourDriverGene(Lists.newArrayList(nonCanonicalDriverGene, noDriverGene, canonicalDriverGene));
-        assertTrue(annotationThird.isPresent());
-        assertEquals(canonicalDriverGene, annotationThird.get());
-    }
-
-    @NotNull
-    private static SnpEffAnnotation createSnpEffAnnotation(@NotNull final String gene, @NotNull final String transcript,
-            @NotNull VariantConsequence consequence) {
-        return ImmutableSnpEffAnnotation.builder()
-                .effects(Strings.EMPTY)
-                .consequences(Lists.newArrayList(consequence))
-                .gene(gene)
-                .geneID(gene)
-                .featureType("transcript")
-                .featureID(transcript)
-                .rank(Strings.EMPTY)
-                .hgvsCoding(Strings.EMPTY)
-                .hgvsProtein(Strings.EMPTY)
-                .build();
-    }
 }

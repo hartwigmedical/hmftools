@@ -44,21 +44,7 @@ public class SnpEffEnrichment
         mGeneTransCache = geneTransCache;
         mGeneTransCache.createGeneNameIdMap();
 
-        Map<String,String> transGeneMap = Maps.newHashMap();
-
-        for(List<GeneData> geneDataList : geneTransCache.getChrGeneDataMap().values())
-        {
-            for(GeneData geneData : geneDataList)
-            {
-                List<TranscriptData> transDataList = geneTransCache.getTranscripts(geneData.GeneId);
-
-                for(TranscriptData tranData : transDataList)
-                {
-                    if(tranData.IsCanonical)
-                        transGeneMap.put(tranData.TransName, geneData.GeneName);
-                }
-            }
-        }
+        Map<String,String> transGeneMap = geneTransCache.createTransGeneNamesMap();
 
         mCanonicalAnnotation = new CanonicalAnnotation(driverGenes, transGeneMap);
     }

@@ -4,13 +4,14 @@ import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.AminoAcids;
-import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.variant.CanonicalAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationParser;
@@ -32,13 +33,19 @@ public class AnnotatedHotspotVCFPrinter {
 
     public static void main(String[] args) throws IOException {
         String annotatedInputVcf = System.getProperty("user.home") + "/hmf/tmp/annotatedHotspots_SNPeff.vcf";
-        new AnnotatedHotspotVCFPrinter().run(annotatedInputVcf);
+        String ensemblDataCacheDir = args[1];
+        new AnnotatedHotspotVCFPrinter().run(annotatedInputVcf, ensemblDataCacheDir);
     }
 
-    public void run(@NotNull String annotatedInputVcf) throws IOException {
-        List<HmfTranscriptRegion> canonicalTranscripts = HmfGenePanelSupplier.allGeneList37();
+    public void run(@NotNull String annotatedInputVcf, final String ensemblDataCacheDir) throws IOException {
 
-        CanonicalAnnotation factory = new CanonicalAnnotation(Sets.newHashSet(), canonicalTranscripts);
+        EnsemblDataCache ensemblDataCache = new EnsemblDataCache(ensemblDataCacheDir, RefGenomeVersion.V37);
+        ensemblDataCache.setRequiredData(false, false, false, true);
+        ensemblDataCache.load(false);
+
+        Map<String,String> transGeneMap = ensemblDataCache.createTransGeneNamesMap();
+
+        CanonicalAnnotation factory = new CanonicalAnnotation(Sets.newHashSet(), transGeneMap);
 
         LOGGER.info("Simplifying variants from '{}'", annotatedInputVcf);
         AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(annotatedInputVcf, new VCFCodec(), false);
