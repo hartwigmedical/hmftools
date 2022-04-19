@@ -19,6 +19,8 @@ import com.hartwig.hmftools.common.drivercatalog.dnds.DndsMutationalLoad;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsVariant;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.flagstat.Flagstat;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.hla.HlaType;
 import com.hartwig.hmftools.common.hla.HlaTypeDetails;
@@ -340,8 +342,9 @@ public class DatabaseAccess implements AutoCloseable {
         return structuralVariantFusionDAO.readBreakends(sample);
     }
 
-    public void writeCanonicalTranscripts(@NotNull String assembly, @NotNull List<CanonicalTranscript> transcripts) {
-        canonicalTranscriptDAO.write(assembly, transcripts);
+    public void writeCanonicalTranscripts(
+            final String refGenomeVersion, final List<GeneData> geneDataList, final List<TranscriptData> transcripts) {
+        canonicalTranscriptDAO.write(refGenomeVersion, geneDataList, transcripts);
     }
 
     public void writePurity(@NotNull String sampleId, @NotNull PurityContext context, @NotNull PurpleQC checks) {
