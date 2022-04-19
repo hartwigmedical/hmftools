@@ -257,7 +257,7 @@ ReportedType | If one or both of the genes matches  a promiscuous gene or known 
 Phased | Set to 1 if a phased fusion can be formed (after allowing for exon skipping)
 ChainLength | 0 for simple fusions.  If fusion is chained equal to the total length of segments chained between 5' and 3' partners
 ChainLinks | 0 for simple fusions.  If fusion is chained equal to the number of segments chained between 5' and 3' partners
-ChainTerminated | True if the fusion is interrupted either on the 5’ partner side by a chained breakend prior to the start of the 5’ gene or by a chained breakend prior to the last coding base of the 3’ gene
+ChainTerminated | True if the fusion is interrupted either on the 5’ partner side by a chained breakend after to the start of the 5’ gene or by a chained breakend prior to the last coding base of the 3’ gene
 DomainsKept | List of 3' partner domains retained in fusion product (as annotated by PROSITE profiles)
 DomainsLost | List of 3' partner domains lost in fusion product (as annotated by PROSITE profiles)
 SkippedExonsUp | Count of splice donors required to be skipped on 5' partner side to form an inframe fusion.  
