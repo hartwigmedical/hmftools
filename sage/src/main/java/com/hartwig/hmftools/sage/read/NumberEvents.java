@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.read;
 
+import static java.lang.Math.max;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
@@ -42,7 +43,7 @@ public final class NumberEvents
         if(record.getCigar().isRightClipped())
             softClippedBases += record.getCigar().getLastCigarElement().getLength();
 
-        return softClippedBases > 0 ? (1 + softClippedBases / SC_READ_EVENTS_FACTOR) : 0;
+        return softClippedBases > 0 ? max(1, softClippedBases / SC_READ_EVENTS_FACTOR) : 0;
     }
 
     public static int rawNM(final SAMRecord record, final RefSequence refGenome)

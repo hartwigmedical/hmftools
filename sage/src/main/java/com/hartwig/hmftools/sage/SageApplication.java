@@ -84,7 +84,7 @@ public class SageApplication implements AutoCloseable
         int initMemory = calcMemoryUsage(false);
         logMemoryUsage(mConfig, "BQR", initMemory);
         System.gc();
-        
+
         int maxTaskMemory = 0;
 
         System.gc();
