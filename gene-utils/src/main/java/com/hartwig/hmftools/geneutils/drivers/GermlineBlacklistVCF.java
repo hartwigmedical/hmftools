@@ -2,8 +2,6 @@ package com.hartwig.hmftools.geneutils.drivers;
 
 import java.util.List;
 
-import org.jetbrains.annotations.NotNull;
-
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
@@ -12,15 +10,11 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-final class GermlineBlacklistVCF
+public final class GermlineBlacklistVCF
 {
     private static final String BLACKLIST_FLAG = "BLACKLIST";
 
-    private GermlineBlacklistVCF()
-    {
-    }
-
-    public static void process(@NotNull String outputFile, @NotNull List<VariantContext> variants)
+    public static void write(final String outputFile, final List<VariantContext> variants)
     {
         VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputFile)
                 .modifyOption(Options.INDEX_ON_THE_FLY, true)

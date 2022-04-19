@@ -11,14 +11,12 @@ import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
@@ -30,12 +28,9 @@ import com.hartwig.hmftools.common.genome.bed.ImmutableNamedBed;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.genepanel.HmfExonPanelBed;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
-import com.hartwig.hmftools.common.genome.region.GenomeRegionsBuilder;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
@@ -101,58 +96,9 @@ public class GenerateDriverGeneFiles
 
         writeGenePanelRegions(refGenomeVersion, driverGenes, sageDir);
 
-        String germlineBlacklistFile = formVersionFile(sageDir, "KnownBlacklist.germline.vcf.gz", refGenomeVersion);
+        writeGermlineBlacklist(refGenomeVersion, sageDir);
 
-        GU_LOGGER.info("writing {} germline blacklist file at {}", refGenomeVersion, germlineBlacklistFile);
-        List<VariantContext> germlineBlackList = refGenomeVersion == RefGenomeVersion.V37 ?
-                GermlineResources.blacklist37() : GermlineResources.blacklist38();
-
-        GermlineBlacklistVCF.process(germlineBlacklistFile, germlineBlackList);
-
-        String germlineHotspotFile = formVersionFile(sageDir, "KnownHotspots.germline.vcf.gz", refGenomeVersion);
-
-        GU_LOGGER.info("writing {} germline hotspots at {}", refGenomeVersion, germlineHotspotFile);
-        GermlineHotspotVCF germlineHotspotVCF = new GermlineHotspotVCF(germlineHotspotGenes(driverGenes));
-
-        /*
-        String somaticCodingWithoutUtr = formVersionFile(sageDir, "ActionableCodingPanel.somatic.bed.gz", refGenomeVersion);
-        String germlineCodingWithUtr = formVersionFile(sageDir, "ActionableCodingPanel.germline.bed.gz", refGenomeVersion);
-        String germlineCodingWithoutUtr = formVersionFile(sageDir, "CoverageCodingPanel.germline.bed.gz", refGenomeVersion);
-        String germlineSliceFile = formVersionFile(sageDir, "SlicePanel.germline.bed.gz", refGenomeVersion);
-
-        Set<String> germlineGenes = germlineGenes(driverGenes);
-        Set<String> somaticGenes = somaticGenes(driverGenes);
-        Set<String> allGenes = Sets.newHashSet();
-        allGenes.addAll(germlineGenes);
-        allGenes.addAll(somaticGenes);
-
-        // Write out actionable bed files
-        List<HmfTranscriptRegion> transcripts = refGenomeVersion == RefGenomeVersion.V37 ?
-                HmfGenePanelSupplier.allGeneList37() : HmfGenePanelSupplier.allGeneList38();
-
-        GU_LOGGER.info("writing {} {} bed file at {}", refGenomeVersion, "somatic", somaticCodingWithoutUtr);
-        createNamedBedFiles(false, somaticCodingWithoutUtr, somaticGenes, transcripts);
-
-        GU_LOGGER.info("writing {} {} coverage bed file at {}", refGenomeVersion, "germline", germlineCodingWithoutUtr);
-        createNamedBedFiles(false, germlineCodingWithoutUtr, allGenes, transcripts);
-
-        GU_LOGGER.info("writing {} {} bed file at {}", refGenomeVersion, "germline", germlineCodingWithUtr);
-        List<GenomeRegion> germlinePanel = createUnnamedBedFiles(true, germlineCodingWithUtr, allGenes, transcripts);
-
-        String sageRefDir = mResourceRepoDir + SAGE_DIR + File.separator + refGenomeVersion.identifier();
-
-        String clinvarFile = formVersionFile(sageRefDir, "clinvar.vcf.gz", refGenomeVersion);
-
-        GU_LOGGER.info("located clinvar file for {} at {}", refGenomeVersion, clinvarFile);
-
-        List<GenomeRegion> germlineHotspots = germlineHotspotVCF.process(clinvarFile, germlineHotspotFile);
-
-        String qualityBedFile = getResourceURL(refGenomeVersion.addVersionToFilePath("/drivers/QualityRecalibration.bed"));
-        Collection<GenomeRegion> qualityRecalibrationRegions = BEDFileLoader.fromBedFile(qualityBedFile).values();
-
-        GU_LOGGER.info("writing {} germline slice file at {}", refGenomeVersion, germlineSliceFile);
-        createSliceFile(germlineSliceFile, germlinePanel, germlineHotspots, qualityRecalibrationRegions);
-        */
+        writeGermlineHotspots(refGenomeVersion, driverGenes, sageDir);
     }
 
     private void writeDriverGeneFiles(final RefGenomeVersion refGenomeVersion, final List<DriverGene> driverGenes)
@@ -245,6 +191,50 @@ public class GenerateDriverGeneFiles
         return regions;
     }
 
+    private void writeGermlineBlacklist(final RefGenomeVersion refGenomeVersion, final String sageDir)
+    {
+        String germlineBlacklistFile = formVersionFile(sageDir, "KnownBlacklist.germline.vcf.gz", refGenomeVersion);
+
+        GU_LOGGER.info("writing {} germline blacklist file at {}", refGenomeVersion, germlineBlacklistFile);
+
+        try
+        {
+            List<VariantContext> germlineBlackList = refGenomeVersion == RefGenomeVersion.V37 ?
+                    GermlineResources.blacklist37() : GermlineResources.blacklist38();
+
+            GermlineBlacklistVCF.write(germlineBlacklistFile, germlineBlackList);
+        }
+        catch(IOException e)
+        {
+            GU_LOGGER.error("failed to write germline blacklist file: {}", e.toString());
+        }
+    }
+
+    private void writeGermlineHotspots(final RefGenomeVersion refGenomeVersion, final List<DriverGene> driverGenes, final String sageDir)
+    {
+        String germlineHotspotFile = formVersionFile(sageDir, "KnownHotspots.germline.vcf.gz", refGenomeVersion);
+
+        String sageRefDir = mResourceRepoDir + SAGE_DIR + File.separator + refGenomeVersion.identifier();
+        String clinvarFile = formVersionFile(sageRefDir, "clinvar.vcf.gz", refGenomeVersion);
+
+        GU_LOGGER.info("located clinvar file for {} at {}", refGenomeVersion, clinvarFile);
+
+        List<String> germlineHotspotGenes = driverGenes.stream()
+                .filter(x -> x.reportGermlineHotspot() != DriverGeneGermlineReporting.NONE)
+                .map(x -> x.gene()).collect(Collectors.toList());
+
+        GU_LOGGER.info("writing {} germline hotspots to {}", germlineHotspotGenes.size(), germlineHotspotFile);
+
+        try
+        {
+            GermlineHotspotVCF.write(clinvarFile, germlineHotspotFile, germlineHotspotGenes);
+        }
+        catch(IOException e)
+        {
+            GU_LOGGER.error("failed to write germline hotspots file: {}", e.toString());
+        }
+    }
+
     private boolean createOutputDir(final String outputDir)
     {
         final File dir = new File(outputDir);
@@ -255,92 +245,6 @@ public class GenerateDriverGeneFiles
         }
 
         return true;
-    }
-
-    private static void createNamedBedFiles(
-            boolean includeUTR, final String file, final Set<String> genes, final List<HmfTranscriptRegion> transcripts)
-    {
-        try
-        {
-            List<NamedBed> somaticBed = HmfExonPanelBed.createNamedCodingRegions(includeUTR, genes, transcripts);
-            NamedBedFile.writeBedFile(file, somaticBed);
-        }
-        catch(IOException e)
-        {
-            GU_LOGGER.error("failed to write name bed file({}): {}", file, e.toString());
-        }
-    }
-
-    private static void createSliceFile(final String file, final Collection<GenomeRegion>... allRegions) throws IOException
-    {
-        GenomeRegionsBuilder builder = new GenomeRegionsBuilder();
-        for(Collection<GenomeRegion> regions : allRegions)
-        {
-            for(GenomeRegion region : regions)
-            {
-                builder.addRegion(region.chromosome(), region.start() - 100, region.end() + 100);
-            }
-        }
-
-        List<GenomeRegion> combined = builder.build();
-        NamedBedFile.writeUnnamedBedFile(file, combined);
-    }
-
-
-    private static List<GenomeRegion> createUnnamedBedFiles(
-            boolean includeUTR, final String file, final Set<String> genes,
-            final List<HmfTranscriptRegion> transcripts) throws IOException
-    {
-        List<GenomeRegion> somaticBed = HmfExonPanelBed.createUnnamedCodingRegions(includeUTR, genes, transcripts);
-        NamedBedFile.writeUnnamedBedFile(file, somaticBed);
-        return somaticBed;
-    }
-
-    private static Set<String> somaticGenes(final List<DriverGene> genePanel)
-    {
-        Set<String> somaticReportableGenes = Sets.newHashSet();
-        for(DriverGene driverGene : genePanel)
-        {
-            if(driverGene.reportSomatic())
-            {
-                somaticReportableGenes.add(driverGene.gene());
-            }
-        }
-
-        return somaticReportableGenes;
-    }
-
-    private static Set<String> germlineGenes(final List<DriverGene> genePanel)
-    {
-        Set<String> germlineReportableGenes = Sets.newHashSet();
-        for(DriverGene driverGene : genePanel)
-        {
-            if(driverGene.reportGermline())
-            {
-                germlineReportableGenes.add(driverGene.gene());
-            }
-        }
-
-        return germlineReportableGenes;
-    }
-
-    private static Set<String> germlineHotspotGenes(final List<DriverGene> genePanel)
-    {
-        Set<String> germlineHotspotGenes = Sets.newHashSet();
-        for(DriverGene driverGene : genePanel)
-        {
-            if(driverGene.reportGermlineHotspot() != DriverGeneGermlineReporting.NONE)
-            {
-                germlineHotspotGenes.add(driverGene.gene());
-            }
-        }
-
-        return germlineHotspotGenes;
-    }
-
-    private static String getResourceURL(final String location)
-    {
-        return GenerateDriverGeneFiles.class.getResource(location).toString();
     }
 
     public static void main(String[] args) throws IOException, ParseException
