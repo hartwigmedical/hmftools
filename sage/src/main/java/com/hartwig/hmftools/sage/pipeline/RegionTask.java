@@ -1,13 +1,12 @@
 package com.hartwig.hmftools.sage.pipeline;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.SageCommon.calcCurrentMemoryUsage;
+import static com.hartwig.hmftools.sage.SageCommon.calcMemoryUsage;
+import static com.hartwig.hmftools.sage.SageCommon.logMemoryUsage;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -192,6 +191,6 @@ public class RegionTask
         mPerfCounters.add(mEvidenceStage.getVariantPhaser().getPerfCounter());
 
         if(mConfig.logPerfStats())
-            mResults.addPerfCounters(mPerfCounters, calcCurrentMemoryUsage(false));
+            mResults.addPerfCounters(mPerfCounters, calcMemoryUsage(false));
     }
 }

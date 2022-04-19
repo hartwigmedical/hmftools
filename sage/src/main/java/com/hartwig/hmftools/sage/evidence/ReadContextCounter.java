@@ -246,9 +246,9 @@ public class ReadContextCounter implements VariantHotspot
         if(mIsMnv)
             adjustedNumOfEvents = NumberEvents.calcWithMnvRaw(numberOfEvents, mVariant.ref(), mVariant.alt());
 
-        if(mVariant.alt().length() <= SC_READ_EVENTS_FACTOR)
+        if(max(mVariant.ref().length(), mVariant.alt().length()) <= SC_READ_EVENTS_FACTOR)
         {
-            // penalise variants except long inserts for their soft-clipped bases
+            // penalise variants except long INDELs for their soft-clipped bases
             adjustedNumOfEvents += NumberEvents.calcSoftClipAdjustment(record);
         }
 

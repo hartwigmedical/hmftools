@@ -13,7 +13,7 @@ public class SageCommon
 
     private static final long MEGABYTE = 1024L * 1024L;
 
-    public static int calcCurrentMemoryUsage(boolean runGc)
+    public static int calcMemoryUsage(boolean runGc)
     {
         Runtime runtime = Runtime.getRuntime();
 
@@ -22,6 +22,14 @@ public class SageCommon
 
         long memory = runtime.totalMemory() - runtime.freeMemory();
         return round(memory / MEGABYTE);
+    }
+
+    public static void logMemoryUsage(final SageConfig config, final String stage, int memory)
+    {
+        if(config.PerfWarnTime == 0)
+            return;
+
+        SG_LOGGER.info("stage({}) memory({})", stage, memory);
     }
 
 }

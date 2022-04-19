@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.sage.quality;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 public class BaseQualityKey
 {
     public final byte Ref;
@@ -15,6 +18,7 @@ public class BaseQualityKey
         Quality = quality;
     }
 
+    @Override
     public boolean equals(final Object other)
     {
         if(this == other)
@@ -25,7 +29,6 @@ public class BaseQualityKey
 
         BaseQualityKey otherKey = (BaseQualityKey)other;
         return matches(otherKey.Ref, otherKey.Alt, otherKey.Quality, otherKey.TrinucleotideContext);
-        // return hashCode() == other.hashCode();
     }
 
     public boolean matches(byte ref, byte alt, byte quality, byte[] trinucleotideContext)
@@ -33,8 +36,15 @@ public class BaseQualityKey
         if(Ref != ref || Alt != alt || Quality != quality)
             return false;
 
-        return (trinucleotideContext[0] == TrinucleotideContext[0] && trinucleotideContext[1] == TrinucleotideContext[1]
-                &&  trinucleotideContext[2] == TrinucleotideContext[2]);
+        return Arrays.equals(trinucleotideContext, TrinucleotideContext);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = Objects.hash(Ref, Alt, Quality);
+        result = 31 * result + Arrays.hashCode(TrinucleotideContext);
+        return result;
     }
 
     public String toString() { return String.format("var(%c->%c) cxt(%s) qual(%d)",

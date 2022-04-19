@@ -4,7 +4,8 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.SageCommon.calcCurrentMemoryUsage;
+import static com.hartwig.hmftools.sage.SageCommon.calcMemoryUsage;
+import static com.hartwig.hmftools.sage.SageCommon.logMemoryUsage;
 import static com.hartwig.hmftools.sage.coverage.GeneCoverage.populateCoverageBuckets;
 import static com.hartwig.hmftools.sage.quality.BaseQualityRecalibration.buildQualityRecalibrationMap;
 
@@ -80,7 +81,10 @@ public class SageApplication implements AutoCloseable
 
         final Map<String,QualityRecalibrationMap> recalibrationMap = buildQualityRecalibrationMap(mConfig, mRefData.RefGenome);
 
-        int initMemory = calcCurrentMemoryUsage(false);
+        int initMemory = calcMemoryUsage(false);
+        logMemoryUsage(mConfig, "BQR", initMemory);
+        System.gc();
+        
         int maxTaskMemory = 0;
 
         System.gc();

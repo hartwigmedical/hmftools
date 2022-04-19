@@ -26,9 +26,8 @@ public class BaseQualityResults
     {
         for(QualityCounter counter : regionCounter.getQualityCounts())
         {
-            BaseQualityKey key = counter.Key;
-            Integer count = mCombinedQualityCounts.get(key);
-            mCombinedQualityCounts.put(key, count != null ? count + counter.count() : counter.count());
+            Integer count = mCombinedQualityCounts.get(counter.Key);
+            mCombinedQualityCounts.put(counter.Key, count != null ? count + counter.count() : counter.count());
         }
     }
 
