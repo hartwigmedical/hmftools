@@ -2,7 +2,6 @@ package com.hartwig.hmftools.common.protect;
 
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
-import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Variant;
 
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +23,7 @@ public final class ProtectEventGenerator {
             return coding;
         }
 
+        // TODO: Also format "upstream" here, similar to VariantUtil.
         return variant.canonicalEffect();
     }
 
