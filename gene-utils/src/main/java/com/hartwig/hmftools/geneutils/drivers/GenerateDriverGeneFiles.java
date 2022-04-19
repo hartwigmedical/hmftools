@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.geneutils.drivers;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
@@ -11,6 +14,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
@@ -18,15 +22,18 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
-import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.genome.bed.ImmutableNamedBed;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
-import com.hartwig.hmftools.common.genome.genepanel.GeneNameMapping37to38;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.genepanel.HmfExonPanelBed;
-import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.genome.region.BEDFileLoader;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionsBuilder;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 
@@ -49,6 +56,7 @@ public class GenerateDriverGeneFiles
 
     private static final String GENE_PANEL_DIR = "gene_panel";
     private static final String SAGE_DIR = "sage";
+    private static final String ENSEMBL_DIR = "ensembl_data_cache";
 
     public GenerateDriverGeneFiles(final CommandLine cmd)
     {
@@ -91,12 +99,26 @@ public class GenerateDriverGeneFiles
         String sageDir = mOutputDir + SAGE_DIR + File.separator + refGenomeVersion.identifier();
         createOutputDir(sageDir + File.separator);
 
+        writeGenePanelRegions(refGenomeVersion, driverGenes, sageDir);
+
+        String germlineBlacklistFile = formVersionFile(sageDir, "KnownBlacklist.germline.vcf.gz", refGenomeVersion);
+
+        GU_LOGGER.info("writing {} germline blacklist file at {}", refGenomeVersion, germlineBlacklistFile);
+        List<VariantContext> germlineBlackList = refGenomeVersion == RefGenomeVersion.V37 ?
+                GermlineResources.blacklist37() : GermlineResources.blacklist38();
+
+        GermlineBlacklistVCF.process(germlineBlacklistFile, germlineBlackList);
+
+        String germlineHotspotFile = formVersionFile(sageDir, "KnownHotspots.germline.vcf.gz", refGenomeVersion);
+
+        GU_LOGGER.info("writing {} germline hotspots at {}", refGenomeVersion, germlineHotspotFile);
+        GermlineHotspotVCF germlineHotspotVCF = new GermlineHotspotVCF(germlineHotspotGenes(driverGenes));
+
+        /*
         String somaticCodingWithoutUtr = formVersionFile(sageDir, "ActionableCodingPanel.somatic.bed.gz", refGenomeVersion);
         String germlineCodingWithUtr = formVersionFile(sageDir, "ActionableCodingPanel.germline.bed.gz", refGenomeVersion);
         String germlineCodingWithoutUtr = formVersionFile(sageDir, "CoverageCodingPanel.germline.bed.gz", refGenomeVersion);
-        String germlineHotspotFile = formVersionFile(sageDir, "KnownHotspots.germline.vcf.gz", refGenomeVersion);
         String germlineSliceFile = formVersionFile(sageDir, "SlicePanel.germline.bed.gz", refGenomeVersion);
-        String germlineBlacklistFile = formVersionFile(sageDir, "KnownBlacklist.germline.vcf.gz", refGenomeVersion);
 
         Set<String> germlineGenes = germlineGenes(driverGenes);
         Set<String> somaticGenes = somaticGenes(driverGenes);
@@ -117,9 +139,6 @@ public class GenerateDriverGeneFiles
         GU_LOGGER.info("writing {} {} bed file at {}", refGenomeVersion, "germline", germlineCodingWithUtr);
         List<GenomeRegion> germlinePanel = createUnnamedBedFiles(true, germlineCodingWithUtr, allGenes, transcripts);
 
-        GU_LOGGER.info("writing {} germline hotspots at {}", refGenomeVersion, germlineHotspotFile);
-        GermlineHotspotVCF germlineHotspotVCF = new GermlineHotspotVCF(germlineHotspotGenes(driverGenes));
-
         String sageRefDir = mResourceRepoDir + SAGE_DIR + File.separator + refGenomeVersion.identifier();
 
         String clinvarFile = formVersionFile(sageRefDir, "clinvar.vcf.gz", refGenomeVersion);
@@ -133,12 +152,7 @@ public class GenerateDriverGeneFiles
 
         GU_LOGGER.info("writing {} germline slice file at {}", refGenomeVersion, germlineSliceFile);
         createSliceFile(germlineSliceFile, germlinePanel, germlineHotspots, qualityRecalibrationRegions);
-
-        GU_LOGGER.info("writing {} germline blacklist file at {}", refGenomeVersion, germlineBlacklistFile);
-        List<VariantContext> germlineBlackList = refGenomeVersion == RefGenomeVersion.V37 ?
-                GermlineResources.blacklist37() : GermlineResources.blacklist38();
-
-        GermlineBlacklistVCF.process(germlineBlacklistFile, germlineBlackList);
+        */
     }
 
     private void writeDriverGeneFiles(final RefGenomeVersion refGenomeVersion, final List<DriverGene> driverGenes)
@@ -154,6 +168,81 @@ public class GenerateDriverGeneFiles
         {
             GU_LOGGER.error("failed to write driver gene panel files: {}", e.toString());
         }
+    }
+
+    private void writeGenePanelRegions(final RefGenomeVersion refGenomeVersion, final List<DriverGene> driverGenes, final String sageDir)
+    {
+        String ensemblDir = mResourceRepoDir + ENSEMBL_DIR + File.separator + refGenomeVersion.identifier();
+
+        EnsemblDataCache ensemblDataCache = new EnsemblDataCache(ensemblDir, refGenomeVersion);
+        ensemblDataCache.setRequiredData(true, false, false, true);
+        ensemblDataCache.load(false);
+
+        final Map<String,List<GeneData>> chrGeneDataMap = ensemblDataCache.getChrGeneDataMap();
+
+        List<GenomeRegion> panelRegionsWithUtr = Lists.newArrayList();
+        List<NamedBed> panelRegionsWithoutUtr = Lists.newArrayList();
+
+        for(HumanChromosome chromosome : HumanChromosome.values())
+        {
+            List<GeneData> geneDataList = chrGeneDataMap.get(refGenomeVersion.versionedChromosome(chromosome.toString()));
+
+            for(GeneData geneData : geneDataList)
+            {
+                if(!driverGenes.stream().anyMatch(x -> x.gene().equals(geneData.GeneName)))
+                    continue;
+
+                TranscriptData transData = ensemblDataCache.getTranscriptData(geneData.GeneId, "");
+
+                panelRegionsWithUtr.addAll(getTranscriptRegions(geneData, transData, true));
+
+                List<GenomeRegion> regions = getTranscriptRegions(geneData, transData, false);
+
+                regions.stream()
+                        .map(x -> ImmutableNamedBed.builder().from(x).name(geneData.GeneName).build())
+                        .forEach(x -> panelRegionsWithoutUtr.add(x));
+            }
+        }
+
+        String codingWithUtr = formVersionFile(sageDir, "ActionableCodingPanel.bed.gz", refGenomeVersion);
+        String coverageWithoutUtr = formVersionFile(sageDir, "CoverageCodingPanel.bed.gz", refGenomeVersion);
+
+        GU_LOGGER.info("writing {} panel coverage regions file({})", refGenomeVersion, coverageWithoutUtr);
+        GU_LOGGER.info("writing {} panel coding regions file({})", refGenomeVersion, codingWithUtr);
+
+        try
+        {
+            NamedBedFile.writeUnnamedBedFile(codingWithUtr, panelRegionsWithUtr);
+            NamedBedFile.writeBedFile(coverageWithoutUtr, panelRegionsWithoutUtr);
+        }
+        catch(IOException e)
+        {
+            GU_LOGGER.error("failed to write gene panel files: {}", e.toString());
+        }
+    }
+
+    private static final int SPLICE_SIZE = 10;
+
+    private List<GenomeRegion> getTranscriptRegions(final GeneData geneData, final TranscriptData transData, boolean includeUTR)
+    {
+        int startPosition = includeUTR || transData.nonCoding() ? transData.TransStart : transData.CodingStart;
+        int endPosition = includeUTR || transData.nonCoding() ? transData.TransEnd : transData.CodingEnd;
+
+        final List<GenomeRegion> regions = Lists.newArrayList();
+
+        for(int i = 0; i < transData.exons().size(); i++)
+        {
+            ExonData exon = transData.exons().get(i);
+            int exonStart = i == 0 ? exon.Start : exon.Start - SPLICE_SIZE;
+            int exonEnd = i == transData.exons().size() - 1 ? exon.End : exon.End + SPLICE_SIZE;
+
+            if(startPosition < exonEnd && endPosition > exonStart)
+            {
+                regions.add(GenomeRegions.create(geneData.Chromosome, max(startPosition, exonStart), min(endPosition, exonEnd)));
+            }
+        }
+
+        return regions;
     }
 
     private boolean createOutputDir(final String outputDir)
