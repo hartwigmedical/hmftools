@@ -61,6 +61,7 @@ public abstract class StructuralVariantData {
     public abstract double insertSequenceRepeatCoverage();
     public abstract int startAnchoringSupportDistance();
     public abstract int endAnchoringSupportDistance();
+    public abstract int ponCount();
 
     public static StructuralVariantData convertSvData(final EnrichedStructuralVariant var, int svId)
     {
@@ -118,6 +119,7 @@ public abstract class StructuralVariantData {
                 .insertSequenceRepeatCoverage(getValueNotNull(var.insertSequenceRepeatCoverage()))
                 .startAnchoringSupportDistance(var.start().anchoringSupportDistance())
                 .endAnchoringSupportDistance(var.end() == null ? 0 : var.end().anchoringSupportDistance())
+                .ponCount(0)
                 .build();
     }
 

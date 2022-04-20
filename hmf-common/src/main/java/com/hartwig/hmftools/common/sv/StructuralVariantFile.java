@@ -241,7 +241,8 @@ public class StructuralVariantFile
                 .insertSequenceRepeatOrientation(getByteValue(values[index++]))
                 .insertSequenceRepeatCoverage(getDoubleValue(values[index++]))
                 .startAnchoringSupportDistance(Integer.parseInt(values[index++]))
-                .endAnchoringSupportDistance(getIntValue(values[index++]));
+                .endAnchoringSupportDistance(getIntValue(values[index++]))
+                .ponCount(0);
 
         return builder.build();
     }

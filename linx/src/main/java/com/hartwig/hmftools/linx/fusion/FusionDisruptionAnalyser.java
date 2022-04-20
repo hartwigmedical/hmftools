@@ -102,7 +102,7 @@ public class FusionDisruptionAnalyser
         mDbAccess = dbAccess;
         mFusionFinder = new FusionFinder(ensemblDataCache, fusionResources.knownFusionCache());
         mFusionWriter = new FusionWriter(mOutputDir, cohortDataWriter);
-        mDisruptionFinder = new DisruptionFinder(config, ensemblDataCache, fusionResources.germlinePonCache(), cohortDataWriter, visSampleData);
+        mDisruptionFinder = new DisruptionFinder(config, ensemblDataCache, cohortDataWriter, visSampleData);
         mVisSampleData = visSampleData;
 
         mNeoEpitopeWriter = null;

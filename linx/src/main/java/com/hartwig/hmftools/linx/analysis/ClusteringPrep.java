@@ -192,6 +192,7 @@ public class ClusteringPrep
                 .insertSequenceRepeatCoverage(sglSvData.insertSequenceRepeatCoverage())
                 .startAnchoringSupportDistance(sglSvData.startAnchoringSupportDistance())
                 .endAnchoringSupportDistance(infSvData.startAnchoringSupportDistance())
+                .ponCount(0)
                 .build();
 
         return new SvVarData(newSvData);

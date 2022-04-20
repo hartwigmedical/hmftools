@@ -60,7 +60,6 @@ public class GermlineDisruptions
     private final EnsemblDataCache mGeneTransCache;
     private final List<GeneData> mDriverGeneDataList;
     private final List<String> mReportableGeneIds;
-    private final GermlinePonCache mGermlinePonCache;
     private final List<SvDisruptionData> mDisruptions;
 
     private final Set<SvVarData> mReportableSgls;
@@ -72,11 +71,9 @@ public class GermlineDisruptions
     private static final List<ResolvedType> REPORTED_RESOLVED_TYPES = Lists.newArrayList(
             ResolvedType.DEL, ResolvedType.DUP, RECIP_INV, RECIP_TRANS);
 
-    public GermlineDisruptions(final LinxConfig config, final EnsemblDataCache geneTransCache, final GermlinePonCache germlinePonCache)
+    public GermlineDisruptions(final LinxConfig config, final EnsemblDataCache geneTransCache)
     {
         mGeneTransCache = geneTransCache;
-
-        mGermlinePonCache = germlinePonCache;
 
         mDriverGeneDataList = config.DriverGenes.stream()
                 .map(x -> geneTransCache.getGeneDataByName(x.gene()))
@@ -127,9 +124,9 @@ public class GermlineDisruptions
         return true;
     }
 
-    public int getPonCount(final SvVarData var)
+    private int getPonCount(final SvVarData var)
     {
-        return var.getSvData().filter().equals(PON_FILTER_PON) ? mGermlinePonCache.getPonCount(var) : 0;
+        return var.getSvData().filter().equals(PON_FILTER_PON) ? var.getSvData().ponCount() : 0;
     }
 
     public void findGeneDeletions(final List<SvCluster> clusters)

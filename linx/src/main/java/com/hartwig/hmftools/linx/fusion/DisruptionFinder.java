@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.linx.fusion;
 
-import static java.lang.Math.abs;
-
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
@@ -39,7 +37,6 @@ import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.CohortDataWriter;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.germline.GermlineDisruptions;
-import com.hartwig.hmftools.linx.germline.GermlinePonCache;
 import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -66,12 +63,12 @@ public class DisruptionFinder implements CohortFileInterface
 
     public DisruptionFinder(
             final LinxConfig config, final EnsemblDataCache geneTransCache,
-            final GermlinePonCache germlinePonCache, final CohortDataWriter cohortDataWriter, final VisSampleData visSampleData)
+            final CohortDataWriter cohortDataWriter, final VisSampleData visSampleData)
     {
         mGeneTransCache = geneTransCache;
 
         mIsGermline = config.IsGermline;
-        mGermlineDisruptions = mIsGermline ? new GermlineDisruptions(config, geneTransCache, germlinePonCache) : null;
+        mGermlineDisruptions = mIsGermline ? new GermlineDisruptions(config, geneTransCache) : null;
 
         mDisruptionGeneTranscripts = getDisruptionGeneTranscripts(config.DriverGenes, !mIsGermline, geneTransCache);
 

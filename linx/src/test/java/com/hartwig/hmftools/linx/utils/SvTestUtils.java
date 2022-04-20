@@ -161,6 +161,7 @@ public class SvTestUtils
                         .insertSequenceRepeatCoverage(0.0)
                         .startAnchoringSupportDistance(0)
                         .endAnchoringSupportDistance(0)
+                        .ponCount(0)
                         .build();
 
         SvVarData var = new SvVarData(svData);

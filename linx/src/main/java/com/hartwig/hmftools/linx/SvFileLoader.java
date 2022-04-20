@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PON_COUNT;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.valueNotNull;
 
@@ -34,7 +35,7 @@ public final class SvFileLoader
         String vcfFile = config.SvVcfFile.contains("*") ? config.SvVcfFile.replaceAll("\\*", sampleId) : config.SvVcfFile;
 
         if(config.IsGermline)
-            return loadSvDataFromGermlineVcf(vcfFile, cmd);
+            return loadSvDataFromGermlineVcf(vcfFile);
         else
             return loadSvDataFromVcf(vcfFile);
     }
@@ -66,7 +67,7 @@ public final class SvFileLoader
         return svDataList;
     }
 
-    private static List<StructuralVariantData> loadSvDataFromGermlineVcf(final String vcfFile, final CommandLine cmd)
+    private static List<StructuralVariantData> loadSvDataFromGermlineVcf(final String vcfFile)
     {
         final List<StructuralVariantData> svDataList = Lists.newArrayList();
 
@@ -178,6 +179,7 @@ public final class SvFileLoader
                 .insertSequenceRepeatCoverage(DatabaseUtil.valueNotNull(var.insertSequenceRepeatCoverage()))
                 .startAnchoringSupportDistance(var.start().anchoringSupportDistance())
                 .endAnchoringSupportDistance(var.end() == null ? 0 : var.end().anchoringSupportDistance())
+                .ponCount(var.startContext().getAttributeAsInt(PON_COUNT, 0))
                 .build();
     }
 }
