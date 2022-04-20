@@ -49,7 +49,7 @@ public class GermlineDrivers
                 driverCatalog.add(germlineDriver(category, gene, geneVariants, geneCopyNumber));
         }
 
-        return new ArrayList<>(driverCatalog);
+        return driverCatalog;
     }
 
     static DriverCatalog germlineDriver(
