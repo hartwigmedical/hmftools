@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.genome.region.CanonicalTranscriptFactory;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -41,9 +40,6 @@ public class LoadCanonicalTranscripts
         LOGGER.info("Persisting transcripts to database");
         loadCanonicalTranscripts(dbAccess, ensemblRootDir, RefGenomeVersion.V37);
         loadCanonicalTranscripts(dbAccess, ensemblRootDir, RefGenomeVersion.V38);
-
-        // dbAccess.writeCanonicalTranscripts("GRCh37", CanonicalTranscriptFactory.create37());
-        // dbAccess.writeCanonicalTranscripts("GRCh38", CanonicalTranscriptFactory.create38());
 
         LOGGER.info("Complete");
     }

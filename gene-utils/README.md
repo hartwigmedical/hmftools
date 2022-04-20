@@ -38,17 +38,6 @@ java -cp gene-utils.jar com.hartwig.hmftools.geneutils.drivers.GenerateDriverGen
   -output_dir /path_to_write_data_files/ 
 ```
 
-### Generating the Gene Panel file (to be deprecated)
-The hmf-common module contains a Ensembl resource file for use in code - all_genes.tsv (V37 and V38 versions). 
-It contains gene, transcript and exon data for about all gene and their canonical transcripts 
-
-```
-java -cp gene-utils.jar com.hartwig.hmftools.geneutils.ensembl.GenerateGenePanel
-    -ensembl_data_dir /path_to_ensembl_data_cache
-    -ref_genome_version [37 or 38] 
-    -output_dir /path_to_write_data_files/ 
-```
-
 ### Generating the Ref-Seq data file
 Generate the RefSeq gene data file:
 ```

@@ -10,7 +10,6 @@ import static org.junit.Assert.assertNull;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -223,18 +222,6 @@ public class CodonRegionTest
         assertEquals(18, allCodonsPart3.end());
 
         assertNull(codonRangeByRank(transcript, 0, 6));
-    }
-
-    @Test
-    public void worksForRealBRAFCodon600() {
-        HmfTranscriptRegion braf = HmfGenePanelSupplier.allGenesMap37().get("BRAF");
-
-        List<GenomeRegion> codon600 = codonByIndex(braf, 600);
-        assertNotNull(codon600);
-        assertEquals(1, codon600.size());
-
-        assertEquals(140453135, codon600.get(0).start());
-        assertEquals(140453137, codon600.get(0).end());
     }
 
     @NotNull
