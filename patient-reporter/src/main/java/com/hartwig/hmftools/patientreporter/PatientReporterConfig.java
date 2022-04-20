@@ -361,6 +361,10 @@ public interface PatientReporterConfig {
         String sampleSummaryTsv = Strings.EMPTY;
         String sampleSpecialRemarkTsv = Strings.EMPTY;
 
+        String outputDirData = Strings.EMPTY;
+        String rvaLogo = Strings.EMPTY;
+        String udiCode = Strings.EMPTY;
+
         if (isQCFail && qcFailReason.isDeepWGSDataAvailable()) {
             if (requirePipelineVersion) {
                 pipelineVersion = nonOptionalFile(cmd, PIPELINE_VERSION_FILE);
@@ -368,6 +372,9 @@ public interface PatientReporterConfig {
             purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
             purpleQcFile = nonOptionalFile(cmd, PURPLE_QC_FILE);
             peachGenotypeTsv = nonOptionalFile(cmd, PEACH_GENOTYPE_TSV);
+            outputDirData = nonOptionalDir(cmd, OUTPUT_DIRECTORY_DATA);
+            rvaLogo = nonOptionalFile(cmd, RVA_LOGO);
+            udiCode = nonOptionalValue(cmd, UDI_DI);
         } else if (!isQCFail) {
             if (requirePipelineVersion) {
                 pipelineVersion = nonOptionalFile(cmd, PIPELINE_VERSION_FILE);
@@ -395,6 +402,10 @@ public interface PatientReporterConfig {
             germlineReportingTsv = nonOptionalFile(cmd, GERMLINE_REPORTING_TSV);
             sampleSummaryTsv = nonOptionalFile(cmd, SAMPLE_SUMMARY_TSV);
             sampleSpecialRemarkTsv = nonOptionalFile(cmd, SAMPLE_SPECIAL_REMARK_TSV);
+
+            outputDirData = nonOptionalDir(cmd, OUTPUT_DIRECTORY_DATA);
+            rvaLogo = nonOptionalFile(cmd, RVA_LOGO);
+            udiCode = nonOptionalValue(cmd, UDI_DI);
         }
 
         return ImmutablePatientReporterConfig.builder()
@@ -403,13 +414,13 @@ public interface PatientReporterConfig {
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
                 .tumorSampleBarcode(nonOptionalValue(cmd, TUMOR_SAMPLE_BARCODE))
                 .outputDirReport(nonOptionalDir(cmd, OUTPUT_DIRECTORY_REPORT))
-                .outputDirData(nonOptionalDir(cmd, OUTPUT_DIRECTORY_DATA))
+                .outputDirData(outputDirData)
                 .primaryTumorTsv(nonOptionalFile(cmd, PRIMARY_TUMOR_TSV))
                 .limsDir(nonOptionalDir(cmd, LIMS_DIRECTORY))
-                .rvaLogo(nonOptionalFile(cmd, RVA_LOGO))
+                .rvaLogo(rvaLogo)
                 .companyLogo(nonOptionalFile(cmd, COMPANY_LOGO))
                 .signature(nonOptionalFile(cmd, SIGNATURE))
-                .udiDi(nonOptionalValue(cmd, UDI_DI))
+                .udiDi(udiCode)
                 .qcFail(isQCFail)
                 .qcFailReason(qcFailReason)
                 .panel(isPanel)
