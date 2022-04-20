@@ -33,12 +33,12 @@ public class IsofoxConstants
     {
         if(version == RefGenomeVersion.V38)
         {
-            geneIds.add("ENSG00000276168");
-            geneIds.add("ENSG00000274012");
-            geneIds.add("ENSG00000278771");
-            geneIds.add("ENSG00000263740");
-            geneIds.add("ENSG00000283293");
-            geneIds.add("ENSG00000265735");
+            geneIds.add("ENSG00000276168"); // RN7SL1
+            geneIds.add("ENSG00000274012"); // RN7SL2
+            geneIds.add("ENSG00000278771"); // RN7SL3
+            geneIds.add("ENSG00000263740"); // RN7SL4P
+            geneIds.add("ENSG00000283293"); // RN7SK
+            geneIds.add("ENSG00000265735"); // RN7SL5P
         }
         else
         {

@@ -130,7 +130,7 @@ public class FragmentSizeCalcs implements Callable
 
     private void calcSampleFragmentSize()
     {
-        if (mGeneDataList.isEmpty() || mRequiredFragCount == 0)
+        if(mGeneDataList.isEmpty() || mRequiredFragCount == 0)
         {
             ISF_LOGGER.error("chromosome({}) fragment size uninitialised", mChromosome);
             return;
@@ -158,7 +158,7 @@ public class FragmentSizeCalcs implements Callable
             mCurrentGenesRange[SE_START] = 0;
             mCurrentGenesRange[SE_END] = 0;
 
-            for (int i = 0; i < overlappingGenes.size(); ++i)
+            for(int i = 0; i < overlappingGenes.size(); ++i)
             {
                 GeneData geneData = overlappingGenes.get(i);
 
@@ -168,12 +168,12 @@ public class FragmentSizeCalcs implements Callable
                 mCurrentTransDataList.addAll(mGeneTransCache.getTranscripts(geneData.GeneId));
             }
 
-            if (mCurrentTransDataList.isEmpty() || mCurrentTransDataList.size() > MAX_GENE_TRANS)
+            if(mCurrentTransDataList.isEmpty() || mCurrentTransDataList.size() > MAX_GENE_TRANS)
                 continue;
 
             int geneLength = mCurrentGenesRange[SE_END] - mCurrentGenesRange[SE_START];
 
-            if (geneLength < MIN_GENE_LENGTH || geneLength > MAX_GENE_LENGTH)
+            if(geneLength < MIN_GENE_LENGTH || geneLength > MAX_GENE_LENGTH)
                 continue;
 
             if(excludedRegions.stream().anyMatch(x -> positionsOverlap(x[SE_START], x[SE_END], mCurrentGenesRange[SE_START], mCurrentGenesRange[SE_END])))
@@ -221,7 +221,7 @@ public class FragmentSizeCalcs implements Callable
                 mFragmentLengthsByGene.clear();
             }
 
-            if (mProcessedFragments >= mRequiredFragCount)
+            if(mProcessedFragments >= mRequiredFragCount)
             {
                 ISF_LOGGER.debug("chromosome({}) max fragment length samples reached: {}", mChromosome, mProcessedFragments);
                 break;
@@ -229,6 +229,9 @@ public class FragmentSizeCalcs implements Callable
         }
 
         ISF_LOGGER.debug("chromosome({}) processing complete", mChromosome);
+
+        mFragmentTracker.clear();
+        mCurrentTransDataList.clear();
 
         if(mConfig.WriteFragmentLengthsByGene)
         {
@@ -462,13 +465,13 @@ public class FragmentSizeCalcs implements Callable
             {
                 final FragmentSize fragLengthCount = fragmentLengths.get(index);
 
-                if (fragLengthCount.Length < fragmentLength)
+                if(fragLengthCount.Length < fragmentLength)
                 {
                     ++index;
                     continue;
                 }
 
-                if (fragLengthCount.Length == fragmentLength)
+                if(fragLengthCount.Length == fragmentLength)
                 {
                     fragLengthCount.Frequency += otherLengthData.Frequency;
                     exists = true;
@@ -477,7 +480,7 @@ public class FragmentSizeCalcs implements Callable
                 break;
             }
 
-            if (!exists)
+            if(!exists)
             {
                 FragmentSize newLengthData = new FragmentSize(fragmentLength, otherLengthData.Frequency);
                 fragmentLengths.add(index, newLengthData);

@@ -10,4 +10,6 @@ public class FragmentSize
         Length = length;
         Frequency = frequency;
     }
+
+    public String toString() { return String.format("length(%d) freq(%d)", Length, Frequency); }
 }

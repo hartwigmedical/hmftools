@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.NO_GENE_ID;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
-import static com.hartwig.hmftools.isofox.fusion.FusionConfig.LOG_READ_ID;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
@@ -22,8 +21,6 @@ import static com.hartwig.hmftools.isofox.fusion.FusionReadData.softClippedReadS
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.checkMissingGeneData;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 import static com.hartwig.hmftools.isofox.fusion.ReadGroup.mergeChimericReadMaps;
-
-import static org.apache.logging.log4j.Level.INFO;
 
 import java.util.List;
 import java.util.Map;
@@ -278,7 +275,6 @@ public class FusionFinder implements Callable
     private void processReadGroups(final List<ReadGroup> readGroups, boolean isInterChromosomal)
     {
         // read groups are guaranteed to be complete
-
         clearState();
 
         if(readGroups.isEmpty())
@@ -374,9 +370,9 @@ public class FusionFinder implements Callable
     private void formInitialFusions()
     {
         int junctioned = 0;
-        for (FusionFragment fragment : mAllFragments)
+        for(FusionFragment fragment : mAllFragments)
         {
-            if (fragment.type() == MATCHED_JUNCTION)
+            if(fragment.type() == MATCHED_JUNCTION)
             {
                 if(fragment.hasSuppAlignment())
                 {
@@ -824,7 +820,7 @@ public class FusionFinder implements Callable
 
                     for(int se = SE_START; se <= SE_END; ++se)
                     {
-                        if (abs(fusion1.junctionPositions()[se] - fusion2.junctionPositions()[se]) <= POSITION_REALIGN_DISTANCE)
+                        if(abs(fusion1.junctionPositions()[se] - fusion2.junctionPositions()[se]) <= POSITION_REALIGN_DISTANCE)
                         {
                             isSimilar = true;
                             break;
