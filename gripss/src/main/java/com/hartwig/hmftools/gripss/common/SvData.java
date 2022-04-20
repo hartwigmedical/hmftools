@@ -36,6 +36,7 @@ public class SvData
     private final String mInsertSequence;
     private final boolean mImprecise;
     private boolean mIsShortLocal;
+    private int mPonCount;
 
     public SvData(final StructuralVariant sv, final GenotypeIds genotypeIds)
     {
@@ -70,6 +71,7 @@ public class SvData
 
         mImprecise = sv.imprecise();
         mInsertSequence = sv.insertSequence();
+        mPonCount = 0;
     }
 
     public void onPositionsUpdated()
@@ -105,6 +107,9 @@ public class SvData
     public String insertSequence() { return mInsertSequence; }
     public int insertSequenceLength() { return mInsertSequence.length(); }
     public int duplicationLength() { return mType == DUP ? length() + 1 : 0; }
+
+    public int ponCount() { return mPonCount; }
+    public void setPonCount(int count) { mPonCount = count; }
 
     public boolean hasReference() { return mReferenceOrdinal >= 0; }
 

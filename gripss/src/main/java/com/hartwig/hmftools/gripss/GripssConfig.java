@@ -88,7 +88,7 @@ public class GripssConfig
 
         if(VcfFile.isEmpty() || !Files.exists(Paths.get(VcfFile)))
         {
-            GR_LOGGER.error("missing or invalid VCF file");
+            GR_LOGGER.error("missing or invalid VCF file({})", VcfFile);
             return false;
         }
 

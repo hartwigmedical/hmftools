@@ -65,12 +65,17 @@ public class FilterCache
 
     public void checkPonFilter(final PonCache ponCache, final SvData sv)
     {
-        if(ponCache.getPonCount(sv) > 0)
+        int ponCount = ponCache.getPonCount(sv);
+
+        if(ponCount > 0)
         {
+            sv.setPonCount(ponCount);
+
             addBreakendFilter(sv.breakendStart(), PON);
 
             if(!sv.isSgl())
                 addBreakendFilter(sv.breakendEnd(), PON);
+
             ++mPonFiltered;
         }
     }

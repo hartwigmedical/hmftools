@@ -50,6 +50,7 @@ public class StructuralVariantFactory
     public static final String LOCAL_LINKED_BY = "LOCAL_LINKED_BY";
     public static final String REMOTE_LINKED_BY = "REMOTE_LINKED_BY";
     public static final String LINKED_BY_DELIM = ",";
+    public static final String PON_COUNT = "PON_COUNT";
 
     private static final String INS_SEQ = "SVINSSEQ";
     private static final String LEFT_INS_SEQ = "LEFT_SVINSSEQ";

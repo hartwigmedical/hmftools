@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ALT_PATH;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_EVENT_TYPE;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_HOTSPOT;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_LOCAL_LINKED_BY;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_PON_COUNT;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REALIGN;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REMOTE_LINKED_BY;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_RESCUE_INFO;
@@ -108,6 +109,8 @@ public class VcfWriter
 
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(VT_HOTSPOT, 1, VCFHeaderLineType.Flag, "Variant is a hotspot"));
 
+        newHeader.addMetaDataLine(new VCFInfoHeaderLine(VT_PON_COUNT, 1, VCFHeaderLineType.Integer, "PON count if in PON"));
+
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(
                 VT_RESCUE_INFO, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "Partner breakend rescue"));
 
@@ -178,6 +181,9 @@ public class VcfWriter
             builder.attribute(VT_REMOTE_LINKED_BY, remoteLinks);
         else
             builder.attribute(VT_REMOTE_LINKED_BY, "");
+
+        if(breakend.sv().ponCount() > 0)
+            builder.attribute(VT_PON_COUNT, breakend.sv().ponCount());
 
         final SvData sv = breakend.sv();
 

@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.IMPRECISE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.LOCAL_LINKED_BY;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.MATE_ID;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PAR_ID;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PON_COUNT;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REMOTE_LINKED_BY;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.TAF;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -78,6 +79,7 @@ public class VcfUtils
 
     public static final String VT_LOCAL_LINKED_BY = LOCAL_LINKED_BY;
     public static final String VT_REMOTE_LINKED_BY = REMOTE_LINKED_BY;
+    public static final String VT_PON_COUNT = PON_COUNT;
     public static final String VT_TAF = TAF;
     public static final String VT_HOTSPOT = HOTSPOT;
     public static final String VT_REALIGN = "REALIGN";
