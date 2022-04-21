@@ -214,7 +214,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
         if (SomaticVariants.hasPhasedVariant(reportableVariants)) {
             contentTable.addCell(TableUtil.createLayoutCell(1, contentTable.getNumberOfColumns())
-                    .add(new Paragraph("\n+ Marked protein (p.) annotation is based on multiple phased variants").addStyle(ReportResources.subTextStyle())));
+                    .add(new Paragraph("\n+ Marked protein (p.) annotation is based on multiple phased variants.").addStyle(ReportResources.subTextStyle())));
         }
 
         return TableUtil.createWrappingReportTable(title, null, contentTable);
