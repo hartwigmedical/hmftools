@@ -21,7 +21,8 @@ Whole exome sequenced (WES) data is not supported.
   + [AMBER](#amber)
   + [Structural Variant Input VCFs (optional)](#structural-variant-input-vcfs-optional)
   + [Somatic Variant Input VCF (optional)](#somatic-variant-input-vcf-optional)
-* [Tumor Only Mode](#tumor-only-mode)  
+* [Tumor Only Mode](#tumor-only-mode) 
+* [Germline Only Mode](#germline-only-mode)  
 * [Algorithm](#algorithm)
   + [1. Sex](#1-sex-determination)
   + [2. Segmentation](#2-segmentation)
@@ -308,6 +309,7 @@ Tumor only mode impacts PURPLE in the following ways:
   - No germline chromosomal aberrations are detected 
   - HLA SNV / INDEL are ignored and hard filtered (assumed to be germline)
   - Mutation burden calculations are adjusted according to expected germline leakage (TO DO: add calculations)
+  - somatic SNV/INDEL and SV with PON_ filters are hardfiltered and ignored
 
 ## Germline only
 Purple can be run in a limited mode on germline only output so that germline point mutations and structural variants can be annotated and filtered according to below described logic.   The differences in germline mode are:
