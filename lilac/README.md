@@ -107,6 +107,18 @@ java -jar lilac.jar \
    -output_dir /output_dir/ \
 ```
 
+Or in tumor-only mode, where the tumor BAM is used to find the alleles:
+
+```
+java -jar lilac.jar \
+   -sample COLO829T 
+   -ref_genome /path_to_ref_genome_fasta_file/ \
+   -resource_dir /path_to_lilac_resource_files/ \ 
+   -tumor_bam /sample_data_path/COLO829T.bam \
+   -output_dir /output_dir/ \
+```
+
+
 ## Algorithm
 The starting point for the LILAC algorithm is the complete set of possible 4 digit alleles and all the fragments aligned to HLA-A, HLA-B and HLA-C. Where multiple 6 digit or 8 digit types are present in the IMGT/HLA database, LILAC uses the numerically lowest type for all calculations. Note that 2 HLA-A alleles {A*31:135, A*33:191} have been removed from the database due to it frequently being found as a low level artefact (likely due to the high similarity to closely related genes and pseudogenes such as HLA-H). 
 
@@ -358,4 +370,6 @@ nucleotide matches are permitted.
 ## Version History and Download Links
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.0)
 - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.1)
+- [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.2)
+
  
