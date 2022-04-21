@@ -227,6 +227,7 @@ PON | PON_COUNT* | PON_MAX** | HMF Cohort | See detailed table below | 37 & 38
 The filters for the HMF cohort PON depend on the ref genome version and are as follows:
 
 Version | Samples | HOTSPOT | PANEL | OTHER
+---|---|---|---|---
 37 | 1000 | PON_MAX>=5 & PON_COUNT>=10 | PON_MAX>=5 & PON_COUNT>=6 | PON_COUNT>=6
 38 | 98 | PON_MAX>=5 & PON_COUNT>=5 | PON_MAX>=5 & PON_COUNT>=2 | PON_COUNT>=2
 
