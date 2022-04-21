@@ -79,7 +79,9 @@ public interface PanelReporterConfig {
         options.addOption(REF_SAMPLE_BARCODE, true, "The reference sample barcode for the tumor sample for which a report is generated.");
 
         options.addOption(PANEL_QC_FAIL, false, "If set, generates a qc-fail report.");
-        options.addOption(PANEL_QC_FAIL_REASON, true, "One of: " + Strings.join(Lists.newArrayList(QCFailReason.validIdentifiers()), ','));
+        options.addOption(PANEL_QC_FAIL_REASON,
+                true,
+                "One of: " + Strings.join(Lists.newArrayList(PanelFailReason.validIdentifiers()), ','));
         options.addOption(PANEL_VCF_NAME, true, "The name of the VCF file of the panel results.");
 
         options.addOption(COMMENTS, true, "Additional comments to be added to the report (optional).");
