@@ -41,8 +41,7 @@ This is the default and recommended mode.
 | ref_genome_version | One of `37` or `38`. Required only when using CRAM files.                             |
 
 The vcf file used by HMF (GermlineHetPon.37.vcf.gz) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
-The sites were chosen by running the GATK HaplotypeCaller over 1700 germline samples and then selecting all SNP sites which are heterozygous in 800 to 900 of the samples. 
-The 1.3 million sites provided in this file typically result in 450k+ BAF points. A 38 equivalent is also available.
+The sites for hg37 were chosen by running the GATK HaplotypeCaller over 1700 germline samples and then selecting all SNP sites which are heterozygous in 800 to 900 of the samples.  The 1.3 million sites provided in this file typically result in 450k+ BAF points.  For hg38 we use GNOMAD v3 SNP sites from chr1-chrX with only a single ALT at that location and with populationAF > 0.05 and < 0.95.   This yields 7.25M sites.
 
 Approximately 1000 sites scattered evenly through the VCF have been tagged with a SNPCHECK flag. 
 The allelic frequency of these sites in the reference bam are written to the `REFERENCE.amber.snp.vcf.gz` file without any filtering to be used downstream for sample matching. 
@@ -75,7 +74,11 @@ java -Xmx32G -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
 ```
 
 ## Tumor Only Mode
-If no reference BAM is supplied, AMBER will be put into tumor only mode.
+If no reference BAM is supplied, AMBER will be put into tumor only mode.  In tumor only, the following behaviour is changed:
+- Contamination check not run
+- snp check vcf is not produced
+- normalBAF and count fields are set to -1 in amber.baf.tsv
+- a set of blacklisted regions (with variable germline copy number) are ignored
 
 ### Mandatory Arguments
 
@@ -95,6 +98,7 @@ If no reference BAM is supplied, AMBER will be put into tumor only mode.
 | min_base_quality       | 13      | Minimum quality for a base to be considered                                   |
 | tumor_only_min_vaf     | 0.05    | Min VAF in ref and alt in tumor only mode                                     |
 | tumor_only_min_support | 2       | Min support in ref and alt in tumor only mode                                 |
+| min_tumor_depth        | 25      | Min total depth in tumor only mode                                            |
 | ref_genome             | NA      | Path to the reference genome fasta file. Required only when using CRAM files. |
 
 ### Example Usage
@@ -176,14 +180,12 @@ HAVING sampleCount > 1
 ORDER BY sampleCount desc;
 ```
 
-
 ## Output
 | File                                    | Description                                                                              |
 |-----------------------------------------|------------------------------------------------------------------------------------------|
-| TUMOR.amber.baf.tsv                     | Tab separated values (TSV) containing reference and tumor BAF at each heterozygous site. |
+| TUMOR.amber.baf.tsv.g                   | Tab separated values (TSV) containing reference and tumor BAF at each heterozygous site. |
 | TUMOR.amber.baf.pcf                     | TSV of BAF segments using PCF algorithm.                                                 |
-| TUMOR.amber.qc                          | Contains median tumor baf and QC status. FAIL may indicate contamination in sample.      |
-| TUMOR.amber.baf.vcf.gz                  | Similar information as BAF file but in VCF format.                                       |
+| TUMOR.amber.qc                          | Contains QC status and comntamination rate. FAIL may indicate contamination in sample.   |
 | TUMOR.amber.contamination.vcf.gz        | Entry at each homozygous site in the reference and tumor.                                |
 | REFERENCE.amber.snp.vcf.gz              | Entry at each SNP location in the reference.                                             |
 | REFERENCE.amber.homozygousregion.tsv    | Regions of homozygosity found in the reference.                                          |
