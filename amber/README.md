@@ -9,6 +9,7 @@ The Bioconductor copy number package is then used to generate pcf segments from 
 When using paired reference/tumor data, AMBER is also able to: 
   - detect evidence of contamination in the tumor from homozygous sites in the reference; and
   - facilitate sample matching by recording SNPs in the germline
+  - identify long regions of homozygosty and consanguinity
 
 ## Installation
 
@@ -32,9 +33,9 @@ This is the default and recommended mode.
 
 | Argument      | Description                                                                                |
 |---------------|--------------------------------------------------------------------------------------------|
-| reference     | Name of the reference sample                                                               |
+| reference     | Name of the reference sample   (if left null run in tumor_only mode)                       |
 | reference_bam | Path to indexed reference BAM file                                                         |
-| tumor         | Name of the tumor sample                                                                   |
+| tumor         | Name of the tumor sample (if left null run in germline_only mode)                          |
 | tumor_bam     | Path to indexed tumor BAM file                                                             |
 | output_dir    | Path to the output directory. This directory will be created if it does not already exist. |
 | loci          | Path to vcf file containing likely heterozygous sites (see below). Gz files supported.     |
@@ -110,6 +111,13 @@ java -Xmx32G -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
    -threads 16 \
    -loci /path/to/GermlineHetPon.37.vcf.gz 
 ```
+## Germline Only Mode
+
+If the tumor / tumor bam are not specified then Amber will be run in germline only mode.   Germline mode has the following differences in behaviour
+- contamination is not run
+- pcf fitting is not run
+- tumor fields are set to -1 for amber.baf.tsv
+- amber.baf.tsv named with ref sample (instead of tumor sample)
 
 ## Multiple Reference / Donor mode
 The `reference` and `reference_bam` arguments supports multiple arguments separated by commas. 
