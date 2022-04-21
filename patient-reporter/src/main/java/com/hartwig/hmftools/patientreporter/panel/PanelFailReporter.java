@@ -58,6 +58,8 @@ public class PanelFailReporter {
                 .signaturePath(reportData.signaturePath())
                 .logoCompanyPath(reportData.logoCompanyPath())
                 .reportDate(reportDate)
+                .isWGSreport(false)
+                .panelFailReason(reason)
                 .build();
     }
 }

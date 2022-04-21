@@ -68,11 +68,12 @@ public class PanelReporterApplication {
         if (config.panel()) {
             if (config.panelQcFail()) {
                 LOGGER.info("Generating qc-fail panel report");
-
                 generatePanelQCFail(sampleMetadata);
+            } else {
+                LOGGER.info("Generating panel report");
+                generatePanelAnalysedReport(sampleMetadata);
             }
-            LOGGER.info("Generating panel report");
-            generatePanelAnalysedReport(sampleMetadata);
+
         }
     }
 

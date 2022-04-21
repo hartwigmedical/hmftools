@@ -185,12 +185,13 @@ public interface PanelReporterConfig {
                 if (panelQcFailReason == null) {
                     throw new ParseException("Did not recognize QC Fail reason: " + qcFailReasonString);
                 }
-            }
-            if (requirePipelineVersion) {
-                pipelineVersion = nonOptionalFile(cmd, PIPELINE_VERSION_FILE);
-            }
+            } else {
+                if (requirePipelineVersion) {
+                    pipelineVersion = nonOptionalFile(cmd, PIPELINE_VERSION_FILE);
+                }
 
-            panelVCFFile = nonOptionalValue(cmd, PANEL_VCF_NAME);
+                panelVCFFile = nonOptionalValue(cmd, PANEL_VCF_NAME);
+            }
         }
 
         return ImmutablePanelReporterConfig.builder()
