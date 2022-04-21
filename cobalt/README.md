@@ -6,9 +6,11 @@ COBALT starts with the raw read counts per 1,000 base window for both normal and
 in the respective bam files with a mapping quality score of at least 10 that is neither unmapped, duplicated, secondary, nor supplementary. 
 Windows with a GC content less than 0.2 or greater than 0.6 or with an average mappability below 0.85 are excluded from further analysis.
 
-Next we apply a GC normalization to calculate the read ratios. 
-To do this we divide the read count of each window by the median read count of all windows sharing the same GC content then normalise further to the 
-ratio of the median to mean read count of all windows. 
+Next we apply a GC normalization to calculate the read ratios. To do this we divide the read count of each window by the median read count of all windows sharing the same GC content then normalise further to the ratio of the median to mean read count of all windows.    For some targeted region analyses the median read count may be very low due to low numbers of off target reads, and the use of discrete integers may restrict resolution.  We therefore modify the median with the following formula to improve the estimate:
+
+```
+modifiedMedian = median - 0.5 + (0.5 - proportion of depth windows with read count < median) / (proportion of depth windows  with read count = median)
+```
 
 Post GC normalization, COBALT is able to detect the following germline chromosomal aberrations from the reference ratio:
 
