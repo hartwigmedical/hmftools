@@ -28,7 +28,7 @@ These two files are used in purple as the structural variant recovery vcf and st
 The bed and bedpe files are available to download from [HMFTools-Resources > Gripss](https://resources.hartwigmedicalfoundation.nl/). Both files need to be sorted by chromosome and start breakend start position.
 
 ## Tumor-only / Germline mode
-The `reference` argument is optional and if not supplied, GRIPSS will run in 'tumor-only' mode in which case  all filters that require the normal sample are de-activated. This includes `minNormalCoverage`, `minRelativeCoverage`, `maxNormalSupport`, `shortSRNormalSupport`.   GRIPSS can be run in a germline mode by setting the 'sample' to the germline and not supplying a 'reference' argument.   In the hartwig pipeline we use the same filter settings for tumor and germline structural variants in GRIDSS (see below)
+The `reference` argument is optional and if not supplied, GRIPSS will run in 'tumor-only' mode in which case  all filters that require the normal sample are de-activated. This includes `minNormalCoverage`, `minRelativeCoverage`, `maxNormalSupport`, `shortSRNormalSupport`.   Single breakends are not called in tumor only mode as there are many germline artefacts. GRIPSS can be run in a germline mode by setting the 'sample' to the germline and not supplying a 'reference' argument.   In the hartwig pipeline we use the same filter settings for tumor and germline structural variants in GRIDSS (see below). 
  
 # Algorithm
 
