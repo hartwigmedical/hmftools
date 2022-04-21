@@ -208,8 +208,27 @@ The filters can be set per variant tier in the form: 'TIER;SAMPLE_COUNT_LIMIT;MA
 
 will mark any variant of tier = HOTSPOT as PON if it matches an entry with 5+ SamplesCount and 5+ MaxSampleReads, 2+ and 5+ for a PANEL tier variant, and 2+ for any other tier variant.
 
-### Population Frequency
+### GNOMAD Population Frequency
 We annotate the population frequency using gnomAD (v3.1.2 for hg38, v2.1.1 for GRCH37). We filter the Gnomad file for variants with at least 0.00005 frequency and and we annotate with a resolution of 0.0001. The VCF tag 'GND_FREQ' will report the frequency.
+
+### PON settings used in the HMF pipeline
+
+A summary of the PON annotation and filtering currently used in the HMF pipeline is below:
+
+Fitlter | Annotations | Source | Filter Thresholds | Ref Genome versions
+---|---|---|---
+PON_GNOMAD | GND_FREQ | Gnomad v3 | GND_FREQ<0.00015 | 38 only
+PON_PANEL_ARTEFACT | PON_PANEL | Curated FFPE Panel Artefacts*** | PON_PANEL {ANY} | 38 only 
+PON | PON_COUNT* | PON_MAX** | HMF Cohort | See detailed table below | 37 & 38
+* Count germline samples with at least 3 reads and sum of base quality > 30
+** Maximum read support in any one sample
+*** The FFPE panel artefacts were curated from recurrent variants in the panel regions only of 35 samples run on HMF FFPE tumor only panels.
+
+The filters for the HMF cohort PON depend on the ref genome version and are as follows:
+
+Version | Samples | HOTSPOT | PANEL | OTHER
+37 | 1000 | PON_MAX>=5 & PON_COUNT>=10 | PON_MAX>=5 & PON_COUNT>=6 | PON_COUNT>=6
+38 | 98 | PON_MAX>=5 & PON_COUNT>=5 | PON_MAX>=5 & PON_COUNT>=2 | PON_COUNT>=2
 
 ## Known Issues
 - Frameshifts may not always be fully aligned to 3'UTR for HGNC protein annotation
