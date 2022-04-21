@@ -216,7 +216,7 @@ We annotate the population frequency using gnomAD (v3.1.2 for hg38, v2.1.1 for G
 A summary of the PON annotation and filtering currently used in the HMF pipeline is below:
 
 Fitlter | Annotations | Source | Filter Thresholds | Ref Genome versions
----|---|---|---
+---|---|---|---|---
 PON_GNOMAD | GND_FREQ | Gnomad v3 | GND_FREQ<0.00015 | 38 only
 PON_PANEL_ARTEFACT | PON_PANEL | Curated FFPE Panel Artefacts*** | PON_PANEL {ANY} | 38 only 
 PON | PON_COUNT* | PON_MAX** | HMF Cohort | See detailed table below | 37 & 38
