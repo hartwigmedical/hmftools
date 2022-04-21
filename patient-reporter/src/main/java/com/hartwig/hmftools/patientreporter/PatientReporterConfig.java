@@ -319,7 +319,6 @@ public interface PatientReporterConfig {
         String sampleSummaryTsv = Strings.EMPTY;
         String sampleSpecialRemarkTsv = Strings.EMPTY;
 
-        String outputDirData = Strings.EMPTY;
         String rvaLogo = Strings.EMPTY;
         String udiCode = Strings.EMPTY;
 
@@ -330,7 +329,6 @@ public interface PatientReporterConfig {
             purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
             purpleQcFile = nonOptionalFile(cmd, PURPLE_QC_FILE);
             peachGenotypeTsv = nonOptionalFile(cmd, PEACH_GENOTYPE_TSV);
-            outputDirData = nonOptionalDir(cmd, OUTPUT_DIRECTORY_DATA);
             rvaLogo = nonOptionalFile(cmd, RVA_LOGO);
             udiCode = nonOptionalValue(cmd, UDI_DI);
         } else if (!isQCFail) {
@@ -361,7 +359,6 @@ public interface PatientReporterConfig {
             sampleSummaryTsv = nonOptionalFile(cmd, SAMPLE_SUMMARY_TSV);
             sampleSpecialRemarkTsv = nonOptionalFile(cmd, SAMPLE_SPECIAL_REMARK_TSV);
 
-            outputDirData = nonOptionalDir(cmd, OUTPUT_DIRECTORY_DATA);
             rvaLogo = nonOptionalFile(cmd, RVA_LOGO);
             udiCode = nonOptionalValue(cmd, UDI_DI);
         }
@@ -372,7 +369,7 @@ public interface PatientReporterConfig {
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
                 .tumorSampleBarcode(nonOptionalValue(cmd, TUMOR_SAMPLE_BARCODE))
                 .outputDirReport(nonOptionalDir(cmd, OUTPUT_DIRECTORY_REPORT))
-                .outputDirData(outputDirData)
+                .outputDirData(nonOptionalDir(cmd, OUTPUT_DIRECTORY_DATA))
                 .primaryTumorTsv(nonOptionalFile(cmd, PRIMARY_TUMOR_TSV))
                 .limsDir(nonOptionalDir(cmd, LIMS_DIRECTORY))
                 .rvaLogo(rvaLogo)

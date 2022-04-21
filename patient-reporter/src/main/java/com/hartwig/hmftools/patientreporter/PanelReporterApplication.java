@@ -16,6 +16,7 @@ import com.hartwig.hmftools.patientreporter.panel.PanelFailReport;
 import com.hartwig.hmftools.patientreporter.panel.PanelFailReporter;
 import com.hartwig.hmftools.patientreporter.panel.PanelReporter;
 import com.hartwig.hmftools.patientreporter.panel.QCFailPanelReportData;
+import com.hartwig.hmftools.patientreporter.reportingdb.ReportingDb;
 
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -92,6 +93,10 @@ public class PanelReporterApplication {
 
         reportWriter.writePanelAnalysedReport(report, outputFilePath);
 
+       if (!config.onlyCreatePDF()) {
+           LOGGER.debug("Updating reporting db");
+           new ReportingDb().appendPanelReport(report, config.outputDirData());
+       }
     }
 
     private void generatePanelQCFail(@NotNull SampleMetadata sampleMetadata) throws IOException {
@@ -106,6 +111,12 @@ public class PanelReporterApplication {
         String outputFilePath = generateOutputFilePathForPanelResultReport(config.outputDirReport(), report);
 
         reportWriter.writePanelQCFailReport(report, outputFilePath);
+
+        if (!config.onlyCreatePDF()) {
+            LOGGER.debug("Updating reporting db");
+
+            new ReportingDb().appendPanelFailReport(report, config.outputDirData());
+        }
     }
 
         @NotNull

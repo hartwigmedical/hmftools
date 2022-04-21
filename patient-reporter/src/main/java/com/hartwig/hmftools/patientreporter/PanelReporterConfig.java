@@ -30,6 +30,7 @@ public interface PanelReporterConfig {
     String TUMOR_SAMPLE_ID = "tumor_sample_id";
     String TUMOR_SAMPLE_BARCODE = "tumor_sample_barcode";
     String OUTPUT_DIRECTORY_REPORT = "output_dir_report";
+    String OUTPUT_DIRECTORY_DATA = "output_dir_data";
 
     String PRIMARY_TUMOR_TSV = "primary_tumor_tsv";
     String LIMS_DIRECTORY = "lims_dir";
@@ -52,6 +53,7 @@ public interface PanelReporterConfig {
     String CORRECTED_REPORT = "corrected_report";
     String CORRECTED_REPORT_EXTERN = "corrected_report_extern";
     String LOG_DEBUG = "log_debug";
+    String ONLY_CREATE_PDF = "only_create_pdf";
 
     // parameters for pipeline version
     String REQUIRE_PIPELINE_VERSION_FILE = "require_pipeline_version_file";
@@ -66,6 +68,7 @@ public interface PanelReporterConfig {
         options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which a patient report will be generated.");
         options.addOption(TUMOR_SAMPLE_BARCODE, true, "The sample barcode for which a patient report will be generated.");
         options.addOption(OUTPUT_DIRECTORY_REPORT, true, "Path to where the PDF report will be written to.");
+        options.addOption(OUTPUT_DIRECTORY_DATA, true, "Path to where the data of the report will be written to.");
 
         options.addOption(PRIMARY_TUMOR_TSV, true, "Path towards the (curated) primary tumor TSV.");
         options.addOption(LIMS_DIRECTORY, true, "Path towards the directory holding the LIMS data");
@@ -86,6 +89,7 @@ public interface PanelReporterConfig {
         options.addOption(CORRECTED_REPORT_EXTERN, false, "If provided, generate a corrected report with intern/extern correction");
 
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
+        options.addOption(ONLY_CREATE_PDF, false, "If provided, just the PDF will be generated and no additional data will be updated.");
 
         options.addOption(REQUIRE_PIPELINE_VERSION_FILE, false, "Boolean for determine pipeline version file is requierde");
         options.addOption(PIPELINE_VERSION_FILE, true, "Path towards the pipeline version (optional)");
@@ -111,6 +115,9 @@ public interface PanelReporterConfig {
 
     @NotNull
     String outputDirReport();
+
+    @NotNull
+    String outputDirData();
 
     @NotNull
     String primaryTumorTsv();
@@ -140,6 +147,8 @@ public interface PanelReporterConfig {
     boolean isCorrectedReport();
 
     boolean isCorrectedReportExtern();
+
+    boolean onlyCreatePDF();
 
     boolean requirePipelineVersionFile();
 
@@ -190,6 +199,7 @@ public interface PanelReporterConfig {
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
                 .tumorSampleBarcode(nonOptionalValue(cmd, TUMOR_SAMPLE_BARCODE))
                 .outputDirReport(nonOptionalDir(cmd, OUTPUT_DIRECTORY_REPORT))
+                .outputDirData(nonOptionalDir(cmd, OUTPUT_DIRECTORY_DATA))
                 .primaryTumorTsv(nonOptionalFile(cmd, PRIMARY_TUMOR_TSV))
                 .limsDir(nonOptionalDir(cmd, LIMS_DIRECTORY))
                 .companyLogo(nonOptionalFile(cmd, COMPANY_LOGO))
@@ -201,6 +211,7 @@ public interface PanelReporterConfig {
                 .comments(cmd.getOptionValue(COMMENTS))
                 .isCorrectedReport(cmd.hasOption(CORRECTED_REPORT))
                 .isCorrectedReportExtern(cmd.hasOption(CORRECTED_REPORT_EXTERN))
+                .onlyCreatePDF(cmd.hasOption(ONLY_CREATE_PDF))
                 .requirePipelineVersionFile(requirePipelineVersion)
                 .pipelineVersionFile(pipelineVersion)
                 .expectedPipelineVersion(cmd.getOptionValue(EXPECTED_PIPELINE_VERSION))
