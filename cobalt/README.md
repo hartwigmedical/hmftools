@@ -79,23 +79,18 @@ COBALT supports both BAM and CRAM file formats. If using CRAM, the ref_genome ar
 | min_quality            | 10      | Min quality                                                 |
 | ref_genome             | None    | Path to the reference genome fasta file if using CRAM files |
 | validation_stringency  | STRICT  | SAM validation strategy: STRICT, SILENT, LENIENT            |
-| tumor_only             | NA      | Set to tumor only mode                                      |
 | tumor_only_diploid_bed | NA      | Bed file of diploid regions of the genome                   |
 
 ## Tumor Only Mode
-In the absence of a reference bam, COBALT can be put into tumor only mode with the `tumor_only` flag. 
-In this mode the `reference` and `reference_bam` parameters are no longer valid.
+In the absence of a reference bam and reference COBALT will  be run in tumor_only mode.    
 
-As no reference data is supplied, COBALT does not try to determine gender or any chromosomal aberrations. 
-The output reference ratios will be 1 or -1 on all chromosomes even if they are allosomes. 
-Downstream, PURPLE will adjust the allosome ratios according to the AMBER gender. 
-A file called `DIPLOID.cobalt.ratio.pcf' will be created in lieu of a reference PCF file.
+Without a means to determine which regions of the normal are diploid, a bed file specifying these locations must be included with the `tumor-only-diploid-bed` parameter. A 37 bed file (DiploidRegions.37.bed.gz) and 38 equivalent are available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). To create this bed file we examined the COBALT output of 100 samples.  We considered each 1000 base region to be diploid if 50% or more of the samples were diploid (0.85 >= referenceGCDiploidRatio <= 1.15 ) at this point. 
 
-Without a means to determine which regions of the normal are diploid, a bed file specifying these locations must be included with the `tumor-only-diploid-bed` parameter. 
-A 37 bed file (DiploidRegions.37.bed.gz) and 38 equivalent are available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl).
+As no reference data is supplied, COBALT does not try to determine gender or any chromosomal aberrations.  No reference pcf file will be created. The output reference ratios will be 1 or -1 on all chromosomes even if they are allosomes.  Downstream, PURPLE will adjust the allosome ratios according to the AMBER gender. 
 
-To create this bed file we examined the COBALT output of 100 samples. 
-We considered each 1000 base region to be diploid if 50% or more of the samples were diploid (0.85 >= referenceGCDiploidRatio <= 1.15 ) at this point. 
+## Germline Only Mode
+
+In the absence of a tumor bam and tumor COBALT will  be run in germline mode.   Counts and ratios are only calculated and fitted for the reference sample.
 
 ## Performance Characteristics
 Performance numbers were taken from a 72 core machine using COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. 
