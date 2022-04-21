@@ -65,19 +65,16 @@ public class PanelReporterApplication {
     private void run() throws IOException {
         SampleMetadata sampleMetadata = buildSampleMetadata(config);
 
-        if (config.panel()) {
-            if (config.panelQcFail()) {
-                LOGGER.info("Generating qc-fail panel report");
-                generatePanelQCFail(sampleMetadata);
-            } else {
-                LOGGER.info("Generating panel report");
-                generatePanelAnalysedReport(sampleMetadata);
-            }
-
+        if (config.panelQcFail()) {
+            LOGGER.info("Generating qc-fail panel report");
+            generatePanelQCFail(sampleMetadata);
+        } else {
+            LOGGER.info("Generating panel report");
+            generatePanelAnalysedReport(sampleMetadata);
         }
     }
 
-   private void generatePanelAnalysedReport(@NotNull SampleMetadata sampleMetadata) throws IOException {
+    private void generatePanelAnalysedReport(@NotNull SampleMetadata sampleMetadata) throws IOException {
         PanelReporter reporter = new PanelReporter(buildBasePanelReportData(config), reportDate);
         com.hartwig.hmftools.patientreporter.panel.PanelReport report = reporter.run(sampleMetadata,
                 config.comments(),
@@ -94,10 +91,10 @@ public class PanelReporterApplication {
 
         reportWriter.writePanelAnalysedReport(report, outputFilePath);
 
-       if (!config.onlyCreatePDF()) {
-           LOGGER.debug("Updating reporting db");
-           new ReportingDb().appendPanelReport(report, config.outputDirData());
-       }
+        if (!config.onlyCreatePDF()) {
+            LOGGER.debug("Updating reporting db");
+            new ReportingDb().appendPanelReport(report, config.outputDirData());
+        }
     }
 
     private void generatePanelQCFail(@NotNull SampleMetadata sampleMetadata) throws IOException {
@@ -120,7 +117,7 @@ public class PanelReporterApplication {
         }
     }
 
-        @NotNull
+    @NotNull
     private static String generateOutputFilePathForPanelResultReport(@NotNull String outputDirReport,
             @NotNull com.hartwig.hmftools.patientreporter.PanelReport panelReport) {
         return outputDirReport + File.separator + OutputFileUtil.generateOutputFileNameForPdfPanelResultReport(panelReport);
