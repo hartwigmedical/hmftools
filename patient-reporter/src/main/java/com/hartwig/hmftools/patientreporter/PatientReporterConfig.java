@@ -50,12 +50,6 @@ public interface PatientReporterConfig {
     String QC_FAIL = "qc_fail";
     String QC_FAIL_REASON = "qc_fail_reason";
 
-    // Params specific for Panel reports
-    String PANEL = "panel";
-    String PANEL_QC_FAIL = "panel_qc_fail";
-    String PANEL_QC_FAIL_REASON = "panel_qc_fail_reason";
-    String PANEL_VCF_NAME = "panel_vcf_name";
-
     // Params specific for actual patient reports
     String PURPLE_PURITY_TSV = "purple_purity_tsv"; // Also used for certain QC fail reports in case deep WGS is available.
     String PURPLE_QC_FILE = "purple_qc_file"; // Also used for certain QC fail reports in case deep WGS is available.
@@ -117,11 +111,6 @@ public interface PatientReporterConfig {
 
         options.addOption(QC_FAIL, false, "If set, generates a qc-fail report.");
         options.addOption(QC_FAIL_REASON, true, "One of: " + Strings.join(Lists.newArrayList(QCFailReason.validIdentifiers()), ','));
-
-        options.addOption(PANEL, false, "If set, generates a panel report.");
-        options.addOption(PANEL_QC_FAIL, false, "If set, generates a qc-fail report.");
-        options.addOption(PANEL_QC_FAIL_REASON, true, "One of: " + Strings.join(Lists.newArrayList(QCFailReason.validIdentifiers()), ','));
-        options.addOption(PANEL_VCF_NAME, true, "The name of the VCF file of the panel results.");
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
@@ -205,16 +194,6 @@ public interface PatientReporterConfig {
 
     @Nullable
     QCFailReason qcFailReason();
-
-    boolean panel();
-
-    boolean panelQcFail();
-
-    @NotNull
-    String panelVCFname();
-
-    @Nullable
-    PanelFailReason panelQcFailReason();
 
     @NotNull
     String purplePurityTsv();
@@ -316,28 +295,7 @@ public interface PatientReporterConfig {
             }
         }
 
-        String panelVCFFile = Strings.EMPTY;
         String pipelineVersion = null;
-
-        boolean isPanel = cmd.hasOption(PANEL);
-        boolean isPanelQCFail = cmd.hasOption(PANEL_QC_FAIL);
-        PanelFailReason panelQcFailReason = null;
-        if (isPanel) {
-            if (isPanelQCFail) {
-                String qcFailReasonString = nonOptionalValue(cmd, PANEL_QC_FAIL_REASON);
-                panelQcFailReason = PanelFailReason.fromIdentifier(qcFailReasonString);
-                if (panelQcFailReason == null) {
-                    throw new ParseException("Did not recognize QC Fail reason: " + qcFailReasonString);
-                }
-            }
-            if (requirePipelineVersion) {
-                pipelineVersion = nonOptionalFile(cmd, PIPELINE_VERSION_FILE);
-            }
-
-            panelVCFFile= nonOptionalValue(cmd, PANEL_VCF_NAME);
-        }
-
-
         String purplePurityTsv = Strings.EMPTY;
         String purpleQcFile = Strings.EMPTY;
         String purpleSomaticDriverCatalogTsv = Strings.EMPTY;
@@ -423,10 +381,6 @@ public interface PatientReporterConfig {
                 .udiDi(udiCode)
                 .qcFail(isQCFail)
                 .qcFailReason(qcFailReason)
-                .panel(isPanel)
-                .panelQcFail(isPanelQCFail)
-                .panelQcFailReason(panelQcFailReason)
-                .panelVCFname(panelVCFFile)
                 .purplePurityTsv(purplePurityTsv)
                 .purpleQcFile(purpleQcFile)
                 .purpleSomaticDriverCatalogTsv(purpleSomaticDriverCatalogTsv)

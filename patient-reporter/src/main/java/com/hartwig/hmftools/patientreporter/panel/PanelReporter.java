@@ -66,6 +66,7 @@ public class PanelReporter {
                 .signaturePath(reportData.signaturePath())
                 .logoCompanyPath(reportData.logoCompanyPath())
                 .reportDate(reportDate)
+                .isWGSreport(false)
                 .build();
     }
 }
