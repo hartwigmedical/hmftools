@@ -21,10 +21,7 @@ public final class SageMetaData
     public static VCFHeader addSageMetaData(@NotNull final VCFHeader header)
     {
         header.addMetaDataLine(new VCFInfoHeaderLine(TIER, 1, VCFHeaderLineType.String, TIER_DESCRIPTION));
-        header.addMetaDataLine(new VCFInfoHeaderLine(LOCAL_PHASE_SET, 1, VCFHeaderLineType.Integer, PHASE_DESCRIPTION));
-
-        // temporarily Sage is only writing the top entry
-        // header.addMetaDataLine(new VCFInfoHeaderLine(LOCAL_PHASE_SET, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, PHASE_DESCRIPTION));
+        header.addMetaDataLine(new VCFInfoHeaderLine(LOCAL_PHASE_SET, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, PHASE_DESCRIPTION));
         return header;
     }
 }

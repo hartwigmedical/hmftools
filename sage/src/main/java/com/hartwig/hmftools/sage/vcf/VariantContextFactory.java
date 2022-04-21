@@ -58,9 +58,8 @@ public final class VariantContextFactory
 
         if(variant.hasLocalPhaseSets())
         {
-            // write in order - PAVE will use the first only
-            // for now only write the first
-            builder.attribute(LOCAL_PHASE_SET, variant.localPhaseSets().get(0));
+            // write in order - PAVE will use the first only, but all are loaded to the DB
+            builder.attribute(LOCAL_PHASE_SET, variant.localPhaseSets());
 
             List<int[]> readCountsRaw = variant.localPhaseSetCounts();
             List<Integer> readCountTotals = Lists.newArrayListWithExpectedSize(readCountsRaw.size());
