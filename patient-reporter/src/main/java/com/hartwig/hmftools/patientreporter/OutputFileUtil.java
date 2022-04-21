@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter;
 
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
+import com.hartwig.hmftools.patientreporter.panel.PanelFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 
 import org.apache.logging.log4j.util.Strings;
@@ -38,7 +39,7 @@ public final class OutputFileUtil {
 
         String fileSuffix = report.isCorrectedReport() ? "_corrected.pdf" : ".pdf";
 
-        String failPrefix = report instanceof QCFailReport ? "_failed" : Strings.EMPTY;
+        String failPrefix = report instanceof PanelFailReport ? "_failed" : Strings.EMPTY;
 
         return filePrefix + failPrefix + "_oncopanel_result_report" + fileSuffix;
     }
