@@ -37,7 +37,7 @@ public class ChimericReadCache
     public ChimericReadCache(final IsofoxConfig config)
     {
         mConfig = config;
-        mReadWriter = config.Fusions.WriteChimericReads ? initialiseReadWriter() : null;
+        mReadWriter = config.Fusions.WriteChimericReads || config.RunPerfChecks ? initialiseReadWriter() : null;
     }
 
     public void close()

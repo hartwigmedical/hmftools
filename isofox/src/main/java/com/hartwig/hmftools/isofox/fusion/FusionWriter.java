@@ -88,7 +88,6 @@ public class FusionWriter
             {
                 mFusionWriter.write(fusionData.toCsv(false));
                 mFusionWriter.newLine();
-                // mFusionWriter.write(fusion.toCsv());
             }
 
             for(FusionData fusionData : passingFusions)
@@ -103,12 +102,12 @@ public class FusionWriter
                 {
                     for(FusionReadData fusion : fusionCandidate)
                     {
-                        for(Map.Entry<FusionFragmentType,List<FusionFragment>> entry : fusion.getFragments().entrySet())
+                        for(List<FusionFragment> fragments : fusion.getFragments().values())
                         {
-                            for(FusionFragment fragment : entry.getValue())
+                            for(FusionFragment fragment : fragments)
                             {
                                 if(mWriteFragments)
-                                    writeFragmentData(fragment, fusionId(fusion.id()), entry.getKey());
+                                    writeFragmentData(fragment, fusionId(fusion.id()));
 
                                 if(mWriteReads)
                                     writeReadData(fragment.reads(), fusionId(fusion.id()));
@@ -142,7 +141,7 @@ public class FusionWriter
                 if(!fragment.assignedFusions().isEmpty())
                     continue;
 
-                writeFragmentData(fragment, "UNFUSED", fragment.type());
+                writeFragmentData(fragment, "UNFUSED");
                 writeReadData(fragment.reads(), "UNFUSED");
             }
         }
@@ -183,44 +182,10 @@ public class FusionWriter
 
     public void writeIncompleteGroupReads(final List<ReadGroup> incompleteGroups)
     {
-        try
-        {
-            final String outputFileName = mConfig.formOutputFile("incomplete_chim_group_reads.csv");
-
-            BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write("ReadId,ReadGroupSize,Chromosome,PosStart,PosEnd,Cigar,InsertSize");
-            writer.write(",MateChr,MatePosStart,FirstInPair,ReadReversed,SuppData,GeneCollectionStart,GeneCollectionEnd");
-            writer.newLine();
-
-            for(ReadGroup readGroup : incompleteGroups)
-            {
-                for(ReadRecord read : readGroup.Reads)
-                {
-                    if(mConfig.Filters.excludeChromosome(read.mateChromosome()))
-                        continue;
-
-                    writer.write(String.format("%s,%d,%s,%d,%d,%s,%d",
-                            read.Id, readGroup.size(), read.Chromosome, read.PosStart, read.PosEnd, read.Cigar.toString(),
-                            read.fragmentInsertSize()));
-
-                    writer.write(String.format(",%s,%d,%s,%s,%s,%d,%d",
-                            read.mateChromosome(), read.mateStartPosition(), read.isFirstOfPair(), read.isReadReversed(),
-                            read.getSuppAlignmentCsv(), read.getGeneCollectons()[SE_START], read.getGeneCollectons()[SE_END]));
-
-                    writer.newLine();
-                }
-            }
-
-            writer.close();
-        }
-        catch (IOException e)
-        {
-            ISF_LOGGER.error("failed to write incomplete chimeric fragment data: {}", e.toString());
-            return;
-        }
+        incompleteGroups.forEach(x -> mChimericReadCache.writeReadData(x.Reads, "INCOMPLETE_GROUPS"));
     }
 
-    public synchronized void writeFragmentData(final FusionFragment fragment, final String fusionId, FusionFragmentType type)
+    public synchronized void writeFragmentData(final FusionFragment fragment, final String fusionId)
     {
         if(!mWriteFragments)
             return;
@@ -228,7 +193,7 @@ public class FusionWriter
         try
         {
             mFragmentWriter.write(String.format("%s,%d,%s,%s,%s,%d,%s",
-                    fragment.readId(), fragment.reads().size(), fusionId, type,
+                    fragment.readId(), fragment.reads().size(), fusionId, fragment.type(),
                     fragment.isSingleGeneCollection(), fragment.reads().stream().filter(x -> x.containsSoftClipping()).count(),
                     fragment.hasSuppAlignment()));
 

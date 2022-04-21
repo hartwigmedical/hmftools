@@ -51,7 +51,7 @@ public class FusionReadData
     private final String mLocationId;
     private final FusionFragment mFragment; // the split fragment which establishes this fusion and whose junction data is used
 
-    private final Map<FusionFragmentType,List<FusionFragment>> mFragments;
+    private Map<FusionFragmentType,List<FusionFragment>> mFragments; // only cached if all chimeric fragments are written to file
     private final Map<FusionFragmentType,Integer> mFragmentCounts;
 
     private boolean mIncompleteData;
@@ -61,7 +61,6 @@ public class FusionReadData
 
     // not stored by stream
     private final String[] mChromosomes;
-    private final int[] mGeneCollections;
     private final int[] mJunctionPositions;
     private final byte[] mJunctionOrientations;
     private final String[] mJunctionBases; // the 10 bases leading up to the junction
@@ -83,7 +82,6 @@ public class FusionReadData
         mFragment = fragment;
 
         mChromosomes = new String[] { fragment.chromosomes()[SE_START], fragment.chromosomes()[SE_END] };
-        mGeneCollections = new int[] { fragment.geneCollections()[SE_START], fragment.geneCollections()[SE_END] };
         mJunctionPositions = new int[] { fragment.junctionPositions()[SE_START], fragment.junctionPositions()[SE_END] };
         mJunctionOrientations = new byte[]{ fragment.junctionOrientations()[SE_START], fragment.junctionOrientations()[SE_END] };
 
@@ -91,7 +89,7 @@ public class FusionReadData
         mJunctionSpliceBases = new String[] {"", ""};
         mAdjacentJunctionBases = new String[] {"", ""};
 
-        mFragments = Maps.newHashMap();
+        mFragments = null;
         mFragmentCounts = Maps.newHashMap();
 
         mLocationId = fragment.locationPair();
@@ -132,7 +130,6 @@ public class FusionReadData
     public int id() { return mId; }
     public String locationId() { return mLocationId; }
     public final String[] chromosomes() { return mChromosomes; }
-    public final int[] geneCollections() { return mGeneCollections; }
     public final int[] junctionPositions() { return mJunctionPositions; }
     public final byte[] junctionOrientations() { return mJunctionOrientations; }
     public final String[] junctionBases() { return mJunctionBases; }
@@ -176,21 +173,17 @@ public class FusionReadData
 
     public void addFusionFragment(final FusionFragment fragment, boolean cacheFragment)
     {
-        try
-        {
-            if(fragment.type() == MATCHED_JUNCTION)
-                updateMaxSplitMappedLength(fragment);
-        }
-        catch(Exception e)
-        {
-            ISF_LOGGER.error("{}", e.toString());
-        }
+        if(fragment.type() == MATCHED_JUNCTION)
+            updateMaxSplitMappedLength(fragment);
 
         addFragmentTypeCount(fragment.type(), 1);
 
         if(cacheFragment)
         {
             fragment.assignedFusions().add(this);
+
+            if(mFragments == null)
+                mFragments = Maps.newHashMap();
 
             List<FusionFragment> fragments = mFragments.get(fragment.type());
 
@@ -471,7 +464,7 @@ public class FusionReadData
             final int seIndex = se;
             List<ReadRecord> reads = fragment.reads().stream()
                     .filter(x -> mChromosomes[seIndex].equals(x.Chromosome))
-                    .filter(x -> mGeneCollections[seIndex] == x.getGeneCollectons()[seIndex])
+                    .filter(x -> mFragment.geneCollections()[seIndex] == x.getGeneCollectons()[seIndex])
                     .collect(Collectors.toList());
 
             for (ReadRecord read : reads)

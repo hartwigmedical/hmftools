@@ -64,6 +64,7 @@ public class FusionFinder implements Callable
 
     private final FusionWriter mFusionWriter;
 
+    private int mHardFilteredCount;
     private final PerformanceCounter mPerfCounter;
 
     public FusionFinder(
@@ -87,6 +88,7 @@ public class FusionFinder implements Callable
         mRealignCandidateFragments = Maps.newHashMap();
 
         mFusionWriter = fusionWriter;
+        mHardFilteredCount = 0;
 
         mPerfCounter = new PerformanceCounter("FusionTask");
    }
@@ -98,6 +100,7 @@ public class FusionFinder implements Callable
 
     public final List<FusionFragment> getFragments() { return mAllFragments; }
     public final List<ReadGroup> getSpanningReadGroups() { return mSpanningReadGroups; }
+    public int hardFilteredCount() { return mHardFilteredCount; }
 
     public void clearState()
     {
@@ -394,6 +397,45 @@ public class FusionFinder implements Callable
             }
         }
 
+        // optionally hard-filtered based solely on matched junction counts per fusion
+
+        // then set gene data
+        for(List<FusionReadData> fusions : mFusionCandidates.values())
+        {
+            List<FusionReadData> hardFiltered = Lists.newArrayList();
+
+            for(FusionReadData fusionData : fusions)
+            {
+                // optionally hard-filter remove any fragment with split fragments below the required minimum
+                if(hardFilterFusion(fusionData))
+                {
+                    hardFiltered.add(fusionData);
+                    continue;
+                }
+
+                FusionFragment initialFragment = fusionData.getInitialFragment();
+                setFusionGeneData(fusionData, initialFragment);
+
+                if(mConfig.Fusions.CacheFragments)
+                {
+                    List<FusionFragment> fragments = fusionData.getFragments(MATCHED_JUNCTION);
+
+                    for(int i = 1; i < fragments.size(); ++i)
+                    {
+                        FusionFragment fragment = fragments.get(i);
+                        fragment.junctionTypes()[SE_START] = initialFragment.junctionTypes()[SE_START];
+                        fragment.junctionTypes()[SE_END] = initialFragment.junctionTypes()[SE_END];
+                    }
+                }
+            }
+
+            if(!hardFiltered.isEmpty())
+            {
+                hardFiltered.forEach(x -> fusions.remove(x));
+                mHardFilteredCount += hardFiltered.size();
+            }
+        }
+
         ISF_LOGGER.debug("task({}) chimeric fragments({} disc={} candRealgn={} junc={}) fusions(loc={} gene={} total={})",
                 mTaskId, mAllFragments.size(), mDiscordantFragments.values().stream().mapToInt(x -> x.size()).sum(),
                 mRealignCandidateFragments.values().stream().mapToInt(x -> x.size()).sum(), junctioned,
@@ -402,6 +444,20 @@ public class FusionFinder implements Callable
         // free up the set of initial fragments now they've all been assigned
         mAllFragments.clear();
         mFusionsByLocation.clear();
+    }
+
+    private boolean hardFilterFusion(final FusionReadData fusionData)
+    {
+        if(mConfig.Fusions.MinHardFilterFrags <= 1)
+            return false;
+
+        if(fusionData.getFragmentTypeCount(MATCHED_JUNCTION) >= mConfig.Fusions.MinHardFilterFrags)
+            return false;
+
+        // must be non-genic on one end
+        FusionFragment initialFragment = fusionData.getInitialFragment();
+
+        return initialFragment.getTransExonRefs()[SE_START].isEmpty() || initialFragment.getTransExonRefs()[SE_END].isEmpty();
     }
 
     private void annotateFusions()
@@ -423,9 +479,7 @@ public class FusionFinder implements Callable
                 for(final FusionReadData fusion : fusionCandidates)
                 {
                     FusionData fusionData = fusion.toFusionData();
-
                     allFusions.add(fusionData);
-
                 }
             }
 
@@ -452,6 +506,7 @@ public class FusionFinder implements Callable
 
     private FusionReadData createOrUpdateFusion(final FusionFragment fragment)
     {
+        // only returns the fusion data if created, not if already exists
         // scenarios:
         // 1. New fusion with correct splice-junction support - may or may not match a known transcript and exon
         // 2. Potential discordant or realigned fragment
@@ -467,7 +522,7 @@ public class FusionFinder implements Callable
             // mark donor-acceptor types whether strands are known or not
             fragment.junctionTypes()[SE_START] = existingFusion.getInitialFragment().junctionTypes()[SE_START];
             fragment.junctionTypes()[SE_END] = existingFusion.getInitialFragment().junctionTypes()[SE_END];
-            return existingFusion;
+            return null;
         }
 
         List<FusionReadData> fusions = mFusionCandidates.get(fragment.locationPair());
@@ -483,8 +538,6 @@ public class FusionFinder implements Callable
 
         fusionData.setJunctionBases(mConfig.RefGenome);
 
-        setGeneData(fusionData);
-
         fusions.add(fusionData);
 
         // add to precise-location store
@@ -497,6 +550,13 @@ public class FusionFinder implements Callable
         }
 
         fusionsByPosition.put(fragment.positionHash(), fusionData);
+
+        return fusionData;
+    }
+
+    private void setFusionGeneData(final FusionReadData fusionData, final FusionFragment fragment)
+    {
+        setGeneData(fusionData);
 
         // add to the cache by gene for later assignment or realigned fragments
         for(int se = SE_START; se <= SE_END; ++se)
@@ -512,13 +572,6 @@ public class FusionFinder implements Callable
             else
                 fusionsByGene.add(fusionData);
         }
-
-        return fusionData;
-    }
-
-    private void applyHardFilters()
-    {
-        // remove any fragment with split fragments below the required minimum
     }
 
     private void cacheDiscordantFragment(final FusionFragment fragment)
@@ -854,7 +907,7 @@ public class FusionFinder implements Callable
 
             final Set<FusionFragment> allocatedFragments = Sets.newHashSet();
 
-            for (FusionFragment fragment : fragments)
+            for(FusionFragment fragment : fragments)
             {
                 // only allocate discordant fragments if they support a gene & transcript at both ends
                 if(fragment.getTransExonRefs()[SE_START].isEmpty() || fragment.getTransExonRefs()[SE_END].isEmpty())
@@ -889,7 +942,7 @@ public class FusionFinder implements Callable
         // create fusions from fragments with 1 or both junctions matching known splice sites between genes without supp alignment
         // and then reassign any other fragments to these new fusions
 
-        final Set<FusionReadData> newFusions = Sets.newHashSet();
+        final List<FusionReadData> newFusions = Lists.newArrayList();
 
         for(Map.Entry<String,List<FusionFragment>> entry : mDiscordantFragments.entrySet())
         {
@@ -897,13 +950,18 @@ public class FusionFinder implements Callable
 
             final Set<FusionFragment> allocatedFragments = Sets.newHashSet();
 
-            for (FusionFragment fragment : fragments)
+            for(FusionFragment fragment : fragments)
             {
                 if(fragment.type() == MATCHED_JUNCTION)
                 {
                     FusionReadData fusionData = createOrUpdateFusion(fragment);
 
-                    newFusions.add(fusionData);
+                    if(fusionData != null)
+                    {
+                        setFusionGeneData(fusionData, fragment);
+                        newFusions.add(fusionData);
+                    }
+
                     allocatedFragments.add(fragment);
                 }
             }
@@ -924,7 +982,7 @@ public class FusionFinder implements Callable
 
             final Set<FusionFragment> allocatedFragments = Sets.newHashSet();
 
-            for (FusionFragment fragment : fragments)
+            for(FusionFragment fragment : fragments)
             {
                 // only allocate discordant fragments if they support a gene & transcript at both ends
                 if(fragment.getTransExonRefs()[SE_START].isEmpty() || fragment.getTransExonRefs()[SE_END].isEmpty())
@@ -982,7 +1040,7 @@ public class FusionFinder implements Callable
 
             for(final FusionReadData fusionData : fusions)
             {
-                for (FusionFragment fragment : realignCandidates)
+                for(FusionFragment fragment : realignCandidates)
                 {
                     if(fusionData.canRelignFragmentToJunction(fragment))
                     {

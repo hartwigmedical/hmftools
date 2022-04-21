@@ -281,6 +281,8 @@ public class BamFragmentReader implements Callable
             }
 
             mPerfCounters[PERF_FUSIONS].stop();
+
+            mChimericStats.HardFiltered += mFusionFinder.hardFilteredCount();
         }
 
         if(mGeneDataList.size() > 10)

@@ -42,7 +42,7 @@ public class FusionConfig
         KnownFusions = new KnownFusionCache();
         KnownFusions.loadFromFile(cmd);
 
-        CacheFragments = WriteChimericFragments || WriteChimericReads || cmd.hasOption(LOG_DEBUG);
+        CacheFragments = WriteChimericFragments || WriteChimericReads;
 
         PerformanceStats = true;
     }

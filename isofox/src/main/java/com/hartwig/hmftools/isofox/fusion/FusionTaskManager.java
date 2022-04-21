@@ -124,7 +124,6 @@ public class FusionTaskManager
 
         // write any unassigned RAC fragments
         mFusionWriter.writeUnfusedFragments(mRealignCandidateMap);
-        mFusionWriter.close();
 
         if(mConfig.RunPerfChecks)
         {
@@ -155,6 +154,8 @@ public class FusionTaskManager
 
             mFusionWriter.writeIncompleteGroupReads(incompleteGroups);
         }
+
+        mFusionWriter.close();
     }
 
     private static final int LOG_COUNT = 100000;

@@ -90,7 +90,6 @@ public class FusionFragment
     public String readId() { return mReadGroup.id(); }
 
     public final List<ReadRecord> reads() { return mReadGroup.Reads; }
-    public final ReadGroup readGroup() { return mReadGroup; }
 
     public FusionFragmentType type() { return mType; }
     public final String[] chromosomes() { return mChromosomes; }
@@ -171,20 +170,19 @@ public class FusionFragment
 
     private void extractTranscriptExonData()
     {
-        // set transcript & exon info for each junction from each applicable read
-        // only take the highest matches
+        // set transcript & exon info for each junction from each applicable read, taking only the highest matches
         for(int se = SE_START; se <= SE_END; ++se)
         {
             final List<ReadRecord> reads = readsByLocation(se);
 
-            for (final ReadRecord read : reads)
+            for(final ReadRecord read : reads)
             {
                 if(mJunctionPositions[se] > 0 && !positionWithin(mJunctionPositions[se], read.PosStart, read.PosEnd))
                     continue;
 
                 final Map<RegionMatchType,List<TransExonRef>> transExonRefMap = read.getTransExonRefs(se);
 
-                for (Map.Entry<RegionMatchType, List<TransExonRef>> entry : transExonRefMap.entrySet())
+                for(Map.Entry<RegionMatchType, List<TransExonRef>> entry : transExonRefMap.entrySet())
                 {
                     RegionMatchType matchType = entry.getKey();
 
