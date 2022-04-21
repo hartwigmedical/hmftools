@@ -139,7 +139,6 @@ db_user | None | Database username - set all 3 DB parameters to load Purple data
 db_pass | None | Database password
 db_url | None | Database URL. Should be of format: `mysql://localhost:3306/hmfpatients`
 no_charts | NA | Disables creation of (non-circos) charts
-tumor_only | NA | [Tumor only mode](#tumor-only-mode)
 
 #### Optional Somatic Fit Arguments
 The following arguments control the somatic fit. Changing these values without a thorough understanding of the system is not recommended.
@@ -296,6 +295,30 @@ The actual HMF somatic pipeline includes a number of additional filtering steps 
 While these steps are specific to Strelka, these principles can be applied to other callers. 
 
 ## Tumor-Only Mode
+Whilst PURPLE is primarily designed to be run with paired normal / tumor data, it is possible to run with tumor data only by leaving the reference and reference_bam parameters null. 
+It is important to first run AMBER and COBALT in tumor only mode. 
+
+[AMBER](../amber#tumor-only-mode) and [COBALT](../cobalt#tumor-only-mode) have native support for tumor only as described in their respective readme files.
+
+Tumor only mode impacts PURPLE in the following ways:
+  - Somatic variants are excluded from fitting
+  - X and Y chromosomes are excluded from fitting
+  - Gender is determined only from AMBER
+  - COBALT allosome reference ratios are adjusted according to AMBER gender
+  - No germline chromosomal aberrations are detected 
+  - HLA SNV / INDEL are ignored and hard filtered (assumed to be germline)
+  - Mutation burden calculations are adjusted according to expected germline leakage (TO DO: add calculations)
+
+## Germline only
+Purple can be run in a limited mode on germline only output so that germline point mutations and structural variants can be annotated and filtered according to below described logic.   The differences in germline mode are:
+  - use ONLY reference pcf from COBALT 
+  - Amber observedBAF assumed to be 0.5 for all regions
+  - No somatic fit conducted. purity set to 1; ploidy to 2
+  - somatic VCF tags are set to fixed values PURPLE_CN: 2, PURPLE_MACN: 1, PURPLE_AF: 0.5, PURPLE_VCN: 1, BIALLELIC: FALSE
+  - All TMB fields are set to zero
+  - No geneCopyNumber,somatic or sv output is produced
+
+## Tumor-Only Mode
 Whilst PURPLE is primarily designed to be run with paired normal / tumor data, it is possible to run with tumor data only by including the `tumor_only` flag. 
 It is important to first run AMBER and COBALT in tumor only mode. 
 
@@ -307,6 +330,8 @@ Tumor only mode impacts PURPLE in the following ways:
   - Gender is determined only from AMBER
   - COBALT allosome reference ratios are adjusted according to AMBER gender
   - No germline chromosomal aberrations are detected 
+  - HLA SNV / INDEL are ignored and hard filtered (assumed to be germline)
+  - Mutation burden calculations are adjusted according to expected germline leakage (TO DO: add calculations)
 
 
 ## Algorithm
