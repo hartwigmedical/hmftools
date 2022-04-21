@@ -43,7 +43,6 @@ public interface PanelReporterConfig {
     String REF_SAMPLE_BARCODE = "ref_sample_barcode";
 
     // Params specific for Panel reports
-    String PANEL = "panel";
     String PANEL_QC_FAIL = "panel_qc_fail";
     String PANEL_QC_FAIL_REASON = "panel_qc_fail_reason";
     String PANEL_VCF_NAME = "panel_vcf_name";
@@ -79,7 +78,6 @@ public interface PanelReporterConfig {
         options.addOption(REF_SAMPLE_ID, true, "The reference sample ID for the tumor sample for which a report is generated.");
         options.addOption(REF_SAMPLE_BARCODE, true, "The reference sample barcode for the tumor sample for which a report is generated.");
 
-        options.addOption(PANEL, false, "If set, generates a panel report.");
         options.addOption(PANEL_QC_FAIL, false, "If set, generates a qc-fail report.");
         options.addOption(PANEL_QC_FAIL_REASON, true, "One of: " + Strings.join(Lists.newArrayList(QCFailReason.validIdentifiers()), ','));
         options.addOption(PANEL_VCF_NAME, true, "The name of the VCF file of the panel results.");
@@ -131,8 +129,6 @@ public interface PanelReporterConfig {
     @NotNull
     String signature();
 
-    boolean panel();
-
     boolean panelQcFail();
 
     @NotNull
@@ -175,23 +171,21 @@ public interface PanelReporterConfig {
         String panelVCFFile = Strings.EMPTY;
         String pipelineVersion = null;
 
-        boolean isPanel = cmd.hasOption(PANEL);
         boolean isPanelQCFail = cmd.hasOption(PANEL_QC_FAIL);
         PanelFailReason panelQcFailReason = null;
-        if (isPanel) {
-            if (isPanelQCFail) {
-                String qcFailReasonString = nonOptionalValue(cmd, PANEL_QC_FAIL_REASON);
-                panelQcFailReason = PanelFailReason.fromIdentifier(qcFailReasonString);
-                if (panelQcFailReason == null) {
-                    throw new ParseException("Did not recognize QC Fail reason: " + qcFailReasonString);
-                }
-            } else {
-                if (requirePipelineVersion) {
-                    pipelineVersion = nonOptionalFile(cmd, PIPELINE_VERSION_FILE);
-                }
 
-                panelVCFFile = nonOptionalValue(cmd, PANEL_VCF_NAME);
+        if (isPanelQCFail) {
+            String qcFailReasonString = nonOptionalValue(cmd, PANEL_QC_FAIL_REASON);
+            panelQcFailReason = PanelFailReason.fromIdentifier(qcFailReasonString);
+            if (panelQcFailReason == null) {
+                throw new ParseException("Did not recognize QC Fail reason: " + qcFailReasonString);
             }
+        } else {
+            if (requirePipelineVersion) {
+                pipelineVersion = nonOptionalFile(cmd, PIPELINE_VERSION_FILE);
+            }
+
+            panelVCFFile = nonOptionalValue(cmd, PANEL_VCF_NAME);
         }
 
         return ImmutablePanelReporterConfig.builder()
@@ -205,7 +199,6 @@ public interface PanelReporterConfig {
                 .limsDir(nonOptionalDir(cmd, LIMS_DIRECTORY))
                 .companyLogo(nonOptionalFile(cmd, COMPANY_LOGO))
                 .signature(nonOptionalFile(cmd, SIGNATURE))
-                .panel(isPanel)
                 .panelQcFail(isPanelQCFail)
                 .panelQcFailReason(panelQcFailReason)
                 .panelVCFname(panelVCFFile)
