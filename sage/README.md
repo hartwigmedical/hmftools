@@ -434,8 +434,7 @@ filtered_max_normal_alt_support |3| Normal `AD[1]`
 
 Note that hotspots are never hard-filtered.
 
-The first 3 filters are excluded from this point onwards and have no further processing applied to them.  
-The filtered_max_normal_alt_support is applied at the final step of the algorithm, solely to reduce file size.  The filtered_max_normal_alt_support does not apply to germline variants in the same local phase set as passing somatic variants.
+The first 3 filters are excluded from this point onwards and have no further processing applied to them.  The filtered_max_normal_alt_support is applied at the final step of the algorithm, solely to reduce file size, and is not applied in the absence of a provided reference sample.  The filtered_max_normal_alt_support does not apply to germline variants in the same local phase set as passing somatic variants.
  
 ## 4. Normal Counts and Quality
 
@@ -471,10 +470,7 @@ strandBias|0.0005 |0.0005|0.0005 |0.0005| SBLikelihood<sup>4</sup>
 
 4. StrandBiasLikelihood =  `binomial(min(SB,1-SB)*AD,AD,0.5,TRUE)`  If 0.1<SB<0.9 we never filter
 
-If multiple tumors are supplied, a variant remains unfiltered if it is unfiltered for any single tumor. 
-
-The germline criteria are only evaluated against the primary reference, ie, the first in the supplied reference list.
-If no reference bams supplied, the germline criteria are not evaluated.
+If multiple tumors are supplied, a variant remains unfiltered if it is unfiltered for any single tumor. The germline criteria are only evaluated against the primary reference, ie, the first in the supplied reference list. If no reference bams supplied, the germline criteria are not evaluated.
 
 Soft filters can be disabled using the `disable_soft_filter` parameter.
 
