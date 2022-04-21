@@ -69,6 +69,35 @@ public class HospitalModelFactoryTest {
     }
 
     @Test
+    public void canReadHospitalContactWIDE() throws IOException {
+        Map<String, HospitalPersons> hospitalContactWIDE =
+                HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_wide.tsv", 4, "WIDE");
+        assertEquals(2, hospitalContactWIDE.size());
+
+        HospitalPersons wide1 = hospitalContactWIDE.get("01");
+        assertEquals("Someone", wide1.hospitalPI());
+        assertEquals("Someone1", wide1.requesterName());
+        assertEquals("my@email.com", wide1.requesterEmail());
+
+        HospitalPersons wide2 = hospitalContactWIDE.get("02");
+        assertEquals("Someone", wide2.hospitalPI());
+        assertEquals("Someone1", wide2.requesterName());
+        assertEquals("my@email.com", wide2.requesterEmail());
+    }
+
+    @Test
+    public void canReadHospitalContactCOREDB() throws IOException {
+        Map<String, HospitalPersons> hospitalContactCOREDB =
+                HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_coredb.tsv", 4, "COREDB");
+        assertEquals(1, hospitalContactCOREDB.size());
+
+        HospitalPersons coredb01 = hospitalContactCOREDB.get("01");
+        assertEquals("Someone1", coredb01.hospitalPI());
+        assertEquals("Someone1", coredb01.requesterName());
+        assertEquals("my@email.com", coredb01.requesterEmail());
+    }
+
+    @Test
     public void canReadHospitalContactACTIN() throws IOException {
         Map<String, HospitalPersons> hospitalContactACTIN =
                 HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_actin.tsv", 2, "ACTIN");
@@ -117,7 +146,6 @@ public class HospitalModelFactoryTest {
         assertEquals(1, hospitalContactGENAYA.size());
 
         HospitalPersons genaya = hospitalContactGENAYA.get("01");
-        assertEquals("Someone1", genaya.hospitalPI());
         assertEquals("Someone1", genaya.requesterName());
         assertEquals("my@email.com", genaya.requesterEmail());
     }
@@ -135,41 +163,15 @@ public class HospitalModelFactoryTest {
     @Test
     public void canReadHospitalContactTARGTO() throws IOException {
         Map<String, HospitalPersons> hospitalContactTARGTO =
-                HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_targto.tsv", 2, "TARGTO");
+                HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_targto.tsv", 4, "TARGTO");
         assertEquals(1, hospitalContactTARGTO.size());
 
-        HospitalPersons genaya = hospitalContactTARGTO.get("01");
-        assertEquals("Someone", genaya.hospitalPI());
+        HospitalPersons targto = hospitalContactTARGTO.get("01");
+        assertEquals("Someone1", targto.requesterName());
+        assertEquals("my@email.com", targto.requesterEmail());
     }
 
-    @Test
-    public void canReadHospitalContactWIDE() throws IOException {
-        Map<String, HospitalPersons> hospitalContactWIDE =
-                HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_wide.tsv", 4, "WIDE");
-        assertEquals(2, hospitalContactWIDE.size());
 
-        HospitalPersons wide1 = hospitalContactWIDE.get("01");
-        assertEquals("Someone", wide1.hospitalPI());
-        assertEquals("Someone1", wide1.requesterName());
-        assertEquals("my@email.com", wide1.requesterEmail());
-
-        HospitalPersons wide2 = hospitalContactWIDE.get("02");
-        assertEquals("Someone", wide2.hospitalPI());
-        assertEquals("Someone1", wide2.requesterName());
-        assertEquals("my@email.com", wide2.requesterEmail());
-    }
-
-    @Test
-    public void canReadHospitalContactCOREDB() throws IOException {
-        Map<String, HospitalPersons> hospitalContactCOREDB =
-                HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_coredb.tsv", 4, "COREDB");
-        assertEquals(1, hospitalContactCOREDB.size());
-
-        HospitalPersons coredb01 = hospitalContactCOREDB.get("01");
-        assertEquals("Someone1", coredb01.hospitalPI());
-        assertEquals("Someone1", coredb01.requesterName());
-        assertEquals("my@email.com", coredb01.requesterEmail());
-    }
 
     @Test
     public void canReadSampleToHospitalMapping() throws IOException {

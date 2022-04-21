@@ -41,9 +41,18 @@ public final class HospitalModelFactory {
     private static final int HOSPITAL_PERSONS_PI_COLUMN = 1;
     private static final int HOSPITAL_PERSONS_REQUESTER_NAME_COLUMN = 2;
     private static final int HOSPITAL_PERSONS_REQUESTER_EMAIL_COLUMN = 3;
+
+    private static final int HOSPITAL_PERSONS_FIELD_COUNT_CPCT= 2;
+    private static final int HOSPITAL_PERSONS_FIELD_COUNT_DRUP = 2;
     private static final int HOSPITAL_PERSONS_FIELD_COUNT_WIDE = 4;
     private static final int HOSPITAL_PERSONS_FIELD_COUNT_COREDB = 4;
-    private static final int HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP_ACTIN = 2;
+    private static final int HOSPITAL_PERSONS_FIELD_COUNT_ACTIN = 2;
+    private static final int HOSPITAL_PERSONS_FIELD_COUNT_GLOW = 2;
+    private static final int HOSPITAL_PERSONS_FIELD_COUNT_OPTIC = 2;
+    private static final int HOSPITAL_PERSONS_FIELD_COUNT_SHERPA = 2;
+    private static final int HOSPITAL_PERSONS_FIELD_COUNT_GENAYA = 4;
+    private static final int HOSPITAL_PERSONS_FIELD_COUNT_OMIC = 2;
+    private static final int HOSPITAL_PERSONS_FIELD_COUNT_TARGTO = 4;
 
     private static final int SAMPLE_MAPPING_ID_COLUMN = 0;
     private static final int HOSPITAL_MAPPING_COLUMN = 1;
@@ -74,27 +83,27 @@ public final class HospitalModelFactory {
 
         Map<String, HospitalAddress> hospitalAddressMap = readFromHospitalAddressTsv(hospitalAddressTsv);
         Map<String, HospitalPersons> hospitalPersonsCPCT =
-                readFromHospitalPersonsTsv(hospitalPersonsCPCTTsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP_ACTIN, "CPCT");
+                readFromHospitalPersonsTsv(hospitalPersonsCPCTTsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT, "CPCT");
         Map<String, HospitalPersons> hospitalPersonsDRUP =
-                readFromHospitalPersonsTsv(hospitalPersonsDRUPTsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP_ACTIN, "DRUP");
+                readFromHospitalPersonsTsv(hospitalPersonsDRUPTsv, HOSPITAL_PERSONS_FIELD_COUNT_DRUP, "DRUP");
         Map<String, HospitalPersons> hospitalPersonsWIDE =
                 readFromHospitalPersonsTsv(hospitalPersonsWIDETsv, HOSPITAL_PERSONS_FIELD_COUNT_WIDE, "WIDE");
         Map<String, HospitalPersons> hospitalPersonsCOREDB =
                 readFromHospitalPersonsTsv(hospitalPersonsCOREDBTsv, HOSPITAL_PERSONS_FIELD_COUNT_COREDB, "COREDB");
         Map<String, HospitalPersons> hospitalPersonsACTIN =
-                readFromHospitalPersonsTsv(hospitalPersonsACTINTsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP_ACTIN, "ACTIN");
+                readFromHospitalPersonsTsv(hospitalPersonsACTINTsv, HOSPITAL_PERSONS_FIELD_COUNT_ACTIN, "ACTIN");
         Map<String, HospitalPersons> hospitalPersonsGLOW =
-                readFromHospitalPersonsTsv(hospitalPersonsGLOWTsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP_ACTIN, "GLOW");
+                readFromHospitalPersonsTsv(hospitalPersonsGLOWTsv, HOSPITAL_PERSONS_FIELD_COUNT_GLOW, "GLOW");
         Map<String, HospitalPersons> hospitalPersonsOPTIC =
-                readFromHospitalPersonsTsv(hospitalPersonsOPTICTsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP_ACTIN, "OPTIC");
+                readFromHospitalPersonsTsv(hospitalPersonsOPTICTsv, HOSPITAL_PERSONS_FIELD_COUNT_OPTIC, "OPTIC");
         Map<String, HospitalPersons> hospitalPersonsSHERPA =
-                readFromHospitalPersonsTsv(hospitalPersonsSHERPATsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP_ACTIN, "SHERPA");
+                readFromHospitalPersonsTsv(hospitalPersonsSHERPATsv, HOSPITAL_PERSONS_FIELD_COUNT_SHERPA, "SHERPA");
         Map<String, HospitalPersons> hospitalPersonsGENAYA =
-                readFromHospitalPersonsTsv(hospitalPersonsGENAYATsv, HOSPITAL_PERSONS_FIELD_COUNT_COREDB, "GENAYA");
+                readFromHospitalPersonsTsv(hospitalPersonsGENAYATsv, HOSPITAL_PERSONS_FIELD_COUNT_GENAYA, "GENAYA");
         Map<String, HospitalPersons> hospitalPersonsOmic =
-                readFromHospitalPersonsTsv(hospitalPersonsOmicTsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP_ACTIN, "OMIC");
+                readFromHospitalPersonsTsv(hospitalPersonsOmicTsv, HOSPITAL_PERSONS_FIELD_COUNT_OMIC, "OMIC");
         Map<String, HospitalPersons> hospitalPersonsTargto =
-                readFromHospitalPersonsTsv(hospitalPersonsTargtoTsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP_ACTIN, "TARGTO");
+                readFromHospitalPersonsTsv(hospitalPersonsTargtoTsv, HOSPITAL_PERSONS_FIELD_COUNT_TARGTO, "TARGTO");
         Map<String, String> sampleHospitalMapping = readFromSampleToHospitalMappingTsv(sampleHospitalMappingTsv);
 
         HospitalModel hospitalModel = ImmutableHospitalModel.builder()
