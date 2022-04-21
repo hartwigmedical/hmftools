@@ -183,7 +183,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(variant.gDNA()));
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.determineCanonicalImpact(variant.canonicalHgvsCodingImpact(),
                     variant.canonicalEffect())));
-            contentTable.addCell(TableUtil.createContentCell(variant.canonicalHgvsProteinImpact()));
+            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.proteinAnnotationDisplayString(variant.canonicalHgvsProteinImpact(),
+                    variant.canonicalEffect())));
             contentTable.addCell(TableUtil.createContentCell(new Paragraph(
                     variant.alleleReadCount() + " / ").setFont(ReportResources.fontBold())
                     .add(new Text(String.valueOf(variant.totalReadCount())).setFont(ReportResources.fontRegular()))
@@ -209,6 +210,11 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createLayoutCell(1, contentTable.getNumberOfColumns())
                     .add(new Paragraph("\n# Marked variant(s) are also present in the germline of the patient. Referral to a genetic "
                             + "specialist should be advised.").addStyle(ReportResources.subTextStyle())));
+        }
+
+        if (SomaticVariants.hasPhasedVariant(reportableVariants)) {
+            contentTable.addCell(TableUtil.createLayoutCell(1, contentTable.getNumberOfColumns())
+                    .add(new Paragraph("\n+ Marked variant(s) are phased with each other").addStyle(ReportResources.subTextStyle())));
         }
 
         return TableUtil.createWrappingReportTable(title, null, contentTable);
@@ -309,8 +315,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         }
 
         Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 50, 100, 50, 80, 85, 85 },
-                new Cell[] { TableUtil.createHeaderCell("Location"),
-                        TableUtil.createHeaderCell("Gene"),
+                new Cell[] { TableUtil.createHeaderCell("Location"), TableUtil.createHeaderCell("Gene"),
                         TableUtil.createHeaderCell("Disrupted range"),
                         TableUtil.createHeaderCell("Type").setTextAlignment(TextAlignment.CENTER),
                         TableUtil.createHeaderCell("Cluster ID").setTextAlignment(TextAlignment.CENTER),
