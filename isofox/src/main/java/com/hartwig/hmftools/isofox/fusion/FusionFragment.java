@@ -199,11 +199,11 @@ public class FusionFragment
 
                         for(TransExonRef transExonRef : mTransExonRefs[se])
                         {
-                            if (transExonRef.TransId == readTransExonRef.TransId)
+                            if(transExonRef.TransId == readTransExonRef.TransId)
                             {
                                 found = true;
 
-                                if (transExonRef.ExonRank != readTransExonRef.ExonRank)
+                                if(transExonRef.ExonRank != readTransExonRef.ExonRank)
                                 {
                                     ISF_LOGGER.trace("multi-exon: read({} cigar={}) ref1({}) ref2({})",
                                             read.Id, read.Cigar.toString(), transExonRef.toString(), readTransExonRef.toString());
@@ -269,7 +269,7 @@ public class FusionFragment
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            if (mJunctionTypes[se] == KNOWN)
+            if(mJunctionTypes[se] == KNOWN)
             {
                 continue;
             }
@@ -281,9 +281,9 @@ public class FusionFragment
                 {
                     boolean isDonor = (mJunctionOrientations[se] == junctionStrands[se]);
 
-                    if (isDonor && canonicalDonor(daBases, junctionStrands[se]))
+                    if(isDonor && canonicalDonor(daBases, junctionStrands[se]))
                         mJunctionTypes[se] = FusionJunctionType.CANONICAL;
-                    else if (!isDonor && canonicalAcceptor(daBases, junctionStrands[se]))
+                    else if(!isDonor && canonicalAcceptor(daBases, junctionStrands[se]))
                         mJunctionTypes[se] = FusionJunctionType.CANONICAL;
                 }
                 else
@@ -292,7 +292,7 @@ public class FusionFragment
                     byte asDonorStrand = mJunctionOrientations[se];
                     byte asAcceptorStrand = (byte)(-mJunctionOrientations[se]);
 
-                    if (canonicalDonor(daBases, asDonorStrand) || canonicalAcceptor(daBases, asAcceptorStrand))
+                    if(canonicalDonor(daBases, asDonorStrand) || canonicalAcceptor(daBases, asAcceptorStrand))
                         mJunctionTypes[se] = FusionJunctionType.CANONICAL;
                 }
             }

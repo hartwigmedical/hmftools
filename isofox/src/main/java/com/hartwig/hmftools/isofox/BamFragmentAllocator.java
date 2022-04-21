@@ -289,10 +289,12 @@ public class BamFragmentAllocator
 
     private void processRead(ReadRecord read)
     {
+        /*
         if(read.Id.equals(LOG_READ_ID))
         {
             ISF_LOGGER.debug("specific read by ID: {}", read.toString());
         }
+        */
 
         // for each record find all exons with an overlap
         // skip records if either end isn't in one of the exons for this gene
@@ -301,6 +303,7 @@ public class BamFragmentAllocator
         {
             mNextGeneCountLog += GENE_LOG_COUNT;
             ISF_LOGGER.info("chr({}) genes({}) bamRecordCount({})", mCurrentGenes.chromosome(), mCurrentGenes.geneNames(), mGeneReadCount);
+            System.gc(); // attempting to reduce allocation to discarded SAMRecords and ReadRecords
         }
 
         if(mConfig.GeneReadLimit > 0 && mGeneReadCount >= mConfig.GeneReadLimit)
@@ -716,7 +719,9 @@ public class BamFragmentAllocator
         if(mGeneReadCount >= mNextGeneCountLog)
         {
             mNextGeneCountLog += GENE_LOG_COUNT;
-            ISF_LOGGER.info("chr({}) genes({}) bamRecordCount({})", mCurrentGenes.chromosome(), mCurrentGenes.geneNames(), mGeneReadCount);
+            ISF_LOGGER.info("chr({}) genes({}) enriched bamRecordCount({})",
+                    mCurrentGenes.chromosome(), mCurrentGenes.geneNames(), mGeneReadCount);
+            System.gc();
         }
 
         if(mConfig.GeneReadLimit > 0 && mGeneReadCount >= mConfig.GeneReadLimit)

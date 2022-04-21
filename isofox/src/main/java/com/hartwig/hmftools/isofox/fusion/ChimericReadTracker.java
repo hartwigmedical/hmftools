@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.isofox.fusion;
 
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
@@ -10,6 +12,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_NOVEL_SJ_DISTANCE;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
+import static com.hartwig.hmftools.isofox.common.CommonUtils.cigarFromStr;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
@@ -22,6 +25,10 @@ import static com.hartwig.hmftools.isofox.fusion.FusionUtils.isInversion;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.setHasMultipleKnownSpliceGenes;
 import static com.hartwig.hmftools.isofox.fusion.ReadGroup.hasSuppAlignment;
 
+import static htsjdk.samtools.CigarOperator.M;
+import static htsjdk.samtools.CigarOperator.N;
+
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,6 +45,8 @@ import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
+
+import htsjdk.samtools.Cigar;
 
 public class ChimericReadTracker
 {
@@ -187,8 +196,7 @@ public class ChimericReadTracker
             read.addIntronicTranscriptRefs(mGeneCollection.getTranscripts());
     }
 
-    private static final String LOG_READ_ID = "";
-    // private static final String LOG_READ_ID = "A00260:30:HGL2NDSXX:2:1476:6117:17754";
+    // private static final String LOG_READ_ID = "";
 
     public void postProcessChimericReads(final BaseDepth baseDepth, final FragmentTracker fragmentTracker)
     {
@@ -219,10 +227,12 @@ public class ChimericReadTracker
             final List<ReadRecord> reads = readGroup.Reads;
             final String readId = reads.get(0).Id;
 
+            /*
             if(readId.equals(LOG_READ_ID))
             {
                 ISF_LOGGER.debug("specific read: {}", readId);
             }
+            */
 
             int readCount = reads.size();
             boolean readGroupComplete = readGroup.isComplete();

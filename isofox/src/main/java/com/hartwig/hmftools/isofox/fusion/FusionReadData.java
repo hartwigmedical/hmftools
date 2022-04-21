@@ -49,7 +49,7 @@ public class FusionReadData
 {
     private final int mId;
     private final String mLocationId;
-    private final FusionFragment mFragment; // the one which establishes this fusion and whose junction data is used
+    private final FusionFragment mFragment; // the split fragment which establishes this fusion and whose junction data is used
 
     private final Map<FusionFragmentType,List<FusionFragment>> mFragments;
     private final Map<FusionFragmentType,Integer> mFragmentCounts;

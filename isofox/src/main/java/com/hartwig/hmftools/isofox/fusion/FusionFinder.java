@@ -354,7 +354,6 @@ public class FusionFinder implements Callable
         reconcileFusions();
 
         // assign any discordant reads
-        // ISF_LOGGER.debug("{}: assigning unfused fragments", mTaskId);
         assignDiscordantFragments();
         createLocalFusions();
     }
@@ -479,7 +478,6 @@ public class FusionFinder implements Callable
             mFusionCandidates.put(fragment.locationPair(), fusions);
         }
 
-        // int fusionId = mTaskId * 1000000 + mNextFusionId++; // keep unique across threaded tasks
         int fusionId = mFusionWriter.getNextFusionId();
         final FusionReadData fusionData = new FusionReadData(fusionId, fragment);
 
@@ -516,6 +514,11 @@ public class FusionFinder implements Callable
         }
 
         return fusionData;
+    }
+
+    private void applyHardFilters()
+    {
+        // remove any fragment with split fragments below the required minimum
     }
 
     private void cacheDiscordantFragment(final FusionFragment fragment)

@@ -62,7 +62,7 @@ public class GeneRegionFilters
         ExcludedRegion = refGenomeVersion.is37() ? EXCLUDED_REGION_1_REF_37 : EXCLUDED_REGION_1_REF_38;
     }
 
-    public static void addLoggingOptions(final Options options)
+    public static void addCommandLineOptions(final Options options)
     {
         options.addOption(RESTRICTED_GENE_IDS, true, "Optional list of Ensmebl GeneIds separated by ';'");
         options.addOption(EXCLUDED_GENE_ID_FILE, true, "Optional CSV file of genes to ignore");

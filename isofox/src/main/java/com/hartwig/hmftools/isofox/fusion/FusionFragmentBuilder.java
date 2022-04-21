@@ -151,7 +151,7 @@ public class FusionFragmentBuilder
 
         for(ReadRecord read : fragment.reads())
         {
-            if (!read.hasSuppAlignment())
+            if(!read.hasSuppAlignment())
                 continue;
 
             int scLeft = read.isSoftClipped(SE_START) ? read.Cigar.getFirstCigarElement().getLength() : 0;
@@ -159,9 +159,9 @@ public class FusionFragmentBuilder
 
             boolean useLeft = false;
 
-            if (scLeft > 0 && scRight > 0)
+            if(scLeft > 0 && scRight > 0)
             {
-                if (scLeft >= scRight)
+                if(scLeft >= scRight)
                     useLeft = true;
                 else
                     useLeft = false;
@@ -173,7 +173,7 @@ public class FusionFragmentBuilder
 
             chromosomes[posIndex] = read.Chromosome;
 
-            if (useLeft)
+            if(useLeft)
             {
                 junctionPositions[posIndex] = read.getCoordsBoundary(SE_START);
                 junctionOrientations[posIndex] = NEG_ORIENT;
@@ -198,7 +198,7 @@ public class FusionFragmentBuilder
 
         int lowerIndex;
 
-        if (chromosomes[SE_START].equals(chromosomes[SE_END]))
+        if(chromosomes[SE_START].equals(chromosomes[SE_END]))
             lowerIndex = junctionPositions[0] <= junctionPositions[1] ? 0 : 1;
         else
             lowerIndex = lowerChromosome(chromosomes[SE_START], chromosomes[SE_END]) ? 0 : 1;
@@ -294,7 +294,7 @@ public class FusionFragmentBuilder
 
                 List<ReadRecord> readGroup = readGroups.get(chrGeneId);
 
-                if (readGroup == null)
+                if(readGroup == null)
                 {
                     readGroups.put(chrGeneId, Lists.newArrayList(read));
 
@@ -332,7 +332,7 @@ public class FusionFragmentBuilder
         // find the lower chromosome and position
         int lowerIndex;
 
-        if (chromosomes.get(0).equals(chromosomes.get(1)))
+        if(chromosomes.get(0).equals(chromosomes.get(1)))
             lowerIndex = positions.get(chrGeneCollections.get(0)) <= positions.get(chrGeneCollections.get(1)) ? 0 : 1;
         else
             lowerIndex = lowerChromosome(chromosomes.get(0), chromosomes.get(1)) ? 0 : 1;

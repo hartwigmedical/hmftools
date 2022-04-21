@@ -208,8 +208,18 @@ public class IsofoxConfig
         WriteGcData = cmd.hasOption(WRITE_GC_DATA);
 
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
-        ExpCountsFile = cmd.getOptionValue(EXP_COUNTS_FILE);
-        ExpGcRatiosFile = cmd.getOptionValue(EXP_GC_RATIOS_FILE);
+
+        if(Functions.contains(TRANSCRIPT_COUNTS))
+        {
+            ExpCountsFile = cmd.getOptionValue(EXP_COUNTS_FILE);
+            ExpGcRatiosFile = cmd.getOptionValue(EXP_GC_RATIOS_FILE);
+        }
+        else
+        {
+            ExpCountsFile = null;
+            ExpGcRatiosFile = null;
+        }
+
         NeoEpitopeFile = cmd.getOptionValue(NEO_EPITOPE_FILE);
         UnmappedCohortFreqFile = cmd.getOptionValue(UMR_COHORT_FREQUENCY_FILE);
 
@@ -234,7 +244,7 @@ public class IsofoxConfig
             }
         }
 
-        Fusions = new FusionConfig(cmd);
+        Fusions = Functions.contains(FUSIONS) ? new FusionConfig(cmd) : new FusionConfig();
 
         RunValidations = cmd.hasOption(RUN_VALIDATIONS);
         RunPerfChecks = cmd.hasOption(PERF_CHECKS);
@@ -468,7 +478,7 @@ public class IsofoxConfig
         options.addOption(RUN_VALIDATIONS, false, "Run auto-validations");
         options.addOption(PERF_CHECKS, false, "Run performance logging routines");
 
-        GeneRegionFilters.addLoggingOptions(options);
+        GeneRegionFilters.addCommandLineOptions(options);
         FusionConfig.addCommandLineOptions(options);
 
         return options;
