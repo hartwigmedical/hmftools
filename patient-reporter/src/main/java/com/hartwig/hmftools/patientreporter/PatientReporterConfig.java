@@ -319,7 +319,6 @@ public interface PatientReporterConfig {
         String sampleSummaryTsv = Strings.EMPTY;
         String sampleSpecialRemarkTsv = Strings.EMPTY;
 
-        String rvaLogo = Strings.EMPTY;
         String udiCode = Strings.EMPTY;
 
         if (isQCFail && qcFailReason.isDeepWGSDataAvailable()) {
@@ -329,7 +328,6 @@ public interface PatientReporterConfig {
             purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
             purpleQcFile = nonOptionalFile(cmd, PURPLE_QC_FILE);
             peachGenotypeTsv = nonOptionalFile(cmd, PEACH_GENOTYPE_TSV);
-            rvaLogo = nonOptionalFile(cmd, RVA_LOGO);
             udiCode = nonOptionalValue(cmd, UDI_DI);
         } else if (!isQCFail) {
             if (requirePipelineVersion) {
@@ -359,7 +357,6 @@ public interface PatientReporterConfig {
             sampleSummaryTsv = nonOptionalFile(cmd, SAMPLE_SUMMARY_TSV);
             sampleSpecialRemarkTsv = nonOptionalFile(cmd, SAMPLE_SPECIAL_REMARK_TSV);
 
-            rvaLogo = nonOptionalFile(cmd, RVA_LOGO);
             udiCode = nonOptionalValue(cmd, UDI_DI);
         }
 
@@ -372,7 +369,7 @@ public interface PatientReporterConfig {
                 .outputDirData(nonOptionalDir(cmd, OUTPUT_DIRECTORY_DATA))
                 .primaryTumorTsv(nonOptionalFile(cmd, PRIMARY_TUMOR_TSV))
                 .limsDir(nonOptionalDir(cmd, LIMS_DIRECTORY))
-                .rvaLogo(rvaLogo)
+                .rvaLogo(nonOptionalFile(cmd, RVA_LOGO))
                 .companyLogo(nonOptionalFile(cmd, COMPANY_LOGO))
                 .signature(nonOptionalFile(cmd, SIGNATURE))
                 .udiDi(udiCode)
