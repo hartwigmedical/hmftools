@@ -82,6 +82,8 @@ COBALT supports both BAM and CRAM file formats. If using CRAM, the ref_genome ar
 | ref_genome             | None    | Path to the reference genome fasta file if using CRAM files |
 | validation_stringency  | STRICT  | SAM validation strategy: STRICT, SILENT, LENIENT            |
 | tumor_only_diploid_bed | NA      | Bed file of diploid regions of the genome                   |
+| pcf_gamma              | 100     | Gamma value for use in R copy_number pcf function           |
+| target_region          | None    | Target region TSV file for use in targeted mode.            |
 
 ## Tumor Only Mode
 In the absence of a reference bam and reference COBALT will  be run in tumor_only mode.    
@@ -112,15 +114,13 @@ Peak memory is measure in gigabytes.
 ## Output
 The following tab delimited files are written:
 
-`/run_dir/cobalt/TUMOR.chr.len`
-
-`/run_dir/cobalt/TUMOR.cobalt.ratio.tsv`
+`/run_dir/cobalt/TUMOR.cobalt.ratio.tsv.gz`
 
 `/run_dir/cobalt/TUMOR.cobalt.ratio.pcf`
 
 `/run_dir/cobalt/REFERENCE.cobalt.ratio.pcf`
 
-TUMOR.cobalt.ratio.tsv contains the counts and ratios of the reference and tumor:
+TUMOR.cobalt.ratio.tsv.gz contains the counts and ratios of the reference and tumor:
 
 | Chromosome | Position | ReferenceReadCount | TumorReadCount | ReferenceGCRatio | TumorGCRatio | ReferenceGCDiploidRatio |
 |------------|----------|--------------------|----------------|------------------|--------------|-------------------------|
@@ -134,6 +134,12 @@ TUMOR.cobalt.ratio.pcf and REFERENCE.cobalt.ratio.pcf contain the segmented regi
 
 
 ## Version History and Download Links
+- [1.13](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.13)
+  - Added support for germline only mode.
+  - Added support for targeted mode. Activated when run with `-target_region` argument.
+  - Keeps 0 read counts for regions that have no read, instead of dropping those regions from output.
+  - Added new argument `-pcf_gamma` for overriding PCF gamma value.
+  - Remove some redundant output files.
 - [1.12](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.12)
   - Added workaround for R copy_number module pcf function bug 
 - [1.11](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.11)
