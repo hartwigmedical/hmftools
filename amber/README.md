@@ -9,6 +9,7 @@ The Bioconductor copy number package is then used to generate pcf segments from 
 When using paired reference/tumor data, AMBER is also able to: 
   - detect evidence of contamination in the tumor from homozygous sites in the reference; and
   - facilitate sample matching by recording SNPs in the germline
+  - identify long regions of homozygosty and consanguinity
 
 ## Installation
 
@@ -32,17 +33,16 @@ This is the default and recommended mode.
 
 | Argument      | Description                                                                                |
 |---------------|--------------------------------------------------------------------------------------------|
-| reference     | Name of the reference sample                                                               |
+| reference     | Name of the reference sample   (if left null run in tumor_only mode)                       |
 | reference_bam | Path to indexed reference BAM file                                                         |
-| tumor         | Name of the tumor sample                                                                   |
+| tumor         | Name of the tumor sample (if left null run in germline_only mode)                          |
 | tumor_bam     | Path to indexed tumor BAM file                                                             |
 | output_dir    | Path to the output directory. This directory will be created if it does not already exist. |
 | loci          | Path to vcf file containing likely heterozygous sites (see below). Gz files supported.     |
 | ref_genome_version | One of `37` or `38`. Required only when using CRAM files.                             |
 
 The vcf file used by HMF (GermlineHetPon.37.vcf.gz) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
-The sites were chosen by running the GATK HaplotypeCaller over 1700 germline samples and then selecting all SNP sites which are heterozygous in 800 to 900 of the samples. 
-The 1.3 million sites provided in this file typically result in 450k+ BAF points. A 38 equivalent is also available.
+The sites for hg37 were chosen by running the GATK HaplotypeCaller over 1700 germline samples and then selecting all SNP sites which are heterozygous in 800 to 900 of the samples.  The 1.3 million sites provided in this file typically result in 450k+ BAF points.  For hg38 we use GNOMAD v3 SNP sites from chr1-chrX with only a single ALT at that location and with populationAF > 0.05 and < 0.95.   This yields 7.25M sites.
 
 Approximately 1000 sites scattered evenly through the VCF have been tagged with a SNPCHECK flag. 
 The allelic frequency of these sites in the reference bam are written to the `REFERENCE.amber.snp.vcf.gz` file without any filtering to be used downstream for sample matching. 
@@ -75,7 +75,11 @@ java -Xmx32G -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
 ```
 
 ## Tumor Only Mode
-If no reference BAM is supplied, AMBER will be put into tumor only mode.
+If no reference BAM is supplied, AMBER will be put into tumor only mode.  In tumor only, the following behaviour is changed:
+- Contamination check not run
+- snp check vcf is not produced
+- normalBAF and count fields are set to -1 in amber.baf.tsv
+- a set of blacklisted regions (with variable germline copy number) are ignored
 
 ### Mandatory Arguments
 
@@ -95,6 +99,7 @@ If no reference BAM is supplied, AMBER will be put into tumor only mode.
 | min_base_quality       | 13      | Minimum quality for a base to be considered                                   |
 | tumor_only_min_vaf     | 0.05    | Min VAF in ref and alt in tumor only mode                                     |
 | tumor_only_min_support | 2       | Min support in ref and alt in tumor only mode                                 |
+| tumor_only_min_depth   | 25      | Min depth in ref and alt in tumor only mode                                   |
 | ref_genome             | NA      | Path to the reference genome fasta file. Required only when using CRAM files. |
 
 ### Example Usage
@@ -106,6 +111,13 @@ java -Xmx32G -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
    -threads 16 \
    -loci /path/to/GermlineHetPon.37.vcf.gz 
 ```
+## Germline Only Mode
+
+If the tumor / tumor bam are not specified then Amber will be run in germline only mode.   Germline mode has the following differences in behaviour
+- contamination is not run
+- pcf fitting is not run
+- tumor fields are set to -1 for amber.baf.tsv.gz
+- amber.baf.tsv.gz named with ref sample (instead of tumor sample)
 
 ## Multiple Reference / Donor mode
 The `reference` and `reference_bam` arguments supports multiple arguments separated by commas. 
@@ -176,17 +188,15 @@ HAVING sampleCount > 1
 ORDER BY sampleCount desc;
 ```
 
-
 ## Output
-| File                                    | Description                                                                              |
-|-----------------------------------------|------------------------------------------------------------------------------------------|
-| TUMOR.amber.baf.tsv                     | Tab separated values (TSV) containing reference and tumor BAF at each heterozygous site. |
-| TUMOR.amber.baf.pcf                     | TSV of BAF segments using PCF algorithm.                                                 |
-| TUMOR.amber.qc                          | Contains median tumor baf and QC status. FAIL may indicate contamination in sample.      |
-| TUMOR.amber.baf.vcf.gz                  | Similar information as BAF file but in VCF format.                                       |
-| TUMOR.amber.contamination.vcf.gz        | Entry at each homozygous site in the reference and tumor.                                |
-| REFERENCE.amber.snp.vcf.gz              | Entry at each SNP location in the reference.                                             |
-| REFERENCE.amber.homozygousregion.tsv    | Regions of homozygosity found in the reference.                                          |
+| File                                 | Description                                                                              |
+|--------------------------------------|------------------------------------------------------------------------------------------|
+| TUMOR.amber.baf.tsv.gz               | Tab separated values (TSV) containing reference and tumor BAF at each heterozygous site. |
+| TUMOR.amber.baf.pcf                  | TSV of BAF segments using PCF algorithm.                                                 |
+| TUMOR.amber.qc                       | Contains QC status and comntamination rate. FAIL may indicate contamination in sample.   |
+| TUMOR.amber.contamination.vcf.gz     | Entry at each homozygous site in the reference and tumor.                                |
+| REFERENCE.amber.snp.vcf.gz           | Entry at each SNP location in the reference.                                             |
+| REFERENCE.amber.homozygousregion.tsv | Regions of homozygosity found in the reference.                                          |
 
 ## Performance Characteristics
 Performance numbers were taken from a 72 core machine using COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. 
@@ -206,6 +216,14 @@ Peak memory is measure in gigabytes.
 
  
 # Version History and Download Links
+- [3.9](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.9)
+  - Added germline only mode support. 
+  - Added `tumor_only_min_depth` argument.
+  - Make `ref_genome_version` argument mandatory.
+  - Added excluded SNP regions (values are hard coded) in tumor only mode.
+  - Fixed a rounding issue in the classification of zygosity.
+  - Removed <sample id>.amber.baf.vcf.gz output.
+  - compressed baf TSV output with gzip.
 - [3.8](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.8)
   - Added workaround for a bug in R copy_number module pcf function 
   - Fixed `NullPointerException` in tumor only mode

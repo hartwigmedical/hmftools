@@ -2,6 +2,8 @@ package com.hartwig.hmftools.common.amber;
 
 import java.util.function.Predicate;
 
+import com.hartwig.hmftools.common.utils.Doubles;
+
 public class NormalHeterozygousFilter implements Predicate<BaseDepth>
 {
     private final double mMinHetAFPercentage;
@@ -23,20 +25,20 @@ public class NormalHeterozygousFilter implements Predicate<BaseDepth>
 
     private boolean isHeterozygousRef(int refSupport, int readDepth)
     {
-        final int minCount = (int) Math.round((1 - mMaxHetAFPercentage) * readDepth);
-        final int maxCount = (int) Math.round((1 - mMinHetAFPercentage) * readDepth);
+        final double minCount = (1 - mMaxHetAFPercentage) * readDepth;
+        final double maxCount = (1 - mMinHetAFPercentage) * readDepth;
         return between(refSupport, minCount, maxCount);
     }
 
     private boolean isHeterozygousAlt(int altSupport, int readDepth)
     {
-        final int minCount = (int) Math.round(mMinHetAFPercentage * readDepth);
-        final int maxCount = (int) Math.round(mMaxHetAFPercentage * readDepth);
+        final double minCount = mMinHetAFPercentage * readDepth;
+        final double maxCount = mMaxHetAFPercentage * readDepth;
         return between(altSupport, minCount, maxCount);
     }
 
-    private static boolean between(int totalCount, int min, int max)
+    private static boolean between(int totalCount, double min, double max)
     {
-        return totalCount >= min && totalCount <= max;
+        return Doubles.greaterOrEqual(totalCount, min) && Doubles.lessOrEqual(totalCount, max);
     }
 }

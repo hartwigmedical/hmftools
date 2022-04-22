@@ -6,9 +6,11 @@ COBALT starts with the raw read counts per 1,000 base window for both normal and
 in the respective bam files with a mapping quality score of at least 10 that is neither unmapped, duplicated, secondary, nor supplementary. 
 Windows with a GC content less than 0.2 or greater than 0.6 or with an average mappability below 0.85 are excluded from further analysis.
 
-Next we apply a GC normalization to calculate the read ratios. 
-To do this we divide the read count of each window by the median read count of all windows sharing the same GC content then normalise further to the 
-ratio of the median to mean read count of all windows. 
+Next we apply a GC normalization to calculate the read ratios. To do this we divide the read count of each window by the median read count of all windows sharing the same GC content then normalise further to the ratio of the median to mean read count of all windows.    For some targeted region analyses the median read count may be very low due to low numbers of off target reads, and the use of discrete integers may restrict resolution.  We therefore modify the median with the following formula to improve the estimate:
+
+```
+modifiedMedian = median - 0.5 + (0.5 - proportion of depth windows with read count < median) / (proportion of depth windows  with read count = median)
+```
 
 Post GC normalization, COBALT is able to detect the following germline chromosomal aberrations from the reference ratio:
 
@@ -79,23 +81,20 @@ COBALT supports both BAM and CRAM file formats. If using CRAM, the ref_genome ar
 | min_quality            | 10      | Min quality                                                 |
 | ref_genome             | None    | Path to the reference genome fasta file if using CRAM files |
 | validation_stringency  | STRICT  | SAM validation strategy: STRICT, SILENT, LENIENT            |
-| tumor_only             | NA      | Set to tumor only mode                                      |
 | tumor_only_diploid_bed | NA      | Bed file of diploid regions of the genome                   |
+| pcf_gamma              | 100     | Gamma value for use in R copy_number pcf function           |
+| target_region          | None    | Target region TSV file for use in targeted mode.            |
 
 ## Tumor Only Mode
-In the absence of a reference bam, COBALT can be put into tumor only mode with the `tumor_only` flag. 
-In this mode the `reference` and `reference_bam` parameters are no longer valid.
+In the absence of a reference bam and reference COBALT will  be run in tumor_only mode.    
 
-As no reference data is supplied, COBALT does not try to determine gender or any chromosomal aberrations. 
-The output reference ratios will be 1 or -1 on all chromosomes even if they are allosomes. 
-Downstream, PURPLE will adjust the allosome ratios according to the AMBER gender. 
-A file called `DIPLOID.cobalt.ratio.pcf' will be created in lieu of a reference PCF file.
+Without a means to determine which regions of the normal are diploid, a bed file specifying these locations must be included with the `tumor-only-diploid-bed` parameter. A 37 bed file (DiploidRegions.37.bed.gz) and 38 equivalent are available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). To create this bed file we examined the COBALT output of 100 samples.  We considered each 1000 base region to be diploid if 50% or more of the samples were diploid (0.85 >= referenceGCDiploidRatio <= 1.15 ) at this point. 
 
-Without a means to determine which regions of the normal are diploid, a bed file specifying these locations must be included with the `tumor-only-diploid-bed` parameter. 
-A 37 bed file (DiploidRegions.37.bed.gz) and 38 equivalent are available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl).
+As no reference data is supplied, COBALT does not try to determine gender or any chromosomal aberrations.  No reference pcf file will be created. The output reference ratios will be 1 or -1 on all chromosomes even if they are allosomes.  Downstream, PURPLE will adjust the allosome ratios according to the AMBER gender. 
 
-To create this bed file we examined the COBALT output of 100 samples. 
-We considered each 1000 base region to be diploid if 50% or more of the samples were diploid (0.85 >= referenceGCDiploidRatio <= 1.15 ) at this point. 
+## Germline Only Mode
+
+In the absence of a tumor bam and tumor COBALT will  be run in germline mode.   Counts and ratios are only calculated and fitted for the reference sample.
 
 ## Performance Characteristics
 Performance numbers were taken from a 72 core machine using COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. 
@@ -115,15 +114,13 @@ Peak memory is measure in gigabytes.
 ## Output
 The following tab delimited files are written:
 
-`/run_dir/cobalt/TUMOR.chr.len`
-
-`/run_dir/cobalt/TUMOR.cobalt.ratio.tsv`
+`/run_dir/cobalt/TUMOR.cobalt.ratio.tsv.gz`
 
 `/run_dir/cobalt/TUMOR.cobalt.ratio.pcf`
 
 `/run_dir/cobalt/REFERENCE.cobalt.ratio.pcf`
 
-TUMOR.cobalt.ratio.tsv contains the counts and ratios of the reference and tumor:
+TUMOR.cobalt.ratio.tsv.gz contains the counts and ratios of the reference and tumor:
 
 | Chromosome | Position | ReferenceReadCount | TumorReadCount | ReferenceGCRatio | TumorGCRatio | ReferenceGCDiploidRatio |
 |------------|----------|--------------------|----------------|------------------|--------------|-------------------------|
@@ -137,6 +134,12 @@ TUMOR.cobalt.ratio.pcf and REFERENCE.cobalt.ratio.pcf contain the segmented regi
 
 
 ## Version History and Download Links
+- [1.13](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.13)
+  - Added support for germline only mode.
+  - Added support for targeted mode. Activated when run with `-target_region` argument.
+  - Keeps 0 read counts for regions that have no read, instead of dropping those regions from output.
+  - Added new argument `-pcf_gamma` for overriding PCF gamma value.
+  - Remove some redundant output files.
 - [1.12](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.12)
   - Added workaround for R copy_number module pcf function bug 
 - [1.11](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.11)

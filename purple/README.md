@@ -21,7 +21,8 @@ Whole exome sequenced (WES) data is not supported.
   + [AMBER](#amber)
   + [Structural Variant Input VCFs (optional)](#structural-variant-input-vcfs-optional)
   + [Somatic Variant Input VCF (optional)](#somatic-variant-input-vcf-optional)
-* [Tumor Only Mode](#tumor-only-mode)  
+* [Tumor Only Mode](#tumor-only-mode) 
+* [Germline Only Mode](#germline-only-mode)  
 * [Algorithm](#algorithm)
   + [1. Sex](#1-sex-determination)
   + [2. Segmentation](#2-segmentation)
@@ -139,7 +140,6 @@ db_user | None | Database username - set all 3 DB parameters to load Purple data
 db_pass | None | Database password
 db_url | None | Database URL. Should be of format: `mysql://localhost:3306/hmfpatients`
 no_charts | NA | Disables creation of (non-circos) charts
-tumor_only | NA | [Tumor only mode](#tumor-only-mode)
 
 #### Optional Somatic Fit Arguments
 The following arguments control the somatic fit. Changing these values without a thorough understanding of the system is not recommended.
@@ -296,6 +296,31 @@ The actual HMF somatic pipeline includes a number of additional filtering steps 
 While these steps are specific to Strelka, these principles can be applied to other callers. 
 
 ## Tumor-Only Mode
+Whilst PURPLE is primarily designed to be run with paired normal / tumor data, it is possible to run with tumor data only by leaving the reference and reference_bam parameters null. 
+It is important to first run AMBER and COBALT in tumor only mode. 
+
+[AMBER](../amber#tumor-only-mode) and [COBALT](../cobalt#tumor-only-mode) have native support for tumor only as described in their respective readme files.
+
+Tumor only mode impacts PURPLE in the following ways:
+  - Somatic variants are excluded from fitting
+  - X and Y chromosomes are excluded from fitting
+  - Gender is determined only from AMBER
+  - COBALT allosome reference ratios are adjusted according to AMBER gender
+  - No germline chromosomal aberrations are detected 
+  - HLA SNV / INDEL are ignored and hard filtered (assumed to be germline)
+  - Mutation burden calculations are adjusted according to expected germline leakage (TO DO: add calculations)
+  - somatic SNV/INDEL and SV with PON_ filters are hardfiltered and ignored
+
+## Germline only
+Purple can be run in a limited mode on germline only output so that germline point mutations and structural variants can be annotated and filtered according to below described logic.   The differences in germline mode are:
+  - use ONLY reference pcf from COBALT 
+  - Amber observedBAF assumed to be 0.5 for all regions
+  - No somatic fit conducted. purity set to 1; ploidy to 2
+  - somatic VCF tags are set to fixed values PURPLE_CN: 2, PURPLE_MACN: 1, PURPLE_AF: 0.5, PURPLE_VCN: 1, BIALLELIC: FALSE
+  - All TMB fields are set to zero
+  - No geneCopyNumber,somatic or sv output is produced
+
+## Tumor-Only Mode
 Whilst PURPLE is primarily designed to be run with paired normal / tumor data, it is possible to run with tumor data only by including the `tumor_only` flag. 
 It is important to first run AMBER and COBALT in tumor only mode. 
 
@@ -307,6 +332,8 @@ Tumor only mode impacts PURPLE in the following ways:
   - Gender is determined only from AMBER
   - COBALT allosome reference ratios are adjusted according to AMBER gender
   - No germline chromosomal aberrations are detected 
+  - HLA SNV / INDEL are ignored and hard filtered (assumed to be germline)
+  - Mutation burden calculations are adjusted according to expected germline leakage (TO DO: add calculations)
 
 
 ## Algorithm
@@ -317,7 +344,7 @@ There are 12 key steps in the PURPLE pipeline described in detail below:
 
 We examine both the AMBER and COBALT data to independently determine and validate the sex of the patient. This includes detecting the presence of Klinefelter syndrome: a chromosomal disorder resulting in 2 or more X chromosome in a male and which we have found to affect 0.2% of the male samples in our cohort.
 
-To determine the sex of a sample with AMBER, we examine the number of heterozygous loci in our provided BED file of 1.3 million common germline SNPs on the X chromosome, outside the pseudoautosomal region.   Anything less than 1k heterozygous loci is considered male. A typical female has 12-13k heterozygous loci.
+To determine the sex of a sample with AMBER, we examine the number of heterozygous loci in our provided BED file of ommon germline SNPs on the X chromosome, outside the pseudoautosomal region.   If the X chromosome contains < 1% of total heterozygous loci for the sample, then it is considered male. 
 
 To determine sex using COBALT, we first use the reference ratio to determine the number of copies of the X chromosome. A median X ratio greater than 0.65 is interpreted as 2 copies (note that nearly all female samples are very close to a ratio of 1, but a handful are significantly lower with mosaic X loss). If there is only one copy of the X chromosome the sample is male. Otherwise, we check for the presence of the Y chromosome as determined by at least 1000 data points with a median ratio > 0.05. If the Y chromosome is present (in addition to the 2 copies of the X chromosome), then the sample is male with Klinefelter syndrome. In the absence of the Y chromosome the sample is female.
 
