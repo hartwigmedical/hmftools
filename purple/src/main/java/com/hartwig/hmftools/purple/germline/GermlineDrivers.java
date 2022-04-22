@@ -4,7 +4,6 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,7 +51,7 @@ public class GermlineDrivers
         return driverCatalog;
     }
 
-    static DriverCatalog germlineDriver(
+    private static DriverCatalog germlineDriver(
             final DriverCategory category, final String gene,
             final List<GermlineVariant> geneVariants, final GeneCopyNumber geneCopyNumber)
     {

@@ -48,12 +48,12 @@ public class GermlineVariants
         return mReportableVariants;
     }
 
-    public void loadReportableVariants(final String germlineVcf) throws Exception
+    public void loadReportableVariants(final String germlineVcf)
     {
         loadGermlineVariants(germlineVcf, true);
     }
 
-    private void loadGermlineVariants(final String germlineVcf, boolean checkReported) throws Exception
+    private void loadGermlineVariants(final String germlineVcf, boolean checkReported)
     {
         if(germlineVcf.isEmpty())
             return;
@@ -62,7 +62,9 @@ public class GermlineVariants
 
         for(VariantContext context : vcfReader)
         {
-            if(checkReported && !context.getAttributeAsBoolean(VariantHeader.REPORTED_FLAG, false))
+            boolean isReported = context.getAttributeAsBoolean(VariantHeader.REPORTED_FLAG, false);
+
+            if(checkReported && !isReported)
                 continue;
 
             GermlineVariant variant = new GermlineVariant(context);
@@ -121,6 +123,10 @@ public class GermlineVariants
         for(GermlineVariant variant : mVariants)
         {
             VariantContext newContext = new VariantContextBuilder(variant.context()).filters(variant.filters()).make();
+
+            if(newContext.getAttributeAsBoolean(VariantHeader.REPORTED_FLAG, false))
+                mReportableVariants.add(variant);
+
             writer.add(newContext);
         }
 
