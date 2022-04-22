@@ -256,7 +256,7 @@ public class GermlineDeletionDrivers
         boolean anyReported = filters.isEmpty() && driverGenes.stream().anyMatch(x -> x.reportGermlineDisruption());
 
         mDeletions.add(new GermlineDeletion(
-                geneNames.toString(), region.chromosome(), (int) region.start(), (int) region.end(),
+                geneNames.toString(), region.chromosome(), region.start(), region.end(),
                 region.depthWindowCount(), exonRankMin, exonRankMax,
                 GermlineDetectionMethod.SEGMENT, region.germlineStatus(), tumorStatus, germlineCopyNumber, tumorCopyNumber,
                 filter, cohortFrequency, anyReported));
