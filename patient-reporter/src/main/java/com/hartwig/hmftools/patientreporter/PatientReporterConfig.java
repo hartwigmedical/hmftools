@@ -319,8 +319,6 @@ public interface PatientReporterConfig {
         String sampleSummaryTsv = Strings.EMPTY;
         String sampleSpecialRemarkTsv = Strings.EMPTY;
 
-        String udiCode = Strings.EMPTY;
-
         if (isQCFail && qcFailReason.isDeepWGSDataAvailable()) {
             if (requirePipelineVersion) {
                 pipelineVersion = nonOptionalFile(cmd, PIPELINE_VERSION_FILE);
@@ -328,7 +326,6 @@ public interface PatientReporterConfig {
             purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
             purpleQcFile = nonOptionalFile(cmd, PURPLE_QC_FILE);
             peachGenotypeTsv = nonOptionalFile(cmd, PEACH_GENOTYPE_TSV);
-            udiCode = nonOptionalValue(cmd, UDI_DI);
         } else if (!isQCFail) {
             if (requirePipelineVersion) {
                 pipelineVersion = nonOptionalFile(cmd, PIPELINE_VERSION_FILE);
@@ -356,8 +353,6 @@ public interface PatientReporterConfig {
             germlineReportingTsv = nonOptionalFile(cmd, GERMLINE_REPORTING_TSV);
             sampleSummaryTsv = nonOptionalFile(cmd, SAMPLE_SUMMARY_TSV);
             sampleSpecialRemarkTsv = nonOptionalFile(cmd, SAMPLE_SPECIAL_REMARK_TSV);
-
-            udiCode = nonOptionalValue(cmd, UDI_DI);
         }
 
         return ImmutablePatientReporterConfig.builder()
@@ -372,7 +367,7 @@ public interface PatientReporterConfig {
                 .rvaLogo(nonOptionalFile(cmd, RVA_LOGO))
                 .companyLogo(nonOptionalFile(cmd, COMPANY_LOGO))
                 .signature(nonOptionalFile(cmd, SIGNATURE))
-                .udiDi(udiCode)
+                .udiDi(nonOptionalValue(cmd, UDI_DI))
                 .qcFail(isQCFail)
                 .qcFailReason(qcFailReason)
                 .purplePurityTsv(purplePurityTsv)
