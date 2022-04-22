@@ -106,7 +106,6 @@ public class SampleAndDisclaimerChapterFail implements ReportChapter {
                 " based on ",
                 report.qsFormNumber() + "."));
         div.add(createContentParagraph("No check is performed to verify the ‘primary tumor location’ and ‘primary tumor type’ information."));
-        div.add(createContentParagraph("Any clinical Interpretation of the result file is the responsibility of the hospital."));
         div.add(createContentParagraph("For feedback or complaints please contact ", ReportResources.CONTACT_EMAIL_QA + "."));
         div.add(createContentParagraph("For questions about the contents of this report, please contact ",
                 ReportResources.CONTACT_EMAIL_GENERAL + "."));
