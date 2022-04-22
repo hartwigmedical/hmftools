@@ -87,7 +87,7 @@ public final class SomaticVariants {
     public static String proteinAnnotationDisplayString(@NotNull String canonicalHgvsProteinImpact, @NotNull String canonicalEffect) {
         if (canonicalEffect.contains(VariantEffect.PHASED_INFRAME_DELETION.effect())
                 || canonicalEffect.contains(VariantEffect.PHASED_INFRAME_INSERTION.effect())) {
-            return canonicalEffect + " +";
+            return canonicalHgvsProteinImpact + " +";
         } else {
             return canonicalHgvsProteinImpact;
         }
