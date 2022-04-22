@@ -5,7 +5,6 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
@@ -17,7 +16,6 @@ import static com.hartwig.hmftools.isofox.fusion.cohort.ExternalFusionData.COL_B
 import static com.hartwig.hmftools.isofox.fusion.cohort.ExternalFusionData.COL_BREAKEND_2;
 import static com.hartwig.hmftools.isofox.fusion.cohort.ExternalFusionData.FUSION_SOURCE_ARRIBA;
 import static com.hartwig.hmftools.isofox.fusion.cohort.ExternalFusionData.junctionMatch;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -46,7 +44,6 @@ public class ExternalFusionCompare
 
     private final BufferedWriter mWriter;
     private final List<String> mSampleResults;
-    private final Map<String,Integer> mFieldsMap;
 
     private static final String MT_MATCH = "MATCH";
     private static final String MT_FILT_IN_ISOFOX = "FILTERED_IN_ISOFOX";
@@ -65,7 +62,6 @@ public class ExternalFusionCompare
 
         mWriter = writer;
         mSampleResults = Lists.newArrayList();
-        mFieldsMap = Maps.newHashMap();
     }
 
     public final List<String> getResults() { return mSampleResults; }
