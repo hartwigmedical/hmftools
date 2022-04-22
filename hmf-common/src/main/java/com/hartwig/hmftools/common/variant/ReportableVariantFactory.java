@@ -71,6 +71,7 @@ public final class ReportableVariantFactory {
                             ImmutableReportableVariant.Builder build =
                                     fromVariant(variant, source).driverLikelihood(geneDriver.driverLikelihood())
                                             .transcript(geneDriver.transcript())
+                                            .canonicalHgvsProteinImpact(variant.otherReportedEffects().split("\\|")[2])
                                             .isCanonical(geneDriver.isCanonical());
                             reportable.from(build.build());
                             result.add(reportable.build());
