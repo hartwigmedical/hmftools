@@ -44,7 +44,6 @@ public class GeneCollection
     private final List<int[]> mCommonExonicRegions; // merge any overlapping exons, to form a set of exonic regions for the gene
     private final List<TranscriptData> mTranscripts;
 
-    private boolean mContainsExcludedGene;
     private List<TranscriptData> mEnrichedTranscripts;
     private int[] mEnrichedRegion; // special regions of high read density
 
@@ -79,7 +78,6 @@ public class GeneCollection
 
         mEnrichedTranscripts = null;
         mEnrichedRegion = null;
-        mContainsExcludedGene = false;
     }
 
     public int id() { return mId; }
@@ -121,7 +119,6 @@ public class GeneCollection
         return geneNames.toString();
     }
 
-    public boolean containsExcludedGene() { return mContainsExcludedGene; }
     public boolean containsEnrichedRegion() { return mEnrichedRegion != null; }
     public List<TranscriptData> getEnrichedTranscripts() { return mEnrichedTranscripts; }
     public int[] getEnrichedRegion() { return mEnrichedRegion; }
@@ -136,11 +133,6 @@ public class GeneCollection
 
     public void markEnrichedAndExcludedGenes(final IsofoxConfig config, final EnsemblDataCache geneTransCache)
     {
-        if(!config.Filters.ExcludedGeneIds.isEmpty() && mGeneIds.stream().anyMatch(x -> config.Filters.ExcludedGeneIds.contains(x)))
-        {
-            mContainsExcludedGene = true;
-        }
-
         if(config.Filters.EnrichedGeneIds.isEmpty())
             return;
 

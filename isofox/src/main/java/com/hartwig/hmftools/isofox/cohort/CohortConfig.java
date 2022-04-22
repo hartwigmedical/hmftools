@@ -22,7 +22,6 @@ import static com.hartwig.hmftools.isofox.cohort.AnalysisType.GENE_EXPRESSION_CO
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.GENE_EXPRESSION_MATRIX;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.TRANSCRIPT_EXPRESSION_MATRIX;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.getIsofoxFileId;
-import static com.hartwig.hmftools.isofox.common.GeneRegionFilters.EXCLUDED_GENE_ID_FILE;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
@@ -60,6 +59,7 @@ public class CohortConfig
     public static final String ALL_AVAILABLE_FILES = "all_available_files";
     public static final String ANALYSIS_TYPES = "analyses";
     public static final String FAIL_MISSING = "fail_on_missing_file";
+    public static final String EXCLUDED_GENE_ID_FILE = "excluded_gene_id_file";
 
     public static final String SAMPLE_MUT_FILE = "sample_mut_file";
     private static final String THREADS = "threads";

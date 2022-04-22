@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.BamFragmentReader.findNextOverlappingGenes;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_BUFFER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
@@ -139,8 +138,6 @@ public class FragmentSizeCalcs implements Callable
         // walk through each chromosome, taking groups of overlapping genes together
         ISF_LOGGER.debug("calculating fragment size for chromosome({}) geneCount({})", mChromosome, mGeneDataList.size());
 
-        List<int[]> excludedRegions = generateExcludedRegions();
-
         final List<GeneData> overlappingGenes = Lists.newArrayList();
         int currentGeneIndex = 0;
         int nextLogCount = 100;
@@ -149,7 +146,7 @@ public class FragmentSizeCalcs implements Callable
         {
             currentGeneIndex = findNextOverlappingGenes(mGeneDataList, currentGeneIndex, overlappingGenes);
 
-            if(overlappingGenes.stream().anyMatch(x -> mConfig.Filters.containsExcludedEnrichedGene(x.GeneId)))
+            if(overlappingGenes.stream().anyMatch(x -> mConfig.Filters.EnrichedGeneIds.contains(x.GeneId)))
                 continue;
 
             mCurrentTransDataList.clear();
@@ -176,8 +173,13 @@ public class FragmentSizeCalcs implements Callable
             if(geneLength < MIN_GENE_LENGTH || geneLength > MAX_GENE_LENGTH)
                 continue;
 
-            if(excludedRegions.stream().anyMatch(x -> positionsOverlap(x[SE_START], x[SE_END], mCurrentGenesRange[SE_START], mCurrentGenesRange[SE_END])))
+            if(mChromosome.equals(mConfig.Filters.ExcludedRegion.Chromosome)
+            && positionsOverlap(
+                    mConfig.Filters.ExcludedRegion.start(), mConfig.Filters.ExcludedRegion.end(),
+                    mCurrentGenesRange[SE_START], mCurrentGenesRange[SE_END]))
+            {
                 continue;
+            }
 
             if(currentGeneIndex >= nextLogCount)
             {
@@ -243,25 +245,6 @@ public class FragmentSizeCalcs implements Callable
                         mChromosome, fragLengths.get(0), fragLengths.get(1), fragLengths.get(2));
             }
         }
-    }
-
-    private List<int[]> generateExcludedRegions()
-    {
-        // create a buffer around the enriched gene to avoid excessive reads in this vicinity
-        final List<int[]> excludedRegions = Lists.newArrayList();
-        for(final String geneId : mConfig.Filters.EnrichedGeneIds)
-        {
-            final GeneData geneData = mGeneTransCache.getGeneDataById(geneId);
-            if(geneData == null)
-                continue;
-
-            if(geneData.Chromosome.equals(mChromosome))
-            {
-                excludedRegions.add(new int[] { geneData.GeneStart - ENRICHED_GENE_BUFFER, geneData.GeneEnd + ENRICHED_GENE_BUFFER});
-            }
-        }
-
-        return excludedRegions;
     }
 
     private void processBamRead(@NotNull final SAMRecord read)

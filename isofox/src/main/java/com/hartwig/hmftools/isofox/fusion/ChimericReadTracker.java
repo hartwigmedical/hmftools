@@ -95,6 +95,7 @@ public class ChimericReadTracker
     public final Set<Integer> getJunctionPositions() { return mJunctionPositions; }
     public final List<List<ReadRecord>> getLocalChimericReads() { return mLocalChimericReads; }
     public ChimericStats getStats() { return mChimericStats; }
+    public Set<String> getDuplicateReadIds() { return mDuplicateReadIds; }
 
     public boolean isChimeric(final ReadRecord read1, final ReadRecord read2, boolean isDuplicate, boolean isMultiMapped)
     {
@@ -136,13 +137,23 @@ public class ChimericReadTracker
         pastJuncPositions.forEach(x -> mJunctionPositions.remove(x));
     }
 
-    public void clear()
+    public void clear() { clear(false); }
+    public void clearAll() { clear(true); }
+
+    private void clear(boolean full)
     {
         mChimericReadMap.clear();
         mCandidateRealignedReadMap.clear();
         mChimericStats.clear();
         mLocalChimericReads.clear();
-        mDuplicateReadIds.clear();
+
+        if(full)
+        {
+            mDuplicateReadIds.clear();
+            mPreviousPostGeneReadMap.clear();
+            mPostGeneReadMap.clear();
+            mJunctionPositions.clear();
+        }
     }
 
     public void addRealignmentCandidates(final ReadRecord read1, final ReadRecord read2)
@@ -305,12 +316,13 @@ public class ChimericReadTracker
     private boolean inExcludedRegion(final ReadRecord read, boolean checkMate)
     {
         // check the read and its supplementary data if present
-        if(mGeneCollection.inEnrichedRegion(read.PosStart, read.PosEnd))
+        if(mConfig.Filters.skipRead(read.Chromosome, read.PosStart))
             return true;
 
         if(checkMate && mConfig.Filters.skipRead(read.mateChromosome(), read.mateStartPosition()))
             return true;
 
+        // only skip fragments in immune regions if both junction positions are in one
         boolean inImmuneRegion = mConfig.Filters.ImmuneGeneRegions.stream()
                 .anyMatch(x -> x.Chromosome.equals(read.Chromosome) && positionsOverlap(read.PosStart, read.PosEnd, x.start(), x.end()));
 

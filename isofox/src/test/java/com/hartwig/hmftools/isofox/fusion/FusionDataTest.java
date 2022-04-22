@@ -32,7 +32,9 @@ import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
@@ -311,8 +313,10 @@ public class FusionDataTest
         finder.processLocalReadGroups(completeGroups);
         assertEquals(1, finder.getRealignCandidateFragments().size());
 
+        Set<String> emptyDuplicateIds = Sets.newHashSet();
+
         List<ReadGroup> interChromosomalGroups = fusionTaskManager.addIncompleteReadGroup(
-                gc3.chromosome(), finder.extractIncompleteReadGroups(gc3.chromosome()), finder.getRealignCandidateFragments());
+                gc3.chromosome(), finder.extractIncompleteReadGroups(gc3.chromosome()), finder.getRealignCandidateFragments(), emptyDuplicateIds);
 
         assertTrue(interChromosomalGroups.isEmpty());
 
@@ -325,7 +329,7 @@ public class FusionDataTest
         assertEquals(1, finder2.getRealignCandidateFragments().size());
 
         interChromosomalGroups = fusionTaskManager.addIncompleteReadGroup(
-                gc5.chromosome(), finder2.extractIncompleteReadGroups(gc5.chromosome()), finder2.getRealignCandidateFragments());
+                gc5.chromosome(), finder2.extractIncompleteReadGroups(gc5.chromosome()), finder2.getRealignCandidateFragments(), emptyDuplicateIds);
 
         finder2.processInterChromosomalReadGroups(interChromosomalGroups);
 

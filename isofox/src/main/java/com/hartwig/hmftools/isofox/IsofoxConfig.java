@@ -26,7 +26,6 @@ import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.RETAINED_INTRONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.STATISTICS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
-import static com.hartwig.hmftools.isofox.common.GeneRegionFilters.EXCLUDED_GENE_ID_FILE;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.FL_LENGTH;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 import static com.hartwig.hmftools.isofox.unmapped.UmrCohortFrequency.UMR_COHORT_FREQUENCY_FILE;
@@ -321,9 +320,8 @@ public class IsofoxConfig
     public static boolean validConfigPaths(final CommandLine cmd)
     {
         return configPathValid(cmd, OUTPUT_DIR) && configPathValid(cmd, REF_GENOME)  && configPathValid(cmd, ENSEMBL_DATA_DIR)
-                && configPathValid(cmd, GENE_ID_FILE) && configPathValid(cmd, EXCLUDED_GENE_ID_FILE)
-                && configPathValid(cmd, BAM_FILE) && configPathValid(cmd, EXP_COUNTS_FILE) && configPathValid(cmd, EXP_GC_RATIOS_FILE)
-                && configPathValid(cmd, NEO_EPITOPE_FILE);
+                && configPathValid(cmd, GENE_ID_FILE) && configPathValid(cmd, BAM_FILE) && configPathValid(cmd, EXP_COUNTS_FILE)
+                && configPathValid(cmd, EXP_GC_RATIOS_FILE) && configPathValid(cmd, NEO_EPITOPE_FILE);
     }
 
     public static boolean configPathValid(final CommandLine cmd, final String configItem)

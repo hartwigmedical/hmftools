@@ -132,6 +132,18 @@ public class FusionFinder implements Callable
         return completeReadGroups;
     }
 
+    public void removeIncompleteGroupsByDuplicateReads(final Set<String> duplicateReadIds)
+    {
+        Set<String> matchedIds = mChimericPartialReadGroups.keySet().stream()
+                .filter(x -> duplicateReadIds.contains(x)).collect(Collectors.toSet());
+
+        if(matchedIds.isEmpty())
+            return;
+
+        matchedIds.forEach(x -> mChimericPartialReadGroups.remove(x));
+        matchedIds.forEach(x -> duplicateReadIds.remove(x));
+    }
+
     private List<ReadGroup> reconcileSpanningReadGroups(
             final GeneCollection geneCollection, final List<ReadGroup> spanningReadGroups, final BaseDepth baseDepth)
     {

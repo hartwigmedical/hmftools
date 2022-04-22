@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.isofox.fusion.ReadGroup.mergeChimericReadMaps
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -59,7 +60,7 @@ public class FusionTaskManager
 
     public synchronized List<ReadGroup> addIncompleteReadGroup(
             final String chromosome, final Map<String,Map<String,ReadGroup>> chrIncompleteGroups,
-            final Map<String,List<FusionFragment>> racFragments)
+            final Map<String,List<FusionFragment>> racFragments, final Set<String> duplicateReadIds)
     {
         int prevIncomplete = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
 

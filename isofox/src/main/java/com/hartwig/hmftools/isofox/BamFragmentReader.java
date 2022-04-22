@@ -184,12 +184,6 @@ public class BamFragmentReader implements Callable
         {
             mCurrentGeneIndex = findNextOverlappingGenes(mGeneDataList, mCurrentGeneIndex, overlappingGenes);
 
-            if(!mConfig.Filters.ExcludedGeneIds.isEmpty()
-            && overlappingGenes.stream().anyMatch(x -> mConfig.Filters.ExcludedGeneIds.contains(x.GeneId)))
-            {
-                continue;
-            }
-
             final List<GeneReadData> geneReadDataList = createGeneReadData(overlappingGenes, mGeneTransCache);
 
             GeneCollection geneCollection = new GeneCollection(mCollectionId++, geneReadDataList);
@@ -215,15 +209,24 @@ public class BamFragmentReader implements Callable
             else
             {
                 // the buffer is to be able to test out pre and post gene region reads
-                geneCollection.setNonGenicPosition(SE_START, geneCollection.regionBounds()[SE_START] - 10000);
-                geneCollection.setNonGenicPosition(SE_END, geneCollection.regionBounds()[SE_END] + 10000);
-            }
+                if(lastGeneCollectionEndPosition == 1)
+                {
+                    geneCollection.setNonGenicPosition(SE_START, geneCollection.regionBounds()[SE_START] - 10000);
+                }
+                else
+                {
+                    geneCollection.setNonGenicPosition(SE_START, lastGeneCollectionEndPosition);
+                }
 
-            if(geneCollection.containsExcludedGene() || (mConfig.runFusionsOnly() && geneCollection.containsEnrichedRegion()))
-            {
-                // skip past this gene collection - enriched regions are not used for fusion calling
-                lastGeneCollectionEndPosition = geneCollection.regionBounds()[SE_END] + 1;
-                continue;
+                if(mCurrentGeneIndex < mGeneDataList.size())
+                {
+                    final GeneData nextGeneData = mGeneDataList.get(mCurrentGeneIndex);
+                    geneCollection.setNonGenicPosition(SE_END, nextGeneData.GeneStart - 1);
+                }
+                else
+                {
+                    geneCollection.setNonGenicPosition(SE_END, geneCollection.regionBounds()[SE_END] + 10000);
+                }
             }
 
             mPerfCounters[PERF_TOTAL].start();
@@ -261,14 +264,18 @@ public class BamFragmentReader implements Callable
 
             mPerfCounters[PERF_FUSIONS].start();
 
+            // remove groups missing a dropped duplicate readId
+            Set<String> duplicateReadIds = mBamFragmentAllocator.getChimericReadTracker().getDuplicateReadIds();
+            mFusionFinder.removeIncompleteGroupsByDuplicateReads(duplicateReadIds);
+
             // handle fragments spanning multiple chromosomes
 
-            // first organise incomplete reads into the chromosomes which they want to link to
+            // organise incomplete reads into the chromosomes which they want to link to
             final Map<String,Map<String,ReadGroup>> chrIncompleteReadsGroups = mFusionFinder.extractIncompleteReadGroups(mChromosome);
             final Map<String,List<FusionFragment>> racFragments = mFusionFinder.extractRealignCandidateFragments(chrIncompleteReadsGroups);
 
             final List<ReadGroup> interChromosomalGroups = mFusionTaskManager.addIncompleteReadGroup(
-                    mChromosome, chrIncompleteReadsGroups, racFragments);
+                    mChromosome, chrIncompleteReadsGroups, racFragments, duplicateReadIds);
 
             if(!interChromosomalGroups.isEmpty())
             {
@@ -283,6 +290,7 @@ public class BamFragmentReader implements Callable
             mPerfCounters[PERF_FUSIONS].stop();
 
             mChimericStats.HardFiltered += mFusionFinder.hardFilteredCount();
+            mBamFragmentAllocator.getChimericReadTracker().clearAll();
         }
 
         if(mGeneDataList.size() > 10)

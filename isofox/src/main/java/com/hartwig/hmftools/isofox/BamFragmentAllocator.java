@@ -216,6 +216,7 @@ public class BamFragmentAllocator
         if(mConfig.Filters.ExcludedRegion != null && geneRegion.overlaps(mConfig.Filters.ExcludedRegion))
         {
             // special handling to avoid any specified enriched region (in this case LINC00486's poly-G sequence)
+            // has no genes overlapping this
             mExcludedRegion = mConfig.Filters.ExcludedRegion;
             final ChrBaseRegion preRegion = new ChrBaseRegion(geneRegion.Chromosome, geneRegion.start(), mExcludedRegion.start() - 100);
             final ChrBaseRegion postRegion = new ChrBaseRegion(geneRegion.Chromosome, mExcludedRegion.end() + 100, geneRegion.end());
@@ -254,7 +255,7 @@ public class BamFragmentAllocator
         if(!positionWithin(record.getStart(), mValidReadStartRegion[SE_START], mValidReadStartRegion[SE_END]))
             return;
 
-        if(inExcludeRegion(record))
+        if(inExcludedRegion(record))
             return;
 
         if(mCurrentGenes.inEnrichedRegion(record.getStart(), record.getEnd()))
@@ -292,7 +293,7 @@ public class BamFragmentAllocator
         /*
         if(read.Id.equals(LOG_READ_ID))
         {
-            ISF_LOGGER.debug("specific read by ID: {}", read.toString());
+            ISF_LOGGER.info("genes({}) specific read by ID: {}", mCurrentGenes.geneNames(), read.toString());
         }
         */
 
@@ -696,7 +697,7 @@ public class BamFragmentAllocator
         return transcriptBases;
     }
 
-    private boolean inExcludeRegion(final SAMRecord record)
+    private boolean inExcludedRegion(final SAMRecord record)
     {
         if(mExcludedRegion == null)
             return false;
@@ -705,8 +706,11 @@ public class BamFragmentAllocator
             return true;
 
         // check the mate as well
-        if(record.getContig() != null && mConfig.Filters.ExcludedRegion.containsPosition(record.getMateReferenceName(), record.getMateAlignmentStart()))
+        if(record.getMateReferenceName() != null
+        && mConfig.Filters.ExcludedRegion.containsPosition(record.getMateReferenceName(), record.getMateAlignmentStart()))
+        {
             return true;
+        }
 
         return false;
     }

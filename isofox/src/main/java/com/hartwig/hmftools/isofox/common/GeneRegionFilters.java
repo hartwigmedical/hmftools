@@ -29,32 +29,29 @@ public class GeneRegionFilters
     public final List<ChrBaseRegion> SpecificRegions;
 
     public final List<String> RestrictedGeneIds; // specific set of genes to process
-    public final List<String> ExcludedGeneIds; // genes to ignore
     public final List<String> EnrichedGeneIds; // genes to count by not fully process for any functional purpose
     public final ChrBaseRegion ExcludedRegion;
 
     public final List<ChrBaseRegion> RestrictedGeneRegions; // limit analysis to these regions only
-    public final List<ChrBaseRegion> ExcludedGeneRegions; // exclude these regions based on geneId, enriched or excluded regions
     public final List<ChrBaseRegion> ImmuneGeneRegions;
 
-    public final RefGenomeVersion mRefGenomeVersion;
+    private final RefGenomeVersion mRefGenomeVersion;
+    private final List<ChrBaseRegion> mExcludedGeneRegions; // exclude these regions based on geneId, enriched or excluded regions
 
     // config
     private static final String SPECIFIC_CHR = "specific_chr";
     private static final String SPECIFIC_REGIONS = "specific_regions";
     public static final String RESTRICTED_GENE_IDS = "restricted_gene_ids";
-    public static final String EXCLUDED_GENE_ID_FILE = "excluded_gene_id_file";
     private static final String ENRICHED_GENE_IDS = "enriched_gene_ids";
 
     public GeneRegionFilters(final RefGenomeVersion refGenomeVersion)
     {
         RestrictedGeneIds = Lists.newArrayList();
-        ExcludedGeneIds = Lists.newArrayList();
         EnrichedGeneIds = Lists.newArrayList();
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();
 
-        ExcludedGeneRegions = Lists.newArrayList();
+        mExcludedGeneRegions = Lists.newArrayList();
         RestrictedGeneRegions = Lists.newArrayList();
         ImmuneGeneRegions = Lists.newArrayList();
 
@@ -65,7 +62,6 @@ public class GeneRegionFilters
     public static void addCommandLineOptions(final Options options)
     {
         options.addOption(RESTRICTED_GENE_IDS, true, "Optional list of Ensmebl GeneIds separated by ';'");
-        options.addOption(EXCLUDED_GENE_ID_FILE, true, "Optional CSV file of genes to ignore");
         options.addOption(ENRICHED_GENE_IDS, true, "Optional list of geneIds to treat as enriched");
         options.addOption(SPECIFIC_CHR, true, "Restrict to chromosome(s) separated by ';'");
         options.addOption(SPECIFIC_REGIONS, true, "Restrict to regions(s) separated by ';' in format Chr:PosStart:PosEnd");
@@ -97,13 +93,6 @@ public class GeneRegionFilters
         else if(cmd.hasOption(RESTRICTED_GENE_IDS))
         {
             RestrictedGeneIds.addAll(Arrays.stream(cmd.getOptionValue(RESTRICTED_GENE_IDS).split(ITEM_DELIM)).collect(Collectors.toList()));
-        }
-
-        if(cmd.hasOption(EXCLUDED_GENE_ID_FILE))
-        {
-            final String inputFile = cmd.getOptionValue(EXCLUDED_GENE_ID_FILE);
-            ExcludedGeneIds.addAll(loadGeneIdsFile(inputFile));
-            ISF_LOGGER.info("file({}) loaded {} excluded genes", inputFile, ExcludedGeneIds.size());
         }
 
         if(cmd.hasOption(SPECIFIC_REGIONS))
@@ -143,11 +132,6 @@ public class GeneRegionFilters
         }
     }
 
-    public boolean containsExcludedEnrichedGene(final String geneId)
-    {
-        return ExcludedGeneIds.contains(geneId) || EnrichedGeneIds.contains(geneId);
-    }
-
     public boolean excludeChromosome(final String chromosome)
     {
         return !SpecificChromosomes.isEmpty() && !SpecificChromosomes.contains(chromosome);
@@ -155,42 +139,34 @@ public class GeneRegionFilters
 
     public boolean skipRead(final String chromosome, int position)
     {
+        // currently only used to filter out chimeric reads
         if(!HumanChromosome.contains(chromosome))
             return true;
 
         if(!SpecificChromosomes.isEmpty() && !SpecificChromosomes.contains(chromosome))
             return true;
-        else if(!SpecificRegions.isEmpty() && !SpecificRegions.stream().anyMatch(x -> x.containsPosition(chromosome, position)))
+
+        if(!SpecificRegions.isEmpty() && !SpecificRegions.stream().anyMatch(x -> x.containsPosition(chromosome, position)))
             return true;
 
         if(!RestrictedGeneRegions.isEmpty() && !RestrictedGeneRegions.stream().anyMatch(x -> x.containsPosition(chromosome, position)))
-        {
             return true;
-        }
 
-        if(ExcludedGeneRegions.stream().anyMatch(x -> x.containsPosition(chromosome, position)))
-        {
+        if(mExcludedGeneRegions.stream().anyMatch(x -> x.containsPosition(chromosome, position)))
             return true;
-        }
 
         return false;
     }
 
     public void buildGeneRegions(final EnsemblDataCache geneTransCache)
     {
-        ExcludedGeneRegions.add(ExcludedRegion);
+        mExcludedGeneRegions.add(ExcludedRegion);
 
         EnrichedGeneIds.stream()
                 .map(x -> geneTransCache.getGeneDataById(x))
                 .filter(x -> x != null)
-                .forEach(x -> ExcludedGeneRegions.add(new ChrBaseRegion(
+                .forEach(x -> mExcludedGeneRegions.add(new ChrBaseRegion(
                         x.Chromosome, x.GeneStart - ENRICHED_GENE_BUFFER, x.GeneEnd + ENRICHED_GENE_BUFFER)));
-
-        ExcludedGeneIds.stream()
-                .map(x -> geneTransCache.getGeneDataById(x))
-                .filter(x -> x != null)
-                .forEach(x -> ExcludedGeneRegions.add(new ChrBaseRegion(
-                        x.Chromosome, x.GeneStart, x.GeneEnd)));
 
         RestrictedGeneIds.stream()
                 .map(x -> geneTransCache.getGeneDataById(x))
