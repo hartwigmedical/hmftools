@@ -24,20 +24,17 @@ public final class ReportSignature {
     }
 
     @NotNull
-    public static Div createSignatureDiv(@NotNull String rvaLogoPath, @NotNull String signaturePath, boolean isPanel)
-            throws IOException {
+    public static Div createSignatureDiv(@NotNull String rvaLogoPath, @NotNull String signaturePath) throws IOException {
         Div div = new Div();
         div.setKeepTogether(true);
         div.setMarginTop(40);
 
-        if (!isPanel) {
-            try {
-                Image rvaLogo = new Image(ImageDataFactory.create(rvaLogoPath));
-                rvaLogo.setMaxHeight(58);
-                div.add(rvaLogo);
-            } catch (MalformedURLException e) {
-                throw new IOException("Failed to read RVA logo image at " + rvaLogoPath);
-            }
+        try {
+            Image rvaLogo = new Image(ImageDataFactory.create(rvaLogoPath));
+            rvaLogo.setMaxHeight(58);
+            div.add(rvaLogo);
+        } catch (MalformedURLException e) {
+            throw new IOException("Failed to read RVA logo image at " + rvaLogoPath);
         }
 
         Paragraph signatureText =
@@ -61,8 +58,7 @@ public final class ReportSignature {
     }
 
     @NotNull
-    public static Div createSignatureDivPanel(@NotNull String signaturePath)
-            throws IOException {
+    public static Div createSignatureDivPanel(@NotNull String signaturePath) throws IOException {
         Div div = new Div();
         div.setKeepTogether(true);
         div.setMarginTop(40);
