@@ -37,8 +37,8 @@ public class ChimericStats
 
     public String toString()
     {
-        return String.format("junc=%d locInterGene=%d candRealgn=%d bnd=%d inv=%d filt=%d",
-                ChimericJunctions, LocalInterGeneFrags, CandidateRealignFrags, Translocations, Inversions, HardFiltered);
+        return String.format("junc=%d locInterGene=%d candRealgn=%d bnd=%d",
+                ChimericJunctions, LocalInterGeneFrags, CandidateRealignFrags, Translocations);
     }
 
 }

@@ -64,7 +64,6 @@ public class ChimericReadTracker
 
     private final List<List<ReadRecord>> mLocalChimericReads; // fragments to re-evaluate as alternate splice sites
     private final Map<String,ReadGroup> mCandidateRealignedReadMap;
-    private final Set<String> mDuplicateReadIds; // used to store chimeric duplicates
 
     // to avoid double-processing reads falling after a gene collection
     private final Map<String,List<ReadRecord>> mPostGeneReadMap;
@@ -81,7 +80,6 @@ public class ChimericReadTracker
         mChimericStats = new ChimericStats();
         mChimericReadMap = Maps.newHashMap();
         mJunctionPositions = Sets.newHashSet();
-        mDuplicateReadIds = Sets.newHashSet();
         mLocalChimericReads = Lists.newArrayList();
         mCandidateRealignedReadMap = Maps.newHashMap();
         mPostGeneReadMap = Maps.newHashMap();
@@ -95,7 +93,6 @@ public class ChimericReadTracker
     public final Set<Integer> getJunctionPositions() { return mJunctionPositions; }
     public final List<List<ReadRecord>> getLocalChimericReads() { return mLocalChimericReads; }
     public ChimericStats getStats() { return mChimericStats; }
-    public Set<String> getDuplicateReadIds() { return mDuplicateReadIds; }
 
     public boolean isChimeric(final ReadRecord read1, final ReadRecord read2, boolean isDuplicate, boolean isMultiMapped)
     {
@@ -149,7 +146,6 @@ public class ChimericReadTracker
 
         if(full)
         {
-            mDuplicateReadIds.clear();
             mPreviousPostGeneReadMap.clear();
             mPostGeneReadMap.clear();
             mJunctionPositions.clear();
@@ -207,8 +203,6 @@ public class ChimericReadTracker
             read.addIntronicTranscriptRefs(mGeneCollection.getTranscripts());
     }
 
-    // private static final String LOG_READ_ID = "";
-
     public void postProcessChimericReads(final BaseDepth baseDepth, final FragmentTracker fragmentTracker)
     {
         // check any lone reads - this cannot be one of a pair of non-genic reads since they will have already been dismissed
@@ -239,7 +233,7 @@ public class ChimericReadTracker
             final String readId = reads.get(0).Id;
 
             /*
-            if(readId.equals(LOG_READ_ID))
+            if(readId.equals(""))
             {
                 ISF_LOGGER.debug("specific read: {}", readId);
             }
@@ -248,20 +242,13 @@ public class ChimericReadTracker
             int readCount = reads.size();
             boolean readGroupComplete = readGroup.isComplete();
 
-            // if any read in the group is a duplicate then drop the entire group
-            // but record it's ID for the reads in other gene collections if the group is incomplete
-            if(reads.stream().anyMatch(x -> x.isDuplicate()))
+            // duplicates are kept until a group is complete, since not all reads are marked as duplicates and those would otherwise
+            // be orphaned later on
+
+            if(reads.stream().anyMatch(x -> x.isDuplicate()) && reads.size() >= 2)
             {
-                if(mDuplicateReadIds.contains(readId))
-                    mDuplicateReadIds.remove(readId); // not expected to be seen again since occurs across consecutive gene collections
-                else
-                    mDuplicateReadIds.add(readId);
-
-                if(reads.size() >= 2)
-                    mGeneCollection.addCount(DUPLICATE, 1);
-
-                fragsToRemove.add(readId);
-                continue;
+                // chimeric read groups with duplicates will be dropped later on once the group is complete
+                mGeneCollection.addCount(DUPLICATE, 1);
             }
 
             if(mRunFusions && skipNonGenicReads(reads))
@@ -309,7 +296,6 @@ public class ChimericReadTracker
             mChimericReadMap.clear();
             mCandidateRealignedReadMap.clear();
             mChimericStats.clear();
-            mDuplicateReadIds.clear();
         }
     }
 

@@ -132,18 +132,6 @@ public class FusionFinder implements Callable
         return completeReadGroups;
     }
 
-    public void removeIncompleteGroupsByDuplicateReads(final Set<String> duplicateReadIds)
-    {
-        Set<String> matchedIds = mChimericPartialReadGroups.keySet().stream()
-                .filter(x -> duplicateReadIds.contains(x)).collect(Collectors.toSet());
-
-        if(matchedIds.isEmpty())
-            return;
-
-        matchedIds.forEach(x -> mChimericPartialReadGroups.remove(x));
-        matchedIds.forEach(x -> duplicateReadIds.remove(x));
-    }
-
     private List<ReadGroup> reconcileSpanningReadGroups(
             final GeneCollection geneCollection, final List<ReadGroup> spanningReadGroups, final BaseDepth baseDepth)
     {
@@ -299,7 +287,7 @@ public class FusionFinder implements Callable
 
         // first turn them into fragments, then look for fusions
         Level logLevel = isInterChromosomal ? Level.INFO : Level.DEBUG;
-        ISF_LOGGER.log(logLevel, "task({}) processing {} {} chimeric read groups",
+        ISF_LOGGER.log(logLevel, "chr({}) processing {} {} chimeric read groups",
                 mTaskId, readGroups.size(), isInterChromosomal ? "inter-chromosome" : "local");
 
         int readGroupCount = 0;
@@ -310,9 +298,13 @@ public class FusionFinder implements Callable
 
             if(readGroupCount > 0 && (readGroupCount % LOG_COUNT) == 0)
             {
-                ISF_LOGGER.info("task({}) processed {} {} chimeric read groups",
+                ISF_LOGGER.info("chr({}) processed {} {} chimeric read groups",
                         mTaskId, readGroupCount, isInterChromosomal ? "inter-chromosome" : "local");
             }
+
+            // exclude any group with a duplicate read now that group is complete (since not all reads are marked as duplicates)
+            if(readGroup.hasDuplicateRead())
+                continue;
 
             final List<ReadRecord> reads = readGroup.Reads;
 

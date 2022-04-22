@@ -264,10 +264,6 @@ public class BamFragmentReader implements Callable
 
             mPerfCounters[PERF_FUSIONS].start();
 
-            // remove groups missing a dropped duplicate readId
-            Set<String> duplicateReadIds = mBamFragmentAllocator.getChimericReadTracker().getDuplicateReadIds();
-            mFusionFinder.removeIncompleteGroupsByDuplicateReads(duplicateReadIds);
-
             // handle fragments spanning multiple chromosomes
 
             // organise incomplete reads into the chromosomes which they want to link to
@@ -275,7 +271,7 @@ public class BamFragmentReader implements Callable
             final Map<String,List<FusionFragment>> racFragments = mFusionFinder.extractRealignCandidateFragments(chrIncompleteReadsGroups);
 
             final List<ReadGroup> interChromosomalGroups = mFusionTaskManager.addIncompleteReadGroup(
-                    mChromosome, chrIncompleteReadsGroups, racFragments, duplicateReadIds);
+                    mChromosome, chrIncompleteReadsGroups, racFragments);
 
             if(!interChromosomalGroups.isEmpty())
             {

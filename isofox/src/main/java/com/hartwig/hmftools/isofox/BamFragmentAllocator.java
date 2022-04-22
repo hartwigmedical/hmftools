@@ -287,13 +287,16 @@ public class BamFragmentAllocator
     }
 
     private static final String LOG_READ_ID = "";
+    // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:3:22601:26589:17334";
 
     private void processRead(ReadRecord read)
     {
         /*
         if(read.Id.equals(LOG_READ_ID))
         {
-            ISF_LOGGER.info("genes({}) specific read by ID: {}", mCurrentGenes.geneNames(), read.toString());
+            ISF_LOGGER.info("genes({}) region({} - {}) specific readId({}) details: {}",
+                    mCurrentGenes.geneNames(), mValidReadStartRegion[SE_START], mValidReadStartRegion[SE_END],
+                    read.Id, read.toString());
         }
         */
 

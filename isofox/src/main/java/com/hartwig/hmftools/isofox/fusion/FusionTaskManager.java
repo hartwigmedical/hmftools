@@ -5,13 +5,11 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.fusion.FusionConfig.LOG_READ_ID;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 import static com.hartwig.hmftools.isofox.fusion.ReadGroup.mergeChimericReadMaps;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -60,7 +58,7 @@ public class FusionTaskManager
 
     public synchronized List<ReadGroup> addIncompleteReadGroup(
             final String chromosome, final Map<String,Map<String,ReadGroup>> chrIncompleteGroups,
-            final Map<String,List<FusionFragment>> racFragments, final Set<String> duplicateReadIds)
+            final Map<String,List<FusionFragment>> racFragments)
     {
         int prevIncomplete = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
 
@@ -100,9 +98,6 @@ public class FusionTaskManager
         int totalRacFrags = mRealignCandidateMap.values().stream().mapToInt(x -> x.size()).sum();
         int newRacFrags = racFragments.values().stream().mapToInt(x -> x.size()).sum();
         int newIncomplete = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
-
-        // exclude duplicate reads now that group is known (since not all reads are marked as duplicates)
-        completeGroups = completeGroups.stream().filter(x -> !x.isDuplicate()).collect(Collectors.toList());
 
         int partialGroupCount = chrIncompleteGroups.values().stream().mapToInt(x -> x.size()).sum();
 

@@ -38,14 +38,13 @@ public class ReadGroup
     public boolean isComplete() { return Reads.size() == 3 || (Reads.size() == 2 && !hasSuppAlignment(Reads)); }
 
     public boolean hasSuppAlignment() { return hasSuppAlignment(Reads); }
-    public boolean hasDuplicate() { return Reads.stream().anyMatch(x -> x.isDuplicate()); }
 
     public static boolean hasSuppAlignment(final List<ReadRecord> reads)
     {
         return reads.stream().anyMatch(x -> x.hasSuppAlignment());
     }
 
-    public boolean isDuplicate() { return Reads.stream().anyMatch(x -> x.isDuplicate()); }
+    public boolean hasDuplicateRead() { return Reads.stream().anyMatch(x -> x.isDuplicate()); }
 
     public void merge(final ReadGroup other)
     {
