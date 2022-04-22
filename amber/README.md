@@ -99,7 +99,7 @@ If no reference BAM is supplied, AMBER will be put into tumor only mode.  In tum
 | min_base_quality       | 13      | Minimum quality for a base to be considered                                   |
 | tumor_only_min_vaf     | 0.05    | Min VAF in ref and alt in tumor only mode                                     |
 | tumor_only_min_support | 2       | Min support in ref and alt in tumor only mode                                 |
-| min_tumor_depth        | 25      | Min total depth in tumor only mode                                            |
+| tumor_only_min_depth   | 25      | Min depth in ref and alt in tumor only mode                                   |
 | ref_genome             | NA      | Path to the reference genome fasta file. Required only when using CRAM files. |
 
 ### Example Usage
@@ -116,8 +116,8 @@ java -Xmx32G -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
 If the tumor / tumor bam are not specified then Amber will be run in germline only mode.   Germline mode has the following differences in behaviour
 - contamination is not run
 - pcf fitting is not run
-- tumor fields are set to -1 for amber.baf.tsv
-- amber.baf.tsv named with ref sample (instead of tumor sample)
+- tumor fields are set to -1 for amber.baf.tsv.gz
+- amber.baf.tsv.gz named with ref sample (instead of tumor sample)
 
 ## Multiple Reference / Donor mode
 The `reference` and `reference_bam` arguments supports multiple arguments separated by commas. 
@@ -189,14 +189,14 @@ ORDER BY sampleCount desc;
 ```
 
 ## Output
-| File                                    | Description                                                                              |
-|-----------------------------------------|------------------------------------------------------------------------------------------|
-| TUMOR.amber.baf.tsv.g                   | Tab separated values (TSV) containing reference and tumor BAF at each heterozygous site. |
-| TUMOR.amber.baf.pcf                     | TSV of BAF segments using PCF algorithm.                                                 |
-| TUMOR.amber.qc                          | Contains QC status and comntamination rate. FAIL may indicate contamination in sample.   |
-| TUMOR.amber.contamination.vcf.gz        | Entry at each homozygous site in the reference and tumor.                                |
-| REFERENCE.amber.snp.vcf.gz              | Entry at each SNP location in the reference.                                             |
-| REFERENCE.amber.homozygousregion.tsv    | Regions of homozygosity found in the reference.                                          |
+| File                                 | Description                                                                              |
+|--------------------------------------|------------------------------------------------------------------------------------------|
+| TUMOR.amber.baf.tsv.gz               | Tab separated values (TSV) containing reference and tumor BAF at each heterozygous site. |
+| TUMOR.amber.baf.pcf                  | TSV of BAF segments using PCF algorithm.                                                 |
+| TUMOR.amber.qc                       | Contains QC status and comntamination rate. FAIL may indicate contamination in sample.   |
+| TUMOR.amber.contamination.vcf.gz     | Entry at each homozygous site in the reference and tumor.                                |
+| REFERENCE.amber.snp.vcf.gz           | Entry at each SNP location in the reference.                                             |
+| REFERENCE.amber.homozygousregion.tsv | Regions of homozygosity found in the reference.                                          |
 
 ## Performance Characteristics
 Performance numbers were taken from a 72 core machine using COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. 
@@ -216,6 +216,14 @@ Peak memory is measure in gigabytes.
 
  
 # Version History and Download Links
+- [3.9](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.9)
+  - Added germline only mode support. 
+  - Added `tumor_only_min_depth` argument.
+  - Make `ref_genome_version` argument mandatory.
+  - Added excluded SNP regions (values are hard coded) in tumor only mode.
+  - Fixed a rounding issue in the classification of zygosity.
+  - Removed <sample id>.amber.baf.vcf.gz output.
+  - compressed baf TSV output with gzip.
 - [3.8](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.8)
   - Added workaround for a bug in R copy_number module pcf function 
   - Fixed `NullPointerException` in tumor only mode
