@@ -117,6 +117,8 @@ public class HospitalModelFactoryTest {
 
         HospitalPersons glow1 = hospitalContactGLOW.get("02");
         assertEquals("Someone", glow1.hospitalPI());
+        assertNull(glow1.requesterName());
+        assertNull(glow1.requesterEmail());
     }
 
     @Test
@@ -127,6 +129,8 @@ public class HospitalModelFactoryTest {
 
         HospitalPersons optic1 = hospitalContactOPTIC.get("02");
         assertEquals("Someone", optic1.hospitalPI());
+        assertNull(optic1.requesterName());
+        assertNull(optic1.requesterEmail());
     }
 
     @Test
@@ -137,6 +141,8 @@ public class HospitalModelFactoryTest {
 
         HospitalPersons sherpa = hospitalContactSHERPA.get("02");
         assertEquals("Someone", sherpa.hospitalPI());
+        assertNull(sherpa.requesterName());
+        assertNull(sherpa.requesterEmail());
     }
 
     @Test
@@ -156,8 +162,10 @@ public class HospitalModelFactoryTest {
                 HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_omic.tsv", 2, "OMIC");
         assertEquals(1, hospitalContactOMIC.size());
 
-        HospitalPersons genaya = hospitalContactOMIC.get("01");
-        assertEquals("Someone", genaya.hospitalPI());
+        HospitalPersons omic = hospitalContactOMIC.get("01");
+        assertEquals("Someone", omic.hospitalPI());
+        assertNull(omic.requesterName());
+        assertNull(omic.requesterEmail());
     }
 
     @Test
