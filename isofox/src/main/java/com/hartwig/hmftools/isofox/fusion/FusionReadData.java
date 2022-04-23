@@ -42,6 +42,7 @@ import com.hartwig.hmftools.common.gene.GeneData;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
@@ -381,7 +382,7 @@ public class FusionReadData
 
     public void cacheTranscriptData()
     {
-        for (int se = SE_START; se <= SE_END; ++se)
+        for(int se = SE_START; se <= SE_END; ++se)
         {
             mTransExonRefs[se].addAll(mFragment.getTransExonRefs()[se]);
         }
@@ -442,7 +443,7 @@ public class FusionReadData
             // of the fusion is unspliced or the fragment is intronic, then measure the genomic distance vs permitted fragment length
             if(fragment.regionMatchTypes()[se] == INTRON || mFragment.regionMatchTypes()[se] == INTRON)
             {
-                if (fragmentPosition < mJunctionPositions[se])
+                if(fragmentPosition < mJunctionPositions[se])
                     impliedFragmentLength += mJunctionPositions[se] - fragmentPosition;
                 else
                     impliedFragmentLength += fragmentPosition - mJunctionPositions[se];
@@ -459,30 +460,84 @@ public class FusionReadData
     {
         boolean hasSupportingRead = false;
 
-        for (int se = SE_START; se <= SE_END; ++se)
+        for(int se = SE_START; se <= SE_END; ++se)
         {
             final int seIndex = se;
-            List<ReadRecord> reads = fragment.reads().stream()
-                    .filter(x -> mChromosomes[seIndex].equals(x.Chromosome))
-                    .filter(x -> mFragment.geneCollections()[seIndex] == x.getGeneCollectons()[seIndex])
-                    .collect(Collectors.toList());
 
-            for (ReadRecord read : reads)
+            for(ReadRecord read : fragment.reads())
             {
-                if (softClippedReadSupportsJunction(read, se))
-                {
-                    hasSupportingRead = true;
-                }
+                if(!read.Chromosome.equals(mChromosomes[seIndex]) || mFragment.geneCollections()[seIndex] == read.getGeneCollectons()[seIndex])
+                    continue;
 
                 // check that none of the other reads are on the incorrect side of this fusion junction
                 if(mJunctionOrientations[se] == 1 && read.getCoordsBoundary(SE_END) > mJunctionPositions[se] + SOFT_CLIP_JUNC_BUFFER)
                     return false;
                 else if(mJunctionOrientations[se] == -1 && read.getCoordsBoundary(SE_START) < mJunctionPositions[se] - SOFT_CLIP_JUNC_BUFFER)
                     return false;
+
+                if(!hasSupportingRead && softClippedReadSupportsJunction(read, se))
+                {
+                    hasSupportingRead = true;
+                }
             }
         }
 
         return hasSupportingRead;
+    }
+
+    public static boolean matchesFusionJunctionRegion(final FusionFragment fragment, final ChrBaseRegion fusionRegion, int junctionOrient)
+    {
+        boolean hasSupportingRead = false;
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            final int seIndex = se;
+
+            for(ReadRecord read : fragment.reads())
+            {
+                if(!read.Chromosome.equals(fusionRegion.Chromosome))
+                    continue;
+
+                // compare a minimum number of soft-clipped bases to the other side of the exon junction
+                // if the read extends past break junction, include these bases in what is compared against the next junction to account for homology
+                if(junctionOrient == POS_ORIENT)
+                {
+                    if(!read.isSoftClipped(SE_END))
+                        continue;
+
+                    int readBoundary = read.getCoordsBoundary(SE_END);
+
+                    if(!fusionRegion.containsPosition(readBoundary))
+                        continue;
+
+                    int scLength = read.Cigar.getLastCigarElement().getLength();
+
+                    if(scLength < REALIGN_MIN_SOFT_CLIP_BASE_LENGTH || scLength > REALIGN_MAX_SOFT_CLIP_BASE_LENGTH)
+                        continue;
+
+                    return true;
+                }
+                else
+                {
+                    if(!read.isSoftClipped(SE_START))
+                        return false;
+
+                    int readBoundary = read.getCoordsBoundary(SE_START);
+
+                    if(!fusionRegion.containsPosition(readBoundary))
+                        continue;
+
+                    int scLength = read.Cigar.getFirstCigarElement().getLength();
+
+                    if(scLength < REALIGN_MIN_SOFT_CLIP_BASE_LENGTH || scLength > REALIGN_MAX_SOFT_CLIP_BASE_LENGTH)
+                        continue;
+
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private boolean softClippedReadSupportsJunction(final ReadRecord read, int juncSeIndex)

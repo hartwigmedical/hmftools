@@ -287,6 +287,8 @@ public class BamFragmentReader implements Callable
 
             mChimericStats.HardFiltered += mFusionFinder.hardFilteredCount();
             mBamFragmentAllocator.getChimericReadTracker().clearAll();
+
+            mFusionFinder.logPerfCounters();
         }
 
         if(mGeneDataList.size() > 10)
@@ -500,13 +502,23 @@ public class BamFragmentReader implements Callable
 
         mChimericStats.merge(mBamFragmentAllocator.getChimericReadTracker().getStats());
 
-        if(completeReadGroups.size() >= 10000)
+        boolean highCount = completeReadGroups.size() >= 10000;
+        if(highCount)
         {
-            ISF_LOGGER.info("chr({}) genes({}) found {} local chimeric read groups, stats: {}",
-                    mChromosome, geneCollection.geneNames(), completeReadGroups.size(), mChimericStats);
+            int nonSuppGroups = (int)completeReadGroups.stream().filter(x -> x.size() == 2).count();
+            ISF_LOGGER.info("chr({}) genes({}) region({} - {}) found {} local chimeric read groups (non-supp={}), stats({})",
+                    mChromosome, geneCollection.geneNames(),
+                    geneCollection.getNonGenicPositions()[SE_START], geneCollection.getNonGenicPositions()[SE_END],
+                    completeReadGroups.size(), nonSuppGroups, mChimericStats);
         }
 
         mFusionFinder.processLocalReadGroups(completeReadGroups);
+
+        if(highCount)
+        {
+            mFusionFinder.clearState();
+            System.gc();
+        }
 
         mPerfCounters[PERF_FUSIONS].pause();
     }

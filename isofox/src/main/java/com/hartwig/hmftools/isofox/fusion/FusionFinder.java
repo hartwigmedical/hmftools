@@ -13,10 +13,13 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.NO_GENE_ID;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
+import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOFT_CLIP_BASE_LENGTH;
+import static com.hartwig.hmftools.isofox.fusion.FusionConstants.SOFT_CLIP_JUNC_BUFFER;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGN_CANDIDATE;
+import static com.hartwig.hmftools.isofox.fusion.FusionReadData.matchesFusionJunctionRegion;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.softClippedReadSupportsJunction;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.checkMissingGeneData;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
@@ -36,6 +39,7 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
@@ -67,6 +71,16 @@ public class FusionFinder implements Callable
     private int mHardFilteredCount;
     private final PerformanceCounter mPerfCounter;
 
+    private final PerformanceCounter[] mPerfCounters;
+
+    private static final int PERF_WRITE = 0;
+    private static final int PERF_REALIGN = 1;
+    private static final int PERF_CREATE_FRAGS = 2;
+    private static final int PERF_FORM_INIT = 3;
+    private static final int PERF_RECONCILE = 4;
+    private static final int PERF_DISCORD = 5;
+    private static final int PERF_CREATE_LOCAL = 6;
+
     public FusionFinder(
             final String taskId, final IsofoxConfig config, final EnsemblDataCache geneTransCache,
             final PassingFusions passingFusions, final FusionWriter fusionWriter)
@@ -91,6 +105,14 @@ public class FusionFinder implements Callable
         mHardFilteredCount = 0;
 
         mPerfCounter = new PerformanceCounter("FusionTask");
+        mPerfCounters = new PerformanceCounter[PERF_CREATE_LOCAL+1];
+        mPerfCounters[PERF_WRITE] = new PerformanceCounter("FusionWrite");
+        mPerfCounters[PERF_REALIGN] = new PerformanceCounter("FusionRealign");
+        mPerfCounters[PERF_CREATE_FRAGS] = new PerformanceCounter("FusionCreateFrags");
+        mPerfCounters[PERF_FORM_INIT] = new PerformanceCounter("FusionFormInit");
+        mPerfCounters[PERF_RECONCILE] = new PerformanceCounter("FusionReconcile");
+        mPerfCounters[PERF_DISCORD] = new PerformanceCounter("FusionDiscord");
+        mPerfCounters[PERF_CREATE_LOCAL] = new PerformanceCounter("FusionCreateLocal");
    }
 
     public final Map<String,List<FusionReadData>> getFusionCandidates() { return mFusionCandidates; }
@@ -285,10 +307,13 @@ public class FusionFinder implements Callable
 
         mPerfCounter.start();
 
+        mPerfCounters[PERF_CREATE_FRAGS].start();
+
+        String scope = isInterChromosomal ? "inter-chromosome" : "local";
+
         // first turn them into fragments, then look for fusions
         Level logLevel = isInterChromosomal ? Level.INFO : Level.DEBUG;
-        ISF_LOGGER.log(logLevel, "chr({}) processing {} {} chimeric read groups",
-                mTaskId, readGroups.size(), isInterChromosomal ? "inter-chromosome" : "local");
+        ISF_LOGGER.log(logLevel, "chr({}) processing {} {} chimeric read groups", mTaskId, readGroups.size(), scope);
 
         int readGroupCount = 0;
 
@@ -298,8 +323,7 @@ public class FusionFinder implements Callable
 
             if(readGroupCount > 0 && (readGroupCount % LOG_COUNT) == 0)
             {
-                ISF_LOGGER.info("chr({}) processed {} {} chimeric read groups",
-                        mTaskId, readGroupCount, isInterChromosomal ? "inter-chromosome" : "local");
+                ISF_LOGGER.info("chr({}) processed {} {} chimeric read groups", mTaskId, readGroupCount, scope);
             }
 
             // exclude any group with a duplicate read now that group is complete (since not all reads are marked as duplicates)
@@ -322,18 +346,25 @@ public class FusionFinder implements Callable
             mAllFragments.add(fragment);
         }
 
+        mPerfCounters[PERF_CREATE_FRAGS].stop();
+
         processFragments();
 
         if(!isInterChromosomal) // otherwise need to wait for RAC fragment assignment
         {
+            mPerfCounters[PERF_REALIGN].start();
             assignRealignCandidateFragments(mRealignCandidateFragments);
+            mPerfCounters[PERF_REALIGN].stop();
+
+            mPerfCounters[PERF_WRITE].start();
             writeFusionSummary();
+            mPerfCounters[PERF_WRITE].stop();
         }
 
         if(readGroupCount > LOG_COUNT)
         {
-            ISF_LOGGER.info("task({}) fusion task complete, fusions({}) unassigned(disc={} realgn={})",
-                    mTaskId, mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum(),
+            ISF_LOGGER.info("chr({}) {} fusion processing complete, fusions({}) unassigned(disc={} realgn={})",
+                    mTaskId, scope, mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum(),
                     mDiscordantFragments.values().stream().mapToInt(x -> x.size()).sum(),
                     mRealignCandidateFragments.values().stream().mapToInt(x -> x.size()).sum());
         }
@@ -357,12 +388,22 @@ public class FusionFinder implements Callable
     {
         // ISF_LOGGER.debug("{}: processing {} chimeric fragments", mTaskId, initialFragmentCount);
 
+        mPerfCounters[PERF_FORM_INIT].start();
         formInitialFusions();
+        mPerfCounters[PERF_FORM_INIT].stop();
+
+        mPerfCounters[PERF_RECONCILE].start();
         reconcileFusions();
+        mPerfCounters[PERF_RECONCILE].stop();
 
         // assign any discordant reads
+        mPerfCounters[PERF_DISCORD].start();
         assignDiscordantFragments();
+        mPerfCounters[PERF_DISCORD].stop();
+
+        mPerfCounters[PERF_CREATE_LOCAL].start();
         createLocalFusions();
+        mPerfCounters[PERF_CREATE_LOCAL].stop();
     }
 
     private void writeFusionSummary()
@@ -440,7 +481,8 @@ public class FusionFinder implements Callable
             }
         }
 
-        ISF_LOGGER.debug("task({}) chimeric fragments({} disc={} candRealgn={} junc={}) fusions(loc={} gene={} total={})",
+        Level level = mAllFragments.size() > 10000 ? Level.INFO : Level.DEBUG;
+        ISF_LOGGER.log(level, "chr({}) chimeric fragments({} disc={} candRealgn={} junc={}) fusions(loc={} gene={} total={})",
                 mTaskId, mAllFragments.size(), mDiscordantFragments.values().stream().mapToInt(x -> x.size()).sum(),
                 mRealignCandidateFragments.values().stream().mapToInt(x -> x.size()).sum(), junctioned,
                 mFusionCandidates.size(), mFusionsByGene.size(), mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum());
@@ -489,7 +531,7 @@ public class FusionFinder implements Callable
 
             List<FusionData> passingFusions = mPassingFusions.findPassingFusions(allFusions);
 
-            ISF_LOGGER.debug("task({}) passing fusions({}) from total({})", mTaskId, passingFusions.size(), allFusions.size());
+            ISF_LOGGER.debug("chr({}) passing fusions({}) from total({})", mTaskId, passingFusions.size(), allFusions.size());
 
             mFusionWriter.writeFusionData(allFusions, passingFusions, mFusionCandidates);
         }
@@ -787,14 +829,14 @@ public class FusionFinder implements Callable
 
                     if(fusion1.matchWithinHomology(fusion2))
                     {
-                        ISF_LOGGER.debug("fusion({}) homology merge with fusion({})", fusion1.id(), fusion2.id());
+                        ISF_LOGGER.trace("fusion({}) homology merge with fusion({})", fusion1.id(), fusion2.id());
 
-                        ISF_LOGGER.debug("fusion1({}) homology({}/{}) start(junc={} adj={}) end(junc={} adj={})",
+                        ISF_LOGGER.trace("fusion1({}) homology({}/{}) start(junc={} adj={}) end(junc={} adj={})",
                                 fusion1.toString(), fusion1.junctionHomology()[SE_START], fusion1.junctionHomology()[SE_END],
                                 fusion1.junctionBases()[SE_START], fusion1.adjacentJunctionBases()[SE_START],
                                 fusion1.junctionBases()[SE_END], fusion1.adjacentJunctionBases()[SE_END]);
 
-                        ISF_LOGGER.debug("fusion2({}) homology({}/{}) start(junc={} adj={}) end(junc={} adj={})",
+                        ISF_LOGGER.trace("fusion2({}) homology({}/{}) start(junc={} adj={}) end(junc={} adj={})",
                                 fusion2.toString(), fusion2.junctionHomology()[SE_START], fusion2.junctionHomology()[SE_END],
                                 fusion2.junctionBases()[SE_START], fusion2.adjacentJunctionBases()[SE_START],
                                 fusion2.junctionBases()[SE_END], fusion2.adjacentJunctionBases()[SE_END]);
@@ -945,7 +987,6 @@ public class FusionFinder implements Callable
     {
         // create fusions from fragments with 1 or both junctions matching known splice sites between genes without supp alignment
         // and then reassign any other fragments to these new fusions
-
         final List<FusionReadData> newFusions = Lists.newArrayList();
 
         for(Map.Entry<String,List<FusionFragment>> entry : mDiscordantFragments.entrySet())
@@ -1042,14 +1083,96 @@ public class FusionFinder implements Callable
             if(realignCandidates == null || realignCandidates.isEmpty())
                 continue;
 
-            for(final FusionReadData fusionData : fusions)
+            // organise candidate fragments into region slots
+            if(realignCandidates.size() > 500 && fusions.size() >= 500)
             {
-                for(FusionFragment fragment : realignCandidates)
+                // for each fusion, and then each junction position, make a chr base region, then link candidate fragments to these
+                Map<ChrBaseRegion,List<FusionReadData>> regionFusionsMap = Maps.newHashMap();
+                Map<ChrBaseRegion,List<FusionFragment>> regionFragmentsMap = Maps.newHashMap();
+
+                final List<FusionFragment> remainingFragments = Lists.newArrayList(realignCandidates);
+
+                for(final FusionReadData fusionData : fusions)
                 {
-                    if(fusionData.canRelignFragmentToJunction(fragment))
+                    for(int se = SE_START; se <= SE_END; ++se)
                     {
-                        fragment.setType(REALIGNED);
-                        fusionData.addFusionFragment(fragment, mConfig.Fusions.CacheFragments);
+                        ChrBaseRegion newRegion = new ChrBaseRegion(
+                                fusionData.chromosomes()[se],
+                                fusionData.junctionPositions()[se] - REALIGN_MAX_SOFT_CLIP_BASE_LENGTH,
+                                fusionData.junctionPositions()[se] + REALIGN_MAX_SOFT_CLIP_BASE_LENGTH);
+
+                        ChrBaseRegion existingRegion = regionFusionsMap.keySet().stream().filter(x -> x.overlaps(newRegion)).findFirst().orElse(null);
+
+                        if(existingRegion != null)
+                        {
+                            List<FusionReadData> regionFusions = regionFusionsMap.get(existingRegion);
+                            regionFusions.add(fusionData);
+                        }
+                        else
+                        {
+                            regionFusionsMap.put(newRegion, Lists.newArrayList(fusionData));
+
+                            // look for overlapping fragments
+                            List<FusionFragment> regionFragments = null;
+
+                            int index = 0;
+                            while(index < remainingFragments.size())
+                            {
+                                FusionFragment fragment = remainingFragments.get(index);
+
+                                if(matchesFusionJunctionRegion(fragment, newRegion, fusionData.junctionOrientations()[se]))
+                                {
+                                    if(regionFragments == null)
+                                    {
+                                        regionFragments = Lists.newArrayList();
+                                        regionFragmentsMap.put(newRegion, regionFragments);
+                                    }
+
+                                    regionFragments.add(fragment);
+                                    remainingFragments.remove(index);
+                                }
+                                else
+                                {
+                                    ++index;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // now use these generated maps to look for candidate to assign
+                for(Map.Entry<ChrBaseRegion,List<FusionFragment>> fragEntry : regionFragmentsMap.entrySet())
+                {
+                    List<FusionReadData> regionFusions = regionFusionsMap.get(fragEntry.getKey());
+                    List<FusionFragment> regionFragments = fragEntry.getValue();
+
+                    if(regionFragments == null)
+                        continue;
+
+                    for(final FusionReadData fusionData : regionFusions)
+                    {
+                        for(FusionFragment fragment : regionFragments)
+                        {
+                            if(fusionData.canRelignFragmentToJunction(fragment))
+                            {
+                                fragment.setType(REALIGNED);
+                                fusionData.addFusionFragment(fragment, mConfig.Fusions.CacheFragments);
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for(final FusionReadData fusionData : fusions)
+                {
+                    for(FusionFragment fragment : realignCandidates)
+                    {
+                        if(fusionData.canRelignFragmentToJunction(fragment))
+                        {
+                            fragment.setType(REALIGNED);
+                            fusionData.addFusionFragment(fragment, mConfig.Fusions.CacheFragments);
+                        }
                     }
                 }
             }
@@ -1061,6 +1184,17 @@ public class FusionFinder implements Callable
         mRealignCandidateFragments.clear();
         assignRealignCandidateFragments(racFragments);
         writeFusionSummary();
+    }
+
+    public void logPerfCounters()
+    {
+        if(!mConfig.RunPerfChecks)
+            return;
+
+        for(PerformanceCounter perfCounter : mPerfCounters)
+        {
+            perfCounter.logStats();
+        }
     }
 }
 
