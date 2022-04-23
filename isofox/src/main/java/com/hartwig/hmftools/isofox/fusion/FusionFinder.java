@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.NO_GENE_ID;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
+import static com.hartwig.hmftools.isofox.fusion.FusionConstants.HIGH_LOG_COUNT;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.SOFT_CLIP_JUNC_BUFFER;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
@@ -70,16 +71,12 @@ public class FusionFinder implements Callable
 
     private int mHardFilteredCount;
     private final PerformanceCounter mPerfCounter;
-
     private final PerformanceCounter[] mPerfCounters;
 
-    private static final int PERF_WRITE = 0;
-    private static final int PERF_REALIGN = 1;
-    private static final int PERF_CREATE_FRAGS = 2;
-    private static final int PERF_FORM_INIT = 3;
-    private static final int PERF_RECONCILE = 4;
-    private static final int PERF_DISCORD = 5;
-    private static final int PERF_CREATE_LOCAL = 6;
+    private static final int PERF_REALIGN = 0;
+    private static final int PERF_CREATE_FRAGS = 1;
+    private static final int PERF_FORM_INIT = 2;
+    private static final int PERF_CREATE_LOCAL = 3;
 
     public FusionFinder(
             final String taskId, final IsofoxConfig config, final EnsemblDataCache geneTransCache,
@@ -105,14 +102,19 @@ public class FusionFinder implements Callable
         mHardFilteredCount = 0;
 
         mPerfCounter = new PerformanceCounter("FusionTask");
-        mPerfCounters = new PerformanceCounter[PERF_CREATE_LOCAL+1];
-        mPerfCounters[PERF_WRITE] = new PerformanceCounter("FusionWrite");
-        mPerfCounters[PERF_REALIGN] = new PerformanceCounter("FusionRealign");
-        mPerfCounters[PERF_CREATE_FRAGS] = new PerformanceCounter("FusionCreateFrags");
-        mPerfCounters[PERF_FORM_INIT] = new PerformanceCounter("FusionFormInit");
-        mPerfCounters[PERF_RECONCILE] = new PerformanceCounter("FusionReconcile");
-        mPerfCounters[PERF_DISCORD] = new PerformanceCounter("FusionDiscord");
-        mPerfCounters[PERF_CREATE_LOCAL] = new PerformanceCounter("FusionCreateLocal");
+
+        if(mConfig.Fusions.RunPerfChecks)
+        {
+            mPerfCounters = new PerformanceCounter[PERF_CREATE_LOCAL + 1];
+            mPerfCounters[PERF_REALIGN] = new PerformanceCounter("FusionRealign");
+            mPerfCounters[PERF_CREATE_FRAGS] = new PerformanceCounter("FusionCreateFrags");
+            mPerfCounters[PERF_FORM_INIT] = new PerformanceCounter("FusionFormInit");
+            mPerfCounters[PERF_CREATE_LOCAL] = new PerformanceCounter("FusionCreateLocal");
+        }
+        else
+        {
+            mPerfCounters = null;
+        }
    }
 
     public final Map<String,List<FusionReadData>> getFusionCandidates() { return mFusionCandidates; }
@@ -295,8 +297,6 @@ public class FusionFinder implements Callable
         processReadGroups(readGroups, true);
     }
 
-    private static final int LOG_COUNT = 10000;
-
     private void processReadGroups(final List<ReadGroup> readGroups, boolean isInterChromosomal)
     {
         // read groups are guaranteed to be complete
@@ -307,7 +307,7 @@ public class FusionFinder implements Callable
 
         mPerfCounter.start();
 
-        mPerfCounters[PERF_CREATE_FRAGS].start();
+        perfStart(PERF_CREATE_FRAGS);
 
         String scope = isInterChromosomal ? "inter-chromosome" : "local";
 
@@ -321,7 +321,7 @@ public class FusionFinder implements Callable
         {
             ++readGroupCount;
 
-            if(readGroupCount > 0 && (readGroupCount % LOG_COUNT) == 0)
+            if(readGroupCount > 0 && (readGroupCount % HIGH_LOG_COUNT) == 0)
             {
                 ISF_LOGGER.info("chr({}) processed {} {} chimeric read groups", mTaskId, readGroupCount, scope);
             }
@@ -346,22 +346,20 @@ public class FusionFinder implements Callable
             mAllFragments.add(fragment);
         }
 
-        mPerfCounters[PERF_CREATE_FRAGS].stop();
+        perfStop(PERF_CREATE_FRAGS);
 
         processFragments();
 
         if(!isInterChromosomal) // otherwise need to wait for RAC fragment assignment
         {
-            mPerfCounters[PERF_REALIGN].start();
+            perfStart(PERF_REALIGN);
             assignRealignCandidateFragments(mRealignCandidateFragments);
-            mPerfCounters[PERF_REALIGN].stop();
+            perfStop(PERF_REALIGN);
 
-            mPerfCounters[PERF_WRITE].start();
             writeFusionSummary();
-            mPerfCounters[PERF_WRITE].stop();
         }
 
-        if(readGroupCount > LOG_COUNT)
+        if(readGroupCount > HIGH_LOG_COUNT)
         {
             ISF_LOGGER.info("chr({}) {} fusion processing complete, fusions({}) unassigned(disc={} realgn={})",
                     mTaskId, scope, mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum(),
@@ -388,22 +386,18 @@ public class FusionFinder implements Callable
     {
         // ISF_LOGGER.debug("{}: processing {} chimeric fragments", mTaskId, initialFragmentCount);
 
-        mPerfCounters[PERF_FORM_INIT].start();
+        perfStart(PERF_FORM_INIT);
         formInitialFusions();
-        mPerfCounters[PERF_FORM_INIT].stop();
+        perfStop(PERF_FORM_INIT);
 
-        mPerfCounters[PERF_RECONCILE].start();
         reconcileFusions();
-        mPerfCounters[PERF_RECONCILE].stop();
 
         // assign any discordant reads
-        mPerfCounters[PERF_DISCORD].start();
         assignDiscordantFragments();
-        mPerfCounters[PERF_DISCORD].stop();
 
-        mPerfCounters[PERF_CREATE_LOCAL].start();
+        perfStart(PERF_CREATE_LOCAL);
         createLocalFusions();
-        mPerfCounters[PERF_CREATE_LOCAL].stop();
+        perfStop(PERF_CREATE_LOCAL);
     }
 
     private void writeFusionSummary()
@@ -481,7 +475,7 @@ public class FusionFinder implements Callable
             }
         }
 
-        Level level = mAllFragments.size() > 10000 ? Level.INFO : Level.DEBUG;
+        Level level = mAllFragments.size() > HIGH_LOG_COUNT ? Level.INFO : Level.DEBUG;
         ISF_LOGGER.log(level, "chr({}) chimeric fragments({} disc={} candRealgn={} junc={}) fusions(loc={} gene={} total={})",
                 mTaskId, mAllFragments.size(), mDiscordantFragments.values().stream().mapToInt(x -> x.size()).sum(),
                 mRealignCandidateFragments.values().stream().mapToInt(x -> x.size()).sum(), junctioned,
@@ -1084,7 +1078,7 @@ public class FusionFinder implements Callable
                 continue;
 
             // organise candidate fragments into region slots
-            if(realignCandidates.size() > 500 && fusions.size() >= 500)
+            if(realignCandidates.size() >= 500 && fusions.size() >= 500)
             {
                 // for each fusion, and then each junction position, make a chr base region, then link candidate fragments to these
                 Map<ChrBaseRegion,List<FusionReadData>> regionFusionsMap = Maps.newHashMap();
@@ -1186,9 +1180,25 @@ public class FusionFinder implements Callable
         writeFusionSummary();
     }
 
+    private void perfStart(int counter)
+    {
+        if(mPerfCounters == null)
+            return;
+
+        mPerfCounters[counter].start();
+    }
+
+    private void perfStop(int counter)
+    {
+        if(mPerfCounters == null)
+            return;
+
+        mPerfCounters[counter].stop();
+    }
+
     public void logPerfCounters()
     {
-        if(!mConfig.RunPerfChecks)
+        if(mPerfCounters == null)
             return;
 
         for(PerformanceCounter perfCounter : mPerfCounters)

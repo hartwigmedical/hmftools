@@ -88,8 +88,8 @@ public class FusionFragment
     public static FusionFragment from(final List<ReadRecord> reads) { return new FusionFragment(new ReadGroup(reads)); }
 
     public String readId() { return mReadGroup.id(); }
-
-    public final List<ReadRecord> reads() { return mReadGroup.Reads; }
+    public List<ReadRecord> reads() { return mReadGroup.Reads; }
+    public ReadGroup readGroup() { return mReadGroup; }
 
     public FusionFragmentType type() { return mType; }
     public final String[] chromosomes() { return mChromosomes; }

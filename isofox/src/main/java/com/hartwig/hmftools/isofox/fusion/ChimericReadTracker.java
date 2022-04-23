@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.isofox.fusion;
 
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
@@ -12,7 +10,6 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_NOVEL_SJ_DISTANCE;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
-import static com.hartwig.hmftools.isofox.common.CommonUtils.cigarFromStr;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
@@ -23,10 +20,8 @@ import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findSplitReadJuncti
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.hasRealignableSoftClip;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.isInversion;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.setHasMultipleKnownSpliceGenes;
+import static com.hartwig.hmftools.isofox.fusion.LocalJunctionData.setMaxSplitMappedLength;
 import static com.hartwig.hmftools.isofox.fusion.ReadGroup.hasSuppAlignment;
-
-import static htsjdk.samtools.CigarOperator.M;
-import static htsjdk.samtools.CigarOperator.N;
 
 import java.util.Arrays;
 import java.util.List;
@@ -46,8 +41,6 @@ import com.hartwig.hmftools.isofox.common.FragmentTracker;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 
-import htsjdk.samtools.Cigar;
-
 public class ChimericReadTracker
 {
     private final IsofoxConfig mConfig;
@@ -58,6 +51,7 @@ public class ChimericReadTracker
 
     private GeneCollection mGeneCollection; // the current collection being processed
     private final Map<String,ReadGroup> mChimericReadMap;
+    private final List<ReadGroup> mLocalCompleteGroups;
 
     // junction position from fusion junction candidate reads are cached to identify candidate realignable reads
     private final Set<Integer> mJunctionPositions;
@@ -81,6 +75,7 @@ public class ChimericReadTracker
         mChimericReadMap = Maps.newHashMap();
         mJunctionPositions = Sets.newHashSet();
         mLocalChimericReads = Lists.newArrayList();
+        mLocalCompleteGroups = Lists.newArrayList();
         mCandidateRealignedReadMap = Maps.newHashMap();
         mPostGeneReadMap = Maps.newHashMap();
         mPreviousPostGeneReadMap = Maps.newHashMap();
@@ -140,6 +135,7 @@ public class ChimericReadTracker
     private void clear(boolean full)
     {
         mChimericReadMap.clear();
+        mLocalCompleteGroups.clear();
         mCandidateRealignedReadMap.clear();
         mChimericStats.clear();
         mLocalChimericReads.clear();
@@ -193,7 +189,53 @@ public class ChimericReadTracker
         }
         else
         {
-            mChimericReadMap.put(read1.Id, new ReadGroup(read1, read2));
+            // cache info about any local dual-junction group
+            ReadGroup group = new ReadGroup(read1, read2);
+
+            if(group.size() == 2 && group.isComplete() && !group.hasDuplicateRead())
+            {
+                final int[] junctPositions = findCandidateJunctions(group.Reads);
+                if(junctPositions[SE_START] > 0 && junctPositions[SE_END] > 0)
+                {
+                    final byte[] junctOrientations = {1, -1};
+                    matchOrAddLocalJunctionGroup(group, junctPositions, junctOrientations);
+                    return;
+                }
+            }
+
+            mChimericReadMap.put(read1.Id, group);
+        }
+    }
+
+    private void matchOrAddLocalJunctionGroup(final ReadGroup group, final int[] junctPositions, final byte[] junctOrientations)
+    {
+        LocalJunctionData matchData = null;
+        for(ReadGroup readGroup : mLocalCompleteGroups)
+        {
+            if(!Arrays.equals(readGroup.localJunctionData().JunctionPositions, junctPositions))
+                continue;
+
+            if(!Arrays.equals(readGroup.localJunctionData().JunctionOrientations, junctOrientations))
+                continue;
+
+            matchData = readGroup.localJunctionData();
+            ++matchData.MatchedGroupCount;
+            ++mChimericStats.MatchedJunctions;
+            break;
+        }
+
+        if(matchData == null)
+        {
+            matchData = new LocalJunctionData(junctPositions, junctOrientations);
+            group.setLocalJunctionData(matchData);
+            mLocalCompleteGroups.add(group);
+            mChimericReadMap.put(group.id(), group);
+        }
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            setMaxSplitMappedLength(
+                    se, group.Reads, junctPositions, junctOrientations, matchData.MaxSplitLengths);
         }
     }
 
@@ -266,7 +308,7 @@ public class ChimericReadTracker
             }
 
             if(mRunFusions)
-                collectCandidateJunctions(reads);
+                collectCandidateJunctions(readGroup);
         }
 
         if(!fragsToRemove.isEmpty())
@@ -294,6 +336,7 @@ public class ChimericReadTracker
         {
             // clear other chimeric state except for local junction information
             mChimericReadMap.clear();
+            mLocalCompleteGroups.clear();
             mCandidateRealignedReadMap.clear();
             mChimericStats.clear();
         }
@@ -487,16 +530,33 @@ public class ChimericReadTracker
         }
     }
 
-    private void collectCandidateJunctions(final List<ReadRecord> reads)
+    private void collectCandidateJunctions(final ReadGroup readGroup)
     {
+        if(readGroup.localJunctionData() != null)
+        {
+            mJunctionPositions.add(readGroup.localJunctionData().JunctionPositions[SE_START]);
+            mJunctionPositions.add(readGroup.localJunctionData().JunctionPositions[SE_END]);
+            return;
+        }
+
+        final int[] junctionPositions = findCandidateJunctions(readGroup.Reads);
+
+        if(junctionPositions[SE_START] > 0)
+            mJunctionPositions.add(junctionPositions[SE_START]);
+
+        if(junctionPositions[SE_END] > 0)
+            mJunctionPositions.add(junctionPositions[SE_END]);
+    }
+
+    private int[] findCandidateJunctions(final List<ReadRecord> reads)
+    {
+        final int[] junctionPositions = new int[SE_PAIR];
+
         final ReadRecord splitRead = findSplitRead(reads);
 
         if(splitRead != null)
         {
-            final int[] splitJunction = findSplitReadJunction(splitRead);
-            mJunctionPositions.add(splitJunction[SE_START]);
-            mJunctionPositions.add(splitJunction[SE_END]);
-            return;
+            return findSplitReadJunction(splitRead);
         }
 
         if(hasSuppAlignment(reads))
@@ -508,13 +568,12 @@ public class ChimericReadTracker
                     for(int se = SE_START; se <= SE_END; ++se)
                     {
                         if(hasRealignableSoftClip(read, se, false))
-                            mJunctionPositions.add(read.getCoordsBoundary(se));
-
+                            junctionPositions[se] = read.getCoordsBoundary(se);
                     }
                 }
             }
 
-            return;
+            return junctionPositions;
         }
 
         // otherwise must either have a junction supported by 2 facing soft-clipped reads or a supplementary read
@@ -524,11 +583,10 @@ public class ChimericReadTracker
             final ReadRecord read = reads.get(0);
 
             if(hasRealignableSoftClip(read, SE_START, false))
-                mJunctionPositions.add(read.getCoordsBoundary(SE_START));
+                junctionPositions[SE_START] = read.getCoordsBoundary(SE_START);
 
             if(hasRealignableSoftClip(read, SE_END, false))
-                mJunctionPositions.add(read.getCoordsBoundary(SE_END));
-
+                junctionPositions[SE_END] = read.getCoordsBoundary(SE_END);
         }
         else
         {
@@ -544,12 +602,10 @@ public class ChimericReadTracker
 
             if(scPositions[SE_START] > 0 && scPositions[SE_END] > 0 && scPositions[SE_START] < scPositions[SE_END])
             {
-                mJunctionPositions.add(scPositions[SE_START]);
-                mJunctionPositions.add(scPositions[SE_END]);
+                return scPositions;
             }
         }
+
+        return junctionPositions;
     }
-
-
-
 }

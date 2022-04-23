@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.impliedSvType;
@@ -27,6 +26,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionConstants.SOFT_CLIP_JUNC_
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
+import static com.hartwig.hmftools.isofox.fusion.LocalJunctionData.setMaxSplitMappedLength;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
 import java.util.List;
@@ -174,10 +174,23 @@ public class FusionReadData
 
     public void addFusionFragment(final FusionFragment fragment, boolean cacheFragment)
     {
-        if(fragment.type() == MATCHED_JUNCTION)
-            updateMaxSplitMappedLength(fragment);
-
         addFragmentTypeCount(fragment.type(), 1);
+
+        if(fragment.type() == MATCHED_JUNCTION)
+        {
+            LocalJunctionData matchData = fragment.readGroup().localJunctionData();
+
+            for(int se = SE_START; se <= SE_END; ++se)
+            {
+                if(matchData != null)
+                    mMaxSplitLengths[se] = max(mMaxSplitLengths[se], matchData.MaxSplitLengths[se]);
+                else
+                    setMaxSplitMappedLength(se, fragment.readsByLocation(se), mJunctionPositions, mJunctionOrientations, mMaxSplitLengths);
+            }
+
+            if(matchData != null)
+                addFragmentTypeCount(fragment.type(), matchData.MatchedGroupCount);
+        }
 
         if(cacheFragment)
         {
@@ -188,7 +201,7 @@ public class FusionReadData
 
             List<FusionFragment> fragments = mFragments.get(fragment.type());
 
-            if (fragments == null)
+            if(fragments == null)
                 mFragments.put(fragment.type(), Lists.newArrayList(fragment));
             else
                 fragments.add(fragment);
@@ -466,7 +479,7 @@ public class FusionReadData
 
             for(ReadRecord read : fragment.reads())
             {
-                if(!read.Chromosome.equals(mChromosomes[seIndex]) || mFragment.geneCollections()[seIndex] == read.getGeneCollectons()[seIndex])
+                if(!read.Chromosome.equals(mChromosomes[seIndex]) || mFragment.geneCollections()[seIndex] != read.getGeneCollectons()[seIndex])
                     continue;
 
                 // check that none of the other reads are on the incorrect side of this fusion junction
@@ -613,7 +626,7 @@ public class FusionReadData
     private void updateMaxSplitMappedLength(final FusionFragment fragment)
     {
         // find the longest section mapped across the junction
-        for (int se = SE_START; se <= SE_END; ++se)
+        for(int se = SE_START; se <= SE_END; ++se)
         {
             final int seIndex = se;
 

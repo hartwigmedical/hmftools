@@ -9,6 +9,7 @@ public class ChimericStats
     public int Translocations;
     public int Inversions;
     public int HardFiltered;
+    public int MatchedJunctions;
 
     public ChimericStats()
     {
@@ -23,6 +24,7 @@ public class ChimericStats
         Translocations += other.Translocations;
         Inversions += other.Inversions;
         HardFiltered += other.HardFiltered;
+        MatchedJunctions += other.MatchedJunctions;
     }
 
     public void clear()
@@ -33,6 +35,7 @@ public class ChimericStats
         Translocations = 0;
         Inversions = 0;
         HardFiltered = 0;
+        MatchedJunctions = 0;
     }
 
     public String toString()

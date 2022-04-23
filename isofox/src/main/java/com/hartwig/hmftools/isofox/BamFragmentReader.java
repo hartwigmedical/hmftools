@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.isofox.common.RegionReadData.findUniqueBases;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.getChromosomeLength;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.isofox.fusion.FusionConstants.HIGH_LOG_COUNT;
 
 import java.util.List;
 import java.util.Map;
@@ -257,7 +258,7 @@ public class BamFragmentReader implements Callable
         {
             if(nextLogCount > 100)
             {
-                ISF_LOGGER.info("chr({}) chimeric data: {}", mChromosome, mChimericStats);
+                ISF_LOGGER.info("chr({}) chimeric data: {} mj={}", mChromosome, mChimericStats, mChimericStats.MatchedJunctions);
             }
 
             mPerfCounters[PERF_FUSIONS].stop();
@@ -502,14 +503,14 @@ public class BamFragmentReader implements Callable
 
         mChimericStats.merge(mBamFragmentAllocator.getChimericReadTracker().getStats());
 
-        boolean highCount = completeReadGroups.size() >= 10000;
+        boolean highCount = completeReadGroups.size() >= HIGH_LOG_COUNT;
         if(highCount)
         {
             int nonSuppGroups = (int)completeReadGroups.stream().filter(x -> x.size() == 2).count();
-            ISF_LOGGER.info("chr({}) genes({}) region({} - {}) found {} local chimeric read groups (non-supp={}), stats({})",
+            ISF_LOGGER.info("chr({}) genes({}) region({} - {}) found {} local chimeric read groups (non-supp={}), stats({} mj={})",
                     mChromosome, geneCollection.geneNames(),
                     geneCollection.getNonGenicPositions()[SE_START], geneCollection.getNonGenicPositions()[SE_END],
-                    completeReadGroups.size(), nonSuppGroups, mChimericStats);
+                    completeReadGroups.size(), nonSuppGroups, mChimericStats, mChimericStats.MatchedJunctions);
         }
 
         mFusionFinder.processLocalReadGroups(completeReadGroups);
