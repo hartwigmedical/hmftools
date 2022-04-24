@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.createCmdLineOptions;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.validConfigPaths;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_CHROMOSOMES;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.PRIORITISED_CHROMOSOMES;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_GC_COUNTS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_TRANS_COUNTS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
@@ -185,7 +185,7 @@ public class Isofox
         final List<String> chromosomes = Lists.newArrayList();
 
         // process any enriched genes first, then add the rest in order of decreasing length
-        ENRICHED_GENE_CHROMOSOMES.forEach(x -> chromosomes.add(mConfig.RefGenVersion.versionedChromosome(x)));
+        PRIORITISED_CHROMOSOMES.forEach(x -> chromosomes.add(mConfig.RefGenVersion.versionedChromosome(x)));
 
         Arrays.stream(HumanChromosome.values())
                 .map(chromosome -> mConfig.RefGenVersion.versionedChromosome(chromosome.toString()))

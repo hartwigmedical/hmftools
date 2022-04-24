@@ -51,7 +51,8 @@ public class IsofoxConstants
         }
     }
 
-    public static final List<String> ENRICHED_GENE_CHROMOSOMES = Lists.newArrayList("14", "22", "2", "3", "6", "9");
+    // process genes with longer expected processing times first
+    public static final List<String> PRIORITISED_CHROMOSOMES = Lists.newArrayList("14", "22", "2", "3", "6", "9", "16", "17");
 
     // HLA region: chr 6: 29690552-33111102
     // IG regions: chr 14:106032614-107288051, chr22: 22380474-23265085
@@ -59,10 +60,10 @@ public class IsofoxConstants
     {
         if(version == RefGenomeVersion.V38)
         {
-            regions.add(new ChrBaseRegion("chr2", 88857161, 90315836));
-            regions.add(new ChrBaseRegion("chr6", 29722775, 33143325));
-            regions.add(new ChrBaseRegion("chr14", 105586437, 106879844));
-            regions.add(new ChrBaseRegion("chr22", 22026076, 22922913));
+            regions.add(new ChrBaseRegion("chr2", 88857161, 90315836)); // IGK
+            regions.add(new ChrBaseRegion("chr6", 29722775, 33143325)); // HLA
+            regions.add(new ChrBaseRegion("chr14", 105586437, 106879844)); // IGH
+            regions.add(new ChrBaseRegion("chr22", 22026076, 22922913)); // IGL
         }
         else
         {

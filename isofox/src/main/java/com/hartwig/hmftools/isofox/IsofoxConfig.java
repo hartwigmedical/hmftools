@@ -11,7 +11,9 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG19
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.loadDelimitedIdFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
@@ -92,10 +94,12 @@ public class IsofoxConfig
     // neo-epitopes
     private static final String NEO_EPITOPE_FILE = "neoepitope_file";
 
+    // debug and performance
     private static final String GENE_READ_LIMIT = "gene_read_limit";
     private static final String RUN_VALIDATIONS = "validate";
     private static final String PERF_CHECKS = "run_perf_checks";
     private static final String THREADS = "threads";
+    private static final String FILTER_READS_FILE = "filter_reads_file";
 
     public final String SampleId;
 
@@ -141,6 +145,7 @@ public class IsofoxConfig
     public final boolean RunValidations;
     public final boolean RunPerfChecks;
     public final int Threads;
+    public final List<String> FilteredReadIds;
 
     public static final Logger ISF_LOGGER = LogManager.getLogger(IsofoxConfig.class);
 
@@ -247,6 +252,9 @@ public class IsofoxConfig
 
         RunValidations = cmd.hasOption(RUN_VALIDATIONS);
         RunPerfChecks = cmd.hasOption(PERF_CHECKS);
+
+        FilteredReadIds = cmd.hasOption(FILTER_READS_FILE) ?
+                loadDelimitedIdFile(cmd.getOptionValue(FILTER_READS_FILE), "FilteredReadIds", CSV_DELIM) : null;
     }
 
     public boolean isValid()
@@ -381,6 +389,8 @@ public class IsofoxConfig
         return V37;
     }
 
+    public boolean skipFilteredRead(final String readId) { return FilteredReadIds != null && !FilteredReadIds.contains(readId); }
+
     public IsofoxConfig()
     {
         SampleId = "TEST";
@@ -426,6 +436,7 @@ public class IsofoxConfig
         RunValidations = true;
         RunPerfChecks = false;
         Threads = 0;
+        FilteredReadIds = null;
     }
 
     public static Options createCmdLineOptions()
@@ -475,6 +486,7 @@ public class IsofoxConfig
         options.addOption(THREADS, true, "Number of threads to use (default=0, single-threaded)");
         options.addOption(RUN_VALIDATIONS, false, "Run auto-validations");
         options.addOption(PERF_CHECKS, false, "Run performance logging routines");
+        options.addOption(FILTER_READS_FILE, true, "Only process reads in this file");
 
         GeneRegionFilters.addCommandLineOptions(options);
         FusionConfig.addCommandLineOptions(options);

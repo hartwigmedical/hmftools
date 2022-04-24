@@ -182,42 +182,48 @@ public class FusionFragment
 
                 final Map<RegionMatchType,List<TransExonRef>> transExonRefMap = read.getTransExonRefs(se);
 
+                List<TransExonRef> transExonRefs = null;
+
                 for(Map.Entry<RegionMatchType, List<TransExonRef>> entry : transExonRefMap.entrySet())
                 {
                     RegionMatchType matchType = entry.getKey();
 
                     if(matchRank(matchType) >= matchRank(mRegionMatchTypes[se]))
-                        mRegionMatchTypes[se] = matchType;
-                    else
-                        continue;
-
-                    for(TransExonRef readTransExonRef : entry.getValue())
                     {
-                        boolean found = false;
+                        mRegionMatchTypes[se] = matchType;
+                        transExonRefs = entry.getValue();
+                    }
+                }
 
-                        for(TransExonRef transExonRef : mTransExonRefs[se])
+                if(transExonRefs == null)
+                    continue;
+
+                for(TransExonRef readTransExonRef : transExonRefs)
+                {
+                    boolean found = false;
+
+                    for(TransExonRef transExonRef : mTransExonRefs[se])
+                    {
+                        if(transExonRef.TransId == readTransExonRef.TransId)
                         {
-                            if(transExonRef.TransId == readTransExonRef.TransId)
+                            found = true;
+
+                            if(transExonRef.ExonRank != readTransExonRef.ExonRank)
                             {
-                                found = true;
+                                ISF_LOGGER.trace("multi-exon: read({} cigar={}) ref1({}) ref2({})",
+                                        read.Id, read.Cigar.toString(), transExonRef.toString(), readTransExonRef.toString());
 
-                                if(transExonRef.ExonRank != readTransExonRef.ExonRank)
-                                {
-                                    ISF_LOGGER.trace("multi-exon: read({} cigar={}) ref1({}) ref2({})",
-                                            read.Id, read.Cigar.toString(), transExonRef.toString(), readTransExonRef.toString());
-
-                                    // will be handled later on
-                                    mTransExonRefs[se].add(readTransExonRef);
-                                }
-
-                                break;
+                                // will be handled later on
+                                mTransExonRefs[se].add(readTransExonRef);
                             }
-                        }
 
-                        if(!found)
-                        {
-                            mTransExonRefs[se].add(readTransExonRef);
+                            break;
                         }
+                    }
+
+                    if(!found)
+                    {
+                        mTransExonRefs[se].add(readTransExonRef);
                     }
                 }
             }

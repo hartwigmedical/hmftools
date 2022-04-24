@@ -250,6 +250,9 @@ public class BamFragmentAllocator
 
     private void processSamRecord(final SAMRecord record)
     {
+        if(mConfig.skipFilteredRead(record.getReadName()))
+            return;
+
         // to avoid double-processing of reads overlapping 2 (or more) gene collections, only process them if they start in this
         // gene collection or its preceding non-genic region
         if(!positionWithin(record.getStart(), mValidReadStartRegion[SE_START], mValidReadStartRegion[SE_END]))

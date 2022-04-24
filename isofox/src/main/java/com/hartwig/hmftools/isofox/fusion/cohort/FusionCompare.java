@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.isofox.fusion.cohort;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
@@ -155,8 +157,21 @@ public class FusionCompare
 
         for(List<FusionData> fusions : origChrMap.values())
         {
-            fusions.forEach(x -> writeFusionDiffs("NO_NEW", x, null, emptyDiffs));
-            unmatchOrig += fusions.size();
+            for(FusionData fusion : fusions)
+            {
+                boolean isImmunePair = (fusion.GeneNames[FS_UP].startsWith("HLA") && fusion.GeneNames[FS_DOWN].startsWith("HLA"))
+                        || (fusion.GeneNames[FS_UP].startsWith("IG") && fusion.GeneNames[FS_DOWN].startsWith("IG"));
+
+                if(isImmunePair)
+                {
+                    writeFusionDiffs("IMMUNE_PAIR", fusion, null, emptyDiffs);
+                }
+                else
+                {
+                    writeFusionDiffs("NO_NEW", fusion, null, emptyDiffs);
+                    ++unmatchOrig;
+                }
+            }
         }
 
         for(List<FusionData> fusions : newChrMap.values())
@@ -221,7 +236,7 @@ public class FusionCompare
             String outputFileName = outputDir + "isf.fusions_compare." + outputId + ".csv";
 
             final BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write("MatchType,IdOrig,IdNew,ChrUp,ChrDown,PosUp,PosDown,TotalFragsOrig,TotalFragsNew,SplitFragsOrig,SplitFragsNew,DiffInfo");
+            writer.write("MatchType,Name,IdOrig,IdNew,ChrUp,ChrDown,PosUp,PosDown,TotalFragsOrig,TotalFragsNew,SplitFragsOrig,SplitFragsNew,DiffInfo");
             writer.newLine();
 
             return writer;
@@ -241,8 +256,8 @@ public class FusionCompare
             StringJoiner sj = new StringJoiner(";");
             diffs.forEach(x -> sj.add(x));
 
-            mWriter.write(String.format("%s,%d,%d,%s,%s,%d,%d,%d,%d,%d,%d,%s",
-                    matchType,
+            mWriter.write(String.format("%s,%s,%d,%d,%s,%s,%d,%d,%d,%d,%d,%d,%s",
+                    matchType, origFusion != null ? origFusion.name() : newFusion.name(),
                     origFusion != null ? origFusion.Id : -1, newFusion != null ? newFusion.Id : -1,
                     refFusion.Chromosomes[SE_START], refFusion.Chromosomes[SE_END],
                     refFusion.JunctionPositions[SE_START], refFusion.JunctionPositions[SE_END],

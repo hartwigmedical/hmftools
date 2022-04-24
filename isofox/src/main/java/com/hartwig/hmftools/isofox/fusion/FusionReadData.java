@@ -500,8 +500,6 @@ public class FusionReadData
 
     public static boolean matchesFusionJunctionRegion(final FusionFragment fragment, final ChrBaseRegion fusionRegion, int junctionOrient)
     {
-        boolean hasSupportingRead = false;
-
         for(int se = SE_START; se <= SE_END; ++se)
         {
             final int seIndex = se;
@@ -620,55 +618,6 @@ public class FusionReadData
                 extraBases = extraBases.substring(extraBases.length() - JUNCTION_BASE_LENGTH, extraBases.length());
 
             return junctionBases[switchIndex(juncSeIndex)].endsWith(extraBases);
-        }
-    }
-
-    private void updateMaxSplitMappedLength(final FusionFragment fragment)
-    {
-        // find the longest section mapped across the junction
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            final int seIndex = se;
-
-            final List<ReadRecord> reads = fragment.readsByLocation(se).stream()
-                    .filter(x -> positionWithin(mJunctionPositions[seIndex], x.PosStart, x.PosEnd)).collect(Collectors.toList());
-
-            if(reads.isEmpty()) // can occur with the fragments from a fusion merged in due to homology
-                continue;
-
-            List<int[]> mappedCoords;
-
-            if(reads.size() == 1)
-            {
-                mappedCoords = reads.get(0).getMappedRegionCoords(false);
-            }
-            else
-            {
-                mappedCoords = deriveCommonRegions(
-                        reads.get(0).getMappedRegionCoords(false), reads.get(1).getMappedRegionCoords(false));
-            }
-
-            int mappedBases = 0;
-
-            for(int[] coord : mappedCoords)
-            {
-                if(mJunctionOrientations[se] == NEG_ORIENT)
-                {
-                    if(coord[SE_END] < mJunctionPositions[se])
-                        continue;
-
-                    mappedBases += coord[SE_END] - max(mJunctionPositions[se], coord[SE_START]) + 1;
-                }
-                else
-                {
-                    if(coord[SE_START] > mJunctionPositions[se])
-                        break;
-
-                    mappedBases += min(mJunctionPositions[se], coord[SE_END]) - coord[SE_START] + 1;
-                }
-            }
-
-            mMaxSplitLengths[se] = max(mappedBases, mMaxSplitLengths[se]);
         }
     }
 

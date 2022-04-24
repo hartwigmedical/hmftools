@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsInde
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.configPathValid;
 import static com.hartwig.hmftools.isofox.expression.cohort.CohortGenePercentiles.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.isofox.expression.cohort.CohortGenePercentiles.PAN_CANCER;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_CHR;
@@ -132,6 +133,12 @@ public class SampleLoaderTask implements Callable
     {
         final String cancerType = getSampleCancerType(sampleId);
 
+        if(cancerType == null)
+        {
+            ISF_LOGGER.warn("sample({}) data loading skipped", sampleId);
+            return;
+        }
+
         ISF_LOGGER.debug("sample({}) cancerType({}) loading Isofox RNA data", sampleId, cancerType);
 
         loadStatistics(sampleId);
@@ -164,7 +171,8 @@ public class SampleLoaderTask implements Callable
         }
         catch(Exception e)
         {
-            ISF_LOGGER.error("failed to retrieve clinical data for sample({}): {}", e.toString());
+            ISF_LOGGER.warn("failed to retrieve clinical data for sample({}): {}", sampleId, e.toString());
+            return null;
         }
 
         return CANCER_TYPE_OTHER;
