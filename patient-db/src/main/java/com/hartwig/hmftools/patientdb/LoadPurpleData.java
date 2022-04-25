@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -139,12 +140,20 @@ public class LoadPurpleData
         final String svVcf = purpleDir + sampleId + PURPLE_SV_VCF_SUFFIX;
 
         // skip loading if any files are missing
-        if(!Files.exists(Paths.get(geneCopyNumberFile)) || !Files.exists(Paths.get(copyNumberFile))
-        || !Files.exists(Paths.get(purityRangeFile)) || !Files.exists(Paths.get(somaticDriversFile))
-        || !Files.exists(Paths.get(somaticVcf)) || !Files.exists(Paths.get(svVcf)))
+        List<String> requiredFiles = Lists.newArrayList(
+                geneCopyNumberFile, copyNumberFile, somaticDriversFile, purityRangeFile, somaticVcf, svVcf);
+
+        if(requiredFiles.stream().noneMatch(x -> Files.exists(Paths.get(x))))
         {
-            LOGGER.info("skipping somatic due to missing files");
+            LOGGER.info("skipping somatic data - no files present");
             return;
+        }
+
+        if(requiredFiles.stream().anyMatch(x -> !Files.exists(Paths.get(x))))
+        {
+            LOGGER.info("skipping somatic data - files are missing:");
+            requiredFiles.stream().filter(x -> !Files.exists(Paths.get(x))).forEach(x -> logMissingFile(x));
+            System.exit(1);
         }
 
         List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(geneCopyNumberFile);
@@ -182,8 +191,16 @@ public class LoadPurpleData
         somaticVariantFactory.fromVCFFile(sampleId, referenceId, rnaId, somaticVcf, referenceId != null, somaticWriter);
         somaticWriter.close();
 
-        LOGGER.info("loaded {} variants, filtered {} variants",
+        LOGGER.info("loaded {} somatic variants, filtered({})",
                 somaticVariantFactory.getCreatedCount(), somaticVariantFactory.getFilteredCount());
+    }
+
+    private static void logMissingFile(final String filename)
+    {
+        if(!Files.exists(Paths.get(filename)))
+        {
+            LOGGER.warn("missing file {}", filename);
+        }
     }
     
     private static void loadGermlineData(
@@ -195,11 +212,20 @@ public class LoadPurpleData
         final String germlineDriverFile = DriverCatalogFile.generateGermlineFilename(purpleDir, sampleId);
 
         // skip loading if any files are missing
-        if(!Files.exists(Paths.get(germlineDeletionsFile)) || !Files.exists(Paths.get(germlineVcf))
-        || !Files.exists(Paths.get(germlineDriverFile)))
+        List<String> requiredFiles = Lists.newArrayList(
+                germlineVcf, germlineDeletionsFile, germlineDriverFile);
+
+        if(requiredFiles.stream().noneMatch(x -> Files.exists(Paths.get(x))))
         {
-            LOGGER.info("skipping germline due to missing files");
+            LOGGER.info("skipping germline data - no files present");
             return;
+        }
+
+        if(requiredFiles.stream().anyMatch(x -> !Files.exists(Paths.get(x))))
+        {
+            LOGGER.warn("skipping germline data - files are missing:");
+            requiredFiles.stream().filter(x -> !Files.exists(Paths.get(x))).forEach(x -> logMissingFile(x));
+            System.exit(1);
         }
 
         List<GermlineDeletion> germlineDeletions = GermlineDeletion.read(germlineDeletionsFile);
