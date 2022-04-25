@@ -83,13 +83,10 @@ public class IsofoxConfig
     // expected expression config
     private static final String EXP_COUNTS_FILE = "exp_counts_file";
     private static final String EXP_GC_RATIOS_FILE = "exp_gc_ratios_file";
-    private static final String APPLY_EXP_RATES = "apply_exp_rates";
     private static final String READ_LENGTH = "read_length";
     private static final String ER_FRAGMENT_LENGTHS = "exp_rate_frag_lengths";
-    private static final String APPLY_GC_BIAS_ADJUSTMENT = "apply_gc_bias_adjust";
     private static final String WRITE_EXPECTED_RATES = "write_exp_rates";
     private static final String WRITE_TRANS_COMBO_DATA = "write_trans_combo_data";
-    private static final String APPLY_MQ_ADJUST = "apply_map_qual_adjust";
 
     // neo-epitopes
     private static final String NEO_EPITOPE_FILE = "neoepitope_file";
@@ -467,15 +464,12 @@ public class IsofoxConfig
 
         options.addOption(WRITE_GC_DATA, false, "Write GC ratio counts from all genic reads");
 
-        options.addOption(APPLY_EXP_RATES, false, "Generate expected expression rates for transcripts");
         options.addOption(EXP_COUNTS_FILE, true, "File with generated expected expression rates per transcript");
         options.addOption(EXP_GC_RATIOS_FILE, true, "File with generated expected GC ratios per transcript");
         options.addOption(NEO_EPITOPE_FILE, true, "File with neo-epitopes to measure fragment support");
         options.addOption(UMR_COHORT_FREQUENCY_FILE, true, "Unmapped reads cohort frequency file");
         options.addOption(READ_LENGTH, true, "Sample sequencing read length (eg 76 or 151 bases");
         options.addOption(SINGLE_MAP_QUAL, true, "Optional - map quality for reads mapped to a single location (default=255)");
-        options.addOption(APPLY_MQ_ADJUST, false, "Use read map quality to adjust expected counts");
-        options.addOption(APPLY_GC_BIAS_ADJUSTMENT, false, "Use GC Bias adjustments in expected rate calcs");
 
         options.addOption(ER_FRAGMENT_LENGTHS, true,
                 "Fragment sizes and weights for expected transcript calcs (format: length1-freq1;length3-freq2 eg 100-10;150-20) in integer terms");

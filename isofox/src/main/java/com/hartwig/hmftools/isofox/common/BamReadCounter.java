@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
-import static com.hartwig.hmftools.isofox.BamFragmentReader.findNextOverlappingGenes;
+import static com.hartwig.hmftools.isofox.GeneCollectionReader.findNextOverlappingGenes;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;

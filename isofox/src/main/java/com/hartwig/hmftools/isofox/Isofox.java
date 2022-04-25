@@ -180,7 +180,7 @@ public class Isofox
             logMemory(mConfig, "CalcFragLengths");
         }
 
-        final List<BamFragmentReader> chrTasks = Lists.newArrayList();
+        final List<GeneCollectionReader> chrTasks = Lists.newArrayList();
         final List<Callable> callableList = Lists.newArrayList();
         final List<String> chromosomes = Lists.newArrayList();
 
@@ -199,7 +199,7 @@ public class Isofox
             if(geneDataList == null)
                 continue;
 
-            BamFragmentReader bamReaderTask = new BamFragmentReader(
+            GeneCollectionReader bamReaderTask = new GeneCollectionReader(
                     mConfig, chromosome, geneDataList, mGeneTransCache, mResultsWriter,
                     mFusionTaskManager, mExpectedCountsCache, mGcTranscriptCalcs);
 
@@ -244,7 +244,7 @@ public class Isofox
         return true;
     }
 
-    private void processBamFragments(final List<BamFragmentReader> chrTasks, final List<Callable> callableList)
+    private void processBamFragments(final List<GeneCollectionReader> chrTasks, final List<Callable> callableList)
     {
         int[] totalCounts = new int[typeAsInt(FragmentType.MAX)];
 
@@ -315,7 +315,7 @@ public class Isofox
     }
 
     private void applyGcAdjustments(
-            final List<BamFragmentReader> chrTasks, final List<Callable> callableList, final GcRatioCounts actualGcCounts)
+            final List<GeneCollectionReader> chrTasks, final List<Callable> callableList, final GcRatioCounts actualGcCounts)
     {
         ISF_LOGGER.info("applying GC adjustments and transcript re-fit");
 

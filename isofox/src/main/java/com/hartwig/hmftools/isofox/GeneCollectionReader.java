@@ -56,7 +56,7 @@ import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.TranscriptResult;
 
-public class BamFragmentReader implements Callable
+public class GeneCollectionReader implements Callable
 {
     private final String mChromosome;
     private final IsofoxConfig mConfig;
@@ -91,7 +91,7 @@ public class BamFragmentReader implements Callable
 
     private final PerformanceCounter[] mPerfCounters;
 
-    public BamFragmentReader(
+    public GeneCollectionReader(
             final IsofoxConfig config, final String chromosome, final List<GeneData> geneDataList,
             final EnsemblDataCache geneTransCache, final ResultsWriter resultsWriter, final FusionTaskManager fusionManager,
             final ExpectedCountsCache expectedCountsCache, final GcTranscriptCalculator transcriptGcCalcs)

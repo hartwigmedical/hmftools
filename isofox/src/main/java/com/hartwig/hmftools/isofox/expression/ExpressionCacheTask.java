@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.isofox.expression;
 
-import static com.hartwig.hmftools.isofox.BamFragmentReader.findNextOverlappingGenes;
+import static com.hartwig.hmftools.isofox.GeneCollectionReader.findNextOverlappingGenes;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.GeneReadData.createGeneReadData;
 

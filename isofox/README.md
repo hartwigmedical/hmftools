@@ -91,7 +91,6 @@ exp_gc_ratios_file | Pre-computed expected GC ratio counts per transcript
 read_length | Expected RNA read length (eg 76 or 151), will be computed if not provided
 long_frag_limit | Default 550 bases, fragments longer than this without a splice junction are not considered to support a gene for the purposes of expression
 single_map_qual | Default 255, discard reads with map quality below this unless using the config 'apply_map_qual_adjust'
-apply_map_qual_adjust | Include multi-mapped fragments in transcript counting, weighted by inverse of # multi-mapped locations
 enriched_gene_ids | By default includes: ENSG00000265150;ENSG00000258486;ENSG00000202198;ENSG00000266037;ENSG00000263740;ENSG00000265735
 
 ### Optional output files:
@@ -108,7 +107,8 @@ write_exp_rates | Generates file 'sample_id.isf.exp_rates.csv' with expected cou
 ### Logging and Debug
 Argument | Description
 ---|---
-specific_chr | Restricted List of chromosomes to process separated by ';'
+specific_chr | Restricted BAM reading to a list chromosomes to process separated by ';'
+specific_regions | Restrict BAM reading to list of regions, separated by ';' in the form chromosome:positionStart:positionEnd
 gene_read_limit | Default 0, not applied. Per-gene cap on number of reads processed.
 threads | Default 0, single-threaded.
 log_debug | Log verbose
@@ -117,7 +117,7 @@ write_read_data | Write data on each BAM read, only recommended with restricted 
 write_exon_data | Write data on transcript exon covered by a supporting fragment, only recommended with restricted genes file
 
 ### Memory Usage and Threading
-ISOFOX takes ~10 mins to process a 7GB BAM with 120M reads / 60M fragments using 10 cores, with maximum memory usage of 10GB, and ~30 mins to process a 35GB BAM with 440M reads / 200M fragments using 10 cores, with maximum memory usage of 12GB. 
+ISOFOX takes ~10 mins to process a 7GB BAM with 120M reads / 60M fragments using 10 cores, with maximum memory usage of 10GB, and ~30 mins to process a 35GB BAM with 440M reads / 200M fragments using 10 cores, with maximum memory usage of 25GB. 
 
 ### Example Usage
 Running all functions:
@@ -508,4 +508,6 @@ RelatedFusions | Ids of other fusions in the same gene which may be caused by th
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/isofox-v1.0)
 - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/isofox-v1.1)
 - [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/isofox-v1.2)
+- [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/isofox-v1.3)
+- [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/isofox-v1.4)
 
