@@ -873,11 +873,14 @@ The second method can load data from reading the output files without the need t
 
 ```
 java -cp purple.jar com.hartwig.hmftools.patientdb.LoadPurpleData \ 
-    -tumor COLO829T \
+    -sample COLO829T \
+    -reference COLO829R \
     -purple_dir /path/to/COLO829/purple \
     -db_user purple_writer -db_pass purple_writer_password \
     -db_url mysql://localhost:3306/patientdb?serverTimezone=UTC
 ```
+
+Either somatic or germline data only can be loaded if the configs -somatic_only and -germline_only are included.
 
 Regardless of which method is used, that sample's PURPLE data will be deleted before new records are inserted.
 PURPLE does not support updating records.

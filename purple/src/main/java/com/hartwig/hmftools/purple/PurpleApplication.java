@@ -430,10 +430,10 @@ public class PurpleApplication
             PPL_LOGGER.info("writing purple data to database: {}", mCmdLineArgs.getOptionValue(DB_URL));
 
             mDbAccess.writePurity(tumorSample, purityContext, qcChecks);
-            mDbAccess.writeBestFitPerPurity(tumorSample, bestFit.bestFitPerPurity());
 
             if(mConfig.runTumor())
             {
+                mDbAccess.writeBestFitPerPurity(tumorSample, bestFit.bestFitPerPurity());
                 mDbAccess.writeCopynumbers(tumorSample, copyNumbers);
                 mDbAccess.writeGeneCopyNumbers(tumorSample, geneCopyNumbers);
             }

@@ -26,11 +26,7 @@ public class SubclonalLikelihoodEnrichment
     {
         double copyNumber = variant.copyNumber();
         double subclonalLikelihood = Math.round(mSubclonalLikelihood.subclonalLikelihood(copyNumber) * 1000d) / 1000d;
-
-        if(!Doubles.isZero(subclonalLikelihood))
-        {
-            variant.context().getCommonInfo().putAttribute(SUBCLONAL_LIKELIHOOD_FLAG, subclonalLikelihood);
-        }
+        variant.context().getCommonInfo().putAttribute(SUBCLONAL_LIKELIHOOD_FLAG, subclonalLikelihood);
     }
 
     public static VCFHeader enrichHeader(final VCFHeader template)
