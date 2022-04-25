@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.patientdb.dao;
 
-import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_GERMLINE;
-import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_SOMATIC;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_PURPLE_GERMLINE;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_PURPLE_SOMATIC;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.GERMLINE;
@@ -28,9 +26,7 @@ import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep17;
 import org.jooq.InsertValuesStep19;
-import org.jooq.InsertValuesStep20;
 import org.jooq.Record;
 import org.jooq.Result;
 
@@ -44,11 +40,15 @@ class DriverCatalogDAO
         this.context = context;
     }
 
-    void writePurpleDrivers(@NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog, @NotNull List<DriverCatalog> germlineCatalog)
+    void writePurpleDrivers(@NotNull String sample, @Nullable List<DriverCatalog> somaticCatalog, @Nullable List<DriverCatalog> germlineCatalog)
     {
         deleteForSample(sample, Sets.newHashSet(GERMLINE)); // clean up deprecated type
-        write(sample, somaticCatalog, Sets.newHashSet(DRIVERS_PURPLE_SOMATIC));
-        write(sample, germlineCatalog, Sets.newHashSet(DRIVERS_PURPLE_GERMLINE));
+
+        if(somaticCatalog != null)
+            write(sample, somaticCatalog, Sets.newHashSet(DRIVERS_PURPLE_SOMATIC));
+
+        if(germlineCatalog != null)
+            write(sample, germlineCatalog, Sets.newHashSet(DRIVERS_PURPLE_GERMLINE));
     }
 
     void writeLinxDrivers(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog, final EnumSet<DriverType> driverTypes)

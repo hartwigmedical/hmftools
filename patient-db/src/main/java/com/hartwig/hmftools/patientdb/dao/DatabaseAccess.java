@@ -439,13 +439,13 @@ public class DatabaseAccess implements AutoCloseable {
         geneCopyNumberDAO.writeGermlineDeletions(sample, deletions);
     }
 
-    public void writeLinxDriverCatalog(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog,
-            final EnumSet<DriverType> driverTypes) {
+    public void writeLinxDriverCatalog(
+            @NotNull String sample, @NotNull List<DriverCatalog> driverCatalog, final EnumSet<DriverType> driverTypes) {
         driverCatalogDAO.writeLinxDrivers(sample, driverCatalog, driverTypes);
     }
 
-    public void writePurpleDriverCatalog(@NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog,
-            @NotNull List<DriverCatalog> germlineCatalog) {
+    public void writePurpleDriverCatalog(
+            @NotNull String sample, @Nullable List<DriverCatalog> somaticCatalog, @Nullable List<DriverCatalog> germlineCatalog) {
         driverCatalogDAO.writePurpleDrivers(sample, somaticCatalog, germlineCatalog);
     }
 
@@ -560,8 +560,8 @@ public class DatabaseAccess implements AutoCloseable {
         somaticVariantDAO.deleteSomaticVariantForSample(sample);
 
         LOGGER.info("Deleting germline variant data for sample: {}", sample);
-        context.delete(Tables.GERMLINEVARIANT).where(Tables.GERMLINEVARIANT.SAMPLEID.eq(sample)).execute();
         germlineVariantDAO.deleteGermlineVariantsForSample(sample);
+        germlineVariantDAO.deleteGermlineStructuralVariantsForSample(sample);
 
         LOGGER.info("Deleting structural variant annotation data for sample: {}", sample);
         structuralVariantFusionDAO.deleteAnnotationsForSample(sample);

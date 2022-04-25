@@ -63,9 +63,13 @@ public class GermlineVariantDAO
         inserter.execute();
     }
 
-    void deleteGermlineVariantsForSample(@NotNull String sampleId)
+    public void deleteGermlineVariantsForSample(@NotNull String sampleId)
     {
         context.delete(GERMLINEVARIANT).where(GERMLINEVARIANT.SAMPLEID.eq(sampleId)).execute();
+    }
+
+    public void deleteGermlineStructuralVariantsForSample(@NotNull String sampleId)
+    {
         context.delete(STRUCTURALVARIANTGERMLINE).where(STRUCTURALVARIANTGERMLINE.SAMPLEID.eq(sampleId)).execute();
     }
 

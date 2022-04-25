@@ -46,7 +46,7 @@ public class LoadLinxData {
         CommandLine cmd = new DefaultParser().parse(options, args);
         DatabaseAccess dbAccess = createDatabaseAccess(cmd);
 
-        if (dbAccess == null)
+        if(dbAccess == null)
         {
             LOGGER.error("Failed to create DB connection");
             System.exit(1);
@@ -68,7 +68,7 @@ public class LoadLinxData {
         boolean loadSomaticData = dataTypes.equals(DATA_TYPE_BOTH) || dataTypes.equals(DATA_TYPE_SOMATIC);
         boolean loadGermlineData = dataTypes.equals(DATA_TYPE_BOTH) || dataTypes.equals(DATA_TYPE_GERMLINE);
 
-        if (!(loadSomaticData || loadGermlineData))
+        if(!(loadSomaticData || loadGermlineData))
             LOGGER.warn("No data will be loaded based on selected datatype '{}'", dataTypes);
 
         if(loadSomaticData)
