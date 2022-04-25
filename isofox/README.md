@@ -37,7 +37,7 @@ The full list of non default parameters we use internally is:
 STAR allows setting of the '—outFilterMultimapNmax ‘ parameter to specify the maximum number of multimaps to allow for an alignment and we use the default value (10).   STAR will mark one of the multi-mappable reads as primary and the remainder as secondary reads. MAPQ by default in STAR for mappable reads to 255, whereas multi-mappable reads will have qual scores of 3 or less. For transcript abundance only, Isofox counts both primary and secondary reads at all locations, but reduces the weight of the reads to reflect the multi-mapping  (MAPQ 3 = 50%,  MAPQ 2 = 33%, MAPQ 1 = 20%, MAPQ 0 => 10%).    Reads with MAPQ of <10 are excluded from novel splice junction and chimeric analysis
 
 ## Configuration
-The 3 core functions of Isofox are controlled by the 'functions' argument:
+The functions of Isofox are controlled by the 'functions' argument:
 - TRANSCRIPT_COUNTS: calculate gene and transcript expression
 - ALT_SPLICE_JUNCTIONS: find and annotate alternate splice junctions
 - RETAINED_INTRONS: identify retained introns
