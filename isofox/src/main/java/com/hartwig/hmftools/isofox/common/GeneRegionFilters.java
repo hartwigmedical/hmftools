@@ -67,7 +67,7 @@ public class GeneRegionFilters
         options.addOption(SPECIFIC_REGIONS, true, "Restrict to regions(s) separated by ';' in format Chr:PosStart:PosEnd");
     }
 
-    public void loadConfig(final CommandLine cmd)
+    public void loadConfig(final CommandLine cmd) throws Exception
     {
         if(cmd.hasOption(ENRICHED_GENE_IDS))
         {
@@ -107,10 +107,7 @@ public class GeneRegionFilters
                     ChrBaseRegion region = new ChrBaseRegion(items[0], Integer.parseInt(items[1]), Integer.parseInt(items[2]));
 
                     if(!region.isValid())
-                    {
-                        ISF_LOGGER.error("invalid specific region: {}", region);
-                        continue;
-                    }
+                        throw new Exception(String.format("invalid specific region: %s", region));
 
                     ISF_LOGGER.info("filtering for specific region: {}", region);
                     SpecificRegions.add(region);
@@ -120,7 +117,7 @@ public class GeneRegionFilters
                 }
                 else
                 {
-                    ISF_LOGGER.error("invalid specific region({})", regionStr);
+                    throw new Exception(String.format("invalid specific region: %s", regionStr));
                 }
             }
         }

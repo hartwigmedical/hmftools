@@ -253,7 +253,7 @@ public class ChimericReadTracker
         {
             final ReadRecord read = (ReadRecord)object;
 
-            if(read.isMateUnmapped() || inExcludedRegion(read, true))
+            if(read.isMateUnmapped() || inExcludedRegion(read, true) || read.isSecondaryAlignment())
                 continue;
 
             if(!read.isDuplicate())

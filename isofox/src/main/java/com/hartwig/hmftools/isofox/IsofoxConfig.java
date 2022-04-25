@@ -149,7 +149,7 @@ public class IsofoxConfig
 
     public static final Logger ISF_LOGGER = LogManager.getLogger(IsofoxConfig.class);
 
-    public IsofoxConfig(final CommandLine cmd)
+    public IsofoxConfig(final CommandLine cmd) throws Exception
     {
         SampleId = cmd.getOptionValue(SAMPLE);
 
@@ -261,7 +261,7 @@ public class IsofoxConfig
     {
         if(OutputDir == null)
         {
-            ISF_LOGGER.error("not output directory specified");
+            ISF_LOGGER.error("no output directory specified");
             return false;
         }
 

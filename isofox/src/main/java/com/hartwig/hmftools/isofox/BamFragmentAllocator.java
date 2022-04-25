@@ -139,7 +139,7 @@ public class BamFragmentAllocator
         // reads with supplementary alignment data are only used for fusions
         boolean keepDuplicates = mRunFusions || mConfig.runFunction(TRANSCRIPT_COUNTS);
         boolean keepSupplementaries = mRunFusions || mConfig.runFunction(ALT_SPLICE_JUNCTIONS) || mConfig.runFunction(UNMAPPED_READS);
-        boolean keepSecondaries = true; // now always used
+        boolean keepSecondaries = mConfig.runFunction(TRANSCRIPT_COUNTS);
         int minMapQuality = keepSecondaries ? 0 : SINGLE_MAP_QUALITY;
 
         mBamSlicer = new BamSlicer(minMapQuality, keepDuplicates, keepSupplementaries, keepSecondaries);
@@ -392,7 +392,7 @@ public class BamFragmentAllocator
         // some of these may be re-processed as alternative SJ candidates if they are within a single gene
         if(isChimeric)
         {
-            if(!isMultiMapped)
+            if(!isMultiMapped && !read1.isSecondaryAlignment() && !read2.isSecondaryAlignment())
                 processChimericReadPair(read1, read2, isDuplicate);
 
             mUmrFinder.processReads(read1, read2, true);

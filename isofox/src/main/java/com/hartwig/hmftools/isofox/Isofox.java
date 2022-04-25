@@ -470,7 +470,7 @@ public class Isofox
         return TaskExecutor.executeTasks(callableList, mConfig.Threads);
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args) throws Exception
     {
         final VersionInfo version = new VersionInfo("isofox.version");
         ISF_LOGGER.info("Isofox version: {}", version.version());
