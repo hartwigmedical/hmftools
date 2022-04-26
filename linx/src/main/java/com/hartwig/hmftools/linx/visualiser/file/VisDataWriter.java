@@ -52,6 +52,13 @@ public class VisDataWriter
     private BufferedWriter mProteinDomainFileWriter;
     private BufferedWriter mFusionFileWriter;
 
+    public static final String COHORT_VIS_SVS_FILE = "LNX_VIS_SVS.tsv";
+    public static final String COHORT_VIS_LINKS_FILE = "LNX_VIS_SEGMENTS.tsv";
+    public static final String COHORT_VIS_COPY_NUMBER_FILE = "LNX_VIS_COPY_NUMBER.tsv";
+    public static final String COHORT_VIS_GENE_EXONS_FILE = "LNX_VIS_GENE_EXONS.tsv";
+    public static final String COHORT_VIS_PROTEIN_FILE = "LNX_VIS_PROTEIN_DOMAINS.tsv";
+    public static final String COHORT_VIS_FUSIONS_FILE = "LNX_VIS_FUSIONS.tsv";
+
     public VisDataWriter(final String outputDir, final EnsemblDataCache geneDataCache, boolean enabled, boolean isBatchOutput)
     {
         mEnabled = enabled;
@@ -70,27 +77,27 @@ public class VisDataWriter
     {
         try
         {
-            mSvFileWriter = createBufferedWriter(mOutputDir + "LNX_VIS_SVS.tsv", false);
+            mSvFileWriter = createBufferedWriter(mOutputDir + COHORT_VIS_SVS_FILE, false);
             mSvFileWriter.write(VisSvDataFile.header());
             mSvFileWriter.newLine();
 
-            mSegmentFileWriter = createBufferedWriter(mOutputDir + "LNX_VIS_SEGMENTS.tsv", false);
+            mSegmentFileWriter = createBufferedWriter(mOutputDir + COHORT_VIS_LINKS_FILE, false);
             mSegmentFileWriter.write(VisSegmentFile.header());
             mSegmentFileWriter.newLine();
 
-            mCnFileWriter = createBufferedWriter(mOutputDir + "LNX_VIS_COPY_NUMBER.tsv", false);
+            mCnFileWriter = createBufferedWriter(mOutputDir + COHORT_VIS_COPY_NUMBER_FILE, false);
             mCnFileWriter.write(VisCopyNumberFile.header());
             mCnFileWriter.newLine();
 
-            mGeneFileWriter = createBufferedWriter(mOutputDir + "LNX_VIS_GENE_EXONS.tsv", false);
+            mGeneFileWriter = createBufferedWriter(mOutputDir + COHORT_VIS_GENE_EXONS_FILE, false);
             mGeneFileWriter.write(VisGeneExon.header());
             mGeneFileWriter.newLine();
 
-            mProteinDomainFileWriter = createBufferedWriter(mOutputDir + "LNX_VIS_PROTEIN_DOMAINS.tsv", false);
+            mProteinDomainFileWriter = createBufferedWriter(mOutputDir + COHORT_VIS_PROTEIN_FILE, false);
             mProteinDomainFileWriter.write(VisProteinDomainFile.header());
             mProteinDomainFileWriter.newLine();
 
-            mFusionFileWriter = createBufferedWriter(mOutputDir + "LNX_VIS_FUSIONS.tsv", false);
+            mFusionFileWriter = createBufferedWriter(mOutputDir + COHORT_VIS_FUSIONS_FILE, false);
             mFusionFileWriter.write(VisFusionFile.header());
             mFusionFileWriter.newLine();
 

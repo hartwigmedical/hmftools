@@ -337,7 +337,6 @@ public class CircosDataWriter
         return result;
     }
 
-    @NotNull
     private List<String> createMinorAllelePloidy(final List<CopyNumberAlteration> alterations)
     {
         final List<String> result = Lists.newArrayList();
@@ -354,7 +353,6 @@ public class CircosDataWriter
         return result;
     }
 
-    @NotNull
     private List<String> createScatter(final List<Segment> segments, final List<VisSvData> links)
     {
         int glyphSize = circosConfig.GlyphSize;
@@ -388,7 +386,6 @@ public class CircosDataWriter
         return result;
     }
 
-    @NotNull
     private List<String> createSglScatter(final List<VisSvData> links)
     {
         int glyphSize = circosConfig.GlyphSize;
@@ -410,7 +407,6 @@ public class CircosDataWriter
         return result;
     }
 
-    @NotNull
     private String scatterGlyph(boolean isStart, final Segment segment, final List<VisSvData> links)
     {
         int location = isStart ? segment.start() : segment.end();
@@ -429,7 +425,6 @@ public class CircosDataWriter
         return isFoldback ? "triangle" : "circle";
     }
 
-    @NotNull
     private String scatterEntry(boolean isStart, final Segment segment, final String color, final String glyph,
             int glyph_size, int frame)
     {
@@ -444,7 +439,6 @@ public class CircosDataWriter
                 .toString();
     }
 
-    @NotNull
     private String scatterSGLEntry(final VisSvData link, final String color, int glyph_size)
     {
         return new StringJoiner(DELIMITER).add(circosContig(link.startChromosome()))
@@ -455,12 +449,14 @@ public class CircosDataWriter
                 .toString();
     }
 
-    @NotNull
     private List<String> createLinks(final List<VisSvData> links)
     {
         final List<String> result = Lists.newArrayList();
-        for (final VisSvData link : VisLinks.clean(links))
+        for(final VisSvData link : links)
         {
+            if(!HumanChromosome.contains(link.startChromosome()) || !HumanChromosome.contains(link.endChromosome()))
+                continue;
+
             final String linkString = new StringJoiner(DELIMITER).add(circosContig(link.startChromosome()))
                     .add(String.valueOf(link.startPosition()))
                     .add(String.valueOf(link.startPosition()))
@@ -476,7 +472,6 @@ public class CircosDataWriter
         return result;
     }
 
-    @NotNull
     private List<String> createConnectors(final List<Connector> connectors)
     {
         final List<String> result = Lists.newArrayList();

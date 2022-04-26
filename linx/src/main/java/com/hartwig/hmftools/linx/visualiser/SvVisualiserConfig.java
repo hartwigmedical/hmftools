@@ -38,6 +38,7 @@ public class SvVisualiserConfig
     private static final String VIS_FILE_DIRECTORY = "vis_file_dir";
     private static final String PLOT_REPORTABLE = "plot_reportable";
     public static final String RESTRICT_CLUSTERS_BY_GENE = "restrict_cluster_by_gene";
+    public static final String PLOT_CLUSTER_GENES = "plot_cluster_genes";
 
     private static final String THREADS = "threads";
     private static final String INCLUDE_LINE_ELEMENTS = "include_line_elements";
@@ -57,6 +58,9 @@ public class SvVisualiserConfig
         options.addOption(THREADS, true, "Number of threads to use");
         options.addOption(INCLUDE_LINE_ELEMENTS, false, "Include line elements in chromosome plots");
         options.addOption(PLOT_REPORTABLE, false, "Plot all clusters with a fusion, disruption, AMP or DEL");
+
+        options.addOption(PLOT_CLUSTER_GENES, false,
+                "Show all genes linked to SVs in a cluster (only applicable when clusterId is specified)");
 
         return options;
     }

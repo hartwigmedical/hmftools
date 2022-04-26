@@ -57,21 +57,27 @@ public class SvVisualiser implements AutoCloseable
 {
     public static final Logger VIS_LOGGER = LogManager.getLogger(SvVisualiser.class);
 
-    public static void main(String[] args) throws IOException, InterruptedException, ExecutionException
+    public static void main(String[] args)
     {
         final Options options = SvVisualiserConfig.createOptions();
         SampleData.addCmdLineOptions(options);
         CircosConfig.addOptions(options);
 
-        try (final SvVisualiser application = new SvVisualiser(options, args))
+        try(final SvVisualiser application = new SvVisualiser(options, args))
         {
             application.run();
         }
-        catch (ParseException e)
+        catch(ParseException e)
         {
             VIS_LOGGER.warn(e);
+            e.printStackTrace();
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("SvVisualiser", options);
+            System.exit(1);
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
             System.exit(1);
         }
     }
@@ -84,7 +90,7 @@ public class SvVisualiser implements AutoCloseable
     private final List<Callable<Object>> mCallableImages;
     private final List<Callable<Object>> mCallableConfigs;
 
-    private SvVisualiser(final Options options, final String... args) throws ParseException, IOException
+    private SvVisualiser(final Options options, final String... args) throws Exception
     {
         final CommandLine cmd = createCommandLine(args, options);
         VIS_LOGGER.info("Loading data");
@@ -111,15 +117,15 @@ public class SvVisualiser implements AutoCloseable
         {
             Set<Integer> reportableClusterIds = mSampleData.findReportableClusters();
 
-            for (Integer clusterId : reportableClusterIds)
+            for(Integer clusterId : reportableClusterIds)
             {
                 submitCluster(Lists.newArrayList(clusterId), true);
             }
         }
 
-        else if (!mSampleData.Clusters.isEmpty() || !mSampleData.Chromosomes.isEmpty())
+        else if(!mSampleData.Clusters.isEmpty() || !mSampleData.Chromosomes.isEmpty())
         {
-            if (!mSampleData.Clusters.isEmpty())
+            if(!mSampleData.Clusters.isEmpty())
             {
                 submitCluster(mSampleData.Clusters, false);
             }
@@ -150,7 +156,7 @@ public class SvVisualiser implements AutoCloseable
         mCallableConfigs.forEach(x -> futures.add(mExecutorService.submit(x)));
         mCallableImages.forEach(x -> futures.add(mExecutorService.submit(x)));
 
-        for (Future<Object> future : futures)
+        for(Future<Object> future : futures)
         {
             future.get();
         }
@@ -158,7 +164,7 @@ public class SvVisualiser implements AutoCloseable
 
     private void submitChromosome(@NotNull final List<String> chromosomes)
     {
-        if (chromosomes.stream().anyMatch(x -> !HumanChromosome.contains(x)))
+        if(chromosomes.stream().anyMatch(x -> !HumanChromosome.contains(x)))
         {
             VIS_LOGGER.warn("Invalid chromosomes: {}", chromosomes.toString());
             return;
@@ -181,7 +187,7 @@ public class SvVisualiser implements AutoCloseable
                 .collect(toSet());
 
         final List<VisSvData> chromosomeLinks = mSampleData.SvData.stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
-        if (chromosomeLinks.isEmpty())
+        if(chromosomeLinks.isEmpty())
         {
             VIS_LOGGER.warn("Chromosomes {} not present in file", chromosomesStr);
             return;
@@ -239,7 +245,7 @@ public class SvVisualiser implements AutoCloseable
         final Set<Integer> linkChainIds = clusterLinks.stream().map(VisSvData::chainId).collect(Collectors.toSet());
         final Set<Integer> segmentChainIds = clusterSegments.stream().map(Segment::chainId).collect(Collectors.toSet());
         segmentChainIds.removeAll(linkChainIds);
-        if (!segmentChainIds.isEmpty())
+        if(!segmentChainIds.isEmpty())
         {
             VIS_LOGGER.warn("Cluster {} contains chain ids {} not found in the links", clusterIdsStr, segmentChainIds);
             return;
@@ -317,13 +323,13 @@ public class SvVisualiser implements AutoCloseable
         final FusionDataWriter fusionDataWriter = new FusionDataWriter(filteredFusions, filteredExons, filteredProteinDomains);
 
         mCallableConfigs.add(() -> new CircosDataWriter(color, sample, mConfig.OutputConfPath, mCircosConfig, confWrite, circosData).write());
-        if (!fusionDataWriter.finalExons().isEmpty())
+        if(!fusionDataWriter.finalExons().isEmpty())
         {
             mCallableConfigs.add(() -> fusionDataWriter.write(sample, mConfig.OutputConfPath));
         }
 
         int minFrame = mCircosConfig.Step ? 0 : circosData.maxFrame();
-        for (int frame = minFrame; frame <= circosData.maxFrame(); frame++)
+        for(int frame = minFrame; frame <= circosData.maxFrame(); frame++)
         {
             boolean plotFusion = !fusionDataWriter.finalExons().isEmpty();
             submitFrame(frame, plotFusion, circosData.labelSize(), sample, confWrite);

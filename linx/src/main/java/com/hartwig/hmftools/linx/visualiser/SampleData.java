@@ -7,10 +7,19 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsem
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS_DESC;
 import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
 import static com.hartwig.hmftools.linx.visualiser.SvVisualiser.VIS_LOGGER;
+import static com.hartwig.hmftools.linx.visualiser.SvVisualiserConfig.PLOT_CLUSTER_GENES;
 import static com.hartwig.hmftools.linx.visualiser.SvVisualiserConfig.RESTRICT_CLUSTERS_BY_GENE;
 import static com.hartwig.hmftools.linx.visualiser.SvVisualiserConfig.parameter;
+import static com.hartwig.hmftools.linx.visualiser.file.VisDataWriter.COHORT_VIS_COPY_NUMBER_FILE;
+import static com.hartwig.hmftools.linx.visualiser.file.VisDataWriter.COHORT_VIS_FUSIONS_FILE;
+import static com.hartwig.hmftools.linx.visualiser.file.VisDataWriter.COHORT_VIS_GENE_EXONS_FILE;
+import static com.hartwig.hmftools.linx.visualiser.file.VisDataWriter.COHORT_VIS_PROTEIN_FILE;
+import static com.hartwig.hmftools.linx.visualiser.file.VisDataWriter.COHORT_VIS_LINKS_FILE;
+import static com.hartwig.hmftools.linx.visualiser.file.VisDataWriter.COHORT_VIS_SVS_FILE;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -32,6 +41,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
 import com.hartwig.hmftools.common.sv.linx.LinxDriver;
 import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.Fusion;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableFusion;
@@ -68,66 +78,44 @@ public class SampleData
 
     public final List<String> Chromosomes;
     public final Set<String> Genes;
+    public final List<ChrBaseRegion> SpecificRegions;
 
     private final String mSampleDataDir;
 
     private static final String SAMPLE = "sample";
     private static final String VIS_FILE_DIRECTORY = "vis_file_dir";
-
-    private static final String SEGMENT = "segment";
-    private static final String PROTEIN_DOMAIN = "protein_domain";
-    private static final String FUSION = "fusion";
-    private static final String LINK = "link";
-
+    private static final String LOAD_COHORT_FILES = "load_cohort_files";
     private static final String CLUSTERS = "clusterId";
     private static final String CHROMOSOMES = "chromosome";
-    private static final String CNA = "cna";
-    private static final String EXON = "exon";
     private static final String GENE = "gene";
 
-    private static final String PLOT_CLUSTER_GENES = "plot_cluster_genes";
-
-    public SampleData(final CommandLine cmd) throws ParseException, IOException
+    public SampleData(final CommandLine cmd) throws Exception
     {
         final StringJoiner missingJoiner = new StringJoiner(", ");
 
         Sample = parameter(cmd, SAMPLE, missingJoiner);
         mSampleDataDir = cmd.getOptionValue(VIS_FILE_DIRECTORY);
 
-        final String svDataFile = mSampleDataDir != null ?
-                VisSvDataFile.generateFilename(mSampleDataDir, Sample) : parameter(cmd, LINK, missingJoiner);
+        SpecificRegions = ChrBaseRegion.loadSpecificRegions(cmd);
 
-        final String linksFile = mSampleDataDir != null ?
-                VisSegmentFile.generateFilename(mSampleDataDir, Sample) : parameter(cmd, SEGMENT, missingJoiner);
+        boolean useCohortFiles = cmd.hasOption(LOAD_COHORT_FILES);
+        final String svDataFile = useCohortFiles ? COHORT_VIS_SVS_FILE : VisSvDataFile.generateFilename(mSampleDataDir, Sample);
+        final String linksFile = useCohortFiles ? COHORT_VIS_LINKS_FILE : VisSegmentFile.generateFilename(mSampleDataDir, Sample);
+        final String cnaFile = useCohortFiles ? COHORT_VIS_COPY_NUMBER_FILE : VisCopyNumberFile.generateFilename(mSampleDataDir, Sample);
+        final String geneExonFile = useCohortFiles ? COHORT_VIS_GENE_EXONS_FILE : VisGeneExon.generateFilename(mSampleDataDir, Sample);
+        final String proteinFile = useCohortFiles ? COHORT_VIS_PROTEIN_FILE : VisProteinDomainFile.generateFilename(mSampleDataDir, Sample);
+        final String fusionFile = useCohortFiles ? COHORT_VIS_FUSIONS_FILE : VisFusionFile.generateFilename(mSampleDataDir, Sample);
 
-        final String cnaFile = mSampleDataDir != null ?
-                VisCopyNumberFile.generateFilename(mSampleDataDir, Sample) : parameter(cmd, CNA, missingJoiner);
-
-        final String geneExonFile = mSampleDataDir != null ?
-                VisGeneExon.generateFilename(mSampleDataDir, Sample) : parameter(cmd, EXON, missingJoiner);
-
-        final String proteinDomainFile = mSampleDataDir != null ?
-                VisProteinDomainFile.generateFilename(mSampleDataDir, Sample) : parameter(cmd, PROTEIN_DOMAIN, missingJoiner);
-
-        final String fusionFile = mSampleDataDir != null ?
-                VisFusionFile.generateFilename(mSampleDataDir, Sample) : parameter(cmd, FUSION, missingJoiner);
-
-        final String missing = missingJoiner.toString();
-        if (!missing.isEmpty())
-        {
-            throw new ParseException("Missing the following parameters: " + missing);
-        }
+        SvData = VisLinks.readSvData(svDataFile, Sample, SpecificRegions);
 
         Fusions = loadFusions(fusionFile).stream().filter(x -> x.sampleId().equals(Sample)).collect(toList());
-        SvData = VisLinks.readSvData(svDataFile).stream().filter(x -> x.sampleId().equals(Sample)).collect(toList());
-
         Exons = VisExons.readExons(geneExonFile).stream().filter(x -> x.SampleId.equals(Sample)).collect(toList());
         Segments = VisSegments.readTracks(linksFile).stream().filter(x -> x.sampleId().equals(Sample)).collect(toList());
 
         CopyNumberAlterations = VisCopyNumbers.read(cnaFile)
                 .stream().filter(x -> x.sampleId().equals(Sample)).collect(toList());
 
-        ProteinDomains = VisProteinDomains.readProteinDomains(proteinDomainFile, Fusions)
+        ProteinDomains = VisProteinDomains.readProteinDomains(proteinFile, Fusions)
                 .stream()
                 .filter(x -> x.sampleId().equals(Sample))
                 .collect(toList());
@@ -136,84 +124,80 @@ public class SampleData
         Chromosomes = parseChromosomes(cmd);
         Genes = Sets.newHashSet();
 
+        if(Segments.isEmpty() || SvData.isEmpty() || CopyNumberAlterations.isEmpty())
+        {
+            VIS_LOGGER.warn("sample({}) empty segments, SVs or copy-number files", Sample);
+            return;
+        }
+
         if(cmd.hasOption(GENE))
         {
-            Arrays.stream(cmd.getOptionValue(GENE).split(",")).forEach(x -> Genes.add(x));
+            String geneStr = cmd.getOptionValue(GENE);
+            String delim = geneStr.contains(";") ? ";" : ",";
+            Arrays.stream(geneStr.split(delim)).forEach(x -> Genes.add(x));
         }
 
-        if(cmd.hasOption(PLOT_CLUSTER_GENES) && !Clusters.isEmpty() && mSampleDataDir != null)
+        boolean loadSvData = cmd.hasOption(PLOT_CLUSTER_GENES) || cmd.hasOption(RESTRICT_CLUSTERS_BY_GENE) || !SpecificRegions.isEmpty();
+
+        if(loadSvData)
         {
-            List<LinxSvAnnotation> svAnnotations = LinxSvAnnotation.read(LinxSvAnnotation.generateFilename(mSampleDataDir, Sample));
+            final String svAnnotationsFile = LinxSvAnnotation.generateFilename(mSampleDataDir, Sample);
+            List<LinxSvAnnotation> svAnnotations = LinxSvAnnotation.read(svAnnotationsFile);
 
-            for(LinxSvAnnotation svAnnotation : svAnnotations)
+            if(!SpecificRegions.isEmpty())
             {
-                if(Clusters.contains(svAnnotation.clusterId()))
-                {
-                    if(!svAnnotation.geneStart().isEmpty())
-                        Arrays.stream(svAnnotation.geneStart().split(ITEM_DELIM)).forEach(x -> Genes.add(x));
+                svAnnotations = svAnnotations.stream().filter(x -> SvData.stream().anyMatch(y -> y.svId() == x.svId())).collect(toList());
+            }
 
-                    if(!svAnnotation.geneEnd().isEmpty())
-                        Arrays.stream(svAnnotation.geneEnd().split(ITEM_DELIM)).forEach(x -> Genes.add(x));
+            if(cmd.hasOption(PLOT_CLUSTER_GENES) && !Clusters.isEmpty())
+            {
+                for(LinxSvAnnotation svAnnotation : svAnnotations)
+                {
+                    if(Clusters.contains(svAnnotation.clusterId()))
+                    {
+                        if(!svAnnotation.geneStart().isEmpty())
+                            Arrays.stream(svAnnotation.geneStart().split(ITEM_DELIM)).forEach(x -> Genes.add(x));
+
+                        if(!svAnnotation.geneEnd().isEmpty())
+                            Arrays.stream(svAnnotation.geneEnd().split(ITEM_DELIM)).forEach(x -> Genes.add(x));
+                    }
                 }
             }
-        }
-        else if(!Genes.isEmpty() && Clusters.isEmpty() && cmd.hasOption(RESTRICT_CLUSTERS_BY_GENE))
-        {
-            List<LinxSvAnnotation> svAnnotations = LinxSvAnnotation.read(LinxSvAnnotation.generateFilename(mSampleDataDir, Sample));
-
-            for(LinxSvAnnotation svAnnotation : svAnnotations)
+            else if(!Genes.isEmpty() && Clusters.isEmpty() && cmd.hasOption(RESTRICT_CLUSTERS_BY_GENE))
             {
-                if(Genes.stream().anyMatch(x -> x.equals(svAnnotation.geneStart()) || x.equals(svAnnotation.geneEnd())))
+                for(LinxSvAnnotation svAnnotation : svAnnotations)
+                {
+                    if(Genes.stream().anyMatch(x -> x.equals(svAnnotation.geneStart()) || x.equals(svAnnotation.geneEnd())))
+                    {
+                        if(!Clusters.contains(svAnnotation.clusterId()))
+                            Clusters.add(svAnnotation.clusterId());
+                    }
+                }
+
+                List<LinxDriver> linxDrivers = LinxDriver.read(LinxDriver.generateFilename(mSampleDataDir, Sample));
+
+                for(LinxDriver linxDriver : linxDrivers)
+                {
+                    if(Genes.stream().anyMatch(x -> x.equals(linxDriver.gene())))
+                    {
+                        if(!Clusters.contains(linxDriver.clusterId()))
+                            Clusters.add(linxDriver.clusterId());
+                    }
+                }
+            }
+
+            if(!SpecificRegions.isEmpty() && Clusters.isEmpty())
+            {
+                // limit to those clusters covered by an SV in the specific regions
+                for(LinxSvAnnotation svAnnotation : svAnnotations)
                 {
                     if(!Clusters.contains(svAnnotation.clusterId()))
                         Clusters.add(svAnnotation.clusterId());
                 }
             }
-
-            List<LinxDriver> linxDrivers = LinxDriver.read(LinxDriver.generateFilename(mSampleDataDir, Sample));
-
-            for(LinxDriver linxDriver : linxDrivers)
-            {
-                if(Genes.stream().anyMatch(x -> x.equals(linxDriver.gene())))
-                {
-                    if(!Clusters.contains(linxDriver.clusterId()))
-                        Clusters.add(linxDriver.clusterId());
-                }
-            }
         }
 
         Exons.addAll(additionalExons(Genes, cmd, Exons, Clusters));
-
-        if(Segments.isEmpty() && SvData.isEmpty())
-        {
-            VIS_LOGGER.warn("No structural variants found for sample {}", Sample);
-        }
-
-        if(CopyNumberAlterations.isEmpty())
-        {
-            VIS_LOGGER.warn("No copy number alterations found for sample {}", Sample);
-        }
-    }
-
-    public static void addCmdLineOptions(final Options options)
-    {
-        options.addOption(SAMPLE, true, "Sample name");
-        options.addOption(VIS_FILE_DIRECTORY, true, "Path to all Linx vis files, used instead of specifying them individually");
-        options.addOption(SEGMENT, true, "Path to segment file - eg 'COLO829T.linx.vis_segments.tsv");
-        options.addOption(LINK, true, "Path to sv-data file eg 'COLO829T.linx.vis_sv_data.tsv'");
-        options.addOption(PROTEIN_DOMAIN, true, "Path to protein domain file - eg 'COLO829T.linx.vis_protein_domain.tsv'");
-        options.addOption(FUSION, true, "Path to fusion file - eg 'COLO829T.linx.fusions.tsv'");
-        options.addOption(CNA, true, "Path to copy number alteration file - eg 'COLO829T.linx.vis_copy_number.tsv'");
-        options.addOption(EXON, true, "Path to exon file - eg 'COLO829T.linx.vis_gene_exon.tsv'");
-        options.addOption(GENE, true, "Show canonical transcript for genes (separated by ','");
-        options.addOption(RESTRICT_CLUSTERS_BY_GENE, false, "Only plot clusters with breakends in configured 'gene' list");
-        addEnsemblDir(options);
-        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
-        options.addOption(CLUSTERS, true, "Only generate image for specified comma separated clusters");
-        options.addOption(CHROMOSOMES, true, "Only generate image for specified comma separated chromosomes");
-
-        options.addOption(PLOT_CLUSTER_GENES, false,
-                "Show all genes linked to SVs in a cluster (only applicable when clusterId is specified)");
     }
 
     public Set<Integer> findReportableClusters()
@@ -364,4 +348,17 @@ public class SampleData
         return exonList;
     }
 
+    public static void addCmdLineOptions(final Options options)
+    {
+        options.addOption(SAMPLE, true, "Sample name");
+        options.addOption(VIS_FILE_DIRECTORY, true, "Path to all Linx vis files, used instead of specifying them individually");
+        options.addOption(LOAD_COHORT_FILES, false, "Load Linx cohort rather than per-sample vis files");
+        options.addOption(GENE, true, "Show canonical transcript for genes (separated by ','");
+        options.addOption(RESTRICT_CLUSTERS_BY_GENE, false, "Only plot clusters with breakends in configured 'gene' list");
+        addEnsemblDir(options);
+        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
+        options.addOption(CLUSTERS, true, "Only generate image for specified comma separated clusters");
+        options.addOption(CHROMOSOMES, true, "Only generate image for specified comma separated chromosomes");
+        options.addOption(SPECIFIC_REGIONS, true, SPECIFIC_REGIONS_DESC);
+    }
 }
