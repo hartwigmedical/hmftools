@@ -108,12 +108,10 @@ public class CFReportWriter implements ReportWriter {
 
     public void writeJsonFailedFile(@NotNull QCFailReport report, @NotNull String outputFilePath) throws IOException {
         writeReportDataToJson(report, outputFilePath);
-
     }
 
     public void writeJsonAnalysedFile(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException {
         writeReportDataToJson(report, outputFilePath);
-
     }
 
     public void writeReportDataToJson(@NotNull PatientReport report, @NotNull String outputDirData) throws IOException {
@@ -169,6 +167,36 @@ public class CFReportWriter implements ReportWriter {
         } else {
             LOGGER.info("Successfully generated in-memory patient report");
         }
+    }
+
+    public void writeJsonPanelFile(@NotNull PanelReport report, @NotNull String outputFilePath) throws IOException {
+        writeReportDataToJson(report, outputFilePath);
+    }
+
+    public void writeJsonPanelFailedFile(@NotNull PanelFailReport report, @NotNull String outputFilePath) throws IOException {
+        writeReportDataToJson(report, outputFilePath);
+    }
+
+    public void writeReportDataToJson(@NotNull com.hartwig.hmftools.patientreporter.PanelReport report, @NotNull String outputDirData)
+            throws IOException {
+        if (writeToFile) {
+            String outputFileData = outputDirData + File.separator + OutputFileUtil.generateOutputFileNameForJsonPanel(report);
+            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFileData));
+            writer.write(convertToJson(report));
+            writer.close();
+            LOGGER.info(" Created report data json file at {} ", outputFileData);
+        }
+    }
+
+    @VisibleForTesting
+    @NotNull
+    public String convertToJson(@NotNull com.hartwig.hmftools.patientreporter.PanelReport report) {
+        return new GsonBuilder().serializeNulls()
+                .serializeSpecialFloatingPointValues()
+                .setPrettyPrinting()
+                .disableHtmlEscaping()
+                .create()
+                .toJson(report);
     }
 
     private void writePanel(@NotNull com.hartwig.hmftools.patientreporter.PanelReport patientReport, @NotNull ReportChapter[] chapters,

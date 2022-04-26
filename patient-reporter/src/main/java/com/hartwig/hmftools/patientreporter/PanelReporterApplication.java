@@ -92,7 +92,8 @@ public class PanelReporterApplication {
         reportWriter.writePanelAnalysedReport(report, outputFilePath);
 
         if (!config.onlyCreatePDF()) {
-            LOGGER.debug("Updating reporting db");
+            LOGGER.debug("Updating reporting db and writing report data");
+            reportWriter.writeJsonPanelFile(report, config.outputDirData());
             new ReportingDb().appendPanelReport(report, config.outputDirData());
         }
     }
@@ -111,10 +112,11 @@ public class PanelReporterApplication {
         reportWriter.writePanelQCFailReport(report, outputFilePath);
 
         if (!config.onlyCreatePDF()) {
-            LOGGER.debug("Updating reporting db");
-
+            LOGGER.debug("Updating reporting db and writing report data");
+            reportWriter.writeJsonPanelFailedFile(report, config.outputDirData());
             new ReportingDb().appendPanelFailReport(report, config.outputDirData());
         }
+
     }
 
     @NotNull
