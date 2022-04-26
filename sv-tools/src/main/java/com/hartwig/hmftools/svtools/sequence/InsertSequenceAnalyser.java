@@ -2,21 +2,30 @@ package com.hartwig.hmftools.svtools.sequence;
 
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.codon.Nucleotides;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.common.utils.ConfigUtils;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -33,91 +42,241 @@ public class InsertSequenceAnalyser
 {
     private final String mInputFile;
     private final String mOutputDir;
-    private List<InsertSeqData> mInsertSeqData;
-    private Map<String,List<InsertSeqData>> mSampleInsertSeqData;
+    private final Map<String,List<InsertSeqData>> mSampleInsertSeqData;
     private BufferedWriter mWriter;
 
     private int mMinSearchLength;
-    private int mMaxSearchLength;
-    private int mRequiredMatchCount;
+    private double mRequiredMatchPerc;
 
     private List<String> mMatchSequences;
 
-    private static final String INS_SEQ_INPUT_FILE = "ins_seq_input_file";
+    private static final String INS_SEQ_FILE = "insert_seq_file";
     private static final String SEARCH_LENGTH_MIN = "search_length_min";
-    private static final String SEARCH_LENGTH_MAX = "search_length_max";
-    private static final String REQD_MATCH_COUNT = "req_match_count";
+    private static final String REQD_MATCH_PERC = "req_match_perc";
 
     private static final Logger LOGGER = LogManager.getLogger(InsertSequenceAnalyser.class);
 
-    public InsertSequenceAnalyser(final String inputFile, final String outputDir, int minSearch, int maxSearch, int reqMatchCount)
+    public InsertSequenceAnalyser(final String inputFile, final String outputDir, int minSearch, double reqMatchCount)
     {
         mInputFile = inputFile;
         mOutputDir = outputDir;
         mMinSearchLength = minSearch;
-        mMaxSearchLength = maxSearch;
-        mRequiredMatchCount = reqMatchCount;
+        mRequiredMatchPerc = reqMatchCount;
 
-        mInsertSeqData = Lists.newArrayList();
         mSampleInsertSeqData = Maps.newHashMap();
         mMatchSequences = Lists.newArrayList();
 
-        mWriter = null;
-    }
-
-    public static InsertSequenceAnalyser from (final CommandLine cmd)
-    {
-        return new InsertSequenceAnalyser(
-                cmd.getOptionValue(INS_SEQ_INPUT_FILE),
-                parseOutputDir(cmd),
-                Integer.parseInt(cmd.getOptionValue(SEARCH_LENGTH_MAX, "-1")),
-                Integer.parseInt(cmd.getOptionValue(SEARCH_LENGTH_MIN, "1")),
-                Integer.parseInt(cmd.getOptionValue(REQD_MATCH_COUNT, "10")));
-    }
-
-    public static void addCmdLineArgs(final Options options)
-    {
-        options.addOption(OUTPUT_DIR, true, "Output directory");
-        options.addOption(INS_SEQ_INPUT_FILE, true, "File with sample insert sequence data");
-        options.addOption(SEARCH_LENGTH_MAX, true, "Sequence max length");
-        options.addOption(SEARCH_LENGTH_MIN, true, "Sequence min length");
-        options.addOption(REQD_MATCH_COUNT, true, "Number of instances of search string to record it");
-    }
-
-    public final List<String> getMatchSequences() { return mMatchSequences; }
-
-    @VisibleForTesting
-    public void addSequenceData(final List<InsertSeqData> seqDataList)
-    {
-        mInsertSeqData.addAll(seqDataList);
-
-        List<InsertSeqData> sampleDataList = null;
-        String currentSample = "";
-
-        for(final InsertSeqData isData : seqDataList)
-        {
-            if(!currentSample.equals(isData.SampleId))
-            {
-                sampleDataList = Lists.newArrayList();
-                currentSample = isData.SampleId;
-                mSampleInsertSeqData.put(isData.SampleId, sampleDataList);
-            }
-
-            sampleDataList.add(isData);
-        }
+        mWriter = initialiseWriter();
     }
 
     public void run()
     {
         loadSampleData();
-        analyseCommonSequences();
+
+        if(mWriter == null)
+            return;
+
         analyseSampleSequences();
         closeBufferedWriter(mWriter);
     }
 
-    private static final int COL_SAMPLE_ID = 0;
-    private static final int COL_SV_ID = 1;
-    private static final int COL_INS_SEQ = 2;
+    private void analyseSampleSequences()
+    {
+        int sampleCount = 0;
+        for(Map.Entry<String,List<InsertSeqData>> entry : mSampleInsertSeqData.entrySet())
+        {
+            String sampleId = entry.getKey();
+            List<InsertSeqData> insertSeqDataList = entry.getValue();
+
+            LOGGER.trace("sample({}) checking {} SGLs", sampleId, insertSeqDataList.size());
+
+            int index = 0;
+            while(index < insertSeqDataList.size())
+            {
+                InsertSeqData first = insertSeqDataList.get(index);
+
+                boolean matched = false;
+
+                for(int nextIndex = index + 1; nextIndex < insertSeqDataList.size(); ++nextIndex)
+                {
+                    InsertSeqData next = insertSeqDataList.get(nextIndex);
+
+                    MatchedBaseData matchedBaseData = getMatchedBaseData(first, next);
+
+                    if(matchedBaseData != null)
+                    {
+                        writeMatchData(sampleId, first, next, matchedBaseData);
+                        matched = true;
+                        insertSeqDataList.remove(nextIndex);
+                        break;
+                    }
+                }
+
+                if(matched)
+                    insertSeqDataList.remove(index);
+                else
+                    ++index;
+            }
+
+            ++sampleCount;
+
+            if((sampleCount % 100) == 0)
+            {
+                LOGGER.info("processed {} samples", sampleCount);
+            }
+        }
+
+        LOGGER.info("insert sequence analysis complete");
+    }
+
+    private MatchedBaseData getMatchedBaseData(final InsertSeqData sgl1, final InsertSeqData sgl2)
+    {
+        // scenarios:
+        // different orientations: the -ve orientation will read the insert sequence as reverse compliment and in reverse order
+        // same orientations: the second SGL will read the insert sequence as forward compliment but in reverse order
+
+        String firstSequence = sgl1.InsertSeq;
+        String secondSequence = sgl2.InsertSeq;
+
+        if(sgl1.Orientation == sgl2.Orientation)
+        {
+            secondSequence = Nucleotides.reverseStrandBases(secondSequence);
+        }
+        else
+        {
+            //
+            // secondSequence = reverseString(secondSequence);
+        }
+
+        MatchedBaseData matchData = findMatchData(firstSequence, secondSequence);
+
+        if(matchData != null)
+            return matchData;
+
+        matchData = findMatchData(secondSequence, firstSequence);
+
+        return matchData;
+    }
+
+    private static final int START_SEARCH_LENGTH = 20;
+
+    private MatchedBaseData findMatchData(final String seq1, final String seq2)
+    {
+        int matchStart1 = -1;
+        int matchStart2 = -1;
+
+        for(int i = 0; i < seq2.length() - START_SEARCH_LENGTH; ++i)
+        {
+            String searchStr = seq2.substring(i, i + START_SEARCH_LENGTH);
+
+            int matchIndex = seq1.indexOf(searchStr);
+
+            if(matchIndex >= 0)
+            {
+                matchStart1 = matchIndex;
+                matchStart2 = i;
+                break;
+            }
+        }
+
+        if(matchStart1 < 0)
+            return null;
+
+        int matchedBases = START_SEARCH_LENGTH;
+        int misMatches = 0;
+        int currentMismatches = 0;
+
+        for(int index2 = matchStart2 + matchedBases; index2 < seq2.length(); ++index2)
+        {
+            int index1 = matchStart1 + matchedBases;
+            if(index1 >= seq1.length())
+                break;
+
+            if(seq1.charAt(index1) == seq2.charAt(index2))
+            {
+                ++matchedBases;
+                currentMismatches = 0;
+                continue;
+            }
+
+            ++misMatches;
+            ++currentMismatches;
+
+            if(currentMismatches >= 2)
+            {
+                misMatches -= currentMismatches;
+                break;
+            }
+
+            if(misMatches / (double)(matchedBases + misMatches) > (1 - mRequiredMatchPerc))
+            {
+                --misMatches;
+                break;
+            }
+        }
+
+        return matchedBases >= mMinSearchLength ? new MatchedBaseData(matchedBases + misMatches, matchedBases) : null;
+    }
+
+    private StructuralVariantType getSvType(final InsertSeqData sgl1, final InsertSeqData sgl2)
+    {
+        if(!sgl1.Chromosome.equals(sgl2.Chromosome))
+            return BND;
+
+        if(sgl1.Orientation == sgl2.Orientation)
+        {
+            return INV;
+        }
+
+        if(sgl1.Position < sgl2.Position)
+            return sgl1.Orientation == POS_ORIENT ? DEL : DUP;
+        else
+            return sgl2.Orientation == POS_ORIENT ? DEL : DUP;
+    }
+
+    private BufferedWriter initialiseWriter()
+    {
+        if(mOutputDir == null)
+            return null;
+
+        try
+        {
+            final String outputFileName = mOutputDir + "insert_seq_matches.csv";
+
+            BufferedWriter writer = createBufferedWriter(outputFileName, false);
+            writer.write("SampleId,SvId1,SvId2,VcfId1,VcdId2,Chr1,Pos1,Orient1,Chr2,Pos2,Orient2");
+            writer.write(",SvType,OverlapBases,MatchedBases,SeqLen1,SeqLen2");
+            writer.newLine();
+            return writer;
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("Failed to write insert sequence output CSV file: {}", e.toString());
+            return null;
+        }
+    }
+
+    private void writeMatchData(final String sampleId, final InsertSeqData first, final InsertSeqData next, final MatchedBaseData matchedBases)
+    {
+        try
+        {
+            StructuralVariantType svType = getSvType(first, next);
+
+            mWriter.write(String.format("%s,%d,%d,%s,%s,%s,%d,%d,%s,%d,%d",
+                    sampleId, first.SvId, next.SvId, first.VcfId, next.VcfId,
+                    first.Chromosome, first.Position, first.Orientation,
+                    next.Chromosome, next.Position, next.Orientation));
+
+            mWriter.write(String.format(",%s,%d,%d,%d,%d",
+                    svType, matchedBases.OverlapBases, matchedBases.MatchedBases, first.InsertSeq.length(), next.InsertSeq.length()));
+
+            mWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("Failed to write insert sequence matches: {}", e.toString());
+        }
+    }
 
     private void loadSampleData()
     {
@@ -126,42 +285,31 @@ public class InsertSequenceAnalyser
 
         try
         {
-            BufferedReader fileReader = new BufferedReader(new FileReader(mInputFile));
-
-            String line = fileReader.readLine(); // skip header
+            List<String> lines = Files.readAllLines(Paths.get(mInputFile));
+            lines.remove(0);
 
             List<InsertSeqData> sampleDataList = null;
             String currentSample = "";
 
-            while ((line = fileReader.readLine()) != null)
+            for(String line : lines)
             {
-                // parse CSV data
-                String[] items = line.split(",", -1);
+                InsertSeqData insData = InsertSeqData.fromCsv(line);
 
-                if(items.length < COL_INS_SEQ+1)
-                {
-                    LOGGER.warn("invalid input string: {}", line);
+                if(insData.InsertSeq.length() < mMinSearchLength)
                     continue;
-                }
 
-                final String sampleId = items[COL_SAMPLE_ID];
-                int svId = Integer.parseInt(items[COL_SV_ID]);
-                final String insertSeq = items[COL_INS_SEQ];
-
-                InsertSeqData isData = new InsertSeqData(sampleId, svId, insertSeq);
-                mInsertSeqData.add(isData);
-
-                if(!currentSample.equals(sampleId))
+                if(!currentSample.equals(insData.SampleId))
                 {
                     sampleDataList = Lists.newArrayList();
-                    currentSample = sampleId;
-                    mSampleInsertSeqData.put(sampleId, sampleDataList);
+                    currentSample = insData.SampleId;
+                    mSampleInsertSeqData.put(insData.SampleId, sampleDataList);
                 }
 
-                sampleDataList.add(isData);
+                sampleDataList.add(insData);
             }
 
-            LOGGER.info("loaded {} sample insert sequences from CSV file({})", mInsertSeqData.size(), mInputFile);
+            LOGGER.info("loaded samples({}) total insert sequences from CSV file({})",
+                    mSampleInsertSeqData.size(), mSampleInsertSeqData.values().stream().mapToInt(x -> x.size()).sum(), mInputFile);
 
         }
         catch(IOException e)
@@ -170,12 +318,65 @@ public class InsertSequenceAnalyser
         }
     }
 
-    private void analyseSampleSequences()
+    private class MatchedBaseData
     {
+        public int OverlapBases;
+        public int MatchedBases;
 
+        public MatchedBaseData(final int overlapBases, final int matchedBases)
+        {
+            OverlapBases = overlapBases;
+            MatchedBases = matchedBases;
+        }
     }
 
-    private void analyseCommonSequences()
+    private final String reverseString(final String str)
+    {
+        String reverse = "";
+
+        for(int i = str.length() - 1; i >= 0; --i)
+        {
+            reverse += str.charAt(i);
+        }
+
+        return reverse;
+    }
+
+    public static void main(@NotNull final String[] args) throws ParseException
+    {
+        final Options options = new Options();
+        addCmdLineArgs(options);
+
+        final CommandLineParser parser = new DefaultParser();
+        final CommandLine cmd = parser.parse(options, args);
+
+        Configurator.setRootLevel(Level.DEBUG);
+
+        InsertSequenceAnalyser insSeqAnalyser = InsertSequenceAnalyser.from(cmd);
+        insSeqAnalyser.run();
+    }
+
+    public static InsertSequenceAnalyser from (final CommandLine cmd)
+    {
+        return new InsertSequenceAnalyser(
+                cmd.getOptionValue(INS_SEQ_FILE),
+                parseOutputDir(cmd),
+                Integer.parseInt(cmd.getOptionValue(SEARCH_LENGTH_MIN, "50")),
+                Double.parseDouble(cmd.getOptionValue(REQD_MATCH_PERC, "0.95")));
+    }
+
+    public static void addCmdLineArgs(final Options options)
+    {
+        options.addOption(INS_SEQ_FILE, true, "File with sample insert sequence data");
+        options.addOption(SEARCH_LENGTH_MIN, true, "Sequence min length");
+        options.addOption(REQD_MATCH_PERC, true, "Number of instances of search string to record it");
+        addOutputDir(options);
+        addLoggingOptions(options);
+    }
+
+    /*
+
+        private void analyseCommonSequences()
     {
         for(int i = 0; i < mInsertSeqData.size() - 1; ++i)
         {
@@ -210,7 +411,7 @@ public class InsertSequenceAnalyser
                     if(matches.isEmpty())
                         continue;
 
-                    if(matches.size() >= mRequiredMatchCount)
+                    if(matches.size() >= mRequiredMatchPerc)
                     {
                         mMatchSequences.add(searchStr);
                         logMatchSequence(false, isData, matches, searchStr);
@@ -277,74 +478,26 @@ public class InsertSequenceAnalyser
         return matches;
     }
 
-    private final String reverseString(final String str)
+    @VisibleForTesting
+    public void addSequenceData(final List<InsertSeqData> seqDataList)
     {
-        String reverse = "";
+        mInsertSeqData.addAll(seqDataList);
 
-        for(int i = str.length() - 1; i >= 0; --i)
+        List<InsertSeqData> sampleDataList = null;
+        String currentSample = "";
+
+        for(final InsertSeqData isData : seqDataList)
         {
-            reverse += str.charAt(i);
-        }
-
-        return reverse;
-    }
-
-    private void logMatchSequence(boolean specificSample, final InsertSeqData isData, final List<InsertSeqData> matches, final String matchSequence)
-    {
-        if(mOutputDir.isEmpty())
-            return;
-
-        try
-        {
-            if(mWriter == null)
+            if(!currentSample.equals(isData.SampleId))
             {
-                final String outputFileName = mOutputDir + "LNX_INS_SEQUENCES.csv";
-
-                mWriter = createBufferedWriter(outputFileName, false);
-                mWriter.write("SampleId,SampleCount,MatchCount,InsertSequence");
-                mWriter.newLine();
+                sampleDataList = Lists.newArrayList();
+                currentSample = isData.SampleId;
+                mSampleInsertSeqData.put(isData.SampleId, sampleDataList);
             }
 
-            int sampleCount = 1;
-            String sampleId = isData.SampleId;
-
-            if(!specificSample)
-            {
-                // determine unique sample count
-                List<String> sampleIds = Lists.newArrayList(isData.SampleId);
-
-                for (final InsertSeqData otherData : matches)
-                {
-                    if (!sampleIds.contains(otherData.SampleId))
-                        sampleIds.add(otherData.SampleId);
-                }
-
-                sampleCount = sampleIds.size();
-                sampleId = "ALL";
-            }
-
-            // +1 is to account for the data which initiates the search
-            mWriter.write(String.format("%s,%d,%d,%s", sampleId, sampleCount, matches.size() + 1, matchSequence));
-            mWriter.newLine();
-        }
-        catch(IOException e)
-        {
-            LOGGER.error("Failed to write insert sequence output CSV file: {}", e.toString());
+            sampleDataList.add(isData);
         }
     }
-
-    public static void main(@NotNull final String[] args) throws ParseException
-    {
-        final Options options = new Options();
-        addCmdLineArgs(options);
-
-        final CommandLineParser parser = new DefaultParser();
-        final CommandLine cmd = parser.parse(options, args);
-
-        Configurator.setRootLevel(Level.DEBUG);
-
-        InsertSequenceAnalyser insSeqAnalyser = InsertSequenceAnalyser.from(cmd);
-        insSeqAnalyser.run();
-    }
+    */
 
 }
