@@ -126,8 +126,8 @@ public class PanelReporterApplication {
     @NotNull
     private static SampleMetadata buildSampleMetadata(@NotNull PanelReporterConfig config) {
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
-                .refSampleId(config.refSampleId())
-                .refSampleBarcode(config.refSampleBarcode())
+                .refSampleId(null)
+                .refSampleBarcode(null)
                 .tumorSampleId(config.tumorSampleId())
                 .tumorSampleBarcode(config.tumorSampleBarcode())
                 .build();

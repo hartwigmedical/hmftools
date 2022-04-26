@@ -38,10 +38,6 @@ public interface PanelReporterConfig {
     String COMPANY_LOGO = "company_logo";
     String SIGNATURE = "signature";
 
-    // General params needed for every report but for QC fail it can be optional in some cases
-    String REF_SAMPLE_ID = "ref_sample_id";
-    String REF_SAMPLE_BARCODE = "ref_sample_barcode";
-
     // Params specific for Panel reports
     String PANEL_QC_FAIL = "panel_qc_fail";
     String PANEL_QC_FAIL_REASON = "panel_qc_fail_reason";
@@ -75,9 +71,6 @@ public interface PanelReporterConfig {
         options.addOption(COMPANY_LOGO, true, "Path towards an image file containing the company logo.");
         options.addOption(SIGNATURE, true, "Path towards an image file containing the signature to be appended at the end of the report.");
 
-        options.addOption(REF_SAMPLE_ID, true, "The reference sample ID for the tumor sample for which a report is generated.");
-        options.addOption(REF_SAMPLE_BARCODE, true, "The reference sample barcode for the tumor sample for which a report is generated.");
-
         options.addOption(PANEL_QC_FAIL, false, "If set, generates a qc-fail report.");
         options.addOption(PANEL_QC_FAIL_REASON,
                 true,
@@ -100,12 +93,6 @@ public interface PanelReporterConfig {
 
         return options;
     }
-
-    @Nullable
-    String refSampleId();
-
-    @Nullable
-    String refSampleBarcode();
 
     @NotNull
     String tumorSampleId();
@@ -191,8 +178,6 @@ public interface PanelReporterConfig {
         }
 
         return ImmutablePanelReporterConfig.builder()
-                .refSampleId(cmd.hasOption(REF_SAMPLE_ID) ? nonOptionalValue(cmd, REF_SAMPLE_ID) : null)
-                .refSampleBarcode(cmd.hasOption(REF_SAMPLE_BARCODE) ? nonOptionalValue(cmd, REF_SAMPLE_BARCODE) : null)
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
                 .tumorSampleBarcode(nonOptionalValue(cmd, TUMOR_SAMPLE_BARCODE))
                 .outputDirReport(nonOptionalDir(cmd, OUTPUT_DIRECTORY_REPORT))
