@@ -25,8 +25,8 @@ public final class CurationFunction {
     }
 
     private static final String GENE_CDKN2A = "CDKN2A";
-    private static final String GENE_CDKN2A_CANONICAL = "CDKN2A (P16)";
-    private static final String GENE_CDKN2A_NON_CANONICAL = "CDKN2A (P14Arf)";
+    private static final String GENE_CDKN2A_CANONICAL = "CDKN2A (p16)";
+    private static final String GENE_CDKN2A_NON_CANONICAL = "CDKN2A (p14ARF)";
 
     @NotNull
     public static GenomicAnalysis curation(@NotNull GenomicAnalysis genomicAnalysis) {
