@@ -5,10 +5,17 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.hartwig.hmftools.common.genome.chromosome.ContigComparator;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
@@ -113,6 +120,42 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
         }
 
         return ContigComparator.INSTANCE.compare(Chromosome, other.Chromosome);
+    }
+
+    // config loading to filter on specific regions
+    public static final String SPECIFIC_REGIONS = "specific_regions";
+    public static final String SPECIFIC_REGIONS_DESC = "Restrict to regions(s) separated by ';' in format Chr:PosStart:PosEnd";
+    public static final String ITEM_DELIM = ";";
+    public static final String SUB_ITEM_DELIM = ":";
+
+    public static List<ChrBaseRegion> loadSpecificRegions(final CommandLine cmd) throws ParseException
+    {
+        List<ChrBaseRegion> regions = Lists.newArrayList();
+
+        if(!cmd.hasOption(SPECIFIC_REGIONS))
+            return regions;
+
+        // expected format: chromosome:positionStart:positionEnd, separated by ';'
+        final List<String> regionStrs = Arrays.stream(cmd.getOptionValue(SPECIFIC_REGIONS).split(ITEM_DELIM, -1)).collect(Collectors.toList());
+        for(String regionStr : regionStrs)
+        {
+            final String[] items = regionStr.split(SUB_ITEM_DELIM);
+            if(items.length == 3)
+            {
+                ChrBaseRegion region = new ChrBaseRegion(items[0], Integer.parseInt(items[1]), Integer.parseInt(items[2]));
+
+                if(!region.isValid())
+                    throw new ParseException(String.format("invalid specific region: %s", region));
+
+                regions.add(region);
+            }
+            else
+            {
+                throw new ParseException(String.format("invalid specific region: %s", regionStr));
+            }
+        }
+
+        return regions;
     }
 }
 

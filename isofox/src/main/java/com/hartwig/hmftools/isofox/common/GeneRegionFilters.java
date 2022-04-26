@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.isofox.common;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadGeneIdsFile;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS_DESC;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_ID_FILE;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_BUFFER;
@@ -40,7 +42,6 @@ public class GeneRegionFilters
 
     // config
     private static final String SPECIFIC_CHR = "specific_chr";
-    private static final String SPECIFIC_REGIONS = "specific_regions";
     public static final String RESTRICTED_GENE_IDS = "restricted_gene_ids";
     private static final String ENRICHED_GENE_IDS = "enriched_gene_ids";
 
@@ -64,7 +65,7 @@ public class GeneRegionFilters
         options.addOption(RESTRICTED_GENE_IDS, true, "Optional list of Ensmebl GeneIds separated by ';'");
         options.addOption(ENRICHED_GENE_IDS, true, "Optional list of geneIds to treat as enriched");
         options.addOption(SPECIFIC_CHR, true, "Restrict to chromosome(s) separated by ';'");
-        options.addOption(SPECIFIC_REGIONS, true, "Restrict to regions(s) separated by ';' in format Chr:PosStart:PosEnd");
+        options.addOption(SPECIFIC_REGIONS, true, SPECIFIC_REGIONS_DESC);
     }
 
     public void loadConfig(final CommandLine cmd) throws Exception
@@ -97,28 +98,14 @@ public class GeneRegionFilters
 
         if(cmd.hasOption(SPECIFIC_REGIONS))
         {
-            // expected format:
-            final List<String> regionStrs = Arrays.stream(cmd.getOptionValue(SPECIFIC_REGIONS).split(ITEM_DELIM, -1)).collect(Collectors.toList());
-            for(String regionStr : regionStrs)
+            SpecificRegions.addAll(ChrBaseRegion.loadSpecificRegions(cmd));
+
+            for(ChrBaseRegion region : SpecificRegions)
             {
-                final String[] items = regionStr.split(SUB_ITEM_DELIM);
-                if(items.length == 3)
-                {
-                    ChrBaseRegion region = new ChrBaseRegion(items[0], Integer.parseInt(items[1]), Integer.parseInt(items[2]));
+                ISF_LOGGER.info("filtering for specific region: {}", region);
 
-                    if(!region.isValid())
-                        throw new Exception(String.format("invalid specific region: %s", region));
-
-                    ISF_LOGGER.info("filtering for specific region: {}", region);
-                    SpecificRegions.add(region);
-
-                    if(!SpecificChromosomes.contains(region.Chromosome))
-                        SpecificChromosomes.add(region.Chromosome);
-                }
-                else
-                {
-                    throw new Exception(String.format("invalid specific region: %s", regionStr));
-                }
+                if(!SpecificChromosomes.contains(region.Chromosome))
+                    SpecificChromosomes.add(region.Chromosome);
             }
         }
         else if(cmd.hasOption(SPECIFIC_CHR))

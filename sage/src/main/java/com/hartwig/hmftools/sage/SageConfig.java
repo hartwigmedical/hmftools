@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_LEVEL;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.containsFlag;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS_DESC;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH_PANEL;
@@ -118,7 +120,6 @@ public class SageConfig
     private static final String INCLUDE_MT = "include_mt";
 
     private static final String SPECIFIC_CHROMOSOMES = "specific_chr";
-    private static final String SPECIFIC_REGIONS = "specific_regions";
     private static final String SPECIFIC_POSITIONS = "specific_positions";
     private static final String LOG_LPS_DATA = "log_lps_data";
     private static final String PERF_WARN_TIME = "perf_warn_time";
@@ -169,28 +170,19 @@ public class SageConfig
 
         if(cmd.hasOption(SPECIFIC_REGIONS))
         {
-            final List<String> regionStrs = Arrays.stream(cmd.getOptionValue(SPECIFIC_REGIONS).split(ITEM_DELIM, -1)).collect(Collectors.toList());
-            for(String regionStr : regionStrs)
+            try
             {
-                final String[] items = regionStr.split(SUB_ITEM_DELIM);
-                if(items.length == 3)
+                SpecificRegions.addAll(ChrBaseRegion.loadSpecificRegions(cmd));
+
+                for(ChrBaseRegion region : SpecificRegions)
                 {
-                    ChrBaseRegion region = new ChrBaseRegion(items[0], Integer.parseInt(items[1]), Integer.parseInt(items[2]));
-
-                    if(!region.isValid())
-                    {
-                        SG_LOGGER.error("invalid specific region: {}", region);
-                        continue;
-                    }
-
                     SG_LOGGER.info("filtering for specific region: {}", region);
-                    SpecificRegions.add(region);
                     SpecificChromosomes.add(region.Chromosome);
                 }
-                else
-                {
-                    SG_LOGGER.error("invalid specific region: {}", regionStr);
-                }
+            }
+            catch(Exception e)
+            {
+                SG_LOGGER.error("invalid specific regions: {}", cmd.getOptionValue(SPECIFIC_REGIONS));
             }
         }
         else if(cmd.hasOption(SPECIFIC_CHROMOSOMES))
@@ -371,7 +363,7 @@ public class SageConfig
         options.addOption(OUTPUT_VCF, true, "Output vcf");
         options.addOption(MIN_MAP_QUALITY, true, "Min map quality to apply to non-hotspot variants [" + DEFAULT_MIN_MAP_QUALITY + "]");
         options.addOption(SPECIFIC_CHROMOSOMES, true, "Run for subset of chromosomes, split by ';'");
-        options.addOption(SPECIFIC_REGIONS, true, "Run for specific regions(s) separated by ';' in format Chr:PosStart:PosEnd");
+        options.addOption(SPECIFIC_REGIONS, true, SPECIFIC_REGIONS_DESC);
         options.addOption(SPECIFIC_POSITIONS, true, "Run for specific positions(s) separated by ';', for debug purposes");
         options.addOption(INCLUDE_MT, false, "Call MT variants");
         options.addOption(SLICE_SIZE, true, "Slice size [" + DEFAULT_SLICE_SIZE + "]");
