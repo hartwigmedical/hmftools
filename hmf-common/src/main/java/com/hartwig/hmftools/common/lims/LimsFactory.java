@@ -139,7 +139,8 @@ public final class LimsFactory {
 
             // DEV-252 - Filter on somatic to get rid of RNA samples
             // Also, we are not interested in research-labeled samples.
-            if (analysisType != null && analysisType.toLowerCase().contains("somatic") && !label.equalsIgnoreCase("research")) {
+            if (analysisType != null && (analysisType.toLowerCase().contains("somatic") || analysisType.toLowerCase()
+                    .contains("targeted_tumor_only")) && !label.equalsIgnoreCase("research")) {
                 try {
                     LimsJsonSampleData limsJsonSampleData = gson.fromJson(jsonSample.getValue(), LimsJsonSampleData.class);
                     if (limsDataPerSampleBarcode.containsKey(barcode)) {
@@ -178,7 +179,8 @@ public final class LimsFactory {
                 .reportPgx(true)
                 .biopsySite("Skin")
                 .cohort("COLO")
-                .analysisType("somatic").build();
+                .analysisType("somatic")
+                .build();
     }
 
     @NotNull

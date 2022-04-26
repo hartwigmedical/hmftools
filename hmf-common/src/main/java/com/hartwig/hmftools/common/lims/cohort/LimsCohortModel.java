@@ -77,7 +77,7 @@ public abstract class LimsCohortModel {
             return "GENAYA";
         } else if (sampleId.startsWith("OMIC")) {
             return "OMIC";
-        } else if (sampleId.startsWith("TARG")) {
+        } else if (sampleId.startsWith("TARGTO")) {
             return "TARGTO";
         }else {
             return null;
