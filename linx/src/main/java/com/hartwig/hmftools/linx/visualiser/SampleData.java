@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
 import static com.hartwig.hmftools.linx.visualiser.SvVisualiser.VIS_LOGGER;
+import static com.hartwig.hmftools.linx.visualiser.SvVisualiserConfig.RESTRICT_CLUSTERS_BY_GENE;
 import static com.hartwig.hmftools.linx.visualiser.SvVisualiserConfig.parameter;
 
 import java.io.IOException;
@@ -66,6 +67,7 @@ public class SampleData
     public final List<Integer> Clusters;
 
     public final List<String> Chromosomes;
+    public final Set<String> Genes;
 
     private final String mSampleDataDir;
 
@@ -132,12 +134,11 @@ public class SampleData
 
         Clusters = parseClusters(cmd);
         Chromosomes = parseChromosomes(cmd);
-
-        final Set<String> geneList = Sets.newHashSet();
+        Genes = Sets.newHashSet();
 
         if(cmd.hasOption(GENE))
         {
-            Arrays.stream(cmd.getOptionValue(GENE).split(",")).forEach(x -> geneList.add(x));
+            Arrays.stream(cmd.getOptionValue(GENE).split(",")).forEach(x -> Genes.add(x));
         }
 
         if(cmd.hasOption(PLOT_CLUSTER_GENES) && !Clusters.isEmpty() && mSampleDataDir != null)
@@ -149,15 +150,39 @@ public class SampleData
                 if(Clusters.contains(svAnnotation.clusterId()))
                 {
                     if(!svAnnotation.geneStart().isEmpty())
-                        Arrays.stream(svAnnotation.geneStart().split(ITEM_DELIM)).forEach(x -> geneList.add(x));
+                        Arrays.stream(svAnnotation.geneStart().split(ITEM_DELIM)).forEach(x -> Genes.add(x));
 
                     if(!svAnnotation.geneEnd().isEmpty())
-                        Arrays.stream(svAnnotation.geneEnd().split(ITEM_DELIM)).forEach(x -> geneList.add(x));
+                        Arrays.stream(svAnnotation.geneEnd().split(ITEM_DELIM)).forEach(x -> Genes.add(x));
+                }
+            }
+        }
+        else if(!Genes.isEmpty() && Clusters.isEmpty() && cmd.hasOption(RESTRICT_CLUSTERS_BY_GENE))
+        {
+            List<LinxSvAnnotation> svAnnotations = LinxSvAnnotation.read(LinxSvAnnotation.generateFilename(mSampleDataDir, Sample));
+
+            for(LinxSvAnnotation svAnnotation : svAnnotations)
+            {
+                if(Genes.stream().anyMatch(x -> x.equals(svAnnotation.geneStart()) || x.equals(svAnnotation.geneEnd())))
+                {
+                    if(!Clusters.contains(svAnnotation.clusterId()))
+                        Clusters.add(svAnnotation.clusterId());
+                }
+            }
+
+            List<LinxDriver> linxDrivers = LinxDriver.read(LinxDriver.generateFilename(mSampleDataDir, Sample));
+
+            for(LinxDriver linxDriver : linxDrivers)
+            {
+                if(Genes.stream().anyMatch(x -> x.equals(linxDriver.gene())))
+                {
+                    if(!Clusters.contains(linxDriver.clusterId()))
+                        Clusters.add(linxDriver.clusterId());
                 }
             }
         }
 
-        Exons.addAll(additionalExons(geneList, cmd, Exons, Clusters));
+        Exons.addAll(additionalExons(Genes, cmd, Exons, Clusters));
 
         if(Segments.isEmpty() && SvData.isEmpty())
         {
@@ -180,7 +205,8 @@ public class SampleData
         options.addOption(FUSION, true, "Path to fusion file - eg 'COLO829T.linx.fusions.tsv'");
         options.addOption(CNA, true, "Path to copy number alteration file - eg 'COLO829T.linx.vis_copy_number.tsv'");
         options.addOption(EXON, true, "Path to exon file - eg 'COLO829T.linx.vis_gene_exon.tsv'");
-        options.addOption(GENE, true, "Add canonical transcriptions of supplied comma separated genes to image");
+        options.addOption(GENE, true, "Show canonical transcript for genes (separated by ','");
+        options.addOption(RESTRICT_CLUSTERS_BY_GENE, false, "Only plot clusters with breakends in configured 'gene' list");
         addEnsemblDir(options);
         options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
         options.addOption(CLUSTERS, true, "Only generate image for specified comma separated clusters");

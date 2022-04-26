@@ -40,9 +40,9 @@ public class CircosConfigWriter
     private final double mapInnerRadius;
     private final double labelSize;
 
-    public CircosConfigWriter(@NotNull final String sample, @NotNull final String outputDir, @NotNull final CircosData data, @NotNull final CircosConfig config)
+    public CircosConfigWriter(final String filename, final String outputDir, final CircosData data, final CircosConfig config)
     {
-        this.sample = sample;
+        this.sample = filename;
         this.circosData = data;
         this.config = config;
         this.outputDir = outputDir;
@@ -91,9 +91,7 @@ public class CircosConfigWriter
         mapOuterRadius = copyNumberInnerRadius - gapSize;
         mapMiddleRadius = mapOuterRadius - mapGainTracks * purpleTrackSize;
         mapInnerRadius = mapMiddleRadius - 1 * purpleTrackSize;
-
     }
-
 
     public double svTrackRelative(int track)
     {
@@ -108,9 +106,7 @@ public class CircosConfigWriter
         return segmentOuterRadius;
     }
 
-    @NotNull
-    public String writeConfig(int frame)
-            throws IOException
+    public String writeConfig(int frame) throws IOException
     {
         final String fileName = sample + ".circos." + String.format("%03d", frame) + ".conf";
         final String configPath = outputDir + File.separator + fileName;
@@ -163,7 +159,7 @@ public class CircosConfigWriter
     }
 
     @NotNull
-    private String readResource(@NotNull final String resource) throws IOException
+    private String readResource(final String resource) throws IOException
     {
         InputStream in = getClass().getResourceAsStream(resource);
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));

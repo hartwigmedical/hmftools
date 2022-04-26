@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -163,7 +164,7 @@ public class SvVisualiser implements AutoCloseable
             return;
         }
 
-        final String chromosomesStr = chromosomes.size() >= 23
+        final String chromosomesStr = chromosomes.size() >= 24
                 ? "All"
                 : chromosomes.stream().map(RefGenomeFunctions::stripChrPrefix).collect(Collectors.joining("-"));
 
@@ -219,20 +220,17 @@ public class SvVisualiser implements AutoCloseable
         final List<VisGeneExon> clusterExons =
                 mSampleData.Exons.stream().filter(x -> clusterIds.contains(x.ClusterId)).distinct().collect(toList());
 
-        String clusterIdsStr = "";
+        StringJoiner clustersSj = new StringJoiner("-");
+        clusterIds.forEach(x -> clustersSj.add(String.valueOf(x)));
+        String clusterIdsStr = clustersSj.toString();
 
-        for (int clusterId : clusterIds)
-        {
-            clusterIdsStr = appendStr(clusterIdsStr, String.valueOf(clusterId), '-');
-        }
-
-        if (clusterLinks.isEmpty())
+        if(clusterLinks.isEmpty())
         {
             VIS_LOGGER.warn("Cluster {} not present in file", clusterIdsStr);
             return;
         }
 
-        if (clusterLinks.size() == 1 && skipSingles && clusterExons.isEmpty())
+        if(clusterLinks.size() == 1 && skipSingles && clusterExons.isEmpty())
         {
             VIS_LOGGER.debug("Skipping simple cluster {}", clusterIdsStr);
             return;
@@ -247,10 +245,34 @@ public class SvVisualiser implements AutoCloseable
             return;
         }
 
-        final String resolvedTypeString = clusterLinks.stream().findFirst().map(VisSvData::resolvedType).map(Enum::toString).orElse("Unknown");
 
-        final String sample = mSampleData.Sample + ".cluster" + clusterIdsStr + "." + resolvedTypeString + ".sv" + clusterLinks.size()
-                + (mConfig.Debug ? ".debug" : "");
+        String fileId = mSampleData.Sample;
+
+
+        if(!mSampleData.Genes.isEmpty() && mConfig.RestrictClusterByGene)
+        {
+            StringJoiner genesSj = new StringJoiner("-");
+            mSampleData.Genes.forEach(x -> genesSj.add(x));
+
+            fileId += mSampleData.Genes.size() > 1 ? ".genes-" : ".gene-";
+            fileId += genesSj.toString();
+        }
+        else
+        {
+            fileId += clusterIds.size() > 1 ? ".clusters-" : ".cluster-";
+            fileId += clusterIdsStr;
+
+            if(mSampleData.Clusters.size() == 1)
+            {
+                final String resolvedTypeString = clusterLinks.get(0).resolvedType().toString();
+                fileId += "." + resolvedTypeString;
+            }
+        }
+
+        fileId += ".sv" + clusterLinks.size();
+
+        if(mConfig.Debug)
+            fileId += ".debug";
 
         final List<ProteinDomain> clusterProteinDomains =
                 mSampleData.ProteinDomains.stream().filter(x -> clusterIds.contains(x.clusterId())).distinct().collect(toList());
@@ -258,7 +280,7 @@ public class SvVisualiser implements AutoCloseable
         final List<Fusion> clusterFusions = mSampleData.Fusions.stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
 
         submitFiltered(clusterIds.size() == 1 ? ColorPicker::chainColors : ColorPicker::clusterColors,
-                sample, clusterLinks, clusterSegments, clusterExons, clusterProteinDomains, clusterFusions, true);
+                fileId, clusterLinks, clusterSegments, clusterExons, clusterProteinDomains, clusterFusions, true);
     }
 
     private void submitFiltered(final ColorPickerFactory colorPickerFactory,
@@ -318,29 +340,23 @@ public class SvVisualiser implements AutoCloseable
     }
 
     private Object createImageFrame(
-            int frame,
-            double labelSize,
-            final String sample,
-            boolean plotFusion,
-            boolean plotChromosome) throws IOException, InterruptedException
+            int frame, double labelSize, final String sample, boolean plotFusion, boolean plotChromosome) throws IOException, InterruptedException
     {
         final String confFileName = sample + ".circos." + String.format("%03d", frame) + ".conf";
         final String outputFileName = sample + "." + String.format("%03d", frame) + ".png";
 
         double rLabelSize = 1.2 * labelSize;
 
-        final Object circosResult =
-                new CircosExecution(mConfig.CircosBin).generateCircos(mConfig.OutputConfPath + File.separator + confFileName,
-                        mConfig.OutputPlotPath,
-                        outputFileName,
-                        mConfig.OutputConfPath);
+        final Object circosResult = new CircosExecution(
+                mConfig.CircosBin).generateCircos(mConfig.OutputConfPath + File.separator + confFileName,
+                mConfig.OutputPlotPath, outputFileName, mConfig.OutputConfPath);
 
-        if (plotFusion)
+        if(plotFusion)
         {
             new FusionExecution(sample, outputFileName, mConfig.OutputConfPath, mConfig.OutputPlotPath).executeR(mCircosConfig, rLabelSize);
         }
 
-        if (plotChromosome)
+        if(plotChromosome)
         {
             return new ChromosomeRangeExecution(sample, outputFileName, mConfig.OutputConfPath, mConfig.OutputPlotPath).executeR(mCircosConfig, rLabelSize);
         }

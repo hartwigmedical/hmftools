@@ -29,6 +29,7 @@ public class SvVisualiserConfig
     public final boolean Debug;
 
     public final boolean PlotReportableEvents;
+    public final boolean RestrictClusterByGene;
 
     private static final String PLOT_OUT = "plot_out";
     private static final String DATA_OUT = "data_out";
@@ -36,6 +37,7 @@ public class SvVisualiserConfig
     private static final String DEBUG = "debug";
     private static final String VIS_FILE_DIRECTORY = "vis_file_dir";
     private static final String PLOT_REPORTABLE = "plot_reportable";
+    public static final String RESTRICT_CLUSTERS_BY_GENE = "restrict_cluster_by_gene";
 
     private static final String THREADS = "threads";
     private static final String INCLUDE_LINE_ELEMENTS = "include_line_elements";
@@ -94,6 +96,7 @@ public class SvVisualiserConfig
 
         IncludeLineElements = cmd.hasOption(INCLUDE_LINE_ELEMENTS);
         PlotReportableEvents = cmd.hasOption(PLOT_REPORTABLE);
+        RestrictClusterByGene = cmd.hasOption(RESTRICT_CLUSTERS_BY_GENE);
     }
 
     public static String parameter(@NotNull final CommandLine cmd, @NotNull final String parameter, @NotNull final StringJoiner missing)
