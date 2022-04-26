@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.purple.Gender.MALE;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.ALL_ANNOTATIONS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.linkSglMappedInferreds;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.populateChromosomeBreakendMap;
-import static com.hartwig.hmftools.linx.analysis.VariantPrep.setSvCopyNumberData;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.initialiseSV;
 
 import java.util.List;
@@ -19,6 +18,7 @@ import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.CnSegmentBuilder;
 import com.hartwig.hmftools.linx.cn.LohEvent;
+import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.linx.fusion.FusionResources;
@@ -246,7 +246,7 @@ public class LinxTester
 
         CnDataLoader.createChrCopyNumberMap();
 
-        setSvCopyNumberData(
+        SvCNData.setSvCopyNumberData(
                 AllVariants,
                 CnDataLoader.getSvJcnCalcMap(),
                 CnDataLoader.getSvIdCnDataMap(),

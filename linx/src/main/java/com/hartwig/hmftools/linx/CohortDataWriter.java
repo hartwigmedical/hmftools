@@ -177,11 +177,6 @@ public class CohortDataWriter
                 writer.write(",Recovered,RepeatClass,RepeatType,AnchorStart,AnchorEnd");
             }
 
-            if(mConfig.IsGermline)
-            {
-                writer.write(",Filter,PonCount");
-            }
-
             writer.newLine();
             return writer;
         }

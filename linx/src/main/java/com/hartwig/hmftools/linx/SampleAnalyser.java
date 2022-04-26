@@ -32,11 +32,11 @@ import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.sv.linx.LinxLink;
 import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.linx.analysis.ClusterAnalyser;
-import com.hartwig.hmftools.linx.analysis.VariantPrep;
 import com.hartwig.hmftools.linx.annotators.LineElementType;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.CnSegmentBuilder;
+import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.linx.fusion.FusionResources;
@@ -270,7 +270,7 @@ public class SampleAnalyser implements Callable
         if(!mConfig.IsGermline)
         {
             // look-up and cache relevant CN data into each SV
-            VariantPrep.setSvCopyNumberData(
+            SvCNData.setSvCopyNumberData(
                     mAllVariants,
                     mCnDataLoader.getSvJcnCalcMap(),
                     mCnDataLoader.getSvIdCnDataMap(),
@@ -463,7 +463,7 @@ public class SampleAnalyser implements Callable
 
         mCnDataLoader.createChrCopyNumberMap();
 
-        VariantPrep.setSvCopyNumberData(
+        SvCNData.setSvCopyNumberData(
                 mAllVariants,
                 mCnDataLoader.getSvJcnCalcMap(),
                 mCnDataLoader.getSvIdCnDataMap(),

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.types;
 
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.chromosomeRank;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.isPossibleLink;
@@ -7,7 +8,9 @@ import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_TEMPLATED_INSERT
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 public class SglMapping
 {
@@ -121,4 +124,5 @@ public class SglMapping
     {
         return String.format("%s:%d:%d qual=%d", Chromosome, Position, Orientation, QualScore);
     }
+
 }
