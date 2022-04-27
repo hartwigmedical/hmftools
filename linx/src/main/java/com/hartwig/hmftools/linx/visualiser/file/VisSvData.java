@@ -17,7 +17,7 @@ import com.hartwig.hmftools.linx.types.ResolvedType;
 
 import org.jetbrains.annotations.NotNull;
 
-public class VisSvDataFile
+public class VisSvData
 {
     public final String SampleId;
     public final int ClusterId;
@@ -42,7 +42,7 @@ public class VisSvDataFile
     public static final String INFO_TYPE_NORMAL = "NORMAL";
     public static final String INFO_TYPE_FOLDBACK = "FOLDBACK";
 
-    public VisSvDataFile(
+    public VisSvData(
             final String sampleId, int clusterId, int chainId, int svId, final StructuralVariantType type, final ResolvedType resolvedType,
             boolean isSynthetic, final String chrStart, final String chrEnd, int posStart, int posEnd, byte orientStart, byte orientEnd,
             final String infoStart, final String infoEnd, double jcn, boolean inDM)
@@ -67,9 +67,9 @@ public class VisSvDataFile
         Frame = 0;
     }
 
-    public static VisSvDataFile from(final VisSvDataFile other)
+    public static VisSvData from(final VisSvData other)
     {
-        VisSvDataFile newData = new VisSvDataFile(
+        VisSvData newData = new VisSvData(
                 other.SampleId, other.ClusterId, other.ChainId, other.SvId, other.Type, other.ClusterResolvedType,
                 other.IsSynthetic, other.ChrStart, other.ChrEnd, other.PosStart, other.PosEnd, other.OrientStart, other.OrientEnd,
                 other.InfoStart, other.InfoEnd, other.JCN, other.InDoubleMinute);
@@ -109,18 +109,18 @@ public class VisSvDataFile
     }
 
     @NotNull
-    public static List<VisSvDataFile> read(final String filePath) throws IOException
+    public static List<VisSvData> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<VisSvDataFile> svDataList) throws IOException
+    public static void write(@NotNull final String filename, @NotNull List<VisSvData> svDataList) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(svDataList));
     }
 
     @NotNull
-    static List<String> toLines(@NotNull final List<VisSvDataFile> cnDataList)
+    static List<String> toLines(@NotNull final List<VisSvData> cnDataList)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -129,9 +129,9 @@ public class VisSvDataFile
     }
 
     @NotNull
-    static List<VisSvDataFile> fromLines(@NotNull List<String> lines)
+    static List<VisSvData> fromLines(@NotNull List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith("SampleId")).map(VisSvDataFile::fromString).collect(toList());
+        return lines.stream().filter(x -> !x.startsWith("SampleId")).map(VisSvData::fromString).collect(toList());
     }
 
     @NotNull
@@ -159,7 +159,7 @@ public class VisSvDataFile
     }
 
     @NotNull
-    public static String toString(@NotNull final VisSvDataFile svData)
+    public static String toString(@NotNull final VisSvData svData)
     {
         return new StringJoiner(DELIMITER)
                 .add(String.valueOf(svData.SampleId))
@@ -183,13 +183,13 @@ public class VisSvDataFile
     }
 
     @NotNull
-    private static VisSvDataFile fromString(@NotNull final String tiData)
+    private static VisSvData fromString(@NotNull final String tiData)
     {
         String[] values = tiData.split(DELIMITER);
 
         int index = 0;
 
-        return new VisSvDataFile(
+        return new VisSvData(
                 values[index++],
                 Integer.parseInt(values[index++]),
                 Integer.parseInt(values[index++]),

@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.linx.visualiser.data;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.linx.visualiser.data.FusedExons.convertRegion;
 
 import java.io.File;
@@ -13,19 +16,19 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.linx.visualiser.circos.ColorPicker;
 import com.hartwig.hmftools.linx.visualiser.circos.ProteinDomainColors;
+import com.hartwig.hmftools.linx.visualiser.file.VisFusion;
+import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain;
 
 import org.jetbrains.annotations.NotNull;
 
 public class FusedProteinDomains
 {
-
     private static final String DELIMITER = "\t";
 
-    @NotNull
-    public static List<ProteinDomain> fusedProteinDomains(@NotNull final Fusion fusion, @NotNull final List<FusedExon> fusedExons,
-            @NotNull final List<ProteinDomain> proteinDomains)
+    public static List<VisProteinDomain> fusedProteinDomains(final VisFusion fusion, final List<FusedExon> fusedExons,
+            final List<VisProteinDomain> proteinDomains)
     {
-        final List<ProteinDomain> result = Lists.newArrayList();
+        final List<VisProteinDomain> result = Lists.newArrayList();
         if (fusedExons.isEmpty())
         {
             return result;
@@ -37,29 +40,27 @@ public class FusedProteinDomains
         final FusedExon finalDownExon = fusedExons.get(fusedExons.size() - 1);
         final GenomeRegion downGeneRegion = downGeneRegion(fusion, finalDownExon);
 
-        for (ProteinDomain unadjustedDomain : proteinDomains)
+        for (VisProteinDomain unadjustedDomain : proteinDomains)
         {
-            if (unadjustedDomain.transcript().equals(fusion.transcriptUp()) && unadjustedDomain.overlaps(upGeneRegion))
+            if (unadjustedDomain.Transcript.equals(fusion.TranscriptUp) && unadjustedDomain.overlaps(upGeneRegion))
             {
-                final GenomeRegion convertedDomain = convertRegion(fusion.strandUp(), upGeneRegion, unadjustedDomain);
-                final ProteinDomain domain = ImmutableProteinDomain.builder().from(unadjustedDomain)
-                        .chromosome(fusion.name())
-                        .start(Math.max(convertedDomain.start(), firstUpExon.geneStart()))
-                        .end(Math.min(convertedDomain.end(), firstUpExon.geneEnd()))
-                        .build();
+                final GenomeRegion convertedDomain = convertRegion(fusion.StrandUp, upGeneRegion, unadjustedDomain);
 
+                final VisProteinDomain domain = VisProteinDomain.from(unadjustedDomain);
+                domain.Chromosome = fusion.name();
+                domain.Start = max(convertedDomain.start(), firstUpExon.geneStart());
+                domain.End = min(convertedDomain.end(), firstUpExon.geneEnd());
                 result.add(domain);
             }
 
-            if (unadjustedDomain.transcript().equals(fusion.transcriptDown()) && unadjustedDomain.overlaps(downGeneRegion))
+            if (unadjustedDomain.Transcript.equals(fusion.TranscriptDown) && unadjustedDomain.overlaps(downGeneRegion))
             {
-                final GenomeRegion convertedDomain = convertRegion(fusion.strandDown(), downGeneRegion, unadjustedDomain);
-                final ProteinDomain domain = ImmutableProteinDomain.builder().from(unadjustedDomain)
-                        .chromosome(fusion.name())
-                        .start(Math.max(convertedDomain.start() + firstUpExon.geneEnd(), finalDownExon.geneStart()))
-                        .end(Math.min(convertedDomain.end() + firstUpExon.geneEnd(), finalDownExon.geneEnd()))
-                        .build();
+                final GenomeRegion convertedDomain = convertRegion(fusion.StrandDown, downGeneRegion, unadjustedDomain);
 
+                final VisProteinDomain domain = VisProteinDomain.from(unadjustedDomain);
+                unadjustedDomain.Chromosome = fusion.name();
+                unadjustedDomain.Start = max(convertedDomain.start() + firstUpExon.geneEnd(), finalDownExon.geneStart());
+                unadjustedDomain.End = min(convertedDomain.end() + firstUpExon.geneEnd(), finalDownExon.geneEnd());
                 result.add(domain);
             }
         }
@@ -67,32 +68,29 @@ public class FusedProteinDomains
         return result;
     }
 
-    @NotNull
-    private static GenomeRegion upGeneRegion(@NotNull final Fusion fusion, @NotNull final FusedExon firstUpGene)
+    private static GenomeRegion upGeneRegion(final VisFusion fusion, final FusedExon firstUpGene)
     {
         final int upGeneLength = firstUpGene.geneEnd() - firstUpGene.geneStart();
-        final int upGeneStart = fusion.strandUp() < 0 ? fusion.positionUp() : fusion.positionUp() - upGeneLength;
+        final int upGeneStart = fusion.StrandUp < 0 ? fusion.PosUp : fusion.PosUp - upGeneLength;
 
-        return GenomeRegions.create(fusion.chromosomeUp(), upGeneStart, upGeneStart + upGeneLength);
+        return GenomeRegions.create(fusion.ChrUp, upGeneStart, upGeneStart + upGeneLength);
     }
 
-    @NotNull
-    private static GenomeRegion downGeneRegion(@NotNull final Fusion fusion, @NotNull final FusedExon finalDownExon)
+    private static GenomeRegion downGeneRegion(final VisFusion fusion, final FusedExon finalDownExon)
     {
         final int downGeneLength = finalDownExon.geneEnd() - finalDownExon.geneStart();
-        final int downGeneStart = fusion.strandDown() < 0 ? fusion.positionDown() - downGeneLength : fusion.positionDown();
+        final int downGeneStart = fusion.StrandDown < 0 ? fusion.PosDown - downGeneLength : fusion.PosDown;
 
-        return GenomeRegions.create(fusion.chromosomeDown(), downGeneStart, downGeneStart + downGeneLength);
+        return GenomeRegions.create(fusion.ChrDown, downGeneStart, downGeneStart + downGeneLength);
     }
 
-    public static void write(@NotNull final String fileName, @NotNull final ProteinDomainColors colors,
-            @NotNull final List<ProteinDomain> domains) throws IOException
+    public static void write(final String fileName, final ProteinDomainColors colors,
+            final List<VisProteinDomain> domains) throws IOException
     {
         Files.write(new File(fileName).toPath(), toLines(colors, domains));
     }
 
-    @NotNull
-    static List<String> toLines(@NotNull final ProteinDomainColors colors, @NotNull final List<ProteinDomain> domains)
+    static List<String> toLines(final ProteinDomainColors colors, final List<VisProteinDomain> domains)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -115,17 +113,17 @@ public class FusedProteinDomains
     }
 
     @NotNull
-    private static String toString(@NotNull final ProteinDomainColors colors, @NotNull final ProteinDomain domain)
+    private static String toString(final ProteinDomainColors colors, final VisProteinDomain domain)
     {
         return new StringJoiner(DELIMITER)
-                .add(domain.sampleId())
-                .add(String.valueOf(domain.clusterId()))
+                .add(domain.SampleId)
+                .add(String.valueOf(domain.ClusterId))
                 .add(domain.chromosome())
                 .add(String.valueOf(domain.start()))
                 .add(String.valueOf(domain.end()))
                 .add(domain.name())
                 .add(ColorPicker.hexColor(colors.color(domain)))
-                .add(domain.transcript())
+                .add(domain.Transcript)
                 .toString();
     }
 

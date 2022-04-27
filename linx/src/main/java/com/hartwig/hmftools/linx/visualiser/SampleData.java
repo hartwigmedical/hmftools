@@ -29,7 +29,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -43,21 +42,17 @@ import com.hartwig.hmftools.common.sv.linx.LinxDriver;
 import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
-import com.hartwig.hmftools.linx.visualiser.data.Fusion;
-import com.hartwig.hmftools.linx.visualiser.data.ImmutableFusion;
-import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
-import com.hartwig.hmftools.linx.visualiser.data.Segment;
 import com.hartwig.hmftools.linx.visualiser.data.VisCopyNumbers;
 import com.hartwig.hmftools.linx.visualiser.data.VisExons;
 import com.hartwig.hmftools.linx.visualiser.data.VisLinks;
 import com.hartwig.hmftools.linx.visualiser.data.VisProteinDomains;
 import com.hartwig.hmftools.linx.visualiser.data.VisSegments;
 import com.hartwig.hmftools.linx.visualiser.file.VisCopyNumberFile;
-import com.hartwig.hmftools.linx.visualiser.file.VisFusionFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisFusion;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
-import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile;
-import com.hartwig.hmftools.linx.visualiser.file.VisSegmentFile;
-import com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain;
+import com.hartwig.hmftools.linx.visualiser.file.VisSegment;
+import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -67,11 +62,11 @@ public class SampleData
 {
     public final String Sample;
 
-    public final List<Segment> Segments;
-    public final List<VisSvDataFile> SvData;
+    public final List<VisSegment> Segments;
+    public final List<VisSvData> SvData;
     public final List<CopyNumberAlteration> CopyNumberAlterations;
-    public final List<ProteinDomain> ProteinDomains;
-    public final List<Fusion> Fusions;
+    public final List<VisProteinDomain> ProteinDomains;
+    public final List<VisFusion> Fusions;
     public final List<VisGeneExon> Exons;
     public final List<Integer> Clusters;
 
@@ -98,26 +93,24 @@ public class SampleData
         SpecificRegions = ChrBaseRegion.loadSpecificRegions(cmd);
 
         boolean useCohortFiles = cmd.hasOption(LOAD_COHORT_FILES);
-        final String svDataFile = useCohortFiles ? COHORT_VIS_SVS_FILE : VisSvDataFile.generateFilename(mSampleDataDir, Sample);
-        final String linksFile = useCohortFiles ? COHORT_VIS_LINKS_FILE : VisSegmentFile.generateFilename(mSampleDataDir, Sample);
+        final String svDataFile = useCohortFiles ? COHORT_VIS_SVS_FILE : VisSvData.generateFilename(mSampleDataDir, Sample);
+        final String linksFile = useCohortFiles ? COHORT_VIS_LINKS_FILE : VisSegment.generateFilename(mSampleDataDir, Sample);
         final String cnaFile = useCohortFiles ? COHORT_VIS_COPY_NUMBER_FILE : VisCopyNumberFile.generateFilename(mSampleDataDir, Sample);
         final String geneExonFile = useCohortFiles ? COHORT_VIS_GENE_EXONS_FILE : VisGeneExon.generateFilename(mSampleDataDir, Sample);
-        final String proteinFile = useCohortFiles ? COHORT_VIS_PROTEIN_FILE : VisProteinDomainFile.generateFilename(mSampleDataDir, Sample);
-        final String fusionFile = useCohortFiles ? COHORT_VIS_FUSIONS_FILE : VisFusionFile.generateFilename(mSampleDataDir, Sample);
+        final String proteinFile = useCohortFiles ? COHORT_VIS_PROTEIN_FILE : VisProteinDomain.generateFilename(mSampleDataDir, Sample);
+        final String fusionFile = useCohortFiles ? COHORT_VIS_FUSIONS_FILE : VisFusion.generateFilename(mSampleDataDir, Sample);
 
         SvData = VisLinks.readSvData(svDataFile, Sample, SpecificRegions);
 
-        Fusions = loadFusions(fusionFile).stream().filter(x -> x.sampleId().equals(Sample)).collect(toList());
+        Fusions = loadFusions(fusionFile).stream().filter(x -> x.SampleId.equals(Sample)).collect(toList());
         Exons = VisExons.readExons(geneExonFile).stream().filter(x -> x.SampleId.equals(Sample)).collect(toList());
-        Segments = VisSegments.readTracks(linksFile).stream().filter(x -> x.sampleId().equals(Sample)).collect(toList());
+        Segments = VisSegments.readSegments(linksFile).stream().filter(x -> x.SampleId.equals(Sample)).collect(toList());
 
         CopyNumberAlterations = VisCopyNumbers.read(cnaFile)
                 .stream().filter(x -> x.sampleId().equals(Sample)).collect(toList());
 
-        ProteinDomains = VisProteinDomains.readProteinDomains(proteinFile, Fusions)
-                .stream()
-                .filter(x -> x.sampleId().equals(Sample))
-                .collect(toList());
+        ProteinDomains = VisProteinDomains.readProteinDomains(proteinFile, Fusions).stream()
+                .filter(x -> x.SampleId.equals(Sample)).collect(toList());
 
         Clusters = parseClusters(cmd);
         Chromosomes = parseChromosomes(cmd);
@@ -203,7 +196,7 @@ public class SampleData
     {
         Set<Integer> clusterIds = Sets.newHashSet();
 
-        Fusions.stream().forEach(x -> clusterIds.add(x.clusterId()));
+        Fusions.stream().forEach(x -> clusterIds.add(x.ClusterId));
 
         if(mSampleDataDir != null)
         {
@@ -217,7 +210,7 @@ public class SampleData
 
                 for(Integer svId : svIds)
                 {
-                    VisSvDataFile svData = SvData.stream().filter(x -> x.SvId == svId).findFirst().orElse(null);
+                    VisSvData svData = SvData.stream().filter(x -> x.SvId == svId).findFirst().orElse(null);
                     if(svData != null)
                          clusterIds.add(svData.ClusterId);
                 }
@@ -234,32 +227,12 @@ public class SampleData
         return clusterIds;
     }
 
-    private List<Fusion> loadFusions(final String fileName) throws IOException
+    private List<VisFusion> loadFusions(final String fileName) throws IOException
     {
         if(!Files.exists(Paths.get(fileName)))
             return Lists.newArrayList();
 
-        final List<VisFusionFile> visFusions = VisFusionFile.read(fileName);
-
-        return visFusions.stream().map(x -> ImmutableFusion.builder()
-                .sampleId(x.SampleId)
-                .reportable(x.Reportable)
-                .clusterId(x.ClusterId)
-                .geneUp(x.GeneNameUp)
-                .transcriptUp(x.TranscriptUp)
-                .chromosomeUp(x.ChrUp)
-                .positionUp(x.PosUp)
-                .strandUp(x.StrandUp)
-                .regionTypeUp(x.RegionTypeUp)
-                .fusedExonUp(x.FusedExonUp)
-                .geneDown(x.GeneNameDown)
-                .transcriptDown(x.TranscriptDown)
-                .chromosomeDown(x.ChrDown)
-                .positionDown(x.PosDown)
-                .strandDown(x.StrandDown)
-                .regionTypeDown(x.RegionTypeDown)
-                .fusedExonDown(x.FusedExonDown)
-                .build()).collect(Collectors.toList());
+        return VisFusion.read(fileName);
     }
 
     private static List<Integer> parseClusters(final CommandLine cmd) throws ParseException

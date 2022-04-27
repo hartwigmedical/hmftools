@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.visualiser.circos.SegmentTerminal;
+import com.hartwig.hmftools.linx.visualiser.file.VisSegment;
 
 import org.junit.Test;
 
@@ -15,32 +16,26 @@ public class SegmentsTest
     @Test
     public void testTrackStrategies()
     {
+        final List<VisSegment> segments = Lists.newArrayList(
+                createSegment("1"),
+                createSegment("2"), createSegment("1"));
 
-        final List<Segment> segments = Lists.newArrayList(createSegment("1"), createSegment("2"), createSegment("1"));
-
-        final List<Segment> incrementOnChromosome = VisSegments.incrementOnChromosome(segments, Collections.emptyList(), false);
+        final List<VisSegment> incrementOnChromosome = VisSegments.incrementOnChromosome(segments, Collections.emptyList(), false);
         assertEquals(3, incrementOnChromosome.size());
-        assertEquals(1, incrementOnChromosome.get(0).track());
-        assertEquals(1, incrementOnChromosome.get(1).track());
-        assertEquals(2, incrementOnChromosome.get(2).track());
+        assertEquals(1, incrementOnChromosome.get(0).Track);
+        assertEquals(1, incrementOnChromosome.get(1).Track);
+        assertEquals(2, incrementOnChromosome.get(2).Track);
     }
 
-    private static Segment createSegment(String chromosome)
+    private static VisSegment createSegment(String chromosome)
     {
-        return ImmutableSegment.builder()
-                .sampleId("sampleId")
-                .clusterId(1)
-                .chainId(1)
-                .chromosome(chromosome)
-                .start(1)
-                .end(1000)
-                .track(1)
-                .startTerminal(SegmentTerminal.NONE)
-                .endTerminal(SegmentTerminal.NONE)
-                .ploidy(0)
-                .inDoubleMinute(false)
-                .frame(0)
-                .build();
+        VisSegment segment = new VisSegment(
+                "sampleId", 1,1, chromosome, "1", "1000", 0, false);
+
+        segment.setTerminalStart(SegmentTerminal.NONE);
+        segment.setTerminalEnd(SegmentTerminal.NONE);
+        segment.Track = 1;
+        return segment;
     }
 
 }

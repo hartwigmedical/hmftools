@@ -4,20 +4,18 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile;
-
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
 
 public class AdjustedPositions
 {
 
-    public static List<AdjustedPosition> create(final List<VisSvDataFile> originalLinks, final List<VisSvDataFile> scaledLinks)
+    public static List<AdjustedPosition> create(final List<VisSvData> originalLinks, final List<VisSvData> scaledLinks)
     {
         final List<AdjustedPosition> result = Lists.newArrayList();
         for (int i = 0; i < originalLinks.size(); i++)
         {
-            final VisSvDataFile original = originalLinks.get(i);
-            final VisSvDataFile scaled = scaledLinks.get(i);
+            final VisSvData original = originalLinks.get(i);
+            final VisSvData scaled = scaledLinks.get(i);
 
             if (scaled.isValidStart())
             {

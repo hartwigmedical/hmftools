@@ -6,7 +6,8 @@ import java.util.Optional;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
-import com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisSegment;
+import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -20,25 +21,25 @@ public class Connectors
     }
 
     @NotNull
-    public List<Connector> createConnectors(@NotNull final List<Segment> segments, @NotNull final List<VisSvDataFile> links)
+    public List<Connector> createConnectors(@NotNull final List<VisSegment> segments, @NotNull final List<VisSvData> links)
     {
         final List<Connector> result = Lists.newArrayList();
 
-        for (Segment segment : segments)
+        for (VisSegment segment : segments)
         {
             final ImmutableConnector.Builder builder = ImmutableConnector.builder()
                     .chromosome(segment.chromosome())
-                    .clusterId(segment.clusterId())
-                    .chainId(segment.chainId())
-                    .track(segment.track());
+                    .clusterId(segment.ClusterId)
+                    .chainId(segment.ChainId)
+                    .track(segment.Track);
 
             final GenomePosition startPosition = GenomePositions.create(segment.chromosome(), segment.start());
-            final Optional<VisSvDataFile> optionalStartPositionLink = VisLinks.findLink(startPosition, links);
+            final Optional<VisSvData> optionalStartPositionLink = VisLinks.findLink(startPosition, links);
 
             if (optionalStartPositionLink.isPresent())
             {
                 double startLinkPloidy = optionalStartPositionLink.get().JCN;
-                double startLinkPloidyBeforeSegment = VisSegments.segmentPloidyBefore(segment.track(), startPosition, segments);
+                double startLinkPloidyBeforeSegment = VisSegments.segmentPloidyBefore(segment.Track, startPosition, segments);
 
                 if (startLinkPloidy > 0)
                 {
@@ -50,14 +51,14 @@ public class Connectors
             }
 
             final GenomePosition endPosition = GenomePositions.create(segment.chromosome(), segment.end());
-            final Optional<VisSvDataFile> optionalEndPositionLink = VisLinks.findLink(endPosition, links);
+            final Optional<VisSvData> optionalEndPositionLink = VisLinks.findLink(endPosition, links);
 
             if (optionalEndPositionLink.isPresent())
             {
                 double endLinkPloidy = optionalEndPositionLink.get().JCN;
                 if (endLinkPloidy > 0)
                 {
-                    double endLinkPloidyBeforeSegment = VisSegments.segmentPloidyBefore(segment.track(), endPosition, segments);
+                    double endLinkPloidyBeforeSegment = VisSegments.segmentPloidyBefore(segment.Track, endPosition, segments);
                     result.add(builder.position(segment.end())
                             .ploidy(Math.max(0, endLinkPloidy - endLinkPloidyBeforeSegment))
                             .frame(optionalEndPositionLink.get().Frame)
@@ -72,7 +73,7 @@ public class Connectors
     }
 
     @NotNull
-    private List<Connector> create(@NotNull final VisSvDataFile link)
+    private List<Connector> create(@NotNull final VisSvData link)
     {
         @NotNull
         final List<Connector> result = Lists.newArrayList();

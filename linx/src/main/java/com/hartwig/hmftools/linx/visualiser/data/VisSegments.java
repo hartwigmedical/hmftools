@@ -12,34 +12,42 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.linx.visualiser.circos.SegmentTerminal;
 import com.hartwig.hmftools.linx.visualiser.circos.Span;
-import com.hartwig.hmftools.linx.visualiser.file.VisSegmentFile;
-import com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisSegment;
+import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
 
 import org.jetbrains.annotations.NotNull;
 
 public class VisSegments
 {
-    public static double segmentPloidyBefore(final int track, final GenomePosition position, final List<Segment> segments)
+    public static double segmentPloidyBefore(final int track, final GenomePosition position, final List<VisSegment> segments)
     {
         return segments.stream()
-                .filter(x -> x.track() < track)
+                .filter(x -> x.Track < track)
                 .filter(x -> x.chromosome().equals(position.chromosome()) && (x.start() == position.position()
                         || x.end() == position.position()))
-                .mapToDouble(Segment::ploidy)
+                .mapToDouble(x -> x.LinkPloidy)
                 .sum();
     }
 
     @NotNull
-    public static Segment entireChromosome(final String sampleId, final String chromosome, final RefGenomeCoordinates refGenCoords)
+    public static VisSegment entireChromosome(final String sampleId, final String chromosome, final RefGenomeCoordinates refGenCoords)
     {
+        VisSegment segment = new VisSegment(
+                sampleId, -1, -1, chromosome, "1", String.valueOf(refGenCoords.length(chromosome)),
+                0, false);
+
+        segment.setTerminalStart(SegmentTerminal.TELOMERE);
+        segment.setTerminalEnd(SegmentTerminal.TELOMERE);
+
+        return segment;
+
+        /*
         return ImmutableSegment.builder()
                 .sampleId(sampleId)
                 .clusterId(-1)
@@ -54,12 +62,22 @@ public class VisSegments
                 .inDoubleMinute(false)
                 .frame(0)
                 .build();
+        */
     }
 
-    private static Segment centromere(final String sampleId, final String chromosome, final RefGenomeCoordinates refGenCoords)
+    private static VisSegment centromere(final String sampleId, final String chromosome, final RefGenomeCoordinates refGenCoords)
     {
         int position = refGenCoords.centromere(chromosome);
 
+        VisSegment segment = new VisSegment(
+                sampleId, -1, -1, chromosome, String.valueOf(position), String.valueOf(position), 0, false);
+
+        segment.setTerminalStart(SegmentTerminal.CENTROMERE);
+        segment.setTerminalEnd(SegmentTerminal.CENTROMERE);
+
+        return segment;
+
+        /*
         return ImmutableSegment.builder()
                 .sampleId(sampleId)
                 .clusterId(-1)
@@ -74,43 +92,52 @@ public class VisSegments
                 .inDoubleMinute(false)
                 .frame(0)
                 .build();
+        */
     }
 
-    public static List<Segment> readTracks(final String fileName) throws IOException
+    public static List<VisSegment> readSegments(final String fileName) throws IOException
     {
-        return VisSegmentFile.read(fileName).stream().map(VisSegments::fromFile).collect(Collectors.toList());
+        return VisSegment.read(fileName);
     }
 
-    public static List<Segment> extendTerminals(int terminalDistance, final List<Segment> segments, final List<VisSvDataFile> links,
+    public static List<VisSegment> extendTerminals(int terminalDistance, final List<VisSegment> segments, final List<VisSvData> links,
             final List<GenomePosition> allPositions, boolean showSimpleSvSegments, final RefGenomeCoordinates refGenCoords)
     {
         final Map<String,Integer> minPositionPerChromosome = minPositionPerChromosome(allPositions);
         final Map<String,Integer> maxPositionPerChromosome = maxPositionPerChromosome(allPositions);
 
-        final List<Segment> result = Lists.newArrayList();
-        for (Segment segment : segments)
+        final List<VisSegment> result = Lists.newArrayList();
+
+        for(VisSegment segment : segments)
         {
             int centromere = refGenCoords.centromere(segment.chromosome());
             int length = refGenCoords.length(segment.chromosome());
 
-            if (segment.startTerminal() != SegmentTerminal.NONE)
+            if(segment.startTerminal() != SegmentTerminal.NONE)
             {
                 final int minPositionOnChromosome = minPositionPerChromosome.get(segment.chromosome());
+
                 final int startPosition = segment.startTerminal() == SegmentTerminal.CENTROMERE && minPositionOnChromosome < centromere
                         ? centromere
                         : Math.max(1, minPositionOnChromosome - terminalDistance);
 
-                segment = ImmutableSegment.builder().from(segment).start(startPosition).build();
+                segment = VisSegment.from(segment);
+                segment.setStart(startPosition);
+
+                // segment = ImmutableSegment.builder().from(segment).start(startPosition).build();
             }
 
-            if (segment.endTerminal() != SegmentTerminal.NONE)
+            if(segment.endTerminal() != SegmentTerminal.NONE)
             {
                 final int maxPositionOnChromosome = maxPositionPerChromosome.get(segment.chromosome());
                 final int endPosition = segment.endTerminal() == SegmentTerminal.CENTROMERE && maxPositionOnChromosome > centromere
                         ? centromere
                         : Math.min(length, maxPositionOnChromosome + terminalDistance);
 
-                segment = ImmutableSegment.builder().from(segment).end(endPosition).build();
+                segment = VisSegment.from(segment);
+                segment.setEnd(endPosition);
+
+                // segment = ImmutableSegment.builder().from(segment).end(endPosition).build();
             }
 
             result.add(segment);
@@ -119,13 +146,12 @@ public class VisSegments
         return incrementOnChromosome(addCentromeres(result, refGenCoords), links, showSimpleSvSegments);
     }
 
-    public static List<Segment> addCentromeres(final List<Segment> segments, final RefGenomeCoordinates refGenCoords)
+    public static List<VisSegment> addCentromeres(final List<VisSegment> segments, final RefGenomeCoordinates refGenCoords)
     {
-        if (segments.isEmpty())
-        {
+        if(segments.isEmpty())
             return segments;
-        }
-        final List<Segment> result = Lists.newArrayList(segments);
+
+        final List<VisSegment> result = Lists.newArrayList(segments);
         final Set<String> existingCentromeres = segments.stream()
                 .filter(x -> x.startTerminal() == SegmentTerminal.CENTROMERE || x.endTerminal() == SegmentTerminal.CENTROMERE)
                 .map(GenomeRegion::chromosome)
@@ -133,20 +159,20 @@ public class VisSegments
 
         final Set<String> requiredCentromeres = Sets.newHashSet();
         final List<GenomeRegion> segmentSpan = Span.spanRegions(segments);
-        for (final GenomeRegion genomeRegion : segmentSpan)
+        for(final GenomeRegion genomeRegion : segmentSpan)
         {
             int centromere = refGenCoords.centromere(genomeRegion.chromosome());
-            if (genomeRegion.start() < centromere && genomeRegion.end() > centromere)
+            if(genomeRegion.start() < centromere && genomeRegion.end() > centromere)
             {
                 requiredCentromeres.add(genomeRegion.chromosome());
             }
         }
 
         requiredCentromeres.removeAll(existingCentromeres);
-        if (!requiredCentromeres.isEmpty())
+        if(!requiredCentromeres.isEmpty())
         {
-            final String sampleId = segments.get(0).sampleId();
-            for (final String requiredCentromere : requiredCentromeres)
+            final String sampleId = segments.get(0).SampleId;
+            for(final String requiredCentromere : requiredCentromeres)
             {
                 result.add(centromere(sampleId, requiredCentromere, refGenCoords));
             }
@@ -155,46 +181,25 @@ public class VisSegments
         return result;
     }
 
-    private static Segment fromFile(final VisSegmentFile file)
+    public static List<VisSegment> incrementOnChromosome(final List<VisSegment> segments, final List<VisSvData> links, boolean showSimpleSvSegments)
     {
-        return ImmutableSegment.builder()
-                .sampleId(file.SampleId)
-                .clusterId(file.ClusterId)
-                .chainId(file.ChainId)
-                .chromosome(file.Chromosome)
-                .start(SegmentTerminal.fromString(file.PosStart) == SegmentTerminal.NONE
-                        ? Integer.valueOf(file.PosStart)
-                        : Integer.valueOf(file.PosEnd))
-                .end(SegmentTerminal.fromString(file.PosEnd) == SegmentTerminal.NONE
-                        ? Integer.valueOf(file.PosEnd)
-                        : Integer.valueOf(file.PosStart))
-                .track(0)
-                .frame(0)
-                .startTerminal(SegmentTerminal.fromString(file.PosStart))
-                .endTerminal(SegmentTerminal.fromString(file.PosEnd))
-                .ploidy(file.LinkPloidy)
-                .inDoubleMinute(file.InDoubleMinute)
-                .build();
-    }
-
-    static List<Segment> incrementOnChromosome(final List<Segment> segments, final List<VisSvDataFile> links, boolean showSimpleSvSegments)
-    {
-
         final Map<String, Integer> trackMap = Maps.newHashMap();
-        final List<Segment> result = Lists.newArrayList();
+        final List<VisSegment> result = Lists.newArrayList();
 
         int frame = -1;
         int currentTrack = 1;
-        for (final Segment segment : segments)
+        for(final VisSegment segment : segments)
         {
-            if (segment.clusterId() == -1)
+            if(segment.ClusterId == -1)
             {
-                result.add(ImmutableSegment.builder().from(segment).track(0).build());
+                VisSegment newSegment = VisSegment.from(segment);
+                newSegment.Track = 0;
+                result.add(newSegment);
             }
-            else if (showSegment(showSimpleSvSegments, segment, links))
+            else if(showSegment(showSimpleSvSegments, segment, links))
             {
                 final String chromosome = segment.chromosome();
-                if (!trackMap.containsKey(chromosome))
+                if(!trackMap.containsKey(chromosome))
                 {
                     currentTrack = 1;
                 }
@@ -204,22 +209,26 @@ public class VisSegments
                 }
                 trackMap.put(chromosome, currentTrack);
 
-                result.add(ImmutableSegment.builder().from(segment).track(currentTrack).frame(frame += 2).build());
+                VisSegment newSegment = VisSegment.from(segment);
+                newSegment.Track = currentTrack;
+                newSegment.Frame += 2;
+                result.add(newSegment);
+                //result.add(ImmutableSegment.builder().from(segment).track(currentTrack).frame(frame += 2).build());
             }
         }
 
         return result;
     }
 
-    private static boolean showSegment(boolean showSimpleSvSegments, final Segment segment, final List<VisSvDataFile> links)
+    private static boolean showSegment(boolean showSimpleSvSegments, final VisSegment segment, final List<VisSvData> links)
     {
-        if (segment.startTerminal() == SegmentTerminal.NONE && segment.endTerminal() == SegmentTerminal.NONE)
+        if(segment.startTerminal() == SegmentTerminal.NONE && segment.endTerminal() == SegmentTerminal.NONE)
         {
             return true;
         }
 
         GenomePosition startPosition = GenomePositions.create(segment.chromosome(), segment.start());
-        if (segment.startTerminal() == SegmentTerminal.NONE && showSegment(showSimpleSvSegments, startPosition, links))
+        if(segment.startTerminal() == SegmentTerminal.NONE && showSegment(showSimpleSvSegments, startPosition, links))
         {
             return true;
         }
@@ -229,7 +238,7 @@ public class VisSegments
 
     }
 
-    private static boolean showSegment(boolean showSimpleSvSegments, final GenomePosition position, final List<VisSvDataFile> links)
+    private static boolean showSegment(boolean showSimpleSvSegments, final GenomePosition position, final List<VisSvData> links)
     {
         return VisLinks.findLink(position, links).filter(x -> !x.connectorsOnly(showSimpleSvSegments)).isPresent();
     }

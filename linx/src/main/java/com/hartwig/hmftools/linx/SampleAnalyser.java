@@ -48,12 +48,12 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.visualiser.file.VisCopyNumberFile;
-import com.hartwig.hmftools.linx.visualiser.file.VisFusionFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisFusion;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
-import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.file.VisSampleData;
-import com.hartwig.hmftools.linx.visualiser.file.VisSegmentFile;
-import com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisSegment;
+import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
 
@@ -410,12 +410,12 @@ public class SampleAnalyser implements Callable
                 LinxBreakend.write(LinxBreakend.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
                 LinxDriver.write(LinxDriver.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
 
-                VisSvDataFile.write(VisSvDataFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+                VisSvData.write(VisSvData.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
                 VisCopyNumberFile.write(VisCopyNumberFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
                 VisGeneExon.write(VisGeneExon.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-                VisSegmentFile.write(VisSegmentFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-                VisFusionFile.write(VisFusionFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-                VisProteinDomainFile.write(VisProteinDomainFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+                VisSegment.write(VisSegment.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+                VisFusion.write(VisFusion.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+                VisProteinDomain.write(VisProteinDomain.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
             }
         }
         catch (IOException e)

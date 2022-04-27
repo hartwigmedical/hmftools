@@ -47,7 +47,7 @@ import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
-import com.hartwig.hmftools.linx.visualiser.file.VisFusionFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisFusion;
 import com.hartwig.hmftools.linx.visualiser.file.VisSampleData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
@@ -1051,7 +1051,7 @@ public class FusionDisruptionAnalyser
         if(mVisSampleData == null || !mConfig.Output.WriteVisualisationData)
             return;
 
-        final List<VisFusionFile> visFusions = Lists.newArrayList();
+        final List<VisFusion> visFusions = Lists.newArrayList();
 
         for(final GeneFusion fusion : fusionList)
         {
@@ -1068,7 +1068,7 @@ public class FusionDisruptionAnalyser
                 mVisSampleData.addGeneExonData(clusterId, transDown.gene().geneId(), transDown.geneName(),
                         transDown.transName(), transDown.transId(), transDown.gene().chromosome(), FUSION);
 
-                visFusions.add(new VisFusionFile(
+                visFusions.add(new VisFusion(
                         mSampleId, clusterId, fusion.reportable(),
                         transUp.geneName(), transUp.transName(), transUp.gene().chromosome(), transUp.gene().position(),
                         transUp.gene().strand(), transUp.regionType().toString(), fusion.getFusedExon(true),

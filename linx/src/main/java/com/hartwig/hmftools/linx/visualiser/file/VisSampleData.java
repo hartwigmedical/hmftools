@@ -10,7 +10,7 @@ public class VisSampleData
 {
     private String mSampleId;
     private final List<VisGeneData> mGeneData;
-    private final List<VisFusionFile> mFusions;
+    private final List<VisFusion> mFusions;
 
     public VisSampleData()
     {
@@ -28,7 +28,7 @@ public class VisSampleData
 
     public String sampleId() { return mSampleId; }
     public final List<VisGeneData> getGeneData() { return mGeneData; }
-    public final List<VisFusionFile> getFusions() { return mFusions; }
+    public final List<VisFusion> getFusions() { return mFusions; }
 
     public void addGeneExonData(int clusterId, final String geneId, final String geneName, final String transName, int transId,
             final String chromosome, final VisGeneAnnotationType annotationType)
@@ -56,6 +56,6 @@ public class VisSampleData
         mGeneData.add(geneData);
     }
 
-    public void addFusions(final List<VisFusionFile> fusions) { mFusions.addAll(fusions); }
+    public void addFusions(final List<VisFusion> fusions) { mFusions.addAll(fusions); }
 
 }

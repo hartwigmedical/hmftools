@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -90,13 +90,13 @@ public class ColorPicker
     private final double connectorTransparency;
 
     @NotNull
-    public static ColorPicker clusterColors(@NotNull final List<VisSvDataFile> links)
+    public static ColorPicker clusterColors(@NotNull final List<VisSvData> links)
     {
         return new ColorPicker(colorsByCluster(links), true, connectorTransparency(links.size()));
     }
 
     @NotNull
-    public static ColorPicker chainColors(@NotNull final List<VisSvDataFile> links)
+    public static ColorPicker chainColors(@NotNull final List<VisSvData> links)
     {
         return new ColorPicker(colorsByChain(links), false, connectorTransparency(links.size()));
     }
@@ -160,7 +160,7 @@ public class ColorPicker
     }
 
     @NotNull
-    private static Map<Integer, String> colorsByCluster(@NotNull final List<VisSvDataFile> links)
+    private static Map<Integer, String> colorsByCluster(@NotNull final List<VisSvData> links)
     {
         final Map<Integer, String> result = Maps.newHashMap();
 
@@ -180,7 +180,7 @@ public class ColorPicker
             result.put(clusterSizeList.get(i).clusterId, color);
         }
 
-        for (VisSvDataFile link : links)
+        for (VisSvData link : links)
         {
             if (link.isSimpleSV())
             {
@@ -196,13 +196,13 @@ public class ColorPicker
     }
 
     @NotNull
-    private static Map<Integer, String> colorsByChain(@NotNull final List<VisSvDataFile> links)
+    private static Map<Integer, String> colorsByChain(@NotNull final List<VisSvData> links)
     {
         final Map<Integer,String> result = Maps.newHashMap();
 
         if (!links.isEmpty())
         {
-            final VisSvDataFile firstLink = links.get(0);
+            final VisSvData firstLink = links.get(0);
 
             if(firstLink.isSimpleSV() && !firstLink.InDoubleMinute)
             {

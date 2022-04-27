@@ -16,29 +16,29 @@ import com.hartwig.hmftools.linx.visualiser.data.Connectors;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.DisruptedExons;
 import com.hartwig.hmftools.linx.visualiser.data.VisExons;
-import com.hartwig.hmftools.linx.visualiser.data.Fusion;
 import com.hartwig.hmftools.linx.visualiser.data.Gene;
 import com.hartwig.hmftools.linx.visualiser.data.Genes;
 import com.hartwig.hmftools.linx.visualiser.data.VisLinks;
-import com.hartwig.hmftools.linx.visualiser.data.Segment;
+import com.hartwig.hmftools.linx.visualiser.file.VisFusion;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
-import com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisSegment;
+import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
 
 import org.jetbrains.annotations.NotNull;
 
 public class CircosData
 {
     private final List<VisGeneExon> exons;
-    private final List<VisSvDataFile> links;
+    private final List<VisSvData> links;
     private final List<Gene> genes;
-    private final List<Segment> segments;
+    private final List<VisSegment> segments;
     private final List<GenomeRegion> lineElements;
     private final List<GenomeRegion> fragileSites;
     private final List<CopyNumberAlteration> alterations;
     private final List<GenomeRegion> disruptedGeneRegions;
     private final List<Connector> connectors;
 
-    private final List<VisSvDataFile> unadjustedLinks;
+    private final List<VisSvData> unadjustedLinks;
     private final List<CopyNumberAlteration> unadjustedAlterations;
 
     private final Set<GenomePosition> contigLengths;
@@ -57,12 +57,12 @@ public class CircosData
     private final int maxFrame;
 
     public CircosData(
-            boolean showSimpleSvSegments, final CircosConfig config, final List<Segment> unadjustedSegments,
-            final List<VisSvDataFile> unadjustedLinks, final List<CopyNumberAlteration> unadjustedAlterations,
-            final List<VisGeneExon> unadjustedExons, final List<Fusion> fusions)
+            boolean showSimpleSvSegments, final CircosConfig config, final List<VisSegment> unadjustedSegments,
+            final List<VisSvData> unadjustedLinks, final List<CopyNumberAlteration> unadjustedAlterations,
+            final List<VisGeneExon> unadjustedExons, final List<VisFusion> fusions)
     {
-        this.upstreamGenes = fusions.stream().map(Fusion::geneUp).collect(toSet());
-        this.downstreamGenes = fusions.stream().map(Fusion::geneDown).collect(toSet());
+        this.upstreamGenes = fusions.stream().map(x -> x.GeneNameUp).collect(toSet());
+        this.downstreamGenes = fusions.stream().map(x -> x.GeneNameDown).collect(toSet());
         this.unadjustedLinks = unadjustedLinks;
         this.unadjustedAlterations = unadjustedAlterations;
         this.config = config;
@@ -102,12 +102,12 @@ public class CircosData
         disruptedGeneRegions = scalePosition.interpolateRegions(unadjustedDisruptedGeneRegions);
         exons = scalePosition.interpolateExons(unadjustedGeneExons);
 
-        maxTracks = segments.stream().mapToInt(Segment::track).max().orElse(0) + 1;
+        maxTracks = segments.stream().mapToInt(x -> x.Track).max().orElse(0) + 1;
         maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);
         maxMinorAllelePloidy = alterations.stream().mapToDouble(CopyNumberAlteration::minorAlleleCopyNumber).max().orElse(0);
 
         double maxLinkPloidy = links.stream().mapToDouble(x -> x.JCN).max().orElse(0);
-        double maxSegmentsPloidy = segments.stream().mapToDouble(Segment::ploidy).max().orElse(0);
+        double maxSegmentsPloidy = segments.stream().mapToDouble(x -> x.LinkPloidy).max().orElse(0);
 
         maxPloidy = Math.max(maxLinkPloidy, maxSegmentsPloidy);
         connectors = new Connectors(showSimpleSvSegments).createConnectors(segments, links);
@@ -118,7 +118,7 @@ public class CircosData
                 ? 0.9d * config.MaxGeneCharacters / actualMaxGeneCharacters * labelSize
                 : labelSize;
 
-        maxFrame = segments.stream().mapToInt(Segment::frame).max().orElse(0);
+        maxFrame = segments.stream().mapToInt(x -> x.Frame).max().orElse(0);
     }
 
     public List<Connector> connectors()
@@ -181,7 +181,7 @@ public class CircosData
     }
 
     @NotNull
-    public List<VisSvDataFile> unadjustedLinks()
+    public List<VisSvData> unadjustedLinks()
     {
         return unadjustedLinks;
     }
@@ -193,13 +193,13 @@ public class CircosData
     }
 
     @NotNull
-    public List<Segment> segments()
+    public List<VisSegment> segments()
     {
         return segments;
     }
 
     @NotNull
-    public List<VisSvDataFile> links()
+    public List<VisSvData> links()
     {
         return links;
     }

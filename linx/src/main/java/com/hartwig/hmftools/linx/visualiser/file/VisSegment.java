@@ -11,10 +11,12 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.linx.visualiser.circos.SegmentTerminal;
 
 import org.jetbrains.annotations.NotNull;
 
-public class VisSegmentFile
+public class VisSegment implements GenomeRegion
 {
     public final String SampleId;
     public final int ClusterId;
@@ -25,9 +27,17 @@ public class VisSegmentFile
     public final double LinkPloidy;
     public final boolean InDoubleMinute;
 
+    public int Frame;
+    public int Track;
 
-    public VisSegmentFile(final String sampleId, int clusterId, int chainId, final String chromosome,
-            final String posStart, final String posEnd, double linkPloidy, boolean inDM)
+    private int mStart;
+    private int mEnd;
+    private SegmentTerminal mTerminalStart;
+    private SegmentTerminal mTerminalEnd;
+
+    public VisSegment(
+            final String sampleId, int clusterId, int chainId, final String chromosome, final String posStart, final String posEnd,
+            double linkPloidy, boolean inDM)
     {
         SampleId = sampleId;
         ClusterId = clusterId;
@@ -37,6 +47,48 @@ public class VisSegmentFile
         PosEnd = posEnd;
         LinkPloidy = linkPloidy;
         InDoubleMinute = inDM;
+        Frame = 0;
+        Track = 0;
+
+        mTerminalStart = SegmentTerminal.fromString(PosStart);
+        mTerminalEnd = SegmentTerminal.fromString(PosEnd);
+        mStart = SegmentTerminal.fromString(PosStart) == SegmentTerminal.NONE ? Integer.valueOf(PosStart) : Integer.valueOf(PosEnd);
+        mEnd = SegmentTerminal.fromString(PosEnd) == SegmentTerminal.NONE ? Integer.valueOf(PosEnd) : Integer.valueOf(PosStart);
+    }
+
+    @Override
+    public String chromosome() { return Chromosome; }
+
+    @Override
+    public int start() { return mStart; }
+
+    @Override
+    public int end() { return mEnd; }
+
+    public void setStart(int pos) { mStart = pos; }
+    public void setEnd(int pos) { mEnd = pos; }
+
+    public SegmentTerminal startTerminal() { return mTerminalStart; }
+    public SegmentTerminal endTerminal() { return mTerminalEnd; };
+
+    public void setTerminalStart(final SegmentTerminal terminal) { mTerminalStart = terminal; }
+    public void setTerminalEnd(final SegmentTerminal terminal) { mTerminalEnd = terminal; }
+
+    public static VisSegment from(final VisSegment other)
+    {
+        VisSegment newSegment = new VisSegment(
+                other.SampleId, other.ClusterId, other.ChainId, other.Chromosome, other.PosStart, other.PosEnd,
+                other.LinkPloidy, other.InDoubleMinute);
+
+        newSegment.setTerminalStart(other.startTerminal());
+        newSegment.setTerminalEnd(other.endTerminal());
+        newSegment.Track = other.Track;
+        newSegment.Frame = other.Frame;
+        newSegment.setStart(other.start());
+        newSegment.setEnd(other.end());
+        newSegment.setTerminalStart(other.startTerminal());
+        newSegment.setTerminalEnd(other.endTerminal());
+        return newSegment;
     }
 
     private static final String FILE_EXTENSION = ".linx.vis_segments.tsv";
@@ -48,18 +100,18 @@ public class VisSegmentFile
     }
 
     @NotNull
-    public static List<VisSegmentFile> read(final String filePath) throws IOException
+    public static List<VisSegment> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<VisSegmentFile> svDataList) throws IOException
+    public static void write(@NotNull final String filename, @NotNull List<VisSegment> svDataList) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(svDataList));
     }
 
     @NotNull
-    static List<String> toLines(@NotNull final List<VisSegmentFile> segments)
+    static List<String> toLines(@NotNull final List<VisSegment> segments)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -68,9 +120,9 @@ public class VisSegmentFile
     }
 
     @NotNull
-    static List<VisSegmentFile> fromLines(@NotNull List<String> lines)
+    static List<VisSegment> fromLines(@NotNull List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith("SampleId")).map(VisSegmentFile::fromString).collect(toList());
+        return lines.stream().filter(x -> !x.startsWith("SampleId")).map(VisSegment::fromString).collect(toList());
     }
 
     @NotNull
@@ -89,7 +141,7 @@ public class VisSegmentFile
     }
 
     @NotNull
-    public static String toString(@NotNull final VisSegmentFile segment)
+    public static String toString(@NotNull final VisSegment segment)
     {
         return new StringJoiner(DELIMITER)
                 .add(String.valueOf(segment.SampleId))
@@ -104,13 +156,13 @@ public class VisSegmentFile
     }
 
     @NotNull
-    private static VisSegmentFile fromString(@NotNull final String segment)
+    private static VisSegment fromString(@NotNull final String segment)
     {
         String[] values = segment.split(DELIMITER);
 
         int index = 0;
 
-        return new VisSegmentFile(
+        return new VisSegment(
                 values[index++],
                 Integer.parseInt(values[index++]),
                 Integer.parseInt(values[index++]),

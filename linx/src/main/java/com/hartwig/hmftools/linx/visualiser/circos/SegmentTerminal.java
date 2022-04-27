@@ -8,8 +8,7 @@ public enum SegmentTerminal
     CENTROMERE,
     NONE;
 
-    @NotNull
-    public static SegmentTerminal fromString(@NotNull final String position)
+    public static SegmentTerminal fromString(final String position)
     {
         switch (position)
         {

@@ -11,19 +11,18 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.linx.visualiser.file.VisFusion;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
-
-import org.jetbrains.annotations.NotNull;
 
 public class DisruptedExons
 {
-    public static List<GenomeRegion> disruptedGeneRegions(final List<Fusion> fusions, final List<VisGeneExon> exons)
+    public static List<GenomeRegion> disruptedGeneRegions(final List<VisFusion> fusions, final List<VisGeneExon> exons)
     {
         List<GenomeRegion> result = exons.stream().filter(x -> x.AnnotationType == EXON_LOST)
                 .map(x -> GenomeRegions.create(x.Chromosome, x.ExonStart, x.ExonEnd))
                 .collect(Collectors.toList());
 
-        for (Fusion fusion : fusions)
+        for (VisFusion fusion : fusions)
         {
             result.addAll(disruptedGeneRegions(fusion, exons));
         }
@@ -31,13 +30,13 @@ public class DisruptedExons
         return result;
     }
 
-    public static List<GenomeRegion> disruptedGeneRegions(final Fusion fusion, final List<VisGeneExon> exons)
+    public static List<GenomeRegion> disruptedGeneRegions(final VisFusion fusion, final List<VisGeneExon> exons)
     {
         final List<VisGeneExon> upStreamExons = sortedUpstreamExons(fusion, exons).stream()
-                .filter(x -> x.ExonRank >= fusion.fusedExonUp()).collect(Collectors .toList());
+                .filter(x -> x.ExonRank >= fusion.FusedExonUp).collect(Collectors .toList());
 
         final List<VisGeneExon> downStreamExons = sortedDownstreamExons(fusion, exons).stream()
-                .filter(x -> x.ExonRank <= fusion.fusedExonDown()).collect(Collectors.toList());
+                .filter(x -> x.ExonRank <= fusion.FusedExonDown).collect(Collectors.toList());
 
         if (upStreamExons.isEmpty() || downStreamExons.isEmpty())
         {
@@ -55,54 +54,54 @@ public class DisruptedExons
         return Lists.newArrayList(upGeneRegion, downGeneRegion);
     }
 
-    private static Gene downGeneExcludedRegion(final Fusion fusion, final VisGeneExon firstExcludedDownExon,
+    private static Gene downGeneExcludedRegion(final VisFusion fusion, final VisGeneExon firstExcludedDownExon,
             final VisGeneExon firstIncludedDoneExon)
     {
-        return fusion.strandDown() < 0 ?
+        return fusion.StrandDown < 0 ?
                 ImmutableGene.builder()
                         .type(EXON_LOST)
                         .chromosome(firstExcludedDownExon.Chromosome)
                         .end(firstExcludedDownExon.ExonEnd)
-                        .start(Math.min(fusion.positionDown(), firstIncludedDoneExon.ExonEnd))
-                        .strand(fusion.strandUp())
-                        .name(fusion.geneDown())
-                        .transcript(fusion.transcriptDown())
+                        .start(Math.min(fusion.PosDown, firstIncludedDoneExon.ExonEnd))
+                        .strand(fusion.StrandUp)
+                        .name(fusion.GeneNameDown)
+                        .transcript(fusion.TranscriptDown)
                         .namePosition(0)
                         .build() :
                 ImmutableGene.builder()
                         .type(EXON_LOST)
                         .chromosome(firstExcludedDownExon.Chromosome)
                         .start(firstExcludedDownExon.ExonStart)
-                        .end(Math.max(fusion.positionDown(), firstIncludedDoneExon.ExonStart))
-                        .strand(fusion.strandUp())
-                        .name(fusion.geneDown())
-                        .transcript(fusion.transcriptDown())
+                        .end(Math.max(fusion.PosDown, firstIncludedDoneExon.ExonStart))
+                        .strand(fusion.StrandUp)
+                        .name(fusion.GeneNameDown)
+                        .transcript(fusion.TranscriptDown)
                         .namePosition(0)
                         .build();
     }
 
-    private static Gene upGeneExcludedRegion(final Fusion fusion, final VisGeneExon finalIncludedExon,
+    private static Gene upGeneExcludedRegion(final VisFusion fusion, final VisGeneExon finalIncludedExon,
             final VisGeneExon finalExcludedUpExon)
     {
-        return fusion.strandUp() < 0 ?
+        return fusion.StrandUp < 0 ?
                 ImmutableGene.builder()
                         .type(EXON_LOST)
                         .chromosome(finalExcludedUpExon.Chromosome)
                         .start(finalExcludedUpExon.ExonStart)
-                        .end(Math.max(fusion.positionUp(), finalIncludedExon.ExonStart))
-                        .strand(fusion.strandDown())
-                        .name(fusion.geneUp())
-                        .transcript(fusion.transcriptUp())
+                        .end(Math.max(fusion.PosUp, finalIncludedExon.ExonStart))
+                        .strand(fusion.StrandDown)
+                        .name(fusion.GeneNameUp)
+                        .transcript(fusion.TranscriptUp)
                         .namePosition(0)
                         .build() :
                 ImmutableGene.builder()
                         .type(EXON_LOST)
                         .chromosome(finalExcludedUpExon.Chromosome)
-                        .start(Math.min(fusion.positionUp(), finalIncludedExon.ExonEnd))
+                        .start(Math.min(fusion.PosUp, finalIncludedExon.ExonEnd))
                         .end(finalExcludedUpExon.ExonEnd)
-                        .strand(fusion.strandDown())
-                        .name(fusion.geneUp())
-                        .transcript(fusion.transcriptUp())
+                        .strand(fusion.StrandDown)
+                        .name(fusion.GeneNameUp)
+                        .transcript(fusion.TranscriptUp)
                         .namePosition(0)
                         .build();
     }

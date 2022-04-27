@@ -13,11 +13,11 @@ import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_CENTROMERE;
 import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_TELOMERE;
 import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.EXON_LOST;
 import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.FUSION;
-import static com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile.PD_FIVE_PRIME_UTR;
-import static com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile.PD_NON_CODING;
-import static com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile.PD_THREE_PRIME_UTR;
-import static com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile.INFO_TYPE_FOLDBACK;
-import static com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile.INFO_TYPE_NORMAL;
+import static com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain.PD_FIVE_PRIME_UTR;
+import static com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain.PD_NON_CODING;
+import static com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain.PD_THREE_PRIME_UTR;
+import static com.hartwig.hmftools.linx.visualiser.file.VisSvData.INFO_TYPE_FOLDBACK;
+import static com.hartwig.hmftools.linx.visualiser.file.VisSvData.INFO_TYPE_NORMAL;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -78,11 +78,11 @@ public class VisDataWriter
         try
         {
             mSvFileWriter = createBufferedWriter(mOutputDir + COHORT_VIS_SVS_FILE, false);
-            mSvFileWriter.write(VisSvDataFile.header());
+            mSvFileWriter.write(VisSvData.header());
             mSvFileWriter.newLine();
 
             mSegmentFileWriter = createBufferedWriter(mOutputDir + COHORT_VIS_LINKS_FILE, false);
-            mSegmentFileWriter.write(VisSegmentFile.header());
+            mSegmentFileWriter.write(VisSegment.header());
             mSegmentFileWriter.newLine();
 
             mCnFileWriter = createBufferedWriter(mOutputDir + COHORT_VIS_COPY_NUMBER_FILE, false);
@@ -94,11 +94,11 @@ public class VisDataWriter
             mGeneFileWriter.newLine();
 
             mProteinDomainFileWriter = createBufferedWriter(mOutputDir + COHORT_VIS_PROTEIN_FILE, false);
-            mProteinDomainFileWriter.write(VisProteinDomainFile.header());
+            mProteinDomainFileWriter.write(VisProteinDomain.header());
             mProteinDomainFileWriter.newLine();
 
             mFusionFileWriter = createBufferedWriter(mOutputDir + COHORT_VIS_FUSIONS_FILE, false);
-            mFusionFileWriter.write(VisFusionFile.header());
+            mFusionFileWriter.write(VisFusion.header());
             mFusionFileWriter.newLine();
 
         }
@@ -134,7 +134,7 @@ public class VisDataWriter
 
     private void writeSvData(final VisSampleData sampleData, final List<SvVarData> variants)
     {
-        List<VisSvDataFile> svDataList = Lists.newArrayList();
+        List<VisSvData> svDataList = Lists.newArrayList();
 
         for(final SvVarData var : variants)
         {
@@ -154,7 +154,7 @@ public class VisDataWriter
                 final SvBreakend beStart = var.getBreakend(true);
                 final SvBreakend beEnd = var.getBreakend(false);
 
-                svDataList.add(new VisSvDataFile(sampleData.sampleId(), cluster.id(), chainId, var.id(),
+                svDataList.add(new VisSvData(sampleData.sampleId(), cluster.id(), chainId, var.id(),
                         var.type(), cluster.getResolvedType(), cluster.isSyntheticType(),
                         beStart.chromosome(), beEnd != null ? beEnd.chromosome() : "-1",
                         beStart.position(), beEnd != null ? beEnd.position() : 0,
@@ -169,15 +169,15 @@ public class VisDataWriter
         {
             if(mBatchOutput)
             {
-                for(final VisSvDataFile data : svDataList)
+                for(final VisSvData data : svDataList)
                 {
-                    mSvFileWriter.write(VisSvDataFile.toString(data));
+                    mSvFileWriter.write(VisSvData.toString(data));
                     mSvFileWriter.newLine();
                 }
             }
             else
             {
-                VisSvDataFile.write(VisSvDataFile.generateFilename(mOutputDir, sampleData.sampleId()), svDataList);
+                VisSvData.write(VisSvData.generateFilename(mOutputDir, sampleData.sampleId()), svDataList);
             }
         }
         catch(IOException e)
@@ -189,7 +189,7 @@ public class VisDataWriter
     private void writeSegmentData(final VisSampleData sampleData, final List<SvCluster> clusters)
     {
         // write out the links from each chain and a link from the chain-end breakends to telomere or centromere
-        List<VisSegmentFile> segments = Lists.newArrayList();
+        List<VisSegment> segments = Lists.newArrayList();
 
         for(final SvCluster cluster : clusters)
         {
@@ -234,7 +234,7 @@ public class VisDataWriter
 
                     if (breakend != null)
                     {
-                        segments.add(new VisSegmentFile(sampleData.sampleId(), cluster.id(), chain.id(), breakend.chromosome(),
+                        segments.add(new VisSegment(sampleData.sampleId(), cluster.id(), chain.id(), breakend.chromosome(),
                                 getPositionValue(breakend, true), getPositionValue(breakend, false), chainPloidy, false));
                     }
                 }
@@ -266,7 +266,7 @@ public class VisDataWriter
                     final SvBreakend beStart = pair.getBreakend(true);
                     final SvBreakend beEnd = pair.getBreakend(false);
 
-                    segments.add(new VisSegmentFile(sampleData.sampleId(), cluster.id(), chain.id(), beStart.chromosome(),
+                    segments.add(new VisSegment(sampleData.sampleId(), cluster.id(), chain.id(), beStart.chromosome(),
                             String.valueOf(beStart.position()), String.valueOf(beEnd.position()), linkPloidy, chain.isDoubleMinute()));
                 }
 
@@ -277,7 +277,7 @@ public class VisDataWriter
 
                     if (breakend != null && !startsOnEnd)
                     {
-                        segments.add(new VisSegmentFile(sampleData.sampleId(), cluster.id(), chain.id(), breakend.chromosome(),
+                        segments.add(new VisSegment(sampleData.sampleId(), cluster.id(), chain.id(), breakend.chromosome(),
                                 getPositionValue(breakend, true), getPositionValue(breakend, false), chainPloidy, false));
                     }
                 }
@@ -295,7 +295,7 @@ public class VisDataWriter
                     if (breakend == null)
                         continue;
 
-                    segments.add(new VisSegmentFile(sampleData.sampleId(), cluster.id(), chainId, breakend.chromosome(),
+                    segments.add(new VisSegment(sampleData.sampleId(), cluster.id(), chainId, breakend.chromosome(),
                             getPositionValue(breakend, true), getPositionValue(breakend, false), var.jcn(), false));
                 }
             }
@@ -305,15 +305,15 @@ public class VisDataWriter
         {
             if(mBatchOutput)
             {
-                for(final VisSegmentFile data : segments)
+                for(final VisSegment data : segments)
                 {
-                    mSegmentFileWriter.write(VisSegmentFile.toString(data));
+                    mSegmentFileWriter.write(VisSegment.toString(data));
                     mSegmentFileWriter.newLine();
                 }
             }
             else
             {
-                VisSegmentFile.write(VisSegmentFile.generateFilename(mOutputDir, sampleData.sampleId()), segments);
+                VisSegment.write(VisSegment.generateFilename(mOutputDir, sampleData.sampleId()), segments);
             }
         }
         catch (final IOException e)
@@ -350,7 +350,7 @@ public class VisDataWriter
             return;
 
         final List<VisGeneExon> geneExonList = Lists.newArrayList();
-        final List<VisProteinDomainFile> proteinList = Lists.newArrayList();
+        final List<VisProteinDomain> proteinList = Lists.newArrayList();
 
         for(final VisGeneData geneData : sampleData.getGeneData())
         {
@@ -405,7 +405,7 @@ public class VisDataWriter
 
                     if(domainPositions[SE_START] != null && domainPositions[SE_END] != null)
                     {
-                        proteinList.add(new VisProteinDomainFile(sampleData.sampleId(), geneData.ClusterId, transData.TransName, geneData.Chromosome,
+                        proteinList.add(new VisProteinDomain(sampleData.sampleId(), geneData.ClusterId, transData.TransName, geneData.Chromosome,
                                 domainPositions[SE_START], domainPositions[SE_END], proteinData.HitDescription));
                     }
                 }
@@ -422,19 +422,19 @@ public class VisDataWriter
 
                 if(fivePrimeUtrStart < fivePrimeUtrEnd)
                 {
-                    proteinList.add(new VisProteinDomainFile(sampleData.sampleId(), geneData.ClusterId, transData.TransName, geneData.Chromosome,
+                    proteinList.add(new VisProteinDomain(sampleData.sampleId(), geneData.ClusterId, transData.TransName, geneData.Chromosome,
                             fivePrimeUtrStart, fivePrimeUtrEnd, PD_FIVE_PRIME_UTR));
                 }
 
                 if(threePrimeUtrStart < threePrimeUtrEnd)
                 {
-                    proteinList.add(new VisProteinDomainFile(sampleData.sampleId(), geneData.ClusterId, transData.TransName, geneData.Chromosome,
+                    proteinList.add(new VisProteinDomain(sampleData.sampleId(), geneData.ClusterId, transData.TransName, geneData.Chromosome,
                             threePrimeUtrStart, threePrimeUtrEnd, PD_THREE_PRIME_UTR));
                 }
             }
             else
             {
-                proteinList.add(new VisProteinDomainFile(sampleData.sampleId(), geneData.ClusterId, transData.TransName, geneData.Chromosome,
+                proteinList.add(new VisProteinDomain(sampleData.sampleId(), geneData.ClusterId, transData.TransName, geneData.Chromosome,
                         transData.TransStart, transData.TransEnd, PD_NON_CODING));
             }
         }
@@ -449,16 +449,16 @@ public class VisDataWriter
                     mGeneFileWriter.newLine();
                 }
 
-                for(final VisProteinDomainFile data : proteinList)
+                for(final VisProteinDomain data : proteinList)
                 {
-                    mProteinDomainFileWriter.write(VisProteinDomainFile.toString(data));
+                    mProteinDomainFileWriter.write(VisProteinDomain.toString(data));
                     mProteinDomainFileWriter.newLine();
                 }
             }
             else
             {
                 VisGeneExon.write(VisGeneExon.generateFilename(mOutputDir, sampleData.sampleId()), geneExonList);
-                VisProteinDomainFile.write(VisProteinDomainFile.generateFilename(mOutputDir, sampleData.sampleId()), proteinList);
+                VisProteinDomain.write(VisProteinDomain.generateFilename(mOutputDir, sampleData.sampleId()), proteinList);
             }
         }
         catch (final IOException e)
@@ -554,15 +554,15 @@ public class VisDataWriter
         {
             if (mBatchOutput)
             {
-                for (final VisFusionFile visFusion : sampleData.getFusions())
+                for (final VisFusion visFusion : sampleData.getFusions())
                 {
-                    mFusionFileWriter.write(VisFusionFile.toString(visFusion));
+                    mFusionFileWriter.write(VisFusion.toString(visFusion));
                     mFusionFileWriter.newLine();
                 }
             }
             else
             {
-                VisFusionFile.write(VisFusionFile.generateFilename(mOutputDir, sampleData.sampleId()), sampleData.getFusions());
+                VisFusion.write(VisFusion.generateFilename(mOutputDir, sampleData.sampleId()), sampleData.getFusions());
             }
         }
         catch (IOException e)

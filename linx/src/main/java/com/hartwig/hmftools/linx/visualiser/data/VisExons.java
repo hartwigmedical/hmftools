@@ -12,20 +12,21 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.linx.visualiser.file.VisFusion;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 
 public class VisExons
 {
     private static final Comparator<VisGeneExon> RANKED = Comparator.comparingInt(x -> x.ExonRank);
 
-    public static List<VisGeneExon> fusionExons(final Fusion fusion, final List<VisGeneExon> exons)
+    public static List<VisGeneExon> fusionExons(final VisFusion fusion, final List<VisGeneExon> exons)
     {
         final List<VisGeneExon> result = Lists.newArrayList();
 
-        result.addAll(transcriptExons(fusion.transcriptUp(), exons));
-        if(!fusion.transcriptUp().equals(fusion.transcriptDown()))
+        result.addAll(transcriptExons(fusion.TranscriptUp, exons));
+        if(!fusion.TranscriptUp.equals(fusion.TranscriptDown))
         {
-            result.addAll(transcriptExons(fusion.transcriptDown(), exons));
+            result.addAll(transcriptExons(fusion.TranscriptDown, exons));
         }
 
         return result;
@@ -62,18 +63,18 @@ public class VisExons
         return Lists.newArrayList(dedup.values());
     }
 
-    static List<VisGeneExon> sortedUpstreamExons(final Fusion fusion, final List<VisGeneExon> exons)
+    static List<VisGeneExon> sortedUpstreamExons(final VisFusion fusion, final List<VisGeneExon> exons)
     {
         return exons.stream()
-                .filter(x -> x.Gene.equals(fusion.geneUp()) & x.Transcript.equals(fusion.transcriptUp()))
+                .filter(x -> x.Gene.equals(fusion.GeneNameUp) & x.Transcript.equals(fusion.TranscriptUp))
                 .sorted(RANKED)
                 .collect(Collectors.toList());
     }
 
-    static List<VisGeneExon> sortedDownstreamExons(final Fusion fusion, final List<VisGeneExon> exons)
+    static List<VisGeneExon> sortedDownstreamExons(final VisFusion fusion, final List<VisGeneExon> exons)
     {
         return exons.stream()
-                .filter(x -> x.Gene.equals(fusion.geneDown()) & x.Transcript.equals(fusion.transcriptDown()))
+                .filter(x -> x.Gene.equals(fusion.GeneNameDown) & x.Transcript.equals(fusion.TranscriptDown))
                 .sorted(RANKED)
                 .collect(Collectors.toList());
     }

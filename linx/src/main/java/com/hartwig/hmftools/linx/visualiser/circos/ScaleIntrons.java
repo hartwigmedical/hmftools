@@ -9,6 +9,7 @@ import com.hartwig.hmftools.linx.visualiser.data.FusedExon;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableFusedExon;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
+import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -59,15 +60,15 @@ class ScaleIntrons
     }
 
     @NotNull
-    public List<ProteinDomain> scaleIntronsInProteinDomains(@NotNull final List<ProteinDomain> domains)
+    public List<VisProteinDomain> scaleIntronsInProteinDomains(@NotNull final List<VisProteinDomain> domains)
     {
-        final List<ProteinDomain> result = Lists.newArrayList();
-        for (ProteinDomain domain : domains)
+        final List<VisProteinDomain> result = Lists.newArrayList();
+        for (VisProteinDomain domain : domains)
         {
-            result.add(ImmutableProteinDomain.builder().from(domain)
-                    .start(domain.start() + offset(domain.start()))
-                    .end(domain.end() + offset(domain.end()))
-                    .build());
+            VisProteinDomain newDomain = VisProteinDomain.from(domain);
+            newDomain.Start = domain.start() + offset(domain.start());
+            newDomain.End = domain.end() + offset(domain.end());
+            result.add(newDomain);
         }
 
         return result;

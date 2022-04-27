@@ -29,8 +29,8 @@ import com.hartwig.hmftools.linx.visualiser.data.AdjustedPositions;
 import com.hartwig.hmftools.linx.visualiser.data.Connector;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.Gene;
-import com.hartwig.hmftools.linx.visualiser.data.Segment;
-import com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisSegment;
+import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
 import com.hartwig.hmftools.linx.visualiser.data.VisLinks;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 
@@ -93,8 +93,8 @@ public class CircosDataWriter
 
         int totalContigLength = data.totalContigLength();
 
-        final List<Segment> segments = data.segments();
-        final List<VisSvDataFile> links = data.links();
+        final List<VisSegment> segments = data.segments();
+        final List<VisSvData> links = data.links();
         final List<CopyNumberAlteration> alterations = data.alterations();
         final List<GenomeRegion> fragileSites = data.fragileSites();
         final List<GenomeRegion> lineElements = data.lineElements();
@@ -353,30 +353,30 @@ public class CircosDataWriter
         return result;
     }
 
-    private List<String> createScatter(final List<Segment> segments, final List<VisSvDataFile> links)
+    private List<String> createScatter(final List<VisSegment> segments, final List<VisSvData> links)
     {
         int glyphSize = circosConfig.GlyphSize;
         int glyphSizeInner = (int) Math.floor(circosConfig.GlyphSize * 14d / 20d);
 
         final List<String> result = Lists.newArrayList();
-        for (Segment segment : segments)
+        for (VisSegment segment : segments)
         {
 
-            if (segment.track() == 0)
+            if (segment.Track == 0)
             {
                 continue;
             }
 
-            final String colorOption = colorPicker.transparentColor(segment.clusterId(), segment.chainId());
+            final String colorOption = colorPicker.transparentColor(segment.ClusterId, segment.ChainId);
             final String startGlyph = scatterGlyph(true, segment, links);
-            result.add(scatterEntry(true, segment, colorOption, startGlyph, glyphSize, segment.frame()));
+            result.add(scatterEntry(true, segment, colorOption, startGlyph, glyphSize, segment.Frame));
             if (segment.startTerminal() == SegmentTerminal.CENTROMERE)
             {
                 result.add(scatterEntry(true, segment, "color=white", startGlyph, glyphSizeInner, 0));
             }
 
             final String endGlyph = scatterGlyph(false, segment, links);
-            result.add(scatterEntry(false, segment, colorOption, endGlyph, glyphSize, segment.frame()));
+            result.add(scatterEntry(false, segment, colorOption, endGlyph, glyphSize, segment.Frame));
             if (segment.endTerminal() == SegmentTerminal.CENTROMERE)
             {
                 result.add(scatterEntry(false, segment, "color=white", endGlyph, glyphSizeInner, 0));
@@ -386,7 +386,7 @@ public class CircosDataWriter
         return result;
     }
 
-    private List<String> createSglScatter(final List<VisSvDataFile> links)
+    private List<String> createSglScatter(final List<VisSvData> links)
     {
         int glyphSize = circosConfig.GlyphSize;
         int glyphSizeInner = (int) Math.floor(circosConfig.GlyphSize * 14d / 20d);
@@ -394,7 +394,7 @@ public class CircosDataWriter
         final List<String> result = Lists.newArrayList();
 
         // Draw open circles at SGL ends
-        for (final VisSvDataFile link : links)
+        for (final VisSvData link : links)
         {
             if (link.isValidStart() && !link.isValidEnd())
             {
@@ -407,7 +407,7 @@ public class CircosDataWriter
         return result;
     }
 
-    private String scatterGlyph(boolean isStart, final Segment segment, final List<VisSvDataFile> links)
+    private String scatterGlyph(boolean isStart, final VisSegment segment, final List<VisSvData> links)
     {
         int location = isStart ? segment.start() : segment.end();
         final SegmentTerminal terminal = isStart ? segment.startTerminal() : segment.endTerminal();
@@ -426,7 +426,7 @@ public class CircosDataWriter
         return isFoldback ? "triangle" : "circle";
     }
 
-    private String scatterEntry(boolean isStart, final Segment segment, final String color, final String glyph,
+    private String scatterEntry(boolean isStart, final VisSegment segment, final String color, final String glyph,
             int glyph_size, int frame)
     {
 
@@ -435,12 +435,12 @@ public class CircosDataWriter
         return new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
                 .add(String.valueOf(location))
                 .add(String.valueOf(location))
-                .add(String.valueOf(segment.track()))
+                .add(String.valueOf(segment.Track))
                 .add(color + "," + "glyph=" + glyph + ",glyph_size=" + glyph_size + ",frame=" + frame)
                 .toString();
     }
 
-    private String scatterSGLEntry(final VisSvDataFile link, final String color, int glyph_size)
+    private String scatterSGLEntry(final VisSvData link, final String color, int glyph_size)
     {
         return new StringJoiner(DELIMITER).add(circosContig(link.ChrStart))
                 .add(String.valueOf(link.PosStart))
@@ -450,10 +450,10 @@ public class CircosDataWriter
                 .toString();
     }
 
-    private List<String> createLinks(final List<VisSvDataFile> links)
+    private List<String> createLinks(final List<VisSvData> links)
     {
         final List<String> result = Lists.newArrayList();
-        for(final VisSvDataFile link : links)
+        for(final VisSvData link : links)
         {
             if(!HumanChromosome.contains(link.ChrStart) || !HumanChromosome.contains(link.ChrEnd))
                 continue;
@@ -516,24 +516,24 @@ public class CircosDataWriter
         return result;
     }
 
-    private List<String> createHistogramTrack(final List<Segment> segments)
+    private List<String> createHistogramTrack(final List<VisSegment> segments)
     {
         final List<String> result = Lists.newArrayList();
-        for (final Segment segment : segments)
+        for (final VisSegment segment : segments)
         {
-            if (segment.track() > 0)
+            if (segment.Track > 0)
             {
-                double thickness = thicknessPixels(segment.ploidy());
-                double r0 = configWriter.svTrackRelative(segment.track());
+                double thickness = thicknessPixels(segment.LinkPloidy);
+                double r0 = configWriter.svTrackRelative(segment.Track);
                 String r0String = "r0=" + RATIO_FORMAT.format(r0) + "r-" + thickness / 2d + "p";
                 String r1String = "r1=" + RATIO_FORMAT.format(r0) + "r+" + thickness / 2d + "p";
 
                 final String entry = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
                         .add(String.valueOf(segment.start()))
                         .add(String.valueOf(segment.end()))
-                        .add(String.valueOf(segment.track()))
-                        .add("fill_" + colorPicker.transparentColor(segment.clusterId(), segment.chainId()) + "," + r0String + ","
-                                + r1String + ",frame=" + segment.frame())
+                        .add(String.valueOf(segment.Track))
+                        .add("fill_" + colorPicker.transparentColor(segment.ClusterId, segment.ChainId) + "," + r0String + ","
+                                + r1String + ",frame=" + segment.Frame)
                         .toString();
                 result.add(entry);
             }
@@ -542,7 +542,7 @@ public class CircosDataWriter
         return result;
     }
 
-    private List<String> createPositionText(final List<VisSvDataFile> originalLinks, final List<VisSvDataFile> scaledLinks)
+    private List<String> createPositionText(final List<VisSvData> originalLinks, final List<VisSvData> scaledLinks)
     {
         final List<AdjustedPosition> positions = AdjustedPositions.create(originalLinks, scaledLinks);
         if (circosConfig.ExactPosition)

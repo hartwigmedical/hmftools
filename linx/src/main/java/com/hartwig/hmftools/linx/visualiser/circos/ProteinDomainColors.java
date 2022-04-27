@@ -10,12 +10,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.data.VisProteinDomains;
+import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain;
 
 import org.jetbrains.annotations.NotNull;
 
 public class ProteinDomainColors
 {
-
     private static final float SAT = 0.5f;
     private static final float BRIGHT = 0.8392f;
     private static final Color UTR = new Color(128, 128, 128);
@@ -24,14 +24,14 @@ public class ProteinDomainColors
 
     private final Map<String, Color> proteinColorMap = Maps.newLinkedHashMap();
 
-    public ProteinDomainColors(@NotNull final List<ProteinDomain> proteinDomains)
+    public ProteinDomainColors(final List<VisProteinDomain> proteinDomains)
     {
-        this(proteinDomains.stream().map(ProteinDomain::name).collect(Collectors.toSet()));
+        this(proteinDomains.stream().map(VisProteinDomain::name).collect(Collectors.toSet()));
     }
 
-    ProteinDomainColors(@NotNull final Set<String> proteinDomains)
+    ProteinDomainColors(final Set<String> proteinDomains)
     {
-        proteinColorMap.put(VisProteinDomains.UTR, UTR);
+        proteinColorMap.put(VisProteinDomain.UTR, UTR);
 
         final List<String> newProteinDomains =
                 proteinDomains.stream().filter(x -> !proteinColorMap.containsKey(x)).collect(Collectors.toList());
@@ -44,9 +44,9 @@ public class ProteinDomainColors
     }
 
     @NotNull
-    public Color color(@NotNull final ProteinDomain proteinDomain)
+    public Color color(final VisProteinDomain proteinDomain)
     {
-        if (proteinDomain.name().equals(VisProteinDomains.UTR))
+        if (proteinDomain.name().equals(VisProteinDomain.UTR))
         {
             return proteinDomain.start() == 1 ? UTR_DOWN : UTR_UP;
         }

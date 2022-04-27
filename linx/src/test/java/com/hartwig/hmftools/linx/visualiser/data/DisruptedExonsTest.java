@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.linx.visualiser.file.VisFusion;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 
 import org.jetbrains.annotations.NotNull;
@@ -48,7 +49,7 @@ public class DisruptedExonsTest
         exons.addAll(normalUp);
         exons.addAll(normalDown);
 
-        final Fusion fusion = create(1, 150, 1, 1, 150, 2);
+        final VisFusion fusion = create(1, 150, 1, 1, 150, 2);
         final List<GenomeRegion> victim = DisruptedExons.disruptedGeneRegions(fusion, exons);
 
         assertEquals(2, victim.size());
@@ -63,7 +64,7 @@ public class DisruptedExonsTest
         exons.addAll(normalUp);
         exons.addAll(normalDown);
 
-        final Fusion fusion = create(1, 50, 1, 1, 250, 2);
+        final VisFusion fusion = create(1, 50, 1, 1, 250, 2);
         final List<GenomeRegion> victim = DisruptedExons.disruptedGeneRegions(fusion, exons);
 
         assertEquals(2, victim.size());
@@ -78,7 +79,7 @@ public class DisruptedExonsTest
         exons.addAll(reverseUp);
         exons.addAll(reverseDown);
 
-        final Fusion fusion = create(-1, 150, 1, -1, 150, 2);
+        final VisFusion fusion = create(-1, 150, 1, -1, 150, 2);
         final List<GenomeRegion> victim = DisruptedExons.disruptedGeneRegions(fusion, exons);
 
         assertEquals(2, victim.size());
@@ -93,7 +94,7 @@ public class DisruptedExonsTest
         exons.addAll(reverseUp);
         exons.addAll(reverseDown);
 
-        final Fusion fusion = create(-1, 250, 1, -1, 50, 2);
+        final VisFusion fusion = create(-1, 250, 1, -1, 50, 2);
         final List<GenomeRegion> victim = DisruptedExons.disruptedGeneRegions(fusion, exons);
 
         assertEquals(2, victim.size());
@@ -116,27 +117,11 @@ public class DisruptedExonsTest
     }
 
     @NotNull
-    static Fusion create(int strandUp, int positionUp, int fusedExonUp, int strandDown, int positionDown, int fusedExonDown)
+    static VisFusion create(int strandUp, int positionUp, int fusedExonUp, int strandDown, int positionDown, int fusedExonDown)
     {
-        return ImmutableFusion.builder()
-                .sampleId("sample")
-                .reportable(true)
-                .clusterId(1)
-                .chromosomeUp(UP)
-                .positionUp(positionUp)
-                .geneUp(UP)
-                .strandUp(strandUp)
-                .regionTypeUp(UP)
-                .fusedExonUp(fusedExonUp)
-                .chromosomeDown(DOWN)
-                .positionDown(positionDown)
-                .geneDown(DOWN)
-                .strandDown(strandDown)
-                .regionTypeDown(DOWN)
-                .fusedExonDown(fusedExonDown)
-                .transcriptUp(UP)
-                .transcriptDown(DOWN)
-                .build();
+        return new VisFusion(
+                "sample", 1, true, UP, UP, UP, positionUp, strandUp, UP, fusedExonUp,
+                DOWN, DOWN, DOWN, positionDown, strandDown, DOWN, fusedExonDown);
     }
 
 }

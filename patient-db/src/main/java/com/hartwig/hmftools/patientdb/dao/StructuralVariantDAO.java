@@ -118,6 +118,7 @@ class StructuralVariantDAO
                     .insertSequenceRepeatCoverage(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATCOVERAGE)))
                     .startAnchoringSupportDistance(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.STARTANCHORINGSUPPORTDISTANCE)))
                     .endAnchoringSupportDistance(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.ENDANCHORINGSUPPORTDISTANCE)))
+                    .ponCount(0)
                     .build());
         }
         return structuralVariants;

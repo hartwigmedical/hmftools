@@ -14,7 +14,7 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public class VisFusionFile
+public class VisFusion
 {
     public final String SampleId;
     public final boolean Reportable;
@@ -36,7 +36,7 @@ public class VisFusionFile
     public final String RegionTypeDown;
     public final int FusedExonDown;
 
-    public VisFusionFile(final String sampleId, int clusterId, boolean reportable,
+    public VisFusion(final String sampleId, int clusterId, boolean reportable,
             final String geneNameUp, final String transcriptUp,
             final String chrUp, int posUp, int strandUp, final String regionTypeUp, int fusedExonUp,
             final String geneNameDown, final String transcriptDown,
@@ -63,6 +63,11 @@ public class VisFusionFile
         FusedExonDown = fusedExonDown;
     }
 
+    public String name()
+    {
+        return GeneNameUp + "_" + GeneNameDown;
+    }
+
     private static final String FILE_EXTENSION = ".linx.vis_fusion.tsv";
 
     @NotNull
@@ -72,18 +77,18 @@ public class VisFusionFile
     }
 
     @NotNull
-    public static List<VisFusionFile> read(final String filePath) throws IOException
+    public static List<VisFusion> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<VisFusionFile> dataList) throws IOException
+    public static void write(@NotNull final String filename, @NotNull List<VisFusion> dataList) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(dataList));
     }
 
     @NotNull
-    static List<String> toLines(@NotNull final List<VisFusionFile> dataList)
+    static List<String> toLines(@NotNull final List<VisFusion> dataList)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -92,9 +97,9 @@ public class VisFusionFile
     }
 
     @NotNull
-    static List<VisFusionFile> fromLines(@NotNull List<String> lines)
+    static List<VisFusion> fromLines(@NotNull List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith("SampleId")).map(VisFusionFile::fromString).collect(toList());
+        return lines.stream().filter(x -> !x.startsWith("SampleId")).map(VisFusion::fromString).collect(toList());
     }
 
     @NotNull
@@ -122,7 +127,7 @@ public class VisFusionFile
     }
 
     @NotNull
-    public static String toString(@NotNull final VisFusionFile data)
+    public static String toString(@NotNull final VisFusion data)
     {
         return new StringJoiner(DELIMITER)
                 .add(String.valueOf(data.SampleId))
@@ -146,13 +151,13 @@ public class VisFusionFile
     }
 
     @NotNull
-    private static VisFusionFile fromString(@NotNull final String data)
+    private static VisFusion fromString(@NotNull final String data)
     {
         String[] values = data.split(DELIMITER);
 
         int index = 0;
 
-        return new VisFusionFile(
+        return new VisFusion(
                 values[index++],
                 Integer.parseInt(values[index++]),
                 Boolean.parseBoolean(values[index++]),
