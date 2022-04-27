@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -25,7 +24,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.common.utils.ConfigUtils;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -95,7 +93,9 @@ public class InsertSequenceAnalyser
             {
                 InsertSeqData first = insertSeqDataList.get(index);
 
-                boolean matched = false;
+                MatchedBaseData topMatchedData = null;
+                int topMatchIndex = 0;
+                InsertSeqData topMatchSeq = null;
 
                 for(int nextIndex = index + 1; nextIndex < insertSeqDataList.size(); ++nextIndex)
                 {
@@ -103,19 +103,28 @@ public class InsertSequenceAnalyser
 
                     MatchedBaseData matchedBaseData = getMatchedBaseData(first, next);
 
-                    if(matchedBaseData != null)
+                    if(matchedBaseData == null)
+                        continue;
+
+                    if(topMatchedData == null || topMatchedData.Mismatches < matchedBaseData.Mismatches)
                     {
-                        writeMatchData(sampleId, first, next, matchedBaseData);
-                        matched = true;
-                        insertSeqDataList.remove(nextIndex);
-                        break;
+                        topMatchIndex = nextIndex;
+                        topMatchedData = matchedBaseData;
+                        topMatchSeq = next;
                     }
                 }
 
-                if(matched)
+                if(topMatchedData != null)
+                {
+                    insertSeqDataList.remove(topMatchIndex);
                     insertSeqDataList.remove(index);
+
+                    writeMatchData(sampleId, first, topMatchSeq, topMatchedData);
+                }
                 else
+                {
                     ++index;
+                }
             }
 
             ++sampleCount;
@@ -136,17 +145,7 @@ public class InsertSequenceAnalyser
         // same orientations: the second SGL will read the insert sequence as forward compliment but in reverse order
 
         String firstSequence = sgl1.InsertSeq;
-        String secondSequence = sgl2.InsertSeq;
-
-        if(sgl1.Orientation == sgl2.Orientation)
-        {
-            secondSequence = Nucleotides.reverseStrandBases(secondSequence);
-        }
-        else
-        {
-            //
-            // secondSequence = reverseString(secondSequence);
-        }
+        String secondSequence = sgl1.Orientation != sgl2.Orientation ? sgl2.InsertSeq : Nucleotides.reverseStrandBases(sgl2.InsertSeq);
 
         MatchedBaseData matchData = findMatchData(firstSequence, secondSequence);
 
@@ -158,37 +157,23 @@ public class InsertSequenceAnalyser
         return matchData;
     }
 
-    private static final int START_SEARCH_LENGTH = 20;
-
     private MatchedBaseData findMatchData(final String seq1, final String seq2)
     {
-        int matchStart1 = -1;
-        int matchStart2 = -1;
+        // the string being searched for must find a match at its start
 
-        for(int i = 0; i < seq2.length() - START_SEARCH_LENGTH; ++i)
-        {
-            String searchStr = seq2.substring(i, i + START_SEARCH_LENGTH);
+        String searchStr = seq2.substring(0, mMinSearchLength);
+        int matchIndex1 = seq1.indexOf(searchStr);
 
-            int matchIndex = seq1.indexOf(searchStr);
-
-            if(matchIndex >= 0)
-            {
-                matchStart1 = matchIndex;
-                matchStart2 = i;
-                break;
-            }
-        }
-
-        if(matchStart1 < 0)
+        if(matchIndex1 < 0)
             return null;
 
-        int matchedBases = START_SEARCH_LENGTH;
+        int matchedBases = mMinSearchLength;
         int misMatches = 0;
         int currentMismatches = 0;
 
-        for(int index2 = matchStart2 + matchedBases; index2 < seq2.length(); ++index2)
+        for(int index2 = matchedBases; index2 < seq2.length(); ++index2)
         {
-            int index1 = matchStart1 + matchedBases;
+            int index1 = matchIndex1 + matchedBases;
             if(index1 >= seq1.length())
                 break;
 
@@ -215,7 +200,10 @@ public class InsertSequenceAnalyser
             }
         }
 
-        return matchedBases >= mMinSearchLength ? new MatchedBaseData(matchedBases + misMatches, matchedBases) : null;
+        if(matchedBases < mMinSearchLength)
+            return null;
+
+        return new MatchedBaseData(matchedBases + misMatches, misMatches, 0, matchIndex1);
     }
 
     private StructuralVariantType getSvType(final InsertSeqData sgl1, final InsertSeqData sgl2)
@@ -245,7 +233,8 @@ public class InsertSequenceAnalyser
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
             writer.write("SampleId,SvId1,SvId2,VcfId1,VcdId2,Chr1,Pos1,Orient1,Chr2,Pos2,Orient2");
-            writer.write(",SvType,OverlapBases,MatchedBases,SeqLen1,SeqLen2");
+            writer.write(",SvType,OverlapBases,Mismatches,MatchIndex");
+            writer.write(",SeqLen1,SeqLen2,RepeatClass1,RepeatClass2,InsSeq1,InsSeq2");
             writer.newLine();
             return writer;
         }
@@ -267,8 +256,13 @@ public class InsertSequenceAnalyser
                     first.Chromosome, first.Position, first.Orientation,
                     next.Chromosome, next.Position, next.Orientation));
 
-            mWriter.write(String.format(",%s,%d,%d,%d,%d",
-                    svType, matchedBases.OverlapBases, matchedBases.MatchedBases, first.InsertSeq.length(), next.InsertSeq.length()));
+            mWriter.write(String.format(",%s,%d,%d,%d",
+                    svType, matchedBases.OverlapBases, matchedBases.Mismatches, matchedBases.MatchedIndex2));
+
+            String secondSequence = first.Orientation != next.Orientation ? next.InsertSeq : Nucleotides.reverseStrandBases(next.InsertSeq);
+
+            mWriter.write(String.format(",%d,%d,%s,%s,%s,%s",
+                    first.InsertSeq.length(), next.InsertSeq.length(), first.RepeatType, next.RepeatType, first.InsertSeq, secondSequence));
 
             mWriter.newLine();
         }
@@ -321,12 +315,16 @@ public class InsertSequenceAnalyser
     private class MatchedBaseData
     {
         public int OverlapBases;
-        public int MatchedBases;
+        public int Mismatches;
+        public int MatchedIndex1;
+        public int MatchedIndex2;
 
-        public MatchedBaseData(final int overlapBases, final int matchedBases)
+        public MatchedBaseData(final int overlapBases, final int mismatches, final int index1, final int index2)
         {
             OverlapBases = overlapBases;
-            MatchedBases = matchedBases;
+            Mismatches = mismatches;
+            MatchedIndex1 = index1;
+            MatchedIndex2 = index2;
         }
     }
 

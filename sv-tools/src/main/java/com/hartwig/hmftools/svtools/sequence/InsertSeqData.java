@@ -14,11 +14,12 @@ public class InsertSeqData
     public final String LinkedBy;
     public final String RefContext;
     public final String Alignments;
+    public final String RepeatType;
 
     public InsertSeqData(
             final String sampleId, final int svId, final String vcfId, final String chromosome, final int position,
             final byte orientation, final String insertSeq, final double copyNumber, final double copyNumberChange, final String linkedBy,
-            final String refContext, final String alignments)
+            final String refContext, final String alignments, final String repeatType)
     {
         SampleId = sampleId;
         SvId = svId;
@@ -32,6 +33,7 @@ public class InsertSeqData
         LinkedBy = linkedBy;
         RefContext = refContext;
         Alignments = alignments;
+        RepeatType = repeatType;
     }
 
     public static InsertSeqData fromCsv(final String line)
@@ -44,6 +46,6 @@ public class InsertSeqData
         return new InsertSeqData(
                 values[index++], Integer.parseInt(values[index++]), values[index++], values[index++], Integer.parseInt(values[index++]),
                 Byte.parseByte(values[index++]), values[index++], Double.parseDouble(values[index++]), Double.parseDouble(values[index++]),
-                values[index++], values[index++], values[index++]);
+                values[index++], values[index++], values[index++], values[index++]);
     }
 }
