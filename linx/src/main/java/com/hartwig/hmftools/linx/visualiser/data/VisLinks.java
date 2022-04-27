@@ -46,34 +46,6 @@ public class VisLinks
         return Optional.empty();
     }
 
-    public static List<VisSvData> readSvData(
-            final String fileName, final String sampleId, final List<ChrBaseRegion> restrictedRegions) throws IOException
-    {
-        List<VisSvData> fileSVs = VisSvData.read(fileName);
-
-        List<VisSvData> visSvData = Lists.newArrayList();
-
-        for(VisSvData sv : fileSVs)
-        {
-            if(!sv.SampleId.equals(sampleId))
-                continue;
-
-            if(!restrictedRegions.isEmpty())
-            {
-                if(restrictedRegions.stream().anyMatch(x -> x.containsPosition(sv.ChrStart, sv.PosStart) || x.containsPosition(sv.ChrEnd, sv.PosEnd)))
-                {
-                    visSvData.add(sv);
-                }
-            }
-            else
-            {
-                visSvData.add(sv);
-            }
-        }
-
-        return visSvData;
-    }
-
     public static List<GenomePosition> allPositions(final List<VisSvData> links)
     {
         final List<GenomePosition> results = Lists.newArrayList();

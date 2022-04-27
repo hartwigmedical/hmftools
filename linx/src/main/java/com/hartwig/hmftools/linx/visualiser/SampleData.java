@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -99,7 +100,36 @@ public class SampleData
         final String proteinFile = useCohortFiles ? COHORT_VIS_PROTEIN_FILE : VisProteinDomain.generateFilename(mSampleDataDir, Sample);
         final String fusionFile = useCohortFiles ? COHORT_VIS_FUSIONS_FILE : VisFusion.generateFilename(mSampleDataDir, Sample);
 
-        SvData = VisLinks.readSvData(svDataFile, Sample, SpecificRegions);
+        Clusters = parseClusters(cmd);
+        Chromosomes = parseChromosomes(cmd);
+
+        List<VisSvData> svData = VisSvData.read(svDataFile).stream().filter(x -> x.SampleId.equals(Sample)).collect(toList());
+
+        if(!SpecificRegions.isEmpty())
+        {
+            List<VisSvData> svsInRegions = svData.stream()
+                    .filter(x -> SpecificRegions.stream()
+                            .anyMatch(y -> y.containsPosition(x.ChrStart, x.PosStart) || y.containsPosition(x.ChrEnd, x.PosEnd)))
+                    .collect(toList());
+
+            if(Clusters.isEmpty())
+            {
+                // if clusters have not been specified, then add these to the set to be plotted
+                svsInRegions.forEach(x -> addClusterId(x.ClusterId));
+            }
+            else
+            {
+                // otherwise only show SVs for the specified clusters which are also in the specified regions
+                svData = svsInRegions;
+            }
+        }
+
+        if(!Clusters.isEmpty())
+        {
+            svData = svData.stream().filter(x -> Clusters.contains(x.ClusterId)).collect(toList());
+        }
+
+        SvData = svData;
 
         Fusions = loadFusions(fusionFile).stream().filter(x -> x.SampleId.equals(Sample)).collect(toList());
         Exons = VisExons.readExons(geneExonFile).stream().filter(x -> x.SampleId.equals(Sample)).collect(toList());
@@ -111,8 +141,6 @@ public class SampleData
         ProteinDomains = VisProteinDomains.readProteinDomains(proteinFile, Fusions).stream()
                 .filter(x -> x.SampleId.equals(Sample)).collect(toList());
 
-        Clusters = parseClusters(cmd);
-        Chromosomes = parseChromosomes(cmd);
         Genes = Sets.newHashSet();
 
         if(Segments.isEmpty() || SvData.isEmpty() || CopyNumbers.isEmpty())
@@ -128,7 +156,8 @@ public class SampleData
             Arrays.stream(geneStr.split(delim)).forEach(x -> Genes.add(x));
         }
 
-        boolean loadSvData = cmd.hasOption(PLOT_CLUSTER_GENES) || cmd.hasOption(RESTRICT_CLUSTERS_BY_GENE) || !SpecificRegions.isEmpty();
+        boolean loadSvData = !useCohortFiles
+                && (cmd.hasOption(PLOT_CLUSTER_GENES) || cmd.hasOption(RESTRICT_CLUSTERS_BY_GENE) || !SpecificRegions.isEmpty());
 
         if(loadSvData)
         {
@@ -160,8 +189,7 @@ public class SampleData
                 {
                     if(Genes.stream().anyMatch(x -> x.equals(svAnnotation.geneStart()) || x.equals(svAnnotation.geneEnd())))
                     {
-                        if(!Clusters.contains(svAnnotation.clusterId()))
-                            Clusters.add(svAnnotation.clusterId());
+                        addClusterId(svAnnotation.clusterId());
                     }
                 }
 
@@ -171,8 +199,7 @@ public class SampleData
                 {
                     if(Genes.stream().anyMatch(x -> x.equals(linxDriver.gene())))
                     {
-                        if(!Clusters.contains(linxDriver.clusterId()))
-                            Clusters.add(linxDriver.clusterId());
+                        addClusterId(linxDriver.clusterId());
                     }
                 }
             }
@@ -182,13 +209,18 @@ public class SampleData
                 // limit to those clusters covered by an SV in the specific regions
                 for(LinxSvAnnotation svAnnotation : svAnnotations)
                 {
-                    if(!Clusters.contains(svAnnotation.clusterId()))
-                        Clusters.add(svAnnotation.clusterId());
+                    addClusterId(svAnnotation.clusterId());
                 }
             }
         }
 
         Exons.addAll(additionalExons(Genes, cmd, Exons, Clusters));
+    }
+
+    private void addClusterId(final int clusterId)
+    {
+        if(!Clusters.contains(clusterId))
+            Clusters.add(clusterId);
     }
 
     public Set<Integer> findReportableClusters()
