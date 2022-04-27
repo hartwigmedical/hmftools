@@ -872,7 +872,7 @@ java -jar purple.jar \
 The second method can load data from reading the output files without the need to rerun PURPLE. This can be run with the following command:
 
 ```
-java -cp purple.jar com.hartwig.hmftools.patientdb.LoadPurpleData \ 
+java -cp patient-db.jar com.hartwig.hmftools.patientdb.LoadPurpleData \ 
     -sample COLO829T \
     -reference COLO829R \
     -purple_dir /path/to/COLO829/purple \
