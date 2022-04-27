@@ -7,8 +7,6 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.linx.visualiser.data.FusedExon;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableFusedExon;
-import com.hartwig.hmftools.linx.visualiser.data.ImmutableProteinDomain;
-import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain;
 
 import org.jetbrains.annotations.NotNull;

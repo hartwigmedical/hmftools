@@ -98,16 +98,17 @@ public class VisLinks
 
     public static List<VisSvData> addFrame(final List<VisSegment> segments, final List<VisSvData> links)
     {
-        // final List<VisSvDataFile> result = Lists.newArrayList();
+        final List<VisSvData> results = Lists.newArrayList();
 
         for(VisSvData link : links)
         {
             int minConnectedFrame = segments.stream().filter(x -> VisLinks.connected(link, x)).mapToInt(x -> x.Frame).min().orElse(0);
-            link.Frame = minConnectedFrame + 1;
-            // result.add(ImmutableVisSvData.builder().from(link).frame(minConnectedFrame + 1).build());
+            VisSvData newLink = VisSvData.from(link);
+            newLink.Frame = minConnectedFrame + 1;
+            results.add(newLink);
         }
 
-        return links;
+        return results;
     }
 
     private static boolean connected(final VisSvData link, final VisSegment segment)

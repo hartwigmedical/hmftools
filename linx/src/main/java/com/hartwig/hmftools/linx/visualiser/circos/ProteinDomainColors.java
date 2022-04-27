@@ -8,8 +8,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
-import com.hartwig.hmftools.linx.visualiser.data.VisProteinDomains;
 import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain;
 
 import org.jetbrains.annotations.NotNull;

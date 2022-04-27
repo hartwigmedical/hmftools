@@ -23,8 +23,6 @@ import com.hartwig.hmftools.linx.visualiser.data.Gene;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableCopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableFusedExon;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableGene;
-import com.hartwig.hmftools.linx.visualiser.data.ImmutableProteinDomain;
-import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.file.VisSegment;
@@ -98,8 +96,6 @@ class ScalePosition
 
     public List<VisProteinDomain> interpolateProteinDomains(final List<VisProteinDomain> exons)
     {
-        // return exons.stream().map(x -> interpolate(x, y -> ImmutableProteinDomain.builder().from(x))).collect(Collectors.toList());
-
         List<VisProteinDomain> results = Lists.newArrayList();
         for(VisProteinDomain exon : exons)
         {
@@ -111,20 +107,6 @@ class ScalePosition
             results.add(newExon);
         }
         return results;
-
-        /*
-            private <T extends GenomeRegion> T interpolate(final T exon, Function<T, GenomeRegionBuilder<T>> builderFunction)
-            {
-                final ScaleContig positionMap = mContigMap.get(exon.chromosome());
-                assert (positionMap != null && !positionMap.isEmpty());
-
-                return builderFunction.apply(exon)
-                        .start(positionMap.interpolate(exon.start()))
-                        .end(positionMap.interpolate(exon.end()))
-                        .build();
-            }
-         */
-
     }
 
     public List<VisGeneExon> interpolateExons(final List<VisGeneExon> exons)

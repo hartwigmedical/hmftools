@@ -100,13 +100,14 @@ public class VisSegments
         return VisSegment.read(fileName);
     }
 
-    public static List<VisSegment> extendTerminals(int terminalDistance, final List<VisSegment> segments, final List<VisSvData> links,
+    public static List<VisSegment> extendTerminals(
+            int terminalDistance, final List<VisSegment> segments, final List<VisSvData> links,
             final List<GenomePosition> allPositions, boolean showSimpleSvSegments, final RefGenomeCoordinates refGenCoords)
     {
         final Map<String,Integer> minPositionPerChromosome = minPositionPerChromosome(allPositions);
         final Map<String,Integer> maxPositionPerChromosome = maxPositionPerChromosome(allPositions);
 
-        final List<VisSegment> result = Lists.newArrayList();
+        final List<VisSegment> results = Lists.newArrayList();
 
         for(VisSegment segment : segments)
         {
@@ -140,10 +141,10 @@ public class VisSegments
                 // segment = ImmutableSegment.builder().from(segment).end(endPosition).build();
             }
 
-            result.add(segment);
+            results.add(segment);
         }
 
-        return incrementOnChromosome(addCentromeres(result, refGenCoords), links, showSimpleSvSegments);
+        return incrementOnChromosome(addCentromeres(results, refGenCoords), links, showSimpleSvSegments);
     }
 
     public static List<VisSegment> addCentromeres(final List<VisSegment> segments, final RefGenomeCoordinates refGenCoords)
@@ -211,9 +212,9 @@ public class VisSegments
 
                 VisSegment newSegment = VisSegment.from(segment);
                 newSegment.Track = currentTrack;
-                newSegment.Frame += 2;
+                frame += 2;
+                newSegment.Frame = frame;
                 result.add(newSegment);
-                //result.add(ImmutableSegment.builder().from(segment).track(currentTrack).frame(frame += 2).build());
             }
         }
 

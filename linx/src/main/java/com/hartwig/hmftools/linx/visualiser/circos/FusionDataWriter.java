@@ -10,7 +10,6 @@ import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.linx.visualiser.data.FusedExon;
 import com.hartwig.hmftools.linx.visualiser.data.FusedExons;
 import com.hartwig.hmftools.linx.visualiser.data.FusedProteinDomains;
-import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.data.VisProteinDomains;
 import com.hartwig.hmftools.linx.visualiser.file.VisFusion;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
