@@ -9,6 +9,7 @@ public enum DriverType
     DEL,
     HOM_DUP_DISRUPTION,
     HOM_DEL_DISRUPTION,
+    DISRUPTION,
     MUTATION,
     GERMLINE, // to be deprecated, was previously just germline variants
     GERMLINE_MUTATION,
@@ -22,7 +23,8 @@ public enum DriverType
 
     public static final EnumSet<DriverType> DRIVERS_LINX_GERMLINE = EnumSet.of(DriverType.GERMLINE_DISRUPTION);
 
-    public static final EnumSet<DriverType> DRIVERS_LINX_SOMATIC = EnumSet.of(DriverType.HOM_DUP_DISRUPTION, DriverType.HOM_DEL_DISRUPTION);
+    public static final EnumSet<DriverType> DRIVERS_LINX_SOMATIC = EnumSet.of(
+            DriverType.HOM_DUP_DISRUPTION, DriverType.HOM_DEL_DISRUPTION, DriverType.DISRUPTION);
 
     public static boolean isGermline(final DriverType type)
     {

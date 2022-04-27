@@ -53,7 +53,6 @@ public class DriverGeneAnnotator implements CohortFileInterface
     private final DeletionDrivers mDelDrivers;
 
     private String mSampleId;
-    private String mOutputDir;
     private final CohortDataWriter mCohortDataWriter;
 
     private final List<LinxDriver> mDriverOutputList;
@@ -73,7 +72,6 @@ public class DriverGeneAnnotator implements CohortFileInterface
 
         mDriverOutputList = Lists.newArrayList();
 
-        mOutputDir = mConfig.OutputDataPath;
         mCohortDataWriter = cohortDataWriter;
 
         mDataCache = new DriverDataCache(dbAccess, cnDataLoader, mGeneTransCache);
@@ -94,7 +92,9 @@ public class DriverGeneAnnotator implements CohortFileInterface
         mDataCache.setSamplePurityData(ploidy, isMale);
     }
 
-    public final List<DriverGeneData> getDriverGeneDataList() { return mDataCache.getDriverGeneDataList(); }
+    public List<DriverGeneData> getDriverGeneDataList() { return mDataCache.getDriverGeneDataList(); }
+    public List<DriverCatalog> getDriverCatalog() { return mDataCache.getDriverCatalog(); }
+    public List<LinxDriver> getDriverOutputList() { return mDriverOutputList; }
 
     public void annotateSVs(final String sampleId, final Map<String,List<SvBreakend>> chrBreakendMap)
     {
@@ -186,8 +186,6 @@ public class DriverGeneAnnotator implements CohortFileInterface
         final List<DriverGeneData> disDelDrivers = mDelDrivers.findDisruptiveDelDrivers(mChrBreakendMap);
         disDelDrivers.forEach(x -> writeDriverData(x));
 
-        writeSampleDriverData();
-
         mChrBreakendMap = null;
 
         mPerfCounter.stop();
@@ -205,39 +203,6 @@ public class DriverGeneAnnotator implements CohortFileInterface
         }
 
         return false;
-    }
-
-    private void writeSampleDriverData()
-    {
-        if(mConfig.UploadToDB && mDbAccess != null)
-        {
-            writeToDatabase(mSampleId, mDbAccess, mDataCache.getDriverCatalog(), mDriverOutputList);
-        }
-
-        if(mConfig.hasMultipleSamples() || mOutputDir == null)
-            return;
-
-        // generate an empty Linx driver file even if no annotations were found
-        try
-        {
-            final String driverCatalogFile = LinxDriver.generateCatalogFilename(mOutputDir, mSampleId, true);
-            DriverCatalogFile.write(driverCatalogFile, mDataCache.getDriverCatalog());
-
-            final String driversFile = LinxDriver.generateFilename(mOutputDir, mSampleId);
-            LinxDriver.write(driversFile, mDriverOutputList);
-        }
-        catch(IOException e)
-        {
-            LNX_LOGGER.error("failed to write drivers file: {}", e.toString());
-        }
-    }
-
-    private synchronized static void writeToDatabase(
-            final String sampleId, final DatabaseAccess dbAccess,
-            final List<DriverCatalog> driverCatalogs, final List<LinxDriver> linxDrivers)
-    {
-        dbAccess.writeLinxDriverCatalog(sampleId, driverCatalogs, DRIVERS_LINX_SOMATIC);
-        dbAccess.writeSvDrivers(sampleId, linxDrivers);
     }
 
     private static final String COHORT_WRITER_DRIVER = "Driver";

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx;
 
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_SOMATIC;
 import static com.hartwig.hmftools.common.purple.Gender.MALE;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
@@ -17,6 +18,7 @@ import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
@@ -357,6 +359,12 @@ public class SampleAnalyser implements Callable
         mCohortDataWriter.getVisWriter().writeOutput(
                 mVisSampleData, mAnalyser.getClusters(), mAllVariants, mCnDataLoader.getChrCnDataMap());
 
+        final List<DriverCatalog> driverCatalogs = Lists.newArrayList(mDriverGeneAnnotator.getDriverCatalog());
+        final List<LinxDriver> linxDrivers = mDriverGeneAnnotator.getDriverOutputList();
+
+        // include any reportable disruptions for genes which do not already have homozgous distruptins
+        mFusionAnalyser.getDisruptionFinder().addReportableDisruptions(driverCatalogs);
+
         if(mConfig.isSingleSample())
         {
             try
@@ -365,6 +373,12 @@ public class SampleAnalyser implements Callable
                 LinxSvAnnotation.write(LinxSvAnnotation.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), linxSvData);
                 LinxCluster.write(LinxCluster.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), clusterData);
                 LinxLink.write(LinxLink.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), linksData);
+
+                final String driverCatalogFile = LinxDriver.generateCatalogFilename(mConfig.OutputDataPath, mCurrentSampleId, true);
+                DriverCatalogFile.write(driverCatalogFile, driverCatalogs);
+
+                final String driversFile = LinxDriver.generateFilename(mConfig.OutputDataPath, mCurrentSampleId);
+                LinxDriver.write(driversFile, linxDrivers);
             }
             catch (IOException e)
             {
@@ -374,7 +388,7 @@ public class SampleAnalyser implements Callable
 
         if(mConfig.UploadToDB && mDbAccess != null)
         {
-            writeToDatabase(mCurrentSampleId, mDbAccess, linxSvData, clusterData, linksData);
+            writeToDatabase(mCurrentSampleId, mDbAccess, linxSvData, clusterData, linksData, driverCatalogs, linxDrivers);
         }
 
         mPerfCounters.get(PERF_COUNTER_WRITE).stop();
@@ -382,11 +396,14 @@ public class SampleAnalyser implements Callable
 
     private synchronized static void writeToDatabase(
             final String sampleId, final DatabaseAccess dbAccess,
-            final List<LinxSvAnnotation> linxSvData, final List<LinxCluster> clusterData, final List<LinxLink> linksData)
+            final List<LinxSvAnnotation> linxSvData, final List<LinxCluster> clusterData, final List<LinxLink> linksData,
+            final List<DriverCatalog> driverCatalogs, final List<LinxDriver> linxDrivers)
     {
         dbAccess.writeSvLinxData(sampleId, linxSvData);
         dbAccess.writeSvClusters(sampleId, clusterData);
         dbAccess.writeSvLinks(sampleId, linksData);
+        dbAccess.writeLinxDriverCatalog(sampleId, driverCatalogs, DRIVERS_LINX_SOMATIC);
+        dbAccess.writeSvDrivers(sampleId, linxDrivers);
     }
 
     public void writeSampleWithNoSVs()

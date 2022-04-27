@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.linx.fusion;
 
+import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.HOM_DEL_DISRUPTION;
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.HOM_DUP_DISRUPTION;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
@@ -25,6 +28,10 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
@@ -796,6 +803,44 @@ public class DisruptionFinder implements CohortFileInterface
 
         if(mIsGermline)
             mGermlineDisruptions.findGeneDeletions(clusters);
+    }
+
+    public void addReportableDisruptions(final List<DriverCatalog> driverCatalogs)
+    {
+        for(SvDisruptionData disruptionData : mDisruptions)
+        {
+            if(!disruptionData.reportable())
+                continue;
+
+            if(driverCatalogs.stream()
+                    .filter(x -> x.gene().equals(disruptionData.Gene.GeneName))
+                    .anyMatch(x -> x.driver() == HOM_DUP_DISRUPTION || x.driver() == HOM_DEL_DISRUPTION))
+            {
+                continue;
+            }
+
+            DriverCatalog driverCatalog = ImmutableDriverCatalog.builder()
+                    .driver(DriverType.DISRUPTION)
+                    .category(TSG)
+                    .gene(disruptionData.Gene.GeneName)
+                    .transcript(disruptionData.Transcript.TransName)
+                    .isCanonical(disruptionData.Transcript.IsCanonical)
+                    .chromosome(disruptionData.Gene.Chromosome)
+                    .chromosomeBand(disruptionData.Gene.KaryotypeBand)
+                    .likelihoodMethod(LikelihoodMethod.DEL)
+                    .driverLikelihood(0)
+                    .missense(0)
+                    .nonsense(0)
+                    .splice(0)
+                    .inframe(0)
+                    .frameshift(0)
+                    .biallelic(true)
+                    .minCopyNumber(disruptionData.UndisruptedCopyNumber)
+                    .maxCopyNumber(disruptionData.UndisruptedCopyNumber)
+                    .build();
+
+            driverCatalogs.add(driverCatalog);
+        }
     }
 
     public void writeGermlineDisruptions(final String sampleId, final String outputDir, final DatabaseAccess dbAccess)
