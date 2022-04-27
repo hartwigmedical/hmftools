@@ -17,17 +17,15 @@ import org.jetbrains.annotations.NotNull;
 
 public class Genes
 {
-    @NotNull
-    public static List<Gene> uniqueGenes(@NotNull final List<VisGeneExon> exons)
+    public static List<Gene> uniqueGenes(final List<VisGeneExon> exons)
     {
         return unique(genes(exons));
     }
 
-    @NotNull
-    public static List<Gene> unique(@NotNull final List<Gene> genes)
+    public static List<Gene> unique(final List<Gene> genes)
     {
         final Map<String, Gene> result = Maps.newHashMap();
-        for (Gene gene : genes)
+        for(Gene gene : genes)
         {
             if (result.containsKey(gene.name()))
             {
@@ -43,8 +41,7 @@ public class Genes
         return Lists.newArrayList(result.values());
     }
 
-    @NotNull
-    public static List<Gene> genes(@NotNull final List<VisGeneExon> exons)
+    public static List<Gene> genes(final List<VisGeneExon> exons)
     {
         final List<Gene> result = Lists.newArrayList();
 
@@ -53,7 +50,7 @@ public class Genes
                 .map(x -> x.Transcript)
                 .collect(Collectors.toSet());
 
-        for (final String transcript : transcripts)
+        for(final String transcript : transcripts)
         {
             final List<VisGeneExon> transcriptExons = exons.stream().filter(x -> x.Transcript.equals(transcript)).sorted().collect(toList());
             final VisGeneExon first = transcriptExons.get(0);

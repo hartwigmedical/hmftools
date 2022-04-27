@@ -29,7 +29,7 @@ public class FusedProteinDomains
             final List<VisProteinDomain> proteinDomains)
     {
         final List<VisProteinDomain> result = Lists.newArrayList();
-        if (fusedExons.isEmpty())
+        if(fusedExons.isEmpty())
         {
             return result;
         }
@@ -40,9 +40,9 @@ public class FusedProteinDomains
         final FusedExon finalDownExon = fusedExons.get(fusedExons.size() - 1);
         final GenomeRegion downGeneRegion = downGeneRegion(fusion, finalDownExon);
 
-        for (VisProteinDomain unadjustedDomain : proteinDomains)
+        for(VisProteinDomain unadjustedDomain : proteinDomains)
         {
-            if (unadjustedDomain.Transcript.equals(fusion.TranscriptUp) && unadjustedDomain.overlaps(upGeneRegion))
+            if(unadjustedDomain.Transcript.equals(fusion.TranscriptUp) && unadjustedDomain.overlaps(upGeneRegion))
             {
                 final GenomeRegion convertedDomain = convertRegion(fusion.StrandUp, upGeneRegion, unadjustedDomain);
 
@@ -53,7 +53,7 @@ public class FusedProteinDomains
                 result.add(domain);
             }
 
-            if (unadjustedDomain.Transcript.equals(fusion.TranscriptDown) && unadjustedDomain.overlaps(downGeneRegion))
+            if(unadjustedDomain.Transcript.equals(fusion.TranscriptDown) && unadjustedDomain.overlaps(downGeneRegion))
             {
                 final GenomeRegion convertedDomain = convertRegion(fusion.StrandDown, downGeneRegion, unadjustedDomain);
 

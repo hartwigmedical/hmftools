@@ -8,16 +8,15 @@ import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
 
 public class AdjustedPositions
 {
-
     public static List<AdjustedPosition> create(final List<VisSvData> originalLinks, final List<VisSvData> scaledLinks)
     {
         final List<AdjustedPosition> result = Lists.newArrayList();
-        for (int i = 0; i < originalLinks.size(); i++)
+        for(int i = 0; i < originalLinks.size(); i++)
         {
             final VisSvData original = originalLinks.get(i);
             final VisSvData scaled = scaledLinks.get(i);
 
-            if (scaled.isValidStart())
+            if(scaled.isValidStart())
             {
                 final AdjustedPosition start = ImmutableAdjustedPosition.builder()
                         .chromosome(scaled.ChrStart)
@@ -29,7 +28,7 @@ public class AdjustedPositions
                 result.add(start);
             }
 
-            if (scaled.isValidEnd())
+            if(scaled.isValidEnd())
             {
                 final AdjustedPosition end = ImmutableAdjustedPosition.builder()
                         .chromosome(scaled.ChrEnd)

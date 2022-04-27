@@ -10,19 +10,21 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-public class VisCopyNumberFile
+public class VisCopyNumber implements GenomeRegion
 {
     public final String SampleId;
     public final String Chromosome;
-    public final int Start;
-    public final int End;
+    public int Start;
+    public int End;
     public final double CopyNumber;
     public final double BAF;
+    public boolean Truncated;
 
-    public VisCopyNumberFile(final String sampleId, final String chromosome, int start, int end, double copyNumber, double baf)
+    public VisCopyNumber(final String sampleId, final String chromosome, int start, int end, double copyNumber, double baf)
     {
         SampleId = sampleId;
         Chromosome = chromosome;
@@ -30,7 +32,32 @@ public class VisCopyNumberFile
         End = end;
         CopyNumber = copyNumber;
         BAF = baf;
+        Truncated = false;
     }
+
+    public static VisCopyNumber from(final VisCopyNumber other)
+    {
+        VisCopyNumber newCn = new VisCopyNumber(
+                other.SampleId, other.Chromosome, other.Start, other.End, other.CopyNumber, other.BAF);
+        newCn.Truncated = other.Truncated;
+        return newCn;
+    }
+
+    @Override
+    public String chromosome() { return Chromosome; }
+
+    @Override
+    public int start() { return Start; }
+
+    @Override
+    public int end() { return End; }
+
+
+    public double minorAlleleCopyNumber()
+    {
+        return Math.max(0, (1 - BAF) * CopyNumber);
+    }
+
 
     public static final String DELIMITER = "\t";
     public static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
@@ -43,18 +70,18 @@ public class VisCopyNumberFile
     }
 
     @NotNull
-    public static List<VisCopyNumberFile> read(final String filePath) throws IOException
+    public static List<VisCopyNumber> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<VisCopyNumberFile> cnDataList) throws IOException
+    public static void write(@NotNull final String filename, @NotNull List<VisCopyNumber> cnDataList) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(cnDataList));
     }
 
     @NotNull
-    static List<String> toLines(@NotNull final List<VisCopyNumberFile> cnDataList)
+    static List<String> toLines(@NotNull final List<VisCopyNumber> cnDataList)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -63,9 +90,9 @@ public class VisCopyNumberFile
     }
 
     @NotNull
-    static List<VisCopyNumberFile> fromLines(@NotNull List<String> lines)
+    static List<VisCopyNumber> fromLines(@NotNull List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith("SampleId")).map(VisCopyNumberFile::fromString).collect(toList());
+        return lines.stream().filter(x -> !x.startsWith("SampleId")).map(VisCopyNumber::fromString).collect(toList());
     }
 
     @NotNull
@@ -82,7 +109,7 @@ public class VisCopyNumberFile
     }
 
     @NotNull
-    public static String toString(@NotNull final VisCopyNumberFile cnData)
+    public static String toString(@NotNull final VisCopyNumber cnData)
     {
         return new StringJoiner(DELIMITER)
                 .add(String.valueOf(cnData.SampleId))
@@ -95,13 +122,13 @@ public class VisCopyNumberFile
     }
 
     @NotNull
-    private static VisCopyNumberFile fromString(@NotNull final String tiData)
+    private static VisCopyNumber fromString(@NotNull final String tiData)
     {
         String[] values = tiData.split(DELIMITER);
 
         int index = 0;
 
-        return new VisCopyNumberFile(
+        return new VisCopyNumber(
                 values[index++],
                 values[index++],
                 Integer.parseInt(values[index++]),

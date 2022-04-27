@@ -17,12 +17,11 @@ import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionBuilder;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
-import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.FusedExon;
 import com.hartwig.hmftools.linx.visualiser.data.Gene;
-import com.hartwig.hmftools.linx.visualiser.data.ImmutableCopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableFusedExon;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableGene;
+import com.hartwig.hmftools.linx.visualiser.file.VisCopyNumber;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.file.VisSegment;
@@ -89,9 +88,22 @@ class ScalePosition
         return results;
     }
 
-    public List<CopyNumberAlteration> interpolateAlterations(final List<CopyNumberAlteration> segments)
+    public List<VisCopyNumber> interpolateCopyNumbers(final List<VisCopyNumber> segments)
     {
-        return segments.stream().map(x -> interpolate(x, y -> ImmutableCopyNumberAlteration.builder().from(x))).collect(Collectors.toList());
+        List<VisCopyNumber> results = Lists.newArrayList();
+
+        for(VisCopyNumber cnData : segments)
+        {
+            VisCopyNumber newCnData = VisCopyNumber.from(cnData);
+            ScaleContig positionMap = mContigMap.get(cnData.Chromosome);
+            newCnData.Start = positionMap.scale(cnData.start());
+            newCnData.End = positionMap.scale(cnData.end());
+            results.add(newCnData);
+        }
+
+        return results;
+
+        // return segments.stream().map(x -> interpolate(x, y -> ImmutableVisCopyNumberFile.builder().from(x))).collect(Collectors.toList());
     }
 
     public List<VisProteinDomain> interpolateProteinDomains(final List<VisProteinDomain> exons)

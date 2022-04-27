@@ -86,7 +86,7 @@ public class VisDataWriter
             mSegmentFileWriter.newLine();
 
             mCnFileWriter = createBufferedWriter(mOutputDir + COHORT_VIS_COPY_NUMBER_FILE, false);
-            mCnFileWriter.write(VisCopyNumberFile.header());
+            mCnFileWriter.write(VisCopyNumber.header());
             mCnFileWriter.newLine();
 
             mGeneFileWriter = createBufferedWriter(mOutputDir + COHORT_VIS_GENE_EXONS_FILE, false);
@@ -514,7 +514,7 @@ public class VisDataWriter
 
     private void writeCopyNumberData(final VisSampleData sampleData, final Map<String,List<SvCNData>> chrCNDataMap)
     {
-        List<VisCopyNumberFile> cnDataList = Lists.newArrayList();
+        List<VisCopyNumber> cnDataList = Lists.newArrayList();
 
         for(Map.Entry<String,List<SvCNData>> entry : chrCNDataMap.entrySet())
         {
@@ -522,7 +522,7 @@ public class VisDataWriter
 
             for(SvCNData cnData : entry.getValue())
             {
-                cnDataList.add(new VisCopyNumberFile(
+                cnDataList.add(new VisCopyNumber(
                         sampleData.sampleId(), chromosome, cnData.StartPos, cnData.EndPos, cnData.CopyNumber, cnData.ActualBaf));
             }
         }
@@ -531,15 +531,15 @@ public class VisDataWriter
         {
             if(mBatchOutput)
             {
-                for(final VisCopyNumberFile data : cnDataList)
+                for(final VisCopyNumber data : cnDataList)
                 {
-                    mCnFileWriter.write(VisCopyNumberFile.toString(data));
+                    mCnFileWriter.write(VisCopyNumber.toString(data));
                     mCnFileWriter.newLine();
                 }
             }
             else
             {
-                VisCopyNumberFile.write(VisCopyNumberFile.generateFilename(mOutputDir, sampleData.sampleId()), cnDataList);
+                VisCopyNumber.write(VisCopyNumber.generateFilename(mOutputDir, sampleData.sampleId()), cnDataList);
             }
         }
         catch(IOException e)

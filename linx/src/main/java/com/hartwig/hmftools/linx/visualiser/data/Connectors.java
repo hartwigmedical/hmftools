@@ -21,11 +21,11 @@ public class Connectors
     }
 
     @NotNull
-    public List<Connector> createConnectors(@NotNull final List<VisSegment> segments, @NotNull final List<VisSvData> links)
+    public List<Connector> createConnectors(final List<VisSegment> segments, final List<VisSvData> links)
     {
         final List<Connector> result = Lists.newArrayList();
 
-        for (VisSegment segment : segments)
+        for(VisSegment segment : segments)
         {
             final ImmutableConnector.Builder builder = ImmutableConnector.builder()
                     .chromosome(segment.chromosome())
@@ -36,12 +36,12 @@ public class Connectors
             final GenomePosition startPosition = GenomePositions.create(segment.chromosome(), segment.start());
             final Optional<VisSvData> optionalStartPositionLink = VisLinks.findLink(startPosition, links);
 
-            if (optionalStartPositionLink.isPresent())
+            if(optionalStartPositionLink.isPresent())
             {
                 double startLinkPloidy = optionalStartPositionLink.get().JCN;
                 double startLinkPloidyBeforeSegment = VisSegments.segmentPloidyBefore(segment.Track, startPosition, segments);
 
-                if (startLinkPloidy > 0)
+                if(startLinkPloidy > 0)
                 {
                     result.add(builder.position(segment.start())
                             .ploidy(Math.max(0, startLinkPloidy - startLinkPloidyBeforeSegment))
@@ -53,10 +53,10 @@ public class Connectors
             final GenomePosition endPosition = GenomePositions.create(segment.chromosome(), segment.end());
             final Optional<VisSvData> optionalEndPositionLink = VisLinks.findLink(endPosition, links);
 
-            if (optionalEndPositionLink.isPresent())
+            if(optionalEndPositionLink.isPresent())
             {
                 double endLinkPloidy = optionalEndPositionLink.get().JCN;
-                if (endLinkPloidy > 0)
+                if(endLinkPloidy > 0)
                 {
                     double endLinkPloidyBeforeSegment = VisSegments.segmentPloidyBefore(segment.Track, endPosition, segments);
                     result.add(builder.position(segment.end())
@@ -72,13 +72,11 @@ public class Connectors
         return result;
     }
 
-    @NotNull
-    private List<Connector> create(@NotNull final VisSvData link)
+    private List<Connector> create(final VisSvData link)
     {
-        @NotNull
         final List<Connector> result = Lists.newArrayList();
 
-        if (link.connectorsOnly(showSimpleSvSegments))
+        if(link.connectorsOnly(showSimpleSvSegments))
         {
             final ImmutableConnector.Builder builder = ImmutableConnector.builder()
                     .clusterId(link.ClusterId)
@@ -87,13 +85,13 @@ public class Connectors
                     .frame(0)
                     .track(0);
 
-            if (link.isValidStart())
+            if(link.isValidStart())
             {
                 final Connector start = builder.chromosome(link.ChrStart).position(link.PosStart).build();
                 result.add(start);
             }
 
-            if (link.isValidEnd())
+            if(link.isValidEnd())
             {
                 final Connector start = builder.chromosome(link.ChrEnd).position(link.PosEnd).build();
                 result.add(start);

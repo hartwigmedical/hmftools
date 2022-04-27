@@ -13,12 +13,12 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.linx.visualiser.CircosConfig;
 import com.hartwig.hmftools.linx.visualiser.data.Connector;
 import com.hartwig.hmftools.linx.visualiser.data.Connectors;
-import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.DisruptedExons;
 import com.hartwig.hmftools.linx.visualiser.data.VisExons;
 import com.hartwig.hmftools.linx.visualiser.data.Gene;
 import com.hartwig.hmftools.linx.visualiser.data.Genes;
 import com.hartwig.hmftools.linx.visualiser.data.VisLinks;
+import com.hartwig.hmftools.linx.visualiser.file.VisCopyNumber;
 import com.hartwig.hmftools.linx.visualiser.file.VisFusion;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 import com.hartwig.hmftools.linx.visualiser.file.VisSegment;
@@ -34,12 +34,12 @@ public class CircosData
     private final List<VisSegment> segments;
     private final List<GenomeRegion> lineElements;
     private final List<GenomeRegion> fragileSites;
-    private final List<CopyNumberAlteration> alterations;
+    private final List<VisCopyNumber> copyNumbers;
     private final List<GenomeRegion> disruptedGeneRegions;
     private final List<Connector> connectors;
 
     private final List<VisSvData> unadjustedLinks;
-    private final List<CopyNumberAlteration> unadjustedAlterations;
+    private final List<VisCopyNumber> unadjustedAlterations;
 
     private final Set<GenomePosition> contigLengths;
 
@@ -58,7 +58,7 @@ public class CircosData
 
     public CircosData(
             boolean showSimpleSvSegments, final CircosConfig config, final List<VisSegment> unadjustedSegments,
-            final List<VisSvData> unadjustedLinks, final List<CopyNumberAlteration> unadjustedAlterations,
+            final List<VisSvData> unadjustedLinks, final List<VisCopyNumber> unadjustedAlterations,
             final List<VisGeneExon> unadjustedExons, final List<VisFusion> fusions)
     {
         this.upstreamGenes = fusions.stream().map(x -> x.GeneNameUp).collect(toSet());
@@ -95,7 +95,7 @@ public class CircosData
         contigLengths = scalePosition.contigLengths();
         segments = scalePosition.scaleSegments(unadjustedSegments);
         links = scalePosition.scaleLinks(unadjustedLinks);
-        alterations = scalePosition.interpolateAlterations(unadjustedAlterations);
+        copyNumbers = scalePosition.interpolateCopyNumbers(unadjustedAlterations);
         fragileSites = scalePosition.interpolateRegions(unadjustedFragileSites);
         lineElements = scalePosition.interpolateRegions(unadjustedLineElements);
         genes = scalePosition.interpolateGene(unadjustedGenes);
@@ -103,15 +103,15 @@ public class CircosData
         exons = scalePosition.interpolateExons(unadjustedGeneExons);
 
         maxTracks = segments.stream().mapToInt(x -> x.Track).max().orElse(0) + 1;
-        maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);
-        maxMinorAllelePloidy = alterations.stream().mapToDouble(CopyNumberAlteration::minorAlleleCopyNumber).max().orElse(0);
+        maxCopyNumber = copyNumbers.stream().mapToDouble(x -> x.CopyNumber).max().orElse(0);
+        maxMinorAllelePloidy = copyNumbers.stream().mapToDouble(VisCopyNumber::minorAlleleCopyNumber).max().orElse(0);
 
         double maxLinkPloidy = links.stream().mapToDouble(x -> x.JCN).max().orElse(0);
         double maxSegmentsPloidy = segments.stream().mapToDouble(x -> x.LinkPloidy).max().orElse(0);
 
         maxPloidy = Math.max(maxLinkPloidy, maxSegmentsPloidy);
         connectors = new Connectors(showSimpleSvSegments).createConnectors(segments, links);
-        labelSize = config.labelSize(untruncatedCopyNumberAlterationsCount());
+        labelSize = config.labelSize(untruncatedVisCopyNumberFilesCount());
 
         int actualMaxGeneCharacters = genes.stream().mapToInt(x -> x.name().length()).max().orElse(0);
         geneLabelSize = actualMaxGeneCharacters > config.MaxGeneCharacters
@@ -174,61 +174,16 @@ public class CircosData
         return maxMinorAllelePloidy;
     }
 
-    @NotNull
-    public List<Gene> genes()
-    {
-        return genes;
-    }
+    public List<Gene> genes() { return genes; }
+    public List<VisSvData> unadjustedLinks() { return unadjustedLinks; }
+    public List<VisCopyNumber> unadjustedAlterations() { return unadjustedAlterations; }
+    public List<VisSegment> segments() { return segments; }
+    public List<VisSvData> links() { return links; }
+    public List<VisCopyNumber> copyNumbers() { return copyNumbers; }
+    public List<VisGeneExon> exons() { return exons; }
+    public List<GenomeRegion> fragileSites() { return fragileSites; }
+    public List<GenomeRegion> lineElements() { return lineElements; }
 
-    @NotNull
-    public List<VisSvData> unadjustedLinks()
-    {
-        return unadjustedLinks;
-    }
-
-    @NotNull
-    public List<CopyNumberAlteration> unadjustedAlterations()
-    {
-        return unadjustedAlterations;
-    }
-
-    @NotNull
-    public List<VisSegment> segments()
-    {
-        return segments;
-    }
-
-    @NotNull
-    public List<VisSvData> links()
-    {
-        return links;
-    }
-
-    @NotNull
-    public List<CopyNumberAlteration> alterations()
-    {
-        return alterations;
-    }
-
-    @NotNull
-    public List<VisGeneExon> exons()
-    {
-        return exons;
-    }
-
-    @NotNull
-    public List<GenomeRegion> fragileSites()
-    {
-        return fragileSites;
-    }
-
-    @NotNull
-    public List<GenomeRegion> lineElements()
-    {
-        return lineElements;
-    }
-
-    @NotNull
     public Set<GenomePosition> contigLengths()
     {
         return contigLengths;
@@ -239,9 +194,9 @@ public class CircosData
         return contigLengths().stream().mapToInt(x -> (int) x.position()).sum();
     }
 
-    private long untruncatedCopyNumberAlterationsCount()
+    private long untruncatedVisCopyNumberFilesCount()
     {
-        return alterations.stream().filter(x -> !x.truncated()).count();
+        return copyNumbers.stream().filter(x -> !x.Truncated).count();
     }
 
     public double labelSize()

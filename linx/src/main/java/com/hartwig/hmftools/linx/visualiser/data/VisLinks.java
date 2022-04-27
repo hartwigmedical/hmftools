@@ -32,12 +32,12 @@ public class VisLinks
     {
         for(final VisSvData link : links)
         {
-            if (link.ChrStart.equals(position.chromosome()) && link.PosStart == position.position())
+            if(link.ChrStart.equals(position.chromosome()) && link.PosStart == position.position())
             {
                 return Optional.of(link);
             }
 
-            if (link.ChrEnd.equals(position.chromosome()) && link.PosEnd == position.position())
+            if(link.ChrEnd.equals(position.chromosome()) && link.PosEnd == position.position())
             {
                 return Optional.of(link);
             }
@@ -78,14 +78,14 @@ public class VisLinks
     {
         final List<GenomePosition> results = Lists.newArrayList();
 
-        for (final VisSvData link : links)
+        for(final VisSvData link : links)
         {
-            if (link.isValidStart() && link.PosStart != -1)
+            if(link.isValidStart() && link.PosStart != -1)
             {
                 results.add(GenomePositions.create(link.ChrStart, link.PosStart));
             }
 
-            if (link.isValidEnd() && link.PosEnd != -1)
+            if(link.isValidEnd() && link.PosEnd != -1)
             {
                 results.add(GenomePositions.create(link.ChrEnd, link.PosEnd));
             }

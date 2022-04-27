@@ -31,10 +31,10 @@ import com.hartwig.hmftools.linx.visualiser.circos.ColorPicker;
 import com.hartwig.hmftools.linx.visualiser.circos.FusionDataWriter;
 import com.hartwig.hmftools.linx.visualiser.circos.FusionExecution;
 import com.hartwig.hmftools.linx.visualiser.circos.Span;
-import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.VisCopyNumbers;
 import com.hartwig.hmftools.linx.visualiser.data.VisLinks;
 import com.hartwig.hmftools.linx.visualiser.data.VisSegments;
+import com.hartwig.hmftools.linx.visualiser.file.VisCopyNumber;
 import com.hartwig.hmftools.linx.visualiser.file.VisFusion;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain;
@@ -303,8 +303,8 @@ public class SvVisualiser implements AutoCloseable
         positionsToCover.addAll(Span.allPositions(filteredExons));
 
         // Limit copy numbers to within segments, links and exons (plus a little extra)
-        final List<CopyNumberAlteration> alterations =
-                VisCopyNumbers.copyNumbers(mSampleData.CopyNumberAlterations, Span.spanPositions(positionsToCover));
+        final List<VisCopyNumber> alterations =
+                VisCopyNumbers.copyNumbers(mSampleData.CopyNumbers, Span.spanPositions(positionsToCover));
         positionsToCover.addAll(Span.allPositions(alterations));
 
         // Need to extend terminal segments past any current segments, links and exons and copy numbers

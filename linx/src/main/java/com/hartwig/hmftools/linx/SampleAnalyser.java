@@ -47,7 +47,7 @@ import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
-import com.hartwig.hmftools.linx.visualiser.file.VisCopyNumberFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisCopyNumber;
 import com.hartwig.hmftools.linx.visualiser.file.VisFusion;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain;
@@ -411,7 +411,7 @@ public class SampleAnalyser implements Callable
                 LinxDriver.write(LinxDriver.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
 
                 VisSvData.write(VisSvData.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-                VisCopyNumberFile.write(VisCopyNumberFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+                VisCopyNumber.write(VisCopyNumber.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
                 VisGeneExon.write(VisGeneExon.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
                 VisSegment.write(VisSegment.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
                 VisFusion.write(VisFusion.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());

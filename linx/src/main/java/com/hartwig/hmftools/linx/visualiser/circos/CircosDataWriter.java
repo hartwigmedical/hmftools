@@ -27,8 +27,8 @@ import com.hartwig.hmftools.linx.visualiser.CircosConfig;
 import com.hartwig.hmftools.linx.visualiser.data.AdjustedPosition;
 import com.hartwig.hmftools.linx.visualiser.data.AdjustedPositions;
 import com.hartwig.hmftools.linx.visualiser.data.Connector;
-import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.Gene;
+import com.hartwig.hmftools.linx.visualiser.file.VisCopyNumber;
 import com.hartwig.hmftools.linx.visualiser.file.VisSegment;
 import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
 import com.hartwig.hmftools.linx.visualiser.data.VisLinks;
@@ -95,7 +95,7 @@ public class CircosDataWriter
 
         final List<VisSegment> segments = data.segments();
         final List<VisSvData> links = data.links();
-        final List<CopyNumberAlteration> alterations = data.alterations();
+        final List<VisCopyNumber> alterations = data.copyNumbers();
         final List<GenomeRegion> fragileSites = data.fragileSites();
         final List<GenomeRegion> lineElements = data.lineElements();
         final List<VisGeneExon> exons = data.exons();
@@ -154,8 +154,7 @@ public class CircosDataWriter
         return this;
     }
 
-    @NotNull
-    private List<String> chromosomeLocations(final List<CopyNumberAlteration> unadjustedAlterations)
+    private List<String> chromosomeLocations(final List<VisCopyNumber> unadjustedAlterations)
     {
         List<String> result = Lists.newArrayList();
 
@@ -281,7 +280,6 @@ public class CircosDataWriter
         return result;
     }
 
-    @NotNull
     private List<String> highlights(final List<GenomeRegion> regions)
     {
         return regions.stream()
@@ -292,19 +290,17 @@ public class CircosDataWriter
                 .collect(toList());
     }
 
-    @NotNull
-    private List<String> createDistances(final List<CopyNumberAlteration> unadjustedSegment,
-            final List<CopyNumberAlteration> segments)
+    private List<String> createDistances(final List<VisCopyNumber> unadjustedSegment, final List<VisCopyNumber> segments)
     {
         final List<String> result = Lists.newArrayList();
-        int unadjustedSegments = (int)segments.stream().filter(x -> !x.truncated()).count();
+        int unadjustedSegments = (int)segments.stream().filter(x -> !x.Truncated).count();
         if (unadjustedSegments <= circosConfig.MaxNumberOfDistanceLabels)
         {
             for (int i = 0; i < unadjustedSegment.size(); i++)
             {
-                final CopyNumberAlteration adjusted = segments.get(i);
-                final CopyNumberAlteration unadjusted = unadjustedSegment.get(i);
-                if (!adjusted.truncated())
+                final VisCopyNumber adjusted = segments.get(i);
+                final VisCopyNumber unadjusted = unadjustedSegment.get(i);
+                if (!adjusted.Truncated)
                 {
                     final String distance = new StringJoiner(DELIMITER).add(circosContig(adjusted.chromosome()))
                             .add(String.valueOf(adjusted.start()))
@@ -321,15 +317,15 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private List<String> createCNA(final List<CopyNumberAlteration> alterations)
+    private List<String> createCNA(final List<VisCopyNumber> alterations)
     {
         final List<String> result = Lists.newArrayList();
-        for (CopyNumberAlteration alteration : alterations)
+        for (VisCopyNumber alteration : alterations)
         {
             final String cna = new StringJoiner(DELIMITER).add(circosContig(alteration.chromosome()))
                     .add(String.valueOf(alteration.start()))
                     .add(String.valueOf(alteration.end()))
-                    .add(String.valueOf(alteration.copyNumber() - 2))
+                    .add(String.valueOf(alteration.CopyNumber - 2))
                     .toString();
             result.add(cna);
         }
@@ -337,10 +333,10 @@ public class CircosDataWriter
         return result;
     }
 
-    private List<String> createMinorAllelePloidy(final List<CopyNumberAlteration> alterations)
+    private List<String> createMinorAllelePloidy(final List<VisCopyNumber> alterations)
     {
         final List<String> result = Lists.newArrayList();
-        for (CopyNumberAlteration alteration : alterations)
+        for (VisCopyNumber alteration : alterations)
         {
             final String cna = new StringJoiner(DELIMITER).add(circosContig(alteration.chromosome()))
                     .add(String.valueOf(alteration.start()))

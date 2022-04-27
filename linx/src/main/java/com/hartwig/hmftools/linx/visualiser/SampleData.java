@@ -41,13 +41,12 @@ import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
 import com.hartwig.hmftools.common.sv.linx.LinxDriver;
 import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.VisCopyNumbers;
 import com.hartwig.hmftools.linx.visualiser.data.VisExons;
 import com.hartwig.hmftools.linx.visualiser.data.VisLinks;
 import com.hartwig.hmftools.linx.visualiser.data.VisProteinDomains;
 import com.hartwig.hmftools.linx.visualiser.data.VisSegments;
-import com.hartwig.hmftools.linx.visualiser.file.VisCopyNumberFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisCopyNumber;
 import com.hartwig.hmftools.linx.visualiser.file.VisFusion;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain;
@@ -64,7 +63,7 @@ public class SampleData
 
     public final List<VisSegment> Segments;
     public final List<VisSvData> SvData;
-    public final List<CopyNumberAlteration> CopyNumberAlterations;
+    public final List<VisCopyNumber> CopyNumbers;
     public final List<VisProteinDomain> ProteinDomains;
     public final List<VisFusion> Fusions;
     public final List<VisGeneExon> Exons;
@@ -95,7 +94,7 @@ public class SampleData
         boolean useCohortFiles = cmd.hasOption(LOAD_COHORT_FILES);
         final String svDataFile = useCohortFiles ? COHORT_VIS_SVS_FILE : VisSvData.generateFilename(mSampleDataDir, Sample);
         final String linksFile = useCohortFiles ? COHORT_VIS_LINKS_FILE : VisSegment.generateFilename(mSampleDataDir, Sample);
-        final String cnaFile = useCohortFiles ? COHORT_VIS_COPY_NUMBER_FILE : VisCopyNumberFile.generateFilename(mSampleDataDir, Sample);
+        final String cnaFile = useCohortFiles ? COHORT_VIS_COPY_NUMBER_FILE : VisCopyNumber.generateFilename(mSampleDataDir, Sample);
         final String geneExonFile = useCohortFiles ? COHORT_VIS_GENE_EXONS_FILE : VisGeneExon.generateFilename(mSampleDataDir, Sample);
         final String proteinFile = useCohortFiles ? COHORT_VIS_PROTEIN_FILE : VisProteinDomain.generateFilename(mSampleDataDir, Sample);
         final String fusionFile = useCohortFiles ? COHORT_VIS_FUSIONS_FILE : VisFusion.generateFilename(mSampleDataDir, Sample);
@@ -106,8 +105,8 @@ public class SampleData
         Exons = VisExons.readExons(geneExonFile).stream().filter(x -> x.SampleId.equals(Sample)).collect(toList());
         Segments = VisSegments.readSegments(linksFile).stream().filter(x -> x.SampleId.equals(Sample)).collect(toList());
 
-        CopyNumberAlterations = VisCopyNumbers.read(cnaFile)
-                .stream().filter(x -> x.sampleId().equals(Sample)).collect(toList());
+        CopyNumbers = VisCopyNumbers.read(cnaFile)
+                .stream().filter(x -> x.SampleId.equals(Sample)).collect(toList());
 
         ProteinDomains = VisProteinDomains.readProteinDomains(proteinFile, Fusions).stream()
                 .filter(x -> x.SampleId.equals(Sample)).collect(toList());
@@ -116,7 +115,7 @@ public class SampleData
         Chromosomes = parseChromosomes(cmd);
         Genes = Sets.newHashSet();
 
-        if(Segments.isEmpty() || SvData.isEmpty() || CopyNumberAlterations.isEmpty())
+        if(Segments.isEmpty() || SvData.isEmpty() || CopyNumbers.isEmpty())
         {
             VIS_LOGGER.warn("sample({}) empty segments, SVs or copy-number files", Sample);
             return;
