@@ -6,6 +6,7 @@ import java.util.Optional;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
+import com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -19,7 +20,7 @@ public class Connectors
     }
 
     @NotNull
-    public List<Connector> createConnectors(@NotNull final List<Segment> segments, @NotNull final List<VisSvData> links)
+    public List<Connector> createConnectors(@NotNull final List<Segment> segments, @NotNull final List<VisSvDataFile> links)
     {
         final List<Connector> result = Lists.newArrayList();
 
@@ -32,34 +33,34 @@ public class Connectors
                     .track(segment.track());
 
             final GenomePosition startPosition = GenomePositions.create(segment.chromosome(), segment.start());
-            final Optional<VisSvData> optionalStartPositionLink = VisLinks.findLink(startPosition, links);
+            final Optional<VisSvDataFile> optionalStartPositionLink = VisLinks.findLink(startPosition, links);
 
             if (optionalStartPositionLink.isPresent())
             {
-                double startLinkPloidy = optionalStartPositionLink.get().jcn();
+                double startLinkPloidy = optionalStartPositionLink.get().JCN;
                 double startLinkPloidyBeforeSegment = VisSegments.segmentPloidyBefore(segment.track(), startPosition, segments);
 
                 if (startLinkPloidy > 0)
                 {
                     result.add(builder.position(segment.start())
                             .ploidy(Math.max(0, startLinkPloidy - startLinkPloidyBeforeSegment))
-                            .frame(optionalStartPositionLink.get().frame())
+                            .frame(optionalStartPositionLink.get().Frame)
                             .build());
                 }
             }
 
             final GenomePosition endPosition = GenomePositions.create(segment.chromosome(), segment.end());
-            final Optional<VisSvData> optionalEndPositionLink = VisLinks.findLink(endPosition, links);
+            final Optional<VisSvDataFile> optionalEndPositionLink = VisLinks.findLink(endPosition, links);
 
             if (optionalEndPositionLink.isPresent())
             {
-                double endLinkPloidy = optionalEndPositionLink.get().jcn();
+                double endLinkPloidy = optionalEndPositionLink.get().JCN;
                 if (endLinkPloidy > 0)
                 {
                     double endLinkPloidyBeforeSegment = VisSegments.segmentPloidyBefore(segment.track(), endPosition, segments);
                     result.add(builder.position(segment.end())
                             .ploidy(Math.max(0, endLinkPloidy - endLinkPloidyBeforeSegment))
-                            .frame(optionalEndPositionLink.get().frame())
+                            .frame(optionalEndPositionLink.get().Frame)
                             .build());
                 }
             }
@@ -71,7 +72,7 @@ public class Connectors
     }
 
     @NotNull
-    private List<Connector> create(@NotNull final VisSvData link)
+    private List<Connector> create(@NotNull final VisSvDataFile link)
     {
         @NotNull
         final List<Connector> result = Lists.newArrayList();
@@ -79,21 +80,21 @@ public class Connectors
         if (link.connectorsOnly(showSimpleSvSegments))
         {
             final ImmutableConnector.Builder builder = ImmutableConnector.builder()
-                    .clusterId(link.clusterId())
-                    .chainId(link.chainId())
-                    .ploidy(link.jcn())
+                    .clusterId(link.ClusterId)
+                    .chainId(link.ChainId)
+                    .ploidy(link.JCN)
                     .frame(0)
                     .track(0);
 
             if (link.isValidStart())
             {
-                final Connector start = builder.chromosome(link.startChromosome()).position(link.startPosition()).build();
+                final Connector start = builder.chromosome(link.ChrStart).position(link.PosStart).build();
                 result.add(start);
             }
 
             if (link.isValidEnd())
             {
-                final Connector start = builder.chromosome(link.endChromosome()).position(link.endPosition()).build();
+                final Connector start = builder.chromosome(link.ChrEnd).position(link.PosEnd).build();
                 result.add(start);
             }
 

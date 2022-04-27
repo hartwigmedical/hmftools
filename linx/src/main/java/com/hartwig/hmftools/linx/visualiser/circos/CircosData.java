@@ -19,17 +19,17 @@ import com.hartwig.hmftools.linx.visualiser.data.VisExons;
 import com.hartwig.hmftools.linx.visualiser.data.Fusion;
 import com.hartwig.hmftools.linx.visualiser.data.Gene;
 import com.hartwig.hmftools.linx.visualiser.data.Genes;
-import com.hartwig.hmftools.linx.visualiser.data.VisSvData;
 import com.hartwig.hmftools.linx.visualiser.data.VisLinks;
 import com.hartwig.hmftools.linx.visualiser.data.Segment;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
+import com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile;
 
 import org.jetbrains.annotations.NotNull;
 
 public class CircosData
 {
     private final List<VisGeneExon> exons;
-    private final List<VisSvData> links;
+    private final List<VisSvDataFile> links;
     private final List<Gene> genes;
     private final List<Segment> segments;
     private final List<GenomeRegion> lineElements;
@@ -38,7 +38,7 @@ public class CircosData
     private final List<GenomeRegion> disruptedGeneRegions;
     private final List<Connector> connectors;
 
-    private final List<VisSvData> unadjustedLinks;
+    private final List<VisSvDataFile> unadjustedLinks;
     private final List<CopyNumberAlteration> unadjustedAlterations;
 
     private final Set<GenomePosition> contigLengths;
@@ -58,7 +58,7 @@ public class CircosData
 
     public CircosData(
             boolean showSimpleSvSegments, final CircosConfig config, final List<Segment> unadjustedSegments,
-            final List<VisSvData> unadjustedLinks, final List<CopyNumberAlteration> unadjustedAlterations,
+            final List<VisSvDataFile> unadjustedLinks, final List<CopyNumberAlteration> unadjustedAlterations,
             final List<VisGeneExon> unadjustedExons, final List<Fusion> fusions)
     {
         this.upstreamGenes = fusions.stream().map(Fusion::geneUp).collect(toSet());
@@ -106,7 +106,7 @@ public class CircosData
         maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);
         maxMinorAllelePloidy = alterations.stream().mapToDouble(CopyNumberAlteration::minorAlleleCopyNumber).max().orElse(0);
 
-        double maxLinkPloidy = links.stream().mapToDouble(VisSvData::jcn).max().orElse(0);
+        double maxLinkPloidy = links.stream().mapToDouble(x -> x.JCN).max().orElse(0);
         double maxSegmentsPloidy = segments.stream().mapToDouble(Segment::ploidy).max().orElse(0);
 
         maxPloidy = Math.max(maxLinkPloidy, maxSegmentsPloidy);
@@ -181,7 +181,7 @@ public class CircosData
     }
 
     @NotNull
-    public List<VisSvData> unadjustedLinks()
+    public List<VisSvDataFile> unadjustedLinks()
     {
         return unadjustedLinks;
     }
@@ -199,7 +199,7 @@ public class CircosData
     }
 
     @NotNull
-    public List<VisSvData> links()
+    public List<VisSvDataFile> links()
     {
         return links;
     }

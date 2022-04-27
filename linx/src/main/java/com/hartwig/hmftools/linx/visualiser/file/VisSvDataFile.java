@@ -11,7 +11,9 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.linx.types.ResolvedType;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -22,31 +24,33 @@ public class VisSvDataFile
     public final int ChainId;
     public final int SvId;
     public final StructuralVariantType Type;
-    public final com.hartwig.hmftools.linx.types.ResolvedType ResolvedType;
+    public final ResolvedType ClusterResolvedType;
     public final boolean IsSynthetic;
     public final String ChrStart;
     public final String InfoStart;
     public final String ChrEnd;
     public final String InfoEnd;
-    public final int PosStart;
-    public final int PosEnd;
+    public int PosStart;
+    public int PosEnd;
     public final byte OrientStart;
     public final byte OrientEnd;
     public final double JCN;
     public final boolean InDoubleMinute;
 
+    public int Frame;
+
     public static final String INFO_TYPE_NORMAL = "NORMAL";
     public static final String INFO_TYPE_FOLDBACK = "FOLDBACK";
 
-    public VisSvDataFile(final String sampleId, int clusterId, int chainId, int svId,
-            StructuralVariantType type, final com.hartwig.hmftools.linx.types.ResolvedType resolvedType, boolean isSynthetic,
-            final String chrStart, final String chrEnd, int posStart, int posEnd,
-            byte orientStart, byte orientEnd, final String infoStart, final String infoEnd, double jcn, boolean inDM)
+    public VisSvDataFile(
+            final String sampleId, int clusterId, int chainId, int svId, final StructuralVariantType type, final ResolvedType resolvedType,
+            boolean isSynthetic, final String chrStart, final String chrEnd, int posStart, int posEnd, byte orientStart, byte orientEnd,
+            final String infoStart, final String infoEnd, double jcn, boolean inDM)
     {
         SampleId = sampleId;
         ClusterId = clusterId;
         ChainId = chainId;
-        ResolvedType = resolvedType;
+        ClusterResolvedType = resolvedType;
         IsSynthetic = isSynthetic;
         SvId = svId;
         Type = type;
@@ -60,6 +64,40 @@ public class VisSvDataFile
         InfoEnd = infoEnd;
         JCN = jcn;
         InDoubleMinute = inDM;
+        Frame = 0;
+    }
+
+    public static VisSvDataFile from(final VisSvDataFile other)
+    {
+        VisSvDataFile newData = new VisSvDataFile(
+                other.SampleId, other.ClusterId, other.ChainId, other.SvId, other.Type, other.ClusterResolvedType,
+                other.IsSynthetic, other.ChrStart, other.ChrEnd, other.PosStart, other.PosEnd, other.OrientStart, other.OrientEnd,
+                other.InfoStart, other.InfoEnd, other.JCN, other.InDoubleMinute);
+
+        newData.Frame = other.Frame;
+
+        return newData;
+    }
+
+    public boolean connectorsOnly(boolean showSimpleSvSegments)
+    {
+        return (!showSimpleSvSegments && isSimpleSV()) || isLineElement();
+    }
+    public boolean isSimpleSV()
+    {
+        return ClusterResolvedType.isSimple() && !IsSynthetic;
+    }
+    public boolean isLineElement()
+    {
+        return ClusterResolvedType == ResolvedType.LINE;
+    }
+    public boolean isValidStart()
+    {
+        return HumanChromosome.contains(ChrStart);
+    }
+    public boolean isValidEnd()
+    {
+        return HumanChromosome.contains(ChrEnd);
     }
 
     private static final String FILE_EXTENSION = ".linx.vis_sv_data.tsv";
@@ -129,7 +167,7 @@ public class VisSvDataFile
                 .add(String.valueOf(svData.ChainId))
                 .add(String.valueOf(svData.SvId))
                 .add(String.valueOf(svData.Type))
-                .add(String.valueOf(svData.ResolvedType))
+                .add(String.valueOf(svData.ClusterResolvedType))
                 .add(String.valueOf(svData.IsSynthetic))
                 .add(String.valueOf(svData.ChrStart))
                 .add(String.valueOf(svData.ChrEnd))

@@ -36,12 +36,12 @@ import com.hartwig.hmftools.linx.visualiser.circos.Span;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.VisCopyNumbers;
 import com.hartwig.hmftools.linx.visualiser.data.Fusion;
-import com.hartwig.hmftools.linx.visualiser.data.VisSvData;
 import com.hartwig.hmftools.linx.visualiser.data.VisLinks;
 import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.data.Segment;
 import com.hartwig.hmftools.linx.visualiser.data.VisSegments;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
+import com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -137,7 +137,7 @@ public class SvVisualiser implements AutoCloseable
         }
         else
         {
-            final List<Integer> clusterIds = mSampleData.SvData.stream().map(VisSvData::clusterId).distinct().sorted().collect(toList());
+            final List<Integer> clusterIds = mSampleData.SvData.stream().map(x -> x.ClusterId).distinct().sorted().collect(toList());
 
             for (Integer clusterId : clusterIds)
             {
@@ -145,8 +145,8 @@ public class SvVisualiser implements AutoCloseable
             }
 
             final Set<String> chromosomes = Sets.newHashSet();
-            mSampleData.SvData.stream().map(VisSvData::startChromosome).filter(HumanChromosome::contains).forEach(chromosomes::add);
-            mSampleData.SvData.stream().map(VisSvData::endChromosome).filter(HumanChromosome::contains).forEach(chromosomes::add);
+            mSampleData.SvData.stream().map(x -> x.ChrStart).filter(HumanChromosome::contains).forEach(chromosomes::add);
+            mSampleData.SvData.stream().map(x -> x.ChrEnd).filter(HumanChromosome::contains).forEach(chromosomes::add);
             for (final String chromosome : chromosomes)
             {
                 submitChromosome(Lists.newArrayList(chromosome));
@@ -174,19 +174,19 @@ public class SvVisualiser implements AutoCloseable
                 ? "All"
                 : chromosomes.stream().map(RefGenomeFunctions::stripChrPrefix).collect(Collectors.joining("-"));
 
-        final Predicate<VisSvData> linePredicate = x -> !x.isLineElement() || mConfig.IncludeLineElements;
-        final Predicate<VisSvData> chromosomePredicate = x -> chromosomes.contains(x.startChromosome()) || chromosomes.contains(x.endChromosome());
-        final Predicate<VisSvData> combinedPredicate = chromosomePredicate.and(linePredicate);
+        final Predicate<VisSvDataFile> linePredicate = x -> !x.isLineElement() || mConfig.IncludeLineElements;
+        final Predicate<VisSvDataFile> chromosomePredicate = x -> chromosomes.contains(x.ChrStart) || chromosomes.contains(x.ChrEnd);
+        final Predicate<VisSvDataFile> combinedPredicate = chromosomePredicate.and(linePredicate);
 
         final String sample = mSampleData.Sample + ".chr" + chromosomesStr + (mConfig.Debug ? ".debug" : "");
 
         final Set<Integer> clusterIds = mSampleData.SvData
                 .stream()
                 .filter(combinedPredicate)
-                .map(VisSvData::clusterId)
+                .map(x -> x.ClusterId)
                 .collect(toSet());
 
-        final List<VisSvData> chromosomeLinks = mSampleData.SvData.stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
+        final List<VisSvDataFile> chromosomeLinks = mSampleData.SvData.stream().filter(x -> clusterIds.contains(x.ClusterId)).collect(toList());
         if(chromosomeLinks.isEmpty())
         {
             VIS_LOGGER.warn("Chromosomes {} not present in file", chromosomesStr);
@@ -204,8 +204,8 @@ public class SvVisualiser implements AutoCloseable
         final Set<String> chromosomesOfInterest = Sets.newHashSet(chromosomes);
         chromosomeLinks.forEach(x ->
         {
-            chromosomesOfInterest.add(x.startChromosome());
-            chromosomesOfInterest.add(x.endChromosome());
+            chromosomesOfInterest.add(x.ChrStart);
+            chromosomesOfInterest.add(x.ChrEnd);
         });
         chromosomeSegments.forEach(x -> chromosomesOfInterest.add(x.chromosome()));
 
@@ -221,7 +221,7 @@ public class SvVisualiser implements AutoCloseable
 
     private void submitCluster(final List<Integer> clusterIds, boolean skipSingles)
     {
-        final List<VisSvData> clusterLinks = mSampleData.SvData.stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
+        final List<VisSvDataFile> clusterLinks = mSampleData.SvData.stream().filter(x -> clusterIds.contains(x.ClusterId)).collect(toList());
         final List<Segment> clusterSegments = mSampleData.Segments.stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
         final List<VisGeneExon> clusterExons =
                 mSampleData.Exons.stream().filter(x -> clusterIds.contains(x.ClusterId)).distinct().collect(toList());
@@ -242,7 +242,7 @@ public class SvVisualiser implements AutoCloseable
             return;
         }
 
-        final Set<Integer> linkChainIds = clusterLinks.stream().map(VisSvData::chainId).collect(Collectors.toSet());
+        final Set<Integer> linkChainIds = clusterLinks.stream().map(x -> x.ChainId).collect(Collectors.toSet());
         final Set<Integer> segmentChainIds = clusterSegments.stream().map(Segment::chainId).collect(Collectors.toSet());
         segmentChainIds.removeAll(linkChainIds);
         if(!segmentChainIds.isEmpty())
@@ -270,7 +270,7 @@ public class SvVisualiser implements AutoCloseable
 
             if(mSampleData.Clusters.size() == 1)
             {
-                final String resolvedTypeString = clusterLinks.get(0).resolvedType().toString();
+                final String resolvedTypeString = clusterLinks.get(0).ClusterResolvedType.toString();
                 fileId += "." + resolvedTypeString;
             }
         }
@@ -291,7 +291,7 @@ public class SvVisualiser implements AutoCloseable
 
     private void submitFiltered(final ColorPickerFactory colorPickerFactory,
             final String sample,
-            final List<VisSvData> filteredLinks,
+            final List<VisSvDataFile> filteredLinks,
             final List<Segment> filteredSegments,
             final List<VisGeneExon> filteredExons,
             final List<ProteinDomain> filteredProteinDomains,
@@ -313,7 +313,7 @@ public class SvVisualiser implements AutoCloseable
         final List<Segment> segments = VisSegments.extendTerminals(
                 0, filteredSegments, filteredLinks, positionsToCover, showSimpleSvSegments, mConfig.RefGenomeCoords);
 
-        final List<VisSvData> links = VisLinks.addFrame(segments, filteredLinks);
+        final List<VisSvDataFile> links = VisLinks.addFrame(segments, filteredLinks);
 
         final ColorPicker color = colorPickerFactory.create(links);
 
@@ -387,7 +387,7 @@ public class SvVisualiser implements AutoCloseable
     private interface ColorPickerFactory
     {
         @NotNull
-        ColorPicker create(@NotNull final List<VisSvData> links);
+        ColorPicker create(@NotNull final List<VisSvDataFile> links);
     }
 
 }

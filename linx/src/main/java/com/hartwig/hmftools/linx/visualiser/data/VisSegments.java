@@ -21,6 +21,7 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.linx.visualiser.circos.SegmentTerminal;
 import com.hartwig.hmftools.linx.visualiser.circos.Span;
 import com.hartwig.hmftools.linx.visualiser.file.VisSegmentFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -80,7 +81,7 @@ public class VisSegments
         return VisSegmentFile.read(fileName).stream().map(VisSegments::fromFile).collect(Collectors.toList());
     }
 
-    public static List<Segment> extendTerminals(int terminalDistance, final List<Segment> segments, final List<VisSvData> links,
+    public static List<Segment> extendTerminals(int terminalDistance, final List<Segment> segments, final List<VisSvDataFile> links,
             final List<GenomePosition> allPositions, boolean showSimpleSvSegments, final RefGenomeCoordinates refGenCoords)
     {
         final Map<String,Integer> minPositionPerChromosome = minPositionPerChromosome(allPositions);
@@ -176,7 +177,7 @@ public class VisSegments
                 .build();
     }
 
-    static List<Segment> incrementOnChromosome(final List<Segment> segments, final List<VisSvData> links, boolean showSimpleSvSegments)
+    static List<Segment> incrementOnChromosome(final List<Segment> segments, final List<VisSvDataFile> links, boolean showSimpleSvSegments)
     {
 
         final Map<String, Integer> trackMap = Maps.newHashMap();
@@ -210,7 +211,7 @@ public class VisSegments
         return result;
     }
 
-    private static boolean showSegment(boolean showSimpleSvSegments, final Segment segment, final List<VisSvData> links)
+    private static boolean showSegment(boolean showSimpleSvSegments, final Segment segment, final List<VisSvDataFile> links)
     {
         if (segment.startTerminal() == SegmentTerminal.NONE && segment.endTerminal() == SegmentTerminal.NONE)
         {
@@ -228,7 +229,7 @@ public class VisSegments
 
     }
 
-    private static boolean showSegment(boolean showSimpleSvSegments, final GenomePosition position, final List<VisSvData> links)
+    private static boolean showSegment(boolean showSimpleSvSegments, final GenomePosition position, final List<VisSvDataFile> links)
     {
         return VisLinks.findLink(position, links).filter(x -> !x.connectorsOnly(showSimpleSvSegments)).isPresent();
     }

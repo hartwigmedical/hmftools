@@ -13,30 +13,30 @@ import com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile;
 
 public class VisLinks
 {
-    public static Optional<VisSvData> findStartLink(final GenomePosition position, List<VisSvData> links)
+    public static Optional<VisSvDataFile> findStartLink(final GenomePosition position, List<VisSvDataFile> links)
     {
         return links.stream()
-                .filter(x -> x.startChromosome().equals(position.chromosome()) && x.startPosition() == position.position())
+                .filter(x -> x.ChrStart.equals(position.chromosome()) && x.PosStart == position.position())
                 .findFirst();
     }
 
-    public static Optional<VisSvData> findEndLink(final GenomePosition position, List<VisSvData> links)
+    public static Optional<VisSvDataFile> findEndLink(final GenomePosition position, List<VisSvDataFile> links)
     {
         return links.stream()
-                .filter(x -> x.endChromosome().equals(position.chromosome()) && x.endPosition() == position.position())
+                .filter(x -> x.ChrEnd.equals(position.chromosome()) && x.PosEnd == position.position())
                 .findFirst();
     }
 
-    public static Optional<VisSvData> findLink(final GenomePosition position, final List<VisSvData> links)
+    public static Optional<VisSvDataFile> findLink(final GenomePosition position, final List<VisSvDataFile> links)
     {
-        for(final VisSvData link : links)
+        for(final VisSvDataFile link : links)
         {
-            if (link.startChromosome().equals(position.chromosome()) && link.startPosition() == position.position())
+            if (link.ChrStart.equals(position.chromosome()) && link.PosStart == position.position())
             {
                 return Optional.of(link);
             }
 
-            if (link.endChromosome().equals(position.chromosome()) && link.endPosition() == position.position())
+            if (link.ChrEnd.equals(position.chromosome()) && link.PosEnd == position.position())
             {
                 return Optional.of(link);
             }
@@ -45,12 +45,12 @@ public class VisLinks
         return Optional.empty();
     }
 
-    public static List<VisSvData> readSvData(
+    public static List<VisSvDataFile> readSvData(
             final String fileName, final String sampleId, final List<ChrBaseRegion> restrictedRegions) throws IOException
     {
         List<VisSvDataFile> fileSVs = VisSvDataFile.read(fileName);
 
-        List<VisSvData> visSvData = Lists.newArrayList();
+        List<VisSvDataFile> visSvData = Lists.newArrayList();
 
         for(VisSvDataFile sv : fileSVs)
         {
@@ -61,56 +61,32 @@ public class VisLinks
             {
                 if(restrictedRegions.stream().anyMatch(x -> x.containsPosition(sv.ChrStart, sv.PosStart) || x.containsPosition(sv.ChrEnd, sv.PosEnd)))
                 {
-                    visSvData.add(VisLinks.fromFile(sv));
+                    visSvData.add(sv);
                 }
             }
             else
             {
-                visSvData.add(VisLinks.fromFile(sv));
+                visSvData.add(sv);
             }
         }
 
         return visSvData;
     }
 
-    private static VisSvData fromFile(final VisSvDataFile file)
-    {
-        return ImmutableVisSvData.builder()
-                .sampleId(file.SampleId)
-                .clusterId(file.ClusterId)
-                .chainId(file.ChainId)
-                .svId(file.SvId)
-                .type(file.Type)
-                .resolvedType(file.ResolvedType)
-                .isSynthetic(file.IsSynthetic)
-                .startChromosome(file.ChrStart)
-                .startPosition(file.PosStart)
-                .startOrientation(file.OrientStart)
-                .startInfo(file.InfoStart)
-                .endChromosome(file.ChrEnd)
-                .endPosition(file.PosEnd)
-                .endOrientation(file.OrientEnd)
-                .endInfo(file.InfoEnd)
-                .jcn(file.JCN)
-                .inDoubleMinute(file.InDoubleMinute)
-                .frame(0)
-                .build();
-    }
-
-    public static List<GenomePosition> allPositions(final List<VisSvData> links)
+    public static List<GenomePosition> allPositions(final List<VisSvDataFile> links)
     {
         final List<GenomePosition> results = Lists.newArrayList();
 
-        for (final VisSvData link : links)
+        for (final VisSvDataFile link : links)
         {
-            if (link.isValidStart() && link.startPosition() != -1)
+            if (link.isValidStart() && link.PosStart != -1)
             {
-                results.add(GenomePositions.create(link.startChromosome(), link.startPosition()));
+                results.add(GenomePositions.create(link.ChrStart, link.PosStart));
             }
 
-            if (link.isValidEnd() && link.endPosition() != -1)
+            if (link.isValidEnd() && link.PosEnd != -1)
             {
-                results.add(GenomePositions.create(link.endChromosome(), link.endPosition()));
+                results.add(GenomePositions.create(link.ChrEnd, link.PosEnd));
             }
         }
 
@@ -119,25 +95,26 @@ public class VisLinks
         return results;
     }
 
-    public static List<VisSvData> addFrame(final List<Segment> segments, final List<VisSvData> links)
+    public static List<VisSvDataFile> addFrame(final List<Segment> segments, final List<VisSvDataFile> links)
     {
-        final List<VisSvData> result = Lists.newArrayList();
+        // final List<VisSvDataFile> result = Lists.newArrayList();
 
-        for(VisSvData link : links)
+        for(VisSvDataFile link : links)
         {
             int minConnectedFrame = segments.stream().filter(x -> VisLinks.connected(link, x)).mapToInt(Segment::frame).min().orElse(0);
-            result.add(ImmutableVisSvData.builder().from(link).frame(minConnectedFrame + 1).build());
+            link.Frame = minConnectedFrame + 1;
+            // result.add(ImmutableVisSvData.builder().from(link).frame(minConnectedFrame + 1).build());
         }
 
-        return result;
+        return links;
     }
 
-    private static boolean connected(final VisSvData link, final Segment segment)
+    private static boolean connected(final VisSvDataFile link, final Segment segment)
     {
-        boolean connectedAtStart = segment.chromosome().equals(link.startChromosome()) && (segment.start() == link.startPosition()
-                || segment.end() == link.startPosition());
-        boolean connectedAtEnd = segment.chromosome().equals(link.endChromosome()) && (segment.start() == link.endPosition()
-                || segment.end() == link.endPosition());
+        boolean connectedAtStart = segment.chromosome().equals(link.ChrStart) && (segment.start() == link.PosStart
+                || segment.end() == link.PosStart);
+        boolean connectedAtEnd = segment.chromosome().equals(link.ChrEnd) && (segment.start() == link.PosEnd
+                || segment.end() == link.PosEnd);
         return connectedAtStart || connectedAtEnd;
     }
 

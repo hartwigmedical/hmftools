@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.linx.visualiser.data.VisSvData;
+import com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -90,13 +90,13 @@ public class ColorPicker
     private final double connectorTransparency;
 
     @NotNull
-    public static ColorPicker clusterColors(@NotNull final List<VisSvData> links)
+    public static ColorPicker clusterColors(@NotNull final List<VisSvDataFile> links)
     {
         return new ColorPicker(colorsByCluster(links), true, connectorTransparency(links.size()));
     }
 
     @NotNull
-    public static ColorPicker chainColors(@NotNull final List<VisSvData> links)
+    public static ColorPicker chainColors(@NotNull final List<VisSvDataFile> links)
     {
         return new ColorPicker(colorsByChain(links), false, connectorTransparency(links.size()));
     }
@@ -160,7 +160,7 @@ public class ColorPicker
     }
 
     @NotNull
-    private static Map<Integer, String> colorsByCluster(@NotNull final List<VisSvData> links)
+    private static Map<Integer, String> colorsByCluster(@NotNull final List<VisSvDataFile> links)
     {
         final Map<Integer, String> result = Maps.newHashMap();
 
@@ -168,7 +168,7 @@ public class ColorPicker
 
         final List<ClusterSize> clusterSizeList = Lists.newArrayList();
         links.stream()
-                .map(VisSvData::clusterId)
+                .map(x -> x.ClusterId)
                 .collect(toMap(x -> x, (x) -> 1L, Math::addExact))
                 .forEach((key, value) -> clusterSizeList.add(new ClusterSize(key, value)));
 
@@ -180,15 +180,15 @@ public class ColorPicker
             result.put(clusterSizeList.get(i).clusterId, color);
         }
 
-        for (VisSvData link : links)
+        for (VisSvDataFile link : links)
         {
             if (link.isSimpleSV())
             {
-                result.put(link.clusterId(), simpleSvColor(link.type()));
+                result.put(link.ClusterId, simpleSvColor(link.Type));
             }
             else if (link.isLineElement())
             {
-                result.put(link.clusterId(), toString(LINE));
+                result.put(link.ClusterId, toString(LINE));
             }
         }
 
@@ -196,29 +196,29 @@ public class ColorPicker
     }
 
     @NotNull
-    private static Map<Integer, String> colorsByChain(@NotNull final List<VisSvData> links)
+    private static Map<Integer, String> colorsByChain(@NotNull final List<VisSvDataFile> links)
     {
         final Map<Integer,String> result = Maps.newHashMap();
 
         if (!links.isEmpty())
         {
-            final VisSvData firstLink = links.get(0);
+            final VisSvDataFile firstLink = links.get(0);
 
-            if(firstLink.isSimpleSV() && !firstLink.inDoubleMinute())
+            if(firstLink.isSimpleSV() && !firstLink.InDoubleMinute)
             {
-                final String color = simpleSvColor(firstLink.type());
-                links.forEach(x -> result.put(x.chainId(), color));
+                final String color = simpleSvColor(firstLink.Type);
+                links.forEach(x -> result.put(x.ChainId, color));
             }
             else if(firstLink.isLineElement())
             {
-                links.forEach(x -> result.put(x.chainId(), toString(LINE)));
+                links.forEach(x -> result.put(x.ChainId, toString(LINE)));
             }
             else
             {
-                final List<Integer> dmChainIds = links.stream().filter(x -> x.inDoubleMinute()).map(VisSvData::chainId)
+                final List<Integer> dmChainIds = links.stream().filter(x -> x.InDoubleMinute).map(x -> x.ChainId)
                         .distinct().collect(Collectors.toList());
 
-                final List<Integer> chainIds = links.stream().map(VisSvData::chainId).distinct().collect(Collectors.toList());
+                final List<Integer> chainIds = links.stream().map(x -> x.ChainId).distinct().collect(Collectors.toList());
 
                 for(int i = 0; i < chainIds.size(); i++)
                 {

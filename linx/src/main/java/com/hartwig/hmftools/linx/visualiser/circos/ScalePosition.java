@@ -24,11 +24,10 @@ import com.hartwig.hmftools.linx.visualiser.data.ImmutableFusedExon;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableGene;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableSegment;
-import com.hartwig.hmftools.linx.visualiser.data.ImmutableVisSvData;
-import com.hartwig.hmftools.linx.visualiser.data.VisSvData;
 import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.data.Segment;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
+import com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -169,26 +168,28 @@ class ScalePosition
         return regions.stream().map(x -> interpolate(x, mContigMap.get(x.chromosome()))).collect(Collectors.toList());
     }
 
-    public List<VisSvData> scaleLinks(final List<VisSvData> links)
+    public List<VisSvDataFile> scaleLinks(final List<VisSvDataFile> links)
     {
-        final List<VisSvData> results = Lists.newArrayList();
-        for (final VisSvData link : links)
+        final List<VisSvDataFile> results = Lists.newArrayList();
+        for (final VisSvDataFile link : links)
         {
             try
             {
-                final ImmutableVisSvData.Builder builder = ImmutableVisSvData.builder().from(link);
-                if (link.isValidStart())
+                VisSvDataFile newData = VisSvDataFile.from(link);
+
+                if(link.isValidStart())
                 {
-                    builder.startPosition(mContigMap.get(link.startChromosome()).scale(link.startPosition()));
+                    newData.PosStart = mContigMap.get(link.ChrStart).scale(link.PosStart);
                 }
 
-                if (link.isValidEnd())
+                if(link.isValidEnd())
                 {
-                    builder.endPosition(mContigMap.get(link.endChromosome()).scale(link.endPosition()));
+                    newData.PosEnd = mContigMap.get(link.ChrEnd).scale(link.PosEnd);
                 }
 
-                results.add(builder.build());
-            } catch (Exception e)
+                results.add(newData);
+            }
+            catch (Exception e)
             {
                 VIS_LOGGER.error("Unable to scale link {}", link);
                 throw e;

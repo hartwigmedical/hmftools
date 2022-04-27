@@ -52,7 +52,6 @@ import com.hartwig.hmftools.linx.visualiser.data.VisExons;
 import com.hartwig.hmftools.linx.visualiser.data.VisLinks;
 import com.hartwig.hmftools.linx.visualiser.data.VisProteinDomains;
 import com.hartwig.hmftools.linx.visualiser.data.VisSegments;
-import com.hartwig.hmftools.linx.visualiser.data.VisSvData;
 import com.hartwig.hmftools.linx.visualiser.file.VisCopyNumberFile;
 import com.hartwig.hmftools.linx.visualiser.file.VisFusionFile;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
@@ -69,7 +68,7 @@ public class SampleData
     public final String Sample;
 
     public final List<Segment> Segments;
-    public final List<VisSvData> SvData;
+    public final List<VisSvDataFile> SvData;
     public final List<CopyNumberAlteration> CopyNumberAlterations;
     public final List<ProteinDomain> ProteinDomains;
     public final List<Fusion> Fusions;
@@ -146,7 +145,7 @@ public class SampleData
 
             if(!SpecificRegions.isEmpty())
             {
-                svAnnotations = svAnnotations.stream().filter(x -> SvData.stream().anyMatch(y -> y.svId() == x.svId())).collect(toList());
+                svAnnotations = svAnnotations.stream().filter(x -> SvData.stream().anyMatch(y -> y.SvId == x.svId())).collect(toList());
             }
 
             if(cmd.hasOption(PLOT_CLUSTER_GENES) && !Clusters.isEmpty())
@@ -218,9 +217,9 @@ public class SampleData
 
                 for(Integer svId : svIds)
                 {
-                    VisSvData svData = SvData.stream().filter(x -> x.svId() == svId).findFirst().orElse(null);
+                    VisSvDataFile svData = SvData.stream().filter(x -> x.SvId == svId).findFirst().orElse(null);
                     if(svData != null)
-                         clusterIds.add(svData.clusterId());
+                         clusterIds.add(svData.ClusterId);
                 }
 
                 final List<LinxDriver> drivers = LinxDriver.read(LinxDriver.generateFilename(mSampleDataDir, Sample));
