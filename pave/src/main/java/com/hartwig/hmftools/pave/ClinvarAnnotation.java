@@ -107,12 +107,14 @@ public class ClinvarAnnotation
                 if(context.getAlleles().size() < 2)
                     continue;
 
-                List<ClinvarEntry> entries = mChrEntries.get(context.getContig());
+                String chromosome = RefGenomeFunctions.stripChrPrefix(context.getContig());
+
+                List<ClinvarEntry> entries = mChrEntries.get(chromosome);
 
                 if(entries == null)
                 {
                     entries = Lists.newArrayList();
-                    mChrEntries.put(context.getContig(), entries);
+                    mChrEntries.put(chromosome, entries);
                 }
 
                 int position = context.getStart();
