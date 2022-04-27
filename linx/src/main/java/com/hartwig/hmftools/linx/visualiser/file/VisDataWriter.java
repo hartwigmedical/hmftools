@@ -193,7 +193,7 @@ public class VisDataWriter
 
         for(final SvCluster cluster : clusters)
         {
-            if (cluster.getSvCount() == 1)
+            if(cluster.getSvCount() == 1)
             {
                 if(isFilteredResolvedType(cluster.getResolvedType()))
                     continue;
@@ -208,7 +208,7 @@ public class VisDataWriter
             // log chains in order of highest to lowest ploidy so that where an SV is is more than 1 chain it will show the max ploidy
             List<SvChain> chains = Lists.newArrayList();
 
-            for (final SvChain chain : cluster.getChains())
+            for(final SvChain chain : cluster.getChains())
             {
                 int index = 0;
                 while(index < chains.size())
@@ -222,7 +222,7 @@ public class VisDataWriter
                 chains.add(index, chain);
             }
 
-            for (final SvChain chain : chains)
+            for(final SvChain chain : chains)
             {
                 // log the start of the chain
                 boolean startsOnEnd = chain.getFirstSV() == chain.getLastSV(); // closed loop chains eg DMs
@@ -232,18 +232,18 @@ public class VisDataWriter
                 {
                     SvBreakend breakend = chain.getOpenBreakend(true);
 
-                    if (breakend != null)
+                    if(breakend != null)
                     {
                         segments.add(new VisSegment(sampleData.sampleId(), cluster.id(), chain.id(), breakend.chromosome(),
                                 getPositionValue(breakend, true), getPositionValue(breakend, false), chainPloidy, false));
                     }
                 }
 
-                for (final LinkedPair pair : chain.getLinkedPairs())
+                for(final LinkedPair pair : chain.getLinkedPairs())
                 {
                     boolean isRepeat = uniquePairs.stream().anyMatch(x -> x.matches(pair));
 
-                    if (isRepeat)
+                    if(isRepeat)
                         continue;
 
                     uniquePairs.add(pair);
@@ -252,7 +252,7 @@ public class VisDataWriter
 
                     if(cluster.requiresReplication() || cluster.getChains().size() > 1)
                     {
-                        for (final SvChain otherChain : cluster.getChains())
+                        for(final SvChain otherChain : cluster.getChains())
                         {
                             int linkRepeats = (int) otherChain.getLinkedPairs().stream().filter(x -> x.matches(pair)).count();
                             linkPloidy += linkRepeats * otherChain.jcn();
@@ -275,7 +275,7 @@ public class VisDataWriter
                     // log the end of the chain out to centromere or telomere
                     SvBreakend breakend = chain.getOpenBreakend(false);
 
-                    if (breakend != null && !startsOnEnd)
+                    if(breakend != null && !startsOnEnd)
                     {
                         segments.add(new VisSegment(sampleData.sampleId(), cluster.id(), chain.id(), breakend.chromosome(),
                                 getPositionValue(breakend, true), getPositionValue(breakend, false), chainPloidy, false));
@@ -284,15 +284,15 @@ public class VisDataWriter
             }
 
             // finally write out all unchained SVs with telomere and centromere links shown
-            for (final SvVarData var : cluster.getUnlinkedSVs())
+            for(final SvVarData var : cluster.getUnlinkedSVs())
             {
                 int chainId = cluster.getChainId(var);
 
-                for (int be = SE_START; be <= SE_END; ++be)
+                for(int be = SE_START; be <= SE_END; ++be)
                 {
                     final SvBreakend breakend = var.getBreakend(be);
 
-                    if (breakend == null)
+                    if(breakend == null)
                         continue;
 
                     segments.add(new VisSegment(sampleData.sampleId(), cluster.id(), chainId, breakend.chromosome(),
@@ -365,7 +365,7 @@ public class VisDataWriter
             if(transData == null || transData.exons().isEmpty())
                 continue;
 
-            for (final ExonData exonData : transData.exons())
+            for(final ExonData exonData : transData.exons())
             {
                 if(geneData.ExonPositionOffsets.isEmpty())
                 {
@@ -397,9 +397,9 @@ public class VisDataWriter
 
             final List<TranscriptProteinData> transProteinData = mGeneDataCache.getTranscriptProteinDataMap().get(transId);
 
-            if (transProteinData != null)
+            if(transProteinData != null)
             {
-                for (final TranscriptProteinData proteinData : transProteinData)
+                for(final TranscriptProteinData proteinData : transProteinData)
                 {
                     final Integer[] domainPositions = EnsemblDataCache.getProteinDomainPositions(proteinData, transData);
 
@@ -552,9 +552,9 @@ public class VisDataWriter
     {
         try
         {
-            if (mBatchOutput)
+            if(mBatchOutput)
             {
-                for (final VisFusion visFusion : sampleData.getFusions())
+                for(final VisFusion visFusion : sampleData.getFusions())
                 {
                     mFusionFileWriter.write(VisFusion.toString(visFusion));
                     mFusionFileWriter.newLine();
@@ -565,7 +565,7 @@ public class VisDataWriter
                 VisFusion.write(VisFusion.generateFilename(mOutputDir, sampleData.sampleId()), sampleData.getFusions());
             }
         }
-        catch (IOException e)
+        catch(IOException e)
         {
             LNX_LOGGER.error("failed to write fusions vis file: {}", e.toString());
         }
