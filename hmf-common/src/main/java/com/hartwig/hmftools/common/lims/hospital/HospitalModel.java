@@ -50,7 +50,6 @@ public abstract class HospitalModel {
     @NotNull
     abstract Map<String, HospitalPersons> hospitalPersonsTARGTO();
 
-
     @NotNull
     abstract Map<String, String> sampleToHospitalMapping();
 
@@ -74,12 +73,13 @@ public abstract class HospitalModel {
 
         String requesterName = null;
         String requesterEmail = null;
-        if (cohort.requireHospitalPersonsRequester()) {
-            requesterName = coreRequesterName;
-            requesterEmail = coreRequesterEmail;
-        } else if (persons != null) {
+
+        if (persons != null) {
             requesterName = persons.requesterName();
             requesterEmail = persons.requesterEmail();
+        } else if (cohort.requireHospitalPersonsRequester()) {
+            requesterName = coreRequesterName;
+            requesterEmail = coreRequesterEmail;
         }
 
         return ImmutableHospitalContactData.builder()
