@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -271,8 +272,20 @@ public class GeneCollectionReader implements Callable
             final Map<String,Map<String,ReadGroup>> chrIncompleteReadsGroups = mFusionFinder.extractIncompleteReadGroups(mChromosome);
             final Map<String,List<FusionFragment>> racFragments = mFusionFinder.extractRealignCandidateFragments(chrIncompleteReadsGroups);
 
+            // first remove any hard-filtered groups from this chromosome now it is complete
+            Map<String,ReadGroup> localIncompleteGroups = chrIncompleteReadsGroups.get(mChromosome);
+
+            Map<String,Set<String>> hfGroupChrMap = mBamFragmentAllocator.getChimericReadTracker().getHardFilteredReadGroups();
+            Set<String> localHfGroups = hfGroupChrMap.get(mChromosome);
+            hfGroupChrMap.remove(mChromosome); // this chromosome no longer required
+
+            if(localHfGroups != null && !localHfGroups.isEmpty() && localIncompleteGroups != null)
+            {
+                localHfGroups.forEach(x -> localIncompleteGroups.remove(x));
+            }
+
             final List<ReadGroup> interChromosomalGroups = mFusionTaskManager.addIncompleteReadGroup(
-                    mChromosome, chrIncompleteReadsGroups, racFragments);
+                    mChromosome, chrIncompleteReadsGroups, racFragments, hfGroupChrMap);
 
             if(!interChromosomalGroups.isEmpty())
             {

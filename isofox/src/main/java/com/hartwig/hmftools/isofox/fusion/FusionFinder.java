@@ -239,12 +239,13 @@ public class FusionFinder implements Callable
         return chrIncompleteReadsGroups;
     }
 
-    public final Map<String,List<FusionFragment>> extractRealignCandidateFragments(final Map<String,Map<String,ReadGroup>> chrReadGroups)
+    public final Map<String,List<FusionFragment>> extractRealignCandidateFragments(
+            final Map<String,Map<String,ReadGroup>> incompleteReadGroups)
     {
         // extract any RAC fragment which supports an (incomplete) inter-chromosomal read group
         final Map<String,List<FusionFragment>> matchingRacFragments = Maps.newHashMap();
 
-        for(Map<String,ReadGroup> readGroupMap : chrReadGroups.values())
+        for(Map<String,ReadGroup> readGroupMap : incompleteReadGroups.values())
         {
             for(ReadGroup readGroup : readGroupMap.values())
             {

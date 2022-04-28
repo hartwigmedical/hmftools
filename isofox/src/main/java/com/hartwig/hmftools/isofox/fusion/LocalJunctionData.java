@@ -19,7 +19,7 @@ public class LocalJunctionData
 {
     public final int[] JunctionPositions;
     public final byte[] JunctionOrientations;
-    public int MatchedGroupCount;
+    public int MatchCount;
     public final int[] MaxSplitLengths;
 
     public LocalJunctionData(final int[] junctionPositions, final byte[] junctionOrientations)
@@ -27,13 +27,13 @@ public class LocalJunctionData
         JunctionPositions = junctionPositions;
         JunctionOrientations = junctionOrientations;
         MaxSplitLengths = new int[SE_PAIR];
-        MatchedGroupCount = 0;
+        MatchCount = 0;
     }
 
     public String toString()
     {
         return String.format("junc(%d - %d) matched(%d) maxSplits(%d - %d)",
-                JunctionPositions[SE_START], JunctionPositions[SE_END],  MatchedGroupCount,
+                JunctionPositions[SE_START], JunctionPositions[SE_END], MatchCount,
                 MaxSplitLengths[SE_START], MaxSplitLengths[SE_END]);
     }
 

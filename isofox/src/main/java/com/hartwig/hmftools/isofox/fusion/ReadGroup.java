@@ -60,7 +60,7 @@ public class ReadGroup
     {
         return String.format("%s reads(%d) complete(%s) %s",
                 id(), Reads.size(), isComplete(),
-                mLocalJunctionData != null ? String.format("matches(%d)", mLocalJunctionData.MatchedGroupCount) : "");
+                mLocalJunctionData != null ? String.format("matches(%d)", mLocalJunctionData.MatchCount) : "");
     }
 
     public String findOtherChromosome(final String chromosome)

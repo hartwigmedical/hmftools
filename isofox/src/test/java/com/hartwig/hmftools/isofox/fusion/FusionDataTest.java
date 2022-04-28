@@ -314,7 +314,8 @@ public class FusionDataTest
         assertEquals(1, finder.getRealignCandidateFragments().size());
 
         List<ReadGroup> interChromosomalGroups = fusionTaskManager.addIncompleteReadGroup(
-                gc3.chromosome(), finder.extractIncompleteReadGroups(gc3.chromosome()), finder.getRealignCandidateFragments());
+                gc3.chromosome(), finder.extractIncompleteReadGroups(gc3.chromosome()),
+                finder.getRealignCandidateFragments(), Maps.newHashMap());
 
         assertTrue(interChromosomalGroups.isEmpty());
 
@@ -327,7 +328,8 @@ public class FusionDataTest
         assertEquals(1, finder2.getRealignCandidateFragments().size());
 
         interChromosomalGroups = fusionTaskManager.addIncompleteReadGroup(
-                gc5.chromosome(), finder2.extractIncompleteReadGroups(gc5.chromosome()), finder2.getRealignCandidateFragments());
+                gc5.chromosome(), finder2.extractIncompleteReadGroups(gc5.chromosome()),
+                finder2.getRealignCandidateFragments(), Maps.newHashMap());
 
         finder2.processInterChromosomalReadGroups(interChromosomalGroups);
 

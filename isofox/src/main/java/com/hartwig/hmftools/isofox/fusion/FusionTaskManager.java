@@ -10,9 +10,11 @@ import static com.hartwig.hmftools.isofox.fusion.ReadGroup.mergeChimericReadMaps
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
+import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
@@ -32,6 +34,7 @@ public class FusionTaskManager
 
     private final Map<String,List<FusionFragment>> mRealignCandidateMap;
     private final Map<String,Map<String,ReadGroup>> mIncompleteReadGroups; // keyed by chromosome then readId
+    private final Map<String,Set<String>> mHardFilteredReadGroups; // keyed by chromosome then readId
 
     private final PerformanceCounter mPerfCounter;
 
@@ -46,6 +49,7 @@ public class FusionTaskManager
 
         mRealignCandidateMap = Maps.newHashMap();
         mIncompleteReadGroups = Maps.newHashMap();
+        mHardFilteredReadGroups = Maps.newHashMap();
 
         mPerfCounter = new PerformanceCounter("Fusions");
         mFusionWriter = new FusionWriter(mConfig);
@@ -58,16 +62,17 @@ public class FusionTaskManager
 
     public synchronized List<ReadGroup> addIncompleteReadGroup(
             final String chromosome, final Map<String,Map<String,ReadGroup>> chrIncompleteGroups,
-            final Map<String,List<FusionFragment>> racFragments)
+            final Map<String,List<FusionFragment>> racFragments, final Map<String,Set<String>> hardFilteredGroups)
     {
         int prevIncomplete = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
+        int hardFiltered = 0;
 
         List<ReadGroup> completeGroups = Lists.newArrayList();
 
         for(Map.Entry<String,Map<String,ReadGroup>> entry : chrIncompleteGroups.entrySet())
         {
             String otherChromosome = entry.getKey();
-            Map<String,ReadGroup> newGroups = entry.getValue();
+            Map<String,ReadGroup> newIncompleteGroups = entry.getValue();
 
             Map<String,ReadGroup> existingGroups = mIncompleteReadGroups.get(otherChromosome);
 
@@ -80,17 +85,59 @@ public class FusionTaskManager
                     mIncompleteReadGroups.put(chromosome, chromosomeGroups);
                 }
 
-                chromosomeGroups.putAll(newGroups);
+                chromosomeGroups.putAll(newIncompleteGroups);
 
                 ISF_LOGGER.debug("added chromosomes({} & {}) newGroups({})",
-                        chromosome, otherChromosome, newGroups.size());
+                        chromosome, otherChromosome, newIncompleteGroups.size());
             }
             else
             {
-                mergeChimericReadMaps(existingGroups, completeGroups, newGroups);
+                Set<String> chrHfGroups = mHardFilteredReadGroups.get(otherChromosome);
+
+                if(chrHfGroups != null)
+                {
+                    List<String> matched = chrHfGroups.stream().filter(x -> newIncompleteGroups.containsKey(x)).collect(Collectors.toList());
+                    matched.forEach(x -> newIncompleteGroups.remove(x));
+                    matched.forEach(x -> chrHfGroups.remove(x));
+                    hardFiltered += matched.size();
+                }
+
+                mergeChimericReadMaps(existingGroups, completeGroups, newIncompleteGroups);
 
                 ISF_LOGGER.debug("combined chromosomes({} & {}) existing({}) new({}) complete({})",
-                        chromosome, otherChromosome, existingGroups.size(), newGroups.size(), completeGroups.size());
+                        chromosome, otherChromosome, existingGroups.size(), newIncompleteGroups.size(), completeGroups.size());
+            }
+        }
+
+        if(!hardFilteredGroups.isEmpty())
+        {
+            // use the read-IDs from hard-filtered groups to remove existing incomplete groups
+            // otherwise cache them until they can be applied
+            for(Map.Entry<String,Set<String>> entry : hardFilteredGroups.entrySet())
+            {
+                String otherChromosome = entry.getKey();
+                Set<String> newHfGroups = entry.getValue();
+
+                Map<String, ReadGroup> existingIncompleteGroups = mIncompleteReadGroups.get(otherChromosome);
+
+                if(existingIncompleteGroups != null)
+                {
+                    List<String> matched = newHfGroups.stream().filter(x -> existingIncompleteGroups.containsKey(x)).collect(Collectors.toList());
+                    matched.forEach(x -> existingIncompleteGroups.remove(x));
+                    matched.forEach(x -> newHfGroups.remove(x));
+                    hardFiltered += matched.size();
+                }
+
+                // store any unmatched HF groups
+                Set<String> chrHfGroups = mHardFilteredReadGroups.get(otherChromosome);
+
+                if(chrHfGroups == null)
+                {
+                    chrHfGroups = Sets.newHashSet();
+                    mHardFilteredReadGroups.put(otherChromosome, chrHfGroups);
+                }
+
+                chrHfGroups.addAll(newHfGroups);
             }
         }
 
@@ -101,8 +148,8 @@ public class FusionTaskManager
 
         int partialGroupCount = chrIncompleteGroups.values().stream().mapToInt(x -> x.size()).sum();
 
-        ISF_LOGGER.info("chr({}) chimeric groups(partial={} complete={}) total incomplete({} -> {}) racFrags({} new={})",
-                chromosome, partialGroupCount, completeGroups.size(), prevIncomplete, newIncomplete, totalRacFrags, newRacFrags);
+        ISF_LOGGER.info("chr({}) chimeric groups(partial={} complete={}) total incomplete({} -> {}) racFrags({} new={}) hf({})",
+                chromosome, partialGroupCount, completeGroups.size(), prevIncomplete, newIncomplete, totalRacFrags, newRacFrags, hardFiltered);
 
         return completeGroups;
     }
