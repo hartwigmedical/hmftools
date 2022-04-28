@@ -36,7 +36,7 @@ public class CNADrivers
         mAmplificationTargets = panel.amplificationTargets().stream().collect(Collectors.toMap(DriverGene::gene, x -> x));
     }
 
-    public static int deletedGenes(@NotNull final List<GeneCopyNumber> geneCopyNumbers)
+    public static int deletedGenes(final List<GeneCopyNumber> geneCopyNumbers)
     {
         return (int) geneCopyNumbers.stream()
                 .filter(x -> !HumanChromosome.fromString(x.chromosome()).equals(HumanChromosome._Y)
@@ -44,8 +44,12 @@ public class CNADrivers
                 .count();
     }
 
-    @NotNull
-    public List<DriverCatalog> amplifications(final double ploidy, @NotNull final List<GeneCopyNumber> geneCopyNumbers)
+    public List<DriverCatalog> amplifications(final double ploidy, final List<GeneCopyNumber> geneCopyNumbers)
+    {
+        return amplifications(ploidy, geneCopyNumbers, true);
+    }
+
+    public List<DriverCatalog> amplifications(final double ploidy, final List<GeneCopyNumber> geneCopyNumbers, boolean allowPartials)
     {
         Predicate<GeneCopyNumber> targetPredicate = x -> mAmplificationTargets.containsKey(x.geneName());
         Predicate<GeneCopyNumber> qcStatusPredicate =
@@ -63,7 +67,7 @@ public class CNADrivers
                 {
                     result.add(createAmpDriver(geneCopyNumber));
                 }
-                else if(maxCopyNumberPredicate.test(geneCopyNumber))
+                else if(allowPartials && maxCopyNumberPredicate.test(geneCopyNumber))
                 {
                     result.add(createPartialAmpDriver(geneCopyNumber));
                 }
@@ -73,8 +77,7 @@ public class CNADrivers
         return result;
     }
 
-    @NotNull
-    public List<DriverCatalog> deletions(@NotNull final List<GeneCopyNumber> geneCopyNumbers)
+    public List<DriverCatalog> deletions(final List<GeneCopyNumber> geneCopyNumbers)
     {
         List<DriverCatalog> drivers = Lists.newArrayList();
 

@@ -520,7 +520,10 @@ public class PurpleApplication
             final CNADrivers cnaDrivers = new CNADrivers(purityContext.qc().status(), mReferenceData.DriverGenes);
 
             somaticDriverCatalog.addAll(cnaDrivers.deletions(geneCopyNumbers));
-            somaticDriverCatalog.addAll(cnaDrivers.amplifications(purityContext.bestFit().ploidy(), geneCopyNumbers));
+
+            // partial AMPs are only allowed for WGS
+            somaticDriverCatalog.addAll(cnaDrivers.amplifications(
+                    purityContext.bestFit().ploidy(), geneCopyNumbers, !mConfig.TargetRegionsMode));
 
             DriverCatalogFile.write(DriverCatalogFile.generateSomaticFilename(mConfig.OutputDir, tumorSample), somaticDriverCatalog);
         }
