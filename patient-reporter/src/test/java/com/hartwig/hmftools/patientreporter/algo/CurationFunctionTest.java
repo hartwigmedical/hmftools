@@ -33,6 +33,9 @@ import org.junit.Test;
 
 public class CurationFunctionTest {
 
+    private static final String GENE_CDKN2A_CANONICAL = "CDKN2A (p16)";
+    private static final String GENE_CDKN2A_NON_CANONICAL = "CDKN2A (p14ARF)";
+
     @Test
     public void canCurateTumorSpecificEvidence() {
         List<ProtectEvidence> tumorSpecificEvidence = evidence();
@@ -40,8 +43,8 @@ public class CurationFunctionTest {
 
         assertEquals(curated.size(), 3);
         assertEquals(findByGeneProtect(curated, "KRAS", false), "KRAS");
-        assertEquals(findByGeneProtect(curated, "CDKN2A (P16)", true), "CDKN2A (P16)");
-        assertEquals(findByGeneProtect(curated, "CDKN2A (P14Arf)", false), "CDKN2A (P14Arf)");
+        assertEquals(findByGeneProtect(curated, GENE_CDKN2A_CANONICAL, true), GENE_CDKN2A_CANONICAL);
+        assertEquals(findByGeneProtect(curated, GENE_CDKN2A_NON_CANONICAL, false), GENE_CDKN2A_NON_CANONICAL);
     }
 
     @Test
@@ -51,8 +54,8 @@ public class CurationFunctionTest {
 
         assertEquals(curated.size(), 3);
         assertEquals(findByGeneProtect(curated, "KRAS", false), "KRAS");
-        assertEquals(findByGeneProtect(curated, "CDKN2A (P16)", true), "CDKN2A (P16)");
-        assertEquals(findByGeneProtect(curated, "CDKN2A (P14Arf)", false), "CDKN2A (P14Arf)");
+        assertEquals(findByGeneProtect(curated, GENE_CDKN2A_CANONICAL, true), GENE_CDKN2A_CANONICAL);
+        assertEquals(findByGeneProtect(curated, GENE_CDKN2A_NON_CANONICAL, false), GENE_CDKN2A_NON_CANONICAL);
     }
 
     @Test
@@ -62,8 +65,8 @@ public class CurationFunctionTest {
 
         assertEquals(curated.size(), 3);
         assertEquals(findByGeneProtect(curated, "KRAS", false), "KRAS");
-        assertEquals(findByGeneProtect(curated, "CDKN2A (P16)", true), "CDKN2A (P16)");
-        assertEquals(findByGeneProtect(curated, "CDKN2A (P14Arf)", false), "CDKN2A (P14Arf)");
+        assertEquals(findByGeneProtect(curated, GENE_CDKN2A_CANONICAL, true), GENE_CDKN2A_CANONICAL);
+        assertEquals(findByGeneProtect(curated, GENE_CDKN2A_NON_CANONICAL, false), GENE_CDKN2A_NON_CANONICAL);
     }
 
     @NotNull
@@ -83,8 +86,8 @@ public class CurationFunctionTest {
 
         assertEquals(curated.size(), 3);
         assertEquals(findByGeneVariant(curated, "KRAS", false), "KRAS");
-        assertEquals(findByGeneVariant(curated, "CDKN2A (P16)", true), "CDKN2A (P16)");
-        assertEquals(findByGeneVariant(curated, "CDKN2A (P14Arf)", false), "CDKN2A (P14Arf)");
+        assertEquals(findByGeneVariant(curated, GENE_CDKN2A_CANONICAL, true), GENE_CDKN2A_CANONICAL);
+        assertEquals(findByGeneVariant(curated, GENE_CDKN2A_NON_CANONICAL, false), GENE_CDKN2A_NON_CANONICAL);
     }
 
     @Test
@@ -106,8 +109,8 @@ public class CurationFunctionTest {
 
         assertEquals(curated.size(), 3);
         assertEquals(findByGeneVariant(curated, "KRAS", false), "KRAS");
-        assertEquals(findByGeneVariant(curated, "CDKN2A (P16)", true), "CDKN2A (P16)");
-        assertEquals(findByGeneVariant(curated, "CDKN2A (P14Arf)", false), "CDKN2A (P14Arf)");
+        assertEquals(findByGeneVariant(curated, GENE_CDKN2A_CANONICAL, true), GENE_CDKN2A_CANONICAL);
+        assertEquals(findByGeneVariant(curated, GENE_CDKN2A_NON_CANONICAL, false), GENE_CDKN2A_NON_CANONICAL);
     }
 
     @NotNull
@@ -127,8 +130,8 @@ public class CurationFunctionTest {
 
         assertEquals(curated.size(), 3);
         assertEquals(findByGeneGainLoss(curated, "BRAF", true), "BRAF");
-        assertEquals(findByGeneGainLoss(curated, "CDKN2A (P16)", true), "CDKN2A (P16)");
-        assertEquals(findByGeneGainLoss(curated, "CDKN2A (P14Arf)", false), "CDKN2A (P14Arf)");
+        assertEquals(findByGeneGainLoss(curated, GENE_CDKN2A_CANONICAL, true), GENE_CDKN2A_CANONICAL);
+        assertEquals(findByGeneGainLoss(curated, GENE_CDKN2A_NON_CANONICAL, false), GENE_CDKN2A_NON_CANONICAL);
     }
 
     @NotNull
@@ -148,8 +151,8 @@ public class CurationFunctionTest {
 
         assertEquals(curated.size(), 3);
         assertEquals(findByGeneGDisruption(curated, "NRAS", true), "NRAS");
-        assertEquals(findByGeneGDisruption(curated, "CDKN2A (P16)", true), "CDKN2A (P16)");
-        assertEquals(findByGeneGDisruption(curated, "CDKN2A (P14Arf)", false), "CDKN2A (P14Arf)");
+        assertEquals(findByGeneGDisruption(curated, GENE_CDKN2A_CANONICAL, true), GENE_CDKN2A_CANONICAL);
+        assertEquals(findByGeneGDisruption(curated, GENE_CDKN2A_NON_CANONICAL, false), GENE_CDKN2A_NON_CANONICAL);
     }
 
     @NotNull
@@ -169,8 +172,8 @@ public class CurationFunctionTest {
 
         assertEquals(curated.size(), 3);
         assertEquals(findByGeneHomozygousDisruption(curated, "NRAS", true), "NRAS");
-        assertEquals(findByGeneHomozygousDisruption(curated, "CDKN2A (P16)", true), "CDKN2A (P16)");
-        assertEquals(findByGeneHomozygousDisruption(curated, "CDKN2A (P14Arf)", false), "CDKN2A (P14Arf)");
+        assertEquals(findByGeneHomozygousDisruption(curated, GENE_CDKN2A_CANONICAL, true), GENE_CDKN2A_CANONICAL);
+        assertEquals(findByGeneHomozygousDisruption(curated, GENE_CDKN2A_NON_CANONICAL, false), GENE_CDKN2A_NON_CANONICAL);
     }
 
     @NotNull
