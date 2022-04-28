@@ -2,7 +2,7 @@
 
 If a gene panel is configured, PURPLE will compile a catalog of drivers including point mutations and copy number events.  To include point mutations in the driver catalog, the somatic VCF must be annotated with [PAVE](https://github.com/hartwigmedical/hmftools/tree/master/pave).
 
-Running [LINX](https://github.com/hartwigmedical/hmftools/tree/master/linx) enriches the PURPLE driver catalog with the addition of both homozygous disruption drivers and fusions
+Running [LINX](https://github.com/hartwigmedical/hmftools/tree/master/linx) enriches the PURPLE driver catalog with the addition of disruption drivers.  Fusions are also called but reported separately.
 
 ## Gene Panel Configuration
 
@@ -34,11 +34,9 @@ A detailed description of our gene discovery and initial construction of our gen
 
 ## Gene Driver Likelihood
 
-A driver likelihood estimate between 0 and 1 is calculated for each variant in the gene panel.
-High level amplifications, deletions, fusions (when using LINX), and TERT promoter mutations are all rare so have a likelihood of 1 when found affecting a driver gene, but for coding mutations we need to account for the large number of passenger point mutations that are present throughout the genome and thus also in driver genes.
-
-For coding mutations the driver likelihood algorithm depends on the configured 'likelihood type' in the gene panel.
-The impacts of configuring `ONCO` vs `TSG` type is the following:
+A driver likelihood estimate between 0 and 1 is calculated for each variant in the gene panel.  High level amplifications, homozygous deletions, homozygous disruptions and TERT promoter mutations are all rare so have a likelihood of 1 when found affecting a driver gene.   Note that non homozygous disruptions are also added to the driver catalog, but driver likelihood is set to 0.    
+  
+For coding mutations we need to account for the large number of passenger point mutations that are present throughout the genome and thus also in driver genes.  This is implemented as a model where the driver likelihood algorithm depends on the configured 'likelihood type' in the driver gene panel.  The impacts of configuring `ONCO` vs `TSG` type is the following:
 
 Characteristic | `ONCO` | `TSG`
 ---|---|---
