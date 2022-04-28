@@ -164,7 +164,7 @@ public final class HospitalModelFactory {
                 String requesterEmail = parts.length > 2 ? parts[HOSPITAL_PERSONS_REQUESTER_EMAIL_COLUMN] : null;
 
                 HospitalPersons hospitalPersons = ImmutableHospitalPersons.builder()
-                        .hospitalPI(requesterName != null
+                        .hospitalPI(parts[HOSPITAL_PERSONS_PI_COLUMN].isEmpty()
                                 ? requesterName
                                 : parts[HOSPITAL_PERSONS_PI_COLUMN])
                         .requesterName(requesterName)
