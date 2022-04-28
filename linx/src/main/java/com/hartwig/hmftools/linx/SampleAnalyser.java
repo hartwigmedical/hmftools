@@ -359,11 +359,17 @@ public class SampleAnalyser implements Callable
         mCohortDataWriter.getVisWriter().writeOutput(
                 mVisSampleData, mAnalyser.getClusters(), mAllVariants, mCnDataLoader.getChrCnDataMap());
 
-        final List<DriverCatalog> driverCatalogs = Lists.newArrayList(mDriverGeneAnnotator.getDriverCatalog());
-        final List<LinxDriver> linxDrivers = mDriverGeneAnnotator.getDriverOutputList();
+        List<DriverCatalog> driverCatalogs = null;
+        List<LinxDriver> linxDrivers = null;
 
-        // include any reportable disruptions for genes which do not already have homozgous distruptins
-        mFusionAnalyser.getDisruptionFinder().addReportableDisruptions(driverCatalogs);
+        if(!mConfig.IsGermline)
+        {
+            driverCatalogs = Lists.newArrayList(mDriverGeneAnnotator.getDriverCatalog());
+            linxDrivers = mDriverGeneAnnotator.getDriverOutputList();
+
+            // include any reportable disruptions for genes which do not already have homozgous distruptins
+            mFusionAnalyser.getDisruptionFinder().addReportableDisruptions(driverCatalogs);
+        }
 
         if(mConfig.isSingleSample())
         {
@@ -374,11 +380,14 @@ public class SampleAnalyser implements Callable
                 LinxCluster.write(LinxCluster.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), clusterData);
                 LinxLink.write(LinxLink.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), linksData);
 
-                final String driverCatalogFile = LinxDriver.generateCatalogFilename(mConfig.OutputDataPath, mCurrentSampleId, true);
-                DriverCatalogFile.write(driverCatalogFile, driverCatalogs);
+                if(!mConfig.IsGermline)
+                {
+                    final String driverCatalogFile = LinxDriver.generateCatalogFilename(mConfig.OutputDataPath, mCurrentSampleId, true);
+                    DriverCatalogFile.write(driverCatalogFile, driverCatalogs);
 
-                final String driversFile = LinxDriver.generateFilename(mConfig.OutputDataPath, mCurrentSampleId);
-                LinxDriver.write(driversFile, linxDrivers);
+                    final String driversFile = LinxDriver.generateFilename(mConfig.OutputDataPath, mCurrentSampleId);
+                    LinxDriver.write(driversFile, linxDrivers);
+                }
             }
             catch (IOException e)
             {
@@ -386,7 +395,7 @@ public class SampleAnalyser implements Callable
             }
         }
 
-        if(mConfig.UploadToDB && mDbAccess != null)
+        if(!mConfig.IsGermline && mConfig.UploadToDB && mDbAccess != null)
         {
             writeToDatabase(mCurrentSampleId, mDbAccess, linxSvData, clusterData, linksData, driverCatalogs, linxDrivers);
         }

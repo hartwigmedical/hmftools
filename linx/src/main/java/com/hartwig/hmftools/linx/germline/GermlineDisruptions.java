@@ -425,9 +425,9 @@ public class GermlineDisruptions
                     var.position(true), var.position(false),
                     var.orientation(true), var.orientation(false),
                     gene.GeneName, var.type(), filters, svData.event(), svData.qualityScore(),
-                    svData.startTumorVariantFragmentCount(), svData.startTumorReferenceFragmentCount(), svData.endTumorReferenceFragmentCount(),
+                    svData.startNormalVariantFragmentCount(), svData.startNormalReferenceFragmentCount(), svData.endNormalReferenceFragmentCount(),
+                    // svData.startTumorVariantFragmentCount(), svData.startTumorReferenceFragmentCount(), svData.endTumorReferenceFragmentCount(),
                     0, 0, 0,
-                    // svData.startNormalVariantFragmentCount(), svData.startNormalReferenceFragmentCount(), svData.endNormalReferenceFragmentCount(),
                     svData.insertSequence(), svData.insertSequenceAlignments(), svData.insertSequenceRepeatClass(), svData.insertSequenceRepeatType(),
                     cluster.id(), cluster.getSvCount(), cluster.getResolvedType().toString(),
                     svData.startLinkedBy(), svData.endLinkedBy(), ponCount, reportable));
