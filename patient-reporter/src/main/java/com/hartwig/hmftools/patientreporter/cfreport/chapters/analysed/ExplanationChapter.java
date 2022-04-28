@@ -81,8 +81,8 @@ public class ExplanationChapter implements ReportChapter {
                 "The 'tVAF' field displays the variant allele frequency corrected for tumor purity.",
                 "The 'Biallelic' field indicates whether the variant is present across all alleles in the tumor "
                         + "(and is including variants with loss-of-heterozygosity).",
-                "The 'Driver' field is based on the driver probability calculated based on the HMF database on gene level. A "
-                        + "variant in a gene with High driver likelihood is likely to be positively selected for "
+                "The 'Driver' field represents the driver probability on gene level and is calculated based on the HMF database. A "
+                        + "variant in a gene with High driver likelihood is likely to be positively selected  "
                         + "during the oncogenic process." })));
 
         table.addCell(TableUtil.createLayoutCell(1, 5).setHeight(30));
