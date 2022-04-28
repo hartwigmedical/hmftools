@@ -86,9 +86,9 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     public static AnalysedPatientReport createWithCOLO829Data(@NotNull ExampleAnalysisConfig config,
             @NotNull PurpleQCStatus purpleQCStatus) {
-        String pipelineVersion = "5.25";
+        String pipelineVersion = "5.28";
         double averageTumorPloidy = 3.1;
-        int tumorMutationalLoad = 189;
+        int tumorMutationalLoad = 186;
         double tumorMutationalBurden = 13.7;
         double microsatelliteIndelsPerMb = 0.12;
         double chordHrdValue = 0D;
@@ -227,52 +227,52 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     public static List<CnPerChromosomeArmData> extractCnPerChromosome() {
         List<CnPerChromosomeArmData> cnPerChromosomeArm = Lists.newArrayList();
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("1"), ChromosomeArm.P_ARM, 2.5764959002046512));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("1"), ChromosomeArm.Q_ARM, 3.922154509665307));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("2"), ChromosomeArm.P_ARM, 3.0171634513146657));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("2"), ChromosomeArm.Q_ARM, 3.0219000202305364));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("3"), ChromosomeArm.P_ARM, 3.5912655243657037));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("3"), ChromosomeArm.Q_ARM, 4.000405698398538));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("4"), ChromosomeArm.P_ARM, 2.0229999604574793));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("4"), ChromosomeArm.Q_ARM, 3.8454729078639636));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("5"), ChromosomeArm.P_ARM, 2.002090592970043));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("5"), ChromosomeArm.Q_ARM, 2.011425950136734));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("6"), ChromosomeArm.P_ARM, 3.845563676541185));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("6"), ChromosomeArm.Q_ARM, 2.9144758693840416));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("7"), ChromosomeArm.P_ARM, 4.024705530627151));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("7"), ChromosomeArm.Q_ARM, 4.169394819739314));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("8"), ChromosomeArm.P_ARM, 3.33329992648033));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("8"), ChromosomeArm.Q_ARM, 3.344172929126994));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("9"), ChromosomeArm.P_ARM, 2.7299876766236433));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("9"), ChromosomeArm.Q_ARM, 3.706061264689252));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("10"), ChromosomeArm.P_ARM, 2.502865993794371));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("10"), ChromosomeArm.Q_ARM, 2.0093221707856945));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("11"), ChromosomeArm.P_ARM, 3.1662562322138417));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("11"), ChromosomeArm.Q_ARM, 2.911332199188708));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("12"), ChromosomeArm.P_ARM, 3.0119999171541836));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("12"), ChromosomeArm.Q_ARM, 3.0024718089108817));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("13"), ChromosomeArm.P_ARM, 3.157299819582857));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("13"), ChromosomeArm.Q_ARM, 3.1479621008464864));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("14"), ChromosomeArm.P_ARM, 3.03029982684));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("14"), ChromosomeArm.Q_ARM, 3.0134803904104572));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("15"), ChromosomeArm.P_ARM, 3.7027997998486484));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("15"), ChromosomeArm.Q_ARM, 2.5464224756588587));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("16"), ChromosomeArm.P_ARM, 3.187989400854891));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("16"), ChromosomeArm.Q_ARM, 1.9895662504676845));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("17"), ChromosomeArm.P_ARM, 2.988699874228875));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("17"), ChromosomeArm.Q_ARM, 3.04380005299814));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("18"), ChromosomeArm.P_ARM, 2.370029828320411));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("18"), ChromosomeArm.Q_ARM, 2.850749440994104));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("19"), ChromosomeArm.P_ARM, 2.885974468288675));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("19"), ChromosomeArm.Q_ARM, 2.9279000888664264));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("20"), ChromosomeArm.P_ARM, 4.016485962287397));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("20"), ChromosomeArm.Q_ARM, 4.00558480110238));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("21"), ChromosomeArm.P_ARM, 2.9929997659548166));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("21"), ChromosomeArm.Q_ARM, 3.0001645829865997));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("22"), ChromosomeArm.P_ARM, 3.9840997252344827));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("22"), ChromosomeArm.Q_ARM, 3.9767647179863497));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("X"), ChromosomeArm.P_ARM, 1.9504007026407164));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("X"), ChromosomeArm.Q_ARM, 1.9559000205584387));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("1"), ChromosomeArm.P_ARM, 2.5772792739090105));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("1"), ChromosomeArm.Q_ARM, 3.923536090197291));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("2"), ChromosomeArm.P_ARM, 3.016271458549662));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("2"), ChromosomeArm.Q_ARM, 3.02120002022585));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("3"), ChromosomeArm.P_ARM, 3.5910709809245502));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("3"), ChromosomeArm.Q_ARM, 4.000879324279213));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("4"), ChromosomeArm.P_ARM, 2.0210999604946176));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("4"), ChromosomeArm.Q_ARM, 3.8453841055332885));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("5"), ChromosomeArm.P_ARM, 2.0000481443928493));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("5"), ChromosomeArm.Q_ARM, 2.0096989504909413));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("6"), ChromosomeArm.P_ARM, 3.8479440436530545));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("6"), ChromosomeArm.Q_ARM, 2.913192184870031));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("7"), ChromosomeArm.P_ARM, 4.024620078272729));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("7"), ChromosomeArm.Q_ARM, 4.171334679722508));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("8"), ChromosomeArm.P_ARM, 3.3325999264957695));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("8"), ChromosomeArm.Q_ARM, 3.3429529791412795));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("9"), ChromosomeArm.P_ARM, 2.7291755064569365));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("9"), ChromosomeArm.Q_ARM, 3.6992000400581495));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("10"), ChromosomeArm.P_ARM, 2.5009802424099066));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("10"), ChromosomeArm.Q_ARM, 2.007094743290902));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("11"), ChromosomeArm.P_ARM, 3.1661435478205004));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("11"), ChromosomeArm.Q_ARM, 2.9098638260285616));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("12"), ChromosomeArm.P_ARM, 3.0115999171651855));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("12"), ChromosomeArm.Q_ARM, 3.003116732830778));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("13"), ChromosomeArm.P_ARM, 3.1564998196285714));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("13"), ChromosomeArm.Q_ARM, 3.146714774779385));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("14"), ChromosomeArm.P_ARM, 3.0139998277714284));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("14"), ChromosomeArm.Q_ARM, 3.0138455205847463));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("15"), ChromosomeArm.P_ARM, 3.7023997998702702));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("15"), ChromosomeArm.Q_ARM, 2.546611471333237));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("16"), ChromosomeArm.P_ARM, 3.1919712830460782));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("16"), ChromosomeArm.Q_ARM, 1.989521251230779));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("17"), ChromosomeArm.P_ARM, 2.9938998740100473));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("17"), ChromosomeArm.Q_ARM, 3.0477000530660465));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("18"), ChromosomeArm.P_ARM, 2.370931614063123));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("18"), ChromosomeArm.Q_ARM, 2.8490432529511334));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("19"), ChromosomeArm.P_ARM, 2.889021931658433));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("19"), ChromosomeArm.Q_ARM, 2.934100089054606));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("20"), ChromosomeArm.P_ARM, 4.013880905298536));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("20"), ChromosomeArm.Q_ARM, 4.008612196597953));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("21"), ChromosomeArm.P_ARM, 2.991999766033014));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("21"), ChromosomeArm.Q_ARM, 2.9982181161009325));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("22"), ChromosomeArm.P_ARM, 3.9915997247172412));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("22"), ChromosomeArm.Q_ARM, 3.983474946385728));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("X"), ChromosomeArm.P_ARM, 1.9496150872949336));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("X"), ChromosomeArm.Q_ARM, 1.9547000205458256));
         return cnPerChromosomeArm;
     }
 
@@ -329,30 +329,18 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static Set<ProtectSource> createTestProtectSource(@NotNull Set<Knowledgebase> sources,
-            @NotNull ProtectEvidenceType protectEvidenceType, @NotNull ProtectEvidenceType protectEvidenceType2, @Nullable Integer rank) {
-        Set<ProtectSource> protectSources = Sets.newHashSet();
+    private static ProtectSource createTestProtectSource(@NotNull Knowledgebase source, @NotNull String soureEvent,
+            @NotNull Set<String> sourceUrls, @NotNull ProtectEvidenceType protectEvidenceType, @Nullable Integer rank,
+            @NotNull Set<String> evidenceurls) {
 
-        for (Knowledgebase knowledgebase : sources) {
-            protectSources.add(ImmutableProtectSource.builder()
-                    .source(knowledgebase)
-                    .sourceEvent(Strings.EMPTY)
-                    .sourceUrls(Sets.newHashSet("https://ckbhome.jax.org/profileResponse/advancedEvidenceFind?molecularProfileId=29714&drugId=8971&doId=4944&responseType=sensitive&evidenceType=Actionable"))
-                    .evidenceType(protectEvidenceType)
-                    .rangeRank(rank)
-                    .evidenceUrls(Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/29490986",
-                            "https://meetinglibrary.asco.org/record/160279/abstract"))
-                    .build());
-            protectSources.add(ImmutableProtectSource.builder()
-                    .source(knowledgebase)
-                    .sourceEvent(Strings.EMPTY)
-                    .sourceUrls(Sets.newHashSet("https://ckbhome.jax.org/profileResponse/advancedEvidenceFind?molecularProfileId=29714&drugId=8971&doId=4944&responseType=sensitive&evidenceType=Actionable"))
-                    .evidenceType(protectEvidenceType2)
-                    .rangeRank(rank)
-                    .evidenceUrls(Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/30922731", ""))
-                    .build());
-        }
-        return protectSources;
+        return ImmutableProtectSource.builder()
+                .source(source)
+                .sourceEvent(soureEvent)
+                .sourceUrls(sourceUrls)
+                .evidenceType(protectEvidenceType)
+                .rangeRank(null)
+                .evidenceUrls(evidenceurls)
+                .build();
     }
 
     @NotNull
@@ -361,277 +349,12 @@ public final class ExampleAnalysisTestFactory {
 
         ImmutableProtectEvidence.Builder onLabelBuilder = ImmutableProtectEvidence.builder().onLabel(true);
 
-        evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
-                .transcript("123")
-                .isCanonical(true)
-                .event("p.Val600Glu")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("Cobimetinib + Vemurafenib")
-                .level(EvidenceLevel.A)
-                .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC, Knowledgebase.VICC_CGI),
-                        ProtectEvidenceType.HOTSPOT_MUTATION,
-                        ProtectEvidenceType.SIGNATURE,
-                        null))
-                .build());
-
-        evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
-                .transcript("123")
-                .isCanonical(true)
-                .event("p.Val600Glu")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("Dabrafenib")
-                .level(EvidenceLevel.A)
-                .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC, Knowledgebase.VICC_CGI),
-                        ProtectEvidenceType.HOTSPOT_MUTATION,
-                        ProtectEvidenceType.SIGNATURE,
-                        null))
-                .build());
-
-        evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
-                .transcript("123")
-                .isCanonical(true)
-                .event("p.Val600Glu")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("Dabrafenib + Trametinib")
-                .level(EvidenceLevel.A)
-                .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC, Knowledgebase.VICC_CGI),
-                        ProtectEvidenceType.HOTSPOT_MUTATION,
-                        ProtectEvidenceType.SIGNATURE,
-                        null))
-                .build());
-
-        evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
-                .transcript("123")
-                .isCanonical(true)
-                .event("p.Val600Glu")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("Trametinib")
-                .level(EvidenceLevel.A)
-                .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI),
-                        ProtectEvidenceType.EXON_MUTATION,
-                        ProtectEvidenceType.SIGNATURE,
-                        1))
-                .build());
-
-        evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
-                .transcript("123")
-                .isCanonical(true)
-                .event("p.Val600Glu")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("Vemurafenib")
-                .level(EvidenceLevel.A)
-                .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI),
-                        ProtectEvidenceType.CODON_MUTATION,
-                        ProtectEvidenceType.SIGNATURE,
-                        600))
-                .build());
-
-        evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
-                .transcript("123")
-                .isCanonical(true)
-                .event("p.Val600Glu")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("RO4987655")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
-                        ProtectEvidenceType.HOTSPOT_MUTATION,
-                        ProtectEvidenceType.SIGNATURE,
-                        null))
-                .build());
-
-        evidenceItemsOnLabel.add(onLabelBuilder.gene("PTEN")
-                .transcript("123")
-                .isCanonical(true)
-                .event("partial loss")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("Buparlisib + Carboplatin + Paclitaxel")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI),
-                        ProtectEvidenceType.DELETION,
-                        ProtectEvidenceType.SIGNATURE,
-                        null))
-                .build());
-
         return evidenceItemsOnLabel;
     }
 
     @NotNull
     private static List<ProtectEvidence> createCOLO829ClinicalTrials() {
         List<ProtectEvidence> trialsOnLabel = Lists.newArrayList();
-
-        ImmutableProtectEvidence.Builder onLabelBuilder = ImmutableProtectEvidence.builder().onLabel(true);
-
-        trialsOnLabel.add(onLabelBuilder.gene("BRAF")
-                .transcript("123")
-                .isCanonical(true)
-                .event("p.Val600Glu")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("Array 818-103")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION),
-                        ProtectEvidenceType.HOTSPOT_MUTATION,
-                        ProtectEvidenceType.SIGNATURE,
-                        null))
-                .build());
-
-        trialsOnLabel.add(onLabelBuilder.gene("BRAF")
-                .transcript("123")
-                .isCanonical(true)
-                .event("p.Val600Glu")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("CLXH254C12201")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION),
-                        ProtectEvidenceType.HOTSPOT_MUTATION,
-                        ProtectEvidenceType.SIGNATURE,
-                        null))
-                .build());
-
-        trialsOnLabel.add(onLabelBuilder.gene("BRAF")
-                .transcript("123")
-                .isCanonical(true)
-                .event("p.Val600Glu")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("COWBOY")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION),
-                        ProtectEvidenceType.HOTSPOT_MUTATION,
-                        ProtectEvidenceType.SIGNATURE,
-                        null))
-                .build());
-
-        trialsOnLabel.add(onLabelBuilder.gene("BRAF")
-                .transcript("123")
-                .isCanonical(true)
-                .event("p.Val600Glu")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("COWBOY")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION),
-                        ProtectEvidenceType.HOTSPOT_MUTATION,
-                        ProtectEvidenceType.SIGNATURE,
-                        null))
-                .build());
-
-        trialsOnLabel.add(onLabelBuilder.gene("BRAF")
-                .transcript("123")
-                .isCanonical(true)
-                .event("p.Val600Glu")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("DRUP")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION),
-                        ProtectEvidenceType.HOTSPOT_MUTATION,
-                        ProtectEvidenceType.SIGNATURE,
-                        null))
-                .build());
-
-        trialsOnLabel.add(onLabelBuilder.gene("BRAF")
-                .transcript("123")
-                .isCanonical(true)
-                .event("p.Val600Glu")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("EBIN (EORTC-1612-MG)")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION),
-                        ProtectEvidenceType.HOTSPOT_MUTATION,
-                        ProtectEvidenceType.SIGNATURE,
-                        null))
-                .build());
-
-        trialsOnLabel.add(onLabelBuilder.event("High tumor mutation load")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("BASKET OF BASKETS (VHIO17002)")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION),
-                        ProtectEvidenceType.SIGNATURE,
-                        ProtectEvidenceType.DELETION,
-                        null))
-                .build());
-
-        trialsOnLabel.add(onLabelBuilder.event("High tumor mutation load")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("DRUP")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION),
-                        ProtectEvidenceType.SIGNATURE,
-                        ProtectEvidenceType.DELETION,
-                        null))
-                .build());
-
-        trialsOnLabel.add(onLabelBuilder.event("High tumor mutation load")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("KEYNOTE-158")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION),
-                        ProtectEvidenceType.SIGNATURE,
-                        ProtectEvidenceType.DELETION,
-                        null))
-                .build());
-
-        trialsOnLabel.add(onLabelBuilder.gene("PTEN")
-                .transcript("123")
-                .isCanonical(true)
-                .eventIsHighDriver(true)
-                .event("partial loss")
-                .germline(false)
-                .reported(true)
-                .treatment("DRUP")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION),
-                        ProtectEvidenceType.DELETION,
-                        ProtectEvidenceType.ACTIVATION,
-                        null))
-                .build());
 
         return trialsOnLabel;
     }
@@ -642,289 +365,32 @@ public final class ExampleAnalysisTestFactory {
 
         ImmutableProtectEvidence.Builder offLabelBuilder = ImmutableProtectEvidence.builder().onLabel(false);
 
-        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
-                .transcript("123")
-                .isCanonical(true)
-                .event("p.Val600Glu")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("Bevacizumab")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESISTANT)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI),
-                        ProtectEvidenceType.HOTSPOT_MUTATION,
-                        ProtectEvidenceType.ACTIVATION,
-                        null))
-                .build());
-
-        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
-                .transcript("123")
-                .isCanonical(true)
-                .event("p.Val600Glu")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("CI-1040")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI),
-                        ProtectEvidenceType.HOTSPOT_MUTATION,
-                        ProtectEvidenceType.ACTIVATION,
-                        null))
-                .build());
-
-        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
-                .transcript("123")
-                .isCanonical(true)
-                .event("p.Val600Glu")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("Cetuximab")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESISTANT)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI),
-                        ProtectEvidenceType.HOTSPOT_MUTATION,
-                        ProtectEvidenceType.ACTIVATION,
-                        null))
-                .build());
-
-        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
-                .transcript("123")
-                .isCanonical(true)
-                .event("p.Val600Glu")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("Cetuximab + Irinotecan + Vemurafenib")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
-                        ProtectEvidenceType.HOTSPOT_MUTATION,
-                        ProtectEvidenceType.ACTIVATION,
-                        null))
-                .build());
-
-        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
-                .transcript("123")
-                .isCanonical(true)
-                .event("p.Val600Glu")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("Fluorouracil")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESISTANT)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
-                        ProtectEvidenceType.HOTSPOT_MUTATION,
-                        ProtectEvidenceType.ACTIVATION,
-                        null))
-                .build());
-
-        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
-                .transcript("123")
-                .isCanonical(true)
-                .event("p.Val600Glu")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("Irinotecan")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESISTANT)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
-                        ProtectEvidenceType.HOTSPOT_MUTATION,
-                        ProtectEvidenceType.ACTIVATION,
-                        null))
-                .build());
-
-        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
-                .transcript("123")
-                .isCanonical(true)
-                .event("p.Val600Glu")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("Oxaliplatin")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESISTANT)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
-                        ProtectEvidenceType.HOTSPOT_MUTATION,
-                        ProtectEvidenceType.ACTIVATION,
-                        null))
-                .build());
-
-        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
-                .transcript("123")
-                .isCanonical(true)
-                .event("p.Val600Glu")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("Panitumumab")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESISTANT)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI, Knowledgebase.VICC_CIVIC),
-                        ProtectEvidenceType.HOTSPOT_MUTATION,
-                        ProtectEvidenceType.ACTIVATION,
-                        null))
-                .build());
-
-        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
-                .transcript("123")
-                .isCanonical(true)
-                .event("p.Val600Glu")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("Selumetinib")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
-                        ProtectEvidenceType.HOTSPOT_MUTATION,
-                        ProtectEvidenceType.ACTIVATION,
-                        null))
-                .build());
-
-        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
-                .transcript("123")
-                .isCanonical(true)
-                .event("p.Val600Glu")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("Sorafenib")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
-                        ProtectEvidenceType.HOTSPOT_MUTATION,
-                        ProtectEvidenceType.ACTIVATION,
-                        null))
-                .build());
-
-        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
-                .transcript("123")
-                .isCanonical(true)
-                .event("p.Val600Glu")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("Vemurafenib")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESISTANT)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI),
-                        ProtectEvidenceType.CODON_MUTATION,
-                        ProtectEvidenceType.ACTIVATION,
-                        600))
-                .build());
-
-        evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
-                .transcript("123")
-                .isCanonical(true)
-                .event("partial loss")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("Anti-EGFR monoclonal antibody")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESISTANT)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI),
-                        ProtectEvidenceType.DELETION,
-                        ProtectEvidenceType.ACTIVATION,
-                        null))
-                .build());
-
-        evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
-                .transcript("123")
-                .isCanonical(true)
-                .event("partial loss")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("Cetuximab")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESISTANT)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
-                        ProtectEvidenceType.DELETION,
-                        ProtectEvidenceType.ACTIVATION,
-                        null))
-                .build());
-
-        evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
-                .transcript("123")
-                .isCanonical(true)
-                .event("partial loss")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("Everolimus")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESISTANT)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
-                        ProtectEvidenceType.DELETION,
-                        ProtectEvidenceType.ACTIVATION,
-                        null))
-                .build());
-
-        evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
-                .transcript("123")
-                .isCanonical(true)
-                .event("partial loss")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("Lapatinib + Trastuzumab")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESISTANT)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
-                        ProtectEvidenceType.DELETION,
-                        ProtectEvidenceType.ACTIVATION,
-                        null))
-                .build());
-
-        evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
-                .transcript("123")
-                .isCanonical(true)
-                .event("partial loss")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .reported(true)
-                .treatment("Trastuzumab")
-                .level(EvidenceLevel.B)
-                .direction(EvidenceDirection.RESISTANT)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
-                        ProtectEvidenceType.DELETION,
-                        ProtectEvidenceType.ACTIVATION,
-                        null))
-                .build());
-
         return evidenceItemsOffLabel;
     }
 
     @NotNull
     private static List<ReportableVariant> createCOLO829SomaticVariants(boolean forceCDKN2AVariantToBeGermline) {
-        // TODO Fill in canonicalEffect
         ReportableVariant variant1 = ImmutableReportableVariant.builder()
                 .source(ReportableVariantSource.SOMATIC)
                 .gene("BRAF")
-                .transcript("123")
+                .transcript("ENST00000288602")
                 .isCanonical(true)
                 .genotypeStatus(GenotypeStatus.HOM_REF)
                 .chromosome("7")
                 .position(140453136)
-                .ref("T")
-                .alt("A")
+                .ref("A")
+                .alt("T")
                 .type(VariantType.SNP)
                 .otherReportedEffects(Strings.EMPTY)
                 .canonicalTranscript("ENST00000288602")
-                .canonicalEffect(Strings.EMPTY)
+                .canonicalEffect("missense_variant")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .canonicalHgvsCodingImpact("c.1799T>A")
                 .canonicalHgvsProteinImpact("p.Val600Glu")
                 .alleleReadCount(150)
                 .totalReadCount(221)
-                .alleleCopyNumber(4.09281)
-                .totalCopyNumber(6.01)
+                .alleleCopyNumber(4.09962)
+                .totalCopyNumber(6.02)
                 .minorAlleleCopyNumber(2.01)
                 .hotspot(Hotspot.HOTSPOT)
                 .driverLikelihood(1D)
@@ -934,8 +400,8 @@ public final class ExampleAnalysisTestFactory {
 
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
                 .source(forceCDKN2AVariantToBeGermline ? ReportableVariantSource.GERMLINE : ReportableVariantSource.SOMATIC)
-                .gene("CDKN2A")
-                .transcript("123")
+                .gene("CDKN2A (p16)")
+                .transcript("ENST00000498124")
                 .isCanonical(true)
                 .genotypeStatus(GenotypeStatus.HOM_REF)
                 .chromosome("9")
@@ -943,9 +409,9 @@ public final class ExampleAnalysisTestFactory {
                 .ref("CCG")
                 .alt("C")
                 .type(VariantType.INDEL)
-                .otherReportedEffects(Strings.EMPTY)
+                .otherReportedEffects("ENST00000579755|c.246_247delCG|p.Gly83fs|frameshift_variant|NONSENSE_OR_FRAMESHIFT")
                 .canonicalTranscript("ENST00000498124")
-                .canonicalEffect(Strings.EMPTY)
+                .canonicalEffect("frameshift_variant")
                 .canonicalCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
                 .canonicalHgvsCodingImpact("c.203_204delCG")
                 .canonicalHgvsProteinImpact("p.Ala68fs")
@@ -963,7 +429,7 @@ public final class ExampleAnalysisTestFactory {
         ReportableVariant variant3 = ImmutableReportableVariant.builder()
                 .source(ReportableVariantSource.SOMATIC)
                 .gene("TERT")
-                .transcript("123")
+                .transcript("ENST00000310581")
                 .isCanonical(true)
                 .genotypeStatus(GenotypeStatus.HOM_REF)
                 .chromosome("5")
@@ -975,7 +441,7 @@ public final class ExampleAnalysisTestFactory {
                 .canonicalTranscript("ENST00000310581")
                 .canonicalEffect("upstream_gene_variant")
                 .canonicalCodingEffect(CodingEffect.NONE)
-                .canonicalHgvsCodingImpact("c.-125_-124delCCinsTT")
+                .canonicalHgvsCodingImpact(Strings.EMPTY)
                 .canonicalHgvsProteinImpact(Strings.EMPTY)
                 .alleleReadCount(56)
                 .totalReadCount(65)
@@ -986,12 +452,13 @@ public final class ExampleAnalysisTestFactory {
                 .clonalLikelihood(1D)
                 .driverLikelihood(1D)
                 .biallelic(true)
+                .localPhaseSet(4410)
                 .build();
 
         ReportableVariant variant4 = ImmutableReportableVariant.builder()
                 .source(ReportableVariantSource.SOMATIC)
                 .gene("SF3B1")
-                .transcript("123")
+                .transcript("ENST00000335508")
                 .isCanonical(true)
                 .genotypeStatus(GenotypeStatus.HOM_REF)
                 .chromosome("2")
@@ -1001,7 +468,7 @@ public final class ExampleAnalysisTestFactory {
                 .type(VariantType.SNP)
                 .otherReportedEffects(Strings.EMPTY)
                 .canonicalTranscript("ENST00000335508")
-                .canonicalEffect(Strings.EMPTY)
+                .canonicalEffect("missense_variant")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .canonicalHgvsCodingImpact("c.2153C>T")
                 .canonicalHgvsProteinImpact("p.Pro718Leu")
@@ -1012,14 +479,14 @@ public final class ExampleAnalysisTestFactory {
                 .totalCopyNumber(3.02)
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .clonalLikelihood(1D)
-                .driverLikelihood(0.1459)
+                .driverLikelihood(0.1458)
                 .biallelic(false)
                 .build();
 
         ReportableVariant variant5 = ImmutableReportableVariant.builder()
                 .source(ReportableVariantSource.SOMATIC)
                 .gene("TP63")
-                .transcript("123")
+                .transcript("ENST00000264731")
                 .isCanonical(true)
                 .genotypeStatus(GenotypeStatus.HOM_REF)
                 .chromosome("3")
@@ -1029,7 +496,7 @@ public final class ExampleAnalysisTestFactory {
                 .type(VariantType.SNP)
                 .otherReportedEffects(Strings.EMPTY)
                 .canonicalTranscript("ENST00000264731")
-                .canonicalEffect(Strings.EMPTY)
+                .canonicalEffect("missense_variant")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .canonicalHgvsCodingImpact("c.1497G>T")
                 .canonicalHgvsProteinImpact("p.Met499Ile")
@@ -1044,7 +511,35 @@ public final class ExampleAnalysisTestFactory {
                 .biallelic(false)
                 .build();
 
-        return Lists.newArrayList(variant1, variant2, variant3, variant4, variant5);
+        ReportableVariant variant6 = ImmutableReportableVariant.builder()
+                .source(forceCDKN2AVariantToBeGermline ? ReportableVariantSource.GERMLINE : ReportableVariantSource.SOMATIC)
+                .gene("CDKN2A (P14Arf)")
+                .transcript("ENST00000579755")
+                .isCanonical(false)
+                .genotypeStatus(GenotypeStatus.HOM_REF)
+                .chromosome("9")
+                .position(21971153)
+                .ref("CCG")
+                .alt("C")
+                .type(VariantType.INDEL)
+                .otherReportedEffects("ENST00000579755|c.246_247delCG|p.Gly83fs|frameshift_variant|NONSENSE_OR_FRAMESHIFT")
+                .canonicalTranscript("ENST00000498124")
+                .canonicalEffect("frameshift_variant")
+                .canonicalCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
+                .canonicalHgvsCodingImpact("c.203_204delCG")
+                .canonicalHgvsProteinImpact("p.Gly83fs")
+                .alleleReadCount(99)
+                .totalReadCount(99)
+                .alleleCopyNumber(2.0)
+                .minorAlleleCopyNumber(0.0)
+                .totalCopyNumber(2.0)
+                .hotspot(Hotspot.NEAR_HOTSPOT)
+                .clonalLikelihood(1D)
+                .driverLikelihood(1D)
+                .biallelic(true)
+                .build();
+
+        return Lists.newArrayList(variant1, variant2, variant3, variant4, variant5, variant6);
     }
 
     @NotNull
@@ -1053,7 +548,7 @@ public final class ExampleAnalysisTestFactory {
                 .chromosome("10")
                 .chromosomeBand("q23.31")
                 .gene("PTEN")
-                .transcript("123")
+                .transcript("ENST00000371953")
                 .isCanonical(true)
                 .minCopies(0)
                 .maxCopies(2)
@@ -1128,12 +623,12 @@ public final class ExampleAnalysisTestFactory {
                 .gene("PTEN")
                 .range("Intron 5 -> Intron 6")
                 .type("DEL")
-                .junctionCopyNumber(2.012)
+                .junctionCopyNumber(2.0076)
                 .undisruptedCopyNumber(0.0)
                 .firstAffectedExon(5)
-                .svId(1)
-                .clusterId(2)
-                .transcriptId(Strings.EMPTY)
+                .svId(122)
+                .clusterId(67)
+                .transcriptId("ENST00000371953")
                 .isCanonical(true)
                 .build();
 
@@ -1158,11 +653,11 @@ public final class ExampleAnalysisTestFactory {
                 .haplotype("*1_HOM")
                 .function("Normal Function")
                 .linkedDrugs("5-Fluorouracil;Capecitabine;Tegafur")
-                .urlPrescriptionInfo("https://www.pharmgkb.org/chemical/PA128406956/guidelineAnnotation/PA166104939;"
+                .urlPrescriptionInfo("https://www.pharmgkb.org/chemical/PA128406956/guidelineAnnotation/PA1661049399;"
                         + "https://www.pharmgkb.org/chemical/PA448771/guidelineAnnotation/PA166104963;"
                         + "https://www.pharmgkb.org/chemical/PA452620/guidelineAnnotation/PA166104944")
                 .panelVersion("PGx_min_DPYD_v1.2")
-                .repoVersion("1.4")
+                .repoVersion("1.6")
                 .build());
     }
 
