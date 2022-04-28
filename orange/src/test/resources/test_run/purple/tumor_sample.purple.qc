@@ -1,6 +1,6 @@
 QCStatus	PASS
 Method	NORMAL
-CopyNumberSegments	208
+CopyNumberSegments	203
 UnsupportedCopyNumberSegments	0
 Purity	0.9900
 AmberGender	MALE

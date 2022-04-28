@@ -1,2 +1,2 @@
 gene	haplotype	function	linked_drugs	url_prescription_info	panel_version	repo_version	haplotype_only	zygosity_only
-DPYD	*1_HOM	Normal Function	5-Fluorouracil;Capecitabine;Tegafur	https://www.pharmgkb.org/chemical/PA128406956/guidelineAnnotation/PA166104939;https://www.pharmgkb.org/chemical/PA448771/guidelineAnnotation/PA166104963;https://www.pharmgkb.org/chemical/PA452620/guidelineAnnotation/PA166104944	PGx_min_DPYD_v1.2	1.5	*1	HOM
+DPYD	*1_HOM	Normal Function	5-Fluorouracil;Capecitabine;Tegafur	https://www.pharmgkb.org/chemical/PA128406956/guidelineAnnotation/PA166104939;https://www.pharmgkb.org/chemical/PA448771/guidelineAnnotation/PA166104963;https://www.pharmgkb.org/chemical/PA452620/guidelineAnnotation/PA166104944	PGx_min_DPYD_v1.2	1.6	*1	HOM
