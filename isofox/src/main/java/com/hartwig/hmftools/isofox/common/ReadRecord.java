@@ -35,6 +35,7 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarOperator;
@@ -68,7 +69,7 @@ public class ReadRecord
     private short mMapQuality;
     private byte[] mBaseQualities;
 
-    private final Map<Integer,Integer> mJunctionDepth;
+    private Map<Integer,Integer> mJunctionDepth; // depth at chimeric junctions
 
     private static final String SUPPLEMENTARY_ATTRIBUTE = "SA";
 
@@ -128,7 +129,7 @@ public class ReadRecord
         mSupplementaryAlignment = null;
         mHasInterGeneSplit = false;
         mMapQuality = 0;
-        mJunctionDepth = Maps.newHashMap();
+        mJunctionDepth = null;
         mBaseQualities = null;
     }
 
@@ -839,10 +840,14 @@ public class ReadRecord
         return transType != null ? transType : UNKNOWN;
     }
 
+    @Nullable
     public Map<Integer,Integer> getJunctionDepth() { return mJunctionDepth; }
 
     public void setReadJunctionDepth(final BaseDepth baseDepth)
     {
+        if(mJunctionDepth == null)
+            mJunctionDepth = Maps.newHashMap();
+
         for(final int[] mappedCoords : mMappedCoords)
         {
             mJunctionDepth.put(mappedCoords[SE_START], baseDepth.depthAtBase(mappedCoords[SE_START]));

@@ -53,6 +53,7 @@ public class FusionFinder implements Callable
 {
     private final String mTaskId;
     private final IsofoxConfig mConfig;
+    // private final FusionTaskManager mTaskManager;
     private final EnsemblDataCache mGeneTransCache;
     private final PassingFusions mPassingFusions;
 

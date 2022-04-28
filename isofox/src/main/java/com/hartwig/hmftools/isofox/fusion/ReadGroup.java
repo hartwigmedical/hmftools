@@ -80,6 +80,10 @@ public class ReadGroup
     public static void mergeChimericReadMaps(
             final Map<String,ReadGroup> partialGroups, final List<ReadGroup> completeGroups, final Map<String,ReadGroup> sourceMap)
     {
+        // 1. copies complete groups from the source map into complete groups map
+        // 2. checks for a partial match by combining partials and source, and if found removes from partials
+        // 3. new partial groups from the source map are copied into the partials map
+        // note: source map is logically const
         for(Map.Entry<String,ReadGroup> entry : sourceMap.entrySet())
         {
             final ReadGroup srcReadGroup = entry.getValue();

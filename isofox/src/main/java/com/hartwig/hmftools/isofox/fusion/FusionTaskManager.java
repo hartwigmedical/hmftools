@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.fusion.FusionConstants.HIGH_LOG_COUNT;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 import static com.hartwig.hmftools.isofox.fusion.ReadGroup.mergeChimericReadMaps;
 
@@ -62,7 +63,7 @@ public class FusionTaskManager
 
     public synchronized List<ReadGroup> addIncompleteReadGroup(
             final String chromosome, final Map<String,Map<String,ReadGroup>> chrIncompleteGroups,
-            final Map<String,List<FusionFragment>> racFragments, final Map<String,Set<String>> hardFilteredGroups)
+            final Map<String,Set<String>> hardFilteredGroups)
     {
         int prevIncomplete = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
         int hardFiltered = 0;
@@ -141,18 +142,28 @@ public class FusionTaskManager
             }
         }
 
-        mRealignCandidateMap.putAll(racFragments);
-        int totalRacFrags = mRealignCandidateMap.values().stream().mapToInt(x -> x.size()).sum();
-        int newRacFrags = racFragments.values().stream().mapToInt(x -> x.size()).sum();
         int newIncomplete = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
 
         int partialGroupCount = chrIncompleteGroups.values().stream().mapToInt(x -> x.size()).sum();
 
-        ISF_LOGGER.info("chr({}) chimeric groups(partial={} complete={}) total incomplete({} -> {}) racFrags({} new={}) hf({})",
-                chromosome, partialGroupCount, completeGroups.size(), prevIncomplete, newIncomplete, totalRacFrags, newRacFrags, hardFiltered);
+        ISF_LOGGER.info("chr({}) chimeric groups(partial={} complete={}) total incomplete({} -> {}) hf({})",
+                chromosome, partialGroupCount, completeGroups.size(), prevIncomplete, newIncomplete, hardFiltered);
 
         return completeGroups;
     }
+
+    public synchronized void addRealignCandidateFragments(final Map<String,List<FusionFragment>> racFragments)
+    {
+        mRealignCandidateMap.putAll(racFragments);
+        int totalRacFrags = mRealignCandidateMap.values().stream().mapToInt(x -> x.size()).sum();
+        int newRacFrags = racFragments.values().stream().mapToInt(x -> x.size()).sum();
+
+        if(totalRacFrags > HIGH_LOG_COUNT)
+        {
+            ISF_LOGGER.info("realignable candidate fragments total({}) new({})", totalRacFrags, newRacFrags);
+        }
+    }
+
 
     public synchronized final Map<String,List<FusionFragment>> getRealignCandidateMap() { return mRealignCandidateMap; }
 

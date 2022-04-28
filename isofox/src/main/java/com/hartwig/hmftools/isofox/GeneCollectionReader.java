@@ -285,7 +285,9 @@ public class GeneCollectionReader implements Callable
             }
 
             final List<ReadGroup> interChromosomalGroups = mFusionTaskManager.addIncompleteReadGroup(
-                    mChromosome, chrIncompleteReadsGroups, racFragments, hfGroupChrMap);
+                    mChromosome, chrIncompleteReadsGroups, hfGroupChrMap);
+
+            mFusionTaskManager.addRealignCandidateFragments(racFragments);
 
             if(!interChromosomalGroups.isEmpty())
             {

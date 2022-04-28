@@ -105,7 +105,7 @@ public class FusionReadData
         {
             for(ReadRecord read : mFragment.reads())
             {
-                if(read.getJunctionDepth().containsKey(mJunctionPositions[se]))
+                if(read.getJunctionDepth() != null && read.getJunctionDepth().containsKey(mJunctionPositions[se]))
                 {
                     mReadDepth[se] = read.getJunctionDepth().get(mJunctionPositions[se]);
                     break;
@@ -499,8 +499,6 @@ public class FusionReadData
     {
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            final int seIndex = se;
-
             for(ReadRecord read : fragment.reads())
             {
                 if(!read.Chromosome.equals(fusionRegion.Chromosome))
