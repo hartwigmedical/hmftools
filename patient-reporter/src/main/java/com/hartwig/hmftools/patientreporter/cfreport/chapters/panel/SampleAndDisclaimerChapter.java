@@ -110,9 +110,9 @@ public class SampleAndDisclaimerChapter implements ReportChapter {
                 pipelineVersion));
 
         div.add(createContentParagraph("No check is performed to verify the ‘primary tumor location’ and ‘primary tumor type’ information."));
-        div.add(createContentParagraph("The results of this report and result file is based solely on the results of the DNA sequencing of "
-                + "the received tumor material"));
-        div.add(createContentParagraph("Any clinical Interpretation of the result file is the responsibility of the hospital."));
+        div.add(createContentParagraph("The results in this report and in the result files are solely based on the results of the DNA "
+                + "sequencing of the received tumor material."));
+        div.add(createContentParagraph("Any clinical interpretation of the result files is the responsibility of the hospital."));
         div.add(createContentParagraph("This test is intended for tumor samples with minimal 10% tumor cel percentage."));
         div.add(createContentParagraph("For feedback or complaints please contact ", ReportResources.CONTACT_EMAIL_QA + "."));
         div.add(createContentParagraph("For questions about the contents of this report, please contact ",

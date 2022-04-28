@@ -46,16 +46,16 @@ public class PanelExplanationChapter implements ReportChapter {
 
         div.add(new Paragraph("Details on the report general ").addStyle(ReportResources.smallBodyHeadingStyle()));
         div.add(createContentParagraph("The variant calling of the sequencing data is based on reference genome version GRCh38."));
-        div.add(createContentDivWithLinkThree("Transcript list can be found on ",
+        div.add(createContentDivWithLinkThree("The transcript list can be found at ",
                 "https://resources.hartwigmedicalfoundation.nl",
-                " in directory " + "'Patient-Reporting.",
+                " in the directory " + "'Patient-Reporting.",
                 "https://resources.hartwigmedicalfoundation.nl"));
 
         div.add(new Paragraph("").addStyle(ReportResources.smallBodyHeadingStyle()));
         div.add(new Paragraph("Details on the VCF file").addStyle(ReportResources.smallBodyHeadingStyle()));
-        div.add(createContentDivWithLinkThree("Short description of the headers present in the VCF can be found on ",
+        div.add(createContentDivWithLinkThree("A short description of the headers present in the VCF file can be found at ",
                 "https://resources.hartwigmedicalfoundation.nl",
-                " in directory 'Patient-Reporting.",
+                " in the directory 'Patient-Reporting.",
                 "https://resources.hartwigmedicalfoundation.nl"));
         return div;
     }
