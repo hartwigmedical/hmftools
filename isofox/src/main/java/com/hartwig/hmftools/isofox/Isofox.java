@@ -53,6 +53,7 @@ import com.hartwig.hmftools.isofox.expression.ExpressionCacheTask;
 import com.hartwig.hmftools.isofox.expression.GeneCollectionSummary;
 import com.hartwig.hmftools.isofox.fusion.ChimericReadCache;
 import com.hartwig.hmftools.isofox.fusion.ChimericStats;
+import com.hartwig.hmftools.isofox.fusion.FusionFragmentReplay;
 import com.hartwig.hmftools.isofox.fusion.FusionTaskManager;
 import com.hartwig.hmftools.isofox.neo.NeoEpitopeReader;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
@@ -111,7 +112,8 @@ public class Isofox
     {
         if(mConfig.runFunction(FUSIONS) && mConfig.Fusions.ChimericReadsFile != null)
         {
-            mFusionTaskManager.processCachedFragments(ChimericReadCache.loadChimericReads(mConfig.Fusions.ChimericReadsFile));
+            FusionFragmentReplay fusionReplayer = new FusionFragmentReplay(mConfig, mGeneTransCache);
+            fusionReplayer.run();
             return true;
         }
 

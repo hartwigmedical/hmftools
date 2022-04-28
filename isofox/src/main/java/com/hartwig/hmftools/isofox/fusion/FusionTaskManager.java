@@ -29,7 +29,6 @@ public class FusionTaskManager
     private final IsofoxConfig mConfig;
     private final EnsemblDataCache mGeneTransCache;
 
-    private final List<FusionFinder> mFusionTasks;
     private final FusionWriter mFusionWriter;
     private final PassingFusions mPassingFusions;
 
@@ -43,8 +42,6 @@ public class FusionTaskManager
     {
         mConfig = config;
         mGeneTransCache = geneTransCache;
-
-        mFusionTasks = Lists.newArrayList();
 
         mPassingFusions = new PassingFusions(config.Fusions.KnownFusions, config.Fusions.CohortFile);
 
@@ -212,137 +209,6 @@ public class FusionTaskManager
         mFusionWriter.close();
     }
 
-    private static final int LOG_COUNT = 100000;
-
-    public void processCachedFragments(final List<ReadGroup> readGroups)
-    {
-        // convert any set of valid reads into a fragment, and then process these in groups by chromosomal pair
-        ISF_LOGGER.info("processing {} chimeric read groups", readGroups.size());
-
-        mPerfCounter.start();
-
-        int invalidFragments = 0;
-        int skipped = 0;
-        int fragments = 0;
-        int missingSuppReads = 0;
-
-        int readGroupCount = 0;
-
-        final Map<String,List<FusionFragment>> chrPairFragments = Maps.newHashMap();
-
-        for(ReadGroup readGroup : readGroups)
-        {
-            ++readGroupCount;
-
-            if(readGroupCount > 0 && (readGroupCount % LOG_COUNT) == 0)
-            {
-                ISF_LOGGER.info("processed {} chimeric read groups", readGroupCount);
-            }
-
-            boolean isComplete = readGroup.isComplete();
-            final List<ReadRecord> reads = readGroup.Reads;
-
-            if(reads.stream().anyMatch(x -> mConfig.Filters.skipRead(x.mateChromosome(), x.mateStartPosition())))
-            {
-                ++skipped;
-                continue;
-            }
-
-            if(!isComplete)
-            {
-                if(readGroup.hasSuppAlignment())
-                {
-                    if(skipMissingReads(reads))
-                    {
-                        ++skipped;
-                        continue;
-                    }
-
-                    ++missingSuppReads;
-                }
-
-                ++invalidFragments;
-            }
-            else
-            {
-                FusionFragment fragment = new FusionFragment(readGroup);
-
-                if(fragment.type() == FusionFragmentType.UNKNOWN)
-                {
-                    ++invalidFragments;
-                    continue;
-                }
-
-                ++fragments;
-
-                final String chrPair = formChromosomePair(fragment.chromosomes()[SE_START], fragment.chromosomes()[SE_END]);
-                List<FusionFragment> fragmentList = chrPairFragments.get(chrPair);
-
-                if(fragmentList == null)
-                {
-                    chrPairFragments.put(chrPair, Lists.newArrayList(fragment));
-                }
-                else
-                {
-                    fragmentList.add(fragment);
-                }
-            }
-        }
-
-        // allocate fusion pairs evenly amongst threads (if multi-thread)
-        mFusionTasks.clear();
-
-        for(int taskId = 0; taskId < max(mConfig.Threads, 1); ++taskId)
-        {
-            mFusionTasks.add(createFusionFinder(String.valueOf(taskId)));
-        }
-
-        for(List<FusionFragment> chrPairFrags : chrPairFragments.values())
-        {
-            // allocate the next chr-pair fragment batch to the task with the least
-            FusionFinder leastAllocated = null;
-            int minAllocated = 0;
-
-            for(FusionFinder fusionTask : mFusionTasks)
-            {
-                if(minAllocated == 0 || fusionTask.getFragments().size() < minAllocated)
-                {
-                    leastAllocated = fusionTask;
-                    minAllocated = fusionTask.getFragments().size();
-                    if(minAllocated == 0)
-                        break;
-                }
-            }
-
-            leastAllocated.getFragments().addAll(chrPairFrags);
-        }
-
-        ISF_LOGGER.info("chimeric groups({} skipped={} invalid={} miss={} candidates={}) chrPairs({}) tasks({})",
-                readGroups.size(), skipped, invalidFragments, missingSuppReads, fragments,
-                chrPairFragments.size(), mFusionTasks.size());
-
-        if(mFusionTasks.isEmpty())
-        {
-            ISF_LOGGER.warn("no fusion tasks created");
-            return;
-        }
-        else
-        {
-            final List<Callable> callableList = mFusionTasks.stream().collect(Collectors.toList());
-            TaskExecutor.executeTasks(callableList, mConfig.Threads);
-            logPerformanceStats();
-        }
-
-        mFusionWriter.close();
-
-        mPerfCounter.stop();
-
-        if(mConfig.Fusions.PerformanceStats)
-            mPerfCounter.logStats();
-
-        ISF_LOGGER.info("fusion calling complete");
-    }
-
     private boolean skipMissingReads(final List<ReadRecord> reads)
     {
         for(final ReadRecord read : reads)
@@ -361,21 +227,4 @@ public class FusionTaskManager
         return false;
     }
 
-    private void logPerformanceStats()
-    {
-        if(!mConfig.Fusions.PerformanceStats)
-            return;
-
-        if(!ISF_LOGGER.isDebugEnabled() && mConfig.Functions.size() > 1)
-            return;
-
-        final PerformanceCounter perfCounter = mFusionTasks.get(0).getPerfCounter();
-
-        for (int i = 1; i < mFusionTasks.size(); ++i)
-        {
-            perfCounter.merge(mFusionTasks.get(i).getPerfCounter());
-        }
-
-        perfCounter.logStats();
-    }
 }
