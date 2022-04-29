@@ -1,112 +1,112 @@
 SampleId,Category,ResultType,DataType,Value,RefCancerType,RefValue
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Esophagus/Stomach,1.08e-23
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Mesothelium,1.80e-30
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Bone/Soft tissue: Other,0.000607
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Liver,1.30e-33
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Cartilaginous neoplasm,4.48e-51
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Thyroid gland,2.81e-33
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Anogenital,1.49e-28
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Kidney,5.06e-06
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Head and neck: other,0.00905
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Osteosarcoma,1.27e-22
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Lung: NET,5.29e-36
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Uterus: Endometrium,0.00
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Pancreas,2.79e-26
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Lung: Small Cell,8.40e-42
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,GIST,3.70e-31
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Colorectum/Appendix/SmallIntestine,1.02e-37
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Pilocytic astrocytoma,8.82e-50
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Melanoma,0.973
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Lymphoid tissue,1.13e-33
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Bile duct/Gallbladder,7.74e-30
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Chronic lymphocytic leukemia,1.22e-42
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Skin: Other,0.0173
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Small intestine/Colorectum: NET,6.02e-41
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Pancreas: NET,2.32e-25
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Glioma,4.17e-28
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Medulloblastoma,1.63e-47
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Liposarcoma,2.52e-22
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Leiomyosarcoma,6.59e-24
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Breast,1.49e-23
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Salivary gland/Adenoid cystic,1.36e-38
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Lung: Non-small Cell,1.59e-25
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Prostate,1.38e-37
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Urothelial tract,1.12e-24
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Acute myeloid leukemia,7.41e-52
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Ovary/Fallopian tube,0.00
-tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2498,Myeloproliferative neoplasm,2.21e-48
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Esophagus/Stomach,5.84e-10
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Mesothelium,3.47e-09
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Bone/Soft tissue: Other,1.93e-05
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Liver,2.35e-08
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Cartilaginous neoplasm,3.18e-29
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Thyroid gland,4.17e-08
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Kidney,1.45e-07
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Anogenital,2.35e-07
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Head and neck: other,6.15e-07
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Osteosarcoma,4.32e-07
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Lung: NET,1.75e-10
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Uterus: Endometrium,0.00
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Pancreas,4.89e-08
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Lung: Small Cell,1.13e-09
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,GIST,6.29e-08
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Colorectum/Appendix/SmallIntestine,1.43e-07
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Melanoma,1.00
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Pilocytic astrocytoma,4.11e-26
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Lymphoid tissue,9.63e-16
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Bile duct/Gallbladder,8.30e-07
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Small intestine/Colorectum: NET,3.05e-09
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Skin: Other,8.32e-06
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Chronic lymphocytic leukemia,2.87e-16
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Pancreas: NET,1.10e-07
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Glioma,2.19e-07
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Medulloblastoma,3.96e-09
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Liposarcoma,9.00e-13
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Leiomyosarcoma,9.54e-07
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Breast,5.51e-08
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Salivary gland/Adenoid cystic,7.08e-07
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Lung: Non-small Cell,1.57e-07
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Prostate,4.09e-07
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Urothelial tract,8.06e-07
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Acute myeloid leukemia,3.71e-19
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Ovary/Fallopian tube,0.00
-tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.104e-09,Myeloproliferative neoplasm,1.11e-18
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Esophagus/Stomach,25.8
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Mesothelium,78.9
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Bone/Soft tissue: Other,0.981
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Liver,57.0
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Cartilaginous neoplasm,1.75e+03
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Thyroid gland,278
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Anogenital,19.2
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Kidney,29.1
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Head and neck: other,1.44
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Osteosarcoma,79.9
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Lung: NET,114
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Uterus: Endometrium,61.3
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Pancreas,35.7
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Lung: Small Cell,16.0
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,GIST,247
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Colorectum/Appendix/SmallIntestine,16.7
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Pilocytic astrocytoma,2.01e+03
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Melanoma,0.340
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Lymphoid tissue,23.5
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Bile duct/Gallbladder,41.4
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Chronic lymphocytic leukemia,496
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Skin: Other,0.633
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Small intestine/Colorectum: NET,106
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Pancreas: NET,94.5
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Glioma,500
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Medulloblastoma,397
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Liposarcoma,143
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Leiomyosarcoma,99.7
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Breast,12.6
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Salivary gland/Adenoid cystic,29.3
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Lung: Non-small Cell,7.91
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Prostate,56.6
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Urothelial tract,7.46
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Acute myeloid leukemia,347
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Ovary/Fallopian tube,43.3
-tumor_sample,SNV,PERCENTILE,SIG_7_UV,24239,Myeloproliferative neoplasm,4.56e+04
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Esophagus/Stomach,1.09e-23
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Mesothelium,1.86e-30
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Bone/Soft tissue: Other,0.000599
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Liver,1.33e-33
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Cartilaginous neoplasm,4.63e-51
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Thyroid gland,2.92e-33
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Anogenital,1.52e-28
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Kidney,4.94e-06
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Head and neck: other,0.00893
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Osteosarcoma,1.30e-22
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Lung: NET,5.44e-36
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Uterus: Endometrium,0.00
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Pancreas,2.85e-26
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Lung: Small Cell,8.85e-42
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,GIST,3.81e-31
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Colorectum/Appendix/SmallIntestine,1.04e-37
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Pilocytic astrocytoma,9.12e-50
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Melanoma,0.973
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Lymphoid tissue,1.16e-33
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Bile duct/Gallbladder,7.93e-30
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Chronic lymphocytic leukemia,1.27e-42
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Skin: Other,0.0171
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Small intestine/Colorectum: NET,6.22e-41
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Pancreas: NET,2.21e-25
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Glioma,3.99e-28
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Medulloblastoma,1.65e-47
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Liposarcoma,2.54e-22
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Leiomyosarcoma,6.78e-24
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Breast,1.53e-23
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Salivary gland/Adenoid cystic,1.40e-38
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Lung: Non-small Cell,1.62e-25
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Prostate,1.42e-37
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Urothelial tract,1.13e-24
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Acute myeloid leukemia,7.49e-52
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Ovary/Fallopian tube,0.00
+tumor_sample,CLASSIFIER,LIKELIHOOD,SNV_96_PAIRWISE_SIMILARITY,0.2469,Myeloproliferative neoplasm,2.23e-48
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Esophagus/Stomach,5.71e-10
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Mesothelium,3.36e-09
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Bone/Soft tissue: Other,1.91e-05
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Liver,2.33e-08
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Cartilaginous neoplasm,3.25e-29
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Thyroid gland,4.10e-08
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Kidney,1.40e-07
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Anogenital,2.29e-07
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Head and neck: other,6.03e-07
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Osteosarcoma,4.26e-07
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Lung: NET,1.72e-10
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Uterus: Endometrium,0.00
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Pancreas,4.77e-08
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Lung: Small Cell,1.12e-09
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,GIST,6.20e-08
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Colorectum/Appendix/SmallIntestine,1.41e-07
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Melanoma,1.00
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Pilocytic astrocytoma,4.01e-26
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Lymphoid tissue,9.59e-16
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Bile duct/Gallbladder,8.14e-07
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Small intestine/Colorectum: NET,3.05e-09
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Skin: Other,8.24e-06
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Chronic lymphocytic leukemia,2.85e-16
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Pancreas: NET,1.09e-07
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Glioma,2.22e-07
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Medulloblastoma,3.91e-09
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Liposarcoma,8.89e-13
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Leiomyosarcoma,9.40e-07
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Breast,5.46e-08
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Salivary gland/Adenoid cystic,6.90e-07
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Lung: Non-small Cell,1.54e-07
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Prostate,4.04e-07
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Urothelial tract,7.86e-07
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Acute myeloid leukemia,3.69e-19
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Ovary/Fallopian tube,0.00
+tumor_sample,CLASSIFIER,LIKELIHOOD,GENOMIC_POSITION_SIMILARITY,5.141e-09,Myeloproliferative neoplasm,1.07e-18
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Esophagus/Stomach,25.8
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Mesothelium,78.9
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Bone/Soft tissue: Other,0.981
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Liver,57.0
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Cartilaginous neoplasm,1.76e+03
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Thyroid gland,278
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Anogenital,19.2
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Kidney,29.1
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Head and neck: other,1.44
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Osteosarcoma,79.9
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Lung: NET,114
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Uterus: Endometrium,61.3
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Pancreas,35.8
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Lung: Small Cell,16.0
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,GIST,247
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Colorectum/Appendix/SmallIntestine,16.7
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Pilocytic astrocytoma,2.01e+03
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Melanoma,0.340
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Lymphoid tissue,23.5
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Bile duct/Gallbladder,41.4
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Chronic lymphocytic leukemia,496
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Skin: Other,0.633
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Small intestine/Colorectum: NET,106
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Pancreas: NET,94.5
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Glioma,500
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Medulloblastoma,398
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Liposarcoma,143
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Leiomyosarcoma,99.7
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Breast,12.6
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Salivary gland/Adenoid cystic,29.3
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Lung: Non-small Cell,7.91
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Prostate,56.6
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Urothelial tract,7.47
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Acute myeloid leukemia,347
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Ovary/Fallopian tube,43.3
+tumor_sample,SNV,PERCENTILE,SIG_7_UV,24251,Myeloproliferative neoplasm,4.57e+04
 tumor_sample,SNV,PERCENTILE,SIG_6_MMR,0,Esophagus/Stomach,0.405
 tumor_sample,SNV,PERCENTILE,SIG_6_MMR,0,Mesothelium,0.380
 tumor_sample,SNV,PERCENTILE,SIG_6_MMR,0,Bone/Soft tissue: Other,0.435
@@ -179,150 +179,150 @@ tumor_sample,SNV,PERCENTILE,SIG_10_POLE,0,Urothelial tract,0.275
 tumor_sample,SNV,PERCENTILE,SIG_10_POLE,0,Acute myeloid leukemia,0.450
 tumor_sample,SNV,PERCENTILE,SIG_10_POLE,0,Ovary/Fallopian tube,0.445
 tumor_sample,SNV,PERCENTILE,SIG_10_POLE,0,Myeloproliferative neoplasm,0.425
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Esophagus/Stomach,0.999
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Mesothelium,4.38
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Bone/Soft tissue: Other,0.968
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Liver,2.72
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Cartilaginous neoplasm,54.6
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Thyroid gland,2.23
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Anogenital,0.993
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Kidney,3.42
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Head and neck: other,0.997
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Osteosarcoma,3.90
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Lung: NET,3.92
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Uterus: Endometrium,2.16
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Pancreas,1.63
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Lung: Small Cell,1.25
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,GIST,5.51
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Colorectum/Appendix/SmallIntestine,0.995
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Pilocytic astrocytoma,149
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Melanoma,0.874
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Lymphoid tissue,0.986
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Bile duct/Gallbladder,0.998
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Chronic lymphocytic leukemia,19.0
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Skin: Other,0.550
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Small intestine/Colorectum: NET,5.66
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Pancreas: NET,0.980
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Glioma,0.931
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Medulloblastoma,9.39
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Liposarcoma,3.58
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Leiomyosarcoma,0.985
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Breast,0.996
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Salivary gland/Adenoid cystic,2.35
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Lung: Non-small Cell,0.992
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Prostate,2.76
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Urothelial tract,0.977
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Acute myeloid leukemia,24.5
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Ovary/Fallopian tube,0.996
-tumor_sample,SNV,PERCENTILE,SIG_11,1350,Myeloproliferative neoplasm,13.8
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Esophagus/Stomach,1.87
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Mesothelium,1.67
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Bone/Soft tissue: Other,6.44
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Liver,0.958
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Cartilaginous neoplasm,100
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Thyroid gland,3.19
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Anogenital,0.994
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Kidney,1.22
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Head and neck: other,0.929
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Osteosarcoma,2.24
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Lung: NET,0.973
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Uterus: Endometrium,3.73
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Pancreas,1.66
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Lung: Small Cell,0.0915
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,GIST,14.3
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Colorectum/Appendix/SmallIntestine,0.990
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Pilocytic astrocytoma,493
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Melanoma,0.994
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Lymphoid tissue,100
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Bile duct/Gallbladder,1.06
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Chronic lymphocytic leukemia,100
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Skin: Other,0.991
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Small intestine/Colorectum: NET,100
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Pancreas: NET,1.25
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Glioma,100
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Medulloblastoma,49.5
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Liposarcoma,100
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Leiomyosarcoma,0.988
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Breast,1.19
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Salivary gland/Adenoid cystic,0.979
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Lung: Non-small Cell,0.408
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Prostate,1.51
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Urothelial tract,0.924
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Acute myeloid leukemia,6.58
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Ovary/Fallopian tube,1.00
-tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2095,Myeloproliferative neoplasm,100
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Esophagus/Stomach,0.244
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Mesothelium,15.6
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Bone/Soft tissue: Other,0.971
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Liver,0.995
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Cartilaginous neoplasm,221
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Thyroid gland,3.53
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Anogenital,0.974
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Kidney,0.998
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Head and neck: other,0.973
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Osteosarcoma,0.950
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Lung: NET,100
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Uterus: Endometrium,0.973
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Pancreas,0.956
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Lung: Small Cell,0.966
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,GIST,0.983
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Colorectum/Appendix/SmallIntestine,0.544
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Pilocytic astrocytoma,180
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Melanoma,0.974
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Lymphoid tissue,0.811
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Bile duct/Gallbladder,0.943
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Chronic lymphocytic leukemia,2.08
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Skin: Other,0.921
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Small intestine/Colorectum: NET,7.00
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Pancreas: NET,0.994
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Glioma,100
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Medulloblastoma,103
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Liposarcoma,3.66
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Leiomyosarcoma,2.84
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Breast,0.934
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Salivary gland/Adenoid cystic,0.931
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Lung: Non-small Cell,0.933
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Prostate,0.989
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Urothelial tract,0.904
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Acute myeloid leukemia,13.9
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Ovary/Fallopian tube,0.994
-tumor_sample,SNV,PERCENTILE,SIG_17,1117,Myeloproliferative neoplasm,392
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Esophagus/Stomach,0.981
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Mesothelium,8.64
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Bone/Soft tissue: Other,0.981
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Liver,4.55
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Cartilaginous neoplasm,415
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Thyroid gland,0.959
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Anogenital,0.667
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Kidney,1.52
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Head and neck: other,0.880
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Osteosarcoma,0.989
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Lung: NET,19.8
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Uterus: Endometrium,1.05
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Pancreas,1.65
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Lung: Small Cell,1.25
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,GIST,8.05
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Colorectum/Appendix/SmallIntestine,0.996
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Pilocytic astrocytoma,353
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Melanoma,0.338
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Lymphoid tissue,0.992
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Bile duct/Gallbladder,1.03
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Chronic lymphocytic leukemia,103
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Skin: Other,0.522
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Small intestine/Colorectum: NET,6.77
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Pancreas: NET,0.984
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Glioma,0.988
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Medulloblastoma,41.1
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Liposarcoma,3.76
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Leiomyosarcoma,5.18
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Breast,0.849
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Salivary gland/Adenoid cystic,0.988
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Lung: Non-small Cell,0.823
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Prostate,2.25
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Urothelial tract,0.588
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Acute myeloid leukemia,209
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Ovary/Fallopian tube,0.998
-tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3858,Myeloproliferative neoplasm,161
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Esophagus/Stomach,0.999
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Mesothelium,4.31
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Bone/Soft tissue: Other,0.968
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Liver,2.67
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Cartilaginous neoplasm,53.7
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Thyroid gland,2.19
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Anogenital,0.992
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Kidney,3.36
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Head and neck: other,0.997
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Osteosarcoma,3.84
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Lung: NET,3.86
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Uterus: Endometrium,2.12
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Pancreas,1.61
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Lung: Small Cell,1.23
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,GIST,5.42
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Colorectum/Appendix/SmallIntestine,0.995
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Pilocytic astrocytoma,146
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Melanoma,0.873
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Lymphoid tissue,0.986
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Bile duct/Gallbladder,0.998
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Chronic lymphocytic leukemia,18.7
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Skin: Other,0.549
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Small intestine/Colorectum: NET,5.56
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Pancreas: NET,0.980
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Glioma,0.931
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Medulloblastoma,9.23
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Liposarcoma,3.52
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Leiomyosarcoma,0.985
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Breast,0.996
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Salivary gland/Adenoid cystic,2.31
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Lung: Non-small Cell,0.992
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Prostate,2.71
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Urothelial tract,0.976
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Acute myeloid leukemia,24.1
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Ovary/Fallopian tube,0.995
+tumor_sample,SNV,PERCENTILE,SIG_11,1328,Myeloproliferative neoplasm,13.6
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Esophagus/Stomach,1.89
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Mesothelium,1.69
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Bone/Soft tissue: Other,6.50
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Liver,0.959
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Cartilaginous neoplasm,100
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Thyroid gland,3.22
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Anogenital,0.994
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Kidney,1.24
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Head and neck: other,0.930
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Osteosarcoma,2.27
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Lung: NET,0.973
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Uterus: Endometrium,3.76
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Pancreas,1.68
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Lung: Small Cell,0.0932
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,GIST,14.5
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Colorectum/Appendix/SmallIntestine,0.990
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Pilocytic astrocytoma,497
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Melanoma,0.994
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Lymphoid tissue,100
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Bile duct/Gallbladder,1.07
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Chronic lymphocytic leukemia,100
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Skin: Other,0.991
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Small intestine/Colorectum: NET,100
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Pancreas: NET,1.27
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Glioma,100
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Medulloblastoma,50.0
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Liposarcoma,100
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Leiomyosarcoma,0.988
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Breast,1.20
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Salivary gland/Adenoid cystic,0.979
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Lung: Non-small Cell,0.409
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Prostate,1.52
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Urothelial tract,0.925
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Acute myeloid leukemia,6.64
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Ovary/Fallopian tube,1.01
+tumor_sample,SNV,PERCENTILE,SIG_4_SMOKING,2115,Myeloproliferative neoplasm,100
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Esophagus/Stomach,0.244
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Mesothelium,15.6
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Bone/Soft tissue: Other,0.971
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Liver,0.995
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Cartilaginous neoplasm,221
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Thyroid gland,3.53
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Anogenital,0.974
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Kidney,0.998
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Head and neck: other,0.973
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Osteosarcoma,0.950
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Lung: NET,100
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Uterus: Endometrium,0.973
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Pancreas,0.956
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Lung: Small Cell,0.966
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,GIST,0.983
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Colorectum/Appendix/SmallIntestine,0.544
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Pilocytic astrocytoma,180
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Melanoma,0.974
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Lymphoid tissue,0.811
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Bile duct/Gallbladder,0.944
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Chronic lymphocytic leukemia,2.08
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Skin: Other,0.921
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Small intestine/Colorectum: NET,7.01
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Pancreas: NET,0.994
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Glioma,100
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Medulloblastoma,103
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Liposarcoma,3.66
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Leiomyosarcoma,2.85
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Breast,0.934
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Salivary gland/Adenoid cystic,0.931
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Lung: Non-small Cell,0.934
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Prostate,0.989
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Urothelial tract,0.904
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Acute myeloid leukemia,13.9
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Ovary/Fallopian tube,0.994
+tumor_sample,SNV,PERCENTILE,SIG_17,1119,Myeloproliferative neoplasm,393
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Esophagus/Stomach,0.981
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Mesothelium,8.65
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Bone/Soft tissue: Other,0.981
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Liver,4.56
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Cartilaginous neoplasm,416
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Thyroid gland,0.959
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Anogenital,0.667
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Kidney,1.52
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Head and neck: other,0.880
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Osteosarcoma,0.989
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Lung: NET,19.8
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Uterus: Endometrium,1.05
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Pancreas,1.65
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Lung: Small Cell,1.25
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,GIST,8.05
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Colorectum/Appendix/SmallIntestine,0.996
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Pilocytic astrocytoma,353
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Melanoma,0.338
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Lymphoid tissue,0.992
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Bile duct/Gallbladder,1.03
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Chronic lymphocytic leukemia,103
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Skin: Other,0.522
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Small intestine/Colorectum: NET,6.77
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Pancreas: NET,0.984
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Glioma,0.988
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Medulloblastoma,41.1
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Liposarcoma,3.76
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Leiomyosarcoma,5.18
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Breast,0.849
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Salivary gland/Adenoid cystic,0.988
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Lung: Non-small Cell,0.823
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Prostate,2.25
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Urothelial tract,0.588
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Acute myeloid leukemia,209
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Ovary/Fallopian tube,0.998
+tumor_sample,SNV,PERCENTILE,SIG_2_13_AID_APOBEC,3860,Myeloproliferative neoplasm,161
 tumor_sample,SNV,PERCENTILE,SIG_1,0,Esophagus/Stomach,0.0950
 tumor_sample,SNV,PERCENTILE,SIG_1,0,Mesothelium,-100
 tumor_sample,SNV,PERCENTILE,SIG_1,0,Bone/Soft tissue: Other,0.0300
@@ -359,114 +359,114 @@ tumor_sample,SNV,PERCENTILE,SIG_1,0,Urothelial tract,0.0450
 tumor_sample,SNV,PERCENTILE,SIG_1,0,Acute myeloid leukemia,0.00
 tumor_sample,SNV,PERCENTILE,SIG_1,0,Ovary/Fallopian tube,0.0150
 tumor_sample,SNV,PERCENTILE,SIG_1,0,Myeloproliferative neoplasm,-100
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Esophagus/Stomach,0.830
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Mesothelium,2.26
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Bone/Soft tissue: Other,0.971
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Liver,1.06
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Cartilaginous neoplasm,26.3
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Thyroid gland,1.11
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Anogenital,0.908
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Kidney,0.993
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Head and neck: other,0.932
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Osteosarcoma,2.11
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Lung: NET,3.84
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Uterus: Endometrium,0.874
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Pancreas,0.991
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Lung: Small Cell,0.396
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,GIST,2.73
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Colorectum/Appendix/SmallIntestine,0.860
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Pilocytic astrocytoma,51.8
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Melanoma,0.377
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Lymphoid tissue,0.965
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Bile duct/Gallbladder,0.963
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Chronic lymphocytic leukemia,8.59
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Skin: Other,0.565
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Small intestine/Colorectum: NET,1.80
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Pancreas: NET,0.983
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Glioma,0.920
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Medulloblastoma,11.3
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Liposarcoma,3.27
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Leiomyosarcoma,0.987
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Breast,0.947
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Salivary gland/Adenoid cystic,1.08
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Lung: Non-small Cell,0.611
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Prostate,0.971
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Urothelial tract,0.786
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Acute myeloid leukemia,14.7
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Ovary/Fallopian tube,0.992
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37675,Myeloproliferative neoplasm,21.1
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Esophagus/Stomach,0.0282
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Mesothelium,0.0317
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Bone/Soft tissue: Other,0.0307
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Liver,0.0317
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Cartilaginous neoplasm,0.0317
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Thyroid gland,0.0317
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Anogenital,0.0298
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Kidney,0.0315
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Head and neck: other,0.0303
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Osteosarcoma,0.0317
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Lung: NET,0.0317
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Uterus: Endometrium,0.00
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Pancreas,0.0314
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Lung: Small Cell,0.0185
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,GIST,0.0317
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Colorectum/Appendix/SmallIntestine,0.0282
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Pilocytic astrocytoma,0.0317
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Melanoma,0.0145
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Lymphoid tissue,0.0308
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Bile duct/Gallbladder,0.0308
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Chronic lymphocytic leukemia,0.0317
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Skin: Other,0.0183
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Small intestine/Colorectum: NET,0.0317
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Pancreas: NET,0.0311
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Glioma,0.0292
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Medulloblastoma,0.0317
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Liposarcoma,0.0317
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Leiomyosarcoma,0.0317
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Breast,0.0304
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Salivary gland/Adenoid cystic,0.0317
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Lung: Non-small Cell,0.0219
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Prostate,0.0308
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Urothelial tract,0.0270
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Acute myeloid leukemia,0.0317
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Ovary/Fallopian tube,0.00
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37675,Myeloproliferative neoplasm,0.0317
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Esophagus/Stomach,0.0716
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Mesothelium,0.00105
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Bone/Soft tissue: Other,0.00799
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Liver,0.00182
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Cartilaginous neoplasm,0.00105
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Thyroid gland,0.00474
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Anogenital,0.0276
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Kidney,0.00243
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Head and neck: other,0.0237
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Osteosarcoma,0.00105
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Lung: NET,0.00105
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Uterus: Endometrium,0.00
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Pancreas,0.00253
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Lung: Small Cell,0.188
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,GIST,0.00105
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Colorectum/Appendix/SmallIntestine,0.0529
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Pilocytic astrocytoma,0.00105
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Melanoma,0.176
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Lymphoid tissue,0.0178
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Bile duct/Gallbladder,0.0129
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Chronic lymphocytic leukemia,0.00105
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Skin: Other,0.117
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Small intestine/Colorectum: NET,0.00105
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Pancreas: NET,0.00467
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Glioma,0.0221
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Medulloblastoma,0.00105
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Liposarcoma,0.00105
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Leiomyosarcoma,0.00675
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Breast,0.0208
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Salivary gland/Adenoid cystic,0.0104
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Lung: Non-small Cell,0.122
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Prostate,0.00927
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Urothelial tract,0.0841
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Acute myeloid leukemia,0.00105
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Ovary/Fallopian tube,0.00
-tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37675,Myeloproliferative neoplasm,0.00105
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Esophagus/Stomach,0.830
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Mesothelium,2.27
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Bone/Soft tissue: Other,0.971
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Liver,1.06
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Cartilaginous neoplasm,26.3
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Thyroid gland,1.11
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Anogenital,0.908
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Kidney,0.993
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Head and neck: other,0.932
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Osteosarcoma,2.11
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Lung: NET,3.84
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Uterus: Endometrium,0.874
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Pancreas,0.991
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Lung: Small Cell,0.398
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,GIST,2.74
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Colorectum/Appendix/SmallIntestine,0.860
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Pilocytic astrocytoma,51.9
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Melanoma,0.377
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Lymphoid tissue,0.965
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Bile duct/Gallbladder,0.963
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Chronic lymphocytic leukemia,8.60
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Skin: Other,0.565
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Small intestine/Colorectum: NET,1.80
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Pancreas: NET,0.983
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Glioma,0.920
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Medulloblastoma,11.3
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Liposarcoma,3.27
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Leiomyosarcoma,0.987
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Breast,0.947
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Salivary gland/Adenoid cystic,1.08
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Lung: Non-small Cell,0.611
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Prostate,0.971
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Urothelial tract,0.786
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Acute myeloid leukemia,14.7
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Ovary/Fallopian tube,0.992
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,SNV_COUNT,37701,Myeloproliferative neoplasm,21.2
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Esophagus/Stomach,0.0282
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Mesothelium,0.0317
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Bone/Soft tissue: Other,0.0307
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Liver,0.0317
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Cartilaginous neoplasm,0.0317
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Thyroid gland,0.0317
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Anogenital,0.0298
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Kidney,0.0315
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Head and neck: other,0.0304
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Osteosarcoma,0.0317
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Lung: NET,0.0317
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Uterus: Endometrium,0.00
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Pancreas,0.0314
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Lung: Small Cell,0.0185
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,GIST,0.0317
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Colorectum/Appendix/SmallIntestine,0.0282
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Pilocytic astrocytoma,0.0317
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Melanoma,0.0145
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Lymphoid tissue,0.0308
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Bile duct/Gallbladder,0.0308
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Chronic lymphocytic leukemia,0.0317
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Skin: Other,0.0183
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Small intestine/Colorectum: NET,0.0317
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Pancreas: NET,0.0311
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Glioma,0.0292
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Medulloblastoma,0.0317
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Liposarcoma,0.0317
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Leiomyosarcoma,0.0317
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Breast,0.0304
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Salivary gland/Adenoid cystic,0.0317
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Lung: Non-small Cell,0.0219
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Prostate,0.0308
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Urothelial tract,0.0270
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Acute myeloid leukemia,0.0317
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Ovary/Fallopian tube,0.00
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_LOW,37701,Myeloproliferative neoplasm,0.0317
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Esophagus/Stomach,0.0714
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Mesothelium,0.00106
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Bone/Soft tissue: Other,0.00799
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Liver,0.00182
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Cartilaginous neoplasm,0.00106
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Thyroid gland,0.00473
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Anogenital,0.0276
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Kidney,0.00243
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Head and neck: other,0.0237
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Osteosarcoma,0.00106
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Lung: NET,0.00106
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Uterus: Endometrium,0.00
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Pancreas,0.00253
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Lung: Small Cell,0.188
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,GIST,0.00106
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Colorectum/Appendix/SmallIntestine,0.0529
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Pilocytic astrocytoma,0.00106
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Melanoma,0.176
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Lymphoid tissue,0.0178
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Bile duct/Gallbladder,0.0129
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Chronic lymphocytic leukemia,0.00106
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Skin: Other,0.117
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Small intestine/Colorectum: NET,0.00106
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Pancreas: NET,0.00467
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Glioma,0.0221
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Medulloblastoma,0.00106
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Liposarcoma,0.00106
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Leiomyosarcoma,0.00675
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Breast,0.0208
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Salivary gland/Adenoid cystic,0.0104
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Lung: Non-small Cell,0.122
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Prostate,0.00928
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Urothelial tract,0.0841
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Acute myeloid leukemia,0.00106
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Ovary/Fallopian tube,0.00
+tumor_sample,SNV,LIKELIHOOD,SNV_COUNT_HIGH,37701,Myeloproliferative neoplasm,0.00106
 tumor_sample,FEATURE,PREVALENCE,DRIVER,TERT (1),Esophagus/Stomach,0.00
 tumor_sample,FEATURE,PREVALENCE,DRIVER,TERT (1),Mesothelium,0.0513
 tumor_sample,FEATURE,PREVALENCE,DRIVER,TERT (1),Bone/Soft tissue: Other,0.0609
@@ -725,7 +725,7 @@ tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Bo
 tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Liver,3.64e-08
 tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Cartilaginous neoplasm,8.73e-15
 tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Thyroid gland,4.85e-10
-tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Anogenital,6.17e-10
+tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Anogenital,6.18e-10
 tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Kidney,8.11e-09
 tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Head and neck: other,7.86e-09
 tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Osteosarcoma,4.22e-11
@@ -734,14 +734,14 @@ tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Ut
 tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Pancreas,1.52e-10
 tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Lung: Small Cell,3.29e-11
 tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,GIST,1.74e-10
-tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Colorectum/Appendix/SmallIntestine,9.93e-10
+tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Colorectum/Appendix/SmallIntestine,9.94e-10
 tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Pilocytic astrocytoma,2.38e-13
 tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Melanoma,2.45e-06
 tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Lymphoid tissue,2.49e-11
 tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Bile duct/Gallbladder,2.13e-08
 tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Chronic lymphocytic leukemia,5.70e-13
 tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Skin: Other,1.22e-09
-tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Small intestine/Colorectum: NET,9.67e-14
+tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Small intestine/Colorectum: NET,9.68e-14
 tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Pancreas: NET,1.47e-12
 tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Glioma,3.74e-08
 tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Medulloblastoma,1.43e-12
@@ -749,8 +749,8 @@ tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Li
 tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Leiomyosarcoma,8.50e-13
 tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Breast,1.42e-10
 tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Salivary gland/Adenoid cystic,3.52e-08
-tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Lung: Non-small Cell,6.04e-09
-tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Prostate,6.37e-11
+tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Lung: Non-small Cell,6.05e-09
+tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Prostate,6.38e-11
 tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Urothelial tract,8.34e-09
 tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Acute myeloid leukemia,1.69e-15
 tumor_sample,FEATURE,LIKELIHOOD,FEATURE,TERT;CDKN2A;PTEN;BRAF;SF3B1;INDEL_ALB,Ovary/Fallopian tube,0.00
@@ -791,114 +791,114 @@ tumor_sample,SAMPLE_TRAIT,PREVALENCE,GENDER,MALE,Urothelial tract,0.730
 tumor_sample,SAMPLE_TRAIT,PREVALENCE,GENDER,MALE,Acute myeloid leukemia,0.615
 tumor_sample,SAMPLE_TRAIT,PREVALENCE,GENDER,MALE,Ovary/Fallopian tube,0.00
 tumor_sample,SAMPLE_TRAIT,PREVALENCE,GENDER,MALE,Myeloproliferative neoplasm,0.455
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Esophagus/Stomach,0.161
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Mesothelium,0.944
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Bone/Soft tissue: Other,0.824
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Liver,0.818
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Cartilaginous neoplasm,9.67
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Thyroid gland,0.913
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Anogenital,0.177
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Kidney,0.872
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Head and neck: other,0.433
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Osteosarcoma,0.973
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Lung: NET,0.990
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Uterus: Endometrium,0.303
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Pancreas,0.392
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Lung: Small Cell,0.107
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,GIST,0.983
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Colorectum/Appendix/SmallIntestine,0.0123
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Melanoma,0.636
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Pilocytic astrocytoma,23.5
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Lymphoid tissue,0.467
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Bile duct/Gallbladder,0.467
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Skin: Other,0.360
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Small intestine/Colorectum: NET,0.981
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Chronic lymphocytic leukemia,1.32
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Glioma,0.449
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Pancreas: NET,0.932
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Medulloblastoma,0.989
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Liposarcoma,0.931
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Leiomyosarcoma,0.849
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Breast,0.611
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Salivary gland/Adenoid cystic,0.677
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Lung: Non-small Cell,0.268
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Prostate,0.367
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Urothelial tract,0.200
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Acute myeloid leukemia,6.22
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Ovary/Fallopian tube,0.763
-tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.11507520111927247,Myeloproliferative neoplasm,9.67
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Esophagus/Stomach,0.00698
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Mesothelium,0.0379
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Bone/Soft tissue: Other,0.0343
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Liver,0.0363
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Cartilaginous neoplasm,0.0400
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Thyroid gland,0.0370
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Anogenital,0.0140
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Kidney,0.0372
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Head and neck: other,0.0229
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Osteosarcoma,0.0399
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Lung: NET,0.0400
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Uterus: Endometrium,0.00
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Pancreas,0.0229
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Lung: Small Cell,0.00986
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,GIST,0.0400
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Colorectum/Appendix/SmallIntestine,0.000684
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Melanoma,0.0302
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Pilocytic astrocytoma,0.0400
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Lymphoid tissue,0.0205
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Bile duct/Gallbladder,0.0223
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Skin: Other,0.0171
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Small intestine/Colorectum: NET,0.0393
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Chronic lymphocytic leukemia,0.0400
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Glioma,0.0294
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Pancreas: NET,0.0377
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Medulloblastoma,0.0400
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Liposarcoma,0.0393
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Leiomyosarcoma,0.0381
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Breast,0.0286
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Salivary gland/Adenoid cystic,0.0308
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Lung: Non-small Cell,0.0143
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Prostate,0.0188
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Urothelial tract,0.0135
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Acute myeloid leukemia,0.0400
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Ovary/Fallopian tube,0.00
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.11507520111927247,Myeloproliferative neoplasm,0.0400
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Esophagus/Stomach,0.0630
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Mesothelium,0.00429
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Bone/Soft tissue: Other,0.0203
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Liver,0.0234
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Cartilaginous neoplasm,0.000302
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Thyroid gland,0.00716
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Anogenital,0.0687
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Kidney,0.0186
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Head and neck: other,0.0477
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Osteosarcoma,0.0122
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Lung: NET,0.00228
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Uterus: Endometrium,0.00
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Pancreas,0.0559
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Lung: Small Cell,0.0683
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,GIST,0.00771
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Colorectum/Appendix/SmallIntestine,0.0719
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Melanoma,0.0399
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Pilocytic astrocytoma,0.000302
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Lymphoid tissue,0.0437
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Bile duct/Gallbladder,0.0483
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Skin: Other,0.0485
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Small intestine/Colorectum: NET,0.00292
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Chronic lymphocytic leukemia,0.000302
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Glioma,0.0556
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Pancreas: NET,0.00700
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Medulloblastoma,0.00630
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Liposarcoma,0.00842
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Leiomyosarcoma,0.0156
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Breast,0.0400
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Salivary gland/Adenoid cystic,0.0327
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Lung: Non-small Cell,0.0600
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Prostate,0.0513
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Urothelial tract,0.0669
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Acute myeloid leukemia,0.000302
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Ovary/Fallopian tube,0.00
-tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.11507520111927247,Myeloproliferative neoplasm,0.000302
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Esophagus/Stomach,0.162
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Mesothelium,0.944
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Bone/Soft tissue: Other,0.829
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Liver,0.829
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Cartilaginous neoplasm,9.85
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Thyroid gland,0.914
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Anogenital,0.180
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Kidney,0.879
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Head and neck: other,0.439
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Osteosarcoma,0.977
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Lung: NET,0.991
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Uterus: Endometrium,0.309
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Pancreas,0.403
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Lung: Small Cell,0.118
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,GIST,0.986
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Colorectum/Appendix/SmallIntestine,0.0127
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Melanoma,0.645
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Pilocytic astrocytoma,23.9
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Lymphoid tissue,0.477
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Bile duct/Gallbladder,0.484
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Skin: Other,0.364
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Small intestine/Colorectum: NET,0.981
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Chronic lymphocytic leukemia,1.34
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Glioma,0.480
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Pancreas: NET,0.933
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Medulloblastoma,0.991
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Liposarcoma,0.935
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Leiomyosarcoma,0.854
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Breast,0.619
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Salivary gland/Adenoid cystic,0.680
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Lung: Non-small Cell,0.274
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Prostate,0.371
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Urothelial tract,0.207
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Acute myeloid leukemia,6.34
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Ovary/Fallopian tube,0.776
+tumor_sample,SAMPLE_TRAIT,PERCENTILE,MS_INDELS_TMB,0.1172,Myeloproliferative neoplasm,9.85
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Esophagus/Stomach,0.00698
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Mesothelium,0.0377
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Bone/Soft tissue: Other,0.0341
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Liver,0.0362
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Cartilaginous neoplasm,0.0398
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Thyroid gland,0.0368
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Anogenital,0.0145
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Kidney,0.0371
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Head and neck: other,0.0230
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Osteosarcoma,0.0398
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Lung: NET,0.0398
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Uterus: Endometrium,0.00
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Pancreas,0.0234
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Lung: Small Cell,0.0102
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,GIST,0.0398
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Colorectum/Appendix/SmallIntestine,0.000698
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Melanoma,0.0304
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Pilocytic astrocytoma,0.0398
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Lymphoid tissue,0.0205
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Bile duct/Gallbladder,0.0223
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Skin: Other,0.0174
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Small intestine/Colorectum: NET,0.0391
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Chronic lymphocytic leukemia,0.0398
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Glioma,0.0300
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Pancreas: NET,0.0374
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Medulloblastoma,0.0398
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Liposarcoma,0.0392
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Leiomyosarcoma,0.0379
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Breast,0.0288
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Salivary gland/Adenoid cystic,0.0308
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Lung: Non-small Cell,0.0144
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Prostate,0.0191
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Urothelial tract,0.0139
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Acute myeloid leukemia,0.0398
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Ovary/Fallopian tube,0.00
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_LOW,0.1172,Myeloproliferative neoplasm,0.0398
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Esophagus/Stomach,0.0635
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Mesothelium,0.00433
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Bone/Soft tissue: Other,0.0201
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Liver,0.0228
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Cartilaginous neoplasm,0.000306
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Thyroid gland,0.00719
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Anogenital,0.0693
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Kidney,0.0184
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Head and neck: other,0.0480
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Osteosarcoma,0.0120
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Lung: NET,0.00222
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Uterus: Endometrium,0.00
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Pancreas,0.0560
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Lung: Small Cell,0.0689
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,GIST,0.00696
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Colorectum/Appendix/SmallIntestine,0.0728
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Melanoma,0.0392
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Pilocytic astrocytoma,0.000306
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Lymphoid tissue,0.0432
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Bile duct/Gallbladder,0.0486
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Skin: Other,0.0490
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Small intestine/Colorectum: NET,0.00274
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Chronic lymphocytic leukemia,0.000306
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Glioma,0.0553
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Pancreas: NET,0.00701
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Medulloblastoma,0.00572
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Liposarcoma,0.00835
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Leiomyosarcoma,0.0152
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Breast,0.0396
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Salivary gland/Adenoid cystic,0.0325
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Lung: Non-small Cell,0.0605
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Prostate,0.0517
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Urothelial tract,0.0674
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Acute myeloid leukemia,0.000306
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Ovary/Fallopian tube,0.00
+tumor_sample,SAMPLE_TRAIT,LIKELIHOOD,MS_INDELS_TMB_HIGH,0.1172,Myeloproliferative neoplasm,0.000306
 tumor_sample,CLASSIFIER,LIKELIHOOD,GENDER,MALE,Esophagus/Stomach,0.0302
 tumor_sample,CLASSIFIER,LIKELIHOOD,GENDER,MALE,Mesothelium,0.0302
 tumor_sample,CLASSIFIER,LIKELIHOOD,GENDER,MALE,Bone/Soft tissue: Other,0.0302
@@ -971,42 +971,42 @@ tumor_sample,SV,PERCENTILE,MAX_COMPLEX_SIZE,8.0,Urothelial tract,0.145
 tumor_sample,SV,PERCENTILE,MAX_COMPLEX_SIZE,8.0,Acute myeloid leukemia,0.942
 tumor_sample,SV,PERCENTILE,MAX_COMPLEX_SIZE,8.0,Ovary/Fallopian tube,0.240
 tumor_sample,SV,PERCENTILE,MAX_COMPLEX_SIZE,8.0,Myeloproliferative neoplasm,1.00
-tumor_sample,SV,PERCENTILE,LINE,1.0,Esophagus/Stomach,0.0650
-tumor_sample,SV,PERCENTILE,LINE,1.0,Mesothelium,0.816
-tumor_sample,SV,PERCENTILE,LINE,1.0,Bone/Soft tissue: Other,0.680
-tumor_sample,SV,PERCENTILE,LINE,1.0,Liver,0.710
-tumor_sample,SV,PERCENTILE,LINE,1.0,Cartilaginous neoplasm,0.938
-tumor_sample,SV,PERCENTILE,LINE,1.0,Thyroid gland,0.450
-tumor_sample,SV,PERCENTILE,LINE,1.0,Anogenital,0.0833
-tumor_sample,SV,PERCENTILE,LINE,1.0,Kidney,0.745
-tumor_sample,SV,PERCENTILE,LINE,1.0,Head and neck: other,0.0755
-tumor_sample,SV,PERCENTILE,LINE,1.0,Osteosarcoma,0.595
-tumor_sample,SV,PERCENTILE,LINE,1.0,Lung: NET,0.595
-tumor_sample,SV,PERCENTILE,LINE,1.0,Uterus: Endometrium,0.120
-tumor_sample,SV,PERCENTILE,LINE,1.0,Pancreas,0.295
-tumor_sample,SV,PERCENTILE,LINE,1.0,Lung: Small Cell,0.224
-tumor_sample,SV,PERCENTILE,LINE,1.0,GIST,0.862
-tumor_sample,SV,PERCENTILE,LINE,1.0,Colorectum/Appendix/SmallIntestine,0.0136
-tumor_sample,SV,PERCENTILE,LINE,1.0,Melanoma,0.655
-tumor_sample,SV,PERCENTILE,LINE,1.0,Pilocytic astrocytoma,0.991
-tumor_sample,SV,PERCENTILE,LINE,1.0,Lymphoid tissue,0.930
-tumor_sample,SV,PERCENTILE,LINE,1.0,Bile duct/Gallbladder,0.300
-tumor_sample,SV,PERCENTILE,LINE,1.0,Skin: Other,0.152
-tumor_sample,SV,PERCENTILE,LINE,1.0,Small intestine/Colorectum: NET,0.760
-tumor_sample,SV,PERCENTILE,LINE,1.0,Chronic lymphocytic leukemia,0.978
-tumor_sample,SV,PERCENTILE,LINE,1.0,Glioma,0.760
-tumor_sample,SV,PERCENTILE,LINE,1.0,Pancreas: NET,0.795
-tumor_sample,SV,PERCENTILE,LINE,1.0,Medulloblastoma,0.932
-tumor_sample,SV,PERCENTILE,LINE,1.0,Liposarcoma,0.435
-tumor_sample,SV,PERCENTILE,LINE,1.0,Leiomyosarcoma,0.755
-tumor_sample,SV,PERCENTILE,LINE,1.0,Breast,0.250
-tumor_sample,SV,PERCENTILE,LINE,1.0,Salivary gland/Adenoid cystic,0.207
-tumor_sample,SV,PERCENTILE,LINE,1.0,Lung: Non-small Cell,0.165
-tumor_sample,SV,PERCENTILE,LINE,1.0,Prostate,0.125
-tumor_sample,SV,PERCENTILE,LINE,1.0,Urothelial tract,0.0150
-tumor_sample,SV,PERCENTILE,LINE,1.0,Acute myeloid leukemia,0.944
-tumor_sample,SV,PERCENTILE,LINE,1.0,Ovary/Fallopian tube,0.250
-tumor_sample,SV,PERCENTILE,LINE,1.0,Myeloproliferative neoplasm,0.833
+tumor_sample,SV,PERCENTILE,LINE,4.0,Esophagus/Stomach,0.0965
+tumor_sample,SV,PERCENTILE,LINE,4.0,Mesothelium,0.947
+tumor_sample,SV,PERCENTILE,LINE,4.0,Bone/Soft tissue: Other,0.880
+tumor_sample,SV,PERCENTILE,LINE,4.0,Liver,0.865
+tumor_sample,SV,PERCENTILE,LINE,4.0,Cartilaginous neoplasm,2.00
+tumor_sample,SV,PERCENTILE,LINE,4.0,Thyroid gland,0.650
+tumor_sample,SV,PERCENTILE,LINE,4.0,Anogenital,0.170
+tumor_sample,SV,PERCENTILE,LINE,4.0,Kidney,0.910
+tumor_sample,SV,PERCENTILE,LINE,4.0,Head and neck: other,0.255
+tumor_sample,SV,PERCENTILE,LINE,4.0,Osteosarcoma,0.746
+tumor_sample,SV,PERCENTILE,LINE,4.0,Lung: NET,0.810
+tumor_sample,SV,PERCENTILE,LINE,4.0,Uterus: Endometrium,0.465
+tumor_sample,SV,PERCENTILE,LINE,4.0,Pancreas,0.520
+tumor_sample,SV,PERCENTILE,LINE,4.0,Lung: Small Cell,0.520
+tumor_sample,SV,PERCENTILE,LINE,4.0,GIST,0.960
+tumor_sample,SV,PERCENTILE,LINE,4.0,Colorectum/Appendix/SmallIntestine,0.0238
+tumor_sample,SV,PERCENTILE,LINE,4.0,Melanoma,0.880
+tumor_sample,SV,PERCENTILE,LINE,4.0,Pilocytic astrocytoma,1.00
+tumor_sample,SV,PERCENTILE,LINE,4.0,Lymphoid tissue,0.984
+tumor_sample,SV,PERCENTILE,LINE,4.0,Bile duct/Gallbladder,0.515
+tumor_sample,SV,PERCENTILE,LINE,4.0,Skin: Other,0.325
+tumor_sample,SV,PERCENTILE,LINE,4.0,Small intestine/Colorectum: NET,0.936
+tumor_sample,SV,PERCENTILE,LINE,4.0,Chronic lymphocytic leukemia,2.00
+tumor_sample,SV,PERCENTILE,LINE,4.0,Glioma,0.980
+tumor_sample,SV,PERCENTILE,LINE,4.0,Pancreas: NET,0.945
+tumor_sample,SV,PERCENTILE,LINE,4.0,Medulloblastoma,1.00
+tumor_sample,SV,PERCENTILE,LINE,4.0,Liposarcoma,0.770
+tumor_sample,SV,PERCENTILE,LINE,4.0,Leiomyosarcoma,0.915
+tumor_sample,SV,PERCENTILE,LINE,4.0,Breast,0.480
+tumor_sample,SV,PERCENTILE,LINE,4.0,Salivary gland/Adenoid cystic,0.410
+tumor_sample,SV,PERCENTILE,LINE,4.0,Lung: Non-small Cell,0.325
+tumor_sample,SV,PERCENTILE,LINE,4.0,Prostate,0.265
+tumor_sample,SV,PERCENTILE,LINE,4.0,Urothelial tract,0.0638
+tumor_sample,SV,PERCENTILE,LINE,4.0,Acute myeloid leukemia,1.33
+tumor_sample,SV,PERCENTILE,LINE,4.0,Ovary/Fallopian tube,0.385
+tumor_sample,SV,PERCENTILE,LINE,4.0,Myeloproliferative neoplasm,1.33
 tumor_sample,SV,PERCENTILE,SIMPLE_DUP_32B_200B,3.0,Esophagus/Stomach,0.285
 tumor_sample,SV,PERCENTILE,SIMPLE_DUP_32B_200B,3.0,Mesothelium,0.195
 tumor_sample,SV,PERCENTILE,SIMPLE_DUP_32B_200B,3.0,Bone/Soft tissue: Other,0.0650
@@ -1079,78 +1079,78 @@ tumor_sample,SV,PERCENTILE,TELOMERIC_SGL,0.0,Urothelial tract,0.300
 tumor_sample,SV,PERCENTILE,TELOMERIC_SGL,0.0,Acute myeloid leukemia,0.500
 tumor_sample,SV,PERCENTILE,TELOMERIC_SGL,0.0,Ovary/Fallopian tube,0.385
 tumor_sample,SV,PERCENTILE,TELOMERIC_SGL,0.0,Myeloproliferative neoplasm,0.500
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Esophagus/Stomach,0.00355
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Mesothelium,0.0441
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Bone/Soft tissue: Other,0.0392
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Liver,0.0388
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Cartilaginous neoplasm,0.0511
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Thyroid gland,0.0248
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Anogenital,0.00466
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Kidney,0.0404
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Head and neck: other,0.00430
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Osteosarcoma,0.0334
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Lung: NET,0.0339
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Uterus: Endometrium,0.00
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Pancreas,0.0162
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Lung: Small Cell,0.0123
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,GIST,0.0464
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Colorectum/Appendix/SmallIntestine,0.000778
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Melanoma,0.0372
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Pilocytic astrocytoma,0.0532
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Lymphoid tissue,0.0501
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Bile duct/Gallbladder,0.0169
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Skin: Other,0.00846
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Small intestine/Colorectum: NET,0.0416
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Chronic lymphocytic leukemia,0.0526
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Glioma,0.0442
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Pancreas: NET,0.0442
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Medulloblastoma,0.0501
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Liposarcoma,0.0252
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Leiomyosarcoma,0.0437
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Breast,0.0141
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Salivary gland/Adenoid cystic,0.0116
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Lung: Non-small Cell,0.00926
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Prostate,0.00677
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Urothelial tract,0.000872
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Acute myeloid leukemia,0.0510
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Ovary/Fallopian tube,0.00
-tumor_sample,SV,LIKELIHOOD,LINE_LOW,1.0,Myeloproliferative neoplasm,0.0450
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Esophagus/Stomach,0.0572
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Mesothelium,0.0117
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Bone/Soft tissue: Other,0.0227
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Liver,0.0188
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Cartilaginous neoplasm,0.00477
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Thyroid gland,0.0344
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Anogenital,0.0562
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Kidney,0.0160
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Head and neck: other,0.0568
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Osteosarcoma,0.0263
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Lung: NET,0.0269
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Uterus: Endometrium,0.00
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Pancreas,0.0435
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Lung: Small Cell,0.0477
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,GIST,0.00869
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Colorectum/Appendix/SmallIntestine,0.0603
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Melanoma,0.0234
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Pilocytic astrocytoma,0.000577
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Lymphoid tissue,0.00448
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Bile duct/Gallbladder,0.0435
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Skin: Other,0.0521
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Small intestine/Colorectum: NET,0.0156
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Chronic lymphocytic leukemia,0.00154
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Glioma,0.0186
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Pancreas: NET,0.0142
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Medulloblastoma,0.00433
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Liposarcoma,0.0363
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Leiomyosarcoma,0.0185
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Breast,0.0466
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Salivary gland/Adenoid cystic,0.0490
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Lung: Non-small Cell,0.0515
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Prostate,0.0535
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Urothelial tract,0.0602
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Acute myeloid leukemia,0.00382
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Ovary/Fallopian tube,0.00
-tumor_sample,SV,LIKELIHOOD,LINE_HIGH,1.0,Myeloproliferative neoplasm,0.0105
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Esophagus/Stomach,0.00417
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Mesothelium,0.0401
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Bone/Soft tissue: Other,0.0381
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Liver,0.0373
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Cartilaginous neoplasm,0.0417
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Thyroid gland,0.0282
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Anogenital,0.00782
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Kidney,0.0392
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Head and neck: other,0.0118
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Osteosarcoma,0.0320
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Lung: NET,0.0367
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Uterus: Endometrium,0.00
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Pancreas,0.0240
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Lung: Small Cell,0.0248
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,GIST,0.0415
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Colorectum/Appendix/SmallIntestine,0.00112
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Melanoma,0.0378
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Pilocytic astrocytoma,0.0417
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Lymphoid tissue,0.0412
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Bile duct/Gallbladder,0.0227
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Skin: Other,0.0154
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Small intestine/Colorectum: NET,0.0395
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Chronic lymphocytic leukemia,0.0417
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Glioma,0.0413
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Pancreas: NET,0.0401
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Medulloblastoma,0.0417
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Liposarcoma,0.0336
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Leiomyosarcoma,0.0389
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Breast,0.0223
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Salivary gland/Adenoid cystic,0.0194
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Lung: Non-small Cell,0.0148
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Prostate,0.0127
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Urothelial tract,0.00313
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Acute myeloid leukemia,0.0417
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Ovary/Fallopian tube,0.00
+tumor_sample,SV,LIKELIHOOD,LINE_LOW,4.0,Myeloproliferative neoplasm,0.0417
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Esophagus/Stomach,0.0770
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Mesothelium,0.00559
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Bone/Soft tissue: Other,0.0134
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Liver,0.0140
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Cartilaginous neoplasm,0.000354
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Thyroid gland,0.0340
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Anogenital,0.0725
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Kidney,0.0106
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Head and neck: other,0.0649
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Osteosarcoma,0.0226
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Lung: NET,0.0182
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Uterus: Endometrium,0.00
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Pancreas,0.0454
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Lung: Small Cell,0.0463
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,GIST,0.00522
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Colorectum/Appendix/SmallIntestine,0.0831
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Melanoma,0.0136
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Pilocytic astrocytoma,0.000354
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Lymphoid tissue,0.00212
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Bile duct/Gallbladder,0.0454
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Skin: Other,0.0609
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Small intestine/Colorectum: NET,0.00707
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Chronic lymphocytic leukemia,0.000354
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Glioma,0.00467
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Pancreas: NET,0.00601
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Medulloblastoma,0.000424
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Liposarcoma,0.0267
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Leiomyosarcoma,0.00903
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Breast,0.0492
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Salivary gland/Adenoid cystic,0.0542
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Lung: Non-small Cell,0.0607
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Prostate,0.0654
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Urothelial tract,0.0800
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Acute myeloid leukemia,0.000354
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Ovary/Fallopian tube,0.00
+tumor_sample,SV,LIKELIHOOD,LINE_HIGH,4.0,Myeloproliferative neoplasm,0.000354
 tumor_sample,SV,LIKELIHOOD,TELOMERIC_SGL_HIGH,0.0,Esophagus/Stomach,0.0333
 tumor_sample,SV,LIKELIHOOD,TELOMERIC_SGL_HIGH,0.0,Mesothelium,0.0261
 tumor_sample,SV,LIKELIHOOD,TELOMERIC_SGL_HIGH,0.0,Bone/Soft tissue: Other,0.0345
@@ -1259,75 +1259,75 @@ tumor_sample,SV,LIKELIHOOD,MAX_COMPLEX_SIZE_HIGH,8.0,Urothelial tract,0.0421
 tumor_sample,SV,LIKELIHOOD,MAX_COMPLEX_SIZE_HIGH,8.0,Acute myeloid leukemia,0.00329
 tumor_sample,SV,LIKELIHOOD,MAX_COMPLEX_SIZE_HIGH,8.0,Ovary/Fallopian tube,0.00
 tumor_sample,SV,LIKELIHOOD,MAX_COMPLEX_SIZE_HIGH,8.0,Myeloproliferative neoplasm,0.00223
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Esophagus/Stomach,2.13e-05
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Mesothelium,1.02e-07
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Bone/Soft tissue: Other,0.000136
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Liver,0.000413
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Cartilaginous neoplasm,1.26e-12
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Thyroid gland,1.83e-05
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Anogenital,0.000164
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Kidney,0.000190
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Head and neck: other,0.000764
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Osteosarcoma,1.89e-06
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Lung: NET,4.27e-08
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Esophagus/Stomach,4.69e-05
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Mesothelium,8.01e-08
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Bone/Soft tissue: Other,0.000131
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Liver,0.000469
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Cartilaginous neoplasm,2.04e-13
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Thyroid gland,3.04e-05
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Anogenital,0.000478
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Kidney,0.000201
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Head and neck: other,0.00291
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Osteosarcoma,2.40e-06
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Lung: NET,4.93e-08
 tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Uterus: Endometrium,0.00
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Pancreas,1.41e-05
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Lung: Small Cell,6.22e-05
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,GIST,1.50e-06
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Colorectum/Appendix/SmallIntestine,8.09e-06
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Pilocytic astrocytoma,3.07e-13
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Melanoma,0.972
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Lymphoid tissue,1.36e-06
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Bile duct/Gallbladder,0.00313
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Chronic lymphocytic leukemia,1.38e-12
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Skin: Other,0.000643
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Small intestine/Colorectum: NET,1.45e-09
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Pancreas: NET,6.07e-08
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Glioma,0.0144
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Medulloblastoma,1.12e-09
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Liposarcoma,3.81e-06
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Leiomyosarcoma,7.40e-07
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Breast,9.58e-05
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Salivary gland/Adenoid cystic,0.00298
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Lung: Non-small Cell,0.00460
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Prostate,1.25e-05
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Urothelial tract,0.000814
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Acute myeloid leukemia,2.59e-13
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Pancreas,3.08e-05
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Lung: Small Cell,0.000167
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,GIST,1.27e-06
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Colorectum/Appendix/SmallIntestine,2.18e-05
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Pilocytic astrocytoma,2.61e-13
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Melanoma,0.957
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Lymphoid tissue,9.69e-07
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Bile duct/Gallbladder,0.00623
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Chronic lymphocytic leukemia,5.36e-13
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Skin: Other,0.00183
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Small intestine/Colorectum: NET,1.06e-09
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Pancreas: NET,4.27e-08
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Glioma,0.00693
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Medulloblastoma,2.11e-10
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Liposarcoma,5.66e-06
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Leiomyosarcoma,5.65e-07
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Breast,0.000219
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Salivary gland/Adenoid cystic,0.00738
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Lung: Non-small Cell,0.0118
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Prostate,3.77e-05
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Urothelial tract,0.00443
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Acute myeloid leukemia,5.01e-14
 tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Ovary/Fallopian tube,0.00
-tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Myeloproliferative neoplasm,4.61e-13
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Esophagus/Stomach,0.000130
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Mesothelium,0.000130
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Bone/Soft tissue: Other,0.000130
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Liver,0.000130
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Cartilaginous neoplasm,0.000130
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Thyroid gland,0.000130
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Anogenital,0.000130
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Kidney,0.000130
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Head and neck: other,0.000130
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Osteosarcoma,0.000130
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Lung: NET,0.000130
+tumor_sample,CLASSIFIER,LIKELIHOOD,FEATURE,,Myeloproliferative neoplasm,4.38e-14
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Esophagus/Stomach,0.000131
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Mesothelium,0.000131
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Bone/Soft tissue: Other,0.000131
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Liver,0.000131
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Cartilaginous neoplasm,0.000131
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Thyroid gland,0.000131
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Anogenital,0.000131
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Kidney,0.000131
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Head and neck: other,0.000131
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Osteosarcoma,0.000131
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Lung: NET,0.000131
 tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Uterus: Endometrium,0.00
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Pancreas,0.000130
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Lung: Small Cell,0.000130
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,GIST,0.000130
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Colorectum/Appendix/SmallIntestine,0.000130
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Pilocytic astrocytoma,0.000130
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Pancreas,0.000131
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Lung: Small Cell,0.000131
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,GIST,0.000131
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Colorectum/Appendix/SmallIntestine,0.000131
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Pilocytic astrocytoma,0.000131
 tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Melanoma,0.996
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Lymphoid tissue,0.000130
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Bile duct/Gallbladder,0.000130
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Chronic lymphocytic leukemia,0.000130
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Lymphoid tissue,0.000131
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Bile duct/Gallbladder,0.000131
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Chronic lymphocytic leukemia,0.000131
 tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Skin: Other,0.000186
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Small intestine/Colorectum: NET,0.000130
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Pancreas: NET,0.000130
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Glioma,0.000165
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Medulloblastoma,0.000130
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Liposarcoma,0.000130
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Leiomyosarcoma,0.000130
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Breast,2.91e-05
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Salivary gland/Adenoid cystic,0.000130
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Lung: Non-small Cell,0.000130
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Prostate,0.000130
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Urothelial tract,0.000130
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Acute myeloid leukemia,0.000130
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Small intestine/Colorectum: NET,0.000131
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Pancreas: NET,0.000131
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Glioma,0.000131
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Medulloblastoma,0.000131
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Liposarcoma,0.000131
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Leiomyosarcoma,0.000131
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Breast,2.94e-05
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Salivary gland/Adenoid cystic,0.000131
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Lung: Non-small Cell,0.000146
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Prostate,0.000131
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Urothelial tract,0.000131
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Acute myeloid leukemia,0.000131
 tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Ovary/Fallopian tube,0.00
-tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Myeloproliferative neoplasm,0.000130
+tumor_sample,COMBINED,LIKELIHOOD,DNA_COMBINED,,Myeloproliferative neoplasm,0.000131
