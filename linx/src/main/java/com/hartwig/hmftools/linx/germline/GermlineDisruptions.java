@@ -449,9 +449,9 @@ public class GermlineDisruptions
                         .splice(0)
                         .inframe(0)
                         .frameshift(0)
-                        .biallelic(true)
-                        .minCopyNumber(2)
-                        .maxCopyNumber(2)
+                        .biallelic(false)
+                        .minCopyNumber(0)
+                        .maxCopyNumber(0)
                         .build());
             }
         }

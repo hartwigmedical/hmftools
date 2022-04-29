@@ -21,7 +21,8 @@ import org.jetbrains.annotations.NotNull;
 public class CNADrivers
 {
     private static final double MIN_COPY_NUMBER_RELATIVE_INCREASE = 3;
-    private static final double MAX_COPY_NUMBER_DEL = 0.5;
+
+    public static final double MAX_COPY_NUMBER_DEL = 0.5;
 
     private static final Set<SegmentSupport> MERE = Sets.newHashSet(SegmentSupport.CENTROMERE, SegmentSupport.TELOMERE);
 
