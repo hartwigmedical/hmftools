@@ -84,6 +84,8 @@ public class FittedRegionFactory
         return fittedRegion;
     }
 
+    private static final double MIN_CN_THRESHOLD = 0.1;
+
     private double impliedBaf(final PurityAdjuster purityAdjuster, final String chromosome, final double copyNumber,
             final double observedBAF)
     {
@@ -93,7 +95,7 @@ public class FittedRegionFactory
         }
 
         CobaltChromosome cobaltChromosome = mCobaltChromosomes.get(chromosome);
-        if(!cobaltChromosome.isNormal() || !cobaltChromosome.isDiploid() || Doubles.lessOrEqual(copyNumber, 1))
+        if(!cobaltChromosome.isNormal() || !cobaltChromosome.isDiploid() || Doubles.lessOrEqual(copyNumber, MIN_CN_THRESHOLD))
         {
             return 1;
         }

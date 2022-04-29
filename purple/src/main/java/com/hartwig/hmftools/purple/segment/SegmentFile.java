@@ -24,13 +24,12 @@ public final class SegmentFile
     private static final String EXTENSION = ".purple.segment.tsv";
     private static final String DELIMITER = "\t";
 
-    @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateFilename(final String basePath, final String sample)
     {
         return basePath + File.separator + sample + EXTENSION;
     }
 
-    public static void write(@NotNull final String filePath, @NotNull Collection<ObservedRegion> fittedRegions) throws IOException
+    public static void write(final String filePath, Collection<ObservedRegion> fittedRegions) throws IOException
     {
         final Collection<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -38,7 +37,6 @@ public final class SegmentFile
         Files.write(new File(filePath).toPath(), lines);
     }
 
-    @NotNull
     public static List<ObservedRegion> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
