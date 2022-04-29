@@ -31,6 +31,8 @@ import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
+import org.jetbrains.annotations.Nullable;
+
 public class FusionFragment
 {
     private final ReadGroup mReadGroup;
@@ -48,7 +50,7 @@ public class FusionFragment
     private final RegionMatchType[] mRegionMatchTypes; // top-ranking region match type from the reads
     private final List<TransExonRef>[] mTransExonRefs;
 
-    private final Set<FusionReadData> mFusions;
+    private Set<FusionReadData> mFusions;
 
     public FusionFragment(final ReadGroup readGroup)
     {
@@ -68,7 +70,7 @@ public class FusionFragment
         mTransExonRefs[SE_START] = Lists.newArrayList();
         mTransExonRefs[SE_END] = Lists.newArrayList();
 
-        mFusions = Sets.newHashSet();
+        mFusions = null;
 
         mType = UNKNOWN;
 
@@ -96,7 +98,18 @@ public class FusionFragment
     public final int[] geneCollections() { return mGeneCollections; }
     public final byte[] orientations() { return mOrientations; }
     public ChrGeneCollectionPair chrGeneCollection(int se) { return new ChrGeneCollectionPair(mChromosomes[se], mGeneCollections[se]); }
-    public final Set<FusionReadData> assignedFusions() { return mFusions; }
+
+
+    public void assignFusion(final FusionReadData fusion)
+    {
+        if(mFusions == null)
+            mFusions = Sets.newHashSet();
+
+        mFusions.add(fusion);
+    }
+
+    @Nullable
+    public Set<FusionReadData> assignedFusions() { return mFusions; }
 
     public boolean hasSuppAlignment() { return mHasSupplementaryAlignment; }
 

@@ -138,7 +138,7 @@ public class FusionWriter
         {
             for(FusionFragment fragment : fragments)
             {
-                if(!fragment.assignedFusions().isEmpty())
+                if(fragment.assignedFusions() != null && !fragment.assignedFusions().isEmpty())
                     continue;
 
                 writeFragmentData(fragment, "UNFUSED");

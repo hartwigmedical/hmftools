@@ -123,7 +123,7 @@ public class FusionFinder implements Callable
     public final Map<String,ReadGroup> getChimericPartialReadGroups() { return mChimericPartialReadGroups; }
     public final Map<String,List<FusionFragment>> getRealignCandidateFragments() { return mRealignCandidateFragments; }
 
-    public final List<FusionFragment> getFragments() { return mAllFragments; }
+    public final List<FusionFragment> getFragments() { return mAllFragments; } // only used by FusionFragmentReplay, can refactor
     public final List<ReadGroup> getSpanningReadGroups() { return mSpanningReadGroups; }
     public int hardFilteredCount() { return mHardFilteredCount; }
 

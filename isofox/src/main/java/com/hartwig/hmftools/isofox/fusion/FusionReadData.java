@@ -191,7 +191,7 @@ public class FusionReadData
 
         if(cacheFragment)
         {
-            fragment.assignedFusions().add(this);
+            fragment.assignFusion(this);
 
             if(mFragments == null)
                 mFragments = Maps.newHashMap();

@@ -1,18 +1,12 @@
 package com.hartwig.hmftools.isofox.fusion;
 
-import static java.lang.Math.max;
-
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.HIGH_LOG_COUNT;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 import static com.hartwig.hmftools.isofox.fusion.ReadGroup.mergeChimericReadMaps;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.beust.jcommander.internal.Sets;
@@ -22,7 +16,6 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
 
 public class FusionTaskManager
 {
@@ -36,8 +29,6 @@ public class FusionTaskManager
     private final Map<String,Map<String,ReadGroup>> mIncompleteReadGroups; // keyed by chromosome then readId
     private final Map<String,Set<String>> mHardFilteredReadGroups; // keyed by chromosome then readId
 
-    private final PerformanceCounter mPerfCounter;
-
     public FusionTaskManager(final IsofoxConfig config, final EnsemblDataCache geneTransCache)
     {
         mConfig = config;
@@ -49,7 +40,6 @@ public class FusionTaskManager
         mIncompleteReadGroups = Maps.newHashMap();
         mHardFilteredReadGroups = Maps.newHashMap();
 
-        mPerfCounter = new PerformanceCounter("Fusions");
         mFusionWriter = new FusionWriter(mConfig);
     }
 
@@ -161,13 +151,13 @@ public class FusionTaskManager
         }
     }
 
-
     public synchronized final Map<String,List<FusionFragment>> getRealignCandidateMap() { return mRealignCandidateMap; }
 
     public void close()
     {
+        // TODO: invalid use of state since only the initial junction fragment is assigned a fusion ref if cacheFragments is disabled
         long unfusedRacFrags = mRealignCandidateMap.values().stream()
-                .mapToLong(x -> x.stream().filter(y -> y.assignedFusions().isEmpty()).count()).sum();
+                .mapToLong(x -> x.stream().filter(y -> y.assignedFusions() == null).count()).sum();
 
         int incompleteGroupCount = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
 
@@ -226,5 +216,4 @@ public class FusionTaskManager
 
         return false;
     }
-
 }
