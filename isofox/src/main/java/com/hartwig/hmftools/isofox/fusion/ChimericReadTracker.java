@@ -59,7 +59,6 @@ public class ChimericReadTracker
     private final List<ReadGroup> mLocalCompleteGroups; // 2-read same-gene-collection groups with a split junction
 
     // junction position from fusion junction candidate reads are cached to identify candidate realignable reads
-    private final Set<Integer> mJunctionPositions;
     private JunctionRacFragments mJunctionRacGroups;
 
     private final List<List<ReadRecord>> mLocalChimericReads; // fragments to re-evaluate as alternate splice sites
@@ -87,7 +86,6 @@ public class ChimericReadTracker
         mKnownGeneIds = Sets.newHashSet();
         mChimericStats = new ChimericStats();
         mChimericReadMap = Maps.newHashMap();
-        mJunctionPositions = Sets.newHashSet();
         mJunctionRacGroups = null;
         mLocalChimericReads = Lists.newArrayList();
         mLocalCompleteGroups = Lists.newArrayList();
@@ -101,8 +99,15 @@ public class ChimericReadTracker
     public boolean enabled() { return mEnabled; }
 
     public Map<String,ReadGroup> getReadMap() { return mChimericReadMap; }
-    public Set<Integer> getJunctionPositions() { return mJunctionPositions; }
-    public JunctionRacFragments getJunctionRacGroups() { return mJunctionRacGroups; }
+
+    public JunctionRacFragments extractJunctionRacFragments()
+    {
+        mJunctionRacGroups.purgeEmptyJunctions();
+        return mJunctionRacGroups;
+    }
+
+    public JunctionRacFragments getJunctionRacGroups() { return mJunctionRacGroups; } // testing only
+
     public List<List<ReadRecord>> getLocalChimericReads() { return mLocalChimericReads; }
     public ChimericStats getStats() { return mChimericStats; }
 
@@ -150,14 +155,6 @@ public class ChimericReadTracker
         mPreviousPostGeneReadMap.clear();
         mPreviousPostGeneReadMap.putAll(mPostGeneReadMap);
         mPostGeneReadMap.clear();
-
-        // only purge junction positions which are now outside the regions to be processed
-        Set<Integer> pastJuncPositions = mJunctionPositions.stream()
-                .filter(x -> x < geneCollection.getNonGenicPositions()[SE_START]).collect(Collectors.toSet());
-
-        pastJuncPositions.forEach(x -> mJunctionPositions.remove(x));
-
-        /// mJunctionRacGroups.purgeGroups(geneCollection.getNonGenicPositions()[SE_START]);
     }
 
     public void clear() { clear(false); }
@@ -176,8 +173,7 @@ public class ChimericReadTracker
         {
             mPreviousPostGeneReadMap.clear();
             mPostGeneReadMap.clear();
-            mJunctionPositions.clear();
-            mJunctionRacGroups.clear();
+            mJunctionRacGroups = null;
         }
     }
 
@@ -519,73 +515,7 @@ public class ChimericReadTracker
     {
         // cache each RAC against the junction(s) it may support, and discard any which support none
         // RACs are no longer added to the chimeric read map since they now only exist in here
-
         mCandidateRealignedGroups.forEach(x -> mJunctionRacGroups.checkAddCandidateGroup(x));
-        /*
-
-        for(ReadGroup readGroup : mCandidateRealignedGroups)
-        {
-            if(mJunctionRacGroups.checkAddCandidateGroup(readGroup))
-            {
-                mChimericReadMap.put(readGroup.id(), readGroup);
-                ++mChimericStats.CandidateRealignFrags;
-            }
-        }
-        */
-
-        /*
-        // in addition to the group having a least one read with the required soft-clipping, the other read cannot extend past this
-        // possible point of junction support
-        Set<Integer>[] supportedJunctions = new Set[SE_PAIR];
-        supportedJunctions[SE_START] = Sets.newHashSetWithExpectedSize(2); // from start boundaries, orientation -1
-        supportedJunctions[SE_END] = Sets.newHashSetWithExpectedSize(2); // from end boundaries, orientation +1
-
-        for(ReadGroup readGroup : mCandidateRealignedGroups)
-        {
-            supportedJunctions[SE_START].clear();
-            supportedJunctions[SE_END].clear();
-
-            for(ReadRecord read : readGroup.Reads)
-            {
-                for(int se = SE_START; se <= SE_END; ++se)
-                {
-                    final int seIndex = se;
-                    if(!read.isSoftClipped(se))
-                        continue;
-
-                    int readBoundary = read.getCoordsBoundary(seIndex);
-
-                    if(mJunctionPositions.stream().anyMatch(x -> positionWithin(readBoundary,
-                            x - SOFT_CLIP_JUNC_BUFFER, x + SOFT_CLIP_JUNC_BUFFER)))
-                    {
-                        supportedJunctions[se].add(readBoundary);
-                    }
-                }
-            }
-
-            if(supportedJunctions[SE_START].isEmpty() && supportedJunctions[SE_END].isEmpty())
-                continue;
-
-            boolean validGroup = true;
-
-            if(!supportedJunctions[SE_START].isEmpty()
-            && readGroup.Reads.stream().anyMatch(x -> supportedJunctions[SE_START].stream().anyMatch(y -> x.PosStart < y - SOFT_CLIP_JUNC_BUFFER)))
-            {
-                validGroup = false;
-            }
-            else if(!supportedJunctions[SE_END].isEmpty()
-            && readGroup.Reads.stream().anyMatch(x -> supportedJunctions[SE_END].stream().anyMatch(y -> x.PosEnd > y + SOFT_CLIP_JUNC_BUFFER)))
-            {
-                validGroup = false;
-            }
-
-            if(validGroup)
-            {
-                mChimericReadMap.put(readGroup.id(), readGroup);
-                ++mChimericStats.CandidateRealignFrags;
-            }
-        }
-        */
     }
 
     private void collectCandidateJunctions(final ReadGroup readGroup)
@@ -605,7 +535,6 @@ public class ChimericReadTracker
     {
         if(juncPosition > 0)
         {
-            mJunctionPositions.add(juncPosition);
             mJunctionRacGroups.addJunction(juncPosition, juncOrientation);
         }
     }

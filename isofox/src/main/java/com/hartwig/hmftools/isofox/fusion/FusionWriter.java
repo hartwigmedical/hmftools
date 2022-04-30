@@ -129,22 +129,13 @@ public class FusionWriter
             mChimericReadCache.writeReadData(reads, groupStatus);
     }
 
-    public synchronized void writeUnfusedFragments(final Map<String,List<FusionFragment>> unfusedFragments)
+    public synchronized void writeUnfusedFragments(final List<FusionFragment> fragments)
     {
         if(!mWriteFragments)
             return;
 
-        for(List<FusionFragment> fragments : unfusedFragments.values())
-        {
-            for(FusionFragment fragment : fragments)
-            {
-                if(fragment.assignedFusions() != null && !fragment.assignedFusions().isEmpty())
-                    continue;
-
-                writeFragmentData(fragment, "UNFUSED");
-                writeReadData(fragment.reads(), "UNFUSED");
-            }
-        }
+        fragments.forEach(x -> writeFragmentData(x, "UNFUSED"));
+        fragments.forEach(x -> writeReadData(x.reads(), "UNFUSED"));
     }
 
     private void initialiseFragmentWriter()

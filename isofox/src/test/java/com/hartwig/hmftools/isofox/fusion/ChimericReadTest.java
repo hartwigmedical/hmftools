@@ -154,7 +154,7 @@ public class ChimericReadTest
 
         assertTrue(chimericRT.getReadMap().isEmpty());
         assertEquals(1, chimericRT.getLocalChimericReads().size());
-        assertTrue(chimericRT.getJunctionPositions().isEmpty());
+        assertTrue(chimericRT.getJunctionRacGroups().junctionCount() == 0);
 
         chimericRT.clear();
 
@@ -175,7 +175,7 @@ public class ChimericReadTest
         assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(NEG_ORIENT).containsKey(10400));
 
         chimericRT.clear();
-        chimericRT.getJunctionPositions().clear(); // force a clean-up
+        chimericRT.getJunctionRacGroups().clear(); // force a clean-up
 
         // this DEL doesn't splice at known sites
         read1 = createMappedRead(++readId, gc1, 1081, 1100, createCigar(0, 20, 20));
@@ -188,7 +188,7 @@ public class ChimericReadTest
 
         assertTrue(chimericRT.getReadMap().isEmpty());
         assertEquals(1, chimericRT.getLocalChimericReads().size());
-        assertEquals(2, chimericRT.getJunctionRacGroups().junctionCount());
+        assertEquals(0, chimericRT.getJunctionRacGroups().junctionCount());
 
         chimericRT.clear();
 
@@ -210,7 +210,7 @@ public class ChimericReadTest
 
         assertTrue(chimericRT.getReadMap().isEmpty());
         assertEquals(1, chimericRT.getLocalChimericReads().size());
-        assertTrue(chimericRT.getJunctionPositions().isEmpty());
+        assertTrue(chimericRT.getJunctionRacGroups().junctionCount() == 0);
 
         chimericRT.clear();
 
@@ -233,9 +233,9 @@ public class ChimericReadTest
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
         assertEquals(1, chimericRT.getReadMap().size());
-        assertEquals(2, chimericRT.getJunctionPositions().size());
-        assertTrue(chimericRT.getJunctionPositions().contains(10500));
-        assertTrue(chimericRT.getJunctionPositions().contains(chimericJunc));
+        assertEquals(2, chimericRT.getJunctionRacGroups().junctionCount());
+        assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(POS_ORIENT).containsKey(10500));
+        assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(NEG_ORIENT).containsKey(chimericJunc));
     }
 
     @Test
@@ -274,7 +274,7 @@ public class ChimericReadTest
 
         assertTrue(chimericRT.getReadMap().isEmpty());
         assertTrue(chimericRT.getLocalChimericReads().isEmpty());
-        assertTrue(chimericRT.getJunctionPositions().isEmpty());
+        assertTrue(chimericRT.getJunctionRacGroups().junctionCount() == 0);
         chimericRT.clear();
 
         chimericRT.initialise(gc2);
@@ -284,7 +284,7 @@ public class ChimericReadTest
 
         assertTrue(chimericRT.getReadMap().isEmpty());
         assertTrue(chimericRT.getLocalChimericReads().isEmpty());
-        assertTrue(chimericRT.getJunctionPositions().isEmpty());
+        assertTrue(chimericRT.getJunctionRacGroups().junctionCount() == 0);
 
         // pre and post gene reads are kept if relating to other genes / have supp alignments
         chimericRT.clear();
@@ -326,8 +326,8 @@ public class ChimericReadTest
         assertEquals(1, chimericRT.getLocalChimericReads().size());
         assertTrue(chimericRT.getLocalChimericReads().get(0).contains(read5));
 
-        assertTrue(chimericRT.getJunctionPositions().contains(500));
-        assertFalse(chimericRT.getJunctionPositions().contains(2000));
+        assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(POS_ORIENT).containsKey(500));
+        assertFalse(chimericRT.getJunctionRacGroups().getJunctionGroups(NEG_ORIENT).containsKey(2000));
 
         chimericRT.clear();
         fragTracker.clear();
@@ -344,10 +344,6 @@ public class ChimericReadTest
         assertTrue(chimericRT.getReadMap().containsKey(read2.Id));
         assertTrue(chimericRT.getReadMap().containsKey(read4.Id));
         assertTrue(chimericRT.getLocalChimericReads().isEmpty());
-        assertTrue(chimericRT.getJunctionPositions().contains(2000));
-        assertFalse(chimericRT.getJunctionPositions().contains(2100)); // already processed
-
-        // assertEquals(1, chimericRT.getLocalChimericReads().size());
     }
 
     @Test

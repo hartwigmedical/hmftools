@@ -39,7 +39,7 @@ public class JunctionRacFragments
     public int fragmentCount() { return mRacFragments.size(); }
     public int assignedFragmentCount() { return (int)mRacFragments.stream().filter(x -> x.type() == REALIGNED).count(); }
 
-    public List<FusionFragment> getRacGroups() { return mRacFragments; }
+    public List<FusionFragment> getRacFragments() { return mRacFragments; }
     public int junctionCount() { return mPosJunctionFragments.size() + mNegJunctionFragments.size(); }
 
     public List<FusionFragment> getJunctionFragments(byte orientation, int position)
@@ -113,19 +113,16 @@ public class JunctionRacFragments
         return fragmentAdded;
     }
 
-    @Deprecated
-    public void purgeGroups(int position)
+    public void purgeEmptyJunctions()
     {
-        List<Integer> pastJuncPositions = mPosJunctionFragments.keySet().stream()
-                .filter(x -> x < position).collect(Collectors.toList());
+        for(int i = 0; i <= 1; ++i)
+        {
+            Map<Integer,List<FusionFragment>> junctionGroups = (i == 0) ? mPosJunctionFragments : mNegJunctionFragments;
 
-        pastJuncPositions.forEach(x -> mPosJunctionFragments.remove(x));
+            List<Integer> emptyPositions = junctionGroups.entrySet().stream()
+                    .filter(x -> x.getValue().isEmpty()).map(x -> x.getKey()).collect(Collectors.toList());
 
-        pastJuncPositions = mNegJunctionFragments.keySet().stream()
-                .filter(x -> x < position).collect(Collectors.toList());
-
-        pastJuncPositions.forEach(x -> mNegJunctionFragments.remove(x));
+            emptyPositions.forEach(x -> junctionGroups.remove(x));
+        }
     }
-
-
 }

@@ -270,23 +270,12 @@ public class GeneCollectionReader implements Callable
 
             // organise incomplete reads into the chromosomes which they want to link to
             final Map<String,Map<String,ReadGroup>> chrIncompleteReadsGroups = mFusionFinder.extractIncompleteReadGroups(mChromosome);
-            // final Map<String,List<FusionFragment>> racFragments = mFusionFinder.extractRealignCandidateFragments(chrIncompleteReadsGroups);
-
-            // first remove any hard-filtered groups from this chromosome now it is complete
-            // Map<String,ReadGroup> localIncompleteGroups = chrIncompleteReadsGroups.get(mChromosome);
 
             final List<ReadGroup> interChromosomalGroups = mFusionTaskManager.addIncompleteReadGroup(mChromosome, chrIncompleteReadsGroups);
 
-            // mFusionTaskManager.addRealignCandidateFragments(racFragments);
-
             if(!interChromosomalGroups.isEmpty())
             {
-                // ISF_LOGGER.info("chr({}) processing {} inter-chromosomal groups", mChromosome, interChromosomalGroups.size());
-
                 mFusionFinder.processInterChromosomalReadGroups(interChromosomalGroups);
-
-                // assign RAC fragements from the global cache
-                // mFusionFinder.assignInterChromosomalRacFragments(mFusionTaskManager.getRealignCandidateMap());
             }
 
             mPerfCounters[PERF_FUSIONS].stop();
@@ -519,7 +508,7 @@ public class GeneCollectionReader implements Callable
         }
 
         mFusionTaskManager.addRacFragments(
-                mChromosome, geneCollection.id(), mBamFragmentAllocator.getChimericReadTracker().getJunctionRacGroups());
+                mChromosome, geneCollection.id(), mBamFragmentAllocator.getChimericReadTracker().extractJunctionRacFragments());
 
         mFusionFinder.processLocalReadGroups(completeReadGroups);
 

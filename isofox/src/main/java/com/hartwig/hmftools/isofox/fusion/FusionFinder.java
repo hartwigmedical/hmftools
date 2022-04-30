@@ -7,8 +7,6 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.NO_GENE_ID;
@@ -20,8 +18,6 @@ import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNC
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGN_CANDIDATE;
 import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.KNOWN;
-import static com.hartwig.hmftools.isofox.fusion.FusionReadData.matchesFusionJunctionRegion;
-import static com.hartwig.hmftools.isofox.fusion.FusionReadData.softClippedReadSupportsJunction;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.checkMissingGeneData;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 import static com.hartwig.hmftools.isofox.fusion.ReadGroup.mergeChimericReadMaps;
@@ -63,18 +59,13 @@ public class FusionFinder implements Callable
 
     private final Map<String,List<FusionReadData>> mFusionCandidates; // keyed by the chromosome pair
     private final Map<String,Map<String,FusionReadData>> mFusionsByLocation; // keyed by the chromosome pair, then precise position (hashed)
-    private final Map<String,List<FusionReadData>> mFusionsByGene; // keyed by the chr + gene collectionId
     private final Map<String,List<FusionFragment>> mDiscordantFragments; // keyed by the chromosome pair
-    private final Map<String,List<FusionFragment>> mRealignCandidateFragments; // keyed by chr + gene collectionId
 
     private final FusionWriter mFusionWriter;
 
     private int mHardFilteredCount;
     private final PerformanceCounter mPerfCounter;
     private final PerformanceCounter[] mPerfCounters;
-
-    // TODO
-    private boolean mUseNewRACs;
 
     private static final int PERF_REALIGN = 0;
     private static final int PERF_CREATE_FRAGS = 1;
@@ -98,9 +89,7 @@ public class FusionFinder implements Callable
 
         mFusionCandidates = Maps.newHashMap();
         mFusionsByLocation = Maps.newHashMap();
-        mFusionsByGene = Maps.newHashMap();
         mDiscordantFragments = Maps.newHashMap();
-        mRealignCandidateFragments = Maps.newHashMap();
 
         mFusionWriter = fusionWriter;
         mHardFilteredCount = 0;
@@ -119,8 +108,6 @@ public class FusionFinder implements Callable
         {
             mPerfCounters = null;
         }
-
-        mUseNewRACs = true;
    }
 
     public final List<FusionFragment> getFragments() { return mAllFragments; } // only used by FusionFragmentReplay, can refactor
@@ -130,7 +117,6 @@ public class FusionFinder implements Callable
     public final Map<String,List<FusionReadData>> getFusionCandidates() { return mFusionCandidates; }
     public final Map<String,List<FusionFragment>> getUnfusedFragments() { return mDiscordantFragments; }
     public final Map<String,ReadGroup> getChimericPartialReadGroups() { return mChimericPartialReadGroups; }
-    public final Map<String,List<FusionFragment>> getRealignCandidateFragments() { return mRealignCandidateFragments; }
     public final List<ReadGroup> getSpanningReadGroups() { return mSpanningReadGroups; }
     public final RacFragmentCache racFragmentCache() { return mRacFragmentCache; }
 
@@ -139,7 +125,6 @@ public class FusionFinder implements Callable
         mAllFragments.clear();
         mFusionCandidates.clear();
         mFusionsByLocation.clear();
-        mFusionsByGene.clear();
         mDiscordantFragments.clear();
     }
 
@@ -310,19 +295,11 @@ public class FusionFinder implements Callable
 
         processFragments();
 
-        // if(!isInterChromosomal) // otherwise need to wait for RAC fragment assignment
-        // {
-            perfStart(PERF_REALIGN);
+        perfStart(PERF_REALIGN);
+        assignRealignCandidateFragments();
+        perfStop(PERF_REALIGN);
 
-            if(mUseNewRACs)
-                assignRealignCandidateFragments();
-            else
-                assignRealignCandidateFragments(mRealignCandidateFragments);
-
-            perfStop(PERF_REALIGN);
-
-            writeFusionSummary();
-        //}
+        writeFusionSummary();
 
         if(readGroupCount > HIGH_LOG_COUNT)
         {
@@ -348,8 +325,6 @@ public class FusionFinder implements Callable
 
     private void processFragments()
     {
-        // ISF_LOGGER.debug("{}: processing {} chimeric fragments", mTaskId, initialFragmentCount);
-
         perfStart(PERF_FORM_INIT);
         formInitialFusions();
         perfStop(PERF_FORM_INIT);
@@ -392,9 +367,7 @@ public class FusionFinder implements Callable
             }
             else if(fragment.type() == REALIGN_CANDIDATE)
             {
-                // TODO remove
-                if(!mUseNewRACs)
-                    cacheRealignCandidateFragment(fragment);
+                // condition shouldn't be triggered anymore from newly complete groups, implying they are inter-gene-collection
             }
             else
             {
@@ -403,10 +376,9 @@ public class FusionFinder implements Callable
         }
 
         Level level = mAllFragments.size() > HIGH_LOG_COUNT ? Level.INFO : Level.DEBUG;
-        ISF_LOGGER.log(level, "chr({}) chimeric fragments({} disc={} candRealgn={} junc={}) fusions(loc={} gene={} total={})",
+        ISF_LOGGER.log(level, "chr({}) chimeric fragments({} disc={} junc={}) fusions(loc={} total={})",
                 mTaskId, mAllFragments.size(), mDiscordantFragments.values().stream().mapToInt(x -> x.size()).sum(),
-                mRealignCandidateFragments.values().stream().mapToInt(x -> x.size()).sum(), junctioned,
-                mFusionCandidates.size(), mFusionsByGene.size(), mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum());
+                junctioned, mFusionCandidates.size(), mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum());
 
         // free up the set of initial fragments now they've all been assigned
         mAllFragments.clear();
@@ -484,8 +456,18 @@ public class FusionFinder implements Callable
             mFusionWriter.writeFusionData(allFusions, passingFusions, mFusionCandidates);
         }
 
-        if(!mDiscordantFragments.isEmpty())
-            mFusionWriter.writeUnfusedFragments(mDiscordantFragments);
+        if(!mDiscordantFragments.isEmpty() && (mConfig.Fusions.WriteChimericReads || mConfig.Fusions.WriteChimericFragments))
+        {
+            // assigned fragments have been purged
+            List<FusionFragment> unusedFragments = Lists.newArrayList();
+
+            for(List<FusionFragment> fragments : mDiscordantFragments.values())
+            {
+                unusedFragments.addAll(fragments);
+            }
+
+            mFusionWriter.writeUnfusedFragments(unusedFragments);
+        }
     }
 
     private FusionReadData findExistingFusion(final FusionFragment fragment)
@@ -552,7 +534,7 @@ public class FusionFinder implements Callable
         final FusionReadData fusionData = new FusionReadData(fusionId, fragment);
 
         fusionData.setJunctionBases(mConfig.RefGenome);
-        setFusionGeneData(fusionData, fragment);
+        setGeneData(fusionData);
 
         fusions.add(fusionData);
 
@@ -568,36 +550,6 @@ public class FusionFinder implements Callable
         fusionsByPosition.put(fragment.positionHash(), fusionData);
 
         return fusionData;
-    }
-
-    private void setFusionGeneData(final FusionReadData fusionData, final FusionFragment fragment)
-    {
-        setGeneData(fusionData);
-
-        // add to the cache by gene for later assignment or realigned fragments
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            if(se == SE_END && fragment.isSingleGeneCollection())
-                break;
-
-            final String chrGenePair = fragment.chrGeneCollection(se).toString();
-            List<FusionReadData> fusionsByGene = mFusionsByGene.get(chrGenePair);
-
-            if(fusionsByGene == null)
-                mFusionsByGene.put(chrGenePair, Lists.newArrayList(fusionData));
-            else
-                fusionsByGene.add(fusionData);
-        }
-    }
-
-    private void cacheDiscordantFragment(final FusionFragment fragment)
-    {
-        List<FusionFragment> fragments = mDiscordantFragments.get(fragment.locationPair());
-
-        if(fragments == null)
-            mDiscordantFragments.put(fragment.locationPair(), Lists.newArrayList(fragment));
-        else
-            fragments.add(fragment);
     }
 
     private void setGeneData(final FusionReadData fusionData)
@@ -910,14 +862,51 @@ public class FusionFinder implements Callable
         }
     }
 
-    private void assignDiscordantFragments()
+    private void createLocalFusions()
     {
-        // attempt to allocate discordant fragments to fusions
+        // create fusions from fragments with 1 or both junctions matching known splice sites between genes without supp alignment
+        // and then reassign any other fragments to these new fusions
+        final List<FusionReadData> newFusions = Lists.newArrayList();
+
         for(Map.Entry<String,List<FusionFragment>> entry : mDiscordantFragments.entrySet())
         {
-            final List<FusionReadData> fusions = mFusionCandidates.get(entry.getKey());
+            final List<FusionFragment> fragments = entry.getValue();
 
-            if(fusions == null)
+            final Set<FusionFragment> allocatedFragments = Sets.newHashSet();
+
+            for(FusionFragment fragment : fragments)
+            {
+                if(fragment.type() != MATCHED_JUNCTION && fragment.type() != DISCORDANT_JUNCTION)
+                    continue;
+
+                if(fragment.type() == DISCORDANT_JUNCTION)
+                {
+                    boolean createFusion = canCreateDiscordantFusion(fragment);
+                    fragment.unassignFusion();
+
+                    if(!createFusion)
+                        continue;
+                }
+
+                FusionReadData fusionData = createOrUpdateFusion(fragment);
+
+                if(fusionData == null)
+                    continue;
+
+                newFusions.add(fusionData);
+                allocatedFragments.add(fragment);
+            }
+
+            allocatedFragments.forEach(x -> fragments.remove(x));
+        }
+
+        // now re-check remaining non-split-junction against the new fusions only
+        for(Map.Entry<String,List<FusionFragment>> entry : mDiscordantFragments.entrySet())
+        {
+            final List<FusionReadData> fusions = newFusions.stream()
+                    .filter(x -> x.locationId().equals(entry.getKey())).collect(Collectors.toList());
+
+            if(fusions.isEmpty())
                 continue;
 
             final List<FusionFragment> fragments = entry.getValue();
@@ -954,53 +943,24 @@ public class FusionFinder implements Callable
         }
     }
 
-    private void createLocalFusions()
+    private void cacheDiscordantFragment(final FusionFragment fragment)
     {
-        // create fusions from fragments with 1 or both junctions matching known splice sites between genes without supp alignment
-        // and then reassign any other fragments to these new fusions
-        final List<FusionReadData> newFusions = Lists.newArrayList();
+        List<FusionFragment> fragments = mDiscordantFragments.get(fragment.locationPair());
 
+        if(fragments == null)
+            mDiscordantFragments.put(fragment.locationPair(), Lists.newArrayList(fragment));
+        else
+            fragments.add(fragment);
+    }
+
+    private void assignDiscordantFragments()
+    {
+        // attempt to allocate discordant fragments to fusions
         for(Map.Entry<String,List<FusionFragment>> entry : mDiscordantFragments.entrySet())
         {
-            final List<FusionFragment> fragments = entry.getValue();
+            final List<FusionReadData> fusions = mFusionCandidates.get(entry.getKey());
 
-            final Set<FusionFragment> allocatedFragments = Sets.newHashSet();
-
-            for(FusionFragment fragment : fragments)
-            {
-                if(fragment.type() != MATCHED_JUNCTION && fragment.type() != DISCORDANT_JUNCTION)
-                    continue;
-
-                if(fragment.type() == DISCORDANT_JUNCTION)
-                {
-                    boolean createFusion = canCreateDiscordantFusion(fragment);
-                    fragment.unassignFusion();
-
-                    if(!createFusion)
-                        continue;
-
-                    // fragment.setType(DISCORDANT);
-                }
-
-                FusionReadData fusionData = createOrUpdateFusion(fragment);
-
-                if(fusionData == null)
-                    continue;
-
-                newFusions.add(fusionData);
-                allocatedFragments.add(fragment);
-            }
-
-            allocatedFragments.forEach(x -> fragments.remove(x));
-        }
-
-        // now re-check remaining non-split-junction against the new fusions only
-        for(Map.Entry<String,List<FusionFragment>> entry : mDiscordantFragments.entrySet())
-        {
-            final List<FusionReadData> fusions = newFusions.stream()
-                    .filter(x -> x.locationId().equals(entry.getKey())).collect(Collectors.toList());
-
-            if(fusions.isEmpty())
+            if(fusions == null)
                 continue;
 
             final List<FusionFragment> fragments = entry.getValue();
@@ -1073,104 +1033,6 @@ public class FusionFinder implements Callable
             }
         }
     }
-
-    private void cacheRealignCandidateFragment(final FusionFragment fragment)
-    {
-        final String chrPair = fragment.chrGeneCollection(SE_START).toString();
-        List<FusionFragment> fragments = mRealignCandidateFragments.get(chrPair);
-
-        if(fragments == null)
-            mRealignCandidateFragments.put(chrPair, Lists.newArrayList(fragment));
-        else
-            fragments.add(fragment);
-    }
-
-    private void assignRealignCandidateFragments(final Map<String,List<FusionFragment>> racFragments)
-    {
-        if(racFragments.isEmpty())
-            return;
-
-        for(Map.Entry<String,List<FusionReadData>> entry : mFusionsByGene.entrySet())
-        {
-            final ChrGeneCollectionPair chrGenePair = ChrGeneCollectionPair.from(entry.getKey());
-            final List<FusionReadData> fusions = entry.getValue();
-
-            final List<FusionFragment> realignCandidates = racFragments.get(chrGenePair.toString());
-
-            if(realignCandidates == null || realignCandidates.isEmpty())
-                continue;
-
-            for(final FusionReadData fusionData : fusions)
-            {
-                for(FusionFragment fragment : realignCandidates)
-                {
-                    if(fusionData.canRelignFragmentToJunction(fragment))
-                    {
-                        fragment.setType(REALIGNED);
-                        fusionData.addFusionFragment(fragment, mConfig.Fusions.CacheFragments);
-                    }
-                }
-            }
-        }
-    }
-
-    /*
-    public final Map<String,List<FusionFragment>> extractRealignCandidateFragments(
-            final Map<String,Map<String,ReadGroup>> incompleteReadGroups)
-    {
-        // extract any RAC fragment which supports an (incomplete) inter-chromosomal read group
-        final Map<String,List<FusionFragment>> matchingRacFragments = Maps.newHashMap();
-
-        for(Map<String,ReadGroup> readGroupMap : incompleteReadGroups.values())
-        {
-            for(ReadGroup readGroup : readGroupMap.values())
-            {
-                ReadRecord saRead = readGroup.Reads.stream().filter(x -> x.hasSuppAlignment()).findFirst().orElse(null);
-
-                if(saRead == null)
-                    continue;
-
-                final int scIndex = saRead.longestSoftClippedEnd();
-                int junctionPosition = saRead.getCoordsBoundary(scIndex);
-                byte junctionOrientation = scIndex == SE_START ? NEG_ORIENT : POS_ORIENT;
-
-                // now find any potentially supporting RAC fragments
-                ChrGeneCollectionPair chrGenePair = new ChrGeneCollectionPair(saRead.Chromosome, saRead.getGeneCollectons()[SE_START]);
-
-                final List<FusionFragment> fragments = mRealignCandidateFragments.get(chrGenePair.toString());
-
-                if(fragments == null)
-                    continue;
-
-                List<FusionFragment> matchingFragments = null;
-
-                for(FusionFragment fragment : fragments)
-                {
-                    if(fragment.reads().stream().
-                            anyMatch(x -> softClippedReadSupportsJunction(x, scIndex, junctionPosition, junctionOrientation, null)))
-                    {
-                        if(matchingFragments == null)
-                        {
-                            matchingFragments = Lists.newArrayList();
-                            matchingRacFragments.put(chrGenePair.toString(), matchingFragments);
-                        }
-
-                        matchingFragments.add(fragment);
-                    }
-                }
-            }
-        }
-
-        return matchingRacFragments;
-    }
-
-    public void assignInterChromosomalRacFragments(final Map<String,List<FusionFragment>> racFragments)
-    {
-        mRealignCandidateFragments.clear();
-        assignRealignCandidateFragments(racFragments);
-        writeFusionSummary();
-    }
-    */
 
     private void perfStart(int counter)
     {

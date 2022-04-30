@@ -23,12 +23,9 @@ public class FusionTaskManager
     private final FusionWriter mFusionWriter;
     private final PassingFusions mPassingFusions;
 
-    private final Map<String,List<FusionFragment>> mRealignCandidateMap;
     private final RacFragmentCache mRacFragmentCache;
     private final Map<String,Map<String,ReadGroup>> mIncompleteReadGroups; // keyed by chromosome then readId
     private final Map<String,Set<String>> mHardFilteredReadGroups; // keyed by chromosome then readId
-
-    // private final ConcurrentMap
 
     public FusionTaskManager(final IsofoxConfig config, final EnsemblDataCache geneTransCache)
     {
@@ -38,7 +35,6 @@ public class FusionTaskManager
         mPassingFusions = new PassingFusions(config.Fusions.KnownFusions, config.Fusions.CohortFile);
 
         mRacFragmentCache = new RacFragmentCache();
-        mRealignCandidateMap = Maps.newHashMap();
         mIncompleteReadGroups = Maps.newHashMap();
         mHardFilteredReadGroups = Maps.newHashMap();
 
@@ -117,30 +113,17 @@ public class FusionTaskManager
         mRacFragmentCache.addRacFragments(chromosome, geneCollectionId, racFragments);
     }
 
-
-    public synchronized void addRealignCandidateFragments(final Map<String,List<FusionFragment>> racFragments)
-    {
-        mRealignCandidateMap.putAll(racFragments);
-        int totalRacFrags = mRealignCandidateMap.values().stream().mapToInt(x -> x.size()).sum();
-        int newRacFrags = racFragments.values().stream().mapToInt(x -> x.size()).sum();
-
-        if(totalRacFrags > HIGH_LOG_COUNT)
-        {
-            ISF_LOGGER.info("realignable candidate fragments total({}) new({})", totalRacFrags, newRacFrags);
-        }
-    }
-
-    public synchronized final Map<String,List<FusionFragment>> getRealignCandidateMap() { return mRealignCandidateMap; }
-
     public void close()
     {
         int incompleteGroupCount = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
 
-        ISF_LOGGER.info("all fusion tasks complete - RAC frags({} assigned={}) incompleteGroups({})",
-                mRacFragmentCache.totalFragmentCount(), mRacFragmentCache.assignedFragmentCount(), incompleteGroupCount);
+        ISF_LOGGER.info("all fusion tasks complete - RAC frags({} assigned={} groups={}) incompleteGroups({})",
+                mRacFragmentCache.totalFragmentCount(), mRacFragmentCache.assignedFragmentCount(),
+                mRacFragmentCache.totalGroupCount(), incompleteGroupCount);
 
         // write any unassigned RAC fragments
-        mFusionWriter.writeUnfusedFragments(mRealignCandidateMap);
+        if(mConfig.Fusions.WriteChimericReads || mConfig.Fusions.WriteChimericFragments)
+            mFusionWriter.writeUnfusedFragments(mRacFragmentCache.getUnassignedFragments());
 
         if(mConfig.RunPerfChecks)
         {
