@@ -275,17 +275,7 @@ public class GeneCollectionReader implements Callable
             // first remove any hard-filtered groups from this chromosome now it is complete
             Map<String,ReadGroup> localIncompleteGroups = chrIncompleteReadsGroups.get(mChromosome);
 
-            Map<String,Set<String>> hfGroupChrMap = mBamFragmentAllocator.getChimericReadTracker().getHardFilteredReadGroups();
-            Set<String> localHfGroups = hfGroupChrMap.get(mChromosome);
-            hfGroupChrMap.remove(mChromosome); // this chromosome no longer required
-
-            if(localHfGroups != null && !localHfGroups.isEmpty() && localIncompleteGroups != null)
-            {
-                localHfGroups.forEach(x -> localIncompleteGroups.remove(x));
-            }
-
-            final List<ReadGroup> interChromosomalGroups = mFusionTaskManager.addIncompleteReadGroup(
-                    mChromosome, chrIncompleteReadsGroups, hfGroupChrMap);
+            final List<ReadGroup> interChromosomalGroups = mFusionTaskManager.addIncompleteReadGroup(mChromosome, chrIncompleteReadsGroups);
 
             mFusionTaskManager.addRealignCandidateFragments(racFragments);
 

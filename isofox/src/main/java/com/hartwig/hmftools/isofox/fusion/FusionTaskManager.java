@@ -49,8 +49,7 @@ public class FusionTaskManager
     }
 
     public synchronized List<ReadGroup> addIncompleteReadGroup(
-            final String chromosome, final Map<String,Map<String,ReadGroup>> chrIncompleteGroups,
-            final Map<String,Set<String>> hardFilteredGroups)
+            final String chromosome, final Map<String,Map<String,ReadGroup>> chrIncompleteGroups)
     {
         int prevIncomplete = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
         int hardFiltered = 0;
@@ -94,38 +93,6 @@ public class FusionTaskManager
 
                 ISF_LOGGER.debug("combined chromosomes({} & {}) existing({}) new({}) complete({})",
                         chromosome, otherChromosome, existingGroups.size(), newIncompleteGroups.size(), completeGroups.size());
-            }
-        }
-
-        if(!hardFilteredGroups.isEmpty())
-        {
-            // use the read-IDs from hard-filtered groups to remove existing incomplete groups
-            // otherwise cache them until they can be applied
-            for(Map.Entry<String,Set<String>> entry : hardFilteredGroups.entrySet())
-            {
-                String otherChromosome = entry.getKey();
-                Set<String> newHfGroups = entry.getValue();
-
-                Map<String, ReadGroup> existingIncompleteGroups = mIncompleteReadGroups.get(otherChromosome);
-
-                if(existingIncompleteGroups != null)
-                {
-                    List<String> matched = newHfGroups.stream().filter(x -> existingIncompleteGroups.containsKey(x)).collect(Collectors.toList());
-                    matched.forEach(x -> existingIncompleteGroups.remove(x));
-                    matched.forEach(x -> newHfGroups.remove(x));
-                    hardFiltered += matched.size();
-                }
-
-                // store any unmatched HF groups
-                Set<String> chrHfGroups = mHardFilteredReadGroups.get(otherChromosome);
-
-                if(chrHfGroups == null)
-                {
-                    chrHfGroups = Sets.newHashSet();
-                    mHardFilteredReadGroups.put(otherChromosome, chrHfGroups);
-                }
-
-                chrHfGroups.addAll(newHfGroups);
             }
         }
 

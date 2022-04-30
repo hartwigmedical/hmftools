@@ -86,6 +86,7 @@ public class JunctionRacGroups
                         anyMatch(x -> softClippedReadSupportsJunction(x, seIndex, juncPosition, juncOrientation, null)))
                 {
                     junctionGroups.get(juncPosition).add(readGroup);
+                    readGroup.addRacJunction(juncPosition);
                 }
             }
         }

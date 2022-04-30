@@ -4,7 +4,9 @@ import static com.hartwig.hmftools.isofox.fusion.FusionUtils.suppAlignmentChromo
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 
@@ -13,10 +15,11 @@ public class ReadGroup
     public final List<ReadRecord> Reads;
 
     private LocalJunctionData mLocalJunctionData = null;
+    private Set<Integer> mRacJunctions = null; // the set of junctions supported if this is a realignment candidate
 
     public ReadGroup(final List<ReadRecord> reads)
     {
-        Reads = Lists.newArrayListWithCapacity(3);
+        Reads = Lists.newArrayListWithCapacity(reads.size());
         Reads.addAll(reads);
     }
 
@@ -50,6 +53,16 @@ public class ReadGroup
 
     public void setLocalJunctionData(final LocalJunctionData data) { mLocalJunctionData = data; }
     public LocalJunctionData localJunctionData() { return mLocalJunctionData; }
+
+    public void addRacJunction(final int position)
+    {
+        if(mRacJunctions == null)
+            mRacJunctions = Sets.newHashSet();
+
+        mRacJunctions.add(position);
+    }
+
+    public Set<Integer> getRacJunctions() { return mRacJunctions; }
 
     public void merge(final ReadGroup other)
     {

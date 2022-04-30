@@ -70,7 +70,7 @@ public class FusionFragmentsTest
         readPair[1].setStrand(true, false);
 
         List<ReadRecord> reads = Lists.newArrayList(read1, readPair[0], readPair[1]);
-        FusionFragment fragment = FusionFragment.from(reads);
+        FusionFragment fragment = FusionFragment.fromReads(reads);
 
         assertEquals(MATCHED_JUNCTION, fragment.type());
         assertEquals(CHR_1, fragment.chromosomes()[SE_START]);
@@ -109,7 +109,7 @@ public class FusionFragmentsTest
 
         reads = Lists.newArrayList(read1, readPair[0], readPair[1]);
 
-        fragment = FusionFragment.from(reads);
+        fragment = FusionFragment.fromReads(reads);
 
         assertEquals(MATCHED_JUNCTION, fragment.type());
         assertEquals(CHR_1, fragment.chromosomes()[SE_START]);
@@ -141,7 +141,7 @@ public class FusionFragmentsTest
         read2.setStrand(true, false);
 
         reads = Lists.newArrayList(read1, read2);
-        fragment = FusionFragment.from(reads);
+        fragment = FusionFragment.fromReads(reads);
 
         assertEquals(DISCORDANT_JUNCTION, fragment.type());
         assertEquals(CHR_1, fragment.chromosomes()[SE_START]);
@@ -182,7 +182,7 @@ public class FusionFragmentsTest
 
         reads = Lists.newArrayList(read1, read2);
 
-        fragment = FusionFragment.from(reads);
+        fragment = FusionFragment.fromReads(reads);
 
         assertEquals(MATCHED_JUNCTION, fragment.type());
         assertEquals(CHR_1, fragment.chromosomes()[SE_START]);
@@ -226,7 +226,7 @@ public class FusionFragmentsTest
         readPair[1].setStrand(true, false);
 
         List<ReadRecord> reads = Lists.newArrayList(read1, readPair[0], readPair[1]);
-        FusionFragment fragment = FusionFragment.from(reads);
+        FusionFragment fragment = FusionFragment.fromReads(reads);
 
         assertEquals(MATCHED_JUNCTION, fragment.type());
         assertEquals(CHR_1, fragment.chromosomes()[SE_START]);
@@ -246,7 +246,7 @@ public class FusionFragmentsTest
         read1.setFlag(FIRST_OF_PAIR, true);
 
         reads = Lists.newArrayList(read1, readPair[0], readPair[1]);
-        fragment = FusionFragment.from(reads);
+        fragment = FusionFragment.fromReads(reads);
 
         assertEquals(MATCHED_JUNCTION, fragment.type());
         assertEquals(CHR_1, fragment.chromosomes()[SE_START]);
@@ -305,7 +305,7 @@ public class FusionFragmentsTest
         read3.setStrand(false, false);
 
         List<ReadRecord> reads = Lists.newArrayList(read1, read2, read3);
-        FusionFragment fragment = FusionFragment.from(reads);
+        FusionFragment fragment = FusionFragment.fromReads(reads);
 
         assertEquals(MATCHED_JUNCTION, fragment.type());
         assertEquals(CHR_1, fragment.chromosomes()[SE_START]);
@@ -342,7 +342,7 @@ public class FusionFragmentsTest
         read3.setStrand(true, true);
 
         reads = Lists.newArrayList(readPair[0], readPair[1], read3);
-        fragment = FusionFragment.from(reads);
+        fragment = FusionFragment.fromReads(reads);
 
         assertEquals(MATCHED_JUNCTION, fragment.type());
         assertEquals(CHR_1, fragment.chromosomes()[SE_START]);
@@ -381,7 +381,7 @@ public class FusionFragmentsTest
         read3.setStrand(false, true);
 
         List<ReadRecord> reads = Lists.newArrayList(readPair[0], readPair[1], read3);
-        FusionFragment fragment = FusionFragment.from(reads);
+        FusionFragment fragment = FusionFragment.fromReads(reads);
 
         assertEquals(MATCHED_JUNCTION, fragment.type());
         assertEquals(CHR_1, fragment.chromosomes()[SE_START]);
@@ -428,7 +428,7 @@ public class FusionFragmentsTest
         read2.setStrand(true, false);
 
         List<ReadRecord> reads = Lists.newArrayList(read1, read2);
-        FusionFragment fragment = FusionFragment.from(reads);
+        FusionFragment fragment = FusionFragment.fromReads(reads);
 
         assertEquals(DISCORDANT_JUNCTION, fragment.type());
         assertEquals(CHR_1, fragment.chromosomes()[SE_START]);
@@ -465,7 +465,7 @@ public class FusionFragmentsTest
         read2.setStrand(true, false);
 
         reads = Lists.newArrayList(read1, read2);
-        fragment = FusionFragment.from(reads);
+        fragment = FusionFragment.fromReads(reads);
 
 //        assertEquals(MATCHED_JUNCTION, fragment.type());
 //        assertEquals(CHR_1, fragment.chromosomes()[SE_START]);

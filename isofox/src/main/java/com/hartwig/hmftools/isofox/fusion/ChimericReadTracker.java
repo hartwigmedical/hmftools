@@ -78,7 +78,6 @@ public class ChimericReadTracker
     private final Set<String> mReferenceKnownGeneIds; // all as defined by the cache
     private final Set<String> mKnownGeneIds; // in the current gene collection
     private final List<String[]> mKnownPairGeneIds;
-    private final Map<String,Set<String>> mHardFilteredReadGroups;
 
     // to avoid double-processing reads falling after a gene collection
     private final Map<String,List<ReadRecord>> mPostGeneReadMap;
@@ -104,7 +103,6 @@ public class ChimericReadTracker
         mPostGeneReadMap = Maps.newHashMap();
         mPreviousPostGeneReadMap = Maps.newHashMap();
         mSupplementaryJunctions = Maps.newHashMap();
-        mHardFilteredReadGroups = Maps.newHashMap();
         mGeneCollection = null;
     }
 
@@ -114,7 +112,6 @@ public class ChimericReadTracker
     public Set<Integer> getJunctionPositions() { return mJunctionPositions; }
     public JunctionRacGroups getJunctionRacGroups() { return mJunctionRacGroups; }
     public List<List<ReadRecord>> getLocalChimericReads() { return mLocalChimericReads; }
-    public Map<String,Set<String>> getHardFilteredReadGroups() { return mHardFilteredReadGroups; }
     public ChimericStats getStats() { return mChimericStats; }
 
     public boolean isChimeric(final ReadRecord read1, final ReadRecord read2, boolean isDuplicate, boolean isMultiMapped)
@@ -188,7 +185,6 @@ public class ChimericReadTracker
             mPostGeneReadMap.clear();
             mJunctionPositions.clear();
             mJunctionRacGroups.clear();
-            mHardFilteredReadGroups.clear();
         }
     }
 
@@ -648,7 +644,7 @@ public class ChimericReadTracker
         }
 
         // type 3: discordant with at least 1 known-pair gene, must be a single-read group since the other will be distant
-        if(readGroup.Reads.size() > 1 || mKnownGeneIds.isEmpty() || readInKnownGene(readGroup))
+        if(readGroup.Reads.size() > 1 || mKnownGeneIds.isEmpty() || !readInKnownGene(readGroup))
             return junctionPositions;
 
         // select the side with the longest soft-clipping
@@ -715,41 +711,6 @@ public class ChimericReadTracker
             {
                 mChimericReadMap.remove(readGroup.id());
                 ++mChimericStats.HardFiltered;
-            }
-        }
-
-        for(List<SupplementaryJunctionData> juncsByPos : mSupplementaryJunctions.values())
-        {
-            for(SupplementaryJunctionData suppJuncData : juncsByPos)
-            {
-                if(suppJuncData.MatchCount + 1 >= minSplitFrags)
-                    continue;
-
-                ReadGroup readGroup = mChimericReadMap.get(suppJuncData.ReadIds.get(0));
-
-                if(readGroup == null)
-                    continue;
-
-                if(readInKnownGene(readGroup))
-                    continue;
-
-                for(String readId : suppJuncData.ReadIds)
-                {
-                    if(mChimericReadMap.containsKey(readId))
-                    {
-                        mChimericReadMap.remove(readId);
-                        ++mChimericStats.HardFiltered;
-
-                        Set<String> chrReadIds = mHardFilteredReadGroups.get(suppJuncData.RemoteChromosome);
-                        if(chrReadIds == null)
-                        {
-                            chrReadIds = Sets.newHashSet();
-                            mHardFilteredReadGroups.put(suppJuncData.RemoteChromosome, chrReadIds);
-                        }
-
-                        chrReadIds.add(readId);
-                    }
-                }
             }
         }
     }

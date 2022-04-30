@@ -87,7 +87,7 @@ public class FusionFragment
         extractTranscriptExonData();
     }
 
-    public static FusionFragment from(final List<ReadRecord> reads) { return new FusionFragment(new ReadGroup(reads)); }
+    public static FusionFragment fromReads(final List<ReadRecord> reads) { return new FusionFragment(new ReadGroup(reads)); }
 
     public String readId() { return mReadGroup.id(); }
     public List<ReadRecord> reads() { return mReadGroup.Reads; }
