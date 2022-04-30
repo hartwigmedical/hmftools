@@ -236,7 +236,9 @@ public class ChimericReadTracker
             // cache info about any local dual-junction group
             ReadGroup group = new ReadGroup(read1, read2);
 
-            if(group.size() == 2 && group.isComplete() && !group.hasDuplicateRead())
+            /* causing issues when groups contain region-spanning reads, and may not offer much speed advantage anyway
+            if(group.size() == 2 && group.isComplete() && !group.hasDuplicateRead()
+            && group.Reads.stream().allMatch(x -> !x.spansGeneCollections()))
             {
                 final int[] junctPositions = findCandidateJunctions(group, false);
                 if(junctPositions[SE_START] > 0 && junctPositions[SE_END] > 0)
@@ -246,6 +248,7 @@ public class ChimericReadTracker
                     return;
                 }
             }
+            */
 
             mChimericReadMap.put(read1.Id, group);
         }

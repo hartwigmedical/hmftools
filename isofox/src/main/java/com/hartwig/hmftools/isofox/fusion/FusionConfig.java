@@ -40,7 +40,7 @@ public class FusionConfig
         RunPerfChecks = cmd.hasOption(RUN_FUSION_PERF);
         ChimericReadsFile = cmd.getOptionValue(CHIMERIC_READ_FILE);
         CohortFile = cmd.getOptionValue(FUSION_COHORT_FILE);
-        MinHardFilterFrags = Integer.parseInt(cmd.getOptionValue(MIN_FRAGS_HARD_FILTER, "2"));
+        MinHardFilterFrags = 0; //Integer.parseInt(cmd.getOptionValue(MIN_FRAGS_HARD_FILTER, "2"));
 
         KnownFusions = new KnownFusionCache();
         KnownFusions.loadFromFile(cmd);
