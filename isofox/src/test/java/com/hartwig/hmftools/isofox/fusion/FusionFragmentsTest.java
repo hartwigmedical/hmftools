@@ -23,6 +23,7 @@ import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
 import static com.hartwig.hmftools.isofox.TestUtils.createMappedRead;
 import static com.hartwig.hmftools.isofox.TestUtils.createSupplementaryReadPair;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
+import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 
 import static org.junit.Assert.assertEquals;
@@ -142,7 +143,7 @@ public class FusionFragmentsTest
         reads = Lists.newArrayList(read1, read2);
         fragment = FusionFragment.from(reads);
 
-        assertEquals(MATCHED_JUNCTION, fragment.type());
+        assertEquals(DISCORDANT_JUNCTION, fragment.type());
         assertEquals(CHR_1, fragment.chromosomes()[SE_START]);
         assertEquals(CHR_1, fragment.chromosomes()[SE_END]);
         assertEquals(gc1.id(), fragment.geneCollections()[SE_START]);
@@ -429,7 +430,7 @@ public class FusionFragmentsTest
         List<ReadRecord> reads = Lists.newArrayList(read1, read2);
         FusionFragment fragment = FusionFragment.from(reads);
 
-        assertEquals(MATCHED_JUNCTION, fragment.type());
+        assertEquals(DISCORDANT_JUNCTION, fragment.type());
         assertEquals(CHR_1, fragment.chromosomes()[SE_START]);
         assertEquals(CHR_1, fragment.chromosomes()[SE_END]);
         assertEquals(1, fragment.orientations()[SE_START]);

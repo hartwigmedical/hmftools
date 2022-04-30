@@ -158,9 +158,11 @@ public class ChimericReadTest
         chimericRT.clear();
 
         // DEL linking 2 genes at known splice sites is considered chimeric
-        read1 = createMappedRead(++readId, gc1, 1081, 1100, createCigar(0, 20, 20));
+        read1 = createMappedRead(++readId, gc1, 1081, 10419, createCigar(0, 20, 9299, 20, 0));
+        //read1 = createMappedRead(++readId, gc1, 1081, 1100, createCigar(0, 20, 20));
         read1.setFlag(FIRST_OF_PAIR, true);
-        read2 = createMappedRead(readId, gc1, 10400, 10419, createCigar(20, 20, 0));
+        read2 = createMappedRead(readId, gc1, 10405, 10424, createCigar(20, 20, 0));
+        //read2 = createMappedRead(readId, gc1, 10400, 10419, createCigar(20, 20, 0));
         read2.setStrand(true, false);
 
         chimericRT.addChimericReadPair(read1, read2);
@@ -212,11 +214,16 @@ public class ChimericReadTest
         chimericRT.clear();
 
         // a DEL more than 500K from the gene boundary is considered chimeric
-        read1 = createMappedRead(++readId, gc2, 10481, 10500, createCigar(0, 20, 20));
-        read1.setFlag(FIRST_OF_PAIR, true);
         int geneEnd = gc2.genes().stream().mapToInt(x -> x.GeneData.GeneEnd).max().orElse(0);
-        int chimericJunc = geneEnd + MAX_NOVEL_SJ_DISTANCE + 1;
-        read2 = createMappedRead(readId, gc2, chimericJunc, chimericJunc + 19, createCigar(20, 20, 0));
+        int chimericJunc = geneEnd + MAX_NOVEL_SJ_DISTANCE + 1; // 511501
+        read1 = createMappedRead(
+                ++readId, gc2, 10481, chimericJunc + 19,
+                createCigar(0, 20, 501000, 20, 0));
+        read1.setFlag(FIRST_OF_PAIR, true);
+
+        read2 = createMappedRead(
+                readId, gc2, chimericJunc + 5, chimericJunc + 24, createCigar(0, 20, 0));
+
         read2.setStrand(true, false);
         read2.setGeneCollection(SE_START, gc2.id(), false);
         read2.setGeneCollection(SE_END, gc2.id(), false);

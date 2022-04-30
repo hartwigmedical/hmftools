@@ -8,9 +8,8 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
+import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGN_CANDIDATE;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findSplitRead;
@@ -154,26 +153,11 @@ public class FusionFragmentBuilder
             if(!read.hasSuppAlignment())
                 continue;
 
-            int scLeft = read.isSoftClipped(SE_START) ? read.Cigar.getFirstCigarElement().getLength() : 0;
-            int scRight = read.isSoftClipped(SE_END) ? read.Cigar.getLastCigarElement().getLength() : 0;
-
-            boolean useLeft = false;
-
-            if(scLeft > 0 && scRight > 0)
-            {
-                if(scLeft >= scRight)
-                    useLeft = true;
-                else
-                    useLeft = false;
-            }
-            else
-            {
-                useLeft = scLeft > 0;
-            }
+            SoftClipSide scSide = SoftClipSide.fromRead(read);
 
             chromosomes[posIndex] = read.Chromosome;
 
-            if(useLeft)
+            if(scSide.isLeft())
             {
                 junctionPositions[posIndex] = read.getCoordsBoundary(SE_START);
                 junctionOrientations[posIndex] = NEG_ORIENT;
@@ -203,7 +187,7 @@ public class FusionFragmentBuilder
         else
             lowerIndex = lowerChromosome(chromosomes[SE_START], chromosomes[SE_END]) ? 0 : 1;
 
-        for (int se = SE_START; se <= SE_END; ++se)
+        for(int se = SE_START; se <= SE_END; ++se)
         {
             int index = se == SE_START ? lowerIndex : switchIndex(lowerIndex);
             fragment.junctionPositions()[se] = junctionPositions[index];
@@ -325,7 +309,6 @@ public class FusionFragmentBuilder
             // orientation could be set based on the orientations and positions of the reads.. do this when the junction data is set
             fragment.orientations()[SE_START] = POS_ORIENT;
             fragment.orientations()[SE_END] = NEG_ORIENT;
-
             return;
         }
 
@@ -337,7 +320,7 @@ public class FusionFragmentBuilder
         else
             lowerIndex = lowerChromosome(chromosomes.get(0), chromosomes.get(1)) ? 0 : 1;
 
-        for (int se = SE_START; se <= SE_END; ++se)
+        for(int se = SE_START; se <= SE_END; ++se)
         {
             int index = se == SE_START ? lowerIndex : switchIndex(lowerIndex);
             final String chrGeneId = chrGeneCollections.get(index);
@@ -355,7 +338,7 @@ public class FusionFragmentBuilder
         int[] scPositions = {-1, -1};
         byte[] scOrientations = {0, 0};
 
-        for (int se = SE_START; se <= SE_END; ++se)
+        for(int se = SE_START; se <= SE_END; ++se)
         {
             int index = se == SE_START ? lowerIndex : switchIndex(lowerIndex);
             final String chrGeneId = chrGeneCollections.get(index);
@@ -366,30 +349,24 @@ public class FusionFragmentBuilder
             if(!read.isSoftClipped(requiredScSide))
                 break;
 
-            int scLength = requiredScSide == SE_START ?
-                    read.Cigar.getFirstCigarElement().getLength() : read.Cigar.getLastCigarElement().getLength();
-
-            if(scLength < REALIGN_MIN_SOFT_CLIP_BASE_LENGTH)
-                break;
-
             if(requiredScSide == SE_START)
             {
                 scPositions[se] = read.getCoordsBoundary(SE_START);
-                scOrientations[se] = -1;
+                scOrientations[se] = NEG_ORIENT;
             }
             else
             {
                 scPositions[se] = read.getCoordsBoundary(SE_END);
-                scOrientations[se] = 1;
+                scOrientations[se] = POS_ORIENT;
             }
         }
 
-        if(scPositions[SE_START] > 0 && scPositions[SE_END] > 0)
+        if(scPositions[SE_START] > 0 && scPositions[SE_START] < scPositions[SE_END])
         {
-            // this will now be a candidate for a local fusion
-            fragment.setType(MATCHED_JUNCTION);
+            // this will now be a candidate for a local fusion from a discordant read pair
+            fragment.setType(DISCORDANT_JUNCTION);
 
-            for (int se = SE_START; se <= SE_END; ++se)
+            for(int se = SE_START; se <= SE_END; ++se)
             {
                 int index = se == SE_START ? lowerIndex : switchIndex(lowerIndex);
                 fragment.junctionPositions()[se] = scPositions[index];

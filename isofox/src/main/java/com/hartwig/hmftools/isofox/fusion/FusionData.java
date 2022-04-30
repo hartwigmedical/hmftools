@@ -38,7 +38,7 @@ public class FusionData
     public final byte[] JunctionOrientations;
     public final FusionJunctionType[] JunctionTypes;
     public final String SvType;
-    public final boolean NonSupp;
+    public final String ReadType;
     public final String[] GeneIds;
     public final String[] GeneNames;
     public final byte[] Strands;
@@ -63,7 +63,7 @@ public class FusionData
     private FusionFilterType mFilter;
 
     public FusionData(int id, boolean isValid, final String[] chromosomes, final int[] junctionPositions, final byte[] junctionOrientations,
-            final FusionJunctionType[] junctionTypes, final String svType, boolean nonSupp,
+            final FusionJunctionType[] junctionTypes, final String svType, final String readType,
             final String[] geneIds, final String[] geneNames, final byte[] strands,
             int totalFrags, int splitFrags, int realignedFrags, int discordantFrags, final int[] coverage, final int[] anchorDistance,
             final String[] transData, final String relatedFusionIds, final String initReadId)
@@ -77,7 +77,7 @@ public class FusionData
         JunctionTypes = junctionTypes;
 
         SvType = svType;
-        NonSupp = nonSupp;
+        ReadType = readType;
 
         GeneIds = geneIds;
         GeneNames = geneNames;
@@ -163,6 +163,7 @@ public class FusionData
     public static final String FLD_REALIGN_FLAGS = "RealignedFrags";
     public static final String FLD_DISCORD_FRAGS = "DiscordantFrags";
     public static final String FLD_NON_SUPP = "NonSupp";
+    public static final String FLD_READ_TYPE = "ReadType"; // replaces 'NonSupp'
     public static final String FLD_TRANS_DATA = "TransData";
     public static final String FLD_REL_SPLICED_IDS = "RelatedSplicedIds";
     public static final String FLD_INIT_READ_ID = "InitReadId";
@@ -214,7 +215,7 @@ public class FusionData
         }
         else
         {
-            sj.add(FLD_NON_SUPP);
+            sj.add(FLD_READ_TYPE);
             sj.add(FLD_INIT_READ_ID);
         }
 
@@ -263,7 +264,7 @@ public class FusionData
         }
         else
         {
-            sj.add(String.valueOf(NonSupp));
+            sj.add(ReadType);
             sj.add(InitReadId);
         }
 
@@ -318,7 +319,7 @@ public class FusionData
             Integer transUpIndex = fieldsIndexMap.get(formStreamField(FLD_TRANS_DATA, FS_UP));
             Integer transDownIndex = fieldsIndexMap.get(formStreamField(FLD_TRANS_DATA, FS_DOWN));
             Integer initReadIndex = fieldsIndexMap.get(FLD_INIT_READ_ID);
-            Integer nonSuppIndex = fieldsIndexMap.get(FLD_NON_SUPP);
+            Integer readTypeIndex = fieldsIndexMap.get(FLD_READ_TYPE);
 
             // optional fields - filtered
             Integer filterIndex = fieldsIndexMap.get(FLD_FILTER);
@@ -349,7 +350,8 @@ public class FusionData
                         new byte[] { Byte.parseByte(values[strandUpIndex]), Byte.parseByte(values[strandDownIndex]) };
 
                 final String svType = values[svTypeIndex];
-                boolean nonSupp = nonSuppIndex != null ? Boolean.parseBoolean(values[nonSuppIndex]) : false;
+
+                final String readType = readTypeIndex != null ? values[readTypeIndex] : "";
 
                 final int[] coverage = new int[] { Integer.parseInt(values[covUpIndex]), Integer.parseInt(values[covDownIndex]) };
 
@@ -362,7 +364,7 @@ public class FusionData
 
                 FusionData fusion = new FusionData(
                         fusionId, isValid, chromosomes, junctionPositions, junctionOrientations, junctionTypes,
-                        svType, nonSupp, geneIds, geneNames, strands,
+                        svType, readType, geneIds, geneNames, strands,
                         Integer.parseInt(values[totalFragsIndex]), Integer.parseInt(values[splitFragsIndex]),
                         Integer.parseInt(values[realignedFragsIndex]), Integer.parseInt(values[discordantFragsIndex]),
                         coverage, anchorDistance, transData, values[relatedFusionIdsIndex], initReadId);

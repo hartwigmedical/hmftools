@@ -6,5 +6,8 @@ public enum FusionFragmentType
     MATCHED_JUNCTION,
     REALIGN_CANDIDATE,
     REALIGNED,
-    DISCORDANT;
+    DISCORDANT,
+    DISCORDANT_JUNCTION;
+
+    public boolean isJunctionType() { return this == MATCHED_JUNCTION || this == DISCORDANT_JUNCTION; }
 }

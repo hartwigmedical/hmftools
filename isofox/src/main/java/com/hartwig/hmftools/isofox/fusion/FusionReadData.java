@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionConstants.JUNCTION_BASE_L
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.SOFT_CLIP_JUNC_BUFFER;
+import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
@@ -173,7 +174,7 @@ public class FusionReadData
     {
         addFragmentTypeCount(fragment.type(), 1);
 
-        if(fragment.type() == MATCHED_JUNCTION)
+        if(fragment.type().isJunctionType() || fragment == mFragment)
         {
             LocalJunctionData matchData = fragment.readGroup().localJunctionData();
 
@@ -206,13 +207,13 @@ public class FusionReadData
     }
 
     public boolean isKnownSpliced() { return getInitialFragment().isSpliced(); }
-    public boolean isUnspliced() { return getInitialFragment().isUnspliced() && getInitialFragment().type() == MATCHED_JUNCTION; }
+    public boolean isUnspliced() { return getInitialFragment().isUnspliced() && getInitialFragment().type().isJunctionType(); }
 
     public boolean hasViableGenes() { return mFusionGenes[FS_UP] != null && mFusionGenes[FS_DOWN] != null; }
 
     public void setJunctionBases(final RefGenomeInterface refGenome)
     {
-        if(mFragment.type() != MATCHED_JUNCTION)
+        if(!mFragment.type().isJunctionType())
             return;
 
         try
@@ -657,8 +658,6 @@ public class FusionReadData
         int[] anchorDistance = new int[FS_PAIR];
         String[] transData = new String[] {"", ""};
 
-        // String[] otherGenes = new String[] {"", ""}; // not sure where this was every sourced from
-
         int splitFragments = 0;
         int realignedFragments = 0;
         int discordantFragments = 0;
@@ -667,7 +666,7 @@ public class FusionReadData
         {
             if(entry.getKey() == MATCHED_JUNCTION)
                 splitFragments = entry.getValue();
-            else if(entry.getKey() == DISCORDANT)
+            else if(entry.getKey() == DISCORDANT || entry.getKey() == DISCORDANT_JUNCTION)
                 discordantFragments = entry.getValue();
             else if(entry.getKey() == REALIGNED)
                 realignedFragments = entry.getValue();
@@ -727,10 +726,13 @@ public class FusionReadData
             relatedFusionIds = FUSION_NONE;
         }
 
+        String readType = sampleFragment.hasSuppAlignment() ? "SuppAlign" :
+                (sampleFragment.reads().stream().anyMatch(x -> x.containsSplit()) ? "Split" : (
+                        sampleFragment.type() == DISCORDANT_JUNCTION ? "Discordant" : "Other"));
+
         return new FusionData(
                 mId, isValid, chromosomes, junctionPositions, junctionOrientations, junctionTypes, getImpliedSvType().toString(),
-                !sampleFragment.hasSuppAlignment(), geneIds, geneNames, strands,
-                totalFragments, splitFragments, realignedFragments, discordantFragments, coverage, anchorDistance,
-                transData, relatedFusionIds, getInitialFragment().readId());
+                readType, geneIds, geneNames, strands, totalFragments, splitFragments, realignedFragments, discordantFragments, coverage,
+                anchorDistance, transData, relatedFusionIds, getInitialFragment().readId());
     }
 }

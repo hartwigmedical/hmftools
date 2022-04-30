@@ -51,6 +51,8 @@ import com.hartwig.hmftools.isofox.common.CommonUtils;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.RegionMatchType;
+import com.hartwig.hmftools.isofox.common.RegionReadData;
 
 import htsjdk.samtools.Cigar;
 
@@ -59,8 +61,6 @@ public class ChimericReadTracker
     private final IsofoxConfig mConfig;
     private final boolean mRunFusions;
     private final boolean mEnabled; // required for alt splice junctions
-
-    private final List<String[]> mKnownPairGeneIds;
 
     private GeneCollection mGeneCollection; // the current collection being processed
     private final Map<String,ReadGroup> mChimericReadMap;
@@ -75,7 +75,9 @@ public class ChimericReadTracker
 
     // map of candidate junction groups with supp data
     private final Map<Integer,List<SupplementaryJunctionData>> mSupplementaryJunctions;
-    private final Set<String> mKnownGeneIds;
+    private final Set<String> mReferenceKnownGeneIds; // all as defined by the cache
+    private final Set<String> mKnownGeneIds; // in the current gene collection
+    private final List<String[]> mKnownPairGeneIds;
     private final Map<String,Set<String>> mHardFilteredReadGroups;
 
     // to avoid double-processing reads falling after a gene collection
@@ -90,6 +92,7 @@ public class ChimericReadTracker
         mEnabled = mRunFusions || mConfig.Functions.contains(ALT_SPLICE_JUNCTIONS);
 
         mKnownPairGeneIds = Lists.newArrayList();
+        mReferenceKnownGeneIds = Sets.newHashSet();
         mKnownGeneIds = Sets.newHashSet();
         mChimericStats = new ChimericStats();
         mChimericReadMap = Maps.newHashMap();
@@ -137,20 +140,22 @@ public class ChimericReadTracker
             if(upGene != null && downGene != null)
                 mKnownPairGeneIds.add(new String[] { upGene.GeneId, downGene.GeneId });
 
-            mKnownGeneIds.add(upGene.GeneId);
-            mKnownGeneIds.add(downGene.GeneId);
+            mReferenceKnownGeneIds.add(upGene.GeneId);
+            mReferenceKnownGeneIds.add(downGene.GeneId);
         }
 
         mConfig.Fusions.KnownFusions.getDataByType(PROMISCUOUS_5)
-                .forEach(x -> mKnownGeneIds.add(geneTransCache.getGeneDataByName(x.FiveGene).GeneId));
+                .forEach(x -> mReferenceKnownGeneIds.add(geneTransCache.getGeneDataByName(x.FiveGene).GeneId));
 
         mConfig.Fusions.KnownFusions.getDataByType(PROMISCUOUS_3)
-                .forEach(x -> mKnownGeneIds.add(geneTransCache.getGeneDataByName(x.ThreeGene).GeneId));
+                .forEach(x -> mReferenceKnownGeneIds.add(geneTransCache.getGeneDataByName(x.ThreeGene).GeneId));
     }
 
     public void initialise(final GeneCollection geneCollection)
     {
         mGeneCollection = geneCollection;
+        mKnownGeneIds.clear();
+        mGeneCollection.geneIds().stream().filter(x -> mKnownGeneIds.contains(x)).forEach(x -> mKnownGeneIds.add(x));
 
         mPreviousPostGeneReadMap.clear();
         mPreviousPostGeneReadMap.putAll(mPostGeneReadMap);
@@ -233,7 +238,7 @@ public class ChimericReadTracker
 
             if(group.size() == 2 && group.isComplete() && !group.hasDuplicateRead())
             {
-                final int[] junctPositions = findCandidateJunctions(group.Reads, false);
+                final int[] junctPositions = findCandidateJunctions(group, false);
                 if(junctPositions[SE_START] > 0 && junctPositions[SE_END] > 0)
                 {
                     final byte[] junctOrientations = {1, -1};
@@ -590,7 +595,7 @@ public class ChimericReadTracker
             return;
         }
 
-        findCandidateJunctions(readGroup.Reads, true);
+        findCandidateJunctions(readGroup, true);
     }
 
     private void addJunction(int juncPosition, byte juncOrientation)
@@ -602,9 +607,10 @@ public class ChimericReadTracker
         }
     }
 
-    private int[] findCandidateJunctions(final List<ReadRecord> reads, boolean addJunction)
+    private int[] findCandidateJunctions(final ReadGroup readGroup, boolean addJunction)
     {
-        final ReadRecord splitRead = findSplitRead(reads);
+        // type 1: split reads
+        final ReadRecord splitRead = findSplitRead(readGroup.Reads);
 
         if(splitRead != null)
         {
@@ -621,10 +627,11 @@ public class ChimericReadTracker
 
         final int[] junctionPositions = new int[SE_PAIR];
 
-        final ReadRecord suppRead = reads.stream().filter(x -> x.hasSuppAlignment()).findFirst().orElse(null);
+        // type 2: supplementary
+        final ReadRecord suppRead = readGroup.Reads.stream().filter(x -> x.hasSuppAlignment()).findFirst().orElse(null);
         if(suppRead != null)
         {
-            SoftClipSide scSide = SoftClipSide.fromRead(suppRead.Cigar);
+            SoftClipSide scSide = SoftClipSide.fromRead(suppRead);
 
             if(scSide != null && scSide.Length >= REALIGN_MIN_SOFT_CLIP_BASE_LENGTH)
             {
@@ -637,45 +644,51 @@ public class ChimericReadTracker
             return junctionPositions;
         }
 
-        // otherwise must either have a junction supported by 2 facing soft-clipped reads or a supplementary read
-        // logic needs to match the type and junction assignment in FusionFragmentBuilder
-        if(reads.size() == 1)
-        {
-            /*
-            final ReadRecord read = reads.get(0);
+        // type 3: discordant with at least 1 known-pair gene, must be a single-read group since the other will be distant
+        if(readGroup.Reads.size() > 1 || mKnownGeneIds.isEmpty() || readInKnownGene(readGroup))
+            return junctionPositions;
 
-            if(hasRealignableSoftClip(read, SE_START, false))
+        // select the side with the longest soft-clipping
+        ReadRecord read = readGroup.Reads.get(0);
+
+        SoftClipSide scSide = SoftClipSide.fromRead(read);
+
+        if(scSide != null)
+        {
+            if(scSide.isLeft())
+            {
                 junctionPositions[SE_START] = read.getCoordsBoundary(SE_START);
 
-            if(hasRealignableSoftClip(read, SE_END, false))
-                junctionPositions[SE_END] = read.getCoordsBoundary(SE_END);
-            */
-        }
-        else
-        {
-            int[] scPositions = {-1, -1};
-
-            for(ReadRecord read : reads)
-            {
-                if(hasRealignableSoftClip(read, SE_START, false))
-                    scPositions[SE_END] = read.getCoordsBoundary(SE_START);
-                else if(hasRealignableSoftClip(read, SE_END, false))
-                    scPositions[SE_START] = read.getCoordsBoundary(SE_END);
-            }
-
-            if(scPositions[SE_START] > 0 && scPositions[SE_END] > 0 && scPositions[SE_START] < scPositions[SE_END])
-            {
                 if(addJunction)
-                {
-                    addJunction(scPositions[SE_START], POS_ORIENT);
-                    addJunction(scPositions[SE_END], NEG_ORIENT);
-                }
+                    addJunction(junctionPositions[SE_START], NEG_ORIENT);
+            }
+            else
+            {
+                junctionPositions[SE_END] = read.getCoordsBoundary(SE_END);
 
-                return scPositions;
+                if(addJunction)
+                    addJunction(junctionPositions[SE_END], POS_ORIENT);
             }
         }
 
         return junctionPositions;
+    }
+
+    private boolean readInKnownGene(final ReadGroup readGroup)
+    {
+        if(mKnownGeneIds.isEmpty())
+            return false;
+
+        for(ReadRecord read : readGroup.Reads)
+        {
+            if(read.getMappedRegions().keySet().stream()
+                    .anyMatch(x -> x.getTransExonRefs().stream().anyMatch(y -> mKnownGeneIds.contains(y.GeneId))))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void applyHardFilter()
@@ -683,8 +696,8 @@ public class ChimericReadTracker
         if(mConfig.Fusions.MinHardFilterFrags <= 1)
             return;
 
-        // hard-filter chimeric split fragments which aren't in known fusion genes or with known splice sites
-        boolean hasKnownGene = mGeneCollection.geneIds().stream().anyMatch(x -> mKnownGeneIds.contains(x));
+        // filter will be repeated in the fusion finding routine when all info is known, but for now hard-filter any read groups
+        // without a read matching a known fusion gene
         final int minSplitFrags = mConfig.Fusions.MinHardFilterFrags;
 
         for(ReadGroup readGroup : mLocalCompleteGroups)
@@ -692,11 +705,8 @@ public class ChimericReadTracker
             if(readGroup.localJunctionData().MatchCount + 1 >= minSplitFrags)
                 continue;
 
-            if(readGroup.Reads.stream().filter(x -> x.withinGeneCollection())
-                    .anyMatch(x -> x.getMappedRegions().values().stream().anyMatch(y -> y == EXON_BOUNDARY)))
-            {
+            if(readInKnownGene(readGroup))
                 continue;
-            }
 
             if(mChimericReadMap.containsKey(readGroup.id()))
             {
@@ -717,18 +727,8 @@ public class ChimericReadTracker
                 if(readGroup == null)
                     continue;
 
-                if(suppJuncData.IsGenic)
-                {
-                    if(suppJuncData.KnownSpliceSite)
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        if(hasKnownGene)
-                            continue;
-                    }
-                }
+                if(readInKnownGene(readGroup))
+                    continue;
 
                 for(String readId : suppJuncData.ReadIds)
                 {
@@ -766,11 +766,9 @@ public class ChimericReadTracker
             return;
 
         // find the junction from this read's SC and same for the supp mapping data
-        SoftClipSide scSide = SoftClipSide.fromRead(read.Cigar);
+        SoftClipSide scSide = SoftClipSide.fromRead(read);
 
-        boolean knownSpliceSite = read.getMappedRegions().values().stream().anyMatch(x -> x == EXON_BOUNDARY);
-        SupplementaryJunctionData suppJuncData = new SupplementaryJunctionData(
-                read.Id, read.withinGeneCollection(), knownSpliceSite);
+        SupplementaryJunctionData suppJuncData = new SupplementaryJunctionData(read.Id);
 
         if(scSide.isLeft())
         {
@@ -785,7 +783,7 @@ public class ChimericReadTracker
 
         suppJuncData.RemoteChromosome = suppData.Chromosome;
         Cigar remoteCigar = CommonUtils.cigarFromStr(suppData.Cigar);
-        scSide = SoftClipSide.fromRead(remoteCigar);
+        scSide = SoftClipSide.fromCigar(remoteCigar);
 
         if(scSide.isLeft())
         {
@@ -823,8 +821,6 @@ public class ChimericReadTracker
     private class SupplementaryJunctionData
     {
         public final List<String> ReadIds;
-        public final boolean IsGenic;
-        public final boolean KnownSpliceSite;
 
         public int LocalJunctionPos;
         public byte LocalJunctionOrient;
@@ -835,11 +831,9 @@ public class ChimericReadTracker
 
         public int MatchCount;
 
-        public SupplementaryJunctionData(final String readId, boolean isGenic, boolean knownSpliceSite)
+        public SupplementaryJunctionData(final String readId)
         {
             ReadIds = Lists.newArrayList(readId);
-            IsGenic = isGenic;
-            KnownSpliceSite = knownSpliceSite;
 
             LocalJunctionPos = 0;
             LocalJunctionOrient = 0;

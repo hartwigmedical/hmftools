@@ -15,11 +15,12 @@ import static com.hartwig.hmftools.isofox.common.ReadRecord.NO_GENE_ID;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.HIGH_LOG_COUNT;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOFT_CLIP_BASE_LENGTH;
-import static com.hartwig.hmftools.isofox.fusion.FusionConstants.SOFT_CLIP_JUNC_BUFFER;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
+import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGN_CANDIDATE;
+import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.KNOWN;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.matchesFusionJunctionRegion;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.softClippedReadSupportsJunction;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.checkMissingGeneData;
@@ -438,9 +439,21 @@ public class FusionFinder implements Callable
             }
         }
 
+        Level level = mAllFragments.size() > HIGH_LOG_COUNT ? Level.INFO : Level.DEBUG;
+        ISF_LOGGER.log(level, "chr({}) chimeric fragments({} disc={} candRealgn={} junc={}) fusions(loc={} gene={} total={})",
+                mTaskId, mAllFragments.size(), mDiscordantFragments.values().stream().mapToInt(x -> x.size()).sum(),
+                mRealignCandidateFragments.values().stream().mapToInt(x -> x.size()).sum(), junctioned,
+                mFusionCandidates.size(), mFusionsByGene.size(), mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum());
+
+        // free up the set of initial fragments now they've all been assigned
+        mAllFragments.clear();
+        mFusionsByLocation.clear();
+    }
+
+    private void hardFilterFusions()
+    {
         // optionally hard-filtered based solely on matched junction counts per fusion
 
-        // then set gene data
         for(List<FusionReadData> fusions : mFusionCandidates.values())
         {
             List<FusionReadData> hardFiltered = Lists.newArrayList();
@@ -453,21 +466,6 @@ public class FusionFinder implements Callable
                     hardFiltered.add(fusionData);
                     continue;
                 }
-
-                FusionFragment initialFragment = fusionData.getInitialFragment();
-                setFusionGeneData(fusionData, initialFragment);
-
-                if(mConfig.Fusions.CacheFragments)
-                {
-                    List<FusionFragment> fragments = fusionData.getFragments(MATCHED_JUNCTION);
-
-                    for(int i = 1; i < fragments.size(); ++i)
-                    {
-                        FusionFragment fragment = fragments.get(i);
-                        fragment.junctionTypes()[SE_START] = initialFragment.junctionTypes()[SE_START];
-                        fragment.junctionTypes()[SE_END] = initialFragment.junctionTypes()[SE_END];
-                    }
-                }
             }
 
             if(!hardFiltered.isEmpty())
@@ -476,16 +474,6 @@ public class FusionFinder implements Callable
                 mHardFilteredCount += hardFiltered.size();
             }
         }
-
-        Level level = mAllFragments.size() > HIGH_LOG_COUNT ? Level.INFO : Level.DEBUG;
-        ISF_LOGGER.log(level, "chr({}) chimeric fragments({} disc={} candRealgn={} junc={}) fusions(loc={} gene={} total={})",
-                mTaskId, mAllFragments.size(), mDiscordantFragments.values().stream().mapToInt(x -> x.size()).sum(),
-                mRealignCandidateFragments.values().stream().mapToInt(x -> x.size()).sum(), junctioned,
-                mFusionCandidates.size(), mFusionsByGene.size(), mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum());
-
-        // free up the set of initial fragments now they've all been assigned
-        mAllFragments.clear();
-        mFusionsByLocation.clear();
     }
 
     private boolean hardFilterFusion(final FusionReadData fusionData)
@@ -493,6 +481,7 @@ public class FusionFinder implements Callable
         if(mConfig.Fusions.MinHardFilterFrags <= 1)
             return false;
 
+        // TODO - change to be post assignment??
         if(fusionData.getFragmentTypeCount(MATCHED_JUNCTION) >= mConfig.Fusions.MinHardFilterFrags)
             return false;
 
@@ -546,6 +535,27 @@ public class FusionFinder implements Callable
         return fusionsByPosition.get(fragment.positionHash());
     }
 
+    private boolean canCreateDiscordantFusion(final FusionFragment fragment)
+    {
+        if(fragment.type() != DISCORDANT_JUNCTION)
+            return false;
+
+        if(findExistingFusion(fragment) != null)
+            return true;
+
+        FusionReadData fusionData = new FusionReadData(0, fragment);
+        fusionData.setJunctionBases(mConfig.RefGenome);
+        setGeneData(fusionData);
+
+        if(!fusionData.hasViableGenes())
+            return false;
+
+        if(!mPassingFusions.knownFusionCache().hasKnownFusion(fusionData.getGeneName(FS_UP), fusionData.getGeneName(FS_DOWN)))
+            return false;
+
+        return fragment.junctionTypes()[FS_UP] == KNOWN || fragment.junctionTypes()[FS_DOWN] == KNOWN;
+    }
+
     private FusionReadData createOrUpdateFusion(final FusionFragment fragment)
     {
         // only returns the fusion data if created, not if already exists
@@ -579,6 +589,7 @@ public class FusionFinder implements Callable
         final FusionReadData fusionData = new FusionReadData(fusionId, fragment);
 
         fusionData.setJunctionBases(mConfig.RefGenome);
+        setFusionGeneData(fusionData, fragment);
 
         fusions.add(fusionData);
 
@@ -839,6 +850,7 @@ public class FusionFinder implements Callable
 
                         final FusionReadData fusion1Const = fusion1;
 
+                        // no need to consider discordant junctions since reconciliation is only done for non-local fusions
                         if(mConfig.Fusions.CacheFragments)
                             fusion2.getFragments(MATCHED_JUNCTION).forEach(x -> fusion1Const.addFusionFragment(x, mConfig.Fusions.CacheFragments));
                         else
@@ -993,18 +1005,27 @@ public class FusionFinder implements Callable
 
             for(FusionFragment fragment : fragments)
             {
-                if(fragment.type() == MATCHED_JUNCTION)
+                if(fragment.type() != MATCHED_JUNCTION && fragment.type() != DISCORDANT_JUNCTION)
+                    continue;
+
+                if(fragment.type() == DISCORDANT_JUNCTION)
                 {
-                    FusionReadData fusionData = createOrUpdateFusion(fragment);
+                    boolean createFusion = canCreateDiscordantFusion(fragment);
+                    fragment.unassignFusion();
 
-                    if(fusionData != null)
-                    {
-                        setFusionGeneData(fusionData, fragment);
-                        newFusions.add(fusionData);
-                    }
+                    if(!createFusion)
+                        continue;
 
-                    allocatedFragments.add(fragment);
+                    // fragment.setType(DISCORDANT);
                 }
+
+                FusionReadData fusionData = createOrUpdateFusion(fragment);
+
+                if(fusionData == null)
+                    continue;
+
+                newFusions.add(fusionData);
+                allocatedFragments.add(fragment);
             }
 
             allocatedFragments.forEach(x -> fragments.remove(x));

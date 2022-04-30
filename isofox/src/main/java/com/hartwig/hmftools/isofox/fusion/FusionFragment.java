@@ -99,7 +99,6 @@ public class FusionFragment
     public final byte[] orientations() { return mOrientations; }
     public ChrGeneCollectionPair chrGeneCollection(int se) { return new ChrGeneCollectionPair(mChromosomes[se], mGeneCollections[se]); }
 
-
     public void assignFusion(final FusionReadData fusion)
     {
         if(mFusions == null)
@@ -107,6 +106,8 @@ public class FusionFragment
 
         mFusions.add(fusion);
     }
+
+    public void unassignFusion() { mFusions = null; }
 
     @Nullable
     public Set<FusionReadData> assignedFusions() { return mFusions; }

@@ -67,6 +67,8 @@ public class PassingFusions
         mKnownFusionCache = knownFusionCache;
     }
 
+    public KnownFusionCache knownFusionCache() { return mKnownFusionCache; }
+
     public List<FusionData> findPassingFusions(final List<FusionData> allFusions)
     {
         // mark passing fusions, and then include any which are related to them

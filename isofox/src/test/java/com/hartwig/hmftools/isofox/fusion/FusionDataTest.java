@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox.fusion;
 
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -8,6 +9,8 @@ import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_2;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_3;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_5;
+import static com.hartwig.hmftools.isofox.TestUtils.GENE_NAME_1;
+import static com.hartwig.hmftools.isofox.TestUtils.GENE_NAME_2;
 import static com.hartwig.hmftools.isofox.TestUtils.NEG_STRAND;
 import static com.hartwig.hmftools.isofox.TestUtils.POS_STRAND;
 import static com.hartwig.hmftools.isofox.TestUtils.addTestGenes;
@@ -20,6 +23,7 @@ import static com.hartwig.hmftools.isofox.TestUtils.createReadPair;
 import static com.hartwig.hmftools.isofox.TestUtils.createSupplementaryReadPair;
 import static com.hartwig.hmftools.isofox.TestUtils.overrideRefGenome;
 import static com.hartwig.hmftools.isofox.TestUtils.populateRefGenome;
+import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
@@ -38,6 +42,8 @@ import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.fusion.KnownFusionData;
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
@@ -434,6 +440,8 @@ public class FusionDataTest
 
         FusionFinder finder = createFusionFinder(config, geneTransCache);
 
+        config.Fusions.KnownFusions.addData(new KnownFusionData(KNOWN_PAIR, GENE_NAME_1, GENE_NAME_2, "", ""));
+
         int gcId = 0;
 
         final GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
@@ -442,7 +450,7 @@ public class FusionDataTest
         final Map<String, ReadGroup> readGroups1 = Maps.newHashMap();
         final Map<String, ReadGroup> readGroups2 = Maps.newHashMap();
 
-        // a simple DEL, supported by 2 split fragments
+        // a simple DEL, supported by 2 split fragments - the discordant read forming the known-pair fusion
         int readId = 0;
         ReadRecord read1 = createMappedRead(readId, gc1, 1081, 1100, createCigar(0, 20, 20));
         ReadRecord read2 = createMappedRead(readId, gc2, 10200, 10219, createCigar(20, 20, 0));
@@ -501,9 +509,10 @@ public class FusionDataTest
 
         FusionReadData fusion = fusions.stream().filter(x -> x.isKnownSpliced()).findFirst().orElse(null);
         assertTrue(fusion != null);
-        assertEquals(2, fusion.getFragments(MATCHED_JUNCTION).size());
+        assertEquals(DISCORDANT_JUNCTION, fusion.getInitialFragment().type());
+        assertEquals(2, fusion.getFragmentTypeCount(DISCORDANT_JUNCTION));
+        assertEquals(1, fusion.getFragmentTypeCount(DISCORDANT));
         assertEquals(2, fusion.getFragments(REALIGNED).size());
-        assertEquals(1, fusion.getFragments(DISCORDANT).size());
         assertEquals(20, fusion.getMaxSplitLengths()[SE_START]);
         assertEquals(20, fusion.getMaxSplitLengths()[SE_END]);
     }
@@ -622,10 +631,10 @@ public class FusionDataTest
         final Map<String, ReadGroup> readGroups1 = Maps.newHashMap();
         final Map<String, ReadGroup> readGroups2 = Maps.newHashMap();
 
-        // a simple DEL, supported by 1 split fragment
+        // a simple DEL, supported by a split-read
         int readId = 0;
-        ReadRecord read1 = createMappedRead(readId, gc1, 581, 600, createCigar(0, 20, 20));
-        ReadRecord read2 = createMappedRead(readId, gc2, 10200, 10219, createCigar(20, 20, 0));
+        ReadRecord read1 = createMappedRead(readId, gc1, 581, 10219, createCigar(0, 20, 9599, 20, 0));
+        ReadRecord read2 = createMappedRead(readId, gc2, 10205, 10224, createCigar(0, 20, 0));
         read2.setStrand(true, false);
 
         readGroups1.put(read1.Id, new ReadGroup(read1));
@@ -673,9 +682,9 @@ public class FusionDataTest
 
         FusionReadData fusion = fusions.stream().findFirst().orElse(null);
         assertTrue(fusion != null);
-        assertEquals(1, fusion.getFragments(MATCHED_JUNCTION).size());
-        assertEquals(2, fusion.getFragments(REALIGNED).size());
-        // assertEquals(1, fusion.getFragments(DISCORDANT).size()); // not yet handled
+        assertEquals(MATCHED_JUNCTION, fusion.getInitialFragment().type());
+        assertEquals(1, fusion.getFragmentTypeCount(MATCHED_JUNCTION));
+        assertEquals(2, fusion.getFragmentTypeCount(REALIGNED));
     }
 
     @Test
