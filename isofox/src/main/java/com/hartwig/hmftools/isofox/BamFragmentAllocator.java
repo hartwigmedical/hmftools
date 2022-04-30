@@ -289,18 +289,18 @@ public class BamFragmentAllocator
         processRead(read);
     }
 
-    private static final String LOG_READ_ID = "";
-    // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:1:12206:13335:5242";
+    // private static final String LOG_READ_ID = "";
+    private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:3:13507:14197:14107";
 
     private void processRead(ReadRecord read)
     {
-        /*
         if(read.Id.equals(LOG_READ_ID))
         {
             ISF_LOGGER.info("genes({}) region({} - {}) specific readId({}) details: {}",
                     mCurrentGenes.geneNames(), mValidReadStartRegion[SE_START], mValidReadStartRegion[SE_END],
                     read.Id, read.toString());
         }
+        /*
         */
 
         // for each record find all exons with an overlap

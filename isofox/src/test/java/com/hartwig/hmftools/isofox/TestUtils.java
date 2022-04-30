@@ -30,7 +30,10 @@ import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.fusion.FusionFinder;
 import com.hartwig.hmftools.isofox.fusion.FusionWriter;
+import com.hartwig.hmftools.isofox.fusion.JunctionRacFragments;
 import com.hartwig.hmftools.isofox.fusion.PassingFusions;
+import com.hartwig.hmftools.isofox.fusion.RacFragmentCache;
+import com.hartwig.hmftools.isofox.fusion.ReadGroup;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -417,11 +420,51 @@ public class TestUtils
 
     public static FusionFinder createFusionFinder(final IsofoxConfig config, final EnsemblDataCache geneTransCache)
     {
+        return createFusionFinder(config, geneTransCache, new RacFragmentCache());
+    }
+
+    public static FusionFinder createFusionFinder(
+            final IsofoxConfig config, final EnsemblDataCache geneTransCache, final RacFragmentCache racFragmentCache)
+    {
         config.Filters.buildGeneRegions(geneTransCache);
 
         return new FusionFinder(
-                "FF", config, geneTransCache,
+                "FF", config, geneTransCache, racFragmentCache,
                 new PassingFusions(config.Fusions.KnownFusions, null), new FusionWriter(config));
+    }
+
+    public static void addRacJunction(
+            final RacFragmentCache racFragmentCache, final String chromosome, int gcId, byte juncOrient, int juncPosition)
+    {
+        JunctionRacFragments juncRacFragments = racFragmentCache.getRacFragments(chromosome, gcId);
+
+        if(juncRacFragments == null)
+        {
+            juncRacFragments = new JunctionRacFragments();
+            juncRacFragments.addJunction(juncPosition, juncOrient);
+            racFragmentCache.addRacFragments(chromosome, gcId, juncRacFragments);
+        }
+    }
+
+    public static void addRacReadGroup(
+            final RacFragmentCache racFragmentCache, final ReadGroup readGroup, byte juncOrient, int juncPosition)
+    {
+        String chromosome = readGroup.Reads.get(0).Chromosome;
+        int gcId = readGroup.Reads.get(0).getGeneCollectons()[0];
+
+        JunctionRacFragments juncRacFragments = racFragmentCache.getRacFragments(chromosome, gcId);
+
+        if(juncRacFragments == null)
+        {
+            juncRacFragments = new JunctionRacFragments();
+            juncRacFragments.addJunction(juncPosition, juncOrient);
+            juncRacFragments.checkAddCandidateGroup(readGroup);
+            racFragmentCache.addRacFragments(chromosome, gcId, juncRacFragments);
+        }
+        else
+        {
+            juncRacFragments.checkAddCandidateGroup(readGroup);
+        }
     }
 
 }

@@ -48,7 +48,7 @@ public class FusionReadData
 {
     private final int mId;
     private final String mLocationId;
-    private final FusionFragment mFragment; // the split fragment which establishes this fusion and whose junction data is used
+    private final FusionFragment mFragment; // the fragment which establishes this fusion and whose junction data is used
 
     private Map<FusionFragmentType,List<FusionFragment>> mFragments; // only cached if all chimeric fragments are written to file
     private final Map<FusionFragmentType,Integer> mFragmentCounts;
@@ -135,6 +135,7 @@ public class FusionReadData
     public final String[] adjacentJunctionBases() { return mAdjacentJunctionBases; }
     public final String[] junctionSpliceBases() { return mJunctionSpliceBases; }
     public final int[] junctionHomology() { return mJunctionHomology; }
+    public final int[] streamIndices() { return mStreamIndices; }
 
     public boolean hasIncompleteData() { return mIncompleteData; }
     public void setIncompleteData() { mIncompleteData = true; }

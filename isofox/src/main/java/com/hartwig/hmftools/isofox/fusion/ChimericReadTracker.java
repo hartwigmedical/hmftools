@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
@@ -17,18 +16,13 @@ import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
-import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
-import static com.hartwig.hmftools.isofox.fusion.FusionConstants.SOFT_CLIP_JUNC_BUFFER;
-import static com.hartwig.hmftools.isofox.fusion.FusionReadData.softClippedReadSupportsJunction;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.addChimericReads;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findSplitRead;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findSplitReadJunction;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.hasRealignableSoftClip;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.isInversion;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.setHasMultipleKnownSpliceGenes;
 import static com.hartwig.hmftools.isofox.fusion.LocalJunctionData.setMaxSplitMappedLength;
-import static com.hartwig.hmftools.isofox.fusion.ReadGroup.hasSuppAlignment;
 
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.N;
@@ -51,8 +45,6 @@ import com.hartwig.hmftools.isofox.common.CommonUtils;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
-import com.hartwig.hmftools.isofox.common.RegionMatchType;
-import com.hartwig.hmftools.isofox.common.RegionReadData;
 
 import htsjdk.samtools.Cigar;
 
@@ -68,7 +60,7 @@ public class ChimericReadTracker
 
     // junction position from fusion junction candidate reads are cached to identify candidate realignable reads
     private final Set<Integer> mJunctionPositions;
-    private final JunctionRacGroups mJunctionRacGroups; // keyed by orientation then junction position
+    private JunctionRacFragments mJunctionRacGroups;
 
     private final List<List<ReadRecord>> mLocalChimericReads; // fragments to re-evaluate as alternate splice sites
     private final List<ReadGroup> mCandidateRealignedGroups;
@@ -96,7 +88,7 @@ public class ChimericReadTracker
         mChimericStats = new ChimericStats();
         mChimericReadMap = Maps.newHashMap();
         mJunctionPositions = Sets.newHashSet();
-        mJunctionRacGroups = new JunctionRacGroups();
+        mJunctionRacGroups = null;
         mLocalChimericReads = Lists.newArrayList();
         mLocalCompleteGroups = Lists.newArrayList();
         mCandidateRealignedGroups = Lists.newArrayList();
@@ -110,7 +102,7 @@ public class ChimericReadTracker
 
     public Map<String,ReadGroup> getReadMap() { return mChimericReadMap; }
     public Set<Integer> getJunctionPositions() { return mJunctionPositions; }
-    public JunctionRacGroups getJunctionRacGroups() { return mJunctionRacGroups; }
+    public JunctionRacFragments getJunctionRacGroups() { return mJunctionRacGroups; }
     public List<List<ReadRecord>> getLocalChimericReads() { return mLocalChimericReads; }
     public ChimericStats getStats() { return mChimericStats; }
 
@@ -153,6 +145,7 @@ public class ChimericReadTracker
         mGeneCollection = geneCollection;
         mKnownGeneIds.clear();
         mGeneCollection.geneIds().stream().filter(x -> mKnownGeneIds.contains(x)).forEach(x -> mKnownGeneIds.add(x));
+        mJunctionRacGroups = new JunctionRacFragments();
 
         mPreviousPostGeneReadMap.clear();
         mPreviousPostGeneReadMap.putAll(mPostGeneReadMap);
@@ -164,7 +157,7 @@ public class ChimericReadTracker
 
         pastJuncPositions.forEach(x -> mJunctionPositions.remove(x));
 
-        mJunctionRacGroups.purgeGroups(geneCollection.getNonGenicPositions()[SE_START]);
+        /// mJunctionRacGroups.purgeGroups(geneCollection.getNonGenicPositions()[SE_START]);
     }
 
     public void clear() { clear(false); }
@@ -361,7 +354,7 @@ public class ChimericReadTracker
 
         applyHardFilter();
 
-        mChimericStats.ChimericJunctions += mJunctionPositions.size();
+        mChimericStats.ChimericJunctions += mJunctionRacGroups.junctionCount();
 
         int chimericCount = mChimericReadMap.size();
         mGeneCollection.addCount(TOTAL, chimericCount);
@@ -522,15 +515,25 @@ public class ChimericReadTracker
         return false;
     }
 
-    private void addRacGroups()
-    {
-        mCandidateRealignedGroups.forEach(x -> mJunctionRacGroups.checkAddCandidateGroup(x));
-    }
-
     private void addRealignCandidates()
     {
-        addRacGroups();
+        // cache each RAC against the junction(s) it may support, and discard any which support none
+        // RACs are no longer added to the chimeric read map since they now only exist in here
 
+        mCandidateRealignedGroups.forEach(x -> mJunctionRacGroups.checkAddCandidateGroup(x));
+        /*
+
+        for(ReadGroup readGroup : mCandidateRealignedGroups)
+        {
+            if(mJunctionRacGroups.checkAddCandidateGroup(readGroup))
+            {
+                mChimericReadMap.put(readGroup.id(), readGroup);
+                ++mChimericStats.CandidateRealignFrags;
+            }
+        }
+        */
+
+        /*
         // in addition to the group having a least one read with the required soft-clipping, the other read cannot extend past this
         // possible point of junction support
         Set<Integer>[] supportedJunctions = new Set[SE_PAIR];
@@ -582,6 +585,7 @@ public class ChimericReadTracker
                 ++mChimericStats.CandidateRealignFrags;
             }
         }
+        */
     }
 
     private void collectCandidateJunctions(final ReadGroup readGroup)

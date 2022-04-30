@@ -127,11 +127,18 @@ public class FusionFragmentBuilder
                 return;
             }
 
-            // set single junction info for candidate realignable reads
-            if(fragment.reads().stream().anyMatch(x -> isRealignedFragmentCandidate(x)))
+            // set single junction info for candidate realignable fragments
+            if(fragment.reads().size() == 2
+            && fragment.reads().stream().anyMatch(x -> isRealignedFragmentCandidate(x))
+            && fragment.reads().stream().noneMatch(x -> x.spansGeneCollections()))
             {
-                setSingleSoftClipJunctionData(fragment);
-                return;
+                ReadRecord read1 = fragment.reads().get(0);
+                ReadRecord read2 = fragment.reads().get(1);
+                if(read1.getGeneCollectons()[0] == read2.getGeneCollectons()[1])
+                {
+                    setSingleSoftClipJunctionData(fragment);
+                    return;
+                }
             }
         }
 

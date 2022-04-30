@@ -15,7 +15,6 @@ public class ReadGroup
     public final List<ReadRecord> Reads;
 
     private LocalJunctionData mLocalJunctionData = null;
-    private Set<Integer> mRacJunctions = null; // the set of junctions supported if this is a realignment candidate
 
     public ReadGroup(final List<ReadRecord> reads)
     {
@@ -53,16 +52,6 @@ public class ReadGroup
 
     public void setLocalJunctionData(final LocalJunctionData data) { mLocalJunctionData = data; }
     public LocalJunctionData localJunctionData() { return mLocalJunctionData; }
-
-    public void addRacJunction(final int position)
-    {
-        if(mRacJunctions == null)
-            mRacJunctions = Sets.newHashSet();
-
-        mRacJunctions.add(position);
-    }
-
-    public Set<Integer> getRacJunctions() { return mRacJunctions; }
 
     public void merge(final ReadGroup other)
     {

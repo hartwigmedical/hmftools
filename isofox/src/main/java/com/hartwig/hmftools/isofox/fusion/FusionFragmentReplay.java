@@ -26,6 +26,7 @@ public class FusionFragmentReplay
     private final List<FusionFinder> mFusionTasks;
 
     private final EnsemblDataCache mGeneTransCache;
+    private final RacFragmentCache mRacFragmentCache;
 
     private final FusionWriter mFusionWriter;
     private final PassingFusions mPassingFusions;
@@ -37,13 +38,14 @@ public class FusionFragmentReplay
 
         mPassingFusions = new PassingFusions(config.Fusions.KnownFusions, config.Fusions.CohortFile);
         mFusionWriter = new FusionWriter(mConfig);
+        mRacFragmentCache = new RacFragmentCache();
 
         mFusionTasks = Lists.newArrayList();
     }
 
     public FusionFinder createFusionFinder(final String id)
     {
-        return new FusionFinder(id, mConfig, mGeneTransCache, mPassingFusions, mFusionWriter);
+        return new FusionFinder(id, mConfig, mGeneTransCache, mRacFragmentCache, mPassingFusions, mFusionWriter);
     }
 
     public void run()

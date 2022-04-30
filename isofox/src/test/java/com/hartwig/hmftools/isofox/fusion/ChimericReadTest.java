@@ -3,6 +3,8 @@ package com.hartwig.hmftools.isofox.fusion;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_NOVEL_SJ_DISTANCE;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.ReadCountsTest.REF_BASE_STR_1;
@@ -87,8 +89,8 @@ public class ChimericReadTest
 
         assertEquals(1, chimericRT.getReadMap().size());
         assertEquals(2, chimericRT.getReadMap().get(read1.Id).size());
-        assertEquals(1, chimericRT.getJunctionPositions().size());
-        assertEquals(1100, chimericRT.getJunctionPositions().iterator().next().intValue());
+        assertEquals(1, chimericRT.getJunctionRacGroups().junctionCount());
+        assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(POS_ORIENT).containsKey(1100));
 
         // single read in this gene
         chimericRT.clear();
@@ -106,11 +108,10 @@ public class ChimericReadTest
 
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
-        assertEquals(2, chimericRT.getReadMap().size());
-        assertEquals(1, chimericRT.getReadMap().get(read3.Id).size());
-        assertEquals(2, chimericRT.getReadMap().get(read1.Id).size());
-        assertEquals(1, chimericRT.getJunctionPositions().size());
-        assertEquals(1100, chimericRT.getJunctionPositions().iterator().next().intValue());
+        assertEquals(1, chimericRT.getReadMap().size());
+        assertEquals(1, chimericRT.getJunctionRacGroups().fragmentCount());
+        assertEquals(1, chimericRT.getJunctionRacGroups().junctionCount());
+        assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(POS_ORIENT).containsKey(1100));
     }
 
     public static final String TEST_SUPP_DATA = "21;42870046;-;46S30M;255;0;";
@@ -169,9 +170,9 @@ public class ChimericReadTest
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
         assertEquals(1, chimericRT.getReadMap().size());
-        assertEquals(2, chimericRT.getJunctionPositions().size());
-        assertTrue(chimericRT.getJunctionPositions().contains(1100));
-        assertTrue(chimericRT.getJunctionPositions().contains(10400));
+        assertEquals(2, chimericRT.getJunctionRacGroups().junctionCount());
+        assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(POS_ORIENT).containsKey(1100));
+        assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(NEG_ORIENT).containsKey(10400));
 
         chimericRT.clear();
         chimericRT.getJunctionPositions().clear(); // force a clean-up
@@ -187,7 +188,7 @@ public class ChimericReadTest
 
         assertTrue(chimericRT.getReadMap().isEmpty());
         assertEquals(1, chimericRT.getLocalChimericReads().size());
-        assertTrue(chimericRT.getJunctionPositions().isEmpty());
+        assertEquals(2, chimericRT.getJunctionRacGroups().junctionCount());
 
         chimericRT.clear();
 
@@ -402,8 +403,8 @@ public class ChimericReadTest
 
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
-        assertEquals(3, chimericRT.getReadMap().size());
-        assertEquals(4, chimericRT.getJunctionPositions().size());
+        assertEquals(2, chimericRT.getReadMap().size());
+        assertEquals(4, chimericRT.getJunctionRacGroups().junctionCount());
 
         chimericRT.clear();
         chimericRT.initialise(gc2);
@@ -419,8 +420,8 @@ public class ChimericReadTest
 
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
-        assertEquals(1, chimericRT.getReadMap().size());
-        assertEquals(2, chimericRT.getJunctionPositions().size());
+        assertEquals(0, chimericRT.getReadMap().size());
+        assertEquals(0, chimericRT.getJunctionRacGroups().junctionCount());
 
         // same again with the 3rd gene
         chimericRT.clear();
@@ -436,8 +437,8 @@ public class ChimericReadTest
 
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
-        assertEquals(1, chimericRT.getReadMap().size());
-        assertEquals(1, chimericRT.getJunctionPositions().size());
+        assertEquals(0, chimericRT.getReadMap().size());
+        assertEquals(0, chimericRT.getJunctionRacGroups().junctionCount());
     }
 
     @Test

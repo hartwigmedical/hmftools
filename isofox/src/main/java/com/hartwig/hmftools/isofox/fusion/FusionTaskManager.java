@@ -9,11 +9,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 
@@ -26,8 +24,11 @@ public class FusionTaskManager
     private final PassingFusions mPassingFusions;
 
     private final Map<String,List<FusionFragment>> mRealignCandidateMap;
+    private final RacFragmentCache mRacFragmentCache;
     private final Map<String,Map<String,ReadGroup>> mIncompleteReadGroups; // keyed by chromosome then readId
     private final Map<String,Set<String>> mHardFilteredReadGroups; // keyed by chromosome then readId
+
+    // private final ConcurrentMap
 
     public FusionTaskManager(final IsofoxConfig config, final EnsemblDataCache geneTransCache)
     {
@@ -36,6 +37,7 @@ public class FusionTaskManager
 
         mPassingFusions = new PassingFusions(config.Fusions.KnownFusions, config.Fusions.CohortFile);
 
+        mRacFragmentCache = new RacFragmentCache();
         mRealignCandidateMap = Maps.newHashMap();
         mIncompleteReadGroups = Maps.newHashMap();
         mHardFilteredReadGroups = Maps.newHashMap();
@@ -45,8 +47,10 @@ public class FusionTaskManager
 
     public FusionFinder createFusionFinder(final String id)
     {
-        return new FusionFinder(id, mConfig, mGeneTransCache, mPassingFusions, mFusionWriter);
+        return new FusionFinder(id, mConfig, mGeneTransCache, mRacFragmentCache, mPassingFusions, mFusionWriter);
     }
+
+    public final RacFragmentCache racFragmentCache() { return mRacFragmentCache; }
 
     public synchronized List<ReadGroup> addIncompleteReadGroup(
             final String chromosome, final Map<String,Map<String,ReadGroup>> chrIncompleteGroups)
@@ -106,6 +110,14 @@ public class FusionTaskManager
         return completeGroups;
     }
 
+    public RacFragmentCache getRacFragmentCache() { return mRacFragmentCache; }
+
+    public synchronized void addRacFragments(final String chromosome, int geneCollectionId, final JunctionRacFragments racFragments)
+    {
+        mRacFragmentCache.addRacFragments(chromosome, geneCollectionId, racFragments);
+    }
+
+
     public synchronized void addRealignCandidateFragments(final Map<String,List<FusionFragment>> racFragments)
     {
         mRealignCandidateMap.putAll(racFragments);
@@ -122,13 +134,10 @@ public class FusionTaskManager
 
     public void close()
     {
-        // TODO: invalid use of state since only the initial junction fragment is assigned a fusion ref if cacheFragments is disabled
-        long unfusedRacFrags = mRealignCandidateMap.values().stream()
-                .mapToLong(x -> x.stream().filter(y -> y.assignedFusions() == null).count()).sum();
-
         int incompleteGroupCount = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
 
-        ISF_LOGGER.info("all fusion tasks complete - unfused RAC frags({}) incompleteGroups({})", unfusedRacFrags, incompleteGroupCount);
+        ISF_LOGGER.info("all fusion tasks complete - RAC frags({} assigned={}) incompleteGroups({})",
+                mRacFragmentCache.totalFragmentCount(), mRacFragmentCache.assignedFragmentCount(), incompleteGroupCount);
 
         // write any unassigned RAC fragments
         mFusionWriter.writeUnfusedFragments(mRealignCandidateMap);

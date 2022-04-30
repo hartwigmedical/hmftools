@@ -4,6 +4,8 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.isofox.TestUtils.CHR_1;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_2;
@@ -13,6 +15,7 @@ import static com.hartwig.hmftools.isofox.TestUtils.GENE_NAME_1;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_NAME_2;
 import static com.hartwig.hmftools.isofox.TestUtils.NEG_STRAND;
 import static com.hartwig.hmftools.isofox.TestUtils.POS_STRAND;
+import static com.hartwig.hmftools.isofox.TestUtils.addRacReadGroup;
 import static com.hartwig.hmftools.isofox.TestUtils.addTestGenes;
 import static com.hartwig.hmftools.isofox.TestUtils.createFusionFinder;
 import static com.hartwig.hmftools.isofox.TestUtils.createGeneCollection;
@@ -258,6 +261,7 @@ public class FusionDataTest
 
         FusionTaskManager fusionTaskManager = new FusionTaskManager(config, geneTransCache);
         FusionFinder finder = fusionTaskManager.createFusionFinder(gc3.chromosome());
+        RacFragmentCache racFragmentCache = fusionTaskManager.racFragmentCache();
 
         // 2 spliced fragments
         int readId = 0;
@@ -275,7 +279,6 @@ public class FusionDataTest
         readGroups2.put(read1.Id, new ReadGroup(readPair[1]));
 
         // RAC fragment for GC3
-
         String junctionBases = config.RefGenome.getBaseString(gc3.chromosome(), 20264, 20300)
                 + config.RefGenome.getBaseString(gc5.chromosome(), 10200, 10202);
 
@@ -283,7 +286,7 @@ public class FusionDataTest
         ReadRecord read2 = createMappedRead(readId, gc3, 20250, 20289, createCigar(0, 40, 0));
         read2.setStrand(true, false);
 
-        readGroups1.put(read1.Id, new ReadGroup(read1, read2));
+        addRacReadGroup(racFragmentCache, new ReadGroup(read1, read2), POS_ORIENT, 20300);
 
         // RAC fragment for GC5
         junctionBases = config.RefGenome.getBaseString(gc5.chromosome(), 20298, 20300)
@@ -293,7 +296,7 @@ public class FusionDataTest
         read2 = createMappedRead(readId, gc5, 10210, 10259, createCigar(0, 40, 0));
         read2.setStrand(true, false);
 
-        readGroups2.put(read1.Id, new ReadGroup(read1, read2));
+        addRacReadGroup(racFragmentCache, new ReadGroup(read1, read2), NEG_ORIENT, 10200);
 
         // 1 intronic discordant read
         ReadRecord[] discordantReads = createReadPair(++readId, gc3, gc5, 20150, 20189, 10320, 10359,
@@ -317,12 +320,9 @@ public class FusionDataTest
         List<ReadGroup> completeGroups = finder.processNewChimericReadGroups(gc3, baseDepth, readGroups1);
         assertEquals(3, finder.getChimericPartialReadGroups().size());
         finder.processLocalReadGroups(completeGroups);
-        assertEquals(1, finder.getRealignCandidateFragments().size());
 
         List<ReadGroup> interChromosomalGroups = fusionTaskManager.addIncompleteReadGroup(
                 gc3.chromosome(), finder.extractIncompleteReadGroups(gc3.chromosome()));
-
-        fusionTaskManager.addRealignCandidateFragments(finder.getRealignCandidateFragments());
 
         assertTrue(interChromosomalGroups.isEmpty());
 
@@ -332,18 +332,13 @@ public class FusionDataTest
         completeGroups = finder2.processNewChimericReadGroups(gc5, baseDepth, readGroups2);
         assertEquals(3, finder2.getChimericPartialReadGroups().size());
         finder2.processLocalReadGroups(completeGroups);
-        assertEquals(1, finder2.getRealignCandidateFragments().size());
 
         interChromosomalGroups = fusionTaskManager.addIncompleteReadGroup(
                 gc5.chromosome(), finder2.extractIncompleteReadGroups(gc5.chromosome()));
 
-        fusionTaskManager.addRealignCandidateFragments(finder2.getRealignCandidateFragments());
-
         finder2.processInterChromosomalReadGroups(interChromosomalGroups);
 
         assertEquals(3, interChromosomalGroups.size());
-
-        finder2.assignInterChromosomalRacFragments(fusionTaskManager.getRealignCandidateMap());
 
         List<FusionReadData> fusions = finder2.getFusionCandidates().values().iterator().next();
         assertEquals(1, fusions.size());
@@ -367,6 +362,7 @@ public class FusionDataTest
         populateRefGenome(config.RefGenome);
 
         FusionFinder finder = createFusionFinder(config, geneTransCache);
+        RacFragmentCache racFragmentCache = finder.racFragmentCache();
 
         int gcId = 0;
 
@@ -395,8 +391,7 @@ public class FusionDataTest
         ReadRecord read5 = createMappedRead(readId, gc1, 1051, 1090, createCigar(0, 40, 0));
         read5.setStrand(true, false);
 
-        readGroups1.put(read4.Id, new ReadGroup(read4));
-        readGroups2.put(read5.Id, new ReadGroup(read5));
+        addRacReadGroup(racFragmentCache, new ReadGroup(read4, read4), POS_ORIENT, 1100);
 
         // a soft-clipped read matching 2 bases into the ref due to homology with the other side of the fusion junction
         junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1091, 1100)
@@ -406,8 +401,7 @@ public class FusionDataTest
         ReadRecord read7 = createMappedRead(readId, gc2, 10210, 10249, createCigar(0, 40, 0));
         read7.setStrand(true, false);
 
-        readGroups1.put(read6.Id, new ReadGroup(read6));
-        readGroups2.put(read7.Id, new ReadGroup(read7));
+        addRacReadGroup(racFragmentCache, new ReadGroup(read6, read7), NEG_ORIENT, 10200);
 
         BaseDepth baseDepth = new BaseDepth();
         List<ReadGroup> completeGroups = finder.processNewChimericReadGroups(gc1, baseDepth, readGroups1);
@@ -439,6 +433,7 @@ public class FusionDataTest
         populateRefGenome(config.RefGenome);
 
         FusionFinder finder = createFusionFinder(config, geneTransCache);
+        RacFragmentCache racFragmentCache = finder.racFragmentCache();
 
         config.Fusions.KnownFusions.addData(new KnownFusionData(KNOWN_PAIR, GENE_NAME_1, GENE_NAME_2, "", ""));
 
@@ -477,7 +472,9 @@ public class FusionDataTest
         ReadRecord read4 = createMappedRead(readId, gc1, 1051, 1090, createCigar(0, 40, 0));
         read4.setStrand(true, false);
 
-        readGroups1.put(read3.Id, new ReadGroup(read3, read4));
+        // readGroups1.put(read3.Id, new ReadGroup(read3, read4));
+
+        addRacReadGroup(racFragmentCache, new ReadGroup(read3, read4), POS_ORIENT, 1100);
 
         junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1091, 1100)
                 + config.RefGenome.getBaseString(gc2.chromosome(), 10200, 10229);
@@ -487,6 +484,8 @@ public class FusionDataTest
         read6.setStrand(true, false);
 
         readGroups1.put(read5.Id, new ReadGroup(read5, read6));
+
+        addRacReadGroup(racFragmentCache, new ReadGroup(read5, read6), NEG_ORIENT, 10200);
 
         // and a discordant fragment
         read3 = createMappedRead(++readId, gc1, 1050, 1089, createCigar(0, 40, 0));
@@ -529,6 +528,9 @@ public class FusionDataTest
         IsofoxConfig config = new IsofoxConfig();
         populateRefGenome(config.RefGenome);
 
+        FusionFinder finder = createFusionFinder(config, geneTransCache);
+        RacFragmentCache racFragmentCache = finder.racFragmentCache();
+
         int gcId = 0;
 
         final GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
@@ -554,12 +556,16 @@ public class FusionDataTest
         ReadRecord read4 = createMappedRead(readId, gc1, 1051, 1090, createCigar(0, 40, 0));
         read4.setStrand(true, false);
 
+        addRacReadGroup(racFragmentCache, new ReadGroup(read3, read4), POS_ORIENT, 1100);
+
         // then on GC2
         junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1091, 1100)
                 + config.RefGenome.getBaseString(gc2.chromosome(), 10200, 10229);
         ReadRecord read5 = createMappedRead(++readId, gc2, 10200, 10229, createCigar(10, 30, 0), junctionBases);
         ReadRecord read6 = createMappedRead(readId, gc2, 10210, 10249, createCigar(0, 40, 0));
         read6.setStrand(true, false);
+
+        addRacReadGroup(racFragmentCache, new ReadGroup(read5, read6), NEG_ORIENT, 10200);
 
         // and a discordant fragment
         ReadRecord read7 = createMappedRead(++readId, gc1, 1050, 1089, createCigar(0, 40, 0));
@@ -571,12 +577,9 @@ public class FusionDataTest
         ReadRecord read10 = createMappedRead(readId, gc1, 1051, 1090, createCigar(0, 40, 0));
         read10.setStrand(true, false);
 
-        FusionFinder finder = createFusionFinder(config, geneTransCache);
-
         final Map<String,ReadGroup> chimericReadGroups = Maps.newHashMap();
 
         chimericReadGroups.put(read1.Id, new ReadGroup(read1));
-        chimericReadGroups.put(read3.Id, new ReadGroup(read3, read4));
         chimericReadGroups.put(read7.Id, new ReadGroup(read7));
         chimericReadGroups.put(read9.Id, new ReadGroup(read9, read10));
 
@@ -589,7 +592,6 @@ public class FusionDataTest
         // GC 2 read handling
         chimericReadGroups.clear();
         chimericReadGroups.put(read2.Id, new ReadGroup(read2));
-        chimericReadGroups.put(read5.Id, new ReadGroup(read5, read6));
         chimericReadGroups.put(read8.Id, new ReadGroup(read8));
 
         completeGroups = finder.processNewChimericReadGroups(gc2, baseDepth, chimericReadGroups);
@@ -622,6 +624,7 @@ public class FusionDataTest
         populateRefGenome(config.RefGenome);
 
         FusionFinder finder = createFusionFinder(config, geneTransCache);
+        RacFragmentCache racFragmentCache = finder.racFragmentCache();
 
         int gcId = 0;
 
@@ -650,7 +653,8 @@ public class FusionDataTest
         ReadRecord read4 = createMappedRead(readId, gc1, 551, 590, createCigar(0, 40, 0));
         read4.setStrand(true, false);
 
-        readGroups1.put(read3.Id, new ReadGroup(read3, read4));
+        // readGroups1.put(read3.Id, new ReadGroup(read3, read4));
+        addRacReadGroup(racFragmentCache, new ReadGroup(read3, read4), POS_ORIENT, 600);
 
         junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 591, 600)
                 + config.RefGenome.getBaseString(gc2.chromosome(), 10200, 10229);
@@ -660,6 +664,7 @@ public class FusionDataTest
         read6.setStrand(true, false);
 
         readGroups1.put(read5.Id, new ReadGroup(read5 ,read6));
+        addRacReadGroup(racFragmentCache, new ReadGroup(read5, read6), NEG_ORIENT, 10200);
 
         // and a discordant fragment
         read3 = createMappedRead(++readId, gc1, 550, 589, createCigar(0, 40, 0));
