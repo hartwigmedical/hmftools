@@ -14,8 +14,6 @@ public class ReadGroup
 {
     public final List<ReadRecord> Reads;
 
-    private LocalJunctionData mLocalJunctionData = null;
-
     public ReadGroup(final List<ReadRecord> reads)
     {
         Reads = Lists.newArrayListWithCapacity(reads.size());
@@ -50,9 +48,6 @@ public class ReadGroup
 
     public boolean hasDuplicateRead() { return Reads.stream().anyMatch(x -> x.isDuplicate()); }
 
-    public void setLocalJunctionData(final LocalJunctionData data) { mLocalJunctionData = data; }
-    public LocalJunctionData localJunctionData() { return mLocalJunctionData; }
-
     public void merge(final ReadGroup other)
     {
         Reads.addAll(other.Reads);
@@ -60,9 +55,7 @@ public class ReadGroup
 
     public String toString()
     {
-        return String.format("%s reads(%d) complete(%s) %s",
-                id(), Reads.size(), isComplete(),
-                mLocalJunctionData != null ? String.format("matches(%d)", mLocalJunctionData.MatchCount) : "");
+        return String.format("%s reads(%d) complete(%s)", id(), Reads.size(), isComplete());
     }
 
     public String findOtherChromosome(final String chromosome)

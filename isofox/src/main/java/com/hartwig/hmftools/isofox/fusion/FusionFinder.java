@@ -878,10 +878,7 @@ public class FusionFinder implements Callable
 
                 if(fragment.type() == DISCORDANT_JUNCTION)
                 {
-                    boolean createFusion = canCreateDiscordantFusion(fragment);
-                    fragment.unassignFusion();
-
-                    if(!createFusion)
+                    if(!canCreateDiscordantFusion(fragment))
                         continue;
                 }
 

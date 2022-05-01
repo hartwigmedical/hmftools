@@ -25,7 +25,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT_J
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
-import static com.hartwig.hmftools.isofox.fusion.LocalJunctionData.setMaxSplitMappedLength;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.setMaxSplitMappedLength;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
 import java.util.List;
@@ -177,24 +177,14 @@ public class FusionReadData
 
         if(fragment.type().isJunctionType() || fragment == mFragment)
         {
-            LocalJunctionData matchData = fragment.readGroup().localJunctionData();
-
             for(int se = SE_START; se <= SE_END; ++se)
             {
-                if(matchData != null)
-                    mMaxSplitLengths[se] = max(mMaxSplitLengths[se], matchData.MaxSplitLengths[se]);
-                else
-                    setMaxSplitMappedLength(se, fragment.readsByLocation(se), mJunctionPositions, mJunctionOrientations, mMaxSplitLengths);
+                setMaxSplitMappedLength(se, fragment.readsByLocation(se), mJunctionPositions, mJunctionOrientations, mMaxSplitLengths);
             }
-
-            if(matchData != null)
-                addFragmentTypeCount(fragment.type(), matchData.MatchCount);
         }
 
         if(cacheFragment)
         {
-            fragment.assignFusion(this);
-
             if(mFragments == null)
                 mFragments = Maps.newHashMap();
 
@@ -495,57 +485,6 @@ public class FusionReadData
         }
 
         return hasSupportingRead;
-    }
-
-    public static boolean matchesFusionJunctionRegion(final FusionFragment fragment, final ChrBaseRegion fusionRegion, int junctionOrient)
-    {
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            for(ReadRecord read : fragment.reads())
-            {
-                if(!read.Chromosome.equals(fusionRegion.Chromosome))
-                    continue;
-
-                // compare a minimum number of soft-clipped bases to the other side of the exon junction
-                // if the read extends past break junction, include these bases in what is compared against the next junction to account for homology
-                if(junctionOrient == POS_ORIENT)
-                {
-                    if(!read.isSoftClipped(SE_END))
-                        continue;
-
-                    int readBoundary = read.getCoordsBoundary(SE_END);
-
-                    if(!fusionRegion.containsPosition(readBoundary))
-                        continue;
-
-                    int scLength = read.Cigar.getLastCigarElement().getLength();
-
-                    if(scLength < REALIGN_MIN_SOFT_CLIP_BASE_LENGTH || scLength > REALIGN_MAX_SOFT_CLIP_BASE_LENGTH)
-                        continue;
-
-                    return true;
-                }
-                else
-                {
-                    if(!read.isSoftClipped(SE_START))
-                        return false;
-
-                    int readBoundary = read.getCoordsBoundary(SE_START);
-
-                    if(!fusionRegion.containsPosition(readBoundary))
-                        continue;
-
-                    int scLength = read.Cigar.getFirstCigarElement().getLength();
-
-                    if(scLength < REALIGN_MIN_SOFT_CLIP_BASE_LENGTH || scLength > REALIGN_MAX_SOFT_CLIP_BASE_LENGTH)
-                        continue;
-
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
     private boolean softClippedReadSupportsJunction(final ReadRecord read, int juncSeIndex)

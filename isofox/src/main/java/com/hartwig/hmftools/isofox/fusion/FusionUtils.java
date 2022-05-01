@@ -1,18 +1,24 @@
 package com.hartwig.hmftools.isofox.fusion;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.isofox.common.CommonUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.ExonData;
@@ -205,6 +211,51 @@ public class FusionUtils
             chimericReadMap.put(read.Id, new ReadGroup(read));
         else
             chimericReads.Reads.add(read);
+    }
+
+    public static void setMaxSplitMappedLength(
+            int seIndex, final List<ReadRecord> reads, final int[] junctPositions, final byte[] junctOrientations, final int[] maxSplitLengths)
+    {
+        // find the longest section mapped across the junction
+        final List<ReadRecord> matchingReads = reads.stream()
+                .filter(x -> positionWithin(junctPositions[seIndex], x.PosStart, x.PosEnd)).collect(Collectors.toList());
+
+        if(matchingReads.isEmpty()) // can occur with the fragments from a fusion merged in due to homology
+            return;
+
+        List<int[]> mappedCoords;
+
+        if(matchingReads.size() == 1)
+        {
+            mappedCoords = matchingReads.get(0).getMappedRegionCoords(false);
+        }
+        else
+        {
+            mappedCoords = deriveCommonRegions(
+                    matchingReads.get(0).getMappedRegionCoords(false), matchingReads.get(1).getMappedRegionCoords(false));
+        }
+
+        int mappedBases = 0;
+
+        for(int[] coord : mappedCoords)
+        {
+            if(junctOrientations[seIndex] == NEG_ORIENT)
+            {
+                if(coord[SE_END] < junctPositions[seIndex])
+                    continue;
+
+                mappedBases += coord[SE_END] - max(junctPositions[seIndex], coord[SE_START]) + 1;
+            }
+            else
+            {
+                if(coord[SE_START] > junctPositions[seIndex])
+                    break;
+
+                mappedBases += min(junctPositions[seIndex], coord[SE_END]) - coord[SE_START] + 1;
+            }
+        }
+
+        maxSplitLengths[seIndex] = max(mappedBases, maxSplitLengths[seIndex]);
     }
 
     public static void checkMissingGeneData(final ReadRecord read, final List<TranscriptData> transDataList)

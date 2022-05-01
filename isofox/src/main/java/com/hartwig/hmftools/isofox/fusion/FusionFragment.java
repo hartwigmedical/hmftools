@@ -50,8 +50,6 @@ public class FusionFragment
     private final RegionMatchType[] mRegionMatchTypes; // top-ranking region match type from the reads
     private final List<TransExonRef>[] mTransExonRefs;
 
-    private Set<FusionReadData> mFusions;
-
     public FusionFragment(final ReadGroup readGroup)
     {
         mReadGroup = readGroup;
@@ -69,8 +67,6 @@ public class FusionFragment
         mTransExonRefs = new List[SE_PAIR];
         mTransExonRefs[SE_START] = Lists.newArrayList();
         mTransExonRefs[SE_END] = Lists.newArrayList();
-
-        mFusions = null;
 
         mType = UNKNOWN;
 
@@ -97,20 +93,6 @@ public class FusionFragment
     public final String[] chromosomes() { return mChromosomes; }
     public final int[] geneCollections() { return mGeneCollections; }
     public final byte[] orientations() { return mOrientations; }
-    public ChrGeneCollectionPair chrGeneCollection(int se) { return new ChrGeneCollectionPair(mChromosomes[se], mGeneCollections[se]); }
-
-    public void assignFusion(final FusionReadData fusion)
-    {
-        if(mFusions == null)
-            mFusions = Sets.newHashSet();
-
-        mFusions.add(fusion);
-    }
-
-    public void unassignFusion() { mFusions = null; }
-
-    @Nullable
-    public Set<FusionReadData> assignedFusions() { return mFusions; }
 
     public boolean hasSuppAlignment() { return mHasSupplementaryAlignment; }
 
