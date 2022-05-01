@@ -103,6 +103,8 @@ public class ChimericReadTracker
     public JunctionRacFragments extractJunctionRacFragments()
     {
         mJunctionRacGroups.purgeEmptyJunctions();
+        mChimericStats.ChimericJunctions += mJunctionRacGroups.junctionCount();
+        mChimericStats.CandidateRealignFrags += mJunctionRacGroups.fragmentCount();
         return mJunctionRacGroups;
     }
 
@@ -350,8 +352,6 @@ public class ChimericReadTracker
 
         applyHardFilter();
 
-        mChimericStats.ChimericJunctions += mJunctionRacGroups.junctionCount();
-
         int chimericCount = mChimericReadMap.size();
         mGeneCollection.addCount(TOTAL, chimericCount);
         mGeneCollection.addCount(CHIMERIC, chimericCount);
@@ -366,6 +366,12 @@ public class ChimericReadTracker
             {
                 readGroup.Reads.forEach(x -> x.captureGeneInfo(true));
                 readGroup.Reads.forEach(x -> x.setReadJunctionDepth(baseDepth));
+            }
+
+            for(FusionFragment fragment : mJunctionRacGroups.getRacFragments())
+            {
+                fragment.reads().forEach(x -> x.captureGeneInfo(true));
+                fragment.reads().forEach(x -> x.setReadJunctionDepth(baseDepth));
             }
         }
         else

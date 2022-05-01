@@ -8,7 +8,7 @@ public class ChimericStats
 
     public int Translocations;
     public int Inversions;
-    public int HardFiltered;
+    public int HardFiltered; // unused
     public int MatchedJunctions;
 
     public ChimericStats()

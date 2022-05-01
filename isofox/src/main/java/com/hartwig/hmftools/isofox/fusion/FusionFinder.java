@@ -67,10 +67,9 @@ public class FusionFinder implements Callable
     private final PerformanceCounter mPerfCounter;
     private final PerformanceCounter[] mPerfCounters;
 
-    private static final int PERF_REALIGN = 0;
-    private static final int PERF_CREATE_FRAGS = 1;
-    private static final int PERF_FORM_INIT = 2;
-    private static final int PERF_CREATE_LOCAL = 3;
+    private static final int PERF_CREATE_FRAGS = 0;
+    private static final int PERF_FORM_INIT = 1;
+    private static final int PERF_CREATE_LOCAL = 2;
 
     public FusionFinder(
             final String taskId, final IsofoxConfig config, final EnsemblDataCache geneTransCache,
@@ -99,7 +98,6 @@ public class FusionFinder implements Callable
         if(mConfig.Fusions.RunPerfChecks)
         {
             mPerfCounters = new PerformanceCounter[PERF_CREATE_LOCAL + 1];
-            mPerfCounters[PERF_REALIGN] = new PerformanceCounter("FusionRealign");
             mPerfCounters[PERF_CREATE_FRAGS] = new PerformanceCounter("FusionCreateFrags");
             mPerfCounters[PERF_FORM_INIT] = new PerformanceCounter("FusionFormInit");
             mPerfCounters[PERF_CREATE_LOCAL] = new PerformanceCounter("FusionCreateLocal");
@@ -295,9 +293,7 @@ public class FusionFinder implements Callable
 
         processFragments();
 
-        perfStart(PERF_REALIGN);
         assignRealignCandidateFragments();
-        perfStop(PERF_REALIGN);
 
         writeFusionSummary();
 
@@ -314,9 +310,10 @@ public class FusionFinder implements Callable
     @Override
     public Long call()
     {
-        mPerfCounter.start();;
+        // TODO: used by the replayer, needs checking
+        mPerfCounter.start();
         processFragments();
-        // assignRealignCandidateFragments(mRealignCandidateFragments);
+        assignRealignCandidateFragments();
         writeFusionSummary();
         mPerfCounter.stop();
 
