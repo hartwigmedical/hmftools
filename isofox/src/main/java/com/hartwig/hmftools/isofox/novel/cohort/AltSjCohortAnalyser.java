@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_T
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;

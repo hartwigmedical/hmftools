@@ -1,16 +1,12 @@
 package com.hartwig.hmftools.isofox.unmapped;
 
-import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_END;
-import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_START;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.rna.RnaExpressionMatrix.EXPRESSION_SCOPE_GENE;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.START_STR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.startEndStr;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
@@ -18,7 +14,6 @@ import static com.hartwig.hmftools.isofox.cohort.AnalysisType.UNMAPPED_READS;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
-import static com.hartwig.hmftools.isofox.unmapped.UnmappedRead.SPLICE_TYPE_ACCEPTOR;
 import static com.hartwig.hmftools.isofox.unmapped.UnmappedRead.UMR_NO_MATE;
 import static com.hartwig.hmftools.isofox.unmapped.UnmappedRead.baseQualsFromString;
 

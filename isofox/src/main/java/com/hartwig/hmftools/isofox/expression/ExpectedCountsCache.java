@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.isofox.expression;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.EXP_COUNT_LENGTH_HEADER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;

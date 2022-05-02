@@ -13,6 +13,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
 import com.hartwig.hmftools.common.stats.FisherExactTest;
@@ -110,7 +111,12 @@ public class AltSjWriter
 
             if(freqByCancerType)
             {
-                writer.write("GeneId,CancerType,Chromosome,Type,SjStart,SjEnd,SampleCount,Prevalence,SampleIds");
+                writer.write("GeneId,CancerType,Chromosome,Type,SjStart,SjEnd,SampleCount,Prevalence");
+
+                if(mVerboseCohortFrequency)
+                {
+                    writer.write(",SampleIds");
+                }
             }
             else
             {
@@ -221,8 +227,15 @@ public class AltSjWriter
                                     geneId, cancerType, chromosome, altSJ.Type,
                                     altSJ.SpliceJunction[SE_START], altSJ.SpliceJunction[SE_END]));
 
-                            mCohortFrequencyWriter.write(String.format(",%d,%.4f,%s",
-                                    sampleCount, prevalence, appendStrList(entry.getValue(), ITEM_DELIM.charAt(0))));
+                            mCohortFrequencyWriter.write(String.format(",%d,%.4f", sampleCount, prevalence));
+
+                            if(mVerboseCohortFrequency)
+                            {
+                                StringJoiner sj = new StringJoiner(ITEM_DELIM);
+                                entry.getValue().forEach(x -> sj.add(x));
+
+                                mCohortFrequencyWriter.write(String.format(",%s", sj.toString()));
+                            }
 
                             mCohortFrequencyWriter.newLine();
                         }

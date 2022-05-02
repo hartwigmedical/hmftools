@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.isofox.unmapped;
 
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.unmapped.UnmappedRead.positionKey;
