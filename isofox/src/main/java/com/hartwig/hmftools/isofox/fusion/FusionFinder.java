@@ -339,6 +339,7 @@ public class FusionFinder implements Callable
 
     private void writeFusionSummary()
     {
+        hardFilterFusions();
         annotateFusions();
         writeData();
     }
@@ -381,91 +382,6 @@ public class FusionFinder implements Callable
         // free up the set of initial fragments now they've all been assigned
         mAllFragments.clear();
         mFusionsByLocation.clear();
-    }
-
-    private void hardFilterFusions()
-    {
-        // optionally hard-filtered based solely on matched junction counts per fusion
-
-        for(List<FusionReadData> fusions : mFusionCandidates.values())
-        {
-            List<FusionReadData> hardFiltered = Lists.newArrayList();
-
-            for(FusionReadData fusionData : fusions)
-            {
-                // optionally hard-filter remove any fragment with split fragments below the required minimum
-                if(hardFilterFusion(fusionData))
-                {
-                    hardFiltered.add(fusionData);
-                    continue;
-                }
-            }
-
-            if(!hardFiltered.isEmpty())
-            {
-                hardFiltered.forEach(x -> fusions.remove(x));
-                mHardFilteredCount += hardFiltered.size();
-            }
-        }
-    }
-
-    private boolean hardFilterFusion(final FusionReadData fusionData)
-    {
-        if(mConfig.Fusions.MinHardFilterFrags <= 1)
-            return false;
-
-        // TODO - change to be post assignment??
-        if(fusionData.getFragmentTypeCount(MATCHED_JUNCTION) >= mConfig.Fusions.MinHardFilterFrags)
-            return false;
-
-        // must be non-genic on one end
-        FusionFragment initialFragment = fusionData.getInitialFragment();
-
-        return initialFragment.getTransExonRefs()[SE_START].isEmpty() || initialFragment.getTransExonRefs()[SE_END].isEmpty();
-    }
-
-    private void annotateFusions()
-    {
-        markRelatedFusions();
-    }
-
-    private void writeData()
-    {
-        // write results and unused candidate fusion fragments
-        if(!mFusionCandidates.isEmpty())
-        {
-            // filter down to a list of passing fusions
-
-            List<FusionData> allFusions = Lists.newArrayList();
-
-            for(List<FusionReadData> fusionCandidates : mFusionCandidates.values())
-            {
-                for(final FusionReadData fusion : fusionCandidates)
-                {
-                    FusionData fusionData = fusion.toFusionData();
-                    allFusions.add(fusionData);
-                }
-            }
-
-            List<FusionData> passingFusions = mPassingFusions.findPassingFusions(allFusions);
-
-            ISF_LOGGER.debug("chr({}) passing fusions({}) from total({})", mTaskId, passingFusions.size(), allFusions.size());
-
-            mFusionWriter.writeFusionData(allFusions, passingFusions, mFusionCandidates);
-        }
-
-        if(!mDiscordantFragments.isEmpty() && (mConfig.Fusions.WriteChimericReads || mConfig.Fusions.WriteChimericFragments))
-        {
-            // assigned fragments have been purged
-            List<FusionFragment> unusedFragments = Lists.newArrayList();
-
-            for(List<FusionFragment> fragments : mDiscordantFragments.values())
-            {
-                unusedFragments.addAll(fragments);
-            }
-
-            mFusionWriter.writeUnfusedFragments(unusedFragments);
-        }
     }
 
     private FusionReadData findExistingFusion(final FusionFragment fragment)
@@ -797,7 +713,7 @@ public class FusionFinder implements Callable
 
     private void markRelatedFusions()
     {
-        for( Map.Entry<String,List<FusionReadData>> entry : mFusionCandidates.entrySet())
+        for(Map.Entry<String,List<FusionReadData>> entry : mFusionCandidates.entrySet())
         {
             final List<FusionReadData> fusions = entry.getValue();
 
@@ -1026,6 +942,96 @@ public class FusionFinder implements Callable
                     }
                 }
             }
+        }
+    }
+
+    private void hardFilterFusions()
+    {
+        if(mConfig.Fusions.MinHardFilterFrags <= 1)
+            return;
+
+        for(List<FusionReadData> fusionCandidates : mFusionCandidates.values())
+        {
+            int index = 0;
+
+            while(index < fusionCandidates.size())
+            {
+                FusionReadData fusion = fusionCandidates.get(index);
+
+                if(hardFilterFusion(fusion))
+                {
+                    ++mHardFilteredCount;
+                    fusionCandidates.remove(index);
+                }
+                else
+                {
+                    ++index;
+                }
+            }
+        }
+    }
+
+    private boolean hardFilterFusion(final FusionReadData fusionData)
+    {
+        if(mConfig.Fusions.MinHardFilterFrags <= 1)
+            return false;
+
+        if(fusionData.getTotalFragmentTypeCount() >= mConfig.Fusions.MinHardFilterFrags)
+            return false;
+
+        if(mPassingFusions.knownFusionCache().hasKnownFusion(fusionData.getGeneName(FS_UP), fusionData.getGeneName(FS_DOWN)))
+            return false;
+
+        final FusionJunctionType[] junctionTypes = fusionData.getInitialFragment().junctionTypes();
+
+        if(junctionTypes[SE_START] == KNOWN || junctionTypes[SE_END] == KNOWN)
+            return false;
+
+        ++mHardFilteredCount;
+        return true;
+    }
+
+    private void annotateFusions()
+    {
+        markRelatedFusions();
+    }
+
+    private void writeData()
+    {
+        // write results and unused candidate fusion fragments
+        if(!mFusionCandidates.isEmpty())
+        {
+            // filter down to a list of passing fusions
+
+            List<FusionData> allFusions = Lists.newArrayList();
+
+            for(List<FusionReadData> fusionCandidates : mFusionCandidates.values())
+            {
+                for(final FusionReadData fusion : fusionCandidates)
+                {
+                    FusionData fusionData = fusion.toFusionData();
+                    allFusions.add(fusionData);
+                }
+            }
+
+            List<FusionData> passingFusions = mPassingFusions.findPassingFusions(allFusions);
+
+            ISF_LOGGER.debug("chr({}) passing fusions({}) from total({})", mTaskId, passingFusions.size(), allFusions.size());
+
+            mFusionWriter.writeFusionData(allFusions, passingFusions, mFusionCandidates);
+        }
+
+        if(!mDiscordantFragments.isEmpty() && (mConfig.Fusions.WriteChimericReads || mConfig.Fusions.WriteChimericFragments))
+        {
+            // assigned fragments have been purged
+            List<FusionFragment> unusedFragments = Lists.newArrayList();
+
+            for(List<FusionFragment> fragments : mDiscordantFragments.values())
+            {
+                unusedFragments.addAll(fragments);
+            }
+
+            mFusionWriter.writeUnfusedFragments(unusedFragments);
         }
     }
 

@@ -9,5 +9,7 @@ public class FusionConstants
 
     public static final int SOFT_CLIP_JUNC_BUFFER = 3; // max that a realigned fragment's position can overhang the fusion junction
 
+    public static final int DEFAULT_HARD_FILTER_MIN_FRAGS = 2;
+
     public static final int HIGH_LOG_COUNT = 10000;
 }

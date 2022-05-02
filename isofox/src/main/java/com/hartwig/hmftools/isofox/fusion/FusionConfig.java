@@ -2,6 +2,7 @@ package com.hartwig.hmftools.isofox.fusion;
 
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.isofox.fusion.FusionConstants.DEFAULT_HARD_FILTER_MIN_FRAGS;
 
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 
@@ -40,7 +41,7 @@ public class FusionConfig
         RunPerfChecks = cmd.hasOption(RUN_FUSION_PERF);
         ChimericReadsFile = cmd.getOptionValue(CHIMERIC_READ_FILE);
         CohortFile = cmd.getOptionValue(FUSION_COHORT_FILE);
-        MinHardFilterFrags = 0; //Integer.parseInt(cmd.getOptionValue(MIN_FRAGS_HARD_FILTER, "2"));
+        MinHardFilterFrags = Integer.parseInt(cmd.getOptionValue(MIN_FRAGS_HARD_FILTER, String.valueOf(DEFAULT_HARD_FILTER_MIN_FRAGS)));
 
         KnownFusions = new KnownFusionCache();
         KnownFusions.loadFromFile(cmd);
