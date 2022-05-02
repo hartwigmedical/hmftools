@@ -734,24 +734,6 @@ public class ReadRecord
         return se == SE_START ? Cigar.isLeftClipped() : Cigar.isRightClipped();
     }
 
-    public int longestSoftClippedEnd()
-    {
-        int scLeft = isSoftClipped(SE_START) ? Cigar.getFirstCigarElement().getLength() : 0;
-        int scRight = isSoftClipped(SE_END) ? Cigar.getLastCigarElement().getLength() : 0;
-
-        if (scLeft > 0 && scRight > 0)
-        {
-            if (scLeft >= scRight)
-                return SE_END;
-            else
-                return SE_START;
-        }
-        else
-        {
-            return scLeft > 0 ? SE_START : SE_END;
-        }
-    }
-
     private void addInferredMappingRegion(boolean isLower, int posStart, int posEnd)
     {
         if(isLower)

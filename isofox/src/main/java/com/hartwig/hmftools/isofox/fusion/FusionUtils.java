@@ -78,14 +78,6 @@ public class FusionUtils
         return false;
     }
 
-    public static ReadRecord findSplitRead(final List<ReadRecord> reads)
-    {
-        return reads.stream()
-                .filter(x -> x.containsSplit())
-                .filter(x -> x.spansGeneCollections() || x.hasInterGeneSplit())
-                .findFirst().orElse(null);
-    }
-
     public static int[] findSplitReadJunction(final ReadRecord read)
     {
         if(!read.containsSplit())
@@ -110,6 +102,22 @@ public class FusionUtils
         return null;
     }
 
+    public static FusionRead findSplitRead(final List<FusionRead> reads)
+    {
+        return reads.stream()
+                .filter(x -> x.ContainsSplit)
+                .filter(x -> x.spansGeneCollections() || x.HasInterGeneSplit)
+                .findFirst().orElse(null);
+    }
+
+    public static int[] findSplitReadJunction(final FusionRead read)
+    {
+        if(!read.ContainsSplit)
+            return null;
+
+        return read.junctionPositions();
+    }
+
     public static boolean hasRealignableSoftClip(final ReadRecord read, int se, boolean checkMax)
     {
         if(!read.isSoftClipped(se))
@@ -121,6 +129,17 @@ public class FusionUtils
     }
 
     public static boolean isRealignedFragmentCandidate(final ReadRecord read)
+    {
+        return hasRealignableSoftClip(read, SE_START, true) || hasRealignableSoftClip(read, SE_END, true);
+    }
+
+    public static boolean hasRealignableSoftClip(final FusionRead read, int se, boolean checkMax)
+    {
+        return (read.SoftClipLengths[se] >= REALIGN_MIN_SOFT_CLIP_BASE_LENGTH
+                && (!checkMax || read.SoftClipLengths[se] <= REALIGN_MAX_SOFT_CLIP_BASE_LENGTH));
+    }
+
+    public static boolean isRealignedFragmentCandidate(final FusionRead read)
     {
         return hasRealignableSoftClip(read, SE_START, true) || hasRealignableSoftClip(read, SE_END, true);
     }
@@ -204,21 +223,12 @@ public class FusionUtils
         return false;
     }
 
-    public static void addChimericReads(final Map<String,ReadGroup> chimericReadMap, final ReadRecord read)
-    {
-        ReadGroup chimericReads = chimericReadMap.get(read.Id);
-        if (chimericReads == null)
-            chimericReadMap.put(read.Id, new ReadGroup(read));
-        else
-            chimericReads.Reads.add(read);
-    }
-
     public static void setMaxSplitMappedLength(
-            int seIndex, final List<ReadRecord> reads, final int[] junctPositions, final byte[] junctOrientations, final int[] maxSplitLengths)
+            int seIndex, final List<FusionRead> reads, final int[] junctPositions, final byte[] junctOrientations, final int[] maxSplitLengths)
     {
         // find the longest section mapped across the junction
-        final List<ReadRecord> matchingReads = reads.stream()
-                .filter(x -> positionWithin(junctPositions[seIndex], x.PosStart, x.PosEnd)).collect(Collectors.toList());
+        final List<FusionRead> matchingReads = reads.stream()
+                .filter(x -> positionWithin(junctPositions[seIndex], x.posStart(), x.posEnd())).collect(Collectors.toList());
 
         if(matchingReads.isEmpty()) // can occur with the fragments from a fusion merged in due to homology
             return;
@@ -258,16 +268,16 @@ public class FusionUtils
         maxSplitLengths[seIndex] = max(mappedBases, maxSplitLengths[seIndex]);
     }
 
-    public static void checkMissingGeneData(final ReadRecord read, final List<TranscriptData> transDataList)
+    public static void checkMissingGeneData(final FusionRead read, final List<TranscriptData> transDataList)
     {
-        if(!read.getIsGenicRegion()[SE_END])
+        if(!read.IsGenicRegion[SE_END])
             return;
 
         // due to the way the BAM fragment allocator processes reads per gene collection, the upper gene collection will have missed its
         // transcript exon data, so populate this now
 
-        int upperCoordIndex = read.getMappedRegionCoords().size() - 1;
-        final int[] upperCoords = read.getMappedRegionCoords().get(upperCoordIndex);
+        int upperCoordIndex = read.MappedCoords.size() - 1;
+        final int[] upperCoords = read.MappedCoords.get(upperCoordIndex);
         final Map<RegionMatchType,List<TransExonRef>> transExonRefMap = read.getTransExonRefs(SE_END);
 
         for(TranscriptData transData : transDataList)

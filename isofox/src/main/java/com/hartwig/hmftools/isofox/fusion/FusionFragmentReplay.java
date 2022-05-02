@@ -18,7 +18,6 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
 
 public class FusionFragmentReplay
 {
@@ -50,14 +49,14 @@ public class FusionFragmentReplay
 
     public void run()
     {
-        List<ReadGroup> cachedReadGroups = ChimericReadCache.loadChimericReads(mConfig.Fusions.ChimericReadsFile);
+        List<FusionReadGroup> cachedReadGroups = ChimericReadCache.loadChimericReads(mConfig.Fusions.ChimericReadsFile);
 
         processCachedFragments(cachedReadGroups);
     }
 
     private static final int LOG_COUNT = 100000;
 
-    public void processCachedFragments(final List<ReadGroup> readGroups)
+    public void processCachedFragments(final List<FusionReadGroup> readGroups)
     {
         // convert any set of valid reads into a fragment, and then process these in groups by chromosomal pair
         ISF_LOGGER.info("processing {} chimeric read groups", readGroups.size());
@@ -71,7 +70,7 @@ public class FusionFragmentReplay
 
         final Map<String,List<FusionFragment>> chrPairFragments = Maps.newHashMap();
 
-        for(ReadGroup readGroup : readGroups)
+        for(FusionReadGroup readGroup : readGroups)
         {
             ++readGroupCount;
 
@@ -81,9 +80,9 @@ public class FusionFragmentReplay
             }
 
             boolean isComplete = readGroup.isComplete();
-            final List<ReadRecord> reads = readGroup.Reads;
+            final List<FusionRead> reads = readGroup.Reads;
 
-            if(reads.stream().anyMatch(x -> mConfig.Filters.skipRead(x.mateChromosome(), x.mateStartPosition())))
+            if(reads.stream().anyMatch(x -> mConfig.Filters.skipRead(x.MateChromosome, x.MatePosStart)))
             {
                 ++skipped;
                 continue;
@@ -197,18 +196,16 @@ public class FusionFragmentReplay
         perfCounter.logStats();
     }
 
-    private boolean skipMissingReads(final List<ReadRecord> reads)
+    private boolean skipMissingReads(final List<FusionRead> reads)
     {
-        for(final ReadRecord read : reads)
+        for(final FusionRead read : reads)
         {
-            if(read.hasSuppAlignment())
+            if(read.HasSuppAlignment)
             {
-                SupplementaryReadData suppData = SupplementaryReadData.from(read.getSuppAlignment());
-
-                if(mConfig.Filters.skipRead(suppData.Chromosome, suppData.Position))
+                if(mConfig.Filters.skipRead(read.SuppData.Chromosome, read.SuppData.Position))
                     return true;
 
-                ISF_LOGGER.debug("read({}) missing supp({})", read, suppData);
+                ISF_LOGGER.debug("read({}) missing supp({})", read, read.SuppData);
             }
         }
 

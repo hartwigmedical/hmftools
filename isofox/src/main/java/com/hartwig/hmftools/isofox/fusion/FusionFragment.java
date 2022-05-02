@@ -18,24 +18,19 @@ import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocation;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
-import org.jetbrains.annotations.Nullable;
-
 public class FusionFragment
 {
-    private final ReadGroup mReadGroup;
+    private final FusionReadGroup mReadGroup;
     private final boolean mHasSupplementaryAlignment;
 
     private final int[] mGeneCollections;
@@ -50,7 +45,7 @@ public class FusionFragment
     private final RegionMatchType[] mRegionMatchTypes; // top-ranking region match type from the reads
     private final List<TransExonRef>[] mTransExonRefs;
 
-    public FusionFragment(final ReadGroup readGroup)
+    public FusionFragment(final FusionReadGroup readGroup)
     {
         mReadGroup = readGroup;
         mHasSupplementaryAlignment = mReadGroup.hasSuppAlignment();
@@ -83,11 +78,9 @@ public class FusionFragment
         extractTranscriptExonData();
     }
 
-    public static FusionFragment fromReads(final List<ReadRecord> reads) { return new FusionFragment(new ReadGroup(reads)); }
-
-    public String readId() { return mReadGroup.id(); }
-    public List<ReadRecord> reads() { return mReadGroup.Reads; }
-    public ReadGroup readGroup() { return mReadGroup; }
+    public String readId() { return mReadGroup.ReadId; }
+    public List<FusionRead> reads() { return mReadGroup.Reads; }
+    public FusionReadGroup readGroup() { return mReadGroup; }
 
     public FusionFragmentType type() { return mType; }
     public final String[] chromosomes() { return mChromosomes; }
@@ -149,7 +142,7 @@ public class FusionFragment
         return geneIds;
     }
 
-    public final List<ReadRecord> readsByLocation(final int se)
+    public final List<FusionRead> readsByLocation(final int se)
     {
         if(mType == UNKNOWN)
             return Lists.newArrayList();
@@ -160,7 +153,7 @@ public class FusionFragment
 
         return mReadGroup.Reads.stream()
                 .filter(x -> x.Chromosome.equals(mChromosomes[se]))
-                .filter(x -> x.getGeneCollectons()[SE_START] == mGeneCollections[se] || x.getGeneCollectons()[SE_END] == mGeneCollections[se])
+                .filter(x -> x.GeneCollections[SE_START] == mGeneCollections[se] || x.GeneCollections[SE_END] == mGeneCollections[se])
                 .collect(Collectors.toList());
     }
 
@@ -169,11 +162,11 @@ public class FusionFragment
         // set transcript & exon info for each junction from each applicable read, taking only the highest matches
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            final List<ReadRecord> reads = readsByLocation(se);
+            final List<FusionRead> reads = readsByLocation(se);
 
-            for(final ReadRecord read : reads)
+            for(final FusionRead read : reads)
             {
-                if(mJunctionPositions[se] > 0 && !positionWithin(mJunctionPositions[se], read.PosStart, read.PosEnd))
+                if(mJunctionPositions[se] > 0 && !positionWithin(mJunctionPositions[se], read.Positions[SE_START], read.Positions[SE_END]))
                     continue;
 
                 final Map<RegionMatchType,List<TransExonRef>> transExonRefMap = read.getTransExonRefs(se);
@@ -207,7 +200,7 @@ public class FusionFragment
                             if(transExonRef.ExonRank != readTransExonRef.ExonRank)
                             {
                                 ISF_LOGGER.trace("multi-exon: read({} cigar={}) ref1({}) ref2({})",
-                                        read.Id, read.Cigar.toString(), transExonRef.toString(), readTransExonRef.toString());
+                                        mReadGroup.ReadId, read.Cigar.toString(), transExonRef.toString(), readTransExonRef.toString());
 
                                 // will be handled later on
                                 mTransExonRefs[se].add(readTransExonRef);

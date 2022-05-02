@@ -1,8 +1,7 @@
 package com.hartwig.hmftools.isofox.fusion;
 
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.fusion.FusionConstants.HIGH_LOG_COUNT;
-import static com.hartwig.hmftools.isofox.fusion.ReadGroup.mergeChimericReadMaps;
+import static com.hartwig.hmftools.isofox.fusion.FusionReadGroup.mergeChimericReadMaps;
 
 import java.util.List;
 import java.util.Map;
@@ -13,7 +12,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
 
 public class FusionTaskManager
 {
@@ -24,7 +22,7 @@ public class FusionTaskManager
     private final PassingFusions mPassingFusions;
 
     private final RacFragmentCache mRacFragmentCache;
-    private final Map<String,Map<String,ReadGroup>> mIncompleteReadGroups; // keyed by chromosome then readId
+    private final Map<String,Map<String, FusionReadGroup>> mIncompleteReadGroups; // keyed by chromosome then readId
     private final Map<String,Set<String>> mHardFilteredReadGroups; // keyed by chromosome then readId
 
     public FusionTaskManager(final IsofoxConfig config, final EnsemblDataCache geneTransCache)
@@ -48,24 +46,24 @@ public class FusionTaskManager
 
     public final RacFragmentCache racFragmentCache() { return mRacFragmentCache; }
 
-    public synchronized List<ReadGroup> addIncompleteReadGroup(
-            final String chromosome, final Map<String,Map<String,ReadGroup>> chrIncompleteGroups)
+    public synchronized List<FusionReadGroup> addIncompleteReadGroup(
+            final String chromosome, final Map<String,Map<String, FusionReadGroup>> chrIncompleteGroups)
     {
         int prevIncomplete = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
         int hardFiltered = 0;
 
-        List<ReadGroup> completeGroups = Lists.newArrayList();
+        List<FusionReadGroup> completeGroups = Lists.newArrayList();
 
-        for(Map.Entry<String,Map<String,ReadGroup>> entry : chrIncompleteGroups.entrySet())
+        for(Map.Entry<String,Map<String, FusionReadGroup>> entry : chrIncompleteGroups.entrySet())
         {
             String otherChromosome = entry.getKey();
-            Map<String,ReadGroup> newIncompleteGroups = entry.getValue();
+            Map<String, FusionReadGroup> newIncompleteGroups = entry.getValue();
 
-            Map<String,ReadGroup> existingGroups = mIncompleteReadGroups.get(otherChromosome);
+            Map<String, FusionReadGroup> existingGroups = mIncompleteReadGroups.get(otherChromosome);
 
             if(existingGroups == null)
             {
-                Map<String,ReadGroup> chromosomeGroups = mIncompleteReadGroups.get(chromosome);
+                Map<String, FusionReadGroup> chromosomeGroups = mIncompleteReadGroups.get(chromosome);
                 if(chromosomeGroups == null)
                 {
                     chromosomeGroups = Maps.newHashMap();
@@ -127,21 +125,21 @@ public class FusionTaskManager
 
         if(mConfig.RunPerfChecks)
         {
-            List<ReadGroup> incompleteGroups = Lists.newArrayList();
+            List<FusionReadGroup> incompleteGroups = Lists.newArrayList();
 
-            for(Map.Entry<String,Map<String,ReadGroup>> chrEntry : mIncompleteReadGroups.entrySet())
+            for(Map.Entry<String,Map<String, FusionReadGroup>> chrEntry : mIncompleteReadGroups.entrySet())
             {
                 String chromosome = chrEntry.getKey();
 
                 if(mConfig.Filters.excludeChromosome(chromosome))
                     continue;
 
-                Map<String, ReadGroup> rgMap = chrEntry.getValue();
-                for(ReadGroup readGroup : rgMap.values())
+                Map<String, FusionReadGroup> rgMap = chrEntry.getValue();
+                for(FusionReadGroup readGroup : rgMap.values())
                 {
                     if(!mConfig.Filters.SpecificChromosomes.isEmpty())
                     {
-                        if(readGroup.Reads.stream().anyMatch(x -> !mConfig.Filters.SpecificChromosomes.contains(x.mateChromosome())))
+                        if(readGroup.Reads.stream().anyMatch(x -> !mConfig.Filters.SpecificChromosomes.contains(x.MateChromosome)))
                             continue;
                     }
 
@@ -158,18 +156,16 @@ public class FusionTaskManager
         mFusionWriter.close();
     }
 
-    private boolean skipMissingReads(final List<ReadRecord> reads)
+    private boolean skipMissingReads(final List<FusionRead> reads)
     {
-        for(final ReadRecord read : reads)
+        for(final FusionRead read : reads)
         {
-            if(read.hasSuppAlignment())
+            if(read.HasSuppAlignment)
             {
-                SupplementaryReadData suppData = SupplementaryReadData.from(read.getSuppAlignment());
-
-                if(mConfig.Filters.skipRead(suppData.Chromosome, suppData.Position))
+                if(mConfig.Filters.skipRead(read.SuppData.Chromosome, read.SuppData.Position))
                     return true;
 
-                ISF_LOGGER.debug("read({}) missing supp({})", read, suppData);
+                ISF_LOGGER.debug("read({}) missing supp({})", read, read.SuppData);
             }
         }
 

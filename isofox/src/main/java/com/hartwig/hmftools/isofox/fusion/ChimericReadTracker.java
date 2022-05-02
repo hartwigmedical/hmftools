@@ -16,12 +16,11 @@ import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
-import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.addChimericReads;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findSplitRead;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findSplitReadJunction;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.isInversion;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.setHasMultipleKnownSpliceGenes;
+import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
+import static com.hartwig.hmftools.isofox.fusion.FusionRead.convertReads;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findSplitReadJunction;
 
 import java.util.List;
 import java.util.Map;
@@ -48,14 +47,14 @@ public class ChimericReadTracker
 
     private GeneCollection mGeneCollection; // the current collection being processed
     private final Map<String,ChimericReadGroup> mChimericReadMap;
-    private final Map<String,ReadGroup> mFusionReadGroupMap;
-    private final List<ReadGroup> mLocalCompleteGroups; // 2-read same-gene-collection groups with a split junction
+    private final Map<String, FusionReadGroup> mFusionReadGroupMap;
+    private final List<FusionReadGroup> mLocalCompleteGroups; // 2-read same-gene-collection groups with a split junction
 
     // junction position from fusion junction candidate reads are cached to identify candidate realignable reads
     private JunctionRacFragments mJunctionRacGroups;
 
     private final List<List<ReadRecord>> mLocalChimericReads; // fragments to re-evaluate as alternate splice sites
-    private final List<ReadGroup> mCandidateRealignedGroups;
+    private final List<ChimericReadGroup> mCandidateRealignedGroups;
 
     // map of candidate junction groups with supp data
     private final Set<String> mReferenceKnownGeneIds; // all as defined by the cache
@@ -90,7 +89,7 @@ public class ChimericReadTracker
 
     public boolean enabled() { return mEnabled; }
 
-    public Map<String,ReadGroup> getReadMap() { return mFusionReadGroupMap; }
+    public Map<String, FusionReadGroup> getReadMap() { return mFusionReadGroupMap; }
 
     public JunctionRacFragments extractJunctionRacFragments()
     {
@@ -176,7 +175,7 @@ public class ChimericReadTracker
         if(read1.isDuplicate() || read2.isDuplicate()) // group complete so drop these
             return;
 
-        mCandidateRealignedGroups.add(new ReadGroup(read1, read2));
+        mCandidateRealignedGroups.add(new ChimericReadGroup(read1, read2));
     }
 
     public void addChimericReadPair(final ReadRecord read1, final ReadRecord read2)
@@ -303,22 +302,23 @@ public class ChimericReadTracker
         {
             addRealignCandidates();
 
+            // TODO - collect junction data against reads or in collectCandidateJunctions, save having to do it FragmentBuilder
+            // set it here against FusionRead
+
             // chimeric reads will be processed by the fusion-finding routine, so need to capture transcript and exon data
             // and free up other gene & region read data (to avoid retaining large numbers of references/memory)
             for(final ChimericReadGroup readGroup : mChimericReadMap.values())
             {
-                readGroup.Reads.forEach(x -> x.captureGeneInfo(true));
-                readGroup.Reads.forEach(x -> x.setReadJunctionDepth(baseDepth));
+                List<FusionRead> reads = convertReads(readGroup.Reads);
+                reads.forEach(x -> x.setReadJunctionDepth(baseDepth));
+                mFusionReadGroupMap.put(readGroup.id(), new FusionReadGroup(readGroup.id(), reads));
             }
 
             for(FusionFragment fragment : mJunctionRacGroups.getRacFragments())
             {
-                fragment.reads().forEach(x -> x.captureGeneInfo(true));
+                // fragment.reads().forEach(x -> x.captureGeneInfo(true));
                 fragment.reads().forEach(x -> x.setReadJunctionDepth(baseDepth));
             }
-
-            // temporary before switch to FusionReads
-            mChimericReadMap.values().forEach(x -> mFusionReadGroupMap.put(x.id(), new ReadGroup(x.Reads)));
         }
         else
         {
@@ -473,11 +473,14 @@ public class ChimericReadTracker
     private void collectCandidateJunctions(final ChimericReadGroup readGroup)
     {
         // type 1: split reads
-        final ReadRecord splitRead = findSplitRead(readGroup.Reads);
+        final ReadRecord splitRead = readGroup.Reads.stream()
+            .filter(x -> x.containsSplit())
+            .filter(x -> x.spansGeneCollections() || x.hasInterGeneSplit())
+            .findFirst().orElse(null);
 
         if(splitRead != null)
         {
-            int[] splitJunction = findSplitReadJunction(splitRead);
+            int[] splitJunction = FusionUtils.findSplitReadJunction(splitRead);
 
             addJunction(splitJunction[SE_START], POS_ORIENT);
             addJunction(splitJunction[SE_END], NEG_ORIENT);
@@ -552,34 +555,4 @@ public class ChimericReadTracker
         return false;
     }
 
-    private class ChimericReadGroup
-    {
-        public final List<ReadRecord> Reads;
-
-        public ChimericReadGroup(final ReadRecord read)
-        {
-            Reads = Lists.newArrayListWithCapacity(2);
-            Reads.add(read);
-        }
-
-        public ChimericReadGroup(final ReadRecord read1, final ReadRecord read2)
-        {
-            Reads = Lists.newArrayListWithCapacity(2);
-            Reads.add(read1);
-            Reads.add(read2);
-        }
-
-        public final String id() { return Reads.get(0).Id; }
-
-        public int size() { return Reads.size(); }
-
-        public boolean isComplete() { return Reads.size() == 3 || (Reads.size() == 2 && !hasSuppAlignment()); }
-
-        public boolean hasSuppAlignment() { return Reads.stream().anyMatch(x -> x.hasSuppAlignment()); }
-
-        public String toString()
-        {
-            return String.format("%s reads(%d) complete(%s)", id(), Reads.size(), isComplete());
-        }
-    }
 }

@@ -28,12 +28,13 @@ import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
+import com.hartwig.hmftools.isofox.fusion.ChimericReadGroup;
 import com.hartwig.hmftools.isofox.fusion.FusionFinder;
 import com.hartwig.hmftools.isofox.fusion.FusionWriter;
 import com.hartwig.hmftools.isofox.fusion.JunctionRacFragments;
 import com.hartwig.hmftools.isofox.fusion.PassingFusions;
 import com.hartwig.hmftools.isofox.fusion.RacFragmentCache;
-import com.hartwig.hmftools.isofox.fusion.ReadGroup;
+import com.hartwig.hmftools.isofox.fusion.FusionReadGroup;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -447,10 +448,10 @@ public class TestUtils
     }
 
     public static void addRacReadGroup(
-            final RacFragmentCache racFragmentCache, final ReadGroup readGroup, byte juncOrient, int juncPosition)
+            final RacFragmentCache racFragmentCache, final ChimericReadGroup readGroup, byte juncOrient, int juncPosition)
     {
         String chromosome = readGroup.Reads.get(0).Chromosome;
-        int gcId = readGroup.Reads.get(0).getGeneCollectons()[0];
+        int gcId = readGroup.Reads.get(0).getGeneCollectons()[SE_START];
 
         JunctionRacFragments juncRacFragments = racFragmentCache.getRacFragments(chromosome, gcId);
 

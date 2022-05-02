@@ -26,9 +26,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionConstants.HIGH_LOG_COUNT;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -50,9 +48,8 @@ import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.adjusts.GcTranscriptCalculator;
 import com.hartwig.hmftools.isofox.fusion.ChimericStats;
 import com.hartwig.hmftools.isofox.fusion.FusionFinder;
-import com.hartwig.hmftools.isofox.fusion.FusionFragment;
 import com.hartwig.hmftools.isofox.fusion.FusionTaskManager;
-import com.hartwig.hmftools.isofox.fusion.ReadGroup;
+import com.hartwig.hmftools.isofox.fusion.FusionReadGroup;
 import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.TranscriptResult;
@@ -269,9 +266,9 @@ public class GeneCollectionReader implements Callable
             // handle fragments spanning multiple chromosomes
 
             // organise incomplete reads into the chromosomes which they want to link to
-            final Map<String,Map<String,ReadGroup>> chrIncompleteReadsGroups = mFusionFinder.extractIncompleteReadGroups(mChromosome);
+            final Map<String,Map<String, FusionReadGroup>> chrIncompleteReadsGroups = mFusionFinder.extractIncompleteReadGroups(mChromosome);
 
-            final List<ReadGroup> interChromosomalGroups = mFusionTaskManager.addIncompleteReadGroup(mChromosome, chrIncompleteReadsGroups);
+            final List<FusionReadGroup> interChromosomalGroups = mFusionTaskManager.addIncompleteReadGroup(mChromosome, chrIncompleteReadsGroups);
 
             if(!interChromosomalGroups.isEmpty())
             {
@@ -491,7 +488,7 @@ public class GeneCollectionReader implements Callable
         // pass any complete chimeric read groups to the fusion finder
         // and add to this any groups which are now complete (ie which were partially complete before)
         // cache any incomplete groups, either for later gene collections or from other chromosomes
-        final List<ReadGroup> completeReadGroups = mFusionFinder.processNewChimericReadGroups(
+        final List<FusionReadGroup> completeReadGroups = mFusionFinder.processNewChimericReadGroups(
                 geneCollection, mBamFragmentAllocator.getBaseDepth(),
                 mBamFragmentAllocator.getChimericReadTracker().getReadMap());
 

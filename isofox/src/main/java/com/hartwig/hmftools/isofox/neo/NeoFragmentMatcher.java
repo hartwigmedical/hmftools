@@ -18,7 +18,7 @@ import static com.hartwig.hmftools.isofox.neo.NeoFragmentSupport.PARTIAL_MATCH;
 import java.util.List;
 
 import com.hartwig.hmftools.isofox.common.ReadRecord;
-import com.hartwig.hmftools.isofox.fusion.ReadGroup;
+import com.hartwig.hmftools.isofox.fusion.ChimericReadGroup;
 
 import org.apache.commons.compress.utils.Lists;
 
@@ -447,7 +447,7 @@ public class NeoFragmentMatcher
         }
     }
 
-    public static void checkBaseCoverage(final NeoEpitopeData neData, final ReadGroup readGroup)
+    public static void checkBaseCoverage(final NeoEpitopeData neData, final ChimericReadGroup readGroup)
     {
         for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {

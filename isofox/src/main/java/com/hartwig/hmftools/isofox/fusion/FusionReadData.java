@@ -40,8 +40,6 @@ import com.hartwig.hmftools.common.gene.GeneData;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
 public class FusionReadData
@@ -104,11 +102,12 @@ public class FusionReadData
         // extract depth from reads
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            for(ReadRecord read : mFragment.reads())
+            for(FusionRead read : mFragment.reads())
             {
-                if(read.getJunctionDepth() != null && read.getJunctionDepth().containsKey(mJunctionPositions[se]))
+                int depth = read.junctionDepth(se, mJunctionPositions[se]);
+                if(depth > 0)
                 {
-                    mReadDepth[se] = read.getJunctionDepth().get(mJunctionPositions[se]);
+                    mReadDepth[se] = depth;
                     break;
                 }
             }
@@ -400,7 +399,7 @@ public class FusionReadData
         // the 2 reads' bounds need to fall within 2 or less exons away
         // apply max fragment distance criteria
 
-        int impliedFragmentLength = fragment.reads().get(0).Length * 2;
+        int impliedFragmentLength = fragment.reads().get(0).ReadBaseLength * 2;
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
@@ -425,12 +424,12 @@ public class FusionReadData
             if(!hasTranscriptExonMatch(fusionRefs, fragmentRefs, permittedExonDiff))
                 return false;
 
-            final List<ReadRecord> reads = fragment.readsByLocation(se);
+            final List<FusionRead> reads = fragment.readsByLocation(se);
 
             if(reads.isEmpty())
                 return false;
 
-            final ReadRecord read = reads.get(0);
+            final FusionRead read = reads.get(0);
 
             int fragmentPosition = read.getCoordsBoundary(switchIndex(se));
 
@@ -466,9 +465,9 @@ public class FusionReadData
         {
             final int seIndex = se;
 
-            for(ReadRecord read : fragment.reads())
+            for(FusionRead read : fragment.reads())
             {
-                if(!read.Chromosome.equals(mChromosomes[seIndex]) || mFragment.geneCollections()[seIndex] != read.getGeneCollectons()[seIndex])
+                if(!read.Chromosome.equals(mChromosomes[seIndex]) || mFragment.geneCollections()[seIndex] != read.GeneCollections[seIndex])
                     continue;
 
                 // check that none of the other reads are on the incorrect side of this fusion junction
@@ -487,14 +486,14 @@ public class FusionReadData
         return hasSupportingRead;
     }
 
-    private boolean softClippedReadSupportsJunction(final ReadRecord read, int juncSeIndex)
+    private boolean softClippedReadSupportsJunction(final FusionRead read, int juncSeIndex)
     {
         return softClippedReadSupportsJunction(
                 read, juncSeIndex, mJunctionPositions[juncSeIndex], mJunctionOrientations[juncSeIndex], mJunctionBases);
     }
 
     public static boolean softClippedReadSupportsJunction(
-            final ReadRecord read, int juncSeIndex, int junctionPosition, byte junctionOrientation, final String[] junctionBases)
+            final FusionRead read, int juncSeIndex, int junctionPosition, byte junctionOrientation, final String[] junctionBases)
     {
         // compare a minimum number of soft-clipped bases to the other side of the exon junction
         // if the read extends past break junction, include these bases in what is compared against the next junction to account for homology
@@ -510,7 +509,7 @@ public class FusionReadData
                 return false;
 
             // test that soft-clipped bases match the other junction's bases
-            int scLength = read.Cigar.getLastCigarElement().getLength();
+            int scLength = read.SoftClipLengths[SE_END];
 
             if(scLength < REALIGN_MIN_SOFT_CLIP_BASE_LENGTH || scLength > REALIGN_MAX_SOFT_CLIP_BASE_LENGTH)
                 return false;
@@ -521,7 +520,9 @@ public class FusionReadData
             // if the junction is 1 base higher, then take 1 base off the soft-clipped bases
             int posAdjust = readBoundary > junctionPosition ? readBoundary - junctionPosition : 0;
 
-            String extraBases = read.ReadBases.substring(read.Length - scLength - posAdjust, read.Length);
+            int boundaryBaseLength = read.BoundaryBases[SE_END].length();
+            String extraBases = read.BoundaryBases[SE_END].substring(boundaryBaseLength - scLength - posAdjust, boundaryBaseLength);
+            // String extraBases = read.ReadBases.substring(read.Length - scLength - posAdjust, read.Length);
 
             if(extraBases.length() > JUNCTION_BASE_LENGTH)
                 extraBases = extraBases.substring(0, JUNCTION_BASE_LENGTH);
@@ -538,7 +539,7 @@ public class FusionReadData
             if(!positionWithin(readBoundary, junctionPosition - SOFT_CLIP_JUNC_BUFFER, junctionPosition))
                 return false;
 
-            int scLength = read.Cigar.getFirstCigarElement().getLength();
+            int scLength = read.SoftClipLengths[SE_START];
 
             if(scLength < REALIGN_MIN_SOFT_CLIP_BASE_LENGTH || scLength > REALIGN_MAX_SOFT_CLIP_BASE_LENGTH)
                 return false;
@@ -548,7 +549,8 @@ public class FusionReadData
 
             int posAdjust = readBoundary < junctionPosition ? junctionPosition - readBoundary : 0;
 
-            String extraBases = read.ReadBases.substring(0, scLength + posAdjust);
+            String extraBases = read.BoundaryBases[SE_START].substring(0, scLength + posAdjust);
+            // String extraBases = read.ReadBases.substring(0, scLength + posAdjust);
 
             if(extraBases.length() > JUNCTION_BASE_LENGTH)
                 extraBases = extraBases.substring(extraBases.length() - JUNCTION_BASE_LENGTH, extraBases.length());
@@ -667,7 +669,7 @@ public class FusionReadData
         }
 
         String readType = sampleFragment.hasSuppAlignment() ? "SuppAlign" :
-                (sampleFragment.reads().stream().anyMatch(x -> x.containsSplit()) ? "Split" : (
+                (sampleFragment.reads().stream().anyMatch(x -> x.ContainsSplit) ? "Split" : (
                         sampleFragment.type() == DISCORDANT_JUNCTION ? "Discordant" : "Other"));
 
         return new FusionData(

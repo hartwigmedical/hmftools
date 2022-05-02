@@ -23,7 +23,6 @@ import static com.hartwig.hmftools.isofox.TestUtils.createReadRecord;
 import static com.hartwig.hmftools.isofox.TestUtils.createRegion;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.ALT;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.setHasMultipleKnownSpliceGenes;
 
 import static org.junit.Assert.assertEquals;
 
@@ -470,7 +469,7 @@ public class ChimericReadTest
         assertEquals(SPLICE_JUNCTION, read.getTranscriptClassification(trans2));
 
         final List<String[]> knownPairGeneIds = Lists.newArrayList();
-        assertFalse(setHasMultipleKnownSpliceGenes(Lists.newArrayList(read), knownPairGeneIds));
+        assertFalse(FusionUtils.setHasMultipleKnownSpliceGenes(Lists.newArrayList(read), knownPairGeneIds));
 
         // now a ready which doesn't support any known junction but is still within just one gene
         read = createReadRecord(1, CHR_1, 191, 509, REF_BASE_STR_1,
@@ -479,11 +478,11 @@ public class ChimericReadTest
         read.processOverlappingRegions(ReadRecord.findOverlappingRegions(allRegions, read));
         assertEquals(ALT, read.getTranscriptClassification(trans1));
 
-        assertFalse(setHasMultipleKnownSpliceGenes(Lists.newArrayList(read), knownPairGeneIds));
+        assertFalse(FusionUtils.setHasMultipleKnownSpliceGenes(Lists.newArrayList(read), knownPairGeneIds));
         
         // if the genes are known then treat this as chimeroc
         knownPairGeneIds.add(new String[] {GENE_ID_1, GENE_ID_2});
-        assertTrue(setHasMultipleKnownSpliceGenes(Lists.newArrayList(read), knownPairGeneIds));
+        assertTrue(FusionUtils.setHasMultipleKnownSpliceGenes(Lists.newArrayList(read), knownPairGeneIds));
     }
 
 }

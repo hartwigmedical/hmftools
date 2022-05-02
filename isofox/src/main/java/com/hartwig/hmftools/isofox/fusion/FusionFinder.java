@@ -20,7 +20,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGN_CAND
 import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.KNOWN;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.checkMissingGeneData;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
-import static com.hartwig.hmftools.isofox.fusion.ReadGroup.mergeChimericReadMaps;
+import static com.hartwig.hmftools.isofox.fusion.FusionReadGroup.mergeChimericReadMaps;
 
 import java.util.List;
 import java.util.Map;
@@ -39,7 +39,6 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
 import org.apache.logging.log4j.Level;
@@ -54,8 +53,8 @@ public class FusionFinder implements Callable
 
     private final List<FusionFragment> mAllFragments;
 
-    private final List<ReadGroup> mSpanningReadGroups; // temporary caching for read groups spanning gene collections
-    private final Map<String,ReadGroup> mChimericPartialReadGroups;
+    private final List<FusionReadGroup> mSpanningReadGroups; // temporary caching for read groups spanning gene collections
+    private final Map<String, FusionReadGroup> mChimericPartialReadGroups;
 
     private final Map<String,List<FusionReadData>> mFusionCandidates; // keyed by the chromosome pair
     private final Map<String,Map<String,FusionReadData>> mFusionsByLocation; // keyed by the chromosome pair, then precise position (hashed)
@@ -114,8 +113,8 @@ public class FusionFinder implements Callable
     // all for testing only
     public final Map<String,List<FusionReadData>> getFusionCandidates() { return mFusionCandidates; }
     public final Map<String,List<FusionFragment>> getUnfusedFragments() { return mDiscordantFragments; }
-    public final Map<String,ReadGroup> getChimericPartialReadGroups() { return mChimericPartialReadGroups; }
-    public final List<ReadGroup> getSpanningReadGroups() { return mSpanningReadGroups; }
+    public final Map<String, FusionReadGroup> getChimericPartialReadGroups() { return mChimericPartialReadGroups; }
+    public final List<FusionReadGroup> getSpanningReadGroups() { return mSpanningReadGroups; }
     public final RacFragmentCache racFragmentCache() { return mRacFragmentCache; }
 
     public void clearState()
@@ -126,20 +125,20 @@ public class FusionFinder implements Callable
         mDiscordantFragments.clear();
     }
 
-    public List<ReadGroup> processNewChimericReadGroups(
-            final GeneCollection geneCollection, final BaseDepth baseDepth, final Map<String,ReadGroup> newReadGroups)
+    public List<FusionReadGroup> processNewChimericReadGroups(
+            final GeneCollection geneCollection, final BaseDepth baseDepth, final Map<String, FusionReadGroup> newReadGroups)
     {
-        List<ReadGroup> completeReadGroups = Lists.newArrayList();
+        List<FusionReadGroup> completeReadGroups = Lists.newArrayList();
 
         mergeChimericReadMaps(mChimericPartialReadGroups, completeReadGroups, newReadGroups);
 
         // identify any read groups with reads spanning into a future gene collection
         // and fill in any missing gene info for reads (partial or complete) which link to this gene collections
-        final List<ReadGroup> spanningGroups = newReadGroups.values().stream()
-                .filter(x -> x.Reads.stream().anyMatch(y -> y.getGeneCollectons()[SE_END] == NO_GENE_ID))
+        final List<FusionReadGroup> spanningGroups = newReadGroups.values().stream()
+                .filter(x -> x.Reads.stream().anyMatch(y -> y.GeneCollections[SE_END] == NO_GENE_ID))
                 .collect(Collectors.toList());
 
-        final List<ReadGroup> geneCompletedGroups = reconcileSpanningReadGroups(geneCollection, spanningGroups, baseDepth);
+        final List<FusionReadGroup> geneCompletedGroups = reconcileSpanningReadGroups(geneCollection, spanningGroups, baseDepth);
 
         spanningGroups.stream().forEach(x -> completeReadGroups.remove(x));
         geneCompletedGroups.stream().filter(x -> !completeReadGroups.contains(x)).forEach(x -> completeReadGroups.add(x));
@@ -147,21 +146,21 @@ public class FusionFinder implements Callable
         return completeReadGroups;
     }
 
-    private List<ReadGroup> reconcileSpanningReadGroups(
-            final GeneCollection geneCollection, final List<ReadGroup> spanningReadGroups, final BaseDepth baseDepth)
+    private List<FusionReadGroup> reconcileSpanningReadGroups(
+            final GeneCollection geneCollection, final List<FusionReadGroup> spanningReadGroups, final BaseDepth baseDepth)
     {
-        List<ReadGroup> completeGroups = Lists.newArrayList();
+        List<FusionReadGroup> completeGroups = Lists.newArrayList();
 
         // check pending groups which needed their upper gene and depth info populated by this gene collection
         int index = 0;
         while(index < mSpanningReadGroups.size())
         {
-            ReadGroup readGroup = mSpanningReadGroups.get(index);
+            FusionReadGroup readGroup = mSpanningReadGroups.get(index);
             boolean missingGeneInfo = false;
 
-            for(ReadRecord read : readGroup.Reads)
+            for(FusionRead read : readGroup.Reads)
             {
-                if(read.getGeneCollectons()[SE_END] != NO_GENE_ID)
+                if(read.GeneCollections[SE_END] != NO_GENE_ID)
                     continue;
 
                 if(!positionWithin(read.getCoordsBoundary(SE_END),
@@ -174,12 +173,14 @@ public class FusionFinder implements Callable
                 if(positionWithin(read.getCoordsBoundary(SE_END),
                         geneCollection.regionBounds()[SE_START], geneCollection.regionBounds()[SE_END]))
                 {
-                    read.setGeneCollection(SE_END, geneCollection.id(), true);
+                    read.GeneCollections[SE_END] = geneCollection.id();
+                    read.IsGenicRegion[SE_END] = true;
                     checkMissingGeneData(read, geneCollection.getTranscripts());
                 }
                 else
                 {
-                    read.setGeneCollection(SE_END, geneCollection.id(), false);
+                    read.GeneCollections[SE_END] = geneCollection.id();
+                    read.IsGenicRegion[SE_END] = false;
                 }
 
                 // fill in junction positions depth from reads which spanned into this GC (eg from long N-split reads)
@@ -203,10 +204,10 @@ public class FusionFinder implements Callable
         return completeGroups;
     }
 
-    public Map<String,Map<String,ReadGroup>> extractIncompleteReadGroups(final String chromosome)
+    public Map<String,Map<String, FusionReadGroup>> extractIncompleteReadGroups(final String chromosome)
     {
-        Map<String,Map<String,ReadGroup>> chrIncompleteReadsGroups = Maps.newHashMap();
-        for(ReadGroup readGroup : mChimericPartialReadGroups.values())
+        Map<String,Map<String, FusionReadGroup>> chrIncompleteReadsGroups = Maps.newHashMap();
+        for(FusionReadGroup readGroup : mChimericPartialReadGroups.values())
         {
             String otherChromosome = readGroup.findOtherChromosome(chromosome);
 
@@ -215,14 +216,14 @@ public class FusionFinder implements Callable
                 if(!HumanChromosome.contains(otherChromosome))
                     continue;
 
-                Map<String, ReadGroup> readGroupMap = chrIncompleteReadsGroups.get(otherChromosome);
+                Map<String, FusionReadGroup> readGroupMap = chrIncompleteReadsGroups.get(otherChromosome);
                 if(readGroupMap == null)
                 {
                     readGroupMap = Maps.newHashMap();
                     chrIncompleteReadsGroups.put(otherChromosome, readGroupMap);
                 }
 
-                readGroupMap.put(readGroup.id(), readGroup);
+                readGroupMap.put(readGroup.ReadId, readGroup);
             }
         }
 
@@ -230,17 +231,17 @@ public class FusionFinder implements Callable
         return chrIncompleteReadsGroups;
     }
 
-    public void processLocalReadGroups(final List<ReadGroup> readGroups)
+    public void processLocalReadGroups(final List<FusionReadGroup> readGroups)
     {
         processReadGroups(readGroups, false);
     }
 
-    public void processInterChromosomalReadGroups(final List<ReadGroup> readGroups)
+    public void processInterChromosomalReadGroups(final List<FusionReadGroup> readGroups)
     {
         processReadGroups(readGroups, true);
     }
 
-    private void processReadGroups(final List<ReadGroup> readGroups, boolean isInterChromosomal)
+    private void processReadGroups(final List<FusionReadGroup> readGroups, boolean isInterChromosomal)
     {
         // read groups are guaranteed to be complete
         clearState();
@@ -260,7 +261,7 @@ public class FusionFinder implements Callable
 
         int readGroupCount = 0;
 
-        for(ReadGroup readGroup : readGroups)
+        for(FusionReadGroup readGroup : readGroups)
         {
             ++readGroupCount;
 
@@ -273,9 +274,9 @@ public class FusionFinder implements Callable
             if(readGroup.hasDuplicateRead())
                 continue;
 
-            final List<ReadRecord> reads = readGroup.Reads;
+            final List<FusionRead> reads = readGroup.Reads;
 
-            if(reads.stream().anyMatch(x -> mConfig.Filters.skipRead(x.mateChromosome(), x.mateStartPosition())))
+            if(reads.stream().anyMatch(x -> mConfig.Filters.skipRead(x.MateChromosome, x.MatePosStart)))
                 continue;
 
             FusionFragment fragment = new FusionFragment(readGroup);

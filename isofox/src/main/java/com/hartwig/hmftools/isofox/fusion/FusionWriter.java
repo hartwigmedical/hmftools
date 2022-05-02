@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.isofox.IsofoxConfig;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
 
 public class FusionWriter
 {
@@ -123,7 +122,7 @@ public class FusionWriter
         }
     }
 
-    public synchronized void writeReadData(final List<ReadRecord> reads, final String groupStatus)
+    public synchronized void writeReadData(final List<FusionRead> reads, final String groupStatus)
     {
         if(mWriteReads)
             mChimericReadCache.writeReadData(reads, groupStatus);
@@ -171,7 +170,7 @@ public class FusionWriter
         }
     }
 
-    public void writeIncompleteGroupReads(final List<ReadGroup> incompleteGroups)
+    public void writeIncompleteGroupReads(final List<FusionReadGroup> incompleteGroups)
     {
         incompleteGroups.forEach(x -> mChimericReadCache.writeReadData(x.Reads, "INCOMPLETE_GROUPS"));
     }
@@ -185,7 +184,8 @@ public class FusionWriter
         {
             mFragmentWriter.write(String.format("%s,%d,%s,%s,%s,%d,%s",
                     fragment.readId(), fragment.reads().size(), fusionId, fragment.type(),
-                    fragment.isSingleGeneCollection(), fragment.reads().stream().filter(x -> x.containsSoftClipping()).count(),
+                    fragment.isSingleGeneCollection(),
+                    fragment.reads().stream().filter(x -> x.SoftClipLengths[SE_START] > 0 || x.SoftClipLengths[SE_END] > 0).count(),
                     fragment.hasSuppAlignment()));
 
             for(int se = SE_START; se <= SE_END; ++se)

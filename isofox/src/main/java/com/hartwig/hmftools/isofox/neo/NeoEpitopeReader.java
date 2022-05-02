@@ -36,7 +36,7 @@ import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
-import com.hartwig.hmftools.isofox.fusion.ReadGroup;
+import com.hartwig.hmftools.isofox.fusion.ChimericReadGroup;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -56,7 +56,7 @@ public class NeoEpitopeReader
 
     private GeneCollection mCurrentGenes;
     private NeoEpitopeData mCurrentNeoData;
-    private final Map<String,ReadGroup> mReadGroups;
+    private final Map<String, ChimericReadGroup> mReadGroups;
 
     private BufferedWriter mWriter;
 
@@ -204,11 +204,11 @@ public class NeoEpitopeReader
         mCurrentGenes.setReadGeneCollections(read, mCurrentGenes.regionBounds());
 
         // only handle complete groups
-        ReadGroup readGroup = mReadGroups.get(read.Id);
+        ChimericReadGroup readGroup = mReadGroups.get(read.Id);
 
         if(readGroup == null)
         {
-            mReadGroups.put(read.Id, new ReadGroup(read));
+            mReadGroups.put(read.Id, new ChimericReadGroup(read));
             return;
         }
 
@@ -221,7 +221,7 @@ public class NeoEpitopeReader
         }
     }
 
-    private boolean isCandidateGroup(final ReadGroup readGroup)
+    private boolean isCandidateGroup(final ChimericReadGroup readGroup)
     {
         // ignore unspliced reads
         if(mCurrentNeoData.isFusion())
@@ -237,7 +237,7 @@ public class NeoEpitopeReader
         return true;
     }
 
-    private void processFragmentReads(final ReadGroup readGroup)
+    private void processFragmentReads(final ChimericReadGroup readGroup)
     {
         if(!isCandidateGroup(readGroup))
             return;

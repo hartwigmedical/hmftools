@@ -12,19 +12,16 @@ import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGN_CANDIDATE;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findSplitRead;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findSplitReadJunction;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocation;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.hasRealignableSoftClip;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.isRealignedFragmentCandidate;
-import static com.hartwig.hmftools.isofox.fusion.ReadGroup.hasSuppAlignment;
 
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
 
 public class FusionFragmentBuilder
 {
@@ -49,19 +46,6 @@ public class FusionFragmentBuilder
 
      */
 
-    public static boolean isValidFragment(final List<ReadRecord> reads)
-    {
-        if(reads.size() <= 1)
-            return false;
-
-        if(hasSuppAlignment(reads))
-        {
-            return (reads.size() == 3);
-        }
-
-        return (reads.size() == 2);
-    }
-
     public static void setFragmentProperties(final FusionFragment fragment)
     {
         /* Set the following propeties for fragments:
@@ -84,7 +68,7 @@ public class FusionFragmentBuilder
         // set chromosomes - either 1 or 2, with the lower set into the start position
         final List<String> chromosomes = Lists.newArrayListWithCapacity(2);
 
-        for(final ReadRecord read : fragment.reads())
+        for(final FusionRead read : fragment.reads())
         {
             if(!chromosomes.contains(read.Chromosome))
                 chromosomes.add(read.Chromosome);
@@ -118,7 +102,10 @@ public class FusionFragmentBuilder
         // identify the properties of the junction and use it to set other properties of the fragment
         if(fragment.isSingleChromosome())
         {
-            final ReadRecord splitRead = findSplitRead(fragment.reads());
+            final FusionRead splitRead = fragment.reads().stream()
+                    .filter(x -> x.ContainsSplit)
+                    .filter(x -> x.spansGeneCollections() || x.HasInterGeneSplit)
+                    .findFirst().orElse(null);
 
             if(splitRead != null)
             {
@@ -132,9 +119,9 @@ public class FusionFragmentBuilder
             && fragment.reads().stream().anyMatch(x -> isRealignedFragmentCandidate(x))
             && fragment.reads().stream().noneMatch(x -> x.spansGeneCollections()))
             {
-                ReadRecord read1 = fragment.reads().get(0);
-                ReadRecord read2 = fragment.reads().get(1);
-                if(read1.getGeneCollectons()[0] == read2.getGeneCollectons()[1])
+                FusionRead read1 = fragment.reads().get(0);
+                FusionRead read2 = fragment.reads().get(1);
+                if(read1.GeneCollections[0] == read2.GeneCollections[1])
                 {
                     setSingleSoftClipJunctionData(fragment);
                     return;
@@ -155,26 +142,24 @@ public class FusionFragmentBuilder
 
         int posIndex = 0;
 
-        for(ReadRecord read : fragment.reads())
+        for(FusionRead read : fragment.reads())
         {
-            if(!read.hasSuppAlignment())
+            if(!read.HasSuppAlignment)
                 continue;
-
-            SoftClipSide scSide = SoftClipSide.fromRead(read);
 
             chromosomes[posIndex] = read.Chromosome;
 
-            if(scSide.isLeft())
+            if(read.isLongestSoftClip(SE_START))
             {
                 junctionPositions[posIndex] = read.getCoordsBoundary(SE_START);
                 junctionOrientations[posIndex] = NEG_ORIENT;
-                geneCollections[posIndex] = read.getGeneCollectons()[SE_START];
+                geneCollections[posIndex] = read.GeneCollections[SE_START];
             }
             else
             {
                 junctionPositions[posIndex] = read.getCoordsBoundary(SE_END);
                 junctionOrientations[posIndex] = POS_ORIENT;
-                geneCollections[posIndex] = read.getGeneCollectons()[SE_END];
+                geneCollections[posIndex] = read.GeneCollections[SE_END];
             }
 
             ++posIndex;
@@ -206,7 +191,7 @@ public class FusionFragmentBuilder
         fragment.setType(MATCHED_JUNCTION);
     }
 
-    private static void setSplitReadJunctionData(final FusionFragment fragment, final ReadRecord splitRead)
+    private static void setSplitReadJunctionData(final FusionFragment fragment, final FusionRead splitRead)
     {
         // set the junction data around the spanning N-split
         final int[] splitJunction = findSplitReadJunction(splitRead);
@@ -215,7 +200,7 @@ public class FusionFragmentBuilder
         {
             for(int se = SE_START; se <= SE_END; ++se)
             {
-                fragment.geneCollections()[se] = splitRead.getGeneCollectons()[se];
+                fragment.geneCollections()[se] = splitRead.GeneCollections[se];
                 fragment.junctionPositions()[se] = splitJunction[se];
             }
 
@@ -228,22 +213,20 @@ public class FusionFragmentBuilder
     private static void setSingleSoftClipJunctionData(final FusionFragment fragment)
     {
         // 2 gene collections are involved or a candidate realignable fragment in one collection
-        ReadRecord realignRead = null;
+        FusionRead realignRead = null;
         int maxScLength = 0;
         int scSide = 0;
 
-        for(ReadRecord read : fragment.reads())
+        for(FusionRead read : fragment.reads())
         {
             for(int se = SE_START; se <= SE_END; ++se)
             {
                 if(!hasRealignableSoftClip(read, se, true))
                     continue;
 
-                int scLength = se == SE_START ? read.Cigar.getFirstCigarElement().getLength() : read.Cigar.getLastCigarElement().getLength();
-
-                if(scLength > maxScLength)
+                if(read.SoftClipLengths[se] > maxScLength)
                 {
-                    maxScLength = scLength;
+                    maxScLength = read.SoftClipLengths[se];
                     scSide = se;
                     realignRead = read;
                 }
@@ -258,7 +241,7 @@ public class FusionFragmentBuilder
         fragment.junctionOrientations()[SE_START] = scSide == SE_START ? NEG_ORIENT : POS_ORIENT;
         fragment.orientations()[SE_START] = fragment.junctionOrientations()[SE_START];
 
-        fragment.geneCollections()[SE_START] = fragment.geneCollections()[SE_END] = realignRead.getGeneCollectons()[scSide];
+        fragment.geneCollections()[SE_START] = fragment.geneCollections()[SE_END] = realignRead.GeneCollections[scSide];
         fragment.setType(REALIGN_CANDIDATE);
     }
 
@@ -269,11 +252,11 @@ public class FusionFragmentBuilder
         final List<String> chromosomes = Lists.newArrayListWithCapacity(2);
         final Map<String,Integer> positions = Maps.newHashMapWithExpectedSize(2);
         final List<Integer> geneCollections = Lists.newArrayListWithCapacity(2);
-        final Map<String,ReadRecord> reads = Maps.newHashMapWithExpectedSize(2);
+        final Map<String,FusionRead> reads = Maps.newHashMapWithExpectedSize(2);
 
-        final Map<String,List<ReadRecord>> readGroups = Maps.newHashMapWithExpectedSize(2);
+        final Map<String,List<FusionRead>> readGroups = Maps.newHashMapWithExpectedSize(2);
 
-        for(final ReadRecord read : fragment.reads())
+        for(final FusionRead read : fragment.reads())
         {
             for(int se = SE_START; se <= SE_END; ++se)
             {
@@ -281,9 +264,9 @@ public class FusionFragmentBuilder
                 if(!read.spansGeneCollections() && se == SE_END)
                     continue;
 
-                final String chrGeneId = formLocation(read.Chromosome, read.getGeneCollectons()[se], true); // genic status ignored for group determination
+                final String chrGeneId = formLocation(read.Chromosome, read.GeneCollections[se], true); // genic status ignored for group determination
 
-                List<ReadRecord> readGroup = readGroups.get(chrGeneId);
+                List<FusionRead> readGroup = readGroups.get(chrGeneId);
 
                 if(readGroup == null)
                 {
@@ -291,7 +274,7 @@ public class FusionFragmentBuilder
 
                     chrGeneCollections.add(chrGeneId);
                     chromosomes.add(read.Chromosome);
-                    geneCollections.add(read.getGeneCollectons()[se]);
+                    geneCollections.add(read.GeneCollections[se]);
                     positions.put(chrGeneId, read.getCoordsBoundary(se)); // no overlap in gene collections so doesn't matter which position is used
                     reads.put(chrGeneId, read);
                 }
@@ -333,7 +316,7 @@ public class FusionFragmentBuilder
             final String chrGeneId = chrGeneCollections.get(index);
 
             fragment.geneCollections()[se] = geneCollections.get(index);
-            fragment.orientations()[se] = reads.get(chrGeneId).orientation();
+            fragment.orientations()[se] = reads.get(chrGeneId).Orientation;
         }
 
         fragment.setType(DISCORDANT);
@@ -349,7 +332,7 @@ public class FusionFragmentBuilder
         {
             int index = se == SE_START ? lowerIndex : switchIndex(lowerIndex);
             final String chrGeneId = chrGeneCollections.get(index);
-            ReadRecord read = reads.get(chrGeneId);
+            FusionRead read = reads.get(chrGeneId);
 
             int requiredScSide = switchIndex(se);
 

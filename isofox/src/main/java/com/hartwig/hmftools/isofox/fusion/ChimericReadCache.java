@@ -67,15 +67,17 @@ public class ChimericReadCache
         }
     }
 
-    public synchronized void writeReadData(final List<ReadRecord> reads, final String groupStatus)
+    public synchronized void writeReadData(final List<FusionRead> reads, final String groupStatus)
     {
         if(mReadWriter == null)
             return;
 
         try
         {
-            for(final ReadRecord read : reads)
+            // TODO, use new read class
+            for(final FusionRead read : reads)
             {
+                /*
                 mReadWriter.write(String.format("%d,%s,%s,%s,%d,%d,%d,%s,%d",
                         reads.size(), read.Id, groupStatus, read.Chromosome,
                         read.PosStart, read.PosEnd, read.orientation(), read.Cigar.toString(), read.fragmentInsertSize()));
@@ -132,7 +134,9 @@ public class ChimericReadCache
                         topTransMatchType, transExonData.isEmpty() ? "NONE" : transExonData,
                         upperTopTransMatchType, upperTransExonData.isEmpty() ? "NONE" : upperTransExonData));
 
+                 */
                 mReadWriter.newLine();
+
             }
 
         }
@@ -143,9 +147,12 @@ public class ChimericReadCache
         }
     }
 
-    public static List<ReadGroup> loadChimericReads(final String inputFile)
+    public static List<FusionReadGroup> loadChimericReads(final String inputFile)
     {
-        final List<ReadGroup> readGroupList = Lists.newArrayList();
+        final List<FusionReadGroup> readGroupList = Lists.newArrayList();
+
+        // TODO - use FusionRead instead
+        ISF_LOGGER.error("current unsupported");
 
         if(!Files.exists(Paths.get(inputFile)))
         {
@@ -193,7 +200,7 @@ public class ChimericReadCache
             int transExonData = fieldsMap.get("TransExonData");
             int upperTransExonData = fieldsMap.get("UpperTransExonData");
 
-            ReadGroup readGroup = null;
+            FusionReadGroup readGroup = null;
 
             while ((line = fileReader.readLine()) != null)
             {
@@ -250,13 +257,13 @@ public class ChimericReadCache
                     }
 
                     // reads are written by fragment so all reads will be sequential
-                    if(readGroup == null || !readGroup.id().equals(read.Id))
+                    if(readGroup == null || !readGroup.ReadId.equals(read.Id))
                     {
-                        readGroup = new ReadGroup(read);
+                        // readGroup = new FusionReadGroup(read);
                     }
                     else
                     {
-                        readGroup.Reads.add(read);
+                        // readGroup.Reads.add(read);
 
                         if(readGroup.isComplete())
                             readGroupList.add(readGroup);

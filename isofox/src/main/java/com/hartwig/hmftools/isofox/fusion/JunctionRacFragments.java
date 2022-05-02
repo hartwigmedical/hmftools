@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.SOFT_CLIP_JUNC_BUFFER;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGN_CANDIDATE;
+import static com.hartwig.hmftools.isofox.fusion.FusionRead.convertReads;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.softClippedReadSupportsJunction;
 
 import java.util.List;
@@ -67,7 +68,7 @@ public class JunctionRacFragments
         }
     }
 
-    public boolean checkAddCandidateGroup(final ReadGroup readGroup)
+    public boolean checkAddCandidateGroup(final ChimericReadGroup readGroup)
     {
         boolean fragmentAdded = false;
 
@@ -91,10 +92,11 @@ public class JunctionRacFragments
                         continue;
                 }
 
-                if(readGroup.Reads.stream().
-                        anyMatch(x -> softClippedReadSupportsJunction(x, seIndex, juncPosition, juncOrientation, null)))
+                List<FusionRead> fusionReads = convertReads(readGroup.Reads);
+
+                if(fusionReads.stream().anyMatch(x -> softClippedReadSupportsJunction(x, seIndex, juncPosition, juncOrientation, null)))
                 {
-                    FusionFragment fragment = new FusionFragment(readGroup);
+                    FusionFragment fragment = new FusionFragment(new FusionReadGroup(readGroup.id(), fusionReads));
 
                     if(fragment.type() != REALIGN_CANDIDATE)
                         continue;
