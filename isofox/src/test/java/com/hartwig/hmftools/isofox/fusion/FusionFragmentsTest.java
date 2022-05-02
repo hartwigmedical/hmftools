@@ -47,7 +47,6 @@ import junit.framework.TestCase;
 
 public class FusionFragmentsTest
 {
-    /* TODO: re-enable
     @Test
     public void testDelFragments()
     {
@@ -172,7 +171,7 @@ public class FusionFragmentsTest
 
         // DEL spanning 2 gene collections but without a supplementary read or soft-clipping, but with the N-split in the reads representing the junction
         read1 = createMappedRead(readId, gc1, 1080, 10218, createCigar(0, 21, 9099, 19, 0));
-        read2 = createMappedRead(++readId, gc1, 1081, 10219, createCigar(0, 20, 9099, 20, 0));
+        read2 = createMappedRead(readId, gc1, 1081, 10219, createCigar(0, 20, 9099, 20, 0));
         read1.setFlag(FIRST_OF_PAIR, true);
         read2.setStrand(true, false);
 
@@ -200,7 +199,6 @@ public class FusionFragmentsTest
         assertEquals(-1, fragment.junctionOrientations()[SE_END]);
         assertEquals(DEL, fragment.getImpliedSvType());
     }
-    */
 
     @Test
     public void testDupFragments()

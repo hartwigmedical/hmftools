@@ -102,14 +102,6 @@ public class FusionUtils
         return null;
     }
 
-    public static FusionRead findSplitRead(final List<FusionRead> reads)
-    {
-        return reads.stream()
-                .filter(x -> x.ContainsSplit)
-                .filter(x -> x.spansGeneCollections() || x.HasInterGeneSplit)
-                .findFirst().orElse(null);
-    }
-
     public static int[] findSplitReadJunction(final FusionRead read)
     {
         if(!read.ContainsSplit)
@@ -237,12 +229,11 @@ public class FusionUtils
 
         if(matchingReads.size() == 1)
         {
-            mappedCoords = matchingReads.get(0).getMappedRegionCoords(false);
+            mappedCoords = matchingReads.get(0).MappedCoords;
         }
         else
         {
-            mappedCoords = deriveCommonRegions(
-                    matchingReads.get(0).getMappedRegionCoords(false), matchingReads.get(1).getMappedRegionCoords(false));
+            mappedCoords = deriveCommonRegions(matchingReads.get(0).MappedCoords, matchingReads.get(1).MappedCoords);
         }
 
         int mappedBases = 0;

@@ -36,4 +36,6 @@ public class SupplementaryReadData
         return String.format("location(%s:%d) strand(%c) cigar(%s) mq(%d)",
             Chromosome, Position, Strand, Cigar, MapQuality);
     }
+
+    public String asCsv() { return String.format("%s;%d;%c;%s;%d;0", Chromosome, Position, Strand, Cigar, MapQuality); }
 }

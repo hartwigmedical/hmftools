@@ -41,6 +41,7 @@ public class FusionRead
     public final SupplementaryReadData SuppData;
     public boolean IsDuplicate;
     public boolean ContainsSplit;
+    public int Flags;
 
     public final List<int[]> MappedCoords;
 
@@ -53,8 +54,6 @@ public class FusionRead
     private final Map<RegionMatchType,List<TransExonRef>> mTransExonRefs;
     private final Map<RegionMatchType,List<TransExonRef>> mUpperTransExonRefs; // TE refs for upper coords if a spanning read
 
-    // public final int MappedBases; // for setting max split mapped length
-
     public FusionRead(final ReadRecord read)
     {
         Chromosome = read.Chromosome;
@@ -62,7 +61,7 @@ public class FusionRead
         Orientation = read.orientation();
         MateChromosome = read.mateChromosome();
         MatePosStart = read.mateStartPosition();
-        MappedCoords = read.getMappedRegionCoords(); // TODO: carefully decide if these should included the inferred mapping or not
+        MappedCoords = read.getMappedRegionCoords(false);
         Cigar = read.Cigar.toString();
         GeneCollections = read.getGeneCollectons();
         IsGenicRegion = read.getIsGenicRegion();
@@ -70,6 +69,7 @@ public class FusionRead
         HasSuppAlignment = read.hasSuppAlignment();
         IsDuplicate = read.isDuplicate();
         ContainsSplit = read.containsSplit();
+        Flags = read.flags();
 
         SuppData = read.hasSuppAlignment() ? SupplementaryReadData.from(read.getSuppAlignment()) : null;
 
@@ -87,30 +87,43 @@ public class FusionRead
         mTransExonRefs = Maps.newHashMap();
         mUpperTransExonRefs = Maps.newHashMap();
 
-        for(Map.Entry<RegionReadData,RegionMatchType> entry : read.getMappedRegions().entrySet())
+        if(!read.getMappedRegions().isEmpty())
         {
-            List<TransExonRef> transRefList = mTransExonRefs.get(entry.getValue());
+            for(Map.Entry<RegionReadData, RegionMatchType> entry : read.getMappedRegions().entrySet())
+            {
+                List<TransExonRef> transRefList = mTransExonRefs.get(entry.getValue());
 
-            if(transRefList == null)
-            {
-                mTransExonRefs.put(entry.getValue(), Lists.newArrayList(entry.getKey().getTransExonRefs()));
-            }
-            else
-            {
-                transRefList.addAll(entry.getKey().getTransExonRefs());
+                if(transRefList == null)
+                {
+                    mTransExonRefs.put(entry.getValue(), Lists.newArrayList(entry.getKey().getTransExonRefs()));
+                }
+                else
+                {
+                    transRefList.addAll(entry.getKey().getTransExonRefs());
+                }
             }
         }
-
-        mJunctionPositions = new int[SE_PAIR];
+        else
+        {
+            mTransExonRefs.putAll(read.getTransExonRefs());
+        }
 
         // depth will only be set for known junctions
         mBoundaryDepth = null;
         mJunctionDepth = null;
+
+        mJunctionPositions = new int[SE_PAIR];
+
+        if(read.junctionPositions() != null)
+        {
+            mJunctionPositions[SE_START] = read.junctionPositions()[SE_START];
+            mJunctionPositions[SE_END] = read.junctionPositions()[SE_END];
+            mJunctionDepth = new int[SE_PAIR];
+        }
     }
 
     public int getCoordsBoundary(int se)
     {
-        // TODO - could also just use Positions start and end? since only diff is realigned SC?
         return se == SE_START ? MappedCoords.get(0)[SE_START] : MappedCoords.get(MappedCoords.size() - 1)[SE_END];
     }
 
@@ -133,13 +146,6 @@ public class FusionRead
         else
             return mTransExonRefs;
     }
-
-    public List<int[]> getMappedRegionCoords(boolean includeInferred)
-    {
-        // TODO: maintain distinction or not?
-        return MappedCoords;
-    }
-
 
     public void setReadJunctionDepth(final BaseDepth baseDepth)
     {
@@ -169,16 +175,27 @@ public class FusionRead
 
     public int junctionDepth(int se, int junctionPosition)
     {
-        if(mJunctionPositions[se] == junctionPosition)
-            return mJunctionDepth != null ? mJunctionDepth[se] : 0;
+        if(mJunctionPositions != null && mJunctionDepth != null)
+            return mJunctionPositions[se] == junctionPosition ? mJunctionDepth[se] : 0;
 
-        return mBoundaryDepth.containsKey(junctionPosition) ? mBoundaryDepth.get(junctionPosition) : 0;
+        if(mBoundaryDepth != null)
+            return mBoundaryDepth.containsKey(junctionPosition) ? mBoundaryDepth.get(junctionPosition) : 0;
+
+        return 0;
     }
 
     public static List<FusionRead> convertReads(final List<ReadRecord> reads)
     {
         List<FusionRead> fusionReads = reads.stream().map(x -> new FusionRead(x)).collect(Collectors.toList());
         return fusionReads;
+    }
+
+    public String toString()
+    {
+        return String.format("range(%s: %d -> %d) cigar(%s) junc(%d - %d) gc(%d - %d) sup=%s igs=%s",
+                Chromosome, Positions[SE_START], Positions[SE_END], Cigar,
+                mJunctionPositions != null ? mJunctionPositions[SE_START] : 0, mJunctionPositions != null ? mJunctionPositions[SE_END] : 0,
+                GeneCollections[SE_START], GeneCollections[SE_END], HasSuppAlignment, HasInterGeneSplit);
     }
 
 }

@@ -109,7 +109,7 @@ public class FusionWriter
                                     writeFragmentData(fragment, fusionId(fusion.id()));
 
                                 if(mWriteReads)
-                                    writeReadData(fragment.reads(), fusionId(fusion.id()));
+                                    writeReadData(fragment.readId(), fragment.reads(), fusionId(fusion.id()));
                             }
                         }
                     }
@@ -122,10 +122,10 @@ public class FusionWriter
         }
     }
 
-    public synchronized void writeReadData(final List<FusionRead> reads, final String groupStatus)
+    public synchronized void writeReadData(final String readId, final List<FusionRead> reads, final String groupStatus)
     {
         if(mWriteReads)
-            mChimericReadCache.writeReadData(reads, groupStatus);
+            mChimericReadCache.writeReadData(readId, reads, groupStatus);
     }
 
     public synchronized void writeUnfusedFragments(final List<FusionFragment> fragments)
@@ -134,7 +134,7 @@ public class FusionWriter
             return;
 
         fragments.forEach(x -> writeFragmentData(x, "UNFUSED"));
-        fragments.forEach(x -> writeReadData(x.reads(), "UNFUSED"));
+        fragments.forEach(x -> writeReadData(x.readId(), x.reads(), "UNFUSED"));
     }
 
     private void initialiseFragmentWriter()
@@ -172,7 +172,7 @@ public class FusionWriter
 
     public void writeIncompleteGroupReads(final List<FusionReadGroup> incompleteGroups)
     {
-        incompleteGroups.forEach(x -> mChimericReadCache.writeReadData(x.Reads, "INCOMPLETE_GROUPS"));
+        incompleteGroups.forEach(x -> mChimericReadCache.writeReadData(x.ReadId, x.Reads, "INCOMPLETE_GROUPS"));
     }
 
     public synchronized void writeFragmentData(final FusionFragment fragment, final String fusionId)

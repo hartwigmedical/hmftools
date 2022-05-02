@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.BamRecordUtils.generateMappedCoords;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
@@ -69,6 +70,7 @@ public class ReadRecord
     private short mMapQuality;
     private byte[] mBaseQualities;
 
+    private int[] mJunctionPositions; // chimeric junctions
     private Map<Integer,Integer> mJunctionDepth; // depth at chimeric junctions
 
     private static final String SUPPLEMENTARY_ATTRIBUTE = "SA";
@@ -130,6 +132,7 @@ public class ReadRecord
         mHasInterGeneSplit = false;
         mMapQuality = 0;
         mJunctionDepth = null;
+        mJunctionPositions = null;
         mBaseQualities = null;
     }
 
@@ -822,19 +825,14 @@ public class ReadRecord
         return transType != null ? transType : UNKNOWN;
     }
 
-    @Nullable
-    public Map<Integer,Integer> getJunctionDepth() { return mJunctionDepth; }
+    public int[] junctionPositions() { return mJunctionPositions; }
 
-    public void setReadJunctionDepth(final BaseDepth baseDepth)
+    public void setJunctionPosition(int se, int junctionPosition)
     {
-        if(mJunctionDepth == null)
-            mJunctionDepth = Maps.newHashMap();
+        if(mJunctionPositions == null)
+            mJunctionPositions = new int[SE_PAIR];
 
-        for(final int[] mappedCoords : mMappedCoords)
-        {
-            mJunctionDepth.put(mappedCoords[SE_START], baseDepth.depthAtBase(mappedCoords[SE_START]));
-            mJunctionDepth.put(mappedCoords[SE_END], baseDepth.depthAtBase(mappedCoords[SE_END]));
-        }
+        mJunctionPositions[se] = junctionPosition;
     }
 
     public String toString()

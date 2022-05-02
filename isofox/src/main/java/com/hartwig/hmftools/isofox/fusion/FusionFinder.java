@@ -126,7 +126,7 @@ public class FusionFinder implements Callable
     }
 
     public List<FusionReadGroup> processNewChimericReadGroups(
-            final GeneCollection geneCollection, final BaseDepth baseDepth, final Map<String, FusionReadGroup> newReadGroups)
+            final GeneCollection geneCollection, final BaseDepth baseDepth, final Map<String,FusionReadGroup> newReadGroups)
     {
         List<FusionReadGroup> completeReadGroups = Lists.newArrayList();
 
@@ -283,7 +283,7 @@ public class FusionFinder implements Callable
 
             if(fragment.type() == FusionFragmentType.UNKNOWN)
             {
-                mFusionWriter.writeReadData(reads, "INVALID_FRAG");
+                mFusionWriter.writeReadData(fragment.readId(), reads, "INVALID_FRAG");
                 continue;
             }
 

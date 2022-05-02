@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.NONE;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.cigarFromStr;
+import static com.hartwig.hmftools.isofox.common.RegionMatchType.getHighestMatchType;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
@@ -19,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
@@ -50,9 +52,9 @@ public class ChimericReadCache
             final String outputFileName = mConfig.formOutputFile("chimeric_reads.csv");
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write("ReadGroupCount,ReadId,FusionGroup,Chromosome,PosStart,PosEnd,Orientation,Cigar,InsertSize");
-            writer.write(",FirstInPair,Supplementary,ReadReversed,ProperPair,SuppAlign");
-            writer.write(",Bases,Flags,MateChr,MatePosStart,GeneSetStart,GeneSetEnd,GenicStart,GenicEnd,InterGeneSplit");
+            writer.write("ReadGroupCount,ReadId,FusionGroup,Chromosome,PosStart,PosEnd,Orientation,Cigar");
+            writer.write(",Flags,HasSupplAlign,SuppData,BasesStart,BasesEnd,MateChr,MatePosStart");
+            writer.write(",GeneSetStart,GeneSetEnd,GenicStart,GenicEnd,InterGeneSplit");
             writer.write(",MappedCoords,ScRegionsMatchedStart,ScRegionsMatchedEnd");
             writer.write(",TopTransMatch,TransExonData,UpperTopTransMatch,UpperTransExonData");
             writer.newLine();
@@ -65,53 +67,57 @@ public class ChimericReadCache
         }
     }
 
-    public synchronized void writeReadData(final List<FusionRead> reads, final String groupStatus)
+    public synchronized void writeReadData(final String readId, final List<FusionRead> reads, final String groupStatus)
     {
         if(mReadWriter == null)
             return;
 
         try
         {
-            // TODO, use new read class
             for(final FusionRead read : reads)
             {
-                /*
-                mReadWriter.write(String.format("%d,%s,%s,%s,%d,%d,%d,%s,%d",
-                        reads.size(), read.Id, groupStatus, read.Chromosome,
-                        read.PosStart, read.PosEnd, read.orientation(), read.Cigar.toString(), read.fragmentInsertSize()));
+                mReadWriter.write(String.format("%d,%s,%s,%s,%d,%d,%d,%s",
+                        reads.size(), readId, groupStatus, read.Chromosome,
+                        read.posStart(), read.posEnd(), read.Orientation, read.Cigar));
 
+                /*
                 mReadWriter.write(String.format(",%s,%s,%s,%s,%s,%s,%d,%s,%d",
-                        read.isFirstOfPair(), read.isSupplementaryAlignment(), read.isReadReversed(), read.isProperPair(),
-                        read.getSuppAlignmentCsv(), read.ReadBases, read.flags(), read.mateChromosome(), read.mateStartPosition()));
+                        read.isFirstOfPair(), read.HasSuppAlignment, read.isReadReversed(), read.isProperPair(),
+                        read.SuppData != null, read.ReadBases, read.flags(), read.MateChromosome, read.MatePosStart));
+                */
+
+                mReadWriter.write(String.format(",%d,%s,%s,%s,%s,%s,%d",
+                        read.Flags, read.HasSuppAlignment, read.SuppData != null ? read.SuppData.asCsv() : "NONE",
+                        read.BoundaryBases[SE_START], read.BoundaryBases[SE_END], read.MateChromosome, read.MatePosStart));
 
                 mReadWriter.write(String.format(",%d,%d,%s,%s,%s",
-                        read.getGeneCollectons()[SE_START], read.getGeneCollectons()[SE_END],
-                        read.getIsGenicRegion()[SE_START], read.getIsGenicRegion()[SE_END], read.hasInterGeneSplit()));
+                        read.GeneCollections[SE_START], read.GeneCollections[SE_END],
+                        read.IsGenicRegion[SE_START], read.IsGenicRegion[SE_END], read.HasInterGeneSplit));
 
-                String coordsStr = "";
+                StringJoiner coordsStr = new StringJoiner(ITEM_DELIM);
 
-                for(int[] coord : read.getMappedRegionCoords())
+                for(int[] coord : read.MappedCoords)
                 {
-                    coordsStr = appendStr(coordsStr, String.format("%d:%d", coord[SE_START], coord[SE_END]), ITEM_DELIM.charAt(0));
+                    coordsStr.add(String.format("%d:%d", coord[SE_START], coord[SE_END]));
                 }
 
                 mReadWriter.write(String.format(",%s,%d,%d",
-                        coordsStr, read.getSoftClipRegionsMatched()[SE_START], read.getSoftClipRegionsMatched()[SE_END]));
+                        coordsStr.toString(), read.SoftClipLengths[SE_START], read.SoftClipLengths[SE_END]));
 
                 // log the transcript exons affected, and the highest matching transcript
-                String transExonData = "";
+                StringJoiner transExonData = new StringJoiner(ITEM_DELIM);
                 RegionMatchType topTransMatchType = getHighestMatchType(read.getTransExonRefs().keySet());
 
                 if(topTransMatchType != NONE)
                 {
                     for (final TransExonRef transExonRef : read.getTransExonRefs().get(topTransMatchType))
                     {
-                        transExonData = appendStr(transExonData, String.format("%s:%d:%s:%d",
-                                transExonRef.GeneId, transExonRef.TransId, transExonRef.TransName, transExonRef.ExonRank), ';');
+                        transExonData.add(String.format("%s:%d:%s:%d",
+                                transExonRef.GeneId, transExonRef.TransId, transExonRef.TransName, transExonRef.ExonRank));
                     }
                 }
 
-                String upperTransExonData = "";
+                StringJoiner upperTransExonData = new StringJoiner(ITEM_DELIM);
                 RegionMatchType upperTopTransMatchType = NONE;
 
                 if(read.spansGeneCollections() && !read.getTransExonRefs(SE_END).isEmpty())
@@ -122,17 +128,16 @@ public class ChimericReadCache
                     {
                         for (final TransExonRef transExonRef : read.getTransExonRefs(SE_END).get(upperTopTransMatchType))
                         {
-                            transExonData = appendStr(transExonData, String.format("%s:%d:%s:%d",
-                                    transExonRef.GeneId, transExonRef.TransId, transExonRef.TransName, transExonRef.ExonRank), ';');
+                            upperTransExonData.add(String.format("%s:%d:%s:%d",
+                                    transExonRef.GeneId, transExonRef.TransId, transExonRef.TransName, transExonRef.ExonRank));
                         }
                     }
                 }
 
                 mReadWriter.write(String.format(",%s,%s,%s,%s",
-                        topTransMatchType, transExonData.isEmpty() ? "NONE" : transExonData,
-                        upperTopTransMatchType, upperTransExonData.isEmpty() ? "NONE" : upperTransExonData));
+                        topTransMatchType, transExonData.toString().isEmpty() ? "NONE" : transExonData.toString(),
+                        upperTopTransMatchType, upperTransExonData.toString().isEmpty() ? "NONE" : upperTransExonData.toString()));
 
-                 */
                 mReadWriter.newLine();
 
             }

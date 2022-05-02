@@ -338,7 +338,7 @@ public class TestUtils
         if(read.getMappedRegions().isEmpty())
             read.addIntronicTranscriptRefs(geneCollection.getTranscripts());
 
-        read.captureGeneInfo(false);
+        // read.captureGeneInfo(false);
 
         geneCollection.setReadGeneCollections(read, geneCollection.getNonGenicPositions());
 

@@ -302,9 +302,6 @@ public class ChimericReadTracker
         {
             addRealignCandidates();
 
-            // TODO - collect junction data against reads or in collectCandidateJunctions, save having to do it FragmentBuilder
-            // set it here against FusionRead
-
             // chimeric reads will be processed by the fusion-finding routine, so need to capture transcript and exon data
             // and free up other gene & region read data (to avoid retaining large numbers of references/memory)
             for(final ChimericReadGroup readGroup : mChimericReadMap.values())
@@ -316,7 +313,6 @@ public class ChimericReadTracker
 
             for(FusionFragment fragment : mJunctionRacGroups.getRacFragments())
             {
-                // fragment.reads().forEach(x -> x.captureGeneInfo(true));
                 fragment.reads().forEach(x -> x.setReadJunctionDepth(baseDepth));
             }
         }
@@ -482,8 +478,8 @@ public class ChimericReadTracker
         {
             int[] splitJunction = FusionUtils.findSplitReadJunction(splitRead);
 
-            addJunction(splitJunction[SE_START], POS_ORIENT);
-            addJunction(splitJunction[SE_END], NEG_ORIENT);
+            addJunction(splitRead, SE_START, splitJunction[SE_START], POS_ORIENT);
+            addJunction(splitRead, SE_END, splitJunction[SE_END], NEG_ORIENT);
 
             return;
         }
@@ -500,7 +496,7 @@ public class ChimericReadTracker
             {
                 junctionPositions[scSide.Side] = suppRead.getCoordsBoundary(scSide.Side);
 
-                addJunction(junctionPositions[scSide.Side], scSide.Side == SE_START ? NEG_ORIENT : POS_ORIENT);
+                addJunction(suppRead, scSide.Side, junctionPositions[scSide.Side], scSide.Side == SE_START ? NEG_ORIENT : POS_ORIENT);
             }
 
             return;
@@ -520,20 +516,21 @@ public class ChimericReadTracker
             if(scSide.isLeft())
             {
                 junctionPositions[SE_START] = read.getCoordsBoundary(SE_START);
-                addJunction(junctionPositions[SE_START], NEG_ORIENT);
+                addJunction(read, SE_START, junctionPositions[SE_START], NEG_ORIENT);
             }
             else
             {
                 junctionPositions[SE_END] = read.getCoordsBoundary(SE_END);
-                addJunction(junctionPositions[SE_END], POS_ORIENT);
+                addJunction(read, SE_END, junctionPositions[SE_END], POS_ORIENT);
             }
         }
     }
 
-    private void addJunction(int juncPosition, byte juncOrientation)
+    private void addJunction(final ReadRecord read, int seIndex, int juncPosition, byte juncOrientation)
     {
         if(juncPosition > 0)
         {
+            read.setJunctionPosition(seIndex, juncPosition);
             mJunctionRacGroups.addJunction(juncPosition, juncOrientation);
         }
     }
