@@ -521,8 +521,8 @@ public class FusionReadData
             int posAdjust = readBoundary > junctionPosition ? readBoundary - junctionPosition : 0;
 
             int boundaryBaseLength = read.BoundaryBases[SE_END].length();
-            String extraBases = read.BoundaryBases[SE_END].substring(boundaryBaseLength - scLength - posAdjust, boundaryBaseLength);
-            // String extraBases = read.ReadBases.substring(read.Length - scLength - posAdjust, read.Length);
+            int extraBaseLength = min(scLength + posAdjust, boundaryBaseLength);
+            String extraBases = read.BoundaryBases[SE_END].substring(boundaryBaseLength - extraBaseLength, boundaryBaseLength);
 
             if(extraBases.length() > JUNCTION_BASE_LENGTH)
                 extraBases = extraBases.substring(0, JUNCTION_BASE_LENGTH);
@@ -548,9 +548,9 @@ public class FusionReadData
                 return true;
 
             int posAdjust = readBoundary < junctionPosition ? junctionPosition - readBoundary : 0;
+            int extraBaseLength = min(scLength + posAdjust, read.BoundaryBases[SE_START].length());
 
-            String extraBases = read.BoundaryBases[SE_START].substring(0, scLength + posAdjust);
-            // String extraBases = read.ReadBases.substring(0, scLength + posAdjust);
+            String extraBases = read.BoundaryBases[SE_START].substring(0, extraBaseLength);
 
             if(extraBases.length() > JUNCTION_BASE_LENGTH)
                 extraBases = extraBases.substring(extraBases.length() - JUNCTION_BASE_LENGTH, extraBases.length());

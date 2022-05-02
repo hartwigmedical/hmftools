@@ -25,7 +25,7 @@ public final class FusionTestUtils
             if(read.containsSplit() && read.junctionPositions() == null)
             {
                 // mirror what is done in CRT
-                int[] junctionPositions = findSplitReadJunction(read);
+                int[] junctionPositions = ChimericUtils.findSplitReadJunction(read);
                 if(junctionPositions != null)
                 {
                     read.setJunctionPosition(SE_START, junctionPositions[SE_START]);

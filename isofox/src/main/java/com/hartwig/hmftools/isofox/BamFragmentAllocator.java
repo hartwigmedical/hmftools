@@ -32,7 +32,7 @@ import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.isRealignedFragmentCandidate;
+import static com.hartwig.hmftools.isofox.fusion.ChimericUtils.isRealignedFragmentCandidate;
 
 import java.io.BufferedWriter;
 import java.io.File;

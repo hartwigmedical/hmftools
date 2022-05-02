@@ -19,7 +19,6 @@ import htsjdk.samtools.CigarOperator;
 
 public final class ChimericUtils
 {
-    /*
     public static boolean isInversion(final List<ReadRecord> reads)
     {
         // an inversion must a) be same chromosome b) have supplementary alignment c) have same orientations around the chimeric junction
@@ -173,5 +172,4 @@ public final class ChimericUtils
 
         return false;
     }
-    */
 }

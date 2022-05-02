@@ -22,7 +22,6 @@ import com.hartwig.hmftools.isofox.common.TransExonRef;
 public class FusionRead
 {
     // skip read ID since always obtainable from the read-group
-
     public final String Chromosome;
     public final int[] Positions;
     public final byte Orientation;
@@ -48,7 +47,7 @@ public class FusionRead
     // directly related to fusion junctions, may be set on one, both or no sides
     private final int[] mJunctionPositions;
 
-    private Map<Integer,Integer> mBoundaryDepth; // depth at mapped coords boundaries
+    private Map<Integer,Integer> mBoundaryDepth; // depth at mapped coords boundaries, used when junction is not known
     private int[] mJunctionDepth; // depth at chimeric junctions
 
     private final Map<RegionMatchType,List<TransExonRef>> mTransExonRefs;

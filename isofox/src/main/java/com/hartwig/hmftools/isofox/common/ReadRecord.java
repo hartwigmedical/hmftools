@@ -430,30 +430,6 @@ public class ReadRecord
         return mFragmentInsertSize < Length;
     }
 
-    public void captureGeneInfo(boolean purgeRegions)
-    {
-        // converts the more details view of transcript mapping data to a stream-lined data set for chimeric read processing
-        for(Map.Entry<RegionReadData,RegionMatchType> entry : mMappedRegions.entrySet())
-        {
-            List<TransExonRef> transRefList = mTransExonRefs.get(entry.getValue());
-
-            if(transRefList == null)
-            {
-                mTransExonRefs.put(entry.getValue(), Lists.newArrayList(entry.getKey().getTransExonRefs()));
-            }
-            else
-            {
-                transRefList.addAll(entry.getKey().getTransExonRefs());
-            }
-        }
-
-        if(purgeRegions)
-        {
-            mMappedRegions.clear();
-            mTranscriptClassification.clear();
-        }
-    }
-
     public static final List<RegionReadData> getUniqueValidRegion(final ReadRecord read1, final ReadRecord read2)
     {
         final List<RegionReadData> regions = read1.getMappedRegions().entrySet().stream()

@@ -16,11 +16,11 @@ import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.isInversion;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.setHasMultipleKnownSpliceGenes;
+import static com.hartwig.hmftools.isofox.fusion.ChimericUtils.findSplitReadJunction;
+import static com.hartwig.hmftools.isofox.fusion.ChimericUtils.isInversion;
+import static com.hartwig.hmftools.isofox.fusion.ChimericUtils.setHasMultipleKnownSpliceGenes;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionRead.convertReads;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findSplitReadJunction;
 
 import java.util.List;
 import java.util.Map;
@@ -476,7 +476,7 @@ public class ChimericReadTracker
 
         if(splitRead != null)
         {
-            int[] splitJunction = FusionUtils.findSplitReadJunction(splitRead);
+            int[] splitJunction = findSplitReadJunction(splitRead);
 
             addJunction(splitRead, SE_START, splitJunction[SE_START], POS_ORIENT);
             addJunction(splitRead, SE_END, splitJunction[SE_END], NEG_ORIENT);
