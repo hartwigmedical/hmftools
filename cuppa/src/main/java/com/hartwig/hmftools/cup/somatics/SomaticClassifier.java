@@ -374,7 +374,7 @@ public class SomaticClassifier implements CuppaClassifier
         }
 
         SampleResult result = new SampleResult(
-                sample.Id, SAMPLE_TRAIT, PERCENTILE, "SNV_COUNT", snvTotal, cancerTypeValues);
+                sample.Id, SAMPLE_TRAIT, PERCENTILE, "SNV_COUNT", String.valueOf(snvTotal), cancerTypeValues);
 
         results.add(result);
 
@@ -384,12 +384,12 @@ public class SomaticClassifier implements CuppaClassifier
         final Map<String,Double> cancerPrevsLow = calcPercentilePrevalence(
                 sample, cancerSampleCount, cancerTypeCount, mRefCancerSnvCountPercentiles, snvTotal,  true);
 
-        results.add(new SampleResult(sample.Id, SNV, LIKELIHOOD, "SNV_COUNT_LOW", snvTotal, cancerPrevsLow));
+        results.add(new SampleResult(sample.Id, SNV, LIKELIHOOD, "SNV_COUNT_LOW", String.valueOf(snvTotal), cancerPrevsLow));
 
         final Map<String,Double> cancerPrevsHigh = calcPercentilePrevalence(
                 sample, cancerSampleCount, cancerTypeCount, mRefCancerSnvCountPercentiles, snvTotal, false);
 
-        results.add(new SampleResult(sample.Id, SNV, LIKELIHOOD, "SNV_COUNT_HIGH", snvTotal, cancerPrevsHigh));
+        results.add(new SampleResult(sample.Id, SNV, LIKELIHOOD, "SNV_COUNT_HIGH", String.valueOf(snvTotal), cancerPrevsHigh));
     }
 
     private void addCssResults(
@@ -692,7 +692,8 @@ public class SomaticClassifier implements CuppaClassifier
                 }
             }
 
-            results.add(new SampleResult(sample.Id, SNV, PERCENTILE, signatureDisplayName(sigName), round(sampleSigContrib), cancerResults));
+            results.add(new SampleResult(
+                    sample.Id, SNV, PERCENTILE, signatureDisplayName(sigName), String.valueOf(round(sampleSigContrib)), cancerResults));
         }
     }
 

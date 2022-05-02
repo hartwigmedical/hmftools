@@ -126,9 +126,9 @@ public class SomaticDataLoader
         {
             final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false);
 
-            for (VariantContext variant : reader.iterator())
+            for(VariantContext variant : reader.iterator())
             {
-                if (filter.test(variant))
+                if(filter.test(variant))
                 {
                     final SomaticVariant somaticVariant = variantFactory.createVariant(sampleId, variant).orElse(null);
 

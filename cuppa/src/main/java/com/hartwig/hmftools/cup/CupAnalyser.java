@@ -283,7 +283,7 @@ public class CupAnalyser
 
             mSampleDataWriter = createBufferedWriter(sampleDataFilename, false);
 
-            mSampleDataWriter.write("SampleId,Category,ResultType,DataType,Value,RefCancerType,RefValue");
+            mSampleDataWriter.write(SampleResult.csvHeader());
 
             mSampleDataWriter.newLine();
 
@@ -318,15 +318,7 @@ public class CupAnalyser
                 if(mConfig.WriteClassifiersOnly && !(result.Category == CLASSIFIER || result.Category == CategoryType.COMBINED))
                     continue;
 
-                final String sampleStr = String.format("%s,%s,%s,%s,%s",
-                        sampleData.Id, result.Category, result.ResultType, result.DataType, result.Value.toString());
-
-                for(Map.Entry<String,Double> cancerValues : result.CancerTypeValues.entrySet())
-                {
-                    mSampleDataWriter.write(String.format("%s,%s,%.3g",
-                            sampleStr, cancerValues.getKey(), cancerValues.getValue()));
-                    mSampleDataWriter.newLine();
-                }
+                result.write(mSampleDataWriter);
             }
         }
         catch(IOException e)

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.cup.common;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.CuppaConfig.CANCER_SUBTYPE_OTHER;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;

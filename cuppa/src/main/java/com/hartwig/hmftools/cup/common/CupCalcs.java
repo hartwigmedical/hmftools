@@ -91,7 +91,7 @@ public class CupCalcs
         final Map<String,Double> cancerPrevalenceValues = Maps.newHashMap();
 
         final List<SampleResult> prevalenceResults = allResults.stream()
-                .filter(x -> x.ResultType == LIKELIHOOD)
+                .filter(x -> x.Result == LIKELIHOOD)
                 .filter(x -> x.Category != CLASSIFIER)
                 .collect(Collectors.toList());
 

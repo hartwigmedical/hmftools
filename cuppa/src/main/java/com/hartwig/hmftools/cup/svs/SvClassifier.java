@@ -129,7 +129,7 @@ public class SvClassifier implements CuppaClassifier
                 cancerTypeValues.put(cancerType, percentile);
             }
 
-            SampleResult result = new SampleResult(sample.Id, SV, PERCENTILE, svDataType.toString(), svCount, cancerTypeValues);
+            SampleResult result = new SampleResult(sample.Id, SV, PERCENTILE, svDataType.toString(), String.valueOf(svCount), cancerTypeValues);
             results.add(result);
         }
 
@@ -157,7 +157,7 @@ public class SvClassifier implements CuppaClassifier
                 sample, cancerSampleCount, cancerTypeCount, mRefSvTypePercentiles.get(type), svValue, useLowThreshold);
 
         final String dataType = String.format("%s_%s", type, useLowThreshold ? "LOW" : "HIGH");
-        return new SampleResult(sample.Id, SV, LIKELIHOOD, dataType, svValue, cancerPrevs);
+        return new SampleResult(sample.Id, SV, LIKELIHOOD, dataType, String.valueOf(svValue), cancerPrevs);
     }
 
     private boolean loadCohortSvData()
