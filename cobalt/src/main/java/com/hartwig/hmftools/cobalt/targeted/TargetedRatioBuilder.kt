@@ -217,26 +217,37 @@ class TargetedRatioBuilder(
         {
             val minNumGcRatios =
                 (offTargetWindowSize.toDouble() / CobaltConstants.WINDOW_SIZE * CobaltConstants.MIN_OFF_TARGET_WINDOW_RATIO).roundToInt()
+
+            val windowEnd = windowStart + offTargetWindowSize - 1
+            // the window position is the middle
+            val windowMid = windowStart + offTargetWindowSize / 2
+
             if (windowGcRatios.size < minNumGcRatios)
             {
                 // if we don't have enough sub windows with valid values then we skip this
+                sLogger.trace(
+                    "off target window: {}:{} ({} - {}), not enough sub window",
+                    chromosome, windowMid,
+                    windowStart, windowEnd)
                 return null
             }
-            val windowEnd = windowStart + offTargetWindowSize - 1
-
             // check that this window does not contain any target regions
             for (targetRegion in targetRegions)
             {
-                if (windowStart <= targetRegion.position() && windowEnd > targetRegion.position())
+                if (targetRegion.chromosome() == chromosome &&
+                    windowStart <= targetRegion.position() &&
+                    windowEnd > targetRegion.position())
                 {
                     // this window contains a target region
+                    sLogger.trace(
+                        "off target window: {}:{} ({} - {}), contains target region ",
+                        chromosome, windowMid,
+                        windowStart, windowEnd)
                     return null
                 }
             }
             val median = Doubles.median(windowGcRatios)
 
-            // the window position is the middle
-            val windowMid = windowStart + offTargetWindowSize / 2
             sLogger.debug(
                 "off target window: {}:{} ({} - {}), num sub windows: {}, median: {}",
                 chromosome, windowMid,
