@@ -280,6 +280,7 @@ public class GeneCollectionReader implements Callable
             mBamFragmentAllocator.getChimericReadTracker().clearAll();
 
             mFusionFinder.logPerfCounters();
+            mFusionFinder.clearState(true);
         }
 
         if(mGeneDataList.size() > 10)
@@ -510,7 +511,7 @@ public class GeneCollectionReader implements Callable
 
         if(highCount)
         {
-            mFusionFinder.clearState();
+            mFusionFinder.clearState(false);
             System.gc();
         }
 

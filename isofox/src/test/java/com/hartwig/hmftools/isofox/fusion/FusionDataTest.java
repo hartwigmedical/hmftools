@@ -181,7 +181,7 @@ public class FusionDataTest
         assertEquals(2, fusion.getFragments(DISCORDANT).size());
 
         // check again with the discordant read having to fall within the correct transcript & exon
-        finder.clearState();
+        finder.clearState(false);
         readGroups1.clear();
         readGroups2.clear();
 

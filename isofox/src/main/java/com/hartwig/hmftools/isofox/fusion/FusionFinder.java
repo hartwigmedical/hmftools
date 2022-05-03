@@ -117,12 +117,18 @@ public class FusionFinder implements Callable
     public final List<FusionReadGroup> getSpanningReadGroups() { return mSpanningReadGroups; }
     public final RacFragmentCache racFragmentCache() { return mRacFragmentCache; }
 
-    public void clearState()
+    public void clearState(boolean isFinal)
     {
         mAllFragments.clear();
         mFusionCandidates.clear();
         mFusionsByLocation.clear();
         mDiscordantFragments.clear();
+
+        if(isFinal)
+        {
+            mChimericPartialReadGroups.clear();
+            mSpanningReadGroups.clear();
+        }
     }
 
     public List<FusionReadGroup> processNewChimericReadGroups(
@@ -239,12 +245,17 @@ public class FusionFinder implements Callable
     public void processInterChromosomalReadGroups(final List<FusionReadGroup> readGroups)
     {
         processReadGroups(readGroups, true);
+
+        if(mHardFilteredCount > 0)
+        {
+            ISF_LOGGER.info("chr({}) fusion processing complete, hard-filtered({})", mTaskId, mHardFilteredCount);
+        }
     }
 
     private void processReadGroups(final List<FusionReadGroup> readGroups, boolean isInterChromosomal)
     {
         // read groups are guaranteed to be complete
-        clearState();
+        clearState(false);
 
         if(readGroups.isEmpty())
             return;
@@ -474,15 +485,22 @@ public class FusionFinder implements Callable
 
         FusionFragment initialFragment = fusionData.getInitialFragment();
 
+        List<TranscriptData> transcriptsCache = Lists.newArrayList();
+
         for(int se = SE_START; se <= SE_END; ++se)
         {
             List<TranscriptData> transDataList = Lists.newArrayList();
             Set<String> spliceGeneIds = Sets.newHashSet();
-            // final List<String> spliceGeneIds = initialFragment.getGeneIds(se);
 
             for(FusionTransExon transExonRef : initialFragment.getTransExonRefs()[se])
             {
-                TranscriptData transData = mGeneTransCache.getTranscriptData(transExonRef.TransId);
+                TranscriptData transData = transcriptsCache.stream().filter(x -> x.TransId == transExonRef.TransId).findFirst().orElse(null);
+
+                if(transData == null)
+                {
+                    transData = mGeneTransCache.getTranscriptData(transExonRef.TransId);
+                    transcriptsCache.add(transData);
+                }
 
                 if(transData == null)
                     continue;
@@ -496,16 +514,8 @@ public class FusionFinder implements Callable
                 spliceGeneIds.add(transData.GeneId);
             }
 
-            // previously would get all transcripts if those not identified as relating to the fragment junction
-            // but surely this was incorrect
-            // spliceGeneIds.forEach(x -> transDataList.addAll(mGeneTransCache.getTranscripts(x)));
-
             // purge any invalid transcript-exons and mark the junction as known if applicable
             initialFragment.validateTranscriptExons(transDataList, se);
-
-            // CHECK: and collect again - but seems absolutely pointless
-            // spliceGeneIds.clear();
-            // spliceGeneIds.addAll(initialFragment.getGeneIds(se));
 
             if(!spliceGeneIds.isEmpty())
             {

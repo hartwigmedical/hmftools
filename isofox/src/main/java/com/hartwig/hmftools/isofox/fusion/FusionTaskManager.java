@@ -24,7 +24,6 @@ public class FusionTaskManager
 
     private final RacFragmentCache mRacFragmentCache;
     private final Map<String,Map<String, FusionReadGroup>> mIncompleteReadGroups; // keyed by chromosome then readId
-    private final Map<String,Set<String>> mHardFilteredReadGroups; // keyed by chromosome then readId
 
     public FusionTaskManager(final IsofoxConfig config, final EnsemblDataCache geneTransCache)
     {
@@ -38,7 +37,6 @@ public class FusionTaskManager
 
         mRacFragmentCache = new RacFragmentCache();
         mIncompleteReadGroups = Maps.newHashMap();
-        mHardFilteredReadGroups = Maps.newHashMap();
 
         mFusionWriter = new FusionWriter(mConfig);
     }
@@ -54,7 +52,6 @@ public class FusionTaskManager
             final String chromosome, final Map<String,Map<String, FusionReadGroup>> chrIncompleteGroups)
     {
         int prevIncomplete = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
-        int hardFiltered = 0;
 
         List<FusionReadGroup> completeGroups = Lists.newArrayList();
 
@@ -81,16 +78,6 @@ public class FusionTaskManager
             }
             else
             {
-                Set<String> chrHfGroups = mHardFilteredReadGroups.get(otherChromosome);
-
-                if(chrHfGroups != null)
-                {
-                    List<String> matched = chrHfGroups.stream().filter(x -> newIncompleteGroups.containsKey(x)).collect(Collectors.toList());
-                    matched.forEach(x -> newIncompleteGroups.remove(x));
-                    matched.forEach(x -> chrHfGroups.remove(x));
-                    hardFiltered += matched.size();
-                }
-
                 mergeChimericReadMaps(existingGroups, completeGroups, newIncompleteGroups);
 
                 ISF_LOGGER.debug("combined chromosomes({} & {}) existing({}) new({}) complete({})",
@@ -102,13 +89,11 @@ public class FusionTaskManager
 
         int partialGroupCount = chrIncompleteGroups.values().stream().mapToInt(x -> x.size()).sum();
 
-        ISF_LOGGER.info("chr({}) chimeric groups(partial={} complete={}) total incomplete({} -> {}) hf({})",
-                chromosome, partialGroupCount, completeGroups.size(), prevIncomplete, newIncomplete, hardFiltered);
+        ISF_LOGGER.info("chr({}) chimeric groups(partial={} complete={}) total incomplete({} -> {})",
+                chromosome, partialGroupCount, completeGroups.size(), prevIncomplete, newIncomplete);
 
         return completeGroups;
     }
-
-    public RacFragmentCache getRacFragmentCache() { return mRacFragmentCache; }
 
     public synchronized void addRacFragments(final String chromosome, int geneCollectionId, final JunctionRacFragments racFragments)
     {
