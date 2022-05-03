@@ -22,7 +22,7 @@ We find that 6 genes in particular (RN7SL2,RN7SL1,RN7SL3,RN7SL4P,RN7SL5P & RN7SK
 In addition, any junction which maps in the Poly-G region of LINC00486 is filtered from all analyses (v38: chr2:32,916,190-32,916,630; v37: 2:33,141,260-33,141,700) as they are likely the result of Poly-G sequencer artefacts.
 
 ### A note on alignment and multi-mapping
-We use STAR as our aligner. ISOFOX expects BAM output with chimeric reads in the BAm itself, so it is essential when using STAR to set the outSAMtype to 'BAM Unsorted' and the chimOutType to 'WithinBAM'
+We use STAR as our aligner. ISOFOX expects BAM output with chimeric reads in the BAM itself, so it is essential when using STAR to set the outSAMtype to 'BAM Unsorted' and the chimOutType to 'WithinBAM'
 
 The full list of non default parameters we use internally is:
 
