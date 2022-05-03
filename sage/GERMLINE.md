@@ -7,7 +7,7 @@ If a 'coverage_bed' file is provided, then calculate and write coverage statisti
 The following sections describe how SAGE can be configured to detect pathogenic germline variants. 
 
 ## Panel
-The panel is constructed from the supplied DriverGenePanel.hgxx.tsv file using the [DriverGenePanelConversion](../hmf-common/src/main/java/com/hartwig/hmftools/common/drivercatalog/panel/DriverGenePanelConversion.java) function. 
+The panel is constructed from the supplied DriverGenePanel.xx.tsv file using [Gene Utils](../gene-utils/README.md). 
 
 All germline and somatic reportable genes are included in the germline panel. 
 Unlike the somatic panel, the germline panel includes the UTR regions in addition to the coding regions. 
@@ -17,10 +17,10 @@ Splice sites (+1,+2,+5,-2,-1) are included as well.
 The germline hotspot is created at the same time as the germline panel. 
 We select all variants from the clinvar file that are Pathogenic or Likely_pathogenic (but not Benign or Likely_benign) and are marked as report germline hotspot in the driver gene panel.
 
-A select number of [whitelist](../hmf-common/src/main/java/com/hartwig/hmftools/common/drivercatalog/panel/GermlineHotspotVCF.java) variants are added to the hotspot file. 
+A select number of [whitelist](../gene-utils/src/main/resources/drivers/GermlineHotspots.whitelist.38.vcf) variants are added to the hotspot file. 
 
 ## BlackList
-[Blacklisted](../hmf-common/src/main/java/com/hartwig/hmftools/common/drivercatalog/panel/GermlineBlacklistVCF.java) variants are not reported as pathogenic.  
+[Blacklisted](../gene-utils/src/main/resources/drivers/GermlineHotspots.blacklist.38.vcf) variants are not reported as pathogenic.  
 Neither are BRCA2 variants in the range 13:32972625-32972907 (or v38 -> chr13:32398488-32398770).
 
 ## Parameters

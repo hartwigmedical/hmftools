@@ -22,7 +22,7 @@ We find that 6 genes in particular (RN7SL2,RN7SL1,RN7SL3,RN7SL4P,RN7SL5P & RN7SK
 In addition, any junction which maps in the Poly-G region of LINC00486 is filtered from all analyses (v38: chr2:32,916,190-32,916,630; v37: 2:33,141,260-33,141,700) as they are likely the result of Poly-G sequencer artefacts.
 
 ### A note on alignment and multi-mapping
-We use STAR as our aligner. ISOFOX expects BAM output with chimeric reads in the BAm itself, so it is essential when using STAR to set the outSAMtype to 'BAM Unsorted' and the chimOutType to 'WithinBAM'
+We use STAR as our aligner. ISOFOX expects BAM output with chimeric reads in the BAM itself, so it is essential when using STAR to set the outSAMtype to 'BAM Unsorted' and the chimOutType to 'WithinBAM'
 
 The full list of non default parameters we use internally is:
 
@@ -34,7 +34,7 @@ The full list of non default parameters we use internally is:
 --alignSplicedMateMapLminOverLmate 0.33 --alignSplicedMateMapLmin 35 --alignSJstitchMismatchNmax 5 -1 5 5
 ```
 
-STAR allows setting of the '—outFilterMultimapNmax ‘ parameter to specify the maximum number of multimaps to allow for an alignment and we use the default value (10).   STAR will mark one of the multi-mappable reads as primary and the remainder as secondary reads. MAPQ by default in STAR for mappable reads to 255, whereas multi-mappable reads will have qual scores of 3 or less. For transcript abundance only, Isofox counts both primary and secondary reads at all locations, but reduces the weight of the reads to reflect the multi-mapping  (MAPQ 3 = 50%,  MAPQ 2 = 33%, MAPQ 1 = 20%, MAPQ 0 => 10%).    Reads with MAPQ of <10 are excluded from novel splice junction and chimeric analysis
+STAR allows setting of the `—outFilterMultimapNmax` parameter to specify the maximum number of multimaps to allow for an alignment and we use the default value (10).   STAR will mark one of the multi-mappable reads as primary and the remainder as secondary reads. MAPQ by default in STAR for mappable reads to 255, whereas multi-mappable reads will have qual scores of 3 or less. For transcript abundance only, Isofox counts both primary and secondary reads at all locations, but reduces the weight of the reads to reflect the multi-mapping  (MAPQ 3 = 50%,  MAPQ 2 = 33%, MAPQ 1 = 20%, MAPQ 0 => 10%).    Reads with MAPQ of <10 are excluded from novel splice junction and chimeric analysis
 
 ## Configuration
 The functions of Isofox are controlled by the 'functions' argument:
@@ -84,7 +84,7 @@ The output file is approximately 120MB.
 
 Argument | Description
 ---|---
-frag_length_min_count | Minimum number of fragments to observe for length distributon calcs, default = 1M 
+frag_length_min_count | Minimum number of fragments to observe for length distribution calcs, default = 1M 
 exp_rate_frag_lengths | Discrete buckets for fragment lengths, either with frequency specified or left as zero if to be calculated (ie with -apply_calc_frag_lengths). eg '50-0;75-0;100-0;125-0;150-0;200-0;250-0;300-0;400-0;550-0' 
 exp_counts_file | Pre-computed expected counts per transcript and gene
 exp_gc_ratios_file | Pre-computed expected GC ratio counts per transcript
@@ -302,9 +302,9 @@ We also search explicitly for evidence of retained introns, ie where reads overl
 
 #### A. Identify candidate chimeric junctions
 
-Any junction supported with either a supplementary alignment or a spliced alignment which either links 2 known splice sites which are not present in any single ensemble gene OR links 2 known splice sites that are not spliced in a known ensembl transcript but create a known fusion pair (eg. GOPC_ROS1) OR extends at least 500kb beyond the range of a single gene is treated as a candidate chimeric junction. For a list of known pathogenic fusions only, Isofox also searches for candidate locations without split alignments supported only by discordant read pairs.   To reduce memory consumption and false positives, we hard filter candiates with only 1 read support except for known pathogenic fusions and candidates with at least one end matching a known splice site.
+Any junction supported with either a supplementary alignment or a spliced alignment which either links 2 known splice sites which are not present in any single ensemble gene OR links 2 known splice sites that are not spliced in a known ensembl transcript but create a known fusion pair (eg. GOPC_ROS1) OR extends at least 500kb beyond the range of a single gene is treated as a candidate chimeric junction. For a list of known pathogenic fusions only, Isofox also searches for candidate locations without split alignments supported only by discordant read pairs.   To reduce memory consumption and false positives, we hard filter candidates with only 1 read support except for known pathogenic fusions and candidates with at least one end matching a known splice site.
 
-The chimeric junction is oriented by the splice site type of the 2 breakends:  a location matching a donor splice site is set to be the 'up' breakend and a location matching the acceptor site is set to be the down breakend. If no splice site exists at either breakend, then the direction is infered by looking for canonical donor and acceptor sequences.
+The chimeric junction is oriented by the splice site type of the 2 breakends:  a location matching a donor splice site is set to be the 'up' breakend and a location matching the acceptor site is set to be the down breakend. If no splice site exists at either breakend, then the direction is inferred by looking for canonical donor and acceptor sequences.
 
 If either end of the chimeric junction overlaps more than 1 gene, then select one gene candidate according to the following priority rules:
 * Genes with matching splice site / orientation 
@@ -314,7 +314,7 @@ If either end of the chimeric junction overlaps more than 1 gene, then select on
 #### B. Count support
 
 Isofox counts 3 categories all fragments supporting the break junction broken into 3 categories:
-* Split - any fragment with a supplementary alignment or splice juction at the exact break junction
+* Split - any fragment with a supplementary alignment or splice junction at the exact break junction
 * Realigned - any fragment that has both reads mapped on one end of the chimeric junction, without a supplementary but exactly matches the reference at the other side of the candidate junction and overlaps the breakpoint by at least 3 bases but not more than 10 bases.  If the overlapping bases are consistent with multiple candidate junctions they may be double counted.						
 * Discordant pairs:  any fragment with 1 read mapped at either end of the chimeric junction in the appropriate orientation which cannot be classified as split or realigned and which with the chimeric junction implies a fragment length of <550 bases either unspliced or on a known transcript. If the discordant pairs are consistent with multiple junctions they may be double counted	
 
@@ -322,7 +322,7 @@ Isofox also determines the coverage at both breakends and the max anchor length 
 
 #### C. Filtering
 
-4 filters are applied in Isofox to remove likely artefacts from our chimeric junctions output.  The filters are tiered such that we achieve maximum senstivity for fusions with highest prior likelihood whilst still containing. Known pathogenic fusion partners are given the highest sensitivity followed by known splice site to known splice site, follow by canonical splice pairings (GT-AG) and lastly any other non-canoncial splice pairing.
+4 filters are applied in Isofox to remove likely artefacts from our chimeric junctions output.  The filters are tiered such that we achieve maximum sensitivity for fusions with highest prior likelihood whilst still containing. Known pathogenic fusion partners are given the highest sensitivity followed by known splice site to known splice site, follow by canonical splice pairings (GT-AG) and lastly any other non-canonical splice pairing.
 
 The filters and thresholds per tier are as follows:
 
@@ -333,9 +333,9 @@ min_af | min(AFUp, AFDown) | 0 | 0.002 | 0.005 | 0.005 | 0.05
 min_anchor | min(maxAnchorLengthUp, maxAnchorLengthDown) | 0 | 20 | 20 | 20 | 20 
 max_cohort_frequency*** | count of observations in cohort | NA if known;  5 if either gene known | 2 | 2 | 2 | 2
 
-'* For known pair fusions (excluding DEL / DUP <1M bases) supporting fragments are cumulative aross all novel junctions
+'* For known pair fusions (excluding DEL / DUP <1M bases) supporting fragments are cumulative across all novel junctions
 
-'** 'unspliced' junctions that are asscoicated with a passing Splice Site - Splice Site junction get the same filter cutoffs (excluding DEL / DUP <1M bases). 
+'** 'unspliced' junctions that are associated with a passing Splice Site - Splice Site junction get the same filter cutoffs (excluding DEL / DUP <1M bases). 
 
 '*** see below for cohort frequency calculation
 
@@ -440,7 +440,7 @@ SJEnd | End position of novel splice junction
 Fragments | Count of fragments supporting novel splice junction
 StartDepth | Total depth at SJStart position
 EndDepth | Total depth at SJEnd position
-Type | Type of novel splice junction.  One of:  'SKIPPED_EXON','NOVEL_EXON','NOVEL_3_PRIME_SS','NOVEL_5_PRIME_SS','NOVEL_INTRON','MIXED_TRANSCRIPT','INTRONIC', 'INTRONIC_TO_EXONIC' or 'CIRICULAR'
+Type | Type of novel splice junction.  One of:  'SKIPPED_EXON','NOVEL_EXON','NOVEL_3_PRIME_SS','NOVEL_5_PRIME_SS','NOVEL_INTRON','MIXED_TRANSCRIPT','INTRONIC', 'INTRONIC_TO_EXONIC' or 'CIRCULAR'
 SJStartContext| Gene context at SJStart position.  One of 'SPLICE_JUNC','EXONIC' or 'INTRONIC'
 SJEndContext |  Gene context at SJEnd position.  One of 'SPLICE_JUNC','EXONIC' or 'INTRONIC'
 SJStartDistance | Distance of SJStart position from nearest splice site (0 if splice junction, >0 if intronic and <0 if exonic)
@@ -475,7 +475,7 @@ Isofox generates 2 fusion output files - one for passing fusions and one for all
 Field | Description 
 ---|---
 FusionId | Unique id for fusion
-Valid | Both up and down gene strands match breakpoint orientation to make a potentially viable orientaiton
+Valid | Both up and down gene strands match breakpoint orientation to make a potentially viable orientation
 GeneIdUp | Ensembl Id for gene at up breakend
 GeneNameUp | Gene at up breakend
 ChrUp | Chromosome of up breakend
