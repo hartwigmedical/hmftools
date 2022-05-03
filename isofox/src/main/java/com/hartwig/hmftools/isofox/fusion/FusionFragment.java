@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.NO_GENE_ID;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.exonBoundary;
@@ -12,12 +11,12 @@ import static com.hartwig.hmftools.isofox.common.RegionMatchType.matchRank;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.canonicalAcceptor;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.canonicalDonor;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.impliedSvType;
+import static com.hartwig.hmftools.isofox.common.TransExonRef.mergeUnique;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.UNKNOWN;
 import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.KNOWN;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocation;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -162,59 +161,36 @@ public class FusionFragment
         // set transcript & exon info for each junction from each applicable read, taking only the highest matches
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            final List<FusionRead> reads = readsByLocation(se);
-
-            for(final FusionRead read : reads)
+            for(final FusionRead read : mReadGroup.Reads)
             {
+                if(!isSingleGeneCollection())
+                {
+                    if(!read.Chromosome.equals(mChromosomes[se]))
+                        continue;
+
+                    if(read.GeneCollections[SE_START] != mGeneCollections[se] && read.GeneCollections[SE_END] != mGeneCollections[se])
+                        continue;
+                }
+
                 if(mJunctionPositions[se] > 0 && !positionWithin(mJunctionPositions[se], read.Positions[SE_START], read.Positions[SE_END]))
                     continue;
 
-                final Map<RegionMatchType,List<TransExonRef>> transExonRefMap = read.getTransExonRefs(se);
-
-                List<TransExonRef> transExonRefs = null;
-
-                for(Map.Entry<RegionMatchType, List<TransExonRef>> entry : transExonRefMap.entrySet())
-                {
-                    RegionMatchType matchType = entry.getKey();
-
-                    if(matchRank(matchType) >= matchRank(mRegionMatchTypes[se]))
-                    {
-                        mRegionMatchTypes[se] = matchType;
-                        transExonRefs = entry.getValue();
-                    }
-                }
-
-                if(transExonRefs == null)
+                if(se == SE_END && read.getTransExonRefs(SE_END) == null)
                     continue;
 
-                for(TransExonRef readTransExonRef : transExonRefs)
+                RegionMatchType readMatchType = read.getRegionMatchType(se);
+
+                if(matchRank(readMatchType) < matchRank(mRegionMatchTypes[se]))
+                    continue;
+
+                if(matchRank(readMatchType) > matchRank(mRegionMatchTypes[se]))
                 {
-                    boolean found = false;
-
-                    for(TransExonRef transExonRef : mTransExonRefs[se])
-                    {
-                        if(transExonRef.TransId == readTransExonRef.TransId)
-                        {
-                            found = true;
-
-                            if(transExonRef.ExonRank != readTransExonRef.ExonRank)
-                            {
-                                ISF_LOGGER.trace("multi-exon: read({} cigar={}) ref1({}) ref2({})",
-                                        mReadGroup.ReadId, read.Cigar.toString(), transExonRef.toString(), readTransExonRef.toString());
-
-                                // will be handled later on
-                                mTransExonRefs[se].add(readTransExonRef);
-                            }
-
-                            break;
-                        }
-                    }
-
-                    if(!found)
-                    {
-                        mTransExonRefs[se].add(readTransExonRef);
-                    }
+                    mRegionMatchTypes[se] = readMatchType;
+                    mTransExonRefs[se].clear();
                 }
+
+                List<TransExonRef> readTransExonRefs = read.getTransExonRefs(se);
+                mergeUnique(mTransExonRefs[se], readTransExonRefs);
             }
         }
     }

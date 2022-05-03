@@ -123,6 +123,9 @@ public class SomaticClassifier implements CuppaClassifier
 
     public static final String WRITE_GEN_POS_CSS = "write_gen_pos_css";
 
+
+    private static final int GEN_POS_CSS_SIMILARITY_MAX_MATCHES = 100;
+
     public SomaticClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
         mConfig = config;
@@ -426,7 +429,7 @@ public class SomaticClassifier implements CuppaClassifier
             if(css < SNV_CSS_THRESHOLD)
                 continue;
 
-            if(mConfig.WriteSimilarities)
+            if(false && mConfig.WriteSimilarities)
             {
                 recordCssSimilarity(
                         topMatches, sample.Id, refSampleId, css, SNV_96_PAIRWISE_SIMILARITY.toString(),
@@ -465,7 +468,7 @@ public class SomaticClassifier implements CuppaClassifier
                 sample.Id, CLASSIFIER, LIKELIHOOD, SNV_96_PAIRWISE_SIMILARITY.toString(), String.format("%.4g", totalCss), cancerCssTotals));
 
         // for non-ref cohorts, also report closest matches from amongst these
-        if(mConfig.WriteSimilarities && mSampleDataCache.isMultiSampleNonRef())
+        if(false && mConfig.WriteSimilarities && mSampleDataCache.isMultiSampleNonRef())
         {
             for(Map.Entry<String,Integer> entry : mSampleSnvCountsIndex.entrySet())
             {
@@ -575,7 +578,7 @@ public class SomaticClassifier implements CuppaClassifier
                 sample.Id, CLASSIFIER, LIKELIHOOD, GENOMIC_POSITION_SIMILARITY.toString(), String.format("%.4g", totalCss), cancerCssTotals));
 
         // then run pairwise analysis if similarities are being analysed
-        // addSnvPosSimilarities(sample, sampleCounts, similarities);
+        addSnvPosSimilarities(sample, sampleCounts, similarities);
     }
 
     private void initialiseOutputFiles()
@@ -641,7 +644,7 @@ public class SomaticClassifier implements CuppaClassifier
             {
                 recordCssSimilarity(
                         topMatches, sample.Id, refSampleId, css, GENOMIC_POSITION_SIMILARITY.toString(),
-                        CSS_SIMILARITY_MAX_MATCHES, CSS_SIMILARITY_CUTOFF);
+                        GEN_POS_CSS_SIMILARITY_MAX_MATCHES, CSS_SIMILARITY_CUTOFF);
             }
         }
 

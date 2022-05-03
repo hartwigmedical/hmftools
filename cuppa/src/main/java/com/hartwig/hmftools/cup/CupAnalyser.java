@@ -295,7 +295,8 @@ public class CupAnalyser
 
                 mSampleSimilarityWriter = createBufferedWriter(sampleSimilarityFilename, false);
 
-                mSampleSimilarityWriter.write("SampleId,MatchType,Score,MatchSampleId,MatchCancerType");
+                mSampleSimilarityWriter.write("SampleId,CancerType,PrimaryType,PrimarySubtype,Location,SubLocation");
+                mSampleSimilarityWriter.write(",MatchType,Score,MatchSampleId,MatchCancerType");
                 mSampleSimilarityWriter.write(",MatchPrimaryType,MatchPrimarySubtype,MatchLocation,MatchSubLocation");
                 mSampleSimilarityWriter.newLine();
             }
@@ -343,8 +344,10 @@ public class CupAnalyser
                     matchedSample = mSampleDataCache.findSampleData(similarity.MatchedSampleId);
                 }
 
-                mSampleSimilarityWriter.write(String.format("%s,%s,%.3f,%s",
-                        sampleData.Id, similarity.MatchType, similarity.Score, similarity.MatchedSampleId));
+                mSampleSimilarityWriter.write(String.format("%s,%s,%s,%s,%s,%s,%s,%.3f,%s",
+                        sampleData.Id, sampleData.cancerType(), sampleData.PrimaryType, sampleData.PrimarySubtype,
+                        sampleData.PrimaryLocation, sampleData.PrimarySubLocation,
+                        similarity.MatchType, similarity.Score, similarity.MatchedSampleId));
 
                 if(matchedSample != null)
                 {

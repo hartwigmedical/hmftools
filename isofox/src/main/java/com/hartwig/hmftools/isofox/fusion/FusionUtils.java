@@ -3,16 +3,17 @@ package com.hartwig.hmftools.isofox.fusion;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.deriveCommonRegions;
+import static com.hartwig.hmftools.isofox.common.RegionMatchType.NONE;
+import static com.hartwig.hmftools.isofox.common.RegionMatchType.matchRank;
+import static com.hartwig.hmftools.isofox.common.TransExonRef.mergeUnique;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
 
@@ -21,13 +22,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
-
-import htsjdk.samtools.CigarOperator;
 
 public class FusionUtils
 {
@@ -105,9 +104,41 @@ public class FusionUtils
         maxSplitLengths[seIndex] = max(mappedBases, maxSplitLengths[seIndex]);
     }
 
+    public static RegionMatchType extractTopTransExonRefs(
+            final Map<RegionMatchType,List<TransExonRef>> transExonRefMap,
+            final RegionMatchType existingMatchType, final List<TransExonRef> existingTransExonRefs)
+    {
+        RegionMatchType topMatchType = NONE;
+        List<TransExonRef> topTransExonRefs = null;
+
+        for(Map.Entry<RegionMatchType, List<TransExonRef>> entry : transExonRefMap.entrySet())
+        {
+            RegionMatchType matchType = entry.getKey();
+
+            if(matchRank(matchType) < matchRank(existingMatchType))
+                continue;
+
+            if(topMatchType == null || matchRank(matchType) >= matchRank(topMatchType))
+            {
+                topMatchType = matchType;
+                topTransExonRefs = entry.getValue();
+            }
+        }
+
+        if(topTransExonRefs == null)
+            return existingMatchType;
+
+        if(matchRank(topMatchType) > matchRank(existingMatchType))
+            existingTransExonRefs.clear();
+
+        mergeUnique(existingTransExonRefs, topTransExonRefs);
+
+        return topMatchType;
+    }
+
     public static void checkMissingGeneData(final FusionRead read, final List<TranscriptData> transDataList)
     {
-        if(!read.IsGenicRegion[SE_END])
+        if(!read.IsGenicRegion[SE_END] || !read.spansGeneCollections())
             return;
 
         // due to the way the BAM fragment allocator processes reads per gene collection, the upper gene collection will have missed its
@@ -115,7 +146,9 @@ public class FusionUtils
 
         int upperCoordIndex = read.MappedCoords.size() - 1;
         final int[] upperCoords = read.MappedCoords.get(upperCoordIndex);
-        final Map<RegionMatchType,List<TransExonRef>> transExonRefMap = read.getTransExonRefs(SE_END);
+
+        List<TransExonRef> transExonRefs = Lists.newArrayList();
+        RegionMatchType topMatchType = NONE;
 
         for(TranscriptData transData : transDataList)
         {
@@ -126,6 +159,9 @@ public class FusionUtils
             {
                 if(!positionsOverlap(upperCoords[SE_START], upperCoords[SE_END], exonData.Start, exonData.End))
                     continue;
+
+                if(exonData.Start > upperCoords[SE_END])
+                    break;
 
                 RegionMatchType matchType;
                 if(upperCoords[SE_START] == exonData.Start || upperCoords[SE_END] == exonData.End)
@@ -141,18 +177,21 @@ public class FusionUtils
                     matchType = RegionMatchType.EXON_INTRON;
                 }
 
+                if(matchRank(matchType) < matchRank(topMatchType))
+                    continue;
+
+                if(matchRank(matchType) > matchRank(topMatchType))
+                {
+                    transExonRefs.clear();
+                    topMatchType = matchType;
+                }
+
                 TransExonRef teRef = new TransExonRef(transData.GeneId, transData.TransId, transData.TransName, exonData.Rank);
-
-                final List<TransExonRef> transExonRefs = transExonRefMap.get(matchType);
-
-                if(transExonRefs == null)
-                    transExonRefMap.put(matchType, Lists.newArrayList(teRef));
-                else
-                    transExonRefs.add(teRef);
-
-                break;
+                transExonRefs.add(teRef);
             }
         }
+
+        read.setUpperTransExonRefs(transExonRefs, topMatchType);
     }
 
     public static final String SUPP_ALIGNMENT_DELIM = ",";

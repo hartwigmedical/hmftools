@@ -106,11 +106,11 @@ public class ChimericReadCache
 
                 // log the transcript exons affected, and the highest matching transcript
                 StringJoiner transExonData = new StringJoiner(ITEM_DELIM);
-                RegionMatchType topTransMatchType = getHighestMatchType(read.getTransExonRefs().keySet());
+                RegionMatchType topTransMatchType = read.getRegionMatchType(SE_START);
 
                 if(topTransMatchType != NONE)
                 {
-                    for (final TransExonRef transExonRef : read.getTransExonRefs().get(topTransMatchType))
+                    for(final TransExonRef transExonRef : read.getTransExonRefs(SE_START))
                     {
                         transExonData.add(String.format("%s:%d:%s:%d",
                                 transExonRef.GeneId, transExonRef.TransId, transExonRef.TransName, transExonRef.ExonRank));
@@ -120,17 +120,14 @@ public class ChimericReadCache
                 StringJoiner upperTransExonData = new StringJoiner(ITEM_DELIM);
                 RegionMatchType upperTopTransMatchType = NONE;
 
-                if(read.spansGeneCollections() && !read.getTransExonRefs(SE_END).isEmpty())
+                if(read.spansGeneCollections() && read.getTransExonRefs(SE_END) != null)
                 {
-                    upperTopTransMatchType = getHighestMatchType(read.getTransExonRefs(SE_END).keySet());
+                    upperTopTransMatchType = read.getRegionMatchType(SE_END);
 
-                    if(upperTopTransMatchType != NONE)
+                    for(TransExonRef transExonRef : read.getTransExonRefs(SE_END))
                     {
-                        for (final TransExonRef transExonRef : read.getTransExonRefs(SE_END).get(upperTopTransMatchType))
-                        {
-                            upperTransExonData.add(String.format("%s:%d:%s:%d",
-                                    transExonRef.GeneId, transExonRef.TransId, transExonRef.TransName, transExonRef.ExonRank));
-                        }
+                        upperTransExonData.add(String.format("%s:%d:%s:%d",
+                                transExonRef.GeneId, transExonRef.TransId, transExonRef.TransName, transExonRef.ExonRank));
                     }
                 }
 
@@ -139,7 +136,6 @@ public class ChimericReadCache
                         upperTopTransMatchType, upperTransExonData.toString().isEmpty() ? "NONE" : upperTransExonData.toString()));
 
                 mReadWriter.newLine();
-
             }
 
         }

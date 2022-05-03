@@ -6,6 +6,10 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
+import static com.hartwig.hmftools.isofox.common.RegionMatchType.NONE;
+import static com.hartwig.hmftools.isofox.common.RegionMatchType.matchRank;
+import static com.hartwig.hmftools.isofox.common.TransExonRef.mergeUnique;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.extractTopTransExonRefs;
 
 import java.util.List;
 import java.util.Map;
@@ -50,8 +54,10 @@ public class FusionRead
     private Map<Integer,Integer> mBoundaryDepth; // depth at mapped coords boundaries, used when junction is not known
     private int[] mJunctionDepth; // depth at chimeric junctions
 
-    private final Map<RegionMatchType,List<TransExonRef>> mTransExonRefs;
-    private final Map<RegionMatchType,List<TransExonRef>> mUpperTransExonRefs; // TE refs for upper coords if a spanning read
+    private final List<TransExonRef> mTransExonRefs;
+    private RegionMatchType mRegionMatchType;
+    private List<TransExonRef> mUpperTransExonRefs; // TE refs for upper coords if a spanning read
+    private RegionMatchType mUpperRegionMatchType;
 
     public FusionRead(final ReadRecord read)
     {
@@ -83,29 +89,11 @@ public class FusionRead
 
         BoundaryBases = new String[] { read.ReadBases.substring(0, startBases), read.ReadBases.substring(read.Length - endBases) };
 
-        mTransExonRefs = Maps.newHashMap();
-        mUpperTransExonRefs = Maps.newHashMap();
-
-        if(!read.getMappedRegions().isEmpty())
-        {
-            for(Map.Entry<RegionReadData, RegionMatchType> entry : read.getMappedRegions().entrySet())
-            {
-                List<TransExonRef> transRefList = mTransExonRefs.get(entry.getValue());
-
-                if(transRefList == null)
-                {
-                    mTransExonRefs.put(entry.getValue(), Lists.newArrayList(entry.getKey().getTransExonRefs()));
-                }
-                else
-                {
-                    transRefList.addAll(entry.getKey().getTransExonRefs());
-                }
-            }
-        }
-        else
-        {
-            mTransExonRefs.putAll(read.getTransExonRefs());
-        }
+        mTransExonRefs = Lists.newArrayList();
+        mRegionMatchType = NONE;
+        mUpperTransExonRefs = null;
+        mUpperRegionMatchType = NONE;
+        extractReadTransExonRefs(read);
 
         // depth will only be set for known junctions
         mBoundaryDepth = null;
@@ -137,13 +125,55 @@ public class FusionRead
 
     public final int[] junctionPositions() { return mJunctionPositions; }
 
-    public final Map<RegionMatchType,List<TransExonRef>> getTransExonRefs() { return mTransExonRefs; }
-    public final Map<RegionMatchType,List<TransExonRef>> getTransExonRefs(int se)
+    public final List<TransExonRef> getTransExonRefs() { return mTransExonRefs; }
+    public final List<TransExonRef> getTransExonRefs(int se)
     {
         if(spansGeneCollections())
             return se == SE_START ? mTransExonRefs : mUpperTransExonRefs;
         else
             return mTransExonRefs;
+    }
+
+    public RegionMatchType getRegionMatchType(int se)
+    {
+        return se == SE_END && mUpperTransExonRefs != null ? mUpperRegionMatchType : mRegionMatchType;
+    }
+
+    private void extractReadTransExonRefs(final ReadRecord read)
+    {
+        if(!read.getMappedRegions().isEmpty())
+        {
+            for(Map.Entry<RegionReadData, RegionMatchType> entry : read.getMappedRegions().entrySet())
+            {
+                RegionMatchType matchType = entry.getValue();
+
+                if(matchRank(matchType) < matchRank(mRegionMatchType))
+                    continue;
+
+                if(matchRank(matchType) > matchRank(mRegionMatchType))
+                {
+                    mRegionMatchType = matchType;
+                    mTransExonRefs.clear();
+                }
+
+                List<TransExonRef> transRefList = entry.getKey().getTransExonRefs();
+                mergeUnique(mTransExonRefs, transRefList);
+            }
+        }
+        else if(!read.getTransExonRefs().isEmpty())
+        {
+            mRegionMatchType = extractTopTransExonRefs(read.getTransExonRefs(), mRegionMatchType, mTransExonRefs);
+        }
+    }
+
+    public void setUpperTransExonRefs(final List<TransExonRef> transExonRefs, final RegionMatchType matchType)
+    {
+        if(mUpperTransExonRefs == null)
+        {
+            mUpperTransExonRefs = Lists.newArrayList(transExonRefs);
+        }
+
+        mUpperRegionMatchType = matchType;
     }
 
     public void setReadJunctionDepth(final BaseDepth baseDepth)

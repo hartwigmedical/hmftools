@@ -256,7 +256,7 @@ public class GeneCollectionReader implements Callable
         {
             if(nextLogCount > 100)
             {
-                ISF_LOGGER.info("chr({}) chimeric data: {} mj={}", mChromosome, mChimericStats, mChimericStats.MatchedJunctions);
+                ISF_LOGGER.info("chr({}) chimeric data: {}", mChromosome, mChimericStats);
             }
 
             mPerfCounters[PERF_FUSIONS].stop();
@@ -498,10 +498,10 @@ public class GeneCollectionReader implements Callable
         if(highCount)
         {
             int nonSuppGroups = (int)completeReadGroups.stream().filter(x -> x.size() == 2).count();
-            ISF_LOGGER.info("chr({}) genes({}) region({} - {}) found {} local chimeric read groups (non-supp={}), stats({} mj={})",
+            ISF_LOGGER.info("chr({}) genes({}) region({} - {}) found {} local chimeric read groups (non-supp={}), stats({})",
                     mChromosome, geneCollection.geneNames(),
                     geneCollection.getNonGenicPositions()[SE_START], geneCollection.getNonGenicPositions()[SE_END],
-                    completeReadGroups.size(), nonSuppGroups, mChimericStats, mChimericStats.MatchedJunctions);
+                    completeReadGroups.size(), nonSuppGroups, mChimericStats);
         }
 
         mFusionTaskManager.addRacFragments(
