@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.isofox.fusion;
 
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadGroup.mergeChimericReadMaps;
 
 import java.util.List;
@@ -29,6 +30,9 @@ public class FusionTaskManager
     {
         mConfig = config;
         mGeneTransCache = geneTransCache;
+
+        if(mConfig.runFunction(FUSIONS))
+            mGeneTransCache.createTranscriptIdMap();
 
         mPassingFusions = new PassingFusions(config.Fusions.KnownFusions, config.Fusions.CohortFile);
 

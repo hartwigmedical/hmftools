@@ -34,29 +34,16 @@ public class TransExonRef
             return other.ExonRank >= ExonRank + maxDiffVsOther && other.ExonRank <= ExonRank;
     }
 
-    public static boolean hasTranscriptExonMatch(final List<TransExonRef> list1, final List<TransExonRef> list2)
+    public static boolean hasMatch(final List<TransExonRef> list1, final List<TransExonRef> list2)
     {
         return list1.stream().anyMatch(x -> list2.stream().anyMatch(y -> x.matches(y)));
     }
 
-    public static void mergeUnique(final List<TransExonRef> existingRefs, final List<TransExonRef> newRefs)
-    {
-        for(TransExonRef transExonRef : newRefs)
-        {
-            if(existingRefs.stream().noneMatch(x -> x.TransId == transExonRef.TransId && x.ExonRank == transExonRef.ExonRank))
-            {
-                existingRefs.add(transExonRef);
-            }
-        }
-
-    }
-    public static boolean hasTranscriptExonMatch(final List<TransExonRef> list1, final List<TransExonRef> list2, int maxList2Diff)
+    public static boolean hasMatchWithinRange(final List<TransExonRef> list1, final List<TransExonRef> list2, int maxList2Diff)
     {
         // list 2 is allowed a buffer of difference
         return list1.stream().anyMatch(x -> list2.stream().anyMatch(y -> x.matches(y, maxList2Diff)));
     }
-
-
 
     public String toString()
     {

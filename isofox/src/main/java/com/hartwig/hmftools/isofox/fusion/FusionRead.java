@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.NONE;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.matchRank;
-import static com.hartwig.hmftools.isofox.common.TransExonRef.mergeUnique;
+import static com.hartwig.hmftools.isofox.fusion.FusionTransExon.fromList;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.extractTopTransExonRefs;
 
 import java.util.List;
@@ -21,7 +21,6 @@ import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
-import com.hartwig.hmftools.isofox.common.TransExonRef;
 
 public class FusionRead
 {
@@ -54,9 +53,9 @@ public class FusionRead
     private Map<Integer,Integer> mBoundaryDepth; // depth at mapped coords boundaries, used when junction is not known
     private int[] mJunctionDepth; // depth at chimeric junctions
 
-    private final List<TransExonRef> mTransExonRefs;
+    private final List<FusionTransExon> mTransExonRefs;
     private RegionMatchType mRegionMatchType;
-    private List<TransExonRef> mUpperTransExonRefs; // TE refs for upper coords if a spanning read
+    private List<FusionTransExon> mUpperTransExonRefs; // TE refs for upper coords if a spanning read
     private RegionMatchType mUpperRegionMatchType;
 
     public FusionRead(final ReadRecord read)
@@ -125,8 +124,8 @@ public class FusionRead
 
     public final int[] junctionPositions() { return mJunctionPositions; }
 
-    public final List<TransExonRef> getTransExonRefs() { return mTransExonRefs; }
-    public final List<TransExonRef> getTransExonRefs(int se)
+    public final List<FusionTransExon> getTransExonRefs() { return mTransExonRefs; }
+    public final List<FusionTransExon> getTransExonRefs(int se)
     {
         if(spansGeneCollections())
             return se == SE_START ? mTransExonRefs : mUpperTransExonRefs;
@@ -156,17 +155,17 @@ public class FusionRead
                     mTransExonRefs.clear();
                 }
 
-                List<TransExonRef> transRefList = entry.getKey().getTransExonRefs();
-                mergeUnique(mTransExonRefs, transRefList);
+                List<FusionTransExon> transRefList = fromList(entry.getKey().getTransExonRefs());
+                FusionTransExon.mergeUnique(mTransExonRefs, transRefList);
             }
         }
-        else if(!read.getTransExonRefs().isEmpty())
+        else if(!read.getReadTransExonRefs().isEmpty())
         {
-            mRegionMatchType = extractTopTransExonRefs(read.getTransExonRefs(), mRegionMatchType, mTransExonRefs);
+            mRegionMatchType = extractTopTransExonRefs(read.getReadTransExonRefs(), mRegionMatchType, mTransExonRefs);
         }
     }
 
-    public void setUpperTransExonRefs(final List<TransExonRef> transExonRefs, final RegionMatchType matchType)
+    public void setUpperTransExonRefs(final List<FusionTransExon> transExonRefs, final RegionMatchType matchType)
     {
         if(mUpperTransExonRefs == null)
         {

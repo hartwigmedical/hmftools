@@ -9,20 +9,19 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.NONE;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.matchRank;
-import static com.hartwig.hmftools.isofox.common.TransExonRef.mergeUnique;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
+import static com.hartwig.hmftools.isofox.fusion.FusionTransExon.fromList;
+import static com.hartwig.hmftools.isofox.fusion.FusionTransExon.mergeUnique;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
@@ -106,7 +105,7 @@ public class FusionUtils
 
     public static RegionMatchType extractTopTransExonRefs(
             final Map<RegionMatchType,List<TransExonRef>> transExonRefMap,
-            final RegionMatchType existingMatchType, final List<TransExonRef> existingTransExonRefs)
+            final RegionMatchType existingMatchType, final List<FusionTransExon> existingTransExonRefs)
     {
         RegionMatchType topMatchType = NONE;
         List<TransExonRef> topTransExonRefs = null;
@@ -131,7 +130,7 @@ public class FusionUtils
         if(matchRank(topMatchType) > matchRank(existingMatchType))
             existingTransExonRefs.clear();
 
-        mergeUnique(existingTransExonRefs, topTransExonRefs);
+        mergeUnique(existingTransExonRefs, fromList(topTransExonRefs));
 
         return topMatchType;
     }
@@ -147,7 +146,7 @@ public class FusionUtils
         int upperCoordIndex = read.MappedCoords.size() - 1;
         final int[] upperCoords = read.MappedCoords.get(upperCoordIndex);
 
-        List<TransExonRef> transExonRefs = Lists.newArrayList();
+        List<FusionTransExon> transExonRefs = Lists.newArrayList();
         RegionMatchType topMatchType = NONE;
 
         for(TranscriptData transData : transDataList)
@@ -186,7 +185,7 @@ public class FusionUtils
                     topMatchType = matchType;
                 }
 
-                TransExonRef teRef = new TransExonRef(transData.GeneId, transData.TransId, transData.TransName, exonData.Rank);
+                FusionTransExon teRef = new FusionTransExon(transData.TransId, exonData.Rank);
                 transExonRefs.add(teRef);
             }
         }

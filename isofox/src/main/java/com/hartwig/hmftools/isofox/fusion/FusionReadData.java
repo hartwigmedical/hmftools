@@ -16,7 +16,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.impliedSvType;
-import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.JUNCTION_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
@@ -383,6 +382,7 @@ public class FusionReadData
 
     public FusionFragment getInitialFragment() { return mFragment; }
 
+    /*
     public void cacheTranscriptData()
     {
         for(int se = SE_START; se <= SE_END; ++se)
@@ -390,6 +390,7 @@ public class FusionReadData
             mTransExonRefs[se].addAll(mFragment.getTransExonRefs()[se]);
         }
     }
+    */
 
     public boolean canAddDiscordantFragment(final FusionFragment fragment, int maxFragmentDistance)
     {
@@ -405,7 +406,7 @@ public class FusionReadData
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            final List<TransExonRef> fragmentRefs = fragment.getTransExonRefs()[se];
+            final List<FusionTransExon> fragmentRefs = fragment.getTransExonRefs()[se];
             final List<TransExonRef> fusionRefs = getTransExonRefsByPos(se);
 
             // must match the orientations of the fusion junction
@@ -423,7 +424,7 @@ public class FusionReadData
             else
                 permittedExonDiff = 2;
 
-            if(!hasTranscriptExonMatch(fusionRefs, fragmentRefs, permittedExonDiff))
+            if(!FusionTransExon.hasMatchWithinRange(fusionRefs, fragmentRefs, permittedExonDiff))
                 return false;
 
             final List<FusionRead> reads = fragment.readsByLocation(se);

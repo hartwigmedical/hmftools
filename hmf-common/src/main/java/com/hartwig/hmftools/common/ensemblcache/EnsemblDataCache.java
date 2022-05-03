@@ -33,7 +33,8 @@ public class EnsemblDataCache
     private final String mDataPath;
     private final RefGenomeVersion mRefGenomeVersion;
 
-    private final Map<String,List<TranscriptData>> mTranscriptDataMap; // transcripts keyed by geneId
+    private final Map<String,List<TranscriptData>> mTranscriptByGeneIdMap; // transcripts keyed by geneId
+    private final Map<Integer,TranscriptData> mTranscriptsByTransIdMap; // transcripts keyed by transId
     private final Map<String,List<GeneData>> mChrGeneDataMap; // genes keyed by chromosome
     private final Map<Integer,List<TranscriptProteinData>> mEnsemblProteinDataMap;
     private final Map<Integer,Integer> mTransSpliceAcceptorPosDataMap;
@@ -68,7 +69,8 @@ public class EnsemblDataCache
         mDataPath = checkAddDirSeparator(dataPath);
         mRefGenomeVersion = refGenomeVersion;
 
-        mTranscriptDataMap = Maps.newHashMap();
+        mTranscriptByGeneIdMap = Maps.newHashMap();
+        mTranscriptsByTransIdMap = Maps.newHashMap();
         mChrGeneDataMap = Maps.newHashMap();
         mEnsemblProteinDataMap = Maps.newHashMap();
         mTransSpliceAcceptorPosDataMap = Maps.newHashMap();
@@ -102,7 +104,7 @@ public class EnsemblDataCache
     }
     public boolean hasDownstreamGeneAnnotation(final GeneData geneData) { return mDownstreamGeneAnnotations.containsKey(geneData); }
 
-    public final List<GeneData> getAlternativeGeneData() { return mAlternativeGeneData; }
+    public List<GeneData> getAlternativeGeneData() { return mAlternativeGeneData; }
 
     public void setRequiredData(boolean exons, boolean proteinDomains, boolean splicePositions, boolean canonicalOnly)
     {
@@ -114,10 +116,9 @@ public class EnsemblDataCache
 
     public void setRequireGeneSynonyms() { mRequireGeneSynonyms = true; }
 
-    public final Map<String,List<TranscriptData>> getTranscriptDataMap() { return mTranscriptDataMap; }
-    public final Map<String,List<GeneData>> getChrGeneDataMap() { return mChrGeneDataMap; }
+    public Map<String,List<TranscriptData>> getTranscriptDataMap() { return mTranscriptByGeneIdMap; }
+    public Map<String,List<GeneData>> getChrGeneDataMap() { return mChrGeneDataMap; }
     public Map<Integer,List<TranscriptProteinData>> getTranscriptProteinDataMap() { return mEnsemblProteinDataMap; }
-    public Map<Integer,Integer> getTransSpliceAcceptorPosDataMap() { return mTransSpliceAcceptorPosDataMap; }
 
     public final GeneData getGeneDataByName(final String geneName)
     {
@@ -127,7 +128,7 @@ public class EnsemblDataCache
         return getGeneData(geneName, true);
     }
 
-    public final GeneData getGeneDataById(final String geneId)
+    public GeneData getGeneDataById(final String geneId)
     {
         if(!mGeneDataMap.isEmpty())
             return mGeneDataMap.get(geneId);
@@ -186,6 +187,17 @@ public class EnsemblDataCache
         }
     }
 
+    public void createTranscriptIdMap()
+    {
+        if(!mTranscriptsByTransIdMap.isEmpty())
+            return;
+
+        for(List<TranscriptData> transcriptDataList : mTranscriptByGeneIdMap.values())
+        {
+            transcriptDataList.forEach(x -> mTranscriptsByTransIdMap.put(x.TransId, x));
+        }
+    }
+
     public GeneNameMapping getGeneMappings()
     {
         if(mGeneNameMapping == null)
@@ -196,7 +208,7 @@ public class EnsemblDataCache
 
     public List<TranscriptData> getTranscripts(final String geneId)
     {
-        return mTranscriptDataMap.get(geneId);
+        return mTranscriptByGeneIdMap.get(geneId);
     }
 
     public void populateGeneIdList(final List<String> uniqueGeneIds, final String chromosome, int position, int upstreamDistance)
@@ -211,12 +223,12 @@ public class EnsemblDataCache
         }
     }
 
-    public final TranscriptData getCanonicalTranscriptData(final String geneId) { return getTranscriptData(geneId, ""); }
+    public TranscriptData getCanonicalTranscriptData(final String geneId) { return getTranscriptData(geneId, ""); }
 
-    public final TranscriptData getTranscriptData(final String geneId, final String transcriptId)
+    public TranscriptData getTranscriptData(final String geneId, final String transcriptId)
     {
         // leave transcriptId empty to retrieve the canonical transcript
-        final List<TranscriptData> transDataList = mTranscriptDataMap.get(geneId);
+        final List<TranscriptData> transDataList = mTranscriptByGeneIdMap.get(geneId);
 
         if(transDataList == null || transDataList.isEmpty())
             return null;
@@ -232,6 +244,8 @@ public class EnsemblDataCache
         return null;
     }
 
+    public TranscriptData getTranscriptData(final int transId) { return mTranscriptsByTransIdMap.get(transId); }
+
     public final List<GeneData> findGenesByRegion(final String chromosome, int posStart, int posEnd)
     {
         // find genes if any of their transcripts are within this position
@@ -244,7 +258,7 @@ public class EnsemblDataCache
             if(posStart > geneData.GeneEnd || posEnd < geneData.GeneStart)
                 continue;
 
-            final List<TranscriptData> transList = mTranscriptDataMap.get(geneData.GeneId);
+            final List<TranscriptData> transList = mTranscriptByGeneIdMap.get(geneData.GeneId);
 
             if(transList == null || transList.isEmpty())
                 continue;
@@ -397,7 +411,7 @@ public class EnsemblDataCache
         if(!delayTranscriptLoading)
         {
             if(!EnsemblDataLoader.loadTranscriptData(
-                    mDataPath, mTranscriptDataMap, mRestrictedGeneIdList, mRequireExons, mCanonicalTranscriptsOnly, Lists.newArrayList()))
+                    mDataPath, mTranscriptByGeneIdMap, mRestrictedGeneIdList, mRequireExons, mCanonicalTranscriptsOnly, Lists.newArrayList()))
             {
                 return false;
             }
@@ -420,14 +434,14 @@ public class EnsemblDataCache
     public boolean loadTranscriptData(final List<String> restrictedGeneIds, final List<String> nonCanonicalTrans)
     {
         if(!EnsemblDataLoader.loadTranscriptData(
-                mDataPath, mTranscriptDataMap, restrictedGeneIds, mRequireExons, mCanonicalTranscriptsOnly, nonCanonicalTrans))
+                mDataPath, mTranscriptByGeneIdMap, restrictedGeneIds, mRequireExons, mCanonicalTranscriptsOnly, nonCanonicalTrans))
         {
             return false;
         }
 
         Set<Integer> uniqueTransIds = Sets.newHashSet();
 
-        for(List<TranscriptData> transDataList : mTranscriptDataMap.values())
+        for(List<TranscriptData> transDataList : mTranscriptByGeneIdMap.values())
         {
             transDataList.forEach(x -> uniqueTransIds.add(x.TransId));
         }

@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.isofox.fusion;
 
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
@@ -30,12 +29,12 @@ import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT_J
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
+import static com.hartwig.hmftools.isofox.fusion.FusionTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.isofox.fusion.FusionTestUtils.createGroup;
 
 import static htsjdk.samtools.SAMFlag.FIRST_OF_PAIR;
 import static htsjdk.samtools.SAMFlag.SECOND_OF_PAIR;
 import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
@@ -156,6 +155,7 @@ public class FusionDataTest
 
         BaseDepth baseDepth = new BaseDepth();
         List<FusionReadGroup> completeGroups = finder.processNewChimericReadGroups(gc1, baseDepth, readGroups1);
+        assertTrue(completeGroups.isEmpty());
         assertEquals(5, finder.getChimericPartialReadGroups().size());
         finder.processLocalReadGroups(completeGroups);
 
@@ -783,9 +783,6 @@ public class FusionDataTest
     public void testCloseMatchFiltering()
     {
         final EnsemblDataCache geneTransCache = createGeneDataCache();
-
-        addTestGenes(geneTransCache);
-        addTestTranscripts(geneTransCache);
 
         IsofoxConfig config = new IsofoxConfig();
 

@@ -277,7 +277,6 @@ public class GeneCollectionReader implements Callable
 
             mPerfCounters[PERF_FUSIONS].stop();
 
-            mChimericStats.HardFiltered += mFusionFinder.hardFilteredCount();
             mBamFragmentAllocator.getChimericReadTracker().clearAll();
 
             mFusionFinder.logPerfCounters();

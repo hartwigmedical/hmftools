@@ -71,7 +71,6 @@ public class ReadRecord
     private byte[] mBaseQualities;
 
     private int[] mJunctionPositions; // chimeric junctions
-    private Map<Integer,Integer> mJunctionDepth; // depth at chimeric junctions
 
     private static final String SUPPLEMENTARY_ATTRIBUTE = "SA";
 
@@ -131,7 +130,6 @@ public class ReadRecord
         mSupplementaryAlignment = null;
         mHasInterGeneSplit = false;
         mMapQuality = 0;
-        mJunctionDepth = null;
         mJunctionPositions = null;
         mBaseQualities = null;
     }
@@ -225,8 +223,8 @@ public class ReadRecord
         setFlag(SAMFlag.MATE_REVERSE_STRAND, mateReadReversed);
     }
 
-    public final Map<RegionMatchType,List<TransExonRef>> getTransExonRefs() { return mTransExonRefs; }
-    public final Map<RegionMatchType,List<TransExonRef>> getTransExonRefs(int se)
+    public final Map<RegionMatchType,List<TransExonRef>> getReadTransExonRefs() { return mTransExonRefs; }
+    public final Map<RegionMatchType,List<TransExonRef>> getReadTransExonRefs(int se)
     {
         if(spansGeneCollections())
             return se == SE_START ? mTransExonRefs : mUpperTransExonRefs;

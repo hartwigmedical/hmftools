@@ -22,10 +22,11 @@ import static com.hartwig.hmftools.isofox.TestUtils.addTestTranscripts;
 import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
 import static com.hartwig.hmftools.isofox.TestUtils.createMappedRead;
 import static com.hartwig.hmftools.isofox.TestUtils.createSupplementaryReadPair;
-import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
+import static com.hartwig.hmftools.isofox.common.TransExonRef.hasMatchWithinRange;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionTestUtils.fromReads;
+import static com.hartwig.hmftools.isofox.fusion.FusionTestUtils.getFragmentGeneIds;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -50,7 +51,7 @@ public class FusionFragmentsTest
     @Test
     public void testDelFragments()
     {
-        final EnsemblDataCache geneTransCache = createGeneDataCache();
+        EnsemblDataCache geneTransCache = createGeneDataCache();
 
         addTestGenes(geneTransCache);
         addTestTranscripts(geneTransCache);
@@ -86,12 +87,7 @@ public class FusionFragmentsTest
         assertEquals(-1, fragment.junctionOrientations()[SE_END]);
         assertEquals(DEL, fragment.getImpliedSvType());
 
-        final List<String>[] spliceGeneIds = new List[] { Lists.newArrayList(), Lists.newArrayList() };
-
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            spliceGeneIds[se].addAll(fragment.getGeneIds(se));
-        }
+        List<String>[] spliceGeneIds = getFragmentGeneIds(geneTransCache, fragment);
 
         assertTrue(fragment.isSpliced());
         assertEquals(1, spliceGeneIds[SE_START].size());
@@ -123,11 +119,7 @@ public class FusionFragmentsTest
         assertEquals(-1, fragment.junctionOrientations()[SE_END]);
         assertEquals(DEL, fragment.getImpliedSvType());
 
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            spliceGeneIds[se].clear();
-            spliceGeneIds[se].addAll(fragment.getGeneIds(se));
-        }
+        spliceGeneIds = getFragmentGeneIds(geneTransCache, fragment);
 
         assertTrue(fragment.isUnspliced());
         assertEquals(1, spliceGeneIds[SE_START].size());
@@ -157,11 +149,7 @@ public class FusionFragmentsTest
         assertEquals(-1, fragment.junctionOrientations()[SE_END]);
         assertEquals(DEL, fragment.getImpliedSvType());
 
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            spliceGeneIds[se].clear();
-            spliceGeneIds[se].addAll(fragment.getGeneIds(se));
-        }
+        spliceGeneIds = getFragmentGeneIds(geneTransCache, fragment);
 
         assertTrue(fragment.isSpliced());
         assertEquals(1, spliceGeneIds[SE_START].size());
@@ -258,13 +246,7 @@ public class FusionFragmentsTest
         assertEquals(1, fragment.junctionOrientations()[SE_END]);
         assertEquals(DUP, fragment.getImpliedSvType());
 
-        final List<String>[] spliceGeneIds = new List[] { Lists.newArrayList(), Lists.newArrayList() };
-
-        for (int se = SE_START; se <= SE_END; ++se)
-        {
-            spliceGeneIds[se].clear();
-            spliceGeneIds[se].addAll(fragment.getGeneIds(se));
-        }
+        List<String>[] spliceGeneIds = getFragmentGeneIds(geneTransCache, fragment);
 
         assertEquals(1, spliceGeneIds[SE_START].size());
         assertEquals(GENE_ID_1, spliceGeneIds[SE_START].get(0));
@@ -317,13 +299,7 @@ public class FusionFragmentsTest
         assertEquals(1, fragment.junctionOrientations()[SE_END]);
         assertEquals(INV, fragment.getImpliedSvType());
 
-        final List<String>[] spliceGeneIds = new List[] { Lists.newArrayList(), Lists.newArrayList() };
-
-        for (int se = SE_START; se <= SE_END; ++se)
-        {
-            spliceGeneIds[se].clear();
-            spliceGeneIds[se].addAll(fragment.getGeneIds(se));
-        }
+        List<String>[] spliceGeneIds = getFragmentGeneIds(geneTransCache, fragment);
 
         assertEquals(1, spliceGeneIds[SE_START].size());
         assertEquals(GENE_ID_1, spliceGeneIds[SE_START].get(0));
@@ -393,13 +369,7 @@ public class FusionFragmentsTest
         assertEquals(-1, fragment.junctionOrientations()[SE_END]);
         assertEquals(BND, fragment.getImpliedSvType());
 
-        final List<String>[] spliceGeneIds = new List[] { Lists.newArrayList(), Lists.newArrayList() };
-
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            spliceGeneIds[se].clear();
-            spliceGeneIds[se].addAll(fragment.getGeneIds(se));
-        }
+        List<String>[] spliceGeneIds = getFragmentGeneIds(geneTransCache, fragment);
 
         assertEquals(1, spliceGeneIds[SE_START].size());
         assertEquals(GENE_ID_3, spliceGeneIds[SE_START].get(0));
@@ -442,12 +412,7 @@ public class FusionFragmentsTest
         assertEquals(-1, fragment.junctionOrientations()[SE_END]);
         assertEquals(DEL, fragment.getImpliedSvType());
 
-        final List<String>[] spliceGeneIds = new List[] { Lists.newArrayList(), Lists.newArrayList() };
-
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            spliceGeneIds[se].addAll(fragment.getGeneIds(se));
-        }
+        List<String>[] spliceGeneIds = getFragmentGeneIds(geneTransCache, fragment);
 
         assertTrue(fragment.isSpliced());
         assertEquals(1, spliceGeneIds[SE_START].size());
@@ -493,24 +458,24 @@ public class FusionFragmentsTest
         transExons2.add(new TransExonRef(GENE_ID_3, TRANS_3, "TRANS3", 3));
         transExons2.add(new TransExonRef(GENE_ID_1, TRANS_1, "TRANS1", 1));
 
-        TestCase.assertTrue(hasTranscriptExonMatch(transExons1, transExons2));
+        TestCase.assertTrue(TransExonRef.hasMatch(transExons1, transExons2));
 
         transExons2.clear();
 
-        assertFalse(hasTranscriptExonMatch(transExons1, transExons2));
+        assertFalse(TransExonRef.hasMatch(transExons1, transExons2));
         transExons2.add(new TransExonRef(GENE_ID_2, TRANS_2, "TRANS2", 2));
 
-        assertFalse(hasTranscriptExonMatch(transExons1, transExons2));
-        assertFalse(hasTranscriptExonMatch(transExons1, transExons2, -1));
-        TestCase.assertTrue(hasTranscriptExonMatch(transExons1, transExons2, -2));
-        assertFalse(hasTranscriptExonMatch(transExons1, transExons2, 2));
+        assertFalse(TransExonRef.hasMatch(transExons1, transExons2));
+        assertFalse(hasMatchWithinRange(transExons1, transExons2, -1));
+        TestCase.assertTrue(hasMatchWithinRange(transExons1, transExons2, -2));
+        assertFalse(hasMatchWithinRange(transExons1, transExons2, 2));
 
         transExons2.clear();
         transExons2.add(new TransExonRef(GENE_ID_2, TRANS_2, "TRANS2", 6));
 
-        assertFalse(hasTranscriptExonMatch(transExons1, transExons2));
-        assertFalse(hasTranscriptExonMatch(transExons1, transExons2, 1));
-        TestCase.assertTrue(hasTranscriptExonMatch(transExons1, transExons2, 2));
-        assertFalse(hasTranscriptExonMatch(transExons1, transExons2, -2));
+        assertFalse(TransExonRef.hasMatch(transExons1, transExons2));
+        assertFalse(hasMatchWithinRange(transExons1, transExons2, 1));
+        TestCase.assertTrue(hasMatchWithinRange(transExons1, transExons2, 2));
+        assertFalse(hasMatchWithinRange(transExons1, transExons2, -2));
     }
 }

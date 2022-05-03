@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.NO_GENE_ID;
-import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
+import static com.hartwig.hmftools.isofox.common.TransExonRef.hasMatchWithinRange;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.HIGH_LOG_COUNT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT_JUNCTION;
@@ -476,18 +476,36 @@ public class FusionFinder implements Callable
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            final List<String> spliceGeneIds = initialFragment.getGeneIds(se);
+            List<TranscriptData> transDataList = Lists.newArrayList();
+            Set<String> spliceGeneIds = Sets.newHashSet();
+            // final List<String> spliceGeneIds = initialFragment.getGeneIds(se);
 
-            // purge any invalid transcript exons when the splice junction is known
-            final List<TranscriptData> transDataList = Lists.newArrayList();
-            spliceGeneIds.forEach(x -> transDataList.addAll(mGeneTransCache.getTranscripts(x)));
+            for(FusionTransExon transExonRef : initialFragment.getTransExonRefs()[se])
+            {
+                TranscriptData transData = mGeneTransCache.getTranscriptData(transExonRef.TransId);
+
+                if(transData == null)
+                    continue;
+
+                if(!transDataList.contains(transData))
+                    transDataList.add(transData);
+
+                fusionData.getTransExonRefsByPos(se).add(new TransExonRef(
+                        transData.GeneId, transData.TransId, transData.TransName, transExonRef.ExonRank));
+
+                spliceGeneIds.add(transData.GeneId);
+            }
+
+            // previously would get all transcripts if those not identified as relating to the fragment junction
+            // but surely this was incorrect
+            // spliceGeneIds.forEach(x -> transDataList.addAll(mGeneTransCache.getTranscripts(x)));
 
             // purge any invalid transcript-exons and mark the junction as known if applicable
             initialFragment.validateTranscriptExons(transDataList, se);
 
-            // and collect again
-            spliceGeneIds.clear();
-            spliceGeneIds.addAll(initialFragment.getGeneIds(se));
+            // CHECK: and collect again - but seems absolutely pointless
+            // spliceGeneIds.clear();
+            // spliceGeneIds.addAll(initialFragment.getGeneIds(se));
 
             if(!spliceGeneIds.isEmpty())
             {
@@ -580,7 +598,7 @@ public class FusionFinder implements Callable
             }
         }
 
-        fusionData.cacheTranscriptData();
+        // fusionData.cacheTranscriptData(); // now done higher up
 
         initialFragment.setJunctionTypes(mConfig.RefGenome, fusionData.getGeneStrands(), fusionData.junctionSpliceBases());
     }
@@ -738,8 +756,8 @@ public class FusionFinder implements Callable
 
                     if(isSpliced && fusion2.isUnspliced())
                     {
-                        if(hasTranscriptExonMatch(upRefs1, fusion2.getTransExonRefsByStream(FS_UP))
-                        && hasTranscriptExonMatch(downRefs1, fusion2.getTransExonRefsByStream(FS_DOWN), -1))
+                        if(TransExonRef.hasMatch(upRefs1, fusion2.getTransExonRefsByStream(FS_UP))
+                        && hasMatchWithinRange(downRefs1, fusion2.getTransExonRefsByStream(FS_DOWN), -1))
                         {
                             fusion2.addRelatedFusion(fusion1.id(), true);
                             continue;
@@ -747,8 +765,8 @@ public class FusionFinder implements Callable
                     }
                     else if(isUnspliced && fusion2.isKnownSpliced())
                     {
-                        if(hasTranscriptExonMatch(upRefs1, fusion2.getTransExonRefsByStream(FS_UP))
-                        && hasTranscriptExonMatch(fusion2.getTransExonRefsByStream(FS_DOWN), downRefs1, -1))
+                        if(TransExonRef.hasMatch(upRefs1, fusion2.getTransExonRefsByStream(FS_UP))
+                        && hasMatchWithinRange(fusion2.getTransExonRefsByStream(FS_DOWN), downRefs1, -1))
                         {
                             fusion1.addRelatedFusion(fusion2.id(), true);
                             continue;

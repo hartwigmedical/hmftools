@@ -2,16 +2,29 @@ package com.hartwig.hmftools.isofox.fusion;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.isofox.TestUtils.addTestGenes;
+import static com.hartwig.hmftools.isofox.TestUtils.addTestTranscripts;
 import static com.hartwig.hmftools.isofox.fusion.FusionRead.convertReads;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findSplitReadJunction;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.test.GeneTestUtils;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 
 public final class FusionTestUtils
 {
+    public static EnsemblDataCache createGeneDataCache()
+    {
+        EnsemblDataCache geneTransCache = GeneTestUtils.createGeneDataCache();
+        addTestGenes(geneTransCache);
+        addTestTranscripts(geneTransCache);
+        geneTransCache.createTranscriptIdMap();
+        return geneTransCache;
+    }
+
     public static FusionFragment fromReads(final List<ReadRecord> reads)
     {
         setReadJunctions(reads);
@@ -51,5 +64,23 @@ public final class FusionTestUtils
         return new FusionReadGroup(read1.Id, fusionReads);
     }
 
+    public static List<String>[] getFragmentGeneIds(final EnsemblDataCache geneTransCache, final FusionFragment fragment)
+    {
+        geneTransCache.createTranscriptIdMap();
+
+        List<String>[] geneIds = new List[] { Lists.newArrayList(), Lists.newArrayList() };
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            for(FusionTransExon transExonRef : fragment.getTransExonRefs()[se])
+            {
+                TranscriptData transcriptData = geneTransCache.getTranscriptData(transExonRef.TransId);
+                if(transcriptData != null && !geneIds[se].contains(transcriptData.GeneId))
+                    geneIds[se].add(transcriptData.GeneId);
+            }
+        }
+
+        return geneIds;
+    }
 
 }

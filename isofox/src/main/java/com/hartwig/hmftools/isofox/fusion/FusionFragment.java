@@ -11,9 +11,9 @@ import static com.hartwig.hmftools.isofox.common.RegionMatchType.matchRank;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.canonicalAcceptor;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.canonicalDonor;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.impliedSvType;
-import static com.hartwig.hmftools.isofox.common.TransExonRef.mergeUnique;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.UNKNOWN;
 import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.KNOWN;
+import static com.hartwig.hmftools.isofox.fusion.FusionTransExon.mergeUnique;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocation;
 
 import java.util.List;
@@ -25,7 +25,6 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
-import com.hartwig.hmftools.isofox.common.TransExonRef;
 
 public class FusionFragment
 {
@@ -42,7 +41,7 @@ public class FusionFragment
     private final String[] mLocationIds; // used to group proximate fragments and fusions
 
     private final RegionMatchType[] mRegionMatchTypes; // top-ranking region match type from the reads
-    private final List<TransExonRef>[] mTransExonRefs;
+    private final List<FusionTransExon>[] mTransExonRefs;
 
     public FusionFragment(final FusionReadGroup readGroup)
     {
@@ -126,13 +125,14 @@ public class FusionFragment
         return impliedSvType(mChromosomes, mJunctionOrientations);
     }
 
-    public final List<TransExonRef>[] getTransExonRefs() { return mTransExonRefs; }
+    public final List<FusionTransExon>[] getTransExonRefs() { return mTransExonRefs; }
 
+    /*
     public List<String> getGeneIds(int seIndex)
     {
         final List<String> geneIds = Lists.newArrayList();
 
-        for(TransExonRef transExonRef : mTransExonRefs[seIndex])
+        for(FusionTransExonRef transExonRef : mTransExonRefs[seIndex])
         {
             if(!geneIds.contains(transExonRef.GeneId))
                 geneIds.add(transExonRef.GeneId);
@@ -140,6 +140,7 @@ public class FusionFragment
 
         return geneIds;
     }
+    */
 
     public final List<FusionRead> readsByLocation(final int se)
     {
@@ -189,7 +190,7 @@ public class FusionFragment
                     mTransExonRefs[se].clear();
                 }
 
-                List<TransExonRef> readTransExonRefs = read.getTransExonRefs(se);
+                List<FusionTransExon> readTransExonRefs = read.getTransExonRefs(se);
                 mergeUnique(mTransExonRefs[se], readTransExonRefs);
             }
         }
@@ -206,7 +207,7 @@ public class FusionFragment
         int index = 0;
         while(index < mTransExonRefs[seIndex].size())
         {
-            TransExonRef transExonRef = mTransExonRefs[seIndex].get(index);
+            FusionTransExon transExonRef = mTransExonRefs[seIndex].get(index);
             TranscriptData transData = transDataList.stream().filter(x -> x.TransId == transExonRef.TransId).findFirst().orElse(null);
 
             if(transData == null)

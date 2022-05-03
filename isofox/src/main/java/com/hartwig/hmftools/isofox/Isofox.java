@@ -232,8 +232,8 @@ public class Isofox
             // extract all chimeric reads and associated data for fusion calling
             ChimericStats chimericStats = new ChimericStats();
             chrTasks.forEach(x -> chimericStats.merge(x.getChimericStats()));
-            ISF_LOGGER.info("overall chimeric stats: {} inv={} filtered={} matchedJunc={}",
-                    chimericStats, chimericStats.Inversions, chimericStats.HardFiltered, chimericStats.MatchedJunctions);
+            ISF_LOGGER.info("overall chimeric stats: {} inv={}", chimericStats, chimericStats.Inversions);
+
             mFusionTaskManager.close();
 
             logMemory(mConfig, "Fusions");

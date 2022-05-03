@@ -3,6 +3,7 @@ package com.hartwig.hmftools.isofox;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.addGeneData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.generateExonStarts;
 import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
@@ -22,6 +23,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.test.GeneTestUtils;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
@@ -121,7 +123,7 @@ public class TestUtils
     public static final int TRANS_3 = 3;
     public static final int TRANS_4 = 4;
     public static final int TRANS_5 = 5;
-    public static final int TRANS_6 = 5;
+    public static final int TRANS_6 = 6;
 
     public static void addTestTranscripts(EnsemblDataCache geneTransCache)
     {
@@ -337,8 +339,6 @@ public class TestUtils
 
         if(read.getMappedRegions().isEmpty())
             read.addIntronicTranscriptRefs(geneCollection.getTranscripts());
-
-        // read.captureGeneInfo(false);
 
         geneCollection.setReadGeneCollections(read, geneCollection.getNonGenicPositions());
 

@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.NONE;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.cigarFromStr;
-import static com.hartwig.hmftools.isofox.common.RegionMatchType.getHighestMatchType;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
@@ -110,10 +109,9 @@ public class ChimericReadCache
 
                 if(topTransMatchType != NONE)
                 {
-                    for(final TransExonRef transExonRef : read.getTransExonRefs(SE_START))
+                    for(final FusionTransExon transExonRef : read.getTransExonRefs(SE_START))
                     {
-                        transExonData.add(String.format("%s:%d:%s:%d",
-                                transExonRef.GeneId, transExonRef.TransId, transExonRef.TransName, transExonRef.ExonRank));
+                        transExonData.add(String.format("%d:%d", transExonRef.TransId, transExonRef.ExonRank));
                     }
                 }
 
@@ -124,10 +122,9 @@ public class ChimericReadCache
                 {
                     upperTopTransMatchType = read.getRegionMatchType(SE_END);
 
-                    for(TransExonRef transExonRef : read.getTransExonRefs(SE_END))
+                    for(FusionTransExon transExonRef : read.getTransExonRefs(SE_END))
                     {
-                        upperTransExonData.add(String.format("%s:%d:%s:%d",
-                                transExonRef.GeneId, transExonRef.TransId, transExonRef.TransName, transExonRef.ExonRank));
+                        upperTransExonData.add(String.format("%d:%d", transExonRef.TransId, transExonRef.ExonRank));
                     }
                 }
 
@@ -244,7 +241,8 @@ public class ChimericReadCache
                     if(matchType != NONE)
                     {
                         List<TransExonRef> transExonRefs = parseTransExonRefs(items[transExonData]);
-                        read.getTransExonRefs().put(matchType, transExonRefs);
+                        // TODO - set into the map instead
+                        // read.getReadTransExonRefs().put(matchType, transExonRefs);
                     }
 
                     matchType = RegionMatchType.valueOf(items[upperTopTransMatch]);
@@ -252,7 +250,7 @@ public class ChimericReadCache
                     if(matchType != NONE)
                     {
                         List<TransExonRef> transExonRefs = parseTransExonRefs(items[upperTransExonData]);
-                        read.getTransExonRefs(SE_END).put(matchType, transExonRefs);
+                        // read.getReadTransExonRefs(SE_END).put(matchType, transExonRefs);
                     }
 
                     // reads are written by fragment so all reads will be sequential
