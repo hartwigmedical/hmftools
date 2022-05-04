@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.quality;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.sage.SageCommon.DELIM;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 

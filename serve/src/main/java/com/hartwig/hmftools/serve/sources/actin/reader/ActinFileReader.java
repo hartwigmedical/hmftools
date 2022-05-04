@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.serve.sources.actin.reader;
 
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -7,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.FileWriterUtils;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,7 +29,7 @@ public final class ActinFileReader {
     private static List<ActinEntry> fromLines(@NotNull List<String> lines) {
         List<ActinEntry> trials = Lists.newArrayList();
 
-        Map<String, Integer> fields = FileWriterUtils.createFieldsIndexMap(lines.get(0), MAIN_FIELD_DELIMITER);
+        Map<String, Integer> fields = createFieldsIndexMap(lines.get(0), MAIN_FIELD_DELIMITER);
         for (String line : lines.subList(1, lines.size())) {
             trials.add(fromString(fields, line));
         }

@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.cobalt;
 
 import static com.hartwig.hmftools.common.cobalt.CobaltCommon.DELIMITER;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
 import java.io.IOException;

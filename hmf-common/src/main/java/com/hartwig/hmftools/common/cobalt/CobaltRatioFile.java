@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.cobalt.CobaltCommon.DELIMITER;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createGzipBufferedReader;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createGzipBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.BufferedReader;
 import java.io.File;

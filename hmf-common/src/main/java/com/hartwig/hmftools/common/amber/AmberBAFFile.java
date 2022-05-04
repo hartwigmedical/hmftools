@@ -20,6 +20,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.primitives.Doubles;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.utils.FileReaderUtils;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -65,7 +66,7 @@ public final class AmberBAFFile
         try(BufferedReader reader = fileName.endsWith(".gz") ? createGzipBufferedReader(fileName) : createBufferedReader(fileName))
         {
             String line = reader.readLine();
-            Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(line, DELIMITER);
+            Map<String, Integer> fieldsIndexMap = FileReaderUtils.createFieldsIndexMap(line, DELIMITER);
 
             int chrIndex = fieldsIndexMap.get(CHROMOSOME);
             int posIndex = fieldsIndexMap.get(POSITION);

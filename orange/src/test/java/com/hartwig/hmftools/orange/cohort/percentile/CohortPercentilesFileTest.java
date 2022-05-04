@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.cohort.percentile;
 
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -11,7 +13,6 @@ import java.util.Map;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.utils.FileWriterUtils;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
 
 import org.jetbrains.annotations.NotNull;
@@ -51,7 +52,7 @@ public class CohortPercentilesFileTest {
 
         List<String> lines = CohortPercentilesFile.toLines(testMap);
 
-        Map<String, Integer> fields = FileWriterUtils.createFieldsIndexMap(CohortPercentilesFile.header(), "\t");
+        Map<String, Integer> fields = createFieldsIndexMap(CohortPercentilesFile.header(), "\t");
 
         Multimap<PercentileType, CohortPercentiles> recreatedMap = CohortPercentilesFile.fromLines(fields, lines);
 

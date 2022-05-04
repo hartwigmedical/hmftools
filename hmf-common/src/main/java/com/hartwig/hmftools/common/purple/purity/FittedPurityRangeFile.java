@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.purple.purity;
 
 import static com.hartwig.hmftools.common.purple.PurpleCommon.DELIMITER;
 import static com.hartwig.hmftools.common.purple.purity.BestFit.bestFitPerPurity;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
 import java.io.IOException;

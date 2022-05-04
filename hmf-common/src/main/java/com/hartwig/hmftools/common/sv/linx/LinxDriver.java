@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.sv.linx;
 import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.sv.linx.LinxCluster.DELIMITER;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
 import java.io.IOException;

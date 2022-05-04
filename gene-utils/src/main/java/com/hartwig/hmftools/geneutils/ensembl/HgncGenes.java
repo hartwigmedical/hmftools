@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.geneutils.ensembl;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 
 import java.nio.file.Files;

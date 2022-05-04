@@ -124,18 +124,4 @@ public final class FileWriterUtils
             throw new IllegalStateException("Could not close buffered writer: " + writer + ": " + e.getMessage());
         }
     }
-
-    @Deprecated
-    public static Map<String,Integer> createFieldsIndexMap(final String fieldsHeader, final String delimiter)
-    {
-        final String[] items = fieldsHeader.split(delimiter,-1);
-        final Map<String,Integer> fieldsIndexMap = Maps.newLinkedHashMap();
-
-        for(int i = 0; i < items.length; ++i)
-        {
-            fieldsIndexMap.put(items[i], i);
-        }
-
-        return fieldsIndexMap;
-    }
 }

@@ -1,12 +1,11 @@
 package com.hartwig.hmftools.common.protect;
 
 import static com.hartwig.hmftools.common.sv.linx.LinxCluster.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,7 +52,7 @@ public final class ProtectEvidenceFile {
         List<ProtectEvidence> evidence = Lists.newArrayList();
         List<String> lines = Files.readAllLines(new File(file).toPath());
 
-        Map<String, Integer> fields = FileWriterUtils.createFieldsIndexMap(lines.get(0), DELIMITER);
+        Map<String, Integer> fields = createFieldsIndexMap(lines.get(0), DELIMITER);
         for (String line : lines.subList(1, lines.size())) {
             evidence.add(fromLine(fields, line));
         }

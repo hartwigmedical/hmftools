@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.svtools.pon;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.svtools.pon.PonBuilder.PON_LOGGER;
 

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.purple.germline;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 
 import java.io.IOException;

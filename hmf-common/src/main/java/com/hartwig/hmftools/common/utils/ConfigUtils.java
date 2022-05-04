@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.utils;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
 import java.io.IOException;
@@ -98,7 +98,7 @@ public class ConfigUtils
 
             for(String line : fileContents)
             {
-                if(line.startsWith("#"))
+                if(line.startsWith("#") || line.isEmpty())
                     continue;
 
                 String[] items = line.split(delim, -1);
@@ -146,41 +146,6 @@ public class ConfigUtils
             return true;
         }
         return false;
-    }
-
-    @NotNull
-    public static String readableFile(@NotNull final CommandLine cmd, @NotNull final String opt) throws IOException, ParseException
-    {
-        if(!cmd.hasOption(opt))
-        {
-            throw new ParseException(opt + " is a required option");
-        }
-        final String file = cmd.getOptionValue(opt);
-        if(!new File(file).exists())
-        {
-            throw new IOException("Unable to read file:  " + file);
-        }
-
-        return file;
-    }
-
-    @NotNull
-    public static String writableOutputDirectory(@NotNull final CommandLine cmd, @NotNull final String opt)
-            throws ParseException, IOException
-    {
-        if(!cmd.hasOption(opt))
-        {
-            throw new ParseException(opt + " is a required option");
-        }
-
-        final String outputDirString = cmd.getOptionValue(opt);
-        final File outputDir = new File(outputDirString);
-        if(!outputDir.exists() && !outputDir.mkdirs())
-        {
-            throw new IOException("Unable to write output directory " + outputDirString);
-        }
-
-        return outputDirString;
     }
 
 }

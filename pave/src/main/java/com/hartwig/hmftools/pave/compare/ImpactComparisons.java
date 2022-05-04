@@ -7,47 +7,18 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
-import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
-import static com.hartwig.hmftools.pave.PaveApplication.findVariantImpacts;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
-import static com.hartwig.hmftools.pave.PaveUtils.createRightAlignedVariant;
-import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
-import static com.hartwig.hmftools.pave.compare.ComparisonUtils.hasCodingEffectDiff;
-import static com.hartwig.hmftools.pave.compare.ImpactDiffType.CODING_EFFECT;
-import static com.hartwig.hmftools.pave.compare.ImpactDiffType.HGVS_CODING;
-import static com.hartwig.hmftools.pave.compare.ImpactDiffType.HGVS_PROTEIN;
-import static com.hartwig.hmftools.pave.compare.ImpactDiffType.REPORTED;
-
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
-import com.hartwig.hmftools.common.drivercatalog.panel.ReportablePredicate;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
-import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.patientdb.dao.SomaticVariantDAO;
 import com.hartwig.hmftools.pave.GeneDataCache;
-import com.hartwig.hmftools.pave.ImpactClassifier;
-import com.hartwig.hmftools.pave.VariantData;
-import com.hartwig.hmftools.pave.VariantImpactBuilder;
-import com.hartwig.hmftools.pave.VariantTransImpact;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -56,9 +27,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
-import org.jooq.Record;
-import org.jooq.Record20;
-import org.jooq.Result;
 
 public class ImpactComparisons
 {

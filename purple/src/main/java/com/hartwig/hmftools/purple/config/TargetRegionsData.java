@@ -1,11 +1,9 @@
 package com.hartwig.hmftools.purple.config;
 
-import static java.lang.Math.max;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.genome.bed.NamedBedFile.readBedFile;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.CODING_BASES_PER_GENOME;

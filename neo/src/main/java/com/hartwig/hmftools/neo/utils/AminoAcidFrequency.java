@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.neo.utils;
 
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

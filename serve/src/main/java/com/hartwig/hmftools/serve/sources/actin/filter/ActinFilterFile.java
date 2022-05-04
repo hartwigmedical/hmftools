@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.serve.sources.actin.filter;
 
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
-
-import com.hartwig.hmftools.common.utils.FileWriterUtils;
 
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
@@ -22,7 +22,7 @@ public final class ActinFilterFile {
     public static List<ActinFilterEntry> read(@NotNull String actinFilterTsv) throws IOException {
         List<String> lines = Files.readAllLines(new File(actinFilterTsv).toPath());
 
-        Map<String, Integer> fields = FileWriterUtils.createFieldsIndexMap(lines.get(0), FIELD_DELIMITER);
+        Map<String, Integer> fields = createFieldsIndexMap(lines.get(0), FIELD_DELIMITER);
         List<ActinFilterEntry> filterEntries = Lists.newArrayList();
         for (String line : lines.subList(1, lines.size())) {
             filterEntries.add(fromLine(fields, line));
