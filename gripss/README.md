@@ -27,6 +27,32 @@ These two files are used in purple as the structural variant recovery vcf and st
 
 The bed and bedpe files are available to download from [HMFTools-Resources > Gripss](https://resources.hartwigmedicalfoundation.nl/). Both files need to be sorted by chromosome and start breakend start position.
 
+### Mandatory Arguments
+
+Argument | Description 
+---|---
+sample | Sample ID
+ref_genome | Reference genome fasta file
+ref_genome_version | V37 (default), V38 or HG19 (ie 37 with 'chr' prefix)
+vcf | Input VCF from GRIDSS 
+output_dir | Output directory
+
+### Optional Arguments
+
+Argument | Description 
+---|---
+reference | Reference ID
+pon_sgl_file | PON for SGL breakends
+pon_sv_file | PON for SVs
+known_hotspot_file | Known hotspot SVs, matches known-pair fusions as used by Linx
+filter_sgls | Filter SGLs from output VCF entirely
+pon_distance | Buffer distance for matching PON entries
+min_qual_rescue_mobile_element_insertion | Min QUAL to rescue a mobile LINE insertion, default = 500
+
+### Filtering Arguments
+See config for filters in the Hard and Soft filters sections below.
+
+
 ## Tumor-only / Germline mode
 The `reference` argument is optional and if not supplied, GRIPSS will run in 'tumor-only' mode in which case  all filters that require the normal sample are de-activated. This includes `minNormalCoverage`, `minRelativeCoverage`, `maxNormalSupport`, `shortSRNormalSupport`.   Single breakends are not called in tumor only mode as there are many germline artefacts. GRIPSS can be run in a germline mode by setting the 'sample' to the germline and not supplying a 'reference' argument.   In the hartwig pipeline we use the same filter settings for tumor and germline structural variants in GRIDSS (see below). 
  
@@ -45,6 +71,14 @@ Three hard filters are applied upfront before other processing occurs:
 * MINIMUM_TUMOR_QUAL - Any variant with QUAL < 100 is filtered
 * MAX_NORMAL_SUPPORT - Any variant with normalSupport > min(max(3, 3% * tumorSupport), 8% * tumorSupport) is filtered as likely germline or artefact unless it links a pair of genes in the known pathogenic fusion list via translocation or local break junction of length more than 10kb. Ideally we would not allow any support for the variant in the normal, but contamination of the blood with tumor DNA is not uncommon.
 
+Type | Config | Default 
+---|---|---
+NO_MATE | hard_min_tumor_qual | N/A  
+MINIMUM_TUMOR_QUAL | hard_min_tumor_qual | 100  
+MAX_NORMAL_SUPPORT | hard_max_normal_absolute_support | 3
+MAX_NORMAL_SUPPORT | hard_max_normal_relative_support | 0.08
+MAX_NORMAL_SUPPORT | soft_max_normal_relative_support | 0.03
+
 ## 2. Realignment
 
 We realign imprecise variants where the breakend can be precisely resolved but the length of the insert sequence is unknown.  By default GRIDSS offsets these variants by the uncertainty of the insert sequence with a wide CIPOS.  GRIPSS realigns the variant to the earliest possible base in the uncertainty window which is the most likely base for the soft clipping.
@@ -58,30 +92,29 @@ For the purposes of backwards compatibility we also perform 3 other fixes to cor
  
 The following filters are applied to all variants
 
-Filter | Default | Description / purpose
----|---|---
-minQual | 400 (SGL:500) | Minimum absolute tumor support for variant.   For PMS2 (an important MMR gene) only (including 10kb upstream and downstream) the minimum qual is set to half the normal value due to the poor mappability of PMS2 due to it's close homolog PMS2CL.
-minNormalCoverage | 8 | Variants with low coverage in germline may be germline variants.
-maxNormalRelativeSupport | 0.03 | Fragments supporting variant in the normal sample may not exceed 3% of read support in the tumor.
-minTumorAF | 0.005 (SGL:0.015) | Low AF variants in high depth regions may be artefacts
-imprecise | FALSE | Imprecise variants may be artefacts linking low mappability regions of the genome.   
-discordantPairSupport | TRUE | Breakpoints (except for DEL,INS & DUP < 1000 bases) must have at least 1 read mapped at each end.   Avoids artefacts linking regions of low mappability.   Not suitable for non paired reads or very short fragment sizes. 
-PON | FALSE | Breakpoint must be found < 3 times in our cohort in pon_sv_file (or pon_sgl_file in the case of breakends).  The Hartwig PON files are generated from ~3800 germline samples. The PON excludes imprecise calls and breakpoints <75 qual score and breakends < 428 qual score.  Inexact homology is allowed in overlap and an additional 3p margin of error is allowed for. 
-maxPolyAHomLength | 6 | Variants with long POLYA homology are frequent artefacts at low VAF
-maxPolyGLength | 16 | Long stretches of polyG/polyC are extremely rare in the ref genome but are known sequencer artefacts.  Single breakends with insert sequences containing long polyG homopolymers are filtered.   This filter is also applied to break junctions where 1 end maps in any of the following POLY-G regions (v38: {chr2:32,916,190-32,916,630; chr4:41,216,410-41,216,450; chr17:44,569,050-44,569,090}; v37: {2:33,141,260-33,141,700; 4:41,218,427-41,218,467; 17:42646418-42646458}).
-
-We also have 8 special filters applying to specific  variant categories:
-
-Filter | Default | Scope | Description 
+Filter | Config | Default | Description / purpose
 ---|---|---|---
-minLength | 32 | DEL, DUP & INS | Minimum absolute length (including insert sequence length) for short DEL and DUP SV to be called. 
-minSingleInsertLength | 16 | SGL | Minimum insert sequence length for a single breakend
-singleStrandBias | 0.05<SB<0.95 | SGL (excluding polyA tails) | Minimum/maximum proportion of reads from the forward strand supporting the single breakend
-maxHomLengthShortInv | 6 | INV(<40b) | Very short INV with high homology are a common sequencer artefact
-shortStrandBias | TRUE | INS,DEL & DUP(<1kb) | Short DEL and DUP must be strand balanced
-shortSRTumorSupport | TRUE | INS,DEL & DUP(<1kb) | Short DELs and DUPs must be supported by at least 1 split read or in the case of very short DEL and INS at least 1 supporting indel containing read.
-shortSRNormalSupport | FALSE | INS,DEL & DUP(<1kb) | Short DELs and DUPs must not be supported by 1 split read or 1 indel containing read in the normal 
-shortDelInsArtefact | | DEL(<1kb) | Filter any short DEL where the insert sequence length + 1 = deletion length, unless the insert sequence is identical to the reverse complement (ie a short reciprocal inversion).  This is a known GRIDSS artefact.
+minQual | min_qual_break_point, min_qual_break_end | 400, SGL = 500 | Minimum absolute tumor support for variant. For PMS2 (an important MMR gene) only (including 10kb upstream and downstream) the minimum qual is set to half the normal value due to the poor mappability of PMS2 due to it's close homolog PMS2CL.
+minNormalCoverage | min_normal_coverage | 8 | Variants with low coverage in germline may be germline variants.
+minTumorAF | min_tumor_af | 0.005 | Low AF variants in high depth regions may be artefacts. SGLs use S0.015.
+imprecise | N/A | FALSE | Imprecise variants may be artefacts linking low mappability regions of the genome.   
+discordantPairSupport | N/A | TRUE | Breakpoints (except for DEL,INS & DUP < 1000 bases) must have at least 1 read mapped at each end. Avoids artefacts linking regions of low mappability.   Not suitable for non paired reads or very short fragment sizes. 
+PON | PON files | FALSE | Breakpoint must be found < 3 times in our cohort in pon_sv_file (or pon_sgl_file in the case of breakends). The Hartwig PON files are generated from ~3800 germline samples. The PON excludes imprecise calls and breakpoints <75 qual score and breakends < 428 qual score.  Inexact homology is allowed in overlap and an additional 3p margin of error is allowed for. 
+maxPolyAHomLength | N/A | 6 | Variants with long poly-A homology are frequent artefacts at low VAF
+maxPolyGLength | N/A | 16 | Long stretches of poly-G/poly-C are extremely rare in the ref genome but are known sequencer artefacts.  Single breakends with insert sequences containing long polyG homopolymers are filtered.   This filter is also applied to break junctions where 1 end maps in any of the following POLY-G regions (v38: {chr2:32,916,190-32,916,630; chr4:41,216,410-41,216,450; chr17:44,569,050-44,569,090}; v37: {2:33,141,260-33,141,700; 4:41,218,427-41,218,467; 17:42646418-42646458}).
+
+We also have 8 special filters applying to specific variant categories:
+
+Filter | Config | Default | Scope | Description 
+---|---|---|---|---
+minLength | min_length | 32 | DEL, DUP & INS | Minimum absolute length (including insert sequence length) for short DEL and DUP SV to be called. 
+minSingleInsertLength | N/A | 16 | SGL | Minimum insert sequence length for a single breakend
+singleStrandBias | max_short_strand_bias | 0.05<SB<0.95 | SGL (excluding polyA tails) | Minimum/maximum proportion of reads from the forward strand supporting the single breakend
+maxHomLengthShortInv | max_hom_length_short_inv | 6 | INV(<40b) | Very short INV with high homology are a common sequencer artefact
+shortStrandBias | N/A | TRUE | INS,DEL & DUP(<1kb) | Short DEL and DUP must be strand balanced
+shortSRTumorSupport | N/A | TRUE | INS,DEL & DUP(<1kb) | Short DELs and DUPs must be supported by at least 1 split read or in the case of very short DEL and INS at least 1 supporting indel containing read.
+shortSRNormalSupport | N/A | FALSE | INS,DEL & DUP(<1kb) | Short DELs and DUPs must not be supported by 1 split read or 1 indel containing read in the normal 
+shortDelInsArtefact | N/A | TRUE | DEL(<1kb) | Filter any short DEL where the insert sequence length + 1 = deletion length, unless the insert sequence is identical to the reverse complement (ie a short reciprocal inversion).  This is a known GRIDSS artefact.
 
 ## 4. Linkage, deduplication and rescue
 
