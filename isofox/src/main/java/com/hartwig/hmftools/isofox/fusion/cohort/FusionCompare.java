@@ -3,6 +3,7 @@ package com.hartwig.hmftools.isofox.fusion.cohort;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
@@ -39,18 +40,35 @@ public class FusionCompare
     private final String mFusionFileOrig;
     private final String mFusionFileNew;
 
+    private final List<String> mSampleIds;
     private final BufferedWriter mWriter;
+
+    private int mMatchedCount;
+    private int mDiffCount;
+    private int mUnmatchOrig;
+    private int mUnmatchNew;
 
     private static final String FUSION_FILE_ORIG = "fusions_orig";
     private static final String FUSION_FILE_NEW = "fusions_new";
+    private static final String SAMPLE_IDS_FILE = "sample_id_file";
 
     public FusionCompare(final CommandLine cmd)
     {
         mFusionFileOrig = cmd.getOptionValue(FUSION_FILE_ORIG);
         mFusionFileNew = cmd.getOptionValue(FUSION_FILE_NEW);
+        mMatchedCount = 0;
+        mDiffCount = 0;
+        mUnmatchOrig = 0;
+        mUnmatchNew = 0;
+
+        mSampleIds = Lists.newArrayList();
+
+        if(cmd.hasOption(SAMPLE_IDS_FILE))
+        {
+            mSampleIds.addAll(loadSampleIdsFile(cmd.getOptionValue(SAMPLE_IDS_FILE)));
+        }
 
         String outputDir = parseOutputDir(cmd);
-
         mWriter = initialiseWriter(outputDir, cmd.getOptionValue(OUTPUT_ID));
     }
 
@@ -62,20 +80,52 @@ public class FusionCompare
             return;
         }
 
-        if(mFusionFileOrig == null || !Files.exists(Paths.get(mFusionFileOrig)))
+        if(mSampleIds.isEmpty())
         {
-            ISF_LOGGER.error("invalid original fusions file({})", mFusionFileOrig);
-            System.exit(1);
+            processSample(null, mFusionFileOrig, mFusionFileNew);
+        }
+        else
+        {
+            ISF_LOGGER.info("running comparisons for {} samples", mSampleIds.size());
+
+            int processed = 0;
+            for(String sampleId : mSampleIds)
+            {
+                String origFile = mFusionFileOrig.replaceAll("\\*", sampleId);
+                String newFile = mFusionFileNew.replaceAll("\\*", sampleId);
+                processSample(sampleId, origFile, newFile);
+
+                ++processed;
+
+                if(processed > 0 && (processed % 100) == 0)
+                {
+                    ISF_LOGGER.info("processed {} samples", processed);
+                }
+            }
+
+            ISF_LOGGER.info("matched({}) diffs({}) unmatched(orig={} new={})",
+                    mMatchedCount, mDiffCount, mUnmatchOrig, mUnmatchNew);
         }
 
-        if(mFusionFileNew == null || !Files.exists(Paths.get(mFusionFileNew)))
+        closeBufferedWriter(mWriter);
+    }
+
+    private void processSample(final String sampleId, final String origFile, final String newFile)
+    {
+        if(!Files.exists(Paths.get(origFile)))
         {
-            ISF_LOGGER.error("invalid new fusions file({})", mFusionFileNew);
-            System.exit(1);
+            ISF_LOGGER.error("invalid original fusions file({})", origFile);
+            return;
         }
 
-        List<FusionData> origFusionsAll = FusionData.loadFromFile(Paths.get(mFusionFileOrig));
-        List<FusionData> newFusionsAll = FusionData.loadFromFile(Paths.get(mFusionFileNew));
+        if(!Files.exists(Paths.get(newFile)))
+        {
+            ISF_LOGGER.error("invalid new fusions file({})", newFile);
+            return;
+        }
+
+        List<FusionData> origFusionsAll = FusionData.loadFromFile(Paths.get(origFile));
+        List<FusionData> newFusionsAll = FusionData.loadFromFile(Paths.get(newFile));
 
         if(origFusionsAll.isEmpty() || newFusionsAll.isEmpty())
         {
@@ -83,7 +133,14 @@ public class FusionCompare
             return;
         }
 
-        ISF_LOGGER.info("loaded fusions orig({}) new({})", origFusionsAll.size(), newFusionsAll.size());
+        if(sampleId != null)
+        {
+            ISF_LOGGER.debug("sample({}) loaded fusions orig({}) new({})", sampleId, origFusionsAll.size(), newFusionsAll.size());
+        }
+        else
+        {
+            ISF_LOGGER.info("loaded fusions orig({}) new({})", origFusionsAll.size(), newFusionsAll.size());
+        }
 
         Map<String,List<FusionData>> origChrMap = buildChromosomeMap(origFusionsAll);
         Map<String,List<FusionData>> newChrMap = buildChromosomeMap(newFusionsAll);
@@ -126,7 +183,7 @@ public class FusionCompare
                         else
                         {
                             ++diffCount;
-                            writeFusionDiffs("DIFFS", origFusion, newFusion, diffs);
+                            writeFusionDiffs(sampleId, "DIFFS", origFusion, newFusion, diffs);
                         }
 
                         break;
@@ -142,7 +199,8 @@ public class FusionCompare
 
                 if((compared % 1000) == 0)
                 {
-                    ISF_LOGGER.debug("compared {} fusions", compared);
+                    ISF_LOGGER.debug("compared {} fusions {}",
+                            compared, sampleId != null ? String.format("for sample(%s)", sampleId) : "");
                 }
 
                 if(newFusions.isEmpty())
@@ -164,11 +222,11 @@ public class FusionCompare
 
                 if(isImmunePair)
                 {
-                    writeFusionDiffs("IMMUNE_PAIR", fusion, null, emptyDiffs);
+                    writeFusionDiffs(sampleId, "IMMUNE_PAIR", fusion, null, emptyDiffs);
                 }
                 else
                 {
-                    writeFusionDiffs("NO_NEW", fusion, null, emptyDiffs);
+                    writeFusionDiffs(sampleId, "NO_NEW", fusion, null, emptyDiffs);
                     ++unmatchOrig;
                 }
             }
@@ -176,13 +234,20 @@ public class FusionCompare
 
         for(List<FusionData> fusions : newChrMap.values())
         {
-            fusions.forEach(x -> writeFusionDiffs("NO_ORIG", null, x, emptyDiffs));
+            fusions.forEach(x -> writeFusionDiffs(sampleId, "NO_ORIG", null, x, emptyDiffs));
             unmatchNew += fusions.size();
         }
 
-        ISF_LOGGER.info("matched({}) diffs({}) unmatched(orig={} new={})", matchedCount, diffCount, unmatchOrig, unmatchNew);
+        if(sampleId != null)
+        {
+            ISF_LOGGER.debug("sample({}) matched({}) diffs({}) unmatched(orig={} new={})",
+                    sampleId, matchedCount, diffCount, unmatchOrig, unmatchNew);
+        }
 
-        closeBufferedWriter(mWriter);
+        mMatchedCount += matchedCount;
+        mUnmatchNew += unmatchNew;
+        mUnmatchOrig += unmatchOrig;
+        mDiffCount += diffCount;
     }
 
     private Map<String,List<FusionData>> buildChromosomeMap(final List<FusionData> fusions)
@@ -229,13 +294,17 @@ public class FusionCompare
             diffs.add(String.format("genes(%s/%s)", fusion1.name(), fusion2.name()));
     }
 
-    public static BufferedWriter initialiseWriter(final String outputDir, final String outputId)
+    public BufferedWriter initialiseWriter(final String outputDir, final String outputId)
     {
         try
         {
             String outputFileName = outputDir + "isf.fusions_compare." + outputId + ".csv";
 
             final BufferedWriter writer = createBufferedWriter(outputFileName, false);
+
+            if(!mSampleIds.isEmpty())
+                writer.write("SampleId,");
+
             writer.write("MatchType,Name,IdOrig,IdNew,ChrUp,ChrDown,PosUp,PosDown,TotalFragsOrig,TotalFragsNew,SplitFragsOrig,SplitFragsNew,DiffInfo");
             writer.newLine();
 
@@ -248,13 +317,17 @@ public class FusionCompare
         }
     }
 
-    private void writeFusionDiffs(final String matchType, final FusionData origFusion, final FusionData newFusion, final List<String> diffs)
+    private void writeFusionDiffs(
+            final String sampleId, final String matchType, final FusionData origFusion, final FusionData newFusion, final List<String> diffs)
     {
         try
         {
             final FusionData refFusion = origFusion != null ? origFusion : newFusion;
             StringJoiner sj = new StringJoiner(";");
             diffs.forEach(x -> sj.add(x));
+
+            if(sampleId != null)
+                mWriter.write(String.format("%s,", sampleId));
 
             mWriter.write(String.format("%s,%s,%d,%d,%s,%s,%d,%d,%d,%d,%d,%d,%s",
                     matchType, origFusion != null ? origFusion.name() : newFusion.name(),
@@ -269,11 +342,9 @@ public class FusionCompare
         }
         catch(IOException e)
         {
-            ISF_LOGGER.error("failed to initialise fusion comparison file: {}", e.toString());
+            ISF_LOGGER.error("failed to write fusion comparison file: {}", e.toString());
         }
     }
-
-
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
@@ -281,6 +352,7 @@ public class FusionCompare
 
         options.addOption(FUSION_FILE_ORIG, true, "Original fusions file");
         options.addOption(FUSION_FILE_NEW, true, "New fusions file");
+        options.addOption(SAMPLE_IDS_FILE, true, "Sample IDs file");
         addLoggingOptions(options);
         addOutputOptions(options);
 
