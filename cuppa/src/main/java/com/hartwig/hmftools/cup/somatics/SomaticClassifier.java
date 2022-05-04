@@ -35,9 +35,8 @@ import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
+import static com.hartwig.hmftools.cup.somatics.GenomicPositions.convertSomaticVariantsToPosFrequencies;
 import static com.hartwig.hmftools.cup.somatics.RefSomatics.convertSignatureName;
-import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.convertSomaticVariantsToPosFrequencies;
-import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.convertSomaticVariantsToSnvCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSignaturePercentileData;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSampleCountsFromFile;
@@ -49,6 +48,7 @@ import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_13;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_2;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.populateReportableSignatures;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.signatureDisplayName;
+import static com.hartwig.hmftools.cup.somatics.TrinucleotideCounts.convertSomaticVariantsToSnvCounts;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -126,7 +126,6 @@ public class SomaticClassifier implements CuppaClassifier
     public static final String WRITE_GEN_POS_CSS = "write_gen_pos_css";
     public static final String WRITE_GEN_POS_SIMILARITIES = "write_gen_pos_sims";
     public static final String WRITE_SNV_SIMILARITIES = "write_snv_sims";
-
 
     private static final int GEN_POS_CSS_SIMILARITY_MAX_MATCHES = 100;
 
@@ -229,7 +228,9 @@ public class SomaticClassifier implements CuppaClassifier
                 }
 
                 mSampleSnvCounts = convertSomaticVariantsToSnvCounts(sampleId, somaticVariants, mSampleSnvCountsIndex);
-                mSamplePosFrequencies = convertSomaticVariantsToPosFrequencies(mPosFrequencyBuilder, sampleId, somaticVariants, mSamplePosFreqIndex);
+
+                mSamplePosFrequencies = convertSomaticVariantsToPosFrequencies(
+                        sampleId, somaticVariants, mSamplePosFreqIndex, mPosFrequencyBuilder, AidApobecStatus.ALL);
             }
             else
             {

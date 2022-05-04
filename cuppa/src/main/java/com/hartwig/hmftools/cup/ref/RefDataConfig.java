@@ -2,10 +2,16 @@ package com.hartwig.hmftools.cup.ref;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.cup.CuppaConfig.CATEGORIES;
 import static com.hartwig.hmftools.cup.CuppaConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SNV_COUNTS_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SNV_SAMPLE_POS_FREQ_FILE;
+import static com.hartwig.hmftools.cup.common.CategoryType.ALL_CATEGORIES;
+import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
+import static com.hartwig.hmftools.cup.common.CategoryType.COMBINED;
+import static com.hartwig.hmftools.cup.common.CategoryType.DNA_CATEGORIES;
+import static com.hartwig.hmftools.cup.common.CategoryType.isDna;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
@@ -13,15 +19,19 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.rna.RefGeneExpression;
 import com.hartwig.hmftools.cup.somatics.RefSomatics;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.commons.compress.utils.Lists;
 
 public class RefDataConfig
 {
+    public final List<CategoryType> IncludedCategories;
+
     public final String OutputDir;
 
     // reference data
@@ -67,6 +77,13 @@ public class RefDataConfig
 
     public RefDataConfig(final CommandLine cmd)
     {
+        IncludedCategories = Lists.newArrayList();
+        if(cmd.hasOption(CATEGORIES))
+        {
+            final String[] categories = cmd.getOptionValue(CATEGORIES).split(";");
+            Arrays.stream(categories).forEach(x -> IncludedCategories.add(CategoryType.valueOf(x)));
+        }
+
         SampleDataFile = cmd.getOptionValue(REF_SAMPLE_DATA_FILE, "");
         CohortSampleTraitsFile = cmd.getOptionValue(REF_SAMPLE_TRAITS_FILE, "");
         CohortSigContribsFile = cmd.getOptionValue(REF_SIG_CONTRIBS_FILE, "");
@@ -99,6 +116,8 @@ public class RefDataConfig
 
     public static void addCmdLineArgs(Options options)
     {
+        options.addOption(CATEGORIES, true, "Categories to build ref data for");
+
         options.addOption(REF_SAMPLE_DATA_FILE, true, "Ref sample data file");
         options.addOption(REF_SAMPLE_TRAITS_FILE, true, "Ref sample cohort traits file");
         options.addOption(REF_SIG_CONTRIBS_FILE, true, "Ref sample cohort signature contributions file");

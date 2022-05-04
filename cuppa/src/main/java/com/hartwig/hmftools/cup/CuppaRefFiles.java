@@ -12,7 +12,9 @@ public class CuppaRefFiles
     public static final String REF_FILE_SAMPLE_DATA = formatRefFilename("sample_data");
     public static final String REF_FILE_SNV_COUNTS = formatRefFilename("snv_counts");
     public static final String REF_FILE_CANCER_POS_FREQ_COUNTS = formatRefFilename("cancer_pos_freq_counts");
+    public static final String REF_FILE_CANCER_POS_FREQ_AA_COUNTS = formatRefFilename("cancer_pos_freq_counts_aapos");
     public static final String REF_FILE_SAMPLE_POS_FREQ_COUNTS = formatRefFilename("sample_pos_freq_counts");
+    public static final String REF_FILE_SAMPLE_POS_FREQ_AA_POS_COUNTS = formatRefFilename("sample_pos_freq_counts_aapos");
     public static final String REF_FILE_FEATURE_PREV = formatRefFilename("feature_prev");
     public static final String REF_FILE_DRIVER_AVG = formatRefFilename("driver_avg");
     public static final String REF_FILE_TRAIT_PERC = formatRefFilename("sample_trait_percentiles");

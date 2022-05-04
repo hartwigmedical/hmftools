@@ -81,6 +81,9 @@ public class RefDataBuilder
 
         for(RefClassifier classifier : mClassifiers)
         {
+            if(!mConfig.IncludedCategories.isEmpty() && !mConfig.IncludedCategories.contains(classifier.categoryType()))
+                continue;
+
             classifier.buildRefDataSets();
         }
 

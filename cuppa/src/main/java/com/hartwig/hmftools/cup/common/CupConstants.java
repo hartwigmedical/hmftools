@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.cup.common;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.Gender;
 
 public class CupConstants
@@ -36,6 +39,9 @@ public class CupConstants
 
     public static final double UNDEFINED_SIG_PERC_MAX_MULTIPLE = 100.01;
     public static final double UNDEFINED_PERC_MAX_MULTIPLE = 1.01;
+
+    public static final List<String> AID_APOBEC_TRINUCLEOTIDE_CONTEXTS = Lists.newArrayList(
+            "C>T_TCA", "C>T_TCC", "C>T_TCG", "C>T_TCT", "C>G_TCA", "C>G_TCC", "C>G_TCG", "C>G_TCT");
 
     // cancer types with gender-exclusions
     public static final String CANCER_TYPE_PROSTATE = "Prostate";

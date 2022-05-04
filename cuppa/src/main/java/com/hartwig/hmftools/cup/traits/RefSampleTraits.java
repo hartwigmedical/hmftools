@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_TRAITS_DATA
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENDER_RATES;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_RATES;
+import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
 import static com.hartwig.hmftools.cup.common.CupConstants.isCandidateCancerType;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
@@ -97,8 +98,11 @@ public class RefSampleTraits implements RefClassifier
         }
     }
 
-    public CategoryType categoryType() { return SNV; }
-    public static boolean requiresBuild(final RefDataConfig config) { return !config.CohortSampleTraitsFile.isEmpty() || config.DbAccess != null; }
+    public CategoryType categoryType() { return SAMPLE_TRAIT; }
+    public static boolean requiresBuild(final RefDataConfig config)
+    {
+        return !config.CohortSampleTraitsFile.isEmpty() || config.DbAccess != null;
+    }
 
     public void buildRefDataSets()
     {

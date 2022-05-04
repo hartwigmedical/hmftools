@@ -5,8 +5,10 @@ import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.contextFromVariant;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.common.CupConstants.AID_APOBEC_TRINUCLEOTIDE_CONTEXTS;
 import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_BUCKET_SIZE;
 import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_MAX_SAMPLE_COUNT;
+import static com.hartwig.hmftools.cup.somatics.GenomicPositions.extractPositionFrequencyCounts;
 import static com.hartwig.hmftools.cup.somatics.RefSomatics.convertSignatureName;
 import static com.hartwig.hmftools.cup.somatics.RefSomatics.populateRefPercentileData;
 
@@ -150,66 +152,6 @@ public class SomaticDataLoader
         return variantList;
     }
 
-    public static double[] extractTrinucleotideCounts(final List<SomaticVariant> variants, final Map<String,Integer> bucketNameMap)
-    {
-        final double[] counts = new double[bucketNameMap.size()];
-
-        for(final SomaticVariant variant : variants)
-        {
-            if(variant.isFiltered() || !variant.isSnp())
-                continue;
-
-            if(variant.alt().length() != 1)
-                continue;
-
-            final String rawContext = variant.trinucleotideContext();
-
-            if(rawContext.contains("N"))
-                continue;
-
-            final String bucketName = contextFromVariant(variant);
-            Integer bucketIndex = bucketNameMap.get(bucketName);
-
-            if(bucketIndex == null)
-            {
-                CUP_LOGGER.error("invalid bucketName({}) from var({}>{}) context={})",
-                        bucketName, variant.ref(), variant.alt(), variant.trinucleotideContext());
-                continue;
-            }
-
-            ++counts[bucketIndex];
-        }
-
-        return counts;
-    }
-
-    public static void extractPositionFrequencyCounts(final List<SomaticVariant> variants, final PositionFrequencies positionFrequencies)
-    {
-        positionFrequencies.clear();
-
-        for(final SomaticVariant variant : variants)
-        {
-            if(variant.isFiltered() || !variant.isSnp())
-                continue;
-
-            if(variant.alt().length() != 1)
-                continue;
-
-            final String rawContext = variant.trinucleotideContext();
-
-            if(rawContext.contains("N"))
-                continue;
-
-            if(!positionFrequencies.isValidChromosome(variant.chromosome()))
-            {
-                CUP_LOGGER.warn("variant chr({}) position({}) cannot map to genomic position", variant.chromosome(), variant.position());
-                continue;
-            }
-
-            positionFrequencies.addPosition(variant.chromosome(), (int)variant.position());
-        }
-    }
-
     public static boolean loadSigContribsFromCohortFile(final String filename, final Map<String,Map<String,Double>> sampleSigContributions)
     {
         try
@@ -246,38 +188,4 @@ public class SomaticDataLoader
 
         return true;
     }
-
-    public static Matrix convertSomaticVariantsToSnvCounts(
-            final String sampleId, final List<SomaticVariant> variants, final Map<String,Integer> sampleSnvCountsIndex)
-    {
-        final Map<String,Integer> triNucBucketNameMap = Maps.newHashMap();
-        populateBucketMap(triNucBucketNameMap);
-
-        final double[] triNucCounts = extractTrinucleotideCounts(variants, triNucBucketNameMap);
-
-        final Matrix sampleSnvCounts = new Matrix(triNucCounts.length, 1);
-
-        sampleSnvCounts.setCol(0, triNucCounts);
-        sampleSnvCountsIndex.put(sampleId, 0);
-
-        return sampleSnvCounts;
-    }
-
-    public static Matrix convertSomaticVariantsToPosFrequencies(
-            final PositionFrequencies posFrequency,
-            final String sampleId, final List<SomaticVariant> variants, final Map<String,Integer> samplePosFreqIndex)
-    {
-        posFrequency.clear();
-        extractPositionFrequencyCounts(variants, posFrequency);
-
-        final Matrix matrix = new Matrix(posFrequency.getCounts().length, 1);
-
-        matrix.setCol(0, posFrequency.getCounts());
-        samplePosFreqIndex.put(sampleId, 0);
-
-        return matrix;
-
-
-    }
-
 }
