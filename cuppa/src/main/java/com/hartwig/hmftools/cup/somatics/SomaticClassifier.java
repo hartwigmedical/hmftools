@@ -153,8 +153,8 @@ public class SomaticClassifier implements CuppaClassifier
         mCssExponentGenPos = cmd != null ? Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_GEN_POS, "10")) : SNV_POS_FREQ_DIFF_EXPONENT;
         mMaxCssAdjustFactorSnv = cmd != null ? Double.parseDouble(cmd.getOptionValue(MAX_CSS_ADJUST_FACTOR_SNV, "0")) : 0;
         mMaxCssAdjustFactorGenPos = cmd != null ? Double.parseDouble(cmd.getOptionValue(MAX_CSS_ADJUST_FACTOR_GEN_POS, "0")) : 0;
-        mWriteSnvSims = cmd.hasOption(WRITE_SNV_SIMILARITIES);
-        mWriteGenPosSims = cmd.hasOption(WRITE_GEN_POS_SIMILARITIES);
+        mWriteSnvSims = cmd != null ? cmd.hasOption(WRITE_SNV_SIMILARITIES) : false;
+        mWriteGenPosSims = cmd != null ? cmd.hasOption(WRITE_GEN_POS_SIMILARITIES) : false;
 
         mIsValid = true;
         mCssWriter = null;
