@@ -2,6 +2,8 @@ package com.hartwig.hmftools.cup.somatics;
 
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.contextFromVariant;
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.populateBucketMap;
+import static com.hartwig.hmftools.common.sigs.SnvSigUtils.variantContext;
+import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 
 import java.util.List;
@@ -9,7 +11,6 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.Matrix;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 public final class TrinucleotideCounts
 {
@@ -19,24 +20,22 @@ public final class TrinucleotideCounts
 
         for(final SomaticVariant variant : variants)
         {
-            if(variant.isFiltered() || !variant.isSnp())
+            if(variant.Type != SNP)
                 continue;
 
-            if(variant.alt().length() != 1)
+            if(variant.Alt.length() != 1)
                 continue;
 
-            final String rawContext = variant.trinucleotideContext();
-
-            if(rawContext.contains("N"))
+            if(variant.TrinucleotideContext.contains("N"))
                 continue;
 
-            final String bucketName = contextFromVariant(variant);
+            String bucketName = variantContext(variant.Ref, variant.Alt, variant.TrinucleotideContext);
             Integer bucketIndex = bucketNameMap.get(bucketName);
 
             if(bucketIndex == null)
             {
                 CUP_LOGGER.error("invalid bucketName({}) from var({}>{}) context={})",
-                        bucketName, variant.ref(), variant.alt(), variant.trinucleotideContext());
+                        bucketName, variant.Ref, variant.Alt, variant.TrinucleotideContext);
                 continue;
             }
 

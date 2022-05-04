@@ -23,8 +23,6 @@ import com.hartwig.hmftools.pave.GeneDataCache;
 
 import org.jooq.Record;
 import org.jooq.Record18;
-import org.jooq.Record19;
-import org.jooq.Record20;
 import org.jooq.Result;
 
 public final class DataLoader
@@ -52,8 +50,6 @@ public final class DataLoader
 
         for(Record record : result)
         {
-            //final SomaticVariant variant = SomaticVariantDAO.buildFromRecord(record);
-
             if(geneDataCache != null)
             {
                 String gene = record.getValue(SOMATICVARIANT.GENE);

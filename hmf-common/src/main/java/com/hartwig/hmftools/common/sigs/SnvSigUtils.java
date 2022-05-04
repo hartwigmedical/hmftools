@@ -51,25 +51,21 @@ public class SnvSigUtils
 
     public static String contextFromVariant(final SomaticVariant variant)
     {
+        return variantContext(variant.ref(), variant.alt(), variant.trinucleotideContext());
+    }
+
+    public static String variantContext(final String ref, final String alt, final String trinucContext)
+    {
         // convert base change to standard set and the context accordingly
-        String baseChange;
-        String context;
-        final String rawContext = variant.trinucleotideContext();
-
-        if(variant.ref().charAt(0) == 'A' || variant.ref().charAt(0) == 'G')
+        if(ref.charAt(0) == 'A' || ref.charAt(0) == 'G')
         {
-            baseChange = String.format("%c>%c", swapDnaBase(variant.ref().charAt(0)), swapDnaBase(variant.alt().charAt(0)));
-
-            // convert the context as well
-            context = String.format("%c%c%c",
-                    swapDnaBase(rawContext.charAt(2)), swapDnaBase(rawContext.charAt(1)), swapDnaBase(rawContext.charAt(0)));
+            return String.format("%c>%c_%c%c%c",
+                    swapDnaBase(ref.charAt(0)), swapDnaBase(alt.charAt(0)),
+                    swapDnaBase(trinucContext.charAt(2)), swapDnaBase(trinucContext.charAt(1)), swapDnaBase(trinucContext.charAt(0)));
         }
         else
         {
-            baseChange = variant.ref() + ">" + variant.alt();
-            context = rawContext;
+            return String.format("%c>%c_%s",ref.charAt(0), alt.charAt(0), trinucContext);
         }
-
-        return baseChange + "_" + context;
     }
 }

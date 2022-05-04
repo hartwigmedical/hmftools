@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
@@ -64,7 +65,6 @@ import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.utils.Matrix;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
@@ -215,7 +215,7 @@ public class SomaticClassifier implements CuppaClassifier
             // load from VCF, database, sigs file or generic counts files
             if(mConfig.DbAccess != null || !mConfig.SampleSomaticVcf.isEmpty())
             {
-                final List<SomaticVariant> somaticVariants = Lists.newArrayList();
+                List<SomaticVariant> somaticVariants = Lists.newArrayList();
 
                 if(mConfig.DbAccess != null)
                 {
@@ -223,8 +223,7 @@ public class SomaticClassifier implements CuppaClassifier
                 }
                 else
                 {
-                    somaticVariants.addAll(loadSomaticVariants(
-                            sampleId, mConfig.SampleSomaticVcf, Lists.newArrayList(VariantContext.Type.SNP)));
+                    somaticVariants.addAll(loadSomaticVariants(mConfig.SampleSomaticVcf, Lists.newArrayList(SNP)));
                 }
 
                 mSampleSnvCounts = convertSomaticVariantsToSnvCounts(sampleId, somaticVariants, mSampleSnvCountsIndex);

@@ -8,8 +8,10 @@ import static com.hartwig.hmftools.common.sigs.SnvSigUtils.populateBucketMap;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SIG_DATA;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CANCER_POS_FREQ_AA_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CANCER_POS_FREQ_COUNTS;
@@ -46,7 +48,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.utils.Matrix;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
@@ -56,6 +57,8 @@ import com.hartwig.hmftools.cup.traits.SampleTraitsData;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.jetbrains.annotations.NotNull;
+
+import htsjdk.variant.variantcontext.VariantContext;
 
 public class RefSomatics implements RefClassifier
 {
@@ -120,7 +123,16 @@ public class RefSomatics implements RefClassifier
 
     public static boolean requiresBuild(final RefDataConfig config)
     {
-        return config.DbAccess != null || (!config.CohortSigContribsFile.isEmpty() && !config.SnvCountsFile.isEmpty());
+        if(config.DbAccess != null)
+            return true;
+
+        if(!config.CohortSigContribsFile.isEmpty() && !config.SnvCountsFile.isEmpty())
+            return true;
+
+        if(!config.CohortSigContribsFile.isEmpty() && !config.SampleSomaticVcf.isEmpty())
+            return true;
+
+        return false;
     }
 
     public static void addCmdLineArgs(@NotNull Options options)
@@ -350,7 +362,17 @@ public class RefSomatics implements RefClassifier
                 CUP_LOGGER.debug("retrieved SNV data for {} samples", retrievedSamples);
             }
 
-            final List<SomaticVariant> variants = loadSomaticVariants(sampleId, mConfig.DbAccess);
+            List<SomaticVariant> variants = Lists.newArrayList();
+
+            if(mConfig.DbAccess != null)
+            {
+                variants.addAll(loadSomaticVariants(sampleId, mConfig.DbAccess));
+            }
+            else
+            {
+                final String somaticVcfFile = formSamplePath(mConfig.SampleSomaticVcf, sampleId);
+                variants.addAll(loadSomaticVariants(somaticVcfFile, Lists.newArrayList(SNP)));
+            }
 
             if(needsTriNucCounts)
             {

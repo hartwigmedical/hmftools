@@ -40,7 +40,6 @@ import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.sv.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.sv.linx.FusionPhasedType;
@@ -54,6 +53,7 @@ import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.cup.somatics.SomaticDataLoader;
+import com.hartwig.hmftools.cup.somatics.SomaticVariant;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.logging.log4j.util.Strings;
@@ -147,7 +147,7 @@ public class FeatureDataLoader
             }
 
             boolean checkIndels = checkIndels(sampleId, sampleDataDir, null);
-            final List<String> indelGenes = loadSpecificMutations(sampleId, sampleVcfFile, checkIndels);
+            final List<String> indelGenes = loadSpecificMutations(sampleVcfFile, checkIndels);
 
             mapFeatureData(sampleId, sampleFeaturesMap, drivers, fusions, virusAnnotations, indelGenes);
         }
@@ -385,7 +385,7 @@ public class FeatureDataLoader
                 .and(SOMATICVARIANT.GENE.in(INDEL_ALB, INDEL_SFTPB, INDEL_SLC34A2, MUTATION_EGFR))
                 .fetch();
 
-        for (Record record : result)
+        for(Record record : result)
         {
             final String sampleId = record.getValue(SOMATICVARIANT.SAMPLEID);
             final String gene = record.getValue(SOMATICVARIANT.GENE);
@@ -410,21 +410,18 @@ public class FeatureDataLoader
     }
 
 
-    private static List<String> loadSpecificMutations(final String sampleId, final String vcfFile, boolean checkIndels)
+    private static List<String> loadSpecificMutations(final String vcfFile, boolean checkIndels)
     {
-        final List<SomaticVariant> variants = SomaticDataLoader.loadSomaticVariants(sampleId, vcfFile, Lists.newArrayList());
+        final List<SomaticVariant> variants = SomaticDataLoader.loadSomaticVariants(vcfFile, Lists.newArrayList());
 
         final List<String> mutations = Lists.newArrayList();
 
         for(SomaticVariant variant : variants)
         {
-            if(variant.isFiltered())
-                continue;
-
-            if((checkIndels && isKnownIndel(variant.gene(), variant.repeatCount(), variant.type()))
-            || isKnownEGFRMutation(variant.gene(), variant.type(), (int)variant.position(), variant.ref(), variant.alt()))
+            if((checkIndels && isKnownIndel(variant.Gene, variant.RepeatCount, variant.Type))
+            || isKnownEGFRMutation(variant.Gene, variant.Type, variant.Position, variant.Ref, variant.Alt))
             {
-                mutations.add(variant.gene());
+                mutations.add(variant.Gene);
             }
         }
 

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cup.somatics;
 
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.contextFromVariant;
+import static com.hartwig.hmftools.common.sigs.SnvSigUtils.variantContext;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
@@ -20,7 +21,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.utils.Matrix;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.cup.common.SampleData;
 
 public final class GenomicPositions
@@ -32,36 +33,32 @@ public final class GenomicPositions
 
         for(final SomaticVariant variant : variants)
         {
-            if(variant.isFiltered() || !variant.isSnp())
+            if(variant.Type != VariantType.SNP)
                 continue;
 
-            if(variant.alt().length() != 1)
+            // exclude male chromosome since is then unhelpful for multi-gender cancer types
+            if(variant.Chromosome.equals("Y") || variant.Chromosome.equals("chrY"))
                 continue;
 
-            if(variant.chromosome().equals("Y") || variant.chromosome().equals("chrY"))
-                continue;
-
-            final String triNucContext = variant.trinucleotideContext();
-
-            if(triNucContext.contains("N"))
+            if(variant.TrinucleotideContext.contains("N"))
                 continue;
 
             if(aidApobecStatus != ALL)
             {
-                final String bucketName = contextFromVariant(variant);
+                String bucketName = variantContext(variant.Ref, variant.Alt, variant.TrinucleotideContext);
                 boolean isAA = AID_APOBEC_TRINUCLEOTIDE_CONTEXTS.contains(bucketName);
 
                 if((aidApobecStatus == TRUE_ONLY && !isAA) || (aidApobecStatus == FALSE_ONLY && isAA))
                     continue;
             }
 
-            if(!positionFrequencies.isValidChromosome(variant.chromosome()))
+            if(!positionFrequencies.isValidChromosome(variant.Chromosome))
             {
-                CUP_LOGGER.warn("variant chr({}) position({}) cannot map to genomic position", variant.chromosome(), variant.position());
+                CUP_LOGGER.warn("variant chr({}) position({}) cannot map to genomic position", variant.Chromosome, variant.Position);
                 continue;
             }
 
-            positionFrequencies.addPosition(variant.chromosome(), variant.position());
+            positionFrequencies.addPosition(variant.Chromosome, variant.Position);
         }
     }
 

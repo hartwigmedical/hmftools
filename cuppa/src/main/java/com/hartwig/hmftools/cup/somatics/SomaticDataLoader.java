@@ -1,16 +1,12 @@
 package com.hartwig.hmftools.cup.somatics;
 
-import static com.hartwig.hmftools.common.sigs.SnvSigUtils.populateBucketMap;
 import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
-import static com.hartwig.hmftools.common.sigs.SnvSigUtils.contextFromVariant;
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
-import static com.hartwig.hmftools.cup.common.CupConstants.AID_APOBEC_TRINUCLEOTIDE_CONTEXTS;
-import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_BUCKET_SIZE;
-import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_MAX_SAMPLE_COUNT;
-import static com.hartwig.hmftools.cup.somatics.GenomicPositions.extractPositionFrequencyCounts;
 import static com.hartwig.hmftools.cup.somatics.RefSomatics.convertSignatureName;
 import static com.hartwig.hmftools.cup.somatics.RefSomatics.populateRefPercentileData;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
@@ -23,13 +19,16 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+
+import org.jooq.Record;
+import org.jooq.Record18;
+import org.jooq.Record7;
+import org.jooq.Record8;
+import org.jooq.Result;
 
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
@@ -111,36 +110,47 @@ public class SomaticDataLoader
 
     public static List<SomaticVariant> loadSomaticVariants(final String sampleId, final DatabaseAccess dbAccess)
     {
-        final List<SomaticVariant> somaticVariants = dbAccess.readSomaticVariants(sampleId, VariantType.SNP);
-        somaticVariants.addAll(dbAccess.readSomaticVariants(sampleId, VariantType.INDEL));
-        return somaticVariants;
+        List<SomaticVariant> variants = Lists.newArrayList();
+
+        Result<Record8<String, String, Integer, String, String, String, String, String>>
+                result = dbAccess.context()
+                .select(SOMATICVARIANT.GENE, SOMATICVARIANT.CHROMOSOME, SOMATICVARIANT.POSITION,
+                        SOMATICVARIANT.REF, SOMATICVARIANT.ALT, SOMATICVARIANT.TYPE, SOMATICVARIANT.GENE,
+                        SOMATICVARIANT.TRINUCLEOTIDECONTEXT)
+                .from(SOMATICVARIANT)
+                .where(SOMATICVARIANT.FILTER.eq(PASS_FILTER))
+                .and(SOMATICVARIANT.SAMPLEID.eq(sampleId))
+                .and(SOMATICVARIANT.TYPE.eq(VariantType.SNP.toString()))
+                .orderBy(SOMATICVARIANT.CHROMOSOME, SOMATICVARIANT.POSITION)
+                .fetch();
+
+        for(Record record : result)
+        {
+            variants.add(SomaticVariant.fromRecord(record));
+        }
+
+        return variants;
     }
 
-    public static List<SomaticVariant> loadSomaticVariants(final String sampleId, final String vcfFile, final List<VariantContext.Type> types)
+    public static List<SomaticVariant> loadSomaticVariants(final String vcfFile, final List<VariantType> types)
     {
         CompoundFilter filter = new CompoundFilter(true);
         filter.add(new PassingVariantFilter());
 
-        SomaticVariantFactory variantFactory = new SomaticVariantFactory(filter);
-        final List<SomaticVariant> variantList = Lists.newArrayList();
+        List<SomaticVariant> variants = Lists.newArrayList();
 
         try
         {
             final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false);
 
-            for(VariantContext variant : reader.iterator())
+            for(VariantContext variantContext : reader.iterator())
             {
-                if(filter.test(variant))
+                if(!filter.test(variantContext))
+                    continue;
+
+                if(types.isEmpty() || types.contains(VariantType.type(variantContext)))
                 {
-                    final SomaticVariant somaticVariant = variantFactory.createVariant(sampleId, variant).orElse(null);
-
-                    if(somaticVariant == null)
-                        continue;
-
-                    if(!types.isEmpty() && !types.contains(variant.getType()))
-                        continue;
-
-                    variantList.add(somaticVariant);
+                    variants.add(SomaticVariant.fromContext(variantContext));
                 }
             }
         }
@@ -149,7 +159,7 @@ public class SomaticDataLoader
             CUP_LOGGER.error(" failed to read somatic VCF file({}): {}", vcfFile, e.toString());
         }
 
-        return variantList;
+        return variants;
     }
 
     public static boolean loadSigContribsFromCohortFile(final String filename, final Map<String,Map<String,Double>> sampleSigContributions)
