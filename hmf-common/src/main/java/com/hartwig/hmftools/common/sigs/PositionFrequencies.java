@@ -27,18 +27,26 @@ public class PositionFrequencies
     private int mPositionCacheSize;
     private int mMaxSampleCount;
     private final int[] mCounts;
+    private final boolean mBuildMap;
 
     public static final int DEFAULT_POS_FREQ_BUCKET_SIZE = 500000;
     public static final int DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT = 20000;
 
     public PositionFrequencies(final int bucketSize, final int maxSampleCount)
     {
+        this(bucketSize, maxSampleCount, false);
+    }
+
+    public PositionFrequencies(final int bucketSize, final int maxSampleCount, boolean buildMap)
+    {
         mBucketSize = bucketSize;
         mMaxSampleCount = maxSampleCount;
 
         mChromosomeLengths = Maps.newHashMap();
         mChromosomePosIndex = Maps.newHashMap();
+
         mChrPosBucketFrequencies = Maps.newHashMap();
+        mBuildMap = buildMap;
 
         mPositionCacheSize = initialisePositionCache(mBucketSize, mChromosomeLengths, mChromosomePosIndex);
 
@@ -73,6 +81,9 @@ public class PositionFrequencies
 
         if(bucketIndex >= 0 && bucketIndex < mCounts.length)
             ++mCounts[bucketIndex];
+
+        if(!mBuildMap)
+            return;
 
         Map<Integer,Integer> positionMap = mChrPosBucketFrequencies.get(chromosome);
 

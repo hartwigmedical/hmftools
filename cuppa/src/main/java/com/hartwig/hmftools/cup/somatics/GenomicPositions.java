@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.common.sigs.SnvSigUtils.variantContext;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CANCER_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.common.CupConstants.AID_APOBEC_TRINUCLEOTIDE_CONTEXTS;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.cup.somatics.AidApobecStatus.ALL;
@@ -27,9 +26,9 @@ import com.hartwig.hmftools.cup.common.SampleData;
 public final class GenomicPositions
 {
     public static void extractPositionFrequencyCounts(
-            final List<SomaticVariant> variants, final PositionFrequencies positionFrequencies, AidApobecStatus aidApobecStatus)
+            final List<SomaticVariant> variants, final PositionFrequencies posFrequencies, AidApobecStatus aidApobecStatus)
     {
-        positionFrequencies.clear();
+        posFrequencies.clear();
 
         for(final SomaticVariant variant : variants)
         {
@@ -52,26 +51,26 @@ public final class GenomicPositions
                     continue;
             }
 
-            if(!positionFrequencies.isValidChromosome(variant.Chromosome))
+            if(!posFrequencies.isValidChromosome(variant.Chromosome))
             {
                 CUP_LOGGER.warn("variant chr({}) position({}) cannot map to genomic position", variant.Chromosome, variant.Position);
                 continue;
             }
 
-            positionFrequencies.addPosition(variant.Chromosome, variant.Position);
+            posFrequencies.addPosition(variant.Chromosome, variant.Position);
         }
     }
 
     public static Matrix convertSomaticVariantsToPosFrequencies(
             final String sampleId, final List<SomaticVariant> variants, final Map<String,Integer> samplePosFreqIndex,
-            final PositionFrequencies posFrequency, AidApobecStatus aidApobecStatus)
+            final PositionFrequencies posFrequencies, AidApobecStatus aidApobecStatus)
     {
-        posFrequency.clear();
-        extractPositionFrequencyCounts(variants, posFrequency, aidApobecStatus);
+        posFrequencies.clear();
+        extractPositionFrequencyCounts(variants, posFrequencies, aidApobecStatus);
 
-        final Matrix matrix = new Matrix(posFrequency.getCounts().length, 1);
+        final Matrix matrix = new Matrix(posFrequencies.getCounts().length, 1);
 
-        matrix.setCol(0, posFrequency.getCounts());
+        matrix.setCol(0, posFrequencies.getCounts());
         samplePosFreqIndex.put(sampleId, 0);
 
         return matrix;

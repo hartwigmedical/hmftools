@@ -176,7 +176,7 @@ public class RefSomatics implements RefClassifier
             writeSampleCounts(mPosFreqCounts, mPosFreqCountsIndex, REF_FILE_SAMPLE_POS_FREQ_COUNTS);
 
             if(mAaPositivePosFreqCounts != null)
-                writeSampleCounts(mPosFreqCounts, mPosFreqCountsIndex, REF_FILE_SAMPLE_POS_FREQ_AA_POS_COUNTS);
+                writeSampleCounts(mAaPositivePosFreqCounts, mPosFreqCountsIndex, REF_FILE_SAMPLE_POS_FREQ_AA_POS_COUNTS);
         }
 
         buildSignaturePercentiles();
