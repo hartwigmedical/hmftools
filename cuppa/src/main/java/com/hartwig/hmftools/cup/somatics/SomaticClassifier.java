@@ -112,6 +112,8 @@ public class SomaticClassifier implements CuppaClassifier
     private final double mMaxCssAdjustFactorGenPos;
     private final double mCssExponentSnv;
     private final double mCssExponentGenPos;
+    private final boolean mWriteGenPosSims;
+    private final boolean mWriteSnvSims;
 
     public static final String MAX_CSS_ADJUST_FACTOR_SNV = "css_max_factor_snv";
     public static final String MAX_CSS_ADJUST_FACTOR_GEN_POS = "css_max_factor_gen_pos";
@@ -122,6 +124,8 @@ public class SomaticClassifier implements CuppaClassifier
     public static final String SNV_POS_FREQ_POS_SIZE = "pos_freq_bucket_size";
 
     public static final String WRITE_GEN_POS_CSS = "write_gen_pos_css";
+    public static final String WRITE_GEN_POS_SIMILARITIES = "write_gen_pos_sims";
+    public static final String WRITE_SNV_SIMILARITIES = "write_snv_sims";
 
 
     private static final int GEN_POS_CSS_SIMILARITY_MAX_MATCHES = 100;
@@ -149,6 +153,8 @@ public class SomaticClassifier implements CuppaClassifier
         mCssExponentGenPos = cmd != null ? Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_GEN_POS, "10")) : SNV_POS_FREQ_DIFF_EXPONENT;
         mMaxCssAdjustFactorSnv = cmd != null ? Double.parseDouble(cmd.getOptionValue(MAX_CSS_ADJUST_FACTOR_SNV, "0")) : 0;
         mMaxCssAdjustFactorGenPos = cmd != null ? Double.parseDouble(cmd.getOptionValue(MAX_CSS_ADJUST_FACTOR_GEN_POS, "0")) : 0;
+        mWriteSnvSims = cmd.hasOption(WRITE_SNV_SIMILARITIES);
+        mWriteGenPosSims = cmd.hasOption(WRITE_GEN_POS_SIMILARITIES);
 
         mIsValid = true;
         mCssWriter = null;
@@ -178,7 +184,9 @@ public class SomaticClassifier implements CuppaClassifier
         mIsValid &= loadSigContributions();
 
         if(cmd.hasOption(WRITE_GEN_POS_CSS))
+        {
             initialiseOutputFiles();
+        }
     }
 
     public static void addCmdLineArgs(Options options)
@@ -429,7 +437,7 @@ public class SomaticClassifier implements CuppaClassifier
             if(css < SNV_CSS_THRESHOLD)
                 continue;
 
-            if(false && mConfig.WriteSimilarities)
+            if(mWriteSnvSims && mConfig.WriteSimilarities)
             {
                 recordCssSimilarity(
                         topMatches, sample.Id, refSampleId, css, SNV_96_PAIRWISE_SIMILARITY.toString(),
@@ -468,7 +476,7 @@ public class SomaticClassifier implements CuppaClassifier
                 sample.Id, CLASSIFIER, LIKELIHOOD, SNV_96_PAIRWISE_SIMILARITY.toString(), String.format("%.4g", totalCss), cancerCssTotals));
 
         // for non-ref cohorts, also report closest matches from amongst these
-        if(false && mConfig.WriteSimilarities && mSampleDataCache.isMultiSampleNonRef())
+        if(mWriteSnvSims && mConfig.WriteSimilarities && mSampleDataCache.isMultiSampleNonRef())
         {
             for(Map.Entry<String,Integer> entry : mSampleSnvCountsIndex.entrySet())
             {
@@ -578,18 +586,54 @@ public class SomaticClassifier implements CuppaClassifier
                 sample.Id, CLASSIFIER, LIKELIHOOD, GENOMIC_POSITION_SIMILARITY.toString(), String.format("%.4g", totalCss), cancerCssTotals));
 
         // then run pairwise analysis if similarities are being analysed
-        addSnvPosSimilarities(sample, sampleCounts, similarities);
+        if(mWriteGenPosSims)
+            addSnvPosSimilarities(sample, sampleCounts, similarities);
     }
 
     private void initialiseOutputFiles()
     {
         try
         {
-            final String filename = mConfig.OutputDir + "CUP_GEN_POS_CSS.csv";
+            final String filename = mConfig.OutputDir + "CUP.GEN_POS_CSS.csv";
 
             mCssWriter = createBufferedWriter(filename, false);
             mCssWriter.write("SampleId,CancerType,RefCancerType,Css");
             mCssWriter.newLine();
+
+            if(mRefCancerSnvPosFrequencies != null)
+            {
+                // separately write cancer-type gen pos CSS values
+                BufferedWriter writer = createBufferedWriter(mConfig.OutputDir + "CUP.GEN_POS_CANCER_CSS.csv", false);
+                writer.write("RefCancerType1,RefCancerType2,Css");
+                writer.newLine();
+
+                for(int i = 0; i < mRefSnvPosFreqCancerTypes.size() - 1; ++i)
+                {
+                    final String refCancerType1 = mRefSnvPosFreqCancerTypes.get(i);
+
+                    if(!isKnownCancerType(refCancerType1))
+                        continue;
+
+                    final double[] refCounts1 = mRefCancerSnvPosFrequencies.getCol(i);
+
+                    for(int j = i + 1; j < mRefSnvPosFreqCancerTypes.size(); ++j)
+                    {
+                        final String refCancerType2 = mRefSnvPosFreqCancerTypes.get(j);
+
+                        if(!isKnownCancerType(refCancerType1))
+                            continue;
+
+                        final double[] refCounts2 = mRefCancerSnvPosFrequencies.getCol(j);
+
+                        double css = calcCosineSim(refCounts1, refCounts2);
+
+                        writer.write(String.format("%s,%s,%.4f", refCancerType1, refCancerType2, css));
+                        writer.newLine();
+                    }
+                }
+
+                writer.close();
+            }
         }
         catch(IOException e)
         {
@@ -640,12 +684,9 @@ public class SomaticClassifier implements CuppaClassifier
             if(css < SNV_CSS_THRESHOLD)
                 continue;
 
-            if(mConfig.WriteSimilarities)
-            {
-                recordCssSimilarity(
-                        topMatches, sample.Id, refSampleId, css, GENOMIC_POSITION_SIMILARITY.toString(),
-                        GEN_POS_CSS_SIMILARITY_MAX_MATCHES, CSS_SIMILARITY_CUTOFF);
-            }
+            recordCssSimilarity(
+                    topMatches, sample.Id, refSampleId, css, GENOMIC_POSITION_SIMILARITY.toString(),
+                    GEN_POS_CSS_SIMILARITY_MAX_MATCHES, CSS_SIMILARITY_CUTOFF);
         }
 
         similarities.addAll(topMatches);
