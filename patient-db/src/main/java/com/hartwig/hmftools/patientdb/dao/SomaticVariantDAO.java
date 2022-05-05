@@ -42,6 +42,8 @@ public class SomaticVariantDAO
     @NotNull
     private final DSLContext context;
 
+    private static final int DB_BATCH_INSERT_SIZE = 10000;
+
     SomaticVariantDAO(@NotNull final DSLContext context)
     {
         this.context = context;
@@ -65,7 +67,7 @@ public class SomaticVariantDAO
             }
         };
 
-        return new BufferedWriter<>(consumer);
+        return new BufferedWriter<>(consumer, DB_BATCH_INSERT_SIZE);
     }
 
     public DndsMutationalLoad readDndsLoad(@NotNull String sample)
