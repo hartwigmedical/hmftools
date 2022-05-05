@@ -132,7 +132,7 @@ public final class CopyNumberProfile
             else if(cnRegionEnd <= bucketPosEnd)
             {
                 // purple region finishes before bucket
-                currentBucketCnTotal += (cnRegionEnd - cnRegionStart + 1) * regionCN;
+                currentBucketCnTotal += (cnRegionEnd - max(bucketPosStart, cnRegionStart) + 1) * regionCN;
             }
             else
             {

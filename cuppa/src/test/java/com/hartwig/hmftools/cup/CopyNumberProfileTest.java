@@ -96,7 +96,7 @@ public class CopyNumberProfileTest
         assertEquals(cnProfile[6], 1.0, 0.1);
         assertEquals(cnProfile[7], 1.0, 0.1);
         assertEquals(cnProfile[8], 1.75, 0.1);
-        assertEquals(cnProfile[9], 2.75, 0.1);
+        assertEquals(cnProfile[9], 2.0, 0.1);
 
         // chr 3
         assertEquals(cnProfile[10], 1.5, 0.1);
