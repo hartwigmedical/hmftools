@@ -34,21 +34,21 @@ public class PositionFrequencies
 
     public PositionFrequencies(final int bucketSize, final int maxSampleCount)
     {
-        this(bucketSize, maxSampleCount, false);
+        this(bucketSize, maxSampleCount, buildStandardChromosomeLengths(), false);
     }
 
-    public PositionFrequencies(final int bucketSize, final int maxSampleCount, boolean buildMap)
+    public PositionFrequencies(final int bucketSize, final int maxSampleCount, final Map<String,Integer> chromosomeLengths, boolean buildMap)
     {
         mBucketSize = bucketSize;
         mMaxSampleCount = maxSampleCount;
 
-        mChromosomeLengths = Maps.newHashMap();
+        mChromosomeLengths = chromosomeLengths;
         mChromosomePosIndex = Maps.newHashMap();
 
         mChrPosBucketFrequencies = Maps.newHashMap();
         mBuildMap = buildMap;
 
-        mPositionCacheSize = initialisePositionCache(mBucketSize, mChromosomeLengths, mChromosomePosIndex);
+        mPositionCacheSize = initialisePositionCache(mBucketSize, chromosomeLengths, mChromosomePosIndex);
 
         mCounts = new int[mPositionCacheSize];
     }
@@ -73,6 +73,11 @@ public class PositionFrequencies
     public boolean isValidChromosome(final String chromosome)
     {
         return mChromosomePosIndex.containsKey(chromosome);
+    }
+
+    public int getBucketIndex(final String chromosome, int position)
+    {
+        return getBucketIndex(mBucketSize, mChromosomePosIndex, chromosome, position);
     }
 
     public void addPosition(final String chromosome, int position)
@@ -102,6 +107,22 @@ public class PositionFrequencies
             positionMap.put(positionBucket, frequency + 1);
     }
 
+    public static Map<String,Integer> buildStandardChromosomeLengths()
+    {
+        final Map<String, Integer> chromosomeLengths = Maps.newHashMap();
+        final RefGenomeCoordinates refGenome37 = RefGenomeCoordinates.COORDS_37;
+        final RefGenomeCoordinates refGenome38 = RefGenomeCoordinates.COORDS_38;
+
+        for(HumanChromosome chr : HumanChromosome.values())
+        {
+            final String chromosome = chr.toString();
+            int length = max(refGenome37.lengths().get(chr), refGenome38.lengths().get(chr));
+            chromosomeLengths.put(chromosome, length);
+        }
+
+        return chromosomeLengths;
+    }
+
     public static int initialisePositionCache(
             int bucketSize, final Map<String,Integer> chromosomeLengths, final Map<String,Integer> chrPosIndexMap)
     {
@@ -110,18 +131,15 @@ public class PositionFrequencies
         if(bucketSize == 0)
             return positionCacheSize;
 
-        chromosomeLengths.clear();
-
-        final RefGenomeCoordinates refGenome37 = RefGenomeCoordinates.COORDS_37;
-        final RefGenomeCoordinates refGenome38 = RefGenomeCoordinates.COORDS_38;
-
         int lastEndPosIndex = -1;
 
-        for(HumanChromosome chr : HumanChromosome.values())
+        for(HumanChromosome humanChromosome : HumanChromosome.values())
         {
-            final String chromosome = chr.toString();
-            int length = max(refGenome37.lengths().get(chr).intValue(), refGenome38.lengths().get(chr).intValue());
-            chromosomeLengths.put(chromosome, length);
+            String chromosome = humanChromosome.toString();
+            if(!chromosomeLengths.containsKey(chromosome))
+                continue;
+
+            int length = chromosomeLengths.get(chromosome);
 
             // chromosomes will have position indices as: chr1 0-9, chr2 10-20 etc
             int startPosIndex = lastEndPosIndex > 0 ? lastEndPosIndex + 1 : 0;

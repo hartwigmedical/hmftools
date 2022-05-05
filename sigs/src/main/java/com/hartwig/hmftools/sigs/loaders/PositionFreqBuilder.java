@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.utils.ConfigUtils;
 import com.hartwig.hmftools.common.utils.Matrix;
 
@@ -61,7 +62,6 @@ public class PositionFreqBuilder
 
     public PositionFreqBuilder(final CommandLine cmd)
     {
-        mChromosomeLengths = Maps.newHashMap();
         mChromosomePosIndex = Maps.newHashMap();
         mSamplePositionFrequencies = Maps.newHashMap();
         mSampleList = Lists.newArrayList();
@@ -76,6 +76,7 @@ public class PositionFreqBuilder
 
         mSampleList.addAll(ConfigUtils.loadSampleIdsFile(cmd.getOptionValue(SAMPLE_DATA_FILE)));
 
+        mChromosomeLengths = PositionFrequencies.buildStandardChromosomeLengths();
         mPositionCacheSize = initialisePositionCache(mBucketSize, mChromosomeLengths, mChromosomePosIndex);
 
         SIG_LOGGER.info("position cache size({}) from position bucket position({})", mPositionCacheSize, mBucketSize);
@@ -83,7 +84,6 @@ public class PositionFreqBuilder
 
     public PositionFreqBuilder(final String outputDir, final String outputId, int positionBucketSize)
     {
-        mChromosomeLengths = Maps.newHashMap();
         mChromosomePosIndex = Maps.newHashMap();
         mSamplePositionFrequencies = Maps.newHashMap();
 
@@ -93,6 +93,7 @@ public class PositionFreqBuilder
         mOutputDir = outputDir;
         mOutputFileId = outputId;
 
+        mChromosomeLengths = PositionFrequencies.buildStandardChromosomeLengths();
         mPositionCacheSize = initialisePositionCache(mBucketSize, mChromosomeLengths, mChromosomePosIndex);
         SIG_LOGGER.info("position cache size({}) from position bucket position({})", mPositionCacheSize, mBucketSize);
 

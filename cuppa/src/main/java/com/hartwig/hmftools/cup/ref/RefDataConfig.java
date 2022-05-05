@@ -49,6 +49,7 @@ public class RefDataConfig
     public final String SampleFeaturesDir;
     public final String SampleSomaticVcf;
     public final String SampleSvVcf;
+    public final String SampleCopyNumberFile;
 
     public final DatabaseAccess DbAccess;
 
@@ -68,6 +69,8 @@ public class RefDataConfig
     private static final String SAMPLE_FEATURES_DIR = "sample_features_dir";
     private static final String SAMPLE_SOMATIC_VCF = "sample_somatic_vcf";
     private static final String SAMPLE_SV_VCF = "sample_sv_vcf";
+
+    private static final String SAMPLE_COPY_NUMBER_FILE = "sample_copy_number_file";
 
     private static final String REF_FEATURE_OVERRIDE_FILE = "feature_override_file";
     public static final String GENDER_RATES = "gender_rates";
@@ -93,6 +96,7 @@ public class RefDataConfig
         SampleFeaturesDir = cmd.getOptionValue(SAMPLE_FEATURES_DIR, "");
         SampleSomaticVcf = cmd.getOptionValue(SAMPLE_SOMATIC_VCF, "");
         SampleSvVcf = cmd.getOptionValue(SAMPLE_SV_VCF, "");
+        SampleCopyNumberFile = cmd.getOptionValue(SAMPLE_COPY_NUMBER_FILE, "");
 
         SnvPositionDataFile = cmd.getOptionValue(REF_SNV_SAMPLE_POS_FREQ_FILE, "");
         SnvCountsFile = cmd.getOptionValue(REF_SNV_COUNTS_FILE, "");
@@ -129,6 +133,7 @@ public class RefDataConfig
         options.addOption(SAMPLE_FEATURES_DIR, true, "Ref sample directory containing features files");
         options.addOption(SAMPLE_SV_VCF, true, "Ref sample SV VCF path, wildcards allowed");
         options.addOption(SAMPLE_SOMATIC_VCF, true, "Ref sample somatic VCF path, wildcards allowed");
+        options.addOption(SAMPLE_COPY_NUMBER_FILE, true, "Ref sample Purple copy number file, wildcards allowed");
 
         options.addOption(REF_GENE_EXP_DATA_FILE, true, "Ref sample RNA gene expression cohort data file");
         options.addOption(REF_ALT_SJ_DATA_FILE, true, "Ref sample RNA alternate splice junction cohort data file");

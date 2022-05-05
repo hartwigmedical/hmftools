@@ -76,8 +76,6 @@ import com.hartwig.hmftools.cup.common.SampleSimilarity;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
-import htsjdk.variant.variantcontext.VariantContext;
-
 public class SomaticClassifier implements CuppaClassifier
 {
     private final CuppaConfig mConfig;
@@ -103,7 +101,7 @@ public class SomaticClassifier implements CuppaClassifier
     private final Map<String,Integer> mSamplePosFreqIndex;
 
     private final SomaticSigs mSomaticSigs;
-    private final PositionFrequencies mPosFrequencyBuilder;
+    private final PositionFrequencies mPosFrequencies;
 
     private boolean mIsValid;
     private BufferedWriter mCssWriter;
@@ -163,7 +161,7 @@ public class SomaticClassifier implements CuppaClassifier
         int posFreqBucketSize = cmd != null && cmd.hasOption(SNV_POS_FREQ_POS_SIZE) ?
                 Integer.parseInt(cmd.getOptionValue(SNV_POS_FREQ_POS_SIZE)) : POS_FREQ_BUCKET_SIZE;
 
-        mPosFrequencyBuilder = new PositionFrequencies(posFreqBucketSize, POS_FREQ_MAX_SAMPLE_COUNT);
+        mPosFrequencies = new PositionFrequencies(posFreqBucketSize, POS_FREQ_MAX_SAMPLE_COUNT);
 
         if(mConfig.RefSnvCountsFile.isEmpty() && mConfig.RefSigContributionFile.isEmpty() && mConfig.RefSnvCancerPosFreqFile.isEmpty())
             return;
@@ -229,7 +227,7 @@ public class SomaticClassifier implements CuppaClassifier
                 mSampleSnvCounts = convertSomaticVariantsToSnvCounts(sampleId, somaticVariants, mSampleSnvCountsIndex);
 
                 mSamplePosFrequencies = convertSomaticVariantsToPosFrequencies(
-                        sampleId, somaticVariants, mSamplePosFreqIndex, mPosFrequencyBuilder, AidApobecStatus.ALL);
+                        sampleId, somaticVariants, mSamplePosFreqIndex, mPosFrequencies, AidApobecStatus.ALL);
             }
             else
             {

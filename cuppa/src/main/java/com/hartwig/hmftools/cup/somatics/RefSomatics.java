@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SIG_DATA;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CANCER_POS_FREQ_AA_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CANCER_POS_FREQ_COUNTS;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_COPY_NUMBER_PROFILE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_POS_FREQ_AA_POS_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SIG_PERC;
@@ -24,6 +25,7 @@ import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_BUCKET_SIZE;
 import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_MAX_SAMPLE_COUNT;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.parseFileSet;
+import static com.hartwig.hmftools.cup.somatics.CopyNumberProfile.buildCopyNumberProfile;
 import static com.hartwig.hmftools.cup.somatics.GenomicPositions.buildCancerPosFrequencies;
 import static com.hartwig.hmftools.cup.somatics.GenomicPositions.extractPositionFrequencyCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticClassifier.SNV_POS_FREQ_POS_SIZE;
@@ -58,8 +60,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.variant.variantcontext.VariantContext;
-
 public class RefSomatics implements RefClassifier
 {
     private final RefDataConfig mConfig;
@@ -79,6 +79,8 @@ public class RefSomatics implements RefClassifier
 
     private final boolean mSplitAidApobec;
 
+    private final Matrix mCopyNumberProfile; // same dimensions as genomic position
+
     private final PositionFrequencies mPosFrequencies;
     private final PositionFrequencies mAaPositivePosFrequencies;
 
@@ -88,6 +90,7 @@ public class RefSomatics implements RefClassifier
     private static final String MATRIX_TYPE_SNV_96 = "SNV_96";
     private static final String MATRIX_TYPE_GEN_POS = "GEN_POS";
     private static final String SPLIT_AID_APOBEC = "split_aid_apobec";
+    private static final String BUILD_CN_PROFILE = "build_copy_number";
 
     public RefSomatics(final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
@@ -116,6 +119,16 @@ public class RefSomatics implements RefClassifier
         mPosFrequencies = new PositionFrequencies(posFreqBucketSize, POS_FREQ_MAX_SAMPLE_COUNT);
         mAaPositivePosFrequencies = new PositionFrequencies(posFreqBucketSize, POS_FREQ_MAX_SAMPLE_COUNT);
 
+        if(cmd.hasOption(BUILD_CN_PROFILE))
+        {
+            int refSampleCount = mSampleDataCache.refSampleIds(false).size();
+            mCopyNumberProfile = new Matrix(mPosFrequencies.getBucketCount(), refSampleCount);
+        }
+        else
+        {
+            mCopyNumberProfile = null;
+        }
+
         populateReportableSignatures();
     }
 
@@ -142,6 +155,8 @@ public class RefSomatics implements RefClassifier
         options.addOption(
                 SPLIT_AID_APOBEC, false,
                 "Exclude 6 AID/APOBEC associated trinucleotide contexts from genomic position frequencies");
+
+        options.addOption(BUILD_CN_PROFILE, false, "Build a copy-number profile to match genomic positions");
     }
 
     public void buildRefDataSets()
@@ -169,14 +184,14 @@ public class RefSomatics implements RefClassifier
 
         // write out sample matrix data unless they were already correct
         if(mWriteTriNucMatrixData)
-            writeSampleCounts(mTriNucCounts, mTriNucCountsIndex, REF_FILE_SNV_COUNTS);
+            writeSampleMatrix(mTriNucCounts, mTriNucCountsIndex, REF_FILE_SNV_COUNTS, INTEGER_FORMAT);
 
         if(mWritePosFreqMatrixData)
         {
-            writeSampleCounts(mPosFreqCounts, mPosFreqCountsIndex, REF_FILE_SAMPLE_POS_FREQ_COUNTS);
+            writeSampleMatrix(mPosFreqCounts, mPosFreqCountsIndex, REF_FILE_SAMPLE_POS_FREQ_COUNTS, INTEGER_FORMAT);
 
             if(mAaPositivePosFreqCounts != null)
-                writeSampleCounts(mAaPositivePosFreqCounts, mPosFreqCountsIndex, REF_FILE_SAMPLE_POS_FREQ_AA_POS_COUNTS);
+                writeSampleMatrix(mAaPositivePosFreqCounts, mPosFreqCountsIndex, REF_FILE_SAMPLE_POS_FREQ_AA_POS_COUNTS, INTEGER_FORMAT);
         }
 
         buildSignaturePercentiles();
@@ -191,6 +206,14 @@ public class RefSomatics implements RefClassifier
             buildCancerPosFrequencies(
                     mAaPositivePosFrequencies, mAaPositivePosFreqCounts, mPosFreqCountsIndex, mSampleDataCache.RefCancerSampleData,
                     mConfig.OutputDir + REF_FILE_CANCER_POS_FREQ_AA_COUNTS);
+        }
+
+        if(mCopyNumberProfile != null)
+        {
+            buildCopyNumberProfile(
+                    mSampleDataCache.refSampleIds(false), mConfig, mCopyNumberProfile, mPosFreqCountsIndex, mPosFrequencies);
+
+            writeSampleMatrix(mCopyNumberProfile, mPosFreqCountsIndex, REF_FILE_SAMPLE_COPY_NUMBER_PROFILE, DEC_2_FORMAT);
         }
 
         closeBufferedWriter(mRefDataWriter);
@@ -405,7 +428,11 @@ public class RefSomatics implements RefClassifier
         }
     }
 
-    private void writeSampleCounts(final Matrix matrix, final Map<String,Integer> sampleCountsIndex, final String filename)
+    private static final String INTEGER_FORMAT = "%.0f";
+    private static final String DEC_2_FORMAT = "%.2f";
+
+    private void writeSampleMatrix(
+            final Matrix matrix, final Map<String,Integer> sampleCountsIndex, final String filename, final String decFormat)
     {
         try
         {
@@ -424,7 +451,7 @@ public class RefSomatics implements RefClassifier
 
             for(int b = 0; b < matrix.Rows; ++b)
             {
-                writer.write(String.format("%.0f", matrixData[b][sampleCountsIndex.get(sampleIds.get(0))]));
+                writer.write(String.format(decFormat, matrixData[b][sampleCountsIndex.get(sampleIds.get(0))]));
 
                 for(int i = 1; i < sampleIds.size(); ++i)
                 {
@@ -436,7 +463,7 @@ public class RefSomatics implements RefClassifier
                         return;
                     }
 
-                    writer.write(String.format(",%.0f", matrixData[b][sampleCountsIndex.get(sampleIds.get(i))]));
+                    writer.write(String.format("," + decFormat, matrixData[b][sampleCountsIndex.get(sampleIds.get(i))]));
                 }
 
                 writer.newLine();
