@@ -3,6 +3,10 @@ package com.hartwig.hmftools.cup;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_FEATURE_DATA_FILE;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SIG_DATA_FILE;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SV_DATA_FILE;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_TRAITS_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_ALT_SJ_CANCER;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_ALT_SJ_SAMPLE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CANCER_POS_FREQ_COUNTS;
@@ -20,9 +24,15 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SV_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_RATES;
 import static com.hartwig.hmftools.cup.common.CategoryType.ALL_CATEGORIES;
+import static com.hartwig.hmftools.cup.common.CategoryType.ALT_SJ;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.COMBINED;
 import static com.hartwig.hmftools.cup.common.CategoryType.DNA_CATEGORIES;
+import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
+import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
+import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
+import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
+import static com.hartwig.hmftools.cup.common.CategoryType.SV;
 import static com.hartwig.hmftools.cup.common.CategoryType.isDna;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
@@ -45,7 +55,7 @@ import org.apache.logging.log4j.Logger;
 
 public class CuppaConfig
 {
-    public final List<CategoryType> IncludedCategories;
+    public final List<CategoryType> Categories;
 
     // reference data
     public final String RefDataDir;
@@ -80,12 +90,13 @@ public class CuppaConfig
     public final String SampleSomaticVcf;
     public final String SampleSvFile;
     public final String SampleGeneExpFile;
+    public final String SampleAltSjFile;
 
     // database access
     public final DatabaseAccess DbAccess;
 
     public final boolean WriteSimilarities;
-    public final boolean WriteClassifiersOnly;
+    public final boolean WriteDetailedScores;
 
     public final String OutputDir;
     public final String OutputFileId;
@@ -105,8 +116,10 @@ public class CuppaConfig
     private static final String SAMPLE_SOMATIC_VCF = "sample_somatic_vcf";
     private static final String SAMPLE_SV_FILE = "sample_sv_file";
     private static final String SAMPLE_GENE_EXP_FILE = "sample_gene_exp_file";
+    private static final String SAMPLE_ALT_SJ_FILE = "sample_alt_sj_matrix_file";
 
     public static final String REF_DATA_DIR = "ref_data_dir";
+    public static final String USE_REF_SAMPLE_DATA = "use_ref_sample_data";
 
     public static final String REF_SAMPLE_DATA_FILE = "ref_sample_data_file";
     public static final String REF_SNV_COUNTS_FILE = "ref_snv_counts_file";
@@ -126,7 +139,7 @@ public class CuppaConfig
     public static final String REF_SNV_SIGNATURES_FILE = "ref_snv_signatures_file";
 
     public static final String WRITE_SIMS = "write_similarities";
-    public static final String WRITE_CLASSIFIERS_ONLY = "write_classifiers_only";
+    public static final String WRITE_DETAILED_SCORES = "write_detailed_scores";
 
     public static final String OUTPUT_FILE_ID = "output_id";
     public static final String LOG_DEBUG = "log_debug";
@@ -143,43 +156,31 @@ public class CuppaConfig
 
     public CuppaConfig(final CommandLine cmd)
     {
-        IncludedCategories = Lists.newArrayList();
+        Categories = Lists.newArrayList();
 
         if(cmd.hasOption(CATEGORIES))
         {
             if(cmd.getOptionValue(CATEGORIES).equals(ALL_CATEGORIES))
             {
-                Arrays.stream(CategoryType.values()).filter(x -> x != CLASSIFIER && x != COMBINED).forEach(x -> IncludedCategories.add(x));
+                Arrays.stream(CategoryType.values()).filter(x -> x != CLASSIFIER && x != COMBINED).forEach(x -> Categories.add(x));
             }
             else if(cmd.getOptionValue(CATEGORIES).equals(DNA_CATEGORIES))
             {
-                Arrays.stream(CategoryType.values()).filter(x -> isDna(x)).forEach(x -> IncludedCategories.add(x));
+                Arrays.stream(CategoryType.values()).filter(x -> isDna(x)).forEach(x -> Categories.add(x));
             }
             else
             {
                 final String[] categories = cmd.getOptionValue(CATEGORIES).split(";");
-                Arrays.stream(categories).forEach(x -> IncludedCategories.add(CategoryType.valueOf(x)));
+                Arrays.stream(categories).forEach(x -> Categories.add(CategoryType.valueOf(x)));
             }
         }
         else
         {
             // just DNA by default
-            Arrays.stream(CategoryType.values()).filter(x -> isDna(x)).forEach(x -> IncludedCategories.add(x));
+            Arrays.stream(CategoryType.values()).filter(x -> isDna(x)).forEach(x -> Categories.add(x));
         }
 
-        CUP_LOGGER.info("running classifiers: {}", IncludedCategories.isEmpty() ? ALL_CATEGORIES : IncludedCategories.toString());
-
-        SampleDataDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR, ""));
-
-        SampleDataFile = cmd.getOptionValue(SAMPLE_DATA_FILE, "");
-        SampleTraitsFile = cmd.getOptionValue(SAMPLE_TRAITS_FILE, "");
-        SampleFeatureFile = cmd.getOptionValue(SAMPLE_FEAT_FILE, "");
-        SampleSnvCountsFile = cmd.getOptionValue(SAMPLE_SNV_COUNTS_FILE, "");
-        SampleSnvPosFreqFile = cmd.getOptionValue(SAMPLE_SNV_POS_FREQ_FILE, "");
-        SampleSigContribFile = cmd.getOptionValue(SAMPLE_SIG_CONTRIB_FILE, "");
-        SampleSvFile = cmd.getOptionValue(SAMPLE_SV_FILE, "");
-        SampleGeneExpFile = cmd.getOptionValue(SAMPLE_GENE_EXP_FILE, "");
-        SampleSomaticVcf = cmd.getOptionValue(SAMPLE_SOMATIC_VCF, "");
+        CUP_LOGGER.info("running classifiers: {}", Categories.isEmpty() ? ALL_CATEGORIES : Categories.toString());
 
         RefDataDir = checkAddDirSeparator(cmd.getOptionValue(REF_DATA_DIR, ""));
 
@@ -201,11 +202,36 @@ public class CuppaConfig
         RefAltSjCancerFile = getRefDataFile(cmd, REF_RNA_ALT_SJ_CANCER_FILE, REF_FILE_ALT_SJ_CANCER);
         RefAltSjSampleFile = getRefDataFile(cmd, REF_RNA_ALT_SJ_SAMPLE_FILE, REF_FILE_ALT_SJ_SAMPLE);
 
+        boolean useRefData = cmd.hasOption(USE_REF_SAMPLE_DATA);
+        SampleDataDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR, ""));
+
+        // use cases for loading sample data:
+        // 1. DB - sourced
+        // 2. single sample - uses pipeline names for each type (eg Linx, Purple, Isofox)
+        // 3. Cohort and Reference data files - if 'use_ref_sample_data' specified, then run Cuppa over ref & cohort files
+        // 4. Cohort files specified manually
+        // 5. Sample data not supplied for a given data type
+
+        SampleDataFile = cmd.getOptionValue(SAMPLE_DATA_FILE, "");
+
+        // for cohort mode, then re-testing ref data, the cohort files are used here:
+        SampleTraitsFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_TRAITS_FILE, COHORT_REF_FILE_TRAITS_DATA_FILE, SAMPLE_TRAIT);
+        SampleFeatureFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_FEAT_FILE, COHORT_REF_FILE_FEATURE_DATA_FILE, FEATURE);
+        SampleSigContribFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_SIG_CONTRIB_FILE, COHORT_REF_FILE_SIG_DATA_FILE, SNV);
+        SampleSvFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_SV_FILE, COHORT_REF_FILE_SV_DATA_FILE, SV);
+
+        SampleSnvCountsFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_SNV_COUNTS_FILE, RefSnvCountsFile, SNV);
+        SampleSnvPosFreqFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_SNV_POS_FREQ_FILE, RefSnvSamplePosFreqFile, SNV);
+        SampleGeneExpFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_GENE_EXP_FILE, RefGeneExpSampleFile, GENE_EXP);
+        SampleAltSjFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_ALT_SJ_FILE, RefAltSjSampleFile, ALT_SJ);
+
+        SampleSomaticVcf = cmd.getOptionValue(SAMPLE_SOMATIC_VCF, "");
+
         OutputDir = parseOutputDir(cmd);
         OutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID, "");
 
         WriteSimilarities = cmd.hasOption(WRITE_SIMS);
-        WriteClassifiersOnly = cmd.hasOption(WRITE_CLASSIFIERS_ONLY);
+        WriteDetailedScores = cmd.hasOption(WRITE_DETAILED_SCORES);
 
         DbAccess = createDatabaseAccess(cmd);
     }
@@ -216,12 +242,36 @@ public class CuppaConfig
         return RefDataDir + fileName;
     }
 
+    private String getCohortSampleDataFile(
+            final CommandLine cmd, boolean useRefDataFile, final String configStr, final String defaultFilename, final CategoryType category)
+    {
+        if(cmd.hasOption(SAMPLE_DATA_DIR) && cmd.hasOption(SPECIFIC_SAMPLE_DATA))
+            return "";
+
+        if(cmd.hasOption(configStr))
+            return configStr;
+
+        if(!useRefDataFile)
+            return ""; // meaning this data type is not loaded
+
+        if(!runClassifier(category)) // ignores ref data file name since classifier won't be run
+            return "";
+
+        final String fileName = cmd.getOptionValue(configStr, defaultFilename);
+        return RefDataDir + fileName;
+    }
+
     public boolean isValid()
     {
         return !OutputDir.isEmpty();
     }
 
-    public boolean runClassifier(final CategoryType type) { return IncludedCategories.isEmpty() || IncludedCategories.contains(type); }
+    public boolean runClassifier(final CategoryType type) { return classifierEnabled(type, Categories); }
+
+    public static boolean classifierEnabled(final CategoryType type, final List<CategoryType> categories)
+    {
+        return categories.isEmpty() || categories.contains(type);
+    }
 
     public String formOutputFilename(final String fileId)
     {
@@ -260,9 +310,11 @@ public class CuppaConfig
         options.addOption(SAMPLE_TRAITS_FILE, true, "Cohort sample traits file");
         options.addOption(SAMPLE_SV_FILE, true, "Cohort SV data");
         options.addOption(SAMPLE_GENE_EXP_FILE, true, "Cohort sample RNA gene expression TPMs");
+        options.addOption(SAMPLE_ALT_SJ_FILE, true, "Cohort sample RNA alt-SJ frag counts matrix file");
         options.addOption(SAMPLE_SOMATIC_VCF, true, "Sample somatic VCF");
 
         options.addOption(REF_DATA_DIR, true, "Reference data directory");
+        options.addOption(USE_REF_SAMPLE_DATA, false, "In cohort-mode, run Cuppa using all ref sample data files");
 
         options.addOption(REF_SAMPLE_DATA_FILE, true, "Reference sample data, default: " + REF_FILE_SAMPLE_DATA);
         options.addOption(REF_SNV_COUNTS_FILE, true, "Reference SNV sample counts, default: " + REF_FILE_SNV_COUNTS);
@@ -281,7 +333,7 @@ public class CuppaConfig
         options.addOption(REF_RNA_ALT_SJ_SAMPLE_FILE, true, "Reference RNA alternative splice-junction sample file, default: " + REF_FILE_ALT_SJ_SAMPLE);
 
         options.addOption(WRITE_SIMS, false, "Write top-20 CSS similarities to file");
-        options.addOption(WRITE_CLASSIFIERS_ONLY, false, "Cohort-only - only write classifier data");
+        options.addOption(WRITE_DETAILED_SCORES, false, "Cohort-only - only write classifier data");
 
         addDatabaseCmdLineArgs(options);
         GeneExpressionClassifier.addCmdLineArgs(options);
@@ -296,7 +348,7 @@ public class CuppaConfig
 
     public CuppaConfig()
     {
-        IncludedCategories = Lists.newArrayList();
+        Categories = Lists.newArrayList();
         RefDataDir = "";
         RefSampleDataFile = "";
         RefSnvCountsFile = "";
@@ -328,10 +380,11 @@ public class CuppaConfig
         SampleSomaticVcf = "";
         SampleSvFile = "";
         SampleGeneExpFile = "";
+        SampleAltSjFile = "";
 
         DbAccess = null;
         WriteSimilarities = false;
-        WriteClassifiersOnly = false;
+        WriteDetailedScores = false;
         OutputDir = "";
         OutputFileId = "";
     }

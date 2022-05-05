@@ -3,6 +3,7 @@ package com.hartwig.hmftools.cup.ref;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SAMPLE_DATA_FILE;
+import static com.hartwig.hmftools.cup.CuppaConfig.classifierEnabled;
 
 import java.util.List;
 
@@ -81,7 +82,7 @@ public class RefDataBuilder
 
         for(RefClassifier classifier : mClassifiers)
         {
-            if(!mConfig.IncludedCategories.isEmpty() && !mConfig.IncludedCategories.contains(classifier.categoryType()))
+            if(!classifierEnabled(classifier.categoryType(), mConfig.Categories))
                 continue;
 
             classifier.buildRefDataSets();

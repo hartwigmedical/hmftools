@@ -24,4 +24,6 @@ public enum CategoryType
         return type == GENE_EXP || type == ALT_SJ;
     }
 
+    public static boolean isSummary(final CategoryType type) { return type == CLASSIFIER || type == COMBINED; }
+
 }

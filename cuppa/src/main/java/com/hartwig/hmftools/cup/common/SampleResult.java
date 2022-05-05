@@ -3,6 +3,9 @@ package com.hartwig.hmftools.cup.common;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
+import static com.hartwig.hmftools.cup.common.CategoryType.COMBINED;
+import static com.hartwig.hmftools.cup.common.ClassifierType.GENDER;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -130,8 +133,16 @@ public class SampleResult
 
                 String sampleId = values[sampleIdIndex];
                 CategoryType category = CategoryType.valueOf(values[categoryIndex]);
-                ResultType resultType = ResultType.valueOf(values[resultTypeIndex]);
+
+                if(!CategoryType.isSummary(category))
+                    continue;
+
                 String dataType = values[dataTypeIndex];
+
+                if(dataType.equals(GENDER.toString()))
+                    continue;
+
+                ResultType resultType = ResultType.valueOf(values[resultTypeIndex]);
                 String value = values[valueIndex];
                 String refCancerType = values[refCancerTypeIndex];
                 double refValue = Double.parseDouble(values[refValueIndex]);

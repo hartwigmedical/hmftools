@@ -12,7 +12,7 @@ import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SIG_DATA;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SIG_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CANCER_POS_FREQ_AA_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CANCER_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_COPY_NUMBER_PROFILE;
@@ -89,8 +89,10 @@ public class RefSomatics implements RefClassifier
     public static final String REF_SIG_TYPE_SNV_COUNT = "SnvCount";
     private static final String MATRIX_TYPE_SNV_96 = "SNV_96";
     private static final String MATRIX_TYPE_GEN_POS = "GEN_POS";
-    private static final String SPLIT_AID_APOBEC = "split_aid_apobec";
     private static final String BUILD_CN_PROFILE = "build_copy_number";
+
+    public static final String SPLIT_AID_APOBEC = "split_aid_apobec";
+    public static final String SPLIT_AID_APOBEC_DESC = "Exclude 6 AID/APOBEC associated trinucleotide contexts from genomic position frequencies";
 
     public RefSomatics(final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
@@ -151,11 +153,7 @@ public class RefSomatics implements RefClassifier
     public static void addCmdLineArgs(@NotNull Options options)
     {
         options.addOption(SNV_POS_FREQ_POS_SIZE, true, "Genomic position bucket size (default: 20000)");
-
-        options.addOption(
-                SPLIT_AID_APOBEC, false,
-                "Exclude 6 AID/APOBEC associated trinucleotide contexts from genomic position frequencies");
-
+        options.addOption(SPLIT_AID_APOBEC, false, SPLIT_AID_APOBEC_DESC);
         options.addOption(BUILD_CN_PROFILE, false, "Build a copy-number profile to match genomic positions");
     }
 
@@ -759,7 +757,7 @@ public class RefSomatics implements RefClassifier
         if(!mConfig.WriteCohortFiles)
             return;
 
-        final String filename = mConfig.OutputDir + COHORT_REF_FILE_SIG_DATA;
+        final String filename = mConfig.OutputDir + COHORT_REF_FILE_SIG_DATA_FILE;
         if(Files.exists(Paths.get(filename)))
         {
             CUP_LOGGER.warn("not over-writing cohort sig-contributions reference file({})", filename);

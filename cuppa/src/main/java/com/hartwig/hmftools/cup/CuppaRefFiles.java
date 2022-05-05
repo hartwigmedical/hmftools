@@ -30,8 +30,8 @@ public class CuppaRefFiles
     public static final String REF_FILE_SNV_SIGNATURES = formatRefFilename("snv_signatures");
 
     // cohort files for building reference data
-    public static final String COHORT_REF_FILE_SV_DATA = formatRefFilename("cohort_sv_data");
-    public static final String COHORT_REF_FILE_TRAITS_DATA = formatRefFilename("cohort_traits_data");
-    public static final String COHORT_REF_FILE_SIG_DATA = formatRefFilename("cohort_signature_data");
-    public static final String COHORT_REF_FILE_FEATURE_DATA = formatRefFilename("cohort_feature_data");
+    public static final String COHORT_REF_FILE_SV_DATA_FILE = formatRefFilename("cohort_sv_data");
+    public static final String COHORT_REF_FILE_TRAITS_DATA_FILE = formatRefFilename("cohort_traits_data");
+    public static final String COHORT_REF_FILE_SIG_DATA_FILE = formatRefFilename("cohort_signature_data");
+    public static final String COHORT_REF_FILE_FEATURE_DATA_FILE = formatRefFilename("cohort_feature_data");
 }

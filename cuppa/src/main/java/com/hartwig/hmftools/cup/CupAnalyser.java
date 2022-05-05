@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
 import static com.hartwig.hmftools.cup.common.CategoryType.SV;
+import static com.hartwig.hmftools.cup.common.CategoryType.isSummary;
 import static com.hartwig.hmftools.cup.common.ClassifierType.isDna;
 import static com.hartwig.hmftools.cup.common.ClassifierType.isRna;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcCombinedClassifierScoreResult;
@@ -24,7 +25,6 @@ import static com.hartwig.hmftools.cup.common.CupConstants.RNA_DAMPEN_FACTOR;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -108,7 +108,7 @@ public class CupAnalyser
                     mSampleDataCache.RefSampleCancerTypeMap.size(), mSampleDataCache.SampleIds.size(),
                     mSampleDataCache.RefCancerSampleData.size());
 
-            if(mConfig.IncludedCategories.stream().anyMatch(x -> CategoryType.isRna(x)))
+            if(mConfig.Categories.stream().anyMatch(x -> CategoryType.isRna(x)))
             {
                 CUP_LOGGER.info("RNA samples: ref({}) test({})",
                         mSampleDataCache.RefSampleDataList.stream().filter(x -> x.hasRna()).count(),
@@ -212,8 +212,8 @@ public class CupAnalyser
         if(combinedFeatureResult != null)
             allResults.add(combinedFeatureResult);
 
-        boolean hasDnaCategories = mConfig.IncludedCategories.stream().anyMatch(x -> CategoryType.isDna(x));
-        boolean hasRnaCategories = mConfig.IncludedCategories.stream().anyMatch(x -> CategoryType.isRna(x));
+        boolean hasDnaCategories = mConfig.Categories.stream().anyMatch(x -> CategoryType.isDna(x));
+        boolean hasRnaCategories = mConfig.Categories.stream().anyMatch(x -> CategoryType.isRna(x));
 
         // ensure each cancer type has a probability for the classifiers to ensure an even application of the min-probability
         final Set<String> refCancerTypes = mSampleDataCache.RefCancerSampleData.keySet();
@@ -316,7 +316,7 @@ public class CupAnalyser
         {
             for(SampleResult result : results)
             {
-                if(mConfig.WriteClassifiersOnly && !(result.Category == CLASSIFIER || result.Category == CategoryType.COMBINED))
+                if(!mConfig.WriteDetailedScores && !isSummary(result.Category))
                     continue;
 
                 result.write(mSampleDataWriter);
@@ -376,7 +376,7 @@ public class CupAnalyser
 
         final CommandLine cmd = createCommandLine(args, options);
 
-        if (cmd.hasOption(LOG_DEBUG))
+        if(cmd.hasOption(LOG_DEBUG))
         {
             Configurator.setRootLevel(Level.DEBUG);
         }

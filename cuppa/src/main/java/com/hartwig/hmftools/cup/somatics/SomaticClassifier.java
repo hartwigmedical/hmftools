@@ -37,6 +37,8 @@ import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
 import static com.hartwig.hmftools.cup.somatics.GenomicPositions.convertSomaticVariantsToPosFrequencies;
+import static com.hartwig.hmftools.cup.somatics.RefSomatics.SPLIT_AID_APOBEC;
+import static com.hartwig.hmftools.cup.somatics.RefSomatics.SPLIT_AID_APOBEC_DESC;
 import static com.hartwig.hmftools.cup.somatics.RefSomatics.convertSignatureName;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSignaturePercentileData;
@@ -106,6 +108,7 @@ public class SomaticClassifier implements CuppaClassifier
     private boolean mIsValid;
     private BufferedWriter mCssWriter;
 
+    private final boolean mSplitAidApobec;
     private final double mMaxCssAdjustFactorSnv;
     private final double mMaxCssAdjustFactorGenPos;
     private final double mCssExponentSnv;
@@ -146,6 +149,7 @@ public class SomaticClassifier implements CuppaClassifier
         mRefSnvPosFreqCancerTypes = Lists.newArrayList();
         mRefSamplePosFreqIndex = Maps.newHashMap();
 
+        mSplitAidApobec = cmd != null ? cmd.hasOption(SPLIT_AID_APOBEC) : false;
         mCssExponentSnv = cmd != null ? Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_SNV, "8")) : SNV_CSS_DIFF_EXPONENT;
         mCssExponentGenPos = cmd != null ? Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_GEN_POS, "10")) : SNV_POS_FREQ_DIFF_EXPONENT;
         mMaxCssAdjustFactorSnv = cmd != null ? Double.parseDouble(cmd.getOptionValue(MAX_CSS_ADJUST_FACTOR_SNV, "0")) : 0;
@@ -188,6 +192,7 @@ public class SomaticClassifier implements CuppaClassifier
 
     public static void addCmdLineArgs(Options options)
     {
+        options.addOption(SPLIT_AID_APOBEC, false, SPLIT_AID_APOBEC_DESC);
         options.addOption(MAX_CSS_ADJUST_FACTOR_SNV, true, "Max CSS adustment factor for SNV 96");
         options.addOption(MAX_CSS_ADJUST_FACTOR_GEN_POS, true, "Max CSS adustment factor for genomic pos frequency");
         options.addOption(CSS_EXPONENT_SNV, true, "Max CSS adustment factor for SNV 96");
@@ -226,8 +231,9 @@ public class SomaticClassifier implements CuppaClassifier
 
                 mSampleSnvCounts = convertSomaticVariantsToSnvCounts(sampleId, somaticVariants, mSampleSnvCountsIndex);
 
+                AidApobecStatus aidApobecStatus = mSplitAidApobec ? AidApobecStatus.FALSE_ONLY : AidApobecStatus.ALL;
                 mSamplePosFrequencies = convertSomaticVariantsToPosFrequencies(
-                        sampleId, somaticVariants, mSamplePosFreqIndex, mPosFrequencies, AidApobecStatus.ALL);
+                        sampleId, somaticVariants, mSamplePosFreqIndex, mPosFrequencies, aidApobecStatus);
             }
             else
             {

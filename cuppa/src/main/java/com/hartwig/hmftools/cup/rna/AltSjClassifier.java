@@ -83,7 +83,6 @@ public class AltSjClassifier implements CuppaClassifier
 
     private BufferedWriter mCssWriter;
 
-    private static final String SAMPLE_ALT_SJ_FILE = "sample_alt_sj_matrix_file";
     private static final String FRAG_COUNT_LOG_VALUE = "alt_sj_log_value";
     private static final String LOG_CSS_VALUES = "alt_sj_log_css";
     private static final String WEIGHT_EXPONENT = "alt_sj_weight_exp";
@@ -126,13 +125,12 @@ public class AltSjClassifier implements CuppaClassifier
         final List<String> ignoreFields = Lists.newArrayList(FLD_GENE_ID, FLD_CHROMOSOME, FLD_POS_START, FLD_POS_END);
         loadRefFragCounts(ignoreFields);
 
-        if(cmd.hasOption(SAMPLE_ALT_SJ_FILE))
+        if(!config.SampleAltSjFile.isEmpty() && !config.SampleAltSjFile.equals(config.RefAltSjCancerFile))
         {
-            String altSjMatrixFile = cmd.getOptionValue(SAMPLE_ALT_SJ_FILE);
-            CUP_LOGGER.debug("loading sample alt-SJ matrix data file({})", altSjMatrixFile);
+            CUP_LOGGER.debug("loading sample alt-SJ matrix data file({})", config.SampleAltSjFile);
 
             List<String> asjLocations = Lists.newArrayList();
-            mSampleFragCounts = loadSampleAltSjMatrixData(altSjMatrixFile, mSampleIndexMap, asjLocations);
+            mSampleFragCounts = loadSampleAltSjMatrixData(config.SampleAltSjFile, mSampleIndexMap, asjLocations);
 
             if(mSampleFragCounts ==  null)
             {
@@ -172,7 +170,6 @@ public class AltSjClassifier implements CuppaClassifier
 
     public static void addCmdLineArgs(Options options)
     {
-        options.addOption(SAMPLE_ALT_SJ_FILE, true, "Cohort sample RNA alt-SJ frag counts matrix file");
         options.addOption(FRAG_COUNT_LOG_VALUE, true, "Use log of frag counts plus this value");
         options.addOption(WEIGHT_EXPONENT, true, "Exponent for weighting pair-wise calcs");
         options.addOption(RUN_PAIRWISE, false, "Run pair-wise classifier");

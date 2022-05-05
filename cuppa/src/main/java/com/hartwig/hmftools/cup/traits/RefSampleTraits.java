@@ -10,12 +10,11 @@ import static com.hartwig.hmftools.cup.CuppaConfig.FLD_CANCER_TYPE;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaConfig.SUBSET_DELIM;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_TRAITS_DATA;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_TRAITS_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENDER_RATES;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_RATES;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
-import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
 import static com.hartwig.hmftools.cup.common.CupConstants.isCandidateCancerType;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.GENDER_RATES;
@@ -299,7 +298,7 @@ public class RefSampleTraits implements RefClassifier
         if(!mConfig.WriteCohortFiles)
             return;
 
-        final String filename = mConfig.OutputDir + COHORT_REF_FILE_TRAITS_DATA;
+        final String filename = mConfig.OutputDir + COHORT_REF_FILE_TRAITS_DATA_FILE;
         if(Files.exists(Paths.get(filename)))
         {
             CUP_LOGGER.warn("not over-writing cohort sample traits reference file({})", filename);

@@ -7,11 +7,6 @@ import static com.hartwig.hmftools.cup.CuppaConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SNV_COUNTS_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SNV_SAMPLE_POS_FREQ_FILE;
-import static com.hartwig.hmftools.cup.common.CategoryType.ALL_CATEGORIES;
-import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
-import static com.hartwig.hmftools.cup.common.CategoryType.COMBINED;
-import static com.hartwig.hmftools.cup.common.CategoryType.DNA_CATEGORIES;
-import static com.hartwig.hmftools.cup.common.CategoryType.isDna;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
@@ -19,6 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.rna.RefGeneExpression;
 import com.hartwig.hmftools.cup.somatics.RefSomatics;
@@ -26,11 +22,10 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.commons.compress.utils.Lists;
 
 public class RefDataConfig
 {
-    public final List<CategoryType> IncludedCategories;
+    public final List<CategoryType> Categories;
 
     public final String OutputDir;
 
@@ -58,10 +53,10 @@ public class RefDataConfig
     // config strings
 
     // cohort files instead of extracting data from database
-    private static final String REF_SAMPLE_TRAITS_FILE = "cohort_sample_traits_file";
-    private static final String REF_SIG_CONTRIBS_FILE = "cohort_sig_contribs_file";
-    private static final String REF_SV_DATA_FILE = "cohort_sv_data_file";
-    private static final String REF_FEATURES_FILE = "cohort_features_file";
+    private static final String REF_COHORT_SAMPLE_TRAITS_FILE = "cohort_sample_traits_file";
+    private static final String REF_COHORT_SIG_CONTRIBS_FILE = "cohort_sig_contribs_file";
+    private static final String REF_COHORT_SV_DATA_FILE = "cohort_sv_data_file";
+    private static final String REF_COHORT_FEATURES_FILE = "cohort_features_file";
 
     private static final String REF_GENE_EXP_DATA_FILE = "ref_gene_exp_file";
     private static final String REF_ALT_SJ_DATA_FILE = "ref_alt_sj_file";
@@ -80,18 +75,18 @@ public class RefDataConfig
 
     public RefDataConfig(final CommandLine cmd)
     {
-        IncludedCategories = Lists.newArrayList();
+        Categories = Lists.newArrayList();
         if(cmd.hasOption(CATEGORIES))
         {
             final String[] categories = cmd.getOptionValue(CATEGORIES).split(";");
-            Arrays.stream(categories).forEach(x -> IncludedCategories.add(CategoryType.valueOf(x)));
+            Arrays.stream(categories).forEach(x -> Categories.add(CategoryType.valueOf(x)));
         }
 
         SampleDataFile = cmd.getOptionValue(REF_SAMPLE_DATA_FILE, "");
-        CohortSampleTraitsFile = cmd.getOptionValue(REF_SAMPLE_TRAITS_FILE, "");
-        CohortSigContribsFile = cmd.getOptionValue(REF_SIG_CONTRIBS_FILE, "");
-        CohortSampleSvDataFile = cmd.getOptionValue(REF_SV_DATA_FILE, "");
-        CohortFeaturesFile = cmd.getOptionValue(REF_FEATURES_FILE, "");
+        CohortSampleTraitsFile = cmd.getOptionValue(REF_COHORT_SAMPLE_TRAITS_FILE, "");
+        CohortSigContribsFile = cmd.getOptionValue(REF_COHORT_SIG_CONTRIBS_FILE, "");
+        CohortSampleSvDataFile = cmd.getOptionValue(REF_COHORT_SV_DATA_FILE, "");
+        CohortFeaturesFile = cmd.getOptionValue(REF_COHORT_FEATURES_FILE, "");
 
         SampleFeaturesDir = cmd.getOptionValue(SAMPLE_FEATURES_DIR, "");
         SampleSomaticVcf = cmd.getOptionValue(SAMPLE_SOMATIC_VCF, "");
@@ -123,12 +118,12 @@ public class RefDataConfig
         options.addOption(CATEGORIES, true, "Categories to build ref data for");
 
         options.addOption(REF_SAMPLE_DATA_FILE, true, "Ref sample data file");
-        options.addOption(REF_SAMPLE_TRAITS_FILE, true, "Ref sample cohort traits file");
-        options.addOption(REF_SIG_CONTRIBS_FILE, true, "Ref sample cohort signature contributions file");
-        options.addOption(REF_SV_DATA_FILE, true, "Ref sample cohort SV file");
+        options.addOption(REF_COHORT_SAMPLE_TRAITS_FILE, true, "Ref sample cohort traits file");
+        options.addOption(REF_COHORT_SIG_CONTRIBS_FILE, true, "Ref sample cohort signature contributions file");
+        options.addOption(REF_COHORT_SV_DATA_FILE, true, "Ref sample cohort SV file");
         options.addOption(REF_SNV_SAMPLE_POS_FREQ_FILE, true, "Ref SNV position frequency matrix data file");
         options.addOption(REF_SNV_COUNTS_FILE, true, "Ref SNV trinucleotide matrix data file");
-        options.addOption(REF_FEATURES_FILE, true, "Ref sample features data file");
+        options.addOption(REF_COHORT_FEATURES_FILE, true, "Ref sample features data file");
 
         options.addOption(SAMPLE_FEATURES_DIR, true, "Ref sample directory containing features files");
         options.addOption(SAMPLE_SV_VCF, true, "Ref sample SV VCF path, wildcards allowed");
