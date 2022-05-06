@@ -45,7 +45,7 @@ import org.apache.logging.log4j.Level;
 
 public class FusionFinder implements Callable
 {
-    private final String mTaskId;
+    private final String mChromosome;
     private final IsofoxConfig mConfig;
     private final EnsemblDataCache mGeneTransCache;
     private final PassingFusions mPassingFusions;
@@ -54,11 +54,12 @@ public class FusionFinder implements Callable
     private final List<FusionFragment> mAllFragments;
 
     private final List<FusionReadGroup> mSpanningReadGroups; // temporary caching for read groups spanning gene collections
-    private final Map<String, FusionReadGroup> mChimericPartialReadGroups;
+    private final Map<String,FusionReadGroup> mChimericPartialReadGroups;
 
     private final Map<String,List<FusionReadData>> mFusionCandidates; // keyed by the chromosome pair
     private final Map<String,Map<String,FusionReadData>> mFusionsByLocation; // keyed by the chromosome pair, then precise position (hashed)
     private final Map<String,List<FusionFragment>> mDiscordantFragments; // keyed by the chromosome pair
+    private final Set<String> mLocalFusionPositions; // set to remove duplicates spanning gene collections
 
     private final FusionWriter mFusionWriter;
 
@@ -71,10 +72,10 @@ public class FusionFinder implements Callable
     private static final int PERF_CREATE_LOCAL = 2;
 
     public FusionFinder(
-            final String taskId, final IsofoxConfig config, final EnsemblDataCache geneTransCache,
+            final String chromosome, final IsofoxConfig config, final EnsemblDataCache geneTransCache,
             final RacFragmentCache racFragmentCache, final PassingFusions passingFusions, final FusionWriter fusionWriter)
     {
-        mTaskId = taskId;
+        mChromosome = chromosome;
         mConfig = config;
         mGeneTransCache = geneTransCache;
         mPassingFusions = passingFusions;
@@ -88,6 +89,7 @@ public class FusionFinder implements Callable
         mFusionCandidates = Maps.newHashMap();
         mFusionsByLocation = Maps.newHashMap();
         mDiscordantFragments = Maps.newHashMap();
+        mLocalFusionPositions = Sets.newHashSet();
 
         mFusionWriter = fusionWriter;
         mHardFilteredCount = 0;
@@ -128,6 +130,7 @@ public class FusionFinder implements Callable
         {
             mChimericPartialReadGroups.clear();
             mSpanningReadGroups.clear();
+            mLocalFusionPositions.clear();
         }
     }
 
@@ -248,7 +251,7 @@ public class FusionFinder implements Callable
 
         if(mHardFilteredCount > 0)
         {
-            ISF_LOGGER.info("chr({}) fusion processing complete, hard-filtered({})", mTaskId, mHardFilteredCount);
+            ISF_LOGGER.info("chr({}) fusion processing complete, hard-filtered({})", mChromosome, mHardFilteredCount);
         }
     }
 
@@ -268,7 +271,7 @@ public class FusionFinder implements Callable
 
         // first turn them into fragments, then look for fusions
         Level logLevel = isInterChromosomal ? Level.INFO : Level.DEBUG;
-        ISF_LOGGER.log(logLevel, "chr({}) processing {} {} chimeric read groups", mTaskId, readGroups.size(), scope);
+        ISF_LOGGER.log(logLevel, "chr({}) processing {} {} chimeric read groups", mChromosome, readGroups.size(), scope);
 
         int readGroupCount = 0;
 
@@ -278,7 +281,7 @@ public class FusionFinder implements Callable
 
             if(readGroupCount > 0 && (readGroupCount % HIGH_LOG_COUNT) == 0)
             {
-                ISF_LOGGER.info("chr({}) processed {} {} chimeric read groups", mTaskId, readGroupCount, scope);
+                ISF_LOGGER.info("chr({}) processed {} {} chimeric read groups", mChromosome, readGroupCount, scope);
             }
 
             // exclude any group with a duplicate read now that group is complete (since not all reads are marked as duplicates)
@@ -312,7 +315,7 @@ public class FusionFinder implements Callable
         if(readGroupCount > HIGH_LOG_COUNT)
         {
             ISF_LOGGER.info("chr({}) {} fusion processing complete, fusions({}) unassignDisc({})",
-                    mTaskId, scope, mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum(),
+                    mChromosome, scope, mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum(),
                     mDiscordantFragments.values().stream().mapToInt(x -> x.size()).sum());
         }
 
@@ -351,11 +354,10 @@ public class FusionFinder implements Callable
     private void writeFusionSummary()
     {
         hardFilterFusions();
+        checkLocalDuplicates();
         annotateFusions();
         writeData();
     }
-
-    public final PerformanceCounter getPerfCounter() { return mPerfCounter; }
 
     private void formInitialFusions()
     {
@@ -387,7 +389,7 @@ public class FusionFinder implements Callable
 
         Level level = mAllFragments.size() > HIGH_LOG_COUNT ? Level.INFO : Level.DEBUG;
         ISF_LOGGER.log(level, "chr({}) chimeric fragments({} disc={} junc={}) fusions(loc={} total={})",
-                mTaskId, mAllFragments.size(), mDiscordantFragments.values().stream().mapToInt(x -> x.size()).sum(),
+                mChromosome, mAllFragments.size(), mDiscordantFragments.values().stream().mapToInt(x -> x.size()).sum(),
                 junctioned, mFusionCandidates.size(), mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum());
 
         // free up the set of initial fragments now they've all been assigned
@@ -1019,6 +1021,35 @@ public class FusionFinder implements Callable
         return true;
     }
 
+    private void checkLocalDuplicates()
+    {
+        for(List<FusionReadData> fusionCandidates : mFusionCandidates.values())
+        {
+            int index = 0;
+
+            while(index < fusionCandidates.size())
+            {
+                FusionReadData fusion = fusionCandidates.get(index);
+
+                if(!fusion.getInitialFragment().hasSuppAlignment())
+                {
+                    String junctionPair = fusion.getInitialFragment().positionHash();
+
+                    if(mLocalFusionPositions.contains(junctionPair))
+                    {
+                        fusionCandidates.remove(index);
+                        continue;
+                    }
+
+                    // record this for subsequent gene-collections with partial spanning groups
+                    mLocalFusionPositions.add(junctionPair);
+                }
+
+                ++index;
+            }
+        }
+    }
+
     private void annotateFusions()
     {
         markRelatedFusions();
@@ -1030,7 +1061,6 @@ public class FusionFinder implements Callable
         if(!mFusionCandidates.isEmpty())
         {
             // filter down to a list of passing fusions
-
             List<FusionData> allFusions = Lists.newArrayList();
 
             for(List<FusionReadData> fusionCandidates : mFusionCandidates.values())
@@ -1044,7 +1074,7 @@ public class FusionFinder implements Callable
 
             List<FusionData> passingFusions = mPassingFusions.findPassingFusions(allFusions);
 
-            ISF_LOGGER.debug("chr({}) passing fusions({}) from total({})", mTaskId, passingFusions.size(), allFusions.size());
+            ISF_LOGGER.debug("chr({}) passing fusions({}) from total({})", mChromosome, passingFusions.size(), allFusions.size());
 
             mFusionWriter.writeFusionData(allFusions, passingFusions, mFusionCandidates);
         }
