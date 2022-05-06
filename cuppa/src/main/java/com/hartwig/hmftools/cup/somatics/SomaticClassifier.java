@@ -52,6 +52,8 @@ import static com.hartwig.hmftools.cup.somatics.SomaticSigs.populateReportableSi
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.signatureDisplayName;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_SNV_96_AID_APOBEC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_SNV_96_AID_APOBEC_DESC;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC_SIG;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC_SIG_DESC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.SPLIT_AID_APOBEC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.SPLIT_AID_APOBEC_DESC;
 import static com.hartwig.hmftools.cup.somatics.TrinucleotideCounts.convertSomaticVariantsToSnvCounts;
@@ -114,6 +116,9 @@ public class SomaticClassifier implements CuppaClassifier
 
     private final boolean mSplitAidApobecGenPos;
     private final boolean mExcludeAidApobecSnv96;
+    private final boolean mAidApobecSigFeature;
+    private final Map<String,double[]> mRefCancerAidApobecPercentiles;
+
     private final double mMaxCssAdjustFactorSnv;
     private final double mMaxCssAdjustFactorGenPos;
     private final double mCssExponentSnv;
@@ -158,7 +163,10 @@ public class SomaticClassifier implements CuppaClassifier
 
         mSplitAidApobecGenPos = cmd != null ? cmd.hasOption(SPLIT_AID_APOBEC) : false;
         mExcludeAidApobecSnv96 = cmd != null ? cmd.hasOption(EXCLUDE_SNV_96_AID_APOBEC) : false;
+        mAidApobecSigFeature = cmd != null ? cmd.hasOption(INCLUDE_AID_APOBEC_SIG) : false;
         mAidApobecSnv96Buckets = Lists.newArrayList();
+        mRefCancerAidApobecPercentiles = Maps.newHashMap();
+
         mCssExponentSnv = cmd != null ? Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_SNV, "8")) : SNV_CSS_DIFF_EXPONENT;
         mCssExponentGenPos = cmd != null ? Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_GEN_POS, "10")) : SNV_POS_FREQ_DIFF_EXPONENT;
         mMaxCssAdjustFactorSnv = cmd != null ? Double.parseDouble(cmd.getOptionValue(MAX_CSS_ADJUST_FACTOR_SNV, "0")) : 0;
@@ -209,6 +217,18 @@ public class SomaticClassifier implements CuppaClassifier
             }
         }
 
+        if(mAidApobecSigFeature)
+        {
+            for(Map.Entry<String,Map<String,double[]>> entry : mRefCancerSigContribPercentiles.entrySet())
+            {
+                String cancerType = entry.getKey();
+                final double[] aaPercentiles = entry.getValue().get(SIG_NAME_2);
+
+                if(aaPercentiles != null)
+                    mRefCancerAidApobecPercentiles.put(cancerType, aaPercentiles);
+            }
+        }
+
         if(cmd.hasOption(WRITE_GEN_POS_CSS))
         {
             initialiseOutputFiles();
@@ -219,6 +239,7 @@ public class SomaticClassifier implements CuppaClassifier
     {
         options.addOption(SPLIT_AID_APOBEC, false, SPLIT_AID_APOBEC_DESC);
         options.addOption(EXCLUDE_SNV_96_AID_APOBEC, false, EXCLUDE_SNV_96_AID_APOBEC_DESC);
+        options.addOption(INCLUDE_AID_APOBEC_SIG, false, INCLUDE_AID_APOBEC_SIG_DESC);
         options.addOption(MAX_CSS_ADJUST_FACTOR_SNV, true, "Max CSS adustment factor for SNV 96");
         options.addOption(MAX_CSS_ADJUST_FACTOR_GEN_POS, true, "Max CSS adustment factor for genomic pos frequency");
         options.addOption(CSS_EXPONENT_SNV, true, "Max CSS adustment factor for SNV 96");
@@ -775,6 +796,23 @@ public class SomaticClassifier implements CuppaClassifier
 
             results.add(new SampleResult(
                     sample.Id, SNV, PERCENTILE, signatureDisplayName(sigName), String.valueOf(round(sampleSigContrib)), cancerResults));
+        }
+
+        if(mAidApobecSigFeature)
+        {
+            // note that in the ref data, sigs @ & 13 have already been combined
+            double aidApobecContrib = sampleSigContribs.entrySet().stream()
+                    .filter(x -> x.getKey().equals(SIG_NAME_2) || x.getKey().equals(SIG_NAME_13))
+                    .mapToDouble(x -> x.getValue()).sum();
+
+            int cancerTypeCount = mSampleDataCache.RefCancerSampleData.size();
+            int cancerSampleCount = sample.isRefSample() ? mSampleDataCache.getCancerSampleCount(sample.cancerType()) : 0;
+
+            final Map<String,Double> aidApobecSigsHigh = calcPercentilePrevalence(
+                    sample, cancerSampleCount, cancerTypeCount, mRefCancerAidApobecPercentiles, aidApobecContrib, false);
+
+            results.add(new SampleResult(
+                    sample.Id, SNV, LIKELIHOOD, "AID_APOBEC_SIG", String.format("%.0f", aidApobecContrib), aidApobecSigsHigh));
         }
     }
 
