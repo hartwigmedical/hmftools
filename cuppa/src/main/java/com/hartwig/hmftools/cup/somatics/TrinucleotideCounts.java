@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.cup.somatics;
 
-import static com.hartwig.hmftools.common.sigs.SnvSigUtils.contextFromVariant;
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.populateBucketMap;
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.variantContext;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;

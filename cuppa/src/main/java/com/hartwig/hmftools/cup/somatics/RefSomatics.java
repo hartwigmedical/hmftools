@@ -34,7 +34,6 @@ import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSigContrib
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSomaticVariants;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_13;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_2;
-import static com.hartwig.hmftools.cup.somatics.SomaticSigs.populateReportableSignatures;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.NORMALISE_COPY_NUMBER;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.NORMALISE_COPY_NUMBER_DESC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.SPLIT_AID_APOBEC;
@@ -129,8 +128,6 @@ public class RefSomatics implements RefClassifier
 
         mBuildCopyNumber = cmd.hasOption(BUILD_CN_PROFILE);
         mCopyNumberProfile = null;
-
-        populateReportableSignatures();
     }
 
     public CategoryType categoryType() { return SNV; }

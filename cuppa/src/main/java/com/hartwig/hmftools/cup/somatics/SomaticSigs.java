@@ -22,7 +22,23 @@ public class SomaticSigs
     private final Matrix mSignatures;
     private final LeastSquaresFit mLeastSquaresFitter;
 
+    public static final String SIG_NAME_2 = "Sig2";
+    public static final String SIG_NAME_13 = "Sig13";
+
     public static final Map<String,String> REPORTABLE_SIGS = Maps.newHashMap();
+
+    static
+    {
+        REPORTABLE_SIGS.put("Sig1", "SIG_1");
+        REPORTABLE_SIGS.put("Sig2", "SIG_2_13_AID_APOBEC");
+        REPORTABLE_SIGS.put("Sig13", "SIG_2_13_AID_APOBEC");
+        REPORTABLE_SIGS.put("Sig4", "SIG_4_SMOKING");
+        REPORTABLE_SIGS.put("Sig6", "SIG_6_MMR");
+        REPORTABLE_SIGS.put("Sig7", "SIG_7_UV");
+        REPORTABLE_SIGS.put("Sig10", "SIG_10_POLE");
+        REPORTABLE_SIGS.put("Sig11", "SIG_11");
+        REPORTABLE_SIGS.put("Sig17", "SIG_17");
+    }
 
     public SomaticSigs(final String signaturesFile)
     {
@@ -46,23 +62,6 @@ public class SomaticSigs
     }
 
     public boolean hasValidData() { return mSignatures != null && !mSignatureNames.isEmpty(); }
-
-    public static final String SIG_NAME_2 = "Sig2";
-    public static final String SIG_NAME_13 = "Sig13";
-
-    public static void populateReportableSignatures()
-    {
-        REPORTABLE_SIGS.clear();
-        REPORTABLE_SIGS.put("Sig1", "SIG_1");
-        REPORTABLE_SIGS.put("Sig2", "SIG_2_13_AID_APOBEC");
-        REPORTABLE_SIGS.put("Sig13", "SIG_2_13_AID_APOBEC");
-        REPORTABLE_SIGS.put("Sig4", "SIG_4_SMOKING");
-        REPORTABLE_SIGS.put("Sig6", "SIG_6_MMR");
-        REPORTABLE_SIGS.put("Sig7", "SIG_7_UV");
-        REPORTABLE_SIGS.put("Sig10", "SIG_10_POLE");
-        REPORTABLE_SIGS.put("Sig11", "SIG_11");
-        REPORTABLE_SIGS.put("Sig17", "SIG_17");
-    }
 
     public static final String signatureDisplayName(final String sigName)
     {

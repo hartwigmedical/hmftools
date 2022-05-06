@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.cup.somatics;
 
+import static java.lang.Math.pow;
+
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.common.CupCalcs.convertToPercentages;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
 
 import java.util.List;
@@ -22,6 +25,22 @@ public final class SomaticsCommon
 
     public static final String INCLUDE_AID_APOBEC_SIG = "aid_apobec_sig_feature";
     public static final String INCLUDE_AID_APOBEC_SIG_DESC = "Add an enriched AID/APOBEC signature feature";
+
+    public static void applyMaxCssAdjustment(double maxCssScore, final Map<String,Double> cancerCssTotals, double adjustFactor)
+    {
+        if(adjustFactor == 0)
+            return;
+
+        double adjustedFactor = pow(maxCssScore, adjustFactor);
+
+        for(Map.Entry<String,Double> entry : cancerCssTotals.entrySet())
+        {
+            double adjCancerScore = pow(entry.getValue(), adjustedFactor);
+            cancerCssTotals.put(entry.getKey(), adjCancerScore);
+        }
+
+        convertToPercentages(cancerCssTotals);
+    }
 
     public static Matrix loadMultipleMatrixFiles(
             final List<String> filenames, final List<String> refSampleIds, final Map<String,Integer> sampleCountsIndex, final String type)

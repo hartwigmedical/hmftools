@@ -31,37 +31,28 @@ import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_POS_FREQ_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_POS_FREQ_DIFF_EXPONENT;
 import static com.hartwig.hmftools.cup.common.CupConstants.UNDEFINED_PERC_MAX_MULTIPLE;
-import static com.hartwig.hmftools.cup.common.CupConstants.UNDEFINED_SIG_PERC_MAX_MULTIPLE;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
 import static com.hartwig.hmftools.cup.somatics.GenomicPositions.convertSomaticVariantsToPosFrequencies;
-import static com.hartwig.hmftools.cup.somatics.RefSomatics.convertSignatureName;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSignaturePercentileData;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSampleCountsFromFile;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSamplePosFreqFromFile;
-import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSigContribsFromCohortFile;
-import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSigContribsFromDatabase;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSomaticVariants;
-import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_13;
-import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_2;
-import static com.hartwig.hmftools.cup.somatics.SomaticSigs.populateReportableSignatures;
-import static com.hartwig.hmftools.cup.somatics.SomaticSigs.signatureDisplayName;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_SNV_96_AID_APOBEC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_SNV_96_AID_APOBEC_DESC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC_SIG;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC_SIG_DESC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.SPLIT_AID_APOBEC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.SPLIT_AID_APOBEC_DESC;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.applyMaxCssAdjustment;
 import static com.hartwig.hmftools.cup.somatics.TrinucleotideCounts.convertSomaticVariantsToSnvCounts;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -69,8 +60,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
-import com.hartwig.hmftools.common.sigs.SignatureAllocation;
-import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.sigs.SnvSigUtils;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.cup.CuppaConfig;
@@ -91,7 +80,6 @@ public class SomaticClassifier implements CuppaClassifier
 
     private Matrix mRefSampleCounts;
     private final List<String> mRefSampleNames;
-    private final Map<String,Map<String,double[]>> mRefCancerSigContribPercentiles;
     private final Map<String,double[]> mRefCancerSnvCountPercentiles;
 
     private Matrix mRefCancerSnvPosFrequencies;
@@ -103,12 +91,10 @@ public class SomaticClassifier implements CuppaClassifier
     private Matrix mSampleSnvCounts;
     private final Map<String,Integer> mSampleSnvCountsIndex;
 
-    private final Map<String,Map<String,Double>> mSampleSigContributions;
-
     private Matrix mSamplePosFrequencies;
     private final Map<String,Integer> mSamplePosFreqIndex;
 
-    private final SomaticSigs mSomaticSigs;
+    private final SigContributions mSigContributions;
     private final PositionFrequencies mPosFrequencies;
 
     private boolean mIsValid;
@@ -116,8 +102,6 @@ public class SomaticClassifier implements CuppaClassifier
 
     private final boolean mSplitAidApobecGenPos;
     private final boolean mExcludeAidApobecSnv96;
-    private final boolean mAidApobecSigFeature;
-    private final Map<String,double[]> mRefCancerAidApobecPercentiles;
 
     private final double mMaxCssAdjustFactorSnv;
     private final double mMaxCssAdjustFactorGenPos;
@@ -150,22 +134,18 @@ public class SomaticClassifier implements CuppaClassifier
         mSampleSnvCounts = null;
         mRefCancerSnvPosFrequencies = null;
         mRefSamplePosFrequencies = null;
-        mSampleSigContributions = Maps.newHashMap();
         mSampleSnvCountsIndex = Maps.newHashMap();
         mSamplePosFreqIndex = Maps.newHashMap();
 
         mRefSampleCounts = null;
         mRefSampleNames = Lists.newArrayList();
-        mRefCancerSigContribPercentiles = Maps.newHashMap();
         mRefCancerSnvCountPercentiles = Maps.newHashMap();
         mRefSnvPosFreqCancerTypes = Lists.newArrayList();
         mRefSamplePosFreqIndex = Maps.newHashMap();
 
         mSplitAidApobecGenPos = cmd != null ? cmd.hasOption(SPLIT_AID_APOBEC) : false;
         mExcludeAidApobecSnv96 = cmd != null ? cmd.hasOption(EXCLUDE_SNV_96_AID_APOBEC) : false;
-        mAidApobecSigFeature = cmd != null ? cmd.hasOption(INCLUDE_AID_APOBEC_SIG) : false;
         mAidApobecSnv96Buckets = Lists.newArrayList();
-        mRefCancerAidApobecPercentiles = Maps.newHashMap();
 
         mCssExponentSnv = cmd != null ? Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_SNV, "8")) : SNV_CSS_DIFF_EXPONENT;
         mCssExponentGenPos = cmd != null ? Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_GEN_POS, "10")) : SNV_POS_FREQ_DIFF_EXPONENT;
@@ -177,7 +157,7 @@ public class SomaticClassifier implements CuppaClassifier
         mIsValid = true;
         mCssWriter = null;
 
-        mSomaticSigs = new SomaticSigs(mConfig.RefSnvSignaturesFile);
+        mSigContributions = new SigContributions(mConfig, mSampleDataCache);
 
         int posFreqBucketSize = cmd != null && cmd.hasOption(SNV_POS_FREQ_POS_SIZE) ?
                 Integer.parseInt(cmd.getOptionValue(SNV_POS_FREQ_POS_SIZE)) : POS_FREQ_BUCKET_SIZE;
@@ -187,9 +167,9 @@ public class SomaticClassifier implements CuppaClassifier
         if(mConfig.RefSnvCountsFile.isEmpty() && mConfig.RefSigContributionFile.isEmpty() && mConfig.RefSnvCancerPosFreqFile.isEmpty())
             return;
 
-        populateReportableSignatures();
+        loadRefSignaturePercentileData(
+                mConfig.RefSigContributionFile, mSigContributions.getRefCancerSigContribPercentiles(), mRefCancerSnvCountPercentiles);
 
-        loadRefSignaturePercentileData(mConfig.RefSigContributionFile, mRefCancerSigContribPercentiles, mRefCancerSnvCountPercentiles);
         mRefSampleCounts = loadRefSampleCounts(mConfig.RefSnvCountsFile, mRefSampleNames, Lists.newArrayList("BucketName"));
 
         mRefCancerSnvPosFrequencies = loadRefSampleCounts(mConfig.RefSnvCancerPosFreqFile, mRefSnvPosFreqCancerTypes, Lists.newArrayList());
@@ -199,7 +179,7 @@ public class SomaticClassifier implements CuppaClassifier
             mIsValid = false;
 
         mIsValid &= loadSampleCounts();
-        mIsValid &= loadSigContributions();
+        mIsValid &= mSigContributions.loadSigContributions(mSampleSnvCounts);
 
         if(mExcludeAidApobecSnv96)
         {
@@ -214,18 +194,6 @@ public class SomaticClassifier implements CuppaClassifier
                 {
                     mRefSampleCounts.set(bucketIndex, i, 0);
                 }
-            }
-        }
-
-        if(mAidApobecSigFeature)
-        {
-            for(Map.Entry<String,Map<String,double[]>> entry : mRefCancerSigContribPercentiles.entrySet())
-            {
-                String cancerType = entry.getKey();
-                final double[] aaPercentiles = entry.getValue().get(SIG_NAME_2);
-
-                if(aaPercentiles != null)
-                    mRefCancerAidApobecPercentiles.put(cancerType, aaPercentiles);
             }
         }
 
@@ -330,76 +298,6 @@ public class SomaticClassifier implements CuppaClassifier
         return false;
     }
 
-    private boolean loadSigContributions()
-    {
-        if(!mConfig.SampleSigContribFile.isEmpty())
-        {
-            CUP_LOGGER.info("loading SNV sig contributions from file({})", mConfig.SampleSigContribFile);
-            return loadSigContribsFromCohortFile(mConfig.SampleSigContribFile, mSampleSigContributions);
-        }
-        else if(mConfig.DbAccess != null)
-        {
-            CUP_LOGGER.info("loading SNV sig contributions from database");
-            return loadSigContribsFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleSigContributions);
-        }
-
-        if(mSampleDataCache.isMultiSample())
-        {
-            CUP_LOGGER.error("missing loading config for SNV sig contributions - requires database or cohort file");
-            return false;
-        }
-
-        final String sampleId = mSampleDataCache.SampleIds.get(0);
-
-        // use sig-allocation file if exists
-        final String sigAllocFile = SignatureAllocationFile.generateFilename(mConfig.SampleDataDir, sampleId);
-
-        if(Files.exists(Paths.get(sigAllocFile)))
-        {
-            try
-            {
-                final List<SignatureAllocation> sigAllocations = SignatureAllocationFile.read(sigAllocFile);
-                Map<String, Double> sigContribs = Maps.newHashMap();
-                for(final SignatureAllocation sigAllocation : sigAllocations)
-                {
-                    final String sigName = convertSignatureName(sigAllocation.signature());
-                    sigContribs.put(sigName, sigAllocation.allocation());
-                }
-
-                mSampleSigContributions.put(sampleId, sigContribs);
-            }
-            catch (Exception e)
-            {
-                CUP_LOGGER.error("sample({}) failed to load sig allocations file({}): {}",
-                        sampleId, sigAllocFile, e.toString());
-                return false;
-            }
-        }
-        else if(mSomaticSigs.hasValidData() && mSampleSnvCounts != null)
-        {
-            CUP_LOGGER.debug("sample({}) running SNV signatures", sampleId);
-
-            final double[] sigAllocations = mSomaticSigs.fitSampleCounts(mSampleSnvCounts.getCol(0));
-
-            if(sigAllocations == null)
-            {
-                CUP_LOGGER.error("sample({}) failed signature fit", sampleId);
-                return false;
-            }
-
-            final Map<String, Double> sigContribs = Maps.newHashMap();
-            mSampleSigContributions.put(sampleId, sigContribs);
-
-            for(int i = 0; i < sigAllocations.length; ++i)
-            {
-                final String sigName = mSomaticSigs.getSigName(i);
-                sigContribs.put(sigName, sigAllocations[i]);
-            }
-        }
-
-        return true;
-    }
-
     public void processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
     {
         if(!mIsValid || mRefSampleCounts == null)
@@ -419,7 +317,7 @@ public class SomaticClassifier implements CuppaClassifier
         addSnv96CssResults(sample, sampleCounts, snvTotal, results, similarities);
         addPosFreqCssResults(sample, results, similarities);
 
-        addSigContributionResults(sample, results);
+        mSigContributions.addSigContributionResults(sample, results);
 
         // add a percentile result
         final Map<String, Double> cancerTypeValues = Maps.newHashMap();
@@ -557,22 +455,6 @@ public class SomaticClassifier implements CuppaClassifier
         }
 
         similarities.addAll(topMatches);
-    }
-
-    private void applyMaxCssAdjustment(double maxCssScore, final Map<String,Double> cancerCssTotals, double adjustFactor)
-    {
-        if(adjustFactor == 0)
-            return;
-
-        double adjustedFactor = pow(maxCssScore, adjustFactor);
-
-        for(Map.Entry<String,Double> entry : cancerCssTotals.entrySet())
-        {
-            double adjCancerScore = pow(entry.getValue(), adjustedFactor);
-            cancerCssTotals.put(entry.getKey(), adjCancerScore);
-        }
-
-        convertToPercentages(cancerCssTotals);
     }
 
     private void addPosFreqCssResults(
@@ -748,72 +630,6 @@ public class SomaticClassifier implements CuppaClassifier
         }
 
         similarities.addAll(topMatches);
-    }
-
-    private void addSigContributionResults(final SampleData sample, final List<SampleResult> results)
-    {
-        final Map<String,Double> sampleSigContribs = mSampleSigContributions.get(sample.Id);
-
-        if(sampleSigContribs == null)
-        {
-            CUP_LOGGER.debug("sample({}) sig contributions not found", sample.Id);
-            return;
-        }
-
-        // report on every one of the designated set
-        for(final String sigName : SomaticSigs.REPORTABLE_SIGS.keySet())
-        {
-            double sampleSigContrib = sampleSigContribs.containsKey(sigName) ? sampleSigContribs.get(sigName) : 0;
-
-            // report the AID/APOBEC sigs 2 & 13 together
-            if(sigName.equalsIgnoreCase(SIG_NAME_2))
-            {
-                sampleSigContrib += sampleSigContribs.containsKey(SIG_NAME_13) ? sampleSigContribs.get(SIG_NAME_13) : 0;
-            }
-            else if(sigName.equalsIgnoreCase(SIG_NAME_13))
-            {
-                continue;
-            }
-
-            Map<String, Double> cancerResults = Maps.newHashMap();
-
-            for(Map.Entry<String,Map<String,double[]>> cancerContribs : mRefCancerSigContribPercentiles.entrySet())
-            {
-                final String cancerType = cancerContribs.getKey();
-                final double[] refSigPercentiles = cancerContribs.getValue().get(sigName);
-
-                if(refSigPercentiles == null)
-                {
-                    // CUP_LOGGER.debug("missing sig({}) data for cancerType({})", sigName, cancerType);
-                    cancerResults.put(cancerType, 0.0);
-                }
-                else
-                {
-                    double percentile = getPercentile(refSigPercentiles, sampleSigContrib, true, UNDEFINED_SIG_PERC_MAX_MULTIPLE);
-                    cancerResults.put(cancerType, percentile);
-                }
-            }
-
-            results.add(new SampleResult(
-                    sample.Id, SNV, PERCENTILE, signatureDisplayName(sigName), String.valueOf(round(sampleSigContrib)), cancerResults));
-        }
-
-        if(mAidApobecSigFeature)
-        {
-            // note that in the ref data, sigs @ & 13 have already been combined
-            double aidApobecContrib = sampleSigContribs.entrySet().stream()
-                    .filter(x -> x.getKey().equals(SIG_NAME_2) || x.getKey().equals(SIG_NAME_13))
-                    .mapToDouble(x -> x.getValue()).sum();
-
-            int cancerTypeCount = mSampleDataCache.RefCancerSampleData.size();
-            int cancerSampleCount = sample.isRefSample() ? mSampleDataCache.getCancerSampleCount(sample.cancerType()) : 0;
-
-            final Map<String,Double> aidApobecSigsHigh = calcPercentilePrevalence(
-                    sample, cancerSampleCount, cancerTypeCount, mRefCancerAidApobecPercentiles, aidApobecContrib, false);
-
-            results.add(new SampleResult(
-                    sample.Id, SNV, LIKELIHOOD, "AID_APOBEC_SIG", String.format("%.0f", aidApobecContrib), aidApobecSigsHigh));
-        }
     }
 
     @VisibleForTesting
