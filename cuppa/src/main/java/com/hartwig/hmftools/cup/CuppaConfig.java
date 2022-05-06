@@ -220,10 +220,10 @@ public class CuppaConfig
         SampleSigContribFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_SIG_CONTRIB_FILE, COHORT_REF_FILE_SIG_DATA_FILE, SNV);
         SampleSvFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_SV_FILE, COHORT_REF_FILE_SV_DATA_FILE, SV);
 
-        SampleSnvCountsFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_SNV_COUNTS_FILE, RefSnvCountsFile, SNV);
-        SampleSnvPosFreqFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_SNV_POS_FREQ_FILE, RefSnvSamplePosFreqFile, SNV);
-        SampleGeneExpFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_GENE_EXP_FILE, RefGeneExpSampleFile, GENE_EXP);
-        SampleAltSjFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_ALT_SJ_FILE, RefAltSjSampleFile, ALT_SJ);
+        SampleSnvCountsFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_SNV_COUNTS_FILE, REF_FILE_SNV_COUNTS, SNV);
+        SampleSnvPosFreqFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_SNV_POS_FREQ_FILE, REF_FILE_SAMPLE_POS_FREQ_COUNTS, SNV);
+        SampleGeneExpFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_GENE_EXP_FILE, REF_FILE_GENE_EXP_SAMPLE, GENE_EXP);
+        SampleAltSjFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_ALT_SJ_FILE, REF_FILE_ALT_SJ_SAMPLE, ALT_SJ);
 
         SampleSomaticVcf = cmd.getOptionValue(SAMPLE_SOMATIC_VCF, "");
 
@@ -257,8 +257,7 @@ public class CuppaConfig
         if(!runClassifier(category)) // ignores ref data file name since classifier won't be run
             return "";
 
-        final String fileName = cmd.getOptionValue(configStr, defaultFilename);
-        return RefDataDir + fileName;
+        return defaultFilename.startsWith(RefDataDir) ? defaultFilename : RefDataDir + defaultFilename;
     }
 
     public boolean isValid()
@@ -333,7 +332,7 @@ public class CuppaConfig
         options.addOption(REF_RNA_ALT_SJ_SAMPLE_FILE, true, "Reference RNA alternative splice-junction sample file, default: " + REF_FILE_ALT_SJ_SAMPLE);
 
         options.addOption(WRITE_SIMS, false, "Write top-20 CSS similarities to file");
-        options.addOption(WRITE_DETAILED_SCORES, false, "Cohort-only - only write classifier data");
+        options.addOption(WRITE_DETAILED_SCORES, false, "Cohort-only - write detailed (non-classifier) data");
 
         addDatabaseCmdLineArgs(options);
         GeneExpressionClassifier.addCmdLineArgs(options);

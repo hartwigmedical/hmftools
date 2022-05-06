@@ -35,6 +35,8 @@ import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSomaticVar
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_13;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_2;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.populateReportableSignatures;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.SPLIT_AID_APOBEC;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.SPLIT_AID_APOBEC_DESC;
 import static com.hartwig.hmftools.cup.somatics.TrinucleotideCounts.extractTrinucleotideCounts;
 
 import java.io.BufferedWriter;
@@ -90,9 +92,6 @@ public class RefSomatics implements RefClassifier
     private static final String MATRIX_TYPE_SNV_96 = "SNV_96";
     private static final String MATRIX_TYPE_GEN_POS = "GEN_POS";
     private static final String BUILD_CN_PROFILE = "build_copy_number";
-
-    public static final String SPLIT_AID_APOBEC = "split_aid_apobec";
-    public static final String SPLIT_AID_APOBEC_DESC = "Exclude 6 AID/APOBEC associated trinucleotide contexts from genomic position frequencies";
 
     public RefSomatics(final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {

@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE_SIM
 import static com.hartwig.hmftools.cup.common.CupCalcs.adjustRefCounts;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.CupCalcs.convertToPercentages;
+import static com.hartwig.hmftools.cup.common.CupConstants.AID_APOBEC_TRINUCLEOTIDE_CONTEXTS;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_MAX_MATCHES;
 import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_BUCKET_SIZE;
@@ -37,8 +38,6 @@ import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
 import static com.hartwig.hmftools.cup.somatics.GenomicPositions.convertSomaticVariantsToPosFrequencies;
-import static com.hartwig.hmftools.cup.somatics.RefSomatics.SPLIT_AID_APOBEC;
-import static com.hartwig.hmftools.cup.somatics.RefSomatics.SPLIT_AID_APOBEC_DESC;
 import static com.hartwig.hmftools.cup.somatics.RefSomatics.convertSignatureName;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSignaturePercentileData;
@@ -51,6 +50,10 @@ import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_13;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_2;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.populateReportableSignatures;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.signatureDisplayName;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_SNV_96_AID_APOBEC;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_SNV_96_AID_APOBEC_DESC;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.SPLIT_AID_APOBEC;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.SPLIT_AID_APOBEC_DESC;
 import static com.hartwig.hmftools.cup.somatics.TrinucleotideCounts.convertSomaticVariantsToSnvCounts;
 
 import java.io.BufferedWriter;
@@ -66,6 +69,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
+import com.hartwig.hmftools.common.sigs.SnvSigUtils;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.cup.common.CategoryType;
@@ -108,13 +112,16 @@ public class SomaticClassifier implements CuppaClassifier
     private boolean mIsValid;
     private BufferedWriter mCssWriter;
 
-    private final boolean mSplitAidApobec;
+    private final boolean mSplitAidApobecGenPos;
+    private final boolean mExcludeAidApobecSnv96;
     private final double mMaxCssAdjustFactorSnv;
     private final double mMaxCssAdjustFactorGenPos;
     private final double mCssExponentSnv;
     private final double mCssExponentGenPos;
     private final boolean mWriteGenPosSims;
     private final boolean mWriteSnvSims;
+
+    private final List<Integer> mAidApobecSnv96Buckets;
 
     public static final String MAX_CSS_ADJUST_FACTOR_SNV = "css_max_factor_snv";
     public static final String MAX_CSS_ADJUST_FACTOR_GEN_POS = "css_max_factor_gen_pos";
@@ -149,7 +156,9 @@ public class SomaticClassifier implements CuppaClassifier
         mRefSnvPosFreqCancerTypes = Lists.newArrayList();
         mRefSamplePosFreqIndex = Maps.newHashMap();
 
-        mSplitAidApobec = cmd != null ? cmd.hasOption(SPLIT_AID_APOBEC) : false;
+        mSplitAidApobecGenPos = cmd != null ? cmd.hasOption(SPLIT_AID_APOBEC) : false;
+        mExcludeAidApobecSnv96 = cmd != null ? cmd.hasOption(EXCLUDE_SNV_96_AID_APOBEC) : false;
+        mAidApobecSnv96Buckets = Lists.newArrayList();
         mCssExponentSnv = cmd != null ? Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_SNV, "8")) : SNV_CSS_DIFF_EXPONENT;
         mCssExponentGenPos = cmd != null ? Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_GEN_POS, "10")) : SNV_POS_FREQ_DIFF_EXPONENT;
         mMaxCssAdjustFactorSnv = cmd != null ? Double.parseDouble(cmd.getOptionValue(MAX_CSS_ADJUST_FACTOR_SNV, "0")) : 0;
@@ -184,6 +193,22 @@ public class SomaticClassifier implements CuppaClassifier
         mIsValid &= loadSampleCounts();
         mIsValid &= loadSigContributions();
 
+        if(mExcludeAidApobecSnv96)
+        {
+            Map<String,Integer> bucketNameIndexMap = Maps.newHashMap();
+            SnvSigUtils.populateBucketMap(bucketNameIndexMap);
+            for(String bucketName : AID_APOBEC_TRINUCLEOTIDE_CONTEXTS)
+            {
+                int bucketIndex = bucketNameIndexMap.get(bucketName);
+                mAidApobecSnv96Buckets.add(bucketIndex);
+
+                for(int i = 0; i < mRefSampleCounts.Cols; ++i)
+                {
+                    mRefSampleCounts.set(bucketIndex, i, 0);
+                }
+            }
+        }
+
         if(cmd.hasOption(WRITE_GEN_POS_CSS))
         {
             initialiseOutputFiles();
@@ -193,6 +218,7 @@ public class SomaticClassifier implements CuppaClassifier
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(SPLIT_AID_APOBEC, false, SPLIT_AID_APOBEC_DESC);
+        options.addOption(EXCLUDE_SNV_96_AID_APOBEC, false, EXCLUDE_SNV_96_AID_APOBEC_DESC);
         options.addOption(MAX_CSS_ADJUST_FACTOR_SNV, true, "Max CSS adustment factor for SNV 96");
         options.addOption(MAX_CSS_ADJUST_FACTOR_GEN_POS, true, "Max CSS adustment factor for genomic pos frequency");
         options.addOption(CSS_EXPONENT_SNV, true, "Max CSS adustment factor for SNV 96");
@@ -231,7 +257,7 @@ public class SomaticClassifier implements CuppaClassifier
 
                 mSampleSnvCounts = convertSomaticVariantsToSnvCounts(sampleId, somaticVariants, mSampleSnvCountsIndex);
 
-                AidApobecStatus aidApobecStatus = mSplitAidApobec ? AidApobecStatus.FALSE_ONLY : AidApobecStatus.ALL;
+                AidApobecStatus aidApobecStatus = mSplitAidApobecGenPos ? AidApobecStatus.FALSE_ONLY : AidApobecStatus.ALL;
                 mSamplePosFrequencies = convertSomaticVariantsToPosFrequencies(
                         sampleId, somaticVariants, mSamplePosFreqIndex, mPosFrequencies, aidApobecStatus);
             }
@@ -369,7 +395,7 @@ public class SomaticClassifier implements CuppaClassifier
         final double[] sampleCounts = mSampleSnvCounts.getCol(sampleCountsIndex);
         int snvTotal = (int)sumVector(sampleCounts);
 
-        addCssResults(sample, sampleCounts, snvTotal, results, similarities);
+        addSnv96CssResults(sample, sampleCounts, snvTotal, results, similarities);
         addPosFreqCssResults(sample, results, similarities);
 
         addSigContributionResults(sample, results);
@@ -407,15 +433,22 @@ public class SomaticClassifier implements CuppaClassifier
         results.add(new SampleResult(sample.Id, SNV, LIKELIHOOD, "SNV_COUNT_HIGH", String.valueOf(snvTotal), cancerPrevsHigh));
     }
 
-    private void addCssResults(
+    private void addSnv96CssResults(
             final SampleData sample, final double[] sampleCounts, int snvTotal,
             final List<SampleResult> results, final List<SampleSimilarity> similarities)
     {
         int refSampleCount = mRefSampleCounts.Cols;
 
         final List<SampleSimilarity> topMatches = Lists.newArrayList();
-
         final Map<String,Double> cancerCssTotals = Maps.newHashMap();
+
+        if(mExcludeAidApobecSnv96)
+        {
+            for(Integer bucketIndex : mAidApobecSnv96Buckets)
+            {
+                sampleCounts[bucketIndex] = 0;
+            }
+        }
 
         double maxCssScore = 0;
 

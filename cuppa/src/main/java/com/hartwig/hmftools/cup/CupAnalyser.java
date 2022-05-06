@@ -69,9 +69,17 @@ public class CupAnalyser
 
         mSampleDataCache = new SampleDataCache();
 
+        mClassifiers = Lists.newArrayList();
+        mSampleDataWriter = null;
+        mSampleSimilarityWriter = null;
+
         loadSampleData(cmd);
 
-        mClassifiers = Lists.newArrayList();
+        if(!mConfig.isValid() || !mSampleDataCache.isValid())
+        {
+            CUP_LOGGER.error("invalid config");
+            System.exit(1);
+        }
 
         if(mConfig.runClassifier(SNV))
             mClassifiers.add(new SomaticClassifier(mConfig, mSampleDataCache, cmd));
@@ -92,9 +100,6 @@ public class CupAnalyser
             mClassifiers.add(new AltSjClassifier(mConfig, mSampleDataCache, cmd));
 
         CUP_LOGGER.debug("{} classifiers loaded", mClassifiers.size());
-
-        mSampleDataWriter = null;
-        mSampleSimilarityWriter = null;
     }
 
     private void loadSampleData(final CommandLine cmd)
@@ -119,12 +124,6 @@ public class CupAnalyser
 
     public void run()
     {
-        if(!mConfig.isValid() || !mSampleDataCache.isValid())
-        {
-            CUP_LOGGER.error("invalid config");
-            System.exit(1);
-        }
-
         if(mSampleDataCache.SampleIds.isEmpty())
         {
             CUP_LOGGER.error("no samples specified");
