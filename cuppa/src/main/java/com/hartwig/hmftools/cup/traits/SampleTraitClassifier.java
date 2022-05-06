@@ -97,6 +97,9 @@ public class SampleTraitClassifier implements CuppaClassifier
             mIsValid = false;
             return;
         }
+
+        // cache for other components to use
+        mSampleTraitsData.entrySet().forEach(x -> mSampleDataCache.RefSampleTraitsData.put(x.getKey(), x.getValue()));
     }
 
     public CategoryType categoryType() { return SAMPLE_TRAIT; }

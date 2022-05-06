@@ -50,7 +50,7 @@ public class SomaticDataLoader
         return sampleCounts;
     }
 
-    public static Matrix loadSamplePosFreqFromFile(final String filename, final Map<String,Integer> sampleCountsIndex)
+    public static Matrix loadSampleMatrixData(final String filename, final Map<String,Integer> sampleCountsIndex)
     {
         if(filename.isEmpty() || !Files.exists(Paths.get(filename)))
             return null;

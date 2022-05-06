@@ -36,16 +36,19 @@ import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
+import static com.hartwig.hmftools.cup.somatics.CopyNumberProfile.normaliseGenPosCountsByCopyNumber;
 import static com.hartwig.hmftools.cup.somatics.GenomicPositions.convertSomaticVariantsToPosFrequencies;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSignaturePercentileData;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSampleCountsFromFile;
-import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSamplePosFreqFromFile;
+import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSampleMatrixData;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSomaticVariants;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_SNV_96_AID_APOBEC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_SNV_96_AID_APOBEC_DESC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC_SIG;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC_SIG_DESC;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.NORMALISE_COPY_NUMBER;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.NORMALISE_COPY_NUMBER_DESC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.SPLIT_AID_APOBEC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.SPLIT_AID_APOBEC_DESC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.applyMaxCssAdjustment;
@@ -103,6 +106,10 @@ public class SomaticClassifier implements CuppaClassifier
     private final boolean mSplitAidApobecGenPos;
     private final boolean mExcludeAidApobecSnv96;
 
+    private final boolean mApplyCopyNumber; // to genomic positions
+    private Matrix mRefSampleCopyNumberProfiles;
+    private Matrix mCopyNumberProfile; // same dimensions as genomic position
+
     private final double mMaxCssAdjustFactorSnv;
     private final double mMaxCssAdjustFactorGenPos;
     private final double mCssExponentSnv;
@@ -134,6 +141,7 @@ public class SomaticClassifier implements CuppaClassifier
         mSampleSnvCounts = null;
         mRefCancerSnvPosFrequencies = null;
         mRefSamplePosFrequencies = null;
+        mRefSampleCopyNumberProfiles = null;
         mSampleSnvCountsIndex = Maps.newHashMap();
         mSamplePosFreqIndex = Maps.newHashMap();
 
@@ -145,6 +153,7 @@ public class SomaticClassifier implements CuppaClassifier
 
         mSplitAidApobecGenPos = cmd != null ? cmd.hasOption(SPLIT_AID_APOBEC) : false;
         mExcludeAidApobecSnv96 = cmd != null ? cmd.hasOption(EXCLUDE_SNV_96_AID_APOBEC) : false;
+        mApplyCopyNumber = cmd != null ? cmd.hasOption(NORMALISE_COPY_NUMBER) : false;
         mAidApobecSnv96Buckets = Lists.newArrayList();
 
         mCssExponentSnv = cmd != null ? Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_SNV, "8")) : SNV_CSS_DIFF_EXPONENT;
@@ -173,29 +182,42 @@ public class SomaticClassifier implements CuppaClassifier
         mRefSampleCounts = loadRefSampleCounts(mConfig.RefSnvCountsFile, mRefSampleNames, Lists.newArrayList("BucketName"));
 
         mRefCancerSnvPosFrequencies = loadRefSampleCounts(mConfig.RefSnvCancerPosFreqFile, mRefSnvPosFreqCancerTypes, Lists.newArrayList());
-        mRefSamplePosFrequencies = loadSamplePosFreqFromFile(mConfig.RefSnvSamplePosFreqFile, mRefSamplePosFreqIndex);
+        mRefSamplePosFrequencies = loadSampleMatrixData(mConfig.RefSnvSamplePosFreqFile, mRefSamplePosFreqIndex);
 
-        if(mRefSampleCounts == null || mRefCancerSnvPosFrequencies == null)
+        if(mApplyCopyNumber)
+        {
+            // uses gen-pos sample map for CN profile
+            mRefSampleCopyNumberProfiles = loadSampleMatrixData(mConfig.RefCopyNumberProfileFile, Maps.newHashMap());
+
+            if(!mConfig.SampleDataFile.equals(mConfig.RefSampleDataFile))
+            {
+                CUP_LOGGER.error("only ref-sample analysis support for CN normalisation");
+                mIsValid = false;
+            }
+        }
+        else
+        {
+            mRefSampleCopyNumberProfiles = null;
+        }
+
+        if(mRefSampleCounts == null || mRefCancerSnvPosFrequencies == null || (mApplyCopyNumber && mRefSampleCopyNumberProfiles == null))
+        {
+            CUP_LOGGER.error("invalid somatic matrix data: SNV-96() GenPos({}) CopyNumber({})",
+                    mRefSampleCounts != null, mRefCancerSnvPosFrequencies != null,
+                    (!mApplyCopyNumber || mRefSampleCopyNumberProfiles != null));
             mIsValid = false;
+        }
 
         mIsValid &= loadSampleCounts();
         mIsValid &= mSigContributions.loadSigContributions(mSampleSnvCounts);
 
-        if(mExcludeAidApobecSnv96)
+        if(mApplyCopyNumber && !mConfig.runClassifier(SAMPLE_TRAIT))
         {
-            Map<String,Integer> bucketNameIndexMap = Maps.newHashMap();
-            SnvSigUtils.populateBucketMap(bucketNameIndexMap);
-            for(String bucketName : AID_APOBEC_TRINUCLEOTIDE_CONTEXTS)
-            {
-                int bucketIndex = bucketNameIndexMap.get(bucketName);
-                mAidApobecSnv96Buckets.add(bucketIndex);
-
-                for(int i = 0; i < mRefSampleCounts.Cols; ++i)
-                {
-                    mRefSampleCounts.set(bucketIndex, i, 0);
-                }
-            }
+            CUP_LOGGER.error("gennomic-position copy number normalisation requires sample traits for purity");
+            mIsValid = false;
         }
+
+        excludeAidApobecBuckets();
 
         if(cmd.hasOption(WRITE_GEN_POS_CSS))
         {
@@ -206,6 +228,7 @@ public class SomaticClassifier implements CuppaClassifier
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(SPLIT_AID_APOBEC, false, SPLIT_AID_APOBEC_DESC);
+        options.addOption(NORMALISE_COPY_NUMBER, false, NORMALISE_COPY_NUMBER_DESC);
         options.addOption(EXCLUDE_SNV_96_AID_APOBEC, false, EXCLUDE_SNV_96_AID_APOBEC_DESC);
         options.addOption(INCLUDE_AID_APOBEC_SIG, false, INCLUDE_AID_APOBEC_SIG_DESC);
         options.addOption(MAX_CSS_ADJUST_FACTOR_SNV, true, "Max CSS adustment factor for SNV 96");
@@ -259,7 +282,7 @@ public class SomaticClassifier implements CuppaClassifier
                         mConfig.SampleSnvPosFreqFile : mConfig.SampleDataDir + sampleId + ".sig.pos_freq_counts.csv";
 
                 mSampleSnvCounts = loadSampleCountsFromFile(snvCountsFile, mSampleSnvCountsIndex);
-                mSamplePosFrequencies = loadSamplePosFreqFromFile(snvPosFreqFile, mSamplePosFreqIndex);
+                mSamplePosFrequencies = loadSampleMatrixData(snvPosFreqFile, mSamplePosFreqIndex);
             }
 
             return mSampleSnvCounts != null && mSamplePosFrequencies != null;
@@ -288,7 +311,7 @@ public class SomaticClassifier implements CuppaClassifier
             }
             else
             {
-                mSamplePosFrequencies = loadSamplePosFreqFromFile(mConfig.SampleSnvPosFreqFile, mSamplePosFreqIndex);
+                mSamplePosFrequencies = loadSampleMatrixData(mConfig.SampleSnvPosFreqFile, mSamplePosFreqIndex);
             }
 
             return mSampleSnvCounts != null && mSamplePosFrequencies != null;
@@ -468,7 +491,15 @@ public class SomaticClassifier implements CuppaClassifier
             return;
         }
 
-        final double[] sampleCounts = mSamplePosFrequencies.getCol(sampleCountsIndex);
+        double[] sampleCounts = mSamplePosFrequencies.getCol(sampleCountsIndex);
+
+        if(mApplyCopyNumber)
+        {
+            double samplePloidy = mSampleDataCache.RefSampleTraitsData.get(sample.Id).Ploidy;
+            final double[] sampleCnProfile = mRefSampleCopyNumberProfiles.getCol(sampleCountsIndex);
+            sampleCounts = normaliseGenPosCountsByCopyNumber(samplePloidy, sampleCounts, sampleCnProfile);
+        }
+
         double sampleTotal = sumVector(sampleCounts);
 
         // first run CSS against cancer cohorts
@@ -630,6 +661,25 @@ public class SomaticClassifier implements CuppaClassifier
         }
 
         similarities.addAll(topMatches);
+    }
+
+    private void excludeAidApobecBuckets()
+    {
+        if(!mExcludeAidApobecSnv96)
+            return;
+
+        Map<String,Integer> bucketNameIndexMap = Maps.newHashMap();
+        SnvSigUtils.populateBucketMap(bucketNameIndexMap);
+        for(String bucketName : AID_APOBEC_TRINUCLEOTIDE_CONTEXTS)
+        {
+            int bucketIndex = bucketNameIndexMap.get(bucketName);
+            mAidApobecSnv96Buckets.add(bucketIndex);
+
+            for(int i = 0; i < mRefSampleCounts.Cols; ++i)
+            {
+                mRefSampleCounts.set(bucketIndex, i, 0);
+            }
+        }
     }
 
     @VisibleForTesting

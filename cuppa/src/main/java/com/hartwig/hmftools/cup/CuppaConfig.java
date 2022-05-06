@@ -63,6 +63,7 @@ public class CuppaConfig
 
     public final String RefSampleDataFile;
     public final String RefSnvCountsFile;
+    public final String RefCopyNumberProfileFile;
     public final String RefSvPercFile;
     public final String RefSigContributionFile;
     public final String RefFeaturePrevFile;
@@ -188,6 +189,7 @@ public class CuppaConfig
 
         RefSampleDataFile = getRefDataFile(cmd, REF_SAMPLE_DATA_FILE, REF_FILE_SAMPLE_DATA);
         RefSnvCountsFile = getRefDataFile(cmd, REF_SNV_COUNTS_FILE, REF_FILE_SNV_COUNTS);
+        RefCopyNumberProfileFile = getRefDataFile(cmd, REF_CN_PROFILE_FILE, REF_FILE_COPY_NUMBER_PROFILE);
         RefSigContributionFile = getRefDataFile(cmd, REF_SIG_CONTRIB_FILE, REF_FILE_SIG_PERC);
         RefFeaturePrevFile = getRefDataFile(cmd, REF_FEAT_PREV_FILE, REF_FILE_FEATURE_PREV);
         RefTraitPercFile = getRefDataFile(cmd, REF_TRAIT_PERC_FILE, REF_FILE_TRAIT_PERC);
@@ -354,6 +356,7 @@ public class CuppaConfig
         RefDataDir = "";
         RefSampleDataFile = "";
         RefSnvCountsFile = "";
+        RefCopyNumberProfileFile = "";
         RefSvPercFile = "";
         RefSigContributionFile = "";
         RefFeaturePrevFile = "";

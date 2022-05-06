@@ -81,14 +81,14 @@ public class CupAnalyser
             System.exit(1);
         }
 
+        if(mConfig.runClassifier(SAMPLE_TRAIT))
+            mClassifiers.add(new SampleTraitClassifier(mConfig, mSampleDataCache));
+
         if(mConfig.runClassifier(SNV))
             mClassifiers.add(new SomaticClassifier(mConfig, mSampleDataCache, cmd));
 
         if(mConfig.runClassifier(FEATURE))
             mClassifiers.add(new FeatureClassifier(mConfig, mSampleDataCache, cmd));
-
-        if(mConfig.runClassifier(SAMPLE_TRAIT))
-            mClassifiers.add(new SampleTraitClassifier(mConfig, mSampleDataCache));
 
         if(mConfig.runClassifier(SV))
             mClassifiers.add(new SvClassifier(mConfig, mSampleDataCache));
