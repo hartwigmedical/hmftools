@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.cup.traits.SampleTraitsData;
 
 public class SampleDataCache
 {
@@ -28,6 +29,7 @@ public class SampleDataCache
     public final Map<String,String> RefSampleCancerTypeMap; // map of ref sample to cancer type
     public final List<SampleData> RefSampleDataList; // includes type 'Other' if in ref data
     public final Map<String,Integer> RefSampleRnaReadLength;
+    public final Map<String,SampleTraitsData> RefSampleTraitsData;
 
     private boolean mIsValid;
 
@@ -38,8 +40,9 @@ public class SampleDataCache
 
         RefCancerSampleData = Maps.newHashMap();
         RefSampleCancerTypeMap = Maps.newHashMap();
-        RefSampleRnaReadLength = Maps.newHashMap();
         RefSampleDataList = Lists.newArrayList();
+        RefSampleRnaReadLength = Maps.newHashMap();
+        RefSampleTraitsData = Maps.newHashMap();
 
         SpecificSample = null;
         mIsValid = true;

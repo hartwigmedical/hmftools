@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.cup.CuppaConfig.CATEGORIES;
 import static com.hartwig.hmftools.cup.CuppaConfig.LOG_DEBUG;
+import static com.hartwig.hmftools.cup.CuppaConfig.REF_CN_PROFILE_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SNV_COUNTS_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SNV_SAMPLE_POS_FREQ_FILE;
@@ -34,13 +35,15 @@ public class RefDataConfig
     public final String CohortSampleTraitsFile;
     public final String CohortSampleSvDataFile;
     public final String CohortSigContribsFile;
-    public final String SnvPositionDataFile;
-    public final String SnvCountsFile;
     public final String CohortFeaturesFile;
-    public final String GeneExpFile;
-    public final String AltSjFile;
+    public final String GenPosMatrixFile;
+    public final String Snv96MatrixFile;
+    public final String CopyNumberMatrixFile;
+    public final String GeneExpMatrixFile;
+    public final String AltSjMatrixFile;
     public final String FeatureOverrideFile;
 
+    // sample paths & files accepting wildcards
     public final String SampleFeaturesDir;
     public final String SampleSomaticVcf;
     public final String SampleSvVcf;
@@ -64,7 +67,6 @@ public class RefDataConfig
     private static final String SAMPLE_FEATURES_DIR = "sample_features_dir";
     private static final String SAMPLE_SOMATIC_VCF = "sample_somatic_vcf";
     private static final String SAMPLE_SV_VCF = "sample_sv_vcf";
-
     private static final String SAMPLE_COPY_NUMBER_FILE = "sample_copy_number_file";
 
     private static final String REF_FEATURE_OVERRIDE_FILE = "feature_override_file";
@@ -93,11 +95,12 @@ public class RefDataConfig
         SampleSvVcf = cmd.getOptionValue(SAMPLE_SV_VCF, "");
         SampleCopyNumberFile = cmd.getOptionValue(SAMPLE_COPY_NUMBER_FILE, "");
 
-        SnvPositionDataFile = cmd.getOptionValue(REF_SNV_SAMPLE_POS_FREQ_FILE, "");
-        SnvCountsFile = cmd.getOptionValue(REF_SNV_COUNTS_FILE, "");
+        GenPosMatrixFile = cmd.getOptionValue(REF_SNV_SAMPLE_POS_FREQ_FILE, "");
+        Snv96MatrixFile = cmd.getOptionValue(REF_SNV_COUNTS_FILE, "");
+        CopyNumberMatrixFile = cmd.getOptionValue(REF_CN_PROFILE_FILE, "");
 
-        GeneExpFile = cmd.getOptionValue(REF_GENE_EXP_DATA_FILE, "");
-        AltSjFile = cmd.getOptionValue(REF_ALT_SJ_DATA_FILE, "");
+        GeneExpMatrixFile = cmd.getOptionValue(REF_GENE_EXP_DATA_FILE, "");
+        AltSjMatrixFile = cmd.getOptionValue(REF_ALT_SJ_DATA_FILE, "");
 
         FeatureOverrideFile = cmd.getOptionValue(REF_FEATURE_OVERRIDE_FILE, "");
 
@@ -118,12 +121,14 @@ public class RefDataConfig
         options.addOption(CATEGORIES, true, "Categories to build ref data for");
 
         options.addOption(REF_SAMPLE_DATA_FILE, true, "Ref sample data file");
+        options.addOption(REF_SNV_SAMPLE_POS_FREQ_FILE, true, "Ref SNV position frequency matrix data file");
+        options.addOption(REF_SNV_COUNTS_FILE, true, "Ref SNV trinucleotide matrix data file");
+        options.addOption(REF_CN_PROFILE_FILE, true, "Ref sample copy number profile matrix data file");
+
+        options.addOption(REF_COHORT_FEATURES_FILE, true, "Ref sample features data file");
         options.addOption(REF_COHORT_SAMPLE_TRAITS_FILE, true, "Ref sample cohort traits file");
         options.addOption(REF_COHORT_SIG_CONTRIBS_FILE, true, "Ref sample cohort signature contributions file");
         options.addOption(REF_COHORT_SV_DATA_FILE, true, "Ref sample cohort SV file");
-        options.addOption(REF_SNV_SAMPLE_POS_FREQ_FILE, true, "Ref SNV position frequency matrix data file");
-        options.addOption(REF_SNV_COUNTS_FILE, true, "Ref SNV trinucleotide matrix data file");
-        options.addOption(REF_COHORT_FEATURES_FILE, true, "Ref sample features data file");
 
         options.addOption(SAMPLE_FEATURES_DIR, true, "Ref sample directory containing features files");
         options.addOption(SAMPLE_SV_VCF, true, "Ref sample SV VCF path, wildcards allowed");

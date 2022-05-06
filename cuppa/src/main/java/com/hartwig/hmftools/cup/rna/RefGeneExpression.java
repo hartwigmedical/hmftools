@@ -62,13 +62,13 @@ public class RefGeneExpression implements RefClassifier
 
     public CategoryType categoryType() { return GENE_EXP; }
 
-    public static boolean requiresBuild(final RefDataConfig config) { return !config.GeneExpFile.isEmpty(); }
+    public static boolean requiresBuild(final RefDataConfig config) { return !config.GeneExpMatrixFile.isEmpty(); }
 
     public void buildRefDataSets()
     {
         CUP_LOGGER.debug("loading RNA gene expression data");
 
-        loadRefRnaGeneExpression(mConfig.GeneExpFile);
+        loadRefRnaGeneExpression(mConfig.GeneExpMatrixFile);
 
         if(mGeneSampleExpressionData == null)
         {

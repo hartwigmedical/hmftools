@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.cup.somatics.AidApobecStatus.ALL;
 import static com.hartwig.hmftools.cup.somatics.AidApobecStatus.FALSE_ONLY;
 import static com.hartwig.hmftools.cup.somatics.AidApobecStatus.TRUE_ONLY;
+import static com.hartwig.hmftools.cup.somatics.CopyNumberProfile.normaliseGenPosCountsByCopyNumber;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -22,6 +23,7 @@ import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.cup.common.SampleData;
+import com.hartwig.hmftools.cup.traits.SampleTraitsData;
 
 public final class GenomicPositions
 {
@@ -78,6 +80,7 @@ public final class GenomicPositions
 
     public static void buildCancerPosFrequencies(
             final PositionFrequencies posFrequencies, final Matrix posFreqCounts, final Map<String,Integer> sampleIndexMap,
+            final Matrix cnProfiles, final Map<String, SampleTraitsData> refSampleTraitsData,
             final Map<String,List<SampleData>> refCancerSampleData, final String filename)
     {
         if(posFreqCounts == null)
@@ -103,10 +106,18 @@ public final class GenomicPositions
 
                 for(final SampleData sample : entry.getValue())
                 {
-                    final double[] sampleCounts = posFreqCounts.getCol(sampleIndexMap.get(sample.Id));
+                    int sampleIndex = sampleIndexMap.get(sample.Id);
+                    double[] sampleCounts = posFreqCounts.getCol(sampleIndex);
 
                     if(sampleCounts == null)
                         continue;
+
+                    if(cnProfiles != null && refSampleTraitsData.containsKey(sample.Id))
+                    {
+                        double samplePloidy = refSampleTraitsData.get(sample.Id).Ploidy;
+                        final double[] sampleCnProfile = cnProfiles.getCol(sampleIndex);
+                        sampleCounts = normaliseGenPosCountsByCopyNumber(samplePloidy, sampleCounts, sampleCnProfile);
+                    }
 
                     double sampleTotal = sumVector(sampleCounts);
 

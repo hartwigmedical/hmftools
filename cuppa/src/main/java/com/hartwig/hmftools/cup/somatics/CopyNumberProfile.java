@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.cup.somatics;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
+import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_CN_ADJUST_MAX;
 
 import java.io.IOException;
 import java.util.List;
@@ -20,10 +22,25 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public final class CopyNumberProfile
 {
+    public static double[] normaliseGenPosCountsByCopyNumber(double samplePloidy, final double[] counts, final double[] copyNumber)
+    {
+        final double[] adjustedCounts = new double[counts.length];
+
+        for(int i = 0; i < counts.length; ++i)
+        {
+            double adjust = samplePloidy / max(0.01, copyNumber[i]);
+            adjustedCounts[i] = counts[i] * min(adjust, GEN_POS_CN_ADJUST_MAX);
+        }
+
+        return adjustedCounts;
+    }
+
     public static void buildCopyNumberProfile(
             final List<String> sampleIds, final RefDataConfig config, final Matrix copyNumberMatrix,
             final Map<String,Integer> sampleIndexMap, final PositionFrequencies posFrequencies)
     {
+        CUP_LOGGER.debug("building copy-number profile reference data");
+
         for(String sampleId : sampleIds)
         {
             int sampleIndex = sampleIndexMap.get(sampleId);
@@ -36,8 +53,8 @@ public final class CopyNumberProfile
             }
             else
             {
-                final String somaticVcfFile = formSamplePath(config.SampleCopyNumberFile, sampleId);
-                cnProfile = extractCopyNumberProfile(sampleId, null, somaticVcfFile, posFrequencies);
+                final String purpleCopyNumberFile = formSamplePath(config.SampleCopyNumberFile, sampleId);
+                cnProfile = extractCopyNumberProfile(sampleId, null, purpleCopyNumberFile, posFrequencies);
             }
 
             copyNumberMatrix.setCol(sampleIndex, cnProfile);

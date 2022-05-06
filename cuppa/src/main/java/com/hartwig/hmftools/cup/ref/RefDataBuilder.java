@@ -43,6 +43,7 @@ public class RefDataBuilder
 
         mClassifiers = Lists.newArrayList();
 
+        // build / load traits first since some subsequent classifiers use its data (eg purity & ploidy)
         if(RefSampleTraits.requiresBuild(mConfig))
             mClassifiers.add(new RefSampleTraits(mConfig, mSampleDataCache, cmd));
 

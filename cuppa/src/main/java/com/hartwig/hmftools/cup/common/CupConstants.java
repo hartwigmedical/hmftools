@@ -20,6 +20,8 @@ public class CupConstants
     public static final double RNA_GENE_EXP_DIFF_EXPONENT = 50;
     public static final double RNA_ALT_SJ_DIFF_EXPONENT = 3.5;
 
+    public static final double GEN_POS_CN_ADJUST_MAX = 4;
+
     public static final int POS_FREQ_BUCKET_SIZE = 500000;
     public static final int POS_FREQ_MAX_SAMPLE_COUNT = 20000;
 

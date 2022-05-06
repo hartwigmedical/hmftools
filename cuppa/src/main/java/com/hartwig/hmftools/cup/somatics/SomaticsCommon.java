@@ -1,5 +1,14 @@
 package com.hartwig.hmftools.cup.somatics;
 
+import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
+
+import java.util.List;
+import java.util.Map;
+
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.Matrix;
+
 public final class SomaticsCommon
 {
     public static final String SPLIT_AID_APOBEC = "split_aid_apobec_gen_pos";
@@ -13,4 +22,53 @@ public final class SomaticsCommon
 
     public static final String INCLUDE_AID_APOBEC_SIG = "aid_apobec_sig_feature";
     public static final String INCLUDE_AID_APOBEC_SIG_DESC = "Add an enriched AID/APOBEC signature feature";
+
+    public static Matrix loadMultipleMatrixFiles(
+            final List<String> filenames, final List<String> refSampleIds, final Map<String,Integer> sampleCountsIndex, final String type)
+    {
+        int refSampleCount = refSampleIds.size();
+
+        Matrix combinedMatrix = null;
+        int sampleIndex = 0;
+
+        for(String filename : filenames)
+        {
+            final List<String> samplesList = Lists.newArrayList();
+            final Matrix subMatrix = loadRefSampleCounts(filename, samplesList, Lists.newArrayList("BucketName"));
+
+            if(subMatrix == null)
+                return null;
+
+            CUP_LOGGER.info("combined {} counts from {} samples", type, samplesList.size());
+
+            final double[][] subData = subMatrix.getData();
+
+            if(combinedMatrix == null)
+            {
+                combinedMatrix = new Matrix(subMatrix.Rows, refSampleCount);
+            }
+
+            for(int s = 0; s < samplesList.size(); ++s)
+            {
+                final String sampleId = samplesList.get(s);
+
+                if(!refSampleIds.contains(sampleId))
+                    continue;
+
+                sampleCountsIndex.put(sampleId, sampleIndex);
+
+                for(int r = 0; r < combinedMatrix.Rows; ++r)
+                {
+                    combinedMatrix.set(r, sampleIndex, subData[r][s]);
+                }
+
+                ++sampleIndex;
+            }
+        }
+
+        combinedMatrix.cacheTranspose();
+
+        return combinedMatrix;
+    }
+
 }

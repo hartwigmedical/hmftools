@@ -145,11 +145,6 @@ public class RefSampleTraits implements RefClassifier
             final List<Double> msIndelTmbValues = traitsData.stream().map(x -> x.IndelsMbPerMb).collect(Collectors.toList());
             writePercentilesData(cancerType, SampleTraitType.MS_INDELS_TMB, createPercentileData(msIndelTmbValues));
 
-            /*
-            final List<Double> chordHrdValues = traitsData.stream().map(x -> x.ChordHrd).collect(Collectors.toList());
-            writePercentilesData(cancerType, SampleTraitType.CHORD_HRD, createPercentileData(chordHrdValues));
-            */
-
             double cancerSamples = mSampleDataCache.getCancerSampleCount(cancerType);
             int wgdCount = (int)traitsData.stream().filter(x -> x.HasWGD).count();
             int femaleCount = (int)traitsData.stream().filter(x -> x.GenderType == Gender.FEMALE).count();
@@ -259,6 +254,9 @@ public class RefSampleTraits implements RefClassifier
         {
             traitsList.add(traitsData);
         }
+
+        // cache for other components to use
+        mSampleDataCache.RefSampleTraitsData.put(traitsData.SampleId, traitsData);
     }
 
     private void writeGenderRates()
