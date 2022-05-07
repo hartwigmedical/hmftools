@@ -17,7 +17,7 @@ public class FusionConfig
     public final String CohortFile;
     public final boolean CacheFragments;
     public final boolean RunPerfChecks;
-    public final int MinHardFilterFrags;
+    public int MinHardFilterFrags;
 
     public final KnownFusionCache KnownFusions;
 

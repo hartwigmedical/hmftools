@@ -61,6 +61,9 @@ public class ChimericReadTracker
     private final Set<String> mKnownGeneIds; // in the current gene collection
     private final List<String[]> mKnownPairGeneIds;
 
+    private final Map<Integer,List<SupplementaryJunctionData>> mSupplementaryJunctions;
+    private final Map<String,Set<String>> mHardFilteredReadIds;
+
     // to avoid double-processing reads falling after a gene collection
     private final Map<String,List<ReadRecord>> mPostGeneReadMap;
     private final Map<String,List<ReadRecord>> mPreviousPostGeneReadMap;
@@ -84,6 +87,8 @@ public class ChimericReadTracker
         mCandidateRealignedGroups = Lists.newArrayList();
         mPostGeneReadMap = Maps.newHashMap();
         mPreviousPostGeneReadMap = Maps.newHashMap();
+        mSupplementaryJunctions = Maps.newHashMap();
+        mHardFilteredReadIds = Maps.newHashMap();
         mGeneCollection = null;
     }
 
@@ -103,6 +108,7 @@ public class ChimericReadTracker
 
     public List<List<ReadRecord>> getLocalChimericReads() { return mLocalChimericReads; }
     public ChimericStats getStats() { return mChimericStats; }
+    public Map<String,Set<String>> getHardFilteredReadIds() { return mHardFilteredReadIds; }
 
     public boolean isChimeric(final ReadRecord read1, final ReadRecord read2, boolean isDuplicate, boolean isMultiMapped)
     {
@@ -161,12 +167,14 @@ public class ChimericReadTracker
         mCandidateRealignedGroups.clear();
         mChimericStats.clear();
         mLocalChimericReads.clear();
+        mSupplementaryJunctions.clear();
 
         if(full)
         {
             mPreviousPostGeneReadMap.clear();
             mPostGeneReadMap.clear();
             mJunctionRacGroups = null;
+            mHardFilteredReadIds.clear();
         }
     }
 
@@ -288,7 +296,10 @@ public class ChimericReadTracker
             }
 
             if(mRunFusions)
+            {
                 collectCandidateJunctions(readGroup);
+                cacheSupplementaryJunctionCandidate(readGroup);
+            }
         }
 
         if(!fragsToRemove.isEmpty())
@@ -297,6 +308,8 @@ public class ChimericReadTracker
         int chimericCount = mChimericReadMap.size();
         mGeneCollection.addCount(TOTAL, chimericCount);
         mGeneCollection.addCount(CHIMERIC, chimericCount);
+
+        applyHardFilter();
 
         if(mRunFusions)
         {
@@ -552,4 +565,23 @@ public class ChimericReadTracker
         return false;
     }
 
+    private void applyHardFilter()
+    {
+        if(mConfig.Fusions.MinHardFilterFrags <= 1)
+            return;
+
+        HardFilteredCache.applyHardFilter(
+                mSupplementaryJunctions, mHardFilteredReadIds, mChimericReadMap, mGeneCollection.chromosome(),
+                mConfig.Fusions.MinHardFilterFrags);
+
+        mSupplementaryJunctions.clear();
+    }
+
+    private void cacheSupplementaryJunctionCandidate(final ChimericReadGroup readGroup)
+    {
+        if(mConfig.Fusions.MinHardFilterFrags <= 1 || readInKnownGene(readGroup))
+            return;
+
+        SupplementaryJunctionData.cacheSupplementaryJunctionCandidate(readGroup, mSupplementaryJunctions);
+    }
 }

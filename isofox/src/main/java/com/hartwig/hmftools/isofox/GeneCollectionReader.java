@@ -265,10 +265,11 @@ public class GeneCollectionReader implements Callable
 
             // handle fragments spanning multiple chromosomes
 
-            // organise incomplete reads into the chromosomes which they want to link to
-            final Map<String,Map<String, FusionReadGroup>> chrIncompleteReadsGroups = mFusionFinder.extractIncompleteReadGroups(mChromosome);
+            // organise incomplete reads into the chromosomes which they link to
+            final Map<String,Map<String,FusionReadGroup>> chrIncompleteReadsGroups = mFusionFinder.extractIncompleteReadGroups(mChromosome);
 
-            final List<FusionReadGroup> interChromosomalGroups = mFusionTaskManager.addIncompleteReadGroup(mChromosome, chrIncompleteReadsGroups);
+            final List<FusionReadGroup> interChromosomalGroups = mFusionTaskManager.addIncompleteReadGroup(
+                    mChromosome, chrIncompleteReadsGroups, mBamFragmentAllocator.getChimericReadTracker().getHardFilteredReadIds());
 
             if(!interChromosomalGroups.isEmpty())
             {

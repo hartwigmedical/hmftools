@@ -164,6 +164,7 @@ public class BamFragmentAllocator
     public BaseDepth getBaseDepth() { return mBaseDepth; }
     public final ChimericReadTracker getChimericReadTracker() { return mChimericReads; }
     public final SpliceSiteCounter getSpliceSiteCounter() { return mSpliceSiteCounter; }
+    public final FragmentTracker getFragmentTracker() { return mFragmentReads; }
 
     public void clearCache()
     {

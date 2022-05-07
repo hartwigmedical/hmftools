@@ -37,6 +37,7 @@ import com.hartwig.hmftools.isofox.fusion.JunctionRacFragments;
 import com.hartwig.hmftools.isofox.fusion.PassingFusions;
 import com.hartwig.hmftools.isofox.fusion.RacFragmentCache;
 import com.hartwig.hmftools.isofox.fusion.FusionReadGroup;
+import com.hartwig.hmftools.isofox.fusion.SupplementaryReadData;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -293,8 +294,19 @@ public class TestUtils
         ReadRecord read2 = createMappedRead(id, gc2, posStart2, posEnd2, cigar2, readBases);
         read1.setFlag(FIRST_OF_PAIR, firstInPair);
         read2.setFlag(SECOND_OF_PAIR, !firstInPair);
-        read1.setSuppAlignment(String.format("%s;%d;%s", read2.Chromosome, read2.PosStart, read2.Cigar.toString()));
-        read2.setSuppAlignment(String.format("%s;%d;%s", read1.Chromosome, read1.PosStart, read1.Cigar.toString()));
+
+        // note: strand is not currently set correctly
+        SupplementaryReadData suppData1 = new SupplementaryReadData(
+                read2.Chromosome, read2.PosStart, '+', read2.Cigar.toString(), 255);
+
+        read1.setSuppAlignment(suppData1.asCsv());
+        // read1.setSuppAlignment(String.format("%s;%d;%s", read2.Chromosome, read2.PosStart, read2.Cigar.toString()));
+
+        SupplementaryReadData suppData2 = new SupplementaryReadData(
+                read1.Chromosome, read1.PosStart, '+', read1.Cigar.toString(), 255);
+
+        read2.setSuppAlignment(suppData2.asCsv());
+        // read2.setSuppAlignment(String.format("%s;%d;%s", read1.Chromosome, read1.PosStart, read1.Cigar.toString()));
 
         return new ReadRecord[] { read1, read2 };
     }

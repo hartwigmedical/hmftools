@@ -432,18 +432,6 @@ public class FusionFragmentsTest
 
         reads = Lists.newArrayList(read1, read2);
         fragment = fromReads(reads);
-
-//        assertEquals(MATCHED_JUNCTION, fragment.type());
-//        assertEquals(CHR_1, fragment.chromosomes()[SE_START]);
-//        assertEquals(CHR_1, fragment.chromosomes()[SE_END]);
-//        assertEquals(1, fragment.orientations()[SE_START]);
-//        assertEquals(-1, fragment.orientations()[SE_END]);
-//        assertEquals(1100, fragment.junctionPositions()[SE_START]);
-//        assertEquals(10200, fragment.junctionPositions()[SE_END]);
-//        assertEquals(1, fragment.junctionOrientations()[SE_START]);
-//        assertEquals(-1, fragment.junctionOrientations()[SE_END]);
-//        assertEquals(DEL, fragment.getImpliedSvType());
-
     }
 
     @Test

@@ -46,13 +46,6 @@ import org.junit.Test;
 
 public class ChimericReadTest
 {
-    /*
-    Single-gene tests
-        - INV, BND straight to chimeric
-        - DEL - chimeric if 500K up/down stream
-        - DEL if between diff genes by known splice donor/acceptor
-    */
-
     @Test
     public void testBasicReads()
     {

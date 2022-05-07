@@ -39,6 +39,7 @@ import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -319,8 +320,10 @@ public class FusionDataTest
         assertEquals(3, finder.getChimericPartialReadGroups().size());
         finder.processLocalReadGroups(completeGroups);
 
+        Map<String,Set<String>> hardFilteredReadIds = Maps.newHashMap();
+
         List<FusionReadGroup> interChromosomalGroups = fusionTaskManager.addIncompleteReadGroup(
-                gc3.chromosome(), finder.extractIncompleteReadGroups(gc3.chromosome()));
+                gc3.chromosome(), finder.extractIncompleteReadGroups(gc3.chromosome()), hardFilteredReadIds);
 
         assertTrue(interChromosomalGroups.isEmpty());
 
@@ -332,7 +335,7 @@ public class FusionDataTest
         finder2.processLocalReadGroups(completeGroups);
 
         interChromosomalGroups = fusionTaskManager.addIncompleteReadGroup(
-                gc5.chromosome(), finder2.extractIncompleteReadGroups(gc5.chromosome()));
+                gc5.chromosome(), finder2.extractIncompleteReadGroups(gc5.chromosome()), hardFilteredReadIds);
 
         finder2.processInterChromosomalReadGroups(interChromosomalGroups);
 

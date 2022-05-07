@@ -3,6 +3,7 @@ package com.hartwig.hmftools.isofox.fusion;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadGroup.mergeChimericReadMaps;
+import static com.hartwig.hmftools.isofox.fusion.HardFilteredCache.removePartialGroupsWithHardFilteredMatch;
 
 import java.util.List;
 import java.util.Map;
@@ -23,7 +24,8 @@ public class FusionTaskManager
     private final PassingFusions mPassingFusions;
 
     private final RacFragmentCache mRacFragmentCache;
-    private final Map<String,Map<String, FusionReadGroup>> mIncompleteReadGroups; // keyed by chromosome then readId
+    private final HardFilteredCache mHardFilteredCache;
+    private final Map<String,Map<String,FusionReadGroup>> mIncompleteReadGroups; // keyed by chromosome then readId
 
     public FusionTaskManager(final IsofoxConfig config, final EnsemblDataCache geneTransCache)
     {
@@ -37,6 +39,7 @@ public class FusionTaskManager
 
         mRacFragmentCache = new RacFragmentCache();
         mIncompleteReadGroups = Maps.newHashMap();
+        mHardFilteredCache = new HardFilteredCache();
 
         mFusionWriter = new FusionWriter(mConfig);
     }
@@ -47,11 +50,20 @@ public class FusionTaskManager
     }
 
     public final RacFragmentCache racFragmentCache() { return mRacFragmentCache; }
+    public final HardFilteredCache hardFilteredCache() { return mHardFilteredCache; }
+    public final Map<String,Map<String,FusionReadGroup>> incompleteReadGroups() { return mIncompleteReadGroups; }
 
     public synchronized List<FusionReadGroup> addIncompleteReadGroup(
-            final String chromosome, final Map<String,Map<String, FusionReadGroup>> chrIncompleteGroups)
+            final String chromosome, final Map<String,Map<String,FusionReadGroup>> chrIncompleteGroups,
+            final Map<String,Set<String>> chrHardFilteredReadIds)
     {
-        int prevIncomplete = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
+        // receive new chromosome's incomplete groups for a particular chromosome, with these grouped by the chromosome they link to
+        // additionally the new chromosome's hard-filtered groups, which are used to clear out the cache of previous partial groups
+        // likewise use the existing hard-filtered cache to clean out any of the new partial groups
+        int initTotalIncomplete = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
+        int initTotalHardFiltered = mHardFilteredCache.cacheCount();
+        int initChrIncomplete = chrIncompleteGroups.values().stream().mapToInt(x -> x.size()).sum();
+        int initChrHardFiltered = chrHardFilteredReadIds.values().stream().mapToInt(x -> x.size()).sum();;
 
         List<FusionReadGroup> completeGroups = Lists.newArrayList();
 
@@ -60,11 +72,11 @@ public class FusionTaskManager
             String otherChromosome = entry.getKey();
             Map<String, FusionReadGroup> newIncompleteGroups = entry.getValue();
 
-            Map<String, FusionReadGroup> existingGroups = mIncompleteReadGroups.get(otherChromosome);
+            Map<String,FusionReadGroup> existingGroups = mIncompleteReadGroups.get(otherChromosome);
 
             if(existingGroups == null)
             {
-                Map<String, FusionReadGroup> chromosomeGroups = mIncompleteReadGroups.get(chromosome);
+                Map<String,FusionReadGroup> chromosomeGroups = mIncompleteReadGroups.get(chromosome);
                 if(chromosomeGroups == null)
                 {
                     chromosomeGroups = Maps.newHashMap();
@@ -73,24 +85,36 @@ public class FusionTaskManager
 
                 chromosomeGroups.putAll(newIncompleteGroups);
 
-                ISF_LOGGER.debug("added chromosomes({} & {}) newGroups({})",
-                        chromosome, otherChromosome, newIncompleteGroups.size());
+                ISF_LOGGER.debug("added chromosomes({} & {}) newGroups({}) new hardFiltered({})",
+                        chromosome, otherChromosome, newIncompleteGroups.size(),
+                        chrHardFilteredReadIds.values().stream().mapToInt(x -> x.size()).sum());
             }
             else
             {
+                removePartialGroupsWithHardFilteredMatch(existingGroups, chrHardFilteredReadIds);
+
+                mHardFilteredCache.removeHardFilteredReads(chromosome, chrIncompleteGroups, chrHardFilteredReadIds);
+
                 mergeChimericReadMaps(existingGroups, completeGroups, newIncompleteGroups);
+
+                // check and remove previously hard-filtered supplementary read groups
+                // purge any hard-filtered groups involving these 2 chromosomes since they won't be handled again
+                mHardFilteredCache.purgeChromosomeEntries(chromosome, otherChromosome);
 
                 ISF_LOGGER.debug("combined chromosomes({} & {}) existing({}) new({}) complete({})",
                         chromosome, otherChromosome, existingGroups.size(), newIncompleteGroups.size(), completeGroups.size());
             }
         }
 
-        int newIncomplete = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
+        mHardFilteredCache.addHardFilteredReads(chrHardFilteredReadIds);
 
-        int partialGroupCount = chrIncompleteGroups.values().stream().mapToInt(x -> x.size()).sum();
+        int newTotalIncomplete = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
+        int newTotalHardFiltered = mHardFilteredCache.cacheCount();
+        int newChrHardFiltered = chrHardFilteredReadIds.values().stream().mapToInt(x -> x.size()).sum();;
 
-        ISF_LOGGER.info("chr({}) chimeric groups(partial={} complete={}) total incomplete({} -> {})",
-                chromosome, partialGroupCount, completeGroups.size(), prevIncomplete, newIncomplete);
+        ISF_LOGGER.info("chr({}) complete({}) partials chr({}) total({} -> {}), filtered chr({} -> {}) total({} -> {})",
+                chromosome, completeGroups.size(), initChrIncomplete, initTotalIncomplete, newTotalIncomplete,
+                initChrHardFiltered, newChrHardFiltered, initTotalHardFiltered, newTotalHardFiltered);
 
         return completeGroups;
     }
