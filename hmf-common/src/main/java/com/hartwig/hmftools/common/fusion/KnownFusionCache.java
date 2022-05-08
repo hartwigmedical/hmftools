@@ -40,6 +40,7 @@ public class KnownFusionCache
     private boolean mHasValidData;
 
     public static final String KNOWN_FUSIONS_FILE = "known_fusion_file";
+    public static final String KNOWN_FUSIONS_FILE_DESC = "Known fusion reference data file";
     private static final String FILE_DELIMITER = ",";
 
     public static final Logger KF_LOGGER = LogManager.getLogger(KnownFusionCache.class);

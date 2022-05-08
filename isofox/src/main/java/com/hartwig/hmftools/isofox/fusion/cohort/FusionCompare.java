@@ -1,7 +1,12 @@
 package com.hartwig.hmftools.isofox.fusion.cohort;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
+import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
+import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
@@ -25,7 +30,9 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.isofox.fusion.FusionData;
+import com.hartwig.hmftools.isofox.fusion.FusionUtils;
 import com.hartwig.hmftools.isofox.loader.DataLoaderConfig;
 
 import org.apache.commons.cli.CommandLine;
@@ -37,6 +44,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class FusionCompare
 {
+    private final KnownFusionCache mKnownFusionCache;
     private final String mFusionFileOrig;
     private final String mFusionFileNew;
 
@@ -47,15 +55,29 @@ public class FusionCompare
     private int mDiffCount;
     private int mUnmatchOrig;
     private int mUnmatchNew;
+    private final int mMinSplitFrags;
 
     private static final String FUSION_FILE_ORIG = "fusions_orig";
     private static final String FUSION_FILE_NEW = "fusions_new";
     private static final String SAMPLE_IDS_FILE = "sample_id_file";
+    private static final String MIN_SPLIT_FRAGS = "min_split_frags";
 
     public FusionCompare(final CommandLine cmd)
     {
         mFusionFileOrig = cmd.getOptionValue(FUSION_FILE_ORIG);
         mFusionFileNew = cmd.getOptionValue(FUSION_FILE_NEW);
+        mMinSplitFrags = Integer.parseInt(cmd.getOptionValue(MIN_SPLIT_FRAGS, "0"));
+
+        if(cmd.hasOption(KNOWN_FUSIONS_FILE))
+        {
+            mKnownFusionCache = new KnownFusionCache();
+            mKnownFusionCache.loadFromFile(cmd);
+        }
+        else
+        {
+            mKnownFusionCache = null;
+        }
+
         mMatchedCount = 0;
         mDiffCount = 0;
         mUnmatchOrig = 0;
@@ -102,10 +124,10 @@ public class FusionCompare
                     ISF_LOGGER.info("processed {} samples", processed);
                 }
             }
-
-            ISF_LOGGER.info("matched({}) diffs({}) unmatched(orig={} new={})",
-                    mMatchedCount, mDiffCount, mUnmatchOrig, mUnmatchNew);
         }
+
+        ISF_LOGGER.info("matched({}) diffs({}) unmatched(orig={} new={})",
+                mMatchedCount, mDiffCount, mUnmatchOrig, mUnmatchNew);
 
         closeBufferedWriter(mWriter);
     }
@@ -256,7 +278,10 @@ public class FusionCompare
 
         for(FusionData fusion : fusions)
         {
-            String chrPair = fusion.Chromosomes[SE_START] + "_" + fusion.Chromosomes[SE_END];
+            if(ignoreNonKnownFusion(fusion))
+                continue;
+
+            String chrPair = FusionUtils.formChromosomePair(fusion.Chromosomes);
 
             List<FusionData> chrFusions = chrMap.get(chrPair);
             if(chrFusions == null)
@@ -266,6 +291,26 @@ public class FusionCompare
             }
 
             chrFusions.add(fusion);
+        }
+
+        // remove duplicates
+        for(List<FusionData> chrFusions : chrMap.values())
+        {
+            for(int i = 0; i < chrFusions.size() - 1; ++i)
+            {
+                FusionData fusion1 = chrFusions.get(i);
+
+                int j = i + 1;
+                while(j < chrFusions.size())
+                {
+                    FusionData fusion2 = chrFusions.get(j);
+
+                    if(matchOnCoords(fusion1, fusion2))
+                        chrFusions.remove(j);
+                    else
+                        ++j;
+                }
+            }
         }
 
         return chrMap;
@@ -285,13 +330,41 @@ public class FusionCompare
         return true;
     }
 
+    private static boolean hasFragmentDiff(int frags1, int frags2)
+    {
+        int diff = abs(frags1 - frags2);
+        double diffPerc = diff / max(frags1, frags2);
+        return diff >= 1 && diffPerc >= 0.1;
+    }
+
     private static void compareFusionDetails(final FusionData fusion1, final FusionData fusion2, final List<String> diffs)
     {
-        if(fusion1.TotalFrags != fusion2.TotalFrags)
-            diffs.add(String.format("totalFrags(%d/%d)", fusion1.TotalFrags, fusion2.TotalFrags));
+        if(hasFragmentDiff(fusion1.TotalFrags, fusion2.TotalFrags) || hasFragmentDiff(fusion1.SplitFrags, fusion2.SplitFrags))
+            diffs.add(String.format("totalFrags(%d/%d) splitFrags(%d/%d)",
+                    fusion1.TotalFrags, fusion2.TotalFrags, fusion1.SplitFrags, fusion2.SplitFrags));
 
         if(!Arrays.equals(fusion1.GeneNames, fusion2.GeneNames))
             diffs.add(String.format("genes(%s/%s)", fusion1.name(), fusion2.name()));
+    }
+
+    private boolean ignoreNonKnownFusion(final FusionData fusion)
+    {
+        if(mKnownFusionCache == null)
+            return false;
+
+        if(mKnownFusionCache.hasKnownFusion(fusion.GeneNames[FS_UP], fusion.GeneNames[FS_DOWN]))
+            return false;
+
+        if(mKnownFusionCache.hasAnyIgFusion(fusion.GeneNames[FS_UP]) || mKnownFusionCache.hasAnyIgFusion(fusion.GeneNames[FS_DOWN]))
+            return false;
+
+        if(mKnownFusionCache.hasPromiscuousThreeGene(fusion.GeneNames[FS_DOWN]))
+            return false;
+
+        if(mKnownFusionCache.hasPromiscuousFiveGene(fusion.GeneNames[FS_UP]))
+            return false;
+
+        return true;
     }
 
     public BufferedWriter initialiseWriter(final String outputDir, final String outputId)
@@ -320,6 +393,15 @@ public class FusionCompare
     private void writeFusionDiffs(
             final String sampleId, final String matchType, final FusionData origFusion, final FusionData newFusion, final List<String> diffs)
     {
+        if(mMinSplitFrags > 1)
+        {
+            if(origFusion != null && origFusion.SplitFrags < mMinSplitFrags)
+                return;
+
+            if(newFusion != null && newFusion.SplitFrags < mMinSplitFrags)
+                return;
+        }
+
         try
         {
             final FusionData refFusion = origFusion != null ? origFusion : newFusion;
@@ -353,6 +435,8 @@ public class FusionCompare
         options.addOption(FUSION_FILE_ORIG, true, "Original fusions file");
         options.addOption(FUSION_FILE_NEW, true, "New fusions file");
         options.addOption(SAMPLE_IDS_FILE, true, "Sample IDs file");
+        options.addOption(MIN_SPLIT_FRAGS, true, "Min split frags for comparisons");
+        options.addOption(KNOWN_FUSIONS_FILE, true, KNOWN_FUSIONS_FILE_DESC);
         addLoggingOptions(options);
         addOutputOptions(options);
 

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.isofox.fusion;
 
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
+import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.DEFAULT_HARD_FILTER_MIN_FRAGS;
 
@@ -60,7 +61,7 @@ public class FusionConfig
     {
         options.addOption(WRITE_CHIMERIC_READS, false, "Write chimeric read data");
         options.addOption(WRITE_CHIMERIC_FRAGS, false, "Write chimeric fragment data");
-        options.addOption(KNOWN_FUSIONS_FILE, true, "Known fusion file");
+        options.addOption(KNOWN_FUSIONS_FILE, true, KNOWN_FUSIONS_FILE_DESC);
         options.addOption(FUSION_COHORT_FILE, true, "Cohort file previously generated");
         options.addOption(MIN_FRAGS_HARD_FILTER, true, "Hard filter chimeric translocations");
         options.addOption(RUN_FUSION_PERF, false, "Write chimeric fragment data");
