@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.KNOWN;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.checkMissingGeneData;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadGroup.mergeChimericReadMaps;
+import static com.hartwig.hmftools.isofox.fusion.HardFilteredCache.removePartialGroupsWithHardFilteredMatch;
 
 import java.util.List;
 import java.util.Map;
@@ -213,8 +214,20 @@ public class FusionFinder implements Callable
         return completeGroups;
     }
 
-    public Map<String,Map<String, FusionReadGroup>> extractIncompleteReadGroups(final String chromosome)
+    public Map<String,Map<String, FusionReadGroup>> extractIncompleteReadGroups(
+            final String chromosome, final Map<String,Set<String>> chrHardFilteredIds)
     {
+        // filter out incomplete groups from the chromosome itself
+        String chrPair = formChromosomePair(chromosome, chromosome);
+
+        if(chrHardFilteredIds.containsKey(chrPair))
+        {
+            final Map<String,Set<String>> selfChrHardFilteredIds = Maps.newHashMap();
+            selfChrHardFilteredIds.put(chrPair, chrHardFilteredIds.get(chrPair));
+            removePartialGroupsWithHardFilteredMatch(mChimericPartialReadGroups, selfChrHardFilteredIds);
+            chrHardFilteredIds.remove(chrPair);
+        }
+
         Map<String,Map<String, FusionReadGroup>> chrIncompleteReadsGroups = Maps.newHashMap();
         for(FusionReadGroup readGroup : mChimericPartialReadGroups.values())
         {

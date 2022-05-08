@@ -322,8 +322,11 @@ public class FusionDataTest
 
         Map<String,Set<String>> hardFilteredReadIds = Maps.newHashMap();
 
+        Map<String,Map<String, FusionReadGroup>> chrIncompleteGroups = finder.extractIncompleteReadGroups(
+                gc3.chromosome(), hardFilteredReadIds);
+
         List<FusionReadGroup> interChromosomalGroups = fusionTaskManager.addIncompleteReadGroup(
-                gc3.chromosome(), finder.extractIncompleteReadGroups(gc3.chromosome()), hardFilteredReadIds);
+                gc3.chromosome(), chrIncompleteGroups, hardFilteredReadIds);
 
         assertTrue(interChromosomalGroups.isEmpty());
 
@@ -334,8 +337,10 @@ public class FusionDataTest
         assertEquals(3, finder2.getChimericPartialReadGroups().size());
         finder2.processLocalReadGroups(completeGroups);
 
+        chrIncompleteGroups = finder2.extractIncompleteReadGroups(gc5.chromosome(), hardFilteredReadIds);
+
         interChromosomalGroups = fusionTaskManager.addIncompleteReadGroup(
-                gc5.chromosome(), finder2.extractIncompleteReadGroups(gc5.chromosome()), hardFilteredReadIds);
+                gc5.chromosome(), chrIncompleteGroups, hardFilteredReadIds);
 
         finder2.processInterChromosomalReadGroups(interChromosomalGroups);
 

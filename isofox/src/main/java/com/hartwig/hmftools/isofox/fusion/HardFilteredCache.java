@@ -99,12 +99,6 @@ public class HardFilteredCache
         }
     }
 
-    private static boolean containsChromosome(final String chrPair, final String chromosome)
-    {
-        String[] chromosomes = chrPair.split("_", 2);
-        return chromosomes[0].equals(chromosome) || chromosomes[1].equals(chromosome);
-    }
-
     private boolean wasHardFiltered(final String chrPair, final String readId)
     {
         Set<String> filteredReadIds = mChromosomePairFilteredReads.get(chrPair);

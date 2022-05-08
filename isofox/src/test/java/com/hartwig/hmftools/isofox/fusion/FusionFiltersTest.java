@@ -264,7 +264,8 @@ public class FusionFiltersTest
         // finish chr 1
         assertEquals(1, bamReader1.getChimericReadTracker().getHardFilteredReadIds().values().stream().mapToInt(x -> x.size()).sum());
 
-        Map<String,Map<String,FusionReadGroup>> chrIncompleteReadsGroups = finderChr1.extractIncompleteReadGroups(gc5.chromosome());
+        Map<String,Map<String,FusionReadGroup>> chrIncompleteReadsGroups = finderChr1.extractIncompleteReadGroups(
+                gc5.chromosome(), bamReader1.getChimericReadTracker().getHardFilteredReadIds());
 
         List<FusionReadGroup> interChromosomalGroups = fusionTaskManager.addIncompleteReadGroup(
                 gc5.chromosome(), chrIncompleteReadsGroups, bamReader1.getChimericReadTracker().getHardFilteredReadIds());
@@ -299,7 +300,8 @@ public class FusionFiltersTest
         // finish chr 2
         assertEquals(1, bamReader2.getChimericReadTracker().getHardFilteredReadIds().values().stream().mapToInt(x -> x.size()).sum());
 
-        chrIncompleteReadsGroups = finderChr2.extractIncompleteReadGroups(gc3.chromosome());
+        chrIncompleteReadsGroups = finderChr2.extractIncompleteReadGroups(
+                gc3.chromosome(), bamReader2.getChimericReadTracker().getHardFilteredReadIds());
 
         // reconcile the 2 chromosomes:
         // the two hard-filtered refs to readId 3 are cancelled out, so there no remaining hard-filtered reads

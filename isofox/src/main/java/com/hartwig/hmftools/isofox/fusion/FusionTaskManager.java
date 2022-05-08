@@ -3,6 +3,7 @@ package com.hartwig.hmftools.isofox.fusion;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadGroup.mergeChimericReadMaps;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 import static com.hartwig.hmftools.isofox.fusion.HardFilteredCache.removePartialGroupsWithHardFilteredMatch;
 
 import java.util.List;
@@ -63,7 +64,7 @@ public class FusionTaskManager
         int initTotalIncomplete = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
         int initTotalHardFiltered = mHardFilteredCache.cacheCount();
         int initChrIncomplete = chrIncompleteGroups.values().stream().mapToInt(x -> x.size()).sum();
-        int initChrHardFiltered = chrHardFilteredReadIds.values().stream().mapToInt(x -> x.size()).sum();;
+        int initChrHardFiltered = chrHardFilteredReadIds.values().stream().mapToInt(x -> x.size()).sum();
 
         List<FusionReadGroup> completeGroups = Lists.newArrayList();
 

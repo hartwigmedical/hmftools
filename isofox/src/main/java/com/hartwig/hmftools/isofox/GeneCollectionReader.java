@@ -23,9 +23,11 @@ import static com.hartwig.hmftools.isofox.common.CommonUtils.getChromosomeLength
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.HIGH_LOG_COUNT;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
@@ -265,11 +267,14 @@ public class GeneCollectionReader implements Callable
 
             // handle fragments spanning multiple chromosomes
 
+            Map<String,Set<String>> chrHardFilteredIds = mBamFragmentAllocator.getChimericReadTracker().getHardFilteredReadIds();
+
             // organise incomplete reads into the chromosomes which they link to
-            final Map<String,Map<String,FusionReadGroup>> chrIncompleteReadsGroups = mFusionFinder.extractIncompleteReadGroups(mChromosome);
+            final Map<String,Map<String,FusionReadGroup>> chrIncompleteReadsGroups = mFusionFinder.extractIncompleteReadGroups(
+                    mChromosome, chrHardFilteredIds);
 
             final List<FusionReadGroup> interChromosomalGroups = mFusionTaskManager.addIncompleteReadGroup(
-                    mChromosome, chrIncompleteReadsGroups, mBamFragmentAllocator.getChimericReadTracker().getHardFilteredReadIds());
+                    mChromosome, chrIncompleteReadsGroups, chrHardFilteredIds);
 
             if(!interChromosomalGroups.isEmpty())
             {
