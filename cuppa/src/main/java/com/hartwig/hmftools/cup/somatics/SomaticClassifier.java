@@ -50,8 +50,8 @@ import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBE
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC_SIG_DESC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.NORMALISE_COPY_NUMBER;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.NORMALISE_COPY_NUMBER_DESC;
-import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.SPLIT_AID_APOBEC;
-import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.SPLIT_AID_APOBEC_DESC;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_AID_APOBEC;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_AID_APOBEC_DESC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.applyMaxCssAdjustment;
 import static com.hartwig.hmftools.cup.somatics.TrinucleotideCounts.convertSomaticVariantsToSnvCounts;
 
@@ -74,7 +74,6 @@ import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 import com.hartwig.hmftools.cup.common.SampleSimilarity;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -106,7 +105,7 @@ public class SomaticClassifier implements CuppaClassifier
     private boolean mIsValid;
     private BufferedWriter mCssWriter;
 
-    private final boolean mSplitAidApobecGenPos;
+    private final boolean mExcludeAidApobecGenPos;
     private final boolean mExcludeAidApobecSnv96;
 
     private final boolean mApplyCopyNumber; // to genomic positions
@@ -154,7 +153,7 @@ public class SomaticClassifier implements CuppaClassifier
         mRefSnvPosFreqCancerTypes = Lists.newArrayList();
         mRefSamplePosFreqIndex = Maps.newHashMap();
 
-        mSplitAidApobecGenPos = cmd != null ? cmd.hasOption(SPLIT_AID_APOBEC) : false;
+        mExcludeAidApobecGenPos = cmd != null ? cmd.hasOption(EXCLUDE_AID_APOBEC) : false;
         mExcludeAidApobecSnv96 = cmd != null ? cmd.hasOption(EXCLUDE_SNV_96_AID_APOBEC) : false;
         mApplyCopyNumber = cmd != null ? cmd.hasOption(NORMALISE_COPY_NUMBER) : false;
         mAidApobecSnv96Buckets = Lists.newArrayList();
@@ -230,7 +229,7 @@ public class SomaticClassifier implements CuppaClassifier
 
     public static void addCmdLineArgs(Options options)
     {
-        options.addOption(SPLIT_AID_APOBEC, false, SPLIT_AID_APOBEC_DESC);
+        options.addOption(EXCLUDE_AID_APOBEC, false, EXCLUDE_AID_APOBEC_DESC);
         options.addOption(NORMALISE_COPY_NUMBER, false, NORMALISE_COPY_NUMBER_DESC);
         options.addOption(EXCLUDE_SNV_96_AID_APOBEC, false, EXCLUDE_SNV_96_AID_APOBEC_DESC);
         options.addOption(INCLUDE_AID_APOBEC_SIG, false, INCLUDE_AID_APOBEC_SIG_DESC);
@@ -272,7 +271,7 @@ public class SomaticClassifier implements CuppaClassifier
 
                 mSampleSnvCounts = convertSomaticVariantsToSnvCounts(sampleId, somaticVariants, mSampleSnvCountsIndex);
 
-                AidApobecStatus aidApobecStatus = mSplitAidApobecGenPos ? AidApobecStatus.FALSE_ONLY : AidApobecStatus.ALL;
+                    AidApobecStatus aidApobecStatus = mExcludeAidApobecGenPos ? AidApobecStatus.FALSE_ONLY : AidApobecStatus.ALL;
                 mSamplePosFrequencies = convertSomaticVariantsToPosFrequencies(
                         sampleId, somaticVariants, mSamplePosFreqIndex, mPosFrequencies, aidApobecStatus);
             }

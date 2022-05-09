@@ -13,10 +13,8 @@ import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SIG_DATA_FILE;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CANCER_POS_FREQ_AA_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CANCER_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_COPY_NUMBER_PROFILE;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_POS_FREQ_AA_POS_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SIG_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SNV_COUNTS;
@@ -36,8 +34,8 @@ import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_13;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_2;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.NORMALISE_COPY_NUMBER;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.NORMALISE_COPY_NUMBER_DESC;
-import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.SPLIT_AID_APOBEC;
-import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.SPLIT_AID_APOBEC_DESC;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_AID_APOBEC;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_AID_APOBEC_DESC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.loadMultipleMatrixFiles;
 import static com.hartwig.hmftools.cup.somatics.TrinucleotideCounts.extractTrinucleotideCounts;
 
@@ -78,17 +76,15 @@ public class RefSomatics implements RefClassifier
 
     private Matrix mPosFreqCounts; // counts per genomic position
     private final Map<String,Integer> mPosFreqCountsIndex;
-    private Matrix mAaPositivePosFreqCounts; // counts per genomic position
     private boolean mWritePosFreqMatrixData;
 
-    private final boolean mSplitAidApobec;
+    private final boolean mExcludeAidApobec;
 
     private final boolean mBuildCopyNumber;
     private final boolean mApplyCopyNumber; // to genomic positions
     private Matrix mCopyNumberProfile; // same dimensions as genomic position
 
     private final PositionFrequencies mPosFrequencies;
-    private final PositionFrequencies mAaPositivePosFrequencies;
 
     private BufferedWriter mRefDataWriter;
 
@@ -116,15 +112,13 @@ public class RefSomatics implements RefClassifier
         mPosFreqCountsIndex = Maps.newHashMap();
         mWritePosFreqMatrixData = false;
 
-        mSplitAidApobec = cmd.hasOption(SPLIT_AID_APOBEC);
+        mExcludeAidApobec = cmd.hasOption(EXCLUDE_AID_APOBEC);
         mApplyCopyNumber = cmd.hasOption(NORMALISE_COPY_NUMBER);
-        mAaPositivePosFreqCounts = null;
 
         int posFreqBucketSize = cmd.hasOption(SNV_POS_FREQ_POS_SIZE) ?
                 Integer.parseInt(cmd.getOptionValue(SNV_POS_FREQ_POS_SIZE)) : POS_FREQ_BUCKET_SIZE;
 
         mPosFrequencies = new PositionFrequencies(posFreqBucketSize, POS_FREQ_MAX_SAMPLE_COUNT);
-        mAaPositivePosFrequencies = new PositionFrequencies(posFreqBucketSize, POS_FREQ_MAX_SAMPLE_COUNT);
 
         mBuildCopyNumber = cmd.hasOption(BUILD_CN_PROFILE);
         mCopyNumberProfile = null;
@@ -149,7 +143,7 @@ public class RefSomatics implements RefClassifier
     public static void addCmdLineArgs(@NotNull Options options)
     {
         options.addOption(SNV_POS_FREQ_POS_SIZE, true, "Genomic position bucket size (default: 20000)");
-        options.addOption(SPLIT_AID_APOBEC, false, SPLIT_AID_APOBEC_DESC);
+        options.addOption(EXCLUDE_AID_APOBEC, false, EXCLUDE_AID_APOBEC_DESC);
         options.addOption(NORMALISE_COPY_NUMBER, false, NORMALISE_COPY_NUMBER_DESC);
         options.addOption(BUILD_CN_PROFILE, false, "Build a copy-number profile to match genomic positions");
     }
@@ -196,9 +190,6 @@ public class RefSomatics implements RefClassifier
         if(mWritePosFreqMatrixData)
         {
             writeSampleMatrix(mPosFreqCounts, mPosFreqCountsIndex, REF_FILE_SAMPLE_POS_FREQ_COUNTS, INTEGER_FORMAT);
-
-            if(mAaPositivePosFreqCounts != null)
-                writeSampleMatrix(mAaPositivePosFreqCounts, mPosFreqCountsIndex, REF_FILE_SAMPLE_POS_FREQ_AA_POS_COUNTS, INTEGER_FORMAT);
         }
 
         if(mBuildCopyNumber)
@@ -223,14 +214,6 @@ public class RefSomatics implements RefClassifier
                 mPosFrequencies, mPosFreqCounts, mPosFreqCountsIndex,
                 mApplyCopyNumber ? mCopyNumberProfile : null, mSampleDataCache.RefSampleTraitsData,
                 mSampleDataCache.RefCancerSampleData, mConfig.OutputDir + REF_FILE_CANCER_POS_FREQ_COUNTS);
-
-        if(mAaPositivePosFreqCounts != null)
-        {
-            buildCancerPosFrequencies(
-                    mAaPositivePosFrequencies, mAaPositivePosFreqCounts, mPosFreqCountsIndex,
-                    mApplyCopyNumber ? mCopyNumberProfile : null    , mSampleDataCache.RefSampleTraitsData, mSampleDataCache.RefCancerSampleData,
-                    mConfig.OutputDir + REF_FILE_CANCER_POS_FREQ_AA_COUNTS);
-        }
 
         closeBufferedWriter(mRefDataWriter);
     }
@@ -328,9 +311,6 @@ public class RefSomatics implements RefClassifier
         if(mPosFreqCounts == null)
         {
             mPosFreqCounts = new Matrix(mPosFrequencies.getBucketCount(), refSampleCount);
-
-            if(mSplitAidApobec)
-                mAaPositivePosFreqCounts = new Matrix(mPosFrequencies.getBucketCount(), refSampleCount);
         }
 
         final Map<String,Integer> triNucBucketNameMap = Maps.newHashMap();
@@ -382,19 +362,9 @@ public class RefSomatics implements RefClassifier
                 int refSampleIndex = mPosFreqCountsIndex.size();
                 mPosFreqCountsIndex.put(sampleId, refSampleIndex);
 
-                if(mSplitAidApobec)
-                {
-                    extractPositionFrequencyCounts(variants, mPosFrequencies, AidApobecStatus.FALSE_ONLY);
-                    mPosFreqCounts.setCol(refSampleIndex, mPosFrequencies.getCounts());
-
-                    extractPositionFrequencyCounts(variants, mAaPositivePosFrequencies, AidApobecStatus.TRUE_ONLY);
-                    mAaPositivePosFreqCounts.setCol(refSampleIndex, mAaPositivePosFrequencies.getCounts());
-                }
-                else
-                {
-                    extractPositionFrequencyCounts(variants, mPosFrequencies, AidApobecStatus.ALL);
-                    mPosFreqCounts.setCol(refSampleIndex, mPosFrequencies.getCounts());
-                }
+                AidApobecStatus aidApobecStatus = mExcludeAidApobec ? AidApobecStatus.FALSE_ONLY : AidApobecStatus.ALL;
+                extractPositionFrequencyCounts(variants, mPosFrequencies, aidApobecStatus);
+                mPosFreqCounts.setCol(refSampleIndex, mPosFrequencies.getCounts());
             }
         }
     }
