@@ -29,7 +29,7 @@ public class PanelQCFailChapter implements ReportChapter {
     @NotNull
     @Override
     public String name() {
-        return Strings.EMPTY;
+        return report.isCorrectedReport() ? TITLE_REPORT + " (Corrected)" : TITLE_REPORT;
     }
 
     @NotNull
