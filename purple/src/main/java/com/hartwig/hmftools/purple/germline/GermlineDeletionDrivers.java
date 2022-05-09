@@ -145,7 +145,7 @@ public class GermlineDeletionDrivers
             }
         }
 
-        if(region.observedNormalRatio() > GERMLINE_DEL_NORMAL_RATIO)
+        if(!filters.contains(FILTER_CN_INCONSISTENCY) && region.observedNormalRatio() > GERMLINE_DEL_NORMAL_RATIO)
         {
             filters.add(FILTER_CN_INCONSISTENCY);
         }
