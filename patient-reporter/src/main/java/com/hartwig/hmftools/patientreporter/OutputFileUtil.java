@@ -17,9 +17,9 @@ public final class OutputFileUtil {
         SampleReport sampleReport = report.sampleReport();
         LimsCohortConfig cohort = report.sampleReport().cohort();
 
-        String filePrefix =
-                cohort.requireHospitalId() ? sampleReport.tumorSampleId() + "_"
-                        + sampleReport.hospitalPatientId().replace(" ", "_") : sampleReport.tumorSampleId();
+        String filePrefix = cohort.requireHospitalId()
+                ? sampleReport.tumorSampleId() + "_" + sampleReport.hospitalPatientId().replace(" ", "_")
+                : sampleReport.tumorSampleId();
 
         String fileSuffix = report.isCorrectedReport() ? "_corrected.pdf" : ".pdf";
 
@@ -33,9 +33,9 @@ public final class OutputFileUtil {
         SampleReport sampleReport = report.sampleReport();
         LimsCohortConfig cohort = report.sampleReport().cohort();
 
-        String filePrefix =
-                cohort.requireHospitalId() ? sampleReport.tumorSampleId() + "_"
-                        + sampleReport.hospitalPatientId().replace(" ", "_") : sampleReport.tumorSampleId();
+        String filePrefix = cohort.requireHospitalId()
+                ? sampleReport.tumorSampleId() + "_" + sampleReport.hospitalPatientId().replace(" ", "_")
+                : sampleReport.tumorSampleId();
 
         String fileSuffix = report.isCorrectedReport() ? "_corrected.pdf" : ".pdf";
 
@@ -49,8 +49,8 @@ public final class OutputFileUtil {
         String filePrefix = report.sampleReport().tumorSampleId() + "_" + report.sampleReport().tumorSampleBarcode();
         String failPrefix = report instanceof QCFailReport ? "_failed" : Strings.EMPTY;
         String fileSuffix;
-        if (report.isCorrectedReport()){
-            if (report.isCorrectedReportExtern()){
+        if (report.isCorrectedReport()) {
+            if (report.isCorrectedReportExtern()) {
                 fileSuffix = "_corrected_external.json";
             } else {
                 fileSuffix = "_corrected_internal.json";
@@ -58,7 +58,7 @@ public final class OutputFileUtil {
         } else {
             fileSuffix = ".json";
         }
-        return filePrefix +failPrefix + fileSuffix;
+        return filePrefix + failPrefix + fileSuffix;
     }
 
     @NotNull
@@ -66,8 +66,8 @@ public final class OutputFileUtil {
         String filePrefix = report.sampleReport().tumorSampleId() + "_" + report.sampleReport().tumorSampleBarcode();
         String failPrefix = report instanceof QCFailReport ? "_failed" : Strings.EMPTY;
         String fileSuffix;
-        if (report.isCorrectedReport()){
-            if (report.isCorrectedReportExtern()){
+        if (report.isCorrectedReport()) {
+            if (report.isCorrectedReportExtern()) {
                 fileSuffix = "_corrected_external.json";
             } else {
                 fileSuffix = "_corrected_internal.json";
@@ -75,6 +75,6 @@ public final class OutputFileUtil {
         } else {
             fileSuffix = ".json";
         }
-        return filePrefix +failPrefix + fileSuffix;
+        return filePrefix + failPrefix + fileSuffix;
     }
 }

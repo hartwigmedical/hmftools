@@ -43,7 +43,15 @@ public class ReportingDb {
 
             String reason = "oncopanel_result_report";
 
-            String reportType = report.isCorrectedReport() ? reason + "_corrected" : reason;
+            String reportType = reason;
+
+            if (report.isCorrectedReport()) {
+                if (report.isCorrectedReportExtern()) {
+                    reportType = reportType + "_corrected_external";
+                } else {
+                    reportType = reportType + "_corrected_internal";
+                }
+            }
 
             writeApiUpdateJson(outputDirectory, tumorBarcode, sampleId, cohort, reportType, report.reportDate(), NA_STRING, null, null);
 
@@ -59,7 +67,15 @@ public class ReportingDb {
 
             String reason = report.panelFailReason().identifier();
 
-            String reportType = report.isCorrectedReport() ? reason + "_corrected" : reason;
+            String reportType = reason;
+
+            if (report.isCorrectedReport()) {
+                if (report.isCorrectedReportExtern()) {
+                    reportType = reportType + "_corrected_external";
+                } else {
+                    reportType = reportType + "_corrected_internal";
+                }
+            }
 
             writeApiUpdateJson(outputDirectory, tumorBarcode, sampleId, cohort, reportType, report.reportDate(), NA_STRING, null, null);
 
@@ -149,7 +165,15 @@ public class ReportingDb {
             LimsCohortConfig cohort = report.sampleReport().cohort();
             String tumorBarcode = report.sampleReport().tumorSampleBarcode();
 
-            String reportType = report.isCorrectedReport() ? report.reason().identifier() + "_corrected" : report.reason().identifier();
+            String reportType = report.reason().identifier();
+
+            if (report.isCorrectedReport()) {
+                if (report.isCorrectedReportExtern()) {
+                    reportType = reportType + "_corrected_external";
+                } else {
+                    reportType = reportType + "_corrected_internal";
+                }
+            }
 
             writeApiUpdateJson(outputDirectory, tumorBarcode, sampleId, cohort, reportType, report.reportDate(), NA_STRING, null, null);
 
