@@ -14,8 +14,9 @@ public class ActinFilterFileTest {
     private static final String TEST_ACTIN_FILTER_FILE = Resources.getResource("actin/filter.tsv").getPath();
 
     @Test
-    public void canReadCkbFilterTsv() throws IOException {
+    public void canReadActinFilterTsv() throws IOException {
         List<ActinFilterEntry> filterEntries = ActinFilterFile.read(TEST_ACTIN_FILTER_FILE);
+
         assertEquals(1, filterEntries.size());
     }
 }

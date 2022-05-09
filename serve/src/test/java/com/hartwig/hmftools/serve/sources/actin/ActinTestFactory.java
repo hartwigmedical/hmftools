@@ -6,6 +6,7 @@ import com.hartwig.hmftools.serve.sources.actin.reader.ImmutableActinEntry;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class ActinTestFactory {
 
@@ -13,22 +14,17 @@ public final class ActinTestFactory {
     }
 
     @NotNull
-    public static ActinEntry createTestEntry() {
+    public static ImmutableActinEntry.Builder builder() {
         return ImmutableActinEntry.builder()
                 .trial(Strings.EMPTY)
                 .rule(ActinRule.ACTIVATION_OR_AMPLIFICATION_OF_GENE_X)
                 .gene(Strings.EMPTY)
                 .mutation(Strings.EMPTY)
-                .build();
+                .isUsedAsInclusion(false);
     }
 
     @NotNull
-    public static ActinEntry createTestEntryWithData(@NotNull ActinRule actinRule, @NotNull String gene, @NotNull String mutation) {
-        return ImmutableActinEntry.builder()
-                .trial("A")
-                .rule(actinRule)
-                .gene(gene)
-                .mutation(mutation)
-                .build();
+    public static ActinEntry create(@NotNull ActinRule actinRule, @Nullable String gene, @Nullable String mutation) {
+        return builder().trial("A").rule(actinRule).gene(gene).mutation(mutation).isUsedAsInclusion(true).build();
     }
 }

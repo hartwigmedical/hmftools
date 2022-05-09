@@ -9,7 +9,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.serve.sources.actin.ActinTestFactory;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinRule;
-import com.hartwig.hmftools.serve.sources.actin.reader.ImmutableActinEntry;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -26,25 +25,19 @@ public class ActinFilterTest {
 
         ActinFilter filter = new ActinFilter(filterEntries);
 
-        ActinEntry brafV600E =
-                ImmutableActinEntry.builder().from(ActinTestFactory.createTestEntry()).gene("BRAF").mutation("V600E").build();
+        ActinEntry brafV600E = ActinTestFactory.builder().gene("BRAF").mutation("V600E").build();
         assertTrue(filter.run(Lists.newArrayList(brafV600E)).isEmpty());
 
-        ActinEntry brafActivation = ImmutableActinEntry.builder()
-                .from(ActinTestFactory.createTestEntry())
-                .rule(ActinRule.ACTIVATING_MUTATION_IN_GENE_X)
-                .gene("BRAF")
-                .build();
+        ActinEntry brafActivation = ActinTestFactory.builder().rule(ActinRule.ACTIVATING_MUTATION_IN_GENE_X).gene("BRAF").build();
         assertTrue(filter.run(Lists.newArrayList(brafActivation)).isEmpty());
 
-        ActinEntry kras = ImmutableActinEntry.builder().from(ActinTestFactory.createTestEntry()).gene("KRAS").build();
+        ActinEntry kras = ActinTestFactory.builder().gene("KRAS").build();
         assertTrue(filter.run(Lists.newArrayList(kras)).isEmpty());
 
-        ActinEntry wildtype =
-                ImmutableActinEntry.builder().from(ActinTestFactory.createTestEntry()).rule(ActinRule.WILDTYPE_OF_GENE_X).build();
+        ActinEntry wildtype = ActinTestFactory.builder().rule(ActinRule.WILDTYPE_OF_GENE_X).build();
         assertTrue(filter.run(Lists.newArrayList(wildtype)).isEmpty());
 
-        ActinEntry tmb = ImmutableActinEntry.builder().from(ActinTestFactory.createTestEntry()).rule(ActinRule.TMB_OF_AT_LEAST_X).build();
+        ActinEntry tmb = ActinTestFactory.builder().rule(ActinRule.TMB_OF_AT_LEAST_X).build();
         assertFalse(filter.run(Lists.newArrayList(tmb)).isEmpty());
 
         filter.reportUnusedFilterEntries();

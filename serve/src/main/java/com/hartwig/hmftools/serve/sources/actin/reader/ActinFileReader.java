@@ -43,9 +43,11 @@ public final class ActinFileReader {
 
         return ImmutableActinEntry.builder()
                 .trial(values[fields.get("trial")])
+                .cohort(emptyToNull(values[fields.get("cohort")]))
                 .rule(ActinRule.valueOf(values[fields.get("rule")]))
                 .gene(emptyToNull(values[fields.get("gene")]))
                 .mutation(emptyToNull(values[fields.get("mutation")]))
+                .isUsedAsInclusion(Boolean.parseBoolean(values[fields.get("isUsedAsInclusion")]))
                 .build();
     }
 
