@@ -267,7 +267,8 @@ public class SomaticClassifier implements CuppaClassifier
                 }
                 else
                 {
-                    final String somaticVcfFile = purpleSomaticVcfFile(mConfig.PurpleDir, sampleId);
+                    String purpleDir = mConfig.getPurpleDataDir(sampleId);
+                    final String somaticVcfFile = purpleSomaticVcfFile(purpleDir, sampleId);
                     somaticVariants.addAll(loadSomaticVariants(somaticVcfFile, Lists.newArrayList(SNP)));
                 }
 

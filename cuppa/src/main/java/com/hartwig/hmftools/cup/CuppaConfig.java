@@ -296,6 +296,15 @@ public class CuppaConfig
         return outputFile + "." + fileId + ".csv";
     }
 
+    public String getLinxDataDir(final String sampleId) { return getSampleDataDir(sampleId, LinxDir); }
+    public String getPurpleDataDir(final String sampleId) { return getSampleDataDir(sampleId, PurpleDir); }
+    public String getIsofoxDataDir(final String sampleId) { return getSampleDataDir(sampleId, IsofoxDir); }
+
+    private String getSampleDataDir(final String sampleId, final String specificDir)
+    {
+        return !SampleDataDir.isEmpty() ? formSamplePath(SampleDataDir, sampleId) : formSamplePath(specificDir, sampleId);
+    }
+
     public static String formSamplePath(final String samplePath, final String sampleId)
     {
         if(!samplePath.contains("*"))

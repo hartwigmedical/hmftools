@@ -512,7 +512,7 @@ public class AltSjClassifier implements CuppaClassifier
 
     private boolean loadSampleAltSJsToArray(final String sampleId)
     {
-        final String filename = AltSpliceJunctionFile.generateFilename(mConfig.SampleDataDir, sampleId);
+        final String filename = AltSpliceJunctionFile.generateFilename(mConfig.getIsofoxDataDir(sampleId), sampleId);
 
         mSampleFragCounts.initialise(0);
         final double[][] sampleFragCounts = mSampleFragCounts.getData();

@@ -265,8 +265,8 @@ public class FeatureClassifier implements CuppaClassifier
 
         for(SampleData sample : mSampleDataCache.SampleDataList)
         {
-            final String linxDataDir = formSamplePath(mConfig.LinxDir, sample.Id);
-            final String purpleDataDir = formSamplePath(mConfig.PurpleDir, sample.Id);
+            final String linxDataDir = mConfig.getLinxDataDir(sample.Id);
+            final String purpleDataDir = mConfig.getPurpleDataDir(sample.Id);
 
             if(!loadFeaturesFromFile(sample.Id, linxDataDir, purpleDataDir, mSampleFeatures))
                 break;

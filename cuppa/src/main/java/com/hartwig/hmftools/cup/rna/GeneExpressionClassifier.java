@@ -144,7 +144,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
             if(mSampleDataCache.isSingleSample())
             {
                 final String sampleId = mSampleDataCache.SampleIds.get(0);
-                final String filename = GeneExpressionFile.generateFilename(mConfig.SampleDataDir, sampleId);
+                final String filename = GeneExpressionFile.generateFilename(mConfig.getIsofoxDataDir(sampleId), sampleId);
                 CUP_LOGGER.debug("loading sample gene-expression data file({})", filename);
 
                 mSampleIndexMap.put(sampleId, 0);
