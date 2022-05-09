@@ -49,19 +49,19 @@ public final class CopyNumberProfile
 
             if(config.DbAccess != null)
             {
-                cnProfile = extractCopyNumberProfile(sampleId, config.DbAccess, null, posFrequencies);
+                cnProfile = extractSampleCopyNumberProfile(sampleId, config.DbAccess, null, posFrequencies);
             }
             else
             {
                 final String purpleCopyNumberFile = formSamplePath(config.SampleCopyNumberFile, sampleId);
-                cnProfile = extractCopyNumberProfile(sampleId, null, purpleCopyNumberFile, posFrequencies);
+                cnProfile = extractSampleCopyNumberProfile(sampleId, null, purpleCopyNumberFile, posFrequencies);
             }
 
             copyNumberMatrix.setCol(sampleIndex, cnProfile);
         }
     }
 
-    public static double[] extractCopyNumberProfile(
+    public static double[] extractSampleCopyNumberProfile(
             final String sampleId, final DatabaseAccess dbAccess, final String copyNumberFile, final PositionFrequencies posFrequencies)
     {
         try

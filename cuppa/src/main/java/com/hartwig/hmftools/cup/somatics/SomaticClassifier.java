@@ -36,6 +36,7 @@ import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
+import static com.hartwig.hmftools.cup.somatics.CopyNumberProfile.extractSampleCopyNumberProfile;
 import static com.hartwig.hmftools.cup.somatics.CopyNumberProfile.normaliseGenPosCountsByCopyNumber;
 import static com.hartwig.hmftools.cup.somatics.GenomicPositions.convertSomaticVariantsToPosFrequencies;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
@@ -62,6 +63,7 @@ import java.util.Map;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.sigs.SnvSigUtils;
 import com.hartwig.hmftools.common.utils.Matrix;
@@ -72,6 +74,7 @@ import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 import com.hartwig.hmftools.cup.common.SampleSimilarity;
+import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -496,7 +499,26 @@ public class SomaticClassifier implements CuppaClassifier
         if(mApplyCopyNumber)
         {
             double samplePloidy = mSampleDataCache.RefSampleTraitsData.get(sample.Id).Ploidy;
-            final double[] sampleCnProfile = mRefSampleCopyNumberProfiles.getCol(sampleCountsIndex);
+
+            double[] sampleCnProfile = null;
+
+            if(sample.isRefSample())
+            {
+                sampleCnProfile = mRefSampleCopyNumberProfiles.getCol(sampleCountsIndex);
+            }
+            else if(!mConfig.SampleDataDir.isEmpty())
+            {
+                final String copyNumberFile = PurpleCopyNumberFile.generateFilenameForReading(mConfig.SampleDataDir, sample.Id);
+                sampleCnProfile = extractSampleCopyNumberProfile(sample.Id, mConfig.DbAccess, copyNumberFile, mPosFrequencies);
+            }
+
+            if(sampleCnProfile == null)
+            {
+                CUP_LOGGER.error("sample({}) missing Purple copy number data for normalisation", sample.Id);
+                mIsValid = false;
+                return;
+            }
+
             sampleCounts = normaliseGenPosCountsByCopyNumber(samplePloidy, sampleCounts, sampleCnProfile);
         }
 
