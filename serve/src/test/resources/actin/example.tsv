@@ -1,4 +1,4 @@
-trial	rule	gene	mutation	isUsedAsInclusion
-Trial 1	TMB_OF_AT_LEAST_X		TMB >= 16	true
-Trial 2	INACTIVATION_OF_GENE_X	TP53		true
-Trial 3	MUTATION_IN_GENE_X_OF_TYPE_Y	CCND1	3' UTR LOSS	true
+trial	cohort	rule	gene	mutation	isUsedAsInclusion
+Trial 1	A	TMB_OF_AT_LEAST_X		TMB >= 16	true
+Trial 2	B	INACTIVATION_OF_GENE_X	TP53		true
+Trial 3		MUTATION_IN_GENE_X_OF_TYPE_Y	CCND1	3' UTR LOSS	true

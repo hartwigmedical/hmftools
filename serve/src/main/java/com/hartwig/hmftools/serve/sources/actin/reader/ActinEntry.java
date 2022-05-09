@@ -12,6 +12,9 @@ public abstract class ActinEntry {
     @NotNull
     public abstract String trial();
 
+    @Nullable
+    public abstract String cohort();
+
     @NotNull
     public abstract ActinRule rule();
 
@@ -20,4 +23,6 @@ public abstract class ActinEntry {
 
     @Nullable
     public abstract String mutation();
+
+    public abstract boolean isUsedAsInclusion();
 }
