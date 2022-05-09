@@ -572,7 +572,7 @@ public class ChimericReadTracker
 
         HardFilteredCache.applyHardFilter(
                 mSupplementaryJunctions, mHardFilteredReadIds, mChimericReadMap, mGeneCollection.chromosome(),
-                mConfig.Fusions.MinHardFilterFrags);
+                mConfig.Fusions.MinHardFilterFrags, mGeneCollection.getCommonExonicRegions());
 
         mSupplementaryJunctions.clear();
     }

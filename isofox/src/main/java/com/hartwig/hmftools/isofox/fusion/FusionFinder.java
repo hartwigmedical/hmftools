@@ -111,7 +111,6 @@ public class FusionFinder implements Callable
    }
 
     public final List<FusionFragment> getFragments() { return mAllFragments; } // only used by FusionFragmentReplay, can refactor
-    public int hardFilteredCount() { return mHardFilteredCount; }
 
     // all for testing only
     public final Map<String,List<FusionReadData>> getFusionCandidates() { return mFusionCandidates; }
@@ -119,6 +118,7 @@ public class FusionFinder implements Callable
     public final Map<String, FusionReadGroup> getChimericPartialReadGroups() { return mChimericPartialReadGroups; }
     public final List<FusionReadGroup> getSpanningReadGroups() { return mSpanningReadGroups; }
     public final RacFragmentCache racFragmentCache() { return mRacFragmentCache; }
+    public int getHardFilteredCount() { return mHardFilteredCount; }
 
     public void clearState(boolean isFinal)
     {
@@ -1030,7 +1030,6 @@ public class FusionFinder implements Callable
         if(junctionTypes[SE_START] == KNOWN || junctionTypes[SE_END] == KNOWN)
             return false;
 
-        ++mHardFilteredCount;
         return true;
     }
 

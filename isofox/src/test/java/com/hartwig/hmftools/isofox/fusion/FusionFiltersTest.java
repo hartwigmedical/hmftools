@@ -239,10 +239,10 @@ public class FusionFiltersTest
 
         bamReader1.processReadRecords(gc5, Lists.newArrayList(read2, readPair2[0]));
 
-        // single read for a new junction, hard-filtered
+        // single read for a new junction, hard-filtered - cannot be at a known splice site
         ReadRecord read3 = createMappedRead(readId3, gc5, 10410, 10449, createCigar(0, 40, 20));
 
-        ReadRecord[] readPair3 = createSupplementaryReadPair(readId3, gc5, gc3, 10400, 10419, 20481, 20500,
+        ReadRecord[] readPair3 = createSupplementaryReadPair(readId3, gc5, gc3, 10401, 10420, 20480, 20499,
                 createCigar(20, 20, 0), createCigar(0, 20, 20), true);
 
         readPair3[0].setStrand(true, false);

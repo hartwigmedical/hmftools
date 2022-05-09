@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.chro
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.isofox.fusion.SupplementaryJunctionData.fromReads;
 
 import java.util.List;
 import java.util.Map;
@@ -12,20 +11,22 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.beust.jcommander.internal.Sets;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class HardFilteredCache
 {
     private final Map<String,Set<String>> mChromosomePairFilteredReads;
+    private int mHardFilteredCount;
 
     public HardFilteredCache()
     {
         mChromosomePairFilteredReads = Maps.newHashMap();
+        mHardFilteredCount = 0;
     }
 
     public int cacheCount() { return mChromosomePairFilteredReads.values().stream().mapToInt(x -> x.size()).sum(); }
     public int chrPairCount() { return mChromosomePairFilteredReads.size(); }
+    public int hardFilteredCount() { return mHardFilteredCount; }
 
     public void addHardFilteredReads(final Map<String,Set<String>> hardFilteredReadIds)
     {
@@ -42,6 +43,7 @@ public class HardFilteredCache
             }
 
             filteredReadIds.addAll(entry.getValue());
+            mHardFilteredCount += entry.getValue().size();
         }
     }
 
@@ -127,13 +129,14 @@ public class HardFilteredCache
 
     public static void applyHardFilter(
             final Map<Integer,List<SupplementaryJunctionData>> supplementaryJunctions, final Map<String,Set<String>> hardFilteredReadIds,
-            final Map<String,ChimericReadGroup> chimericReadMap, final String localChromosome, int minSplitFrags)
+            final Map<String,ChimericReadGroup> chimericReadMap, final String localChromosome, int minSplitFrags,
+            final List<int[]> knownSpliceSites)
     {
         if(minSplitFrags <= 1)
             return;
 
         // filter will be repeated in the fusion finding routine when all info is known, but for now hard-filter any read groups
-        // without a read matching a known fusion gene
+        // without a read matching a known fusion gene or matching a known split site
 
         for(List<SupplementaryJunctionData> suppJunctions : supplementaryJunctions.values())
         {
@@ -141,6 +144,12 @@ public class HardFilteredCache
             {
                 if(suppJuncData.MatchCount + 1 >= minSplitFrags)
                     continue;
+
+                if(matchesKnownSpliceSite(suppJuncData.LocalJunctionPos, knownSpliceSites)
+                || matchesKnownSpliceSite(suppJuncData.RemoteJunctionPos, knownSpliceSites))
+                {
+                    continue;
+                }
 
                 String chrPair = formChromosomePairString(localChromosome, suppJuncData.RemoteChromosome);
 
@@ -158,5 +167,16 @@ public class HardFilteredCache
                 }
             }
         }
+    }
+
+    private static boolean matchesKnownSpliceSite(int position, final List<int[]> knownSpliceSites)
+    {
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            if(knownSpliceSites.stream().anyMatch(x -> x[SE_START] == position))
+                return true;
+        }
+
+        return false;
     }
 }
