@@ -265,10 +265,10 @@ public class FeatureClassifier implements CuppaClassifier
 
         for(SampleData sample : mSampleDataCache.SampleDataList)
         {
-            final String sampleDataDir = formSamplePath(mConfig.SampleDataDir, sample.Id);
-            final String somaticVcf = formSamplePath(mConfig.SampleSomaticVcf, sample.Id);
+            final String linxDataDir = formSamplePath(mConfig.LinxDir, sample.Id);
+            final String purpleDataDir = formSamplePath(mConfig.PurpleDir, sample.Id);
 
-            if(!loadFeaturesFromFile(sample.Id, sampleDataDir, somaticVcf, mSampleFeatures))
+            if(!loadFeaturesFromFile(sample.Id, linxDataDir, purpleDataDir, mSampleFeatures))
                 break;
         }
 

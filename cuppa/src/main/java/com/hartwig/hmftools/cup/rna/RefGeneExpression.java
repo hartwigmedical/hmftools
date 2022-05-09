@@ -62,7 +62,10 @@ public class RefGeneExpression implements RefClassifier
 
     public CategoryType categoryType() { return GENE_EXP; }
 
-    public static boolean requiresBuild(final RefDataConfig config) { return !config.GeneExpMatrixFile.isEmpty(); }
+    public static boolean requiresBuild(final RefDataConfig config)
+    {
+        return config.Categories.contains(GENE_EXP) || !config.GeneExpMatrixFile.isEmpty();
+    }
 
     public void buildRefDataSets()
     {

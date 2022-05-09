@@ -43,11 +43,10 @@ public class RefDataConfig
     public final String AltSjMatrixFile;
     public final String FeatureOverrideFile;
 
-    // sample paths & files accepting wildcards
-    public final String SampleFeaturesDir;
-    public final String SampleSomaticVcf;
-    public final String SampleSvVcf;
-    public final String SampleCopyNumberFile;
+    // pipeline directories, accepting wildcards
+    public final String LinxDir;
+    public final String PurpleDir;
+    public final String IsofoxDir;
 
     public final DatabaseAccess DbAccess;
 
@@ -64,10 +63,10 @@ public class RefDataConfig
     private static final String REF_GENE_EXP_DATA_FILE = "ref_gene_exp_file";
     private static final String REF_ALT_SJ_DATA_FILE = "ref_alt_sj_file";
 
-    private static final String SAMPLE_FEATURES_DIR = "sample_features_dir";
-    private static final String SAMPLE_SOMATIC_VCF = "sample_somatic_vcf";
-    private static final String SAMPLE_SV_VCF = "sample_sv_vcf";
-    private static final String SAMPLE_COPY_NUMBER_FILE = "sample_copy_number_file";
+    // pipeline files from Linx, Isofox and Purple
+    public static final String LINX_DIR = "linx_dir";
+    public static final String PURPLE_DIR = "purple_dir";
+    public static final String ISOFOX_DIR = "isofox_dir";
 
     private static final String REF_FEATURE_OVERRIDE_FILE = "feature_override_file";
     public static final String GENDER_RATES = "gender_rates";
@@ -90,10 +89,9 @@ public class RefDataConfig
         CohortSampleSvDataFile = cmd.getOptionValue(REF_COHORT_SV_DATA_FILE, "");
         CohortFeaturesFile = cmd.getOptionValue(REF_COHORT_FEATURES_FILE, "");
 
-        SampleFeaturesDir = cmd.getOptionValue(SAMPLE_FEATURES_DIR, "");
-        SampleSomaticVcf = cmd.getOptionValue(SAMPLE_SOMATIC_VCF, "");
-        SampleSvVcf = cmd.getOptionValue(SAMPLE_SV_VCF, "");
-        SampleCopyNumberFile = cmd.getOptionValue(SAMPLE_COPY_NUMBER_FILE, "");
+        LinxDir = cmd.getOptionValue(LINX_DIR, "");
+        PurpleDir = cmd.getOptionValue(PURPLE_DIR, "");
+        IsofoxDir = cmd.getOptionValue(ISOFOX_DIR, "");
 
         GenPosMatrixFile = cmd.getOptionValue(REF_SNV_SAMPLE_POS_FREQ_FILE, "");
         Snv96MatrixFile = cmd.getOptionValue(REF_SNV_COUNTS_FILE, "");
@@ -116,6 +114,13 @@ public class RefDataConfig
         return Arrays.stream(filenames.split(FILE_DELIM, -1)).collect(Collectors.toList());
     }
 
+    public static void addPipelineDirectories(final Options options)
+    {
+        options.addOption(LINX_DIR, true, "Path to Linx data files for sample, wildcards allowed");
+        options.addOption(PURPLE_DIR, true, "Path to Purple data files for sample, wildcards allowed");
+        options.addOption(ISOFOX_DIR, true, "Path to Purple data files for sample, wildcards allowed");
+    }
+
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(CATEGORIES, true, "Categories to build ref data for");
@@ -130,10 +135,7 @@ public class RefDataConfig
         options.addOption(REF_COHORT_SIG_CONTRIBS_FILE, true, "Ref sample cohort signature contributions file");
         options.addOption(REF_COHORT_SV_DATA_FILE, true, "Ref sample cohort SV file");
 
-        options.addOption(SAMPLE_FEATURES_DIR, true, "Ref sample directory containing features files");
-        options.addOption(SAMPLE_SV_VCF, true, "Ref sample SV VCF path, wildcards allowed");
-        options.addOption(SAMPLE_SOMATIC_VCF, true, "Ref sample somatic VCF path, wildcards allowed");
-        options.addOption(SAMPLE_COPY_NUMBER_FILE, true, "Ref sample Purple copy number file, wildcards allowed");
+        addPipelineDirectories(options);
 
         options.addOption(REF_GENE_EXP_DATA_FILE, true, "Ref sample RNA gene expression cohort data file");
         options.addOption(REF_ALT_SJ_DATA_FILE, true, "Ref sample RNA alternate splice junction cohort data file");

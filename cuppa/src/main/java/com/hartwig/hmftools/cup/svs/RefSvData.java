@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SV_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SV_PERC;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSvFile;
 import static com.hartwig.hmftools.cup.common.CategoryType.SV;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.parseFileSet;
@@ -53,12 +54,15 @@ public class RefSvData implements RefClassifier
 
     public static boolean requiresBuild(final RefDataConfig config)
     {
-        return config.DbAccess != null || !config.CohortSampleSvDataFile.isEmpty() || !config.SampleSvVcf.isEmpty();
+        if(config.Categories.contains(SV))
+            return true;
+
+        return config.DbAccess != null || !config.CohortSampleSvDataFile.isEmpty() || !config.PurpleDir.isEmpty();
     }
 
     public void buildRefDataSets()
     {
-        if(mConfig.CohortSampleSvDataFile.isEmpty() && mConfig.SampleSvVcf.isEmpty() && mConfig.DbAccess == null)
+        if(mConfig.CohortSampleSvDataFile.isEmpty() && mConfig.PurpleDir.isEmpty() && mConfig.DbAccess == null)
             return;
 
         CUP_LOGGER.info("building SV reference data");
@@ -70,16 +74,21 @@ public class RefSvData implements RefClassifier
             final List<String> files = parseFileSet(mConfig.CohortSampleSvDataFile);
             files.forEach(x -> loadCohortSvData(x, sampleSvData));
         }
-        else if(!mConfig.SampleSvVcf.isEmpty())
+        else if(mConfig.DbAccess != null)
+        {
+            loadSvDataFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(false), sampleSvData);
+            sampleSvData.values().forEach(x -> assignSampleData(x));
+        }
+        else
         {
             // load from per-sample files
             for(int i = 0; i < mSampleDataCache.RefSampleDataList.size(); ++i)
             {
                 SampleData sample = mSampleDataCache.RefSampleDataList.get(i);
 
-                final String svVcfFile = formSamplePath(mConfig.SampleSvVcf, sample.Id);
-                final String sampleDataDir = formSamplePath(mConfig.SampleFeaturesDir, sample.Id);
-                final String clusterFile = LinxCluster.generateFilename(sampleDataDir, sample.Id);
+                final String svVcfFile = purpleSvFile(mConfig.PurpleDir, sample.Id);
+                final String linxDataDir = formSamplePath(mConfig.LinxDir, sample.Id);
+                final String clusterFile = LinxCluster.generateFilename(linxDataDir, sample.Id);
 
                 if(!loadSvDataFromFile(sample.Id, svVcfFile, clusterFile, sampleSvData))
                     break;
@@ -90,11 +99,6 @@ public class RefSvData implements RefClassifier
                 }
             }
 
-            sampleSvData.values().forEach(x -> assignSampleData(x));
-        }
-        else
-        {
-            loadSvDataFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(false), sampleSvData);
             sampleSvData.values().forEach(x -> assignSampleData(x));
         }
 

@@ -26,6 +26,9 @@ public final class SomaticsCommon
     public static final String INCLUDE_AID_APOBEC_SIG = "aid_apobec_sig_feature";
     public static final String INCLUDE_AID_APOBEC_SIG_DESC = "Add an enriched AID/APOBEC signature feature";
 
+    public static final String INTEGER_FORMAT = "%.0f";
+    public static final String DEC_3_FORMAT = "%.3f";
+
     public static void applyMaxCssAdjustment(double maxCssScore, final Map<String,Double> cancerCssTotals, double adjustFactor)
     {
         if(adjustFactor == 0)

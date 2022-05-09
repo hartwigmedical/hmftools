@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleCopyNumberFile;
 import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_CN_ADJUST_MAX;
 
 import java.io.IOException;
@@ -17,7 +18,9 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
+import com.hartwig.hmftools.cup.traits.SampleTraitsData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public final class CopyNumberProfile
@@ -35,11 +38,37 @@ public final class CopyNumberProfile
         return adjustedCounts;
     }
 
-    public static void buildCopyNumberProfile(
-            final List<String> sampleIds, final RefDataConfig config, final Matrix copyNumberMatrix,
-            final Map<String,Integer> sampleIndexMap, final PositionFrequencies posFrequencies)
+    public static Matrix buildSampleCopyNumberNormalisedCounts(
+            final Matrix posFreqCounts, final Map<String,Integer> sampleIndexMap, final Matrix cnProfiles,
+            final List<SampleData> refSamples, final Map<String, SampleTraitsData> refSampleTraitsData)
+    {
+        Matrix adjustedMatrix = new Matrix(cnProfiles.Rows, cnProfiles.Cols);
+
+        for(SampleData sample : refSamples)
+        {
+            int sampleIndex = sampleIndexMap.get(sample.Id);
+            double[] sampleCounts = posFreqCounts.getCol(sampleIndex);
+
+            if(sampleCounts == null)
+                continue;
+
+            double samplePloidy = refSampleTraitsData.get(sample.Id).Ploidy;
+            final double[] sampleCnProfile = cnProfiles.getCol(sampleIndex);
+            double[] adjustedCounts = normaliseGenPosCountsByCopyNumber(samplePloidy, sampleCounts, sampleCnProfile);
+
+            adjustedMatrix.setCol(sampleIndex, adjustedCounts);
+        }
+
+        return adjustedMatrix;
+    }
+
+    public static Matrix buildCopyNumberProfile(
+            final List<String> sampleIds, final RefDataConfig config, final Map<String,Integer> sampleIndexMap,
+            final PositionFrequencies posFrequencies)
     {
         CUP_LOGGER.debug("building copy-number profile reference data");
+
+        Matrix copyNumberMatrix = new Matrix(posFrequencies.getBucketCount(), sampleIds.size());
 
         for(String sampleId : sampleIds)
         {
@@ -53,12 +82,14 @@ public final class CopyNumberProfile
             }
             else
             {
-                final String purpleCopyNumberFile = formSamplePath(config.SampleCopyNumberFile, sampleId);
+                final String purpleCopyNumberFile = purpleCopyNumberFile(config.PurpleDir, sampleId);
                 cnProfile = extractSampleCopyNumberProfile(sampleId, null, purpleCopyNumberFile, posFrequencies);
             }
 
             copyNumberMatrix.setCol(sampleIndex, cnProfile);
         }
+
+        return copyNumberMatrix;
     }
 
     public static double[] extractSampleCopyNumberProfile(
@@ -73,7 +104,7 @@ public final class CopyNumberProfile
         }
         catch(IOException e)
         {
-            CUP_LOGGER.error(" failed to retrieve CN data for sample({})", sampleId, e.toString());
+            CUP_LOGGER.error("failed to retrieve CN data for sample({})", sampleId, e.toString());
             return new double[posFrequencies.getBucketCount()];
         }
     }

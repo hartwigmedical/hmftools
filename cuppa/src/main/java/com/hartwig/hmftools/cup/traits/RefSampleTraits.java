@@ -100,7 +100,7 @@ public class RefSampleTraits implements RefClassifier
     public CategoryType categoryType() { return SAMPLE_TRAIT; }
     public static boolean requiresBuild(final RefDataConfig config)
     {
-        return !config.CohortSampleTraitsFile.isEmpty() || config.DbAccess != null;
+        return config.Categories.contains(SAMPLE_TRAIT) || !config.CohortSampleTraitsFile.isEmpty() || config.DbAccess != null;
     }
 
     public void buildRefDataSets()

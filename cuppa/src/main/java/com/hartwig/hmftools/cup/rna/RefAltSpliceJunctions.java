@@ -50,7 +50,10 @@ public class RefAltSpliceJunctions implements RefClassifier
 
     public CategoryType categoryType() { return ALT_SJ; }
 
-    public static boolean requiresBuild(final RefDataConfig config) { return !config.AltSjMatrixFile.isEmpty(); }
+    public static boolean requiresBuild(final RefDataConfig config)
+    {
+        return config.Categories.contains(ALT_SJ) || !config.AltSjMatrixFile.isEmpty();
+    }
 
     public void buildRefDataSets()
     {

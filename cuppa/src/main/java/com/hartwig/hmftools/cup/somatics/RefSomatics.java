@@ -14,10 +14,12 @@ import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SIG_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CANCER_POS_FREQ_COUNTS;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CN_ADJUSTED_SAMPLE_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_COPY_NUMBER_PROFILE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SIG_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SNV_COUNTS;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
 import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_BUCKET_SIZE;
 import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_MAX_SAMPLE_COUNT;
@@ -32,6 +34,8 @@ import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSigContrib
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSomaticVariants;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_13;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_2;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.DEC_3_FORMAT;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INTEGER_FORMAT;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.NORMALISE_COPY_NUMBER;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.NORMALISE_COPY_NUMBER_DESC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_AID_APOBEC;
@@ -53,6 +57,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 import com.hartwig.hmftools.cup.ref.RefClassifier;
@@ -131,13 +136,10 @@ public class RefSomatics implements RefClassifier
         if(config.DbAccess != null)
             return true;
 
-        if(!config.CohortSigContribsFile.isEmpty() && !config.Snv96MatrixFile.isEmpty())
+        if(config.Categories.contains(SNV))
             return true;
 
-        if(!config.CohortSigContribsFile.isEmpty() && !config.SampleSomaticVcf.isEmpty())
-            return true;
-
-        return false;
+        return !config.CohortSigContribsFile.isEmpty() || !config.Snv96MatrixFile.isEmpty() || !config.PurpleDir.isEmpty();
     }
 
     public static void addCmdLineArgs(@NotNull Options options)
@@ -178,6 +180,11 @@ public class RefSomatics implements RefClassifier
                 final List<String> existingRefSampleIds = Lists.newArrayList();
                 mCopyNumberProfile = loadRefSampleCounts(mConfig.CopyNumberMatrixFile, existingRefSampleIds, Lists.newArrayList());
             }
+            else if(mBuildCopyNumber)
+            {
+                final List<String> refSampleIds = mSampleDataCache.refSampleIds(false);
+                mCopyNumberProfile = buildCopyNumberProfile(refSampleIds, mConfig, mPosFreqCountsIndex, mPosFrequencies);
+            }
         }
 
         mTriNucCounts.cacheTranspose();
@@ -192,28 +199,37 @@ public class RefSomatics implements RefClassifier
             writeSampleMatrix(mPosFreqCounts, mPosFreqCountsIndex, REF_FILE_SAMPLE_POS_FREQ_COUNTS, INTEGER_FORMAT);
         }
 
-        if(mBuildCopyNumber)
+        if(combineCohortFiles || mBuildCopyNumber)
         {
-            int refSampleCount = mSampleDataCache.refSampleIds(false).size();
-            mCopyNumberProfile = new Matrix(mPosFrequencies.getBucketCount(), refSampleCount);
+            writeSampleMatrix(mCopyNumberProfile, mPosFreqCountsIndex, REF_FILE_COPY_NUMBER_PROFILE, DEC_3_FORMAT);
+        }
 
-            if(!combineCohortFiles)
+        Matrix sampleGenPosCounts = null;
+
+        if(mApplyCopyNumber)
+        {
+            Matrix sampleCnNormalisedCounts = CopyNumberProfile.buildSampleCopyNumberNormalisedCounts(
+                    mPosFreqCounts, mPosFreqCountsIndex, mCopyNumberProfile, mSampleDataCache.RefSampleDataList,
+                    mSampleDataCache.RefSampleTraitsData);
+
+            sampleGenPosCounts = sampleCnNormalisedCounts;
+
+            if(mBuildCopyNumber)
             {
-                buildCopyNumberProfile(
-                        mSampleDataCache.refSampleIds(false), mConfig, mCopyNumberProfile, mPosFreqCountsIndex, mPosFrequencies);
+                writeSampleMatrix(sampleCnNormalisedCounts, mPosFreqCountsIndex, REF_FILE_CN_ADJUSTED_SAMPLE_POS_FREQ_COUNTS, DEC_3_FORMAT);
             }
-
-            if(combineCohortFiles || mBuildCopyNumber)
-                writeSampleMatrix(mCopyNumberProfile, mPosFreqCountsIndex, REF_FILE_COPY_NUMBER_PROFILE, DEC_2_FORMAT);
+        }
+        else
+        {
+            sampleGenPosCounts = mPosFreqCounts;
         }
 
         buildSignaturePercentiles();
         buildSnvCountPercentiles();
 
         buildCancerPosFrequencies(
-                mPosFrequencies, mPosFreqCounts, mPosFreqCountsIndex,
-                mApplyCopyNumber ? mCopyNumberProfile : null, mSampleDataCache.RefSampleTraitsData,
-                mSampleDataCache.RefCancerSampleData, mConfig.OutputDir + REF_FILE_CANCER_POS_FREQ_COUNTS);
+                mPosFrequencies, sampleGenPosCounts, mPosFreqCountsIndex, mSampleDataCache.RefCancerSampleData,
+                mConfig.OutputDir + REF_FILE_CANCER_POS_FREQ_COUNTS);
 
         closeBufferedWriter(mRefDataWriter);
     }
@@ -344,7 +360,7 @@ public class RefSomatics implements RefClassifier
             }
             else
             {
-                final String somaticVcfFile = formSamplePath(mConfig.SampleSomaticVcf, sampleId);
+                final String somaticVcfFile = purpleSomaticVcfFile(mConfig.PurpleDir, sampleId);
                 variants.addAll(loadSomaticVariants(somaticVcfFile, Lists.newArrayList(SNP)));
             }
 
@@ -368,9 +384,6 @@ public class RefSomatics implements RefClassifier
             }
         }
     }
-
-    private static final String INTEGER_FORMAT = "%.0f";
-    private static final String DEC_2_FORMAT = "%.2f";
 
     private void writeSampleMatrix(
             final Matrix matrix, final Map<String,Integer> sampleCountsIndex, final String filename, final String decFormat)

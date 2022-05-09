@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
@@ -256,7 +257,7 @@ public class SomaticClassifier implements CuppaClassifier
             final String sampleId = mSampleDataCache.SampleIds.get(0);
 
             // load from VCF, database, sigs file or generic counts files
-            if(mConfig.DbAccess != null || !mConfig.SampleSomaticVcf.isEmpty())
+            if(mConfig.DbAccess != null || !mConfig.PurpleDir.isEmpty())
             {
                 List<SomaticVariant> somaticVariants = Lists.newArrayList();
 
@@ -266,7 +267,8 @@ public class SomaticClassifier implements CuppaClassifier
                 }
                 else
                 {
-                    somaticVariants.addAll(loadSomaticVariants(mConfig.SampleSomaticVcf, Lists.newArrayList(SNP)));
+                    final String somaticVcfFile = purpleSomaticVcfFile(mConfig.PurpleDir, sampleId);
+                    somaticVariants.addAll(loadSomaticVariants(somaticVcfFile, Lists.newArrayList(SNP)));
                 }
 
                 mSampleSnvCounts = convertSomaticVariantsToSnvCounts(sampleId, somaticVariants, mSampleSnvCountsIndex);

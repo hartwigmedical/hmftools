@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus.MSS;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
 import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_CHROMOSOME;
 import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_TYPE;
@@ -101,14 +102,14 @@ public class FeatureDataLoader
     }
 
     public static boolean loadFeaturesFromFile(
-            final String sampleId, final String sampleDataDir, final String sampleVcfFile,
+            final String sampleId, final String linxDataDir, final String purpleDataDir,
             final Map<String,List<SampleFeatureData>> sampleFeaturesMap)
     {
         // extract features from standard pipeline output files and fail if any cannot be loaded
         try
         {
-            String viralInsertFilename = LinxViralInsertion.generateFilename(sampleDataDir, sampleId);
-            String viralAnnotationFilename = AnnotatedVirusFile.generateFileName(sampleDataDir, sampleId);
+            String viralInsertFilename = LinxViralInsertion.generateFilename(linxDataDir, sampleId);
+            String viralAnnotationFilename = AnnotatedVirusFile.generateFileName(linxDataDir, sampleId);
 
             final List<AnnotatedVirus> virusAnnotations = Lists.newArrayList();
 
@@ -122,15 +123,15 @@ public class FeatureDataLoader
                 virusAnnotations.addAll(mapViralInsertsToAnnotations(viralInserts));
             }
 
-            final String fusionsFilename = LinxFusion.generateFilename(sampleDataDir, sampleId);
+            final String fusionsFilename = LinxFusion.generateFilename(linxDataDir, sampleId);
 
             final List<LinxFusion> fusions = LinxFusion.read(fusionsFilename);
 
             // load linx drivers if available, otherwise the purple somatic drivers
             final List<DriverCatalog> drivers = Lists.newArrayList();
 
-            final String linxDriverCatalogFilename = LinxDriver.generateCatalogFilename(sampleDataDir, sampleId, true);
-            final String purpleDriverCatalogFilename = DriverCatalogFile.generateSomaticFilename(sampleDataDir, sampleId);
+            final String linxDriverCatalogFilename = LinxDriver.generateCatalogFilename(linxDataDir, sampleId, true);
+            final String purpleDriverCatalogFilename = DriverCatalogFile.generateSomaticFilename(linxDataDir, sampleId);
 
             if(Files.exists(Paths.get(linxDriverCatalogFilename)))
             {
@@ -146,8 +147,9 @@ public class FeatureDataLoader
                 return false;
             }
 
-            boolean checkIndels = checkIndels(sampleId, sampleDataDir, null);
-            final List<String> indelGenes = loadSpecificMutations(sampleVcfFile, checkIndels);
+            boolean checkIndels = checkIndels(sampleId, purpleDataDir, null);
+            final String somaticVcf = purpleSomaticVcfFile(purpleDataDir, sampleId);
+            final List<String> indelGenes = loadSpecificMutations(somaticVcf, checkIndels);
 
             mapFeatureData(sampleId, sampleFeaturesMap, drivers, fusions, virusAnnotations, indelGenes);
         }
@@ -160,7 +162,7 @@ public class FeatureDataLoader
         return true;
     }
 
-    private static boolean checkIndels(final String sampleId, final String sampleDataDir, final DatabaseAccess dbAccess)
+    private static boolean checkIndels(final String sampleId, final String purpleDataDir, final DatabaseAccess dbAccess)
     {
         PurityContext purityContext = null;
 
@@ -172,12 +174,12 @@ public class FeatureDataLoader
         {
             try
             {
-                purityContext = PurityContextFile.read(sampleDataDir, sampleId);
+                purityContext = PurityContextFile.read(purpleDataDir, sampleId);
             }
             catch (Exception e)
             {
                 CUP_LOGGER.error("sample({}) check indels - failed to load purity file( from dir{}): {}",
-                        sampleId, sampleDataDir, e.toString());
+                        sampleId, purpleDataDir, e.toString());
                 return false;
             }
         }

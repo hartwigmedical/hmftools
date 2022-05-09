@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_FEATURE_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_DRIVER_AVG;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_FEATURE_PREV;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
 import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromCohortFile;
@@ -55,12 +56,15 @@ public class RefFeatures implements RefClassifier
 
     public static boolean requiresBuild(final RefDataConfig config)
     {
-        return config.DbAccess != null || !config.CohortFeaturesFile.isEmpty() || !config.SampleFeaturesDir.isEmpty();
+        if(config.Categories.contains(FEATURE))
+            return true;
+
+        return config.DbAccess != null || !config.CohortFeaturesFile.isEmpty() || !config.LinxDir.isEmpty();
     }
 
     public void buildRefDataSets()
     {
-        if(mConfig.CohortFeaturesFile.isEmpty() && mConfig.DbAccess == null && mConfig.SampleFeaturesDir.isEmpty())
+        if(mConfig.CohortFeaturesFile.isEmpty() && mConfig.DbAccess == null && mConfig.LinxDir.isEmpty())
             return;
 
         CUP_LOGGER.info("building feature reference data");
@@ -114,10 +118,10 @@ public class RefFeatures implements RefClassifier
             {
                 SampleData sample = mSampleDataCache.RefSampleDataList.get(i);
 
-                final String sampleDataDir = formSamplePath(mConfig.SampleFeaturesDir, sample.Id);
-                final String somaticVcf = formSamplePath(mConfig.SampleSomaticVcf, sample.Id);
+                final String linxDataDir = formSamplePath(mConfig.LinxDir, sample.Id);
+                final String purpleDataDir = formSamplePath(mConfig.PurpleDir, sample.Id);
 
-                if(!loadFeaturesFromFile(sample.Id, sampleDataDir, somaticVcf, sampleFeaturesMap))
+                if(!loadFeaturesFromFile(sample.Id, linxDataDir, purpleDataDir, sampleFeaturesMap))
                     break;
 
                 if(i > 0 && (i % 100) == 0)

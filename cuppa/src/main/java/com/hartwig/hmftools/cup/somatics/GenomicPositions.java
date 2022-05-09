@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.cup.somatics.AidApobecStatus.ALL;
 import static com.hartwig.hmftools.cup.somatics.AidApobecStatus.FALSE_ONLY;
 import static com.hartwig.hmftools.cup.somatics.AidApobecStatus.TRUE_ONLY;
 import static com.hartwig.hmftools.cup.somatics.CopyNumberProfile.normaliseGenPosCountsByCopyNumber;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.DEC_3_FORMAT;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -80,7 +81,6 @@ public final class GenomicPositions
 
     public static void buildCancerPosFrequencies(
             final PositionFrequencies posFrequencies, final Matrix posFreqCounts, final Map<String,Integer> sampleIndexMap,
-            final Matrix cnProfiles, final Map<String, SampleTraitsData> refSampleTraitsData,
             final Map<String,List<SampleData>> refCancerSampleData, final String filename)
     {
         if(posFreqCounts == null)
@@ -112,13 +112,6 @@ public final class GenomicPositions
                     if(sampleCounts == null)
                         continue;
 
-                    if(cnProfiles != null && refSampleTraitsData.containsKey(sample.Id))
-                    {
-                        double samplePloidy = refSampleTraitsData.get(sample.Id).Ploidy;
-                        final double[] sampleCnProfile = cnProfiles.getCol(sampleIndex);
-                        sampleCounts = normaliseGenPosCountsByCopyNumber(samplePloidy, sampleCounts, sampleCnProfile);
-                    }
-
                     double sampleTotal = sumVector(sampleCounts);
 
                     double reductionFactor = sampleTotal > maxSampleCount ? maxSampleCount / sampleTotal : 1.0;
@@ -143,11 +136,11 @@ public final class GenomicPositions
 
             for(int b = 0; b < bucketCount; ++b)
             {
-                writer.write(String.format("%.1f", cancerPosCounts.get(cancerTypes.get(0))[b]));
+                writer.write(String.format(DEC_3_FORMAT, cancerPosCounts.get(cancerTypes.get(0))[b]));
 
                 for(int i = 1; i < cancerTypes.size(); ++i)
                 {
-                    writer.write(String.format(",%.1f", cancerPosCounts.get(cancerTypes.get(i))[b]));
+                    writer.write(String.format("," + DEC_3_FORMAT, cancerPosCounts.get(cancerTypes.get(i))[b]));
                 }
 
                 writer.newLine();

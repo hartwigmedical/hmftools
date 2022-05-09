@@ -35,6 +35,10 @@ import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
 import static com.hartwig.hmftools.cup.common.CategoryType.SV;
 import static com.hartwig.hmftools.cup.common.CategoryType.isDna;
+import static com.hartwig.hmftools.cup.ref.RefDataConfig.ISOFOX_DIR;
+import static com.hartwig.hmftools.cup.ref.RefDataConfig.LINX_DIR;
+import static com.hartwig.hmftools.cup.ref.RefDataConfig.PURPLE_DIR;
+import static com.hartwig.hmftools.cup.ref.RefDataConfig.addPipelineDirectories;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
@@ -80,16 +84,21 @@ public class CuppaConfig
     public final String RefAltSjSampleFile;
     public final String RefSnvSignaturesFile;
 
-    // sample data, if not sourced from the database
+    // a single sample directory
     public final String SampleDataDir;
 
+    // or standard pipeline directories
+    public final String LinxDir;
+    public final String PurpleDir;
+    public final String IsofoxDir;
+
+    // cohort files, formed during ref data building
     public final String SampleDataFile;
     public final String SampleFeatureFile;
     public final String SampleTraitsFile;
     public final String SampleSnvCountsFile;
     public final String SampleSnvPosFreqFile;
     public final String SampleSigContribFile;
-    public final String SampleSomaticVcf;
     public final String SampleSvFile;
     public final String SampleGeneExpFile;
     public final String SampleAltSjFile;
@@ -208,6 +217,9 @@ public class CuppaConfig
 
         boolean useRefData = cmd.hasOption(USE_REF_SAMPLE_DATA);
         SampleDataDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR, ""));
+        LinxDir = checkAddDirSeparator(cmd.getOptionValue(LINX_DIR, ""));
+        PurpleDir = checkAddDirSeparator(cmd.getOptionValue(PURPLE_DIR, ""));
+        IsofoxDir = checkAddDirSeparator(cmd.getOptionValue(ISOFOX_DIR, ""));
 
         // use cases for loading sample data:
         // 1. DB - sourced
@@ -228,8 +240,6 @@ public class CuppaConfig
         SampleSnvPosFreqFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_SNV_POS_FREQ_FILE, REF_FILE_SAMPLE_POS_FREQ_COUNTS, SNV);
         SampleGeneExpFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_GENE_EXP_FILE, REF_FILE_GENE_EXP_SAMPLE, GENE_EXP);
         SampleAltSjFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_ALT_SJ_FILE, REF_FILE_ALT_SJ_SAMPLE, ALT_SJ);
-
-        SampleSomaticVcf = cmd.getOptionValue(SAMPLE_SOMATIC_VCF, "");
 
         OutputDir = parseOutputDir(cmd);
         OutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID, "");
@@ -302,6 +312,7 @@ public class CuppaConfig
 
         options.addOption(SPECIFIC_SAMPLE_DATA, true, "Specific sample in form 'SampleId;CancerType;CancerSubtype' (last 2 optional)");
         options.addOption(SAMPLE_DATA_DIR, true, "Directory containing standard sample files from pipeline");
+        addPipelineDirectories(options);
 
         options.addOption(SAMPLE_DATA_FILE, true, "Sample data file");
 
@@ -375,6 +386,9 @@ public class CuppaConfig
 
         // sample data, if not sourced from the database
         SampleDataDir = "";
+        LinxDir = "";
+        PurpleDir = "";
+        IsofoxDir = "";
 
         SampleDataFile = "";
         SampleFeatureFile = "";
@@ -382,7 +396,6 @@ public class CuppaConfig
         SampleSnvCountsFile = "";
         SampleSnvPosFreqFile = "";
         SampleSigContribFile = "";
-        SampleSomaticVcf = "";
         SampleSvFile = "";
         SampleGeneExpFile = "";
         SampleAltSjFile = "";
