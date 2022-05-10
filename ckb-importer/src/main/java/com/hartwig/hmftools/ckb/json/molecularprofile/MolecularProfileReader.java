@@ -261,14 +261,17 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<JsonMolecular
             JsonObject variantAssociatedClinicalTrialJsonObject = variantAssociatedClinicalTrial.getAsJsonObject();
             variantAssociatedClinicalTrialChecker.check(variantAssociatedClinicalTrialJsonObject);
 
-            if (JsonFunctions.nullableString(variantAssociatedClinicalTrialJsonObject, "phase") == null) {
-                LOGGER.warn("phase of study '{}' is nullable from MolecularProfileReader", JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "nctId"));
+            String nctId = JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "nctId");
+            String phase = JsonFunctions.nullableString(variantAssociatedClinicalTrialJsonObject, "phase");
+
+            if (phase == null) {
+                LOGGER.warn("phase of study '{}' is null in MolecularProfileReader", nctId);
             }
 
             variantAssociatedClinicalTrials.add(ImmutableClinicalTrialInfo.builder()
-                    .nctId(JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "nctId"))
+                    .nctId(nctId)
                     .title(JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "title"))
-                    .phase(JsonFunctions.nullableString(variantAssociatedClinicalTrialJsonObject, "phase"))
+                    .phase(phase)
                     .recruitment(JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "recruitment"))
                     .therapies(extractTherapyList(variantAssociatedClinicalTrialJsonObject.getAsJsonArray("therapies")))
                     .build());

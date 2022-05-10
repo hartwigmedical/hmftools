@@ -167,14 +167,17 @@ public class TherapyReader extends CkbJsonDirectoryReader<JsonTherapy> {
             JsonObject clinicalTrialJsonObject = clinicalTrial.getAsJsonObject();
             clinicalTrialChecker.check(clinicalTrialJsonObject);
 
-            if (JsonFunctions.nullableString(clinicalTrialJsonObject, "phase") == null) {
-                LOGGER.warn("phase of study '{}' is nullable from TherapyReader", JsonFunctions.string(clinicalTrialJsonObject, "nctId"));
+            String nctId = JsonFunctions.string(clinicalTrialJsonObject, "nctId");
+            String phase = JsonFunctions.nullableString(clinicalTrialJsonObject, "phase");
+
+            if (phase == null) {
+                LOGGER.warn("phase of study '{}' is null in TherapyReader", nctId);
             }
 
             clinicalTrials.add(ImmutableClinicalTrialInfo.builder()
-                    .nctId(JsonFunctions.string(clinicalTrialJsonObject, "nctId"))
+                    .nctId(nctId)
                     .title(JsonFunctions.string(clinicalTrialJsonObject, "title"))
-                    .phase(JsonFunctions.nullableString(clinicalTrialJsonObject, "phase"))
+                    .phase(phase)
                     .recruitment(JsonFunctions.string(clinicalTrialJsonObject, "recruitment"))
                     .therapies(extractTherapyList(clinicalTrialJsonObject.getAsJsonArray("therapies")))
                     .build());

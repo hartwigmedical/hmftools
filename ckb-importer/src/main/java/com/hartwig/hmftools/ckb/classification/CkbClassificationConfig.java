@@ -216,45 +216,41 @@ public class CkbClassificationConfig {
     @NotNull
     private static Set<String> microsatelliteUnstableKeyPhrases() {
         Set<String> set = Sets.newHashSet();
-        set.add("MSI_high");
+        set.add(CkbConstants.MSI_HIGH);
         return set;
     }
 
     @NotNull
     private static Set<String> microsatelliteStableKeyPhrases() {
         Set<String> set = Sets.newHashSet();
-        set.add("MSI_low");
-        set.add("MSI_neg");
+        set.add(CkbConstants.MSI_NEGATIVE);
+        set.add(CkbConstants.MSI_LOW);
         return set;
     }
 
     @NotNull
     private static Set<String> highTumorMutationalLoadKeyPhrases() {
-        Set<String> set = Sets.newHashSet();
-        set.add("TMB_high");
-        return set;
+        return Sets.newHashSet();
     }
 
     @NotNull
     private static Set<String> lowTumorMutationalLoadKeyPhrases() {
-        Set<String> set = Sets.newHashSet();
-        set.add("TMB_low");
-        return set;
-    }
-
-    @NotNull
-    private static Set<String> lowTumorMutationalBurdenKeyPhrases() {
         return Sets.newHashSet();
     }
 
     @NotNull
     private static Set<String> highTumorMutationalBurdenKeyPhrases() {
-        return Sets.newHashSet();
+        return Sets.newHashSet(CkbConstants.TMB_HIGH);
+    }
+
+    @NotNull
+    private static Set<String> lowTumorMutationalBurdenKeyPhrases() {
+        return Sets.newHashSet(CkbConstants.TMB_LOW);
     }
 
     @NotNull
     private static Set<String> hrDeficiencyKeyPhrases() {
-        return Sets.newHashSet("HRD_pos");
+        return Sets.newHashSet(CkbConstants.HRD_POSITIVE);
     }
 
     @NotNull

@@ -20,50 +20,18 @@ import org.junit.Test;
 public class CkbExtractorTest {
 
     @Test
-    public void canExtractFromCKBEntries() {
+    public void canExtractFromCkbEntries() {
         EventClassifierConfig config = CkbClassificationConfig.build();
         CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(config, RefGenomeResourceTestFactory.buildTestResource37());
 
         List<CkbEntry> ckbEntries = Lists.newArrayList();
-        ckbEntries.add(CkbTestFactory.createEntry("KIT", "amp", "KIT amp", "sensitive", "Actionable", "AB", "cancer", "A", "DOID:162"));
-        ckbEntries.add(CkbTestFactory.createEntry("BRAF",
-                "V600E",
-                "BRAF V600E",
-                "sensitive",
-                "Actionable",
-                "AB",
-                "cancer",
-                "A",
-                "DOID:162"));
-        ckbEntries.add(CkbTestFactory.createEntry("NTRK3",
-                "fusion promiscuous",
-                "NTRK3 fusion promiscuous",
-                "sensitive",
-                "Actionable",
-                "AB",
-                "cancer",
-                "A",
-                "DOID:162"));
-        ckbEntries.add(CkbTestFactory.createEntry("BRAF", "V600", "BRAF V600", "sensitive", "Actionable", "AB", "cancer", "A", "DOID:162"));
-        ckbEntries.add(CkbTestFactory.createEntry("BRAF",
-                "exon 1 deletion",
-                "BRAF exon 1 deletion",
-                "sensitive",
-                "Actionable",
-                "AB",
-                "cancer",
-                "A",
-                "DOID:162"));
-        ckbEntries.add(CkbTestFactory.createEntry("-", "MSI_high", "MSI_high", "sensitive", "Actionable", "AB", "cancer", "A", "DOID:162"));
-        ckbEntries.add(CkbTestFactory.createEntry("ALk",
-                "EML4-ALK",
-                "EML4-ALK Fusion",
-                "sensitive",
-                "Actionable",
-                "AB",
-                "cancer",
-                "A",
-                "DOID:162"));
+        ckbEntries.add(create("KIT", "amp", "KIT amp", "sensitive", "Actionable"));
+        ckbEntries.add(create("BRAF", "V600E", "BRAF V600E", "sensitive", "Actionable"));
+        ckbEntries.add(create("NTRK3", "fusion promiscuous", "NTRK3 fusion promiscuous", "sensitive", "Actionable"));
+        ckbEntries.add(create("BRAF", "V600", "BRAF V600", "sensitive", "Actionable"));
+        ckbEntries.add(create("BRAF", "exon 1 deletion", "BRAF exon 1 deletion", "sensitive", "Actionable"));
+        ckbEntries.add(create("-", "MSI high", "MSI high", "sensitive", "Actionable"));
+        ckbEntries.add(create("ALk", "EML4-ALK", "EML4-ALK Fusion", "sensitive", "Actionable"));
 
         ExtractionResult result = extractor.extract(ckbEntries);
         assertEquals(1, result.knownHotspots().size());
@@ -76,10 +44,16 @@ public class CkbExtractorTest {
         assertEquals(1, result.actionableCharacteristics().size());
     }
 
+    @NotNull
+    private static CkbEntry create(@NotNull String gene, @NotNull String variant, @NotNull String fullName, @NotNull String evidenceType,
+            @NotNull String responseType) {
+        return CkbTestFactory.createEntry(gene, variant, fullName, evidenceType, responseType, "AB", "cancer", "A", "DOID:162");
+    }
+
     @Test
     public void canCurateCodons() {
         List<CodonAnnotation> codonAnnotations = Lists.newArrayList();
-        CodonAnnotation codonAnnotation1 =ImmutableCodonAnnotation.builder()
+        CodonAnnotation codonAnnotation1 = ImmutableCodonAnnotation.builder()
                 .gene("BRAF")
                 .transcript("A")
                 .chromosome("1")
@@ -89,7 +63,7 @@ public class CkbExtractorTest {
                 .rank(600)
                 .build();
 
-        CodonAnnotation codonAnnotation2 =ImmutableCodonAnnotation.builder()
+        CodonAnnotation codonAnnotation2 = ImmutableCodonAnnotation.builder()
                 .gene("KRAS")
                 .transcript("transcript")
                 .chromosome("1")
@@ -114,7 +88,6 @@ public class CkbExtractorTest {
         assertEquals(10, codon2.start());
         assertEquals(20, codon2.end());
         assertEquals("transcript", codon2.transcript());
-
     }
 
     @NotNull

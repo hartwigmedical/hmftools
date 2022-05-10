@@ -2,14 +2,14 @@ package com.hartwig.hmftools.serve.sources.ckb;
 
 import java.time.LocalDate;
 
-import com.hartwig.hmftools.ckb.datamodel.indication.ImmutableIndication;
-import com.hartwig.hmftools.ckb.datamodel.indication.Indication;
-import com.hartwig.hmftools.ckb.datamodel.therapy.Therapy;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.ImmutableCkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.evidence.Evidence;
 import com.hartwig.hmftools.ckb.datamodel.evidence.ImmutableEvidence;
+import com.hartwig.hmftools.ckb.datamodel.indication.ImmutableIndication;
+import com.hartwig.hmftools.ckb.datamodel.indication.Indication;
 import com.hartwig.hmftools.ckb.datamodel.therapy.ImmutableTherapy;
+import com.hartwig.hmftools.ckb.datamodel.therapy.Therapy;
 import com.hartwig.hmftools.ckb.datamodel.variant.Gene;
 import com.hartwig.hmftools.ckb.datamodel.variant.ImmutableGene;
 import com.hartwig.hmftools.ckb.datamodel.variant.ImmutableVariant;
@@ -80,7 +80,7 @@ public final class CkbTestFactory {
 
     @NotNull
     public static CkbEntry createEntry(@NotNull String geneSymbol, @NotNull String variant, @NotNull String fullName,
-            @NotNull String responseType, @NotNull String evidenceType, @NotNull String therapyName, @NotNull String name,
+            @NotNull String responseType, @NotNull String evidenceType, @NotNull String therapyName, @NotNull String indicationName,
             @NotNull String level, @NotNull String termId) {
         return ImmutableCkbEntry.builder()
                 .profileId(0)
@@ -88,17 +88,17 @@ public final class CkbTestFactory {
                 .updateDate(TEST_DATE)
                 .profileName(Strings.EMPTY)
                 .addVariants(createVariant(geneSymbol, variant, fullName))
-                .addEvidences(createEvidence(responseType, evidenceType, therapyName, name, level, termId))
+                .addEvidences(createEvidence(responseType, evidenceType, therapyName, indicationName, level, termId))
                 .build();
     }
 
     @NotNull
     private static Evidence createEvidence(@NotNull String responseType, @NotNull String evidenceType, @NotNull String therapyName,
-            @NotNull String name, @NotNull String level, @NotNull String termId) {
+            @NotNull String indicationName, @NotNull String level, @NotNull String termId) {
         return ImmutableEvidence.builder()
                 .id(0)
                 .therapy(createTherapy(therapyName))
-                .indication(createIndication(name, termId))
+                .indication(createIndication(indicationName, termId))
                 .responseType(responseType)
                 .relevantTreatmentApproaches(Lists.newArrayList())
                 .evidenceType(evidenceType)
