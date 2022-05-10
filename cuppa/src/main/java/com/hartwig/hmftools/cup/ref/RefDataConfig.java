@@ -3,11 +3,14 @@ package com.hartwig.hmftools.cup.ref;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.cup.CuppaConfig.CATEGORIES;
+import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_CN_PROFILE_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SNV_COUNTS_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SNV_SAMPLE_POS_FREQ_FILE;
+import static com.hartwig.hmftools.cup.CuppaConfig.configCategories;
+import static com.hartwig.hmftools.cup.common.CategoryType.ALL_CATEGORIES;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
@@ -76,12 +79,9 @@ public class RefDataConfig
 
     public RefDataConfig(final CommandLine cmd)
     {
-        Categories = Lists.newArrayList();
-        if(cmd.hasOption(CATEGORIES))
-        {
-            final String[] categories = cmd.getOptionValue(CATEGORIES).split(";");
-            Arrays.stream(categories).forEach(x -> Categories.add(CategoryType.valueOf(x)));
-        }
+        Categories = configCategories(cmd);
+
+        CUP_LOGGER.info("build ref data for classifiers: {}", Categories.isEmpty() ? ALL_CATEGORIES : Categories.toString());
 
         SampleDataFile = cmd.getOptionValue(REF_SAMPLE_DATA_FILE, "");
         CohortSampleTraitsFile = cmd.getOptionValue(REF_COHORT_SAMPLE_TRAITS_FILE, "");

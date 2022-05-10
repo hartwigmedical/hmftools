@@ -242,21 +242,21 @@ public class RefSampleTraits implements RefClassifier
             return;
         }
 
-        if(!isKnownCancerType(cancerType))
-            return;
-
-        List<SampleTraitsData> traitsList = mCancerTraitsData.get(cancerType);
-        if(traitsList == null)
-        {
-            mCancerTraitsData.put(cancerType, Lists.newArrayList(traitsData));
-        }
-        else
-        {
-            traitsList.add(traitsData);
-        }
-
         // cache for other components to use
         mSampleDataCache.RefSampleTraitsData.put(traitsData.SampleId, traitsData);
+
+        if(isKnownCancerType(cancerType))
+        {
+            List<SampleTraitsData> traitsList = mCancerTraitsData.get(cancerType);
+            if(traitsList == null)
+            {
+                mCancerTraitsData.put(cancerType, Lists.newArrayList(traitsData));
+            }
+            else
+            {
+                traitsList.add(traitsData);
+            }
+        }
     }
 
     private void writeGenderRates()

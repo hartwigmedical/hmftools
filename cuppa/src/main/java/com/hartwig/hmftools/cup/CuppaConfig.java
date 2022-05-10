@@ -168,29 +168,7 @@ public class CuppaConfig
 
     public CuppaConfig(final CommandLine cmd)
     {
-        Categories = Lists.newArrayList();
-
-        if(cmd.hasOption(CATEGORIES))
-        {
-            if(cmd.getOptionValue(CATEGORIES).equals(ALL_CATEGORIES))
-            {
-                Arrays.stream(CategoryType.values()).filter(x -> x != CLASSIFIER && x != COMBINED).forEach(x -> Categories.add(x));
-            }
-            else if(cmd.getOptionValue(CATEGORIES).equals(DNA_CATEGORIES))
-            {
-                Arrays.stream(CategoryType.values()).filter(x -> isDna(x)).forEach(x -> Categories.add(x));
-            }
-            else
-            {
-                final String[] categories = cmd.getOptionValue(CATEGORIES).split(";");
-                Arrays.stream(categories).forEach(x -> Categories.add(CategoryType.valueOf(x)));
-            }
-        }
-        else
-        {
-            // just DNA by default
-            Arrays.stream(CategoryType.values()).filter(x -> isDna(x)).forEach(x -> Categories.add(x));
-        }
+        Categories = configCategories(cmd);
 
         CUP_LOGGER.info("running classifiers: {}", Categories.isEmpty() ? ALL_CATEGORIES : Categories.toString());
 
@@ -311,6 +289,35 @@ public class CuppaConfig
             return samplePath;
 
         return samplePath.replaceAll("\\*", sampleId);
+    }
+
+    public static List<CategoryType> configCategories(final CommandLine cmd)
+    {
+        List<CategoryType> categories = Lists.newArrayList();
+
+        if(cmd.hasOption(CATEGORIES))
+        {
+            if(cmd.getOptionValue(CATEGORIES).equals(ALL_CATEGORIES))
+            {
+                Arrays.stream(CategoryType.values()).filter(x -> x != CLASSIFIER && x != COMBINED).forEach(x -> categories.add(x));
+            }
+            else if(cmd.getOptionValue(CATEGORIES).equals(DNA_CATEGORIES))
+            {
+                Arrays.stream(CategoryType.values()).filter(x -> isDna(x)).forEach(x -> categories.add(x));
+            }
+            else
+            {
+                final String[] categoryStrings = cmd.getOptionValue(CATEGORIES).split(";");
+                Arrays.stream(categoryStrings).forEach(x -> categories.add(CategoryType.valueOf(x)));
+            }
+        }
+        else
+        {
+            // just DNA by default
+            Arrays.stream(CategoryType.values()).filter(x -> isDna(x)).forEach(x -> categories.add(x));
+        }
+
+        return categories;
     }
 
     public static void addCmdLineArgs(Options options)

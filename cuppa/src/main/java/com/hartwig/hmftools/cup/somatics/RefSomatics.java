@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
-import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SIG_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CANCER_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CN_ADJUSTED_SAMPLE_POS_FREQ_COUNTS;
@@ -21,12 +20,14 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SIG_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SNV_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
+import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_BUCKET_SIZE;
 import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_MAX_SAMPLE_COUNT;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.parseFileSet;
 import static com.hartwig.hmftools.cup.somatics.CopyNumberProfile.buildCopyNumberProfile;
-import static com.hartwig.hmftools.cup.somatics.GenomicPositions.buildCancerPosFrequencies;
+import static com.hartwig.hmftools.cup.somatics.GenomicPositions.addPanCancerNoise;
+import static com.hartwig.hmftools.cup.somatics.GenomicPositions.buildCancerMatrix;
 import static com.hartwig.hmftools.cup.somatics.GenomicPositions.extractPositionFrequencyCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticClassifier.SNV_POS_FREQ_POS_SIZE;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
@@ -41,6 +42,8 @@ import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.NORMALISE_COPY_NU
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_AID_APOBEC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_AID_APOBEC_DESC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.loadMultipleMatrixFiles;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.writeMatrix;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.writeSampleMatrix;
 import static com.hartwig.hmftools.cup.somatics.TrinucleotideCounts.extractTrinucleotideCounts;
 
 import java.io.BufferedWriter;
@@ -88,6 +91,7 @@ public class RefSomatics implements RefClassifier
     private final boolean mBuildCopyNumber;
     private final boolean mApplyCopyNumber; // to genomic positions
     private Matrix mCopyNumberProfile; // same dimensions as genomic position
+    private final int mGenPosNoiseAllocation;
 
     private final PositionFrequencies mPosFrequencies;
 
@@ -97,7 +101,11 @@ public class RefSomatics implements RefClassifier
     private static final String MATRIX_TYPE_SNV_96 = "SNV_96";
     private static final String MATRIX_TYPE_GEN_POS = "GEN_POS";
     private static final String MATRIX_TYPE_CN_PROFILE = "CN_PROFILE";
+
+    // config
     private static final String BUILD_CN_PROFILE = "build_copy_number";
+    public static final String GEN_POS_NOISE_ALLOC = "gen_pos_noise_alloc";
+    public static final String GEN_POS_NOISE_ALLOC_DESC = "Add genomic position counts from pan-cancer medians";
 
     public RefSomatics(final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
@@ -126,6 +134,7 @@ public class RefSomatics implements RefClassifier
         mPosFrequencies = new PositionFrequencies(posFreqBucketSize, POS_FREQ_MAX_SAMPLE_COUNT);
 
         mBuildCopyNumber = cmd.hasOption(BUILD_CN_PROFILE);
+        mGenPosNoiseAllocation = Integer.parseInt(cmd.getOptionValue(GEN_POS_NOISE_ALLOC, "0"));
         mCopyNumberProfile = null;
     }
 
@@ -148,6 +157,7 @@ public class RefSomatics implements RefClassifier
         options.addOption(EXCLUDE_AID_APOBEC, false, EXCLUDE_AID_APOBEC_DESC);
         options.addOption(NORMALISE_COPY_NUMBER, false, NORMALISE_COPY_NUMBER_DESC);
         options.addOption(BUILD_CN_PROFILE, false, "Build a copy-number profile to match genomic positions");
+        options.addOption(GEN_POS_NOISE_ALLOC, true, GEN_POS_NOISE_ALLOC_DESC);
     }
 
     public void buildRefDataSets()
@@ -192,22 +202,24 @@ public class RefSomatics implements RefClassifier
 
         // write out sample matrix data unless they were already correct
         if(mWriteTriNucMatrixData)
-            writeSampleMatrix(mTriNucCounts, mTriNucCountsIndex, REF_FILE_SNV_COUNTS, INTEGER_FORMAT);
+            writeSampleMatrix(mTriNucCounts, mTriNucCountsIndex, mConfig.OutputDir + REF_FILE_SNV_COUNTS, INTEGER_FORMAT);
 
         if(mWritePosFreqMatrixData)
         {
-            writeSampleMatrix(mPosFreqCounts, mPosFreqCountsIndex, REF_FILE_SAMPLE_POS_FREQ_COUNTS, INTEGER_FORMAT);
+            writeSampleMatrix(mPosFreqCounts, mPosFreqCountsIndex, mConfig.OutputDir + REF_FILE_SAMPLE_POS_FREQ_COUNTS, INTEGER_FORMAT);
         }
 
         if(combineCohortFiles || mBuildCopyNumber)
         {
-            writeSampleMatrix(mCopyNumberProfile, mPosFreqCountsIndex, REF_FILE_COPY_NUMBER_PROFILE, DEC_3_FORMAT);
+            writeSampleMatrix(mCopyNumberProfile, mPosFreqCountsIndex, mConfig.OutputDir + REF_FILE_COPY_NUMBER_PROFILE, DEC_3_FORMAT);
         }
 
         Matrix sampleGenPosCounts = null;
 
         if(mApplyCopyNumber)
         {
+            CUP_LOGGER.info("normalising sample pos-freq counts with copy-number");
+
             Matrix sampleCnNormalisedCounts = CopyNumberProfile.buildSampleCopyNumberNormalisedCounts(
                     mPosFreqCounts, mPosFreqCountsIndex, mCopyNumberProfile, mSampleDataCache.RefSampleDataList,
                     mSampleDataCache.RefSampleTraitsData);
@@ -216,7 +228,9 @@ public class RefSomatics implements RefClassifier
 
             if(mBuildCopyNumber)
             {
-                writeSampleMatrix(sampleCnNormalisedCounts, mPosFreqCountsIndex, REF_FILE_CN_ADJUSTED_SAMPLE_POS_FREQ_COUNTS, DEC_3_FORMAT);
+                writeSampleMatrix(
+                        sampleCnNormalisedCounts, mPosFreqCountsIndex,
+                        mConfig.OutputDir + REF_FILE_CN_ADJUSTED_SAMPLE_POS_FREQ_COUNTS, DEC_3_FORMAT);
             }
         }
         else
@@ -227,13 +241,21 @@ public class RefSomatics implements RefClassifier
         buildSignaturePercentiles();
         buildSnvCountPercentiles();
 
-        buildCancerPosFrequencies(
-                mPosFrequencies, sampleGenPosCounts, mPosFreqCountsIndex, mSampleDataCache.RefCancerSampleData,
-                mConfig.OutputDir + REF_FILE_CANCER_POS_FREQ_COUNTS);
+        List<String> cancerTypes = mSampleDataCache.RefCancerSampleData.keySet().stream()
+                .filter(x -> !x.equals(CANCER_TYPE_OTHER)).collect(Collectors.toList());
+
+        Matrix cancerGenPosMatrix = buildCancerMatrix(
+                sampleGenPosCounts, mPosFreqCountsIndex, cancerTypes, mSampleDataCache.RefCancerSampleData, mPosFrequencies.getMaxSampleCount());
+
+        if(mGenPosNoiseAllocation > 0)
+        {
+            addPanCancerNoise(cancerGenPosMatrix, mGenPosNoiseAllocation);
+        }
+
+        writeMatrix(cancerGenPosMatrix, cancerTypes, mConfig.OutputDir + REF_FILE_CANCER_POS_FREQ_COUNTS, DEC_3_FORMAT);
 
         closeBufferedWriter(mRefDataWriter);
     }
-
 
     private Matrix loadReferenceSnvCounts(final String refFilename, final Map<String,Integer> sampleCountsIndex, final String type)
     {
@@ -382,52 +404,6 @@ public class RefSomatics implements RefClassifier
                 extractPositionFrequencyCounts(variants, mPosFrequencies, aidApobecStatus);
                 mPosFreqCounts.setCol(refSampleIndex, mPosFrequencies.getCounts());
             }
-        }
-    }
-
-    private void writeSampleMatrix(
-            final Matrix matrix, final Map<String,Integer> sampleCountsIndex, final String filename, final String decFormat)
-    {
-        try
-        {
-            BufferedWriter writer = createBufferedWriter(mConfig.OutputDir + filename, false);
-
-            final List<String> sampleIds = sampleCountsIndex.keySet().stream().collect(Collectors.toList());
-            writer.write(sampleIds.get(0));
-            for(int i = 1; i < sampleIds.size(); ++i)
-            {
-                writer.write(String.format(",%s", sampleIds.get(i)));
-            }
-
-            writer.newLine();
-
-            final double[][] matrixData = matrix.getData();
-
-            for(int b = 0; b < matrix.Rows; ++b)
-            {
-                writer.write(String.format(decFormat, matrixData[b][sampleCountsIndex.get(sampleIds.get(0))]));
-
-                for(int i = 1; i < sampleIds.size(); ++i)
-                {
-                    int index = sampleCountsIndex.get(sampleIds.get(i));
-
-                    if(index >= matrix.Cols)
-                    {
-                        CUP_LOGGER.error("file({}) invalid col({}) sampleId({})", filename, i, sampleIds.get(i));
-                        return;
-                    }
-
-                    writer.write(String.format("," + decFormat, matrixData[b][sampleCountsIndex.get(sampleIds.get(i))]));
-                }
-
-                writer.newLine();
-            }
-
-            writer.close();
-        }
-        catch(IOException e)
-        {
-            CUP_LOGGER.error("failed to write ref sample SNV counts: {}", e.toString());
         }
     }
 

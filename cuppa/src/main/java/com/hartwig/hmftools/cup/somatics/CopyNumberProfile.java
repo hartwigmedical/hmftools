@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleCopyNumberFile;
 import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_CN_ADJUST_MAX;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -50,7 +52,16 @@ public final class CopyNumberProfile
             double[] sampleCounts = posFreqCounts.getCol(sampleIndex);
 
             if(sampleCounts == null)
+            {
+                CUP_LOGGER.error("sample({}) missing pos freq counts", sample.Id);
                 continue;
+            }
+
+            if(!refSampleTraitsData.containsKey(sample.Id))
+            {
+                CUP_LOGGER.error("sample({}) missing traits data", sample.Id);
+                continue;
+            }
 
             double samplePloidy = refSampleTraitsData.get(sample.Id).Ploidy;
             final double[] sampleCnProfile = cnProfiles.getCol(sampleIndex);
@@ -66,7 +77,7 @@ public final class CopyNumberProfile
             final List<String> sampleIds, final RefDataConfig config, final Map<String,Integer> sampleIndexMap,
             final PositionFrequencies posFrequencies)
     {
-        CUP_LOGGER.debug("building copy-number profile reference data");
+        CUP_LOGGER.info("building copy-number profile reference data");
 
         Matrix copyNumberMatrix = new Matrix(posFrequencies.getBucketCount(), sampleIds.size());
 
@@ -82,8 +93,15 @@ public final class CopyNumberProfile
             }
             else
             {
-                final String purpleCopyNumberFile = purpleCopyNumberFile(config.PurpleDir, sampleId);
-                cnProfile = extractSampleCopyNumberProfile(sampleId, null, purpleCopyNumberFile, posFrequencies);
+                final String purpleCnFile = purpleCopyNumberFile(config.PurpleDir, sampleId);
+
+                if(!Files.exists(Paths.get(purpleCnFile)))
+                {
+                    CUP_LOGGER.error("sample({}) missing Purple copy-number file({})", sampleId, purpleCnFile);
+                    continue;
+                }
+
+                cnProfile = extractSampleCopyNumberProfile(sampleId, null, purpleCnFile, posFrequencies);
             }
 
             copyNumberMatrix.setCol(sampleIndex, cnProfile);

@@ -105,7 +105,8 @@ public final class VectorUtils
 
         for(int i = 0; i < data.length; ++i)
         {
-            if(i == 0) {
+            if(i == 0)
+            {
                 sortedList.add(i);
                 continue;
             }

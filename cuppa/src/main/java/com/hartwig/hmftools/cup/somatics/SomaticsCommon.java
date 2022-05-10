@@ -2,12 +2,16 @@ package com.hartwig.hmftools.cup.somatics;
 
 import static java.lang.Math.pow;
 
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CupCalcs.convertToPercentages;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Matrix;
@@ -91,6 +95,89 @@ public final class SomaticsCommon
         combinedMatrix.cacheTranspose();
 
         return combinedMatrix;
+    }
+
+    public static void writeSampleMatrix(
+            final Matrix matrix, final Map<String,Integer> sampleCountsIndex, final String filename, final String decFormat)
+    {
+        try
+        {
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            final List<String> sampleIds = sampleCountsIndex.keySet().stream().collect(Collectors.toList());
+            writer.write(sampleIds.get(0));
+            for(int i = 1; i < sampleIds.size(); ++i)
+            {
+                writer.write(String.format(",%s", sampleIds.get(i)));
+            }
+
+            writer.newLine();
+
+            final double[][] matrixData = matrix.getData();
+
+            for(int b = 0; b < matrix.Rows; ++b)
+            {
+                writer.write(String.format(decFormat, matrixData[b][sampleCountsIndex.get(sampleIds.get(0))]));
+
+                for(int i = 1; i < sampleIds.size(); ++i)
+                {
+                    int index = sampleCountsIndex.get(sampleIds.get(i));
+
+                    if(index >= matrix.Cols)
+                    {
+                        CUP_LOGGER.error("file({}) invalid col({}) sampleId({})", filename, i, sampleIds.get(i));
+                        return;
+                    }
+
+                    writer.write(String.format("," + decFormat, matrixData[b][sampleCountsIndex.get(sampleIds.get(i))]));
+                }
+
+                writer.newLine();
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            CUP_LOGGER.error("failed to write ref sample SNV counts: {}", e.toString());
+        }
+    }
+
+    public static void writeMatrix(
+            final Matrix matrix, final List<String> columnNames, final String filename, final String decFormat)
+    {
+        try
+        {
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            writer.write(columnNames.get(0));
+            for(int i = 1; i < columnNames.size(); ++i)
+            {
+                writer.write(String.format(",%s", columnNames.get(i)));
+            }
+
+            writer.newLine();
+
+            final double[][] data = matrix.getData();
+
+            for(int b = 0; b < matrix.Rows; ++b)
+            {
+                writer.write(String.format(decFormat, data[b][0]));
+
+                for(int i = 1; i < matrix.Cols; ++i)
+                {
+                    writer.write(String.format("," + decFormat, data[b][i]));
+                }
+
+                writer.newLine();
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            CUP_LOGGER.error("failed to write ref matrix data: {}", e.toString());
+        }
     }
 
 }

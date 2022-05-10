@@ -19,12 +19,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.common.utils.VectorUtils;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.cup.common.SampleData;
-import com.hartwig.hmftools.cup.traits.SampleTraitsData;
 
 public final class GenomicPositions
 {
@@ -79,79 +80,85 @@ public final class GenomicPositions
         return matrix;
     }
 
-    public static void buildCancerPosFrequencies(
-            final PositionFrequencies posFrequencies, final Matrix posFreqCounts, final Map<String,Integer> sampleIndexMap,
-            final Map<String,List<SampleData>> refCancerSampleData, final String filename)
+    public static Matrix buildCancerMatrix(
+            final Matrix samplePosFreqCounts, final Map<String,Integer> sampleIndexMap,
+            final List<String> cancerTypes, final Map<String,List<SampleData>> refCancerSampleData, int maxSampleCount)
     {
-        if(posFreqCounts == null)
-            return;
+        Matrix cancerGenPosMatrix = new Matrix(samplePosFreqCounts.Rows, cancerTypes.size());
+        final double[][] matrixData = cancerGenPosMatrix.getData();
 
-        try
+        for(int i = 0; i < cancerTypes.size(); ++i)
         {
-            BufferedWriter writer = createBufferedWriter(filename, false);
+            String cancerType = cancerTypes.get(i);
+            List<SampleData> samples = refCancerSampleData.get(cancerType);
 
-            int maxSampleCount = posFrequencies.getMaxSampleCount();
-            int bucketCount = posFrequencies.getBucketCount();
-
-            final Map<String,double[]> cancerPosCounts = Maps.newHashMap();
-
-            for(Map.Entry<String,List<SampleData>> entry : refCancerSampleData.entrySet())
+            for(final SampleData sample : samples)
             {
-                final String cancerType = entry.getKey();
+                int sampleIndex = sampleIndexMap.get(sample.Id);
+                double[] sampleCounts = samplePosFreqCounts.getCol(sampleIndex);
 
-                if(cancerType.equals(CANCER_TYPE_OTHER))
+                if(sampleCounts == null)
                     continue;
 
-                final double[] cancerCounts = new double[bucketCount];
+                double sampleTotal = sumVector(sampleCounts);
 
-                for(final SampleData sample : entry.getValue())
+                double reductionFactor = sampleTotal > maxSampleCount ? maxSampleCount / sampleTotal : 1.0;
+
+                for(int b = 0; b < sampleCounts.length; ++b)
                 {
-                    int sampleIndex = sampleIndexMap.get(sample.Id);
-                    double[] sampleCounts = posFreqCounts.getCol(sampleIndex);
-
-                    if(sampleCounts == null)
-                        continue;
-
-                    double sampleTotal = sumVector(sampleCounts);
-
-                    double reductionFactor = sampleTotal > maxSampleCount ? maxSampleCount / sampleTotal : 1.0;
-
-                    for(int b = 0; b < sampleCounts.length; ++b)
-                    {
-                        cancerCounts[b] += reductionFactor * sampleCounts[b];
-                    }
+                    matrixData[b][i] += reductionFactor * sampleCounts[b];
                 }
-
-                cancerPosCounts.put(cancerType, cancerCounts);
             }
-
-            final List<String> cancerTypes = cancerPosCounts.keySet().stream().collect(Collectors.toList());
-            writer.write(cancerTypes.get(0));
-            for(int i = 1; i < cancerTypes.size(); ++i)
-            {
-                writer.write(String.format(",%s", cancerTypes.get(i)));
-            }
-
-            writer.newLine();
-
-            for(int b = 0; b < bucketCount; ++b)
-            {
-                writer.write(String.format(DEC_3_FORMAT, cancerPosCounts.get(cancerTypes.get(0))[b]));
-
-                for(int i = 1; i < cancerTypes.size(); ++i)
-                {
-                    writer.write(String.format("," + DEC_3_FORMAT, cancerPosCounts.get(cancerTypes.get(i))[b]));
-                }
-
-                writer.newLine();
-            }
-
-            writer.close();
         }
-        catch(IOException e)
-        {
-            CUP_LOGGER.error("failed to write sample pos data output: {}", e.toString());
-        }
+
+        return cancerGenPosMatrix;
     }
 
+    public static void addPanCancerNoise(final Matrix cancerGenPosMatrix, int noiseAllocation)
+    {
+        // determine the median count per bucket across the cancer types
+        double[] bucketMedians = new double[cancerGenPosMatrix.Rows];
+        double medianTotal = 0;
+
+        final double[][] data = cancerGenPosMatrix.getData();
+        List<Double> sortedCounts = Lists.newArrayListWithCapacity(cancerGenPosMatrix.Cols);
+        int medianIndex = cancerGenPosMatrix.Cols / 2 + 1;
+
+        for(int b = 0; b < cancerGenPosMatrix.Rows; ++b)
+        {
+            sortedCounts.clear();
+
+            for(int i = 0; i < cancerGenPosMatrix.Cols; ++i)
+            {
+                int index = 0;
+                double count = data[b][i];
+                while(index < sortedCounts.size())
+                {
+                    if(count > sortedCounts.get(index))
+                        break;
+                    else
+                        ++index;
+                }
+
+                sortedCounts.add(index, count);
+            }
+
+            double medianCount = sortedCounts.get(medianIndex);
+            medianTotal += medianCount;
+            bucketMedians[b] = medianCount;
+        }
+
+        // now scale these to the noise allocation
+        for(int b = 0; b < cancerGenPosMatrix.Rows; ++b)
+        {
+            double bucketMedian = bucketMedians[b];
+            double bucketPerc = bucketMedian / medianTotal;
+            double bucketAlloc = bucketPerc * noiseAllocation;
+
+            for(int i = 0; i < cancerGenPosMatrix.Cols; ++i)
+            {
+                data[b][i] += bucketAlloc;
+            }
+        }
+    }
 }

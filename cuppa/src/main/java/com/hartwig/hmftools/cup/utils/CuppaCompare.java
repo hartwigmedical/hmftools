@@ -175,8 +175,8 @@ public class CuppaCompare
             }
         }
 
-        CUP_LOGGER.info("bothCorrect({}) origCorrect({}) newCorrect({}) neither({})",
-                bothCorrect, origOnlyCorrect, newOnlyCorrect, bothIncorrect);
+        CUP_LOGGER.info("bothCorrect({}) origCorrect({}) newCorrect({}) neither({}) unmatched(samples={} cancerTypes={})",
+                bothCorrect, origOnlyCorrect, newOnlyCorrect, bothIncorrect, unmatchedSamples, missingCancerTypes);
 
         closeBufferedWriter(mWriter);
     }
