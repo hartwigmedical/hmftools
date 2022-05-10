@@ -33,9 +33,6 @@ public abstract class EventClassifierConfig {
     public abstract Set<String> geneLevelBlacklistKeyPhrases();
 
     @NotNull
-    public abstract Set<String> geneWildTypesKeyPhrases();
-
-    @NotNull
     public abstract Set<String> genericGeneLevelKeyPhrases();
 
     @NotNull
@@ -43,6 +40,9 @@ public abstract class EventClassifierConfig {
 
     @NotNull
     public abstract Set<String> inactivatingGeneLevelKeyPhrases();
+
+    @NotNull
+    public abstract Set<String> wildTypeKeyPhrases();
 
     @NotNull
     public abstract Set<String> amplificationKeywords();
@@ -93,7 +93,7 @@ public abstract class EventClassifierConfig {
     public abstract Set<String> hrDeficiencyKeyPhrases();
 
     @NotNull
-    public abstract Set<String> hlaEvents();
+    public abstract Set<String> hlaKeyPhrases();
 
     @NotNull
     public abstract Set<String> hpvPositiveEvents();

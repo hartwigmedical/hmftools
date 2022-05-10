@@ -4,11 +4,12 @@ import java.util.Set;
 
 import org.jetbrains.annotations.NotNull;
 
-public class WildTypeMatcher implements EventMatcher{
+public class WildTypeMatcher implements EventMatcher {
+
     @NotNull
     private final Set<String> geneWildTypesKeyPhrases;
 
-    public WildTypeMatcher(@NotNull final Set<String> geneWildTypesKeyPhrases) {
+    WildTypeMatcher(@NotNull final Set<String> geneWildTypesKeyPhrases) {
         this.geneWildTypesKeyPhrases = geneWildTypesKeyPhrases;
     }
 
@@ -19,7 +20,6 @@ public class WildTypeMatcher implements EventMatcher{
                 return true;
             }
         }
-
         return false;
     }
 }

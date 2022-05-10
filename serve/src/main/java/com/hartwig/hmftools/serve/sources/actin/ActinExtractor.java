@@ -55,7 +55,7 @@ public class ActinExtractor {
                 if (type == EventType.UNKNOWN) {
                     LOGGER.warn("No event type known for '{}'", entry);
                 } else {
-                    extractions.add(toExtractionResult(entry, event, type));
+                    extractions.add(toExtractionResult(entry, type, event));
                 }
             }
 
@@ -66,20 +66,22 @@ public class ActinExtractor {
     }
 
     @NotNull
-    private ExtractionResult toExtractionResult(@NotNull ActinEntry entry, @NotNull String event, @NotNull EventType type) {
+    private ExtractionResult toExtractionResult(@NotNull ActinEntry entry, @NotNull EventType type, @NotNull String event) {
         String gene;
         String sourceEvent;
 
         if (entry.gene() != null) {
             gene = entry.gene();
             sourceEvent = entry.rule() + ": " + entry.gene();
+            if (entry.mutation() != null) {
+                sourceEvent += (" " + entry.mutation());
+            }
         } else {
             gene = ActinKeywords.NO_GENE;
             sourceEvent = entry.rule().toString();
-        }
-
-        if (entry.mutation() != null) {
-            sourceEvent += (" " + entry.mutation());
+            if (entry.mutation() != null) {
+                sourceEvent += (": " + entry.mutation());
+            }
         }
 
         EventExtractorOutput extraction = eventExtractor.extract(gene, null, type, event);

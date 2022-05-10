@@ -7,14 +7,19 @@ import org.jetbrains.annotations.NotNull;
 public class HlaMatcher implements EventMatcher{
 
     @NotNull
-    private final Set<String> hlaEvents;
+    private final Set<String> hlaKeyPhrases;
 
-    HlaMatcher(@NotNull final Set<String> hlaEvents) {
-        this.hlaEvents = hlaEvents;
+    HlaMatcher(@NotNull final Set<String> hlaKeyPhrases) {
+        this.hlaKeyPhrases = hlaKeyPhrases;
     }
 
     @Override
     public boolean matches(@NotNull String gene, @NotNull String event) {
-        return hlaEvents.contains(event);
+        for (String keyPhrase : hlaKeyPhrases) {
+            if (event.contains(keyPhrase)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

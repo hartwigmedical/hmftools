@@ -48,11 +48,15 @@ class FusionPairMatcher implements EventMatcher {
             potentialFusion = trimmedEvent;
         }
 
-        if (potentialFusion.contains("-") && !potentialFusion.equals("wild-type")) {
+        if (potentialFusion.contains("-") && !potentialFusion.equalsIgnoreCase("wild-type")) {
             String[] parts = potentialFusion.split("-");
-            // Assume genes that are fused contain no spaces and do not end with "-"
-            return parts.length > 1 && !parts[0].contains(" ") && !parts[1].contains(" ");
+            return parts.length > 1 && !containsInvalidChar(parts[0]) && !containsInvalidChar(parts[1]);
         }
         return false;
+    }
+
+    private static boolean containsInvalidChar(@NotNull String fusionPartner) {
+        // Assume genes that are fused contain no spaces, contain no asterisk
+        return fusionPartner.contains(" ") || fusionPartner.contains("*");
     }
 }

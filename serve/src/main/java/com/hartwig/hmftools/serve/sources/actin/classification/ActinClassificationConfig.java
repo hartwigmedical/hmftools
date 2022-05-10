@@ -18,10 +18,10 @@ public final class ActinClassificationConfig {
     private static final Set<String> SPECIFIC_EXON_EVENTS = specificExonEvents();
     private static final Map<String, Set<String>> FUSION_PAIR_AND_EXONS_PER_GENE = fusionPairAndExonsPerGene();
     private static final Set<String> GENE_LEVEL_BLACKLIST_KEY_PHRASES = geneLevelBlacklistKeyPhrases();
-    private static final Set<String> GENE_WILD_TYPES_KEY_PHRASES = geneWildTypesKeyPhrases();
     private static final Set<String> GENERIC_GENE_LEVEL_KEY_PHRASES = genericGeneLevelKeyPhrases();
     private static final Set<String> ACTIVATING_GENE_LEVEL_KEY_PHRASES = activatingGeneLevelKeyPhrases();
     private static final Set<String> INACTIVATING_GENE_LEVEL_KEY_PHRASES = inactivatingGeneLevelKeyPhrases();
+    private static final Set<String> WILD_TYPE_KEY_PHRASES = wildTypeKeyPhrases();
     private static final Set<String> AMPLIFICATION_KEYWORDS = amplificationKeywords();
     private static final Set<String> AMPLIFICATION_KEY_PHRASES = amplificationKeyPhrases();
     private static final Set<String> DELETION_BLACKLIST_KEY_PHRASES = deletionBlacklistKeyPhrases();
@@ -38,7 +38,7 @@ public final class ActinClassificationConfig {
     private static final Set<String> HIGH_TUMOR_MUTATIONAL_BURDEN_KEY_PHRASES = highTumorMutationalBurdenKeyPhrases();
     private static final Set<String> LOW_TUMOR_MUTATIONAL_BURDEN_KEY_PHRASES = lowTumorMutationalBurdenKeyPhrases();
     private static final Set<String> HR_DEFICIENCY_KEY_PHRASES = hrDeficiencyKeyPhrases();
-    private static final Set<String> HLA_EVENTS = hlaEvents();
+    private static final Set<String> HLA_KEY_PHRASES = hlaKeyPhrases();
     private static final Set<String> HPV_POSITIVE_EVENTS = hpvPositiveEvents();
     private static final Set<String> EBV_POSITIVE_EVENTS = ebvPositiveEvents();
     private static final Map<String, Set<String>> COMBINED_EVENTS_PER_GENE = combinedEventsPerGene();
@@ -57,10 +57,10 @@ public final class ActinClassificationConfig {
                 .specificExonEvents(SPECIFIC_EXON_EVENTS)
                 .fusionPairAndExonsPerGene(FUSION_PAIR_AND_EXONS_PER_GENE)
                 .geneLevelBlacklistKeyPhrases(GENE_LEVEL_BLACKLIST_KEY_PHRASES)
-                .geneWildTypesKeyPhrases(GENE_WILD_TYPES_KEY_PHRASES)
                 .genericGeneLevelKeyPhrases(GENERIC_GENE_LEVEL_KEY_PHRASES)
                 .activatingGeneLevelKeyPhrases(ACTIVATING_GENE_LEVEL_KEY_PHRASES)
                 .inactivatingGeneLevelKeyPhrases(INACTIVATING_GENE_LEVEL_KEY_PHRASES)
+                .wildTypeKeyPhrases(WILD_TYPE_KEY_PHRASES)
                 .amplificationKeywords(AMPLIFICATION_KEYWORDS)
                 .amplificationKeyPhrases(AMPLIFICATION_KEY_PHRASES)
                 .deletionBlacklistKeyPhrases(DELETION_BLACKLIST_KEY_PHRASES)
@@ -77,7 +77,7 @@ public final class ActinClassificationConfig {
                 .highTumorMutationalBurdenKeyPhrases(HIGH_TUMOR_MUTATIONAL_BURDEN_KEY_PHRASES)
                 .lowTumorMutationalBurdenKeyPhrases(LOW_TUMOR_MUTATIONAL_BURDEN_KEY_PHRASES)
                 .hrDeficiencyKeyPhrases(HR_DEFICIENCY_KEY_PHRASES)
-                .hlaEvents(HLA_EVENTS)
+                .hlaKeyPhrases(HLA_KEY_PHRASES)
                 .hpvPositiveEvents(HPV_POSITIVE_EVENTS)
                 .ebvPositiveEvents(EBV_POSITIVE_EVENTS)
                 .combinedEventsPerGene(COMBINED_EVENTS_PER_GENE)
@@ -122,13 +122,6 @@ public final class ActinClassificationConfig {
     }
 
     @NotNull
-    private static Set<String> geneWildTypesKeyPhrases() {
-        Set<String> set = Sets.newHashSet();
-        set.add(ActinKeywords.WILDTYPE);
-        return set;
-    }
-
-    @NotNull
     private static Set<String> genericGeneLevelKeyPhrases() {
         return Sets.newHashSet();
     }
@@ -144,6 +137,13 @@ public final class ActinClassificationConfig {
     private static Set<String> inactivatingGeneLevelKeyPhrases() {
         Set<String> set = Sets.newHashSet();
         set.add(ActinKeywords.INACTIVATION);
+        return set;
+    }
+
+    @NotNull
+    private static Set<String> wildTypeKeyPhrases() {
+        Set<String> set = Sets.newHashSet();
+        set.add(ActinKeywords.WILDTYPE);
         return set;
     }
 
@@ -244,7 +244,7 @@ public final class ActinClassificationConfig {
     }
 
     @NotNull
-    private static Set<String> hlaEvents() {
+    private static Set<String> hlaKeyPhrases() {
         Set<String> set = Sets.newHashSet();
         set.add(ActinKeywords.HLA_TYPE);
         return set;
