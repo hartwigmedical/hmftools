@@ -1,6 +1,6 @@
 gene	transcript	isCanonical	event	eventIsHighDriver	germline	reported	treatment	onLabel	level	direction	sources
-BRAF	123	true	p.Val600Glu	true	false	true	Cobimetinib + Vemurafenib	false	A	RESPONSIVE	url	vicc_cgi|hotspot|https://www.google.com/#q=FDA|HOTSPOT_MUTATION|||
-BRAF	123	true	p.Val600Glu	true	false	true	Dabrafenib	false	A	RESPONSIVE	url	vicc_cgi|hotspot|https://www.google.com/#q=FDA,https://www.google.com/#q=NCCN|HOTSPOT_MUTATION|||
-BRAF	123	true	p.Val600Glu	true	false	true	Dabrafenib + Trametinib	false	A	RESPONSIVE	url	vicc_cgi|hotspot|http://www.ncbi.nlm.nih.gov/pubmed/25399551,http://www.ncbi.nlm.nih.gov/pubmed/27283860|HOTSPOT_MUTATION|||;vicc_civic|hotspot|https://www.google.com/#q=FDA|HOTSPOT_MUTATION|||
-BRAF	123	true	p.Val600Glu	true	false	true	Vemurafenib	false	A	RESPONSIVE	url	vicc_cgi|hotspot|https://www.google.com/#q=FDA|HOTSPOT_MUTATION|600|
-			some mutation	false	false	true	Vemurafenib	false	A	RESPONSIVE	url	vicc_cgi|hotspot|https://www.google.com/#q=FDA|SIGNATURE|||
+BRAF	123	true	p.Val600Glu	true	false	true	Cobimetinib + Vemurafenib	false	A	RESPONSIVE	vicc_cgi|hotspot|https://www.google.com/#q=FDA|HOTSPOT_MUTATION|||
+BRAF	123	true	p.Val600Glu	true	false	true	Dabrafenib	false	A	RESPONSIVE	vicc_cgi|hotspot|https://www.google.com/#q=FDA,https://www.google.com/#q=NCCN|HOTSPOT_MUTATION|||
+BRAF	123	true	p.Val600Glu	true	false	true	Dabrafenib + Trametinib	false	A	RESPONSIVE	vicc_cgi|hotspot|http://www.ncbi.nlm.nih.gov/pubmed/25399551,http://www.ncbi.nlm.nih.gov/pubmed/27283860|HOTSPOT_MUTATION|||;vicc_civic|hotspot|https://www.google.com/#q=FDA|HOTSPOT_MUTATION|||
+BRAF	123	true	p.Val600Glu	true	false	true	Vemurafenib	false	A	RESPONSIVE	vicc_cgi|hotspot|https://www.google.com/#q=FDA|HOTSPOT_MUTATION|600|
+			some mutation	false	false	true	Vemurafenib	false	A	RESPONSIVE	vicc_cgi|hotspot|https://www.google.com/#q=FDA|SIGNATURE|||
