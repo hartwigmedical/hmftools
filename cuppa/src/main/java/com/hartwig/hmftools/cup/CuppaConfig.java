@@ -223,7 +223,7 @@ public class CuppaConfig
 
         OutputDir = parseOutputDir(cmd);
         OutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID, "");
-        Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
+        Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "1"));
 
         WriteSimilarities = cmd.hasOption(WRITE_SIMS);
         WriteDetailedScores = cmd.hasOption(WRITE_DETAILED_SCORES);

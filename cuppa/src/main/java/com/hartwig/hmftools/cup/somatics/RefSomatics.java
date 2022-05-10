@@ -209,7 +209,7 @@ public class RefSomatics implements RefClassifier
             writeSampleMatrix(mPosFreqCounts, mPosFreqCountsIndex, mConfig.OutputDir + REF_FILE_SAMPLE_POS_FREQ_COUNTS, INTEGER_FORMAT);
         }
 
-        if(combineCohortFiles || mBuildCopyNumber)
+        if(mBuildCopyNumber)
         {
             writeSampleMatrix(mCopyNumberProfile, mPosFreqCountsIndex, mConfig.OutputDir + REF_FILE_COPY_NUMBER_PROFILE, DEC_3_FORMAT);
         }

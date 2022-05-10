@@ -126,18 +126,18 @@ public class SampleTraitClassifier implements CuppaClassifier
         {
             for(SampleData sample : mSampleDataCache.SampleDataList)
             {
-                final String sampleDataDir = formSamplePath(mConfig.SampleDataDir, sample.Id);
+                String purpleDir = mConfig.getPurpleDataDir(sample.Id);
 
                 try
                 {
-                    final PurityContext purityContext = PurityContextFile.read(sampleDataDir, sample.Id);
+                    final PurityContext purityContext = PurityContextFile.read(purpleDir, sample.Id);
                     SampleTraitsData traitsData = SampleTraitsData.from(sample.Id, purityContext, 0);
                     mSampleTraitsData.put(traitsData.SampleId, traitsData);
                 }
                 catch(Exception e)
                 {
                     CUP_LOGGER.error("sample({}) sample traits - failed to load purity file from dir{}): {}",
-                            sample.Id, sampleDataDir, e.toString());
+                            sample.Id, purpleDir, e.toString());
                     mIsValid = false;
                     break;
                 }
