@@ -38,11 +38,11 @@ public abstract class RnaStatistics
 
     public String qcStatus()
     {
-        if(totalFragments() > 0 && duplicateFragments() / (double)totalFragments() > HIGH_DUPLICATES_THRESHOLD)
-            return FILTER_DUPLICATES;
-
         if(totalFragments() - duplicateFragments() < LOW_COVERAGE_THRESHOLD)
             return FILTER_LOW_COVERAGE;
+
+        if(totalFragments() > 0 && duplicateFragments() / (double)totalFragments() > HIGH_DUPLICATES_THRESHOLD)
+            return FILTER_DUPLICATES;
 
         return FILTER_PASS;
     }
