@@ -24,8 +24,8 @@ SERVE supports the ingestion of the following knowledgebases:
  - [OncoKB](https://www.oncokb.org) - general purpose knowledgebase that is supported through [VICC](http://cancervariants.org)
  - [DoCM](http://www.docm.info) - database containing pathogenic mutations in cancer
  - [iClusion](https://iclusion.org) - a database with all actively recruiting clinical trials in the Netherlands 
- - [ACTIN](https://github.com/hartwigmedical/actin/blob/master/treatment/README.md) - a database with all actively recruiting clinical trials in the ACTIN study along with 
- molecular inclusion criteria for these trials.
+ - [ACTIN](https://github.com/hartwigmedical/actin/blob/master/treatment/README.md) - a database with all actively recruiting 
+ clinical trials in the ACTIN study along with molecular inclusion criteria for these trials.
  - HMF Cohort - a database of recurrent somatic mutations in cancer-related genes from the Hartwig database.
  - HMF Curated - a database of known driver mutations curated by the Hartwig team.
  
@@ -176,7 +176,7 @@ ACTIVATION | Evidence is applicable when a gene has been activated. Downstream a
 INACTIVATION | Evidence is applicable when a gene has been inactivated. Downstream algorithms are expected to interpret this.
 ANY_MUTATION | SERVE does not restrict this evidence based on the type of mutation and considers every type of mutation applicable for this evidence.
 FUSION | Evidence is applicable in case the gene has fused with another gene (either 3' or 5').
-WILD_TYPE | Evidence is applicable in case no genomic alteration is detected)
+WILD_TYPE | Evidence is applicable in case no genomic alteration is detected.
 
 ### Exonic ranges specific for fusion pairs
 
@@ -200,9 +200,9 @@ LOW_TUMOR_MUTATIONAL_LOAD | Evidence is applicable when the genome does not have
 HOMOLOGOUS_RECOMBINATION_DEFICIENT | Evidence is applicable when the genome has a HRD status (Hartwig's cutoff >= 0.5)
 HPV_POSITIVE | Evidence is applicable when viral presence of some form of HPV has been found
 EBV_POSITIVE | Evidence is applicable when viral presence of some form of EBV has been found
-IMMUNO_HLA / Evidence is applicable in case of an HLA type match
 
 ### HLA typing
+
 Every patient has a specific HLA Class type I in their germline. If this class matches to HLA class type I which is derived from the 
 knowledgebase this patient is applicable for the evidence.
 
@@ -265,7 +265,7 @@ HRD_SIGNATURE | HR Status = HRD
 TMB_OF_AT_LEAST_X | Tumor Mutational Burden (TMB) should be => X
 TML_OF_AT_LEAST_X | Tumor Mutational Load (TML) should be => X
 TML_OF_AT_MOST_X | TML should be <= X
-HAS_HLA_A_TYPE_X | HLA typing should be X   
+HAS_HLA_A_TYPE_X | Patient should have at least one HLA allele of type X   
 
 SERVE configures every trial to A-level evidence with responsive direction. The filtering is predominantly configurable rather than fixed
 in SERVE. The following filters can be configured in ACTIN:
@@ -379,9 +379,10 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   
 ## Version History and Download Links
 - Upcoming
-  - Use correct blacklisted tumor locations for solid tumors 
-  - Updating mutation type filter for exon insertions and deletions
-  - Remove "negative" from CKB events which are interpreted as inactivation events.
+  - Used correct blacklisted tumor locations for solid tumors 
+  - Updated mutation type filter for exon insertions and deletions
+  - Removed "negative" from list of CKB events which are interpreted as inactivation events.
+  - Various updates are made to ingestion of ACTIN source
 - [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.10)
   - Solve issues of v1.9
 - [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.9)
