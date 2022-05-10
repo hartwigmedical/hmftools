@@ -54,11 +54,11 @@ public class ActinEventExtractorTest {
         ActinEntry wildtype = ActinTestFactory.builder().rule(ActinRule.WILDTYPE_OF_GENE_X).gene("A").build();
         assertEquals(Sets.newHashSet(ActinKeywords.WILDTYPE), ActinEventExtractor.extractEvents(wildtype));
 
-        ActinEntry msi = ActinTestFactory.builder().rule(ActinRule.MSI_SIGNATURE).mutation("msi high").build();
-        assertEquals(Sets.newHashSet("msi high"), ActinEventExtractor.extractEvents(msi));
+        ActinEntry msi = ActinTestFactory.builder().rule(ActinRule.MSI_SIGNATURE).build();
+        assertEquals(Sets.newHashSet(ActinKeywords.MSI_SIGNATURE), ActinEventExtractor.extractEvents(msi));
 
-        ActinEntry hrd = ActinTestFactory.builder().rule(ActinRule.HRD_SIGNATURE).mutation("HRD").build();
-        assertEquals(Sets.newHashSet("HRD"), ActinEventExtractor.extractEvents(hrd));
+        ActinEntry hrd = ActinTestFactory.builder().rule(ActinRule.HRD_SIGNATURE).build();
+        assertEquals(Sets.newHashSet(ActinKeywords.HRD_SIGNATURE), ActinEventExtractor.extractEvents(hrd));
 
         ActinEntry tmbHigh = ActinTestFactory.builder().rule(ActinRule.TMB_OF_AT_LEAST_X).mutation("TMB >= 10").build();
         assertEquals(Sets.newHashSet("TMB >= 10"), ActinEventExtractor.extractEvents(tmbHigh));

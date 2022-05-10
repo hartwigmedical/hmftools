@@ -24,8 +24,12 @@ public final class ActinEventExtractor {
             case INACTIVATION_OF_GENE_X: {
                 return Sets.newHashSet(ActinKeywords.INACTIVATION);
             }
-            case MSI_SIGNATURE:
-            case HRD_SIGNATURE:
+            case MSI_SIGNATURE: {
+                return Sets.newHashSet(ActinKeywords.MSI_SIGNATURE);
+            }
+            case HRD_SIGNATURE: {
+                return Sets.newHashSet(ActinKeywords.HRD_SIGNATURE);
+            }
             case TMB_OF_AT_LEAST_X:
             case TML_OF_AT_LEAST_X:
             case TML_OF_AT_MOST_X:
