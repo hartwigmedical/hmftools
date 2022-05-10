@@ -171,7 +171,7 @@ public class ClinicalEvidenceChapter implements ReportChapter {
         }
         StringJoiner sources = new StringJoiner(", ");
         for (ProtectSource source : evidence.protectSources()) {
-            sources.add(source.source().reportDisplay());
+            sources.add(source.source().display());
         }
         return event + " (" + evidence.level() + " - " + sources + ")";
     }

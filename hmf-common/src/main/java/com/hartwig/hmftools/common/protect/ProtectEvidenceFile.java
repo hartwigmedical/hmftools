@@ -17,7 +17,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.common.utils.FileWriterUtils;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -139,7 +138,7 @@ public final class ProtectEvidenceFile {
 
             StringJoiner urls = new StringJoiner(SUBFIELD_DELIMITER);
             StringJoiner evidenceUrls = new StringJoiner(SUBFIELD_DELIMITER);
-            sb.append(source.source().technicalDisplay()).append(SOURCE_SUBFIELD_ITEM_DELIMITER);
+            sb.append(source.source().toString()).append(SOURCE_SUBFIELD_ITEM_DELIMITER);
             sb.append(source.sourceEvent()).append(SOURCE_SUBFIELD_ITEM_DELIMITER);
             for (String sourceUrl : source.sourceUrls()) {
                 urls.add(sourceUrl);
