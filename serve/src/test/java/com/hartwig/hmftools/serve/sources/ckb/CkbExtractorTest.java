@@ -91,13 +91,13 @@ public class CkbExtractorTest {
     }
 
     @NotNull
-    private static CodonAnnotation findByGene(@NotNull Iterable<CodonAnnotation> codons, @NotNull String gene) {
+    private static CodonAnnotation findByGene(@NotNull Iterable<CodonAnnotation> codons, @NotNull String geneToFind) {
         for (CodonAnnotation codon : codons) {
-            if (codon.gene().equals(gene)) {
+            if (codon.gene().equals(geneToFind)) {
                 return codon;
             }
         }
 
-        throw new IllegalStateException("Could not find gene " + gene);
+        throw new IllegalStateException("Could not find gene " + geneToFind);
     }
 }

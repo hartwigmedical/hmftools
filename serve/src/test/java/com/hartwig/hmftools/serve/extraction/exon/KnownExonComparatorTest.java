@@ -25,9 +25,8 @@ public class KnownExonComparatorTest {
                         .build())
                 .build();
 
-        KnownExon exon2 = ImmutableKnownExon.builder()
-                .annotation(ImmutableExonAnnotation.builder().from(exon1.annotation()).rank(2).build())
-                .build();
+        KnownExon exon2 =
+                ImmutableKnownExon.builder().annotation(ImmutableExonAnnotation.builder().from(exon1.annotation()).rank(2).build()).build();
 
         Set<KnownExon> sortedExons = Sets.newTreeSet(new KnownExonComparator());
         sortedExons.add(exon2);

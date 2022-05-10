@@ -40,18 +40,17 @@ public class IclusionFilterTest {
 
         IclusionMutationCondition singleNormalOr = or(Lists.newArrayList((normalMutation())));
 
-        IclusionTrial brafV600E =
-                ImmutableIclusionTrial.builder()
-                        .id("id")
-                        .acronym("empty")
-                        .title("title")
-                        .eudra("eudra")
-                        .nct("nct")
-                        .ipn("ipn")
-                        .ccmo("ccmo")
-                        .mutationConditions(Lists.newArrayList(singleNormalOr))
-                        .tumorLocations(Lists.newArrayList(loc1, loc2))
-                        .build();
+        IclusionTrial brafV600E = ImmutableIclusionTrial.builder()
+                .id("id")
+                .acronym("empty")
+                .title("title")
+                .eudra("eudra")
+                .nct("nct")
+                .ipn("ipn")
+                .ccmo("ccmo")
+                .mutationConditions(Lists.newArrayList(singleNormalOr))
+                .tumorLocations(Lists.newArrayList(loc1, loc2))
+                .build();
 
         assertTrue(filter.run(Lists.newArrayList(brafV600E)).isEmpty());
 

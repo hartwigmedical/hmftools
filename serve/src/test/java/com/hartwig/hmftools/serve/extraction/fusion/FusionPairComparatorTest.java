@@ -12,7 +12,7 @@ public class FusionPairComparatorTest {
 
     @Test
     public void canSortFusionPairs() {
-        KnownFusionPair pair1  = ImmutableKnownFusionPair.builder().geneUp("A").geneDown("B").minExonUp(2).minExonDown(3).build();
+        KnownFusionPair pair1 = ImmutableKnownFusionPair.builder().geneUp("A").geneDown("B").minExonUp(2).minExonDown(3).build();
         KnownFusionPair pair2 = ImmutableKnownFusionPair.builder().geneUp("A").geneDown("B").minExonUp(5).minExonDown(6).build();
         KnownFusionPair pair3 = ImmutableKnownFusionPair.builder().geneUp("A").geneDown("B").build();
         KnownFusionPair pair4 = ImmutableKnownFusionPair.builder().geneUp("A").geneDown("C").build();

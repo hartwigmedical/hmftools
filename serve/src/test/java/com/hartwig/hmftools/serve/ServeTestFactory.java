@@ -154,7 +154,7 @@ public final class ServeTestFactory {
 
     @NotNull
     public static ActionableHotspot createTestActionableHotspotForSource(@NotNull Knowledgebase source) {
-        return ImmutableActionableHotspot.builder().from(createTestActionableHotspot()).source(source).sourceEvent("test").build();
+        return ImmutableActionableHotspot.builder().from(createTestActionableHotspot()).source(source).build();
     }
 
     @NotNull
@@ -170,7 +170,7 @@ public final class ServeTestFactory {
 
     @NotNull
     public static ActionableRange createTestActionableRangeForSource(@NotNull Knowledgebase source) {
-        return ImmutableActionableRange.builder().from(createTestActionableRange()).source(source).sourceEvent("test").build();
+        return ImmutableActionableRange.builder().from(createTestActionableRange()).source(source).build();
     }
 
     @NotNull
@@ -190,7 +190,7 @@ public final class ServeTestFactory {
 
     @NotNull
     public static ActionableGene createTestActionableGeneForSource(@NotNull Knowledgebase source) {
-        return ImmutableActionableGene.builder().from(createTestActionableGene()).source(source).sourceEvent("test").build();
+        return ImmutableActionableGene.builder().from(createTestActionableGene()).source(source).build();
     }
 
     @NotNull
@@ -204,7 +204,7 @@ public final class ServeTestFactory {
 
     @NotNull
     public static ActionableFusion createTestActionableFusionForSource(@NotNull Knowledgebase source) {
-        return ImmutableActionableFusion.builder().from(createTestActionableFusion()).source(source).sourceEvent("test").build();
+        return ImmutableActionableFusion.builder().from(createTestActionableFusion()).source(source).build();
     }
 
     @NotNull
@@ -217,7 +217,6 @@ public final class ServeTestFactory {
         return ImmutableActionableCharacteristic.builder()
                 .from(createTestActionableCharacteristic(null, null))
                 .source(source)
-                .sourceEvent("test")
                 .build();
     }
 
@@ -234,7 +233,7 @@ public final class ServeTestFactory {
 
     @NotNull
     public static ActionableHLA createTestActionableImmunoHLAForSource(@NotNull Knowledgebase source) {
-        return ImmutableActionableHLA.builder().from(createTestActionableHLA()).source(source).sourceEvent("test").build();
+        return ImmutableActionableHLA.builder().from(createTestActionableHLA()).source(source).build();
     }
 
     @NotNull

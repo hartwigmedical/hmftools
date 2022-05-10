@@ -25,8 +25,7 @@ import org.junit.Test;
 public class TransvarInterpreterTest {
 
     @Test
-    public void canLookupTrinucleotides()
-    {
+    public void canLookupTrinucleotides() {
         // Serine (S)
         assertEquals(6, TransvarInterpreter.allTrinucleotidesForSameAminoAcid("TCT", Strand.FORWARD).size());
         assertEquals(6, TransvarInterpreter.allTrinucleotidesForSameAminoAcid("AGA", Strand.REVERSE).size());

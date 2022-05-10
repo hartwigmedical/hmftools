@@ -41,8 +41,7 @@ public class IclusionCuratorTest {
     public void canCurateIclusionTrialsOnGenes() {
         String firstGene = CurationFactory.GENE_MAPPINGS.keySet().iterator().next();
 
-        IclusionMutation mutation =
-                ImmutableIclusionMutation.builder().gene(firstGene).name("any").negation(false).build();
+        IclusionMutation mutation = ImmutableIclusionMutation.builder().gene(firstGene).name("any").negation(false).build();
 
         IclusionTrial trial = trial("test", Lists.newArrayList(or(Lists.newArrayList(mutation))));
 
