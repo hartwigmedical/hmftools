@@ -9,10 +9,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.serve.ServeTestFactory;
-import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
-import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
-import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
-import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.hotspot.ImmutableActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
@@ -20,13 +16,9 @@ import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableCodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableKnownCodon;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
-import com.hartwig.hmftools.serve.extraction.copynumber.ImmutableKnownCopyNumber;
-import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.exon.ImmutableExonAnnotation;
 import com.hartwig.hmftools.serve.extraction.exon.ImmutableKnownExon;
 import com.hartwig.hmftools.serve.extraction.exon.KnownExon;
-import com.hartwig.hmftools.serve.extraction.fusion.ImmutableKnownFusionPair;
-import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
 import com.hartwig.hmftools.serve.refgenome.liftover.ImmutableLiftOverResult;
@@ -104,31 +96,6 @@ public class RefGenomeConverterTest {
     }
 
     @Test
-    public void canConvertKnownCopyNumbers() {
-        KnownCopyNumber copyNumber = ImmutableKnownCopyNumber.builder()
-                .from(ServeTestFactory.createTestKnownCopyNumber())
-                .gene(TEST_GENE)
-                .addSources(Knowledgebase.HARTWIG_CURATED)
-                .build();
-
-        Set<KnownCopyNumber> convertedCopyNumbers = DUMMY_CONVERTER.convertKnownCopyNumbers(Sets.newHashSet(copyNumber));
-        assertEquals(copyNumber, convertedCopyNumbers.iterator().next());
-    }
-
-    @Test
-    public void canConvertKnownFusionPairs() {
-        KnownFusionPair fusionPair = ImmutableKnownFusionPair.builder()
-                .from(ServeTestFactory.createTestKnownFusionPair())
-                .geneUp(TEST_GENE)
-                .geneDown(TEST_GENE)
-                .addSources(Knowledgebase.HARTWIG_CURATED)
-                .build();
-
-        Set<KnownFusionPair> convertedFusionPairs = DUMMY_CONVERTER.convertKnownFusionPairs(Sets.newHashSet(fusionPair));
-        assertEquals(fusionPair, convertedFusionPairs.iterator().next());
-    }
-
-    @Test
     public void canConvertActionableHotspots() {
         ActionableHotspot actionableHotspot = ImmutableActionableHotspot.builder()
                 .from(ServeTestFactory.createTestActionableHotspotForSource(Knowledgebase.HARTWIG_CURATED))
@@ -154,29 +121,6 @@ public class RefGenomeConverterTest {
 
         Set<ActionableRange> convertedActionableRanges = DUMMY_CONVERTER.convertActionableRanges(Sets.newHashSet(actionableRange));
         assertEquals(actionableRange, convertedActionableRanges.iterator().next());
-    }
-
-    @Test
-    public void canConvertActionableGenes() {
-        ActionableGene actionableGene = ImmutableActionableGene.builder()
-                .from(ServeTestFactory.createTestActionableGeneForSource(Knowledgebase.HARTWIG_CURATED))
-                .gene(TEST_GENE)
-                .build();
-
-        Set<ActionableGene> convertedActionableGenes = DUMMY_CONVERTER.convertActionableGenes(Sets.newHashSet(actionableGene));
-        assertEquals(actionableGene, convertedActionableGenes.iterator().next());
-    }
-
-    @Test
-    public void canConvertActionableFusions() {
-        ActionableFusion actionableFusion = ImmutableActionableFusion.builder()
-                .from(ServeTestFactory.createTestActionableFusionForSource(Knowledgebase.HARTWIG_CURATED))
-                .geneUp(TEST_GENE)
-                .geneDown(TEST_GENE)
-                .build();
-
-        Set<ActionableFusion> convertedActionableFusions = DUMMY_CONVERTER.convertActionableFusions(Sets.newHashSet(actionableFusion));
-        assertEquals(actionableFusion, convertedActionableFusions.iterator().next());
     }
 
     @NotNull

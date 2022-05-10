@@ -39,7 +39,7 @@ public class ActionableEventUrlMergerTest {
     private static ActionableFusion createFusion(@NotNull String gene, @NotNull String url) {
         return ImmutableActionableFusion.builder()
                 .from(ActionabilityTestUtil.create(Knowledgebase.VICC_CGI,
-                        "rawInput",
+                        "source event",
                         Sets.newHashSet(),
                         "treatment",
                         ImmutableCancerType.builder()

@@ -20,7 +20,7 @@ public class ActionableFileFunctionsTest {
     public void canConvertActionableEvents() {
         ActionableEvent event =
                 ActionabilityTestUtil.create(Knowledgebase.VICC_CGI,
-                        "rawInput",
+                        "source event",
                         Sets.newHashSet(),
                         "treatment",
                         ImmutableCancerType.builder()

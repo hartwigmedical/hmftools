@@ -6,10 +6,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
-import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
-import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
-import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.hotspot.ImmutableActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
@@ -17,13 +13,9 @@ import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableCodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableKnownCodon;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
-import com.hartwig.hmftools.serve.extraction.copynumber.ImmutableKnownCopyNumber;
-import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.exon.ImmutableExonAnnotation;
 import com.hartwig.hmftools.serve.extraction.exon.ImmutableKnownExon;
 import com.hartwig.hmftools.serve.extraction.exon.KnownExon;
-import com.hartwig.hmftools.serve.extraction.fusion.ImmutableKnownFusionPair;
-import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
 import com.hartwig.hmftools.serve.extraction.range.RangeAnnotation;
@@ -124,26 +116,6 @@ class RefGenomeConverter {
     }
 
     @NotNull
-    public Set<KnownCopyNumber> convertKnownCopyNumbers(@NotNull Set<KnownCopyNumber> copyNumbers) {
-        Set<KnownCopyNumber> convertedCopyNumbers = Sets.newHashSet();
-        for (KnownCopyNumber copyNumber : copyNumbers) {
-            convertedCopyNumbers.add(ImmutableKnownCopyNumber.builder().from(copyNumber).build());
-        }
-
-        return convertedCopyNumbers;
-    }
-
-    @NotNull
-    public Set<KnownFusionPair> convertKnownFusionPairs(@NotNull Set<KnownFusionPair> fusionPairs) {
-        Set<KnownFusionPair> convertedFusionPairs = Sets.newHashSet();
-        for (KnownFusionPair fusionPair : fusionPairs) {
-            convertedFusionPairs.add(ImmutableKnownFusionPair.builder().from(fusionPair).build());
-        }
-
-        return convertedFusionPairs;
-    }
-
-    @NotNull
     public Set<ActionableHotspot> convertActionableHotspots(@NotNull Set<ActionableHotspot> actionableHotspots) {
         Set<ActionableHotspot> convertedActionableHotspots = Sets.newHashSet();
         for (ActionableHotspot actionableHotspot : actionableHotspots) {
@@ -174,24 +146,6 @@ class RefGenomeConverter {
             }
         }
         return convertedActionableRanges;
-    }
-
-    @NotNull
-    public Set<ActionableGene> convertActionableGenes(@NotNull Set<ActionableGene> actionableGenes) {
-        Set<ActionableGene> convertedActionableGenes = Sets.newHashSet();
-        for (ActionableGene actionableGene : actionableGenes) {
-            convertedActionableGenes.add(ImmutableActionableGene.builder().from(actionableGene).build());
-        }
-        return convertedActionableGenes;
-    }
-
-    @NotNull
-    public Set<ActionableFusion> convertActionableFusions(@NotNull Set<ActionableFusion> actionableFusions) {
-        Set<ActionableFusion> convertedActionableFusions = Sets.newHashSet();
-        for (ActionableFusion actionableFusion : actionableFusions) {
-            convertedActionableFusions.add(ImmutableActionableFusion.builder().from(actionableFusion).build());
-        }
-        return convertedActionableFusions;
     }
 
     @Nullable
@@ -245,9 +199,10 @@ class RefGenomeConverter {
                 return Strings.EMPTY;
             }
 
+            @Nullable
             @Override
             public Integer rank() {
-                return 0;
+                return null;
             }
 
             @NotNull

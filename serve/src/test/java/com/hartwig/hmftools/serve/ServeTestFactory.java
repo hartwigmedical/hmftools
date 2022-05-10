@@ -107,7 +107,6 @@ public final class ServeTestFactory {
                 .start(0)
                 .end(0)
                 .mutationType(MutationTypeFilter.ANY)
-                .rank(0)
                 .build();
     }
 
@@ -130,7 +129,6 @@ public final class ServeTestFactory {
                 .start(0)
                 .end(0)
                 .mutationType(MutationTypeFilter.ANY)
-                .rank(0)
                 .build();
     }
 
@@ -252,7 +250,7 @@ public final class ServeTestFactory {
     @NotNull
     private static ActionableEvent createTestBaseEvent(@NotNull Knowledgebase source) {
         return ActionabilityTestUtil.create(source,
-                "rawInput",
+                "source event",
                 Sets.newHashSet(),
                 "treatment",
                 ImmutableCancerType.builder().name("applicable name").doid("applicable doid").build(),
