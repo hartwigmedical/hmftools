@@ -105,10 +105,11 @@ public final class ViccExtractor {
             } else {
                 EventExtractorOutput extractorOutput = eventExtractor.extract(gene, entry.transcriptId(), feature.type(), feature.name());
 
+                String sourceEvent = feature.name().startsWith(gene) ? feature.name() :  gene + " " + feature.name();
                 eventInterpretationPerFeature.put(feature,
                         ImmutableEventInterpretation.builder()
                                 .source(ActionableEvidenceFactory.fromViccSource(entry.source()))
-                                .sourceEvent(gene + " " + feature.name())
+                                .sourceEvent(sourceEvent)
                                 .interpretedGene(gene)
                                 .interpretedEvent(feature.name())
                                 .interpretedEventType(feature.type())
