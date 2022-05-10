@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.serve.sources.actin.classification;
 
-final class ActinKeywords {
+public final class ActinKeywords {
 
     public static final String NO_GENE = "-";
 
