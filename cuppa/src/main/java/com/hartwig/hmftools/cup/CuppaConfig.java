@@ -111,6 +111,7 @@ public class CuppaConfig
 
     public final String OutputDir;
     public final String OutputFileId;
+    public final int Threads;
 
     // config strings
     public static final String CATEGORIES = "categories";
@@ -155,6 +156,7 @@ public class CuppaConfig
 
     public static final String OUTPUT_FILE_ID = "output_id";
     public static final String LOG_DEBUG = "log_debug";
+    public static final String THREADS = "threads";
 
     public static final Logger CUP_LOGGER = LogManager.getLogger(CuppaConfig.class);
 
@@ -221,6 +223,7 @@ public class CuppaConfig
 
         OutputDir = parseOutputDir(cmd);
         OutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID, "");
+        Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
 
         WriteSimilarities = cmd.hasOption(WRITE_SIMS);
         WriteDetailedScores = cmd.hasOption(WRITE_DETAILED_SCORES);
@@ -375,6 +378,7 @@ public class CuppaConfig
         options.addOption(OUTPUT_DIR, true, "Path to output files");
         options.addOption(OUTPUT_FILE_ID, true, "Output file ID");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
+        options.addOption(THREADS, true, "Number of threads");
     }
 
     public CuppaConfig()
@@ -421,5 +425,6 @@ public class CuppaConfig
         WriteDetailedScores = false;
         OutputDir = "";
         OutputFileId = "";
+        Threads = 0;
     }
 }

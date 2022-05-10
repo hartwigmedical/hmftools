@@ -1,41 +1,27 @@
 package com.hartwig.hmftools.cup;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.cup.CuppaConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.SPECIFIC_SAMPLE_DATA;
 import static com.hartwig.hmftools.cup.common.CategoryType.ALT_SJ;
-import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
 import static com.hartwig.hmftools.cup.common.CategoryType.SV;
-import static com.hartwig.hmftools.cup.common.CategoryType.isSummary;
-import static com.hartwig.hmftools.cup.common.ClassifierType.isDna;
-import static com.hartwig.hmftools.cup.common.ClassifierType.isRna;
-import static com.hartwig.hmftools.cup.common.CupCalcs.calcCombinedClassifierScoreResult;
-import static com.hartwig.hmftools.cup.common.CupCalcs.calcCombinedFeatureResult;
-import static com.hartwig.hmftools.cup.common.CupCalcs.fillMissingCancerTypeValues;
-import static com.hartwig.hmftools.cup.common.CupConstants.COMBINED_DAMPEN_FACTOR;
-import static com.hartwig.hmftools.cup.common.CupConstants.DNA_DAMPEN_FACTOR;
-import static com.hartwig.hmftools.cup.common.CupConstants.RNA_DAMPEN_FACTOR;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.util.List;
-import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.cup.common.CategoryType;
-import com.hartwig.hmftools.cup.common.ClassifierType;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
-import com.hartwig.hmftools.cup.common.SampleResult;
-import com.hartwig.hmftools.cup.common.SampleSimilarity;
 import com.hartwig.hmftools.cup.feature.FeatureClassifier;
 import com.hartwig.hmftools.cup.rna.AltSjClassifier;
 import com.hartwig.hmftools.cup.rna.GeneExpressionClassifier;
@@ -59,9 +45,7 @@ public class CupAnalyser
     private final SampleDataCache mSampleDataCache;
 
     private final List<CuppaClassifier> mClassifiers;
-
-    private BufferedWriter mSampleDataWriter;
-    private BufferedWriter mSampleSimilarityWriter;
+    private final ResultsWriter mResultsWriter;
 
     public CupAnalyser(final CommandLine cmd)
     {
@@ -69,9 +53,9 @@ public class CupAnalyser
 
         mSampleDataCache = new SampleDataCache();
 
+        mResultsWriter = new ResultsWriter(mConfig, mSampleDataCache);
+
         mClassifiers = Lists.newArrayList();
-        mSampleDataWriter = null;
-        mSampleSimilarityWriter = null;
 
         loadSampleData(cmd);
 
@@ -130,48 +114,49 @@ public class CupAnalyser
             return;
         }
 
-        if(!allClassifiersValid())
+        if(!allClassifiersValid(mClassifiers))
         {
             System.exit(1);
             return;
         }
-
-        initialiseOutputFiles();
 
         if(mSampleDataCache.SpecificSample != null)
         {
             final SampleData specificSample = mSampleDataCache.SpecificSample;
 
             CUP_LOGGER.info("sample({}) running CUP analysis", specificSample.Id);
-            processSample(specificSample);
+            SampleTask sampleTask = new SampleTask(0, mConfig, mSampleDataCache, mClassifiers, mResultsWriter);
+            sampleTask.processSample(specificSample);
         }
         else
         {
-            int sampleCount = 0;
+            List<SampleTask> sampleTasks = Lists.newArrayList();
+
+            for(int i = 0; i < min(mConfig.Threads, mSampleDataCache.SampleDataList.size()); ++i)
+            {
+                sampleTasks.add(new SampleTask(i, mConfig, mSampleDataCache, mClassifiers, mResultsWriter));
+            }
+
+            int taskIndex = 0;
             for(SampleData sample : mSampleDataCache.SampleDataList)
             {
-                CUP_LOGGER.debug("sample({}) running CUP analysis", sample.Id);
+                sampleTasks.get(taskIndex).getSamples().add(sample);
+                ++taskIndex;
 
-                processSample(sample);
-
-                if(!allClassifiersValid())
-                    break;
-
-                ++sampleCount;
-
-                if((sampleCount % 100) == 0)
-                {
-                    CUP_LOGGER.info("processed {} samples", sampleCount);
-                }
+                if(taskIndex >= sampleTasks.size())
+                    taskIndex = 0;
             }
+
+            List<Callable> callableTasks = sampleTasks.stream().collect(Collectors.toList());
+
+            TaskExecutor.executeTasks(callableTasks, mConfig.Threads);
         }
 
-        closeBufferedWriter(mSampleDataWriter);
-        closeBufferedWriter(mSampleSimilarityWriter);
+        mResultsWriter.close();
 
         mClassifiers.forEach(x -> x.close());
 
-        if(!allClassifiersValid())
+        if(!allClassifiersValid(mClassifiers))
         {
             CUP_LOGGER.info("CUP exiting with errors");
             System.exit(1);
@@ -180,10 +165,10 @@ public class CupAnalyser
         CUP_LOGGER.info("CUP analysis complete");
     }
 
-    private boolean allClassifiersValid()
+    public synchronized static boolean allClassifiersValid(final List<CuppaClassifier> classifiers)
     {
         boolean allInvalid = true;
-        for(CuppaClassifier classifier : mClassifiers)
+        for(CuppaClassifier classifier : classifiers)
         {
             if(!classifier.isValid())
             {
@@ -193,179 +178,6 @@ public class CupAnalyser
         }
 
         return allInvalid;
-    }
-
-    private void processSample(final SampleData sample)
-    {
-        final List<SampleResult> allResults = Lists.newArrayList();
-        final List<SampleSimilarity> similarities = Lists.newArrayList();
-
-        for(CuppaClassifier classifier : mClassifiers)
-        {
-            classifier.processSample(sample, allResults, similarities);
-        }
-
-        // combine all features into a single classifier
-        SampleResult combinedFeatureResult = calcCombinedFeatureResult(sample, allResults, mSampleDataCache.SampleIds.size() > 1);
-
-        if(combinedFeatureResult != null)
-            allResults.add(combinedFeatureResult);
-
-        boolean hasDnaCategories = mConfig.Categories.stream().anyMatch(x -> CategoryType.isDna(x));
-        boolean hasRnaCategories = mConfig.Categories.stream().anyMatch(x -> CategoryType.isRna(x));
-
-        // ensure each cancer type has a probability for the classifiers to ensure an even application of the min-probability
-        final Set<String> refCancerTypes = mSampleDataCache.RefCancerSampleData.keySet();
-
-        allResults.stream()
-                .filter(x -> x.Category == CLASSIFIER)
-                .forEach(x -> fillMissingCancerTypeValues(x.CancerTypeValues, refCancerTypes));
-
-        if(hasDnaCategories)
-        {
-            final List<SampleResult> dnaResults = allResults.stream()
-                    .filter(x -> x.Category == CLASSIFIER && isDna(ClassifierType.valueOf(x.DataType)))
-                    .collect(Collectors.toList());
-
-            if(dnaResults.isEmpty())
-            {
-                hasDnaCategories = false;
-            }
-            else
-            {
-                SampleResult dnaScoreResult = calcCombinedClassifierScoreResult(sample, dnaResults, "DNA_COMBINED", DNA_DAMPEN_FACTOR);
-
-                if(dnaScoreResult != null)
-                    allResults.add(dnaScoreResult);
-            }
-        }
-
-        if(hasRnaCategories)
-        {
-            final List<SampleResult> rnaResults = allResults.stream()
-                    .filter(x -> x.Category == CLASSIFIER && isRna(ClassifierType.valueOf(x.DataType)))
-                    .collect(Collectors.toList());
-
-            if(rnaResults.isEmpty())
-            {
-                hasRnaCategories = false;
-            }
-            else
-            {
-                SampleResult rnaScoreResult = calcCombinedClassifierScoreResult(sample, rnaResults, "RNA_COMBINED", RNA_DAMPEN_FACTOR);
-
-                if(rnaScoreResult != null)
-                    allResults.add(rnaScoreResult);
-            }
-        }
-
-        if(hasDnaCategories && hasRnaCategories)
-        {
-            SampleResult classifierScoreResult =
-                    calcCombinedClassifierScoreResult(sample, allResults, "COMBINED", COMBINED_DAMPEN_FACTOR);
-
-            if(classifierScoreResult != null)
-                allResults.add(classifierScoreResult);
-        }
-
-        writeSampleData(sample, allResults);
-        writeSampleSimilarities(sample, similarities);
-    }
-
-    private void initialiseOutputFiles()
-    {
-        try
-        {
-            final String sampleDataFilename = mSampleDataCache.isSingleSample() ?
-                    mConfig.OutputDir + mSampleDataCache.SpecificSample.Id + ".cup.data.csv"
-                    : mConfig.formOutputFilename("SAMPLE_DATA");
-
-            mSampleDataWriter = createBufferedWriter(sampleDataFilename, false);
-
-            mSampleDataWriter.write(SampleResult.csvHeader());
-
-            mSampleDataWriter.newLine();
-
-            if(mConfig.WriteSimilarities)
-            {
-                final String sampleSimilarityFilename = mSampleDataCache.isSingleSample() ?
-                        mConfig.OutputDir + mSampleDataCache.SpecificSample.Id + ".cup.similarities.csv"
-                        : mConfig.formOutputFilename("SAMPLE_SIMILARITIES");
-
-                mSampleSimilarityWriter = createBufferedWriter(sampleSimilarityFilename, false);
-
-                mSampleSimilarityWriter.write("SampleId,CancerType,PrimaryType,PrimarySubtype,Location,SubLocation");
-                mSampleSimilarityWriter.write(",MatchType,Score,MatchSampleId,MatchCancerType");
-                mSampleSimilarityWriter.write(",MatchPrimaryType,MatchPrimarySubtype,MatchLocation,MatchSubLocation");
-                mSampleSimilarityWriter.newLine();
-            }
-        }
-        catch(IOException e)
-        {
-            CUP_LOGGER.error("failed to write CUPPA output: {}", e.toString());
-        }
-    }
-
-    private void writeSampleData(final SampleData sampleData, final List<SampleResult> results)
-    {
-        if(results.isEmpty() || mSampleDataWriter == null)
-            return;
-
-        try
-        {
-            for(SampleResult result : results)
-            {
-                if(!mConfig.WriteDetailedScores && !isSummary(result.Category))
-                    continue;
-
-                result.write(mSampleDataWriter);
-            }
-        }
-        catch(IOException e)
-        {
-            CUP_LOGGER.error("failed to write sample data: {}", e.toString());
-        }
-    }
-
-    private void writeSampleSimilarities(final SampleData sampleData, final List<SampleSimilarity> similarities)
-    {
-        if(similarities.isEmpty() || mSampleSimilarityWriter == null)
-            return;
-
-        try
-        {
-            for(SampleSimilarity similarity : similarities)
-            {
-                SampleData matchedSample = mSampleDataCache.findRefSampleData(similarity.MatchedSampleId);
-
-                if(matchedSample == null)
-                {
-                    matchedSample = mSampleDataCache.findSampleData(similarity.MatchedSampleId);
-                }
-
-                mSampleSimilarityWriter.write(String.format("%s,%s,%s,%s,%s,%s,%s,%.3f,%s",
-                        sampleData.Id, sampleData.cancerType(), sampleData.PrimaryType, sampleData.PrimarySubtype,
-                        sampleData.PrimaryLocation, sampleData.PrimarySubLocation,
-                        similarity.MatchType, similarity.Score, similarity.MatchedSampleId));
-
-                if(matchedSample != null)
-                {
-                    mSampleSimilarityWriter.write(String.format(",%s,%s,%s,%s,%s",
-                            matchedSample.cancerType(), matchedSample.PrimaryType, matchedSample.PrimarySubtype,
-                            matchedSample.PrimaryLocation, matchedSample.PrimarySubLocation));
-                }
-                else
-                {
-                    mSampleSimilarityWriter.write(",Unclassifed,,,,");
-                }
-
-                mSampleSimilarityWriter.newLine();
-            }
-        }
-        catch(IOException e)
-        {
-            CUP_LOGGER.error("failed to write sample similarity: {}", e.toString());
-        }
     }
 
     public static void main(@NotNull final String[] args) throws ParseException
