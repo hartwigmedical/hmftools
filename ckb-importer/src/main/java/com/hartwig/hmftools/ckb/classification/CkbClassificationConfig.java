@@ -149,7 +149,6 @@ public class CkbClassificationConfig {
     private static Set<String> inactivatingGeneLevelKeyPhrases() {
         Set<String> set = Sets.newHashSet();
         set.add("inact mut");
-        set.add("negative");
         return set;
     }
 
