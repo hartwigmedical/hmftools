@@ -380,6 +380,7 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
 ## Version History and Download Links
 - [Upcoming]
   - Use correct blacklisted tumor locaties for solid tumors 
+  - Updating mutation type filter ago for CKB for indels 
 - [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.10)
   - Solve issues of v1.9
 - [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.9)
