@@ -26,7 +26,7 @@ public final class CancerTypeFactory {
 
     @NotNull
     public static Set<CancerType> fromString(@NotNull String cancerTypeString) {
-        Set<CancerType> cancerTypes = Sets.newConcurrentHashSet();
+        Set<CancerType> cancerTypes = Sets.newHashSet();
         if (!cancerTypeString.isEmpty()) {
             String[] splitCancerTypeString = cancerTypeString.split(DELIMITER_MULTIPLE_TYPES);
 
@@ -41,7 +41,7 @@ public final class CancerTypeFactory {
 
     @NotNull
     public static Set<String> doidStrings(@NotNull Set<CancerType> cancerTypes) {
-        Set<String> cancerTypeDoids = Sets.newConcurrentHashSet();
+        Set<String> cancerTypeDoids = Sets.newHashSet();
         for (CancerType cancerType : cancerTypes) {
             cancerTypeDoids.add(cancerType.doid());
         }
