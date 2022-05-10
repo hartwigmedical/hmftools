@@ -88,7 +88,7 @@ public final class ProtectEvidenceFile {
                 .add(String.valueOf(evidence.onLabel()))
                 .add(evidence.level().toString())
                 .add(evidence.direction().toString())
-                .add(toData(evidence.protectSources()))
+                .add(sourcesToString(evidence.sources()))
                 .toString();
     }
 
@@ -102,26 +102,50 @@ public final class ProtectEvidenceFile {
         return string != null ? string : Strings.EMPTY;
     }
 
-    public static Set<ProtectSource> fromData(final String data) {
+    @NotNull
+    private static ProtectEvidence fromLine(@NotNull Map<String, Integer> fields, @NotNull String line) {
+        String[] values = line.split(FIELD_DELIMITER, -1);
+
+        String eventIsHighDriverField = values[fields.get("eventIsHighDriver")];
+        Boolean eventIsHighDriver = !eventIsHighDriverField.isEmpty() ? Boolean.parseBoolean(eventIsHighDriverField) : null;
+
+        String eventIsCanonicaField = values[fields.get("isCanonical")];
+        Boolean isCanonical = !eventIsCanonicaField.isEmpty() ? Boolean.parseBoolean(eventIsCanonicaField) : null;
+
+        String transcriptField = values[fields.get("transcript")];
+        String transcript = !transcriptField.isEmpty() ? transcriptField : Strings.EMPTY;
+
+        Set<ProtectSource> sources = stringToSources(values[fields.get("sources")]);
+        return ImmutableProtectEvidence.builder()
+                .gene(emptyToNullString(values[fields.get("gene")]))
+                .transcript(emptyToNullString(transcript))
+                .isCanonical(isCanonical)
+                .event(values[fields.get("event")])
+                .eventIsHighDriver(eventIsHighDriver)
+                .germline(Boolean.parseBoolean(values[fields.get("germline")]))
+                .reported(Boolean.parseBoolean(values[fields.get("reported")]))
+                .treatment(values[fields.get("treatment")])
+                .onLabel(Boolean.parseBoolean(values[fields.get("onLabel")]))
+                .level(EvidenceLevel.valueOf(values[fields.get("level")]))
+                .direction(EvidenceDirection.valueOf(values[fields.get("direction")]))
+                .sources(sources)
+                .build();
+    }
+
+    @NotNull
+    private static Set<ProtectSource> stringToSources(@NotNull String sourcesString) {
         Set<ProtectSource> protectSources = Sets.newHashSet();
-        String[] dataEntries = data.split(SOURCE_SUBFIELD_DELIMITER);
+        String[] dataEntries = sourcesString.split(SOURCE_SUBFIELD_DELIMITER);
         for (String entry : dataEntries) {
             String[] items = entry.split("\\" + SOURCE_SUBFIELD_ITEM_DELIMITER, -1);
             String[] urls = items[2].split(SUBFIELD_DELIMITER);
-            Set<String> urlSet = Sets.newHashSet();
-
-            for (String url : urls) {
-                urlSet.add(url);
-            }
+            Set<String> urlSet = Sets.newHashSet(urls);
 
             String[] urlsEvidence = items[5].split(SUBFIELD_DELIMITER);
-            Set<String> urlSetEvidence = Sets.newHashSet();
-            for (String url : urlsEvidence) {
-                urlSetEvidence.add(url);
-            }
+            Set<String> urlSetEvidence = Sets.newHashSet(urlsEvidence);
 
             protectSources.add(ImmutableProtectSource.builder()
-                    .source(Knowledgebase.lookupKnowledgebase(items[0]))
+                    .name(Knowledgebase.lookupKnowledgebase(items[0]))
                     .sourceEvent(items[1])
                     .sourceUrls(urlSet.stream().sorted().collect(Collectors.toList()))
                     .evidenceType(ProtectEvidenceType.valueOf(items[3]))
@@ -132,13 +156,13 @@ public final class ProtectEvidenceFile {
         return protectSources;
     }
 
-    public static String toData(final Set<ProtectSource> protectSources) {
+    @NotNull
+    private static String sourcesToString(@NotNull Set<ProtectSource> sources) {
         StringBuilder sb = new StringBuilder();
-        for (ProtectSource source : protectSources) {
-
+        for (ProtectSource source : sources) {
             StringJoiner urls = new StringJoiner(SUBFIELD_DELIMITER);
             StringJoiner evidenceUrls = new StringJoiner(SUBFIELD_DELIMITER);
-            sb.append(source.source().toString()).append(SOURCE_SUBFIELD_ITEM_DELIMITER);
+            sb.append(source.name().toString()).append(SOURCE_SUBFIELD_ITEM_DELIMITER);
             sb.append(source.sourceEvent()).append(SOURCE_SUBFIELD_ITEM_DELIMITER);
             for (String sourceUrl : source.sourceUrls()) {
                 urls.add(sourceUrl);
@@ -157,36 +181,6 @@ public final class ProtectEvidenceFile {
         }
 
         return sb.toString();
-    }
-
-    @NotNull
-    private static ProtectEvidence fromLine(@NotNull Map<String, Integer> fields, @NotNull String line) {
-        String[] values = line.split(FIELD_DELIMITER, -1);
-
-        String eventIsHighDriverField = values[fields.get("eventIsHighDriver")];
-        Boolean eventIsHighDriver = !eventIsHighDriverField.isEmpty() ? Boolean.parseBoolean(eventIsHighDriverField) : null;
-
-        String eventIsCanonicaField = values[fields.get("isCanonical")];
-        Boolean isCanonical = !eventIsCanonicaField.isEmpty() ? Boolean.parseBoolean(eventIsCanonicaField) : null;
-
-        String transcriptField = values[fields.get("transcript")];
-        String transcript = !transcriptField.isEmpty() ? transcriptField : Strings.EMPTY;
-
-        Set<ProtectSource> sources = fromData(values[fields.get("sources")]);
-        return ImmutableProtectEvidence.builder()
-                .gene(emptyToNullString(values[fields.get("gene")]))
-                .transcript(emptyToNullString(transcript))
-                .isCanonical(isCanonical)
-                .event(values[fields.get("event")])
-                .eventIsHighDriver(eventIsHighDriver)
-                .germline(Boolean.parseBoolean(values[fields.get("germline")]))
-                .reported(Boolean.parseBoolean(values[fields.get("reported")]))
-                .treatment(values[fields.get("treatment")])
-                .onLabel(Boolean.parseBoolean(values[fields.get("onLabel")]))
-                .level(EvidenceLevel.valueOf(values[fields.get("level")]))
-                .direction(EvidenceDirection.valueOf(values[fields.get("direction")]))
-                .protectSources(sources)
-                .build();
     }
 
     @Nullable

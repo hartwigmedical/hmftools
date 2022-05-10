@@ -70,22 +70,22 @@ public class FusionEvidenceTest {
         ProtectEvidence evidence1 = findByFusion(evidences, reportedFusionMatch);
         assertTrue(evidence1.reported());
 
-        assertEquals(evidence1.protectSources().size(), 1);
-        ProtectSource evidence1ProtectSource = findBySource(evidence1.protectSources(), Knowledgebase.CKB);
+        assertEquals(evidence1.sources().size(), 1);
+        ProtectSource evidence1ProtectSource = findBySource(evidence1.sources(), Knowledgebase.CKB);
         assertEquals(ProtectEvidenceType.FUSION_PAIR, evidence1ProtectSource.evidenceType());
 
         ProtectEvidence evidence2 = findByFusion(evidences, reportedPromiscuousMatch);
         assertTrue(evidence2.reported());
 
-        assertEquals(evidence2.protectSources().size(), 1);
-        ProtectSource evidence2ProtectSource = findBySource(evidence2.protectSources(), Knowledgebase.ACTIN);
+        assertEquals(evidence2.sources().size(), 1);
+        ProtectSource evidence2ProtectSource = findBySource(evidence2.sources(), Knowledgebase.ACTIN);
         assertEquals(ProtectEvidenceType.PROMISCUOUS_FUSION, evidence2ProtectSource.evidenceType());
 
         ProtectEvidence evidence3 = findByFusion(evidences, unreportedPromiscuousMatch);
         assertFalse(evidence3.reported());
 
-        assertEquals(evidence3.protectSources().size(), 1);
-        ProtectSource evidence3ProtectSource = findBySource(evidence3.protectSources(), Knowledgebase.ACTIN);
+        assertEquals(evidence3.sources().size(), 1);
+        ProtectSource evidence3ProtectSource = findBySource(evidence3.sources(), Knowledgebase.ACTIN);
         assertEquals(ProtectEvidenceType.PROMISCUOUS_FUSION, evidence3ProtectSource.evidenceType());
     }
 
@@ -161,7 +161,7 @@ public class FusionEvidenceTest {
     @NotNull
     private static ProtectSource findBySource(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase source) {
         for (ProtectSource protectSource : sources) {
-            if (protectSource.source() == source) {
+            if (protectSource.name() == source) {
                 return protectSource;
             }
         }

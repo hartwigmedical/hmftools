@@ -67,7 +67,7 @@ public class ConsentFilterFunctionsTest {
 
     @Test
     public void canFilterEvidenceForGermlineConsent() {
-        ProtectEvidence evidence = ProtectTestFactory.testEvidenceBuilder()
+        ProtectEvidence evidence = ProtectTestFactory.builder()
                 .event("HR deficiency")
                 .germline(true)
                 .reported(true)
@@ -75,8 +75,8 @@ public class ConsentFilterFunctionsTest {
                 .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(Sets.newHashSet(ImmutableProtectSource.builder()
-                        .source(Knowledgebase.ICLUSION)
+                .sources(Sets.newHashSet(ImmutableProtectSource.builder()
+                        .name(Knowledgebase.ICLUSION)
                         .sourceEvent(Strings.EMPTY)
                         .sourceUrls(Sets.newHashSet())
                         .evidenceType(ProtectEvidenceType.AMPLIFICATION)

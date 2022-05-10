@@ -16,16 +16,10 @@ public final class ProtectTestFactory {
     }
 
     @NotNull
-    public static ProtectEvidence createTestProtectEvidence() {
-        return testEvidenceBuilder().build();
-    }
-
-    @NotNull
-    public static ImmutableProtectEvidence.Builder testEvidenceBuilder() {
-
+    public static ImmutableProtectEvidence.Builder builder() {
         Set<ProtectSource> source = Sets.newHashSet();
         source.add(ImmutableProtectSource.builder()
-                .source(Knowledgebase.CKB)
+                .name(Knowledgebase.CKB)
                 .sourceEvent("hotspot")
                 .sourceUrls(Sets.newHashSet())
                 .evidenceType(ProtectEvidenceType.ANY_MUTATION)
@@ -40,6 +34,6 @@ public final class ProtectTestFactory {
                 .onLabel(false)
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(source);
+                .sources(source);
     }
 }

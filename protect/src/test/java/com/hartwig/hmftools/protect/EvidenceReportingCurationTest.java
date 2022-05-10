@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.protect;
 
-import static com.hartwig.hmftools.common.protect.ProtectTestFactory.testEvidenceBuilder;
+import static com.hartwig.hmftools.common.protect.ProtectTestFactory.builder;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -21,8 +21,8 @@ public class EvidenceReportingCurationTest {
         String gene1 = "any gene";
         String gene2 = "TP53";
 
-        ProtectEvidence evidence1 = testEvidenceBuilder().gene(gene1).transcript("123").isCanonical(true).reported(true).build();
-        ProtectEvidence evidence2 = testEvidenceBuilder().gene(gene2).transcript("123").isCanonical(true).reported(true).build();
+        ProtectEvidence evidence1 = builder().gene(gene1).transcript("123").isCanonical(true).reported(true).build();
+        ProtectEvidence evidence2 = builder().gene(gene2).transcript("123").isCanonical(true).reported(true).build();
 
         List<ProtectEvidence> evidence = EvidenceReportingCuration.applyReportingBlacklist(Lists.newArrayList(evidence1, evidence2));
         assertEquals(2, evidence.size());
@@ -37,8 +37,8 @@ public class EvidenceReportingCurationTest {
         String treatment1 = "Chemotherapy";
         String treatment2 = "Immunotherapy";
 
-        ProtectEvidence evidence1 = testEvidenceBuilder().treatment(treatment1).reported(true).build();
-        ProtectEvidence evidence2 = testEvidenceBuilder().treatment(treatment2).reported(true).build();
+        ProtectEvidence evidence1 = builder().treatment(treatment1).reported(true).build();
+        ProtectEvidence evidence2 = builder().treatment(treatment2).reported(true).build();
 
         List<ProtectEvidence> evidence = EvidenceReportingCuration.applyReportingBlacklist(Lists.newArrayList(evidence1, evidence2));
         assertEquals(2, evidence.size());

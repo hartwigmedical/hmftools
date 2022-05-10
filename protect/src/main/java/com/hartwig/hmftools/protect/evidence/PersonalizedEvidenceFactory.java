@@ -9,7 +9,6 @@ import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ImmutableProtectSource;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.common.protect.ProtectSource;
-import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
@@ -46,42 +45,40 @@ public class PersonalizedEvidenceFactory {
 
     @NotNull
     public ImmutableProtectEvidence.Builder evidenceBuilder(@NotNull ActionableEvent actionable) {
-
         StringJoiner sourceUrlJoiner = new StringJoiner(",");
         for (String url : actionable.sourceUrls()) {
             sourceUrlJoiner.add(url);
         }
         return ImmutableProtectEvidence.builder()
                 .treatment(actionable.treatment())
-                .onLabel(determineOnlabel(actionable.applicableCancerType(), actionable.blacklistCancerTypes(), actionable.treatment()))
+                .onLabel(determineOnLabel(actionable.applicableCancerType(), actionable.blacklistCancerTypes(), actionable.treatment()))
                 .level(actionable.level())
                 .direction(actionable.direction())
-                .protectSources(determineProtectSources(actionable));
+                .sources(determineProtectSources(actionable));
     }
 
     @NotNull
     public Set<ProtectSource> determineProtectSources(@NotNull ActionableEvent actionable) {
-        Set<ProtectSource> protectSources = Sets.newHashSet();
-        Knowledgebase source = actionable.source();
+        Set<ProtectSource> sources = Sets.newHashSet();
         String sourceEvent = actionable.sourceEvent();
         Set<String> sourceUrls = actionable.sourceUrls();
         Integer rank = determineRangeRank(actionable);
         ProtectEvidenceType evidenceType = determineEvidenceType(actionable);
         Set<String> evidenceUrls = actionable.evidenceUrls();
 
-        ProtectSource protectSource = ImmutableProtectSource.builder()
-                .source(source)
+        ProtectSource source = ImmutableProtectSource.builder()
+                .name(actionable.source())
                 .sourceEvent(sourceEvent)
                 .sourceUrls(sourceUrls)
                 .evidenceType(evidenceType)
                 .rangeRank(rank)
                 .evidenceUrls(evidenceUrls)
                 .build();
-        protectSources.add(protectSource);
-        return protectSources;
+        sources.add(source);
+        return sources;
     }
 
-    public boolean determineOnlabel(@NotNull CancerType applicableCancerType, @NotNull Set<CancerType> blacklistCancerTypes,
+    public boolean determineOnLabel(@NotNull CancerType applicableCancerType, @NotNull Set<CancerType> blacklistCancerTypes,
             @NotNull String treatment) {
         //TODO filter for blacklisting in v2.2. Should be analyzed in more depth
         return patientTumorDoids.contains(applicableCancerType.doid());

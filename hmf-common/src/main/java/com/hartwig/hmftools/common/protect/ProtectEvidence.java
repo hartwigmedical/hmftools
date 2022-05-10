@@ -47,7 +47,7 @@ public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
     public abstract EvidenceDirection direction();
 
     @NotNull
-    public abstract Set<ProtectSource> protectSources();
+    public abstract Set<ProtectSource> sources();
 
     @Override
     public int compareTo(@NotNull final ProtectEvidence o) {

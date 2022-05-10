@@ -63,8 +63,8 @@ public class DisruptionEvidenceTest {
         assertEquals(geneInact, evidence.gene());
         assertEquals(DisruptionEvidence.HOMOZYGOUS_DISRUPTION_EVENT, evidence.event());
 
-        assertEquals(evidence.protectSources().size(), 1);
-        ProtectSource protectSource = findBySource(evidence.protectSources(), Knowledgebase.CKB);
+        assertEquals(evidence.sources().size(), 1);
+        ProtectSource protectSource = findBySource(evidence.sources(), Knowledgebase.CKB);
         assertEquals(ProtectEvidenceType.INACTIVATION, protectSource.evidenceType());
     }
 
@@ -82,7 +82,7 @@ public class DisruptionEvidenceTest {
     @NotNull
     private static ProtectSource findBySource(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase source) {
         for (ProtectSource protectSource : sources) {
-            if (protectSource.source() == source) {
+            if (protectSource.name() == source) {
                 return protectSource;
             }
         }

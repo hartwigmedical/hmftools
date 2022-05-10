@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectSource;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.serve.refgenome.liftover.LiftOverAlgo;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -54,8 +53,8 @@ public final class EvidenceReportingFunctions {
 
     private static boolean meetsMaxReportableLevelForKnowledgebases(@NotNull ProtectEvidence evidence) {
         EvidenceLevel lowestMaxReportingLevel = EvidenceLevel.A;
-        for (ProtectSource source : evidence.protectSources()) {
-            Knowledgebase knowledgebase = source.source();
+        for (ProtectSource source : evidence.sources()) {
+            Knowledgebase knowledgebase = source.name();
             EvidenceLevel maxLevelForSource = evidence.direction().isCertain()
                     ? knowledgebase.maxCertainEvidenceReportingLevel()
                     : knowledgebase.maxPredictedEvidenceReportingLevel();
@@ -152,8 +151,8 @@ public final class EvidenceReportingFunctions {
     }
 
     private static boolean isExclusiveTrialEvidence(@NotNull ProtectEvidence evidence) {
-        for (ProtectSource source : evidence.protectSources()) {
-            if (!TRIAL_SOURCES.contains(source.source())) {
+        for (ProtectSource source : evidence.sources()) {
+            if (!TRIAL_SOURCES.contains(source.name())) {
                 return false;
             }
         }

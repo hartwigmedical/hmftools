@@ -25,12 +25,12 @@ public class ProtectEvidenceFileTest {
 
         //evidences1
         ProtectEvidence evidence1 = findByTreatment(evidences, "Cobimetinib + Vemurafenib", "p.Val600Glu");
-        assertEquals(1, evidence1.protectSources().size());
+        assertEquals(1, evidence1.sources().size());
 
-        List<ProtectSource> evidence1_source1List = Lists.newArrayList(evidence1.protectSources());
+        List<ProtectSource> evidence1_source1List = Lists.newArrayList(evidence1.sources());
         ProtectSource evidence1_source1 = findBySource(evidence1_source1List, Knowledgebase.VICC_CGI);
 
-        assertEquals(Knowledgebase.VICC_CGI, evidence1_source1.source());
+        assertEquals(Knowledgebase.VICC_CGI, evidence1_source1.name());
         assertEquals("hotspot", evidence1_source1.sourceEvent());
         assertEquals(Sets.newHashSet("https://www.google.com/#q=FDA"),
                 evidence1_source1.sourceUrls());
@@ -39,12 +39,12 @@ public class ProtectEvidenceFileTest {
 
         //evidences2
         ProtectEvidence evidence2 = findByTreatment(evidences, "Dabrafenib", "p.Val600Glu");
-        assertEquals(1, evidence2.protectSources().size());
+        assertEquals(1, evidence2.sources().size());
 
-        List<ProtectSource> evidence2_source1List = Lists.newArrayList(evidence2.protectSources());
+        List<ProtectSource> evidence2_source1List = Lists.newArrayList(evidence2.sources());
         ProtectSource evidence2_source1 = findBySource(evidence2_source1List, Knowledgebase.VICC_CGI);
 
-        assertEquals(Knowledgebase.VICC_CGI, evidence2_source1.source());
+        assertEquals(Knowledgebase.VICC_CGI, evidence2_source1.name());
         assertEquals("hotspot", evidence2_source1.sourceEvent());
         assertEquals(Sets.newHashSet("https://www.google.com/#q=FDA", "https://www.google.com/#q=NCCN"),
                 evidence2_source1.sourceUrls());
@@ -53,12 +53,12 @@ public class ProtectEvidenceFileTest {
 
         //evidences3
         ProtectEvidence evidence3 = findByTreatment(evidences, "Dabrafenib + Trametinib", "p.Val600Glu");
-        assertEquals(2, evidence3.protectSources().size());
+        assertEquals(2, evidence3.sources().size());
 
-        List<ProtectSource> evidence3_source1List = Lists.newArrayList(evidence3.protectSources());
+        List<ProtectSource> evidence3_source1List = Lists.newArrayList(evidence3.sources());
         ProtectSource source3_evidence1 = findBySource(evidence3_source1List, Knowledgebase.VICC_CGI);
 
-        assertEquals(Knowledgebase.VICC_CGI, source3_evidence1.source());
+        assertEquals(Knowledgebase.VICC_CGI, source3_evidence1.name());
         assertEquals("hotspot", source3_evidence1.sourceEvent());
         assertEquals(Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/25399551", "http://www.ncbi.nlm.nih.gov/pubmed/27283860"),
                 source3_evidence1.sourceUrls());
@@ -66,7 +66,7 @@ public class ProtectEvidenceFileTest {
         assertNull(source3_evidence1.rangeRank());
 
         ProtectSource source3_evidence2 = findBySource(evidence3_source1List, Knowledgebase.VICC_CIVIC);
-        assertEquals(Knowledgebase.VICC_CIVIC, source3_evidence2.source());
+        assertEquals(Knowledgebase.VICC_CIVIC, source3_evidence2.name());
         assertEquals("hotspot", source3_evidence2.sourceEvent());
         assertEquals(Sets.newHashSet("https://www.google.com/#q=FDA"),
                 source3_evidence2.sourceUrls());
@@ -75,12 +75,12 @@ public class ProtectEvidenceFileTest {
 
         //evidences4
         ProtectEvidence evidence4 = findByTreatment(evidences, "Vemurafenib", "p.Val600Glu");
-        assertEquals(1, evidence4.protectSources().size());
+        assertEquals(1, evidence4.sources().size());
 
-        List<ProtectSource> evidence4_source_1_list = Lists.newArrayList(evidence4.protectSources());
+        List<ProtectSource> evidence4_source_1_list = Lists.newArrayList(evidence4.sources());
         ProtectSource evidence4_source_1 = findBySource(evidence4_source_1_list, Knowledgebase.VICC_CGI);
 
-        assertEquals(Knowledgebase.VICC_CGI, evidence4_source_1.source());
+        assertEquals(Knowledgebase.VICC_CGI, evidence4_source_1.name());
         assertEquals("hotspot", evidence4_source_1.sourceEvent());
         assertEquals(Sets.newHashSet("https://www.google.com/#q=FDA"),
                 evidence4_source_1.sourceUrls());
@@ -89,12 +89,12 @@ public class ProtectEvidenceFileTest {
 
         //evidences5
         ProtectEvidence evidence5 = findByTreatment(evidences, "Vemurafenib", "some mutation");
-        assertEquals(1, evidence5.protectSources().size());
+        assertEquals(1, evidence5.sources().size());
 
-        List<ProtectSource> evidence5_source_1_list = Lists.newArrayList(evidence5.protectSources());
+        List<ProtectSource> evidence5_source_1_list = Lists.newArrayList(evidence5.sources());
         ProtectSource evidence5_source1 = findBySource(evidence5_source_1_list, Knowledgebase.VICC_CGI);
 
-        assertEquals(Knowledgebase.VICC_CGI, evidence5_source1.source());
+        assertEquals(Knowledgebase.VICC_CGI, evidence5_source1.name());
         assertEquals("hotspot", evidence5_source1.sourceEvent());
         assertEquals(Sets.newHashSet("https://www.google.com/#q=FDA"),
                 evidence5_source1.sourceUrls());
@@ -116,7 +116,7 @@ public class ProtectEvidenceFileTest {
     @NotNull
     private static ProtectSource findBySource(@NotNull List<ProtectSource> sources, @NotNull Knowledgebase evidenceSource) {
         for (ProtectSource source : sources) {
-            if (source.source() == evidenceSource) {
+            if (source.name() == evidenceSource) {
                 return source;
             }
         }
