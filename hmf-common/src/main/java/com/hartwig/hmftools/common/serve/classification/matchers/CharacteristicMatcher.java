@@ -7,14 +7,19 @@ import org.jetbrains.annotations.NotNull;
 class CharacteristicMatcher implements EventMatcher {
 
     @NotNull
-    private final Set<String> tumorCharacteristicEvents;
+    private final Set<String> tumorCharacteristicKeyPhrases;
 
-    CharacteristicMatcher(@NotNull final Set<String> tumorCharacteristicEvents) {
-        this.tumorCharacteristicEvents = tumorCharacteristicEvents;
+    CharacteristicMatcher(@NotNull final Set<String> tumorCharacteristicKeyPhrases) {
+        this.tumorCharacteristicKeyPhrases = tumorCharacteristicKeyPhrases;
     }
 
     @Override
     public boolean matches(@NotNull String gene, @NotNull String event) {
-        return tumorCharacteristicEvents.contains(event);
+        for (String keyPhrase : tumorCharacteristicKeyPhrases) {
+            if (event.contains(keyPhrase)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -17,7 +17,7 @@ import org.junit.Test;
 public class ActinExtractorTest {
 
     @Test
-    public void canExtractFromACTINEntries() {
+    public void canExtractFromActinEntries() {
         EventClassifierConfig config = ActinClassificationConfig.build();
         ActinExtractor extractor = ActinExtractorFactory.buildActinExtractor(config, RefGenomeResourceTestFactory.buildTestResource37());
 

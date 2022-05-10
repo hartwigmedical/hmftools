@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.serve.classification.ImmutableEventClassifier
 
 import org.jetbrains.annotations.NotNull;
 
-public class ActinClassificationConfig {
+public final class ActinClassificationConfig {
 
     private static final Set<String> EXON_IDENTIFIERS = exonIdentifiers();
     private static final Set<String> EXON_KEYWORDS = exonKeywords();
@@ -31,13 +31,13 @@ public class ActinClassificationConfig {
     private static final Set<String> EXONIC_DEL_DUP_FUSION_EVENTS = exonicDelDupFusionEvents();
     private static final Set<String> FUSION_PAIR_EVENTS_TO_SKIP = fusionPairEventsToSkip();
     private static final Set<String> PROMISCUOUS_FUSION_KEY_PHRASES = promiscuousFusionKeyPhrases();
-    private static final Set<String> MICROSATELLITE_UNSTABLE_EVENTS = microsatelliteUnstableEvents();
-    private static final Set<String> MICROSATELLITE_STABLE_EVENTS = microsatelliteStableEvents();
-    private static final Set<String> HIGH_TUMOR_MUTATIONAL_LOAD_EVENTS = highTumorMutationalLoadEvents();
-    private static final Set<String> LOW_TUMOR_MUTATIONAL_LOAD_EVENTS = lowTumorMutationalLoadEvents();
-    private static final Set<String> HIGH_TUMOR_MUTATIONAL_BURDEN_EVENTS = highTumorMutationalBurdenEvents();
-    private static final Set<String> LOW_TUMOR_MUTATIONAL_BURDEN_EVENTS = lowTumorMutationalBurdenEvents();
-    private static final Set<String> HR_DEFICIENCY_EVENTS = hrDeficiencyEvents();
+    private static final Set<String> MICROSATELLITE_UNSTABLE_KEY_PHRASES = microsatelliteUnstableKeyPhrases();
+    private static final Set<String> MICROSATELLITE_STABLE_KEY_PHRASES = microsatelliteStableKeyPhrases();
+    private static final Set<String> HIGH_TUMOR_MUTATIONAL_LOAD_KEY_PHRASES = highTumorMutationalLoadKeyPhrases();
+    private static final Set<String> LOW_TUMOR_MUTATIONAL_LOAD_KEY_PHRASES = lowTumorMutationalLoadKeyPhrases();
+    private static final Set<String> HIGH_TUMOR_MUTATIONAL_BURDEN_KEY_PHRASES = highTumorMutationalBurdenKeyPhrases();
+    private static final Set<String> LOW_TUMOR_MUTATIONAL_BURDEN_KEY_PHRASES = lowTumorMutationalBurdenKeyPhrases();
+    private static final Set<String> HR_DEFICIENCY_KEY_PHRASES = hrDeficiencyKeyPhrases();
     private static final Set<String> HLA_EVENTS = hlaEvents();
     private static final Set<String> HPV_POSITIVE_EVENTS = hpvPositiveEvents();
     private static final Set<String> EBV_POSITIVE_EVENTS = ebvPositiveEvents();
@@ -70,13 +70,13 @@ public class ActinClassificationConfig {
                 .exonicDelDupFusionEvents(EXONIC_DEL_DUP_FUSION_EVENTS)
                 .fusionPairEventsToSkip(FUSION_PAIR_EVENTS_TO_SKIP)
                 .promiscuousFusionKeyPhrases(PROMISCUOUS_FUSION_KEY_PHRASES)
-                .microsatelliteUnstableEvents(MICROSATELLITE_UNSTABLE_EVENTS)
-                .microsatelliteStableEvents(MICROSATELLITE_STABLE_EVENTS)
-                .highTumorMutationalLoadEvents(HIGH_TUMOR_MUTATIONAL_LOAD_EVENTS)
-                .lowTumorMutationalLoadEvents(LOW_TUMOR_MUTATIONAL_LOAD_EVENTS)
-                .highTumorMutationalBurdenEvents(HIGH_TUMOR_MUTATIONAL_BURDEN_EVENTS)
-                .lowTumorMutationalBurdenEvents(LOW_TUMOR_MUTATIONAL_BURDEN_EVENTS)
-                .hrDeficiencyEvents(HR_DEFICIENCY_EVENTS)
+                .microsatelliteUnstableKeyPhrases(MICROSATELLITE_UNSTABLE_KEY_PHRASES)
+                .microsatelliteStableKeyPhrases(MICROSATELLITE_STABLE_KEY_PHRASES)
+                .highTumorMutationalLoadKeyPhrases(HIGH_TUMOR_MUTATIONAL_LOAD_KEY_PHRASES)
+                .lowTumorMutationalLoadKeyPhrases(LOW_TUMOR_MUTATIONAL_LOAD_KEY_PHRASES)
+                .highTumorMutationalBurdenKeyPhrases(HIGH_TUMOR_MUTATIONAL_BURDEN_KEY_PHRASES)
+                .lowTumorMutationalBurdenKeyPhrases(LOW_TUMOR_MUTATIONAL_BURDEN_KEY_PHRASES)
+                .hrDeficiencyKeyPhrases(HR_DEFICIENCY_KEY_PHRASES)
                 .hlaEvents(HLA_EVENTS)
                 .hpvPositiveEvents(HPV_POSITIVE_EVENTS)
                 .ebvPositiveEvents(EBV_POSITIVE_EVENTS)
@@ -199,45 +199,45 @@ public class ActinClassificationConfig {
     }
 
     @NotNull
-    private static Set<String> microsatelliteUnstableEvents() {
+    private static Set<String> microsatelliteUnstableKeyPhrases() {
         Set<String> set = Sets.newHashSet();
         set.add(ActinKeywords.MSI_SIGNATURE);
         return set;
     }
 
     @NotNull
-    private static Set<String> microsatelliteStableEvents() {
+    private static Set<String> microsatelliteStableKeyPhrases() {
         return Sets.newHashSet();
     }
 
     @NotNull
-    private static Set<String> highTumorMutationalLoadEvents() {
+    private static Set<String> highTumorMutationalLoadKeyPhrases() {
         Set<String> set = Sets.newHashSet();
-        set.add(ActinKeywords.TML_HIGH);
+        set.add(ActinKeywords.TML_CHARACTERISTIC + " " + ActinKeywords.GREATER_THAN);
         return set;
     }
 
     @NotNull
-    private static Set<String> lowTumorMutationalLoadEvents() {
+    private static Set<String> lowTumorMutationalLoadKeyPhrases() {
         Set<String> set = Sets.newHashSet();
-        set.add(ActinKeywords.TML_LOW);
+        set.add(ActinKeywords.TML_CHARACTERISTIC + " " + ActinKeywords.LOWER_THAN);
         return set;
     }
 
     @NotNull
-    private static Set<String> lowTumorMutationalBurdenEvents() {
+    private static Set<String> lowTumorMutationalBurdenKeyPhrases() {
         return Sets.newHashSet();
     }
 
     @NotNull
-    private static Set<String> highTumorMutationalBurdenEvents() {
+    private static Set<String> highTumorMutationalBurdenKeyPhrases() {
         Set<String> set = Sets.newHashSet();
-        set.add(ActinKeywords.TMB_HIGH);
+        set.add(ActinKeywords.TMB_CHARACTERISTIC + " " + ActinKeywords.GREATER_THAN);
         return set;
     }
 
     @NotNull
-    private static Set<String> hrDeficiencyEvents() {
+    private static Set<String> hrDeficiencyKeyPhrases() {
         Set<String> set = Sets.newHashSet();
         set.add(ActinKeywords.HRD_SIGNATURE);
         return set;

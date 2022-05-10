@@ -11,11 +11,11 @@ import org.junit.Test;
 
 public class ActinFilterFileTest {
 
-    private static final String TEST_ACTIN_FILTER_FILE = Resources.getResource("actin/filter.tsv").getPath();
+    private static final String EXAMPLE_FILTER_TSV = Resources.getResource("actin/filter.tsv").getPath();
 
     @Test
     public void canReadActinFilterTsv() throws IOException {
-        List<ActinFilterEntry> filterEntries = ActinFilterFile.read(TEST_ACTIN_FILTER_FILE);
+        List<ActinFilterEntry> filterEntries = ActinFilterFile.read(EXAMPLE_FILTER_TSV);
 
         assertEquals(1, filterEntries.size());
     }

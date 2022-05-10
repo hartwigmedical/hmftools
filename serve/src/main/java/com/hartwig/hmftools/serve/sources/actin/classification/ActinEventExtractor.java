@@ -24,6 +24,12 @@ public final class ActinEventExtractor {
             case INACTIVATION_OF_GENE_X: {
                 return Sets.newHashSet(ActinKeywords.INACTIVATION);
             }
+            case MSI_SIGNATURE:
+            case HRD_SIGNATURE:
+            case TMB_OF_AT_LEAST_X:
+            case TML_OF_AT_LEAST_X:
+            case TML_OF_AT_MOST_X:
+            case HAS_HLA_A_TYPE_X:
             case MUTATION_IN_GENE_X_OF_TYPE_Y: {
                 String mutation = entry.mutation();
                 if (mutation == null) {
@@ -41,28 +47,14 @@ public final class ActinEventExtractor {
                 return Sets.newHashSet(ActinKeywords.PROMISCUOUS_FUSION);
             }
             case SPECIFIC_FUSION_OF_X_TO_Y: {
+                String mutation = entry.mutation();
+                if (mutation == null) {
+                    throw new IllegalStateException("No mutation provided in ACTIN entry: " + entry);
+                }
                 return Sets.newHashSet(entry.mutation() + " fusion");
             }
             case WILDTYPE_OF_GENE_X: {
                 return Sets.newHashSet(ActinKeywords.WILDTYPE);
-            }
-            case MSI_SIGNATURE: {
-                return Sets.newHashSet(ActinKeywords.MSI_SIGNATURE + " " + entry.mutation());
-            }
-            case HRD_SIGNATURE: {
-                return Sets.newHashSet(ActinKeywords.HRD_SIGNATURE + " " + entry.mutation());
-            }
-            case TMB_OF_AT_LEAST_X: {
-                return Sets.newHashSet(ActinKeywords.TMB_HIGH + " " + entry.mutation());
-            }
-            case TML_OF_AT_LEAST_X: {
-                return Sets.newHashSet(ActinKeywords.TML_HIGH + " " + entry.mutation());
-            }
-            case TML_OF_AT_MOST_X: {
-                return Sets.newHashSet(ActinKeywords.TML_LOW + " " + entry.mutation());
-            }
-            case HAS_HLA_A_TYPE_X: {
-                return Sets.newHashSet(ActinKeywords.HLA_TYPE + " " + entry.mutation());
             }
             default: {
                 throw new IllegalStateException("Unrecognized event: " + entry.rule());
