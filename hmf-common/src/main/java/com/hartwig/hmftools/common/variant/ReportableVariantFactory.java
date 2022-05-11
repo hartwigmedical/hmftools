@@ -80,11 +80,6 @@ public final class ReportableVariantFactory {
                 }
             }
         }
-        if (driverCatalog.size() != result.size()) {
-            LOGGER.error("The variant catalog size '{}' is not equals than the reportable variants size '{}'",
-                    driverCatalog.size(),
-                    result.size());
-        }
         return result;
     }
 
