@@ -24,7 +24,7 @@ public class SomaticVariantsTest {
 
     @Test
     public void sortCorrectlyOnCodon() {
-        ReportableVariant base = VariantTestFactory.createTestReportableVariant();
+        ReportableVariant base = VariantTestFactory.create();
         ReportableVariant variant1 = ImmutableReportableVariant.builder().from(base).canonicalHgvsCodingImpact("c.-300T>A").build();
         ReportableVariant variant2 = ImmutableReportableVariant.builder().from(base).canonicalHgvsCodingImpact("c.4000T>A").build();
         ReportableVariant variant3 = ImmutableReportableVariant.builder().from(base).canonicalHgvsCodingImpact("c.500T>A").build();
@@ -40,7 +40,7 @@ public class SomaticVariantsTest {
 
     @Test
     public void canExtractMSIgenes() {
-        ReportableVariant base = VariantTestFactory.createTestReportableVariant();
+        ReportableVariant base = VariantTestFactory.create();
         ReportableVariant variant1 = ImmutableReportableVariant.builder().from(base).gene("MLH1").build();
         ReportableVariant variant2 = ImmutableReportableVariant.builder().from(base).gene("MSH2").build();
         ReportableVariant variant3 = ImmutableReportableVariant.builder().from(base).gene("MSH6").build();
@@ -55,7 +55,7 @@ public class SomaticVariantsTest {
 
     @Test
     public void canExtractHRDgenes() {
-        ReportableVariant base = VariantTestFactory.createTestReportableVariant();
+        ReportableVariant base = VariantTestFactory.create();
         ReportableVariant variant1 = ImmutableReportableVariant.builder().from(base).gene("BRCA1").build();
         ReportableVariant variant2 = ImmutableReportableVariant.builder().from(base).gene("BRCA2").build();
         ReportableVariant variant3 = ImmutableReportableVariant.builder().from(base).gene("PALB2").build();

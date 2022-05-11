@@ -1,18 +1,14 @@
-package com.hartwig.hmftools.protect;
+package com.hartwig.hmftools.protect.algo;
 
 import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
-import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.doid.DoidEdge;
-import com.hartwig.hmftools.common.doid.DoidParents;
-import com.hartwig.hmftools.common.doid.DoidParentsTest;
-import com.hartwig.hmftools.common.doid.DoidTestFactory;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.protect.ImmutableProtectConfig;
+import com.hartwig.hmftools.protect.ProtectConfig;
 import com.hartwig.hmftools.serve.actionability.ActionableEvents;
 import com.hartwig.hmftools.serve.actionability.ActionableEventsLoader;
 

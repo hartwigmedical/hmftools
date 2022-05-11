@@ -48,7 +48,7 @@ public class CopyNumberEvidenceTest {
                 .build();
 
         CopyNumberEvidence copyNumberEvidence =
-                new CopyNumberEvidence(EvidenceTestFactory.createTestEvidenceFactory(), Lists.newArrayList(amp, inactivation, fusion));
+                new CopyNumberEvidence(EvidenceTestFactory.create(), Lists.newArrayList(amp, inactivation, fusion));
 
         ReportableGainLoss reportableAmp = PurpleTestFactory.createReportableGainLoss(geneAmp, CopyNumberInterpretation.FULL_GAIN);
         ReportableGainLoss reportableDel = PurpleTestFactory.createReportableGainLoss(geneDel, CopyNumberInterpretation.FULL_LOSS);
@@ -62,19 +62,13 @@ public class CopyNumberEvidenceTest {
 
         ProtectEvidence ampEvidence = find(evidences, geneAmp);
         assertTrue(ampEvidence.reported());
-        assertEquals(reportableAmp.gene(), ampEvidence.gene());
-
         assertEquals(ampEvidence.sources().size(), 1);
-        ProtectSource protectSourceAmpEvidence = findBySource(ampEvidence.sources(), Knowledgebase.CKB);
-        assertEquals(ProtectEvidenceType.AMPLIFICATION, protectSourceAmpEvidence.evidenceType());
+        assertEquals(ProtectEvidenceType.AMPLIFICATION, findByKnowledgebase(ampEvidence.sources(), Knowledgebase.CKB).evidenceType());
 
         ProtectEvidence delEvidence = find(evidences, geneDel);
         assertTrue(delEvidence.reported());
-        assertEquals(reportableDel.gene(), delEvidence.gene());
-
         assertEquals(delEvidence.sources().size(), 1);
-        ProtectSource protectSourceDelEvidence = findBySource(delEvidence.sources(), Knowledgebase.CKB);
-        assertEquals(ProtectEvidenceType.INACTIVATION, protectSourceDelEvidence.evidenceType());
+        assertEquals(ProtectEvidenceType.INACTIVATION, findByKnowledgebase(delEvidence.sources(), Knowledgebase.CKB).evidenceType());
     }
 
     @NotNull
@@ -89,13 +83,13 @@ public class CopyNumberEvidenceTest {
     }
 
     @NotNull
-    private static ProtectSource findBySource(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase source) {
-        for (ProtectSource protectSource : sources) {
-            if (protectSource.name() == source) {
-                return protectSource;
+    private static ProtectSource findByKnowledgebase(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase knowledgebaseToFind) {
+        for (ProtectSource source : sources) {
+            if (source.name() == knowledgebaseToFind) {
+                return source;
             }
         }
 
-        throw new IllegalStateException("Could not find evidence with source: " + source);
+        throw new IllegalStateException("Could not find evidence from source: " + knowledgebaseToFind);
     }
 }

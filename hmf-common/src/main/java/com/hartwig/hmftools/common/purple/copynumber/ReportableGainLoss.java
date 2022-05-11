@@ -24,8 +24,7 @@ public abstract class ReportableGainLoss {
     @NotNull
     public abstract String transcript();
 
-    @NotNull
-    public abstract Boolean isCanonical();
+    public abstract boolean isCanonical();
 
     public abstract long minCopies();
 

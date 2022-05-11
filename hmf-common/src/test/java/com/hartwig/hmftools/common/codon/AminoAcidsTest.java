@@ -1,17 +1,13 @@
 package com.hartwig.hmftools.common.codon;
 
-import static com.hartwig.hmftools.common.codon.Codons.isStopCodon;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_LIST;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.genome.region.Strand;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -37,7 +33,7 @@ public class AminoAcidsTest
                 for(String base3 : DNA_BASE_LIST)
                 {
                     String trinucleotide = base1 + base2 + base3;
-                    assertEquals(true, aminoAcidExists(aminoAcidToTrinucleotideMap, trinucleotide));
+                    assertTrue(aminoAcidExists(aminoAcidToTrinucleotideMap, trinucleotide));
                 }
             }
         }

@@ -48,7 +48,7 @@ public class DisruptionEvidence {
                         .transcript(reportable.transcript())
                         .isCanonical(reportable.isCanonical())
                         .event(HOMOZYGOUS_DISRUPTION_EVENT)
-                        .eventIsHighDriver(EvidenceDriverLikelihood.interpretDisruptions())
+                        .eventIsHighDriver(true)
                         .build();
                 result.add(evidence);
             }

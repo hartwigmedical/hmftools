@@ -21,6 +21,5 @@ public abstract class ReportableHomozygousDisruption {
     @NotNull
     public abstract String transcript();
 
-    @NotNull
-    public abstract Boolean isCanonical();
+    public abstract boolean isCanonical();
 }

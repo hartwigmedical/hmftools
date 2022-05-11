@@ -4,12 +4,13 @@ import com.hartwig.hmftools.common.sv.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.variant.DriverInterpretation;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-public class EvidenceDriverLikelihood {
+public final class EvidenceDriverLikelihood {
 
-    @Nullable
-    public static Boolean interpretVariant(@NotNull DriverInterpretation driverInterpretation) {
+    private EvidenceDriverLikelihood() {
+    }
+
+    public static boolean interpretVariant(@NotNull DriverInterpretation driverInterpretation) {
         switch (driverInterpretation) {
             case HIGH:
                 return true;
@@ -17,17 +18,11 @@ public class EvidenceDriverLikelihood {
             case LOW:
                 return false;
             default:
-                return null;
+                throw new IllegalStateException("Unrecognized driver variant interpretation: " + driverInterpretation);
         }
     }
 
-    @Nullable
-    public static Boolean interpretSignatures() {
-        return null;
-    }
-
-    @Nullable
-    public static Boolean interpretFusions(@NotNull FusionLikelihoodType likelihood) {
+    public static boolean interpretFusion(@NotNull FusionLikelihoodType likelihood) {
         switch (likelihood) {
             case HIGH:
                 return true;
@@ -35,27 +30,17 @@ public class EvidenceDriverLikelihood {
             case NA:
                 return false;
             default:
-                return null;
+                throw new IllegalStateException("Unrecognized fusion likelihood type: " + likelihood);
         }
     }
 
-    public static boolean interpretDisruptions() {
-        // All homozygous disruption has a high driver likelihood
+    public static boolean interpretCopyNumber() {
+        // All loss/gains have a high driver likelihood
         return true;
-    }
-
-    public static boolean interpretCNV() {
-        //All loss/gains has a high driver likelihood
-        return true;
-    }
-
-    @Nullable
-    public static Boolean interpretChord() {
-        return null;
     }
 
     public static boolean interpretVirus() {
-        //We use only high driver viruses for evidence matching
+        // We use only high driver viruses for evidence matching
         return true;
     }
 }

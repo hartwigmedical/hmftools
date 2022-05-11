@@ -7,15 +7,13 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.protect.characteristic.CharacteristicsFunctions;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicAnnotation;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class ChordEvidence {
-    private static final Logger LOGGER = LogManager.getLogger(ChordEvidence.class);
 
     static final String HR_DEFICIENCY_EVENT = "HR deficiency";
 
@@ -35,32 +33,13 @@ public class ChordEvidence {
     @NotNull
     public List<ProtectEvidence> evidence(@NotNull ChordAnalysis chordAnalysis) {
         List<ProtectEvidence> result = Lists.newArrayList();
-        if (chordAnalysis.hrStatus() == ChordStatus.HR_DEFICIENT) {
-            for (ActionableCharacteristic signature : actionableCharacteristics) {
-                switch (signature.comparator()) {
-                    case EQUAL_OR_LOWER:
-                        if (chordAnalysis.hrdValue() <= signature.cutoff()) {
-                            result.add(generateHRDEvidences(signature));
-                        }
-                        break;
-                    case EQUAL_OR_GREATER:
-                        if (chordAnalysis.hrdValue() >= signature.cutoff()) {
-                            result.add(generateHRDEvidences(signature));
-                        }
-                        break;
-                    case LOWER:
-                        if (chordAnalysis.hrdValue() < signature.cutoff()) {
-                            result.add(generateHRDEvidences(signature));
-                        }
-                        break;
-                    case GREATER:
-                        if (chordAnalysis.hrdValue() > signature.cutoff()) {
-                            result.add(generateHRDEvidences(signature));
-                        }
-                        break;
-                    default:
-                        LOGGER.warn("Signature comparator is null");
+        for (ActionableCharacteristic characteristic : actionableCharacteristics) {
+            if (CharacteristicsFunctions.hasExplicitCutoff(characteristic)) {
+                if (CharacteristicsFunctions.evaluateVersusCutoff(characteristic, chordAnalysis.hrdValue())) {
+                    result.add(toHRDEvidence(characteristic));
                 }
+            } else if (chordAnalysis.hrStatus() == ChordStatus.HR_DEFICIENT) {
+                result.add(toHRDEvidence(characteristic));
             }
         }
 
@@ -68,11 +47,7 @@ public class ChordEvidence {
     }
 
     @NotNull
-    public ProtectEvidence generateHRDEvidences(@NotNull ActionableCharacteristic signature) {
-        return personalizedEvidenceFactory.somaticReportableEvidence(signature)
-                .event(HR_DEFICIENCY_EVENT)
-                .eventIsHighDriver(EvidenceDriverLikelihood.interpretChord())
-                .build();
+    private ProtectEvidence toHRDEvidence(@NotNull ActionableCharacteristic signature) {
+        return personalizedEvidenceFactory.somaticReportableEvidence(signature).event(HR_DEFICIENCY_EVENT).eventIsHighDriver(null).build();
     }
-
 }

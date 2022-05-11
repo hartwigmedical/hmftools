@@ -8,6 +8,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.protect.ProtectEvidenceComparator;
 import com.hartwig.hmftools.common.protect.ProtectSource;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
@@ -179,7 +180,7 @@ public class ClinicalEvidenceChapter implements ReportChapter {
     @NotNull
     private static Set<ProtectEvidence> filterOnDirections(@NotNull List<ProtectEvidence> evidences,
             @NotNull Set<EvidenceDirection> allowedDirections) {
-        Set<ProtectEvidence> filtered = Sets.newTreeSet();
+        Set<ProtectEvidence> filtered = Sets.newTreeSet(new ProtectEvidenceComparator());
         for (ProtectEvidence evidence : evidences) {
             if (allowedDirections.contains(evidence.direction())) {
                 filtered.add(evidence);

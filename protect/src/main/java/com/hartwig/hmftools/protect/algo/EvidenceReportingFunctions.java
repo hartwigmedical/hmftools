@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect;
+package com.hartwig.hmftools.protect.algo;
 
 import java.util.List;
 import java.util.Set;
@@ -9,17 +9,15 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.protect.ProtectEvidenceComparator;
 import com.hartwig.hmftools.common.protect.ProtectSource;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class EvidenceReportingFunctions {
-    private static final Logger LOGGER = LogManager.getLogger(EvidenceReportingFunctions.class);
 
     private static final Set<Knowledgebase> TRIAL_SOURCES = Sets.newHashSet(Knowledgebase.ICLUSION, Knowledgebase.ACTIN);
 
@@ -31,7 +29,8 @@ public final class EvidenceReportingFunctions {
         List<ProtectEvidence> meetsMaxLevelSources = onlyReportWhenMeetsMaxLevelForSources(evidences);
         List<ProtectEvidence> maxLevelPerTreatmentEvent = onlyReportHighestLevelForTreatmentAndEvent(meetsMaxLevelSources);
 
-        return maxLevelPerTreatmentEvent.stream().sorted().collect(Collectors.toList());
+        maxLevelPerTreatmentEvent.sort(new ProtectEvidenceComparator());
+        return maxLevelPerTreatmentEvent;
     }
 
     @NotNull
@@ -69,31 +68,26 @@ public final class EvidenceReportingFunctions {
 
     @NotNull
     private static List<ProtectEvidence> onlyReportHighestLevelForTreatmentAndEvent(@NotNull List<ProtectEvidence> evidences) {
-        Set<EventKey> events = EventKey.buildUniqueEventSet(evidences);
-        Set<String> treatments = evidences.stream().map(ProtectEvidence::treatment).collect(Collectors.toSet());
+        Set<EvidenceKey> events = EvidenceKey.buildKeySet(evidences);
 
         List<ProtectEvidence> result = Lists.newArrayList();
-        for (EventKey event : events) {
-            for (String treatment : treatments) {
-                result.addAll(reportHighestPerEventTreatmentDirection(evidences.stream()
-                        .filter(x -> x.treatment().equals(treatment))
-                        .filter(x -> x.direction().isResponsive())
-                        .filter(x -> EventKey.create(x).equals(event))
-                        .collect(Collectors.toList())));
+        for (EvidenceKey event : events) {
+            result.addAll(reportHighestPerEventTreatmentDirection(evidences.stream()
+                    .filter(x -> x.direction().isResponsive())
+                    .filter(x -> EvidenceKey.create(x).equals(event))
+                    .collect(Collectors.toList())));
 
-                result.addAll(reportHighestPerEventTreatmentDirection(evidences.stream()
-                        .filter(x -> x.treatment().equals(treatment))
-                        .filter(x -> !x.direction().isResponsive())
-                        .filter(x -> EventKey.create(x).equals(event))
-                        .collect(Collectors.toList())));
-            }
+            result.addAll(reportHighestPerEventTreatmentDirection(evidences.stream()
+                    .filter(x -> !x.direction().isResponsive())
+                    .filter(x -> EvidenceKey.create(x).equals(event))
+                    .collect(Collectors.toList())));
         }
 
         return result;
     }
 
     @NotNull
-    private static List<ProtectEvidence> reportHighestPerEventTreatmentDirection(@NotNull List<ProtectEvidence> evidences) {
+    private static List<ProtectEvidence> reportHighestPerEventTreatmentDirection(@NotNull Iterable<ProtectEvidence> evidences) {
         EvidenceLevel highestOnLabel = highestReportableLevel(true, evidences);
         EvidenceLevel highestOffLabel = highestReportableLevel(false, evidences);
 
@@ -125,7 +119,7 @@ public final class EvidenceReportingFunctions {
 
     @Nullable
     @VisibleForTesting
-    static EvidenceLevel highestReportableLevel(boolean isOnLabel, @NotNull List<ProtectEvidence> evidences) {
+    static EvidenceLevel highestReportableLevel(boolean isOnLabel, @NotNull Iterable<ProtectEvidence> evidences) {
         EvidenceLevel highest = null;
         for (ProtectEvidence evidence : evidences) {
             if (evidence.reported() && evidence.onLabel() == isOnLabel) {
@@ -138,7 +132,7 @@ public final class EvidenceReportingFunctions {
     }
 
     @NotNull
-    public static List<ProtectEvidence> reportOnLabelTrialsOnly(@NotNull List<ProtectEvidence> evidences) {
+    public static List<ProtectEvidence> reportOnLabelTrialsOnly(@NotNull Iterable<ProtectEvidence> evidences) {
         List<ProtectEvidence> result = Lists.newArrayList();
         for (ProtectEvidence evidence : evidences) {
             if (isExclusiveTrialEvidence(evidence)) {

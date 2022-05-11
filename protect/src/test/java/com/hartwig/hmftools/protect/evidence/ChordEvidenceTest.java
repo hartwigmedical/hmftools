@@ -25,38 +25,42 @@ public class ChordEvidenceTest {
     @Test
     public void canDetermineEvidenceForChord() {
         ActionableCharacteristic signature1 = ImmutableActionableCharacteristic.builder()
-                .from(ServeTestFactory.createTestActionableCharacteristic(TumorCharacteristicsComparator.EQUAL_OR_GREATER, 0.5))
+                .from(ServeTestFactory.createTestActionableCharacteristic())
                 .name(TumorCharacteristicAnnotation.HOMOLOGOUS_RECOMBINATION_DEFICIENT)
                 .build();
 
         ActionableCharacteristic signature2 = ImmutableActionableCharacteristic.builder()
-                .from(ServeTestFactory.createTestActionableCharacteristic(null, null))
+                .from(ServeTestFactory.createTestActionableCharacteristic())
                 .name(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD)
                 .build();
 
         ActionableCharacteristic signature3 = ImmutableActionableCharacteristic.builder()
-                .from(ServeTestFactory.createTestActionableCharacteristic(TumorCharacteristicsComparator.GREATER, 0.8))
+                .from(ServeTestFactory.createTestActionableCharacteristic())
                 .name(TumorCharacteristicAnnotation.HOMOLOGOUS_RECOMBINATION_DEFICIENT)
+                .comparator(TumorCharacteristicsComparator.GREATER)
+                .cutoff(0.8)
                 .build();
 
         ChordEvidence chordEvidence =
-                new ChordEvidence(EvidenceTestFactory.createTestEvidenceFactory(), Lists.newArrayList(signature1, signature2, signature3));
+                new ChordEvidence(EvidenceTestFactory.create(), Lists.newArrayList(signature1, signature2, signature3));
 
-        ChordAnalysis hrDeficient = chordAnalysisWithStatus(ChordStatus.HR_DEFICIENT, 0.5);
+        ChordAnalysis hrDeficient = create(ChordStatus.HR_DEFICIENT, 0.5);
         List<ProtectEvidence> evidence = chordEvidence.evidence(hrDeficient);
-
         assertEquals(1, evidence.size());
 
         ProtectEvidence evidence1 = evidence.get(0);
         assertTrue(evidence1.reported());
         assertEquals(ChordEvidence.HR_DEFICIENCY_EVENT, evidence1.event());
 
-        ChordAnalysis hrProficient = chordAnalysisWithStatus(ChordStatus.HR_PROFICIENT, 0.8);
-        assertTrue(chordEvidence.evidence(hrProficient).isEmpty());
+        ChordAnalysis hrProficientWithHighScore = create(ChordStatus.HR_PROFICIENT, 0.85);
+        assertEquals(1, chordEvidence.evidence(hrProficientWithHighScore).size());
+
+        ChordAnalysis hrProficientWithLowScore = create(ChordStatus.HR_PROFICIENT, 0.2);
+        assertEquals(0, chordEvidence.evidence(hrProficientWithLowScore).size());
     }
 
     @NotNull
-    private static ChordAnalysis chordAnalysisWithStatus(@NotNull ChordStatus status, @NotNull Double hrdValue) {
+    private static ChordAnalysis create(@NotNull ChordStatus status, double hrdValue) {
         return ImmutableChordAnalysis.builder()
                 .from(ChordTestFactory.createMinimalTestChordAnalysis())
                 .hrStatus(status)

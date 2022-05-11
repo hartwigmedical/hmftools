@@ -15,7 +15,7 @@ public enum ProtectEvidenceType {
     CODON_MUTATION("Codon"),
     EXON_MUTATION("Exon"),
     ANY_MUTATION("Any mutation"),
-    WILD_TYPE("Wild-type");;
+    WILD_TYPE("Wild-type");
 
     private final String mDisplay;
 

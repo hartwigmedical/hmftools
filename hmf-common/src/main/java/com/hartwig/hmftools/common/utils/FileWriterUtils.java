@@ -13,11 +13,8 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
-
-import com.google.common.collect.Maps;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;

@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.protect.evidence;
 
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.sv.linx.FusionLikelihoodType;
@@ -12,41 +11,26 @@ import org.junit.Test;
 public class EvidenceDriverLikelihoodTest {
 
     @Test
-    public void canInterpretVariant(){
+    public void canInterpretVariants() {
         assertTrue(EvidenceDriverLikelihood.interpretVariant(DriverInterpretation.HIGH));
         assertFalse(EvidenceDriverLikelihood.interpretVariant(DriverInterpretation.MEDIUM));
         assertFalse(EvidenceDriverLikelihood.interpretVariant(DriverInterpretation.LOW));
     }
 
     @Test
-    public void canInterpretSignatures() {
-        assertNull(EvidenceDriverLikelihood.interpretSignatures());
+    public void canInterpretFusions() {
+        assertTrue(EvidenceDriverLikelihood.interpretFusion(FusionLikelihoodType.HIGH));
+        assertFalse(EvidenceDriverLikelihood.interpretFusion(FusionLikelihoodType.LOW));
+        assertFalse(EvidenceDriverLikelihood.interpretFusion(FusionLikelihoodType.NA));
     }
 
     @Test
-    public void canInterpretFusions(){
-        assertTrue(EvidenceDriverLikelihood.interpretFusions(FusionLikelihoodType.HIGH));
-        assertFalse(EvidenceDriverLikelihood.interpretFusions(FusionLikelihoodType.LOW));
-        assertFalse(EvidenceDriverLikelihood.interpretFusions(FusionLikelihoodType.NA));
+    public void canInterpretCNV() {
+        assertTrue(EvidenceDriverLikelihood.interpretCopyNumber());
     }
 
     @Test
-    public void canInterpretDisruptions(){
-        assertTrue(EvidenceDriverLikelihood.interpretDisruptions());
-    }
-
-    @Test
-    public void canInterpretCNV(){
-        assertTrue(EvidenceDriverLikelihood.interpretCNV());
-    }
-
-    @Test
-    public void canInterpretChord(){
-        assertNull(EvidenceDriverLikelihood.interpretChord());
-    }
-
-    @Test
-    public void canInterpretVirus(){
+    public void canInterpretVirus() {
         assertTrue(EvidenceDriverLikelihood.interpretVirus());
     }
 }

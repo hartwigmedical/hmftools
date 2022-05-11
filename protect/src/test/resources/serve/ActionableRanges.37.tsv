@@ -1,2 +1,2 @@
-gene	transcript	chromosome	start	end	mutationType	rangeType	rank	source	sourceEvent	sourceUrls	treatment	applicableCancerType	applicableDoid	blacklistCancerTypes	level	directioevidenceUrls
+gene	transcript	chromosome	start	end	mutationType	rangeType	rank	source	sourceEvent	sourceUrls	treatment	applicableCancerType	applicableDoid	blacklistCancerTypes	level	direction	evidenceUrls
 BRAF	ENST000002886027	7	100	200	MISSENSE	EXON	2	VICC_CGI	exon	http	drug	all	162	Hematologic cancer,2531	C	RESPONSIVE	http

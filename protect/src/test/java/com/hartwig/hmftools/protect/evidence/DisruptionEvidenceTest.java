@@ -49,7 +49,7 @@ public class DisruptionEvidenceTest {
                 .build();
 
         DisruptionEvidence disruptionEvidence =
-                new DisruptionEvidence(EvidenceTestFactory.createTestEvidenceFactory(), Lists.newArrayList(amp, inactivation, deletion));
+                new DisruptionEvidence(EvidenceTestFactory.create(), Lists.newArrayList(amp, inactivation, deletion));
 
         ReportableHomozygousDisruption matchAmp = create(geneAmp);
         ReportableHomozygousDisruption matchInact = create(geneInact);
@@ -64,8 +64,7 @@ public class DisruptionEvidenceTest {
         assertEquals(DisruptionEvidence.HOMOZYGOUS_DISRUPTION_EVENT, evidence.event());
 
         assertEquals(evidence.sources().size(), 1);
-        ProtectSource protectSource = findBySource(evidence.sources(), Knowledgebase.CKB);
-        assertEquals(ProtectEvidenceType.INACTIVATION, protectSource.evidenceType());
+        assertEquals(ProtectEvidenceType.INACTIVATION, findByKnowledgebase(evidence.sources(), Knowledgebase.CKB).evidenceType());
     }
 
     @NotNull
@@ -80,13 +79,13 @@ public class DisruptionEvidenceTest {
     }
 
     @NotNull
-    private static ProtectSource findBySource(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase source) {
-        for (ProtectSource protectSource : sources) {
-            if (protectSource.name() == source) {
-                return protectSource;
+    private static ProtectSource findByKnowledgebase(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase knowledgebaseToFind) {
+        for (ProtectSource source : sources) {
+            if (source.name() == knowledgebaseToFind) {
+                return source;
             }
         }
 
-        throw new IllegalStateException("Could not find evidence with source: " + source);
+        throw new IllegalStateException("Could not find evidence from source: " + knowledgebaseToFind);
     }
 }

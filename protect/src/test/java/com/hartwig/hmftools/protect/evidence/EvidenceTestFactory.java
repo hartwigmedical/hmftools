@@ -1,12 +1,6 @@
 package com.hartwig.hmftools.protect.evidence;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.doid.DoidEdge;
-import com.hartwig.hmftools.common.doid.DoidParents;
-import com.hartwig.hmftools.common.doid.DoidParentsTest;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -16,8 +10,12 @@ public final class EvidenceTestFactory {
     }
 
     @NotNull
-    public static PersonalizedEvidenceFactory createTestEvidenceFactory() {
+    public static PersonalizedEvidenceFactory create(@NotNull String doid) {
+        return new PersonalizedEvidenceFactory(Sets.newHashSet(doid));
+    }
 
-        return new PersonalizedEvidenceFactory(Sets.newHashSet("162"));
+    @NotNull
+    public static PersonalizedEvidenceFactory create() {
+        return create("162");
     }
 }

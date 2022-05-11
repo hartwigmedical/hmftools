@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect;
+package com.hartwig.hmftools.protect.algo;
 
 import java.io.IOException;
 import java.util.List;
@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordDataLoader;
-import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxDataLoader;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
@@ -16,6 +15,7 @@ import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleDataLoader;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
+import com.hartwig.hmftools.protect.ProtectConfig;
 import com.hartwig.hmftools.protect.evidence.ChordEvidence;
 import com.hartwig.hmftools.protect.evidence.CopyNumberEvidence;
 import com.hartwig.hmftools.protect.evidence.DisruptionEvidence;
@@ -174,11 +174,11 @@ public class ProtectAlgo {
     }
 
     private static void printExtraction(@NotNull String title, @NotNull List<ProtectEvidence> evidences) {
-        Set<EventKey> events = EventKey.buildUniqueEventSet(evidences);
-        LOGGER.debug("Extracted {} evidence items for {} based off {} genomic events", evidences.size(), title, events.size());
-        for (EventKey event : events) {
-            int count = evidences.stream().filter(x -> EventKey.create(x).equals(event)).collect(Collectors.toList()).size();
-            LOGGER.debug(" Resolved {} items for '{}'", count, event);
+        Set<EvidenceKey> keys = EvidenceKey.buildKeySet(evidences);
+        LOGGER.debug("Extracted {} evidence items for {} having {} keys ", evidences.size(), title, keys.size());
+        for (EvidenceKey key : keys) {
+            int count = evidences.stream().filter(x -> EvidenceKey.create(x).equals(key)).collect(Collectors.toList()).size();
+            LOGGER.debug(" Resolved {} items for '{}'", count, key);
         }
     }
 

@@ -47,7 +47,7 @@ public class GermlineReportingModelTest {
     @NotNull
     private static ReportableVariant testReportableVariant(@NotNull String gene, @NotNull GenotypeStatus genotypeStatus) {
         return ImmutableReportableVariant.builder()
-                .from(VariantTestFactory.createTestReportableVariant())
+                .from(VariantTestFactory.create())
                 .type(VariantType.SNP)
                 .source(ReportableVariantSource.GERMLINE)
                 .gene(gene)

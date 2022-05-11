@@ -20,7 +20,6 @@ public interface DriverCatalog
     @NotNull
     String transcript();
 
-    @NotNull
     boolean isCanonical();
 
     @NotNull
