@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.common.protect;
 
-import java.util.Set;
-
-import com.beust.jcommander.internal.Sets;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
@@ -17,15 +15,6 @@ public final class ProtectTestFactory {
 
     @NotNull
     public static ImmutableProtectEvidence.Builder builder() {
-        Set<ProtectSource> source = Sets.newHashSet();
-        source.add(ImmutableProtectSource.builder()
-                .name(Knowledgebase.CKB)
-                .sourceEvent("hotspot")
-                .sourceUrls(Sets.newHashSet())
-                .evidenceType(ProtectEvidenceType.ANY_MUTATION)
-                        .evidenceUrls(Sets.newHashSet())
-                .build());
-
         return ImmutableProtectEvidence.builder()
                 .event(Strings.EMPTY)
                 .germline(false)
@@ -34,6 +23,15 @@ public final class ProtectTestFactory {
                 .onLabel(false)
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .sources(source);
+                .sources(Sets.newHashSet(createSource(Knowledgebase.VICC_CGI)));
+    }
+
+    @NotNull
+    public static ProtectSource createSource(@NotNull Knowledgebase knowledgebase) {
+        return ImmutableProtectSource.builder()
+                .name(knowledgebase)
+                .sourceEvent("any mutation")
+                .evidenceType(ProtectEvidenceType.ANY_MUTATION)
+                .build();
     }
 }

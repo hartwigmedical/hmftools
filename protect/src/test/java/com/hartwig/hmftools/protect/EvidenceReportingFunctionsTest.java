@@ -211,6 +211,12 @@ public class EvidenceReportingFunctionsTest {
 
     @NotNull
     private static ProtectEvidence createTestEvidence(boolean onLabel, @NotNull EvidenceDirection direction, @NotNull EvidenceLevel level) {
-        return ProtectTestFactory.builder().onLabel(onLabel).level(level).direction(direction).treatment("A").build();
+        return ProtectTestFactory.builder()
+                .onLabel(onLabel)
+                .level(level)
+                .direction(direction)
+                .treatment("A")
+                .sources(Sets.newHashSet(ProtectTestFactory.createSource(Knowledgebase.CKB)))
+                .build();
     }
 }

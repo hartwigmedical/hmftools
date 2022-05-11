@@ -68,10 +68,10 @@ public class PersonalizedEvidenceFactoryTest {
     }
 
     @Test
-    public void canDetermineOnlabel() {
-        PersonalizedEvidenceFactory factoryOnlabelMatching = createPersonalizedEvidenceFactory("162");
+    public void canDetermineOnLabel() {
+        PersonalizedEvidenceFactory factoryOnLabelMatching = createPersonalizedEvidenceFactory("162");
         ActionableHotspot hotspotOnLabelMatching = createActionableHotspot("", "", "Cancer", "162");
-        assertTrue(factoryOnlabelMatching.determineOnLabel(hotspotOnLabelMatching.applicableCancerType(),
+        assertTrue(factoryOnLabelMatching.determineOnLabel(hotspotOnLabelMatching.applicableCancerType(),
                 hotspotOnLabelMatching.blacklistCancerTypes(),
                 "treatment"));
 

@@ -24,6 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class PersonalizedEvidenceFactory {
+
     private static final Logger LOGGER = LogManager.getLogger(PersonalizedEvidenceFactory.class);
 
     @NotNull
@@ -49,6 +50,7 @@ public class PersonalizedEvidenceFactory {
         for (String url : actionable.sourceUrls()) {
             sourceUrlJoiner.add(url);
         }
+
         return ImmutableProtectEvidence.builder()
                 .treatment(actionable.treatment())
                 .onLabel(determineOnLabel(actionable.applicableCancerType(), actionable.blacklistCancerTypes(), actionable.treatment()))

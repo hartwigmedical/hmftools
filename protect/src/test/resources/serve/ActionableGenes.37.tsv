@@ -1,2 +1,2 @@
 gene	event	source	sourceEvent	sourceUrls	treatment	applicableCancerType	applicableDoid	blacklistCancerTypes	level	direction	evidenceUrls
-BRCA1	INACTIVATION	VICC_CGI	inac	http	drug	Advanced Solid Tumor	162	Hematologic cancer,2531	B	RESPONSIVE	https
+BRCA1	INACTIVATION	VICC_CGI	inact	http	drug	Advanced Solid Tumor	162	Hematologic cancer,2531	B	RESPONSIVE	https

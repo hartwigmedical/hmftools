@@ -16,14 +16,10 @@ import com.hartwig.hmftools.protect.characteristic.CharacteristicsFunctions;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicAnnotation;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class PurpleSignatureEvidence {
-
-    private static final Logger LOGGER = LogManager.getLogger(PurpleSignatureEvidence.class);
 
     private static final double DEFAULT_HIGH_TMB_CUTOFF = 10D;
 

@@ -109,7 +109,7 @@ level | Evidence level (from A (highest) to D (lowest)) | A
 direction | Whether the evidence is responsive or resistant | RESPONSIVE
 sources | A list of various information from the source | ckb|BRAF V600X|https://ckb.jax.org|CODON_MUTATION|600|https://pubmed.ncbi.nlm.nih.gov;
 
-The list sources contains de following information which is seperate by a semicolon.
+The list sources contains de following information which is separate by a semicolon.
 
 Field  | Description | Example
 ---|---|---
