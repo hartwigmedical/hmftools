@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 public class HaplotypeQC
@@ -150,6 +151,14 @@ public class HaplotypeQC
         {
             Haplotype haplotype = Haplotype.create(
                     evidence.getAminoAcidLoci(), Pair.create(entry.getKey(), entry.getValue()), aminoAcidCount);
+
+            if(haplotype.Haplotype.length() < haplotype.EndLocus - haplotype.StartLocus + 1)
+            {
+                StringJoiner sj = new StringJoiner(";");
+                evidence.getAminoAcidLoci().forEach(x -> sj.add(String.valueOf(x)));
+                LL_LOGGER.error("invalid haplotype({}) created from evidence({}) and amino-acid indices: {}",
+                        haplotype, entry.getKey(), sj.toString());
+            }
 
             haplotypes.add(haplotype);
         }

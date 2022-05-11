@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
 import static com.hartwig.hmftools.lilac.LilacUtils.listMax;
 import static com.hartwig.hmftools.lilac.LilacUtils.listMin;
@@ -94,6 +95,14 @@ public class Haplotype
             return "";
 
         int index = locus - StartLocus;
+
+        if(index < 0 || index >= Haplotype.length())
+        {
+            LL_LOGGER.error("haplotype({}) invalid sequence request at locus({})",
+                    toString(), locus);
+            return "";
+        }
+
         return String.valueOf(Haplotype.charAt(index));
     }
 
