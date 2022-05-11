@@ -3,10 +3,10 @@ package com.hartwig.hmftools.protect.evidence;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.protect.variant.OtherEffectsInterpreter;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
@@ -56,68 +56,46 @@ public class VariantEvidence {
             @NotNull List<SomaticVariant> unreportedSomaticVariants) {
         List<ProtectEvidence> evidences = Lists.newArrayList();
         for (ReportableVariant reportableVariant : ReportableVariantFactory.mergeVariantLists(germline, somatic)) {
-            evidences.addAll(evidence(reportableVariant,
-                    reportableVariant.driverLikelihoodInterpretation(),
-                    reportableVariant.source() == ReportableVariantSource.GERMLINE,
-                    true,
-                    reportableVariant.transcript(),
-                    reportableVariant.isCanonical(),
-                    reportableVariant.otherReportedEffects()));
+            evidences.addAll(evidence(reportableVariant));
         }
 
         for (SomaticVariant unreportedVariant : unreportedSomaticVariants) {
-            evidences.addAll(evidence(unreportedVariant,
-                    DriverInterpretation.LOW,
-                    false,
-                    false,
-                    unreportedVariant.canonicalTranscript(),
-                    true,
-                    unreportedVariant.otherReportedEffects()));
+            evidences.addAll(evidence(unreportedVariant));
         }
 
         return evidences;
     }
 
     @NotNull
-    private List<ProtectEvidence> evidence(@NotNull Variant variant, @NotNull DriverInterpretation driverInterpretation, boolean germline,
-            boolean mayReport, @NotNull String transcript, boolean isCanonical, @NotNull String otherReportedEffects) {
+    private List<ProtectEvidence> evidence(@NotNull Variant variant) {
+        boolean mayReport;
+        DriverInterpretation driverInterpretation;
+
+        if (variant instanceof ReportableVariant) {
+            ReportableVariant reportable = (ReportableVariant) variant;
+            mayReport = true;
+            driverInterpretation = reportable.driverLikelihoodInterpretation();
+        } else {
+            mayReport = false;
+            driverInterpretation = DriverInterpretation.LOW;
+        }
+
         List<ProtectEvidence> evidences = Lists.newArrayList();
         for (ActionableHotspot hotspot : hotspots) {
             if (hotspotMatch(variant, hotspot)) {
-                evidences.add(evidence(variant,
-                        germline,
-                        mayReport,
-                        hotspot,
-                        driverInterpretation,
-                        transcript,
-                        isCanonical,
-                        otherReportedEffects));
+                evidences.add(evidence(variant, hotspot, mayReport));
             }
         }
 
         for (ActionableRange range : ranges) {
-            if (rangeMatch(variant, range, isCanonical, otherReportedEffects)) {
-                evidences.add(evidence(variant,
-                        germline,
-                        mayReport,
-                        range,
-                        driverInterpretation,
-                        transcript,
-                        isCanonical,
-                        otherReportedEffects));
+            if (rangeMatch(variant, range)) {
+                evidences.add(evidence(variant, range, mayReport));
             }
         }
 
         for (ActionableGene gene : genes) {
-            if (geneMatch(variant, gene, isCanonical, otherReportedEffects)) {
-                evidences.add(evidence(variant,
-                        germline,
-                        mayReport && driverInterpretation == DriverInterpretation.HIGH,
-                        gene,
-                        driverInterpretation,
-                        transcript,
-                        isCanonical,
-                        otherReportedEffects));
+            if (geneMatch(variant, gene)) {
+                evidences.add(evidence(variant, gene, mayReport && driverInterpretation == DriverInterpretation.HIGH));
             }
         }
 
@@ -125,26 +103,34 @@ public class VariantEvidence {
     }
 
     @NotNull
-    private ProtectEvidence evidence(@NotNull Variant variant, boolean germline, boolean report, @NotNull ActionableEvent actionable,
-            @NotNull DriverInterpretation driverInterpretation, @NotNull String transcript, boolean isCanonical,
-            @NotNull String otherReportedEffects) {
+    private ProtectEvidence evidence(@NotNull Variant variant, @NotNull ActionableEvent actionable, boolean report) {
+        boolean isGermline;
+        DriverInterpretation driverInterpretation;
+        String transcript;
+        boolean isCanonical;
+
+        if (variant instanceof ReportableVariant) {
+            ReportableVariant reportable = (ReportableVariant) variant;
+            isGermline = reportable.source() == ReportableVariantSource.GERMLINE;
+            driverInterpretation = reportable.driverLikelihoodInterpretation();
+            transcript = reportable.transcript();
+            isCanonical = reportable.isCanonical();
+        } else {
+            isGermline = false;
+            driverInterpretation = DriverInterpretation.LOW;
+            transcript = variant.canonicalTranscript();
+            isCanonical = true;
+        }
 
         return personalizedEvidenceFactory.evidenceBuilder(actionable)
                 .gene(variant.gene())
                 .transcript(transcript)
                 .isCanonical(isCanonical)
-                .event(determineEvent(isCanonical, variant, otherReportedEffects))
-                .germline(germline)
+                .event(ProtectEventGenerator.variantEvent(variant))
+                .germline(isGermline)
                 .reported(report)
                 .eventIsHighDriver(EvidenceDriverLikelihood.interpretVariant(driverInterpretation))
                 .build();
-    }
-
-    @VisibleForTesting
-    static String determineEvent(boolean isCanonical, @NotNull Variant variant, @NotNull String otherReportedEffects) {
-        return isCanonical
-                ? ProtectEventGenerator.variantEvent(variant)
-                : ProtectEventGenerator.variantEventNonCanonical(otherReportedEffects);
     }
 
     private static boolean hotspotMatch(@NotNull Variant variant, @NotNull ActionableHotspot hotspot) {
@@ -152,37 +138,28 @@ public class VariantEvidence {
                 .equals(variant.ref()) && hotspot.alt().equals(variant.alt());
     }
 
-    private static boolean rangeMatch(@NotNull Variant variant, @NotNull ActionableRange range, boolean isCanonical,
-            @NotNull String otherReportedEffects) {
+    private static boolean rangeMatch(@NotNull Variant variant, @NotNull ActionableRange range) {
         return variant.chromosome().equals(range.chromosome()) && variant.gene().equals(range.gene()) && variant.position() >= range.start()
-                && variant.position() <= range.end() && meetsMutationTypeFilter(variant,
-                range.mutationType(),
-                isCanonical,
-                otherReportedEffects);
+                && variant.position() <= range.end() && meetsMutationTypeFilter(variant, range.mutationType());
     }
 
-    private static boolean geneMatch(@NotNull Variant variant, @NotNull ActionableGene gene, boolean isCanonical,
-            @NotNull String otherReportedEffects) {
+    private static boolean geneMatch(@NotNull Variant variant, @NotNull ActionableGene gene) {
         assert gene.event() == GeneLevelEvent.ACTIVATION || gene.event() == GeneLevelEvent.INACTIVATION
                 || gene.event() == GeneLevelEvent.ANY_MUTATION;
 
-        return gene.gene().equals(variant.gene()) && meetsMutationTypeFilter(variant,
-                MutationTypeFilter.ANY,
-                isCanonical,
-                otherReportedEffects);
+        return gene.gene().equals(variant.gene()) && meetsMutationTypeFilter(variant, MutationTypeFilter.ANY);
     }
 
-    @NotNull
-    @VisibleForTesting
-    static CodingEffect extractCodingEffectOther(@NotNull String otherReportedEffects) {
-        return !otherReportedEffects.isEmpty() ? CodingEffect.valueOf(otherReportedEffects.split("\\|")[4]) : CodingEffect.UNDEFINED;
-    }
-
-    private static boolean meetsMutationTypeFilter(@NotNull Variant variant, @NotNull MutationTypeFilter filter, boolean isCanonical,
-            @NotNull String otherReportedEffects) {
-        CodingEffect effectOther = extractCodingEffectOther(otherReportedEffects);
-        CodingEffect effectCanonical = variant.canonicalCodingEffect();
-        CodingEffect effect = isCanonical ? effectCanonical : effectOther;
+    private static boolean meetsMutationTypeFilter(@NotNull Variant variant, @NotNull MutationTypeFilter filter) {
+        CodingEffect effect;
+        if (variant instanceof ReportableVariant) {
+            ReportableVariant reportable = (ReportableVariant) variant;
+            effect = reportable.isCanonical()
+                    ? reportable.canonicalCodingEffect()
+                    : OtherEffectsInterpreter.codingEffect(reportable.otherReportedEffects());
+        } else {
+            effect = variant.canonicalCodingEffect();
+        }
 
         switch (filter) {
             case NONSENSE_OR_FRAMESHIFT:

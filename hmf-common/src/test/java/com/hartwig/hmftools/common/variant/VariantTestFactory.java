@@ -11,7 +11,12 @@ public final class VariantTestFactory {
     }
 
     @NotNull
-    public static ReportableVariant createTestReportableVariant() {
+    public static ReportableVariant create() {
+        return builder().build();
+    }
+
+    @NotNull
+    public static ImmutableReportableVariant.Builder builder() {
         return ImmutableReportableVariant.builder()
                 .source(ReportableVariantSource.SOMATIC)
                 .gene(Strings.EMPTY)
@@ -37,7 +42,6 @@ public final class VariantTestFactory {
                 .hotspot(Hotspot.HOTSPOT)
                 .clonalLikelihood(1D)
                 .driverLikelihood(0D)
-                .biallelic(false)
-                .build();
+                .biallelic(false);
     }
 }

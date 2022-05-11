@@ -42,7 +42,7 @@ public class ChordEvidenceTest {
                 .build();
 
         ChordEvidence chordEvidence =
-                new ChordEvidence(EvidenceTestFactory.createTestEvidenceFactory(), Lists.newArrayList(signature1, signature2, signature3));
+                new ChordEvidence(EvidenceTestFactory.create(), Lists.newArrayList(signature1, signature2, signature3));
 
         ChordAnalysis hrDeficient = create(ChordStatus.HR_DEFICIENT, 0.5);
         List<ProtectEvidence> evidence = chordEvidence.evidence(hrDeficient);

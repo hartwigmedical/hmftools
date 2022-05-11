@@ -48,7 +48,7 @@ public class CopyNumberEvidenceTest {
                 .build();
 
         CopyNumberEvidence copyNumberEvidence =
-                new CopyNumberEvidence(EvidenceTestFactory.createTestEvidenceFactory(), Lists.newArrayList(amp, inactivation, fusion));
+                new CopyNumberEvidence(EvidenceTestFactory.create(), Lists.newArrayList(amp, inactivation, fusion));
 
         ReportableGainLoss reportableAmp = PurpleTestFactory.createReportableGainLoss(geneAmp, CopyNumberInterpretation.FULL_GAIN);
         ReportableGainLoss reportableDel = PurpleTestFactory.createReportableGainLoss(geneDel, CopyNumberInterpretation.FULL_LOSS);

@@ -26,7 +26,7 @@ public class PurpleSignatureEvidenceTest {
                 .name(TumorCharacteristicAnnotation.HOMOLOGOUS_RECOMBINATION_DEFICIENT)
                 .build();
 
-        PurpleSignatureEvidence purpleSignatureEvidence = new PurpleSignatureEvidence(EvidenceTestFactory.createTestEvidenceFactory(),
+        PurpleSignatureEvidence purpleSignatureEvidence = new PurpleSignatureEvidence(EvidenceTestFactory.create(),
                 Lists.newArrayList(nonPurple));
 
         PurpleData data = createPurpleData(MicrosatelliteStatus.MSI, TumorMutationalStatus.HIGH, 4.0, 241, 0.0);
@@ -47,7 +47,7 @@ public class PurpleSignatureEvidenceTest {
                 .cutoff(4D)
                 .build();
 
-        PurpleSignatureEvidence purpleSignatureEvidence = new PurpleSignatureEvidence(EvidenceTestFactory.createTestEvidenceFactory(),
+        PurpleSignatureEvidence purpleSignatureEvidence = new PurpleSignatureEvidence(EvidenceTestFactory.create(),
                 Lists.newArrayList(signatureDefault, signatureWithCutoff));
 
         PurpleData both = createPurpleData(MicrosatelliteStatus.MSI, TumorMutationalStatus.HIGH, 4.0, 241, 0.0);
@@ -74,7 +74,7 @@ public class PurpleSignatureEvidenceTest {
                 .cutoff(4D)
                 .build();
 
-        PurpleSignatureEvidence purpleSignatureEvidence = new PurpleSignatureEvidence(EvidenceTestFactory.createTestEvidenceFactory(),
+        PurpleSignatureEvidence purpleSignatureEvidence = new PurpleSignatureEvidence(EvidenceTestFactory.create(),
                 Lists.newArrayList(signatureDefault, signatureWithCutoff));
 
         PurpleData both = createPurpleData(MicrosatelliteStatus.MSS, TumorMutationalStatus.HIGH, 2.0, 241, 0.0);
@@ -101,7 +101,7 @@ public class PurpleSignatureEvidenceTest {
                 .cutoff(100D)
                 .build();
 
-        PurpleSignatureEvidence purpleSignatureEvidence = new PurpleSignatureEvidence(EvidenceTestFactory.createTestEvidenceFactory(),
+        PurpleSignatureEvidence purpleSignatureEvidence = new PurpleSignatureEvidence(EvidenceTestFactory.create(),
                 Lists.newArrayList(signatureDefault, signatureWithCutoff));
 
         PurpleData both = createPurpleData(MicrosatelliteStatus.MSS, TumorMutationalStatus.HIGH, 2.0, 241, 0.0);
@@ -128,7 +128,7 @@ public class PurpleSignatureEvidenceTest {
                 .cutoff(100D)
                 .build();
 
-        PurpleSignatureEvidence purpleSignatureEvidence = new PurpleSignatureEvidence(EvidenceTestFactory.createTestEvidenceFactory(),
+        PurpleSignatureEvidence purpleSignatureEvidence = new PurpleSignatureEvidence(EvidenceTestFactory.create(),
                 Lists.newArrayList(signatureDefault, signatureWithCutoff));
 
         PurpleData both = createPurpleData(MicrosatelliteStatus.MSS, TumorMutationalStatus.LOW, 2.0, 80, 0.0);
@@ -155,7 +155,7 @@ public class PurpleSignatureEvidenceTest {
                 .cutoff(12D)
                 .build();
 
-        PurpleSignatureEvidence purpleSignatureEvidence = new PurpleSignatureEvidence(EvidenceTestFactory.createTestEvidenceFactory(),
+        PurpleSignatureEvidence purpleSignatureEvidence = new PurpleSignatureEvidence(EvidenceTestFactory.create(),
                 Lists.newArrayList(signatureDefault, signatureWithCutoff));
 
         PurpleData both = createPurpleData(MicrosatelliteStatus.MSS, TumorMutationalStatus.LOW, 2.0, 80, 12.0);
@@ -182,7 +182,7 @@ public class PurpleSignatureEvidenceTest {
                 .cutoff(8D)
                 .build();
 
-        PurpleSignatureEvidence purpleSignatureEvidence = new PurpleSignatureEvidence(EvidenceTestFactory.createTestEvidenceFactory(),
+        PurpleSignatureEvidence purpleSignatureEvidence = new PurpleSignatureEvidence(EvidenceTestFactory.create(),
                 Lists.newArrayList(signatureDefault, signatureWithCutoff));
 
         PurpleData both = createPurpleData(MicrosatelliteStatus.MSS, TumorMutationalStatus.LOW, 2.0, 80, 7D);

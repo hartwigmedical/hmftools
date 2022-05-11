@@ -5,12 +5,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
-import com.hartwig.hmftools.common.protect.ProtectSource;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.test.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -49,13 +47,11 @@ public class VariantEvidenceTest {
                 .source(Knowledgebase.CKB)
                 .build();
 
-        VariantEvidence variantEvidence = new VariantEvidence(EvidenceTestFactory.createTestEvidenceFactory(),
-                Lists.newArrayList(hotspot),
-                Lists.newArrayList(),
-                Lists.newArrayList());
+        VariantEvidence variantEvidence =
+                new VariantEvidence(EvidenceTestFactory.create(), Lists.newArrayList(hotspot), Lists.newArrayList(), Lists.newArrayList());
 
         ReportableVariant variantMatch = ImmutableReportableVariant.builder()
-                .from(VariantTestFactory.createTestReportableVariant())
+                .from(VariantTestFactory.create())
                 .gene("reportable")
                 .chromosome(chromosome)
                 .position(position)
@@ -64,7 +60,7 @@ public class VariantEvidenceTest {
                 .build();
 
         ReportableVariant variantWrongPosition = ImmutableReportableVariant.builder()
-                .from(VariantTestFactory.createTestReportableVariant())
+                .from(VariantTestFactory.create())
                 .gene("wrong position")
                 .chromosome(chromosome)
                 .position(position + 1)
@@ -73,7 +69,7 @@ public class VariantEvidenceTest {
                 .build();
 
         ReportableVariant variantWrongAlt = ImmutableReportableVariant.builder()
-                .from(VariantTestFactory.createTestReportableVariant())
+                .from(VariantTestFactory.create())
                 .gene("wrong alt")
                 .chromosome(chromosome)
                 .position(position)
@@ -98,63 +94,12 @@ public class VariantEvidenceTest {
         ProtectEvidence reportedEvidence = findByGene(evidences, "reportable");
         assertTrue(reportedEvidence.reported());
         assertEquals(reportedEvidence.sources().size(), 1);
-        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, findBySource(reportedEvidence.sources(), Knowledgebase.CKB).evidenceType());
+        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, reportedEvidence.sources().iterator().next().evidenceType());
 
         ProtectEvidence unreportedEvidence = findByGene(evidences, "unreported");
         assertFalse(unreportedEvidence.reported());
         assertEquals(unreportedEvidence.sources().size(), 1);
-        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, findBySource(unreportedEvidence.sources(), Knowledgebase.CKB).evidenceType());
-    }
-
-    @Test
-    public void canDetermineCodingEffectOther() {
-        assertEquals(CodingEffect.NONSENSE_OR_FRAMESHIFT,
-                VariantEvidence.extractCodingEffectOther(
-                        "ENST00000579755|c.246_247delCG|p.Gly83fs|frameshift_variant|NONSENSE_OR_FRAMESHIFT"));
-    }
-
-    @Test
-    public void canDetermineEvent() {
-        ReportableVariant variantProtein = ImmutableReportableVariant.builder()
-                .from(VariantTestFactory.createTestReportableVariant())
-                .canonicalHgvsProteinImpact("p.?")
-                .build();
-
-        ReportableVariant variantCoding = ImmutableReportableVariant.builder()
-                .from(VariantTestFactory.createTestReportableVariant())
-                .canonicalHgvsCodingImpact("c.100 A>T")
-                .build();
-
-        ReportableVariant variantEffect = ImmutableReportableVariant.builder()
-                .from(VariantTestFactory.createTestReportableVariant())
-                .canonicalEffect("splice_variant")
-                .build();
-
-        assertEquals("p.Gly83fs",
-                VariantEvidence.determineEvent(false,
-                        variantProtein,
-                        "ENST00000579755|c.246_247delCG|p.Gly83fs|frameshift_variant|NONSENSE_OR_FRAMESHIFT"));
-        assertEquals("c.246_247delCG",
-                VariantEvidence.determineEvent(false,
-                        variantCoding,
-                        "ENST00000579755|c.246_247delCG||frameshift_variant|NONSENSE_OR_FRAMESHIFT"));
-        assertEquals("frameshift_variant",
-                VariantEvidence.determineEvent(false,
-                        variantEffect,
-                        "ENST00000579755|||frameshift_variant|NONSENSE_OR_FRAMESHIFT"));
-
-        assertEquals("p.?",
-                VariantEvidence.determineEvent(true,
-                        variantProtein,
-                        "ENST00000579755|c.246_247delCG|p.Gly83fs|frameshift_variant|NONSENSE_OR_FRAMESHIFT"));
-        assertEquals("c.100 A>T",
-                VariantEvidence.determineEvent(true,
-                        variantCoding,
-                        "ENST00000579755|c.246_247delCG||frameshift_variant|NONSENSE_OR_FRAMESHIFT"));
-        assertEquals("splice_variant",
-                VariantEvidence.determineEvent(true,
-                        variantEffect,
-                        "ENST00000579755|||frameshift_variant|NONSENSE_OR_FRAMESHIFT"));
+        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, unreportedEvidence.sources().iterator().next().evidenceType());
     }
 
     @Test
@@ -175,41 +120,41 @@ public class VariantEvidenceTest {
                 .source(Knowledgebase.CKB)
                 .build();
 
-        VariantEvidence variantEvidence = new VariantEvidence(EvidenceTestFactory.createTestEvidenceFactory(),
-                Lists.newArrayList(),
-                Lists.newArrayList(range),
-                Lists.newArrayList());
+        VariantEvidence variantEvidence =
+                new VariantEvidence(EvidenceTestFactory.create(), Lists.newArrayList(), Lists.newArrayList(range), Lists.newArrayList());
 
         ReportableVariant variantMatch = ImmutableReportableVariant.builder()
-                .from(VariantTestFactory.createTestReportableVariant())
+                .from(VariantTestFactory.create())
                 .gene(gene)
                 .chromosome(chromosome)
                 .position(start + 1)
                 .gene(gene)
+                .canonicalHgvsCodingImpact("match")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .build();
         ReportableVariant variantOutsideRange = ImmutableReportableVariant.builder()
-                .from(VariantTestFactory.createTestReportableVariant())
-                .gene("outside range")
+                .from(VariantTestFactory.create())
+                .gene(gene)
                 .chromosome(chromosome)
                 .position(start - 1)
                 .gene(gene)
+                .canonicalHgvsCodingImpact("outside range")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .build();
         ReportableVariant variantWrongGene = ImmutableReportableVariant.builder()
-                .from(VariantTestFactory.createTestReportableVariant())
+                .from(VariantTestFactory.create())
                 .gene("wrong gene")
                 .chromosome(chromosome)
                 .position(start + 1)
-                .gene("other gene")
+                .canonicalHgvsCodingImpact("wrong gene")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .build();
         ReportableVariant variantWrongMutationType = ImmutableReportableVariant.builder()
-                .from(VariantTestFactory.createTestReportableVariant())
-                .gene("wrong mutation type")
+                .from(VariantTestFactory.create())
+                .gene(gene)
                 .chromosome(chromosome)
                 .position(start + 1)
-                .gene(gene)
+                .canonicalHgvsCodingImpact("wrong mutation type")
                 .canonicalCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
                 .build();
 
@@ -221,8 +166,9 @@ public class VariantEvidenceTest {
 
         ProtectEvidence evidence = findByGene(evidences, gene);
         assertTrue(evidence.reported());
+        assertEquals("match", evidence.event());
         assertEquals(evidence.sources().size(), 1);
-        assertEquals(ProtectEvidenceType.EXON_MUTATION, findBySource(evidence.sources(), Knowledgebase.CKB).evidenceType());
+        assertEquals(ProtectEvidenceType.EXON_MUTATION, evidence.sources().iterator().next().evidenceType());
     }
 
     @Test
@@ -250,7 +196,7 @@ public class VariantEvidenceTest {
                 .source(Knowledgebase.CKB)
                 .build();
 
-        VariantEvidence variantEvidence = new VariantEvidence(EvidenceTestFactory.createTestEvidenceFactory(),
+        VariantEvidence variantEvidence = new VariantEvidence(EvidenceTestFactory.create(),
                 Lists.newArrayList(),
                 Lists.newArrayList(),
                 Lists.newArrayList(actionableGene1, actionableGene2, actionableGene3));
@@ -276,12 +222,12 @@ public class VariantEvidenceTest {
         ProtectEvidence actEvidence = findByGene(evidences, activatedGene);
         assertTrue(actEvidence.reported());
         assertEquals(actEvidence.sources().size(), 1);
-        assertEquals(ProtectEvidenceType.ACTIVATION, findBySource(actEvidence.sources(), Knowledgebase.CKB).evidenceType());
+        assertEquals(ProtectEvidenceType.ACTIVATION, actEvidence.sources().iterator().next().evidenceType());
 
         ProtectEvidence inactEvidence = findByGene(evidences, inactivatedGene);
         assertFalse(inactEvidence.reported());
         assertEquals(inactEvidence.sources().size(), 1);
-        assertEquals(ProtectEvidenceType.INACTIVATION, findBySource(inactEvidence.sources(), Knowledgebase.CKB).evidenceType());
+        assertEquals(ProtectEvidenceType.INACTIVATION, inactEvidence.sources().iterator().next().evidenceType());
     }
 
     @NotNull
@@ -298,21 +244,10 @@ public class VariantEvidenceTest {
     @NotNull
     private static ReportableVariant withGeneAndDriverLikelihood(@NotNull String gene, double driverLikelihood) {
         return ImmutableReportableVariant.builder()
-                .from(VariantTestFactory.createTestReportableVariant())
+                .from(VariantTestFactory.create())
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .gene(gene)
                 .driverLikelihood(driverLikelihood)
                 .build();
-    }
-
-    @NotNull
-    private static ProtectSource findBySource(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase knowledgebaseToFind) {
-        for (ProtectSource source : sources) {
-            if (source.name() == knowledgebaseToFind) {
-                return source;
-            }
-        }
-
-        throw new IllegalStateException("Could not find evidence from source: " + knowledgebaseToFind);
     }
 }

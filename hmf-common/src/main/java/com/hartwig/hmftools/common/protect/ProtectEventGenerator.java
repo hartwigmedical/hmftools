@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.common.protect;
 
+import com.hartwig.hmftools.common.protect.variant.OtherEffectsInterpreter;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
+import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.Variant;
 
 import org.jetbrains.annotations.NotNull;
@@ -15,17 +17,32 @@ public final class ProtectEventGenerator {
 
     @NotNull
     public static String variantEvent(@NotNull Variant variant) {
-        return variant(variant.canonicalHgvsProteinImpact(), variant.canonicalHgvsCodingImpact(), variant.canonicalEffect());
+        if (variant instanceof ReportableVariant) {
+            return reportableVariantEvent((ReportableVariant) variant);
+        } else {
+            return canonicalVariantEvent(variant);
+        }
     }
 
     @NotNull
-    public static String variantEventNonCanonical(@NotNull String otherReportedEffects) {
-        String[] parts = otherReportedEffects.split("\\|");
-        return variant(parts[2], parts[1], parts[3]);
+    private static String reportableVariantEvent(@NotNull ReportableVariant reportableVariant) {
+        return reportableVariant.isCanonical() ? canonicalVariantEvent(reportableVariant) : nonCanonicalVariantEvent(reportableVariant);
     }
 
     @NotNull
-    private static String variant(@NotNull String protein, @NotNull String coding, @NotNull String effect) {
+    private static String canonicalVariantEvent(@NotNull Variant variant) {
+        return toVariantEvent(variant.canonicalHgvsProteinImpact(), variant.canonicalHgvsCodingImpact(), variant.canonicalEffect());
+    }
+
+    @NotNull
+    private static String nonCanonicalVariantEvent(@NotNull ReportableVariant variant) {
+        return toVariantEvent(OtherEffectsInterpreter.hgvsProteinImpact(variant.otherReportedEffects()),
+                OtherEffectsInterpreter.hgvsCodingImpact(variant.otherReportedEffects()),
+                OtherEffectsInterpreter.effect(variant.otherReportedEffects()));
+    }
+
+    @NotNull
+    private static String toVariantEvent(@NotNull String protein, @NotNull String coding, @NotNull String effect) {
         if (!protein.isEmpty()) {
             return protein;
         }

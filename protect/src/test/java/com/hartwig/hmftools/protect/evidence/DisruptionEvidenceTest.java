@@ -49,7 +49,7 @@ public class DisruptionEvidenceTest {
                 .build();
 
         DisruptionEvidence disruptionEvidence =
-                new DisruptionEvidence(EvidenceTestFactory.createTestEvidenceFactory(), Lists.newArrayList(amp, inactivation, deletion));
+                new DisruptionEvidence(EvidenceTestFactory.create(), Lists.newArrayList(amp, inactivation, deletion));
 
         ReportableHomozygousDisruption matchAmp = create(geneAmp);
         ReportableHomozygousDisruption matchInact = create(geneInact);

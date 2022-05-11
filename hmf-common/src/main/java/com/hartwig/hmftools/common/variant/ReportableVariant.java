@@ -22,8 +22,7 @@ public abstract class ReportableVariant implements Variant {
     @NotNull
     public abstract String transcript();
 
-    @NotNull
-    public abstract Boolean isCanonical();
+    public abstract boolean isCanonical();
 
     @NotNull
     @Override

@@ -38,7 +38,7 @@ public class VirusEvidenceTest {
                 .name(TumorCharacteristicAnnotation.EBV_POSITIVE)
                 .build();
 
-        VirusEvidence virusEvidence = new VirusEvidence(EvidenceTestFactory.createTestEvidenceFactory(), Lists.newArrayList(hpv, ebv));
+        VirusEvidence virusEvidence = new VirusEvidence(EvidenceTestFactory.create(), Lists.newArrayList(hpv, ebv));
 
         List<ProtectEvidence> evidences = virusEvidence.evidence(testData);
         assertEquals(2, evidences.size());

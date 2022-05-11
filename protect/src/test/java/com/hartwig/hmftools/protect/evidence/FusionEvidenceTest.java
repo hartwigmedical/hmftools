@@ -52,7 +52,7 @@ public class FusionEvidenceTest {
                 .source(Knowledgebase.CKB)
                 .build();
 
-        FusionEvidence fusionEvidence = new FusionEvidence(EvidenceTestFactory.createTestEvidenceFactory(),
+        FusionEvidence fusionEvidence = new FusionEvidence(EvidenceTestFactory.create(),
                 Lists.newArrayList(promiscuous, amp),
                 Lists.newArrayList(fusion));
 
@@ -115,7 +115,7 @@ public class FusionEvidenceTest {
                 .build();
 
         FusionEvidence fusionEvidence =
-                new FusionEvidence(EvidenceTestFactory.createTestEvidenceFactory(), Lists.newArrayList(), Lists.newArrayList(fusion));
+                new FusionEvidence(EvidenceTestFactory.create(), Lists.newArrayList(), Lists.newArrayList(fusion));
 
         ImmutableLinxFusion.Builder builder = linxFusionBuilder(geneUp, geneDown, true);
 

@@ -95,6 +95,6 @@ public class ConsentFilterFunctionsTest {
 
     @NotNull
     private static ImmutableReportableVariant.Builder createTestReportableVariantBuilder() {
-        return ImmutableReportableVariant.builder().from(VariantTestFactory.createTestReportableVariant());
+        return ImmutableReportableVariant.builder().from(VariantTestFactory.create());
     }
 }
