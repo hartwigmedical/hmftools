@@ -122,8 +122,8 @@ evidenceUrls | A list of urls with additional information about the evidence | h
 
 ## Version History and Download Links
 - Upcoming
- - Fixed bug in hotspot matching in case everything matches except for the alt (eg V600K against V600R).
- - Add support for matching evidence for low TML, low TMB and MSS (reported always false)
+  - Fixed bug in hotspot matching in case everything matches except for the alt (eg V600K against V600R).
+  - Add support for matching evidence for low TML, low TMB and MSS (reported always false)
 - [2.1](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v2.1)
   - Annotate whether evidence is based on a high driver event 
   - Extract the impacted transcript of the genomic event (relevant for determining if the event is based on CDKN2A p14Arf/CDKN2A p16)
