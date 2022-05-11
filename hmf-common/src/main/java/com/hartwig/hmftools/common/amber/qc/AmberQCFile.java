@@ -9,7 +9,6 @@ import java.text.DecimalFormat;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.FileReaderUtils;
 
 import org.jetbrains.annotations.NotNull;
 

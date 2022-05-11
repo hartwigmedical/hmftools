@@ -39,8 +39,8 @@ public class LimsJsonSampleDataTest {
 
         String completeSopStringNewWithoutENR = "PREP013V23-ENRnaVna-QC037V20-SEQ008V25";
         String completeSopStringUsable = "PREP013V23-QC037V20-SEQ008V25";
-        LimsJsonSampleData completeSopStringNewWithoutENRCpde = buildLimsSampleEntry(completeSopStringNewWithoutENR);
-        assertEquals(completeSopStringUsable, completeSopStringNewWithoutENRCpde.labProcedures());
+        LimsJsonSampleData completeSopStringNewWithoutENRCode = buildLimsSampleEntry(completeSopStringNewWithoutENR);
+        assertEquals(completeSopStringUsable, completeSopStringNewWithoutENRCode.labProcedures());
     }
 
     @NotNull
