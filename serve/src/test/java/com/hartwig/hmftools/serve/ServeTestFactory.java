@@ -23,7 +23,6 @@ import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicAnnotation;
-import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicsComparator;
 import com.hartwig.hmftools.serve.extraction.codon.CodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableCodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableKnownCodon;
@@ -44,7 +43,6 @@ import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class ServeTestFactory {
 
@@ -215,19 +213,16 @@ public final class ServeTestFactory {
     @NotNull
     public static ActionableCharacteristic createTestActionableCharacteristicForSource(@NotNull Knowledgebase source) {
         return ImmutableActionableCharacteristic.builder()
-                .from(createTestActionableCharacteristic(null, null))
+                .from(createTestActionableCharacteristic())
                 .source(source)
                 .build();
     }
 
     @NotNull
-    public static ActionableCharacteristic createTestActionableCharacteristic(@Nullable TumorCharacteristicsComparator comparator,
-            @Nullable Double cutoff) {
+    public static ActionableCharacteristic createTestActionableCharacteristic() {
         return ImmutableActionableCharacteristic.builder()
                 .from(createTestBaseEvent())
                 .name(TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE)
-                .comparator(comparator)
-                .cutoff(cutoff)
                 .build();
     }
 

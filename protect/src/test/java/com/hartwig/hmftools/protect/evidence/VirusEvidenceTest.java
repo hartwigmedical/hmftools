@@ -29,12 +29,12 @@ public class VirusEvidenceTest {
         VirusInterpreterData testData = createTestVirusInterpreterData();
 
         ActionableCharacteristic hpv = ImmutableActionableCharacteristic.builder()
-                .from(ServeTestFactory.createTestActionableCharacteristic(null, null))
+                .from(ServeTestFactory.createTestActionableCharacteristic())
                 .name(TumorCharacteristicAnnotation.HPV_POSITIVE)
                 .build();
 
         ActionableCharacteristic ebv = ImmutableActionableCharacteristic.builder()
-                .from(ServeTestFactory.createTestActionableCharacteristic(null, null))
+                .from(ServeTestFactory.createTestActionableCharacteristic())
                 .name(TumorCharacteristicAnnotation.EBV_POSITIVE)
                 .build();
 

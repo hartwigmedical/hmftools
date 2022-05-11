@@ -123,7 +123,7 @@ public class PersonalizedEvidenceFactoryTest {
                 PersonalizedEvidenceFactory.determineEvidenceType(ServeTestFactory.createTestActionableFusion()));
 
         ActionableCharacteristic characteristic = ImmutableActionableCharacteristic.builder()
-                .from(ServeTestFactory.createTestActionableCharacteristic(null, null))
+                .from(ServeTestFactory.createTestActionableCharacteristic())
                 .name(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD)
                 .comparator(TumorCharacteristicsComparator.EQUAL_OR_GREATER)
                 .cutoff((double) 10)
@@ -154,7 +154,7 @@ public class PersonalizedEvidenceFactoryTest {
     public void canDetermineEvidenceTypesForAllCharacteristics() {
         for (TumorCharacteristicAnnotation name : TumorCharacteristicAnnotation.values()) {
             ActionableCharacteristic characteristic = ImmutableActionableCharacteristic.builder()
-                    .from(ServeTestFactory.createTestActionableCharacteristic(null, null))
+                    .from(ServeTestFactory.createTestActionableCharacteristic())
                     .name(name)
                     .build();
             assertNotNull(PersonalizedEvidenceFactory.determineEvidenceType(characteristic));
