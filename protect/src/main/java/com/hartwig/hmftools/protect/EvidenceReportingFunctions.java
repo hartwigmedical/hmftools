@@ -9,17 +9,15 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.protect.ProtectEvidenceComparator;
 import com.hartwig.hmftools.common.protect.ProtectSource;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class EvidenceReportingFunctions {
-    private static final Logger LOGGER = LogManager.getLogger(EvidenceReportingFunctions.class);
 
     private static final Set<Knowledgebase> TRIAL_SOURCES = Sets.newHashSet(Knowledgebase.ICLUSION, Knowledgebase.ACTIN);
 
@@ -31,7 +29,8 @@ public final class EvidenceReportingFunctions {
         List<ProtectEvidence> meetsMaxLevelSources = onlyReportWhenMeetsMaxLevelForSources(evidences);
         List<ProtectEvidence> maxLevelPerTreatmentEvent = onlyReportHighestLevelForTreatmentAndEvent(meetsMaxLevelSources);
 
-        return maxLevelPerTreatmentEvent.stream().sorted().collect(Collectors.toList());
+        maxLevelPerTreatmentEvent.sort(new ProtectEvidenceComparator());
+        return maxLevelPerTreatmentEvent;
     }
 
     @NotNull
