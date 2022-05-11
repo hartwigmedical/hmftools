@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect;
+package com.hartwig.hmftools.protect.algo;
 
 import java.io.IOException;
 import java.util.List;
@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleDataLoader;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
+import com.hartwig.hmftools.protect.ProtectConfig;
 import com.hartwig.hmftools.protect.evidence.ChordEvidence;
 import com.hartwig.hmftools.protect.evidence.CopyNumberEvidence;
 import com.hartwig.hmftools.protect.evidence.DisruptionEvidence;
@@ -173,7 +174,7 @@ public class ProtectAlgo {
     }
 
     private static void printExtraction(@NotNull String title, @NotNull List<ProtectEvidence> evidences) {
-        Set<EvidenceKey> keys = EvidenceKey.buildUniqueEventSet(evidences);
+        Set<EvidenceKey> keys = EvidenceKey.buildKeySet(evidences);
         LOGGER.debug("Extracted {} evidence items for {} having {} keys ", evidences.size(), title, keys.size());
         for (EvidenceKey key : keys) {
             int count = evidences.stream().filter(x -> EvidenceKey.create(x).equals(key)).collect(Collectors.toList()).size();

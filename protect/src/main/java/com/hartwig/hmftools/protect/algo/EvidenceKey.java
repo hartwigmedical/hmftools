@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect;
+package com.hartwig.hmftools.protect.algo;
 
 import java.util.Objects;
 import java.util.Set;
@@ -20,7 +20,7 @@ class EvidenceKey {
     private final String treatment;
 
     @NotNull
-    public static Set<EvidenceKey> buildUniqueEventSet(@NotNull Iterable<ProtectEvidence> evidences) {
+    public static Set<EvidenceKey> buildKeySet(@NotNull Iterable<ProtectEvidence> evidences) {
         Set<EvidenceKey> keys = Sets.newHashSet();
         for (ProtectEvidence evidence : evidences) {
             keys.add(create(evidence));

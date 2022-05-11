@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect;
+package com.hartwig.hmftools.protect.algo;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

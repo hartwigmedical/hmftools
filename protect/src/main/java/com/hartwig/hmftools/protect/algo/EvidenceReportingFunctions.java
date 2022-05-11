@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect;
+package com.hartwig.hmftools.protect.algo;
 
 import java.util.List;
 import java.util.Set;
@@ -68,7 +68,7 @@ public final class EvidenceReportingFunctions {
 
     @NotNull
     private static List<ProtectEvidence> onlyReportHighestLevelForTreatmentAndEvent(@NotNull List<ProtectEvidence> evidences) {
-        Set<EvidenceKey> events = EvidenceKey.buildUniqueEventSet(evidences);
+        Set<EvidenceKey> events = EvidenceKey.buildKeySet(evidences);
 
         List<ProtectEvidence> result = Lists.newArrayList();
         for (EvidenceKey event : events) {

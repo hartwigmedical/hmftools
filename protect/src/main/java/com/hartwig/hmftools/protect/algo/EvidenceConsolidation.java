@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect;
+package com.hartwig.hmftools.protect.algo;
 
 import java.util.List;
 import java.util.Map;

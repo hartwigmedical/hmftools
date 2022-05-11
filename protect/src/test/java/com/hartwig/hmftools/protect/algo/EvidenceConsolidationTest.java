@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect;
+package com.hartwig.hmftools.protect.algo;
 
 import static com.hartwig.hmftools.common.protect.ProtectTestFactory.builder;
 

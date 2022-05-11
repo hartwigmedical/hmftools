@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect;
+package com.hartwig.hmftools.protect.algo;
 
 import static com.hartwig.hmftools.common.protect.ProtectTestFactory.builder;
 import static com.hartwig.hmftools.common.serve.actionability.EvidenceDirection.PREDICTED_RESPONSIVE;
@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.serve.actionability.EvidenceDirection.
 import static com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.A;
 import static com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.B;
 import static com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.C;
-import static com.hartwig.hmftools.protect.EvidenceReportingFunctions.highestReportableLevel;
+import static com.hartwig.hmftools.protect.algo.EvidenceReportingFunctions.highestReportableLevel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

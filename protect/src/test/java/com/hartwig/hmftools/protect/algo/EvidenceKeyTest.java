@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect;
+package com.hartwig.hmftools.protect.algo;
 
 import static org.junit.Assert.assertEquals;
 
@@ -14,7 +14,7 @@ import org.junit.Test;
 public class EvidenceKeyTest {
 
     @Test
-    public void canCreateUniqueEventSet() {
+    public void canCreateKeySet() {
         List<ProtectEvidence> evidences = Lists.newArrayList();
 
         ProtectEvidence evidence1 = ProtectTestFactory.builder().gene("gene 1").event("event 1").treatment("treatment 1").build();
@@ -22,7 +22,7 @@ public class EvidenceKeyTest {
         evidences.add(evidence1);
         evidences.add(evidence1);
 
-        Set<EvidenceKey> keys = EvidenceKey.buildUniqueEventSet(evidences);
+        Set<EvidenceKey> keys = EvidenceKey.buildKeySet(evidences);
         assertEquals(1, keys.size());
         EvidenceKey key = keys.iterator().next();
         assertEquals("gene 1", key.gene());
@@ -34,6 +34,6 @@ public class EvidenceKeyTest {
         evidences.add(evidence2);
         evidences.add(evidence2);
 
-        assertEquals(2, EvidenceKey.buildUniqueEventSet(evidences).size());
+        assertEquals(2, EvidenceKey.buildKeySet(evidences).size());
     }
 }
