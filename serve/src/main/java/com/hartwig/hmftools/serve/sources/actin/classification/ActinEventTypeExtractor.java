@@ -16,12 +16,8 @@ public final class ActinEventTypeExtractor {
 
     @NotNull
     public static EventType determineEventType(@NotNull ActinEntry entry, @NotNull String event) {
-        String reformatted = event;
-        // TODO: Characteristics contain more details which are not picked up yet by the classifier. This should be properly implemented.
-        if (event.contains(" ")) {
-            reformatted = event.split(" ", 2)[0];
-        }
+        String gene = entry.gene() != null ? entry.gene() : ActinKeywords.NO_GENE;
 
-        return CLASSIFIER.determineType(entry.gene(), reformatted);
+        return CLASSIFIER.determineType(gene, event);
     }
 }

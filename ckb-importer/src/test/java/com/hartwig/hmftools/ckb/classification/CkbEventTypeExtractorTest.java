@@ -8,7 +8,6 @@ import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 
-import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class CkbEventTypeExtractorTest {
@@ -24,7 +23,8 @@ public class CkbEventTypeExtractorTest {
 
     @Test
     public void canClassifyCharacteristics() {
-        Variant characteristic = CkbTestFactory.createVariant("-", "MSI_neg", "MSI_neg", Strings.EMPTY);
+        Variant characteristic =
+                CkbTestFactory.createVariant(CkbConstants.NO_GENE, CkbConstants.MSI_NEGATIVE, CkbConstants.MSI_NEGATIVE, null);
         assertEquals(EventType.CHARACTERISTIC, CkbEventTypeExtractor.classify(CkbTestFactory.createEntry(characteristic)));
     }
 }

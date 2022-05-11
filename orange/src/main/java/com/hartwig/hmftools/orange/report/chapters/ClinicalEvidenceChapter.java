@@ -170,8 +170,8 @@ public class ClinicalEvidenceChapter implements ReportChapter {
             event = AminoAcids.forceSingleLetterProteinAnnotation(event);
         }
         StringJoiner sources = new StringJoiner(", ");
-        for (ProtectSource source : evidence.protectSources()) {
-            sources.add(source.source().reportDisplay());
+        for (ProtectSource source : evidence.sources()) {
+            sources.add(source.name().display());
         }
         return event + " (" + evidence.level() + " - " + sources + ")";
     }
@@ -191,7 +191,7 @@ public class ClinicalEvidenceChapter implements ReportChapter {
     @NotNull
     private static String url(@NotNull ProtectEvidence evidence) {
         String urlString = Strings.EMPTY;
-        for (ProtectSource source: evidence.protectSources()) {
+        for (ProtectSource source: evidence.sources()) {
 
             if (source.evidenceUrls().isEmpty()) {
                 urlString = Strings.EMPTY;

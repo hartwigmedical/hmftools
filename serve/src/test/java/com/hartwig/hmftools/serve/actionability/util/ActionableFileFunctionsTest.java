@@ -18,22 +18,15 @@ public class ActionableFileFunctionsTest {
 
     @Test
     public void canConvertActionableEvents() {
-        ActionableEvent event =
-                ActionabilityTestUtil.create(Knowledgebase.VICC_CGI,
-                        "rawInput",
-                        Sets.newHashSet(),
-                        "treatment",
-                        ImmutableCancerType.builder()
-                                .name("applicable name")
-                                .doid("applicable doid")
-                                .build(),
-                        Sets.newHashSet(ImmutableCancerType.builder()
-                                .name("blacklist name")
-                                .doid("blacklist doid")
-                                .build()),
-                        EvidenceLevel.C,
-                        EvidenceDirection.RESISTANT,
-                        Sets.newHashSet("url1", "url2"));
+        ActionableEvent event = ActionabilityTestUtil.create(Knowledgebase.VICC_CGI,
+                "source event",
+                Sets.newHashSet(),
+                "treatment",
+                ImmutableCancerType.builder().name("applicable name").doid("applicable doid").build(),
+                Sets.newHashSet(ImmutableCancerType.builder().name("blacklist name").doid("blacklist doid").build()),
+                EvidenceLevel.C,
+                EvidenceDirection.RESISTANT,
+                Sets.newHashSet("url1", "url2"));
 
         String line = ActionableFileFunctions.toLine(event);
         ActionableEvent convertedEvent = ActionableFileFunctions.fromLine(line.split(FIELD_DELIMITER), 0);

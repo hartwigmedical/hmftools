@@ -35,7 +35,7 @@ public final class ClinicalTrials {
     @NotNull
     public static String createLinkiClusion(@NotNull ProtectEvidence evidence) {
         String link = Strings.EMPTY;
-        for (ProtectSource source: evidence.protectSources()) {
+        for (ProtectSource source: evidence.sources()) {
             for (String url : source.sourceUrls()) {
                 if (url.contains("trial-eye")) {
                     link = url;

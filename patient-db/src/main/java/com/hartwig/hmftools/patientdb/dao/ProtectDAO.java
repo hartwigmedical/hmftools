@@ -57,20 +57,16 @@ class ProtectDAO {
 
     private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep19 inserter, @NotNull String sample,
             @NotNull ProtectEvidence evidence) {
-
-        for (ProtectSource protectSource : evidence.protectSources()) {
+        for (ProtectSource source : evidence.sources()) {
             StringJoiner sourceUrlJoiner = new StringJoiner(",");
-            StringJoiner evidenceUrlJoiner = new StringJoiner(",");
-            for (String sourceUrl : protectSource.sourceUrls()) {
+            for (String sourceUrl : source.sourceUrls()) {
                 sourceUrlJoiner.add(sourceUrl);
             }
 
-            for (String evidenceUrl : protectSource.evidenceUrls()) {
+            StringJoiner evidenceUrlJoiner = new StringJoiner(",");
+            for (String evidenceUrl : source.evidenceUrls()) {
                 evidenceUrlJoiner.add(evidenceUrl);
             }
-            String knowledgebase = protectSource.source().technicalDisplay();
-            String evidenceType = protectSource.evidenceType().display();
-            Integer rank = protectSource.rangeRank();
 
             inserter.values(sample,
                     evidence.gene(),
@@ -84,11 +80,11 @@ class ProtectDAO {
                     evidence.onLabel(),
                     evidence.level().toString(),
                     evidence.direction().toString(),
-                    knowledgebase,
-                    protectSource.sourceEvent(),
+                    source.name().toString(),
+                    source.sourceEvent(),
                     sourceUrlJoiner.toString(),
-                    evidenceType,
-                    rank,
+                    source.evidenceType().display(),
+                    source.rangeRank(),
                     evidenceUrlJoiner.toString(),
                     timestamp);
         }

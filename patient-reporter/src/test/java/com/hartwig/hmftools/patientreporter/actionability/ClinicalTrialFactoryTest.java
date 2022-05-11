@@ -21,7 +21,7 @@ public class ClinicalTrialFactoryTest {
 
     @Test
     public void canExtractClinicalTrials() {
-        ProtectEvidence evidence = ProtectTestFactory.testEvidenceBuilder()
+        ProtectEvidence evidence = ProtectTestFactory.builder()
                 .event("event")
                 .germline(false)
                 .reported(true)
@@ -29,8 +29,8 @@ public class ClinicalTrialFactoryTest {
                 .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(Sets.newHashSet(ImmutableProtectSource.builder()
-                        .source(Knowledgebase.ICLUSION)
+                .sources(Sets.newHashSet(ImmutableProtectSource.builder()
+                        .name(Knowledgebase.ICLUSION)
                         .sourceEvent(Strings.EMPTY)
                         .sourceUrls(Sets.newHashSet())
                         .evidenceType(ProtectEvidenceType.AMPLIFICATION)

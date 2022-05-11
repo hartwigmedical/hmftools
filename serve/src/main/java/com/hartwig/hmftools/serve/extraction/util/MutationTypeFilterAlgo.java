@@ -25,9 +25,9 @@ public class MutationTypeFilterAlgo {
             return MutationTypeFilter.SPLICE;
         } else if (formattedEvent.contains("deletion/insertion") || formattedEvent.contains("insertions/deletions")) {
             return MutationTypeFilter.INFRAME;
-        } else if (formattedEvent.contains("deletion")) {
+        } else if (formattedEvent.contains("deletion") || formattedEvent.contains("del")) {
             return MutationTypeFilter.INFRAME_DELETION;
-        } else if (formattedEvent.contains("insertion")) {
+        } else if (formattedEvent.contains("insertion") || formattedEvent.contains("ins")) {
             return MutationTypeFilter.INFRAME_INSERTION;
         } else if (formattedEvent.contains("frameshift")) {
             return MutationTypeFilter.NONSENSE_OR_FRAMESHIFT;

@@ -35,13 +35,17 @@ public class ClinicalTrialReader extends CkbJsonDirectoryReader<JsonClinicalTria
         JsonDatamodelChecker clinicalTrialChecker = ClinicalTrialDataModelChecker.clinicalTrialObjectChecker();
         clinicalTrialChecker.check(object);
 
-        if (JsonFunctions.nullableString(object, "phase") == null) {
-            LOGGER.warn("phase of study '{}' is nullable from ClinicalTrialReader", JsonFunctions.string(object, "nctId"));
+        String nctId = JsonFunctions.string(object, "nctId");
+        String phase = JsonFunctions.nullableString(object, "phase");
+
+        if (phase == null) {
+            LOGGER.warn("phase of study '{}' is null in ClinicalTrialReader", nctId);
         }
+
         return ImmutableJsonClinicalTrial.builder()
-                .nctId(JsonFunctions.string(object, "nctId"))
+                .nctId(nctId)
                 .title(JsonFunctions.string(object, "title"))
-                .phase(JsonFunctions.nullableString(object, "phase"))
+                .phase(phase)
                 .recruitment(JsonFunctions.string(object, "recruitment"))
                 .therapies(extractTherapies(object.getAsJsonArray("therapies")))
                 .ageGroups(JsonFunctions.stringList(object, "ageGroups"))

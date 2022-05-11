@@ -19,9 +19,10 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class CkbUtil {
+final class CkbUtil {
 
     private static final Logger LOGGER = LogManager.getLogger(CkbUtil.class);
+
     private static final String FIELD_DELIMITER = "\t";
 
     private CkbUtil() {

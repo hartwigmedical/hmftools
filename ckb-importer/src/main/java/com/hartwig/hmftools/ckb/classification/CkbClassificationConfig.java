@@ -18,10 +18,10 @@ public class CkbClassificationConfig {
     private static final Set<String> SPECIFIC_EXON_EVENTS = specificExonEvents();
     private static final Map<String, Set<String>> FUSION_PAIR_AND_EXONS_PER_GENE = fusionPairAndExonsPerGene();
     private static final Set<String> GENE_LEVEL_BLACKLIST_KEY_PHRASES = geneLevelBlacklistKeyPhrases();
-    private static final Set<String> GENE_WILD_TYPES_KEY_PHRASES = geneWildTypesKeyPhrases();
     private static final Set<String> GENERIC_GENE_LEVEL_KEY_PHRASES = genericGeneLevelKeyPhrases();
     private static final Set<String> ACTIVATING_GENE_LEVEL_KEY_PHRASES = activatingGeneLevelKeyPhrases();
     private static final Set<String> INACTIVATING_GENE_LEVEL_KEY_PHRASES = inactivatingGeneLevelKeyPhrases();
+    private static final Set<String> WILD_TYPE_KEY_PHRASES = wildTypeKeyPhrases();
     private static final Set<String> AMPLIFICATION_KEYWORDS = amplificationKeywords();
     private static final Set<String> AMPLIFICATION_KEY_PHRASES = amplificationKeyPhrases();
     private static final Set<String> DELETION_BLACKLIST_KEY_PHRASES = deletionBlacklistKeyPhrases();
@@ -31,14 +31,14 @@ public class CkbClassificationConfig {
     private static final Set<String> EXONIC_DEL_DUP_FUSION_EVENTS = exonicDelDupFusionEvents();
     private static final Set<String> FUSION_PAIR_EVENTS_TO_SKIP = fusionPairEventsToSkip();
     private static final Set<String> PROMISCUOUS_FUSION_KEY_PHRASES = promiscuousFusionKeyPhrases();
-    private static final Set<String> MICROSATELLITE_UNSTABLE_EVENTS = microsatelliteUnstableEvents();
-    private static final Set<String> MICROSATELLITE_STABLE_EVENTS = microsatelliteStableEvents();
-    private static final Set<String> HIGH_TUMOR_MUTATIONAL_LOAD_EVENTS = highTumorMutationalLoadEvents();
-    private static final Set<String> LOW_TUMOR_MUTATIONAL_LOAD_EVENTS = lowTumorMutationalLoadEvents();
-    private static final Set<String> HIGH_TUMOR_MUTATIONAL_BURDEN_EVENTS = highTumorMutationalBurdenEvents();
-    private static final Set<String> LOW_TUMOR_MUTATIONAL_BURDEN_EVENTS = lowTumorMutationalBurdenEvents();
-    private static final Set<String> HR_DEFICIENCY_EVENTS = hrDeficiencyEvents();
-    private static final Set<String> HLA_EVENTS = hlaEvents();
+    private static final Set<String> MICROSATELLITE_UNSTABLE_KEY_PHRASES = microsatelliteUnstableKeyPhrases();
+    private static final Set<String> MICROSATELLITE_STABLE_KEY_PHRASES = microsatelliteStableKeyPhrases();
+    private static final Set<String> HIGH_TUMOR_MUTATIONAL_LOAD_KEY_PHRASES = highTumorMutationalLoadKeyPhrases();
+    private static final Set<String> LOW_TUMOR_MUTATIONAL_LOAD_KEY_PHRASES = lowTumorMutationalLoadKeyPhrases();
+    private static final Set<String> HIGH_TUMOR_MUTATIONAL_BURDEN_KEY_PHRASES = highTumorMutationalBurdenKeyPhrases();
+    private static final Set<String> LOW_TUMOR_MUTATIONAL_BURDEN_KEY_PHRASES = lowTumorMutationalBurdenKeyPhrases();
+    private static final Set<String> HR_DEFICIENCY_KEY_PHRASES = hrDeficiencyKeyPhrases();
+    private static final Set<String> HLA_KEY_PHRASES = hlaKeyPhrases();
     private static final Set<String> HPV_POSITIVE_EVENTS = hpvPositiveEvents();
     private static final Set<String> EBV_POSITIVE_EVENTS = ebvPositiveEvents();
     private static final Map<String, Set<String>> COMBINED_EVENTS_PER_GENE = combinedEventsPerGene();
@@ -57,10 +57,10 @@ public class CkbClassificationConfig {
                 .specificExonEvents(SPECIFIC_EXON_EVENTS)
                 .fusionPairAndExonsPerGene(FUSION_PAIR_AND_EXONS_PER_GENE)
                 .geneLevelBlacklistKeyPhrases(GENE_LEVEL_BLACKLIST_KEY_PHRASES)
-                .geneWildTypesKeyPhrases(GENE_WILD_TYPES_KEY_PHRASES)
                 .genericGeneLevelKeyPhrases(GENERIC_GENE_LEVEL_KEY_PHRASES)
                 .activatingGeneLevelKeyPhrases(ACTIVATING_GENE_LEVEL_KEY_PHRASES)
                 .inactivatingGeneLevelKeyPhrases(INACTIVATING_GENE_LEVEL_KEY_PHRASES)
+                .wildTypeKeyPhrases(WILD_TYPE_KEY_PHRASES)
                 .amplificationKeywords(AMPLIFICATION_KEYWORDS)
                 .amplificationKeyPhrases(AMPLIFICATION_KEY_PHRASES)
                 .deletionBlacklistKeyPhrases(DELETION_BLACKLIST_KEY_PHRASES)
@@ -70,14 +70,14 @@ public class CkbClassificationConfig {
                 .exonicDelDupFusionEvents(EXONIC_DEL_DUP_FUSION_EVENTS)
                 .fusionPairEventsToSkip(FUSION_PAIR_EVENTS_TO_SKIP)
                 .promiscuousFusionKeyPhrases(PROMISCUOUS_FUSION_KEY_PHRASES)
-                .microsatelliteUnstableEvents(MICROSATELLITE_UNSTABLE_EVENTS)
-                .microsatelliteStableEvents(MICROSATELLITE_STABLE_EVENTS)
-                .highTumorMutationalLoadEvents(HIGH_TUMOR_MUTATIONAL_LOAD_EVENTS)
-                .lowTumorMutationalLoadEvents(LOW_TUMOR_MUTATIONAL_LOAD_EVENTS)
-                .highTumorMutationalBurdenEvents(HIGH_TUMOR_MUTATIONAL_BURDEN_EVENTS)
-                .lowTumorMutationalBurdenEvents(LOW_TUMOR_MUTATIONAL_BURDEN_EVENTS)
-                .hrDeficiencyEvents(HR_DEFICIENCY_EVENTS)
-                .hlaEvents(HLA_EVENTS)
+                .microsatelliteUnstableKeyPhrases(MICROSATELLITE_UNSTABLE_KEY_PHRASES)
+                .microsatelliteStableKeyPhrases(MICROSATELLITE_STABLE_KEY_PHRASES)
+                .highTumorMutationalLoadKeyPhrases(HIGH_TUMOR_MUTATIONAL_LOAD_KEY_PHRASES)
+                .lowTumorMutationalLoadKeyPhrases(LOW_TUMOR_MUTATIONAL_LOAD_KEY_PHRASES)
+                .highTumorMutationalBurdenKeyPhrases(HIGH_TUMOR_MUTATIONAL_BURDEN_KEY_PHRASES)
+                .lowTumorMutationalBurdenKeyPhrases(LOW_TUMOR_MUTATIONAL_BURDEN_KEY_PHRASES)
+                .hrDeficiencyKeyPhrases(HR_DEFICIENCY_KEY_PHRASES)
+                .hlaKeyPhrases(HLA_KEY_PHRASES)
                 .hpvPositiveEvents(HPV_POSITIVE_EVENTS)
                 .ebvPositiveEvents(EBV_POSITIVE_EVENTS)
                 .combinedEventsPerGene(COMBINED_EVENTS_PER_GENE)
@@ -125,13 +125,6 @@ public class CkbClassificationConfig {
     }
 
     @NotNull
-    private static Set<String> geneWildTypesKeyPhrases() {
-        Set<String> set = Sets.newHashSet();
-        set.add("wild-type");
-        return set;
-    }
-
-    @NotNull
     private static Set<String> genericGeneLevelKeyPhrases() {
         Set<String> set = Sets.newHashSet();
         set.add("mutant");
@@ -149,7 +142,13 @@ public class CkbClassificationConfig {
     private static Set<String> inactivatingGeneLevelKeyPhrases() {
         Set<String> set = Sets.newHashSet();
         set.add("inact mut");
-        set.add("negative");
+        return set;
+    }
+
+    @NotNull
+    private static Set<String> wildTypeKeyPhrases() {
+        Set<String> set = Sets.newHashSet();
+        set.add("wild-type");
         return set;
     }
 
@@ -215,51 +214,47 @@ public class CkbClassificationConfig {
     }
 
     @NotNull
-    private static Set<String> microsatelliteUnstableEvents() {
+    private static Set<String> microsatelliteUnstableKeyPhrases() {
         Set<String> set = Sets.newHashSet();
-        set.add("MSI_high");
+        set.add(CkbConstants.MSI_HIGH);
         return set;
     }
 
     @NotNull
-    private static Set<String> microsatelliteStableEvents() {
+    private static Set<String> microsatelliteStableKeyPhrases() {
         Set<String> set = Sets.newHashSet();
-        set.add("MSI_low");
-        set.add("MSI_neg");
+        set.add(CkbConstants.MSI_NEGATIVE);
+        set.add(CkbConstants.MSI_LOW);
         return set;
     }
 
     @NotNull
-    private static Set<String> highTumorMutationalLoadEvents() {
-        Set<String> set = Sets.newHashSet();
-        set.add("TMB_high");
-        return set;
-    }
-
-    @NotNull
-    private static Set<String> lowTumorMutationalLoadEvents() {
-        Set<String> set = Sets.newHashSet();
-        set.add("TMB_low");
-        return set;
-    }
-
-    @NotNull
-    private static Set<String> lowTumorMutationalBurdenEvents() {
+    private static Set<String> highTumorMutationalLoadKeyPhrases() {
         return Sets.newHashSet();
     }
 
     @NotNull
-    private static Set<String> highTumorMutationalBurdenEvents() {
+    private static Set<String> lowTumorMutationalLoadKeyPhrases() {
         return Sets.newHashSet();
     }
 
     @NotNull
-    private static Set<String> hrDeficiencyEvents() {
-        return Sets.newHashSet("HRD_pos");
+    private static Set<String> highTumorMutationalBurdenKeyPhrases() {
+        return Sets.newHashSet(CkbConstants.TMB_HIGH);
     }
 
     @NotNull
-    private static Set<String> hlaEvents() {
+    private static Set<String> lowTumorMutationalBurdenKeyPhrases() {
+        return Sets.newHashSet(CkbConstants.TMB_LOW);
+    }
+
+    @NotNull
+    private static Set<String> hrDeficiencyKeyPhrases() {
+        return Sets.newHashSet(CkbConstants.HRD_POSITIVE);
+    }
+
+    @NotNull
+    private static Set<String> hlaKeyPhrases() {
         return Sets.newHashSet();
     }
 

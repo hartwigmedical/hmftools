@@ -11,16 +11,14 @@ import org.junit.Test;
 
 public class WildTypeMatcherTest {
 
-    private static final Set<String> WILD_TYPE_GENE_KEY_PHRASES = Sets.newHashSet("wild-type");
+    private static final Set<String> WILD_TYPE_KEY_PHRASES = Sets.newHashSet("wild-type");
 
     @Test
     public void canAssessWhetherEventIsWildType() {
-        WildTypeMatcher matcher = new WildTypeMatcher(WILD_TYPE_GENE_KEY_PHRASES);
+        WildTypeMatcher matcher = new WildTypeMatcher(WILD_TYPE_KEY_PHRASES);
 
         assertTrue(matcher.matches("EGFR", "EGFR wild-type"));
 
         assertFalse(matcher.matches("EGFR", "EGFR wild"));
-
     }
-
 }

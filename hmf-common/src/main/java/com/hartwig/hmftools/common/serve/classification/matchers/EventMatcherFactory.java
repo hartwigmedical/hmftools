@@ -36,7 +36,7 @@ public final class EventMatcherFactory {
                 config.activatingGeneLevelKeyPhrases(),
                 config.inactivatingGeneLevelKeyPhrases());
 
-        WildTypeMatcher wildTypeMatcher = new WildTypeMatcher(config.geneWildTypesKeyPhrases());
+        WildTypeMatcher wildTypeMatcher = new WildTypeMatcher(config.wildTypeKeyPhrases());
 
         FusionPairAndExonMatcher fusionPairAndExonMatcher = new FusionPairAndExonMatcher(config.fusionPairAndExonsPerGene());
         AmplificationMatcher amplificationMatcher =
@@ -44,8 +44,8 @@ public final class EventMatcherFactory {
         DeletionMatcher deletionMatcher =
                 new DeletionMatcher(config.deletionBlacklistKeyPhrases(), config.deletionKeywords(), config.deletionKeyPhrases());
 
-        CharacteristicMatcher characteristicMatcher = new CharacteristicMatcher(allCharacteristicEvents(config));
-        HlaMatcher hlaMatcher = new HlaMatcher(allHlaEvents(config));
+        CharacteristicMatcher characteristicMatcher = new CharacteristicMatcher(allCharacteristicKeyPhrases(config));
+        HlaMatcher hlaMatcher = new HlaMatcher(allHlaKeyPhrases(config));
 
         ComplexMatcher complexMatcher = new ComplexMatcher(hotspotMatcher, config.complexEventsPerGene());
         CombinedMatcher combinedMatcher =
@@ -73,25 +73,25 @@ public final class EventMatcherFactory {
     }
 
     @NotNull
-    private static Set<String> allHlaEvents(@NotNull EventClassifierConfig config) {
-        Set<String> hla = Sets.newHashSet();
-        hla.addAll(config.hlaEvents());
-        return hla;
-    }
-
-    @NotNull
-    private static Set<String> allCharacteristicEvents(@NotNull EventClassifierConfig config) {
+    private static Set<String> allCharacteristicKeyPhrases(@NotNull EventClassifierConfig config) {
         Set<String> tumorCharacteristics = Sets.newHashSet();
-        tumorCharacteristics.addAll(config.microsatelliteUnstableEvents());
-        tumorCharacteristics.addAll(config.microsatelliteStableEvents());
-        tumorCharacteristics.addAll(config.highTumorMutationalLoadEvents());
-        tumorCharacteristics.addAll(config.lowTumorMutationalLoadEvents());
-        tumorCharacteristics.addAll(config.highTumorMutationalBurdenEvents());
-        tumorCharacteristics.addAll(config.lowTumorMutationalBurdenEvents());
-        tumorCharacteristics.addAll(config.hrDeficiencyEvents());
+        tumorCharacteristics.addAll(config.microsatelliteUnstableKeyPhrases());
+        tumorCharacteristics.addAll(config.microsatelliteStableKeyPhrases());
+        tumorCharacteristics.addAll(config.highTumorMutationalLoadKeyPhrases());
+        tumorCharacteristics.addAll(config.lowTumorMutationalLoadKeyPhrases());
+        tumorCharacteristics.addAll(config.highTumorMutationalBurdenKeyPhrases());
+        tumorCharacteristics.addAll(config.lowTumorMutationalBurdenKeyPhrases());
+        tumorCharacteristics.addAll(config.hrDeficiencyKeyPhrases());
         tumorCharacteristics.addAll(config.hpvPositiveEvents());
         tumorCharacteristics.addAll(config.ebvPositiveEvents());
         return tumorCharacteristics;
+    }
+
+    @NotNull
+    private static Set<String> allHlaKeyPhrases(@NotNull EventClassifierConfig config) {
+        Set<String> hla = Sets.newHashSet();
+        hla.addAll(config.hlaKeyPhrases());
+        return hla;
     }
 
     @NotNull

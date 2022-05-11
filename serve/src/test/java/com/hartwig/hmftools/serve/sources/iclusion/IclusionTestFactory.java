@@ -31,8 +31,8 @@ public final class IclusionTestFactory {
     }
 
     @NotNull
-    public static IclusionTrial trialWithMutationsAndTumorLocation(@NotNull String acronym, @NotNull List<IclusionMutationCondition> mutationConditions,
-            @NotNull List<IclusionTumorLocation> tumorLocations) {
+    public static IclusionTrial trialWithMutationsAndTumorLocation(@NotNull String acronym,
+            @NotNull List<IclusionMutationCondition> mutationConditions, @NotNull List<IclusionTumorLocation> tumorLocations) {
         return trial(acronym, mutationConditions, tumorLocations, Lists.newArrayList());
     }
 

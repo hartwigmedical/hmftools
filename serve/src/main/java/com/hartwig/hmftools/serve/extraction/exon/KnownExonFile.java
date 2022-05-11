@@ -60,7 +60,7 @@ public final class KnownExonFile {
                         .mutationType(MutationTypeFilter.valueOf(values[5]))
                         .rank(Integer.parseInt(values[6]))
                         .build())
-                .sources(Knowledgebase.fromCommaSeparatedTechnicalDisplayString(values[7]))
+                .sources(Knowledgebase.fromCommaSeparatedSourceString(values[7]))
                 .build();
     }
 

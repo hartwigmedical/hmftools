@@ -24,8 +24,8 @@ SERVE supports the ingestion of the following knowledgebases:
  - [OncoKB](https://www.oncokb.org) - general purpose knowledgebase that is supported through [VICC](http://cancervariants.org)
  - [DoCM](http://www.docm.info) - database containing pathogenic mutations in cancer
  - [iClusion](https://iclusion.org) - a database with all actively recruiting clinical trials in the Netherlands 
- - [ACTIN](https://github.com/hartwigmedical/actin/blob/master/treatment/README.md) - a database with all actively recruiting clinical trials in the ACTIN study along with 
- molecular inclusion criteria for these trials.
+ - [ACTIN](https://github.com/hartwigmedical/actin/blob/master/treatment/README.md) - a database with all actively recruiting 
+ clinical trials in the ACTIN study along with molecular inclusion criteria for these trials.
  - HMF Cohort - a database of recurrent somatic mutations in cancer-related genes from the Hartwig database.
  - HMF Curated - a database of known driver mutations curated by the Hartwig team.
  
@@ -57,6 +57,7 @@ SERVE generates clinical evidence in the following datamodel:
  
 The following genomic events and tumor characteristics can be mapped to clinical evidence:
  - Genome-wide tumor characteristics such as signatures, MSI status, TML status or viral presence
+ - Presence of specific HLA alleles
  - Multi-gene events such as gene fusions
  - Single gene events such as amplification or general (in)activation of a gene
  - Types of mutations in ranges overlapping with specific genes such as:
@@ -92,7 +93,7 @@ Filter  | Description
 ---|---
 FILTER  | We filter every entry when the gene/event isn't present or there is an inconsistency with the Hartwig's driver gene panel
 IGNORE  | Every gene/event is used regardless of mismatch/inconsistencies 
-WARN_ONLY  | Every gene/event is used regardless of mismatch/inconsistencies, however a warning messages is shown for the inconsistencies
+WARN_ONLY  | Every gene/event is used regardless of mismatch/inconsistencies, however a warning message is shown for the inconsistencies
 
 ### Protein resolving for SNVs and (small) INDELs
  
@@ -176,7 +177,7 @@ ACTIVATION | Evidence is applicable when a gene has been activated. Downstream a
 INACTIVATION | Evidence is applicable when a gene has been inactivated. Downstream algorithms are expected to interpret this.
 ANY_MUTATION | SERVE does not restrict this evidence based on the type of mutation and considers every type of mutation applicable for this evidence.
 FUSION | Evidence is applicable in case the gene has fused with another gene (either 3' or 5').
-WILD_TYPE | Evidence is applicable in case no genomic alteration is detected)
+WILD_TYPE | Evidence is applicable in case no genomic alteration is detected.
 
 ### Exonic ranges specific for fusion pairs
 
@@ -193,23 +194,25 @@ When no cut-off values is present but is expected for the characteristics, Hartw
 
 Genome wide event  | Description
 ---|---
-MICROSATELLITE_UNSTABLE  | Evidence is applicable when the genome has a MSI status (Hartwig's cutoff >=4)
-MICROSATELLITE_STABLE  | Evidence is applicable when the genome dopes not have a MSI status (Hartwig's cutoff <4)
-HIGH_TUMOR_MUTATIONAL_LOAD | Evidence is applicable when the genome has a high tumor mutational load status (Hartwig's cutoff >=140)
-LOW_TUMOR_MUTATIONAL_LOAD | Evidence is applicable when the genome does not have a high tumor mutational load status (Hartwig's cutoff <4)
-HOMOLOGOUS_RECOMBINATION_DEFICIENT | Evidence is applicable when the genome has a HRD status (Hartwig's cutoff >= 0.5)
+MICROSATELLITE_UNSTABLE  | Evidence is applicable when the genome has a MSI status
+MICROSATELLITE_STABLE  | Evidence is applicable when the genome does not have a MSI status
+HIGH_TUMOR_MUTATIONAL_LOAD | Evidence is applicable when the genome has a high tumor mutational load status
+LOW_TUMOR_MUTATIONAL_LOAD | Evidence is applicable when the genome does not have a high tumor mutational load status
+HIGH_TUMOR_MUTATIONAL_BURDEN | Evidence is applicable when the genome has a high tumor mutational burden status
+LOW_TUMOR_MUTATIONAL_BURDEN | Evidence is applicable when the genome does not have a high tumor mutational burden status
+HOMOLOGOUS_RECOMBINATION_DEFICIENT | Evidence is applicable when the genome has a HRD status
 HPV_POSITIVE | Evidence is applicable when viral presence of some form of HPV has been found
 EBV_POSITIVE | Evidence is applicable when viral presence of some form of EBV has been found
-IMMUNO_HLA / Evidence is applicable in case of an HLA type match
 
-### HLA typing
+### Presence of HLA alleles 
+
 Every patient has a specific HLA Class type I in their germline. If this class matches to HLA class type I which is derived from the 
 knowledgebase this patient is applicable for the evidence.
 
 ## Curation and harmonization of individual knowledgebases
 
 Per knowledgebase curation and filtering is applied to harmonize knowledge from different sources and to correct/remove mistakes or 
-evidence that is inconsistent with HMF driver model.
+evidence that is inconsistent with the Hartwig driver model.
 
 ### VICC Curation
 
@@ -265,7 +268,7 @@ HRD_SIGNATURE | HR Status = HRD
 TMB_OF_AT_LEAST_X | Tumor Mutational Burden (TMB) should be => X
 TML_OF_AT_LEAST_X | Tumor Mutational Load (TML) should be => X
 TML_OF_AT_MOST_X | TML should be <= X
-HAS_HLA_A_TYPE_X | HLA typing should be X   
+HAS_HLA_A_TYPE_X | Patient should have at least one HLA allele of type X   
 
 SERVE configures every trial to A-level evidence with responsive direction. The filtering is predominantly configurable rather than fixed
 in SERVE. The following filters can be configured in ACTIN:
@@ -337,19 +340,7 @@ There are a few additional checks for specific types of knowledge:
  - A hotspot lift-over is  accepted only in case the reference at the lifted position has remained unchanged.
  - A codon lift-over is accepted only in case the lifted range has a length of 3 bases.
  - Transcripts and codon/exon indices are removed from known codons and exons since they can't be trusted anymore after lift-over
-
-#### Gene lift-over
-
-Genes are lifted between reference genome using Hartwig's internal gene mapping. This impacts the following types of events:
- - Known and actionable ranges
- - Known and actionable copy numbers
- - Actionable gene events
- - Known and actionable fusion pairs
- 
-Do note that for fusion pairs, additional annotation remains unchanged assuming exonic ranges relevant for known and actionable fusions 
-remain identical between ref genome versions.
-
-In case the genomic region of a gene has been flipped between v37 and v38 we exclude the gene from liftover. 
+ - In case the genomic region of a gene has been flipped between v37 and v38 we exclude the gene from liftover. 
  
 ## Overview of the SERVE algorithm
 
@@ -378,8 +369,12 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   - The actionable output is the database that [PROTECT](../protect/README.md) bases its clinical evidence matching on.
   
 ## Version History and Download Links
-- [Upcoming]
-  - Use correct blacklisted tumor locaties for solid tumors 
+- Upcoming
+  - Used correct blacklisted tumor locations for solid tumors 
+  - Updated mutation type filter for exon insertions and deletions
+  - Removed "negative" from list of CKB events which are interpreted as inactivation events.
+  - Moved TMB evidence from CKB from evidence for tumor mutational burden rather than load.
+  - Various updates are made to ingestion of ACTIN source
 - [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.10)
   - Solve issues of v1.9
 - [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.9)

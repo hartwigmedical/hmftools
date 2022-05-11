@@ -14,9 +14,7 @@ public class ActionableHLAFileTest {
 
     @Test
     public void canReadFromFileAndConvert() throws IOException {
-        String actionableHlATsv =
-                ActionableHLAFile.actionableHLATsvPath(ActionabilityTestUtil.TEST_SERVE_OUTPUT_DIR,
-                        RefGenomeVersion.V37);
+        String actionableHlATsv = ActionableHLAFile.actionableHLATsvPath(ActionabilityTestUtil.TEST_SERVE_OUTPUT_DIR, RefGenomeVersion.V37);
         List<ActionableHLA> actionableHLAs = ActionableHLAFile.read(actionableHlATsv);
 
         assertEquals(1, actionableHLAs.size());

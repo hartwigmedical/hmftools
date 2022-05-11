@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class TumorCharacteristic {
 
-    @Nullable
+    @NotNull
     public abstract TumorCharacteristicAnnotation name();
 
     @Nullable

@@ -57,7 +57,7 @@ public final class EvidenceSelector {
     public static List<ProtectEvidence> trialsOnly(@NotNull List<ProtectEvidence> evidences) {
         List<ProtectEvidence> filtered = Lists.newArrayList();
         for (ProtectEvidence evidence : evidences) {
-            if (hasTrialSource(evidence.protectSources())) {
+            if (hasTrialSource(evidence.sources())) {
                 filtered.add(evidence);
             }
         }
@@ -68,7 +68,7 @@ public final class EvidenceSelector {
     public static List<ProtectEvidence> noTrials(@NotNull List<ProtectEvidence> evidences) {
         List<ProtectEvidence> filtered = Lists.newArrayList();
         for (ProtectEvidence evidence : evidences) {
-            if (!hasTrialSource(evidence.protectSources())) {
+            if (!hasTrialSource(evidence.sources())) {
                 filtered.add(evidence);
             }
         }
@@ -76,11 +76,9 @@ public final class EvidenceSelector {
     }
 
     private static boolean hasTrialSource(@NotNull Set<ProtectSource> sources) {
-        for (ProtectSource protectSource: sources) {
-            for (Knowledgebase trialSource : TRIAL_SOURCES) {
-                if (trialSource.technicalDisplay().contains(protectSource.source().technicalDisplay())) {
-                    return true;
-                }
+        for (ProtectSource protectSource : sources) {
+            if (TRIAL_SOURCES.contains(protectSource.name())) {
+                return true;
             }
         }
         return false;

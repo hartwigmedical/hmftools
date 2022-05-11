@@ -1,13 +1,11 @@
 package com.hartwig.hmftools.serve.extraction.characteristic;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -26,197 +24,102 @@ public class TumorCharacteristicExtractorTest {
     private static final String EBV = "ebv";
 
     @Test
-    public void canDetermineCutOffMSI() {
-        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
-        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, MSI);
+    public void canDetermineMSI() {
+        TumorCharacteristicExtractor extractor = buildTestExtractor();
+
+        TumorCharacteristic characteristic = extractor.extract(EventType.CHARACTERISTIC, MSI);
+
         assertEquals(TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE, characteristic.name());
-
-        assertEquals(TumorCharacteristicsComparator.EQUAL_OR_GREATER,
-                TumorCharacteristicExtractor.determineComparator(TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE, "MSI >= 4"));
-        assertEquals(4,
-                TumorCharacteristicExtractor.determineCutoff(TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE, "MSI >= 4"),
-                EPSILON);
+        assertNull(characteristic.comparator());
+        assertNull(characteristic.cutoff());
     }
 
     @Test
-    public void canDetermineCutOffMSS() {
-        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
-        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, MSS);
+    public void canDetermineMSS() {
+        TumorCharacteristicExtractor extractor = buildTestExtractor();
+
+        TumorCharacteristic characteristic = extractor.extract(EventType.CHARACTERISTIC, MSS);
+
         assertEquals(TumorCharacteristicAnnotation.MICROSATELLITE_STABLE, characteristic.name());
-
-        assertEquals(TumorCharacteristicsComparator.LOWER,
-                TumorCharacteristicExtractor.determineComparator(TumorCharacteristicAnnotation.MICROSATELLITE_STABLE, "MSS < 4"));
-        assertEquals(4,
-                TumorCharacteristicExtractor.determineCutoff(TumorCharacteristicAnnotation.MICROSATELLITE_STABLE, "MSS < 4"),
-                EPSILON);
+        assertNull(characteristic.comparator());
+        assertNull(characteristic.cutoff());
     }
 
     @Test
-    public void canDetermineCutOffTMLLow() {
-        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
-        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, LOW_TML);
+    public void canDetermineTMLLow() {
+        TumorCharacteristicExtractor extractor = buildTestExtractor();
+
+        TumorCharacteristic characteristic = extractor.extract(EventType.CHARACTERISTIC, LOW_TML + " < 140");
+
         assertEquals(TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_LOAD, characteristic.name());
-
-        assertEquals(TumorCharacteristicsComparator.LOWER,
-                TumorCharacteristicExtractor.determineComparator(TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_LOAD, "TML < 140"));
-        assertEquals(140,
-                TumorCharacteristicExtractor.determineCutoff(TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_LOAD, "TML < 140"),
-                EPSILON);
+        assertEquals(TumorCharacteristicsComparator.LOWER, characteristic.comparator());
+        assertEquals(140, characteristic.cutoff(), EPSILON);
     }
 
     @Test
-    public void canDetermineCutOffTMLHigh() {
-        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
-        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, HIGH_TML);
+    public void canDetermineTMLHigh() {
+        TumorCharacteristicExtractor extractor = buildTestExtractor();
+
+        TumorCharacteristic characteristic = extractor.extract(EventType.CHARACTERISTIC, HIGH_TML + " >= 140");
+
         assertEquals(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD, characteristic.name());
-
-        assertEquals(TumorCharacteristicsComparator.EQUAL_OR_GREATER,
-                TumorCharacteristicExtractor.determineComparator(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD, "TML >= 140"));
-        assertEquals(140,
-                TumorCharacteristicExtractor.determineCutoff(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD, "TML >= 140"),
-                EPSILON);
+        assertEquals(TumorCharacteristicsComparator.EQUAL_OR_GREATER, characteristic.comparator());
+        assertEquals(140, characteristic.cutoff(), EPSILON);
     }
 
     @Test
-    public void canDetermineCutOffTMBLow() {
-        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
-        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, LOW_TMB);
+    public void canDetermineTMBLow() {
+        TumorCharacteristicExtractor extractor = buildTestExtractor();
+
+        TumorCharacteristic characteristic = extractor.extract(EventType.CHARACTERISTIC, LOW_TMB + " <= 3");
+
         assertEquals(TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_BURDEN, characteristic.name());
-
-        assertNull(TumorCharacteristicExtractor.determineComparator(TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_BURDEN, "TMB < 3"));
-        assertNull(TumorCharacteristicExtractor.determineCutoff(TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_BURDEN, "TMB < 3"));
+        assertEquals(TumorCharacteristicsComparator.EQUAL_OR_LOWER, characteristic.comparator());
+        assertEquals(3, characteristic.cutoff(), EPSILON);
     }
 
     @Test
-    public void canDetermineCutOffTMBHigh() {
-        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
-        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, HIGH_TMB);
+    public void canDetermineTMBHigh() {
+        TumorCharacteristicExtractor extractor = buildTestExtractor();
+
+        TumorCharacteristic characteristic = extractor.extract(EventType.CHARACTERISTIC, HIGH_TMB + " > 14.5");
+
         assertEquals(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_BURDEN, characteristic.name());
-
-        assertEquals(TumorCharacteristicsComparator.EQUAL_OR_GREATER,
-                TumorCharacteristicExtractor.determineComparator(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_BURDEN, "HIGH_TUMOR_MUTATIONAL_BURDEN TMB >= 14"));
-        assertEquals(14,
-                TumorCharacteristicExtractor.determineCutoff(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_BURDEN, "HIGH_TUMOR_MUTATIONAL_BURDEN TMB >= 14"),
-                EPSILON);
+        assertEquals(TumorCharacteristicsComparator.GREATER, characteristic.comparator());
+        assertEquals(14.5, characteristic.cutoff(), EPSILON);
     }
 
     @Test
-    public void canDetermineCutOffHRD() {
-        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
-        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, HRD);
+    public void canDetermineHRD() {
+        TumorCharacteristicExtractor extractor = buildTestExtractor();
+
+        TumorCharacteristic characteristic = extractor.extract(EventType.CHARACTERISTIC, HRD);
+
         assertEquals(TumorCharacteristicAnnotation.HOMOLOGOUS_RECOMBINATION_DEFICIENT, characteristic.name());
-
-        assertEquals(TumorCharacteristicsComparator.EQUAL_OR_GREATER,
-                TumorCharacteristicExtractor.determineComparator(TumorCharacteristicAnnotation.HOMOLOGOUS_RECOMBINATION_DEFICIENT,
-                        "HRD >= 0.5"));
-        assertEquals(0.5,
-                TumorCharacteristicExtractor.determineCutoff(TumorCharacteristicAnnotation.HOMOLOGOUS_RECOMBINATION_DEFICIENT,
-                        "HRD >= 0.5"),
-                EPSILON);
-    }
-
-    @Test
-    public void canDetermineCutOffSource() {
-        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
-        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, HIGH_TML + " TML >= 200");
-        assertEquals(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD, characteristic.name());
-
-        assertEquals(TumorCharacteristicsComparator.EQUAL_OR_GREATER,
-                TumorCharacteristicExtractor.determineComparator(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD, "TML TML >= 200"));
-        assertEquals(200.0,
-                TumorCharacteristicExtractor.determineCutoff(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD, "TML TML >= 200"),
-                EPSILON);
-
-    }
-
-    @Test
-    public void canExtractMicrosatelliteUnstableCharacteristic() {
-        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
-        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, MSI);
-
-        assertNotNull(characteristic);
-        assertEquals(TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE, characteristic.name());
-        assertEquals(TumorCharacteristicsComparator.EQUAL_OR_GREATER,
-                TumorCharacteristicExtractor.determineComparator(TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE, Strings.EMPTY));
-        assertEquals(4.0,
-                TumorCharacteristicExtractor.determineCutoff(TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE, Strings.EMPTY),
-                EPSILON);
-    }
-
-    @Test
-    public void canExtractMicrosatelliteStableCharacteristic() {
-        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
-        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, MSS);
-
-        assertNotNull(characteristic);
-        assertEquals(TumorCharacteristicAnnotation.MICROSATELLITE_STABLE, characteristic.name());
-        assertEquals(TumorCharacteristicsComparator.LOWER,
-                TumorCharacteristicExtractor.determineComparator(TumorCharacteristicAnnotation.MICROSATELLITE_STABLE, "MSS"));
-        assertEquals(4.0, TumorCharacteristicExtractor.determineCutoff(TumorCharacteristicAnnotation.MICROSATELLITE_STABLE, "MSS"), EPSILON);
-    }
-
-    @Test
-    public void canExtractHighTumorMutationalLoadCharacteristic() {
-        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
-        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, HIGH_TML);
-
-        assertNotNull(characteristic);
-        assertEquals(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD, characteristic.name());
-        assertEquals(TumorCharacteristicsComparator.EQUAL_OR_GREATER,
-                TumorCharacteristicExtractor.determineComparator(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD, "TML"));
-        assertEquals(140,
-                TumorCharacteristicExtractor.determineCutoff(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD, "TML"),
-                EPSILON);
-    }
-
-    @Test
-    public void canExtractLowTumorMutationalLoadCharacteristic() {
-        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
-        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, LOW_TML);
-
-        assertNotNull(characteristic);
-        assertEquals(TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_LOAD, characteristic.name());
-        assertEquals(TumorCharacteristicsComparator.LOWER,
-                TumorCharacteristicExtractor.determineComparator(TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_LOAD, "TML"));
-        assertEquals(140,
-                TumorCharacteristicExtractor.determineCutoff(TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_LOAD, "TML"),
-                EPSILON);
-    }
-
-    @Test
-    public void canExtractHrDeficientCharacteristic() {
-        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
-        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, HRD);
-
-        assertNotNull(characteristic);
-        assertEquals(TumorCharacteristicAnnotation.HOMOLOGOUS_RECOMBINATION_DEFICIENT, characteristic.name());
-        assertEquals(TumorCharacteristicsComparator.EQUAL_OR_GREATER,
-                TumorCharacteristicExtractor.determineComparator(TumorCharacteristicAnnotation.HOMOLOGOUS_RECOMBINATION_DEFICIENT, Strings.EMPTY));
-        assertEquals(0.5,
-                TumorCharacteristicExtractor.determineCutoff(TumorCharacteristicAnnotation.HOMOLOGOUS_RECOMBINATION_DEFICIENT, Strings.EMPTY),
-                EPSILON);
+        assertNull(characteristic.comparator());
+        assertNull(characteristic.cutoff());
     }
 
     @Test
     public void canExtractHPVPositiveCharacteristic() {
-        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
-        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, HPV);
+        TumorCharacteristicExtractor extractor = buildTestExtractor();
 
-        assertNotNull(characteristic);
+        TumorCharacteristic characteristic = extractor.extract(EventType.CHARACTERISTIC, HPV);
+
         assertEquals(TumorCharacteristicAnnotation.HPV_POSITIVE, characteristic.name());
-        assertNull(TumorCharacteristicExtractor.determineComparator(TumorCharacteristicAnnotation.HPV_POSITIVE, Strings.EMPTY));
-        assertNull(TumorCharacteristicExtractor.determineCutoff(TumorCharacteristicAnnotation.HPV_POSITIVE, Strings.EMPTY));
+        assertNull(characteristic.comparator());
+        assertNull(characteristic.cutoff());
     }
 
     @Test
     public void canExtractEBVPositiveCharacteristic() {
-        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
-        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, EBV);
+        TumorCharacteristicExtractor extractor = buildTestExtractor();
 
-        assertNotNull(characteristic);
+        TumorCharacteristic characteristic = extractor.extract(EventType.CHARACTERISTIC, EBV);
+
         assertEquals(TumorCharacteristicAnnotation.EBV_POSITIVE, characteristic.name());
-        assertNull(TumorCharacteristicExtractor.determineComparator(TumorCharacteristicAnnotation.HPV_POSITIVE, Strings.EMPTY));
-        assertNull(TumorCharacteristicExtractor.determineCutoff(TumorCharacteristicAnnotation.HPV_POSITIVE, Strings.EMPTY));
+        assertNull(characteristic.comparator());
+        assertNull(characteristic.cutoff());
     }
 
     @Test

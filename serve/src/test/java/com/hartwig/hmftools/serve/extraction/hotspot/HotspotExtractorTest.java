@@ -29,7 +29,7 @@ public class HotspotExtractorTest {
             ImmutableVariantHotspotImpl.builder().chromosome("1").position(10).ref("A").alt("T").build();
 
     @Test
-    public void canFindGene(){
+    public void canFindGene() {
         List<DriverGene> driverGenes = DriverGeneTestFactory.createDriverGenes("BRAF", "KIT");
         assertEquals(DriverCategory.TSG, HotspotExtractor.findByGene(driverGenes, "BRAF"));
         assertEquals(DriverCategory.ONCO, HotspotExtractor.findByGene(driverGenes, "KIT"));
@@ -57,7 +57,7 @@ public class HotspotExtractorTest {
 
     @Test
     public void canFilterNotInCatalog() {
-       String protein = "V600E";
+        String protein = "V600E";
         HotspotExtractor hotspotExtractorFilter = createWithProtein(protein, DriverInconsistencyMode.FILTER);
         List<VariantHotspot> hotspotExtractorFilterList = hotspotExtractorFilter.extract("KRAS", null, EventType.HOTSPOT, "V600E");
         assertNull(hotspotExtractorFilterList);
@@ -94,8 +94,7 @@ public class HotspotExtractorTest {
     }
 
     @NotNull
-    private static HotspotExtractor createWithProtein(@NotNull String protein,
-            @NotNull DriverInconsistencyMode annotation) {
+    private static HotspotExtractor createWithProtein(@NotNull String protein, @NotNull DriverInconsistencyMode annotation) {
         return new HotspotExtractor(GENE_CHECKER,
                 new TestProteinResolver(protein),
                 event -> event,

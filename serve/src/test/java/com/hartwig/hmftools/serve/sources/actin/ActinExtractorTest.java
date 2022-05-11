@@ -17,7 +17,7 @@ import org.junit.Test;
 public class ActinExtractorTest {
 
     @Test
-    public void canExtractFromACTINEntries() {
+    public void canExtractFromActinEntries() {
         EventClassifierConfig config = ActinClassificationConfig.build();
         ActinExtractor extractor = ActinExtractorFactory.buildActinExtractor(config, RefGenomeResourceTestFactory.buildTestResource37());
 
@@ -29,7 +29,7 @@ public class ActinExtractorTest {
         actinEntries.add(ActinTestFactory.create(ActinRule.MUTATION_IN_GENE_X_OF_TYPE_Y, "BRAF", "exon 2-4"));
         actinEntries.add(ActinTestFactory.create(ActinRule.MSI_SIGNATURE, null, "MSI high"));
         actinEntries.add(ActinTestFactory.create(ActinRule.TML_OF_AT_LEAST_X, null, "TML >= 450"));
-        actinEntries.add(ActinTestFactory.create(ActinRule.SPECIFIC_FUSION_OF_X_TO_Y, "", "EML4-ALK"));
+        actinEntries.add(ActinTestFactory.create(ActinRule.SPECIFIC_FUSION_OF_X_TO_Y, null, "EML4-ALK"));
 
         ExtractionResult result = extractor.extract(actinEntries);
         assertEquals(0, result.knownHotspots().size());

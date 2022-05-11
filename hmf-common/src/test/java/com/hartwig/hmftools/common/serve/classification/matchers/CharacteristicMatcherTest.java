@@ -18,6 +18,7 @@ public class CharacteristicMatcherTest {
         EventMatcher matcher = new CharacteristicMatcher(CHARACTERISTIC_EVENTS);
 
         assertTrue(matcher.matches("-", "Characteristic"));
+        assertTrue(matcher.matches("-", "This is a Characteristic event"));
 
         assertFalse(matcher.matches("BRAF", "V600E"));
     }

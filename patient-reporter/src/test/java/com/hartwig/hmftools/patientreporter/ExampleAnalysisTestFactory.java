@@ -326,13 +326,13 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static Set<ProtectSource> createTestProtectSource(@NotNull Set<Knowledgebase> sources,
+    private static Set<ProtectSource> createTestProtectSources(@NotNull Set<Knowledgebase> knowledgebases,
             @NotNull ProtectEvidenceType protectEvidenceType, @Nullable Integer rank) {
-        Set<ProtectSource> protectSources = Sets.newHashSet();
+        Set<ProtectSource> sources = Sets.newHashSet();
 
-        for (Knowledgebase knowledgebase : sources) {
-            protectSources.add(ImmutableProtectSource.builder()
-                    .source(knowledgebase)
+        for (Knowledgebase knowledgebase : knowledgebases) {
+            sources.add(ImmutableProtectSource.builder()
+                    .name(knowledgebase)
                     .sourceEvent(Strings.EMPTY)
                     .sourceUrls(Sets.newHashSet())
                     .evidenceType(protectEvidenceType)
@@ -340,7 +340,7 @@ public final class ExampleAnalysisTestFactory {
                     .evidenceUrls(Sets.newHashSet())
                     .build());
         }
-        return protectSources;
+        return sources;
     }
 
     @NotNull
@@ -359,7 +359,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Cobimetinib + Vemurafenib")
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC, Knowledgebase.VICC_CGI),
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.VICC_CIVIC, Knowledgebase.VICC_CGI),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
                 .build());
@@ -374,7 +374,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Dabrafenib")
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC, Knowledgebase.VICC_CGI),
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.VICC_CIVIC, Knowledgebase.VICC_CGI),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
                 .build());
@@ -389,7 +389,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Dabrafenib + Trametinib")
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC, Knowledgebase.VICC_CGI),
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.VICC_CIVIC, Knowledgebase.VICC_CGI),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
                 .build());
@@ -404,7 +404,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Trametinib")
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI), ProtectEvidenceType.EXON_MUTATION, 1))
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.VICC_CGI), ProtectEvidenceType.EXON_MUTATION, 1))
                 .build());
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
@@ -417,7 +417,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Vemurafenib")
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI), ProtectEvidenceType.CODON_MUTATION, 600))
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.VICC_CGI), ProtectEvidenceType.CODON_MUTATION, 600))
                 .build());
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
@@ -430,7 +430,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("RO4987655")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
                 .build());
@@ -445,7 +445,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Buparlisib + Carboplatin + Paclitaxel")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI), ProtectEvidenceType.DELETION, null))
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.VICC_CGI), ProtectEvidenceType.DELETION, null))
                 .build());
 
         return evidenceItemsOnLabel;
@@ -467,7 +467,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Array 818-103")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION),
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.ICLUSION),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
                 .build());
@@ -482,7 +482,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("CLXH254C12201")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION),
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.ICLUSION),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
                 .build());
@@ -497,7 +497,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("COWBOY")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION),
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.ICLUSION),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
                 .build());
@@ -512,7 +512,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("COWBOY")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION),
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.ICLUSION),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
                 .build());
@@ -527,7 +527,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("DRUP")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION),
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.ICLUSION),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
                 .build());
@@ -542,7 +542,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("EBIN (EORTC-1612-MG)")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION),
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.ICLUSION),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
                 .build());
@@ -554,7 +554,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("BASKET OF BASKETS (VHIO17002)")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION), ProtectEvidenceType.SIGNATURE, null))
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.ICLUSION), ProtectEvidenceType.SIGNATURE, null))
                 .build());
 
         trialsOnLabel.add(onLabelBuilder.event("High tumor mutation load")
@@ -564,7 +564,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("DRUP")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION), ProtectEvidenceType.SIGNATURE, null))
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.ICLUSION), ProtectEvidenceType.SIGNATURE, null))
                 .build());
 
         trialsOnLabel.add(onLabelBuilder.event("High tumor mutation load")
@@ -574,7 +574,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("KEYNOTE-158")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION), ProtectEvidenceType.SIGNATURE, null))
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.ICLUSION), ProtectEvidenceType.SIGNATURE, null))
                 .build());
 
         trialsOnLabel.add(onLabelBuilder.gene("PTEN")
@@ -587,7 +587,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("DRUP")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION), ProtectEvidenceType.DELETION, null))
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.ICLUSION), ProtectEvidenceType.DELETION, null))
                 .build());
 
         return trialsOnLabel;
@@ -609,7 +609,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Bevacizumab")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI),
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.VICC_CGI),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
                 .build());
@@ -624,7 +624,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("CI-1040")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI),
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.VICC_CGI),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
                 .build());
@@ -639,7 +639,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Cetuximab")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI),
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.VICC_CGI),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
                 .build());
@@ -654,7 +654,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Cetuximab + Irinotecan + Vemurafenib")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
                 .build());
@@ -669,7 +669,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Fluorouracil")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
                 .build());
@@ -684,7 +684,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Irinotecan")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
                 .build());
@@ -699,7 +699,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Oxaliplatin")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
                 .build());
@@ -714,7 +714,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Panitumumab")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI, Knowledgebase.VICC_CIVIC),
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.VICC_CGI, Knowledgebase.VICC_CIVIC),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
                 .build());
@@ -729,7 +729,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Selumetinib")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
                 .build());
@@ -744,7 +744,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Sorafenib")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.VICC_CIVIC),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
                         null))
                 .build());
@@ -759,7 +759,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Vemurafenib")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI), ProtectEvidenceType.CODON_MUTATION, 600))
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.VICC_CGI), ProtectEvidenceType.CODON_MUTATION, 600))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
@@ -772,7 +772,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Anti-EGFR monoclonal antibody")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI), ProtectEvidenceType.DELETION, null))
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.VICC_CGI), ProtectEvidenceType.DELETION, null))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
@@ -785,7 +785,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Cetuximab")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC), ProtectEvidenceType.DELETION, null))
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.VICC_CIVIC), ProtectEvidenceType.DELETION, null))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
@@ -798,7 +798,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Everolimus")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC), ProtectEvidenceType.DELETION, null))
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.VICC_CIVIC), ProtectEvidenceType.DELETION, null))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
@@ -811,7 +811,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Lapatinib + Trastuzumab")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC), ProtectEvidenceType.DELETION, null))
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.VICC_CIVIC), ProtectEvidenceType.DELETION, null))
                 .build());
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
@@ -824,7 +824,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Trastuzumab")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CIVIC), ProtectEvidenceType.DELETION, null))
+                .sources(createTestProtectSources(Sets.newHashSet(Knowledgebase.VICC_CIVIC), ProtectEvidenceType.DELETION, null))
                 .build());
 
         return evidenceItemsOffLabel;

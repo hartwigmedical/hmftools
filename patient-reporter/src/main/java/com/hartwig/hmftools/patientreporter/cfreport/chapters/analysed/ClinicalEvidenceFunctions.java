@@ -136,7 +136,8 @@ public class ClinicalEvidenceFunctions {
 
     private static boolean addEvidenceWithMaxLevel(@NotNull Table table, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
             @NotNull EvidenceLevel allowedHighestLevel, @NotNull String evidenceType) {
-        Set<String> sortedTreatments = Sets.newTreeSet(treatmentMap.keySet().stream().collect(Collectors.toSet()));
+        Set<String> sortedTreatments = treatmentMap.keySet().stream().distinct().collect(Collectors.toCollection(Sets::newTreeSet));
+
         boolean hasEvidence = false;
         for (String treatment : sortedTreatments) {
             List<ProtectEvidence> evidences = treatmentMap.get(treatment);
@@ -225,7 +226,7 @@ public class ClinicalEvidenceFunctions {
 
         String evidenceRank = Strings.EMPTY;
         String evidenceSource = Strings.EMPTY;
-        for (ProtectSource source: evidence.protectSources()) {
+        for (ProtectSource source: evidence.sources()) {
             evidenceSource = source.evidenceType().display();
             if (source.evidenceType().equals(ProtectEvidenceType.CODON_MUTATION) || source.evidenceType()
                     .equals(ProtectEvidenceType.EXON_MUTATION)) {

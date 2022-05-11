@@ -39,17 +39,11 @@ public class ActionableEventUrlMergerTest {
     private static ActionableFusion createFusion(@NotNull String gene, @NotNull String url) {
         return ImmutableActionableFusion.builder()
                 .from(ActionabilityTestUtil.create(Knowledgebase.VICC_CGI,
-                        "rawInput",
+                        "source event",
                         Sets.newHashSet(),
                         "treatment",
-                        ImmutableCancerType.builder()
-                                .name("applicable cancerType")
-                                .doid("applicable doid")
-                                .build(),
-                        Sets.newHashSet(ImmutableCancerType.builder()
-                                .name("blacklist cancerType")
-                                .doid("blacklist doid")
-                                .build()),
+                        ImmutableCancerType.builder().name("applicable cancerType").doid("applicable doid").build(),
+                        Sets.newHashSet(ImmutableCancerType.builder().name("blacklist cancerType").doid("blacklist doid").build()),
                         EvidenceLevel.A,
                         EvidenceDirection.RESPONSIVE,
                         Sets.newHashSet(url)))
@@ -59,13 +53,13 @@ public class ActionableEventUrlMergerTest {
     }
 
     @NotNull
-    private static ActionableFusion findByGeneUp(@NotNull Iterable<ActionableFusion> fusions, @NotNull String gene) {
+    private static ActionableFusion findByGeneUp(@NotNull Iterable<ActionableFusion> fusions, @NotNull String geneUpToFind) {
         for (ActionableFusion fusion : fusions) {
-            if (fusion.geneUp().equals(gene)) {
+            if (fusion.geneUp().equals(geneUpToFind)) {
                 return fusion;
             }
         }
 
-        throw new IllegalStateException("Could not find gene in fusions: " + gene);
+        throw new IllegalStateException("Could not find geneUp in fusions: " + geneUpToFind);
     }
 }

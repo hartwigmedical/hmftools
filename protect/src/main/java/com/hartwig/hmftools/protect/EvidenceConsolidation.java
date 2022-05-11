@@ -22,10 +22,7 @@ public final class EvidenceConsolidation {
     public static List<ProtectEvidence> consolidate(@NotNull List<ProtectEvidence> evidences) {
         Map<ProtectEvidence, ConsolidatedData> dataPerEvidence = Maps.newHashMap();
         for (ProtectEvidence evidence : evidences) {
-            ProtectEvidence strippedEvidence = ImmutableProtectEvidence.builder()
-                    .from(evidence)
-                    .protectSources(Sets.newHashSet())
-                    .build();
+            ProtectEvidence strippedEvidence = ImmutableProtectEvidence.builder().from(evidence).sources(Sets.newHashSet()).build();
             ConsolidatedData data = dataPerEvidence.get(strippedEvidence);
             if (data == null) {
                 data = new ConsolidatedData();
@@ -36,10 +33,7 @@ public final class EvidenceConsolidation {
 
         List<ProtectEvidence> consolidatedEvents = Lists.newArrayList();
         for (Map.Entry<ProtectEvidence, ConsolidatedData> entry : dataPerEvidence.entrySet()) {
-            consolidatedEvents.add(ImmutableProtectEvidence.builder()
-                    .from(entry.getKey())
-                    .protectSources(entry.getValue().protectSources())
-                    .build());
+            consolidatedEvents.add(ImmutableProtectEvidence.builder().from(entry.getKey()).sources(entry.getValue().sources()).build());
         }
         return consolidatedEvents;
     }
@@ -47,18 +41,18 @@ public final class EvidenceConsolidation {
     private static class ConsolidatedData {
 
         @NotNull
-        private final Set<ProtectSource> protectSources = Sets.newHashSet();
+        private final Set<ProtectSource> sources = Sets.newHashSet();
 
         public ConsolidatedData() {
         }
 
         public void appendEvidence(@NotNull ProtectEvidence evidence) {
-            protectSources.addAll(evidence.protectSources());
+            sources.addAll(evidence.sources());
         }
 
         @NotNull
-        public Set<ProtectSource> protectSources() {
-            return protectSources;
+        public Set<ProtectSource> sources() {
+            return sources;
         }
     }
 }

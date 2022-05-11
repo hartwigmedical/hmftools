@@ -2,18 +2,13 @@ package com.hartwig.hmftools.protect.evidence;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
-import java.util.List;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.doid.DoidEdge;
-import com.hartwig.hmftools.common.doid.DoidParents;
-import com.hartwig.hmftools.common.doid.DoidParentsTest;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
@@ -76,19 +71,19 @@ public class PersonalizedEvidenceFactoryTest {
     public void canDetermineOnlabel() {
         PersonalizedEvidenceFactory factoryOnlabelMatching = createPersonalizedEvidenceFactory("162");
         ActionableHotspot hotspotOnLabelMatching = createActionableHotspot("", "", "Cancer", "162");
-        assertTrue(factoryOnlabelMatching.determineOnlabel(hotspotOnLabelMatching.applicableCancerType(),
+        assertTrue(factoryOnlabelMatching.determineOnLabel(hotspotOnLabelMatching.applicableCancerType(),
                 hotspotOnLabelMatching.blacklistCancerTypes(),
                 "treatment"));
 
         PersonalizedEvidenceFactory factoryNotBlacklisted = createPersonalizedEvidenceFactory("10283");
         ActionableHotspot hotspotNotBlacklisted = createActionableHotspot("Breast", "0060081", "prostate", "10283");
-        assertTrue(factoryNotBlacklisted.determineOnlabel(hotspotNotBlacklisted.applicableCancerType(),
+        assertTrue(factoryNotBlacklisted.determineOnLabel(hotspotNotBlacklisted.applicableCancerType(),
                 hotspotNotBlacklisted.blacklistCancerTypes(),
                 "treatment"));
 
         PersonalizedEvidenceFactory factoryBlacklisted = createPersonalizedEvidenceFactory("10283");
         ActionableHotspot hotspotBlacklisted = createActionableHotspot("Prostate", "10283", "Cancer", "162");
-        assertFalse(factoryBlacklisted.determineOnlabel(hotspotBlacklisted.applicableCancerType(),
+        assertFalse(factoryBlacklisted.determineOnLabel(hotspotBlacklisted.applicableCancerType(),
                 hotspotBlacklisted.blacklistCancerTypes(),
                 "treatment"));
     }

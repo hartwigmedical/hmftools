@@ -7,8 +7,7 @@ import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 
 import org.jetbrains.annotations.NotNull;
 
-
-public class RefGenomeManagerFactoryTest  {
+public class RefGenomeManagerFactoryTest {
 
     private static final String FUSION_DATA_37 = Resources.getResource("known_fusion_data/known_fusion_data.37.csv").getPath();
 

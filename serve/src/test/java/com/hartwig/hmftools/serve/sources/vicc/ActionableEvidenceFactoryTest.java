@@ -63,9 +63,8 @@ public class ActionableEvidenceFactoryTest {
         assertEquals(EvidenceDirection.RESPONSIVE, eventB.direction());
         assertEquals(Sets.newHashSet("url"), eventB.evidenceUrls());
         assertEquals(Sets.newHashSet(ImmutableCancerType.builder().name("Refractory hematologic cancer").doid("712").build(),
-                        ImmutableCancerType.builder().name("Bone marrow cancer").doid("4960").build(),
-                        ImmutableCancerType.builder().name("Leukemia").doid("1240").build()),
-                eventB.blacklistCancerTypes());
+                ImmutableCancerType.builder().name("Bone marrow cancer").doid("4960").build(),
+                ImmutableCancerType.builder().name("Leukemia").doid("1240").build()), eventB.blacklistCancerTypes());
         factory.evaluateCuration();
     }
 

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.protect;
 
-import static com.hartwig.hmftools.common.protect.ProtectTestFactory.testEvidenceBuilder;
+import static com.hartwig.hmftools.common.protect.ProtectTestFactory.builder;
 import static com.hartwig.hmftools.common.serve.actionability.EvidenceDirection.PREDICTED_RESPONSIVE;
 import static com.hartwig.hmftools.common.serve.actionability.EvidenceDirection.RESPONSIVE;
 import static com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.A;
@@ -22,13 +22,13 @@ import com.hartwig.hmftools.common.protect.ImmutableProtectSource;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.common.protect.ProtectSource;
+import com.hartwig.hmftools.common.protect.ProtectTestFactory;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class EvidenceReportingFunctionsTest {
@@ -53,19 +53,19 @@ public class EvidenceReportingFunctionsTest {
         List<ProtectEvidence> hartwigEvidences = Lists.newArrayList(ImmutableProtectEvidence.builder()
                         .from(onLabelResponsiveB)
                         .treatment("treatment A")
-                        .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.HARTWIG_CURATED)))
+                        .sources(createTestProtectSources(Knowledgebase.HARTWIG_CURATED))
                         .build(),
                 ImmutableProtectEvidence.builder()
                         .from(onLabelResponsiveC)
                         .treatment("treatment B")
                         .direction(RESPONSIVE)
-                        .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.HARTWIG_CURATED)))
+                        .sources(createTestProtectSources(Knowledgebase.HARTWIG_CURATED))
                         .build(),
                 ImmutableProtectEvidence.builder()
                         .from(offLabelResponsiveC)
                         .treatment("treatment C")
                         .direction(PREDICTED_RESPONSIVE)
-                        .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.HARTWIG_CURATED)))
+                        .sources(createTestProtectSources(Knowledgebase.HARTWIG_CURATED))
                         .build());
         List<ProtectEvidence> hartwigFiltered = EvidenceReportingFunctions.applyReportingAlgo(hartwigEvidences);
         assertEquals(3, hartwigFiltered.size());
@@ -74,19 +74,19 @@ public class EvidenceReportingFunctionsTest {
         List<ProtectEvidence> viccEvidences = Lists.newArrayList(ImmutableProtectEvidence.builder()
                         .from(onLabelResponsiveB)
                         .treatment("treatment A")
-                        .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI)))
+                        .sources(createTestProtectSources(Knowledgebase.VICC_CGI))
                         .build(),
                 ImmutableProtectEvidence.builder()
                         .from(onLabelResponsiveC)
                         .treatment("treatment B")
                         .direction(RESPONSIVE)
-                        .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI)))
+                        .sources(createTestProtectSources(Knowledgebase.VICC_CGI))
                         .build(),
                 ImmutableProtectEvidence.builder()
                         .from(offLabelResponsiveC)
                         .treatment("treatment C")
                         .direction(PREDICTED_RESPONSIVE)
-                        .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI)))
+                        .sources(createTestProtectSources(Knowledgebase.VICC_CGI))
                         .build());
         List<ProtectEvidence> viccFiltered = EvidenceReportingFunctions.applyReportingAlgo(viccEvidences);
         assertEquals(3, viccFiltered.size());
@@ -95,19 +95,19 @@ public class EvidenceReportingFunctionsTest {
         List<ProtectEvidence> ckbEvidences = Lists.newArrayList(ImmutableProtectEvidence.builder()
                         .from(onLabelResponsiveB)
                         .treatment("treatment A")
-                        .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.CKB)))
+                        .sources(createTestProtectSources(Knowledgebase.CKB))
                         .build(),
                 ImmutableProtectEvidence.builder()
                         .from(onLabelResponsiveC)
                         .treatment("treatment B")
                         .direction(RESPONSIVE)
-                        .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.CKB)))
+                        .sources(createTestProtectSources(Knowledgebase.CKB))
                         .build(),
                 ImmutableProtectEvidence.builder()
                         .from(offLabelResponsiveC)
                         .treatment("treatment C")
                         .direction(PREDICTED_RESPONSIVE)
-                        .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.CKB)))
+                        .sources(createTestProtectSources(Knowledgebase.CKB))
                         .build());
         List<ProtectEvidence> ckbFiltered = EvidenceReportingFunctions.applyReportingAlgo(ckbEvidences);
         assertEquals(3, ckbFiltered.size());
@@ -159,23 +159,14 @@ public class EvidenceReportingFunctionsTest {
         String event3 = "event3";
         String event4 = "event4";
 
-        ProtectEvidence evidence1 = testEvidenceBuilder().event(event1)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION)))
-                .reported(true)
-                .onLabel(true)
-                .build();
-        ProtectEvidence evidence2 = testEvidenceBuilder().event(event2)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION)))
-                .reported(true)
-                .onLabel(false)
-                .build();
-        ProtectEvidence evidence3 = testEvidenceBuilder().event(event3)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.VICC_CGI)))
-                .reported(true)
-                .onLabel(false)
-                .build();
-        ProtectEvidence evidence4 = testEvidenceBuilder().event(event4)
-                .protectSources(createTestProtectSource(Sets.newHashSet(Knowledgebase.ICLUSION, Knowledgebase.VICC_CGI)))
+        ProtectEvidence evidence1 =
+                builder().event(event1).sources(createTestProtectSources(Knowledgebase.ICLUSION)).reported(true).onLabel(true).build();
+        ProtectEvidence evidence2 =
+                builder().event(event2).sources(createTestProtectSources(Knowledgebase.ICLUSION)).reported(true).onLabel(false).build();
+        ProtectEvidence evidence3 =
+                builder().event(event3).sources(createTestProtectSources(Knowledgebase.VICC_CGI)).reported(true).onLabel(false).build();
+        ProtectEvidence evidence4 = builder().event(event4)
+                .sources(createTestProtectSources(Knowledgebase.ICLUSION, Knowledgebase.VICC_CGI))
                 .reported(true)
                 .onLabel(false)
                 .build();
@@ -204,23 +195,22 @@ public class EvidenceReportingFunctionsTest {
     }
 
     @NotNull
-    private static Set<ProtectSource> createTestProtectSource(@NotNull Set<Knowledgebase> sources) {
-        Set<ProtectSource> protectSources = Sets.newHashSet();
+    private static Set<ProtectSource> createTestProtectSources(@NotNull Knowledgebase... knowledgebases) {
+        Set<ProtectSource> sources = Sets.newHashSet();
 
-        for (Knowledgebase knowledgebase : sources) {
-            protectSources.add(ImmutableProtectSource.builder()
-                    .source(knowledgebase)
+        for (Knowledgebase knowledgebase : knowledgebases) {
+            sources.add(ImmutableProtectSource.builder()
+                    .name(knowledgebase)
                     .sourceEvent(Strings.EMPTY)
-                    .sourceUrls(Sets.newHashSet())
-                    .evidenceType(ProtectEvidenceType.EXON_MUTATION)
+                    .evidenceType(ProtectEvidenceType.ANY_MUTATION)
                     .build());
         }
 
-        return protectSources;
+        return sources;
     }
 
     @NotNull
     private static ProtectEvidence createTestEvidence(boolean onLabel, @NotNull EvidenceDirection direction, @NotNull EvidenceLevel level) {
-        return testEvidenceBuilder().onLabel(onLabel).level(level).direction(direction).treatment("A").build();
+        return ProtectTestFactory.builder().onLabel(onLabel).level(level).direction(direction).treatment("A").build();
     }
 }

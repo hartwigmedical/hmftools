@@ -64,16 +64,16 @@ public class CopyNumberEvidenceTest {
         assertTrue(ampEvidence.reported());
         assertEquals(reportableAmp.gene(), ampEvidence.gene());
 
-        assertEquals(ampEvidence.protectSources().size(), 1);
-        ProtectSource protectSourceAmpEvidence = findBySource(ampEvidence.protectSources(), Knowledgebase.CKB);
+        assertEquals(ampEvidence.sources().size(), 1);
+        ProtectSource protectSourceAmpEvidence = findBySource(ampEvidence.sources(), Knowledgebase.CKB);
         assertEquals(ProtectEvidenceType.AMPLIFICATION, protectSourceAmpEvidence.evidenceType());
 
         ProtectEvidence delEvidence = find(evidences, geneDel);
         assertTrue(delEvidence.reported());
         assertEquals(reportableDel.gene(), delEvidence.gene());
 
-        assertEquals(delEvidence.protectSources().size(), 1);
-        ProtectSource protectSourceDelEvidence = findBySource(delEvidence.protectSources(), Knowledgebase.CKB);
+        assertEquals(delEvidence.sources().size(), 1);
+        ProtectSource protectSourceDelEvidence = findBySource(delEvidence.sources(), Knowledgebase.CKB);
         assertEquals(ProtectEvidenceType.INACTIVATION, protectSourceDelEvidence.evidenceType());
     }
 
@@ -91,7 +91,7 @@ public class CopyNumberEvidenceTest {
     @NotNull
     private static ProtectSource findBySource(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase source) {
         for (ProtectSource protectSource : sources) {
-            if (protectSource.source() == source) {
+            if (protectSource.name() == source) {
                 return protectSource;
             }
         }

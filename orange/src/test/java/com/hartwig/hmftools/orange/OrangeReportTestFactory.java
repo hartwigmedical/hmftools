@@ -136,7 +136,7 @@ public final class OrangeReportTestFactory {
     private static List<ProtectEvidence> createTestProtectData() {
         List<ProtectEvidence> evidences = Lists.newArrayList();
 
-        evidences.add(ProtectTestFactory.testEvidenceBuilder()
+        evidences.add(ProtectTestFactory.builder()
                 .gene("USH2A")
                 .transcript("123")
                 .isCanonical(true)
