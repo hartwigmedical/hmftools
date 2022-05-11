@@ -62,6 +62,8 @@ public final class OtherEffectsInterpreter {
 
     @NotNull
     private static String first(@NotNull String otherReportedEffects) {
+        // This is a little ugly and not full-proof but if there is one entry that contains IMPACT_SPLITTER it will cause issues that are
+        // prevented in case there is just one entry.
         if (otherReportedEffects.split(FIELD_SPLITTER).length > 5) {
             return otherReportedEffects.split(IMPACT_SPLITTER)[0];
         }
