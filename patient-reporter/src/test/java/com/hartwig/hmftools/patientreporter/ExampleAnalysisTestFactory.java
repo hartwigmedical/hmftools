@@ -89,8 +89,8 @@ public final class ExampleAnalysisTestFactory {
         String pipelineVersion = "5.28";
         double averageTumorPloidy = 3.1;
         int tumorMutationalLoad = 186;
-        double tumorMutationalBurden = 13.7;
-        double microsatelliteIndelsPerMb = 0.12;
+        double tumorMutationalBurden = 13.7205;
+        double microsatelliteIndelsPerMb = 0.1172;
         double chordHrdValue = 0D;
         ChordStatus chordStatus = ChordStatus.HR_PROFICIENT;
         String reportDate = DataUtil.formatDate(LocalDate.now());
@@ -338,7 +338,7 @@ public final class ExampleAnalysisTestFactory {
                 .sourceEvent(soureEvent)
                 .sourceUrls(sourceUrls)
                 .evidenceType(protectEvidenceType)
-                .rangeRank(null)
+                .rangeRank(rank)
                 .evidenceUrls(evidenceurls)
                 .build();
     }
@@ -347,15 +347,298 @@ public final class ExampleAnalysisTestFactory {
     private static List<ProtectEvidence> createCOLO829TumorSpecificEvidence() {
         List<ProtectEvidence> evidenceItemsOnLabel = Lists.newArrayList();
 
-        ImmutableProtectEvidence.Builder onLabelBuilder = ImmutableProtectEvidence.builder().onLabel(true);
+        ImmutableProtectEvidence.Builder onLabelBuilder = ImmutableProtectEvidence.builder().onLabel(true).reported(true);
+        evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .transcript("ENST00000288602")
+                .isCanonical(true)
+                .event("p.Val600Glu")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .treatment("Cobimetinib + Vemurafenib")
+                .level(EvidenceLevel.A)
+                .direction(EvidenceDirection.RESPONSIVE)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
+                        "BRAF BRAF:V600E",
+                        Sets.newHashSet(),
+                        ProtectEvidenceType.HOTSPOT_MUTATION,
+                        null,
+                        Sets.newHashSet("ttps://www.google.com/#q=FDA"))))
+                .build());
 
+        evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .transcript("ENST00000288602")
+                .isCanonical(true)
+                .event("p.Val600Glu")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .treatment("Dabrafenib")
+                .level(EvidenceLevel.A)
+                .direction(EvidenceDirection.RESPONSIVE)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
+                        "BRAF BRAF:V600E",
+                        Sets.newHashSet(),
+                        ProtectEvidenceType.HOTSPOT_MUTATION,
+                        null,
+                        Sets.newHashSet("https://www.google.com/#q=FDA"))))
+                .build());
+
+        evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .transcript("ENST00000288602")
+                .isCanonical(true)
+                .event("p.Val600Glu")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .treatment("Dabrafenib + Trametinib")
+                .level(EvidenceLevel.A)
+                .direction(EvidenceDirection.RESPONSIVE)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                                "BRAF V600E",
+                                Sets.newHashSet(),
+                                ProtectEvidenceType.HOTSPOT_MUTATION,
+                                null,
+                                Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/25399551")),
+                        createTestProtectSource(Knowledgebase.VICC_CGI,
+                                "BRAF BRAF:V600E",
+                                Sets.newHashSet(),
+                                ProtectEvidenceType.HOTSPOT_MUTATION,
+                                null,
+                                Sets.newHashSet("https://www.google.com/#q=FDA"))))
+                .build());
+
+        evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .transcript("ENST00000288602")
+                .isCanonical(true)
+                .event("p.Val600Glu")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .treatment("Trametinib")
+                .level(EvidenceLevel.A)
+                .direction(EvidenceDirection.RESPONSIVE)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
+                        "BRAF BRAF:V600E",
+                        Sets.newHashSet(),
+                        ProtectEvidenceType.HOTSPOT_MUTATION,
+                        null,
+                        Sets.newHashSet("https://www.google.com/#q=FDA"))))
+                .build());
+
+        evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .transcript("ENST00000288602")
+                .isCanonical(true)
+                .event("p.Val600Glu")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .treatment("Vemurafenib")
+                .level(EvidenceLevel.A)
+                .direction(EvidenceDirection.RESPONSIVE)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
+                                "BRAF BRAF:V600G",
+                                Sets.newHashSet(),
+                                ProtectEvidenceType.HOTSPOT_MUTATION,
+                                null,
+                                Sets.newHashSet("https://www.google.com/#q=NCCN")),
+                        createTestProtectSource(Knowledgebase.VICC_CGI,
+                                "BRAF BRAF:V600E",
+                                Sets.newHashSet(),
+                                ProtectEvidenceType.HOTSPOT_MUTATION,
+                                null,
+                                Sets.newHashSet("https://www.google.com/#q=FDA")),
+                        createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                                "BRAF V600E",
+                                Sets.newHashSet(),
+                                ProtectEvidenceType.HOTSPOT_MUTATION,
+                                null,
+                                Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/21639808"))))
+                .build());
+
+        evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .transcript("ENST00000288602")
+                .isCanonical(true)
+                .event("p.Val600Glu")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .treatment("RO4987655")
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESPONSIVE)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                        "BRAF V600",
+                        Sets.newHashSet(),
+                        ProtectEvidenceType.CODON_MUTATION,
+                        600,
+                        Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/24947927"))))
+                .build());
+
+        evidenceItemsOnLabel.add(onLabelBuilder.gene("PTEN")
+                .transcript("ENST00000371953")
+                .isCanonical(true)
+                .event("partial loss")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .treatment("Buparlisib + Carboplatin + Paclitaxel")
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESPONSIVE)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                        "PTEN LOSS",
+                        Sets.newHashSet(),
+                        ProtectEvidenceType.DELETION,
+                        null,
+                        Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/25672916"))))
+                .build());
         return evidenceItemsOnLabel;
     }
 
     @NotNull
     private static List<ProtectEvidence> createCOLO829ClinicalTrials() {
         List<ProtectEvidence> trialsOnLabel = Lists.newArrayList();
+        ImmutableProtectEvidence.Builder trialBuilder = ImmutableProtectEvidence.builder().onLabel(true).reported(true);
 
+        trialsOnLabel.add(trialBuilder.gene(null)
+                .transcript(null)
+                .isCanonical(false)
+                .event("High tumor mutation load")
+                .eventIsHighDriver(null)
+                .germline(false)
+                .treatment("BASKET OF BASKETS (VHIO17002)")
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESPONSIVE)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
+                        "TumMutLoad_HIGH",
+                        Sets.newHashSet("https://trial-eye.com/hmf/11087"),
+                        ProtectEvidenceType.SIGNATURE,
+                        null,
+                        Sets.newHashSet())))
+                .build());
+
+        trialsOnLabel.add(trialBuilder.gene(null)
+                .transcript(null)
+                .isCanonical(false)
+                .event("High tumor mutation load")
+                .eventIsHighDriver(null)
+                .germline(false)
+                .treatment("DRUP")
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESPONSIVE)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
+                        "TumMutLoad_HIGH",
+                        Sets.newHashSet("https://trial-eye.com/hmf/10299"),
+                        ProtectEvidenceType.SIGNATURE,
+                        null,
+                        Sets.newHashSet())))
+                .build());
+
+        trialsOnLabel.add(trialBuilder.gene(null)
+                .transcript(null)
+                .isCanonical(false)
+                .event("High tumor mutation load")
+                .eventIsHighDriver(null)
+                .germline(false)
+                .treatment("KEYNOTE-158")
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESPONSIVE)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
+                        "TumMutLoad_HIGH",
+                        Sets.newHashSet("https://trial-eye.com/hmf/4866"),
+                        ProtectEvidenceType.SIGNATURE,
+                        null,
+                        Sets.newHashSet())))
+                .build());
+
+        trialsOnLabel.add(trialBuilder.gene("BRAF")
+                .transcript("ENST00000288602")
+                .isCanonical(true)
+                .event("p.Val600Glu")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .treatment("Array 818-103")
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESPONSIVE)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
+                        "BRAF V600",
+                        Sets.newHashSet("https://trial-eye.com/hmf/13054"),
+                        ProtectEvidenceType.CODON_MUTATION,
+                        600,
+                        Sets.newHashSet())))
+                .build());
+
+        trialsOnLabel.add(trialBuilder.gene("BRAF")
+                .transcript("ENST00000288602")
+                .isCanonical(true)
+                .event("p.Val600Glu")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .treatment("DRUP")
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESPONSIVE)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
+                                "BRAF ACTIVATING MUTATION",
+                                Sets.newHashSet("https://trial-eye.com/hmf/10299"),
+                                ProtectEvidenceType.ACTIVATION,
+                                null,
+                                Sets.newHashSet()),
+                        createTestProtectSource(Knowledgebase.ICLUSION,
+                                "BRAF V600",
+                                Sets.newHashSet("https://trial-eye.com/hmf/10299"),
+                                ProtectEvidenceType.CODON_MUTATION,
+                                600,
+                                Sets.newHashSet())))
+                .build());
+
+        trialsOnLabel.add(trialBuilder.gene("BRAF")
+                .transcript("ENST00000288602")
+                .isCanonical(true)
+                .event("p.Val600Glu")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .treatment("EBIN (EORTC-1612-MG)")
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESPONSIVE)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
+                        "BRAF V600",
+                        Sets.newHashSet("https://trial-eye.com/hmf/11284"),
+                        ProtectEvidenceType.CODON_MUTATION,
+                        600,
+                        Sets.newHashSet())))
+                .build());
+
+        trialsOnLabel.add(trialBuilder.gene("BRAF")
+                .transcript("ENST00000288602")
+                .isCanonical(true)
+                .event("p.Val600Glu")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .treatment("NASAM")
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESPONSIVE)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
+                        "BRAF V600E",
+                        Sets.newHashSet("https://trial-eye.com/hmf/14995"),
+                        ProtectEvidenceType.HOTSPOT_MUTATION,
+                        null,
+                        Sets.newHashSet())))
+                .build());
+
+        trialsOnLabel.add(trialBuilder.gene("PTEN")
+                .transcript("ENST00000371953")
+                .isCanonical(true)
+                .event("partial loss")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .treatment("DRUP")
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESPONSIVE)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
+                                "PTEN LOSS",
+                                Sets.newHashSet("https://trial-eye.com/hmf/10299\""),
+                                ProtectEvidenceType.DELETION,
+                                null,
+                                Sets.newHashSet()),
+                        createTestProtectSource(Knowledgebase.ICLUSION,
+                                "PTEN INACTIVATION MUTATION",
+                                Sets.newHashSet("https://trial-eye.com/hmf/10299"),
+                                ProtectEvidenceType.INACTIVATION,
+                                null,
+                                Sets.newHashSet())))
+                .build());
         return trialsOnLabel;
     }
 
@@ -363,8 +646,300 @@ public final class ExampleAnalysisTestFactory {
     private static List<ProtectEvidence> createCOLO829OffLabelEvidence() {
         List<ProtectEvidence> evidenceItemsOffLabel = Lists.newArrayList();
 
-        ImmutableProtectEvidence.Builder offLabelBuilder = ImmutableProtectEvidence.builder().onLabel(false);
+        ImmutableProtectEvidence.Builder offLabelBuilder = ImmutableProtectEvidence.builder().onLabel(false).reported(true);
 
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .transcript("ENST00000288602")
+                .isCanonical(true)
+                .event("p.Val600Glu")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .treatment("Bevacizumab")
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESISTANT)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                        "BRAF V600E",
+                        Sets.newHashSet(),
+                        ProtectEvidenceType.HOTSPOT_MUTATION,
+                        null,
+                        Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/19571295", "http://www.ncbi.nlm.nih.gov/pubmed/19603024"))))
+                .build());
+
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .transcript("ENST00000288602")
+                .isCanonical(true)
+                .event("p.Val600Glu")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .treatment("CI-1040")
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESPONSIVE)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                        "BRAF V600E",
+                        Sets.newHashSet(),
+                        ProtectEvidenceType.HOTSPOT_MUTATION,
+                        null,
+                        Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/21882184", "http://www.ncbi.nlm.nih.gov/pubmed/18682506"))))
+                .build());
+
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .transcript("ENST00000288602")
+                .isCanonical(true)
+                .event("p.Val600Glu")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .treatment("Cetuximab")
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESISTANT)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
+                                "BRAF BRAF:V600E",
+                                Sets.newHashSet(),
+                                ProtectEvidenceType.HOTSPOT_MUTATION,
+                                null,
+                                Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/20619739",
+                                        "http://www.ncbi.nlm.nih.gov/pubmed/21163703",
+                                        "http://www.ncbi.nlm.nih.gov/pubmed/23325582")),
+                        createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                                "BRAF V600E",
+                                Sets.newHashSet(),
+                                ProtectEvidenceType.HOTSPOT_MUTATION,
+                                null,
+                                Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/19001320",
+                                        "http://www.ncbi.nlm.nih.gov/pubmed/20619739",
+                                        "http://www.ncbi.nlm.nih.gov/pubmed/19884556",
+                                        "http://www.ncbi.nlm.nih.gov/pubmed/25666295"))))
+                .build());
+
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .transcript("ENST00000288602")
+                .isCanonical(true)
+                .event("p.Val600Glu")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .treatment("Cetuximab + Irinotecan + Vemurafenib")
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESPONSIVE)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                        "BRAF V600E",
+                        Sets.newHashSet(),
+                        ProtectEvidenceType.HOTSPOT_MUTATION,
+                        null,
+                        Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/27729313"))))
+                .build());
+
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .transcript("ENST00000288602")
+                .isCanonical(true)
+                .event("p.Val600Glu")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .treatment("Fluorouracil")
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESISTANT)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                        "BRAF V600E",
+                        Sets.newHashSet(),
+                        ProtectEvidenceType.HOTSPOT_MUTATION,
+                        null,
+                        Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/19603024"))))
+                .build());
+
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .transcript("ENST00000288602")
+                .isCanonical(true)
+                .event("p.Val600Glu")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .treatment("Irinotecan")
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESISTANT)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                        "BRAF V600E",
+                        Sets.newHashSet(),
+                        ProtectEvidenceType.HOTSPOT_MUTATION,
+                        null,
+                        Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/19603024"))))
+                .build());
+
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .transcript("ENST00000288602")
+                .isCanonical(true)
+                .event("p.Val600Glu")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .treatment("Oxaliplatin")
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESISTANT)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                        "BRAF V600E",
+                        Sets.newHashSet(),
+                        ProtectEvidenceType.HOTSPOT_MUTATION,
+                        null,
+                        Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/19603024"))))
+                .build());
+
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .transcript("ENST00000288602")
+                .isCanonical(true)
+                .event("p.Val600Glu")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .treatment("Panitumumab")
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESISTANT)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
+                                "BRAF BRAF:V600E",
+                                Sets.newHashSet(),
+                                ProtectEvidenceType.HOTSPOT_MUTATION,
+                                null,
+                                Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/20619739",
+                                        "http://www.ncbi.nlm.nih.gov/pubmed/21163703",
+                                        "http://www.ncbi.nlm.nih.gov/pubmed/23325582")),
+                        createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                                "BRAF V600",
+                                Sets.newHashSet(),
+                                ProtectEvidenceType.CODON_MUTATION,
+                                600,
+                                Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/23325582")),
+                        createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                                "BRAF V600E",
+                                Sets.newHashSet(),
+                                ProtectEvidenceType.HOTSPOT_MUTATION,
+                                null,
+                                Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/19001320"))))
+                .build());
+
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .transcript("ENST00000288602")
+                .isCanonical(true)
+                .event("p.Val600Glu")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .treatment("Selumetinib")
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESPONSIVE)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                        "BRAF V600E",
+                        Sets.newHashSet(),
+                        ProtectEvidenceType.HOTSPOT_MUTATION,
+                        null,
+                        Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/22492957"))))
+                .build());
+
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .transcript("ENST00000288602")
+                .isCanonical(true)
+                .event("p.Val600Glu")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .treatment("Sorafenib")
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESPONSIVE)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                        "BRAF V600E",
+                        Sets.newHashSet(),
+                        ProtectEvidenceType.HOTSPOT_MUTATION,
+                        null,
+                        Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/21882184", "http://www.ncbi.nlm.nih.gov/pubmed/18682506"))))
+                .build());
+
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
+                .transcript("ENST00000371953")
+                .isCanonical(true)
+                .event("partial loss")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .treatment("Anti-EGFR monoclonal antibody")
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESISTANT)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
+                                "PTEN PTEN oncogenic mutation",
+                                Sets.newHashSet(),
+                                ProtectEvidenceType.INACTIVATION,
+                                null,
+                                Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/21163703", "http://www.ncbi.nlm.nih.gov/pubmed/19398573")),
+                        createTestProtectSource(Knowledgebase.VICC_CGI,
+                                "PTEN PTEN deletion",
+                                Sets.newHashSet(),
+                                ProtectEvidenceType.DELETION,
+                                null,
+                                Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/21163703",
+                                        "http://www.ncbi.nlm.nih.gov/pubmed/19398573"))))
+                .build());
+
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
+                .transcript("ENST00000371953")
+                .isCanonical(true)
+                .event("partial loss")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .treatment("Cetuximab")
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESISTANT)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                        "PTEN LOSS",
+                        Sets.newHashSet(),
+                        ProtectEvidenceType.DELETION,
+                        null,
+                        Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/21163703"))))
+                .build());
+
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
+                .transcript("ENST00000371953")
+                .isCanonical(true)
+                .event("partial loss")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .treatment("Everolimus")
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESISTANT)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                        "PTEN LOSS",
+                        Sets.newHashSet(),
+                        ProtectEvidenceType.DELETION,
+                        null,
+                        Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/23989949"))))
+                .build());
+
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
+                .transcript("ENST00000371953")
+                .isCanonical(true)
+                .event("partial loss")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .treatment("Lapatinib + Trastuzumab")
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESISTANT)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                        "PTEN LOSS",
+                        Sets.newHashSet(),
+                        ProtectEvidenceType.DELETION,
+                        null,
+                        Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/25300346"))))
+                .build());
+
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
+                .transcript("ENST00000371953")
+                .isCanonical(true)
+                .event("partial loss")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .treatment("Trastuzumab")
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESISTANT)
+                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                                "PTEN LOSS",
+                                Sets.newHashSet(),
+                                ProtectEvidenceType.DELETION,
+                                null,
+                                Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/20813970")),
+                        createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                                "PTEN LOSS",
+                                Sets.newHashSet(),
+                                ProtectEvidenceType.DELETION,
+                                null,
+                                Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/24387334"))))
+                .build());
         return evidenceItemsOffLabel;
     }
 
@@ -653,8 +1228,8 @@ public final class ExampleAnalysisTestFactory {
                 .haplotype("*1_HOM")
                 .function("Normal Function")
                 .linkedDrugs("5-Fluorouracil;Capecitabine;Tegafur")
-                .urlPrescriptionInfo("https://www.pharmgkb.org/chemical/PA128406956/guidelineAnnotation/PA1661049399;"
-                        + "https://www.pharmgkb.org/chemical/PA448771/guidelineAnnotation/PA166104963;"
+                .urlPrescriptionInfo("https://www.pharmgkb.org/chemical/PA128406956/guidelineAnnotation/PA166104939"
+                        + "https://www.pharmgkb.org/chemical/PA448771/guidelineAnnotation/PA166104963"
                         + "https://www.pharmgkb.org/chemical/PA452620/guidelineAnnotation/PA166104944")
                 .panelVersion("PGx_min_DPYD_v1.2")
                 .repoVersion("1.6")

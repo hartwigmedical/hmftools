@@ -54,7 +54,7 @@ public final class PatientReporterTestFactory {
 
     private static final String GERMLINE_REPORTING_TSV = Resources.getResource("germline_reporting/germline_reporting.tsv").getPath();
 
-    private static final String UDI_DI = "(01) 8720299486010(8012)v5.25";
+    private static final String UDI_DI = "(01)8720299486027(8012)v5.28";
 
     private PatientReporterTestFactory() {
     }
@@ -99,7 +99,7 @@ public final class PatientReporterTestFactory {
                 .onlyCreatePDF(false)
                 .requirePipelineVersionFile(true)
                 .pipelineVersionFile(PIPELINE_VERSION_FILE)
-                .expectedPipelineVersion("5.22")
+                .expectedPipelineVersion("5.28")
                 .overridePipelineVersion(false)
                 .refGenomeVersion(RefGenomeVersion.V37)
                 .build();
