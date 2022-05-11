@@ -1,12 +1,15 @@
 package com.hartwig.hmftools.common.protect.variant;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class OtherEffectsInterpreter {
 
-    private static final String DELIMITER = "\\|";
+    private static final String IMPACT_SPLITTER = VariantImpactSerialiser.VAR_IMPACT_OTHER_REPORT_DELIM;
+    private static final String FIELD_SPLITTER = "\\" + VariantImpactSerialiser.VAR_IMPACT_OTHER_REPORT_ITEM_DELIM;
 
     private static final int TRANSCRIPT_INDEX = 0;
     private static final int HGVS_CODING_IMPACT_INDEX = 1;
@@ -19,26 +22,46 @@ public final class OtherEffectsInterpreter {
 
     @NotNull
     public static String transcript(@NotNull String otherReportedEffects) {
-        return otherReportedEffects.split(DELIMITER)[TRANSCRIPT_INDEX];
+        if (otherReportedEffects.isEmpty()) {
+            return Strings.EMPTY;
+        }
+        return first(otherReportedEffects).split(FIELD_SPLITTER)[TRANSCRIPT_INDEX];
     }
 
     @NotNull
     public static String hgvsCodingImpact(@NotNull String otherReportedEffects) {
-        return otherReportedEffects.split(DELIMITER)[HGVS_CODING_IMPACT_INDEX];
+        if (otherReportedEffects.isEmpty()) {
+            return Strings.EMPTY;
+        }
+        return first(otherReportedEffects).split(FIELD_SPLITTER)[HGVS_CODING_IMPACT_INDEX];
     }
 
     @NotNull
     public static String hgvsProteinImpact(@NotNull String otherReportedEffects) {
-        return otherReportedEffects.split(DELIMITER)[HGVS_PROTEIN_IMPACT_INDEX];
+        if (otherReportedEffects.isEmpty()) {
+            return Strings.EMPTY;
+        }
+        return first(otherReportedEffects).split(FIELD_SPLITTER)[HGVS_PROTEIN_IMPACT_INDEX];
     }
 
     @NotNull
     public static String effect(@NotNull String otherReportedEffects) {
-        return otherReportedEffects.split(DELIMITER)[EFFECT_INDEX];
+        if (otherReportedEffects.isEmpty()) {
+            return Strings.EMPTY;
+        }
+        return first(otherReportedEffects).split(FIELD_SPLITTER)[EFFECT_INDEX];
     }
 
     @NotNull
     public static CodingEffect codingEffect(@NotNull String otherReportedEffects) {
-        return CodingEffect.valueOf(otherReportedEffects.split(DELIMITER)[CODING_EFFECT_INDEX]);
+        if (otherReportedEffects.isEmpty()) {
+            return CodingEffect.UNDEFINED;
+        }
+        return CodingEffect.valueOf(first(otherReportedEffects).split(FIELD_SPLITTER)[CODING_EFFECT_INDEX]);
+    }
+
+    @NotNull
+    private static String first(@NotNull String otherReportedEffects) {
+        return otherReportedEffects.split(IMPACT_SPLITTER)[0];
     }
 }
