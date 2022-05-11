@@ -173,11 +173,11 @@ public class ProtectAlgo {
     }
 
     private static void printExtraction(@NotNull String title, @NotNull List<ProtectEvidence> evidences) {
-        Set<EventKey> events = EventKey.buildUniqueEventSet(evidences);
-        LOGGER.debug("Extracted {} evidence items for {} based off {} genomic events", evidences.size(), title, events.size());
-        for (EventKey event : events) {
-            int count = evidences.stream().filter(x -> EventKey.create(x).equals(event)).collect(Collectors.toList()).size();
-            LOGGER.debug(" Resolved {} items for '{}'", count, event);
+        Set<EvidenceKey> keys = EvidenceKey.buildUniqueEventSet(evidences);
+        LOGGER.debug("Extracted {} evidence items for {} having {} keys ", evidences.size(), title, keys.size());
+        for (EvidenceKey key : keys) {
+            int count = evidences.stream().filter(x -> EvidenceKey.create(x).equals(key)).collect(Collectors.toList()).size();
+            LOGGER.debug(" Resolved {} items for '{}'", count, key);
         }
     }
 

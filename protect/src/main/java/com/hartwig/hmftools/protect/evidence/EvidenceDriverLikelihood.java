@@ -22,7 +22,7 @@ public final class EvidenceDriverLikelihood {
         }
     }
 
-    public static boolean interpretFusions(@NotNull FusionLikelihoodType likelihood) {
+    public static boolean interpretFusion(@NotNull FusionLikelihoodType likelihood) {
         switch (likelihood) {
             case HIGH:
                 return true;
@@ -34,13 +34,13 @@ public final class EvidenceDriverLikelihood {
         }
     }
 
-    public static boolean interpretCNV() {
-        //All loss/gains has a high driver likelihood
+    public static boolean interpretCopyNumber() {
+        // All loss/gains have a high driver likelihood
         return true;
     }
 
     public static boolean interpretVirus() {
-        //We use only high driver viruses for evidence matching
+        // We use only high driver viruses for evidence matching
         return true;
     }
 }

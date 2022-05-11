@@ -111,6 +111,7 @@ public class VariantEvidence {
 
         if (variant instanceof ReportableVariant) {
             ReportableVariant reportable = (ReportableVariant) variant;
+
             isGermline = reportable.source() == ReportableVariantSource.GERMLINE;
             driverInterpretation = reportable.driverLikelihoodInterpretation();
             transcript = reportable.transcript();

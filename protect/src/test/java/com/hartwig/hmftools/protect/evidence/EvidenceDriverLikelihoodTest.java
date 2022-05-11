@@ -19,14 +19,14 @@ public class EvidenceDriverLikelihoodTest {
 
     @Test
     public void canInterpretFusions() {
-        assertTrue(EvidenceDriverLikelihood.interpretFusions(FusionLikelihoodType.HIGH));
-        assertFalse(EvidenceDriverLikelihood.interpretFusions(FusionLikelihoodType.LOW));
-        assertFalse(EvidenceDriverLikelihood.interpretFusions(FusionLikelihoodType.NA));
+        assertTrue(EvidenceDriverLikelihood.interpretFusion(FusionLikelihoodType.HIGH));
+        assertFalse(EvidenceDriverLikelihood.interpretFusion(FusionLikelihoodType.LOW));
+        assertFalse(EvidenceDriverLikelihood.interpretFusion(FusionLikelihoodType.NA));
     }
 
     @Test
     public void canInterpretCNV() {
-        assertTrue(EvidenceDriverLikelihood.interpretCNV());
+        assertTrue(EvidenceDriverLikelihood.interpretCopyNumber());
     }
 
     @Test

@@ -55,7 +55,7 @@ public class PersonalizedEvidenceFactory {
 
     public boolean isOnLabel(@NotNull CancerType applicableCancerType, @NotNull Set<CancerType> blacklistCancerTypes,
             @NotNull String treatment) {
-        //TODO filter for blacklisting in v2.2. Should be analyzed in more depth
+        //TODO filter for blacklisting in future version. Should be analyzed in more depth
         return patientTumorDoids.contains(applicableCancerType.doid());
     }
 
@@ -87,6 +87,12 @@ public class PersonalizedEvidenceFactory {
                 .rangeRank(determineRangeRank(actionable))
                 .evidenceUrls(actionable.evidenceUrls())
                 .build();
+    }
+
+    @VisibleForTesting
+    @Nullable
+    static Integer determineRangeRank(@NotNull ActionableEvent actionable) {
+        return actionable instanceof ActionableRange ? ((ActionableRange) actionable).rank() : null;
     }
 
     @VisibleForTesting
@@ -161,11 +167,5 @@ public class PersonalizedEvidenceFactory {
                 throw new IllegalStateException("Unsupported tumor characteristic: " + characteristic.name());
             }
         }
-    }
-
-    @VisibleForTesting
-    @Nullable
-    static Integer determineRangeRank(@NotNull ActionableEvent actionable) {
-        return actionable instanceof ActionableRange ? ((ActionableRange) actionable).rank() : null;
     }
 }

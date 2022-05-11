@@ -55,7 +55,7 @@ public class CopyNumberEvidence {
                         .transcript(gainLoss.transcript())
                         .isCanonical(gainLoss.isCanonical())
                         .event(ProtectEventGenerator.copyNumberEvent(gainLoss))
-                        .eventIsHighDriver(EvidenceDriverLikelihood.interpretCNV())
+                        .eventIsHighDriver(EvidenceDriverLikelihood.interpretCopyNumber())
                         .build();
                 result.add(evidence);
             }

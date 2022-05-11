@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.protect;
 
-import static com.hartwig.hmftools.common.protect.ProtectTestFactory.builder;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -10,6 +8,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.protect.ProtectTestFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -21,8 +20,8 @@ public class EvidenceReportingCurationTest {
         String gene1 = "any gene";
         String gene2 = "TP53";
 
-        ProtectEvidence evidence1 = builder().gene(gene1).transcript("123").isCanonical(true).reported(true).build();
-        ProtectEvidence evidence2 = builder().gene(gene2).transcript("123").isCanonical(true).reported(true).build();
+        ProtectEvidence evidence1 = ProtectTestFactory.builder().gene(gene1).reported(true).build();
+        ProtectEvidence evidence2 = ProtectTestFactory.builder().gene(gene2).reported(true).build();
 
         List<ProtectEvidence> evidence = EvidenceReportingCuration.applyReportingBlacklist(Lists.newArrayList(evidence1, evidence2));
         assertEquals(2, evidence.size());
@@ -37,8 +36,8 @@ public class EvidenceReportingCurationTest {
         String treatment1 = "Chemotherapy";
         String treatment2 = "Immunotherapy";
 
-        ProtectEvidence evidence1 = builder().treatment(treatment1).reported(true).build();
-        ProtectEvidence evidence2 = builder().treatment(treatment2).reported(true).build();
+        ProtectEvidence evidence1 = ProtectTestFactory.builder().treatment(treatment1).reported(true).build();
+        ProtectEvidence evidence2 = ProtectTestFactory.builder().treatment(treatment2).reported(true).build();
 
         List<ProtectEvidence> evidence = EvidenceReportingCuration.applyReportingBlacklist(Lists.newArrayList(evidence1, evidence2));
         assertEquals(2, evidence.size());
