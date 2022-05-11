@@ -24,7 +24,6 @@ import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class VariantEvidence {
@@ -150,7 +149,7 @@ public class VariantEvidence {
 
     private static boolean hotspotMatch(@NotNull Variant variant, @NotNull ActionableHotspot hotspot) {
         return variant.chromosome().equals(hotspot.chromosome()) && hotspot.position() == variant.position() && hotspot.ref()
-                .equals(variant.ref()) && hotspot.alt().equals(hotspot.alt());
+                .equals(variant.ref()) && hotspot.alt().equals(variant.alt());
     }
 
     private static boolean rangeMatch(@NotNull Variant variant, @NotNull ActionableRange range, boolean isCanonical,

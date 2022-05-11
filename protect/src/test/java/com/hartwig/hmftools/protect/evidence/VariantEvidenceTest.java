@@ -63,13 +63,22 @@ public class VariantEvidenceTest {
                 .alt(alt)
                 .build();
 
-        ReportableVariant variantNonMatch = ImmutableReportableVariant.builder()
+        ReportableVariant variantWrongPosition = ImmutableReportableVariant.builder()
                 .from(VariantTestFactory.createTestReportableVariant())
-                .gene("non-match")
+                .gene("wrong position")
                 .chromosome(chromosome)
                 .position(position + 1)
                 .ref(ref)
                 .alt(alt)
+                .build();
+
+        ReportableVariant variantWrongAlt = ImmutableReportableVariant.builder()
+                .from(VariantTestFactory.createTestReportableVariant())
+                .gene("wrong alt")
+                .chromosome(chromosome)
+                .position(position)
+                .ref(ref)
+                .alt("G")
                 .build();
 
         SomaticVariant unreportedMatch = SomaticVariantTestBuilderFactory.create()
@@ -80,7 +89,7 @@ public class VariantEvidenceTest {
                 .alt(alt)
                 .build();
 
-        List<ProtectEvidence> evidences = variantEvidence.evidence(Lists.newArrayList(variantMatch, variantNonMatch),
+        List<ProtectEvidence> evidences = variantEvidence.evidence(Lists.newArrayList(variantMatch, variantWrongAlt, variantWrongPosition),
                 Lists.newArrayList(),
                 Lists.newArrayList(unreportedMatch));
 

@@ -121,12 +121,14 @@ rangeRank | In case of EXON or CODON, the index of the exon or codon on which th
 evidenceUrls | A list of urls with additional information about the evidence | https://pubmed.ncbi.nlm.nih.gov
 
 ## Version History and Download Links
+- Upcoming
+ - Fixed bug in hotspot matching in case everything matches except for the alt (eg V600K against V600R).
 - [2.1](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v2.1)
-  - Support the determining if evidence is based on a high driver event 
-  - Extract the impacted transcript ID of the genomic event (especially for determine if the event is based on CDKN2A p14Arf/CDKN2A p16)
-  - Determe if the genomic event is based on the canonical transcript 
+  - Annotate whether evidence is based on a high driver event 
+  - Extract the impacted transcript ID of the genomic event (especially for determining if the event is based on CDKN2A p14Arf/CDKN2A p16)
+  - Determine if the genomic event is based on the canonical transcript 
   - Support the new protect model, include the sources information 
-  - Support the comparator/cut-offs for signatures which is evidence specific
+  - Support the comparator/cut-offs for signatures which are evidence specific
 - [2.0](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v2.0)
    - New datamodel supporting evidence types, range ranks and explicit genes. 
    - Support for virus interpreter v1.2
