@@ -44,24 +44,23 @@ public class ChordEvidenceTest {
         ChordEvidence chordEvidence =
                 new ChordEvidence(EvidenceTestFactory.createTestEvidenceFactory(), Lists.newArrayList(signature1, signature2, signature3));
 
-        ChordAnalysis hrDeficient = chordAnalysisWithStatus(ChordStatus.HR_DEFICIENT, 0.5);
+        ChordAnalysis hrDeficient = create(ChordStatus.HR_DEFICIENT, 0.5);
         List<ProtectEvidence> evidence = chordEvidence.evidence(hrDeficient);
-
         assertEquals(1, evidence.size());
 
         ProtectEvidence evidence1 = evidence.get(0);
         assertTrue(evidence1.reported());
         assertEquals(ChordEvidence.HR_DEFICIENCY_EVENT, evidence1.event());
 
-        ChordAnalysis hrProficientWithHighScore = chordAnalysisWithStatus(ChordStatus.HR_PROFICIENT, 0.85);
+        ChordAnalysis hrProficientWithHighScore = create(ChordStatus.HR_PROFICIENT, 0.85);
         assertEquals(1, chordEvidence.evidence(hrProficientWithHighScore).size());
 
-        ChordAnalysis hrProficientWithLowScore = chordAnalysisWithStatus(ChordStatus.HR_PROFICIENT, 0.2);
+        ChordAnalysis hrProficientWithLowScore = create(ChordStatus.HR_PROFICIENT, 0.2);
         assertEquals(0, chordEvidence.evidence(hrProficientWithLowScore).size());
     }
 
     @NotNull
-    private static ChordAnalysis chordAnalysisWithStatus(@NotNull ChordStatus status, double hrdValue) {
+    private static ChordAnalysis create(@NotNull ChordStatus status, double hrdValue) {
         return ImmutableChordAnalysis.builder()
                 .from(ChordTestFactory.createMinimalTestChordAnalysis())
                 .hrStatus(status)

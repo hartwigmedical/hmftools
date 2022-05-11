@@ -94,21 +94,16 @@ public class VariantEvidenceTest {
                 Lists.newArrayList(unreportedMatch));
 
         assertEquals(2, evidences.size());
+
         ProtectEvidence reportedEvidence = findByGene(evidences, "reportable");
         assertTrue(reportedEvidence.reported());
-        assertEquals(variantMatch.gene(), reportedEvidence.gene());
-
         assertEquals(reportedEvidence.sources().size(), 1);
-        ProtectSource sourceReportedEvidence = findBySource(reportedEvidence.sources(), Knowledgebase.CKB);
-        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, sourceReportedEvidence.evidenceType());
+        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, findBySource(reportedEvidence.sources(), Knowledgebase.CKB).evidenceType());
 
         ProtectEvidence unreportedEvidence = findByGene(evidences, "unreported");
         assertFalse(unreportedEvidence.reported());
-        assertEquals(unreportedMatch.gene(), unreportedEvidence.gene());
-
         assertEquals(unreportedEvidence.sources().size(), 1);
-        ProtectSource sourceUnreportedEvidence = findBySource(unreportedEvidence.sources(), Knowledgebase.CKB);
-        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, sourceUnreportedEvidence.evidenceType());
+        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, findBySource(unreportedEvidence.sources(), Knowledgebase.CKB).evidenceType());
     }
 
     @Test
@@ -127,12 +122,12 @@ public class VariantEvidenceTest {
 
         ReportableVariant variantCoding = ImmutableReportableVariant.builder()
                 .from(VariantTestFactory.createTestReportableVariant())
-                .canonicalHgvsProteinImpact("c.100 A>T")
+                .canonicalHgvsCodingImpact("c.100 A>T")
                 .build();
 
         ReportableVariant variantEffect = ImmutableReportableVariant.builder()
                 .from(VariantTestFactory.createTestReportableVariant())
-                .canonicalHgvsProteinImpact("splice_variant")
+                .canonicalEffect("splice_variant")
                 .build();
 
         assertEquals("p.Gly83fs",
@@ -223,12 +218,11 @@ public class VariantEvidenceTest {
         List<ProtectEvidence> evidences = variantEvidence.evidence(reportable, Lists.newArrayList(), Lists.newArrayList());
 
         assertEquals(1, evidences.size());
+
         ProtectEvidence evidence = findByGene(evidences, gene);
         assertTrue(evidence.reported());
-
         assertEquals(evidence.sources().size(), 1);
-        ProtectSource sourceUnreportedEvidence = findBySource(evidence.sources(), Knowledgebase.CKB);
-        assertEquals(ProtectEvidenceType.EXON_MUTATION, sourceUnreportedEvidence.evidenceType());
+        assertEquals(ProtectEvidenceType.EXON_MUTATION, findBySource(evidence.sources(), Knowledgebase.CKB).evidenceType());
     }
 
     @Test
@@ -281,17 +275,13 @@ public class VariantEvidenceTest {
 
         ProtectEvidence actEvidence = findByGene(evidences, activatedGene);
         assertTrue(actEvidence.reported());
-
         assertEquals(actEvidence.sources().size(), 1);
-        ProtectSource sourceActEvidence = findBySource(actEvidence.sources(), Knowledgebase.CKB);
-        assertEquals(ProtectEvidenceType.ACTIVATION, sourceActEvidence.evidenceType());
+        assertEquals(ProtectEvidenceType.ACTIVATION, findBySource(actEvidence.sources(), Knowledgebase.CKB).evidenceType());
 
         ProtectEvidence inactEvidence = findByGene(evidences, inactivatedGene);
         assertFalse(inactEvidence.reported());
-
         assertEquals(inactEvidence.sources().size(), 1);
-        ProtectSource sourceInactEvidence = findBySource(inactEvidence.sources(), Knowledgebase.CKB);
-        assertEquals(ProtectEvidenceType.INACTIVATION, sourceInactEvidence.evidenceType());
+        assertEquals(ProtectEvidenceType.INACTIVATION, findBySource(inactEvidence.sources(), Knowledgebase.CKB).evidenceType());
     }
 
     @NotNull

@@ -62,26 +62,22 @@ public class EvidenceConsolidationTest {
         ProtectEvidence consolidatedEvidence1 = findByTreatment(consolidated, treatment1);
         assertEquals(2, consolidatedEvidence1.sources().size());
 
-        ProtectSource source1 = findBySource(consolidatedEvidence1.sources(), Knowledgebase.VICC_CGI);
-        assertEquals(Knowledgebase.VICC_CGI, source1.name());
+        ProtectSource source1 = findByKnowledgebase(consolidatedEvidence1.sources(), Knowledgebase.VICC_CGI);
         assertEquals("amp", source1.sourceEvent());
         assertEquals(Sets.newHashSet(url1), source1.sourceUrls());
         assertEquals(ProtectEvidenceType.AMPLIFICATION, source1.evidenceType());
         assertNull(source1.rangeRank());
 
-        ProtectSource source2 = findBySource(consolidatedEvidence1.sources(), Knowledgebase.VICC_CIVIC);
-        assertEquals(Knowledgebase.VICC_CIVIC, source2.name());
+        ProtectSource source2 = findByKnowledgebase(consolidatedEvidence1.sources(), Knowledgebase.VICC_CIVIC);
         assertEquals("amp", source2.sourceEvent());
         assertEquals(Sets.newHashSet(url1), source2.sourceUrls());
         assertEquals(ProtectEvidenceType.DELETION, source2.evidenceType());
         assertNull(source2.rangeRank());
 
-
         ProtectEvidence consolidatedEvidence2 = findByTreatment(consolidated, treatment2);
         assertEquals(1, consolidatedEvidence2.sources().size());
 
-        ProtectSource source3 = findBySource(consolidatedEvidence2.sources(), Knowledgebase.VICC_CIVIC);
-        assertEquals(Knowledgebase.VICC_CIVIC, source3.name());
+        ProtectSource source3 = findByKnowledgebase(consolidatedEvidence2.sources(), Knowledgebase.VICC_CIVIC);
         assertEquals("amp", source3.sourceEvent());
         assertEquals(Sets.newHashSet(url3), source3.sourceUrls());
         assertEquals(ProtectEvidenceType.AMPLIFICATION, source3.evidenceType());
@@ -100,7 +96,7 @@ public class EvidenceConsolidationTest {
     }
 
     @NotNull
-    private static ProtectSource findBySource(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase knowledgebaseToFind) {
+    private static ProtectSource findByKnowledgebase(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase knowledgebaseToFind) {
         for (ProtectSource source : sources) {
             if (source.name() == knowledgebaseToFind) {
                 return source;

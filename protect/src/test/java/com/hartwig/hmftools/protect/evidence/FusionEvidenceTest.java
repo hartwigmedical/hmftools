@@ -69,24 +69,18 @@ public class FusionEvidenceTest {
 
         ProtectEvidence evidence1 = findByFusion(evidences, reportedFusionMatch);
         assertTrue(evidence1.reported());
-
         assertEquals(evidence1.sources().size(), 1);
-        ProtectSource evidence1ProtectSource = findBySource(evidence1.sources(), Knowledgebase.CKB);
-        assertEquals(ProtectEvidenceType.FUSION_PAIR, evidence1ProtectSource.evidenceType());
+        assertEquals(ProtectEvidenceType.FUSION_PAIR, findByKnowledgebase(evidence1.sources(), Knowledgebase.CKB).evidenceType());
 
         ProtectEvidence evidence2 = findByFusion(evidences, reportedPromiscuousMatch);
         assertTrue(evidence2.reported());
-
         assertEquals(evidence2.sources().size(), 1);
-        ProtectSource evidence2ProtectSource = findBySource(evidence2.sources(), Knowledgebase.ACTIN);
-        assertEquals(ProtectEvidenceType.PROMISCUOUS_FUSION, evidence2ProtectSource.evidenceType());
+        assertEquals(ProtectEvidenceType.PROMISCUOUS_FUSION, findByKnowledgebase(evidence2.sources(), Knowledgebase.ACTIN).evidenceType());
 
         ProtectEvidence evidence3 = findByFusion(evidences, unreportedPromiscuousMatch);
         assertFalse(evidence3.reported());
-
         assertEquals(evidence3.sources().size(), 1);
-        ProtectSource evidence3ProtectSource = findBySource(evidence3.sources(), Knowledgebase.ACTIN);
-        assertEquals(ProtectEvidenceType.PROMISCUOUS_FUSION, evidence3ProtectSource.evidenceType());
+        assertEquals(ProtectEvidenceType.PROMISCUOUS_FUSION, findByKnowledgebase(evidence3.sources(), Knowledgebase.ACTIN).evidenceType());
     }
 
     @NotNull
@@ -98,7 +92,7 @@ public class FusionEvidenceTest {
             }
         }
 
-        throw new IllegalStateException("Cannot find evidence with event: " + event);
+        throw new IllegalStateException("Cannot find evidence with fusion event: " + event);
     }
 
     @Test
@@ -159,7 +153,7 @@ public class FusionEvidenceTest {
     }
 
     @NotNull
-    private static ProtectSource findBySource(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase knowledgebaseToFind) {
+    private static ProtectSource findByKnowledgebase(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase knowledgebaseToFind) {
         for (ProtectSource source : sources) {
             if (source.name() == knowledgebaseToFind) {
                 return source;

@@ -10,7 +10,12 @@ public final class EvidenceTestFactory {
     }
 
     @NotNull
+    public static PersonalizedEvidenceFactory createTestEvidenceFactory(@NotNull String doid) {
+        return new PersonalizedEvidenceFactory(Sets.newHashSet(doid));
+    }
+
+    @NotNull
     public static PersonalizedEvidenceFactory createTestEvidenceFactory() {
-        return new PersonalizedEvidenceFactory(Sets.newHashSet("162"));
+        return createTestEvidenceFactory("162");
     }
 }

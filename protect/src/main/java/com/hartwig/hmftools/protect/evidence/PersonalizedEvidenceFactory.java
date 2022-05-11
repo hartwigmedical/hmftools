@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.protect.evidence;
 
 import java.util.Set;
-import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
@@ -46,47 +45,22 @@ public class PersonalizedEvidenceFactory {
 
     @NotNull
     public ImmutableProtectEvidence.Builder evidenceBuilder(@NotNull ActionableEvent actionable) {
-        StringJoiner sourceUrlJoiner = new StringJoiner(",");
-        for (String url : actionable.sourceUrls()) {
-            sourceUrlJoiner.add(url);
-        }
-
         return ImmutableProtectEvidence.builder()
                 .treatment(actionable.treatment())
-                .onLabel(determineOnLabel(actionable.applicableCancerType(), actionable.blacklistCancerTypes(), actionable.treatment()))
+                .onLabel(isOnLabel(actionable.applicableCancerType(), actionable.blacklistCancerTypes(), actionable.treatment()))
                 .level(actionable.level())
                 .direction(actionable.direction())
-                .sources(determineProtectSources(actionable));
+                .sources(Sets.newHashSet(resolveProtectSource(actionable)));
     }
 
-    @NotNull
-    public Set<ProtectSource> determineProtectSources(@NotNull ActionableEvent actionable) {
-        Set<ProtectSource> sources = Sets.newHashSet();
-        String sourceEvent = actionable.sourceEvent();
-        Set<String> sourceUrls = actionable.sourceUrls();
-        Integer rank = determineRangeRank(actionable);
-        ProtectEvidenceType evidenceType = determineEvidenceType(actionable);
-        Set<String> evidenceUrls = actionable.evidenceUrls();
-
-        ProtectSource source = ImmutableProtectSource.builder()
-                .name(actionable.source())
-                .sourceEvent(sourceEvent)
-                .sourceUrls(sourceUrls)
-                .evidenceType(evidenceType)
-                .rangeRank(rank)
-                .evidenceUrls(evidenceUrls)
-                .build();
-        sources.add(source);
-        return sources;
-    }
-
-    public boolean determineOnLabel(@NotNull CancerType applicableCancerType, @NotNull Set<CancerType> blacklistCancerTypes,
+    public boolean isOnLabel(@NotNull CancerType applicableCancerType, @NotNull Set<CancerType> blacklistCancerTypes,
             @NotNull String treatment) {
         //TODO filter for blacklisting in v2.2. Should be analyzed in more depth
         return patientTumorDoids.contains(applicableCancerType.doid());
     }
 
-    public boolean determineBlacklistedEvidence(@NotNull Set<CancerType> blacklistCancerTypes, @NotNull String treatment) {
+    @VisibleForTesting
+    boolean determineBlacklistedEvidence(@NotNull Set<CancerType> blacklistCancerTypes, @NotNull String treatment) {
         Set<String> blacklistDoids = CancerTypeFactory.doidStrings(blacklistCancerTypes);
 
         if (!blacklistDoids.isEmpty()) {
@@ -101,6 +75,18 @@ public class PersonalizedEvidenceFactory {
             }
         }
         return false;
+    }
+
+    @NotNull
+    private static ProtectSource resolveProtectSource(@NotNull ActionableEvent actionable) {
+        return ImmutableProtectSource.builder()
+                .name(actionable.source())
+                .sourceEvent(actionable.sourceEvent())
+                .sourceUrls(actionable.sourceUrls())
+                .evidenceType(determineEvidenceType(actionable))
+                .rangeRank(determineRangeRank(actionable))
+                .evidenceUrls(actionable.evidenceUrls())
+                .build();
     }
 
     @VisibleForTesting

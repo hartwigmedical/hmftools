@@ -62,19 +62,13 @@ public class CopyNumberEvidenceTest {
 
         ProtectEvidence ampEvidence = find(evidences, geneAmp);
         assertTrue(ampEvidence.reported());
-        assertEquals(reportableAmp.gene(), ampEvidence.gene());
-
         assertEquals(ampEvidence.sources().size(), 1);
-        ProtectSource sourceAmpEvidence = findBySource(ampEvidence.sources(), Knowledgebase.CKB);
-        assertEquals(ProtectEvidenceType.AMPLIFICATION, sourceAmpEvidence.evidenceType());
+        assertEquals(ProtectEvidenceType.AMPLIFICATION, findByKnowledgebase(ampEvidence.sources(), Knowledgebase.CKB).evidenceType());
 
         ProtectEvidence delEvidence = find(evidences, geneDel);
         assertTrue(delEvidence.reported());
-        assertEquals(reportableDel.gene(), delEvidence.gene());
-
         assertEquals(delEvidence.sources().size(), 1);
-        ProtectSource sourceDelEvidence = findBySource(delEvidence.sources(), Knowledgebase.CKB);
-        assertEquals(ProtectEvidenceType.INACTIVATION, sourceDelEvidence.evidenceType());
+        assertEquals(ProtectEvidenceType.INACTIVATION, findByKnowledgebase(delEvidence.sources(), Knowledgebase.CKB).evidenceType());
     }
 
     @NotNull
@@ -89,7 +83,7 @@ public class CopyNumberEvidenceTest {
     }
 
     @NotNull
-    private static ProtectSource findBySource(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase knowledgebaseToFind) {
+    private static ProtectSource findByKnowledgebase(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase knowledgebaseToFind) {
         for (ProtectSource source : sources) {
             if (source.name() == knowledgebaseToFind) {
                 return source;

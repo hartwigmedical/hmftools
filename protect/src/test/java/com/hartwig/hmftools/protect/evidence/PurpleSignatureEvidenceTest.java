@@ -2,10 +2,7 @@ package com.hartwig.hmftools.protect.evidence;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.List;
-
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleData;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleTestFactory;
@@ -28,7 +25,6 @@ public class PurpleSignatureEvidenceTest {
                 .from(ServeTestFactory.createTestActionableCharacteristic())
                 .name(TumorCharacteristicAnnotation.HOMOLOGOUS_RECOMBINATION_DEFICIENT)
                 .build();
-
 
         PurpleSignatureEvidence purpleSignatureEvidence = new PurpleSignatureEvidence(EvidenceTestFactory.createTestEvidenceFactory(),
                 Lists.newArrayList(nonPurple));
@@ -203,17 +199,6 @@ public class PurpleSignatureEvidenceTest {
     @Test
     public void canConvertCharacteristicToEvent() {
         assertEquals("Microsatellite unstable", PurpleSignatureEvidence.toEvent(TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE));
-    }
-
-    @NotNull
-    private static ProtectEvidence find(@NotNull List<ProtectEvidence> evidences, @NotNull String eventToFind) {
-        for (ProtectEvidence evidence : evidences) {
-            if (evidence.event().equals(eventToFind)) {
-                return evidence;
-            }
-        }
-
-        throw new IllegalStateException("Could not event in evidences: " + eventToFind);
     }
 
     @NotNull
