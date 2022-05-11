@@ -62,6 +62,10 @@ public final class OtherEffectsInterpreter {
 
     @NotNull
     private static String first(@NotNull String otherReportedEffects) {
-        return otherReportedEffects.split(IMPACT_SPLITTER)[0];
+        if (otherReportedEffects.split(FIELD_SPLITTER).length > 5) {
+            return otherReportedEffects.split(IMPACT_SPLITTER)[0];
+        }
+
+        return otherReportedEffects;
     }
 }

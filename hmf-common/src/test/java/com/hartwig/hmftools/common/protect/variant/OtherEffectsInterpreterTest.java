@@ -22,6 +22,12 @@ public class OtherEffectsInterpreterTest {
     }
 
     @Test
+    public void worksWithSplicing() {
+        String example = "ENST00000579755|c.194-3_194-2delCA|p.?|splice_acceptor_variant&intron_variant|SPLICE";
+        assertEquals(CodingEffect.SPLICE, OtherEffectsInterpreter.codingEffect(example));
+    }
+
+    @Test
     public void worksOnEmptyString() {
         assertEquals(Strings.EMPTY, OtherEffectsInterpreter.transcript(Strings.EMPTY));
         assertEquals(Strings.EMPTY, OtherEffectsInterpreter.hgvsCodingImpact(Strings.EMPTY));
