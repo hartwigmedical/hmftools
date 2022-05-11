@@ -65,16 +65,16 @@ public class CopyNumberEvidenceTest {
         assertEquals(reportableAmp.gene(), ampEvidence.gene());
 
         assertEquals(ampEvidence.sources().size(), 1);
-        ProtectSource protectSourceAmpEvidence = findBySource(ampEvidence.sources(), Knowledgebase.CKB);
-        assertEquals(ProtectEvidenceType.AMPLIFICATION, protectSourceAmpEvidence.evidenceType());
+        ProtectSource sourceAmpEvidence = findBySource(ampEvidence.sources(), Knowledgebase.CKB);
+        assertEquals(ProtectEvidenceType.AMPLIFICATION, sourceAmpEvidence.evidenceType());
 
         ProtectEvidence delEvidence = find(evidences, geneDel);
         assertTrue(delEvidence.reported());
         assertEquals(reportableDel.gene(), delEvidence.gene());
 
         assertEquals(delEvidence.sources().size(), 1);
-        ProtectSource protectSourceDelEvidence = findBySource(delEvidence.sources(), Knowledgebase.CKB);
-        assertEquals(ProtectEvidenceType.INACTIVATION, protectSourceDelEvidence.evidenceType());
+        ProtectSource sourceDelEvidence = findBySource(delEvidence.sources(), Knowledgebase.CKB);
+        assertEquals(ProtectEvidenceType.INACTIVATION, sourceDelEvidence.evidenceType());
     }
 
     @NotNull
@@ -89,13 +89,13 @@ public class CopyNumberEvidenceTest {
     }
 
     @NotNull
-    private static ProtectSource findBySource(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase source) {
-        for (ProtectSource protectSource : sources) {
-            if (protectSource.name() == source) {
-                return protectSource;
+    private static ProtectSource findBySource(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase knowledgebaseToFind) {
+        for (ProtectSource source : sources) {
+            if (source.name() == knowledgebaseToFind) {
+                return source;
             }
         }
 
-        throw new IllegalStateException("Could not find evidence with source: " + source);
+        throw new IllegalStateException("Could not find evidence from source: " + knowledgebaseToFind);
     }
 }

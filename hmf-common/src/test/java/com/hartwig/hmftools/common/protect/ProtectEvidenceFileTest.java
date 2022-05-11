@@ -5,8 +5,8 @@ import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
@@ -23,104 +23,113 @@ public class ProtectEvidenceFileTest {
         List<ProtectEvidence> evidences = ProtectEvidenceFile.read(EVIDENCE_TSV);
         assertEquals(5, evidences.size());
 
-        //evidences1
-        ProtectEvidence evidence1 = findByTreatment(evidences, "Cobimetinib + Vemurafenib", "p.Val600Glu");
+        // evidences 1
+        ProtectEvidence evidence1 = findByTreatmentAndEvent(evidences, "Cobimetinib + Vemurafenib", "p.Val600Glu");
         assertEquals(1, evidence1.sources().size());
 
-        List<ProtectSource> evidence1_source1List = Lists.newArrayList(evidence1.sources());
-        ProtectSource evidence1_source1 = findBySource(evidence1_source1List, Knowledgebase.VICC_CGI);
+        ProtectSource evidence1Source = findBySource(evidence1.sources(), Knowledgebase.VICC_CGI);
+        assertEquals("hotspot", evidence1Source.sourceEvent());
+        assertEquals(Sets.newHashSet("https://www.google.com/#q=FDA"), evidence1Source.sourceUrls());
+        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, evidence1Source.evidenceType());
+        assertNull(evidence1Source.rangeRank());
 
-        assertEquals(Knowledgebase.VICC_CGI, evidence1_source1.name());
-        assertEquals("hotspot", evidence1_source1.sourceEvent());
-        assertEquals(Sets.newHashSet("https://www.google.com/#q=FDA"),
-                evidence1_source1.sourceUrls());
-        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, evidence1_source1.evidenceType());
-        assertNull(evidence1_source1.rangeRank());
-
-        //evidences2
-        ProtectEvidence evidence2 = findByTreatment(evidences, "Dabrafenib", "p.Val600Glu");
+        // evidences 2
+        ProtectEvidence evidence2 = findByTreatmentAndEvent(evidences, "Dabrafenib", "p.Val600Glu");
         assertEquals(1, evidence2.sources().size());
 
-        List<ProtectSource> evidence2_source1List = Lists.newArrayList(evidence2.sources());
-        ProtectSource evidence2_source1 = findBySource(evidence2_source1List, Knowledgebase.VICC_CGI);
+        ProtectSource evidence2Source = findBySource(evidence2.sources(), Knowledgebase.VICC_CGI);
+        assertEquals("hotspot", evidence2Source.sourceEvent());
+        assertEquals(Sets.newHashSet("https://www.google.com/#q=FDA", "https://www.google.com/#q=NCCN"), evidence2Source.sourceUrls());
+        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, evidence2Source.evidenceType());
+        assertNull(evidence2Source.rangeRank());
 
-        assertEquals(Knowledgebase.VICC_CGI, evidence2_source1.name());
-        assertEquals("hotspot", evidence2_source1.sourceEvent());
-        assertEquals(Sets.newHashSet("https://www.google.com/#q=FDA", "https://www.google.com/#q=NCCN"),
-                evidence2_source1.sourceUrls());
-        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, evidence2_source1.evidenceType());
-        assertNull(evidence2_source1.rangeRank());
-
-        //evidences3
-        ProtectEvidence evidence3 = findByTreatment(evidences, "Dabrafenib + Trametinib", "p.Val600Glu");
+        // evidences 3
+        ProtectEvidence evidence3 = findByTreatmentAndEvent(evidences, "Dabrafenib + Trametinib", "p.Val600Glu");
         assertEquals(2, evidence3.sources().size());
 
-        List<ProtectSource> evidence3_source1List = Lists.newArrayList(evidence3.sources());
-        ProtectSource source3_evidence1 = findBySource(evidence3_source1List, Knowledgebase.VICC_CGI);
-
-        assertEquals(Knowledgebase.VICC_CGI, source3_evidence1.name());
-        assertEquals("hotspot", source3_evidence1.sourceEvent());
+        ProtectSource evidence3Source1 = findBySource(evidence3.sources(), Knowledgebase.VICC_CGI);
+        assertEquals("hotspot", evidence3Source1.sourceEvent());
         assertEquals(Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/25399551", "http://www.ncbi.nlm.nih.gov/pubmed/27283860"),
-                source3_evidence1.sourceUrls());
-        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, source3_evidence1.evidenceType());
-        assertNull(source3_evidence1.rangeRank());
+                evidence3Source1.sourceUrls());
+        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, evidence3Source1.evidenceType());
+        assertNull(evidence3Source1.rangeRank());
 
-        ProtectSource source3_evidence2 = findBySource(evidence3_source1List, Knowledgebase.VICC_CIVIC);
-        assertEquals(Knowledgebase.VICC_CIVIC, source3_evidence2.name());
-        assertEquals("hotspot", source3_evidence2.sourceEvent());
-        assertEquals(Sets.newHashSet("https://www.google.com/#q=FDA"),
-                source3_evidence2.sourceUrls());
-        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, source3_evidence2.evidenceType());
-        assertNull(source3_evidence2.rangeRank());
+        ProtectSource evidence3Source2 = findBySource(evidence3.sources(), Knowledgebase.VICC_CIVIC);
+        assertEquals("hotspot", evidence3Source2.sourceEvent());
+        assertEquals(Sets.newHashSet("https://www.google.com/#q=FDA"), evidence3Source2.sourceUrls());
+        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, evidence3Source2.evidenceType());
+        assertNull(evidence3Source2.rangeRank());
 
-        //evidences4
-        ProtectEvidence evidence4 = findByTreatment(evidences, "Vemurafenib", "p.Val600Glu");
+        // evidences 4
+        ProtectEvidence evidence4 = findByTreatmentAndEvent(evidences, "Vemurafenib", "p.Val600Glu");
         assertEquals(1, evidence4.sources().size());
 
-        List<ProtectSource> evidence4_source_1_list = Lists.newArrayList(evidence4.sources());
-        ProtectSource evidence4_source_1 = findBySource(evidence4_source_1_list, Knowledgebase.VICC_CGI);
-
-        assertEquals(Knowledgebase.VICC_CGI, evidence4_source_1.name());
-        assertEquals("hotspot", evidence4_source_1.sourceEvent());
-        assertEquals(Sets.newHashSet("https://www.google.com/#q=FDA"),
-                evidence4_source_1.sourceUrls());
-        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, evidence4_source_1.evidenceType());
-        assertEquals("600", String.valueOf(evidence4_source_1.rangeRank()));
+        ProtectSource evidence4Source = findBySource(evidence4.sources(), Knowledgebase.VICC_CGI);
+        assertEquals("hotspot", evidence4Source.sourceEvent());
+        assertEquals(Sets.newHashSet("https://www.google.com/#q=FDA"), evidence4Source.sourceUrls());
+        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, evidence4Source.evidenceType());
+        assertEquals("600", String.valueOf(evidence4Source.rangeRank()));
 
         //evidences5
-        ProtectEvidence evidence5 = findByTreatment(evidences, "Vemurafenib", "some mutation");
+        ProtectEvidence evidence5 = findByTreatmentAndEvent(evidences, "Vemurafenib", "some mutation");
         assertEquals(1, evidence5.sources().size());
 
-        List<ProtectSource> evidence5_source_1_list = Lists.newArrayList(evidence5.sources());
-        ProtectSource evidence5_source1 = findBySource(evidence5_source_1_list, Knowledgebase.VICC_CGI);
+        ProtectSource evidence5Source1 = findBySource(evidence5.sources(), Knowledgebase.VICC_CGI);
+        assertEquals("hotspot", evidence5Source1.sourceEvent());
+        assertEquals(Sets.newHashSet("https://www.google.com/#q=FDA"), evidence5Source1.sourceUrls());
+        assertEquals(ProtectEvidenceType.SIGNATURE, evidence5Source1.evidenceType());
+        assertNull(evidence5Source1.rangeRank());
+    }
 
-        assertEquals(Knowledgebase.VICC_CGI, evidence5_source1.name());
-        assertEquals("hotspot", evidence5_source1.sourceEvent());
-        assertEquals(Sets.newHashSet("https://www.google.com/#q=FDA"),
-                evidence5_source1.sourceUrls());
-        assertEquals(ProtectEvidenceType.SIGNATURE, evidence5_source1.evidenceType());
-        assertNull(evidence5_source1.rangeRank());
+    @Test
+    public void canConvertSourcesBackAndForth() {
+        Set<ProtectSource> sources = Sets.newHashSet();
+
+        sources.add(ImmutableProtectSource.builder()
+                .name(Knowledgebase.VICC_CGI)
+                .sourceEvent("event 1")
+                .sourceUrls(Sets.newHashSet("url1", "url2", "url3"))
+                .evidenceType(ProtectEvidenceType.ANY_MUTATION)
+                .rangeRank(1)
+                .evidenceUrls(Sets.newHashSet("url4", "url5", "url6"))
+                .build());
+
+        sources.add(ImmutableProtectSource.builder()
+                .name(Knowledgebase.VICC_CIVIC)
+                .sourceEvent("event 2")
+                .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
+                .build());
+
+        sources.add(ImmutableProtectSource.builder()
+                .name(Knowledgebase.VICC_JAX)
+                .sourceEvent("event 3")
+                .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
+                .evidenceUrls(Sets.newHashSet("url1"))
+                .build());
+
+        assertEquals(sources, ProtectEvidenceFile.stringToSources(ProtectEvidenceFile.sourcesToString(sources)));
     }
 
     @NotNull
-    private static ProtectEvidence findByTreatment(@NotNull List<ProtectEvidence> evidences, @NotNull String treatment, @NotNull String event) {
+    private static ProtectEvidence findByTreatmentAndEvent(@NotNull Iterable<ProtectEvidence> evidences, @NotNull String treatment,
+            @NotNull String event) {
         for (ProtectEvidence evidence : evidences) {
             if (evidence.treatment().equals(treatment) && evidence.event().equals(event)) {
                 return evidence;
             }
         }
 
-        throw new IllegalStateException("Could not find evidence with treatment: " + treatment);
+        throw new IllegalStateException("Could not find evidence with treatment: " + treatment + " and event " + event);
     }
 
     @NotNull
-    private static ProtectSource findBySource(@NotNull List<ProtectSource> sources, @NotNull Knowledgebase evidenceSource) {
+    private static ProtectSource findBySource(@NotNull Iterable<ProtectSource> sources, @NotNull Knowledgebase sourceToFind) {
         for (ProtectSource source : sources) {
-            if (source.name() == evidenceSource) {
+            if (source.name() == sourceToFind) {
                 return source;
             }
         }
 
-        throw new IllegalStateException("Could not find evidence of source: " + evidenceSource);
+        throw new IllegalStateException("Could not find source: " + sourceToFind);
     }
 }

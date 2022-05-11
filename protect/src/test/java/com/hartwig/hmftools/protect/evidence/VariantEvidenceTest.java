@@ -99,16 +99,16 @@ public class VariantEvidenceTest {
         assertEquals(variantMatch.gene(), reportedEvidence.gene());
 
         assertEquals(reportedEvidence.sources().size(), 1);
-        ProtectSource protectSourceReportedEvidence = findBySource(reportedEvidence.sources(), Knowledgebase.CKB);
-        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, protectSourceReportedEvidence.evidenceType());
+        ProtectSource sourceReportedEvidence = findBySource(reportedEvidence.sources(), Knowledgebase.CKB);
+        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, sourceReportedEvidence.evidenceType());
 
         ProtectEvidence unreportedEvidence = findByGene(evidences, "unreported");
         assertFalse(unreportedEvidence.reported());
         assertEquals(unreportedMatch.gene(), unreportedEvidence.gene());
 
         assertEquals(unreportedEvidence.sources().size(), 1);
-        ProtectSource protectSourceUnreportedEvidence = findBySource(unreportedEvidence.sources(), Knowledgebase.CKB);
-        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, protectSourceUnreportedEvidence.evidenceType());
+        ProtectSource sourceUnreportedEvidence = findBySource(unreportedEvidence.sources(), Knowledgebase.CKB);
+        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, sourceUnreportedEvidence.evidenceType());
     }
 
     @Test
@@ -227,8 +227,8 @@ public class VariantEvidenceTest {
         assertTrue(evidence.reported());
 
         assertEquals(evidence.sources().size(), 1);
-        ProtectSource protectSourceUnreportedEvidence = findBySource(evidence.sources(), Knowledgebase.CKB);
-        assertEquals(ProtectEvidenceType.EXON_MUTATION, protectSourceUnreportedEvidence.evidenceType());
+        ProtectSource sourceUnreportedEvidence = findBySource(evidence.sources(), Knowledgebase.CKB);
+        assertEquals(ProtectEvidenceType.EXON_MUTATION, sourceUnreportedEvidence.evidenceType());
     }
 
     @Test
@@ -283,15 +283,15 @@ public class VariantEvidenceTest {
         assertTrue(actEvidence.reported());
 
         assertEquals(actEvidence.sources().size(), 1);
-        ProtectSource protectSourceActEvidence = findBySource(actEvidence.sources(), Knowledgebase.CKB);
-        assertEquals(ProtectEvidenceType.ACTIVATION, protectSourceActEvidence.evidenceType());
+        ProtectSource sourceActEvidence = findBySource(actEvidence.sources(), Knowledgebase.CKB);
+        assertEquals(ProtectEvidenceType.ACTIVATION, sourceActEvidence.evidenceType());
 
         ProtectEvidence inactEvidence = findByGene(evidences, inactivatedGene);
         assertFalse(inactEvidence.reported());
 
         assertEquals(inactEvidence.sources().size(), 1);
-        ProtectSource protectSourceInacEvidence = findBySource(inactEvidence.sources(), Knowledgebase.CKB);
-        assertEquals(ProtectEvidenceType.INACTIVATION, protectSourceInacEvidence.evidenceType());
+        ProtectSource sourceInactEvidence = findBySource(inactEvidence.sources(), Knowledgebase.CKB);
+        assertEquals(ProtectEvidenceType.INACTIVATION, sourceInactEvidence.evidenceType());
     }
 
     @NotNull
@@ -316,13 +316,13 @@ public class VariantEvidenceTest {
     }
 
     @NotNull
-    private static ProtectSource findBySource(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase source) {
-        for (ProtectSource protectSource : sources) {
-            if (protectSource.name() == source) {
-                return protectSource;
+    private static ProtectSource findBySource(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase knowledgebaseToFind) {
+        for (ProtectSource source : sources) {
+            if (source.name() == knowledgebaseToFind) {
+                return source;
             }
         }
 
-        throw new IllegalStateException("Could not find evidence with source: " + source);
+        throw new IllegalStateException("Could not find evidence from source: " + knowledgebaseToFind);
     }
 }

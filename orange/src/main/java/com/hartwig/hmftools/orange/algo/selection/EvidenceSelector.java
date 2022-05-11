@@ -75,9 +75,9 @@ public final class EvidenceSelector {
         return filtered;
     }
 
-    private static boolean hasTrialSource(@NotNull Set<ProtectSource> sources) {
-        for (ProtectSource protectSource : sources) {
-            if (TRIAL_SOURCES.contains(protectSource.name())) {
+    private static boolean hasTrialSource(@NotNull Iterable<ProtectSource> sources) {
+        for (ProtectSource source : sources) {
+            if (TRIAL_SOURCES.contains(source.name())) {
                 return true;
             }
         }

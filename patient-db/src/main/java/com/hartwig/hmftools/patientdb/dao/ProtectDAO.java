@@ -83,7 +83,7 @@ class ProtectDAO {
                     source.name().toString(),
                     source.sourceEvent(),
                     sourceUrlJoiner.toString(),
-                    source.evidenceType().display(),
+                    source.evidenceType().toString(),
                     source.rangeRank(),
                     evidenceUrlJoiner.toString(),
                     timestamp);

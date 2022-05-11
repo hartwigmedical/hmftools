@@ -159,13 +159,13 @@ public class FusionEvidenceTest {
     }
 
     @NotNull
-    private static ProtectSource findBySource(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase source) {
-        for (ProtectSource protectSource : sources) {
-            if (protectSource.name() == source) {
-                return protectSource;
+    private static ProtectSource findBySource(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase knowledgebaseToFind) {
+        for (ProtectSource source : sources) {
+            if (source.name() == knowledgebaseToFind) {
+                return source;
             }
         }
 
-        throw new IllegalStateException("Could not find evidence with source: " + source);
+        throw new IllegalStateException("Could not find evidence from source: " + knowledgebaseToFind);
     }
 }

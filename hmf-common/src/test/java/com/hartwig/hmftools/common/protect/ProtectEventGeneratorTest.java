@@ -19,7 +19,11 @@ public class ProtectEventGeneratorTest {
         Variant base = SomaticVariantTestBuilderFactory.create().canonicalEffect("some effect").build();
         assertEquals("some effect", ProtectEventGenerator.variantEvent(base));
 
-        Variant coding = ImmutableSomaticVariantImpl.builder().from(base).canonicalHgvsCodingImpact("coding impact").build();
+        Variant upstream =
+                ImmutableSomaticVariantImpl.builder().from(base).canonicalEffect(ProtectEventGenerator.UPSTREAM_GENE_VARIANT).build();
+        assertEquals("upstream", ProtectEventGenerator.variantEvent(upstream));
+
+        Variant coding = ImmutableSomaticVariantImpl.builder().from(upstream).canonicalHgvsCodingImpact("coding impact").build();
         assertEquals("coding impact", ProtectEventGenerator.variantEvent(coding));
 
         Variant protein = ImmutableSomaticVariantImpl.builder().from(coding).canonicalHgvsProteinImpact("protein impact").build();
