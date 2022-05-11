@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.configPathValid;
+import static com.hartwig.hmftools.linx.fusion.DisruptionFinder.getUndisruptedCopyNumber;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.FUSION_MAX_CHAIN_LENGTH;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscript;
@@ -317,7 +318,7 @@ public class FusionDisruptionAnalyser
             mUniqueFusions.stream().filter(x -> x.knownType() != NONE).forEach(x -> mFusionFinder.setFusionProteinFeatures(x));
         }
 
-        final List<BreakendTransData> transcripts = getTranscriptList(svList, mUniqueFusions);
+        final List<BreakendTransData> transcripts = buildTranscriptList(svList, mUniqueFusions);
 
         final List<LinxBreakend> breakends = Lists.newArrayList();
         final List<LinxFusion> fusions = Lists.newArrayList();
@@ -532,7 +533,6 @@ public class FusionDisruptionAnalyser
             {
                 LinkedPair pair = linkedPairs.get(lpIndex1);
                 lowerSV = pair.first();
-                // lowerBreakend = pair.first().getBreakend(!pair.firstLinkOnStart());
                 lowerBreakend = pair.firstBreakend().getOtherBreakend();
             }
             else
@@ -1008,7 +1008,7 @@ public class FusionDisruptionAnalyser
         return uniqueFusions;
     }
 
-    public final List<BreakendTransData> getTranscriptList(final List<SvVarData> svList, final List<GeneFusion> fusions)
+    private List<BreakendTransData> buildTranscriptList(final List<SvVarData> svList, final List<GeneFusion> fusions)
     {
         // add all canonical or otherwise reportable transcript and then add any additional transcripts from the fusions
         List<BreakendTransData> transcripts = Lists.newArrayList();
@@ -1041,6 +1041,17 @@ public class FusionDisruptionAnalyser
 
             if(!transcripts.contains(fusion.downstreamTrans()))
                 transcripts.add(fusion.downstreamTrans());
+        }
+
+        // set undisrupted copy number for all persisted breakends
+        for(BreakendTransData transcript : transcripts)
+        {
+            SvVarData var = svList.stream().filter(x -> x.id() == transcript.gene().id()).findFirst().orElse(null);
+
+            if(var != null)
+            {
+                transcript.setUndisruptedCopyNumber(getUndisruptedCopyNumber(var.getBreakend(transcript.gene().isStart())));
+            }
         }
 
         return transcripts;

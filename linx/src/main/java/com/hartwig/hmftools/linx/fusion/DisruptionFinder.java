@@ -189,18 +189,10 @@ public class DisruptionFinder implements CohortFileInterface
             if(se == SE_END && var.isSglBreakend())
                 continue;
 
-            final SvBreakend breakend = var.getBreakend(se);
-            double undisruptedCopyNumber = getUndisruptedCopyNumber(breakend);
-
             final List<BreakendGeneData> svGenes = se == SE_START ? genesStart : genesEnd;
 
             for(BreakendGeneData gene : svGenes)
             {
-                BreakendTransData canonicalTrans = gene.canonical();
-
-                if(canonicalTrans != null)
-                    canonicalTrans.setUndisruptedCopyNumber(undisruptedCopyNumber);
-
                 // line clusters can insert into an intron and look disruptive if a single breakend is involved,
                 // but are only inserting a (non-disruptive) shard
                 if(cluster.getResolvedType() == LINE)
@@ -268,7 +260,7 @@ public class DisruptionFinder implements CohortFileInterface
         // look for matching transcripts which are both in the same non-exonic section
         boolean foundMatchingTrans = false;
 
-        for (final BreakendTransData trans1 : transList1)
+        for(final BreakendTransData trans1 : transList1)
         {
             final BreakendTransData trans2 = transList2.stream()
                     .filter(x -> x.transId() == trans1.transId()).findFirst().orElse(null);
@@ -710,7 +702,7 @@ public class DisruptionFinder implements CohortFileInterface
 
                 for(final TranscriptData transData : transDataList)
                 {
-                    for (final ExonData exonData : transData.exons())
+                    for(final ExonData exonData : transData.exons())
                     {
                         if (exonData.Rank == 1)
                             continue;
@@ -745,11 +737,11 @@ public class DisruptionFinder implements CohortFileInterface
     {
         mDisruptions.clear();
 
-        for (final SvVarData var : svList)
+        for(final SvVarData var : svList)
         {
-            for (int be = SE_START; be <= SE_END; ++be)
+            for(int be = SE_START; be <= SE_END; ++be)
             {
-                if (be == SE_END && var.isSglBreakend())
+                if(be == SE_END && var.isSglBreakend())
                     continue;
 
                 final List<BreakendGeneData> tsgGenesList = var.getGenesList(isStart(be)).stream()
@@ -848,7 +840,7 @@ public class DisruptionFinder implements CohortFileInterface
         mGermlineDisruptions.writeGermlineSVs(mDisruptions, sampleId, outputDir, dbAccess);
     }
 
-    private static double getUndisruptedCopyNumber(final SvBreakend breakend)
+    public static double getUndisruptedCopyNumber(final SvBreakend breakend)
     {
         double cnLowSide = breakend.copyNumberLowSide();
 
