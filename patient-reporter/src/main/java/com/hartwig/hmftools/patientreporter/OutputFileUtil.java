@@ -47,7 +47,7 @@ public final class OutputFileUtil {
     @NotNull
     public static String generateOutputFileNameForJson(@NotNull PatientReport report) {
         String filePrefix =
-                report.sampleReport().tumorSampleId() + "_" + report.sampleReport().tumorSampleBarcode() + "_dna_analysis_report";
+                report.sampleReport().tumorSampleId() + "_" + report.sampleReport().tumorSampleBarcode() + "_oncoact";
         String failPrefix = report instanceof QCFailReport ? "_failed" : Strings.EMPTY;
         String fileSuffix;
         if (report.isCorrectedReport()) {
@@ -65,7 +65,7 @@ public final class OutputFileUtil {
     @NotNull
     public static String generateOutputFileNameForJsonPanel(@NotNull com.hartwig.hmftools.patientreporter.PanelReport report) {
         String filePrefix =
-                report.sampleReport().tumorSampleId() + "_" + report.sampleReport().tumorSampleBarcode() + "_oncopanel_result_report";
+                report.sampleReport().tumorSampleId() + "_" + report.sampleReport().tumorSampleBarcode() + "_oncopanel";
         String failPrefix = report instanceof QCFailReport ? "_failed" : Strings.EMPTY;
         String fileSuffix;
         if (report.isCorrectedReport()) {
