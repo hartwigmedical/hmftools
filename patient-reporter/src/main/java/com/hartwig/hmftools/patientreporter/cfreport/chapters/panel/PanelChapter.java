@@ -27,13 +27,13 @@ public class PanelChapter implements ReportChapter {
     @NotNull
     @Override
     public String name() {
-        return report.isCorrectedReport() ? TITLE_REPORT + " (Corrected)" : TITLE_REPORT;
+        return Strings.EMPTY;
     }
 
     @NotNull
     @Override
     public String pdfTitle() {
-        return TITLE_REPORT;
+        return report.isCorrectedReport() ? TITLE_REPORT + " (Corrected)" : TITLE_REPORT;
     }
 
     @Override
