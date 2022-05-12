@@ -89,51 +89,56 @@ public class CobaltApplication implements AutoCloseable
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("worker-%d").build();
         ExecutorService executorService = Executors.newFixedThreadPool(mConfig.ThreadCount, namedThreadFactory);
 
-        final SamReaderFactory readerFactory = readerFactory(mConfig);
-
-        final Collection<Chromosome> chromosomes = loadChromosomes(readerFactory);
-
-        final Multimap<Chromosome, GCProfile> gcProfiles = loadGCContent(chromosomes);
-
-        final CountSupplier countSupplier = new CountSupplier(
-                WINDOW_SIZE, mConfig.MinMappingQuality,
-                executorService, readerFactory, chromosomes);
-        
-        countSupplier.generateCounts(mConfig.ReferenceBamPath, mConfig.TumorBamPath);
-
-        final RatioSupplier ratioSupplier = new RatioSupplier(mConfig.ReferenceId, mConfig.TumorId, mConfig.OutputDir,
-                gcProfiles, chromosomes, countSupplier.getReferenceCounts(), countSupplier.getTumorCounts());
-
-        if (mConfig.TargetRegionPath != null)
+        try
         {
-            var targetRegionEnrichment = TargetRegionEnrichment.fromTsv(mConfig.TargetRegionPath);
-            ratioSupplier.setTargetRegionEnrichment(targetRegionEnrichment);
+            final SamReaderFactory readerFactory = readerFactory(mConfig);
+
+            final Collection<Chromosome> chromosomes = loadChromosomes(readerFactory);
+
+            final Multimap<Chromosome, GCProfile> gcProfiles = loadGCContent(chromosomes);
+
+            final CountSupplier countSupplier = new CountSupplier(
+                    WINDOW_SIZE, mConfig.MinMappingQuality,
+                    executorService, readerFactory, chromosomes);
+
+            countSupplier.generateCounts(mConfig.ReferenceBamPath, mConfig.TumorBamPath);
+
+            final RatioSupplier ratioSupplier = new RatioSupplier(mConfig.ReferenceId, mConfig.TumorId, mConfig.OutputDir,
+                    gcProfiles, chromosomes, countSupplier.getReferenceCounts(), countSupplier.getTumorCounts());
+
+            if (mConfig.TargetRegionPath != null)
+            {
+                var targetRegionEnrichment = TargetRegionEnrichment.fromTsv(mConfig.TargetRegionPath);
+                ratioSupplier.setTargetRegionEnrichment(targetRegionEnrichment);
+            }
+
+            Multimap<Chromosome, CobaltRatio> ratios;
+
+            switch (mConfig.mode())
+            {
+                case TUMOR_ONLY:
+                    ratios = ratioSupplier.tumorOnly(mConfig.TumorOnlyDiploidBed);
+                    break;
+                case GERMLIHE_ONLY:
+                    ratios = ratioSupplier.germlineOnly();
+                    break;
+                default:
+                    ratios = ratioSupplier.tumorNormalPair();
+            }
+
+            final String outputFilename = CobaltRatioFile.generateFilenameForWriting(
+                    mConfig.OutputDir, mConfig.TumorId != null ? mConfig.TumorId : mConfig.ReferenceId);
+            CB_LOGGER.info("Persisting cobalt ratios to {}", outputFilename);
+            mVersionInfo.write(mConfig.OutputDir);
+            CobaltRatioFile.write(outputFilename, ratios.values());
+
+            applyRatioSegmentation(executorService, mConfig.OutputDir, outputFilename, mConfig.ReferenceId, mConfig.TumorId, mConfig.PcfGamma);
         }
-
-        Multimap<Chromosome, CobaltRatio> ratios;
-
-        switch (mConfig.mode())
+        finally
         {
-            case TUMOR_ONLY:
-                ratios = ratioSupplier.tumorOnly(mConfig.TumorOnlyDiploidBed);
-                break;
-            case GERMLIHE_ONLY:
-                ratios = ratioSupplier.germlineOnly();
-                break;
-            default:
-                ratios = ratioSupplier.tumorNormalPair();
+            // we must do this to make sure application will exit on exception
+            executorService.shutdown();
         }
-
-        final String outputFilename = CobaltRatioFile.generateFilenameForWriting(
-                mConfig.OutputDir, mConfig.TumorId != null ? mConfig.TumorId : mConfig.ReferenceId);
-        CB_LOGGER.info("Persisting cobalt ratios to {}", outputFilename);
-        mVersionInfo.write(mConfig.OutputDir);
-        CobaltRatioFile.write(outputFilename, ratios.values());
-
-        applyRatioSegmentation(executorService, mConfig.OutputDir, outputFilename, mConfig.ReferenceId, mConfig.TumorId, mConfig.PcfGamma);
-
-        executorService.shutdown();
-
         CB_LOGGER.info("Complete");
 
         return 0;
