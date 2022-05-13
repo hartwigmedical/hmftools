@@ -7,9 +7,12 @@ import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.ReferenceData.TARGET_REGION_BED;
 
 import java.io.File;
+import java.util.Map;
 import java.util.StringJoiner;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.purity.RunMode;
+import com.hartwig.hmftools.common.variant.VariantTier;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -30,6 +33,7 @@ public class PurpleConfig
     public final SomaticFitConfig SomaticFitting;
     public final ChartConfig Charting;
     public final boolean TargetRegionsMode;
+    public final Map<VariantTier,Integer> TierQualFilters;
 
     private boolean mIsValid;
 
@@ -42,6 +46,7 @@ public class PurpleConfig
 
     public static String RUN_DRIVERS = "run_drivers";
     public static String DRIVERS_ONLY = "drivers_only";
+    public static final String TIER_FILTERS = "tier_filters";
 
     public PurpleConfig(final String version, final CommandLine cmd)
     {
@@ -101,6 +106,21 @@ public class PurpleConfig
         PPL_LOGGER.info("reference({}) tumor({}) {}",
                 ReferenceId != null ? ReferenceId : "NONE", TumorId != null ? TumorId : "NONE",
                 TargetRegionsMode ? "running on target-regions only" : "");
+
+        TierQualFilters = Maps.newHashMap();
+
+        if(cmd.hasOption(TIER_FILTERS))
+        {
+            String[] tierFilterStrings = cmd.getOptionValue(TIER_FILTERS).split(";", -1);
+
+            for(String tierFilter : tierFilterStrings)
+            {
+                String[] tierItems = tierFilter.split("=",-1);
+                TierQualFilters.put(VariantTier.valueOf(tierItems[0]), Integer.parseInt(tierItems[1]));
+
+                PPL_LOGGER.info("applying tier({}) qual({}) filter", tierItems[0], tierItems[1]);
+            }
+        }
     }
 
     public boolean isValid() { return mIsValid; }
@@ -146,6 +166,7 @@ public class PurpleConfig
 
         options.addOption(RUN_DRIVERS, false, "Run driver routine");
         options.addOption(DRIVERS_ONLY, false, "Only run the driver routine");
+        options.addOption(TIER_FILTERS, true, "Variant qual filters by tier, format: TIER_A=QUAL;TIER_A=QUAL etc");
 
         addDatabaseCmdLineArgs(options);
         FittingConfig.addOptions(options);

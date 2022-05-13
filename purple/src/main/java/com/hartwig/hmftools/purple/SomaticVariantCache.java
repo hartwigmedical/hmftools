@@ -82,6 +82,13 @@ public class SomaticVariantCache
             if(tumorOnly && HlaCommon.containsPosition(variant)) // ignore these completely
                 continue;
 
+            if(!mConfig.TierQualFilters.isEmpty())
+            {
+                Integer qualThreshold = mConfig.TierQualFilters.get(variant.decorator().tier());
+                if(qualThreshold != null && variant.decorator().qual() < qualThreshold)
+                    continue;
+            }
+
             mVariants.add(variant);
 
             // hotspot status is used in fitting as well as during and for enrichment

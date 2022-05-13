@@ -1,6 +1,12 @@
 package com.hartwig.hmftools.purple.config;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
+import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
+
+import java.util.Map;
+
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.variant.VariantTier;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -46,7 +52,7 @@ public class SomaticFitConfig
         return 0.05;
     }
 
-    public SomaticFitConfig(@NotNull CommandLine cmd)
+    public SomaticFitConfig(final CommandLine cmd)
     {
         MinTotalVariants = getConfigValue(cmd, SOMATIC_MIN_TOTAL, SOMATIC_MIN_VARIANTS_DEFAULT);
         MinPeakVariants = getConfigValue(cmd, SOMATIC_MIN_PEAK, SOMATIC_MIN_PEAK_DEFAULT);
