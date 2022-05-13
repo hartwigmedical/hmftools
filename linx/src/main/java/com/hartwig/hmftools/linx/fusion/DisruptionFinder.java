@@ -183,7 +183,6 @@ public class DisruptionFinder implements CohortFileInterface
 
         final SvCluster cluster = var.getCluster();
 
-        // set the undisrupted copy number against all canonical transcripts
         for(int se = SE_START; se <= SE_END; ++se)
         {
             if(se == SE_END && var.isSglBreakend())
