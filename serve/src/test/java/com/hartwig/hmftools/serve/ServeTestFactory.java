@@ -105,6 +105,7 @@ public final class ServeTestFactory {
                 .start(0)
                 .end(0)
                 .mutationType(MutationTypeFilter.ANY)
+                .rank(0)
                 .build();
     }
 
@@ -127,6 +128,7 @@ public final class ServeTestFactory {
                 .start(0)
                 .end(0)
                 .mutationType(MutationTypeFilter.ANY)
+                .rank(0)
                 .build();
     }
 
