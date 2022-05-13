@@ -76,20 +76,18 @@ For each sample we need to provide the cobalt ratio outputs generated from both 
 WGS bam file and targeted bam file.
 
 Example file input for sample_cfg:
-{
-    "samples": [
-        {
-            "sample_id": "FR16648803",
-            "wgs_cobalt_ratios": "WIDE01010261T.cobalt.ratio.tsv.gz",
-            "targeted_cobalt_ratios": "FR16648803.cobalt.ratio.tsv.gz"
-        },
-        {
-            "sample_id": "FR16648804",
-            "wgs_cobalt_ratios": "WIDE01010261T.cobalt.ratio.tsv.gz",
-            "targeted_cobalt_ratios": "FR16648804.cobalt.ratio.tsv.gz"
-        }
-    ]
-}
+[
+    {
+        "sample_id": "FR16648805",
+        "wgs_cobalt_ratios": "WIDE01010081T.cobalt.ratio.tsv.gz",
+        "targeted_cobalt_ratios": "FR16648805.cobalt.ratio.tsv.gz"
+    },
+    {
+        "sample_id": "FR16648808",
+        "wgs_cobalt_ratios": "WIDE01010241T.cobalt.ratio.tsv.gz",
+        "targeted_cobalt_ratios": "FR16648808.cobalt.ratio.tsv.gz"
+    }
+]
 Example file input for target_region:
 chromosome\tstart\tend\texon
 chr1\t2556664 2556733\t0_TNFRSF14_CODING
