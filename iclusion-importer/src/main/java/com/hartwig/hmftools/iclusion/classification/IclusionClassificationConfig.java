@@ -173,7 +173,9 @@ public final class IclusionClassificationConfig {
 
     @NotNull
     private static Set<String> deletionBlacklistKeyPhrases() {
-        return Sets.newHashSet();
+        Set<String> set = Sets.newHashSet();
+        set.add("EXON");
+        return set;
     }
 
     @NotNull
@@ -194,6 +196,9 @@ public final class IclusionClassificationConfig {
     private static Set<String> exonicDelDupFusionKeyPhrases() {
         Set<String> set = Sets.newHashSet();
         set.add("VIII");
+        set.add("EXON 2-8 LOSS");
+        set.add("EXON 12 LOSS");
+        set.add("EXON 14 LOSS");
         return set;
     }
 
@@ -212,6 +217,7 @@ public final class IclusionClassificationConfig {
         set.add("LOSS-OF-FUNCTION");
         set.add("FLT3-ITD");
         set.add("NON-EXPRESSION");
+        set.add("P780-Y781insGSP");
         return set;
     }
 
