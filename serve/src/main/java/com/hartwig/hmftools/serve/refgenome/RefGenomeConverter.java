@@ -199,10 +199,9 @@ class RefGenomeConverter {
                 return Strings.EMPTY;
             }
 
-            @Nullable
             @Override
-            public Integer rank() {
-                return null;
+            public int rank() {
+                return 0;
             }
 
             @NotNull
