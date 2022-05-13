@@ -217,7 +217,6 @@ public final class IclusionClassificationConfig {
         set.add("LOSS-OF-FUNCTION");
         set.add("FLT3-ITD");
         set.add("NON-EXPRESSION");
-        set.add("P780-Y781insGSP");
         return set;
     }
 
