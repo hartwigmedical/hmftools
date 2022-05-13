@@ -65,7 +65,6 @@ public class FusionFinder implements Callable
     private final FusionWriter mFusionWriter;
 
     private int mHardFilteredCount;
-    private final PerformanceCounter mPerfCounter;
     private final PerformanceCounter[] mPerfCounters;
 
     private static final int PERF_CREATE_FRAGS = 0;
@@ -94,8 +93,6 @@ public class FusionFinder implements Callable
 
         mFusionWriter = fusionWriter;
         mHardFilteredCount = 0;
-
-        mPerfCounter = new PerformanceCounter("FusionTask");
 
         if(mConfig.Fusions.RunPerfChecks)
         {
@@ -276,8 +273,6 @@ public class FusionFinder implements Callable
         if(readGroups.isEmpty())
             return;
 
-        mPerfCounter.start();
-
         perfStart(PERF_CREATE_FRAGS);
 
         String scope = isInterChromosomal ? "inter-chromosome" : "local";
@@ -331,19 +326,15 @@ public class FusionFinder implements Callable
                     mChromosome, scope, mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum(),
                     mDiscordantFragments.values().stream().mapToInt(x -> x.size()).sum());
         }
-
-        mPerfCounter.stop();
     }
 
     @Override
     public Long call()
     {
-        // TODO: used by the replayer, needs checking
-        mPerfCounter.start();
+        // was used by the replayer, needs checking
         processFragments();
         assignRealignCandidateFragments();
         writeFusionSummary();
-        mPerfCounter.stop();
 
         return (long)1;
     }

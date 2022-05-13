@@ -117,6 +117,8 @@ public class ChromosomeFusions
             mFusionFinder.processInterChromosomalReadGroups(interChromosomalGroups);
         }
 
+        mFusionTaskManager.addHardFilteredFusionCount(mFusionFinder.getHardFilteredCount());
+
         mPerfCounter.stop();
 
         mChimericReadTracker.clearAll();

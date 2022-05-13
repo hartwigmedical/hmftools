@@ -23,6 +23,7 @@ public class FusionTaskManager
 
     private final RacFragmentCache mRacFragmentCache;
     private final HardFilteredCache mHardFilteredCache;
+    private int mHardFilteredFusionCount;
     private final Map<String,Map<String,FusionReadGroup>> mIncompleteReadGroups; // keyed by chromosome then readId
 
     public FusionTaskManager(final IsofoxConfig config, final EnsemblDataCache geneTransCache)
@@ -38,6 +39,7 @@ public class FusionTaskManager
 
         mGeneTransCache.createTranscriptIdMap();
         mHardFilteredCache.registerKnownSpliteSites(mGeneTransCache);
+        mHardFilteredFusionCount = 0;
 
         mFusionWriter = new FusionWriter(mConfig);
     }
@@ -122,13 +124,16 @@ public class FusionTaskManager
         mRacFragmentCache.addRacFragments(chromosome, geneCollectionId, racFragments);
     }
 
+    public synchronized void addHardFilteredFusionCount(int count) { mHardFilteredFusionCount += count; }
+
     public void close()
     {
         int incompleteGroupCount = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
+        int totalHardFiltered = mHardFilteredFusionCount + mHardFilteredCache.hardFilteredCount();
 
-        ISF_LOGGER.info("all fusion tasks complete - RAC frags({} assigned={} groups={}) incompleteGroups({})",
-                mRacFragmentCache.totalFragmentCount(), mRacFragmentCache.assignedFragmentCount(),
-                mRacFragmentCache.totalGroupCount(), incompleteGroupCount);
+        ISF_LOGGER.info("all fusion tasks complete: incompleteGroups({}) RAC frags({} assigned={} groups={}) hardFiltered({} supps={})",
+                incompleteGroupCount, mRacFragmentCache.totalFragmentCount(), mRacFragmentCache.assignedFragmentCount(),
+                mRacFragmentCache.totalGroupCount(), totalHardFiltered, mHardFilteredCache.hardFilteredCount());
 
         // write any unassigned RAC fragments
         if(mConfig.Fusions.WriteChimericReads || mConfig.Fusions.WriteChimericFragments)
