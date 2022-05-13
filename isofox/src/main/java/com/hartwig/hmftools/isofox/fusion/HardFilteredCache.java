@@ -12,21 +12,30 @@ import java.util.stream.Collectors;
 
 import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 
 public class HardFilteredCache
 {
     private final Map<String,Set<String>> mChromosomePairFilteredReads;
+
+    private final Map<String,Set<Integer>> mKnownSpliteSites;
+
     private int mHardFilteredCount;
 
     public HardFilteredCache()
     {
         mChromosomePairFilteredReads = Maps.newHashMap();
+        mKnownSpliteSites = Maps.newHashMap();
         mHardFilteredCount = 0;
     }
 
     public int cacheCount() { return mChromosomePairFilteredReads.values().stream().mapToInt(x -> x.size()).sum(); }
     public int chrPairCount() { return mChromosomePairFilteredReads.size(); }
     public int hardFilteredCount() { return mHardFilteredCount; }
+    public Map<String,Set<Integer>> getKnownSpliteSites() { return mKnownSpliteSites; }
 
     public void addHardFilteredReads(final Map<String,Set<String>> hardFilteredReadIds)
     {
@@ -107,6 +116,27 @@ public class HardFilteredCache
         return filteredReadIds != null && filteredReadIds.contains(readId);
     }
 
+    public void registerKnownSpliteSites(final EnsemblDataCache ensemblDataCache)
+    {
+        for(Map.Entry<String,List<GeneData>> chrEntry : ensemblDataCache.getChrGeneDataMap().entrySet())
+        {
+            Set<Integer> uniqueSpliceSites = Sets.newHashSet();
+            mKnownSpliteSites.put(chrEntry.getKey(), uniqueSpliceSites);
+
+            for(GeneData geneData : chrEntry.getValue())
+            {
+                for(TranscriptData transData : ensemblDataCache.getTranscripts(geneData.GeneId))
+                {
+                    for(ExonData exon : transData.exons())
+                    {
+                        uniqueSpliceSites.add(exon.Start);
+                        uniqueSpliceSites.add(exon.End);
+                    }
+                }
+            }
+        }
+    }
+
     public static String formChromosomePairString(final String chr1, final String chr2)
     {
         int chrRank1 = chromosomeRank(chr1);
@@ -130,7 +160,7 @@ public class HardFilteredCache
     public static void applyHardFilter(
             final Map<Integer,List<SupplementaryJunctionData>> supplementaryJunctions, final Map<String,Set<String>> hardFilteredReadIds,
             final Map<String,ChimericReadGroup> chimericReadMap, final String localChromosome, int minSplitFrags,
-            final List<int[]> knownSpliceSites)
+            final Map<String,Set<Integer>> knownSpliceSites)
     {
         if(minSplitFrags <= 1)
             return;
@@ -145,8 +175,8 @@ public class HardFilteredCache
                 if(suppJuncData.MatchCount + 1 >= minSplitFrags)
                     continue;
 
-                if(matchesKnownSpliceSite(suppJuncData.LocalJunctionPos, knownSpliceSites)
-                || matchesKnownSpliceSite(suppJuncData.RemoteJunctionPos, knownSpliceSites))
+                if(matchesKnownSpliceSite(localChromosome, suppJuncData.LocalJunctionPos, knownSpliceSites)
+                || matchesKnownSpliceSite(suppJuncData.RemoteChromosome, suppJuncData.RemoteJunctionPos, knownSpliceSites))
                 {
                     continue;
                 }
@@ -169,14 +199,8 @@ public class HardFilteredCache
         }
     }
 
-    private static boolean matchesKnownSpliceSite(int position, final List<int[]> knownSpliceSites)
+    private static boolean matchesKnownSpliceSite(final String chromosome, int position, final Map<String,Set<Integer>> knownSpliceSites)
     {
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            if(knownSpliceSites.stream().anyMatch(x -> x[SE_START] == position))
-                return true;
-        }
-
-        return false;
+        return knownSpliceSites.containsKey(chromosome) ? knownSpliceSites.get(chromosome).contains(position) : false;
     }
 }

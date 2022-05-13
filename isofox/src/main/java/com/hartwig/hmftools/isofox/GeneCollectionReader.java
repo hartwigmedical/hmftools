@@ -126,6 +126,9 @@ public class GeneCollectionReader implements Callable
         mFusionTaskManager = fusionManager;
         mFusionFinder = mFusionTaskManager != null ? mFusionTaskManager.createFusionFinder(mChromosome) : null;
 
+        if(mFusionTaskManager != null)
+            mBamFragmentAllocator.getChimericReadTracker().setKnownSpliteSites(fusionManager.hardFilteredCache().getKnownSpliteSites());
+
         mPerfCounters = PerformanceTracking.createPerfCounters();
 
         mIsValid = true;

@@ -63,6 +63,7 @@ public class ChimericReadTracker
 
     private final Map<Integer,List<SupplementaryJunctionData>> mSupplementaryJunctions;
     private final Map<String,Set<String>> mHardFilteredReadIds;
+    private Map<String,Set<Integer>> mKnownSpliteSites;
 
     // to avoid double-processing reads falling after a gene collection
     private final Map<String,List<ReadRecord>> mPostGeneReadMap;
@@ -90,6 +91,7 @@ public class ChimericReadTracker
         mSupplementaryJunctions = Maps.newHashMap();
         mHardFilteredReadIds = Maps.newHashMap();
         mGeneCollection = null;
+        mKnownSpliteSites = null;
     }
 
     public boolean enabled() { return mEnabled; }
@@ -104,8 +106,9 @@ public class ChimericReadTracker
         return mJunctionRacGroups;
     }
 
-    public JunctionRacFragments getJunctionRacGroups() { return mJunctionRacGroups; } // testing only
+    public void setKnownSpliteSites(final Map<String,Set<Integer>> knownSpliceites) { mKnownSpliteSites = knownSpliceites; }
 
+    public JunctionRacFragments getJunctionRacGroups() { return mJunctionRacGroups; } // testing only
     public List<List<ReadRecord>> getLocalChimericReads() { return mLocalChimericReads; }
     public ChimericStats getStats() { return mChimericStats; }
     public Map<String,Set<String>> getHardFilteredReadIds() { return mHardFilteredReadIds; }
@@ -148,7 +151,7 @@ public class ChimericReadTracker
     {
         mGeneCollection = geneCollection;
         mKnownGeneIds.clear();
-        mGeneCollection.geneIds().stream().filter(x -> mKnownGeneIds.contains(x)).forEach(x -> mKnownGeneIds.add(x));
+        mGeneCollection.geneIds().stream().filter(x -> mReferenceKnownGeneIds.contains(x)).forEach(x -> mKnownGeneIds.add(x));
         mJunctionRacGroups = new JunctionRacFragments();
 
         mPreviousPostGeneReadMap.clear();
@@ -567,12 +570,12 @@ public class ChimericReadTracker
 
     private void applyHardFilter()
     {
-        if(mConfig.Fusions.MinHardFilterFrags <= 1)
+        if(mConfig.Fusions.MinHardFilterFrags <= 1 || !mKnownGeneIds.isEmpty())
             return;
 
         HardFilteredCache.applyHardFilter(
                 mSupplementaryJunctions, mHardFilteredReadIds, mChimericReadMap, mGeneCollection.chromosome(),
-                mConfig.Fusions.MinHardFilterFrags, mGeneCollection.getCommonExonicRegions());
+                mConfig.Fusions.MinHardFilterFrags, mKnownSpliteSites);
 
         mSupplementaryJunctions.clear();
     }

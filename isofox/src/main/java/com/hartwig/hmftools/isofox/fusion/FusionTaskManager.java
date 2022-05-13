@@ -33,14 +33,14 @@ public class FusionTaskManager
         mConfig = config;
         mGeneTransCache = geneTransCache;
 
-        if(mConfig.runFunction(FUSIONS))
-            mGeneTransCache.createTranscriptIdMap();
-
         mPassingFusions = new PassingFusions(config.Fusions.KnownFusions, config.Fusions.CohortFile);
 
         mRacFragmentCache = new RacFragmentCache();
         mIncompleteReadGroups = Maps.newHashMap();
         mHardFilteredCache = new HardFilteredCache();
+
+        mGeneTransCache.createTranscriptIdMap();
+        mHardFilteredCache.registerKnownSpliteSites(mGeneTransCache);
 
         mFusionWriter = new FusionWriter(mConfig);
     }
