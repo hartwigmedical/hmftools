@@ -8,25 +8,30 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.cup.CuppaConfig.CANCER_SUBTYPE_OTHER;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaConfig.FLD_CANCER_TYPE;
 import static com.hartwig.hmftools.cup.CuppaConfig.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SAMPLE_DATA_FILE;
-import static com.hartwig.hmftools.cup.CuppaConfig.SAMPLE_DATA_FILE;
+import static com.hartwig.hmftools.cup.CuppaConfig.SUBSET_DELIM;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OTHER;
+import static com.hartwig.hmftools.cup.utils.CompareUtils.EMPTY_RESULTS_CSV;
+import static com.hartwig.hmftools.cup.utils.CompareUtils.resultInfoCsv;
+import static com.hartwig.hmftools.cup.utils.CompareUtils.topRefResult;
+import static com.hartwig.hmftools.cup.utils.CompareUtils.resultsMatch;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.SampleResult;
 
 import org.apache.commons.cli.CommandLine;
@@ -34,11 +39,14 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 public class CuppaCompare
 {
-    private final Map<String,String> mSampleCancerTypes;
+    private final Map<String,String> mOrigSampleCancerTypes;
+    private final Map<String,String> mNewSampleCancerTypes;
+    private final List<String> mClassifiers;
     private final String mFileOrig;
     private final String mFileNew;
 
@@ -46,10 +54,20 @@ public class CuppaCompare
     
     private static final String FILE_ORIG = "orig_file";
     private static final String FILE_NEW = "new_file";
+    private static final String ORIG_SAMPLE_DATA = "orig_sample_data";
+    private static final String NEW_SAMPLE_DATA = "new_sample_data";
+    private static final String CLASSIFERS = "new_sample_data";
 
     public CuppaCompare(final CommandLine cmd)
     {
-        mSampleCancerTypes = Maps.newHashMap();
+        mClassifiers = Lists.newArrayList();
+
+        if(cmd.hasOption(CLASSIFERS))
+        {
+            String[] classifers = cmd.getOptionValue(CLASSIFERS).split(SUBSET_DELIM);
+            Arrays.stream(classifers).forEach(x -> mClassifiers.add(x));
+        }
+
         mFileOrig = cmd.getOptionValue(FILE_ORIG);
         mFileNew = cmd.getOptionValue(FILE_NEW);
 
@@ -57,12 +75,21 @@ public class CuppaCompare
 
         mWriter = initialiseWriter(outputDir, cmd.getOptionValue(OUTPUT_ID));
 
-        loadRefSampleData(cmd.getOptionValue(REF_SAMPLE_DATA_FILE));
+        if(cmd.hasOption(REF_SAMPLE_DATA_FILE))
+        {
+            mOrigSampleCancerTypes = loadSampleData(cmd.getOptionValue(REF_SAMPLE_DATA_FILE));
+            mNewSampleCancerTypes = mOrigSampleCancerTypes;
+        }
+        else
+        {
+            mOrigSampleCancerTypes = loadSampleData(cmd.getOptionValue(ORIG_SAMPLE_DATA));
+            mNewSampleCancerTypes = loadSampleData(cmd.getOptionValue(NEW_SAMPLE_DATA));
+        }
     }
 
     public void run()
     {
-        if(mSampleCancerTypes.isEmpty())
+        if(mOrigSampleCancerTypes.isEmpty())
         {
             CUP_LOGGER.error("no samples loaded");
             System.exit(1);
@@ -95,88 +122,72 @@ public class CuppaCompare
             return;
         }
 
-        CUP_LOGGER.info("loaded Cuppa results orig({}) new({})", origAllResults.size(), newAllResults.size());
+        Set<String> allSamples = mOrigSampleCancerTypes.keySet().stream().collect(Collectors.toSet());
+        mNewSampleCancerTypes.keySet().forEach(x -> allSamples.add(x));
 
-        int matchedCount = 0;
-        int diffCount = 0;
-        int compared = 0;
+        CUP_LOGGER.info("loaded Cuppa data: orig(sample={} results={}) new(samples={} results={}) totalSamples({})",
+                origAllResults.size(), origAllResults.values().stream().mapToInt(x -> x.size()).sum(),
+                newAllResults.size(), newAllResults.values().stream().mapToInt(x -> x.size()).sum(), allSamples.size());
 
-        int unmatchedSamples = 0;
-        int unmatchedResults = 0;
-        int bothCorrect = 0;
-        int origOnlyCorrect = 0;
-        int newOnlyCorrect = 0;
-        int bothIncorrect = 0;
-        int missingCancerTypes = 0;
+        int processed = 0;
 
-        for(Map.Entry<String,String> entry : mSampleCancerTypes.entrySet())
+        for(String sampleId : allSamples)
         {
-            String sampleId = entry.getKey();
-            String refCancerType = entry.getValue();
-
-            if(refCancerType.equals(CANCER_TYPE_OTHER))
-                continue;
-
-            List<SampleResult> origResults = origAllResults.get(sampleId);
-            List<SampleResult> newResults = newAllResults.get(sampleId);
-
-            if(newResults == null) // skip samples not present in both cohort results
+            if(mOrigSampleCancerTypes.containsKey(sampleId) && mNewSampleCancerTypes.containsKey(sampleId))
             {
-                ++unmatchedSamples;
-                continue;
+                String origRefCancerType = mOrigSampleCancerTypes.get(sampleId);
+
+                if(mNewSampleCancerTypes.containsKey(sampleId))
+                {
+                    String newRefCancerType = mNewSampleCancerTypes.get(sampleId);
+
+                    if(!origRefCancerType.equals(newRefCancerType))
+                    {
+                        CUP_LOGGER.warn("sample({}) has diff ref cancerTypes(orig={} new={}), skipping",
+                                sampleId, origRefCancerType, newRefCancerType);
+                        continue;
+                    }
+                }
+
+                if(origRefCancerType.equals(CANCER_TYPE_OTHER))
+                    continue;
+
+                List<SampleResult> origResults = origAllResults.get(sampleId);
+                List<SampleResult> newResults = newAllResults.get(sampleId);
+
+                for(SampleResult origResult : origResults)
+                {
+                    SampleResult newResult = newResults.stream().filter(x -> resultsMatch(x, origResult)).findFirst().orElse(null);
+
+                    processResults(sampleId, true, origRefCancerType, origResult, newResult);
+                }
+            }
+            else
+            {
+                boolean hasOrig = mOrigSampleCancerTypes.containsKey(sampleId);
+
+                List<SampleResult> results = hasOrig ? origAllResults.get(sampleId) : newAllResults.get(sampleId);
+                String refCancerType = hasOrig ? mOrigSampleCancerTypes.get(sampleId) : mNewSampleCancerTypes.get(sampleId);
+
+                if(refCancerType.equals(CANCER_TYPE_OTHER))
+                    continue;
+
+                for(SampleResult result : results)
+                {
+                    processResults(sampleId, false, refCancerType, hasOrig ? result : null, !hasOrig ? result : null);
+                }
             }
 
-            for(SampleResult origResult : origResults)
+            ++processed;
+
+            if((processed % 1000) == 0)
             {
-                SampleResult newResult = newResults.stream().filter(x -> x.typeMatches(origResult)).findFirst().orElse(null);
-
-                if(newResult == null)
-                {
-                    ++unmatchedResults;
-                    continue;
-                }
-
-                String origCancerType = origResult.topRefResult();
-                String newCancerType = newResult.topRefResult();
-
-                boolean origCorrect = origCancerType.equals(refCancerType);
-                boolean newCorrect = newCancerType.equals(refCancerType);
-
-                if(origCorrect && newCorrect)
-                {
-                    ++bothCorrect;
-                    continue;
-                }
-
-                if(origCorrect)
-                    ++origOnlyCorrect;
-                else if(newCorrect)
-                    ++newOnlyCorrect;
-                else
-                    ++bothIncorrect;
-
-                if(!origResult.CancerTypeValues.containsKey(refCancerType) || !newResult.CancerTypeValues.containsKey(refCancerType))
-                {
-                    ++missingCancerTypes;
-                    continue;
-                }
-
-                writeDiffs(
-                        sampleId, refCancerType, origResult.Category, origResult.DataType,
-                        origCancerType, origResult.CancerTypeValues.get(origCancerType), origResult.CancerTypeValues.get(refCancerType),
-                        newCancerType, newResult.CancerTypeValues.get(newCancerType), newResult.CancerTypeValues.get(refCancerType));
-            }
-
-            ++compared;
-
-            if((compared % 1000) == 0)
-            {
-                CUP_LOGGER.debug("compared {} samples", compared);
+                CUP_LOGGER.debug("compared {} samples", processed);
             }
         }
 
-        CUP_LOGGER.info("bothCorrect({}) origCorrect({}) newCorrect({}) neither({}) unmatched(samples={} cancerTypes={})",
-                bothCorrect, origOnlyCorrect, newOnlyCorrect, bothIncorrect, unmatchedSamples, missingCancerTypes);
+        // CUP_LOGGER.info("bothCorrect({}) origCorrect({}) newCorrect({}) neither({}) unmatched(samples={} cancerTypes={})",
+        //        bothCorrect, origOnlyCorrect, newOnlyCorrect, bothIncorrect, unmatchedSamples, missingCancerTypes);
 
         closeBufferedWriter(mWriter);
     }
@@ -193,7 +204,7 @@ public class CuppaCompare
             outputFileName += ".csv";
 
             final BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write("SampleId,Category,DataType,RefCancerType,IsCorrect");
+            writer.write("SampleId,Status,DataType,RefCancerType,MatchType");
             writer.write(",OrigCancerType,OrigCancerValue,OrigRefCancerValue");
             writer.write(",NewCancerType,NewCancerValue,NewRefCancerValue");
             writer.newLine();
@@ -207,29 +218,86 @@ public class CuppaCompare
         }
     }
 
-    private void writeDiffs(
-            final String sampleId, final String refCancerType, final CategoryType category, final String dataType,
-            final String origCancerType, double origCancerTypeValue, double origRefCancerTypeValue,
-            final String newCancerType, double newCancerTypeValue, double newRefCancerTypeValue)
+    private static final String STATUS_BOTH = "BOTH";
+    private static final String STATUS_ORIG_SAMPLE = "ORIG_SAMPLE_ONLY";
+    private static final String STATUS_NEW_SAMPLE = "ORIG_SAMPLE_ONLY";
+    private static final String STATUS_ORIG_DATATYPE = "NEW_DATATYPE_ONLY";
+    private static final String STATUS_NEW_DATATYPE = "NEW_DATATYPE_ONLY";
+
+    private static final String MATCH_TYPE_CORRECT = "CORRECT";
+    private static final String MATCH_TYPE_ORIG_CORRECT = "ORIG_ONLY";
+    private static final String MATCH_TYPE_NEW_CORRECT = "NEW_ONLY";
+    private static final String MATCH_TYPE_INCORRECT = "INCORRECT";
+
+    private boolean skipClassifier(final String dataType)
+    {
+        return !mClassifiers.isEmpty() && !mClassifiers.contains(dataType);
+    }
+
+    private void processResults(
+            final String sampleId, boolean sampleInBoth, final String refCancerType,
+            final SampleResult origResult, final SampleResult newResult)
     {
         try
         {
-            boolean origCorrect = origCancerType.equals(refCancerType);
-            boolean newCorrect = newCancerType.equals(refCancerType);
-            String result = origCorrect && newCorrect ? "BOTH" : (origCorrect ? "ORIG" : (newCorrect ? "NEW" : "NEITHER"));
-            mWriter.write(String.format("%s,%s,%s,%s,%s", sampleId, category, dataType, refCancerType, result));
-            mWriter.write(String.format(",%s,%s,%s", origCancerType, origCancerTypeValue, origRefCancerTypeValue));
-            mWriter.write(String.format(",%s,%s,%s", newCancerType, newCancerTypeValue, newRefCancerTypeValue));
-            mWriter.newLine();
+            if(origResult == null || newResult == null)
+            {
+                final SampleResult result = origResult != null ? origResult : newResult;
+
+                if(skipClassifier(result.DataType))
+                    return;
+
+                final String status = sampleInBoth ?
+                        (origResult != null ? STATUS_ORIG_DATATYPE : STATUS_NEW_DATATYPE) :
+                        (origResult != null ? STATUS_ORIG_SAMPLE : STATUS_NEW_SAMPLE);
+
+                boolean isCorrect = topRefResult(result).equals(refCancerType);
+                String matchType = isCorrect ? MATCH_TYPE_CORRECT : MATCH_TYPE_INCORRECT;
+
+                mWriter.write(String.format("%s,%s,%s,%s,%s", sampleId, status, result.DataType, refCancerType, matchType));
+
+                mWriter.write(String.format(",%s,%s",
+                        origResult != null ? resultInfoCsv(origResult, refCancerType) : EMPTY_RESULTS_CSV,
+                        newResult != null ? resultInfoCsv(newResult, refCancerType) : EMPTY_RESULTS_CSV));
+
+                mWriter.newLine();
+            }
+            else
+            {
+                if(skipClassifier(origResult.DataType))
+                    return;
+
+                boolean origCorrect = topRefResult(origResult).equals(refCancerType);
+                boolean newCorrect = topRefResult(newResult).equals(refCancerType);
+
+                String matchType;
+
+                if(origCorrect && newCorrect)
+                    matchType = MATCH_TYPE_CORRECT;
+                else if(origCorrect)
+                    matchType = MATCH_TYPE_ORIG_CORRECT;
+                else if(newCorrect)
+                    matchType = MATCH_TYPE_NEW_CORRECT;
+                else
+                    matchType = MATCH_TYPE_INCORRECT;
+
+                mWriter.write(String.format("%s,%s,%s,%s,%s", sampleId, STATUS_BOTH, origResult.DataType, refCancerType, matchType));
+
+                mWriter.write(String.format(",%s,%s", resultInfoCsv(origResult, refCancerType), resultInfoCsv(newResult, refCancerType)));
+
+                mWriter.newLine();
+            }
         }
         catch(IOException e)
         {
-            CUP_LOGGER.error("failed to initialise Cuppa comparison file: {}", e.toString());
+            CUP_LOGGER.error("failed to write Cuppa comparison file: {}", e.toString());
         }
     }
 
-    private void loadRefSampleData(final String sampleDataFile)
+    private Map<String,String> loadSampleData(final String sampleDataFile)
     {
+        final Map<String,String> sampleCancerTypes = Maps.newHashMap();
+
         try
         {
             final List<String> fileData = Files.readAllLines(new File(sampleDataFile).toPath());
@@ -244,23 +312,28 @@ public class CuppaCompare
             for(final String line : fileData)
             {
                 String[] values = line.split(DATA_DELIM, -1);
-                mSampleCancerTypes.put(values[sampleIdIndex], values[cancerTypeIndex]);
+                sampleCancerTypes.put(values[sampleIdIndex], values[cancerTypeIndex]);
             }
 
-            CUP_LOGGER.info("loaded {} sample and cancer types from file: {}", mSampleCancerTypes.size(), sampleDataFile);
+            CUP_LOGGER.info("loaded {} samples from file: {}", sampleCancerTypes.size(), sampleDataFile);
         }
         catch (IOException e)
         {
             CUP_LOGGER.error("failed to read sample data file({}): {}", sampleDataFile, e.toString());
         }
+
+        return sampleCancerTypes;
     }
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = new Options();
+        options.addOption(CLASSIFERS, true, "Classifiers to compare");
         options.addOption(FILE_ORIG, true, "Original Cuppa results file");
         options.addOption(FILE_NEW, true, "New Cuppa results file");
-        options.addOption(REF_SAMPLE_DATA_FILE, true, "Sample ref data file");
+        options.addOption(REF_SAMPLE_DATA_FILE, true, "Sample ref data file, if using the same for original and new results");
+        options.addOption(ORIG_SAMPLE_DATA, true, "Original sample ref data file");
+        options.addOption(NEW_SAMPLE_DATA, true, "New sample ref data file - optional if the same a original");
         addLoggingOptions(options);
         addOutputOptions(options);
 

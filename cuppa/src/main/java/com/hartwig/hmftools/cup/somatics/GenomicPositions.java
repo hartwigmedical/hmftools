@@ -92,8 +92,20 @@ public final class GenomicPositions
             String cancerType = cancerTypes.get(i);
             List<SampleData> samples = refCancerSampleData.get(cancerType);
 
+            if(samples == null)
+            {
+                CUP_LOGGER.error("cancerType({}) missing ref samples", cancerType);
+                return null;
+            }
+
             for(final SampleData sample : samples)
             {
+                if(!sampleIndexMap.containsKey(sample.Id))
+                {
+                    CUP_LOGGER.error("gen-pos sample index missing sample({})", sample.Id);
+                    return null;
+                }
+
                 int sampleIndex = sampleIndexMap.get(sample.Id);
                 double[] sampleCounts = samplePosFreqCounts.getCol(sampleIndex);
 

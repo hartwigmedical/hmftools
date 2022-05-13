@@ -310,7 +310,7 @@ public class CuppaConfig
             }
             else
             {
-                final String[] categoryStrings = cmd.getOptionValue(CATEGORIES).split(";");
+                final String[] categoryStrings = cmd.getOptionValue(CATEGORIES).split(SUBSET_DELIM);
                 Arrays.stream(categoryStrings).forEach(x -> categories.add(CategoryType.valueOf(x)));
             }
         }

@@ -49,29 +49,6 @@ public class SampleResult
         return false;
     }
 
-    public boolean typeMatches(final SampleResult other)
-    {
-        return SampleId.equals(other.SampleId) && Category == other.Category && DataType.equals(other.DataType)
-                && Result == other.Result;
-    }
-
-    public String topRefResult()
-    {
-        double topValue = 0;
-        String topCancerType = "";
-
-        for(Map.Entry<String,Double> entry : CancerTypeValues.entrySet())
-        {
-            if(entry.getValue() > topValue)
-            {
-                topValue = entry.getValue();
-                topCancerType = entry.getKey();
-            }
-        }
-
-        return topCancerType;
-    }
-
     public static String csvHeader()
     {
         StringJoiner sj = new StringJoiner(DATA_DELIM);
