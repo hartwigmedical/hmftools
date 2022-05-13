@@ -201,6 +201,7 @@ public class HardFilteredCache
 
     private static boolean matchesKnownSpliceSite(final String chromosome, int position, final Map<String,Set<Integer>> knownSpliceSites)
     {
-        return knownSpliceSites.containsKey(chromosome) ? knownSpliceSites.get(chromosome).contains(position) : false;
+        return knownSpliceSites != null && knownSpliceSites.containsKey(chromosome) ?
+            knownSpliceSites.get(chromosome).contains(position) : false;
     }
 }

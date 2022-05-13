@@ -49,6 +49,7 @@ import com.hartwig.hmftools.isofox.expression.GeneCollectionSummary;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.adjusts.GcTranscriptCalculator;
 import com.hartwig.hmftools.isofox.fusion.ChimericStats;
+import com.hartwig.hmftools.isofox.fusion.ChromosomeFusions;
 import com.hartwig.hmftools.isofox.fusion.FusionFinder;
 import com.hartwig.hmftools.isofox.fusion.FusionTaskManager;
 import com.hartwig.hmftools.isofox.fusion.FusionReadGroup;
@@ -56,7 +57,7 @@ import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.TranscriptResult;
 
-public class GeneCollectionReader implements Callable
+public class ChromosomeTaskExecutor implements Callable
 {
     private final String mChromosome;
     private final IsofoxConfig mConfig;
@@ -74,9 +75,7 @@ public class GeneCollectionReader implements Callable
     private int mGenesProcessed;
 
     // fusion state cached across all gene collections
-    private final FusionTaskManager mFusionTaskManager;
-    private final FusionFinder mFusionFinder;
-    private final ChimericStats mChimericStats;
+    private final ChromosomeFusions mChromosomeFusions;
 
     // cache of results
     private final List<GeneCollectionSummary> mGeneCollectionSummaryData;
@@ -91,7 +90,7 @@ public class GeneCollectionReader implements Callable
 
     private final PerformanceCounter[] mPerfCounters;
 
-    public GeneCollectionReader(
+    public ChromosomeTaskExecutor(
             final IsofoxConfig config, final String chromosome, final List<GeneData> geneDataList,
             final EnsemblDataCache geneTransCache, final ResultsWriter resultsWriter, final FusionTaskManager fusionManager,
             final ExpectedCountsCache expectedCountsCache, final GcTranscriptCalculator transcriptGcCalcs)
@@ -121,15 +120,11 @@ public class GeneCollectionReader implements Callable
         mTotalReadsProcessed = 0;
         mCombinedFragmentCounts = new int[typeAsInt(FragmentType.MAX)];
         mNonEnrichedGcRatioCounts = new GcRatioCounts();
-        mChimericStats = new ChimericStats();
-
-        mFusionTaskManager = fusionManager;
-        mFusionFinder = mFusionTaskManager != null ? mFusionTaskManager.createFusionFinder(mChromosome) : null;
-
-        if(mFusionTaskManager != null)
-            mBamFragmentAllocator.getChimericReadTracker().setKnownSpliteSites(fusionManager.hardFilteredCache().getKnownSpliteSites());
 
         mPerfCounters = PerformanceTracking.createPerfCounters();
+
+        mChromosomeFusions = mConfig.runFunction(FUSIONS) ? new ChromosomeFusions(
+                        config, chromosome, fusionManager, mBamFragmentAllocator.getChimericReadTracker(),mPerfCounters[PERF_FUSIONS]) : null;
 
         mIsValid = true;
     }
@@ -138,7 +133,7 @@ public class GeneCollectionReader implements Callable
     public final List<GeneCollectionSummary> getGeneCollectionSummaryData() { return mGeneCollectionSummaryData; }
     public final GcRatioCounts getGcRatioCounts() { return mGcRatioCounts; }
 
-    public final ChimericStats getChimericStats() { return mChimericStats; }
+    public final ChimericStats getChimericStats() { return mChromosomeFusions.chimericStats(); }
     public boolean isValid() { return mIsValid; }
     public int totalReadCount() { return mTotalReadsProcessed; }
 
@@ -251,46 +246,11 @@ public class GeneCollectionReader implements Callable
             {
                 nextLogCount += 100;
                 ISF_LOGGER.info("chr({}) processed {} of {} genes", mChromosome, mGenesProcessed, mGeneDataList.size());
-
-                if(mConfig.runFunction(FUSIONS))
-                    ISF_LOGGER.debug("chr({}) chimeric data: {}", mChromosome, mChimericStats);
             }
         }
 
-        if(mConfig.runFunction(FUSIONS))
-        {
-            if(nextLogCount > 100)
-            {
-                ISF_LOGGER.info("chr({}) chimeric data: {}", mChromosome, mChimericStats);
-            }
-
-            mPerfCounters[PERF_FUSIONS].stop();
-
-            mPerfCounters[PERF_FUSIONS].start();
-
-            // handle fragments spanning multiple chromosomes
-
-            Map<String,Set<String>> chrHardFilteredIds = mBamFragmentAllocator.getChimericReadTracker().getHardFilteredReadIds();
-
-            // organise incomplete reads into the chromosomes which they link to
-            final Map<String,Map<String,FusionReadGroup>> chrIncompleteReadsGroups = mFusionFinder.extractIncompleteReadGroups(
-                    mChromosome, chrHardFilteredIds);
-
-            final List<FusionReadGroup> interChromosomalGroups = mFusionTaskManager.addIncompleteReadGroup(
-                    mChromosome, chrIncompleteReadsGroups, chrHardFilteredIds);
-
-            if(!interChromosomalGroups.isEmpty())
-            {
-                mFusionFinder.processInterChromosomalReadGroups(interChromosomalGroups);
-            }
-
-            mPerfCounters[PERF_FUSIONS].stop();
-
-            mBamFragmentAllocator.getChimericReadTracker().clearAll();
-
-            mFusionFinder.logPerfCounters();
-            mFusionFinder.clearState(true);
-        }
+        if(mChromosomeFusions != null)
+            mChromosomeFusions.onChromosomeComplete();
 
         if(mGeneDataList.size() > 10)
         {
@@ -486,45 +446,10 @@ public class GeneCollectionReader implements Callable
 
     private void postBamReadFusions(final GeneCollection geneCollection)
     {
-        if(!mConfig.runFunction(FUSIONS) || mFusionFinder == null)
+        if(mChromosomeFusions == null)
             return;
 
-        if(!mPerfCounters[PERF_FUSIONS].isRunning())
-            mPerfCounters[PERF_FUSIONS].start();
-        else
-            mPerfCounters[PERF_FUSIONS].resume();
-
-        // pass any complete chimeric read groups to the fusion finder
-        // and add to this any groups which are now complete (ie which were partially complete before)
-        // cache any incomplete groups, either for later gene collections or from other chromosomes
-        final List<FusionReadGroup> completeReadGroups = mFusionFinder.processNewChimericReadGroups(
-                geneCollection, mBamFragmentAllocator.getBaseDepth(),
-                mBamFragmentAllocator.getChimericReadTracker().getReadMap());
-
-        mChimericStats.merge(mBamFragmentAllocator.getChimericReadTracker().getStats());
-
-        boolean highCount = completeReadGroups.size() >= HIGH_LOG_COUNT;
-        if(highCount)
-        {
-            int nonSuppGroups = (int)completeReadGroups.stream().filter(x -> x.size() == 2).count();
-            ISF_LOGGER.info("chr({}) genes({}) region({} - {}) found {} local chimeric read groups (non-supp={}), stats({})",
-                    mChromosome, geneCollection.geneNames(),
-                    geneCollection.getNonGenicPositions()[SE_START], geneCollection.getNonGenicPositions()[SE_END],
-                    completeReadGroups.size(), nonSuppGroups, mChimericStats);
-        }
-
-        mFusionTaskManager.addRacFragments(
-                mChromosome, geneCollection.id(), mBamFragmentAllocator.getChimericReadTracker().extractJunctionRacFragments());
-
-        mFusionFinder.processLocalReadGroups(completeReadGroups);
-
-        if(highCount)
-        {
-            mFusionFinder.clearState(false);
-            System.gc();
-        }
-
-        mPerfCounters[PERF_FUSIONS].pause();
+        mChromosomeFusions.onGeneCollectionComplete(geneCollection, mBamFragmentAllocator.getBaseDepth());
     }
 
     public void applyGcAdjustment()

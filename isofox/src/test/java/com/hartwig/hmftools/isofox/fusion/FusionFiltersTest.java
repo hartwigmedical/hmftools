@@ -59,7 +59,6 @@ import org.junit.Test;
 
 public class FusionFiltersTest
 {
-
     @Test
     public void testHardFilterCache()
     {
