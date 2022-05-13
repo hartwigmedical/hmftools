@@ -287,7 +287,7 @@ public class FusionFinder implements Callable
         {
             ++readGroupCount;
 
-            if(readGroupCount > 0 && (readGroupCount % HIGH_LOG_COUNT) == 0)
+            if(readGroupCount > 0 && (readGroupCount % HIGH_LOG_COUNT) == 0 && mConfig.Fusions.RunPerfChecks)
             {
                 ISF_LOGGER.info("chr({}) processed {} {} chimeric read groups", mChromosome, readGroupCount, scope);
             }
