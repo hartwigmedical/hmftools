@@ -56,7 +56,7 @@ public class CuppaCompare
     private static final String FILE_NEW = "new_file";
     private static final String ORIG_SAMPLE_DATA = "orig_sample_data";
     private static final String NEW_SAMPLE_DATA = "new_sample_data";
-    private static final String CLASSIFERS = "new_sample_data";
+    private static final String CLASSIFERS = "classifiers";
 
     public CuppaCompare(final CommandLine cmd)
     {
@@ -126,8 +126,8 @@ public class CuppaCompare
         mNewSampleCancerTypes.keySet().forEach(x -> allSamples.add(x));
 
         CUP_LOGGER.info("loaded Cuppa data: orig(sample={} results={}) new(samples={} results={}) totalSamples({})",
-                origAllResults.size(), origAllResults.values().stream().mapToInt(x -> x.size()).sum(),
-                newAllResults.size(), newAllResults.values().stream().mapToInt(x -> x.size()).sum(), allSamples.size());
+                mOrigSampleCancerTypes.size(), origAllResults.values().stream().mapToInt(x -> x.size()).sum(),
+                mNewSampleCancerTypes.size(), newAllResults.values().stream().mapToInt(x -> x.size()).sum(), allSamples.size());
 
         int processed = 0;
 
@@ -220,8 +220,8 @@ public class CuppaCompare
 
     private static final String STATUS_BOTH = "BOTH";
     private static final String STATUS_ORIG_SAMPLE = "ORIG_SAMPLE_ONLY";
-    private static final String STATUS_NEW_SAMPLE = "ORIG_SAMPLE_ONLY";
-    private static final String STATUS_ORIG_DATATYPE = "NEW_DATATYPE_ONLY";
+    private static final String STATUS_NEW_SAMPLE = "NEW_SAMPLE_ONLY";
+    private static final String STATUS_ORIG_DATATYPE = "ORIG_DATATYPE_ONLY";
     private static final String STATUS_NEW_DATATYPE = "NEW_DATATYPE_ONLY";
 
     private static final String MATCH_TYPE_CORRECT = "CORRECT";

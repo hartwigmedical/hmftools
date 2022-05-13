@@ -13,6 +13,7 @@ public enum CategoryType
 
     public static final String ALL_CATEGORIES = "ALL";
     public static final String DNA_CATEGORIES = "DNA";
+    public static final String RNA_CATEGORIES = "RNA";
 
     public static boolean isDna(final CategoryType type)
     {

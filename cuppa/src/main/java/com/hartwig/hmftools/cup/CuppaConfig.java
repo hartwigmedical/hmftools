@@ -31,10 +31,12 @@ import static com.hartwig.hmftools.cup.common.CategoryType.COMBINED;
 import static com.hartwig.hmftools.cup.common.CategoryType.DNA_CATEGORIES;
 import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
+import static com.hartwig.hmftools.cup.common.CategoryType.RNA_CATEGORIES;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
 import static com.hartwig.hmftools.cup.common.CategoryType.SV;
 import static com.hartwig.hmftools.cup.common.CategoryType.isDna;
+import static com.hartwig.hmftools.cup.common.CategoryType.isRna;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.ISOFOX_DIR;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.LINX_DIR;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.PURPLE_DIR;
@@ -307,6 +309,10 @@ public class CuppaConfig
             else if(cmd.getOptionValue(CATEGORIES).equals(DNA_CATEGORIES))
             {
                 Arrays.stream(CategoryType.values()).filter(x -> isDna(x)).forEach(x -> categories.add(x));
+            }
+            else if(cmd.getOptionValue(CATEGORIES).equals(RNA_CATEGORIES))
+            {
+                Arrays.stream(CategoryType.values()).filter(x -> isRna(x)).forEach(x -> categories.add(x));
             }
             else
             {
