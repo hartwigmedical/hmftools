@@ -19,6 +19,10 @@ public class IclusionProteinAnnotationExtractor implements EventPreprocessor {
     public String apply(@NotNull String event) {
         String proteinAnnotation = event;
 
+        if (proteinAnnotation.contains("ins")) {
+            proteinAnnotation = proteinAnnotation.replace("-", "_");
+        }
+
         // iClusion tends to use DEL/INS/FS rather than del/ins/fs
         for (String stringToLookFor : CAPITALIZED_STRINGS_TO_UNCAPITALIZE) {
             int position = proteinAnnotation.indexOf(stringToLookFor);

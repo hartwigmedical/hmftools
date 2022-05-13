@@ -13,5 +13,7 @@ public class IclusionProteinAnnotationExtractorTest {
         assertEquals("W288IFS", extractor.apply("W288IFS"));
 
         assertEquals("W288delinsDEL", extractor.apply("W288DELINSDEL"));
+        assertEquals("P780_Y781insGSP", extractor.apply("P780-Y781insGSP"));
+
     }
 }
