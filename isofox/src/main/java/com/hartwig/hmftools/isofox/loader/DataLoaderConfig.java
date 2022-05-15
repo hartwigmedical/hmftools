@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.FileReaderUtils;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -37,6 +38,9 @@ public class DataLoaderConfig
     public static final String CANCER_TYPES_FILE = "cancer_types_file";
     public static final String GENE_DIST_FILE = "gene_distribution_file";
     public static final String ALT_SJ_COHORT_FILE = "alt_sj_cohort_file";
+
+    public static final String FLD_SAMPLE_ID = "SampleId";
+    public static final String FLD_CANCER_TYPE = "CancerType";
 
     public static final String LOAD_TYPES = "load_types";
     public static final String THREADS = "threads";
@@ -71,15 +75,7 @@ public class DataLoaderConfig
         }
         else if(cmd.hasOption(SAMPLE_ID_FILE))
         {
-            try
-            {
-                final List<String> lines = Files.readAllLines(Paths.get(cmd.getOptionValue(SAMPLE_ID_FILE)));
-                lines.stream().filter(x -> !x.startsWith("SampleId")).forEach(x -> addSampleInfo(x));
-            }
-            catch(IOException e)
-            {
-                ISF_LOGGER.warn("invalid sampleId file: {}", e.toString());
-            }
+            loadSampleDataFile(cmd.getOptionValue(SAMPLE_ID_FILE));
         }
 
         if(cmd.hasOption(LOAD_TYPES))
@@ -137,6 +133,43 @@ public class DataLoaderConfig
     public boolean loadDataType(final DataLoadType type)
     {
         return LoadTypes.isEmpty() || LoadTypes.contains(type);
+    }
+
+    private void loadSampleDataFile(final String filename)
+    {
+        try
+        {
+            final List<String> lines = Files.readAllLines(Paths.get(filename));
+
+            Map<String,Integer> fieldsIndexMap = FileReaderUtils.createFieldsIndexMap(lines.get(0), DELIMITER);
+            lines.remove(0);
+
+            if(!fieldsIndexMap.containsKey(FLD_SAMPLE_ID))
+            {
+                ISF_LOGGER.error("sample ID file missing 'SampleId'");
+                return;
+            }
+
+            int sampleIdIndex = fieldsIndexMap.get(FLD_SAMPLE_ID);
+            Integer cancerTypeIndex = fieldsIndexMap.get(FLD_CANCER_TYPE);
+
+            for(String line : lines)
+            {
+                String[] values = line.split(DELIMITER, -1);
+                String sampleId = values[sampleIdIndex];
+                SampleIds.add(sampleId);
+
+                if(cancerTypeIndex != null)
+                {
+                    String cancerType = values[cancerTypeIndex];
+                    SampleCancerTypes.put(sampleId, cancerType);
+                }
+            }
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.warn("invalid sampleId file: {}", e.toString());
+        }
     }
 
     private void addSampleInfo(final String sampleInfo)
