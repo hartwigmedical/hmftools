@@ -20,7 +20,7 @@ public class PrimaryTumorCuratorTest {
 
     @Test
     public void canDetermineUnusedTerms() {
-        PrimaryTumorCurator curator = TestCuratorFactory.primaryTumorCurator();
+        PrimaryTumorCurator curator = CuratorTestFactory.primaryTumorCurator();
         assertEquals(5, curator.unusedSearchTerms().size());
 
         curator.search("patient", "desmoïd tumor");
@@ -30,7 +30,7 @@ public class PrimaryTumorCuratorTest {
     @Test
     public void canCurateDesmoidTumor() {
         // See DEV-275
-        PrimaryTumorCurator curator = TestCuratorFactory.primaryTumorCurator();
+        PrimaryTumorCurator curator = CuratorTestFactory.primaryTumorCurator();
         String desmoidTumor = "desmoïd tumor";
         CuratedPrimaryTumor primaryTumor = curator.search("patient", desmoidTumor);
 
@@ -39,7 +39,7 @@ public class PrimaryTumorCuratorTest {
 
     @Test
     public void canOverrideTumorLocation() {
-        PrimaryTumorCurator curator = TestCuratorFactory.primaryTumorCurator();
+        PrimaryTumorCurator curator = CuratorTestFactory.primaryTumorCurator();
         CuratedPrimaryTumor primaryTumor = curator.search("PT1", "Does not curate");
 
         assertEquals("Adrenal gland", primaryTumor.location());
@@ -54,7 +54,7 @@ public class PrimaryTumorCuratorTest {
     @Test
     public void canCurateSearchTermWithChar34() {
         String searchTerm = "Non-small cell carcinoma NOS (mostly resembling lung carcinoma): working diagnosis \"lung carcinoma\"";
-        PrimaryTumorCurator curator = TestCuratorFactory.primaryTumorCurator();
+        PrimaryTumorCurator curator = CuratorTestFactory.primaryTumorCurator();
         CuratedPrimaryTumor primaryTumor = curator.search("patient", searchTerm);
 
         String location = primaryTumor.location();

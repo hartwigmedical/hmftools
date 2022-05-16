@@ -16,8 +16,8 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.patientdb.clinical.consents.ConsentConfigFactory;
 import com.hartwig.hmftools.patientdb.clinical.curators.BiopsySiteCurator;
+import com.hartwig.hmftools.patientdb.clinical.curators.CuratorTestFactory;
 import com.hartwig.hmftools.patientdb.clinical.curators.PrimaryTumorCurator;
-import com.hartwig.hmftools.patientdb.clinical.curators.TestCuratorFactory;
 import com.hartwig.hmftools.patientdb.clinical.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.BaselineData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyData;
@@ -46,9 +46,9 @@ public class LoadClinicalDataTest {
 
     @Test
     public void canLoadUpRealCpctEcrf() throws IOException, XMLStreamException {
-        PrimaryTumorCurator primaryTumorCurator = TestCuratorFactory.primaryTumorCurator();
-        BiopsySiteCurator biopsySiteCurator = TestCuratorFactory.biopsySiteCurator();
-        TreatmentCurator treatmentCurator = TestCuratorFactory.treatmentCurator();
+        PrimaryTumorCurator primaryTumorCurator = CuratorTestFactory.primaryTumorCurator();
+        BiopsySiteCurator biopsySiteCurator = CuratorTestFactory.biopsySiteCurator();
+        TreatmentCurator treatmentCurator = CuratorTestFactory.treatmentCurator();
 
         EcrfModel cpctEcrfModel = EcrfModel.loadFromXMLNoFormStates(TEST_ECRF);
         assertEquals(1, cpctEcrfModel.patientCount());

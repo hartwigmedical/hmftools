@@ -11,7 +11,7 @@ public class BiopsySiteCuratorTest {
 
     @Test
     public void canCurateOnTestResource() {
-        BiopsySiteCurator curator = TestCuratorFactory.biopsySiteCurator();
+        BiopsySiteCurator curator = CuratorTestFactory.biopsySiteCurator();
 
         CuratedBiopsyType knownCuratedType = curator.search("Breast", "HER2 Positive", "Primary", "left");
         assertEquals("Breast", knownCuratedType.type());

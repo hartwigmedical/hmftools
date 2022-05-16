@@ -9,25 +9,32 @@ public final class DriverCatalogTestFactory {
     }
 
     @NotNull
+    public static DriverCatalog createNonCanonicalSomaticMutationEntryForGene(@NotNull String gene, double likelihood,
+            @NotNull String transcript) {
+        return create(gene, likelihood, DriverType.MUTATION, transcript, false);
+    }
+
+    @NotNull
     public static DriverCatalog createCanonicalSomaticMutationEntryForGene(@NotNull String gene, double likelihood,
             @NotNull String transcript) {
-        return create(gene, likelihood, DriverType.MUTATION, transcript);
+        return create(gene, likelihood, DriverType.MUTATION, transcript, true);
     }
 
     @NotNull
     public static DriverCatalog createCanonicalGermlineMutationEntryForGene(@NotNull String gene, double likelihood,
             @NotNull String transcript) {
-        return create(gene, likelihood, DriverType.GERMLINE_MUTATION, transcript);
+        return create(gene, likelihood, DriverType.GERMLINE_MUTATION, transcript, true);
     }
 
     @NotNull
-    private static DriverCatalog create(@NotNull String gene, double likelihood, @NotNull DriverType type, @NotNull String transcript) {
+    private static DriverCatalog create(@NotNull String gene, double likelihood, @NotNull DriverType type, @NotNull String transcript,
+            boolean isCanonical) {
         return ImmutableDriverCatalog.builder()
                 .chromosome(Strings.EMPTY)
                 .chromosomeBand(Strings.EMPTY)
                 .gene(gene)
                 .transcript(transcript)
-                .isCanonical(true)
+                .isCanonical(isCanonical)
                 .driver(type)
                 .category(DriverCategory.ONCO)
                 .likelihoodMethod(LikelihoodMethod.DNDS)

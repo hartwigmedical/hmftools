@@ -10,7 +10,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.patientdb.clinical.curators.TestCuratorFactory;
+import com.hartwig.hmftools.patientdb.clinical.curators.CuratorTestFactory;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.CuratedPrimaryTumor;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableCuratedPrimaryTumor;
@@ -30,7 +30,7 @@ public class BiopsyReaderTest {
 
     @Test
     public void canFilterOutEmptyAndDuplicateForms() {
-        BiopsyReader biopsyReader = new BiopsyReader(TestCuratorFactory.biopsySiteCurator());
+        BiopsyReader biopsyReader = new BiopsyReader(CuratorTestFactory.biopsySiteCurator());
         List<BiopsyData> biopsies = biopsyReader.read(buildTestPatient(), noCuration());
         assertEquals(1, biopsies.size());
         assertNotNull(biopsies.get(0).date());
@@ -39,7 +39,7 @@ public class BiopsyReaderTest {
 
     @Test
     public void canReadCpctPatientBiopsies() {
-        BiopsyReader biopsyReader = new BiopsyReader(TestCuratorFactory.biopsySiteCurator());
+        BiopsyReader biopsyReader = new BiopsyReader(CuratorTestFactory.biopsySiteCurator());
         List<BiopsyData> biopsies = biopsyReader.read(buildTestPatient(), noCuration());
 
         assertEquals(1, biopsies.size());

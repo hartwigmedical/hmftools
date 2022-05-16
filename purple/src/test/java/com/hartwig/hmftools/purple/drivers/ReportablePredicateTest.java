@@ -15,10 +15,10 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.ReportablePredicate;
+import com.hartwig.hmftools.common.test.SomaticVariantTestFactory;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.test.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.junit.Test;
@@ -29,7 +29,7 @@ public class ReportablePredicateTest {
 
     @Test
     public void testIgnoreIndelsWithLargeRepeatCount() {
-        final SomaticVariant variant = SomaticVariantTestBuilderFactory.create()
+        final SomaticVariant variant = SomaticVariantTestFactory.builder()
                 .gene("AR")
                 .repeatCount(MAX_ONCO_REPEAT_COUNT)
                 .type(VariantType.INDEL)

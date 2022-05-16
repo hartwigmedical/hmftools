@@ -2,7 +2,7 @@ package com.hartwig.hmftools.patientdb.clinical.readers;
 
 import static org.junit.Assert.assertNotNull;
 
-import com.hartwig.hmftools.patientdb.clinical.curators.TestCuratorFactory;
+import com.hartwig.hmftools.patientdb.clinical.curators.CuratorTestFactory;
 
 import org.junit.Test;
 
@@ -10,6 +10,6 @@ public class ColoPatientReaderTest {
 
     @Test
     public void canReadColo() {
-        assertNotNull(new ColoPatientReader(TestCuratorFactory.primaryTumorCurator()).read("COLO829T", "Melanoma"));
+        assertNotNull(new ColoPatientReader(CuratorTestFactory.primaryTumorCurator()).read("COLO829T", "Melanoma"));
     }
 }
