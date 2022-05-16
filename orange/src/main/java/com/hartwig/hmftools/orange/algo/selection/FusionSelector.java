@@ -19,7 +19,7 @@ public final class FusionSelector {
         List<LinxFusion> filtered = Lists.newArrayList();
         for (LinxFusion fusion : fusions) {
             String event = ProtectEventGenerator.fusionEvent(fusion);
-            if (!fusion.reportedType().equals("NONE") || EvidenceSelector.hasEvidence(evidences, event)) {
+            if (!fusion.reportedType().equals("NONE") || EvidenceSelector.hasEvidence(evidences, null, event)) {
                 filtered.add(fusion);
             }
         }

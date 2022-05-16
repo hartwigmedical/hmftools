@@ -29,7 +29,7 @@ public final class SomaticVariantSelector {
         List<ReportableVariant> filtered = Lists.newArrayList();
         for (SomaticVariant variant : unreportedVariants) {
             boolean isHotspot = variant.isHotspot();
-            boolean hasEvidence = EvidenceSelector.hasEvidence(evidences, ProtectEventGenerator.variantEvent(variant));
+            boolean hasEvidence = EvidenceSelector.hasEvidence(evidences, variant.gene(), ProtectEventGenerator.variantEvent(variant));
             boolean isCodingAndHasPhasedReportedVariant =
                     !variant.gene().isEmpty() && hasReportedVariantWithPhase(reportedSomaticVariants, variant.topLocalPhaseSet());
             boolean isCuppaRelevantVariant = isRelevantForCuppa(variant);

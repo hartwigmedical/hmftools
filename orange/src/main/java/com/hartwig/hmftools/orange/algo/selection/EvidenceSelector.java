@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class EvidenceSelector {
 
@@ -21,9 +22,9 @@ public final class EvidenceSelector {
     private EvidenceSelector() {
     }
 
-    public static boolean hasEvidence(@NotNull List<ProtectEvidence> evidences, @NotNull String event) {
+    public static boolean hasEvidence(@NotNull List<ProtectEvidence> evidences, @Nullable String gene, @NotNull String event) {
         for (ProtectEvidence evidence : evidences) {
-            if (evidence.event().equals(event)) {
+            if ((gene == null || gene.equals(evidence.gene())) && evidence.event().equals(event)) {
                 return true;
             }
         }
@@ -94,17 +95,18 @@ public final class EvidenceSelector {
                 if (treatmentEvidences == null) {
                     treatmentEvidences = Lists.newArrayList();
                 }
-                if (!hasHigherOrEqualEvidenceForEventAndTreatment(treatmentEvidences, evidence)) {
+
+                if (!hasHigherOrEqualEvidence(treatmentEvidences, evidence)) {
                     treatmentEvidences.add(evidence);
                 }
+
                 evidencePerTreatmentMap.put(evidence.treatment(), treatmentEvidences);
             }
         }
         return evidencePerTreatmentMap;
     }
 
-    private static boolean hasHigherOrEqualEvidenceForEventAndTreatment(@NotNull List<ProtectEvidence> evidences,
-            @NotNull ProtectEvidence evidenceToCheck) {
+    private static boolean hasHigherOrEqualEvidence(@NotNull List<ProtectEvidence> evidences, @NotNull ProtectEvidence evidenceToCheck) {
         for (ProtectEvidence evidence : evidences) {
             if (evidence.treatment().equals(evidenceToCheck.treatment()) && StringUtils.equals(evidence.gene(), evidenceToCheck.gene())
                     && evidence.event().equals(evidenceToCheck.event())) {

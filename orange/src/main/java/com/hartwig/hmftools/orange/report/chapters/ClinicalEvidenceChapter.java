@@ -170,9 +170,14 @@ public class ClinicalEvidenceChapter implements ReportChapter {
         if (event.contains("p.")) {
             event = AminoAcids.forceSingleLetterProteinAnnotation(event);
         }
-        StringJoiner sources = new StringJoiner(", ");
+        Set<String> sourceNames = Sets.newHashSet();
         for (ProtectSource source : evidence.sources()) {
-            sources.add(source.name().display());
+            sourceNames.add(source.name().display());
+        }
+
+        StringJoiner sources = new StringJoiner(", ");
+        for (String sourceName : sourceNames) {
+            sources.add(sourceName);
         }
         return event + " (" + evidence.level() + " - " + sources + ")";
     }
