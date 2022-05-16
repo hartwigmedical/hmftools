@@ -6,7 +6,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalogMapTest;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalogTestFactory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.test.SomaticVariantTestBuilderFactory;
@@ -27,7 +27,7 @@ public class ReportableVariantFactoryTest {
                 SomaticVariantTestBuilderFactory.create().reported(false).gene(gene2).canonicalTranscript("transcript2").build();
 
         double likelihood = 0.6;
-        DriverCatalog driverGene1 = DriverCatalogMapTest.createCanonicalSomaticMutationEntryForGene(gene1, likelihood, "transcript1");
+        DriverCatalog driverGene1 = DriverCatalogTestFactory.createCanonicalSomaticMutationEntryForGene(gene1, likelihood, "transcript1");
 
         List<ReportableVariant> reportable = ReportableVariantFactory.toReportableSomaticVariants(Lists.newArrayList(variant1, variant2),
                 Lists.newArrayList(driverGene1));
@@ -42,7 +42,7 @@ public class ReportableVariantFactoryTest {
         SomaticVariant variant =
                 SomaticVariantTestBuilderFactory.create().reported(true).gene(gene).canonicalTranscript("transcript1").build();
 
-        DriverCatalog driver1 = DriverCatalogMapTest.createCanonicalGermlineMutationEntryForGene(gene, 0.6, "transcript1");
+        DriverCatalog driver1 = DriverCatalogTestFactory.createCanonicalGermlineMutationEntryForGene(gene, 0.6, "transcript1");
         DriverCatalog driver2 =
                 ImmutableDriverCatalog.builder().from(driver1).driver(DriverType.GERMLINE_DELETION).driverLikelihood(1D).build();
 
@@ -64,7 +64,7 @@ public class ReportableVariantFactoryTest {
 
         double likelihood = 0.6;
         DriverCatalog driverNonCanonical = ImmutableDriverCatalog.builder()
-                .from(DriverCatalogMapTest.createCanonicalSomaticMutationEntryForGene(gene, likelihood, "ENST00000579755"))
+                .from(DriverCatalogTestFactory.createCanonicalSomaticMutationEntryForGene(gene, likelihood, "ENST00000579755"))
                 .isCanonical(false)
                 .build();
 
@@ -82,7 +82,7 @@ public class ReportableVariantFactoryTest {
                 .otherReportedEffects("ENST00000579755|c.246_247delCG|p.Gly83fs|frameshift_variant|NONSENSE_OR_FRAMESHIFT")
                 .build();
         DriverCatalog driverCanonical = ImmutableDriverCatalog.builder()
-                .from(DriverCatalogMapTest.createCanonicalSomaticMutationEntryForGene(gene, likelihoodCanonical, "transcript2"))
+                .from(DriverCatalogTestFactory.createCanonicalSomaticMutationEntryForGene(gene, likelihoodCanonical, "transcript2"))
                 .isCanonical(true)
                 .build();
         List<ReportableVariant> reportable2 = ReportableVariantFactory.toReportableSomaticVariants(Lists.newArrayList(variant2),

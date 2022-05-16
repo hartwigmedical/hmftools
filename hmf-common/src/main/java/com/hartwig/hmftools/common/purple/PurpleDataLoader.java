@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
@@ -52,7 +51,7 @@ public final class PurpleDataLoader {
     @NotNull
     public static PurpleData load(@NotNull String tumorSample, @Nullable String referenceSample, @NotNull String qcFile,
             @NotNull String purityTsv, @NotNull String somaticDriverCatalogTsv, @NotNull String somaticVariantVcf,
-            @NotNull String germlineDriverCatalogTsv, @NotNull String germlineVariantVcf, @Nullable String purpleGeneCopyNumberTsv)
+            @NotNull String germlineDriverCatalogTsv, @NotNull String germlineVariantVcf, @NotNull String purpleGeneCopyNumberTsv)
             throws IOException {
         return load(tumorSample,
                 referenceSample,
@@ -73,7 +72,7 @@ public final class PurpleDataLoader {
     public static PurpleData load(@NotNull String tumorSample, @Nullable String referenceSample, @NotNull String qcFile,
             @NotNull String purityTsv, @NotNull String somaticDriverCatalogTsv, @NotNull String somaticVariantVcf,
             @NotNull String germlineDriverCatalogTsv, @NotNull String germlineVariantVcf, @Nullable String purpleGeneCopyNumberTsv,
-            @Nullable String purpleSomaticCopynumberTsv, @Nullable RefGenomeVersion refGenomeVersion,
+            @Nullable String purpleSomaticCopyNumberTsv, @Nullable RefGenomeVersion refGenomeVersion,
             @Nullable String alternativeTumorSampleId, @Nullable String alternativeReferenceSampleId) throws IOException {
         LOGGER.info("Loading PURPLE data from {}", new File(purityTsv).getParent());
 
@@ -99,11 +98,11 @@ public final class PurpleDataLoader {
         }
 
         List<CnPerChromosomeArmData> cnPerChromosome = Lists.newArrayList();
-        if (purpleSomaticCopynumberTsv != null && refGenomeVersion != null) {
+        if (purpleSomaticCopyNumberTsv != null && refGenomeVersion != null) {
             RefGenomeCoordinates refGenomeCoordinates =
                     refGenomeVersion == RefGenomeVersion.V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
-            cnPerChromosome = GenerateCnPerChromosome.fromPurpleSomaticCopynumberTsv(purpleSomaticCopynumberTsv, refGenomeCoordinates);
-            LOGGER.info(" Loaded chromosomal arm copy numbers from {}", purpleSomaticCopynumberTsv);
+            cnPerChromosome = GenerateCnPerChromosome.fromPurpleSomaticCopynumberTsv(purpleSomaticCopyNumberTsv, refGenomeCoordinates);
+            LOGGER.info(" Generated chromosomal arm copy numbers from {}", purpleSomaticCopyNumberTsv);
         }
 
         List<ReportableVariant> reportableGermlineVariants = Lists.newArrayList();
@@ -139,7 +138,6 @@ public final class PurpleDataLoader {
                 .qc(purityContext.qc())
                 .hasReliableQuality(purityContext.qc().pass())
                 .fittedPurityMethod(purityContext.method())
-                .wholeGenomeDuplication(purityContext.wholeGenomeDuplication())
                 .hasReliablePurity(CheckPurpleQuality.checkHasReliablePurity(purityContext))
                 .purity(purityContext.bestFit().purity())
                 .minPurity(purityContext.score().minPurity())
@@ -147,18 +145,19 @@ public final class PurpleDataLoader {
                 .ploidy(purityContext.bestFit().ploidy())
                 .minPloidy(purityContext.score().minPloidy())
                 .maxPloidy(purityContext.score().maxPloidy())
+                .wholeGenomeDuplication(purityContext.wholeGenomeDuplication())
                 .microsatelliteIndelsPerMb(purityContext.microsatelliteIndelsPerMb())
                 .microsatelliteStatus(purityContext.microsatelliteStatus())
                 .tumorMutationalBurdenPerMb(purityContext.tumorMutationalBurdenPerMb())
                 .tumorMutationalLoad(purityContext.tumorMutationalLoad())
-                .svTumorMutationalBurden(purityContext.svTumorMutationalBurden())
                 .tumorMutationalLoadStatus(purityContext.tumorMutationalLoadStatus())
+                .svTumorMutationalBurden(purityContext.svTumorMutationalBurden())
                 .reportableSomaticVariants(reportableSomaticVariants)
                 .unreportedSomaticVariants(unreportedSomaticVariants)
                 .reportableGermlineVariants(reportableGermlineVariants)
                 .unreportedGermlineVariants(unreportedGermlineVariants)
-                .unreportedGainsLosses(unreportedGainsLosses)
                 .reportableGainsLosses(reportableGainsLosses)
+                .unreportedGainsLosses(unreportedGainsLosses)
                 .cnPerChromosome(cnPerChromosome)
                 .build();
     }
@@ -211,22 +210,18 @@ public final class PurpleDataLoader {
 
     @NotNull
     private static List<ReportableGainLoss> extractGainsLosses(@NotNull List<DriverCatalog> drivers) {
-        List<ReportableGainLoss> gainsLoss = Lists.newArrayList();
-        Set<DriverCatalogKey> keys = DriverCatalogKey.buildUniqueKeysSet(drivers);
-        Map<DriverCatalogKey, DriverCatalog> geneDriverMap = DriverCatalogMap.toDriverMap(drivers);
+        List<ReportableGainLoss> gainsLosses = Lists.newArrayList();
 
-        for (DriverCatalogKey key : keys) {
+        Map<DriverCatalogKey, DriverCatalog> geneDriverMap = DriverCatalogMap.toDriverMap(drivers);
+        for (DriverCatalogKey key : geneDriverMap.keySet()) {
             DriverCatalog geneDriver = geneDriverMap.get(key);
-            if (geneDriver == null) {
-                throw new IllegalStateException("Could not find driver entry for CNV on gene '" + geneDriver.gene() + "'");
-            }
 
             if (geneDriver.driver() == DriverType.AMP || geneDriver.driver() == DriverType.PARTIAL_AMP
                     || geneDriver.driver() == DriverType.DEL) {
-                gainsLoss.add(toReportableGainLoss(geneDriver));
+                gainsLosses.add(toReportableGainLoss(geneDriver));
             }
         }
-        return gainsLoss;
+        return gainsLosses;
     }
 
     @NotNull
