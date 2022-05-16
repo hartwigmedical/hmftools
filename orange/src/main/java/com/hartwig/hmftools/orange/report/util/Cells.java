@@ -12,9 +12,9 @@ import com.itextpdf.layout.property.VerticalAlignment;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class CellUtil {
+public final class Cells {
 
-    private CellUtil() {
+    private Cells() {
     }
 
     @NotNull

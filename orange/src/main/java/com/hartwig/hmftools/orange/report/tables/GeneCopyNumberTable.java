@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
-import com.hartwig.hmftools.orange.report.util.CellUtil;
-import com.hartwig.hmftools.orange.report.util.TableUtil;
+import com.hartwig.hmftools.orange.report.util.Cells;
+import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;
 
@@ -19,23 +19,23 @@ public final class GeneCopyNumberTable {
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<ReportableGainLoss> driverAmpsDels) {
         if (driverAmpsDels.isEmpty()) {
-            return TableUtil.createEmpty(title, width);
+            return Tables.createEmpty(title, width);
         }
 
-        Table table = TableUtil.createContent(width,
+        Table table = Tables.createContent(width,
                 new float[] { 1, 1, 1, 1, 1 },
-                new Cell[] { CellUtil.createHeader("Chromosome"), CellUtil.createHeader("Region"), CellUtil.createHeader("Gene"),
-                        CellUtil.createHeader("Type"), CellUtil.createHeader("CN") });
+                new Cell[] { Cells.createHeader("Chromosome"), Cells.createHeader("Region"), Cells.createHeader("Gene"),
+                        Cells.createHeader("Type"), Cells.createHeader("CN") });
 
         for (ReportableGainLoss gainLoss : sort(driverAmpsDels)) {
-            table.addCell(CellUtil.createContent(gainLoss.chromosome()));
-            table.addCell(CellUtil.createContent(gainLoss.chromosomeBand()));
-            table.addCell(CellUtil.createContent(gainLoss.gene()));
-            table.addCell(CellUtil.createContent(gainLoss.interpretation().display()));
-            table.addCell(CellUtil.createContent(String.valueOf(gainLoss.minCopies())));
+            table.addCell(Cells.createContent(gainLoss.chromosome()));
+            table.addCell(Cells.createContent(gainLoss.chromosomeBand()));
+            table.addCell(Cells.createContent(gainLoss.gene()));
+            table.addCell(Cells.createContent(gainLoss.interpretation().display()));
+            table.addCell(Cells.createContent(String.valueOf(gainLoss.minCopies())));
         }
 
-        return TableUtil.createWrapping(table, title);
+        return Tables.createWrapping(table, title);
     }
 
     @NotNull

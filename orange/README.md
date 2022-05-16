@@ -97,6 +97,7 @@ investigate potential causes for QC failure.
 - Upcoming
   - Only show every source name once in clinical evidence section.
   - Fix bug with selecting variants that are unreported but have evidence.
+  - Improve support for multiple drivers on same gene but with different transcripts.
 - [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.7)
   - Support for Protect v2.1
   - Support multiple LPS per variant in SAGE

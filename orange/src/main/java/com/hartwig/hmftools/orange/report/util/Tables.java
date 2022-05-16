@@ -11,21 +11,21 @@ import com.itextpdf.layout.property.UnitValue;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class TableUtil {
+public final class Tables {
 
     private static final float TABLE_BOTTOM_MARGIN = 20;
 
-    private TableUtil() {
+    private Tables() {
     }
 
     @NotNull
     public static Table createEmpty(@NotNull String title, float width) {
         Cell headerCell = new Cell().setBorder(Border.NO_BORDER).add(new Paragraph(title).addStyle(ReportResources.tableTitleStyle()));
 
-        Table table = TableUtil.createContent(width, new float[] { 1 }, new Cell[] { headerCell });
+        Table table = Tables.createContent(width, new float[] { 1 }, new Cell[] { headerCell });
         table.setKeepTogether(true);
         table.setMarginBottom(TABLE_BOTTOM_MARGIN);
-        table.addCell(CellUtil.createContent(new Paragraph(DataUtil.NONE_STRING)));
+        table.addCell(Cells.createContent(new Paragraph(DataUtil.NONE_STRING)));
 
         return table;
     }
