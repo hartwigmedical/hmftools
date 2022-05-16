@@ -10,10 +10,16 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogKey;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogMap;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.protect.variant.OtherEffectsInterpreter;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class ReportableVariantFactory {
+
+    private static final Logger LOGGER = LogManager.getLogger(ReportableVariantFactory.class);
 
     private ReportableVariantFactory() {
     }
@@ -37,45 +43,73 @@ public final class ReportableVariantFactory {
     @NotNull
     private static List<ReportableVariant> toReportableVariants(@NotNull List<SomaticVariant> variants,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull ReportableVariantSource source) {
-        Map<DriverCatalogKey, DriverCatalog> geneDriverMap = DriverCatalogMap.toDriverMap(driverCatalog);
+        Map<DriverCatalogKey, DriverCatalog> driverMap = DriverCatalogMap.toDriverMap(driverCatalog);
         List<ReportableVariant> result = Lists.newArrayList();
 
         for (SomaticVariant variant : variants) {
             if (variant.reported()) {
+                ImmutableReportableVariant.Builder builder = fromVariant(variant, source);
 
-                for (DriverCatalog catalog : geneDriverMap.values()) {
-                    ImmutableReportableVariant.Builder reportable = ImmutableReportableVariant.builder();
-                    if (catalog.isCanonical()) {
-                        if (variant.gene().equals(catalog.gene()) && variant.canonicalTranscript().equals(catalog.transcript())) {
-                            DriverCatalog geneDriver =
-                                    geneDriverMap.get(DriverCatalogKey.create(variant.gene(), variant.canonicalTranscript()));
+                DriverCatalog canonicalDriver = findCanonicalEntryForVariant(driverMap, variant);
+                if (canonicalDriver != null) {
+                    result.add(builder.driverLikelihood(canonicalDriver.driverLikelihood())
+                            .transcript(canonicalDriver.transcript())
+                            .isCanonical(canonicalDriver.isCanonical())
+                            .build());
+                }
 
-                            ImmutableReportableVariant.Builder build =
-                                    fromVariant(variant, source).driverLikelihood(geneDriver.driverLikelihood())
-                                            .transcript(geneDriver.transcript())
-                                            .isCanonical(geneDriver.isCanonical());
-                            reportable.from(build.build());
-                            result.add(reportable.build());
-                        }
-                    } else {
-                        if (variant.gene().equals(catalog.gene()) && !variant.otherReportedEffects().isEmpty()
-                                && variant.otherReportedEffects().split("\\|")[0].equals(catalog.transcript())) {
+                DriverCatalog nonCanonicalDriver = findNonCanonicalEntryForVariant(driverMap, variant);
+                if (nonCanonicalDriver != null) {
+                    result.add(builder.driverLikelihood(nonCanonicalDriver.driverLikelihood())
+                            .transcript(nonCanonicalDriver.transcript())
+                            .isCanonical(nonCanonicalDriver.isCanonical())
+                            .build());
+                }
+            }
 
-                            DriverCatalog geneDriver = geneDriverMap.get(DriverCatalogKey.create(variant.gene(),
-                                    variant.otherReportedEffects().split("\\|")[0]));
+        }
+        return result;
+    }
 
-                            ImmutableReportableVariant.Builder build =
-                                    fromVariant(variant, source).driverLikelihood(geneDriver.driverLikelihood())
-                                            .transcript(geneDriver.transcript())
-                                            .isCanonical(geneDriver.isCanonical());
-                            reportable.from(build.build());
-                            result.add(reportable.build());
-                        }
-                    }
+    @Nullable
+    private static DriverCatalog findCanonicalEntryForVariant(@NotNull Map<DriverCatalogKey, DriverCatalog> entries,
+            @NotNull SomaticVariant variant) {
+        assert variant.reported();
+
+        for (DriverCatalog catalog : entries.values()) {
+            if (variant.gene().equals(catalog.gene()) && catalog.isCanonical()) {
+                if (variant.canonicalTranscript().equals(catalog.transcript())) {
+                    return entries.get(DriverCatalogKey.create(variant.gene(), variant.canonicalTranscript()));
+                } else {
+                    LOGGER.warn("Canonical driver entry on transcript {} does not match canonical transcript {} on variant",
+                            catalog.transcript(),
+                            variant.canonicalTranscript());
                 }
             }
         }
-        return result;
+
+        LOGGER.warn("No canonical entry found in driver catalog for gene {}", variant.gene());
+        return null;
+    }
+
+    @Nullable
+    private static DriverCatalog findNonCanonicalEntryForVariant(@NotNull Map<DriverCatalogKey, DriverCatalog> entries,
+            @NotNull SomaticVariant variant) {
+        assert variant.reported();
+
+        String nonCanonicalTranscript = OtherEffectsInterpreter.transcript(variant.otherReportedEffects());
+
+        for (DriverCatalog catalog : entries.values()) {
+            if (variant.gene().equals(catalog.gene()) && !catalog.isCanonical()) {
+                if (nonCanonicalTranscript.equals(catalog.transcript())) {
+                    return entries.get(DriverCatalogKey.create(variant.gene(), nonCanonicalTranscript));
+                } else {
+                    LOGGER.warn("Unexpected transcript {} for gene {} in driver catalog", catalog.transcript(), catalog.gene());
+                }
+            }
+        }
+
+        return null;
     }
 
     @NotNull

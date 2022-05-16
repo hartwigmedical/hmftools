@@ -7,7 +7,7 @@ import com.google.common.io.Resources;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class TestCuratorFactory {
+public final class CuratorTestFactory {
 
     private static final String TUMOR_LOCATION_MAPPING_TSV = Resources.getResource("curators/test_tumor_location_mapping.tsv").getPath();
     private static final String TUMOR_LOCATION_OVERRIDES_TSV =
@@ -15,7 +15,7 @@ public final class TestCuratorFactory {
     private static final String BIOPSY_SITE_MAPPING_TSV = Resources.getResource("curators/test_biopsy_site_mapping.tsv").getPath();
     private static final String TREATMENT_MAPPING_TSV = Resources.getResource("curators/test_treatment_mapping.tsv").getPath();
 
-    private TestCuratorFactory() {
+    private CuratorTestFactory() {
     }
 
     @NotNull

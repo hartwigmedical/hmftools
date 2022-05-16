@@ -14,8 +14,8 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.test.SomaticVariantTestFactory;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.test.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
@@ -68,6 +68,6 @@ public class TsgImpactComparatorTest {
 
     @NotNull
     private static com.hartwig.hmftools.common.variant.SomaticVariant create(@NotNull VariantType type, @NotNull CodingEffect codingEffect) {
-        return SomaticVariantTestBuilderFactory.create().type(type).canonicalCodingEffect(codingEffect).build();
+        return SomaticVariantTestFactory.builder().type(type).canonicalCodingEffect(codingEffect).build();
     }
 }

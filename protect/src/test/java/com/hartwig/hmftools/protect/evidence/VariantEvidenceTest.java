@@ -10,7 +10,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.common.test.SomaticVariantTestBuilderFactory;
+import com.hartwig.hmftools.common.test.SomaticVariantTestFactory;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
@@ -77,7 +77,7 @@ public class VariantEvidenceTest {
                 .alt("G")
                 .build();
 
-        SomaticVariant unreportedMatch = SomaticVariantTestBuilderFactory.create()
+        SomaticVariant unreportedMatch = SomaticVariantTestFactory.builder()
                 .gene("unreported")
                 .chromosome(chromosome)
                 .position(position)
@@ -209,7 +209,7 @@ public class VariantEvidenceTest {
         List<ReportableVariant> reportableVariants =
                 Lists.newArrayList(driverOnActivatedGene, passengerOnInactivatedGene, driverOnAmplifiedGene, driverOnOtherGene);
 
-        List<SomaticVariant> unreportedVariants = Lists.newArrayList(SomaticVariantTestBuilderFactory.create()
+        List<SomaticVariant> unreportedVariants = Lists.newArrayList(SomaticVariantTestFactory.builder()
                 .reported(false)
                 .gene(activatedGene)
                 .canonicalCodingEffect(CodingEffect.NONE)

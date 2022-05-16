@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.protect.variant.OtherEffectsTestFactory;
 import com.hartwig.hmftools.common.purple.PurpleTestFactory;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
-import com.hartwig.hmftools.common.test.SomaticVariantTestBuilderFactory;
+import com.hartwig.hmftools.common.test.SomaticVariantTestFactory;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.Variant;
@@ -30,7 +30,7 @@ public class ProtectEventGeneratorTest {
 
     @Test
     public void canGenerateEventForVariant() {
-        Variant base = SomaticVariantTestBuilderFactory.create().canonicalEffect("some effect").build();
+        Variant base = SomaticVariantTestFactory.builder().canonicalEffect("some effect").build();
         assertEquals("some effect", ProtectEventGenerator.variantEvent(base));
 
         String upstreamEffect = ProtectEventGenerator.UPSTREAM_GENE_VARIANT;

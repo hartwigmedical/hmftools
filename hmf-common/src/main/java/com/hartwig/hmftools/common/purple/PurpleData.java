@@ -26,8 +26,6 @@ public interface PurpleData {
     @NotNull
     FittedPurityMethod fittedPurityMethod();
 
-    boolean wholeGenomeDuplication();
-
     boolean hasReliablePurity();
 
     double purity();
@@ -42,6 +40,8 @@ public interface PurpleData {
 
     double maxPloidy();
 
+    boolean wholeGenomeDuplication();
+
     double microsatelliteIndelsPerMb();
 
     @NotNull
@@ -51,10 +51,10 @@ public interface PurpleData {
 
     int tumorMutationalLoad();
 
-    int svTumorMutationalBurden();
-
     @NotNull
     TumorMutationalStatus tumorMutationalLoadStatus();
+
+    int svTumorMutationalBurden();
 
     @NotNull
     List<ReportableVariant> reportableSomaticVariants();

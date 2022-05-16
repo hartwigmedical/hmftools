@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientdb.clinical.readers;
 
-import static com.hartwig.hmftools.patientdb.clinical.datamodel.TestDatamodelFactory.sampleBuilder;
+import static com.hartwig.hmftools.patientdb.clinical.datamodel.DatamodelTestFactory.sampleBuilder;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -13,7 +13,7 @@ import java.time.LocalDate;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.patientdb.clinical.consents.ConsentConfigFactory;
-import com.hartwig.hmftools.patientdb.clinical.curators.TestCuratorFactory;
+import com.hartwig.hmftools.patientdb.clinical.curators.CuratorTestFactory;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
 import com.hartwig.hmftools.patientdb.clinical.readers.wide.ImmutableWideEcrfModel;
@@ -84,8 +84,8 @@ public class WidePatientReaderTest {
                 .build();
 
         WidePatientReader patientReader = new WidePatientReader(wideEcrfModel,
-                TestCuratorFactory.primaryTumorCurator(),
-                TestCuratorFactory.treatmentCurator());
+                CuratorTestFactory.primaryTumorCurator(),
+                CuratorTestFactory.treatmentCurator());
 
         SampleData sample = sampleBuilder(LocalDate.parse("2017-01-01")).build();
 
