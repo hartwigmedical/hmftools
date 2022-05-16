@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientdb.clinical.readers.drup;
 
-import static com.hartwig.hmftools.patientdb.clinical.datamodel.DatamodelTestFactory.sampleBuilder;
+import static com.hartwig.hmftools.patientdb.clinical.datamodel.ClinicalTestFactory.sampleBuilder;
 
 import static org.junit.Assert.assertNotNull;
 
