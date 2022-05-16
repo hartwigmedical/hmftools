@@ -78,7 +78,12 @@ public final class EvidenceReportingFunctions {
                     .collect(Collectors.toList())));
 
             result.addAll(reportHighestPerEventTreatmentDirection(evidences.stream()
-                    .filter(x -> !x.direction().isResponsive())
+                    .filter(x -> x.direction().isResistant())
+                    .filter(x -> EvidenceKey.create(x).equals(event))
+                    .collect(Collectors.toList())));
+
+            result.addAll(reportHighestPerEventTreatmentDirection(evidences.stream()
+                    .filter(x -> !x.direction().isResistant() &&  !x.direction().isResponsive())
                     .filter(x -> EvidenceKey.create(x).equals(event))
                     .collect(Collectors.toList())));
         }

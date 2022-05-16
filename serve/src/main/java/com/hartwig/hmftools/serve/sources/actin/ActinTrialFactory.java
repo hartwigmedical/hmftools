@@ -31,7 +31,7 @@ public final class ActinTrialFactory {
                 .applicableCancerType(ImmutableCancerType.builder().name("Cancer").doid("162").build())
                 .blacklistCancerTypes(Sets.newHashSet())
                 .level(EvidenceLevel.B)
-                .direction(entry.isUsedAsInclusion() ? EvidenceDirection.RESPONSIVE : EvidenceDirection.RESISTANT)
+                .direction(entry.isUsedAsInclusion() ? EvidenceDirection.RESPONSIVE : EvidenceDirection.NO_BENEFIT)
                 .evidenceUrls(Sets.newHashSet())
                 .build();
     }
@@ -43,7 +43,7 @@ public final class ActinTrialFactory {
             if (entry.cohort().contains(TRIAL_COHORT_SEPARATOR)) {
                 LOGGER.warn("ACTIN entry cohort contains cohort separator: {}", entry);
             }
-            addon = TRIAL_COHORT_SEPARATOR+ entry.cohort();
+            addon = TRIAL_COHORT_SEPARATOR + entry.cohort();
         }
 
         return entry.trial() + addon;

@@ -1,11 +1,6 @@
 package com.hartwig.hmftools.protect.algo;
 
 import static com.hartwig.hmftools.common.protect.ProtectTestFactory.builder;
-import static com.hartwig.hmftools.common.serve.actionability.EvidenceDirection.PREDICTED_RESPONSIVE;
-import static com.hartwig.hmftools.common.serve.actionability.EvidenceDirection.RESPONSIVE;
-import static com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.A;
-import static com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.B;
-import static com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.C;
 import static com.hartwig.hmftools.protect.algo.EvidenceReportingFunctions.highestReportableLevel;
 
 import static org.junit.Assert.assertEquals;
@@ -28,111 +23,99 @@ import org.junit.Test;
 
 public class EvidenceReportingFunctionsTest {
 
-    private final ProtectEvidence onLabelResponsiveA = createTestEvidence(true, RESPONSIVE, A);
-    private final ProtectEvidence onLabelResponsiveB = createTestEvidence(true, RESPONSIVE, B);
-    private final ProtectEvidence onLabelResponsiveC = createTestEvidence(true, RESPONSIVE, C);
-    private final ProtectEvidence offLabelResponsiveA = createTestEvidence(false, RESPONSIVE, A);
-    private final ProtectEvidence offLabelResponsiveB = createTestEvidence(false, RESPONSIVE, B);
-    private final ProtectEvidence offLabelResponsiveC = createTestEvidence(false, RESPONSIVE, C);
+    private static final ProtectEvidence ON_LABEL_RESPONSIVE_A = createTestEvidence(true, EvidenceDirection.RESPONSIVE, EvidenceLevel.A);
+    private static final ProtectEvidence ON_LABEL_RESISTANT_B = createTestEvidence(true, EvidenceDirection.RESISTANT, EvidenceLevel.B);
+    private static final ProtectEvidence ON_LABEL_NO_BENEFIT_C = createTestEvidence(true, EvidenceDirection.NO_BENEFIT, EvidenceLevel.C);
+    private static final ProtectEvidence ON_LABEL_RESPONSIVE_B = createTestEvidence(true, EvidenceDirection.RESPONSIVE, EvidenceLevel.B);
+    private static final ProtectEvidence ON_LABEL_RESPONSIVE_C = createTestEvidence(true, EvidenceDirection.RESPONSIVE, EvidenceLevel.C);
+    private static final ProtectEvidence OFF_LABEL_RESPONSIVE_A = createTestEvidence(false, EvidenceDirection.RESPONSIVE, EvidenceLevel.A);
+    private static final ProtectEvidence OFF_LABEL_RESPONSIVE_B = createTestEvidence(false, EvidenceDirection.RESPONSIVE, EvidenceLevel.B);
+    private static final ProtectEvidence OFF_LABEL_RESPONSIVE_C = createTestEvidence(false, EvidenceDirection.RESPONSIVE, EvidenceLevel.C);
 
     @Test
     public void canDetermineHighestReportableLevel() {
-        assertEquals(A, highestReportableLevel(true, Lists.newArrayList(onLabelResponsiveA, onLabelResponsiveB, offLabelResponsiveA)));
-        assertEquals(B, highestReportableLevel(true, Lists.newArrayList(onLabelResponsiveB, offLabelResponsiveA)));
-        assertEquals(A, highestReportableLevel(false, Lists.newArrayList(onLabelResponsiveA, onLabelResponsiveB, offLabelResponsiveA)));
-        assertEquals(A, highestReportableLevel(false, Lists.newArrayList(offLabelResponsiveA)));
+        List<ProtectEvidence> onAndOffLabelA = Lists.newArrayList(ON_LABEL_RESPONSIVE_A, ON_LABEL_RESPONSIVE_B, OFF_LABEL_RESPONSIVE_A);
+        List<ProtectEvidence> onlyOffLabelA = Lists.newArrayList(ON_LABEL_RESPONSIVE_B, OFF_LABEL_RESPONSIVE_A);
+
+        assertEquals(EvidenceLevel.A, highestReportableLevel(true, onAndOffLabelA));
+        assertEquals(EvidenceLevel.B, highestReportableLevel(true, onlyOffLabelA));
+        assertEquals(EvidenceLevel.A, highestReportableLevel(false, onAndOffLabelA));
+        assertEquals(EvidenceLevel.A, highestReportableLevel(false, onlyOffLabelA));
     }
 
     @Test
     public void respectMaxReportingLevel() {
-        List<ProtectEvidence> hartwigEvidences = Lists.newArrayList(ImmutableProtectEvidence.builder()
-                        .from(onLabelResponsiveB)
-                        .treatment("treatment A")
-                        .sources(Sets.newHashSet(ProtectTestFactory.createSource(Knowledgebase.HARTWIG_CURATED)))
-                        .build(),
-                ImmutableProtectEvidence.builder()
-                        .from(onLabelResponsiveC)
-                        .treatment("treatment B")
-                        .direction(RESPONSIVE)
-                        .sources(Sets.newHashSet(ProtectTestFactory.createSource(Knowledgebase.HARTWIG_CURATED)))
-                        .build(),
-                ImmutableProtectEvidence.builder()
-                        .from(offLabelResponsiveC)
-                        .treatment("treatment C")
-                        .direction(PREDICTED_RESPONSIVE)
-                        .sources(Sets.newHashSet(ProtectTestFactory.createSource(Knowledgebase.HARTWIG_CURATED)))
-                        .build());
+        List<ProtectEvidence> hartwigEvidences = createTestEvidencesForKnowledgebase(Knowledgebase.HARTWIG_CURATED);
         List<ProtectEvidence> hartwigFiltered = EvidenceReportingFunctions.applyReportingAlgo(hartwigEvidences);
         assertEquals(3, hartwigFiltered.size());
-        assertEquals(0, hartwigFiltered.stream().filter(x -> x.reported()).count());
+        assertEquals(0, reported(hartwigFiltered).size());
 
-        List<ProtectEvidence> viccEvidences = Lists.newArrayList(ImmutableProtectEvidence.builder()
-                        .from(onLabelResponsiveB)
-                        .treatment("treatment A")
-                        .sources(Sets.newHashSet(ProtectTestFactory.createSource(Knowledgebase.VICC_CGI)))
-                        .build(),
-                ImmutableProtectEvidence.builder()
-                        .from(onLabelResponsiveC)
-                        .treatment("treatment B")
-                        .direction(RESPONSIVE)
-                        .sources(Sets.newHashSet(ProtectTestFactory.createSource(Knowledgebase.VICC_CGI)))
-                        .build(),
-                ImmutableProtectEvidence.builder()
-                        .from(offLabelResponsiveC)
-                        .treatment("treatment C")
-                        .direction(PREDICTED_RESPONSIVE)
-                        .sources(Sets.newHashSet(ProtectTestFactory.createSource(Knowledgebase.VICC_CGI)))
-                        .build());
+        List<ProtectEvidence> viccEvidences = createTestEvidencesForKnowledgebase(Knowledgebase.VICC_CGI);
         List<ProtectEvidence> viccFiltered = EvidenceReportingFunctions.applyReportingAlgo(viccEvidences);
         assertEquals(3, viccFiltered.size());
-        assertEquals(1, viccFiltered.stream().filter(x -> x.reported()).count());
+        assertEquals(1, reported(viccFiltered).size());
 
-        List<ProtectEvidence> ckbEvidences = Lists.newArrayList(ImmutableProtectEvidence.builder()
-                        .from(onLabelResponsiveB)
-                        .treatment("treatment A")
-                        .sources(Sets.newHashSet(ProtectTestFactory.createSource(Knowledgebase.CKB)))
-                        .build(),
-                ImmutableProtectEvidence.builder()
-                        .from(onLabelResponsiveC)
-                        .treatment("treatment B")
-                        .direction(RESPONSIVE)
-                        .sources(Sets.newHashSet(ProtectTestFactory.createSource(Knowledgebase.CKB)))
-                        .build(),
-                ImmutableProtectEvidence.builder()
-                        .from(offLabelResponsiveC)
-                        .treatment("treatment C")
-                        .direction(PREDICTED_RESPONSIVE)
-                        .sources(Sets.newHashSet(ProtectTestFactory.createSource(Knowledgebase.CKB)))
-                        .build());
+        List<ProtectEvidence> ckbEvidences = createTestEvidencesForKnowledgebase(Knowledgebase.CKB);
         List<ProtectEvidence> ckbFiltered = EvidenceReportingFunctions.applyReportingAlgo(ckbEvidences);
         assertEquals(3, ckbFiltered.size());
-        assertEquals(2, ckbFiltered.stream().filter(x -> x.reported()).count());
+        assertEquals(2, reported(ckbFiltered).size());
+    }
+
+    @NotNull
+    private static List<ProtectEvidence> createTestEvidencesForKnowledgebase(@NotNull Knowledgebase knowledgebase) {
+        return Lists.newArrayList(ImmutableProtectEvidence.builder()
+                        .from(ON_LABEL_RESPONSIVE_B)
+                        .treatment("treatment A")
+                        .direction(EvidenceDirection.RESPONSIVE)
+                        .sources(Sets.newHashSet(ProtectTestFactory.createSource(knowledgebase)))
+                        .build(),
+                ImmutableProtectEvidence.builder()
+                        .from(ON_LABEL_RESPONSIVE_C)
+                        .treatment("treatment B")
+                        .direction(EvidenceDirection.RESPONSIVE)
+                        .sources(Sets.newHashSet(ProtectTestFactory.createSource(knowledgebase)))
+                        .build(),
+                ImmutableProtectEvidence.builder()
+                        .from(OFF_LABEL_RESPONSIVE_C)
+                        .treatment("treatment C")
+                        .direction(EvidenceDirection.PREDICTED_RESPONSIVE)
+                        .sources(Sets.newHashSet(ProtectTestFactory.createSource(knowledgebase)))
+                        .build());
+    }
+
+    @Test
+    public void reportEvidenceDirectionsIndependently() {
+        List<ProtectEvidence> evidences = Lists.newArrayList(ON_LABEL_RESPONSIVE_A, ON_LABEL_RESISTANT_B, ON_LABEL_NO_BENEFIT_C);
+
+        List<ProtectEvidence> filtered = EvidenceReportingFunctions.applyReportingAlgo(evidences);
+        assertEquals(3, filtered.size());
+        assertEquals(3, reported(filtered).size());
     }
 
     @Test
     public void doNoReportOffLabelAtSameLevelAsOnLabel() {
-        List<ProtectEvidence> evidence = Lists.newArrayList(onLabelResponsiveA, offLabelResponsiveA);
+        List<ProtectEvidence> evidences = Lists.newArrayList(ON_LABEL_RESPONSIVE_A, OFF_LABEL_RESPONSIVE_A);
 
-        List<ProtectEvidence> filtered = EvidenceReportingFunctions.applyReportingAlgo(evidence);
+        List<ProtectEvidence> filtered = EvidenceReportingFunctions.applyReportingAlgo(evidences);
         assertEquals(2, filtered.size());
-        assertTrue(filtered.contains(onLabelResponsiveA));
-        assertFalse(filtered.contains(offLabelResponsiveA));
+        assertTrue(filtered.contains(ON_LABEL_RESPONSIVE_A));
+        assertFalse(filtered.contains(OFF_LABEL_RESPONSIVE_A));
     }
 
     @Test
     public void reportHighestOffLabelIfHigherThanOnLabel() {
-        List<ProtectEvidence> evidence = Lists.newArrayList(onLabelResponsiveC, offLabelResponsiveA, offLabelResponsiveB);
+        List<ProtectEvidence> evidence = Lists.newArrayList(ON_LABEL_RESPONSIVE_C, OFF_LABEL_RESPONSIVE_A, OFF_LABEL_RESPONSIVE_B);
 
         List<ProtectEvidence> filtered = EvidenceReportingFunctions.applyReportingAlgo(evidence);
         assertEquals(3, filtered.size());
-        assertTrue(filtered.contains(offLabelResponsiveA));
-        assertFalse(filtered.contains(offLabelResponsiveB));
-        assertTrue(filtered.contains(onLabelResponsiveC));
+        assertTrue(filtered.contains(OFF_LABEL_RESPONSIVE_A));
+        assertFalse(filtered.contains(OFF_LABEL_RESPONSIVE_B));
+        assertTrue(filtered.contains(ON_LABEL_RESPONSIVE_C));
     }
 
     @Test
     public void neverSetReportToTrue() {
-        ProtectEvidence reported = onLabelResponsiveA;
+        ProtectEvidence reported = ON_LABEL_RESPONSIVE_A;
         ProtectEvidence reportedFiltered = EvidenceReportingFunctions.applyReportingAlgo(Lists.newArrayList(reported)).get(0);
         assertTrue(reportedFiltered.reported());
 
@@ -140,9 +123,11 @@ public class EvidenceReportingFunctionsTest {
         ProtectEvidence notReportedFiltered = EvidenceReportingFunctions.applyReportingAlgo(Lists.newArrayList(notReported)).get(0);
         assertFalse(notReportedFiltered.reported());
 
-        ProtectEvidence evidence1 =
-                ImmutableProtectEvidence.builder().from(createTestEvidence(true, RESPONSIVE, A)).reported(false).build();
-        ProtectEvidence evidence2 = createTestEvidence(false, RESPONSIVE, A);
+        ProtectEvidence evidence1 = ImmutableProtectEvidence.builder()
+                .from(createTestEvidence(true, EvidenceDirection.RESPONSIVE, EvidenceLevel.A))
+                .reported(false)
+                .build();
+        ProtectEvidence evidence2 = createTestEvidence(false, EvidenceDirection.RESPONSIVE, EvidenceLevel.A);
 
         List<ProtectEvidence> filtered = EvidenceReportingFunctions.applyReportingAlgo(Lists.newArrayList(evidence1, evidence2));
         assertTrue(filtered.contains(evidence1));
@@ -188,6 +173,17 @@ public class EvidenceReportingFunctionsTest {
 
         ProtectEvidence convertedEvidence2 = findByEvent(evidence, event2);
         assertFalse(convertedEvidence2.reported());
+    }
+
+    @NotNull
+    private static List<ProtectEvidence> reported(@NotNull List<ProtectEvidence> evidences) {
+        List<ProtectEvidence> filtered = Lists.newArrayList();
+        for (ProtectEvidence evidence : evidences) {
+            if (evidence.reported()) {
+                filtered.add(evidence);
+            }
+        }
+        return filtered;
     }
 
     @NotNull
