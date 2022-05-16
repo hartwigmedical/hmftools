@@ -51,7 +51,7 @@ SERVE generates clinical evidence in the following datamodel:
  - Blacklist cancer types (annotated with DOID) that should be children of the main cancer type and are used for blacklisting 
  specific types of the main cancer type.
  - Tier / Evidence level of the treatment
- - Direction (Responsive for the treatment or resistant to the treatment)
+ - Direction (Responsive for the treatment, resistant to the treatment or whether mutation implies no benefit for the treatment)
  - A set of URLs pointing towards the source website which provide extra information about the treatment.
  - A set of URLs with extra information about the evidence (e.g. publications backing up the evidence)
  
@@ -270,8 +270,9 @@ TML_OF_AT_LEAST_X | Tumor Mutational Load (TML) should be => X
 TML_OF_AT_MOST_X | TML should be <= X
 HAS_HLA_A_TYPE_X | Patient should have at least one HLA allele of type X   
 
-SERVE configures every trial to A-level evidence with responsive direction. The filtering is predominantly configurable rather than fixed
-in SERVE. The following filters can be configured in ACTIN:
+SERVE configures every trial to B-level evidence with `RESPONSIVE` direction in case the rule is involved in inclusion, and `NO_BENEFIT` in
+case the rule is used for exclusion. The filtering is predominantly configurable rather than fixed in SERVE. 
+The following filters can be configured in ACTIN:
 
 Filter  | Description
 ---|---
@@ -282,7 +283,7 @@ FILTER_EVERYTHING_FOR_RULE | Can be used to remove all evidence of a specific ru
 
 ### iClusion Curation
 
-iClusion contributes to actionability only. SERVE configures every trial to B-level evidence with responsive direction. 
+iClusion contributes to actionability only. SERVE configures every trial to B-level evidence with `RESPONSIVE` direction. 
 SERVE only considers trials with one or more molecular inclusion criterium. The filtering is predominantly configurable rather than fixed 
 in SERVE. The fixed curation of iClusion that is done in SERVE is mapping gene names and signatures. 
 
@@ -370,11 +371,12 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   
 ## Version History and Download Links
 - Upcoming
-  - Used correct blacklisted tumor locations for solid tumors 
-  - Updated mutation type filter for exon insertions and deletions
-  - Removed "negative" from list of CKB events which are interpreted as inactivation events.
-  - Moved TMB evidence from CKB from evidence for tumor mutational burden rather than load.
+  - Use correct blacklisted tumor locations for solid tumors 
+  - Update mutation type filter for exon insertions and deletions
+  - Remove "negative" from list of CKB events which are interpreted as inactivation events.
+  - Move TMB evidence from CKB to evidence for tumor mutational burden rather than mutational load.
   - Various updates are made to ingestion of ACTIN source
+  - Fix bug with consolidation of resistant vs responsive evidence. These were previously consolidated together rather than independently.
 - [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.10)
   - Solve issues of v1.9
 - [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.9)

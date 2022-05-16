@@ -21,6 +21,6 @@ public class ActinTrialFactoryTest {
         ActinTrial trial2 = ActinTrialFactory.toActinTrial(entry2, "some other event");
         assertEquals("some other event", trial2.sourceEvent());
         assertEquals("trial 2", trial2.treatment());
-        assertEquals(EvidenceDirection.RESISTANT, trial2.direction());
+        assertEquals(EvidenceDirection.NO_BENEFIT, trial2.direction());
     }
 }
