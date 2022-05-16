@@ -134,10 +134,12 @@ public class ChimericReadTracker
             final GeneData downGene = geneTransCache.getGeneDataByName(knownPair.ThreeGene);
 
             if(upGene != null && downGene != null)
+            {
                 mKnownPairGeneIds.add(new String[] { upGene.GeneId, downGene.GeneId });
 
-            mReferenceKnownGeneIds.add(upGene.GeneId);
-            mReferenceKnownGeneIds.add(downGene.GeneId);
+                mReferenceKnownGeneIds.add(upGene.GeneId);
+                mReferenceKnownGeneIds.add(downGene.GeneId);
+            }
         }
 
         mConfig.Fusions.KnownFusions.getDataByType(PROMISCUOUS_5)
