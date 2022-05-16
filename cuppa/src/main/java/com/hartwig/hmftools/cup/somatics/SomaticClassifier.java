@@ -274,7 +274,7 @@ public class SomaticClassifier implements CuppaClassifier
 
                 mSampleSnvCounts = convertSomaticVariantsToSnvCounts(sampleId, somaticVariants, mSampleSnvCountsIndex);
 
-                    AidApobecStatus aidApobecStatus = mExcludeAidApobecGenPos ? AidApobecStatus.FALSE_ONLY : AidApobecStatus.ALL;
+                AidApobecStatus aidApobecStatus = mExcludeAidApobecGenPos ? AidApobecStatus.FALSE_ONLY : AidApobecStatus.ALL;
                 mSamplePosFrequencies = convertSomaticVariantsToPosFrequencies(
                         sampleId, somaticVariants, mSamplePosFreqIndex, mPosFrequencies, aidApobecStatus);
             }
