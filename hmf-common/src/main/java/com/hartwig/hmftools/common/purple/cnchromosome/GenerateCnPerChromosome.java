@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.copynumber;
+package com.hartwig.hmftools.common.purple.cnchromosome;
 
 import java.io.IOException;
 import java.util.List;
@@ -11,8 +11,8 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
-import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
-import com.hartwig.hmftools.common.purple.cnchromosome.ImmutableCnPerChromosomeArmData;
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 
 import org.jetbrains.annotations.NotNull;

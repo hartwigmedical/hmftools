@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.linx;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.util.List;
 
@@ -21,7 +22,7 @@ public class ReportableGeneDisruptionFactoryTest {
 
     @Test
     public void canDetermineClusterId() {
-        LinxBreakend pairedDisruptionBuilder = createTestDisruptionBuilder().svId(1)
+        LinxBreakend breakend = createTestDisruptionBuilder().svId(1)
                 .gene("ROPN1B")
                 .chromosome("3")
                 .chrBand("p12")
@@ -29,9 +30,11 @@ public class ReportableGeneDisruptionFactoryTest {
                 .junctionCopyNumber(1.12)
                 .build();
 
-        List<LinxSvAnnotation> linxAnnotationBuilder =
-                Lists.newArrayList(createTestAnnotationBuilder().svId(1).clusterId(2).build());
-        assertEquals(2, (int) ReportableGeneDisruptionFactory.determineClusterId(pairedDisruptionBuilder, linxAnnotationBuilder));
+        LinxSvAnnotation match = createTestAnnotationBuilder().svId(1).clusterId(2).build();
+        assertEquals(2, (int) ReportableGeneDisruptionFactory.determineClusterId(breakend, Lists.newArrayList(match)));
+
+        LinxSvAnnotation noMatch = createTestAnnotationBuilder().svId(2).clusterId(1).build();
+        assertNull(ReportableGeneDisruptionFactory.determineClusterId(breakend, Lists.newArrayList(noMatch)));
     }
 
     @Test

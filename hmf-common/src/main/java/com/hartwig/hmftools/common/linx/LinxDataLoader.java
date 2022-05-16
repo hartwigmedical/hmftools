@@ -49,7 +49,7 @@ public final class LinxDataLoader {
         List<LinxSvAnnotation> linxSvs = Lists.newArrayList();
         if (linxSvsTsv != null) {
             linxSvs = LinxSvAnnotation.read(linxSvsTsv);
-            LOGGER.info(" Loaded {} reportable disruptions from {}", linxSvs.size(), linxSvsTsv);
+            LOGGER.info(" Loaded {} svs from {}", linxSvs.size(), linxSvsTsv);
         }
 
         List<LinxBreakend> linxBreakends =

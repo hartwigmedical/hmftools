@@ -1050,7 +1050,10 @@ public class FusionDisruptionAnalyser
 
             if(var != null)
             {
-                transcript.setUndisruptedCopyNumber(getUndisruptedCopyNumber(var.getBreakend(transcript.gene().isStart())));
+                final SvBreakend breakend = var.getBreakend(transcript.gene().isStart());
+
+                if(breakend != null)
+                    transcript.setUndisruptedCopyNumber(getUndisruptedCopyNumber(breakend));
             }
         }
 
