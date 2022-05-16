@@ -29,7 +29,7 @@ public final class HomozygousDisruptionTable {
 
         for (ReportableHomozygousDisruption homozygousDisruption : sort(homozygousDisruptions)) {
             table.addCell(Cells.createContent(homozygousDisruption.chromosome() + homozygousDisruption.chromosomeBand()));
-            table.addCell(Cells.createContent(homozygousDisruption.gene()));
+            table.addCell(Cells.createContent(gene(homozygousDisruption)));
             table.addCell(Cells.createContent(Strings.EMPTY));
         }
 
@@ -48,5 +48,14 @@ public final class HomozygousDisruptionTable {
                 return location1.compareTo(location2);
             }
         }).collect(Collectors.toList());
+    }
+
+    @NotNull
+    private static String gene(@NotNull ReportableHomozygousDisruption homozygousDisruption) {
+        String addon = Strings.EMPTY;
+        if (!homozygousDisruption.isCanonical()) {
+            addon = " (alt)";
+        }
+        return homozygousDisruption.gene() + addon;
     }
 }
