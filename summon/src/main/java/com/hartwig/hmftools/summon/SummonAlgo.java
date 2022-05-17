@@ -49,7 +49,7 @@ public class SummonAlgo {
                 .virusInterpreter(loadVirusInterpreterData(config))
                 .chord(loadChordAnalysis(config))
                 .protect(loadProtectData(config))
-                .actionabilityEntry(actionabilityEntry)
+                .actionabilityEntries(actionabilityEntry)
                 .build();
     }
 

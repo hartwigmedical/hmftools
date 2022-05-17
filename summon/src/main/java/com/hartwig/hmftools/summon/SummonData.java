@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.summon;
 
 import java.util.List;
+import java.util.Map;
 
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.linx.LinxData;
@@ -8,6 +9,7 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.summon.actionability.ActionabilityEntry;
+import com.hartwig.hmftools.summon.actionability.ActionabilityKey;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -37,5 +39,5 @@ public abstract class SummonData {
     public abstract List<ProtectEvidence> protect();
 
     @NotNull
-    public abstract List<ActionabilityEntry> actionabilityEntry();
+    public abstract List<ActionabilityEntry> actionabilityEntries();
 }

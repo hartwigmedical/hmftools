@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.utils.FileReaderUtils;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ActionabilityFileReader {
+public final class ActionabilityFileReader {
 
     private static final String MAIN_FIELD_DELIMITER = "\t";
 
