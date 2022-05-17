@@ -3,6 +3,7 @@ package com.hartwig.hmftools.orange.report.tables;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 
@@ -80,7 +81,7 @@ final class VariantUtil {
         if (!variant.isCanonical()) {
             addon = " (alt)";
         }
-        return variant.gene() + addon + " " + ProtectEventGenerator.variantEvent(variant);
+        return variant.gene() + addon + " " + AminoAcids.forceSingleLetterProteinAnnotation(ProtectEventGenerator.variantEvent(variant));
     }
 
     @NotNull
