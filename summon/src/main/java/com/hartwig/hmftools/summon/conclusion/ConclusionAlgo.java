@@ -34,6 +34,7 @@ public class ConclusionAlgo {
             KnownFusionType.KNOWN_PAIR.toString(),
             KnownFusionType.IG_KNOWN_PAIR.toString(),
             KnownFusionType.IG_PROMISCUOUS.toString());
+    private static final Set<String> VIRUS = Sets.newHashSet("HPV", "EBV");
 
     @NotNull
     public static ActionabilityConclusion generateConclusion(@NotNull SummonData summonData) {
@@ -106,16 +107,18 @@ public class ConclusionAlgo {
     public static void generateCNVConclusion(@NotNull Set<String> conclusion, @NotNull List<ReportableGainLoss> reportableGainLosses,
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
         for (ReportableGainLoss gainLoss : reportableGainLosses) {
-            if (gainLoss.interpretation().display().equals(CopyNumberInterpretation.FULL_LOSS.display())
-                    || gainLoss.interpretation().display().equals(CopyNumberInterpretation.PARTIAL_LOSS.display())) {
+            if (gainLoss.interpretation().display().equals(CopyNumberInterpretation.FULL_LOSS.display()) || gainLoss.interpretation()
+                    .display()
+                    .equals(CopyNumberInterpretation.PARTIAL_LOSS.display())) {
 
                 ActionabilityKey keyVirus = ImmutableActionabilityKey.builder().gene(gainLoss.gene()).type(Type.LOSS).build();
                 ActionabilityEntry entry = actionabilityMap.get(keyVirus);
                 conclusion.add(entry.conclusion());
             }
 
-            if (gainLoss.interpretation().display().equals(CopyNumberInterpretation.FULL_GAIN.display())
-                    || gainLoss.interpretation().display().equals(CopyNumberInterpretation.PARTIAL_GAIN.display())) {
+            if (gainLoss.interpretation().display().equals(CopyNumberInterpretation.FULL_GAIN.display()) || gainLoss.interpretation()
+                    .display()
+                    .equals(CopyNumberInterpretation.PARTIAL_GAIN.display())) {
                 ActionabilityKey keyVirus = ImmutableActionabilityKey.builder().gene(gainLoss.gene()).type(Type.AMPLIFICATION).build();
                 ActionabilityEntry entry = actionabilityMap.get(keyVirus);
                 conclusion.add(entry.conclusion());
@@ -161,8 +164,9 @@ public class ConclusionAlgo {
     public static void generateVirusConclusion(@NotNull Set<String> conclusion, @NotNull List<AnnotatedVirus> reportableViruses,
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
         for (AnnotatedVirus annotatedVirus : reportableViruses) {
-            if (annotatedVirus.virusDriverLikelihoodType() == VirusLikelihoodType.HIGH) {
-                ActionabilityKey keyVirus = ImmutableActionabilityKey.builder().gene("HPV").type(Type.SIGNATURE_POSITIVE).build();
+            if (annotatedVirus.virusDriverLikelihoodType() == VirusLikelihoodType.HIGH && VIRUS.contains(annotatedVirus.interpretation())) {
+                ActionabilityKey keyVirus =
+                        ImmutableActionabilityKey.builder().gene(annotatedVirus.interpretation()).type(Type.SIGNATURE_POSITIVE).build();
                 ActionabilityEntry entry = actionabilityMap.get(keyVirus);
                 conclusion.add(entry.conclusion());
             }
