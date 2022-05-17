@@ -8,7 +8,6 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ActionabilityConclusion {
-
     @NotNull
     public abstract String conclusion();
 }
