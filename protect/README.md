@@ -121,7 +121,7 @@ rangeRank | In case of EXON or CODON, the index of the exon or codon on which th
 evidenceUrls | A list of urls with additional information about the evidence | https://pubmed.ncbi.nlm.nih.gov
 
 ## Version History and Download Links
-- Upcoming
+- [2.2](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v2.2)
   - Fixed bug in hotspot matching in case everything matches except for the alt (eg V600K against V600R).
   - Add support for matching evidence for low TML, low TMB and MSS (reported always false)
 - [2.1](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v2.1)
