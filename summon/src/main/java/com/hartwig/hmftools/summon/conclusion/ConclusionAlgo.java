@@ -106,16 +106,16 @@ public class ConclusionAlgo {
     public static void generateCNVConclusion(@NotNull Set<String> conclusion, @NotNull List<ReportableGainLoss> reportableGainLosses,
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
         for (ReportableGainLoss gainLoss : reportableGainLosses) {
-            if (gainLoss.interpretation().display() == CopyNumberInterpretation.FULL_LOSS.display()
-                    || gainLoss.interpretation().display() == CopyNumberInterpretation.PARTIAL_LOSS.display()) {
+            if (gainLoss.interpretation().display().equals(CopyNumberInterpretation.FULL_LOSS.display())
+                    || gainLoss.interpretation().display().equals(CopyNumberInterpretation.PARTIAL_LOSS.display())) {
 
                 ActionabilityKey keyVirus = ImmutableActionabilityKey.builder().gene(gainLoss.gene()).type(Type.LOSS).build();
                 ActionabilityEntry entry = actionabilityMap.get(keyVirus);
                 conclusion.add(entry.conclusion());
             }
 
-            if (gainLoss.interpretation().display() == CopyNumberInterpretation.FULL_GAIN.display()
-                    || gainLoss.interpretation().display() == CopyNumberInterpretation.PARTIAL_GAIN.display()) {
+            if (gainLoss.interpretation().display().equals(CopyNumberInterpretation.FULL_GAIN.display())
+                    || gainLoss.interpretation().display().equals(CopyNumberInterpretation.PARTIAL_GAIN.display())) {
                 ActionabilityKey keyVirus = ImmutableActionabilityKey.builder().gene(gainLoss.gene()).type(Type.AMPLIFICATION).build();
                 ActionabilityEntry entry = actionabilityMap.get(keyVirus);
                 conclusion.add(entry.conclusion());
