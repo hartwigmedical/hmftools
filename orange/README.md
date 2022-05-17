@@ -94,7 +94,7 @@ investigate potential causes for QC failure.
  - BQR plots from both reference and tumor sample from [SAGE](../sage)
 
 ### Version History and Download Links
-- Upcoming
+- [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.8)
   - Only show every source name once in clinical evidence section.
   - Fix bug with selecting variants that are unreported but have evidence.
   - Improve support for multiple drivers on same gene but with different transcripts.
