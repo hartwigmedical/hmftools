@@ -219,6 +219,8 @@ public class CuppaCompare
 
             outputFileName += ".csv";
 
+            CUP_LOGGER.info("writing comparison results to {}", outputFileName);
+
             final BufferedWriter writer = createBufferedWriter(outputFileName, false);
             writer.write("SampleId,Status,DataType,MatchType");
 

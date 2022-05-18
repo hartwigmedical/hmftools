@@ -205,12 +205,12 @@ public class AltSjClassifier implements CuppaClassifier
 
         // prepare counts
         final short[] rawSampleFragCounts = mSampleFragCounts[sampleIndex];
-        final double[] sampleFragCounts = convertSampleFragCounts(rawSampleFragCounts);
+        final double[] adjSampleFragCounts = convertSampleFragCounts(rawSampleFragCounts);
 
-        addCancerCssResults(sample, sampleFragCounts, results);
+        addCancerCssResults(sample, rawSampleFragCounts, adjSampleFragCounts, results);
 
         if(mRunPairwise)
-            addSampleCssResults(sample, sampleFragCounts, results, similarities);
+            addSampleCssResults(sample, adjSampleFragCounts, results, similarities);
     }
 
     private double[] convertSampleFragCounts(final short[] rawSampleFragCounts)
@@ -230,14 +230,29 @@ public class AltSjClassifier implements CuppaClassifier
         return sampleFragCounts;
     }
 
-    private void addCancerCssResults(final SampleData sample, final double[] sampleFragCounts, final List<SampleResult> results)
+    private void addCancerCssResults(
+            final SampleData sample, final short[] rawSampleFragCounts, final double[] adjSampleFragCounts, final List<SampleResult> results)
     {
         int refCancerCount = mRefCancerTypeMatrix.Cols;
 
         final Map<String,Double> cancerCssTotals = Maps.newHashMap();
 
-        int totalFrags = (int)sumVector(sampleFragCounts);
-        int altSjSites = (int)Arrays.stream(sampleFragCounts).filter(x -> x > 0).count();
+        int totalFrags = 0;
+        int altSjSites = 0;
+
+        if(mCssWriter != null)
+        {
+            for(int i = 0; i < rawSampleFragCounts.length; ++i)
+            {
+                if(rawSampleFragCounts[i] >= mMinSampleFragments)
+                {
+                    totalFrags += rawSampleFragCounts[i];
+
+                    if(adjSampleFragCounts[i] > 0)
+                        ++altSjSites;
+                }
+            }
+        }
 
         for(int i = 0; i < refCancerCount; ++i)
         {
@@ -265,10 +280,10 @@ public class AltSjClassifier implements CuppaClassifier
             boolean matchesCancerType = sample.cancerType().equals(cohortData.CancerType);
 
             final double[] refAsjFragCounts = sample.isRefSample() && matchesCancerType ?
-                    adjustRefCounts(mRefCancerTypeMatrix.getCol(i), sampleFragCounts, cohortData.SampleCount) : mRefCancerTypeMatrix.getCol(i);
+                    adjustRefCounts(mRefCancerTypeMatrix.getCol(i), rawSampleFragCounts, cohortData.SampleCount) : mRefCancerTypeMatrix.getCol(i);
 
             // now any adjustments have been made, zero out any low-fragment-count sites
-            double css = calcCosineSim(refAsjFragCounts, sampleFragCounts, false, mMinSampleFragments > 0);
+            double css = calcCosineSim(refAsjFragCounts, adjSampleFragCounts, false, mMinSampleFragments > 0);
 
             if(css < RNA_GENE_EXP_CSS_THRESHOLD)
                 continue;
@@ -281,15 +296,15 @@ public class AltSjClassifier implements CuppaClassifier
                 int sampleSites = 0;
                 int refSites = 0;
 
-                for(int j = 0; j < sampleFragCounts.length; ++j)
+                for(int j = 0; j < adjSampleFragCounts.length; ++j)
                 {
-                    if(sampleFragCounts[j] > 0)
+                    if(adjSampleFragCounts[j] > 0)
                         ++sampleSites;
 
                     if(refAsjFragCounts[j] > 0)
                         ++refSites;
 
-                    if(sampleFragCounts[j] > 0 && refAsjFragCounts[j] > 0)
+                    if(adjSampleFragCounts[j] > 0 && refAsjFragCounts[j] > 0)
                         ++matchedSites;
                 }
 
@@ -390,9 +405,9 @@ public class AltSjClassifier implements CuppaClassifier
         similarities.addAll(topMatches);
     }
 
-    private double[] adjustRefCounts(final double[] refCounts, final double[] sampleCounts, int cancerSampleCount)
+    private double[] adjustRefCounts(final double[] refCounts, final short[] sampleCounts, int cancerSampleCount)
     {
-        // remove the sample's counts after first de-logging both counts if required
+        // remove the sample's counts - which since now keep raw counts does not need to be de-logged
         double[] adjustedCounts = new double[refCounts.length];
 
         for(int b = 0; b < refCounts.length; ++b)
@@ -408,9 +423,9 @@ public class AltSjClassifier implements CuppaClassifier
             }
             else
             {
-                double sampleCount = exp(sampleCounts[b]) - mFragCountLogValue;
+                // double sampleCount = exp(sampleCounts[b]) - mFragCountLogValue;
                 double actualRefCount = (exp(refCounts[b]) - mFragCountLogValue) * cancerSampleCount;
-                double adjustedRefAvg = max(actualRefCount - sampleCount, 0) / (cancerSampleCount - 1);
+                double adjustedRefAvg = max(actualRefCount - sampleCounts[b], 0) / (cancerSampleCount - 1);
                 adjustedCounts[b] = convertFragCount(adjustedRefAvg);
             }
         }
