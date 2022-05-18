@@ -17,6 +17,6 @@ public class ActionabilityFileReaderTest {
     @Test
     public void canReadActionabilityDbTsv() throws IOException {
         List<ActionabilityEntry> actionabilityEntries = ActionabilityFileReader.read(ACTIONABILITY_DB_TSV);
-        assertEquals(2, actionabilityEntries.size());
+        assertEquals(4, actionabilityEntries.size());
     }
 }

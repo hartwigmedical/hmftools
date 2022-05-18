@@ -45,7 +45,10 @@ public final class ActionabilityFileReader {
 
         return ImmutableActionabilityEntry.builder()
                 .gene(values[fields.get("Gene")])
-                .type(Type.valueOf(values[fields.get("aberration type")].toUpperCase().replace(" ", "_")))
+                .type(Type.valueOf(values[fields.get("aberration type")].toUpperCase()
+                        .replace(" (ECD)", "")
+                        .replace(" (KDD)", "")
+                        .replace(" ", "_")))
                 .conclusion(values[fields.get("conclusion")])
                 .build();
     }

@@ -108,7 +108,7 @@ public class ConclusionAlgo {
             ActionabilityKey keySomaticVariant = ImmutableActionabilityKey.builder()
                     .gene(somaticVariant.gene())
                     .type(driverGenesMap.get(somaticVariant.gene()).likelihoodType().equals(DriverCategory.ONCO)
-                            ? Type.ACTIVATION_MUTATION
+                            ? Type.ACTIVATING_MUTATION
                             : Type.INACTIVATION)
                     .build();
             ActionabilityEntry entry = actionabilityMap.get(keySomaticVariant);
@@ -123,7 +123,7 @@ public class ConclusionAlgo {
             ActionabilityKey keyGermlineVariant = ImmutableActionabilityKey.builder()
                     .gene(germlineVariant.gene())
                     .type(driverGenesMap.get(germlineVariant.gene()).likelihoodType().equals(DriverCategory.ONCO)
-                            ? Type.ACTIVATION_MUTATION
+                            ? Type.ACTIVATING_MUTATION
                             : Type.INACTIVATION)
                     .build();
             ActionabilityEntry entry = actionabilityMap.get(keyGermlineVariant);
