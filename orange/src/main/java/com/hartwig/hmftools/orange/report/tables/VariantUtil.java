@@ -4,10 +4,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.codon.AminoAcids;
+import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 final class VariantUtil {
@@ -74,30 +76,12 @@ final class VariantUtil {
 
     @NotNull
     public static String variantField(@NotNull ReportableVariant variant) {
-        String consequence;
-        if (variant.isCanonical()) {
-            if (!variant.canonicalHgvsProteinImpact().isEmpty()) {
-                consequence = AminoAcids.forceSingleLetterProteinAnnotation(variant.canonicalHgvsProteinImpact());
-            } else if (!variant.canonicalHgvsCodingImpact().isEmpty()) {
-                consequence = variant.canonicalHgvsCodingImpact();
-            } else if (variant.canonicalEffect().equals(UPSTREAM_GENE_VARIANT)) {
-                consequence = "upstream";
-            } else {
-                consequence = variant.canonicalEffect();
-            }
-        } else {
-            if (!variant.otherReportedEffects().split("\\|")[2].isEmpty()) {
-                consequence = AminoAcids.forceSingleLetterProteinAnnotation(variant.otherReportedEffects().split("\\|")[2]);
-            } else if (!variant.otherReportedEffects().split("\\|")[1].isEmpty()) {
-                consequence = variant.otherReportedEffects().split("\\|")[1];
-            } else if (variant.otherReportedEffects().split("\\|")[3].equals(UPSTREAM_GENE_VARIANT)) {
-                consequence = "upstream";
-            } else {
-                consequence = variant.otherReportedEffects().split("\\|")[3];
-            }
+        // Reuse PROTECT formatting for ORANGE report.
+        String addon = Strings.EMPTY;
+        if (!variant.isCanonical()) {
+            addon = " (alt)";
         }
-
-        return variant.gene() + " " + consequence;
+        return variant.gene() + addon + " " + AminoAcids.forceSingleLetterProteinAnnotation(ProtectEventGenerator.variantEvent(variant));
     }
 
     @NotNull

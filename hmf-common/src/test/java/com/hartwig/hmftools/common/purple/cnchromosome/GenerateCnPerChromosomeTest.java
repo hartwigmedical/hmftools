@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple;
+package com.hartwig.hmftools.common.purple.cnchromosome;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -10,8 +10,6 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.purple.PurpleTestUtils;
-import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
-import com.hartwig.hmftools.common.purple.copynumber.GenerateCnPerChromosome;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 
@@ -19,7 +17,7 @@ import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class CnPerChromosomeFactoryTest
+public class GenerateCnPerChromosomeTest
 {
     private static final double EPSILON = 1.0E-3;
 

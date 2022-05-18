@@ -4,8 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -60,6 +62,8 @@ import org.jetbrains.annotations.Nullable;
 public class OrangeAlgo {
 
     private static final Logger LOGGER = LogManager.getLogger(OrangeAlgo.class);
+
+    private static final DecimalFormat PERCENTAGE = new DecimalFormat("#'%'", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
 
     @NotNull
     private final DoidEntry doidEntry;
@@ -203,7 +207,11 @@ public class OrangeAlgo {
 
     @NotNull
     private static LinxData loadLinxData(@NotNull OrangeConfig config) throws IOException {
-        return LinxDataLoader.load(config.linxFusionTsv(), config.linxBreakendTsv(), null, config.linxDriverCatalogTsv(), config.linxDriverTsv());
+        return LinxDataLoader.load(config.linxFusionTsv(),
+                config.linxBreakendTsv(),
+                null,
+                config.linxDriverCatalogTsv(),
+                config.linxDriverTsv());
     }
 
     @NotNull
@@ -223,7 +231,9 @@ public class OrangeAlgo {
         LOGGER.info(" Loaded {} entries from {}", cuppaEntries.size(), config.cuppaResultCsv());
 
         CuppaData cuppaData = CuppaFactory.create(cuppaEntries);
-        LOGGER.info(" Predicted cancer type '{}' with likelihood {}", cuppaData.predictedCancerType(), cuppaData.bestPredictionLikelihood());
+        LOGGER.info(" Predicted cancer type '{}' with likelihood {}",
+                cuppaData.predictedCancerType(),
+                cuppaData.bestPredictionLikelihood());
         return cuppaData;
     }
 
@@ -259,12 +269,11 @@ public class OrangeAlgo {
         Map<PercentileType, Evaluation> evaluations = Maps.newHashMap();
         Evaluation evaluation = percentilesModel.percentile(svTmbObservation);
         if (evaluation != null) {
-            DecimalFormat percentage = new DecimalFormat("#'%'");
             String cancerType = evaluation.cancerType();
             Double cancerTypePercentile = evaluation.cancerTypePercentile();
             LOGGER.info(" Determined percentile '{}' for pan-cancer and '{}' for cancer type '{}'",
-                    percentage.format(evaluation.panCancerPercentile() * 100),
-                    cancerTypePercentile != null ? percentage.format(cancerTypePercentile * 100) : "NA",
+                    PERCENTAGE.format(evaluation.panCancerPercentile() * 100),
+                    cancerTypePercentile != null ? PERCENTAGE.format(cancerTypePercentile * 100) : "NA",
                     cancerType != null ? cancerType : "NA");
             evaluations.put(type, evaluation);
         } else {

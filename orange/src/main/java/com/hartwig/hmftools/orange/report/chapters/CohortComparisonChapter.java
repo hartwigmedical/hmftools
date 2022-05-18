@@ -4,7 +4,7 @@ import java.io.File;
 
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.util.ImageUtil;
+import com.hartwig.hmftools.orange.report.util.Images;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Image;
@@ -43,7 +43,7 @@ public class CohortComparisonChapter implements ReportChapter {
     }
 
     private void addCuppaSummaryPlot(@NotNull Document document) {
-        Image cuppaSummaryImage = ImageUtil.build(report.plots().cuppaSummaryPlot());
+        Image cuppaSummaryImage = Images.build(report.plots().cuppaSummaryPlot());
         cuppaSummaryImage.setMaxWidth(740);
         cuppaSummaryImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
         document.add(cuppaSummaryImage);
@@ -52,7 +52,7 @@ public class CohortComparisonChapter implements ReportChapter {
     private void addCuppaFeaturePlot(@NotNull Document document) {
         String featurePlotPaths = report.plots().cuppaFeaturePlot();
         if (featurePlotPaths != null && new File(featurePlotPaths).exists()) {
-            Image cuppaFeatureImage = ImageUtil.build(featurePlotPaths);
+            Image cuppaFeatureImage = Images.build(featurePlotPaths);
             cuppaFeatureImage.setMaxWidth(740);
             cuppaFeatureImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
             document.add(cuppaFeatureImage);

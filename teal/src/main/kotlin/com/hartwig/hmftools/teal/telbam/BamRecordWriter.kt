@@ -49,8 +49,7 @@ class BamRecordWriter(config: TelbamParams,
     {
         while (true)
         {
-            var task: TelBamRecord
-            task = try
+            val task: TelBamRecord = try
             {
                 mTelBamRecordQ.take()
             }

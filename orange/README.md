@@ -5,7 +5,7 @@ ORANGE summarizes the key outputs from all algorithms in the Hartwig suite into 
  and hence can always be run as final step without any additional local data or config required. 
  1. The algo intends to combine RNA and DNA data to present an integrated DNA/RNA analysis of a tumor sample. 
  1. Everything that is labeled as a driver by any of the Hartwig algo's is displayed in the PDF along with the driver likelihood. 
- This effectively means that everything reported by [patient-reporter](../patient-reporter) is present in the ORANGE pdf.
+ This effectively means that everything reported by [patient-reporter](../patient-reporter) is present in the ORANGE pdf and json.
  1. An additional exhaustive WGS scan is performed for anything interesting that may be potentially relevant but not picked up as a driver.
  Details of what is considered interesting are described in below.
  1. A comprehensive range of QC measures and plots is displayed which provides in-depth details about the data quality of the tumor sample. 
@@ -19,7 +19,7 @@ The front page of the ORANGE report lists all high-level stats about the sample 
 SNV/Indel clonality. In addition to this front page, the following chapters are generated in the ORANGE report:
  
   - [Somatic Findings](#somatic-findings): What potentially relevant mutations have been found in the tumor specifically?
-  - [Germline Findings](#germline-findings): What potentially relevant mutations have been found in the germline DNA? 
+  - [Germline Findings](#germline-findings): What potentially relevant mutations have been found in the germline data? 
   - [Immunology](#immunology): What can we tell about the immunogenicity of the tumor sample?
   - [Cohort Comparison](#cohort-comparison): How do the various properties of this tumor compare to existing cancer cohorts?
   - [Clinical Evidence](#clinical-evidence): What genomic evidence has been found in favor of, or against, specific treatments?
@@ -94,6 +94,10 @@ investigate potential causes for QC failure.
  - BQR plots from both reference and tumor sample from [SAGE](../sage)
 
 ### Version History and Download Links
+- [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.8)
+  - Only show every source name once in clinical evidence section.
+  - Fix bug with selecting variants that are unreported but have evidence.
+  - Improve support for multiple drivers on same gene but with different transcripts.
 - [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.7)
   - Support for Protect v2.1
   - Support multiple LPS per variant in SAGE

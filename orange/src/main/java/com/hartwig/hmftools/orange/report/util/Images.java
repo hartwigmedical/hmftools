@@ -8,9 +8,9 @@ import com.itextpdf.layout.element.Image;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class ImageUtil {
+public final class Images {
 
-    private ImageUtil() {
+    private Images() {
     }
 
     @NotNull

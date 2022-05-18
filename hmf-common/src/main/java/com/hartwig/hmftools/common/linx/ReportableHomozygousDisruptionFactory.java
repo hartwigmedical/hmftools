@@ -2,13 +2,10 @@ package com.hartwig.hmftools.common.linx;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalogKey;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalogMap;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 
 import org.apache.logging.log4j.LogManager;
@@ -34,16 +31,10 @@ public final class ReportableHomozygousDisruptionFactory {
     }
 
     @NotNull
-    private static List<ReportableHomozygousDisruption> extractHomozygousDisruptions(@NotNull List<DriverCatalog> linxDriversCatalog) {
+    private static List<ReportableHomozygousDisruption> extractHomozygousDisruptions(@NotNull List<DriverCatalog> driverCatalog) {
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
-        Map<DriverCatalogKey, DriverCatalog> driverMap = DriverCatalogMap.toDriverMap(linxDriversCatalog);
 
-        for (DriverCatalogKey key : driverMap.keySet()) {
-            DriverCatalog driver = driverMap.get(key);
-            if (driver == null) {
-                throw new IllegalStateException("Could not find driver entry for homozygous disruption on gene '" + driver.gene() + "'");
-            }
-
+        for (DriverCatalog driver : driverCatalog) {
             if (driver.driver() == DriverType.HOM_DUP_DISRUPTION || driver.driver() == DriverType.HOM_DEL_DISRUPTION) {
                 homozygousDisruptions.add(create(driver));
             }

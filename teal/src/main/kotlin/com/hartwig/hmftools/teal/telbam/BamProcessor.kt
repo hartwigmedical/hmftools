@@ -78,10 +78,6 @@ object BamProcessor
             }
         }
         writer.finish()
-        check(writer.incompleteReadGroups.isEmpty()) {
-            // this should be flagged as an error
-            String.format("%d read groups could not be completed", writer.incompleteReadGroups.size)
-        }
     }
 
     // run the bam reader and record writer threads till completion

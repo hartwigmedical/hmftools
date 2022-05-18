@@ -7,9 +7,9 @@ import com.hartwig.hmftools.patientdb.clinical.ecrf.formstatus.FormStatus;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class DatamodelTestFactory {
+public final class ClinicalTestFactory {
 
-    private DatamodelTestFactory() {
+    private ClinicalTestFactory() {
     }
 
     @NotNull

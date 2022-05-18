@@ -1,0 +1,191 @@
+package com.hartwig.hmftools.summon;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.immutables.value.Value;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+@Value.Immutable
+@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
+public interface SummonConfig {
+
+    String OUTPUT_DIRECTORY = "output_dir";
+    String ACTIONABILITY_DATABASE_TSV = "actionability_database_tsv";
+    String TUMOR_SAMPLE_ID = "tumor_sample_id";
+    String REF_SAMPLE_ID = "ref_sample_id";
+
+    String PURPLE_PURITY_TSV = "purple_purity_tsv";
+    String PURPLE_QC_FILE = "purple_qc_file";
+    String PURPLE_SOMATIC_DRIVER_CATALOG_TSV = "purple_somatic_driver_catalog_tsv";
+    String PURPLE_GERMLINE_DRIVER_CATALOG_TSV = "purple_germline_driver_catalog_tsv";
+    String PURPLE_SOMATIC_VARIANT_VCF = "purple_somatic_variant_vcf";
+    String PURPLE_GERMLINE_VARIANT_VCF = "purple_germline_variant_vcf";
+    String PURPLE_GENE_COPY_NUMBER_TSV = "purple_gene_copy_number_tsv";
+    String LINX_FUSION_TSV = "linx_fusion_tsv";
+    String LINX_BREAKEND_TSV = "linx_breakend_tsv";
+    String LINX_DRIVER_CATALOG_TSV = "linx_driver_catalog_tsv";
+    String CHORD_PREDICTION_TXT = "chord_prediction_txt";
+    String ANNOTATED_VIRUS_TSV = "annotated_virus_tsv";
+    String PROTECT_EVIDENCE_TSV = "protect_evidence_tsv";
+
+    // Some additional optional params and flags
+    String LOG_DEBUG = "log_debug";
+
+    @NotNull
+    static Options createOptions() {
+        Options options = new Options();
+
+        options.addOption(OUTPUT_DIRECTORY, true, "Path to where the data of the report will be written to.");
+        options.addOption(ACTIONABILITY_DATABASE_TSV, true, "Path to where the data oof the actionability database can be found.");
+
+        options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which a conclusion will be generated.");
+        options.addOption(REF_SAMPLE_ID, true, "The reference ID for which is used for this sample.");
+
+        options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
+        options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
+        options.addOption(PURPLE_SOMATIC_DRIVER_CATALOG_TSV, true, "Path towards the purple somatic driver catalog TSV.");
+        options.addOption(PURPLE_GERMLINE_DRIVER_CATALOG_TSV, true, "Path towards the purple germline driver catalog TSV.");
+        options.addOption(PURPLE_SOMATIC_VARIANT_VCF, true, "Path towards the purple somatic variant VCF.");
+        options.addOption(PURPLE_GERMLINE_VARIANT_VCF, true, "Path towards the purple germline variant VCF.");
+        options.addOption(PURPLE_GENE_COPY_NUMBER_TSV, true, "Path towards the purple somatic copynumber TSV.");
+
+        options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
+        options.addOption(LINX_BREAKEND_TSV, true, "Path towards the linx breakend TSV.");
+        options.addOption(LINX_DRIVER_CATALOG_TSV, true, "Path towards the LINX driver catalog TSV.");
+
+        options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
+
+        options.addOption(ANNOTATED_VIRUS_TSV, true, "Path towards the annotated virus TSV.");
+
+        options.addOption(PROTECT_EVIDENCE_TSV, true, "Path towards the protect evidence TSV.");
+
+        options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
+        return options;
+    }
+
+    @NotNull
+    String outputDir();
+
+    @NotNull
+    String actionabilityDatabaseTsv();
+
+    @NotNull
+    String tumorSampleId();
+
+    @Nullable
+    String refSampleId();
+
+    @NotNull
+    String purplePurityTsv();
+
+    @NotNull
+    String purpleQcFile();
+
+    @NotNull
+    String purpleSomaticDriverCatalogTsv();
+
+    @NotNull
+    String purpleGermlineDriverCatalogTsv();
+
+    @NotNull
+    String purpleSomaticVariantVcf();
+
+    @NotNull
+    String purpleGermlineVariantVcf();
+
+    @NotNull
+    String purpleSomaticCopyNumberTsv();
+
+    @NotNull
+    String linxFusionTsv();
+
+    @NotNull
+    String linxBreakendTsv();
+
+    @NotNull
+    String linxDriverCatalogTsv();
+
+    @NotNull
+    String chordPredictionTxt();
+
+    @NotNull
+    String annotatedVirusTsv();
+
+    @NotNull
+    String protectEvidenceTsv();
+
+    @NotNull
+    static SummonConfig createConfig(@NotNull CommandLine cmd) throws ParseException, IOException {
+        if (cmd.hasOption(LOG_DEBUG)) {
+            Configurator.setRootLevel(Level.DEBUG);
+        }
+
+        return ImmutableSummonConfig.builder()
+                .outputDir(nonOptionalDir(cmd, OUTPUT_DIRECTORY))
+                .actionabilityDatabaseTsv(nonOptionalFile(cmd, ACTIONABILITY_DATABASE_TSV))
+                .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
+                .refSampleId(cmd.hasOption(REF_SAMPLE_ID) ? nonOptionalValue(cmd, REF_SAMPLE_ID) : null)
+                .purplePurityTsv(nonOptionalFile(cmd, PURPLE_PURITY_TSV))
+                .purpleQcFile(nonOptionalFile(cmd, PURPLE_QC_FILE))
+                .purpleSomaticDriverCatalogTsv(nonOptionalFile(cmd, PURPLE_SOMATIC_DRIVER_CATALOG_TSV))
+                .purpleGermlineDriverCatalogTsv(nonOptionalFile(cmd, PURPLE_GERMLINE_DRIVER_CATALOG_TSV))
+                .purpleSomaticVariantVcf(nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF))
+                .purpleGermlineVariantVcf(nonOptionalFile(cmd, PURPLE_GERMLINE_VARIANT_VCF))
+                .purpleSomaticCopyNumberTsv(nonOptionalFile(cmd, PURPLE_GENE_COPY_NUMBER_TSV))
+                .linxFusionTsv(nonOptionalFile(cmd, LINX_FUSION_TSV))
+                .linxBreakendTsv(nonOptionalFile(cmd, LINX_BREAKEND_TSV))
+                .linxDriverCatalogTsv(nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV))
+                .chordPredictionTxt(nonOptionalFile(cmd, CHORD_PREDICTION_TXT))
+                .annotatedVirusTsv(nonOptionalFile(cmd, ANNOTATED_VIRUS_TSV))
+                .protectEvidenceTsv(nonOptionalFile(cmd, PROTECT_EVIDENCE_TSV))
+                .build();
+    }
+
+    @NotNull
+    static String nonOptionalValue(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
+        String value = cmd.getOptionValue(param);
+        if (value == null) {
+            throw new ParseException("Parameter must be provided: " + param);
+        }
+
+        return value;
+    }
+
+    @NotNull
+    static String nonOptionalDir(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
+        String value = nonOptionalValue(cmd, param);
+
+        if (!pathExists(value) || !pathIsDirectory(value)) {
+            throw new ParseException("Parameter '" + param + "' must be an existing directory: " + value);
+        }
+
+        return value;
+    }
+
+    @NotNull
+    static String nonOptionalFile(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
+        String value = nonOptionalValue(cmd, param);
+
+        if (!pathExists(value)) {
+            throw new ParseException("Parameter '" + param + "' must be an existing file: " + value);
+        }
+
+        return value;
+    }
+
+    static boolean pathExists(@NotNull String path) {
+        return Files.exists(new File(path).toPath());
+    }
+
+    static boolean pathIsDirectory(@NotNull String path) {
+        return Files.isDirectory(new File(path).toPath());
+    }
+}

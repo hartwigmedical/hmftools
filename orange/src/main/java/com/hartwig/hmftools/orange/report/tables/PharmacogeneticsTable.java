@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.peach.PeachGenotype;
-import com.hartwig.hmftools.orange.report.util.CellUtil;
-import com.hartwig.hmftools.orange.report.util.TableUtil;
+import com.hartwig.hmftools.orange.report.util.Cells;
+import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;
 
@@ -20,23 +20,23 @@ public final class PharmacogeneticsTable {
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<PeachGenotype> genotypes) {
         if (genotypes.isEmpty()) {
-            return TableUtil.createEmpty(title, width);
+            return Tables.createEmpty(title, width);
         }
 
-        Table contentTable = TableUtil.createContent(width,
+        Table contentTable = Tables.createContent(width,
                 new float[] { 1, 1, 1, 2, 1 },
-                new Cell[] { CellUtil.createHeader("Gene"), CellUtil.createHeader("Genotype"), CellUtil.createHeader("Function"),
-                        CellUtil.createHeader("Linked drugs"), CellUtil.createHeader("Source") });
+                new Cell[] { Cells.createHeader("Gene"), Cells.createHeader("Genotype"), Cells.createHeader("Function"),
+                        Cells.createHeader("Linked drugs"), Cells.createHeader("Source") });
 
         for (PeachGenotype genotype : sort(genotypes)) {
-            contentTable.addCell(CellUtil.createContent(genotype.gene()));
-            contentTable.addCell(CellUtil.createContent(genotype.haplotype()));
-            contentTable.addCell(CellUtil.createContent(genotype.function()));
-            contentTable.addCell(CellUtil.createContent(genotype.linkedDrugs()));
-            contentTable.addCell(CellUtil.createUrl(sourceName(genotype.urlPrescriptionInfo()), url(genotype.urlPrescriptionInfo())));
+            contentTable.addCell(Cells.createContent(genotype.gene()));
+            contentTable.addCell(Cells.createContent(genotype.haplotype()));
+            contentTable.addCell(Cells.createContent(genotype.function()));
+            contentTable.addCell(Cells.createContent(genotype.linkedDrugs()));
+            contentTable.addCell(Cells.createUrl(sourceName(genotype.urlPrescriptionInfo()), url(genotype.urlPrescriptionInfo())));
         }
 
-        return TableUtil.createWrapping(contentTable, title);
+        return Tables.createWrapping(contentTable, title);
     }
 
     @NotNull
