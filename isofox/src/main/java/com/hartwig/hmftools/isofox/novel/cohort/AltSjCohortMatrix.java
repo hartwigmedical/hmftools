@@ -140,13 +140,13 @@ public class AltSjCohortMatrix
         if(mCancerMatrixData != null)
         {
             ISF_LOGGER.info("writing matrix data for {} cancer types", mCancerTypes.size());
-            writeMatrixData(mCancerMatrixData, mCancerTypes, "cancer");
+            writeMatrixData(mCancerMatrixData, mCancerTypes, "cancer", true);
         }
 
         if(mSampleMatrixData != null)
         {
             ISF_LOGGER.info("writing matrix data for {} samples", mConfig.SampleData.SampleIds.size());
-            writeMatrixData(mSampleMatrixData, mConfig.SampleData.SampleIds, "sample");
+            writeMatrixData(mSampleMatrixData, mConfig.SampleData.SampleIds, "sample", false);
         }
     }
 
@@ -256,7 +256,7 @@ public class AltSjCohortMatrix
         }
     }
 
-    private void writeMatrixData(final int[][] matrixData, final List<String> itemNames, final String fileId)
+    private void writeMatrixData(final int[][] matrixData, final List<String> itemNames, final String fileId, boolean writeZeroes)
     {
         try
         {
@@ -284,7 +284,11 @@ public class AltSjCohortMatrix
                 for(int s = 0; s < itemNames.size(); ++s)
                 {
                     int fragCount = matrixData[asjIndex][s];
-                    writer.write(String.format(",%d", fragCount));
+
+                    if(!writeZeroes && fragCount == 0)
+                        writer.write(",");
+                    else
+                        writer.write(String.format(",%d", fragCount));
                 }
 
                 writer.newLine();
