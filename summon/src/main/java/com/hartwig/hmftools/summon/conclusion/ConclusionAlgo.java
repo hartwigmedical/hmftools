@@ -74,7 +74,7 @@ public class ConclusionAlgo {
     @NotNull
     public static String generateConslusionString(@NotNull Set<String> conclusionSet) {
         StringBuilder conclusionBuilder = new StringBuilder();
-        for (String conclusion: conclusionSet) {
+        for (String conclusion : conclusionSet) {
             conclusionBuilder.append(conclusion).append(" <enter> ");
         }
         return conclusionBuilder.toString();
@@ -110,7 +110,7 @@ public class ConclusionAlgo {
                             : Type.INACTIVATION)
                     .build();
             ActionabilityEntry entry = actionabilityMap.get(keySomaticVariant);
-            conclusion.add(entry.conclusion());
+            conclusion.add("- " + somaticVariant.gene() + "(" + somaticVariant.canonicalHgvsProteinImpact() + ") " + entry.conclusion());
         }
     }
 
@@ -125,7 +125,7 @@ public class ConclusionAlgo {
                             : Type.INACTIVATION)
                     .build();
             ActionabilityEntry entry = actionabilityMap.get(keyGermlineVariant);
-            conclusion.add(entry.conclusion());
+            conclusion.add("- " + germlineVariant.gene() + "(" + germlineVariant.canonicalHgvsProteinImpact() + ") " + entry.conclusion());
         }
     }
 
@@ -138,7 +138,8 @@ public class ConclusionAlgo {
 
                 ActionabilityKey keyVirus = ImmutableActionabilityKey.builder().gene(gainLoss.gene()).type(Type.LOSS).build();
                 ActionabilityEntry entry = actionabilityMap.get(keyVirus);
-                conclusion.add(entry.conclusion());
+                conclusion.add("- " + gainLoss.gene() + " " + entry.conclusion());
+
             }
 
             if (gainLoss.interpretation().display().equals(CopyNumberInterpretation.FULL_GAIN.display()) || gainLoss.interpretation()
@@ -146,7 +147,7 @@ public class ConclusionAlgo {
                     .equals(CopyNumberInterpretation.PARTIAL_GAIN.display())) {
                 ActionabilityKey keyVirus = ImmutableActionabilityKey.builder().gene(gainLoss.gene()).type(Type.AMPLIFICATION).build();
                 ActionabilityEntry entry = actionabilityMap.get(keyVirus);
-                conclusion.add(entry.conclusion());
+                conclusion.add("- " + gainLoss.gene() + " " + entry.conclusion());
             }
         }
     }
@@ -158,19 +159,20 @@ public class ConclusionAlgo {
                 ActionabilityKey keyFusion =
                         ImmutableActionabilityKey.builder().gene(fusion.geneStart()).type(Type.INTERNAL_DELETION).build();
                 ActionabilityEntry entry = actionabilityMap.get(keyFusion);
-                conclusion.add(entry.conclusion());
+                conclusion.add("- " + fusion.name() + " " + entry.conclusion());
+
             }
             if (fusion.reportedType().toString().equals(KnownFusionType.EXON_DEL_DUP.toString()) && fusion.geneStart().equals("EGFR")
                     && fusion.fusedExonUp() == 25 && fusion.fusedExonDown() == 18) {
                 ActionabilityKey keyFusion =
                         ImmutableActionabilityKey.builder().gene(fusion.geneStart()).type(Type.KINASE_DOMAIN_DUPLICATION).build();
                 ActionabilityEntry entry = actionabilityMap.get(keyFusion);
-                conclusion.add(entry.conclusion());
+                conclusion.add("- " + fusion.name() + " " + entry.conclusion());
             }
             if (FUSION_TYPES.contains(fusion.reportedType().toString())) {
                 ActionabilityKey keyFusion = ImmutableActionabilityKey.builder().gene(fusion.geneStart()).type(Type.FUSION).build();
                 ActionabilityEntry entry = actionabilityMap.get(keyFusion);
-                conclusion.add(entry.conclusion());
+                conclusion.add("- " + fusion.name() + " " + entry.conclusion());
             }
         }
     }
@@ -182,7 +184,8 @@ public class ConclusionAlgo {
             ActionabilityKey keyHomozygousDisruption =
                     ImmutableActionabilityKey.builder().gene(homozygousDisruption.gene()).type(Type.INACTIVATION).build();
             ActionabilityEntry entry = actionabilityMap.get(keyHomozygousDisruption);
-            conclusion.add(entry.conclusion());
+            conclusion.add("- " + homozygousDisruption.gene() + " " + entry.conclusion());
+
         }
     }
 
@@ -193,7 +196,8 @@ public class ConclusionAlgo {
                 ActionabilityKey keyVirus =
                         ImmutableActionabilityKey.builder().gene(annotatedVirus.interpretation()).type(Type.SIGNATURE_POSITIVE).build();
                 ActionabilityEntry entry = actionabilityMap.get(keyVirus);
-                conclusion.add(entry.conclusion());
+                conclusion.add("- " + annotatedVirus.name() + " " + entry.conclusion());
+
             }
         }
     }
@@ -203,7 +207,7 @@ public class ConclusionAlgo {
         if (chordStatus == ChordStatus.HR_DEFICIENT) {
             ActionabilityKey keyHRD = ImmutableActionabilityKey.builder().gene("HRD").type(Type.SIGNATURE_POSITIVE).build();
             ActionabilityEntry entry = actionabilityMap.get(keyHRD);
-            conclusion.add(entry.conclusion());
+            conclusion.add("- " + "HRD" + entry.conclusion());
         }
     }
 
@@ -212,7 +216,7 @@ public class ConclusionAlgo {
         if (microsatelliteStatus == MicrosatelliteStatus.MSI) {
             ActionabilityKey keyMSI = ImmutableActionabilityKey.builder().gene("MSI").type(Type.SIGNATURE_POSITIVE).build();
             ActionabilityEntry entry = actionabilityMap.get(keyMSI);
-            conclusion.add(entry.conclusion());
+            conclusion.add("- " + "MSI " + entry.conclusion());
         }
     }
 
@@ -221,7 +225,7 @@ public class ConclusionAlgo {
         if (tumorMutationalStatus == TumorMutationalStatus.HIGH) {
             ActionabilityKey keyTML = ImmutableActionabilityKey.builder().gene("High-TML").type(Type.SIGNATURE_POSITIVE).build();
             ActionabilityEntry entry = actionabilityMap.get(keyTML);
-            conclusion.add(entry.conclusion());
+            conclusion.add("- " + "TML " + entry.conclusion());
         }
     }
 
@@ -230,7 +234,7 @@ public class ConclusionAlgo {
         if (tumorMutationalBurden >= 10) {
             ActionabilityKey keyTMB = ImmutableActionabilityKey.builder().gene("High-TMB").type(Type.SIGNATURE_POSITIVE).build();
             ActionabilityEntry entry = actionabilityMap.get(keyTMB);
-            conclusion.add(entry.conclusion());
+            conclusion.add("- " + "TMB " + entry.conclusion());
         }
     }
 }

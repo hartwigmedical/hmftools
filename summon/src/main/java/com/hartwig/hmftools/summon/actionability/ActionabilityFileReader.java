@@ -8,10 +8,14 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.FileReaderUtils;
+import com.hartwig.hmftools.summon.SummonApplication;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class ActionabilityFileReader {
+    private static final Logger LOGGER = LogManager.getLogger(ActionabilityFileReader.class);
 
     private static final String MAIN_FIELD_DELIMITER = "\t";
 
@@ -38,6 +42,7 @@ public final class ActionabilityFileReader {
     @NotNull
     private static ActionabilityEntry fromString(@NotNull Map<String, Integer> fields, @NotNull String line) {
         String[] values = line.split(MAIN_FIELD_DELIMITER, -1);
+        LOGGER.info(values[fields.get("aberration type")]);
 
         return ImmutableActionabilityEntry.builder()
                 .gene(values[fields.get("Gene")])
