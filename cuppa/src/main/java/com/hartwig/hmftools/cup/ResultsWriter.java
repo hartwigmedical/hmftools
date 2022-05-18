@@ -18,6 +18,7 @@ public class ResultsWriter
 {
     private final CuppaConfig mConfig;
     private final SampleDataCache mSampleDataCache;
+
     private BufferedWriter mSampleDataWriter;
     private BufferedWriter mSampleSimilarityWriter;
 
@@ -28,6 +29,7 @@ public class ResultsWriter
 
         mSampleDataWriter = null;
         mSampleSimilarityWriter = null;
+
         initialiseOutputFiles();
     }
 

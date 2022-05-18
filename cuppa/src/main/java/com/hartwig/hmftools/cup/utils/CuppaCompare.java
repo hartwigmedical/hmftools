@@ -49,6 +49,7 @@ public class CuppaCompare
     private final List<String> mClassifiers;
     private final String mFileOrig;
     private final String mFileNew;
+    private final boolean mAllowCancerTypeRemap;
 
     private final BufferedWriter mWriter;
     
@@ -57,6 +58,7 @@ public class CuppaCompare
     private static final String ORIG_SAMPLE_DATA = "orig_sample_data";
     private static final String NEW_SAMPLE_DATA = "new_sample_data";
     private static final String CLASSIFERS = "classifiers";
+    private static final String ALLOW_CANCER_TYPE_REMAP = "allow_cancer_type_remap";
 
     public CuppaCompare(final CommandLine cmd)
     {
@@ -73,18 +75,20 @@ public class CuppaCompare
 
         String outputDir = parseOutputDir(cmd);
 
-        mWriter = initialiseWriter(outputDir, cmd.getOptionValue(OUTPUT_ID));
-
         if(cmd.hasOption(REF_SAMPLE_DATA_FILE))
         {
             mOrigSampleCancerTypes = loadSampleData(cmd.getOptionValue(REF_SAMPLE_DATA_FILE));
             mNewSampleCancerTypes = mOrigSampleCancerTypes;
+            mAllowCancerTypeRemap = false;
         }
         else
         {
             mOrigSampleCancerTypes = loadSampleData(cmd.getOptionValue(ORIG_SAMPLE_DATA));
             mNewSampleCancerTypes = loadSampleData(cmd.getOptionValue(NEW_SAMPLE_DATA));
+            mAllowCancerTypeRemap = cmd.hasOption(ALLOW_CANCER_TYPE_REMAP);
         }
+
+        mWriter = initialiseWriter(outputDir, cmd.getOptionValue(OUTPUT_ID), mAllowCancerTypeRemap);
     }
 
     public void run()
@@ -137,16 +141,13 @@ public class CuppaCompare
             {
                 String origRefCancerType = mOrigSampleCancerTypes.get(sampleId);
 
-                if(mNewSampleCancerTypes.containsKey(sampleId))
-                {
-                    String newRefCancerType = mNewSampleCancerTypes.get(sampleId);
+                String newRefCancerType = mNewSampleCancerTypes.containsKey(sampleId) ? mNewSampleCancerTypes.get(sampleId) : origRefCancerType;
 
-                    if(!origRefCancerType.equals(newRefCancerType))
-                    {
-                        CUP_LOGGER.warn("sample({}) has diff ref cancerTypes(orig={} new={}), skipping",
-                                sampleId, origRefCancerType, newRefCancerType);
-                        continue;
-                    }
+                if(!origRefCancerType.equals(newRefCancerType) && !mAllowCancerTypeRemap)
+                {
+                    CUP_LOGGER.warn("sample({}) has diff ref cancerTypes(orig={} new={}), skipping",
+                            sampleId, origRefCancerType, newRefCancerType);
+                    continue;
                 }
 
                 if(origRefCancerType.equals(CANCER_TYPE_OTHER))
@@ -155,11 +156,17 @@ public class CuppaCompare
                 List<SampleResult> origResults = origAllResults.get(sampleId);
                 List<SampleResult> newResults = newAllResults.get(sampleId);
 
+                if(origResults == null || newResults == null)
+                {
+                    CUP_LOGGER.warn("sample({}) {} missing results, skipping", sampleId, origResults == null ? "original" : "new");
+                    continue;
+                }
+
                 for(SampleResult origResult : origResults)
                 {
                     SampleResult newResult = newResults.stream().filter(x -> resultsMatch(x, origResult)).findFirst().orElse(null);
 
-                    processResults(sampleId, true, origRefCancerType, origResult, newResult);
+                    processResults(sampleId, true, origRefCancerType, newRefCancerType, origResult, newResult);
                 }
             }
             else
@@ -167,6 +174,13 @@ public class CuppaCompare
                 boolean hasOrig = mOrigSampleCancerTypes.containsKey(sampleId);
 
                 List<SampleResult> results = hasOrig ? origAllResults.get(sampleId) : newAllResults.get(sampleId);
+
+                if(results == null)
+                {
+                    CUP_LOGGER.warn("sample({}) {} missing results, skipping", sampleId, hasOrig ? "original" : "new");
+                    continue;
+                }
+
                 String refCancerType = hasOrig ? mOrigSampleCancerTypes.get(sampleId) : mNewSampleCancerTypes.get(sampleId);
 
                 if(refCancerType.equals(CANCER_TYPE_OTHER))
@@ -174,7 +188,9 @@ public class CuppaCompare
 
                 for(SampleResult result : results)
                 {
-                    processResults(sampleId, false, refCancerType, hasOrig ? result : null, !hasOrig ? result : null);
+                    processResults(
+                            sampleId, false, hasOrig ? refCancerType : "", !hasOrig ? refCancerType : "",
+                            hasOrig ? result : null, !hasOrig ? result : null);
                 }
             }
 
@@ -192,7 +208,7 @@ public class CuppaCompare
         closeBufferedWriter(mWriter);
     }
 
-    public static BufferedWriter initialiseWriter(final String outputDir, final String outputId)
+    public static BufferedWriter initialiseWriter(final String outputDir, final String outputId, boolean writeNewCancerType)
     {
         try
         {
@@ -204,7 +220,13 @@ public class CuppaCompare
             outputFileName += ".csv";
 
             final BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write("SampleId,Status,DataType,RefCancerType,MatchType");
+            writer.write("SampleId,Status,DataType,MatchType");
+
+            if(writeNewCancerType)
+                writer.write(",OrigRefCancerType,NewRefCancerType");
+            else
+                writer.write(",RefCancerType");
+
             writer.write(",OrigCancerType,OrigCancerValue,OrigRefCancerValue");
             writer.write(",NewCancerType,NewCancerValue,NewRefCancerValue");
             writer.newLine();
@@ -235,7 +257,7 @@ public class CuppaCompare
     }
 
     private void processResults(
-            final String sampleId, boolean sampleInBoth, final String refCancerType,
+            final String sampleId, boolean sampleInBoth, final String origRefCancerType, final String newRefCancerType,
             final SampleResult origResult, final SampleResult newResult)
     {
         try
@@ -243,6 +265,7 @@ public class CuppaCompare
             if(origResult == null || newResult == null)
             {
                 final SampleResult result = origResult != null ? origResult : newResult;
+                final String refCancerType = origResult != null ? origRefCancerType : newRefCancerType;
 
                 if(skipClassifier(result.DataType))
                     return;
@@ -256,6 +279,11 @@ public class CuppaCompare
 
                 mWriter.write(String.format("%s,%s,%s,%s,%s", sampleId, status, result.DataType, refCancerType, matchType));
 
+                if(mAllowCancerTypeRemap)
+                    mWriter.write(String.format(",%s,%s", origRefCancerType, newRefCancerType));
+                else
+                    mWriter.write(String.format(",%s", origRefCancerType));
+
                 mWriter.write(String.format(",%s,%s",
                         origResult != null ? resultInfoCsv(origResult, refCancerType) : EMPTY_RESULTS_CSV,
                         newResult != null ? resultInfoCsv(newResult, refCancerType) : EMPTY_RESULTS_CSV));
@@ -267,8 +295,8 @@ public class CuppaCompare
                 if(skipClassifier(origResult.DataType))
                     return;
 
-                boolean origCorrect = topRefResult(origResult).equals(refCancerType);
-                boolean newCorrect = topRefResult(newResult).equals(refCancerType);
+                boolean origCorrect = topRefResult(origResult).equals(origRefCancerType);
+                boolean newCorrect = topRefResult(newResult).equals(newRefCancerType);
 
                 String matchType;
 
@@ -281,9 +309,14 @@ public class CuppaCompare
                 else
                     matchType = MATCH_TYPE_INCORRECT;
 
-                mWriter.write(String.format("%s,%s,%s,%s,%s", sampleId, STATUS_BOTH, origResult.DataType, refCancerType, matchType));
+                mWriter.write(String.format("%s,%s,%s,%s", sampleId, STATUS_BOTH, origResult.DataType, matchType));
 
-                mWriter.write(String.format(",%s,%s", resultInfoCsv(origResult, refCancerType), resultInfoCsv(newResult, refCancerType)));
+                if(mAllowCancerTypeRemap)
+                    mWriter.write(String.format(",%s,%s", origRefCancerType, newRefCancerType));
+                else
+                    mWriter.write(String.format(",%s", origRefCancerType));
+
+                mWriter.write(String.format(",%s,%s", resultInfoCsv(origResult, origRefCancerType), resultInfoCsv(newResult, newRefCancerType)));
 
                 mWriter.newLine();
             }
@@ -334,6 +367,7 @@ public class CuppaCompare
         options.addOption(REF_SAMPLE_DATA_FILE, true, "Sample ref data file, if using the same for original and new results");
         options.addOption(ORIG_SAMPLE_DATA, true, "Original sample ref data file");
         options.addOption(NEW_SAMPLE_DATA, true, "New sample ref data file - optional if the same a original");
+        options.addOption(ALLOW_CANCER_TYPE_REMAP, false, "Allow cancer types to change for separate sample ref data files");
         addLoggingOptions(options);
         addOutputOptions(options);
 

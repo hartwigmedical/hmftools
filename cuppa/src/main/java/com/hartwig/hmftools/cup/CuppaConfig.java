@@ -246,7 +246,7 @@ public class CuppaConfig
             return "";
 
         if(cmd.hasOption(configStr))
-            return configStr;
+            return cmd.getOptionValue(configStr);
 
         if(!useRefDataFile)
             return ""; // meaning this data type is not loaded

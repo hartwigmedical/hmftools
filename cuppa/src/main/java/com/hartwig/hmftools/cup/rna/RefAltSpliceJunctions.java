@@ -2,6 +2,7 @@ package com.hartwig.hmftools.cup.rna;
 
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.MatrixUtils.DEFAULT_MATRIX_DELIM;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -9,6 +10,7 @@ import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_ALT_SJ_CANCER;
 import static com.hartwig.hmftools.cup.common.CategoryType.ALT_SJ;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -57,7 +59,7 @@ public class RefAltSpliceJunctions implements RefClassifier
 
     public void buildRefDataSets()
     {
-        CUP_LOGGER.debug("loading RNA gene expression data");
+        CUP_LOGGER.debug("loading RNA alternate splice-junction data");
 
         final List<String> cancerTypes = Lists.newArrayList();
         final Map<String,Integer> sampleIndexMap = Maps.newHashMap();
@@ -131,7 +133,6 @@ public class RefAltSpliceJunctions implements RefClassifier
 
             int sampleCount = sampleIndexMap.size();
             int altSjCount = fileData.size();
-            int invalidRowCount = 0;
 
             sampleMatrix = new Matrix(sampleCount, altSjCount);
             final double[][] matrixData = sampleMatrix.getData();
@@ -139,33 +140,34 @@ public class RefAltSpliceJunctions implements RefClassifier
             for(int r = 0; r < altSjCount; ++r)
             {
                 final String line = fileData.get(r);
-                final String[] items = line.split(DEFAULT_MATRIX_DELIM, -1);
+                final String[] values = line.split(DEFAULT_MATRIX_DELIM, -1);
 
-                if(items.length != asjLocationColCount + sampleCount)
+                if(values.length != asjLocationColCount + sampleCount)
                 {
-                    ++invalidRowCount;
-                    continue;
+                    CUP_LOGGER.error("invalid alt-SJ sample matrix column count({}) vs expeted({} + {})",
+                            values.length, asjLocationColCount, sampleCount);
+                    return null;
                 }
 
                 StringJoiner asjLocation = new StringJoiner(DEFAULT_MATRIX_DELIM);
                 for(int i = 0; i < asjLocationColCount; ++i)
                 {
-                    asjLocation.add(items[i]);
+                    asjLocation.add(values[i]);
                 }
 
                 asjLocations.add(asjLocation.toString());
 
                 int c = 0;
-                for(int i = asjLocationColCount; i < items.length; ++i)
+                for(int i = asjLocationColCount; i < values.length; ++i)
                 {
                     // data transposed
-                    matrixData[c][r] = Double.parseDouble(items[i]);
+                    int fragCount = Integer.parseInt(values[i]);
+                    matrixData[c][r] = fragCount;
                     ++c;
                 }
             }
 
-            CUP_LOGGER.info("loaded matrix(rows={} cols={}) from file({}) {}",
-                    altSjCount, sampleCount, filename, invalidRowCount > 0 ? String.format(", invalidRowCount(%d)", invalidRowCount) : "");
+            CUP_LOGGER.info("loaded matrix(rows={} cols={}) from file({})", altSjCount, sampleCount, filename);
         }
         catch (IOException exception)
         {
