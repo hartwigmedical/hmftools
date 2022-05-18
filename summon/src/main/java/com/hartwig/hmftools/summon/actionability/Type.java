@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.summon.actionability;
 
 public enum Type {
+    ACTIVATION_MUTATION,
     AMPLIFICATION,
     EXTRACELLULAR_DOMAIN_MUTATION,
     FUSION,
@@ -8,7 +9,7 @@ public enum Type {
     INTERNAL_DELETION,
     KINASE_DOMAIN_DUPLICATION,
     LOSS,
-    RESISTENCE_MUTATION,
-    SIGNATURE_POSITIVE,
-    ACTIVATION_MUTATION;
+    POSITIVE,
+    RESISTENCE_MUTATION;
+    ;
 }

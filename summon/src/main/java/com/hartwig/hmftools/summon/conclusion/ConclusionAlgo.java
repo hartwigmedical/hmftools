@@ -196,7 +196,7 @@ public class ConclusionAlgo {
         for (AnnotatedVirus annotatedVirus : reportableViruses) {
             if (annotatedVirus.virusDriverLikelihoodType() == VirusLikelihoodType.HIGH && VIRUS.contains(annotatedVirus.interpretation())) {
                 ActionabilityKey keyVirus =
-                        ImmutableActionabilityKey.builder().gene(annotatedVirus.interpretation()).type(Type.SIGNATURE_POSITIVE).build();
+                        ImmutableActionabilityKey.builder().gene(annotatedVirus.interpretation()).type(Type.POSITIVE).build();
                 ActionabilityEntry entry = actionabilityMap.get(keyVirus);
                 conclusion.add("- " + annotatedVirus.name() + " " + entry.conclusion());
 
@@ -207,7 +207,7 @@ public class ConclusionAlgo {
     public static void generateHrdConclusion(@NotNull Set<String> conclusion, @NotNull ChordAnalysis chordAnalysis,
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
         if (chordAnalysis.hrStatus() == ChordStatus.HR_DEFICIENT) {
-            ActionabilityKey keyHRD = ImmutableActionabilityKey.builder().gene("HRD").type(Type.SIGNATURE_POSITIVE).build();
+            ActionabilityKey keyHRD = ImmutableActionabilityKey.builder().gene("HRD").type(Type.POSITIVE).build();
             ActionabilityEntry entry = actionabilityMap.get(keyHRD);
             conclusion.add("- " + "HRD(" + chordAnalysis.hrdValue() + ") " + entry.conclusion());
         }
@@ -216,7 +216,7 @@ public class ConclusionAlgo {
     public static void generateMSIConclusion(@NotNull Set<String> conclusion, @NotNull MicrosatelliteStatus microsatelliteStatus,
             double microsatelliteMb, @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
         if (microsatelliteStatus == MicrosatelliteStatus.MSI) {
-            ActionabilityKey keyMSI = ImmutableActionabilityKey.builder().gene("MSI").type(Type.SIGNATURE_POSITIVE).build();
+            ActionabilityKey keyMSI = ImmutableActionabilityKey.builder().gene("MSI").type(Type.POSITIVE).build();
             ActionabilityEntry entry = actionabilityMap.get(keyMSI);
             conclusion.add("- " + "MSI(" + microsatelliteMb + ")" + entry.conclusion());
         }
@@ -225,7 +225,7 @@ public class ConclusionAlgo {
     public static void generateTMLConclusion(@NotNull Set<String> conclusion, @NotNull TumorMutationalStatus tumorMutationalStatus,
             int tumorMutationalLoad, @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
         if (tumorMutationalStatus == TumorMutationalStatus.HIGH) {
-            ActionabilityKey keyTML = ImmutableActionabilityKey.builder().gene("High-TML").type(Type.SIGNATURE_POSITIVE).build();
+            ActionabilityKey keyTML = ImmutableActionabilityKey.builder().gene("High-TML").type(Type.POSITIVE).build();
             ActionabilityEntry entry = actionabilityMap.get(keyTML);
             conclusion.add("- " + "TML(" + tumorMutationalLoad + ") " + entry.conclusion());
         }
@@ -234,7 +234,7 @@ public class ConclusionAlgo {
     public static void generateTMBConclusion(@NotNull Set<String> conclusion, double tumorMutationalBurden,
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
         if (tumorMutationalBurden >= 10) {
-            ActionabilityKey keyTMB = ImmutableActionabilityKey.builder().gene("High-TMB").type(Type.SIGNATURE_POSITIVE).build();
+            ActionabilityKey keyTMB = ImmutableActionabilityKey.builder().gene("High-TMB").type(Type.POSITIVE).build();
             ActionabilityEntry entry = actionabilityMap.get(keyTMB);
             conclusion.add("- " + "TMB " + entry.conclusion());
         }
