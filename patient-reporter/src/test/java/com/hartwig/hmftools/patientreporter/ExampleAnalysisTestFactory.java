@@ -1086,35 +1086,7 @@ public final class ExampleAnalysisTestFactory {
                 .biallelic(false)
                 .build();
 
-        ReportableVariant variant6 = ImmutableReportableVariant.builder()
-                .source(forceCDKN2AVariantToBeGermline ? ReportableVariantSource.GERMLINE : ReportableVariantSource.SOMATIC)
-                .gene("CDKN2A (P14Arf)")
-                .transcript("ENST00000579755")
-                .isCanonical(false)
-                .genotypeStatus(GenotypeStatus.HOM_REF)
-                .chromosome("9")
-                .position(21971153)
-                .ref("CCG")
-                .alt("C")
-                .type(VariantType.INDEL)
-                .otherReportedEffects("ENST00000579755|c.246_247delCG|p.Gly83fs|frameshift_variant|NONSENSE_OR_FRAMESHIFT")
-                .canonicalTranscript("ENST00000498124")
-                .canonicalEffect("frameshift_variant")
-                .canonicalCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
-                .canonicalHgvsCodingImpact("c.203_204delCG")
-                .canonicalHgvsProteinImpact("p.Gly83fs")
-                .alleleReadCount(99)
-                .totalReadCount(99)
-                .alleleCopyNumber(2.0)
-                .minorAlleleCopyNumber(0.0)
-                .totalCopyNumber(2.0)
-                .hotspot(Hotspot.NEAR_HOTSPOT)
-                .clonalLikelihood(1D)
-                .driverLikelihood(1D)
-                .biallelic(true)
-                .build();
-
-        return Lists.newArrayList(variant1, variant2, variant3, variant4, variant5, variant6);
+        return Lists.newArrayList(variant1, variant2, variant3, variant4, variant5);
     }
 
     @NotNull
@@ -1201,7 +1173,7 @@ public final class ExampleAnalysisTestFactory {
                 .junctionCopyNumber(2.0076)
                 .undisruptedCopyNumber(0.0)
                 .firstAffectedExon(5)
-                .svId(122)
+                .svId(121)
                 .clusterId(67)
                 .transcriptId("ENST00000371953")
                 .isCanonical(true)
