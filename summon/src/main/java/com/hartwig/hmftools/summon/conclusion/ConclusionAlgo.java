@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
@@ -50,21 +51,22 @@ public class ConclusionAlgo {
         List<ReportableHomozygousDisruption> homozygousDisruptions = summonData.linx().homozygousDisruptions();
         List<AnnotatedVirus> reportableViruses = summonData.virusInterpreter().reportableViruses();
 
-        ChordStatus chordStatus = summonData.chord().hrStatus();
-        MicrosatelliteStatus microsatelliteStatus = summonData.purple().microsatelliteStatus();
-        TumorMutationalStatus tumorMutationalStatus = summonData.purple().tumorMutationalLoadStatus();
-        double tumorMutationalBurden = summonData.purple().tumorMutationalBurdenPerMb();
-
         generateSomaticConclusion(conclusion, reportableSomaticVariants, actionabilityMap, driverGenesMap);
         generateGermlineConclusion(conclusion, reportableGermlineVariants, actionabilityMap, driverGenesMap);
         generateCNVConclusion(conclusion, reportableGainLosses, actionabilityMap);
         generateFusionConclusion(conclusion, reportableFusions, actionabilityMap);
         generateHomozygousDisruptionConclusion(conclusion, homozygousDisruptions, actionabilityMap);
         generateVirusConclusion(conclusion, reportableViruses, actionabilityMap);
-        generateHrdConclusion(conclusion, chordStatus, actionabilityMap);
-        generateMSIConclusion(conclusion, microsatelliteStatus, actionabilityMap);
-        generateTMLConclusion(conclusion, tumorMutationalStatus, actionabilityMap);
-        generateTMBConclusion(conclusion, tumorMutationalBurden, actionabilityMap);
+        generateHrdConclusion(conclusion, summonData.chord(), actionabilityMap);
+        generateMSIConclusion(conclusion,
+                summonData.purple().microsatelliteStatus(),
+                summonData.purple().microsatelliteIndelsPerMb(),
+                actionabilityMap);
+        generateTMLConclusion(conclusion,
+                summonData.purple().tumorMutationalLoadStatus(),
+                summonData.purple().tumorMutationalLoad(),
+                actionabilityMap);
+        generateTMBConclusion(conclusion, summonData.purple().tumorMutationalBurdenPerMb(), actionabilityMap);
 
         String conclusionString = generateConslusionString(conclusion);
 
@@ -202,30 +204,30 @@ public class ConclusionAlgo {
         }
     }
 
-    public static void generateHrdConclusion(@NotNull Set<String> conclusion, @NotNull ChordStatus chordStatus,
+    public static void generateHrdConclusion(@NotNull Set<String> conclusion, @NotNull ChordAnalysis chordAnalysis,
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
-        if (chordStatus == ChordStatus.HR_DEFICIENT) {
+        if (chordAnalysis.hrStatus() == ChordStatus.HR_DEFICIENT) {
             ActionabilityKey keyHRD = ImmutableActionabilityKey.builder().gene("HRD").type(Type.SIGNATURE_POSITIVE).build();
             ActionabilityEntry entry = actionabilityMap.get(keyHRD);
-            conclusion.add("- " + "HRD" + entry.conclusion());
+            conclusion.add("- " + "HRD(" + chordAnalysis.hrdValue() + ") " + entry.conclusion());
         }
     }
 
     public static void generateMSIConclusion(@NotNull Set<String> conclusion, @NotNull MicrosatelliteStatus microsatelliteStatus,
-            @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
+            double microsatelliteMb, @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
         if (microsatelliteStatus == MicrosatelliteStatus.MSI) {
             ActionabilityKey keyMSI = ImmutableActionabilityKey.builder().gene("MSI").type(Type.SIGNATURE_POSITIVE).build();
             ActionabilityEntry entry = actionabilityMap.get(keyMSI);
-            conclusion.add("- " + "MSI " + entry.conclusion());
+            conclusion.add("- " + "MSI(" + microsatelliteMb + ")" + entry.conclusion());
         }
     }
 
     public static void generateTMLConclusion(@NotNull Set<String> conclusion, @NotNull TumorMutationalStatus tumorMutationalStatus,
-            @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
+            int tumorMutationalLoad, @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
         if (tumorMutationalStatus == TumorMutationalStatus.HIGH) {
             ActionabilityKey keyTML = ImmutableActionabilityKey.builder().gene("High-TML").type(Type.SIGNATURE_POSITIVE).build();
             ActionabilityEntry entry = actionabilityMap.get(keyTML);
-            conclusion.add("- " + "TML " + entry.conclusion());
+            conclusion.add("- " + "TML(" + tumorMutationalLoad + ") " + entry.conclusion());
         }
     }
 
