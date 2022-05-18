@@ -1,12 +1,13 @@
 package com.hartwig.hmftools.summon.conclusion;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.chord.ChordStatus;
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
@@ -41,7 +42,7 @@ public class ConclusionAlgo {
         Set<String> conclusion = Sets.newHashSet();
 
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = generateActionabilityMap(summonData.actionabilityEntries());
-
+        Map<String, DriverGene> driverGenesMap = generateDriverGenesMap(summonData.driverGenes());
         List<ReportableVariant> reportableSomaticVariants = summonData.purple().reportableSomaticVariants();
         List<ReportableVariant> reportableGermlineVariants = summonData.purple().reportableGermlineVariants();
         List<ReportableGainLoss> reportableGainLosses = summonData.purple().reportableGainsLosses();
@@ -54,8 +55,8 @@ public class ConclusionAlgo {
         TumorMutationalStatus tumorMutationalStatus = summonData.purple().tumorMutationalLoadStatus();
         double tumorMutationalBurden = summonData.purple().tumorMutationalBurdenPerMb();
 
-        generateSomaticConclusion(conclusion, reportableSomaticVariants, actionabilityMap);
-        generateGermlineConclusion(conclusion, reportableGermlineVariants, actionabilityMap);
+        generateSomaticConclusion(conclusion, reportableSomaticVariants, actionabilityMap, driverGenesMap);
+        generateGermlineConclusion(conclusion, reportableGermlineVariants, actionabilityMap, driverGenesMap);
         generateCNVConclusion(conclusion, reportableGainLosses, actionabilityMap);
         generateFusionConclusion(conclusion, reportableFusions, actionabilityMap);
         generateHomozygousDisruptionConclusion(conclusion, homozygousDisruptions, actionabilityMap);
@@ -65,7 +66,18 @@ public class ConclusionAlgo {
         generateTMLConclusion(conclusion, tumorMutationalStatus, actionabilityMap);
         generateTMBConclusion(conclusion, tumorMutationalBurden, actionabilityMap);
 
-        return ImmutableActionabilityConclusion.builder().conclusion(conclusion.toString()).build();
+        String conclusionString = generateConslusionString(conclusion);
+
+        return ImmutableActionabilityConclusion.builder().conclusion(conclusionString).build();
+    }
+
+    @NotNull
+    public static String generateConslusionString(@NotNull Set<String> conclusionSet) {
+        StringBuilder conclusionBuilder = new StringBuilder();
+        for (String conclusion: conclusionSet) {
+            conclusionBuilder.append(conclusion).append(" <enter> ");
+        }
+        return conclusionBuilder.toString();
     }
 
     @NotNull
@@ -78,13 +90,24 @@ public class ConclusionAlgo {
         return actionabilityMap;
     }
 
+    @NotNull
+    public static Map<String, DriverGene> generateDriverGenesMap(@NotNull List<DriverGene> driverGenes) {
+        Map<String, DriverGene> driverGeneMap = Maps.newHashMap();
+        for (DriverGene entry : driverGenes) {
+            driverGeneMap.put(entry.gene(), entry);
+        }
+        return driverGeneMap;
+    }
+
     public static void generateSomaticConclusion(@NotNull Set<String> conclusion,
-            @NotNull List<ReportableVariant> reportableSomaticVariants,
-            @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
+            @NotNull List<ReportableVariant> reportableSomaticVariants, @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap,
+            @NotNull Map<String, DriverGene> driverGenesMap) {
         for (ReportableVariant somaticVariant : reportableSomaticVariants) {
             ActionabilityKey keySomaticVariant = ImmutableActionabilityKey.builder()
                     .gene(somaticVariant.gene())
-                    .type(somaticVariant.gene().equals("ONCO") ? Type.ACTIVATION_MUTATION : Type.INACTIVATION)
+                    .type(driverGenesMap.get(somaticVariant.gene()).likelihoodType().equals(DriverCategory.ONCO)
+                            ? Type.ACTIVATION_MUTATION
+                            : Type.INACTIVATION)
                     .build();
             ActionabilityEntry entry = actionabilityMap.get(keySomaticVariant);
             conclusion.add(entry.conclusion());
@@ -93,11 +116,13 @@ public class ConclusionAlgo {
 
     public static void generateGermlineConclusion(@NotNull Set<String> conclusion,
             @NotNull List<ReportableVariant> reportableGermlineVariants,
-            @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
+            @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap, @NotNull Map<String, DriverGene> driverGenesMap) {
         for (ReportableVariant germlineVariant : reportableGermlineVariants) {
             ActionabilityKey keyGermlineVariant = ImmutableActionabilityKey.builder()
                     .gene(germlineVariant.gene())
-                    .type(germlineVariant.gene().equals("ONCO") ? Type.ACTIVATION_MUTATION : Type.INACTIVATION)
+                    .type(driverGenesMap.get(germlineVariant.gene()).likelihoodType().equals(DriverCategory.ONCO)
+                            ? Type.ACTIVATION_MUTATION
+                            : Type.INACTIVATION)
                     .build();
             ActionabilityEntry entry = actionabilityMap.get(keyGermlineVariant);
             conclusion.add(entry.conclusion());

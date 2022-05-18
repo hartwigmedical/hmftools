@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.PurpleData;
@@ -40,4 +41,7 @@ public abstract class SummonData {
 
     @NotNull
     public abstract List<ActionabilityEntry> actionabilityEntries();
+
+    @NotNull
+    public abstract List<DriverGene> driverGenes();
 }

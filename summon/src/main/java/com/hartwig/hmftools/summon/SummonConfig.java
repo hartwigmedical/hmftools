@@ -35,6 +35,8 @@ public interface SummonConfig {
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
     String ANNOTATED_VIRUS_TSV = "annotated_virus_tsv";
     String PROTECT_EVIDENCE_TSV = "protect_evidence_tsv";
+    String DRIVER_GENE_37_TSV = "driver_gene_37_tsv";
+    String DRIVER_GENE_38_TSV = "driver_gene_38_tsv";
 
     // Some additional optional params and flags
     String LOG_DEBUG = "log_debug";
@@ -66,6 +68,9 @@ public interface SummonConfig {
         options.addOption(ANNOTATED_VIRUS_TSV, true, "Path towards the annotated virus TSV.");
 
         options.addOption(PROTECT_EVIDENCE_TSV, true, "Path towards the protect evidence TSV.");
+
+        options.addOption(DRIVER_GENE_37_TSV, true, "Path to driver gene v37 TSV");
+        options.addOption(DRIVER_GENE_38_TSV, true, "Path to driver gene v38 TSV");
 
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
         return options;
@@ -123,6 +128,12 @@ public interface SummonConfig {
     String protectEvidenceTsv();
 
     @NotNull
+    String driverGene37Tsv();
+
+    @NotNull
+    String driverGene38Tsv();
+
+    @NotNull
     static SummonConfig createConfig(@NotNull CommandLine cmd) throws ParseException, IOException {
         if (cmd.hasOption(LOG_DEBUG)) {
             Configurator.setRootLevel(Level.DEBUG);
@@ -146,6 +157,8 @@ public interface SummonConfig {
                 .chordPredictionTxt(nonOptionalFile(cmd, CHORD_PREDICTION_TXT))
                 .annotatedVirusTsv(nonOptionalFile(cmd, ANNOTATED_VIRUS_TSV))
                 .protectEvidenceTsv(nonOptionalFile(cmd, PROTECT_EVIDENCE_TSV))
+                .driverGene37Tsv(nonOptionalFile(cmd, DRIVER_GENE_37_TSV))
+                .driverGene38Tsv(nonOptionalFile(cmd, DRIVER_GENE_38_TSV))
                 .build();
     }
 

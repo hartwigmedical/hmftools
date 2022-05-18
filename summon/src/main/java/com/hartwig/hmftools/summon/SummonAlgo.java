@@ -6,6 +6,8 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordDataLoader;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxDataLoader;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
@@ -26,16 +28,27 @@ public class SummonAlgo {
 
     @NotNull
     private final List<ActionabilityEntry> actionabilityEntry;
-
     @NotNull
-    public static SummonAlgo build(@NotNull String actionabilityDatabaseTsv) throws IOException {
+    private final List<DriverGene> driverGenes;
+    @NotNull
+    public static SummonAlgo build(@NotNull String actionabilityDatabaseTsv, @NotNull String driverGene37Tsv,
+            @NotNull String driverGene38Tsv) throws IOException {
         List<ActionabilityEntry> actionabilityEntry = ActionabilityFileReader.read(actionabilityDatabaseTsv);
-
-        return new SummonAlgo(actionabilityEntry);
+        List<DriverGene> driverGenes = readDriverGenesFromFile(driverGene37Tsv);
+        return new SummonAlgo(actionabilityEntry, driverGenes);
     }
 
-    private SummonAlgo(final @NotNull List<ActionabilityEntry> actionabilityEntry) {
+    private SummonAlgo(final @NotNull List<ActionabilityEntry> actionabilityEntry, final @NotNull List<DriverGene> driverGenes) {
         this.actionabilityEntry = actionabilityEntry;
+        this.driverGenes = driverGenes;
+    }
+
+    @NotNull
+    private static List<DriverGene> readDriverGenesFromFile(@NotNull String driverGeneTsv) throws IOException {
+        LOGGER.info(" Reading driver genes from {}", driverGeneTsv);
+        List<DriverGene> driverGenes = DriverGeneFile.read(driverGeneTsv);
+        LOGGER.info("  Read {} driver gene entries", driverGenes.size());
+        return driverGenes;
     }
 
     @NotNull
@@ -50,6 +63,7 @@ public class SummonAlgo {
                 .chord(loadChordAnalysis(config))
                 .protect(loadProtectData(config))
                 .actionabilityEntries(actionabilityEntry)
+                .driverGenes(driverGenes)
                 .build();
     }
 
@@ -68,11 +82,7 @@ public class SummonAlgo {
 
     @NotNull
     private static LinxData loadLinxData(@NotNull SummonConfig config) throws IOException {
-        return LinxDataLoader.load(config.linxFusionTsv(),
-                config.linxBreakendTsv(),
-                null,
-                config.linxDriverCatalogTsv(),
-                null);
+        return LinxDataLoader.load(config.linxFusionTsv(), config.linxBreakendTsv(), null, config.linxDriverCatalogTsv(), null);
     }
 
     @NotNull

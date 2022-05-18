@@ -40,7 +40,7 @@ public final class ActionabilityFileReader {
         String[] values = line.split(MAIN_FIELD_DELIMITER, -1);
 
         return ImmutableActionabilityEntry.builder()
-                .gene(values[fields.get("gene")])
+                .gene(values[fields.get("Gene")])
                 .type(Type.valueOf(values[fields.get("aberration type")]))
                 .conclusion(values[fields.get("conclusion")])
                 .build();
