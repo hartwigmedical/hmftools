@@ -61,7 +61,6 @@ public class SummonAlgo {
                 .linx(loadLinxData(config))
                 .virusInterpreter(loadVirusInterpreterData(config))
                 .chord(loadChordAnalysis(config))
-                .protect(loadProtectData(config))
                 .actionabilityEntries(actionabilityEntry)
                 .driverGenes(driverGenes)
                 .build();
@@ -93,14 +92,5 @@ public class SummonAlgo {
     @NotNull
     private static ChordAnalysis loadChordAnalysis(@NotNull SummonConfig config) throws IOException {
         return ChordDataLoader.load(config.chordPredictionTxt());
-    }
-
-    @NotNull
-    private static List<ProtectEvidence> loadProtectData(@NotNull SummonConfig config) throws IOException {
-        LOGGER.info("Loading PROTECT data from {}", new File(config.protectEvidenceTsv()).getParent());
-        List<ProtectEvidence> evidences = ProtectEvidenceFile.read(config.protectEvidenceTsv());
-        LOGGER.info(" Loaded {} PROTECT evidences from {}", evidences.size(), config.protectEvidenceTsv());
-
-        return evidences;
     }
 }

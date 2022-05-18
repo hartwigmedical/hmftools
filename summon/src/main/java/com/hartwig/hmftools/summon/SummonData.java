@@ -37,9 +37,6 @@ public abstract class SummonData {
     public abstract ChordAnalysis chord();
 
     @NotNull
-    public abstract List<ProtectEvidence> protect();
-
-    @NotNull
     public abstract List<ActionabilityEntry> actionabilityEntries();
 
     @NotNull
