@@ -34,7 +34,6 @@ public interface SummonConfig {
     String LINX_DRIVER_CATALOG_TSV = "linx_driver_catalog_tsv";
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
     String ANNOTATED_VIRUS_TSV = "annotated_virus_tsv";
-    String PROTECT_EVIDENCE_TSV = "protect_evidence_tsv";
     String DRIVER_GENE_37_TSV = "driver_gene_37_tsv";
     String DRIVER_GENE_38_TSV = "driver_gene_38_tsv";
 
@@ -66,8 +65,6 @@ public interface SummonConfig {
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
 
         options.addOption(ANNOTATED_VIRUS_TSV, true, "Path towards the annotated virus TSV.");
-
-        options.addOption(PROTECT_EVIDENCE_TSV, true, "Path towards the protect evidence TSV.");
 
         options.addOption(DRIVER_GENE_37_TSV, true, "Path to driver gene v37 TSV");
         options.addOption(DRIVER_GENE_38_TSV, true, "Path to driver gene v38 TSV");
@@ -125,9 +122,6 @@ public interface SummonConfig {
     String annotatedVirusTsv();
 
     @NotNull
-    String protectEvidenceTsv();
-
-    @NotNull
     String driverGene37Tsv();
 
     @NotNull
@@ -156,7 +150,6 @@ public interface SummonConfig {
                 .linxDriverCatalogTsv(nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV))
                 .chordPredictionTxt(nonOptionalFile(cmd, CHORD_PREDICTION_TXT))
                 .annotatedVirusTsv(nonOptionalFile(cmd, ANNOTATED_VIRUS_TSV))
-                .protectEvidenceTsv(nonOptionalFile(cmd, PROTECT_EVIDENCE_TSV))
                 .driverGene37Tsv(nonOptionalFile(cmd, DRIVER_GENE_37_TSV))
                 .driverGene38Tsv(nonOptionalFile(cmd, DRIVER_GENE_38_TSV))
                 .build();
