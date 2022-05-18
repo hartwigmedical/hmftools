@@ -59,6 +59,6 @@ public class SummonApplication {
 
         String filename = SummonConclusionFile.generateFilename(config.outputDir(), config.tumorSampleId());
         LOGGER.info("Writing actionability conclusion to file: {}", filename);
-       // SummonConclusionFile.write(filename, actionabilityConclusion);
+        SummonConclusionFile.write(filename, actionabilityConclusion);
     }
 }
