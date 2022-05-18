@@ -42,11 +42,10 @@ public final class ActionabilityFileReader {
     @NotNull
     private static ActionabilityEntry fromString(@NotNull Map<String, Integer> fields, @NotNull String line) {
         String[] values = line.split(MAIN_FIELD_DELIMITER, -1);
-        LOGGER.info(values[fields.get("aberration type")]);
 
         return ImmutableActionabilityEntry.builder()
                 .gene(values[fields.get("Gene")])
-                .type(Type.valueOf(values[fields.get("aberration type")]))
+                .type(Type.valueOf(values[fields.get("aberration type")].toUpperCase()))
                 .conclusion(values[fields.get("conclusion")])
                 .build();
     }
