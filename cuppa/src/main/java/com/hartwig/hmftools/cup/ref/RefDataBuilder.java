@@ -54,7 +54,7 @@ public class RefDataBuilder
             mClassifiers.add(new RefSvData(mConfig, mSampleDataCache));
 
         if(RefFeatures.requiresBuild(mConfig))
-            mClassifiers.add(new RefFeatures(mConfig, mSampleDataCache));
+            mClassifiers.add(new RefFeatures(mConfig, mSampleDataCache, cmd));
 
         if(RefGeneExpression.requiresBuild(mConfig))
             mClassifiers.add(new RefGeneExpression(mConfig, mSampleDataCache, cmd));

@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.feature.RefFeatures;
 import com.hartwig.hmftools.cup.rna.RefGeneExpression;
 import com.hartwig.hmftools.cup.somatics.RefSomatics;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -152,6 +153,7 @@ public class RefDataConfig
 
         RefGeneExpression.addCmdLineArgs(options);
         RefSomatics.addCmdLineArgs(options);
+        RefFeatures.addCmdLineArgs(options);
     }
 
 }

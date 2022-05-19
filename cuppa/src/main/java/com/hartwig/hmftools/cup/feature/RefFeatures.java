@@ -9,13 +9,17 @@ import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_FEATURE_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_DRIVER_AVG;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_FEATURE_PREV;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
 import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
+import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.convertAndFilterDriverAmps;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromCohortFile;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromDatabase;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromFile;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadRefFeatureOverrides;
+import static com.hartwig.hmftools.cup.feature.FeaturePrevData.TYPE_NAME_DELIM;
+import static com.hartwig.hmftools.cup.feature.FeaturePrevData.featureTypeName;
+import static com.hartwig.hmftools.cup.feature.FeaturePrevData.nameFromfeatureTypeName;
+import static com.hartwig.hmftools.cup.feature.FeaturePrevData.typeFromFeatureTypeName;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.parseFileSet;
 
@@ -36,23 +40,45 @@ import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 import com.hartwig.hmftools.cup.ref.RefClassifier;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
+import org.jetbrains.annotations.NotNull;
+
 public class RefFeatures implements RefClassifier
 {
     private final RefDataConfig mConfig;
     private final SampleDataCache mSampleDataCache;
 
-    private final Map<String,List<FeaturePrevData>> mFeatureOverrides;
+    private final List<FeaturePrevData> mFeatureOverrides;
+    private final boolean mRestrictAmpGenes;
+    private final boolean mSplitDriverAmps;
 
-    public RefFeatures(final RefDataConfig config, final SampleDataCache sampleDataCache)
+    public static final String SPLIT_DRIVER_AMP = "split_driver_amp";
+    public static final String RESTRICT_DRIVER_AMP_GENES = "restrict_driver_amp_genes";
+
+    public static final List<String> DRIVER_AMP_GENES = Lists.newArrayList(
+            "MYC","CCND1","ERBB2","ZNF703","FGFR1","MDM2","AR","CCNE1","ZNF217","EGFR","KRAS","CDK4","TERT","NCOA2","MET","MCL1",
+            "ZMIZ1","FOXA1","CRYBG1","GNAS","CD44","CCND2","MDM4","CDX2","CDK6","TYMS","SOX4","MECOM","VEGFA","IRS2","ADAM30","PIK3CA",
+            "GATA6","CD274","KIT","MYCL","KLF5","ARID5B","RAF1");
+
+    public RefFeatures(final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
 
-        mFeatureOverrides = Maps.newHashMap();
-        loadRefFeatureOverrides(mConfig.FeatureOverrideFile, mFeatureOverrides);
+        mSplitDriverAmps = cmd.hasOption(SPLIT_DRIVER_AMP);
+        mRestrictAmpGenes = cmd.hasOption(RESTRICT_DRIVER_AMP_GENES);
+
+        mFeatureOverrides = loadRefFeatureOverrides(mConfig.FeatureOverrideFile);
     }
 
     public CategoryType categoryType() { return FEATURE; }
+
+    public static void addCmdLineArgs(@NotNull Options options)
+    {
+        options.addOption(SPLIT_DRIVER_AMP, false, "Split driver AMPs from other driver events");
+        options.addOption(RESTRICT_DRIVER_AMP_GENES, false, "Restrict driver AMPs to specifc list of genes");
+    }
 
     public static boolean requiresBuild(final RefDataConfig config)
     {
@@ -74,15 +100,19 @@ public class RefFeatures implements RefClassifier
 
         writeCohortData(sampleFeaturesMap);
 
+        if(mSplitDriverAmps)
+        {
+            convertAndFilterDriverAmps(sampleFeaturesMap, mRestrictAmpGenes);
+        }
+
         final Map<String,Map<String,Double>> cancerFeatureCounts = Maps.newHashMap();
-        final Map<String,FeatureType> featureTypes = Maps.newHashMap();
 
         final Map<String,List<Double>> driversPerSampleMap = Maps.newHashMap();
         final List<Double> panCancerDriversPerSample = Lists.newArrayList();
 
-        assignFeatures(sampleFeaturesMap, cancerFeatureCounts, featureTypes, driversPerSampleMap, panCancerDriversPerSample);
+        assignFeatures(sampleFeaturesMap, cancerFeatureCounts, driversPerSampleMap, panCancerDriversPerSample);
 
-        writeFeaturePrevalenceFile(cancerFeatureCounts, featureTypes);
+        writeFeaturePrevalenceFile(cancerFeatureCounts);
 
         writeAverageDriversFile(driversPerSampleMap, panCancerDriversPerSample);
     }
@@ -133,8 +163,7 @@ public class RefFeatures implements RefClassifier
     }
 
     private void assignFeatures(
-            final Map<String,List<SampleFeatureData>> sampleFeaturesMap,
-            final Map<String,Map<String,Double>> cancerFeatureCounts, final Map<String,FeatureType> featureTypes,
+            final Map<String,List<SampleFeatureData>> sampleFeaturesMap, final Map<String,Map<String,Double>> cancerFeatureCounts,
             final Map<String,List<Double>> driversPerSampleMap, final List<Double> panCancerDriversPerSample)
     {
         for(Map.Entry<String,List<SampleFeatureData>> sampleEntry : sampleFeaturesMap.entrySet())
@@ -145,7 +174,7 @@ public class RefFeatures implements RefClassifier
             if(!isKnownCancerType(cancerType))
                 continue;
 
-            final Set<String> features = Sets.newHashSet();
+            final Set<String> sampleFeatures = Sets.newHashSet();
             double driverTotal = 0;
 
             for(SampleFeatureData feature : sampleEntry.getValue())
@@ -156,13 +185,16 @@ public class RefFeatures implements RefClassifier
                 if(feature.Type == DRIVER)
                     driverTotal += feature.Likelihood;
 
-                if(features.contains(feature.Name))
+                String nameType = featureTypeName(feature.Type, feature.Name);
+                if(sampleFeatures.contains(nameType)) // keep unique contributions per sample
                     continue;
 
-                features.add(feature.Name);
-                featureTypes.put(feature.Name, feature.Type);
+                sampleFeatures.add(nameType);
 
-                double likelihoodTotal = sampleEntry.getValue().stream().filter(x -> x.Name.equals(feature.Name)).mapToDouble(x -> x.Likelihood).sum();
+                double likelihoodTotal = sampleEntry.getValue().stream()
+                        .filter(x -> x.Name.equals(feature.Name) && x.Type == feature.Type)
+                        .mapToDouble(x -> x.Likelihood).sum();
+
                 likelihoodTotal = min(likelihoodTotal, 1);
 
                 Map<String,Double> featureCounts = cancerFeatureCounts.get(cancerType);
@@ -172,12 +204,8 @@ public class RefFeatures implements RefClassifier
                     cancerFeatureCounts.put(cancerType, featureCounts);
                 }
 
-                Double featureCount = featureCounts.get(feature.Name);
-
-                if(featureCount == null)
-                    featureCounts.put(feature.Name, likelihoodTotal);
-                else
-                    featureCounts.put(feature.Name, likelihoodTotal + featureCount);
+                Double featureCount = featureCounts.get(nameType);
+                featureCounts.put(nameType, featureCount == null ? likelihoodTotal : featureCount + likelihoodTotal);
             }
 
             List<Double> sampleDrivers = driversPerSampleMap.get(cancerType);
@@ -195,9 +223,9 @@ public class RefFeatures implements RefClassifier
         }
     }
 
-    private void writeFeaturePrevalenceFile(final Map<String,Map<String,Double>> cancerFeatureCounts, final Map<String,FeatureType> featureTypes)
+    private void writeFeaturePrevalenceFile(final Map<String,Map<String,Double>> cancerFeatureCounts)
     {
-        // output: CancerType,Gene,Type,SamplePerc
+        // output: CancerType,Name,Type,SamplePerc
         try
         {
             final String filename = mConfig.OutputDir + REF_FILE_FEATURE_PREV;
@@ -211,48 +239,41 @@ public class RefFeatures implements RefClassifier
                 final String cancerType = cancerEntry.getKey();
                 int cancerSamples = mSampleDataCache.getCancerSampleCount(cancerType);
 
-                for(Map.Entry<String,Double> featureEntry : cancerEntry.getValue().entrySet())
+                for(Map.Entry<String,Double> featureCounts : cancerEntry.getValue().entrySet())
                 {
-                    final String feature = featureEntry.getKey();
+                    String[] typeNameValues = featureCounts.getKey().split(TYPE_NAME_DELIM, 2);
+                    FeatureType featureType = FeatureType.valueOf(typeNameValues[0]);
+                    String featureName = typeNameValues[1];
 
                     // check for any feature-cancer overrides
-                    final List<FeaturePrevData> overrides = mFeatureOverrides.get(feature);
+                    final FeaturePrevData override = mFeatureOverrides.stream()
+                            .filter(x -> x.CancerType.equals(cancerType))
+                            .filter(x -> x.Type == featureType && x.Name.equals(featureName))
+                            .findFirst().orElse(null);
 
-                    if(overrides == null)
+                    if(override == null)
                     {
-                        double sampleTotal = featureEntry.getValue();
+                        double sampleTotal = featureCounts.getValue();
                         double prevalence = sampleTotal / cancerSamples;
-                        FeatureType featureType = featureTypes.get(feature);
 
-                        writer.write(String.format("%s,%s,%s,%.6f", cancerType, feature, featureType, prevalence));
+                        writer.write(String.format("%s,%s,%s,%.6f", cancerType, featureName, featureType, prevalence));
                         writer.newLine();
                     }
                     else
                     {
+                        writer.write(String.format("%s,%s,%s,%.6f", cancerType, override.Name, override.Type, override.Prevalence));
+                        writer.newLine();
+
                         // remove this entry since unobserved features will then be written at the end
-                        final FeaturePrevData override = overrides.stream().filter(x -> x.CancerType.equals(cancerType)).findFirst().orElse(null);
-
-                        if(override != null)
-                        {
-                            writer.write(String.format("%s,%s,%s,%.6f", cancerType, feature, override.Type, override.Prevalence));
-                            writer.newLine();
-
-                            overrides.remove(override);
-                        }
+                        mFeatureOverrides.remove(override);
                     }
                 }
             }
 
-            for(List<FeaturePrevData> overrides : mFeatureOverrides.values())
+            for(FeaturePrevData override : mFeatureOverrides)
             {
-                if(overrides.isEmpty())
-                    continue;
-
-                for(FeaturePrevData override : overrides)
-                {
-                    writer.write(String.format("%s,%s,%s,%.6f", override.CancerType, override.Name, override.Type, override.Prevalence));
-                    writer.newLine();
-                }
+                writer.write(String.format("%s,%s,%s,%.6f", override.CancerType, override.Name, override.Type, override.Prevalence));
+                writer.newLine();
             }
 
             closeBufferedWriter(writer);

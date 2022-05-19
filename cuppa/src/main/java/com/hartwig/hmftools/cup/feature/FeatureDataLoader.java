@@ -10,7 +10,9 @@ import static com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus.MSS;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
+import static com.hartwig.hmftools.cup.feature.FeatureType.AMP;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
+import static com.hartwig.hmftools.cup.feature.RefFeatures.DRIVER_AMP_GENES;
 import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_CHROMOSOME;
 import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_TYPE;
 import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_TYPE_AMP;
@@ -400,17 +402,17 @@ public class FeatureDataLoader
 
             if((checkIndels && isKnownIndel(gene, repeatCount, type)) || isKnownEGFRMutation(gene, type, position, ref, alt))
             {
-                final List<String> genes = sampleMutationMap.get(sampleId);
+                List<String> genes = sampleMutationMap.get(sampleId);
+
                 if(genes == null)
                     sampleMutationMap.put(sampleId, Lists.newArrayList(gene));
-                else
+                else if(!genes.contains(gene))
                     genes.add(gene);
             }
         }
 
         return sampleMutationMap;
     }
-
 
     private static List<String> loadSpecificMutations(final String vcfFile, boolean checkIndels)
     {
@@ -420,6 +422,9 @@ public class FeatureDataLoader
 
         for(SomaticVariant variant : variants)
         {
+            if(mutations.contains(variant.Gene))
+                continue;
+
             if((checkIndels && isKnownIndel(variant.Gene, variant.RepeatCount, variant.Type))
             || isKnownEGFRMutation(variant.Gene, variant.Type, variant.Position, variant.Ref, variant.Alt))
             {
@@ -474,6 +479,30 @@ public class FeatureDataLoader
         }
 
         return sampleDriverMap;
+    }
+
+    public static void convertAndFilterDriverAmps(final Map<String,List<SampleFeatureData>> sampleFeaturesMap, boolean restrictGenes)
+    {
+        for(Map.Entry<String,List<SampleFeatureData>> sampleEntry : sampleFeaturesMap.entrySet())
+        {
+            List<SampleFeatureData> features = sampleEntry.getValue();
+
+            for(int i = 0; i < features.size(); ++i)
+            {
+                SampleFeatureData featureData = features.get(i);
+
+                if(featureData.Type != DRIVER || !featureData.ExtraInfo.containsValue(DRIVER_TYPE_AMP))
+                    continue;
+
+                if(restrictGenes && !DRIVER_AMP_GENES.contains(featureData.Name))
+                    continue;
+
+                SampleFeatureData ampFeature = new SampleFeatureData(featureData.SampleId, featureData.Name, AMP, featureData.Likelihood);
+                ampFeature.ExtraInfo.putAll(featureData.ExtraInfo);
+
+                features.set(i, ampFeature);
+            }
+        }
     }
 
     private static void mapFeatureData(
@@ -576,15 +605,15 @@ public class FeatureDataLoader
                 if(prevData == null)
                     continue;
 
-                FeaturePrevCounts genePrevTotals = featurePrevTotals.get(prevData.Name);
+                FeaturePrevCounts prevTotals = featurePrevTotals.get(prevData.typeName());
 
-                if(genePrevTotals == null)
+                if(prevTotals == null)
                 {
-                    genePrevTotals = new FeaturePrevCounts();
-                    featurePrevTotals.put(prevData.Name, genePrevTotals);
+                    prevTotals = new FeaturePrevCounts();
+                    featurePrevTotals.put(prevData.typeName(), prevTotals);
                 }
 
-                genePrevTotals.MaxPrevalence = max(genePrevTotals.MaxPrevalence, prevData.Prevalence);
+                prevTotals.MaxPrevalence = max(prevTotals.MaxPrevalence, prevData.Prevalence);
 
                 final List<FeaturePrevData> dataList = cancerDriverPrevalence.get(prevData.CancerType);
                 if(dataList == null)
@@ -606,11 +635,12 @@ public class FeatureDataLoader
         return true;
     }
 
-    public static boolean loadRefFeatureOverrides(
-            final String filename, final Map<String,List<FeaturePrevData>> cancerFeaturePrevOverrides)
+    public static List<FeaturePrevData> loadRefFeatureOverrides(final String filename)
     {
+        final List<FeaturePrevData> cancerFeaturePrevOverrides = Lists.newArrayList();
+
         if(filename == null || filename.isEmpty())
-            return true;
+            return cancerFeaturePrevOverrides;
 
         try
         {
@@ -622,24 +652,18 @@ public class FeatureDataLoader
             {
                 final FeaturePrevData prevData = FeaturePrevData.from(line);
 
-                if(prevData == null)
-                    continue;
-
-                final List<FeaturePrevData> dataList = cancerFeaturePrevOverrides.get(prevData.Name);
-
-                if(dataList == null)
-                    cancerFeaturePrevOverrides.put(prevData.Name, Lists.newArrayList(prevData));
-                else
-                    dataList.add(prevData);
+                if(prevData != null)
+                {
+                    cancerFeaturePrevOverrides.add(prevData);
+                }
             }
         }
         catch (IOException e)
         {
             CUP_LOGGER.error("failed to read feature overrides prevalence data file: {}", e.toString());
-            return false;
         }
 
-        return true;
+        return cancerFeaturePrevOverrides;
     }
 
     public static boolean loadRefCancerFeatureAvg(final String filename, final Map<String,Double> cancerFeatureAvgs)

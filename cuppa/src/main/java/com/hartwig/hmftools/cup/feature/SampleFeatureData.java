@@ -3,6 +3,7 @@ package com.hartwig.hmftools.cup.feature;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaConfig.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.cup.CuppaConfig.SUBSET_DELIM;
+import static com.hartwig.hmftools.cup.feature.FeaturePrevData.featureTypeName;
 
 import java.util.Map;
 import java.util.StringJoiner;
@@ -31,6 +32,8 @@ public class SampleFeatureData
         Likelihood = likelihood;
         ExtraInfo = Maps.newHashMap();
     }
+
+    public String typeName() { return featureTypeName(Type, Name); }
 
     public static String header()
     {

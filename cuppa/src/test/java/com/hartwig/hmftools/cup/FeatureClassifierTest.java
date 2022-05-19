@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.cup.CuppaUtilsTest.TEST_SAMPLE_003;
 import static com.hartwig.hmftools.cup.common.ClassifierType.FEATURE;
 import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_SIMILARITY;
 import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE_SIMILARITY;
+import static com.hartwig.hmftools.cup.feature.FeatureType.AMP;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
 import static com.hartwig.hmftools.cup.feature.FeatureType.FUSION;
 import static com.hartwig.hmftools.cup.feature.FeatureType.VIRUS;
@@ -31,6 +32,9 @@ import com.hartwig.hmftools.cup.feature.FeatureType;
 import com.hartwig.hmftools.cup.feature.SampleFeatureData;
 import com.hartwig.hmftools.cup.somatics.SomaticClassifier;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.Options;
 import org.junit.Test;
 
 public class FeatureClassifierTest
@@ -70,7 +74,6 @@ public class FeatureClassifierTest
         SampleData testSample1 = CuppaUtilsTest.addTestSample(dataCache, TEST_SAMPLE_001);
         SampleData testSample2 = CuppaUtilsTest.addTestSample(dataCache, TEST_SAMPLE_002);
         SampleData testSample3 = CuppaUtilsTest.addTestSample(dataCache, TEST_SAMPLE_003);
-        SampleData testSample4 = CuppaUtilsTest.addTestSample(dataCache, TEST_SAMPLE_003);
 
         List<SampleFeatureData> sampleFeatures = Lists.newArrayList();
         sampleFeatures.add(new SampleFeatureData(testSample1.Id, FUSION_001, FUSION, 1));
@@ -81,7 +84,7 @@ public class FeatureClassifierTest
         sampleFeatureMap.put(testSample2.Id, sampleFeatures);
 
         sampleFeatures = Lists.newArrayList();
-        sampleFeatures.add(new SampleFeatureData(testSample3.Id, VIRUS_001, FUSION, 1));
+        sampleFeatures.add(new SampleFeatureData(testSample3.Id, VIRUS_001, VIRUS, 1));
         sampleFeatures.add(new SampleFeatureData(testSample3.Id, GENE_002, DRIVER, 1));
         sampleFeatureMap.put(testSample3.Id, sampleFeatures);
 
@@ -115,6 +118,60 @@ public class FeatureClassifierTest
         assertEquals(0.0, result.CancerTypeValues.get(TEST_CT_001), 0.01);
         assertEquals(0.02, result.CancerTypeValues.get(TEST_CT_002), 0.01);
         assertEquals(0.16, result.CancerTypeValues.get(TEST_CT_003), 0.01);
+    }
+
+    @Test
+    public void testDriverAmps()
+    {
+        SampleDataCache dataCache = new SampleDataCache();
+
+        CuppaConfig config = new CuppaConfig();
+
+        FeatureClassifier classifier = new FeatureClassifier(config, dataCache, null);
+
+        final Map<String, List<SampleFeatureData>> sampleFeatureMap = Maps.newHashMap();
+        final Map<String, List<FeaturePrevData>> cancerFeaturePrevalence = Maps.newHashMap();
+
+        List<FeaturePrevData> prevalences = Lists.newArrayList();
+        prevalences.add(new FeaturePrevData(TEST_CT_001, GENE_001, DRIVER, 0.2));
+        prevalences.add(new FeaturePrevData(TEST_CT_001, GENE_001, AMP, 0.8));
+        cancerFeaturePrevalence.put(TEST_CT_001, prevalences);
+
+        prevalences = Lists.newArrayList();
+        prevalences.add(new FeaturePrevData(TEST_CT_002, GENE_001, DRIVER, 0.8));
+        prevalences.add(new FeaturePrevData(TEST_CT_002, GENE_001, AMP, 0.2));
+        cancerFeaturePrevalence.put(TEST_CT_002, prevalences);
+
+        SampleData testSample1 = CuppaUtilsTest.addTestSample(dataCache, TEST_SAMPLE_001);
+        SampleData testSample2 = CuppaUtilsTest.addTestSample(dataCache, TEST_SAMPLE_002);
+
+        List<SampleFeatureData> sampleFeatures = Lists.newArrayList();
+        sampleFeatures.add(new SampleFeatureData(testSample1.Id, GENE_001, AMP, 1));
+        sampleFeatureMap.put(testSample1.Id, sampleFeatures);
+
+        sampleFeatures = Lists.newArrayList();
+        sampleFeatures.add(new SampleFeatureData(testSample2.Id, GENE_001, DRIVER, 1));
+        sampleFeatureMap.put(testSample2.Id, sampleFeatures);
+
+        classifier.addFeaturePrevalences(sampleFeatureMap, cancerFeaturePrevalence);
+
+        List<SampleResult> results = Lists.newArrayList();
+        List<SampleSimilarity> similarities = Lists.newArrayList();
+
+        classifier.processSample(testSample1, results, similarities);
+
+        SampleResult result = results.stream().filter(x -> x.DataType.equals(FEATURE.toString())).findFirst().orElse(null);
+        assertTrue(result != null);
+        assertEquals(0.77, result.CancerTypeValues.get(TEST_CT_001), 0.01);
+        assertEquals(0.23, result.CancerTypeValues.get(TEST_CT_002), 0.01);
+
+        results.clear();
+        classifier.processSample(testSample2, results, similarities);
+
+        result = results.stream().filter(x -> x.DataType.equals(FEATURE.toString())).findFirst().orElse(null);
+        assertTrue(result != null);
+        assertEquals(0.23, result.CancerTypeValues.get(TEST_CT_001), 0.01);
+        assertEquals(0.77, result.CancerTypeValues.get(TEST_CT_002), 0.01);
     }
 
     @Test

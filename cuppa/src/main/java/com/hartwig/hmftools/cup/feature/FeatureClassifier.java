@@ -5,6 +5,7 @@ import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.CuppaConfig.SUBSET_DELIM;
 import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
 import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_PAN;
@@ -13,17 +14,23 @@ import static com.hartwig.hmftools.cup.common.CupConstants.NON_DRIVER_ZERO_PREVA
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.ResultType.PREVALENCE;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
+import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.convertAndFilterDriverAmps;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromCohortFile;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromDatabase;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromFile;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadRefCancerFeatureAvg;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadRefPrevalenceData;
+import static com.hartwig.hmftools.cup.feature.FeaturePrevData.featureTypeName;
+import static com.hartwig.hmftools.cup.feature.FeatureType.AMP;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
 import static com.hartwig.hmftools.cup.feature.FeatureType.INDEL;
+import static com.hartwig.hmftools.cup.feature.RefFeatures.RESTRICT_DRIVER_AMP_GENES;
+import static com.hartwig.hmftools.cup.feature.RefFeatures.SPLIT_DRIVER_AMP;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -45,13 +52,13 @@ import org.apache.commons.cli.Options;
 public class FeatureClassifier implements CuppaClassifier
 {
     private final CuppaConfig mConfig;
-    private final Map<String,List<SampleFeatureData>> mSampleFeatures;
-    private final Map<String,List<FeaturePrevData>> mCancerFeaturePrevalence;
+    private final Map<String,List<SampleFeatureData>> mSampleFeatures; // keyed by sampleId
+    private final Map<String,List<FeaturePrevData>> mCancerFeaturePrevalence; // keyed by cancer type
     private final SampleDataCache mSampleDataCache;
     private boolean mIsValid;
 
-    private final Map<String,FeaturePrevCounts> mFeaturePrevalenceTotals;
-    private final Map<String,Double> mCancerFeatureAvg;
+    private final Map<String,FeaturePrevCounts> mFeaturePrevalenceTotals; // keyed by feature type-name
+    private final Map<String,Double> mCancerFeatureAvg; // keyed by cancer type
 
     private final double mNonDriverZeroPrevAllocation;
 
@@ -81,11 +88,21 @@ public class FeatureClassifier implements CuppaClassifier
                 mFeaturePrevalenceTotals.size(), config.RefFeaturePrevFile);
 
         mIsValid &= loadSampleFeatures();
+
+        boolean splitAmps = cmd == null || cmd.hasOption(SPLIT_DRIVER_AMP);
+
+        if(splitAmps)
+        {
+            boolean restrictAmpGenes = cmd == null || cmd.hasOption(RESTRICT_DRIVER_AMP_GENES);
+            convertAndFilterDriverAmps(mSampleFeatures, restrictAmpGenes);
+        }
     }
 
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(NON_DRIVER_ZERO_PREV, true, "Non-driver zero prevalence allocation");
+        options.addOption(SPLIT_DRIVER_AMP, false, "Split driver AMPs from other driver events");
+        options.addOption(RESTRICT_DRIVER_AMP_GENES, false, "Restrict driver AMPs to specifc list of genes");
     }
 
     public CategoryType categoryType() { return FEATURE; }
@@ -113,10 +130,12 @@ public class FeatureClassifier implements CuppaClassifier
 
         for(final SampleFeatureData feature : sampleFeatures)
         {
-            if(processedFeatures.contains(feature.Name))
+            String featureTypeName = feature.typeName();
+
+            if(processedFeatures.contains(featureTypeName))
                 continue;
 
-            processedFeatures.add(feature.Name);
+            processedFeatures.add(featureTypeName);
 
             final Map<String,Double> cancerTypeValues = Maps.newHashMap();
 
@@ -127,14 +146,14 @@ public class FeatureClassifier implements CuppaClassifier
                 final List<FeaturePrevData> driverPrevalences = entry.getValue();
 
                 final FeaturePrevData driverPrev = driverPrevalences.stream()
-                        .filter(x -> x.Name.equals(feature.Name)).findFirst().orElse(null);
+                        .filter(x -> x.typeName().equals(featureTypeName)).findFirst().orElse(null);
 
                 cancerTypeValues.put(cancerType, driverPrev != null ? driverPrev.RawPrevalence : 0);
             }
 
             // report the max likelihood if there are multiple
             double maxLikelihood = sampleFeatures.stream()
-                    .filter(x -> x.Name.equals(feature.Name)).mapToDouble(x -> x.Likelihood).max().orElse(0);
+                    .filter(x -> x.typeName().equals(featureTypeName)).mapToDouble(x -> x.Likelihood).max().orElse(0);
 
             final String featureName = maxLikelihood == 1 ?
                     String.format("%s (1)", feature.Name) : String.format("%s (%.2f)", feature.Name, maxLikelihood);
@@ -167,7 +186,9 @@ public class FeatureClassifier implements CuppaClassifier
         final Map<String, Double> cancerProbTotals = Maps.newHashMap();
 
         final Set<String> allFeatureNames = Sets.newHashSet();
-        allSampleFeatures.stream().filter(x -> x.Likelihood > 0).forEach(x -> allFeatureNames.add(x.Name));
+
+        allSampleFeatures.stream().filter(x -> x.Likelihood > 0)
+                .forEach(x -> allFeatureNames.add(x.Type == AMP ? x.typeName() : x.Name));
 
         for(Map.Entry<String, List<FeaturePrevData>> entry : mCancerFeaturePrevalence.entrySet())
         {
@@ -183,28 +204,29 @@ public class FeatureClassifier implements CuppaClassifier
             // only count at most one driver to avoid the effects of a single event impacting more than 1 gene
             final List<SampleFeatureData> sampleFeatures = allSampleFeatures;
 
-            final Set<String> featureNames = Sets.newHashSet();
-            sampleFeatures.forEach(x -> featureNames.add(x.Name));
+            final Set<String> featureTypeNames = Sets.newHashSet();
+            sampleFeatures.forEach(x -> featureTypeNames.add(x.typeName()));
 
             double probabilityTotal = 1;
 
-            for(final String featureName : featureNames)
+            for(final String featureTypeName : featureTypeNames)
             {
-                double maxLikelihood = sampleFeatures.stream().filter(x -> x.Name.equals(featureName)).mapToDouble(x -> x.Likelihood).max().orElse(0);
+                double maxLikelihood = sampleFeatures.stream().filter(x -> x.typeName().equals(featureTypeName))
+                        .mapToDouble(x -> x.Likelihood).max().orElse(0);
 
                 if(maxLikelihood == 0)
                     continue;
 
-                final FeaturePrevCounts featPrevTotals = mFeaturePrevalenceTotals.get(featureName);
+                final FeaturePrevCounts featPrevTotals = mFeaturePrevalenceTotals.get(featureTypeName);
 
                 if(featPrevTotals == null)
                 {
-                    CUP_LOGGER.debug("sample({}) missing gene({}) prevalence data", sample.Id, featureName);
+                    CUP_LOGGER.debug("sample({}) missing gene({}) prevalence data", sample.Id, featureTypeName);
                     continue;
                 }
 
                 final FeaturePrevData featurePrev = samplePrevs.stream()
-                        .filter(x -> x.Name.equals(featureName)).findFirst().orElse(null);
+                        .filter(x -> x.typeName().equals(featureTypeName)).findFirst().orElse(null);
 
                 double featurePrevTotal = featPrevTotals.PositiveTotal;
                 double featurePrevValue;
@@ -237,10 +259,11 @@ public class FeatureClassifier implements CuppaClassifier
             cancerProbTotals.put(cancerType, probabilityTotal);
         }
 
-        final String featureNamesStr = appendStrList(Lists.newArrayList(allFeatureNames), ';');
+        StringJoiner sj = new StringJoiner(SUBSET_DELIM);
+        allFeatureNames.forEach(x -> sj.add(x));
 
         SampleResult result = new SampleResult(
-                sample.Id, FEATURE, LIKELIHOOD, ClassifierType.FEATURE.toString(), featureNamesStr, cancerProbTotals);
+                sample.Id, FEATURE, LIKELIHOOD, ClassifierType.FEATURE.toString(), sj.toString(), cancerProbTotals);
 
         results.add(result);
     }
@@ -282,26 +305,26 @@ public class FeatureClassifier implements CuppaClassifier
         double noDriverPrevalence = DRIVER_ZERO_PREVALENCE_ALLOCATION / cancerTypeCount;
         double noNonDriverPrevalence = mNonDriverZeroPrevAllocation / cancerTypeCount;
 
-        for(Map.Entry<String,FeaturePrevCounts> geneEntry : mFeaturePrevalenceTotals.entrySet())
+        for(Map.Entry<String,FeaturePrevCounts> prevEntry : mFeaturePrevalenceTotals.entrySet())
         {
-            final String gene = geneEntry.getKey();
-            final FeaturePrevCounts genePrevTotals = geneEntry.getValue();
+            final String featureTypeName = prevEntry.getKey();
+            final FeaturePrevCounts prevTotals = prevEntry.getValue();
 
             boolean isDriverType = false;
 
             for(Map.Entry<String,List<FeaturePrevData>> cancerEntry : mCancerFeaturePrevalence.entrySet())
             {
                 final FeaturePrevData featurePrevData = cancerEntry.getValue().stream()
-                        .filter(x -> x.Name.equals(gene)).findFirst().orElse(null);
+                        .filter(x -> x.typeName().equals(featureTypeName)).findFirst().orElse(null);
 
                 if(featurePrevData != null)
                 {
-                    isDriverType = (featurePrevData.Type == DRIVER || featurePrevData.Type == INDEL);
+                    isDriverType = (featurePrevData.Type == DRIVER || featurePrevData.Type == AMP || featurePrevData.Type == INDEL);
 
                     double noPrevValue = isDriverType ? noDriverPrevalence : noNonDriverPrevalence;
 
                     // note adding cancer prevalence prior to added background rate, since this is done for all cancer types later
-                    genePrevTotals.PositiveTotal += featurePrevData.Prevalence;
+                    prevTotals.PositiveTotal += featurePrevData.Prevalence;
 
                     // even cancer types with non-zero prevalence are boosted by the background allocation
                     featurePrevData.Prevalence += noPrevValue;
@@ -312,8 +335,8 @@ public class FeatureClassifier implements CuppaClassifier
             double noPrevValue = isDriverType ? noDriverPrevalence : noNonDriverPrevalence;
             double noPrevAllocation = noPrevValue * cancerTypeCount;
 
-            genePrevTotals.PositiveTotal += noPrevAllocation;
-            genePrevTotals.MinPrevalence = noPrevValue;
+            prevTotals.PositiveTotal += noPrevAllocation;
+            prevTotals.MinPrevalence = noPrevValue;
         }
     }
 
@@ -332,15 +355,15 @@ public class FeatureClassifier implements CuppaClassifier
 
             for(FeaturePrevData prevData : entry.getValue())
             {
-                FeaturePrevCounts genePrevTotals = mFeaturePrevalenceTotals.get(prevData.Name);
+                FeaturePrevCounts prevTotals = mFeaturePrevalenceTotals.get(prevData.typeName());
 
-                if(genePrevTotals == null)
+                if(prevTotals == null)
                 {
-                    genePrevTotals = new FeaturePrevCounts();
-                    mFeaturePrevalenceTotals.put(prevData.Name, genePrevTotals);
+                    prevTotals = new FeaturePrevCounts();
+                    mFeaturePrevalenceTotals.put(prevData.typeName(), prevTotals);
                 }
 
-                genePrevTotals.MaxPrevalence = max(genePrevTotals.MaxPrevalence, prevData.Prevalence);
+                prevTotals.MaxPrevalence = max(prevTotals.MaxPrevalence, prevData.Prevalence);
             }
         }
 
