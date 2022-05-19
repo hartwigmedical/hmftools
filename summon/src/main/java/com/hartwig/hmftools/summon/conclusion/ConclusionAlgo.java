@@ -85,11 +85,11 @@ public class ConclusionAlgo {
     public static String generateConslusionString(@NotNull Map<Integer, String> conclusion) {
         StringBuilder conclusionBuilder = new StringBuilder();
         int location = 0;
-       for (Map.Entry<Integer, String> entry : conclusion.entrySet()) {
-           if (entry.getKey().equals(location)) {
-               conclusionBuilder.append(entry.getValue()).append(" <enter> ");
-               location += 1;
-           }
+        for (Map.Entry<Integer, String> entry : conclusion.entrySet()) {
+            if (entry.getKey().equals(location)) {
+                conclusionBuilder.append(entry.getValue()).append(" <enter> ");
+                location += 1;
+            }
         }
         return conclusionBuilder.toString();
     }
@@ -183,9 +183,9 @@ public class ConclusionAlgo {
         }
     }
 
-    public static void generateCNVConclusion(@NotNull Map<Integer, String> conclusion, @NotNull List<ReportableGainLoss> reportableGainLosses,
-            @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap, @NotNull Set<String> oncogenic,
-            @NotNull Set<String> actionable) {
+    public static void generateCNVConclusion(@NotNull Map<Integer, String> conclusion,
+            @NotNull List<ReportableGainLoss> reportableGainLosses, @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap,
+            @NotNull Set<String> oncogenic, @NotNull Set<String> actionable) {
         for (ReportableGainLoss gainLoss : reportableGainLosses) {
             oncogenic.add("CNV");
 
