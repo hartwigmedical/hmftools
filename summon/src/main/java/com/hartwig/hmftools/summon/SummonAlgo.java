@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.summon;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -11,10 +10,9 @@ import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
 import com.hartwig.hmftools.common.cuppa.MolecularTissueOriginFile;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxDataLoader;
-import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleDataLoader;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
@@ -34,11 +32,14 @@ public class SummonAlgo {
     private final List<ActionabilityEntry> actionabilityEntry;
     @NotNull
     private final List<DriverGene> driverGenes;
+
     @NotNull
     public static SummonAlgo build(@NotNull String actionabilityDatabaseTsv, @NotNull String driverGene37Tsv,
-            @NotNull String driverGene38Tsv) throws IOException {
+            @NotNull String driverGene38Tsv, @NotNull RefGenomeVersion refGenomeVersion) throws IOException {
         List<ActionabilityEntry> actionabilityEntry = ActionabilityFileReader.read(actionabilityDatabaseTsv);
-        List<DriverGene> driverGenes = readDriverGenesFromFile(driverGene37Tsv);
+        List<DriverGene> driverGenes = refGenomeVersion == RefGenomeVersion.V37
+                ? readDriverGenesFromFile(driverGene37Tsv)
+                : readDriverGenesFromFile(driverGene38Tsv);
         return new SummonAlgo(actionabilityEntry, driverGenes);
     }
 

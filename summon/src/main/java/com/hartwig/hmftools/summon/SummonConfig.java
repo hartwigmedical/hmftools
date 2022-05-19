@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -19,6 +21,8 @@ public interface SummonConfig {
 
     String OUTPUT_DIRECTORY = "output_dir";
     String ACTIONABILITY_DATABASE_TSV = "actionability_database_tsv";
+
+
     String TUMOR_SAMPLE_ID = "tumor_sample_id";
     String REF_SAMPLE_ID = "ref_sample_id";
 
@@ -47,6 +51,7 @@ public interface SummonConfig {
 
         options.addOption(OUTPUT_DIRECTORY, true, "Path to where the data of the report will be written to.");
         options.addOption(ACTIONABILITY_DATABASE_TSV, true, "Path to where the data oof the actionability database can be found.");
+        options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version to use (either '37' or '38')");
 
         options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which a conclusion will be generated.");
         options.addOption(REF_SAMPLE_ID, true, "The reference ID for which is used for this sample.");
@@ -81,6 +86,9 @@ public interface SummonConfig {
 
     @NotNull
     String actionabilityDatabaseTsv();
+
+    @NotNull
+    RefGenomeVersion refGenomeVersion();
 
     @NotNull
     String tumorSampleId();
@@ -142,6 +150,7 @@ public interface SummonConfig {
         return ImmutableSummonConfig.builder()
                 .outputDir(nonOptionalDir(cmd, OUTPUT_DIRECTORY))
                 .actionabilityDatabaseTsv(nonOptionalFile(cmd, ACTIONABILITY_DATABASE_TSV))
+                .refGenomeVersion(RefGenomeVersion.from(nonOptionalValue(cmd, RefGenomeVersion.REF_GENOME_VERSION)))
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
                 .refSampleId(cmd.hasOption(REF_SAMPLE_ID) ? nonOptionalValue(cmd, REF_SAMPLE_ID) : null)
                 .purplePurityTsv(nonOptionalFile(cmd, PURPLE_PURITY_TSV))

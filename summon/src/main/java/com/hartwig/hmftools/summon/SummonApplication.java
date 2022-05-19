@@ -52,7 +52,10 @@ public class SummonApplication {
     public void run() throws IOException {
         LOGGER.info("Running SUMMON algo on sample {})", config.tumorSampleId());
 
-        SummonAlgo algo = SummonAlgo.build(config.actionabilityDatabaseTsv(), config.driverGene37Tsv(), config.driverGene38Tsv());
+        SummonAlgo algo = SummonAlgo.build(config.actionabilityDatabaseTsv(),
+                config.driverGene37Tsv(),
+                config.driverGene38Tsv(),
+                config.refGenomeVersion());
         SummonData summonData = algo.run(config);
 
         ActionabilityConclusion actionabilityConclusion = ConclusionAlgo.generateConclusion(summonData);
