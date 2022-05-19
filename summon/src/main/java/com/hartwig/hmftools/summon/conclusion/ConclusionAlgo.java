@@ -308,7 +308,7 @@ public class ConclusionAlgo {
 
     public static void genertatePurityConclusion(@NotNull Set<String> conclusion, double purity,
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
-        if (purity < 20) {
+        if (purity < 0.195) {
             ActionabilityKey keyPurity = ImmutableActionabilityKey.builder().gene("purity").type(Type.PURITY).build();
 
             ActionabilityEntry entry = actionabilityMap.get(keyPurity);
