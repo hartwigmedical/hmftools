@@ -8,14 +8,10 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.FileReaderUtils;
-import com.hartwig.hmftools.summon.SummonApplication;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class ActionabilityFileReader {
-    private static final Logger LOGGER = LogManager.getLogger(ActionabilityFileReader.class);
 
     private static final String MAIN_FIELD_DELIMITER = "\t";
 

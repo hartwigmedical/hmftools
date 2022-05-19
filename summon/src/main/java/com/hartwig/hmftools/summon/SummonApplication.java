@@ -1,11 +1,7 @@
 package com.hartwig.hmftools.summon;
 
 import java.io.IOException;
-import java.util.List;
 
-import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
-import com.hartwig.hmftools.summon.actionability.ActionabilityEntry;
-import com.hartwig.hmftools.summon.actionability.ActionabilityFileReader;
 import com.hartwig.hmftools.summon.conclusion.ActionabilityConclusion;
 import com.hartwig.hmftools.summon.conclusion.ConclusionAlgo;
 import com.hartwig.hmftools.summon.conclusion.SummonConclusionFile;

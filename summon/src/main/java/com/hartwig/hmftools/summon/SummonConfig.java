@@ -21,11 +21,8 @@ public interface SummonConfig {
 
     String OUTPUT_DIRECTORY = "output_dir";
     String ACTIONABILITY_DATABASE_TSV = "actionability_database_tsv";
-
-
     String TUMOR_SAMPLE_ID = "tumor_sample_id";
     String REF_SAMPLE_ID = "ref_sample_id";
-
     String PURPLE_PURITY_TSV = "purple_purity_tsv";
     String PURPLE_QC_FILE = "purple_qc_file";
     String PURPLE_SOMATIC_DRIVER_CATALOG_TSV = "purple_somatic_driver_catalog_tsv";
@@ -41,7 +38,6 @@ public interface SummonConfig {
     String DRIVER_GENE_37_TSV = "driver_gene_37_tsv";
     String DRIVER_GENE_38_TSV = "driver_gene_38_tsv";
     String MOLECULAR_TISSUE_ORIGIN_TXT = "molecular_tissue_origin_txt";
-
     // Some additional optional params and flags
     String LOG_DEBUG = "log_debug";
 

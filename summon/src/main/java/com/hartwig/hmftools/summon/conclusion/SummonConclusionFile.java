@@ -4,10 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.protect.ProtectEvidence;
 
 import org.jetbrains.annotations.NotNull;
 
