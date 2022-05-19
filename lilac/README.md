@@ -75,6 +75,7 @@ min_high_qual_evidence_factor | 0.000375 | Minimum relative required high base-q
 min_fragments_per_allele | 7 | See documentation for details 
 min_fragments_to_remove_single | 40 | See documentation for details 
 top_score_threshold | 5 | Maximum difference in candidate solution score vs top score as a percentage of total fragments 
+write_all_files | false | Produce more detailed output about candidates and fragment counts per allele and loci
 log_debug | Off (logs at INFO) | Logs in verbose mode 
 debug_phasing | Off | Logs phasing evidence construction 
 expected_alleles | Not applied | List of alleles separated by ';'. These alleles will have their coverage and ranking reported even if not in the winning solution
