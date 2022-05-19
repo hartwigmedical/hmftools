@@ -329,7 +329,7 @@ public class ConclusionAlgo {
             ActionabilityKey keyTMB = ImmutableActionabilityKey.builder().gene("High-TMB").type(Type.POSITIVE).build();
             ActionabilityEntry entry = actionabilityMap.get(keyTMB);
             if (entry != null) {
-                conclusion.put(conclusion.size(), "- " + "TMB " + entry.conclusion());
+                conclusion.put(conclusion.size(), "- " + "TMB( " + tumorMutationalBurden + ")" + entry.conclusion());
             }
         }
     }
