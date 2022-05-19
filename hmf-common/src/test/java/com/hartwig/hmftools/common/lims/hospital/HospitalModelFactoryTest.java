@@ -69,60 +69,6 @@ public class HospitalModelFactoryTest {
     }
 
     @Test
-    public void canReadHospitalContactACTIN() throws IOException {
-        Map<String, HospitalPersons> hospitalContactACTIN =
-                HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_actin.tsv", 2, "ACTIN");
-        assertEquals(1, hospitalContactACTIN.size());
-
-        HospitalPersons actin2 = hospitalContactACTIN.get("02");
-        assertEquals("Someone", actin2.hospitalPI());
-        assertNull(actin2.requesterName());
-        assertNull(actin2.requesterEmail());
-    }
-
-    @Test
-    public void canReadHospitalContactGLOW() throws IOException {
-        Map<String, HospitalPersons> hospitalContactGLOW =
-                HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_glow.tsv", 2, "GLOW");
-        assertEquals(1, hospitalContactGLOW.size());
-
-        HospitalPersons glow1 = hospitalContactGLOW.get("02");
-        assertEquals("Someone", glow1.hospitalPI());
-    }
-
-    @Test
-    public void canReadHospitalContactOPTIC() throws IOException {
-        Map<String, HospitalPersons> hospitalContactOPTIC =
-                HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_optic.tsv", 2, "OPTIC");
-        assertEquals(1, hospitalContactOPTIC.size());
-
-        HospitalPersons optic1 = hospitalContactOPTIC.get("02");
-        assertEquals("Someone", optic1.hospitalPI());
-    }
-
-    @Test
-    public void canReadHospitalContactSHERPA() throws IOException {
-        Map<String, HospitalPersons> hospitalContactSHERPA =
-                HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_sherpa.tsv", 2, "SHERPA");
-        assertEquals(1, hospitalContactSHERPA.size());
-
-        HospitalPersons sherpa = hospitalContactSHERPA.get("02");
-        assertEquals("Someone", sherpa.hospitalPI());
-    }
-
-    @Test
-    public void canReadHospitalContactGENAYA() throws IOException {
-        Map<String, HospitalPersons> hospitalContactGENAYA =
-                HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_genaya.tsv", 4, "GENAYA");
-        assertEquals(1, hospitalContactGENAYA.size());
-
-        HospitalPersons genaya = hospitalContactGENAYA.get("01");
-        assertEquals("Someone1", genaya.hospitalPI());
-        assertEquals("Someone1", genaya.requesterName());
-        assertEquals("my@email.com", genaya.requesterEmail());
-    }
-
-    @Test
     public void canReadHospitalContactWIDE() throws IOException {
         Map<String, HospitalPersons> hospitalContactWIDE =
                 HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_wide.tsv", 4, "WIDE");
@@ -150,6 +96,90 @@ public class HospitalModelFactoryTest {
         assertEquals("Someone1", coredb01.requesterName());
         assertEquals("my@email.com", coredb01.requesterEmail());
     }
+
+    @Test
+    public void canReadHospitalContactACTIN() throws IOException {
+        Map<String, HospitalPersons> hospitalContactACTIN =
+                HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_actin.tsv", 2, "ACTIN");
+        assertEquals(1, hospitalContactACTIN.size());
+
+        HospitalPersons actin2 = hospitalContactACTIN.get("02");
+        assertEquals("Someone", actin2.hospitalPI());
+        assertNull(actin2.requesterName());
+        assertNull(actin2.requesterEmail());
+    }
+
+    @Test
+    public void canReadHospitalContactGLOW() throws IOException {
+        Map<String, HospitalPersons> hospitalContactGLOW =
+                HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_glow.tsv", 2, "GLOW");
+        assertEquals(1, hospitalContactGLOW.size());
+
+        HospitalPersons glow1 = hospitalContactGLOW.get("02");
+        assertEquals("Someone", glow1.hospitalPI());
+        assertNull(glow1.requesterName());
+        assertNull(glow1.requesterEmail());
+    }
+
+    @Test
+    public void canReadHospitalContactOPTIC() throws IOException {
+        Map<String, HospitalPersons> hospitalContactOPTIC =
+                HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_optic.tsv", 2, "OPTIC");
+        assertEquals(1, hospitalContactOPTIC.size());
+
+        HospitalPersons optic1 = hospitalContactOPTIC.get("02");
+        assertEquals("Someone", optic1.hospitalPI());
+        assertNull(optic1.requesterName());
+        assertNull(optic1.requesterEmail());
+    }
+
+    @Test
+    public void canReadHospitalContactSHERPA() throws IOException {
+        Map<String, HospitalPersons> hospitalContactSHERPA =
+                HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_sherpa.tsv", 2, "SHERPA");
+        assertEquals(1, hospitalContactSHERPA.size());
+
+        HospitalPersons sherpa = hospitalContactSHERPA.get("02");
+        assertEquals("Someone", sherpa.hospitalPI());
+        assertNull(sherpa.requesterName());
+        assertNull(sherpa.requesterEmail());
+    }
+
+    @Test
+    public void canReadHospitalContactGENAYA() throws IOException {
+        Map<String, HospitalPersons> hospitalContactGENAYA =
+                HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_genaya.tsv", 4, "GENAYA");
+        assertEquals(1, hospitalContactGENAYA.size());
+
+        HospitalPersons genaya = hospitalContactGENAYA.get("01");
+        assertEquals("Someone1", genaya.requesterName());
+        assertEquals("my@email.com", genaya.requesterEmail());
+    }
+
+    @Test
+    public void canReadHospitalContactOMIC() throws IOException {
+        Map<String, HospitalPersons> hospitalContactOMIC =
+                HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_omic.tsv", 2, "OMIC");
+        assertEquals(1, hospitalContactOMIC.size());
+
+        HospitalPersons omic = hospitalContactOMIC.get("01");
+        assertEquals("Someone", omic.hospitalPI());
+        assertNull(omic.requesterName());
+        assertNull(omic.requesterEmail());
+    }
+
+    @Test
+    public void canReadHospitalContactTARGTO() throws IOException {
+        Map<String, HospitalPersons> hospitalContactTARGTO =
+                HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_targto.tsv", 4, "TARGTO");
+        assertEquals(1, hospitalContactTARGTO.size());
+
+        HospitalPersons targto = hospitalContactTARGTO.get("01");
+        assertEquals("Someone1", targto.requesterName());
+        assertEquals("my@email.com", targto.requesterEmail());
+    }
+
+
 
     @Test
     public void canReadSampleToHospitalMapping() throws IOException {

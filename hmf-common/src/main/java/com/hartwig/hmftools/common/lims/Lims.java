@@ -254,7 +254,7 @@ public class Lims {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         if (sampleData != null) {
             if (sampleData.labProcedures().equals(NOT_AVAILABLE_STRING)) {
-                LOGGER.info("The lab procedure is '{}'", sampleData.labProcedures());
+                LOGGER.warn("The lab procedure is '{}'", sampleData.labProcedures());
             }
             return sampleData.labProcedures();
         }

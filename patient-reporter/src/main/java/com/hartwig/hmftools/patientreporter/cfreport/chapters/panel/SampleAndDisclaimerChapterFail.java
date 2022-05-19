@@ -53,7 +53,7 @@ public class SampleAndDisclaimerChapterFail implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell().add(createDisclaimerColumn()));
         reportDocument.add(table);
 
-        reportDocument.add(ReportSignature.createSignatureDiv(report.logoRVAPath(), report.signaturePath(), true));
+        reportDocument.add(ReportSignature.createSignatureDivPanel(report.signaturePath()));
         reportDocument.add(ReportSignature.createEndOfReportIndication());
     }
 
@@ -76,6 +76,7 @@ public class SampleAndDisclaimerChapterFail implements ReportChapter {
                 DataUtil.formatDate(sampleReport.tumorArrivalDate()),
                 " with internal tumor barcode ",
                 sampleReport.tumorSampleBarcode()));
+        div.add(createContentParagraph("The results stated in this report are based on the tested tumor sample."));
         div.add(createContentParagraph("This experiment is performed according to lab procedures: ", sampleReport.labProcedures()));
         String whoVerified = "This report was generated " + report.user();
 
@@ -105,11 +106,6 @@ public class SampleAndDisclaimerChapterFail implements ReportChapter {
                 " based on ",
                 report.qsFormNumber() + "."));
         div.add(createContentParagraph("No check is performed to verify the ‘primary tumor location’ and ‘primary tumor type’ information."));
-        div.add(createContentParagraph("The results of this report and result file is based solely on the results of the DNA sequencing of "
-                + "the received tumor material"));
-        div.add(createContentParagraph("Any clinical Interpretation of the result file is the responsibility of the hospital."));
-        div.add(createContentParagraph("Based on a tumor purity of at least 5%, the test has a sensitivity of >95% for detection of "
-                + "somatic variants and >95% for detection of translocations and gene copy number changes."));
         div.add(createContentParagraph("For feedback or complaints please contact ", ReportResources.CONTACT_EMAIL_QA + "."));
         div.add(createContentParagraph("For questions about the contents of this report, please contact ",
                 ReportResources.CONTACT_EMAIL_GENERAL + "."));

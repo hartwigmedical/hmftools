@@ -28,13 +28,13 @@ public class QCFailChapter implements ReportChapter {
     @NotNull
     @Override
     public String name() {
-        return failReport.isCorrectedReport() ? TITLE_REPORT + " (Corrected)" : TITLE_REPORT;
+        return Strings.EMPTY;
     }
 
     @NotNull
     @Override
     public String pdfTitle() {
-        return Strings.EMPTY;
+        return failReport.isCorrectedReport() ? TITLE_REPORT + " (Corrected)" : TITLE_REPORT;
     }
 
     @Override

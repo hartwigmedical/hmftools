@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.algo;
 
 import com.hartwig.hmftools.patientreporter.ReportData;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
+import com.hartwig.hmftools.patientreporter.remarks.SpecialRemarkModel;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
 
 import org.immutables.value.Value;
@@ -19,4 +20,6 @@ public abstract class AnalysedReportData implements ReportData {
     @NotNull
     public abstract SummaryModel summaryModel();
 
+    @NotNull
+    public abstract SpecialRemarkModel specialRemarkModel();
 }

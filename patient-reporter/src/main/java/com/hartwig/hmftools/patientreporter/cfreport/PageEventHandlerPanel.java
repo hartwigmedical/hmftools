@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport;
 
-import com.hartwig.hmftools.patientreporter.PatientReport;
+import com.hartwig.hmftools.patientreporter.PanelReport;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Footer;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Header;
 import com.hartwig.hmftools.patientreporter.cfreport.components.SidePanel;
@@ -14,10 +14,10 @@ import com.itextpdf.kernel.pdf.navigation.PdfExplicitRemoteGoToDestination;
 
 import org.jetbrains.annotations.NotNull;
 
-class PageEventHandler implements IEventHandler {
+class PageEventHandlerPanel implements IEventHandler {
 
     @NotNull
-    private final PatientReport patientReport;
+    private final PanelReport patientReport;
 
     @NotNull
     private final Footer footer;
@@ -33,7 +33,7 @@ class PageEventHandler implements IEventHandler {
 
     private PdfOutline outline = null;
 
-    PageEventHandler(@NotNull final PatientReport patientReport) {
+    PageEventHandlerPanel(@NotNull final PanelReport patientReport) {
         this.patientReport = patientReport;
 
         this.header = new Header(patientReport.logoCompanyPath());
@@ -53,7 +53,7 @@ class PageEventHandler implements IEventHandler {
                 createChapterBookmark(documentEvent.getDocument(), chapterTitle);
             }
 
-            SidePanel.renderSidePatientReport(page, patientReport, fullSidebar, fullSidebarContent);
+            SidePanel.renderSidePanelPanelReport(page, patientReport, fullSidebar, fullSidebarContent);
             footer.renderFooter(page, !fullSidebar);
         }
     }

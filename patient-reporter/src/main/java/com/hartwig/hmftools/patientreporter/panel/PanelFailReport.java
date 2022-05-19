@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.panel;
 
 import java.util.Optional;
 
+import com.hartwig.hmftools.patientreporter.PanelReport;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 
@@ -12,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class PanelFailReport implements PatientReport {
+public abstract class PanelFailReport implements PanelReport {
 
     @Override
     @NotNull
@@ -38,10 +39,6 @@ public abstract class PanelFailReport implements PatientReport {
     @Override
     @NotNull
     public abstract String signaturePath();
-
-    @Override
-    @NotNull
-    public abstract String logoRVAPath();
 
     @Override
     @NotNull

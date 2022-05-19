@@ -44,6 +44,11 @@ public abstract class HospitalModel {
     @NotNull
     abstract Map<String, HospitalPersons> hospitalPersonsGENAYA();
 
+    @NotNull
+    abstract Map<String, HospitalPersons> hospitalPersonsOMIC();
+
+    @NotNull
+    abstract Map<String, HospitalPersons> hospitalPersonsTARGTO();
 
     @NotNull
     abstract Map<String, String> sampleToHospitalMapping();
@@ -68,12 +73,13 @@ public abstract class HospitalModel {
 
         String requesterName = null;
         String requesterEmail = null;
-        if (cohort.requireHospitalPersonsRequester()) {
-            requesterName = coreRequesterName;
-            requesterEmail = coreRequesterEmail;
-        } else if (persons != null) {
+
+        if (persons != null) {
             requesterName = persons.requesterName();
             requesterEmail = persons.requesterEmail();
+        } else if (cohort.requireHospitalPersonsRequester()) {
+            requesterName = coreRequesterName;
+            requesterEmail = coreRequesterEmail;
         }
 
         return ImmutableHospitalContactData.builder()
@@ -115,6 +121,10 @@ public abstract class HospitalModel {
                 return hospitalPersonsSHERPA().get(hospitalId);
             case "GENAYA":
                 return hospitalPersonsGENAYA().get(hospitalId);
+            case "OMIC":
+                return hospitalPersonsOMIC().get(hospitalId);
+            case "TARGTO":
+                return hospitalPersonsTARGTO().get(hospitalId);
             default:
                 return null;
         }

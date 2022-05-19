@@ -383,20 +383,16 @@ public class CFReportWriterTest {
                 .sampleReport(sampleReport)
                 .qsFormNumber("form")
                 .VCFFilename("test.vcf")
-                .sampleGbase("100 GB")
-                .sampleQ30Value("90")
                 .isCorrectedReport(false)
                 .isCorrectedReportExtern(false)
                 .signaturePath(testReportData.signaturePath())
-                .logoRVAPath(testReportData.logoRVAPath())
                 .logoCompanyPath(testReportData.logoCompanyPath())
-                .udiDi("")
                 .reportDate(DataUtil.formatDate(LocalDate.now()))
                 .isWGSreport(false)
                 .comments("This is a test report")
                 .build();
 
-        String filename = testReportFilePath(patientReport);
+        String filename = testReportFilePathPanel(patientReport);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writePanelAnalysedReport(patientReport, filename);
@@ -415,15 +411,13 @@ public class CFReportWriterTest {
                 .isCorrectedReport(false)
                 .isCorrectedReportExtern(false)
                 .signaturePath(testReportData.signaturePath())
-                .logoRVAPath(testReportData.logoRVAPath())
                 .logoCompanyPath(testReportData.logoCompanyPath())
-                .udiDi("")
                 .reportDate(DataUtil.formatDate(LocalDate.now()))
                 .isWGSreport(false)
                 .comments("This is a test report")
                 .build();
 
-        String filename = testReportFilePath(patientReport);
+        String filename = testReportFilePathPanel(patientReport);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writePanelQCFailReport(patientReport, filename);
@@ -558,6 +552,17 @@ public class CFReportWriterTest {
     @NotNull
     private static String testReportFilePath(@NotNull PatientReport patientReport) {
         String fileName = OutputFileUtil.generateOutputFileNameForPdfReport(patientReport);
+        String newFileName = fileName;
+        if (TIMESTAMP_FILES) {
+            int extensionStart = fileName.lastIndexOf('.');
+            newFileName = fileName.substring(0, extensionStart) + "_" + System.currentTimeMillis() + fileName.substring(extensionStart);
+        }
+        return REPORT_BASE_DIR + File.separator + newFileName;
+    }
+
+    @NotNull
+    private static String testReportFilePathPanel(@NotNull com.hartwig.hmftools.patientreporter.PanelReport patientReport) {
+        String fileName = OutputFileUtil.generateOutputFileNameForPdfPanelResultReport(patientReport);
         String newFileName = fileName;
         if (TIMESTAMP_FILES) {
             int extensionStart = fileName.lastIndexOf('.');

@@ -50,14 +50,6 @@ public interface PatientReporterConfig {
     String QC_FAIL = "qc_fail";
     String QC_FAIL_REASON = "qc_fail_reason";
 
-    // Params specific for Panel reports
-    String PANEL = "panel";
-    String PANEL_QC_FAIL = "panel_qc_fail";
-    String PANEL_QC_FAIL_REASON = "panel_qc_fail_reason";
-    String PANEL_VCF_NAME = "panel_vcf_name";
-    String PANEL_GBASE = "gbase";
-    String PANEL_Q30 = "q30";
-
     // Params specific for actual patient reports
     String PURPLE_PURITY_TSV = "purple_purity_tsv"; // Also used for certain QC fail reports in case deep WGS is available.
     String PURPLE_QC_FILE = "purple_qc_file"; // Also used for certain QC fail reports in case deep WGS is available.
@@ -80,6 +72,7 @@ public interface PatientReporterConfig {
     // Resources used for generating an analysed patient report
     String GERMLINE_REPORTING_TSV = "germline_reporting_tsv";
     String SAMPLE_SUMMARY_TSV = "sample_summary_tsv";
+    String SAMPLE_SPECIAL_REMARK_TSV = "sample_special_remark_tsv";
 
     // Some additional optional params and flags
     String COMMENTS = "comments";
@@ -119,13 +112,6 @@ public interface PatientReporterConfig {
         options.addOption(QC_FAIL, false, "If set, generates a qc-fail report.");
         options.addOption(QC_FAIL_REASON, true, "One of: " + Strings.join(Lists.newArrayList(QCFailReason.validIdentifiers()), ','));
 
-        options.addOption(PANEL, false, "If set, generates a panel report.");
-        options.addOption(PANEL_QC_FAIL, false, "If set, generates a qc-fail report.");
-        options.addOption(PANEL_QC_FAIL_REASON, true, "One of: " + Strings.join(Lists.newArrayList(QCFailReason.validIdentifiers()), ','));
-        options.addOption(PANEL_VCF_NAME, true, "The name of the VCF file of the panel results.");
-        options.addOption(PANEL_GBASE, true, "The total Gbase of the panel sample.");
-        options.addOption(PANEL_Q30, true, "The total q30 of the panel sample.");
-
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
         options.addOption(PURPLE_SOMATIC_DRIVER_CATALOG_TSV, true, "Path towards the purple somatic driver catalog TSV.");
@@ -146,6 +132,7 @@ public interface PatientReporterConfig {
 
         options.addOption(GERMLINE_REPORTING_TSV, true, "Path towards a TSV containing germline reporting config.");
         options.addOption(SAMPLE_SUMMARY_TSV, true, "Path towards a TSV containing the (clinical) summaries of the samples.");
+        options.addOption(SAMPLE_SPECIAL_REMARK_TSV, true, "Path towards a TSV containing the special remarks of the samples.");
 
         options.addOption(COMMENTS, true, "Additional comments to be added to the report (optional).");
         options.addOption(CORRECTED_REPORT, false, "If provided, generate a corrected report with corrected name");
@@ -208,22 +195,6 @@ public interface PatientReporterConfig {
     @Nullable
     QCFailReason qcFailReason();
 
-    boolean panel();
-
-    boolean panelQcFail();
-
-    @NotNull
-    String panelVCFname();
-
-    @NotNull
-    String panelGbase();
-
-    @NotNull
-    String panelQ30();
-
-    @Nullable
-    PanelFailReason panelQcFailReason();
-
     @NotNull
     String purplePurityTsv();
 
@@ -281,6 +252,9 @@ public interface PatientReporterConfig {
     @NotNull
     String sampleSummaryTsv();
 
+    @NotNull
+    String sampleSpecialRemarkTsv();
+
     @Nullable
     String comments();
 
@@ -321,32 +295,7 @@ public interface PatientReporterConfig {
             }
         }
 
-        String panelVCFFile = Strings.EMPTY;
-        String panelGbase = Strings.EMPTY;
-        String panelQ30 = Strings.EMPTY;
         String pipelineVersion = null;
-
-        boolean isPanel = cmd.hasOption(PANEL);
-        boolean isPanelQCFail = cmd.hasOption(PANEL_QC_FAIL);
-        PanelFailReason panelQcFailReason = null;
-        if (isPanel) {
-            if (isPanelQCFail) {
-                String qcFailReasonString = nonOptionalValue(cmd, PANEL_QC_FAIL_REASON);
-                panelQcFailReason = PanelFailReason.fromIdentifier(qcFailReasonString);
-                if (panelQcFailReason == null) {
-                    throw new ParseException("Did not recognize QC Fail reason: " + qcFailReasonString);
-                }
-            }
-            if (requirePipelineVersion) {
-                pipelineVersion = nonOptionalFile(cmd, PIPELINE_VERSION_FILE);
-            }
-
-            panelVCFFile= nonOptionalValue(cmd, PANEL_VCF_NAME);
-            panelGbase = nonOptionalValue(cmd, PANEL_GBASE);
-            panelQ30 = nonOptionalValue(cmd, PANEL_Q30);
-        }
-
-
         String purplePurityTsv = Strings.EMPTY;
         String purpleQcFile = Strings.EMPTY;
         String purpleSomaticDriverCatalogTsv = Strings.EMPTY;
@@ -368,6 +317,7 @@ public interface PatientReporterConfig {
 
         String germlineReportingTsv = Strings.EMPTY;
         String sampleSummaryTsv = Strings.EMPTY;
+        String sampleSpecialRemarkTsv = Strings.EMPTY;
 
         if (isQCFail && qcFailReason.isDeepWGSDataAvailable()) {
             if (requirePipelineVersion) {
@@ -402,6 +352,7 @@ public interface PatientReporterConfig {
 
             germlineReportingTsv = nonOptionalFile(cmd, GERMLINE_REPORTING_TSV);
             sampleSummaryTsv = nonOptionalFile(cmd, SAMPLE_SUMMARY_TSV);
+            sampleSpecialRemarkTsv = nonOptionalFile(cmd, SAMPLE_SPECIAL_REMARK_TSV);
         }
 
         return ImmutablePatientReporterConfig.builder()
@@ -419,12 +370,6 @@ public interface PatientReporterConfig {
                 .udiDi(nonOptionalValue(cmd, UDI_DI))
                 .qcFail(isQCFail)
                 .qcFailReason(qcFailReason)
-                .panel(isPanel)
-                .panelQcFail(isPanelQCFail)
-                .panelQcFailReason(panelQcFailReason)
-                .panelVCFname(panelVCFFile)
-                .panelGbase(panelGbase)
-                .panelQ30(panelQ30)
                 .purplePurityTsv(purplePurityTsv)
                 .purpleQcFile(purpleQcFile)
                 .purpleSomaticDriverCatalogTsv(purpleSomaticDriverCatalogTsv)
@@ -445,6 +390,7 @@ public interface PatientReporterConfig {
                 .protectEvidenceTsv(protectEvidenceTsv)
                 .germlineReportingTsv(germlineReportingTsv)
                 .sampleSummaryTsv(sampleSummaryTsv)
+                .sampleSpecialRemarkTsv(sampleSpecialRemarkTsv)
                 .comments(cmd.getOptionValue(COMMENTS))
                 .isCorrectedReport(cmd.hasOption(CORRECTED_REPORT))
                 .isCorrectedReportExtern(cmd.hasOption(CORRECTED_REPORT_EXTERN))

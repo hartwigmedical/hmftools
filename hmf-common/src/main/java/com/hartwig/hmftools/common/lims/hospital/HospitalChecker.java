@@ -28,6 +28,8 @@ public final class HospitalChecker {
         Set<String> keyOPTIC = hospitalModel.hospitalPersonsOPTIC().keySet();
         Set<String> keySHERPA = hospitalModel.hospitalPersonsSHERPA().keySet();
         Set<String> keyGENAYA = hospitalModel.hospitalPersonsGENAYA().keySet();
+        Set<String> keyOMIC = hospitalModel.hospitalPersonsOMIC().keySet();
+        Set<String> keyTARGTO = hospitalModel.hospitalPersonsTARGTO().keySet();
         Set<String> keySampleMapping = Sets.newHashSet(hospitalModel.sampleToHospitalMapping().values());
 
         boolean allCorrect = true;
@@ -91,6 +93,21 @@ public final class HospitalChecker {
             if (!hospitalIdsInAddressList.contains(GENAYA)) {
                 allCorrect = false;
                 LOGGER.warn("GENAYA hospital ID is not present in hospital address list: '{}'", GENAYA);
+            }
+        }
+
+        for (String OMIC : keyOMIC) {
+            if (!hospitalIdsInAddressList.contains(OMIC)) {
+                allCorrect = false;
+                LOGGER.warn("OMIC hospital ID is not present in hospital address list: '{}'", OMIC);
+            }
+        }
+
+
+        for (String TARGTO : keyTARGTO) {
+            if (!hospitalIdsInAddressList.contains(TARGTO)) {
+                allCorrect = false;
+                LOGGER.warn("TARGTO hospital ID is not present in hospital address list: '{}'", TARGTO);
             }
         }
 

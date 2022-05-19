@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.patientreporter.actionability;
 
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectSource;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
@@ -18,10 +21,16 @@ public final class ReportableEvidenceItemFactory {
     public static List<ProtectEvidence> extractNonTrialsOnLabel(@NotNull List<ProtectEvidence> evidenceItems) {
         List<ProtectEvidence> nonTrials = Lists.newArrayList();
         for (ProtectEvidence evidence: evidenceItems) {
-            for (ProtectSource source: evidence.sources()) {
-                if (source.name() != Knowledgebase.ICLUSION && evidence.onLabel()){
-                    nonTrials.add(evidence);
+            Set<ProtectSource> protectSources = Sets.newHashSet();
+
+            for (ProtectSource source: evidence.protectSources()) {
+                if (source.source() != Knowledgebase.ICLUSION && evidence.onLabel()){
+                    protectSources.add(source);
                 }
+            }
+
+            if (protectSources.size() >= 1) {
+                nonTrials.add(ImmutableProtectEvidence.builder().from(evidence).protectSources(protectSources).build());
             }
         }
         return nonTrials;
@@ -31,10 +40,15 @@ public final class ReportableEvidenceItemFactory {
     public static List<ProtectEvidence> extractNonTrialsOffLabel(@NotNull List<ProtectEvidence> evidenceItems) {
         List<ProtectEvidence> nonTrials = Lists.newArrayList();
         for (ProtectEvidence evidence: evidenceItems) {
-            for (ProtectSource source: evidence.sources()) {
-                if (source.name() != Knowledgebase.ICLUSION && !evidence.onLabel()){
-                    nonTrials.add(evidence);
+            Set<ProtectSource> protectSources = Sets.newHashSet();
+            for (ProtectSource source: evidence.protectSources()) {
+                if (source.source() != Knowledgebase.ICLUSION && !evidence.onLabel()){
+                    protectSources.add(source);
+
                 }
+            }
+            if (protectSources.size() >= 1) {
+                nonTrials.add(ImmutableProtectEvidence.builder().from(evidence).protectSources(protectSources).build());
             }
         }
         return nonTrials;

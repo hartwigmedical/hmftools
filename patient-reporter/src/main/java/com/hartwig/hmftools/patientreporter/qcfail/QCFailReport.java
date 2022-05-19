@@ -5,7 +5,6 @@ import java.util.Optional;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.peach.PeachGenotype;
-import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
