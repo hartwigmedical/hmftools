@@ -6,6 +6,9 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordDataLoader;
+import com.hartwig.hmftools.common.cuppa.ImmutableMolecularTissueOrigin;
+import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
+import com.hartwig.hmftools.common.cuppa.MolecularTissueOriginFile;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.linx.LinxData;
@@ -21,6 +24,7 @@ import com.hartwig.hmftools.summon.actionability.ActionabilityFileReader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class SummonAlgo {
@@ -61,6 +65,7 @@ public class SummonAlgo {
                 .linx(loadLinxData(config))
                 .virusInterpreter(loadVirusInterpreterData(config))
                 .chord(loadChordAnalysis(config))
+                .molecularTissueOrigin(loadCuppaData(config))
                 .actionabilityEntries(actionabilityEntry)
                 .driverGenes(driverGenes)
                 .build();
@@ -77,6 +82,15 @@ public class SummonAlgo {
                 config.purpleGermlineDriverCatalogTsv(),
                 config.purpleGermlineVariantVcf(),
                 config.purpleSomaticCopyNumberTsv());
+    }
+
+    @NotNull
+    private static MolecularTissueOrigin loadCuppaData(@NotNull SummonConfig config) throws IOException {
+
+        return ImmutableMolecularTissueOrigin.builder()
+                .conclusion(MolecularTissueOriginFile.read(config.molecularTissueOriginTxt()).conclusion())
+                .plotPath(Strings.EMPTY) //Plot isn't used in this tool
+                .build();
     }
 
     @NotNull

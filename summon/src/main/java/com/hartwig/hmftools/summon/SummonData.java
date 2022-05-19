@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
@@ -35,6 +36,9 @@ public abstract class SummonData {
 
     @NotNull
     public abstract ChordAnalysis chord();
+
+    @NotNull
+    public abstract MolecularTissueOrigin molecularTissueOrigin();
 
     @NotNull
     public abstract List<ActionabilityEntry> actionabilityEntries();

@@ -36,6 +36,7 @@ public interface SummonConfig {
     String ANNOTATED_VIRUS_TSV = "annotated_virus_tsv";
     String DRIVER_GENE_37_TSV = "driver_gene_37_tsv";
     String DRIVER_GENE_38_TSV = "driver_gene_38_tsv";
+    String MOLECULAR_TISSUE_ORIGIN_TXT = "molecular_tissue_origin_txt";
 
     // Some additional optional params and flags
     String LOG_DEBUG = "log_debug";
@@ -65,6 +66,8 @@ public interface SummonConfig {
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
 
         options.addOption(ANNOTATED_VIRUS_TSV, true, "Path towards the annotated virus TSV.");
+
+        options.addOption(MOLECULAR_TISSUE_ORIGIN_TXT, true, "Path towards the molecular tissue origin TXT.");
 
         options.addOption(DRIVER_GENE_37_TSV, true, "Path to driver gene v37 TSV");
         options.addOption(DRIVER_GENE_38_TSV, true, "Path to driver gene v38 TSV");
@@ -122,6 +125,9 @@ public interface SummonConfig {
     String annotatedVirusTsv();
 
     @NotNull
+    String molecularTissueOriginTxt();
+
+    @NotNull
     String driverGene37Tsv();
 
     @NotNull
@@ -150,6 +156,7 @@ public interface SummonConfig {
                 .linxDriverCatalogTsv(nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV))
                 .chordPredictionTxt(nonOptionalFile(cmd, CHORD_PREDICTION_TXT))
                 .annotatedVirusTsv(nonOptionalFile(cmd, ANNOTATED_VIRUS_TSV))
+                .molecularTissueOriginTxt(nonOptionalFile(cmd, MOLECULAR_TISSUE_ORIGIN_TXT))
                 .driverGene37Tsv(nonOptionalFile(cmd, DRIVER_GENE_37_TSV))
                 .driverGene38Tsv(nonOptionalFile(cmd, DRIVER_GENE_38_TSV))
                 .build();

@@ -7,6 +7,7 @@ import java.util.Set;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordStatus;
+import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
@@ -25,6 +26,7 @@ import com.hartwig.hmftools.summon.actionability.ActionabilityKey;
 import com.hartwig.hmftools.summon.actionability.ImmutableActionabilityKey;
 import com.hartwig.hmftools.summon.actionability.Type;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 import com.google.common.collect.Sets;
@@ -51,6 +53,7 @@ public class ConclusionAlgo {
         List<ReportableHomozygousDisruption> homozygousDisruptions = summonData.linx().homozygousDisruptions();
         List<AnnotatedVirus> reportableViruses = summonData.virusInterpreter().reportableViruses();
 
+        generateCUPPAConclusion(conclusion, summonData.molecularTissueOrigin(), actionabilityMap);
         generateSomaticConclusion(conclusion, reportableSomaticVariants, actionabilityMap, driverGenesMap);
         generateGermlineConclusion(conclusion, reportableGermlineVariants, actionabilityMap, driverGenesMap);
         generateCNVConclusion(conclusion, reportableGainLosses, actionabilityMap);
@@ -67,6 +70,10 @@ public class ConclusionAlgo {
                 summonData.purple().tumorMutationalLoad(),
                 actionabilityMap);
         generateTMBConclusion(conclusion, summonData.purple().tumorMutationalBurdenPerMb(), actionabilityMap);
+
+        genertatePurityConclusion(conclusion, summonData.purple().purity(), actionabilityMap);
+        generateTotalResults(conclusion, actionabilityMap);
+        generateFindings(conclusion, actionabilityMap);
 
         String conclusionString = generateConslusionString(conclusion);
 
@@ -101,6 +108,27 @@ public class ConclusionAlgo {
         return driverGeneMap;
     }
 
+    public static void generateCUPPAConclusion(@NotNull Set<String> conclusion, MolecularTissueOrigin molecularTissueOrigin,
+            @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
+
+        if (molecularTissueOrigin.conclusion().contains("results inconclusive")) {
+            ActionabilityKey keyCuppaInconclusice =
+                    ImmutableActionabilityKey.builder().gene(Strings.EMPTY).type(Type.CUPPA_INCONCLUSIVE).build();
+
+            ActionabilityEntry entry = actionabilityMap.get(keyCuppaInconclusice);
+            if (entry != null) {
+                conclusion.add("- " + entry.conclusion());
+            }
+        } else {
+            ActionabilityKey keyCuppa = ImmutableActionabilityKey.builder().gene(Strings.EMPTY).type(Type.CUPPA).build();
+
+            ActionabilityEntry entry = actionabilityMap.get(keyCuppa);
+            if (entry != null) {
+                conclusion.add("- " + entry.conclusion());
+            }
+        }
+    }
+
     public static void generateSomaticConclusion(@NotNull Set<String> conclusion,
             @NotNull List<ReportableVariant> reportableSomaticVariants, @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap,
             @NotNull Map<String, DriverGene> driverGenesMap) {
@@ -113,7 +141,8 @@ public class ConclusionAlgo {
                     .build();
             ActionabilityEntry entry = actionabilityMap.get(keySomaticVariant);
             if (entry != null) {
-                conclusion.add("- " + somaticVariant.gene() + "(" + somaticVariant.canonicalHgvsProteinImpact() + ") " + entry.conclusion());
+                conclusion.add(
+                        "- " + somaticVariant.gene() + "(" + somaticVariant.canonicalHgvsProteinImpact() + ") " + entry.conclusion());
             }
         }
     }
@@ -130,7 +159,8 @@ public class ConclusionAlgo {
                     .build();
             ActionabilityEntry entry = actionabilityMap.get(keyGermlineVariant);
             if (entry != null) {
-                conclusion.add("- " + germlineVariant.gene() + "(" + germlineVariant.canonicalHgvsProteinImpact() + ") " + entry.conclusion());
+                conclusion.add(
+                        "- " + germlineVariant.gene() + "(" + germlineVariant.canonicalHgvsProteinImpact() + ") " + entry.conclusion());
             }
         }
     }
@@ -183,7 +213,8 @@ public class ConclusionAlgo {
                 ActionabilityEntry entry = actionabilityMap.get(keyFusion);
                 if (entry != null) {
                     conclusion.add("- " + fusion.name() + " " + entry.conclusion());
-                }            }
+                }
+            }
             if (FUSION_TYPES.contains(fusion.reportedType().toString())) {
                 ActionabilityKey keyFusion = ImmutableActionabilityKey.builder().gene(fusion.geneStart()).type(Type.FUSION).build();
                 ActionabilityEntry entry = actionabilityMap.get(keyFusion);
@@ -248,7 +279,7 @@ public class ConclusionAlgo {
         if (tumorMutationalStatus == TumorMutationalStatus.HIGH) {
             ActionabilityKey keyTML = ImmutableActionabilityKey.builder().gene("High-TML").type(Type.POSITIVE).build();
             ActionabilityEntry entry = actionabilityMap.get(keyTML);
-            if (entry != null){
+            if (entry != null) {
                 conclusion.add("- " + "TML(" + tumorMutationalLoad + ") " + entry.conclusion());
             }
         }
@@ -262,6 +293,46 @@ public class ConclusionAlgo {
             if (entry != null) {
                 conclusion.add("- " + "TMB " + entry.conclusion());
             }
+        }
+    }
+
+    public static void genertatePurityConclusion(@NotNull Set<String> conclusion, double purity,
+            @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
+        if (purity < 20) {
+            ActionabilityKey keyPurity = ImmutableActionabilityKey.builder().gene(Strings.EMPTY).type(Type.PURITY).build();
+
+            ActionabilityEntry entry = actionabilityMap.get(keyPurity);
+            if (entry != null) {
+                conclusion.add("- " + entry.conclusion().replace("XX%", purity + "%"));
+            }
+        }
+    }
+
+    public static void generateTotalResults(@NotNull Set<String> conclusion,
+            @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
+        if (conclusion.size() == 0) {
+            ActionabilityKey keyOncogenic = ImmutableActionabilityKey.builder().gene(Strings.EMPTY).type(Type.ONCOGENIC).build();
+
+            ActionabilityEntry entry = actionabilityMap.get(keyOncogenic);
+            if (entry != null) {
+                conclusion.add("- " + entry.conclusion());
+            }
+        } else {
+            ActionabilityKey keyActionable = ImmutableActionabilityKey.builder().gene(Strings.EMPTY).type(Type.ACTIONABLE).build();
+            ActionabilityEntry entry = actionabilityMap.get(keyActionable);
+            if (entry != null) {
+                conclusion.add("- " + entry.conclusion());
+            }
+        }
+    }
+
+    public static void generateFindings(@NotNull Set<String> conclusion,
+            @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
+        ActionabilityKey keyOncogenic = ImmutableActionabilityKey.builder().gene(Strings.EMPTY).type(Type.FINDINGS).build();
+
+        ActionabilityEntry entry = actionabilityMap.get(keyOncogenic);
+        if (entry != null) {
+            conclusion.add("- " + entry.conclusion());
         }
     }
 }
