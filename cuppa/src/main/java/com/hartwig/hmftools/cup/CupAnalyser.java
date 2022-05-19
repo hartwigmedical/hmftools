@@ -65,7 +65,7 @@ public class CupAnalyser
             System.exit(1);
         }
 
-        if(mConfig.runClassifier(SAMPLE_TRAIT))
+        if(mConfig.runClassifier(SAMPLE_TRAIT)) // added first since other classifiers depend on ploidy & purity
             mClassifiers.add(new SampleTraitClassifier(mConfig, mSampleDataCache));
 
         if(mConfig.runClassifier(SNV))

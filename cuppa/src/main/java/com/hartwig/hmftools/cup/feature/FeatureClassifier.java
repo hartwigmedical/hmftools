@@ -3,10 +3,8 @@ package com.hartwig.hmftools.cup.feature;
 import static java.lang.Math.max;
 import static java.lang.Math.pow;
 
-import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.SUBSET_DELIM;
-import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
 import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_PAN;
 import static com.hartwig.hmftools.cup.common.CupConstants.DRIVER_ZERO_PREVALENCE_ALLOCATION;
@@ -14,18 +12,19 @@ import static com.hartwig.hmftools.cup.common.CupConstants.NON_DRIVER_ZERO_PREVA
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.ResultType.PREVALENCE;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
-import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.convertAndFilterDriverAmps;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromCohortFile;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromDatabase;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromFile;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadRefCancerFeatureAvg;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadRefPrevalenceData;
-import static com.hartwig.hmftools.cup.feature.FeaturePrevData.featureTypeName;
 import static com.hartwig.hmftools.cup.feature.FeatureType.AMP;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
 import static com.hartwig.hmftools.cup.feature.FeatureType.INDEL;
-import static com.hartwig.hmftools.cup.feature.RefFeatures.RESTRICT_DRIVER_AMP_GENES;
-import static com.hartwig.hmftools.cup.feature.RefFeatures.SPLIT_DRIVER_AMP;
+import static com.hartwig.hmftools.cup.feature.FeaturesCommon.MIN_AMP_MULTIPLE;
+import static com.hartwig.hmftools.cup.feature.FeaturesCommon.RESTRICT_DRIVER_AMP_GENES;
+import static com.hartwig.hmftools.cup.feature.FeaturesCommon.SPLIT_DRIVER_AMP;
+import static com.hartwig.hmftools.cup.feature.FeaturesCommon.convertAndFilterDriverAmps;
+import static com.hartwig.hmftools.cup.feature.FeaturesCommon.filterDriverAmps;
 
 import java.util.List;
 import java.util.Map;
@@ -90,19 +89,24 @@ public class FeatureClassifier implements CuppaClassifier
         mIsValid &= loadSampleFeatures();
 
         boolean splitAmps = cmd == null || cmd.hasOption(SPLIT_DRIVER_AMP);
+        double minAmpCnMultiple = cmd != null ? Double.parseDouble(cmd.getOptionValue(MIN_AMP_MULTIPLE, "0")) : 0;
 
         if(splitAmps)
         {
             boolean restrictAmpGenes = cmd == null || cmd.hasOption(RESTRICT_DRIVER_AMP_GENES);
             convertAndFilterDriverAmps(mSampleFeatures, restrictAmpGenes);
+
+            if(minAmpCnMultiple > 0)
+            {
+                filterDriverAmps(mSampleFeatures, mSampleDataCache.RefSampleTraitsData, minAmpCnMultiple);
+            }
         }
     }
 
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(NON_DRIVER_ZERO_PREV, true, "Non-driver zero prevalence allocation");
-        options.addOption(SPLIT_DRIVER_AMP, false, "Split driver AMPs from other driver events");
-        options.addOption(RESTRICT_DRIVER_AMP_GENES, false, "Restrict driver AMPs to specifc list of genes");
+        FeaturesCommon.addCmdLineArgs(options);
     }
 
     public CategoryType categoryType() { return FEATURE; }

@@ -18,11 +18,12 @@ public class SampleFeatureData
     public final double Likelihood;
     public final Map<String,String> ExtraInfo;
 
-    public static final String DRIVER_TYPE = "DriverType";
+    public static final String DRIVER_TYPE = "TYPE";
     public static final String DRIVER_TYPE_AMP = "AMP";
     public static final String DRIVER_TYPE_DEL = "DEL";
 
-    public static final String DRIVER_CHROMOSOME = "DriverChromosome";
+    public static final String DRIVER_CHROMOSOME = "CHR";
+    public static final String AMP_CN = "CN";
 
     public SampleFeatureData(final String sampleId, final String name, final FeatureType type, final double likelihood)
     {

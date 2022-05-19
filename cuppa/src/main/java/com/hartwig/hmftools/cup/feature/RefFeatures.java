@@ -11,16 +11,18 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_DRIVER_AVG;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_FEATURE_PREV;
 import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
-import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.convertAndFilterDriverAmps;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromCohortFile;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromDatabase;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromFile;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadRefFeatureOverrides;
 import static com.hartwig.hmftools.cup.feature.FeaturePrevData.TYPE_NAME_DELIM;
 import static com.hartwig.hmftools.cup.feature.FeaturePrevData.featureTypeName;
-import static com.hartwig.hmftools.cup.feature.FeaturePrevData.nameFromfeatureTypeName;
-import static com.hartwig.hmftools.cup.feature.FeaturePrevData.typeFromFeatureTypeName;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
+import static com.hartwig.hmftools.cup.feature.FeaturesCommon.MIN_AMP_MULTIPLE;
+import static com.hartwig.hmftools.cup.feature.FeaturesCommon.RESTRICT_DRIVER_AMP_GENES;
+import static com.hartwig.hmftools.cup.feature.FeaturesCommon.SPLIT_DRIVER_AMP;
+import static com.hartwig.hmftools.cup.feature.FeaturesCommon.convertAndFilterDriverAmps;
+import static com.hartwig.hmftools.cup.feature.FeaturesCommon.filterDriverAmps;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.parseFileSet;
 
 import java.io.BufferedWriter;
@@ -52,14 +54,7 @@ public class RefFeatures implements RefClassifier
     private final List<FeaturePrevData> mFeatureOverrides;
     private final boolean mRestrictAmpGenes;
     private final boolean mSplitDriverAmps;
-
-    public static final String SPLIT_DRIVER_AMP = "split_driver_amp";
-    public static final String RESTRICT_DRIVER_AMP_GENES = "restrict_driver_amp_genes";
-
-    public static final List<String> DRIVER_AMP_GENES = Lists.newArrayList(
-            "MYC","CCND1","ERBB2","ZNF703","FGFR1","MDM2","AR","CCNE1","ZNF217","EGFR","KRAS","CDK4","TERT","NCOA2","MET","MCL1",
-            "ZMIZ1","FOXA1","CRYBG1","GNAS","CD44","CCND2","MDM4","CDX2","CDK6","TYMS","SOX4","MECOM","VEGFA","IRS2","ADAM30","PIK3CA",
-            "GATA6","CD274","KIT","MYCL","KLF5","ARID5B","RAF1");
+    private final double mMinAmpCnMultiple;
 
     public RefFeatures(final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
@@ -68,6 +63,7 @@ public class RefFeatures implements RefClassifier
 
         mSplitDriverAmps = cmd.hasOption(SPLIT_DRIVER_AMP);
         mRestrictAmpGenes = cmd.hasOption(RESTRICT_DRIVER_AMP_GENES);
+        mMinAmpCnMultiple = Double.parseDouble(cmd.getOptionValue(MIN_AMP_MULTIPLE, "0"));
 
         mFeatureOverrides = loadRefFeatureOverrides(mConfig.FeatureOverrideFile);
     }
@@ -76,8 +72,7 @@ public class RefFeatures implements RefClassifier
 
     public static void addCmdLineArgs(@NotNull Options options)
     {
-        options.addOption(SPLIT_DRIVER_AMP, false, "Split driver AMPs from other driver events");
-        options.addOption(RESTRICT_DRIVER_AMP_GENES, false, "Restrict driver AMPs to specifc list of genes");
+        FeaturesCommon.addCmdLineArgs(options);
     }
 
     public static boolean requiresBuild(final RefDataConfig config)
@@ -103,6 +98,11 @@ public class RefFeatures implements RefClassifier
         if(mSplitDriverAmps)
         {
             convertAndFilterDriverAmps(sampleFeaturesMap, mRestrictAmpGenes);
+
+            if(mMinAmpCnMultiple > 0)
+            {
+                filterDriverAmps(sampleFeaturesMap, mSampleDataCache.RefSampleTraitsData, mMinAmpCnMultiple);
+            }
         }
 
         final Map<String,Map<String,Double>> cancerFeatureCounts = Maps.newHashMap();

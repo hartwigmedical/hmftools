@@ -10,9 +10,8 @@ import static com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus.MSS;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
-import static com.hartwig.hmftools.cup.feature.FeatureType.AMP;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
-import static com.hartwig.hmftools.cup.feature.RefFeatures.DRIVER_AMP_GENES;
+import static com.hartwig.hmftools.cup.feature.SampleFeatureData.AMP_CN;
 import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_CHROMOSOME;
 import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_TYPE;
 import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_TYPE_AMP;
@@ -481,30 +480,6 @@ public class FeatureDataLoader
         return sampleDriverMap;
     }
 
-    public static void convertAndFilterDriverAmps(final Map<String,List<SampleFeatureData>> sampleFeaturesMap, boolean restrictGenes)
-    {
-        for(Map.Entry<String,List<SampleFeatureData>> sampleEntry : sampleFeaturesMap.entrySet())
-        {
-            List<SampleFeatureData> features = sampleEntry.getValue();
-
-            for(int i = 0; i < features.size(); ++i)
-            {
-                SampleFeatureData featureData = features.get(i);
-
-                if(featureData.Type != DRIVER || !featureData.ExtraInfo.containsValue(DRIVER_TYPE_AMP))
-                    continue;
-
-                if(restrictGenes && !DRIVER_AMP_GENES.contains(featureData.Name))
-                    continue;
-
-                SampleFeatureData ampFeature = new SampleFeatureData(featureData.SampleId, featureData.Name, AMP, featureData.Likelihood);
-                ampFeature.ExtraInfo.putAll(featureData.ExtraInfo);
-
-                features.set(i, ampFeature);
-            }
-        }
-    }
-
     private static void mapFeatureData(
             final String sampleId, final Map<String,List<SampleFeatureData>> sampleDrivers, final List<DriverCatalog> drivers,
             final List<LinxFusion> fusions, final List<AnnotatedVirus> virusAnnotations, final List<String> indelGenes)
@@ -521,9 +496,14 @@ public class FeatureDataLoader
                 SampleFeatureData feature = new SampleFeatureData(sampleId, driver.gene(), DRIVER, driver.driverLikelihood());
 
                 if(driver.driver() == DriverType.AMP)
+                {
                     feature.ExtraInfo.put(DRIVER_TYPE, DRIVER_TYPE_AMP);
+                    feature.ExtraInfo.put(AMP_CN, String.format("%.1f", driver.maxCopyNumber()));
+                }
                 else if(driver.driver() == DriverType.DEL)
+                {
                     feature.ExtraInfo.put(DRIVER_TYPE, DRIVER_TYPE_DEL);
+                }
 
                 feature.ExtraInfo.put(DRIVER_CHROMOSOME, driver.chromosome());
 
