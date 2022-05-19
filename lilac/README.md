@@ -47,6 +47,7 @@ Argument | Description
 ---|---
 sample | Sample ID
 ref_genome | Reference genome fasta file
+ref_genome_version | V37 (default), V38 or HG19 (ie 37 with 'chr' prefix)
 reference_bam | Sample's germline BAM 
 resource_dir | Path to Lilac resource files, ie hla_ref_aminoacid_sequences.csv, hla_ref_nucleotide_sequences.csv and lilac_allele_frequencies.csv.
 
@@ -58,7 +59,6 @@ If a sample's tumor BAM is provided in place of the reference BAM, then Lilac wi
 
 Argument | Description 
 ---|---
-ref_genome_version | V37 (default), V38 or HG19 (ie 37 with 'chr' prefix)
 tumor_bam | Sample's tumor BAM
 rna_bam | Sample's RNA BAM if available
 gene_copy_number_file | Sample gene copy number file from Purple
