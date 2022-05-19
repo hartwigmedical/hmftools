@@ -334,7 +334,7 @@ public final class ExampleAnalysisTestFactory {
             @NotNull Set<String> evidenceurls) {
 
         return ImmutableProtectSource.builder()
-                .source(source)
+                .name(source)
                 .sourceEvent(soureEvent)
                 .sourceUrls(sourceUrls)
                 .evidenceType(protectEvidenceType)
@@ -357,7 +357,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Cobimetinib + Vemurafenib")
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
                         "BRAF BRAF:V600E",
                         Sets.newHashSet(),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
@@ -374,7 +374,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Dabrafenib")
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
                         "BRAF BRAF:V600E",
                         Sets.newHashSet(),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
@@ -391,7 +391,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Dabrafenib + Trametinib")
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
                                 "BRAF V600E",
                                 Sets.newHashSet(),
                                 ProtectEvidenceType.HOTSPOT_MUTATION,
@@ -414,7 +414,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Trametinib")
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
                         "BRAF BRAF:V600E",
                         Sets.newHashSet(),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
@@ -431,7 +431,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Vemurafenib")
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
                                 "BRAF BRAF:V600G",
                                 Sets.newHashSet(),
                                 ProtectEvidenceType.HOTSPOT_MUTATION,
@@ -460,7 +460,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("RO4987655")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
                         "BRAF V600",
                         Sets.newHashSet(),
                         ProtectEvidenceType.CODON_MUTATION,
@@ -477,7 +477,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Buparlisib + Carboplatin + Paclitaxel")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
                         "PTEN LOSS",
                         Sets.newHashSet(),
                         ProtectEvidenceType.DELETION,
@@ -501,7 +501,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("BASKET OF BASKETS (VHIO17002)")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
                         "TumMutLoad_HIGH",
                         Sets.newHashSet("https://trial-eye.com/hmf/11087"),
                         ProtectEvidenceType.SIGNATURE,
@@ -518,7 +518,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("DRUP")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
                         "TumMutLoad_HIGH",
                         Sets.newHashSet("https://trial-eye.com/hmf/10299"),
                         ProtectEvidenceType.SIGNATURE,
@@ -535,7 +535,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("KEYNOTE-158")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
                         "TumMutLoad_HIGH",
                         Sets.newHashSet("https://trial-eye.com/hmf/4866"),
                         ProtectEvidenceType.SIGNATURE,
@@ -552,7 +552,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Array 818-103")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
                         "BRAF V600",
                         Sets.newHashSet("https://trial-eye.com/hmf/13054"),
                         ProtectEvidenceType.CODON_MUTATION,
@@ -569,7 +569,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("DRUP")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
                                 "BRAF ACTIVATING MUTATION",
                                 Sets.newHashSet("https://trial-eye.com/hmf/10299"),
                                 ProtectEvidenceType.ACTIVATION,
@@ -592,7 +592,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("EBIN (EORTC-1612-MG)")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
                         "BRAF V600",
                         Sets.newHashSet("https://trial-eye.com/hmf/11284"),
                         ProtectEvidenceType.CODON_MUTATION,
@@ -609,7 +609,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("NASAM")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
                         "BRAF V600E",
                         Sets.newHashSet("https://trial-eye.com/hmf/14995"),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
@@ -626,7 +626,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("DRUP")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
                                 "PTEN LOSS",
                                 Sets.newHashSet("https://trial-eye.com/hmf/10299\""),
                                 ProtectEvidenceType.DELETION,
@@ -657,7 +657,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Bevacizumab")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
                         "BRAF V600E",
                         Sets.newHashSet(),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
@@ -674,7 +674,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("CI-1040")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
                         "BRAF V600E",
                         Sets.newHashSet(),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
@@ -691,7 +691,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Cetuximab")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
                                 "BRAF BRAF:V600E",
                                 Sets.newHashSet(),
                                 ProtectEvidenceType.HOTSPOT_MUTATION,
@@ -719,7 +719,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Cetuximab + Irinotecan + Vemurafenib")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
                         "BRAF V600E",
                         Sets.newHashSet(),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
@@ -736,7 +736,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Fluorouracil")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
                         "BRAF V600E",
                         Sets.newHashSet(),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
@@ -753,7 +753,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Irinotecan")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
                         "BRAF V600E",
                         Sets.newHashSet(),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
@@ -770,7 +770,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Oxaliplatin")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
                         "BRAF V600E",
                         Sets.newHashSet(),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
@@ -787,7 +787,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Panitumumab")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
                                 "BRAF BRAF:V600E",
                                 Sets.newHashSet(),
                                 ProtectEvidenceType.HOTSPOT_MUTATION,
@@ -818,7 +818,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Selumetinib")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
                         "BRAF V600E",
                         Sets.newHashSet(),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
@@ -835,7 +835,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Sorafenib")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
                         "BRAF V600E",
                         Sets.newHashSet(),
                         ProtectEvidenceType.HOTSPOT_MUTATION,
@@ -852,7 +852,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Anti-EGFR monoclonal antibody")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
                                 "PTEN PTEN oncogenic mutation",
                                 Sets.newHashSet(),
                                 ProtectEvidenceType.INACTIVATION,
@@ -876,7 +876,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Cetuximab")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
                         "PTEN LOSS",
                         Sets.newHashSet(),
                         ProtectEvidenceType.DELETION,
@@ -893,7 +893,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Everolimus")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
                         "PTEN LOSS",
                         Sets.newHashSet(),
                         ProtectEvidenceType.DELETION,
@@ -910,7 +910,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Lapatinib + Trastuzumab")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
                         "PTEN LOSS",
                         Sets.newHashSet(),
                         ProtectEvidenceType.DELETION,
@@ -927,7 +927,7 @@ public final class ExampleAnalysisTestFactory {
                 .treatment("Trastuzumab")
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
-                .protectSources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
                                 "PTEN LOSS",
                                 Sets.newHashSet(),
                                 ProtectEvidenceType.DELETION,

@@ -23,14 +23,14 @@ public final class ReportableEvidenceItemFactory {
         for (ProtectEvidence evidence: evidenceItems) {
             Set<ProtectSource> protectSources = Sets.newHashSet();
 
-            for (ProtectSource source: evidence.protectSources()) {
-                if (source.source() != Knowledgebase.ICLUSION && evidence.onLabel()){
+            for (ProtectSource source: evidence.sources()) {
+                if (source.name() != Knowledgebase.ICLUSION && evidence.onLabel()){
                     protectSources.add(source);
                 }
             }
 
             if (protectSources.size() >= 1) {
-                nonTrials.add(ImmutableProtectEvidence.builder().from(evidence).protectSources(protectSources).build());
+                nonTrials.add(ImmutableProtectEvidence.builder().from(evidence).sources(protectSources).build());
             }
         }
         return nonTrials;
@@ -41,14 +41,14 @@ public final class ReportableEvidenceItemFactory {
         List<ProtectEvidence> nonTrials = Lists.newArrayList();
         for (ProtectEvidence evidence: evidenceItems) {
             Set<ProtectSource> protectSources = Sets.newHashSet();
-            for (ProtectSource source: evidence.protectSources()) {
-                if (source.source() != Knowledgebase.ICLUSION && !evidence.onLabel()){
+            for (ProtectSource source: evidence.sources()) {
+                if (source.name() != Knowledgebase.ICLUSION && !evidence.onLabel()){
                     protectSources.add(source);
 
                 }
             }
             if (protectSources.size() >= 1) {
-                nonTrials.add(ImmutableProtectEvidence.builder().from(evidence).protectSources(protectSources).build());
+                nonTrials.add(ImmutableProtectEvidence.builder().from(evidence).sources(protectSources).build());
             }
         }
         return nonTrials;

@@ -116,7 +116,7 @@ public class CurationFunctionTest {
     @NotNull
     private static String findByGeneVariant(List<ReportableVariant> curate, @NotNull String gene, boolean isCanonical) {
         for (ReportableVariant variant : curate) {
-            if (variant.gene().equals(gene) && variant.isCanonical().equals(isCanonical)) {
+            if (variant.gene().equals(gene) && variant.isCanonical() == isCanonical) {
                 return variant.gene();
             }
         }
@@ -137,7 +137,7 @@ public class CurationFunctionTest {
     @NotNull
     private static String findByGeneGainLoss(List<ReportableGainLoss> curate, @NotNull String gene, boolean isCanonical) {
         for (ReportableGainLoss gainLoss : curate) {
-            if (gainLoss.gene().equals(gene) && gainLoss.isCanonical().equals(isCanonical)) {
+            if (gainLoss.gene().equals(gene) && gainLoss.isCanonical() == isCanonical) {
                 return gainLoss.gene();
             }
         }
@@ -190,7 +190,7 @@ public class CurationFunctionTest {
 
     @NotNull
     public List<ProtectEvidence> evidence() {
-        ProtectEvidence evidence1 = ProtectTestFactory.testEvidenceBuilder()
+        ProtectEvidence evidence1 = ProtectTestFactory.builder()
                 .gene("KRAS")
                 .isCanonical(false)
                 .event("amp")
@@ -200,15 +200,15 @@ public class CurationFunctionTest {
                 .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(Sets.newHashSet(ImmutableProtectSource.builder()
-                        .source(Knowledgebase.ICLUSION)
+                .sources(Sets.newHashSet(ImmutableProtectSource.builder()
+                        .name(Knowledgebase.ICLUSION)
                         .sourceEvent(Strings.EMPTY)
                         .sourceUrls(Sets.newHashSet())
                         .evidenceType(ProtectEvidenceType.AMPLIFICATION)
                         .build()))
                 .build();
 
-        ProtectEvidence evidence2 = ProtectTestFactory.testEvidenceBuilder()
+        ProtectEvidence evidence2 = ProtectTestFactory.builder()
                 .gene("CDKN2A")
                 .isCanonical(true)
                 .event("amp")
@@ -218,15 +218,15 @@ public class CurationFunctionTest {
                 .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(Sets.newHashSet(ImmutableProtectSource.builder()
-                        .source(Knowledgebase.ICLUSION)
+                .sources(Sets.newHashSet(ImmutableProtectSource.builder()
+                        .name(Knowledgebase.ICLUSION)
                         .sourceEvent(Strings.EMPTY)
                         .sourceUrls(Sets.newHashSet())
                         .evidenceType(ProtectEvidenceType.AMPLIFICATION)
                         .build()))
                 .build();
 
-        ProtectEvidence evidence3 = ProtectTestFactory.testEvidenceBuilder()
+        ProtectEvidence evidence3 = ProtectTestFactory.builder()
                 .gene("CDKN2A")
                 .isCanonical(false)
                 .event("amp")
@@ -236,8 +236,8 @@ public class CurationFunctionTest {
                 .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .protectSources(Sets.newHashSet(ImmutableProtectSource.builder()
-                        .source(Knowledgebase.ICLUSION)
+                .sources(Sets.newHashSet(ImmutableProtectSource.builder()
+                        .name(Knowledgebase.ICLUSION)
                         .sourceEvent(Strings.EMPTY)
                         .sourceUrls(Sets.newHashSet())
                         .evidenceType(ProtectEvidenceType.AMPLIFICATION)
@@ -259,7 +259,7 @@ public class CurationFunctionTest {
 
     @NotNull
     private static ImmutableReportableVariant.Builder createTestReportableVariantBuilder() {
-        return ImmutableReportableVariant.builder().from(VariantTestFactory.createTestReportableVariant());
+        return ImmutableReportableVariant.builder().from(VariantTestFactory.create());
     }
 
     @NotNull

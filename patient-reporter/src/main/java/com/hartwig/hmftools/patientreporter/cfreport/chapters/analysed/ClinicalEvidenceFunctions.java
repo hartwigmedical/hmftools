@@ -156,7 +156,7 @@ public class ClinicalEvidenceFunctions {
                     Map<String, String> sourceUrls = Maps.newHashMap();
                     Set<String> evidenceUrls = Sets.newHashSet();
 
-                    for (ProtectSource source : responsive.protectSources()) {
+                    for (ProtectSource source : responsive.sources()) {
                         for (String url : source.evidenceUrls()) {
                             evidenceUrls.add(url);
                         }

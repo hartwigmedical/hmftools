@@ -22,14 +22,14 @@ public final class ClinicalTrialFactory {
         List<ProtectEvidence> trials = Lists.newArrayList();
         for (ProtectEvidence evidence : evidenceItems) {
             Set<ProtectSource> protectSources = Sets.newHashSet();
-            for (ProtectSource protectSource: evidence.protectSources()) {
-                if (protectSource.source() == Knowledgebase.ICLUSION && evidence.onLabel()) {
+            for (ProtectSource protectSource: evidence.sources()) {
+                if (protectSource.name() == Knowledgebase.ICLUSION && evidence.onLabel()) {
                     protectSources.add(protectSource);
                 }
             }
 
             if (protectSources.size() >= 1) {
-                trials.add(ImmutableProtectEvidence.builder().from(evidence).protectSources(protectSources).build());
+                trials.add(ImmutableProtectEvidence.builder().from(evidence).sources(protectSources).build());
             }
 
         }
