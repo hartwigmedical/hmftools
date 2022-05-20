@@ -310,8 +310,9 @@ public class ConclusionAlgo {
                         conclusion.put(conclusion.size(),
                                 "- " + "HRD(" + chordAnalysis.hrdValue() + ") " + entry.conclusion() + entryNoHRd.conclusion());
                     }
+                } else {
+                    conclusion.put(conclusion.size(), "- " + "HRD(" + chordAnalysis.hrdValue() + ") " + entry.conclusion());
                 }
-                conclusion.put(conclusion.size(), "- " + "HRD(" + chordAnalysis.hrdValue() + ") " + entry.conclusion());
                 actionable.add("HRD");
                 oncogenic.add("HRD");
             }
