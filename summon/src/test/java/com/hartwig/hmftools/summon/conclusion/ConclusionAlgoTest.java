@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.summon.conclusion;
 
+import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.ONCO;
+import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -8,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.beust.jcommander.internal.Sets;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordStatus;
@@ -15,6 +19,15 @@ import com.hartwig.hmftools.common.chord.ChordTestFactory;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.cuppa.ImmutableMolecularTissueOrigin;
 import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalogTestFactory;
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
+import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
+import com.hartwig.hmftools.common.test.SomaticVariantTestFactory;
+import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.summon.actionability.ActionabilityEntry;
@@ -24,6 +37,7 @@ import com.hartwig.hmftools.summon.actionability.ImmutableActionabilityKey;
 import com.hartwig.hmftools.summon.actionability.Type;
 
 import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class ConclusionAlgoTest {
@@ -55,7 +69,8 @@ public class ConclusionAlgoTest {
                 ImmutableActionabilityEntry.builder().gene("CUPPA").type(Type.CUPPA).onlyHighDriver(false).conclusion("CUPPA").build();
         actionabilityMap.put(key, entry);
 
-        MolecularTissueOrigin molecularTissueOrigin = ImmutableMolecularTissueOrigin.builder().plotPath(Strings.EMPTY).conclusion("Melanoma").build();
+        MolecularTissueOrigin molecularTissueOrigin =
+                ImmutableMolecularTissueOrigin.builder().plotPath(Strings.EMPTY).conclusion("Melanoma").build();
         ConclusionAlgo.generateCUPPAConclusion(conclusion, molecularTissueOrigin, actionabilityMap);
         assertEquals(conclusion.get(0), "- CUPPA");
     }
@@ -65,23 +80,88 @@ public class ConclusionAlgoTest {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         ActionabilityKey key = ImmutableActionabilityKey.builder().gene("CUPPA_inconclusive").type(Type.CUPPA_INCONCLUSIVE).build();
-        ActionabilityEntry entry =
-                ImmutableActionabilityEntry.builder().gene("CUPPA_inconclusive").type(Type.CUPPA_INCONCLUSIVE).onlyHighDriver(false).conclusion("results inconclusive").build();
+        ActionabilityEntry entry = ImmutableActionabilityEntry.builder()
+                .gene("CUPPA_inconclusive")
+                .type(Type.CUPPA_INCONCLUSIVE)
+                .onlyHighDriver(false)
+                .conclusion("results inconclusive")
+                .build();
         actionabilityMap.put(key, entry);
 
-        MolecularTissueOrigin molecularTissueOrigin = ImmutableMolecularTissueOrigin.builder().plotPath(Strings.EMPTY).conclusion("results inconclusive").build();
+        MolecularTissueOrigin molecularTissueOrigin =
+                ImmutableMolecularTissueOrigin.builder().plotPath(Strings.EMPTY).conclusion("results inconclusive").build();
         ConclusionAlgo.generateCUPPAConclusion(conclusion, molecularTissueOrigin, actionabilityMap);
         assertEquals(conclusion.get(0), "- results inconclusive");
     }
 
     @Test
-    public void canGenerateSomaticConclusion() {
+    public void canGenerateVariantsConclusion() {
+        List<ReportableVariant> reportableVariants = canGenerateVariants();
+        Map<String, DriverGene> driverGenesMap = Maps.newHashMap();
+        driverGenesMap.put("CHEK2", createDriverGene("CHEK2", DriverCategory.TSG));
+        driverGenesMap.put("APC", createDriverGene("APC", ONCO));
+        driverGenesMap.put("BRCA2", createDriverGene("BRCA2", DriverCategory.TSG));
+        driverGenesMap.put("BRCA1", createDriverGene("BRCA1", DriverCategory.TSG));
 
-    }
+        Map<Integer, String> conclusion = Maps.newHashMap();
+        Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
 
-    @Test
-    public void canGenerateGermlineConclusion() {
+        ActionabilityKey keyCHEK2 = ImmutableActionabilityKey.builder().gene("CHEK2").type(Type.INACTIVATION).build();
+        ActionabilityEntry entryCHEK2 = ImmutableActionabilityEntry.builder()
+                .gene("CHEK2")
+                .type(Type.INACTIVATION)
+                .onlyHighDriver(true)
+                .conclusion("CHEK2")
+                .build();
+        actionabilityMap.put(keyCHEK2, entryCHEK2);
 
+        ActionabilityKey keyAPC = ImmutableActionabilityKey.builder().gene("APC").type(Type.ACTIVATING_MUTATION).build();
+        ActionabilityEntry entryAPC = ImmutableActionabilityEntry.builder()
+                .gene("APC")
+                .type(Type.ACTIVATING_MUTATION)
+                .onlyHighDriver(false)
+                .conclusion("APC")
+                .build();
+        actionabilityMap.put(keyAPC, entryAPC);
+
+        ActionabilityKey keyBRCA2 = ImmutableActionabilityKey.builder().gene("BRCA2").type(Type.INACTIVATION).build();
+        ActionabilityEntry entryBRCA2= ImmutableActionabilityEntry.builder()
+                .gene("BRCA2")
+                .type(Type.INACTIVATION)
+                .onlyHighDriver(true)
+                .conclusion("BRCA2")
+                .build();
+        actionabilityMap.put(keyBRCA2, entryBRCA2);
+
+        ActionabilityKey keyBRCA1 = ImmutableActionabilityKey.builder().gene("BRCA1").type(Type.INACTIVATION).build();
+        ActionabilityEntry entryBRCA1 = ImmutableActionabilityEntry.builder()
+                .gene("BRCA1")
+                .type(Type.INACTIVATION)
+                .onlyHighDriver(true)
+                .conclusion("BRCA1")
+                .build();
+        actionabilityMap.put(keyBRCA1, entryBRCA1);
+
+        ActionabilityKey keyGermline = ImmutableActionabilityKey.builder().gene("germline").type(Type.GERMLINE).build();
+        ActionabilityEntry entryGermline = ImmutableActionabilityEntry.builder()
+                .gene("germline")
+                .type(Type.GERMLINE)
+                .onlyHighDriver(true)
+                .conclusion("germline")
+                .build();
+        actionabilityMap.put(keyGermline, entryGermline);
+
+        ConclusionAlgo.generateVariantConclusion(conclusion,
+                reportableVariants,
+                actionabilityMap,
+                driverGenesMap,
+                Sets.newHashSet(),
+                Sets.newHashSet());
+        assertEquals(conclusion.size(), 3);
+        assertEquals(conclusion.get(0), "- CHEK2(p.?) CHEK2 germline");
+        assertEquals(conclusion.get(1), "- APC(p.?) APC");
+        assertEquals(conclusion.get(2), "- BRCA2(p.?) BRCA2");
+        assertNull(conclusion.get(3));
     }
 
     @Test
@@ -296,5 +376,64 @@ public class ConclusionAlgoTest {
         actionabilityMap.put(key, entry);
         ConclusionAlgo.generateFindings(conclusion, actionabilityMap);
         assertEquals(conclusion.get(0), "- findings");
+    }
+
+    @NotNull
+    public List<ReportableVariant> canGenerateVariants() {
+        SomaticVariant variant1 = SomaticVariantTestFactory.builder()
+                .reported(true)
+                .gene("APC")
+                .canonicalTranscript("transcript1")
+                .canonicalHgvsProteinImpact("p.?")
+                .build();
+
+        SomaticVariant variant2 = SomaticVariantTestFactory.builder()
+                .reported(true)
+                .gene("BRCA2")
+                .canonicalTranscript("transcript1")
+                .canonicalHgvsProteinImpact("p.?")
+                .build();
+
+        SomaticVariant variant3 = SomaticVariantTestFactory.builder()
+                .reported(true)
+                .gene("BRCA1")
+                .canonicalTranscript("transcript1")
+                .canonicalHgvsProteinImpact("p.?")
+                .build();
+
+        List<ReportableVariant> reportableSomatic =
+                ReportableVariantFactory.toReportableSomaticVariants(Lists.newArrayList(variant1, variant2, variant3),
+                        Lists.newArrayList(DriverCatalogTestFactory.createCanonicalSomaticMutationEntryForGene("APC", 0.4, "transcript1", ONCO),
+                                DriverCatalogTestFactory.createCanonicalSomaticMutationEntryForGene("BRCA2", 0.9, "transcript1", TSG),
+                                DriverCatalogTestFactory.createCanonicalSomaticMutationEntryForGene("BRCA1", 0.7, "transcript1", TSG)));
+
+        SomaticVariant variant4 = SomaticVariantTestFactory.builder()
+                .reported(true)
+                .gene("CHEK2")
+                .canonicalTranscript("transcript1")
+                .canonicalHgvsProteinImpact("p.?")
+                .build();
+
+        List<ReportableVariant> reportableGermline = ReportableVariantFactory.toReportableGermlineVariants(Lists.newArrayList(variant4),
+                Lists.newArrayList(DriverCatalogTestFactory.createCanonicalGermlineMutationEntryForGene("CHEK2", 0.85, "transcript1", TSG)));
+
+        return ReportableVariantFactory.mergeVariantLists(reportableGermline, reportableSomatic);
+    }
+
+    public static DriverGene createDriverGene(@NotNull String name, @NotNull DriverCategory likelihoodMethod) {
+        return ImmutableDriverGene.builder()
+                .gene(name)
+                .reportMissenseAndInframe(false)
+                .reportNonsenseAndFrameshift(false)
+                .reportSplice(false)
+                .reportDeletion(false)
+                .reportDisruption(true)
+                .reportAmplification(false)
+                .reportSomaticHotspot(false)
+                .reportGermlineVariant(DriverGeneGermlineReporting.NONE)
+                .reportGermlineHotspot(DriverGeneGermlineReporting.NONE)
+                .likelihoodType(likelihoodMethod)
+                .reportGermlineDisruption(true)
+                .build();
     }
 }

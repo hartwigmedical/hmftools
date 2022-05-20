@@ -17,6 +17,8 @@ import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
+import com.hartwig.hmftools.common.variant.ReportableVariantSource;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
@@ -49,6 +51,8 @@ public class ConclusionAlgo {
         Map<String, DriverGene> driverGenesMap = generateDriverGenesMap(summonData.driverGenes());
         List<ReportableVariant> reportableSomaticVariants = summonData.purple().reportableSomaticVariants();
         List<ReportableVariant> reportableGermlineVariants = summonData.purple().reportableGermlineVariants();
+        List<ReportableVariant> reportableVariants =
+                ReportableVariantFactory.mergeVariantLists(reportableGermlineVariants, reportableSomaticVariants);
         List<ReportableGainLoss> reportableGainLosses = summonData.purple().reportableGainsLosses();
         List<LinxFusion> reportableFusions = summonData.linx().reportableFusions();
         List<ReportableHomozygousDisruption> homozygousDisruptions = summonData.linx().homozygousDisruptions();
@@ -56,8 +60,7 @@ public class ConclusionAlgo {
 
         genertatePurityConclusion(conclusion, summonData.purple().purity(), actionabilityMap);
         generateCUPPAConclusion(conclusion, summonData.molecularTissueOrigin(), actionabilityMap);
-        generateSomaticConclusion(conclusion, reportableSomaticVariants, actionabilityMap, driverGenesMap, oncogenic, actionable);
-        generateGermlineConclusion(conclusion, reportableGermlineVariants, actionabilityMap, driverGenesMap, oncogenic, actionable);
+        generateVariantConclusion(conclusion, reportableVariants, actionabilityMap, driverGenesMap, oncogenic, actionable);
         generateCNVConclusion(conclusion, reportableGainLosses, actionabilityMap, oncogenic, actionable);
         generateFusionConclusion(conclusion, reportableFusions, actionabilityMap, oncogenic, actionable);
         generateHomozygousDisruptionConclusion(conclusion, homozygousDisruptions, actionabilityMap, oncogenic, actionable);
@@ -134,50 +137,39 @@ public class ConclusionAlgo {
         }
     }
 
-    public static void generateSomaticConclusion(@NotNull Map<Integer, String> conclusion,
-            @NotNull List<ReportableVariant> reportableSomaticVariants, @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap,
+    public static void generateVariantConclusion(@NotNull Map<Integer, String> conclusion,
+            @NotNull List<ReportableVariant> reportableVariants, @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap,
             @NotNull Map<String, DriverGene> driverGenesMap, @NotNull Set<String> oncogenic, @NotNull Set<String> actionable) {
-        for (ReportableVariant somaticVariant : reportableSomaticVariants) {
-            oncogenic.add("somaticVariant");
+
+        for (ReportableVariant reportableVariant : reportableVariants) {
+
+            oncogenic.add(reportableVariant.source() == ReportableVariantSource.SOMATIC ? "somaticVariant" : "germlineVariant");
             ActionabilityKey keySomaticVariant = ImmutableActionabilityKey.builder()
-                    .gene(somaticVariant.gene())
-                    .type(driverGenesMap.get(somaticVariant.gene()).likelihoodType().equals(DriverCategory.ONCO)
+                    .gene(reportableVariant.gene())
+                    .type(driverGenesMap.get(reportableVariant.gene()).likelihoodType().equals(DriverCategory.ONCO)
                             ? Type.ACTIVATING_MUTATION
                             : Type.INACTIVATION)
                     .build();
             ActionabilityEntry entry = actionabilityMap.get(keySomaticVariant);
 
             if (entry != null) {
-                if ((somaticVariant.driverLikelihoodInterpretation() == DriverInterpretation.HIGH && entry.onlyHighDriver())
+                if ((reportableVariant.driverLikelihoodInterpretation() == DriverInterpretation.HIGH && entry.onlyHighDriver())
                         || !entry.onlyHighDriver()) {
-                    actionable.add("somaticVariant");
-                    conclusion.put(conclusion.size(),
-                            "- " + somaticVariant.gene() + "(" + somaticVariant.canonicalHgvsProteinImpact() + ") " + entry.conclusion());
-                }
-            }
-        }
-    }
+                    actionable.add(reportableVariant.source() == ReportableVariantSource.SOMATIC ? "somaticVariant" : "germlineVariant");
 
-    public static void generateGermlineConclusion(@NotNull Map<Integer, String> conclusion,
-            @NotNull List<ReportableVariant> reportableGermlineVariants,
-            @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap, @NotNull Map<String, DriverGene> driverGenesMap,
-            @NotNull Set<String> oncogenic, @NotNull Set<String> actionable) {
-        for (ReportableVariant germlineVariant : reportableGermlineVariants) {
-            oncogenic.add("germlineVariant");
+                    if (reportableVariant.source() == ReportableVariantSource.SOMATIC) {
+                        conclusion.put(conclusion.size(),
+                                "- " + reportableVariant.gene() + "(" + reportableVariant.canonicalHgvsProteinImpact() + ") "
+                                        + entry.conclusion());
+                    } else if (reportableVariant.source() == ReportableVariantSource.GERMLINE) {
+                        ActionabilityKey keyGermline = ImmutableActionabilityKey.builder().gene("germline").type(Type.GERMLINE).build();
+                        ActionabilityEntry entryGermline = actionabilityMap.get(keyGermline);
 
-            ActionabilityKey keyGermlineVariant = ImmutableActionabilityKey.builder()
-                    .gene(germlineVariant.gene())
-                    .type(driverGenesMap.get(germlineVariant.gene()).likelihoodType().equals(DriverCategory.ONCO)
-                            ? Type.ACTIVATING_MUTATION
-                            : Type.INACTIVATION)
-                    .build();
-            ActionabilityEntry entry = actionabilityMap.get(keyGermlineVariant);
-            if (entry != null) {
-                if ((germlineVariant.driverLikelihoodInterpretation() == DriverInterpretation.HIGH && entry.onlyHighDriver())
-                        || !entry.onlyHighDriver()) {
-                    actionable.add("germlineVariant");
-                    conclusion.put(conclusion.size(),
-                            "- " + germlineVariant.gene() + "(" + germlineVariant.canonicalHgvsProteinImpact() + ") " + entry.conclusion());
+                        conclusion.put(conclusion.size(),
+                                "- " + reportableVariant.gene() + "(" + reportableVariant.canonicalHgvsProteinImpact() + ") "
+                                        + entry.conclusion() + " " + entryGermline.conclusion());
+                    }
+
                 }
             }
         }
