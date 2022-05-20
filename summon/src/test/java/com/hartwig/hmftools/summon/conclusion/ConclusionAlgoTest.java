@@ -354,7 +354,9 @@ public class ConclusionAlgoTest {
                 .hrdValue(0.8)
                 .hrStatus(ChordStatus.HR_DEFICIENT)
                 .build();
-        ConclusionAlgo.generateHrdConclusion(conclusion, analysis, actionabilityMap, Sets.newHashSet(), Sets.newHashSet(), Sets.newHashSet());
+        Set<String> HRD = Sets.newHashSet();
+        HRD.add("BRCA1");
+        ConclusionAlgo.generateHrdConclusion(conclusion, analysis, actionabilityMap, Sets.newHashSet(), Sets.newHashSet(), HRD);
         assertEquals(conclusion.get(0), "- HRD(0.8) HRD");
     }
 

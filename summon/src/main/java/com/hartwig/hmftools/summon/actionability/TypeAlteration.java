@@ -21,7 +21,8 @@ public enum TypeAlteration {
     CUPPA,
     CUPPA_INCONCLUSIVE,
     NO_HRD_CAUSE,
-    NO_MSI_HRD_PROFILE;
+    NO_MSI_HRD_PROFILE,
+    NOT_BIALLELIC;
 
     @NotNull
     static TypeAlteration toType(@NotNull String typeInput) {

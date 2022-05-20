@@ -170,9 +170,22 @@ public class ConclusionAlgo {
                                 reportableVariant.source() == ReportableVariantSource.SOMATIC ? "somaticVariant" : "germlineVariant");
                     }
                     //TODO: Add sentence about germline findings probably in future
-                    conclusion.put(conclusion.size(),
-                            "- " + reportableVariant.gene() + "(" + reportableVariant.canonicalHgvsProteinImpact() + ") "
-                                    + entry.conclusion());
+                    if (driverGenesMap.get(reportableVariant.gene()).likelihoodType().equals(DriverCategory.TSG)
+                            && reportableVariant.biallelic()) {
+                        ActionabilityKey keyBiallelic =
+                                ImmutableActionabilityKey.builder().gene("biallelic").type(TypeAlteration.NOT_BIALLELIC).build();
+                        ActionabilityEntry entryBiallelic = actionabilityMap.get(keyBiallelic);
+                        if (entry.condition() == Condition.OTHER) {
+                            conclusion.put(conclusion.size(),
+                                    "- " + reportableVariant.gene() + "(" + reportableVariant.canonicalHgvsProteinImpact() + ") "
+                                            + entry.conclusion() + entryBiallelic.conclusion());
+                        }
+                    } else {
+                        conclusion.put(conclusion.size(),
+                                "- " + reportableVariant.gene() + "(" + reportableVariant.canonicalHgvsProteinImpact() + ") "
+                                        + entry.conclusion());
+                    }
+
                 }
             }
         }
@@ -306,13 +319,14 @@ public class ConclusionAlgo {
                     ActionabilityKey keyNoHRD =
                             ImmutableActionabilityKey.builder().gene("no_HRD_cause").type(TypeAlteration.NO_HRD_CAUSE).build();
                     ActionabilityEntry entryNoHRd = actionabilityMap.get(keyNoHRD);
-                    if (entryNoHRd != null) {
+                    if (entryNoHRd != null && entry.condition() == Condition.OTHER) {
                         conclusion.put(conclusion.size(),
                                 "- " + "HRD(" + chordAnalysis.hrdValue() + ") " + entry.conclusion() + entryNoHRd.conclusion());
                     }
                 } else {
                     conclusion.put(conclusion.size(), "- " + "HRD(" + chordAnalysis.hrdValue() + ") " + entry.conclusion());
                 }
+
                 actionable.add("HRD");
                 oncogenic.add("HRD");
             }
