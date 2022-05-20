@@ -171,7 +171,7 @@ public class ConclusionAlgo {
                     }
                     //TODO: Add sentence about germline findings probably in future
                     if (driverGenesMap.get(reportableVariant.gene()).likelihoodType().equals(DriverCategory.TSG)
-                            && reportableVariant.biallelic()) {
+                            && !reportableVariant.biallelic()) {
                         ActionabilityKey keyBiallelic =
                                 ImmutableActionabilityKey.builder().gene("biallelic").type(TypeAlteration.NOT_BIALLELIC).build();
                         ActionabilityEntry entryBiallelic = actionabilityMap.get(keyBiallelic);
