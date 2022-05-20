@@ -30,6 +30,7 @@ import com.hartwig.hmftools.common.purple.PurpleTestFactory;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
+import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.test.SomaticVariantTestFactory;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
@@ -206,10 +207,19 @@ public class ConclusionAlgoTest {
         assertEquals(conclusion.get(3), "- EGFR EGFR");
     }
 
-    @Test
-    public void canGenerateFusionConclusion() {
-
-    }
+//    @Test
+//    public void canGenerateFusionConclusion() {
+//        List<LinxFusion> homozygousDisruptions = Lists.newArrayList(createHomozygousDisruption("PTEN"));
+//        Map<Integer, String> conclusion = Maps.newHashMap();
+//        Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
+//        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("PTEN").type(Type.INACTIVATION).build();
+//        ActionabilityEntry entry =
+//                ImmutableActionabilityEntry.builder().gene("PTEN").type(Type.INACTIVATION).onlyHighDriver(true).conclusion("PTEN").build();
+//        actionabilityMap.put(key, entry);
+//
+//        ConclusionAlgo.generateFusionConclusion(conclusion, fusion, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
+//
+//    }
 
     @Test
     public void canGenerateHomozygousDisruptionConclusion() {
@@ -355,7 +365,7 @@ public class ConclusionAlgoTest {
         ActionabilityEntry entry =
                 ImmutableActionabilityEntry.builder().gene("High-TMB").type(Type.POSITIVE).onlyHighDriver(false).conclusion("TMB").build();
         actionabilityMap.put(key, entry);
-        ConclusionAlgo.generateTMBConclusion(conclusion, 15, actionabilityMap);
+        ConclusionAlgo.generateTMBConclusion(conclusion, 9, actionabilityMap);
         assertNull(conclusion.get(0));
     }
 
