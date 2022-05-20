@@ -24,6 +24,10 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
+import com.hartwig.hmftools.common.purple.PurpleTestFactory;
+import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
+import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss;
+import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.test.SomaticVariantTestFactory;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
@@ -125,7 +129,7 @@ public class ConclusionAlgoTest {
         actionabilityMap.put(keyAPC, entryAPC);
 
         ActionabilityKey keyBRCA2 = ImmutableActionabilityKey.builder().gene("BRCA2").type(Type.INACTIVATION).build();
-        ActionabilityEntry entryBRCA2= ImmutableActionabilityEntry.builder()
+        ActionabilityEntry entryBRCA2 = ImmutableActionabilityEntry.builder()
                 .gene("BRCA2")
                 .type(Type.INACTIVATION)
                 .onlyHighDriver(true)
@@ -166,7 +170,53 @@ public class ConclusionAlgoTest {
 
     @Test
     public void canGenerateCNVConclusion() {
+        List<ReportableGainLoss> gainLosse = gainloss();
+        Map<Integer, String> conclusion = Maps.newHashMap();
+        Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
 
+
+        ActionabilityKey keyBRAF = ImmutableActionabilityKey.builder().gene("BRAF").type(Type.AMPLIFICATION).build();
+        ActionabilityEntry entryBRAF = ImmutableActionabilityEntry.builder()
+                .gene("BRAF")
+                .type(Type.AMPLIFICATION)
+                .onlyHighDriver(true)
+                .conclusion("BRAF")
+                .build();
+        actionabilityMap.put(keyBRAF, entryBRAF);
+
+        ActionabilityKey keyKRAS = ImmutableActionabilityKey.builder().gene("KRAS").type(Type.AMPLIFICATION).build();
+        ActionabilityEntry entryKRAS = ImmutableActionabilityEntry.builder()
+                .gene("KRAS")
+                .type(Type.AMPLIFICATION)
+                .onlyHighDriver(true)
+                .conclusion("KRAS")
+                .build();
+        actionabilityMap.put(keyKRAS, entryKRAS);
+
+        ActionabilityKey keyCDKN2A = ImmutableActionabilityKey.builder().gene("CDKN2A").type(Type.LOSS).build();
+        ActionabilityEntry entryCDKN2A = ImmutableActionabilityEntry.builder()
+                .gene("CDKN2A")
+                .type(Type.LOSS)
+                .onlyHighDriver(true)
+                .conclusion("CDKN2A")
+                .build();
+        actionabilityMap.put(keyCDKN2A, entryCDKN2A);
+
+        ActionabilityKey keyEGFR = ImmutableActionabilityKey.builder().gene("EGFR").type(Type.LOSS).build();
+        ActionabilityEntry entryEGFR = ImmutableActionabilityEntry.builder()
+                .gene("EGFR")
+                .type(Type.LOSS)
+                .onlyHighDriver(true)
+                .conclusion("EGFR")
+                .build();
+        actionabilityMap.put(keyEGFR, entryEGFR);
+
+        ConclusionAlgo.generateCNVConclusion(conclusion, gainLosse, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
+        assertEquals(conclusion.size(), 4);
+        assertEquals(conclusion.get(0), "- BRAF BRAF");
+        assertEquals(conclusion.get(1), "- KRAS KRAS");
+        assertEquals(conclusion.get(2), "- CDKN2A CDKN2A");
+        assertEquals(conclusion.get(3), "- EGFR EGFR");
     }
 
     @Test
@@ -403,7 +453,10 @@ public class ConclusionAlgoTest {
 
         List<ReportableVariant> reportableSomatic =
                 ReportableVariantFactory.toReportableSomaticVariants(Lists.newArrayList(variant1, variant2, variant3),
-                        Lists.newArrayList(DriverCatalogTestFactory.createCanonicalSomaticMutationEntryForGene("APC", 0.4, "transcript1", ONCO),
+                        Lists.newArrayList(DriverCatalogTestFactory.createCanonicalSomaticMutationEntryForGene("APC",
+                                        0.4,
+                                        "transcript1",
+                                        ONCO),
                                 DriverCatalogTestFactory.createCanonicalSomaticMutationEntryForGene("BRCA2", 0.9, "transcript1", TSG),
                                 DriverCatalogTestFactory.createCanonicalSomaticMutationEntryForGene("BRCA1", 0.7, "transcript1", TSG)));
 
@@ -415,7 +468,10 @@ public class ConclusionAlgoTest {
                 .build();
 
         List<ReportableVariant> reportableGermline = ReportableVariantFactory.toReportableGermlineVariants(Lists.newArrayList(variant4),
-                Lists.newArrayList(DriverCatalogTestFactory.createCanonicalGermlineMutationEntryForGene("CHEK2", 0.85, "transcript1", TSG)));
+                Lists.newArrayList(DriverCatalogTestFactory.createCanonicalGermlineMutationEntryForGene("CHEK2",
+                        0.85,
+                        "transcript1",
+                        TSG)));
 
         return ReportableVariantFactory.mergeVariantLists(reportableGermline, reportableSomatic);
     }
@@ -435,5 +491,22 @@ public class ConclusionAlgoTest {
                 .likelihoodType(likelihoodMethod)
                 .reportGermlineDisruption(true)
                 .build();
+    }
+
+    @NotNull
+    public List<ReportableGainLoss> gainloss() {
+        ReportableGainLoss gainLoss1 = ImmutableReportableGainLoss.builder()
+                .from(PurpleTestFactory.createReportableGainLoss("BRAF", CopyNumberInterpretation.FULL_GAIN))
+                .build();
+        ReportableGainLoss gainLoss2 = ImmutableReportableGainLoss.builder()
+                .from(PurpleTestFactory.createReportableGainLoss("KRAS", CopyNumberInterpretation.PARTIAL_GAIN))
+                .build();
+        ReportableGainLoss gainLoss3 = ImmutableReportableGainLoss.builder()
+                .from(PurpleTestFactory.createReportableGainLoss("CDKN2A", CopyNumberInterpretation.FULL_LOSS))
+                .build();
+        ReportableGainLoss gainLoss4 = ImmutableReportableGainLoss.builder()
+                .from(PurpleTestFactory.createReportableGainLoss("EGFR", CopyNumberInterpretation.PARTIAL_LOSS))
+                .build();
+        return Lists.newArrayList(gainLoss1, gainLoss2, gainLoss3, gainLoss4);
     }
 }

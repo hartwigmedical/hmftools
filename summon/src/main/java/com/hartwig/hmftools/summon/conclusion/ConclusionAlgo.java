@@ -169,7 +169,6 @@ public class ConclusionAlgo {
                                 "- " + reportableVariant.gene() + "(" + reportableVariant.canonicalHgvsProteinImpact() + ") "
                                         + entry.conclusion() + " " + entryGermline.conclusion());
                     }
-
                 }
             }
         }
