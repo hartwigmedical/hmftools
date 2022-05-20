@@ -249,9 +249,7 @@ public class SvVisualiser implements AutoCloseable
             return;
         }
 
-
         String fileId = mSampleData.Sample;
-
 
         if(!mSampleData.Genes.isEmpty() && mConfig.RestrictClusterByGene)
         {

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox.novel.cohort;
 
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionContext.SPLICE_JUNC;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_FRAG_COUNT;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_END;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_START;
@@ -39,6 +40,7 @@ public class AltSjCohortAnalyser
     private final int mMinCancerSampleThreshold;
     private final int mMinFragments;
     private final double mProbabilityThreshold;
+    private final boolean mKnownSitesOnly;
 
     private final AltSjWriter mWriter;
 
@@ -51,6 +53,7 @@ public class AltSjCohortAnalyser
     private static final String ALT_SJ_MIN_CANCER_SAMPLES = "alt_sj_min_cancer_samples";
     private static final String ALT_SJ_PROB_THRESHOLD = "alt_sj_prob_threshold";
     private static final String ALT_SJ_MIN_FRAGS = "alt_sj_min_frags";
+    private static final String ALT_SJ_KNOWN_SITES_ONLY = "alt_sj_known_sites_only";
 
     public AltSjCohortAnalyser(final CohortConfig config, final CommandLine cmd)
     {
@@ -61,6 +64,7 @@ public class AltSjCohortAnalyser
         mMinCancerSampleThreshold = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_CANCER_SAMPLES, "0"));
         mMinFragments = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_FRAGS, "0"));
         mProbabilityThreshold = Double.parseDouble(cmd.getOptionValue(ALT_SJ_PROB_THRESHOLD, "1.0"));
+        mKnownSitesOnly = cmd.hasOption(ALT_SJ_KNOWN_SITES_ONLY);
 
         mAltSjFilter = new AltSjFilter(mConfig.RestrictedGeneIds, mConfig.ExcludedGeneIds, mMinFragments);
 
@@ -74,6 +78,7 @@ public class AltSjCohortAnalyser
         options.addOption(ALT_SJ_MIN_CANCER_SAMPLES, true, "Min number of samples to report an alt SJ");
         options.addOption(ALT_SJ_MIN_FRAGS, true, "Min frag count supporting alt-SJs outside gene panel");
         options.addOption(ALT_SJ_PROB_THRESHOLD, true, "Only write alt SJs for fisher probability less than this");
+        options.addOption(ALT_SJ_KNOWN_SITES_ONLY, false, "Only write alt SJs if at least one site is a known splice site");
         AltSjWriter.addCmdLineOptions(options);
     }
 
@@ -220,6 +225,12 @@ public class AltSjCohortAnalyser
 
     private void addAltSpliceJunction(final AltSpliceJunctionFile altSJ, final String sampleId, final String cancerType)
     {
+        if(mKnownSitesOnly)
+        {
+            if(altSJ.RegionContexts[SE_START] != SPLICE_JUNC && altSJ.RegionContexts[SE_END] != SPLICE_JUNC)
+                return;
+        }
+
         Map<String,List<AltSjCohortData>> chrSJs = mAltSpliceJunctions.get(altSJ.Chromosome);
 
         if(chrSJs == null)

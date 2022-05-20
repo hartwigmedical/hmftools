@@ -448,20 +448,20 @@ public class AltSpliceJunctionFinder
             - Intronic - both sides Intronic  - may also be a transcribed somatic DEL
         */
 
-        if (!sjStartRegions.isEmpty() || !sjEndRegions.isEmpty())
+        if(!sjStartRegions.isEmpty() || !sjEndRegions.isEmpty())
         {
             boolean hasStartMatch = false;
             boolean hasEndMatch = false;
             int startTransId = -1;
             int endTransId = -1;
 
-            for (Integer transId : transIds)
+            for(Integer transId : transIds)
             {
                 // check for skipped exons indicated by the same transcript matching the start and end of the alt SJ, but skipping an exon
                 boolean matchesStart = sjStartRegions.stream().anyMatch(x -> x.hasTransId(transId));
                 boolean matchesEnd = sjEndRegions.stream().anyMatch(x -> x.hasTransId(transId));
 
-                if (matchesStart && matchesEnd)
+                if(matchesStart && matchesEnd)
                     return SKIPPED_EXONS;
 
                 if(matchesStart)
