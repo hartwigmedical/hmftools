@@ -213,7 +213,7 @@ public class ConclusionAlgo {
         for (LinxFusion fusion : reportableFusions) {
             oncogenic.add("fusion");
 
-            if (fusion.reportedType().toString().equals(KnownFusionType.EXON_DEL_DUP.toString())) {
+            if (fusion.reportedType().equals(KnownFusionType.EXON_DEL_DUP.toString())) {
                 ActionabilityKey keyFusion =
                         ImmutableActionabilityKey.builder().gene(fusion.geneStart()).type(Type.INTERNAL_DELETION).build();
                 ActionabilityEntry entry = actionabilityMap.get(keyFusion);
@@ -222,8 +222,9 @@ public class ConclusionAlgo {
                     actionable.add("fusion");
                 }
             }
-            if (fusion.reportedType().toString().equals(KnownFusionType.EXON_DEL_DUP.toString()) && fusion.geneStart().equals("EGFR")
-                    && fusion.fusedExonUp() == 25 && fusion.fusedExonDown() == 18) {
+            if (fusion.reportedType().equals(KnownFusionType.EXON_DEL_DUP.toString()) && fusion.geneStart().equals("EGFR") && (
+                    fusion.fusedExonUp() == 25 && fusion.fusedExonDown() == 14) || (fusion.fusedExonUp() == 26
+                    && fusion.fusedExonDown() == 18)) {
                 ActionabilityKey keyFusion =
                         ImmutableActionabilityKey.builder().gene(fusion.geneStart()).type(Type.KINASE_DOMAIN_DUPLICATION).build();
                 ActionabilityEntry entry = actionabilityMap.get(keyFusion);
@@ -232,11 +233,18 @@ public class ConclusionAlgo {
                     actionable.add("fusion");
                 }
             }
-            if (FUSION_TYPES.contains(fusion.reportedType().toString())) {
-                ActionabilityKey keyFusion = ImmutableActionabilityKey.builder().gene(fusion.geneStart()).type(Type.FUSION).build();
-                ActionabilityEntry entry = actionabilityMap.get(keyFusion);
-                if (entry != null) {
-                    conclusion.put(conclusion.size(), "- " + fusion.name() + " " + entry.conclusion());
+            if (FUSION_TYPES.contains(fusion.reportedType())) {
+                ActionabilityKey keyFusionStart = ImmutableActionabilityKey.builder().gene(fusion.geneStart()).type(Type.FUSION).build();
+                ActionabilityKey keyFusionEnd = ImmutableActionabilityKey.builder().gene(fusion.geneEnd()).type(Type.FUSION).build();
+
+                ActionabilityEntry entryStart = actionabilityMap.get(keyFusionStart);
+                ActionabilityEntry entryEnd = actionabilityMap.get(keyFusionEnd);
+
+                if (entryStart != null) {
+                    conclusion.put(conclusion.size(), "- " + fusion.name() + " " + entryStart.conclusion());
+                    actionable.add("fusion");
+                } else if (entryEnd != null) {
+                    conclusion.put(conclusion.size(), "- " + fusion.name() + " " + entryEnd.conclusion());
                     actionable.add("fusion");
                 }
             }

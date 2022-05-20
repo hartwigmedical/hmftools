@@ -24,12 +24,15 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.linx.ImmutableReportableHomozygousDisruption;
+import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.purple.PurpleTestFactory;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
+import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.test.SomaticVariantTestFactory;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
@@ -207,19 +210,52 @@ public class ConclusionAlgoTest {
         assertEquals(conclusion.get(3), "- EGFR EGFR");
     }
 
-//    @Test
-//    public void canGenerateFusionConclusion() {
-//        List<LinxFusion> homozygousDisruptions = Lists.newArrayList(createHomozygousDisruption("PTEN"));
-//        Map<Integer, String> conclusion = Maps.newHashMap();
-//        Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
-//        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("PTEN").type(Type.INACTIVATION).build();
-//        ActionabilityEntry entry =
-//                ImmutableActionabilityEntry.builder().gene("PTEN").type(Type.INACTIVATION).onlyHighDriver(true).conclusion("PTEN").build();
-//        actionabilityMap.put(key, entry);
-//
-//        ConclusionAlgo.generateFusionConclusion(conclusion, fusion, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
-//
-//    }
+    @Test
+    public void canGenerateFusionConclusion() {
+        List<LinxFusion> fusions = createFusion();
+        Map<Integer, String> conclusion = Maps.newHashMap();
+        Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
+
+        ActionabilityKey keyInternal = ImmutableActionabilityKey.builder().gene("BRAF").type(Type.INTERNAL_DELETION).build();
+        ActionabilityEntry entryInternal = ImmutableActionabilityEntry.builder()
+                .gene("BRAF")
+                .type(Type.INTERNAL_DELETION)
+                .onlyHighDriver(true)
+                .conclusion("BRAF")
+                .build();
+        actionabilityMap.put(keyInternal, entryInternal);
+
+        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("MET").type(Type.FUSION).build();
+        ActionabilityEntry entry =
+                ImmutableActionabilityEntry.builder().gene("MET").type(Type.FUSION).onlyHighDriver(true).conclusion("MET").build();
+        actionabilityMap.put(key, entry);
+
+        ActionabilityKey keyKDD1 = ImmutableActionabilityKey.builder().gene("EGFR").type(Type.KINASE_DOMAIN_DUPLICATION).build();
+        ActionabilityEntry entryKDD1 = ImmutableActionabilityEntry.builder()
+                .gene("EGFR")
+                .type(Type.KINASE_DOMAIN_DUPLICATION)
+                .onlyHighDriver(true)
+                .conclusion("EGFR")
+                .build();
+        actionabilityMap.put(keyKDD1, entryKDD1);
+
+        ActionabilityKey keyKDD2 = ImmutableActionabilityKey.builder().gene("EGFR").type(Type.KINASE_DOMAIN_DUPLICATION).build();
+        ActionabilityEntry entryKDD2 = ImmutableActionabilityEntry.builder()
+                .gene("EGFR")
+                .type(Type.KINASE_DOMAIN_DUPLICATION)
+                .onlyHighDriver(true)
+                .conclusion("EGFR")
+                .build();
+        actionabilityMap.put(keyKDD2, entryKDD2);
+
+        ConclusionAlgo.generateFusionConclusion(conclusion, fusions, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
+        assertEquals(conclusion.size(), 4);
+        assertEquals(conclusion.get(0), "- BRAF-BRAF BRAF");
+        assertEquals(conclusion.get(1), "- CAV2-MET MET");
+        assertEquals(conclusion.get(2), "- EGFR-EGFR EGFR");
+        assertEquals(conclusion.get(3), "- EGFR-EGFR EGFR");
+
+    }
 
     @Test
     public void canGenerateHomozygousDisruptionConclusion() {
@@ -556,5 +592,32 @@ public class ConclusionAlgoTest {
                 .transcript("123")
                 .isCanonical(true)
                 .build();
+    }
+
+    @NotNull
+    private static List<LinxFusion> createFusion() {
+        List<LinxFusion> fusion = Lists.newArrayList();
+        fusion.add(linxFusionBuilder("BRAF", "BRAF", true).reportedType(KnownFusionType.EXON_DEL_DUP.toString()).name("BRAF-BRAF").build());
+        fusion.add(linxFusionBuilder("CAV2", "MET", true).reportedType(KnownFusionType.KNOWN_PAIR.toString()).name("CAV2-MET").build());
+        fusion.add(linxFusionBuilder("EGFR", "EGFR", true).fusedExonUp(25)
+                .fusedExonDown(14)
+                .reportedType(KnownFusionType.EXON_DEL_DUP.toString())
+                .name("EGFR-EGFR")
+                .build());
+        fusion.add(linxFusionBuilder("EGFR", "EGFR", true).fusedExonUp(26)
+                .fusedExonDown(18)
+                .reportedType(KnownFusionType.EXON_DEL_DUP.toString())
+                .name("EGFR-EGFR")
+                .build());
+        return fusion;
+    }
+
+    @NotNull
+    private static ImmutableLinxFusion.Builder linxFusionBuilder(@NotNull String geneStart, @NotNull String geneEnd, boolean reported) {
+        return ImmutableLinxFusion.builder()
+                .from(LinxTestFactory.createMinimalTestFusion())
+                .geneStart(geneStart)
+                .geneEnd(geneEnd)
+                .reported(reported);
     }
 }
