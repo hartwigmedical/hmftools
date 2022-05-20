@@ -134,9 +134,11 @@ public class BamFragmentAllocator
                 SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile)) : null;
 
         // duplicates aren't counted towards fusions so can be ignored if only running fusions
-        // reads with supplementary alignment data are only used for fusions
         boolean keepDuplicates = mConfig.runFunction(TRANSCRIPT_COUNTS) && !mConfig.DropDuplicates;
+
+        // reads with supplementary alignment data are only used for chimeric read handling (eg fusions & alt-SJs)
         boolean keepSupplementaries = mRunFusions || mConfig.runFunction(ALT_SPLICE_JUNCTIONS) || mConfig.runFunction(UNMAPPED_READS);
+
         boolean keepSecondaries = mConfig.runFunction(TRANSCRIPT_COUNTS);
         int minMapQuality = keepSecondaries ? 0 : SINGLE_MAP_QUALITY;
 
