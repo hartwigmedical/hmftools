@@ -252,9 +252,6 @@ public class SampleAnalyser implements Callable
 
     public final List<SvVarData> getVariants() { return mAllVariants; }
 
-    // public final List<SvCluster> getClusters() { return mAnalyser.getClusters(); }
-    // public final List<SvCluster> getAllClusters() { return mAnalyser.getAllClusters(); }
-
     public boolean inValidState() { return mIsValid; }
     public final Map<String, List<SvBreakend>> getChrBreakendMap() { return mAnalyser.getState().getChrBreakendMap(); }
 
