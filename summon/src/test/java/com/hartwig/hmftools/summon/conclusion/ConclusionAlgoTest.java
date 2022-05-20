@@ -78,8 +78,12 @@ public class ConclusionAlgoTest {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         ActionabilityKey key = ImmutableActionabilityKey.builder().gene("CUPPA").type(TypeAlteration.CUPPA).build();
-        ActionabilityEntry entry =
-                ImmutableActionabilityEntry.builder().match("CUPPA").type(TypeAlteration.CUPPA).condition(Condition.OTHER).conclusion("CUPPA").build();
+        ActionabilityEntry entry = ImmutableActionabilityEntry.builder()
+                .match("CUPPA")
+                .type(TypeAlteration.CUPPA)
+                .condition(Condition.OTHER)
+                .conclusion("CUPPA")
+                .build();
         actionabilityMap.put(key, entry);
 
         MolecularTissueOrigin molecularTissueOrigin =
@@ -92,7 +96,8 @@ public class ConclusionAlgoTest {
     public void canGenerateCUPPAConclusionInconclusive() {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
-        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("CUPPA_inconclusive").type(TypeAlteration.CUPPA_INCONCLUSIVE).build();
+        ActionabilityKey key =
+                ImmutableActionabilityKey.builder().gene("CUPPA_inconclusive").type(TypeAlteration.CUPPA_INCONCLUSIVE).build();
         ActionabilityEntry entry = ImmutableActionabilityEntry.builder()
                 .match("CUPPA_inconclusive")
                 .type(TypeAlteration.CUPPA_INCONCLUSIVE)
@@ -169,6 +174,7 @@ public class ConclusionAlgoTest {
                 actionabilityMap,
                 driverGenesMap,
                 Sets.newHashSet(),
+                Sets.newHashSet(),
                 Sets.newHashSet());
         assertEquals(conclusion.size(), 3);
         assertEquals(conclusion.get(0), "- CHEK2(p.?) CHEK2");
@@ -211,8 +217,12 @@ public class ConclusionAlgoTest {
         actionabilityMap.put(keyCDKN2A, entryCDKN2A);
 
         ActionabilityKey keyEGFR = ImmutableActionabilityKey.builder().gene("EGFR").type(TypeAlteration.LOSS).build();
-        ActionabilityEntry entryEGFR =
-                ImmutableActionabilityEntry.builder().match("EGFR").type(TypeAlteration.LOSS).condition(Condition.ALWAYS).conclusion("EGFR").build();
+        ActionabilityEntry entryEGFR = ImmutableActionabilityEntry.builder()
+                .match("EGFR")
+                .type(TypeAlteration.LOSS)
+                .condition(Condition.ALWAYS)
+                .conclusion("EGFR")
+                .build();
         actionabilityMap.put(keyEGFR, entryEGFR);
 
         ConclusionAlgo.generateCNVConclusion(conclusion, gainLosse, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
@@ -239,8 +249,12 @@ public class ConclusionAlgoTest {
         actionabilityMap.put(keyInternal, entryInternal);
 
         ActionabilityKey key = ImmutableActionabilityKey.builder().gene("MET").type(TypeAlteration.FUSION).build();
-        ActionabilityEntry entry =
-                ImmutableActionabilityEntry.builder().match("MET").type(TypeAlteration.FUSION).condition(Condition.ALWAYS).conclusion("MET").build();
+        ActionabilityEntry entry = ImmutableActionabilityEntry.builder()
+                .match("MET")
+                .type(TypeAlteration.FUSION)
+                .condition(Condition.ALWAYS)
+                .conclusion("MET")
+                .build();
         actionabilityMap.put(key, entry);
 
         ActionabilityKey keyKDD1 = ImmutableActionabilityKey.builder().gene("EGFR").type(TypeAlteration.KINASE_DOMAIN_DUPLICATION).build();
@@ -300,13 +314,21 @@ public class ConclusionAlgoTest {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         ActionabilityKey keyEBV = ImmutableActionabilityKey.builder().gene("EBV").type(TypeAlteration.POSITIVE).build();
-        ActionabilityEntry entryEBV =
-                ImmutableActionabilityEntry.builder().match("EBV").type(TypeAlteration.POSITIVE).condition(Condition.ALWAYS).conclusion("EBV").build();
+        ActionabilityEntry entryEBV = ImmutableActionabilityEntry.builder()
+                .match("EBV")
+                .type(TypeAlteration.POSITIVE)
+                .condition(Condition.ALWAYS)
+                .conclusion("EBV")
+                .build();
         actionabilityMap.put(keyEBV, entryEBV);
 
         ActionabilityKey keyHPV = ImmutableActionabilityKey.builder().gene("HPV").type(TypeAlteration.POSITIVE).build();
-        ActionabilityEntry entryHPV =
-                ImmutableActionabilityEntry.builder().match("HPV").type(TypeAlteration.POSITIVE).condition(Condition.ALWAYS).conclusion("HPV").build();
+        ActionabilityEntry entryHPV = ImmutableActionabilityEntry.builder()
+                .match("HPV")
+                .type(TypeAlteration.POSITIVE)
+                .condition(Condition.ALWAYS)
+                .conclusion("HPV")
+                .build();
         actionabilityMap.put(keyHPV, entryHPV);
         ConclusionAlgo.generateVirusConclusion(conclusion, annotatedVirus, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
         assertEquals(conclusion.size(), 2);
@@ -319,8 +341,12 @@ public class ConclusionAlgoTest {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         ActionabilityKey key = ImmutableActionabilityKey.builder().gene("HRD").type(TypeAlteration.POSITIVE).build();
-        ActionabilityEntry entry =
-                ImmutableActionabilityEntry.builder().match("HRD").type(TypeAlteration.POSITIVE).condition(Condition.ALWAYS).conclusion("HRD").build();
+        ActionabilityEntry entry = ImmutableActionabilityEntry.builder()
+                .match("HRD")
+                .type(TypeAlteration.POSITIVE)
+                .condition(Condition.ALWAYS)
+                .conclusion("HRD")
+                .build();
         actionabilityMap.put(key, entry);
 
         ChordAnalysis analysis = ImmutableChordAnalysis.builder()
@@ -328,7 +354,7 @@ public class ConclusionAlgoTest {
                 .hrdValue(0.8)
                 .hrStatus(ChordStatus.HR_DEFICIENT)
                 .build();
-        ConclusionAlgo.generateHrdConclusion(conclusion, analysis, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
+        ConclusionAlgo.generateHrdConclusion(conclusion, analysis, actionabilityMap, Sets.newHashSet(), Sets.newHashSet(), Sets.newHashSet());
         assertEquals(conclusion.get(0), "- HRD(0.8) HRD");
     }
 
@@ -337,8 +363,12 @@ public class ConclusionAlgoTest {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         ActionabilityKey key = ImmutableActionabilityKey.builder().gene("HRD").type(TypeAlteration.POSITIVE).build();
-        ActionabilityEntry entry =
-                ImmutableActionabilityEntry.builder().match("HRD").type(TypeAlteration.POSITIVE).condition(Condition.ALWAYS).conclusion("HRD").build();
+        ActionabilityEntry entry = ImmutableActionabilityEntry.builder()
+                .match("HRD")
+                .type(TypeAlteration.POSITIVE)
+                .condition(Condition.ALWAYS)
+                .conclusion("HRD")
+                .build();
         actionabilityMap.put(key, entry);
 
         ChordAnalysis analysis = ImmutableChordAnalysis.builder()
@@ -346,7 +376,7 @@ public class ConclusionAlgoTest {
                 .hrdValue(0.4)
                 .hrStatus(ChordStatus.HR_PROFICIENT)
                 .build();
-        ConclusionAlgo.generateHrdConclusion(conclusion, analysis, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
+        ConclusionAlgo.generateHrdConclusion(conclusion, analysis, actionabilityMap, Sets.newHashSet(), Sets.newHashSet(), Sets.newHashSet());
         assertNull(conclusion.get(0));
     }
 
@@ -355,10 +385,19 @@ public class ConclusionAlgoTest {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         ActionabilityKey key = ImmutableActionabilityKey.builder().gene("MSI").type(TypeAlteration.POSITIVE).build();
-        ActionabilityEntry entry =
-                ImmutableActionabilityEntry.builder().match("MSI").type(TypeAlteration.POSITIVE).condition(Condition.ALWAYS).conclusion("MSI").build();
+        ActionabilityEntry entry = ImmutableActionabilityEntry.builder()
+                .match("MSI")
+                .type(TypeAlteration.POSITIVE)
+                .condition(Condition.ALWAYS)
+                .conclusion("MSI")
+                .build();
         actionabilityMap.put(key, entry);
-        ConclusionAlgo.generateMSIConclusion(conclusion, MicrosatelliteStatus.MSI, 4.5, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
+        ConclusionAlgo.generateMSIConclusion(conclusion,
+                MicrosatelliteStatus.MSI,
+                4.5,
+                actionabilityMap,
+                Sets.newHashSet(),
+                Sets.newHashSet());
         assertEquals(conclusion.get(0), "- MSI(4.5)MSI");
     }
 
@@ -367,10 +406,19 @@ public class ConclusionAlgoTest {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         ActionabilityKey key = ImmutableActionabilityKey.builder().gene("MSI").type(TypeAlteration.POSITIVE).build();
-        ActionabilityEntry entry =
-                ImmutableActionabilityEntry.builder().match("MSI").type(TypeAlteration.POSITIVE).condition(Condition.ALWAYS).conclusion("MSI").build();
+        ActionabilityEntry entry = ImmutableActionabilityEntry.builder()
+                .match("MSI")
+                .type(TypeAlteration.POSITIVE)
+                .condition(Condition.ALWAYS)
+                .conclusion("MSI")
+                .build();
         actionabilityMap.put(key, entry);
-        ConclusionAlgo.generateMSIConclusion(conclusion, MicrosatelliteStatus.MSS, 3.2, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
+        ConclusionAlgo.generateMSIConclusion(conclusion,
+                MicrosatelliteStatus.MSS,
+                3.2,
+                actionabilityMap,
+                Sets.newHashSet(),
+                Sets.newHashSet());
         assertNull(conclusion.get(0));
     }
 
@@ -386,7 +434,12 @@ public class ConclusionAlgoTest {
                 .conclusion("TML")
                 .build();
         actionabilityMap.put(key, entry);
-        ConclusionAlgo.generateTMLConclusion(conclusion, TumorMutationalStatus.HIGH, 200, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
+        ConclusionAlgo.generateTMLConclusion(conclusion,
+                TumorMutationalStatus.HIGH,
+                200,
+                actionabilityMap,
+                Sets.newHashSet(),
+                Sets.newHashSet());
         assertEquals(conclusion.get(0), "- TML(200) TML");
     }
 
@@ -402,7 +455,12 @@ public class ConclusionAlgoTest {
                 .conclusion("TML")
                 .build();
         actionabilityMap.put(key, entry);
-        ConclusionAlgo.generateTMLConclusion(conclusion, TumorMutationalStatus.LOW, 100, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
+        ConclusionAlgo.generateTMLConclusion(conclusion,
+                TumorMutationalStatus.LOW,
+                100,
+                actionabilityMap,
+                Sets.newHashSet(),
+                Sets.newHashSet());
         assertNull(conclusion.get(0));
     }
 
@@ -549,8 +607,10 @@ public class ConclusionAlgoTest {
 
         List<ReportableVariant> reportableSomatic =
                 ReportableVariantFactory.toReportableSomaticVariants(Lists.newArrayList(variant1, variant2, variant3),
-                        Lists.newArrayList(
-                                DriverCatalogTestFactory.createCanonicalSomaticMutationEntryForGene("APC", 0.4, "transcript1", ONCO),
+                        Lists.newArrayList(DriverCatalogTestFactory.createCanonicalSomaticMutationEntryForGene("APC",
+                                        0.4,
+                                        "transcript1",
+                                        ONCO),
                                 DriverCatalogTestFactory.createCanonicalSomaticMutationEntryForGene("BRCA2", 0.9, "transcript1", TSG),
                                 DriverCatalogTestFactory.createCanonicalSomaticMutationEntryForGene("BRCA1", 0.7, "transcript1", TSG)));
 

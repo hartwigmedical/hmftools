@@ -42,12 +42,14 @@ public class ConclusionAlgo {
             KnownFusionType.IG_KNOWN_PAIR.toString(),
             KnownFusionType.IG_PROMISCUOUS.toString());
     private static final Set<String> VIRUS = Sets.newHashSet("HPV", "EBV");
+    private static final Set<String> HRD_GENES = Sets.newHashSet("BRCA1", "BRCA2", "PALB2", "RAD51B", "RAD51C");
 
     @NotNull
     public static ActionabilityConclusion generateConclusion(@NotNull SummonData summonData) {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Set<String> oncogenic = Sets.newHashSet();
         Set<String> actionable = Sets.newHashSet();
+        Set<String> HRD = Sets.newHashSet();
 
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = generateActionabilityMap(summonData.actionabilityEntries());
         Map<String, DriverGene> driverGenesMap = generateDriverGenesMap(summonData.driverGenes());
@@ -62,12 +64,12 @@ public class ConclusionAlgo {
 
         genertatePurityConclusion(conclusion, summonData.purple().purity(), actionabilityMap);
         generateCUPPAConclusion(conclusion, summonData.molecularTissueOrigin(), actionabilityMap);
-        generateVariantConclusion(conclusion, reportableVariants, actionabilityMap, driverGenesMap, oncogenic, actionable);
+        generateVariantConclusion(conclusion, reportableVariants, actionabilityMap, driverGenesMap, oncogenic, actionable, HRD);
         generateCNVConclusion(conclusion, reportableGainLosses, actionabilityMap, oncogenic, actionable);
         generateFusionConclusion(conclusion, reportableFusions, actionabilityMap, oncogenic, actionable);
         generateHomozygousDisruptionConclusion(conclusion, homozygousDisruptions, actionabilityMap, oncogenic, actionable);
         generateVirusConclusion(conclusion, reportableViruses, actionabilityMap, oncogenic, actionable);
-        generateHrdConclusion(conclusion, summonData.chord(), actionabilityMap, oncogenic, actionable);
+        generateHrdConclusion(conclusion, summonData.chord(), actionabilityMap, oncogenic, actionable, HRD);
         generateMSIConclusion(conclusion,
                 summonData.purple().microsatelliteStatus(),
                 summonData.purple().microsatelliteIndelsPerMb(),
@@ -145,10 +147,13 @@ public class ConclusionAlgo {
 
     public static void generateVariantConclusion(@NotNull Map<Integer, String> conclusion,
             @NotNull List<ReportableVariant> reportableVariants, @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap,
-            @NotNull Map<String, DriverGene> driverGenesMap, @NotNull Set<String> oncogenic, @NotNull Set<String> actionable) {
+            @NotNull Map<String, DriverGene> driverGenesMap, @NotNull Set<String> oncogenic, @NotNull Set<String> actionable,
+            @NotNull Set<String> HRD) {
 
         for (ReportableVariant reportableVariant : reportableVariants) {
-
+            if (HRD_GENES.contains(reportableVariant.gene())) {
+                HRD.add(reportableVariant.gene());
+            }
             oncogenic.add(reportableVariant.source() == ReportableVariantSource.SOMATIC ? "somaticVariant" : "germlineVariant");
             ActionabilityKey keySomaticVariant = ImmutableActionabilityKey.builder()
                     .gene(reportableVariant.gene())
@@ -292,11 +297,20 @@ public class ConclusionAlgo {
 
     public static void generateHrdConclusion(@NotNull Map<Integer, String> conclusion, @NotNull ChordAnalysis chordAnalysis,
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap, @NotNull Set<String> oncogenic,
-            @NotNull Set<String> actionable) {
+            @NotNull Set<String> actionable, @NotNull Set<String> HRD) {
         if (chordAnalysis.hrStatus() == ChordStatus.HR_DEFICIENT) {
             ActionabilityKey keyHRD = ImmutableActionabilityKey.builder().gene("HRD").type(TypeAlteration.POSITIVE).build();
             ActionabilityEntry entry = actionabilityMap.get(keyHRD);
             if (entry != null && entry.condition() == Condition.ALWAYS) {
+                if (HRD.size() == 0) {
+                    ActionabilityKey keyNoHRD =
+                            ImmutableActionabilityKey.builder().gene("no_HRD_cause").type(TypeAlteration.NO_HRD_CAUSE).build();
+                    ActionabilityEntry entryNoHRd = actionabilityMap.get(keyNoHRD);
+                    if (entryNoHRd != null) {
+                        conclusion.put(conclusion.size(),
+                                "- " + "HRD(" + chordAnalysis.hrdValue() + ") " + entry.conclusion() + entryNoHRd.conclusion());
+                    }
+                }
                 conclusion.put(conclusion.size(), "- " + "HRD(" + chordAnalysis.hrdValue() + ") " + entry.conclusion());
                 actionable.add("HRD");
                 oncogenic.add("HRD");
