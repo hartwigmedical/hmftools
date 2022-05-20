@@ -273,7 +273,7 @@ public class ConclusionAlgo {
                 if (entry != null) {
                     if ((annotatedVirus.virusDriverLikelihoodType() == VirusLikelihoodType.HIGH && entry.onlyHighDriver())
                             || !entry.onlyHighDriver()) {
-                        conclusion.put(conclusion.size(), "- " + annotatedVirus.name() + " " + entry.conclusion());
+                        conclusion.put(conclusion.size(), "- " + annotatedVirus.interpretation() + " " + entry.conclusion());
                         actionable.add("virus");
                     }
                 }

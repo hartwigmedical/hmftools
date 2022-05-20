@@ -34,6 +34,8 @@ import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
+import com.hartwig.hmftools.common.virus.AnnotatedVirus;
+import com.hartwig.hmftools.common.virus.VirusTestFactory;
 import com.hartwig.hmftools.summon.actionability.ActionabilityEntry;
 import com.hartwig.hmftools.summon.actionability.ActionabilityKey;
 import com.hartwig.hmftools.summon.actionability.ImmutableActionabilityEntry;
@@ -231,7 +233,30 @@ public class ConclusionAlgoTest {
 
     @Test
     public void canGenerateVirusConclusion() {
+        List<AnnotatedVirus> annotatedVirus = annotatedVirus();
+        Map<Integer, String> conclusion = Maps.newHashMap();
+        Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
+        ActionabilityKey keyEBV = ImmutableActionabilityKey.builder().gene("EBV").type(Type.POSITIVE).build();
+        ActionabilityEntry entryEBV = ImmutableActionabilityEntry.builder()
+                .gene("EBV")
+                .type(Type.POSITIVE)
+                .onlyHighDriver(true)
+                .conclusion("EBV")
+                .build();
+        actionabilityMap.put(keyEBV, entryEBV);
 
+        ActionabilityKey keyHPV = ImmutableActionabilityKey.builder().gene("HPV").type(Type.POSITIVE).build();
+        ActionabilityEntry entryHPV = ImmutableActionabilityEntry.builder()
+                .gene("HPV")
+                .type(Type.POSITIVE)
+                .onlyHighDriver(true)
+                .conclusion("HPV")
+                .build();
+        actionabilityMap.put(keyHPV, entryHPV);
+        ConclusionAlgo.generateVirusConclusion(conclusion, annotatedVirus, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
+        assertEquals(conclusion.size(), 2);
+        assertEquals(conclusion.get(0), "- EBV EBV");
+        assertEquals(conclusion.get(1), "- HPV HPV");
     }
 
     @Test
@@ -508,5 +533,15 @@ public class ConclusionAlgoTest {
                 .from(PurpleTestFactory.createReportableGainLoss("EGFR", CopyNumberInterpretation.PARTIAL_LOSS))
                 .build();
         return Lists.newArrayList(gainLoss1, gainLoss2, gainLoss3, gainLoss4);
+    }
+
+    @NotNull
+    public List<AnnotatedVirus> annotatedVirus() {
+        List<AnnotatedVirus> annotatedVirus = Lists.newArrayList();
+        AnnotatedVirus virus1 = VirusTestFactory.testAnnotatedVirusBuilder().interpretation("EBV").build();
+        AnnotatedVirus virus2 = VirusTestFactory.testAnnotatedVirusBuilder().interpretation("HPV").build();
+        annotatedVirus.add(virus1);
+        annotatedVirus.add(virus2);
+        return annotatedVirus;
     }
 }
