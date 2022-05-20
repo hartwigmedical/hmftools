@@ -24,6 +24,8 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
+import com.hartwig.hmftools.common.linx.ImmutableReportableHomozygousDisruption;
+import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.purple.PurpleTestFactory;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss;
@@ -176,41 +178,24 @@ public class ConclusionAlgoTest {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
 
-
         ActionabilityKey keyBRAF = ImmutableActionabilityKey.builder().gene("BRAF").type(Type.AMPLIFICATION).build();
-        ActionabilityEntry entryBRAF = ImmutableActionabilityEntry.builder()
-                .gene("BRAF")
-                .type(Type.AMPLIFICATION)
-                .onlyHighDriver(true)
-                .conclusion("BRAF")
-                .build();
+        ActionabilityEntry entryBRAF =
+                ImmutableActionabilityEntry.builder().gene("BRAF").type(Type.AMPLIFICATION).onlyHighDriver(true).conclusion("BRAF").build();
         actionabilityMap.put(keyBRAF, entryBRAF);
 
         ActionabilityKey keyKRAS = ImmutableActionabilityKey.builder().gene("KRAS").type(Type.AMPLIFICATION).build();
-        ActionabilityEntry entryKRAS = ImmutableActionabilityEntry.builder()
-                .gene("KRAS")
-                .type(Type.AMPLIFICATION)
-                .onlyHighDriver(true)
-                .conclusion("KRAS")
-                .build();
+        ActionabilityEntry entryKRAS =
+                ImmutableActionabilityEntry.builder().gene("KRAS").type(Type.AMPLIFICATION).onlyHighDriver(true).conclusion("KRAS").build();
         actionabilityMap.put(keyKRAS, entryKRAS);
 
         ActionabilityKey keyCDKN2A = ImmutableActionabilityKey.builder().gene("CDKN2A").type(Type.LOSS).build();
-        ActionabilityEntry entryCDKN2A = ImmutableActionabilityEntry.builder()
-                .gene("CDKN2A")
-                .type(Type.LOSS)
-                .onlyHighDriver(true)
-                .conclusion("CDKN2A")
-                .build();
+        ActionabilityEntry entryCDKN2A =
+                ImmutableActionabilityEntry.builder().gene("CDKN2A").type(Type.LOSS).onlyHighDriver(true).conclusion("CDKN2A").build();
         actionabilityMap.put(keyCDKN2A, entryCDKN2A);
 
         ActionabilityKey keyEGFR = ImmutableActionabilityKey.builder().gene("EGFR").type(Type.LOSS).build();
-        ActionabilityEntry entryEGFR = ImmutableActionabilityEntry.builder()
-                .gene("EGFR")
-                .type(Type.LOSS)
-                .onlyHighDriver(true)
-                .conclusion("EGFR")
-                .build();
+        ActionabilityEntry entryEGFR =
+                ImmutableActionabilityEntry.builder().gene("EGFR").type(Type.LOSS).onlyHighDriver(true).conclusion("EGFR").build();
         actionabilityMap.put(keyEGFR, entryEGFR);
 
         ConclusionAlgo.generateCNVConclusion(conclusion, gainLosse, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
@@ -228,6 +213,21 @@ public class ConclusionAlgoTest {
 
     @Test
     public void canGenerateHomozygousDisruptionConclusion() {
+        List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList(createHomozygousDisruption("PTEN"));
+        Map<Integer, String> conclusion = Maps.newHashMap();
+        Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
+        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("PTEN").type(Type.INACTIVATION).build();
+        ActionabilityEntry entry =
+                ImmutableActionabilityEntry.builder().gene("PTEN").type(Type.INACTIVATION).onlyHighDriver(true).conclusion("PTEN").build();
+        actionabilityMap.put(key, entry);
+        ConclusionAlgo.generateHomozygousDisruptionConclusion(conclusion,
+                homozygousDisruptions,
+                actionabilityMap,
+                Sets.newHashSet(),
+                Sets.newHashSet());
+
+        assertEquals(conclusion.size(), 1);
+        assertEquals(conclusion.get(0), "- PTEN PTEN");
 
     }
 
@@ -237,21 +237,13 @@ public class ConclusionAlgoTest {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         ActionabilityKey keyEBV = ImmutableActionabilityKey.builder().gene("EBV").type(Type.POSITIVE).build();
-        ActionabilityEntry entryEBV = ImmutableActionabilityEntry.builder()
-                .gene("EBV")
-                .type(Type.POSITIVE)
-                .onlyHighDriver(true)
-                .conclusion("EBV")
-                .build();
+        ActionabilityEntry entryEBV =
+                ImmutableActionabilityEntry.builder().gene("EBV").type(Type.POSITIVE).onlyHighDriver(true).conclusion("EBV").build();
         actionabilityMap.put(keyEBV, entryEBV);
 
         ActionabilityKey keyHPV = ImmutableActionabilityKey.builder().gene("HPV").type(Type.POSITIVE).build();
-        ActionabilityEntry entryHPV = ImmutableActionabilityEntry.builder()
-                .gene("HPV")
-                .type(Type.POSITIVE)
-                .onlyHighDriver(true)
-                .conclusion("HPV")
-                .build();
+        ActionabilityEntry entryHPV =
+                ImmutableActionabilityEntry.builder().gene("HPV").type(Type.POSITIVE).onlyHighDriver(true).conclusion("HPV").build();
         actionabilityMap.put(keyHPV, entryHPV);
         ConclusionAlgo.generateVirusConclusion(conclusion, annotatedVirus, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
         assertEquals(conclusion.size(), 2);
@@ -543,5 +535,16 @@ public class ConclusionAlgoTest {
         annotatedVirus.add(virus1);
         annotatedVirus.add(virus2);
         return annotatedVirus;
+    }
+
+    @NotNull
+    private static ReportableHomozygousDisruption createHomozygousDisruption(@NotNull String gene) {
+        return ImmutableReportableHomozygousDisruption.builder()
+                .chromosome(Strings.EMPTY)
+                .chromosomeBand(Strings.EMPTY)
+                .gene(gene)
+                .transcript("123")
+                .isCanonical(true)
+                .build();
     }
 }
