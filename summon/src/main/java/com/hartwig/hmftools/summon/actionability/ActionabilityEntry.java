@@ -12,8 +12,10 @@ public abstract class ActionabilityEntry {
     @NotNull
     public abstract String gene();
 
-    @NotNull
+    @Nullable
     public abstract Type type();
+
+    public abstract boolean onlyHighDriver();
 
     @NotNull
     public abstract String conclusion();

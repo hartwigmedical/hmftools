@@ -8,9 +8,11 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.DataUtil;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -61,12 +63,33 @@ public final class SomaticVariants {
         return false;
     }
 
+    public static boolean hasPhasedVariant(@NotNull List<ReportableVariant> reportableVariants) {
+        for (ReportableVariant reportableVariant : reportableVariants) {
+            if (reportableVariant.canonicalEffect().contains(VariantEffect.PHASED_INFRAME_DELETION.effect())
+                    || reportableVariant.canonicalEffect().contains(VariantEffect.PHASED_INFRAME_INSERTION.effect())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     @NotNull
     public static String geneDisplayString(@NotNull ReportableVariant variant, boolean notifyGermline) {
         if (notifyGermline) {
             return variant.gene() + " #";
         } else {
             return variant.gene();
+        }
+    }
+
+    @NotNull
+    public static String proteinAnnotationDisplayString(@NotNull String canonicalHgvsProteinImpact, @NotNull String canonicalEffect) {
+        if (canonicalEffect.contains(VariantEffect.PHASED_INFRAME_DELETION.effect())
+                || canonicalEffect.contains(VariantEffect.PHASED_INFRAME_INSERTION.effect())) {
+            return canonicalHgvsProteinImpact + " +";
+        } else {
+            return canonicalHgvsProteinImpact;
         }
     }
 

@@ -14,7 +14,7 @@ public final class LimsCohortTestFactory {
 
     @NotNull
     public static LimsCohortConfig createCOLOCohortConfig() {
-        return createCohortConfig("COLO", true, false, false, false, true, true, false, false, true, false, false);
+        return createCohortConfig("COLO", false, true, false, true, true, true, false, false, true, false, false);
     }
 
     @NotNull

@@ -13,7 +13,6 @@ import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.navigation.PdfExplicitRemoteGoToDestination;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 class PageEventHandler implements IEventHandler {
 
@@ -54,7 +53,7 @@ class PageEventHandler implements IEventHandler {
                 createChapterBookmark(documentEvent.getDocument(), chapterTitle);
             }
 
-            SidePanel.renderSidePanel(page, patientReport, fullSidebar, fullSidebarContent);
+            SidePanel.renderSidePatientReport(page, patientReport, fullSidebar, fullSidebarContent);
             footer.renderFooter(page, !fullSidebar);
         }
     }

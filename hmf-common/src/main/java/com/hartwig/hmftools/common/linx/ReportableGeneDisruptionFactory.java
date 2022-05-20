@@ -3,13 +3,14 @@ package com.hartwig.hmftools.common.linx;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
 import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -45,6 +46,8 @@ public final class ReportableGeneDisruptionFactory {
                 reportableDisruptions.add(ImmutableReportableGeneDisruption.builder()
                         .location(primaryDisruptionLeft.chromosome() + primaryDisruptionLeft.chrBand())
                         .gene(primaryDisruptionLeft.gene())
+                        .transcriptId(primaryDisruptionLeft.transcriptId())
+                        .isCanonical(primaryDisruptionLeft.canonical())
                         .type(primaryDisruptionLeft.type())
                         .range(rangeField(pairedDisruption))
                         .junctionCopyNumber(primaryDisruptionLeft.junctionCopyNumber())
@@ -57,6 +60,8 @@ public final class ReportableGeneDisruptionFactory {
                 reportableDisruptions.add(ImmutableReportableGeneDisruption.builder()
                         .location(primaryDisruptionLeft.chromosome() + primaryDisruptionLeft.chrBand())
                         .gene(primaryDisruptionLeft.gene())
+                        .transcriptId(primaryDisruptionLeft.transcriptId())
+                        .isCanonical(primaryDisruptionLeft.canonical())
                         .type(primaryDisruptionLeft.type())
                         .range(rangeField(pairedDisruption))
                         .junctionCopyNumber(primaryDisruptionLeft.junctionCopyNumber())

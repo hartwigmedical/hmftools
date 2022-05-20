@@ -40,8 +40,14 @@ public final class ActionabilityFileReader {
         String[] values = line.split(MAIN_FIELD_DELIMITER, -1);
 
         return ImmutableActionabilityEntry.builder()
-                .gene(values[fields.get("gene")])
-                .type(Type.valueOf(values[fields.get("aberration type")]))
+                .gene(values[fields.get("Gene")])
+                .type(values[fields.get("aberration type")].isEmpty()
+                        ? null
+                        : Type.valueOf(values[fields.get("aberration type")].toUpperCase()
+                                .replace(" (ECD)", "")
+                                .replace(" (KDD)", "")
+                                .replace(" ", "_")))
+                .onlyHighDriver(Boolean.parseBoolean(values[fields.get("only_high_driver")]))
                 .conclusion(values[fields.get("conclusion")])
                 .build();
     }

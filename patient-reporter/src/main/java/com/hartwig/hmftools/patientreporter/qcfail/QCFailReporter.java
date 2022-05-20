@@ -112,6 +112,7 @@ public class QCFailReporter {
                 .peachGenotypes(peachGenotypesOverrule)
                 .purpleQC(purpleQc)
                 .reportDate(reportDate)
+                .isWGSreport(true)
                 .build();
     }
 

@@ -17,7 +17,6 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Icon;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
-import com.hartwig.hmftools.patientreporter.cfreport.data.ClinicalTrials;
 import com.hartwig.hmftools.patientreporter.cfreport.data.EvidenceItems;
 import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.element.Cell;
@@ -136,8 +135,7 @@ public class ClinicalEvidenceFunctions {
 
     private static boolean addEvidenceWithMaxLevel(@NotNull Table table, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
             @NotNull EvidenceLevel allowedHighestLevel, @NotNull String evidenceType) {
-        Set<String> sortedTreatments = treatmentMap.keySet().stream().distinct().collect(Collectors.toCollection(Sets::newTreeSet));
-
+        Set<String> sortedTreatments = Sets.newTreeSet(treatmentMap.keySet().stream().collect(Collectors.toSet()));
         boolean hasEvidence = false;
         for (String treatment : sortedTreatments) {
             List<ProtectEvidence> evidences = treatmentMap.get(treatment);
@@ -155,16 +153,23 @@ public class ClinicalEvidenceFunctions {
                 for (ProtectEvidence responsive : sort(evidences)) {
                     Cell cellGenomic = TableUtil.createTransparentCell(display(responsive));
 
-                    if (!evidenceType.equals("trial")) {
-                        cellGenomic.addStyle(ReportResources.urlStyle())
-                                .setAction(PdfAction.createURI("https://ckbhome.jax.org/gene/grid"));
-                    } else {
-                        cellGenomic.addStyle(ReportResources.urlStyle())
-                                .setAction(PdfAction.createURI(ClinicalTrials.createLinkiClusion(responsive)));
+                    Map<String, String> sourceUrls = Maps.newHashMap();
+                    Set<String> evidenceUrls = Sets.newHashSet();
+
+                    for (ProtectSource source : responsive.sources()) {
+                        for (String url : source.evidenceUrls()) {
+                            evidenceUrls.add(url);
+                        }
+
+                        if (source.sourceUrls().size() >= 1) {
+                            sourceUrls.put(determineEvidenceType(source), source.sourceUrls().stream().iterator().next());
+                        } else {
+                            sourceUrls.put(determineEvidenceType(source), Strings.EMPTY);
+                        }
                     }
 
                     Cell cellType;
-                    cellType = TableUtil.createTransparentCell(new Paragraph(determineEvidenceType(responsive)));
+                    cellType = TableUtil.createTransparentCell(EvidenceItems.createLinksSource(sourceUrls));
                     typeTable.addCell(cellType);
 
                     Cell cellLevel;
@@ -189,14 +194,12 @@ public class ClinicalEvidenceFunctions {
                         levelTable.addCell(cellLevel);
                         responseTable.addCell(cellResistent);
                         responseTable.addCell(cellPredicted);
-
                     }
-
                     responsiveTable.addCell(cellGenomic);
 
                     Cell publications = TableUtil.createTransparentCell(Strings.EMPTY);
                     if (evidenceType.equals("evidence")) {
-                        publications = TableUtil.createTransparentCell(EvidenceItems.createLinksPublications(responsive));
+                        publications = TableUtil.createTransparentCell(EvidenceItems.createLinksPublications(evidenceUrls));
                         linksTable.addCell(publications);
                     } else {
                         linksTable.addCell(publications);
@@ -222,16 +225,13 @@ public class ClinicalEvidenceFunctions {
     }
 
     @NotNull
-    private static String determineEvidenceType(@NotNull ProtectEvidence evidence) {
+    private static String determineEvidenceType(@NotNull ProtectSource source) {
 
         String evidenceRank = Strings.EMPTY;
-        String evidenceSource = Strings.EMPTY;
-        for (ProtectSource source: evidence.sources()) {
-            evidenceSource = source.evidenceType().display();
-            if (source.evidenceType().equals(ProtectEvidenceType.CODON_MUTATION) || source.evidenceType()
-                    .equals(ProtectEvidenceType.EXON_MUTATION)) {
-                evidenceRank = String.valueOf(source.rangeRank());
-            }
+        String evidenceSource = source.evidenceType().display();
+        if (source.evidenceType().equals(ProtectEvidenceType.CODON_MUTATION) || source.evidenceType()
+                .equals(ProtectEvidenceType.EXON_MUTATION)) {
+            evidenceRank = String.valueOf(source.rangeRank());
         }
 
         String evidenceMerged;

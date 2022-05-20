@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -21,7 +23,6 @@ public interface SummonConfig {
     String ACTIONABILITY_DATABASE_TSV = "actionability_database_tsv";
     String TUMOR_SAMPLE_ID = "tumor_sample_id";
     String REF_SAMPLE_ID = "ref_sample_id";
-
     String PURPLE_PURITY_TSV = "purple_purity_tsv";
     String PURPLE_QC_FILE = "purple_qc_file";
     String PURPLE_SOMATIC_DRIVER_CATALOG_TSV = "purple_somatic_driver_catalog_tsv";
@@ -34,8 +35,9 @@ public interface SummonConfig {
     String LINX_DRIVER_CATALOG_TSV = "linx_driver_catalog_tsv";
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
     String ANNOTATED_VIRUS_TSV = "annotated_virus_tsv";
-    String PROTECT_EVIDENCE_TSV = "protect_evidence_tsv";
-
+    String DRIVER_GENE_37_TSV = "driver_gene_37_tsv";
+    String DRIVER_GENE_38_TSV = "driver_gene_38_tsv";
+    String MOLECULAR_TISSUE_ORIGIN_TXT = "molecular_tissue_origin_txt";
     // Some additional optional params and flags
     String LOG_DEBUG = "log_debug";
 
@@ -45,6 +47,7 @@ public interface SummonConfig {
 
         options.addOption(OUTPUT_DIRECTORY, true, "Path to where the data of the report will be written to.");
         options.addOption(ACTIONABILITY_DATABASE_TSV, true, "Path to where the data oof the actionability database can be found.");
+        options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version to use (either '37' or '38')");
 
         options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which a conclusion will be generated.");
         options.addOption(REF_SAMPLE_ID, true, "The reference ID for which is used for this sample.");
@@ -65,7 +68,10 @@ public interface SummonConfig {
 
         options.addOption(ANNOTATED_VIRUS_TSV, true, "Path towards the annotated virus TSV.");
 
-        options.addOption(PROTECT_EVIDENCE_TSV, true, "Path towards the protect evidence TSV.");
+        options.addOption(MOLECULAR_TISSUE_ORIGIN_TXT, true, "Path towards the molecular tissue origin TXT.");
+
+        options.addOption(DRIVER_GENE_37_TSV, true, "Path to driver gene v37 TSV");
+        options.addOption(DRIVER_GENE_38_TSV, true, "Path to driver gene v38 TSV");
 
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
         return options;
@@ -76,6 +82,9 @@ public interface SummonConfig {
 
     @NotNull
     String actionabilityDatabaseTsv();
+
+    @NotNull
+    RefGenomeVersion refGenomeVersion();
 
     @NotNull
     String tumorSampleId();
@@ -120,7 +129,13 @@ public interface SummonConfig {
     String annotatedVirusTsv();
 
     @NotNull
-    String protectEvidenceTsv();
+    String molecularTissueOriginTxt();
+
+    @NotNull
+    String driverGene37Tsv();
+
+    @NotNull
+    String driverGene38Tsv();
 
     @NotNull
     static SummonConfig createConfig(@NotNull CommandLine cmd) throws ParseException, IOException {
@@ -131,6 +146,7 @@ public interface SummonConfig {
         return ImmutableSummonConfig.builder()
                 .outputDir(nonOptionalDir(cmd, OUTPUT_DIRECTORY))
                 .actionabilityDatabaseTsv(nonOptionalFile(cmd, ACTIONABILITY_DATABASE_TSV))
+                .refGenomeVersion(RefGenomeVersion.from(nonOptionalValue(cmd, RefGenomeVersion.REF_GENOME_VERSION)))
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
                 .refSampleId(cmd.hasOption(REF_SAMPLE_ID) ? nonOptionalValue(cmd, REF_SAMPLE_ID) : null)
                 .purplePurityTsv(nonOptionalFile(cmd, PURPLE_PURITY_TSV))
@@ -145,7 +161,9 @@ public interface SummonConfig {
                 .linxDriverCatalogTsv(nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV))
                 .chordPredictionTxt(nonOptionalFile(cmd, CHORD_PREDICTION_TXT))
                 .annotatedVirusTsv(nonOptionalFile(cmd, ANNOTATED_VIRUS_TSV))
-                .protectEvidenceTsv(nonOptionalFile(cmd, PROTECT_EVIDENCE_TSV))
+                .molecularTissueOriginTxt(nonOptionalFile(cmd, MOLECULAR_TISSUE_ORIGIN_TXT))
+                .driverGene37Tsv(nonOptionalFile(cmd, DRIVER_GENE_37_TSV))
+                .driverGene38Tsv(nonOptionalFile(cmd, DRIVER_GENE_38_TSV))
                 .build();
     }
 

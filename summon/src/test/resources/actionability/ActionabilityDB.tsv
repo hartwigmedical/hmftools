@@ -1,2 +1,5 @@
-Gene	aberration type	clinical relevance	treatment (or other association)	trial?	Gene-aberr combi	conclusion
-KRAS	amplification	benefit	inhibitor		inhibitor benefit
+Gene	aberration type	only_high_driver	conclusion
+KRAS	amplification	true	inhibitor benefit
+KRAS	activating mutation	true	inhibitor benefit
+KRAS	extracellular domain (ECD) mutation	true	inhibitor benefit
+KRAS	kinase domain duplication (KDD)	true	inhibitor benefit

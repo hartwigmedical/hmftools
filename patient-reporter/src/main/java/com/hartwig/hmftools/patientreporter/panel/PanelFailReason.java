@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public enum PanelFailReason {
-    PANEL_FAILURE("panel_failure", false, QsFormNumber.FOR_102);
+    PANEL_FAILURE("insufficient_dna_panel", false, QsFormNumber.FOR_345);
 
 
     @NotNull

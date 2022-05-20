@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class PanelQCFailChapter implements ReportChapter {
 
-    private static final String TITLE_REPORT = "Oncopanel Result Report";
+    private static final String TITLE_REPORT = "Oncopanel Result Report Failed";
 
     @NotNull
     private final PanelFailReport report;
@@ -35,7 +35,7 @@ public class PanelQCFailChapter implements ReportChapter {
     @NotNull
     @Override
     public String pdfTitle() {
-        return TITLE_REPORT;
+        return report.isCorrectedReport() ? TITLE_REPORT + " (Corrected)" : TITLE_REPORT;
     }
 
     @Override

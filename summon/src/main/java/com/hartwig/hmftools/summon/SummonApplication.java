@@ -1,11 +1,7 @@
 package com.hartwig.hmftools.summon;
 
 import java.io.IOException;
-import java.util.List;
 
-import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
-import com.hartwig.hmftools.summon.actionability.ActionabilityEntry;
-import com.hartwig.hmftools.summon.actionability.ActionabilityFileReader;
 import com.hartwig.hmftools.summon.conclusion.ActionabilityConclusion;
 import com.hartwig.hmftools.summon.conclusion.ConclusionAlgo;
 import com.hartwig.hmftools.summon.conclusion.SummonConclusionFile;
@@ -52,13 +48,16 @@ public class SummonApplication {
     public void run() throws IOException {
         LOGGER.info("Running SUMMON algo on sample {})", config.tumorSampleId());
 
-        SummonAlgo algo = SummonAlgo.build(config.actionabilityDatabaseTsv());
+        SummonAlgo algo = SummonAlgo.build(config.actionabilityDatabaseTsv(),
+                config.driverGene37Tsv(),
+                config.driverGene38Tsv(),
+                config.refGenomeVersion());
         SummonData summonData = algo.run(config);
 
         ActionabilityConclusion actionabilityConclusion = ConclusionAlgo.generateConclusion(summonData);
 
         String filename = SummonConclusionFile.generateFilename(config.outputDir(), config.tumorSampleId());
         LOGGER.info("Writing actionability conclusion to file: {}", filename);
-       // SummonConclusionFile.write(filename, actionabilityConclusion);
+        SummonConclusionFile.write(filename, actionabilityConclusion);
     }
 }

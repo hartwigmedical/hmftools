@@ -57,6 +57,7 @@ public class AnalysedPatientReporter {
         SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientPrimaryTumor);
 
         String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId(), sampleReport.cohort());
+        String specialRemark = reportData.specialRemarkModel().findSpecialRemarkForSample(sampleMetadata.tumorSampleId());
 
         String pipelineVersion = null;
         if (config.requirePipelineVersionFile()) {
@@ -80,6 +81,7 @@ public class AnalysedPatientReporter {
         String qcForm = determineForNumber(genomicAnalysis.hasReliablePurity(), genomicAnalysis.impliedPurity());
 
         GenomicAnalysis overruledAnalysis = QualityOverruleFunctions.overrule(filteredAnalysis);
+        GenomicAnalysis curateGeneName = CurationFunction.curation(overruledAnalysis);
 
         LOGGER.info("Loading CUPPA result from {}", new File(config.molecularTissueOriginTxt()).getParent());
         MolecularTissueOrigin molecularTissueOrigin = ImmutableMolecularTissueOrigin.builder()
@@ -89,7 +91,7 @@ public class AnalysedPatientReporter {
 
         LOGGER.info(" Molecular tissue origin conclusion: {}", molecularTissueOrigin.conclusion());
 
-        List<PeachGenotype> peachGenotypes = overruledAnalysis.purpleQCStatus().contains(PurpleQCStatus.FAIL_CONTAMINATION)
+        List<PeachGenotype> peachGenotypes = curateGeneName.purpleQCStatus().contains(PurpleQCStatus.FAIL_CONTAMINATION)
                 ? Lists.newArrayList()
                 : loadPeachData(config.peachGenotypeTsv());
 
@@ -99,10 +101,11 @@ public class AnalysedPatientReporter {
                 .sampleReport(sampleReport)
                 .qsFormNumber(qcForm)
                 .clinicalSummary(clinicalSummary)
+                .specialRemark(specialRemark)
                 .pipelineVersion(pipelineVersion)
-                .genomicAnalysis(overruledAnalysis)
-                .molecularTissueOrigin(overruledAnalysis.purpleQCStatus().contains(PurpleQCStatus.FAIL_CONTAMINATION)
-                        || !overruledAnalysis.hasReliablePurity() ? null : molecularTissueOrigin)
+                .genomicAnalysis(curateGeneName)
+                .molecularTissueOrigin(curateGeneName.purpleQCStatus().contains(PurpleQCStatus.FAIL_CONTAMINATION)
+                        || !curateGeneName.hasReliablePurity() ? null : molecularTissueOrigin)
                 .circosPath(config.purpleCircosPlot())
                 .comments(Optional.ofNullable(config.comments()))
                 .isCorrectedReport(config.isCorrectedReport())
@@ -152,6 +155,8 @@ public class AnalysedPatientReporter {
         LOGGER.info(" Shallow seq purity: {}", report.sampleReport().shallowSeqPurityString());
         LOGGER.info(" Lab SOPs used: {}", report.sampleReport().labProcedures());
         LOGGER.info(" Clinical summary present: {}", (!report.clinicalSummary().isEmpty() ? "yes" : "no"));
+        LOGGER.info(" Special remark present: {}", (!report.specialRemark().isEmpty() ? "yes" : "no"));
+
         LOGGER.info(" Cohort: {}", report.sampleReport().cohort().cohortId());
         LOGGER.info(" Germline reporting level: {}", report.sampleReport().germlineReportingLevel());
 

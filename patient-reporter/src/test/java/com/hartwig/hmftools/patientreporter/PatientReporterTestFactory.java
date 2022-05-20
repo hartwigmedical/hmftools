@@ -14,6 +14,8 @@ import com.hartwig.hmftools.patientreporter.algo.ImmutableAnalysedReportData;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingFile;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
+import com.hartwig.hmftools.patientreporter.remarks.SpecialRemarkFile;
+import com.hartwig.hmftools.patientreporter.remarks.SpecialRemarkModel;
 import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
 
@@ -48,9 +50,11 @@ public final class PatientReporterTestFactory {
     private static final String COMPANY_LOGO_PATH = Resources.getResource("company_logo/hartwig_logo_test.jpg").getPath();
 
     private static final String SAMPLE_SUMMARY_TSV = Resources.getResource("sample_summary/sample_summary.tsv").getPath();
+    private static final String SAMPLE_SPECIAL_REMARK_TSV = Resources.getResource("special_remark/sample_special_remark.tsv").getPath();
+
     private static final String GERMLINE_REPORTING_TSV = Resources.getResource("germline_reporting/germline_reporting.tsv").getPath();
 
-    private static final String UDI_DI = "(01) 8720299486010(8012)v5.25";
+    private static final String UDI_DI = "(01)8720299486027(8012)v5.28";
 
     private PatientReporterTestFactory() {
     }
@@ -69,11 +73,6 @@ public final class PatientReporterTestFactory {
                 .signature(SIGNATURE_PATH)
                 .udiDi(UDI_DI)
                 .qcFail(false)
-                .panel(false)
-                .panelQcFail(false)
-                .panelVCFname(Strings.EMPTY)
-                .panelGbase(Strings.EMPTY)
-                .panelQ30(Strings.EMPTY)
                 .purplePurityTsv(PURPLE_PURITY_TSV)
                 .purpleQcFile(PURPLE_QC_FILE)
                 .purpleSomaticDriverCatalogTsv(PURPLE_SOMATIC_DRIVER_CATALOG_TSV)
@@ -94,12 +93,13 @@ public final class PatientReporterTestFactory {
                 .protectEvidenceTsv(PROTECT_EVIDENCE_TSV)
                 .germlineReportingTsv(Strings.EMPTY)
                 .sampleSummaryTsv(SAMPLE_SUMMARY_TSV)
+                .sampleSpecialRemarkTsv(SAMPLE_SPECIAL_REMARK_TSV)
                 .isCorrectedReport(false)
                 .isCorrectedReportExtern(false)
                 .onlyCreatePDF(false)
                 .requirePipelineVersionFile(true)
                 .pipelineVersionFile(PIPELINE_VERSION_FILE)
-                .expectedPipelineVersion("5.22")
+                .expectedPipelineVersion("5.28")
                 .overridePipelineVersion(false)
                 .refGenomeVersion(RefGenomeVersion.V37)
                 .build();
@@ -125,11 +125,13 @@ public final class PatientReporterTestFactory {
         try {
             GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(GERMLINE_REPORTING_TSV);
             SummaryModel summaryModel = SummaryFile.buildFromTsv(SAMPLE_SUMMARY_TSV);
+            SpecialRemarkModel specialRemarkModel = SpecialRemarkFile.buildFromTsv(SAMPLE_SPECIAL_REMARK_TSV);
 
             return ImmutableAnalysedReportData.builder()
                     .from(loadTestReportData())
                     .germlineReportingModel(germlineReportingModel)
                     .summaryModel(summaryModel)
+                    .specialRemarkModel(specialRemarkModel)
                     .build();
         } catch (IOException exception) {
             throw new IllegalStateException("Could not load test analysed report data: " + exception.getMessage());

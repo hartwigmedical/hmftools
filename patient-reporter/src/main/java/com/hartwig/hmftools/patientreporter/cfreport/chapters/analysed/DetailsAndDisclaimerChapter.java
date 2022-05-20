@@ -55,7 +55,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell().add(createDisclaimerDiv(patientReport)));
         reportDocument.add(table);
 
-        reportDocument.add(ReportSignature.createSignatureDiv(patientReport.logoRVAPath(), patientReport.signaturePath(), false));
+        reportDocument.add(ReportSignature.createSignatureDiv(patientReport.logoRVAPath(), patientReport.signaturePath()));
         reportDocument.add(ReportSignature.createEndOfReportIndication());
     }
 

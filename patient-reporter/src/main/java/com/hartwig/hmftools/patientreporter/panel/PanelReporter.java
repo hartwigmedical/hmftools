@@ -34,8 +34,7 @@ public class PanelReporter {
     @NotNull
     public PanelReport run(@NotNull SampleMetadata sampleMetadata, @Nullable String comments, boolean correctedReport,
             boolean correctedReportExtern, @NotNull String expectedPipelineVersion, boolean overridePipelineVersion,
-            @Nullable String pipelineVersionFile, boolean requirePipelineVersionFile, @NotNull String panelVCFname,
-            @NotNull String panelGbase, @NotNull String panelQ30) throws IOException {
+            @Nullable String pipelineVersionFile, boolean requirePipelineVersionFile, @NotNull String panelVCFname) throws IOException {
 
         String patientId = reportData.limsModel().patientId(sampleMetadata.tumorSampleBarcode());
 
@@ -58,18 +57,16 @@ public class PanelReporter {
 
         return ImmutablePanelReport.builder()
                 .sampleReport(sampleReport)
-                .qsFormNumber(QsFormNumber.FOR_080.display())
+                .qsFormNumber(QsFormNumber.FOR_344.display())
                 .pipelineVersion(pipelineVersion)
                 .VCFFilename(panelVCFname)
-                .sampleGbase(panelGbase)
-                .sampleQ30Value(panelQ30)
                 .comments(Optional.ofNullable(comments))
                 .isCorrectedReport(correctedReport)
                 .isCorrectedReportExtern(correctedReportExtern)
                 .signaturePath(reportData.signaturePath())
-                .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
                 .reportDate(reportDate)
+                .isWGSreport(false)
                 .build();
     }
 }

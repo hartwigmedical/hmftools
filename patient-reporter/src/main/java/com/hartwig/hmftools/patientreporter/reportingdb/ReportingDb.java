@@ -18,6 +18,8 @@ import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+import com.hartwig.hmftools.patientreporter.panel.PanelFailReport;
+import com.hartwig.hmftools.patientreporter.panel.PanelReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 
 import org.apache.logging.log4j.LogManager;
@@ -30,6 +32,54 @@ public class ReportingDb {
     private static final String NA_STRING = "N/A";
 
     public ReportingDb() {
+    }
+
+    public void appendPanelReport(@NotNull PanelReport report, @NotNull String outputDirectory) throws IOException {
+
+        if (shouldBeAddedToReportingDb(report.sampleReport())) {
+            String sampleId = report.sampleReport().tumorSampleId();
+            LimsCohortConfig cohort = report.sampleReport().cohort();
+            String tumorBarcode = report.sampleReport().tumorSampleBarcode();
+
+            String reason = "oncopanel_result_report";
+
+            String reportType = reason;
+
+            if (report.isCorrectedReport()) {
+                if (report.isCorrectedReportExtern()) {
+                    reportType = reportType + "_corrected_external";
+                } else {
+                    reportType = reportType + "_corrected_internal";
+                }
+            }
+
+            writeApiUpdateJson(outputDirectory, tumorBarcode, sampleId, cohort, reportType, report.reportDate(), NA_STRING, null, null);
+
+        }
+    }
+
+    public void appendPanelFailReport(@NotNull PanelFailReport report, @NotNull String outputDirectory) throws IOException {
+
+        if (shouldBeAddedToReportingDb(report.sampleReport())) {
+            String sampleId = report.sampleReport().tumorSampleId();
+            LimsCohortConfig cohort = report.sampleReport().cohort();
+            String tumorBarcode = report.sampleReport().tumorSampleBarcode();
+
+            String reason = report.panelFailReason().identifier();
+
+            String reportType = reason;
+
+            if (report.isCorrectedReport()) {
+                if (report.isCorrectedReportExtern()) {
+                    reportType = reportType + "_corrected_external";
+                } else {
+                    reportType = reportType + "_corrected_internal";
+                }
+            }
+
+            writeApiUpdateJson(outputDirectory, tumorBarcode, sampleId, cohort, reportType, report.reportDate(), NA_STRING, null, null);
+
+        }
     }
 
     public void appendAnalysedReport(@NotNull AnalysedPatientReport report, @NotNull String outputDirectory) throws IOException {
@@ -115,7 +165,15 @@ public class ReportingDb {
             LimsCohortConfig cohort = report.sampleReport().cohort();
             String tumorBarcode = report.sampleReport().tumorSampleBarcode();
 
-            String reportType = report.isCorrectedReport() ? report.reason().identifier() + "_corrected" : report.reason().identifier();
+            String reportType = report.reason().identifier();
+
+            if (report.isCorrectedReport()) {
+                if (report.isCorrectedReportExtern()) {
+                    reportType = reportType + "_corrected_external";
+                } else {
+                    reportType = reportType + "_corrected_internal";
+                }
+            }
 
             writeApiUpdateJson(outputDirectory, tumorBarcode, sampleId, cohort, reportType, report.reportDate(), NA_STRING, null, null);
 

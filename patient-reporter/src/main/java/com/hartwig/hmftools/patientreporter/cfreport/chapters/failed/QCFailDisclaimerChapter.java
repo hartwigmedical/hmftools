@@ -46,8 +46,7 @@ public class QCFailDisclaimerChapter implements ReportChapter {
     @Override
     public void render(@NotNull Document reportDocument) {
         reportDocument.add(createContentBody());
-        reportDocument.add(ReportSignature.createSignatureDiv(failReport.logoRVAPath(), failReport.signaturePath(), false)
-                .setMarginTop(15));
+        reportDocument.add(ReportSignature.createSignatureDiv(failReport.logoRVAPath(), failReport.signaturePath()).setMarginTop(15));
         reportDocument.add(ReportSignature.createEndOfReportIndication());
     }
 

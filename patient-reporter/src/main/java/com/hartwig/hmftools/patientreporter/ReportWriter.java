@@ -15,11 +15,15 @@ public interface ReportWriter {
 
     void writeQCFailReport(@NotNull QCFailReport report, @NotNull String outputFilePath) throws IOException;
 
+    void writeJsonFailedFile(@NotNull QCFailReport report, @NotNull String outputFilePath) throws IOException;
+
+    void writeJsonAnalysedFile(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException;
+
     void writePanelAnalysedReport(@NotNull PanelReport report, @NotNull String outputFilePath) throws IOException;
 
     void writePanelQCFailReport(@NotNull PanelFailReport report, @NotNull String outputFilePath) throws IOException;
 
-    void writeJsonFailedFile(@NotNull QCFailReport report, @NotNull String outputFilePath) throws IOException;
+    void writeJsonPanelFile(@NotNull PanelReport report, @NotNull String outputFilePath) throws IOException;
 
-    void writeJsonAnalysedFile(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException;
+    void writeJsonPanelFailedFile(@NotNull PanelFailReport report, @NotNull String outputFilePath) throws IOException;
 }

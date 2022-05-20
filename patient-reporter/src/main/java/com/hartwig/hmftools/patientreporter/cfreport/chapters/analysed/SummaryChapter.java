@@ -27,7 +27,6 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.EvidenceItems;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GainsAndLosses;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.HomozygousDisruptions;
-import com.hartwig.hmftools.patientreporter.cfreport.data.HrDeficiency;
 import com.hartwig.hmftools.patientreporter.cfreport.data.Pharmacogenetics;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.cfreport.data.TumorPurity;
@@ -101,6 +100,7 @@ public class SummaryChapter implements ReportChapter {
                 + "  \nis based on information received from the originating hospital.").addStyle(ReportResources.subTextStyle()));
 
         renderClinicalConclusionText(reportDocument);
+        renderSpecialRemarkText(reportDocument);
         renderTreatmentIndications(reportDocument);
         renderTumorCharacteristics(reportDocument);
         renderGenomicAlterations(reportDocument);
@@ -132,6 +132,19 @@ public class SummaryChapter implements ReportChapter {
         if (!text.isEmpty()) {
             Div div = createSectionStartDiv(contentWidth());
             div.add(new Paragraph("Clinical Conclusion").addStyle(ReportResources.sectionTitleStyle()));
+
+            div.add(new Paragraph(text).setWidth(contentWidth()).addStyle(ReportResources.bodyTextStyle()).setFixedLeading(11));
+
+            reportDocument.add(div);
+        }
+    }
+
+    private void renderSpecialRemarkText(@NotNull Document reportDocument) {
+        String text = patientReport.specialRemark();
+
+        if (!text.isEmpty()) {
+            Div div = createSectionStartDiv(contentWidth());
+            div.add(new Paragraph("Special Remark").addStyle(ReportResources.sectionTitleStyle()));
 
             div.add(new Paragraph(text).setWidth(contentWidth()).addStyle(ReportResources.bodyTextStyle()).setFixedLeading(11));
 

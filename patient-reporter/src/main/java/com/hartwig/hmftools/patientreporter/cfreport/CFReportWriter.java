@@ -93,28 +93,25 @@ public class CFReportWriter implements ReportWriter {
     }
 
     @Override
-    public void writePanelAnalysedReport(@NotNull PanelReport report, @NotNull String outputFilePath) throws IOException{
-        ReportChapter[] chapters = new ReportChapter[] { new PanelChapter(report), new PanelExplanationChapter(),
-                new SampleAndDisclaimerChapter(report) };
+    public void writePanelAnalysedReport(@NotNull PanelReport report, @NotNull String outputFilePath) throws IOException {
+        ReportChapter[] chapters =
+                new ReportChapter[] { new PanelChapter(report), new PanelExplanationChapter(), new SampleAndDisclaimerChapter(report) };
 
-        writeReport(report, chapters, outputFilePath);
+        writePanel(report, chapters, outputFilePath);
     }
 
     @Override
-    public void writePanelQCFailReport(@NotNull PanelFailReport report, @NotNull String outputFilePath) throws IOException{
-        ReportChapter[] chapters = new ReportChapter[] { new PanelQCFailChapter(report),
-                new SampleAndDisclaimerChapterFail(report) };
-        writeReport(report, chapters, outputFilePath);
+    public void writePanelQCFailReport(@NotNull PanelFailReport report, @NotNull String outputFilePath) throws IOException {
+        ReportChapter[] chapters = new ReportChapter[] { new PanelQCFailChapter(report), new SampleAndDisclaimerChapterFail(report) };
+        writePanel(report, chapters, outputFilePath);
     }
 
     public void writeJsonFailedFile(@NotNull QCFailReport report, @NotNull String outputFilePath) throws IOException {
         writeReportDataToJson(report, outputFilePath);
-
     }
 
     public void writeJsonAnalysedFile(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException {
         writeReportDataToJson(report, outputFilePath);
-
     }
 
     public void writeReportDataToJson(@NotNull PatientReport report, @NotNull String outputDirData) throws IOException {
@@ -138,13 +135,76 @@ public class CFReportWriter implements ReportWriter {
                 .toJson(report);
     }
 
-
     private void writeReport(@NotNull PatientReport patientReport, @NotNull ReportChapter[] chapters, @NotNull String outputFilePath)
             throws IOException {
         Document doc = initializeReport(outputFilePath, writeToFile);
         PdfDocument pdfDocument = doc.getPdfDocument();
 
         PageEventHandler pageEventHandler = new PageEventHandler(patientReport);
+        pdfDocument.addEventHandler(PdfDocumentEvent.START_PAGE, pageEventHandler);
+
+        for (int i = 0; i < chapters.length; i++) {
+            ReportChapter chapter = chapters[i];
+
+            pageEventHandler.pdfTitle(chapter.pdfTitle());
+            pageEventHandler.chapterTitle(chapter.name());
+            pageEventHandler.resetChapterPageCounter();
+            pageEventHandler.sidebarType(!chapter.isFullWidth(), chapter.hasCompleteSidebar());
+
+            if (i > 0) {
+                doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+            }
+            chapter.render(doc);
+        }
+
+        pageEventHandler.writeDynamicTextParts(doc.getPdfDocument());
+
+        doc.close();
+        pdfDocument.close();
+
+        if (writeToFile) {
+            LOGGER.info("Created patient report at {}", outputFilePath);
+        } else {
+            LOGGER.info("Successfully generated in-memory patient report");
+        }
+    }
+
+    public void writeJsonPanelFile(@NotNull PanelReport report, @NotNull String outputFilePath) throws IOException {
+        writeReportDataToJson(report, outputFilePath);
+    }
+
+    public void writeJsonPanelFailedFile(@NotNull PanelFailReport report, @NotNull String outputFilePath) throws IOException {
+        writeReportDataToJson(report, outputFilePath);
+    }
+
+    public void writeReportDataToJson(@NotNull com.hartwig.hmftools.patientreporter.PanelReport report, @NotNull String outputDirData)
+            throws IOException {
+        if (writeToFile) {
+            String outputFileData = outputDirData + File.separator + OutputFileUtil.generateOutputFileNameForJsonPanel(report);
+            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFileData));
+            writer.write(convertToJson(report));
+            writer.close();
+            LOGGER.info(" Created report data json file at {} ", outputFileData);
+        }
+    }
+
+    @VisibleForTesting
+    @NotNull
+    public String convertToJson(@NotNull com.hartwig.hmftools.patientreporter.PanelReport report) {
+        return new GsonBuilder().serializeNulls()
+                .serializeSpecialFloatingPointValues()
+                .setPrettyPrinting()
+                .disableHtmlEscaping()
+                .create()
+                .toJson(report);
+    }
+
+    private void writePanel(@NotNull com.hartwig.hmftools.patientreporter.PanelReport patientReport, @NotNull ReportChapter[] chapters,
+            @NotNull String outputFilePath) throws IOException {
+        Document doc = initializeReport(outputFilePath, writeToFile);
+        PdfDocument pdfDocument = doc.getPdfDocument();
+
+        PageEventHandlerPanel pageEventHandler = new PageEventHandlerPanel(patientReport);
         pdfDocument.addEventHandler(PdfDocumentEvent.START_PAGE, pageEventHandler);
 
         for (int i = 0; i < chapters.length; i++) {
