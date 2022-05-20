@@ -12,7 +12,7 @@ public abstract class ActionabilityEntry {
     @NotNull
     public abstract String match();
 
-    @Nullable
+    @NotNull
     public abstract TypeAlteration type();
 
     public abstract Condition condition();
