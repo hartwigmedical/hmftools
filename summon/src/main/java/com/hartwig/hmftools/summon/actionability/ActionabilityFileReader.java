@@ -31,7 +31,6 @@ public final class ActionabilityFileReader {
         for (String line : lines.subList(1, lines.size())) {
             trials.add(fromString(fields, line));
         }
-
         return trials;
     }
 
@@ -40,14 +39,9 @@ public final class ActionabilityFileReader {
         String[] values = line.split(MAIN_FIELD_DELIMITER, -1);
 
         return ImmutableActionabilityEntry.builder()
-                .gene(values[fields.get("Gene")])
-                .type(values[fields.get("aberration type")].isEmpty()
-                        ? null
-                        : Type.valueOf(values[fields.get("aberration type")].toUpperCase()
-                                .replace(" (ECD)", "")
-                                .replace(" (KDD)", "")
-                                .replace(" ", "_")))
-                .onlyHighDriver(Boolean.parseBoolean(values[fields.get("only_high_driver")]))
+                .match(values[fields.get("match")])
+                .type(TypeAlteration.toType(values[fields.get("type_alteration")]))
+                .condition(Condition.toCondition(values[fields.get("condition")]))
                 .conclusion(values[fields.get("conclusion")])
                 .build();
     }

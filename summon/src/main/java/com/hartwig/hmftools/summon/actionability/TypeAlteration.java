@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.summon.actionability;
 
-public enum Type {
+import org.jetbrains.annotations.NotNull;
+
+public enum TypeAlteration {
     ACTIVATING_MUTATION,
     AMPLIFICATION,
     EXTRACELLULAR_DOMAIN_MUTATION,
@@ -20,4 +22,15 @@ public enum Type {
     CUPPA_INCONCLUSIVE,
     NO_HRD_CAUSE,
     NO_MSI_HRD_PROFILE;
+
+    @NotNull
+    static TypeAlteration toType(@NotNull String typeInput) {
+        for (TypeAlteration type : TypeAlteration.values()) {
+            if (typeInput.equals(type.toString())) {
+                return type;
+            }
+        }
+
+        throw new IllegalStateException("Cannot resolve type: '{}' " + typeInput);
+    }
 }

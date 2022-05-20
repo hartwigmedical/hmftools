@@ -10,12 +10,12 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ActionabilityEntry {
 
     @NotNull
-    public abstract String gene();
+    public abstract String match();
 
     @Nullable
-    public abstract Type type();
+    public abstract TypeAlteration type();
 
-    public abstract boolean onlyHighDriver();
+    public abstract Condition condition();
 
     @NotNull
     public abstract String conclusion();

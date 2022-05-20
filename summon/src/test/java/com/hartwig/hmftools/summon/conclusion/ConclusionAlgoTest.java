@@ -44,9 +44,10 @@ import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
 import com.hartwig.hmftools.summon.actionability.ActionabilityEntry;
 import com.hartwig.hmftools.summon.actionability.ActionabilityKey;
+import com.hartwig.hmftools.summon.actionability.Condition;
 import com.hartwig.hmftools.summon.actionability.ImmutableActionabilityEntry;
 import com.hartwig.hmftools.summon.actionability.ImmutableActionabilityKey;
-import com.hartwig.hmftools.summon.actionability.Type;
+import com.hartwig.hmftools.summon.actionability.TypeAlteration;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -76,9 +77,9 @@ public class ConclusionAlgoTest {
     public void canGenerateCUPPAConclusion() {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
-        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("CUPPA").type(Type.CUPPA).build();
+        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("CUPPA").type(TypeAlteration.CUPPA).build();
         ActionabilityEntry entry =
-                ImmutableActionabilityEntry.builder().gene("CUPPA").type(Type.CUPPA).onlyHighDriver(false).conclusion("CUPPA").build();
+                ImmutableActionabilityEntry.builder().match("CUPPA").type(TypeAlteration.CUPPA).condition(Condition.OTHER).conclusion("CUPPA").build();
         actionabilityMap.put(key, entry);
 
         MolecularTissueOrigin molecularTissueOrigin =
@@ -91,11 +92,11 @@ public class ConclusionAlgoTest {
     public void canGenerateCUPPAConclusionInconclusive() {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
-        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("CUPPA_inconclusive").type(Type.CUPPA_INCONCLUSIVE).build();
+        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("CUPPA_inconclusive").type(TypeAlteration.CUPPA_INCONCLUSIVE).build();
         ActionabilityEntry entry = ImmutableActionabilityEntry.builder()
-                .gene("CUPPA_inconclusive")
-                .type(Type.CUPPA_INCONCLUSIVE)
-                .onlyHighDriver(false)
+                .match("CUPPA_inconclusive")
+                .type(TypeAlteration.CUPPA_INCONCLUSIVE)
+                .condition(Condition.OTHER)
                 .conclusion("results inconclusive")
                 .build();
         actionabilityMap.put(key, entry);
@@ -118,47 +119,47 @@ public class ConclusionAlgoTest {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
 
-        ActionabilityKey keyCHEK2 = ImmutableActionabilityKey.builder().gene("CHEK2").type(Type.INACTIVATION).build();
+        ActionabilityKey keyCHEK2 = ImmutableActionabilityKey.builder().gene("CHEK2").type(TypeAlteration.INACTIVATION).build();
         ActionabilityEntry entryCHEK2 = ImmutableActionabilityEntry.builder()
-                .gene("CHEK2")
-                .type(Type.INACTIVATION)
-                .onlyHighDriver(true)
+                .match("CHEK2")
+                .type(TypeAlteration.INACTIVATION)
+                .condition(Condition.ONLY_HIGH)
                 .conclusion("CHEK2")
                 .build();
         actionabilityMap.put(keyCHEK2, entryCHEK2);
 
-        ActionabilityKey keyAPC = ImmutableActionabilityKey.builder().gene("APC").type(Type.ACTIVATING_MUTATION).build();
+        ActionabilityKey keyAPC = ImmutableActionabilityKey.builder().gene("APC").type(TypeAlteration.ACTIVATING_MUTATION).build();
         ActionabilityEntry entryAPC = ImmutableActionabilityEntry.builder()
-                .gene("APC")
-                .type(Type.ACTIVATING_MUTATION)
-                .onlyHighDriver(false)
+                .match("APC")
+                .type(TypeAlteration.ACTIVATING_MUTATION)
+                .condition(Condition.ALWAYS_NO_ACTIONABLE)
                 .conclusion("APC")
                 .build();
         actionabilityMap.put(keyAPC, entryAPC);
 
-        ActionabilityKey keyBRCA2 = ImmutableActionabilityKey.builder().gene("BRCA2").type(Type.INACTIVATION).build();
+        ActionabilityKey keyBRCA2 = ImmutableActionabilityKey.builder().gene("BRCA2").type(TypeAlteration.INACTIVATION).build();
         ActionabilityEntry entryBRCA2 = ImmutableActionabilityEntry.builder()
-                .gene("BRCA2")
-                .type(Type.INACTIVATION)
-                .onlyHighDriver(true)
+                .match("BRCA2")
+                .type(TypeAlteration.INACTIVATION)
+                .condition(Condition.ONLY_HIGH)
                 .conclusion("BRCA2")
                 .build();
         actionabilityMap.put(keyBRCA2, entryBRCA2);
 
-        ActionabilityKey keyBRCA1 = ImmutableActionabilityKey.builder().gene("BRCA1").type(Type.INACTIVATION).build();
+        ActionabilityKey keyBRCA1 = ImmutableActionabilityKey.builder().gene("BRCA1").type(TypeAlteration.INACTIVATION).build();
         ActionabilityEntry entryBRCA1 = ImmutableActionabilityEntry.builder()
-                .gene("BRCA1")
-                .type(Type.INACTIVATION)
-                .onlyHighDriver(true)
+                .match("BRCA1")
+                .type(TypeAlteration.INACTIVATION)
+                .condition(Condition.ONLY_HIGH)
                 .conclusion("BRCA1")
                 .build();
         actionabilityMap.put(keyBRCA1, entryBRCA1);
 
-        ActionabilityKey keyGermline = ImmutableActionabilityKey.builder().gene("germline").type(Type.GERMLINE).build();
+        ActionabilityKey keyGermline = ImmutableActionabilityKey.builder().gene("germline").type(TypeAlteration.GERMLINE).build();
         ActionabilityEntry entryGermline = ImmutableActionabilityEntry.builder()
-                .gene("germline")
-                .type(Type.GERMLINE)
-                .onlyHighDriver(true)
+                .match("germline")
+                .type(TypeAlteration.GERMLINE)
+                .condition(Condition.ONLY_HIGH)
                 .conclusion("germline")
                 .build();
         actionabilityMap.put(keyGermline, entryGermline);
@@ -170,7 +171,7 @@ public class ConclusionAlgoTest {
                 Sets.newHashSet(),
                 Sets.newHashSet());
         assertEquals(conclusion.size(), 3);
-        assertEquals(conclusion.get(0), "- CHEK2(p.?) CHEK2 germline");
+        assertEquals(conclusion.get(0), "- CHEK2(p.?) CHEK2");
         assertEquals(conclusion.get(1), "- APC(p.?) APC");
         assertEquals(conclusion.get(2), "- BRCA2(p.?) BRCA2");
         assertNull(conclusion.get(3));
@@ -182,24 +183,36 @@ public class ConclusionAlgoTest {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
 
-        ActionabilityKey keyBRAF = ImmutableActionabilityKey.builder().gene("BRAF").type(Type.AMPLIFICATION).build();
-        ActionabilityEntry entryBRAF =
-                ImmutableActionabilityEntry.builder().gene("BRAF").type(Type.AMPLIFICATION).onlyHighDriver(true).conclusion("BRAF").build();
+        ActionabilityKey keyBRAF = ImmutableActionabilityKey.builder().gene("BRAF").type(TypeAlteration.AMPLIFICATION).build();
+        ActionabilityEntry entryBRAF = ImmutableActionabilityEntry.builder()
+                .match("BRAF")
+                .type(TypeAlteration.AMPLIFICATION)
+                .condition(Condition.ALWAYS)
+                .conclusion("BRAF")
+                .build();
         actionabilityMap.put(keyBRAF, entryBRAF);
 
-        ActionabilityKey keyKRAS = ImmutableActionabilityKey.builder().gene("KRAS").type(Type.AMPLIFICATION).build();
-        ActionabilityEntry entryKRAS =
-                ImmutableActionabilityEntry.builder().gene("KRAS").type(Type.AMPLIFICATION).onlyHighDriver(true).conclusion("KRAS").build();
+        ActionabilityKey keyKRAS = ImmutableActionabilityKey.builder().gene("KRAS").type(TypeAlteration.AMPLIFICATION).build();
+        ActionabilityEntry entryKRAS = ImmutableActionabilityEntry.builder()
+                .match("KRAS")
+                .type(TypeAlteration.AMPLIFICATION)
+                .condition(Condition.ALWAYS)
+                .conclusion("KRAS")
+                .build();
         actionabilityMap.put(keyKRAS, entryKRAS);
 
-        ActionabilityKey keyCDKN2A = ImmutableActionabilityKey.builder().gene("CDKN2A").type(Type.LOSS).build();
-        ActionabilityEntry entryCDKN2A =
-                ImmutableActionabilityEntry.builder().gene("CDKN2A").type(Type.LOSS).onlyHighDriver(true).conclusion("CDKN2A").build();
+        ActionabilityKey keyCDKN2A = ImmutableActionabilityKey.builder().gene("CDKN2A").type(TypeAlteration.LOSS).build();
+        ActionabilityEntry entryCDKN2A = ImmutableActionabilityEntry.builder()
+                .match("CDKN2A")
+                .type(TypeAlteration.LOSS)
+                .condition(Condition.ALWAYS)
+                .conclusion("CDKN2A")
+                .build();
         actionabilityMap.put(keyCDKN2A, entryCDKN2A);
 
-        ActionabilityKey keyEGFR = ImmutableActionabilityKey.builder().gene("EGFR").type(Type.LOSS).build();
+        ActionabilityKey keyEGFR = ImmutableActionabilityKey.builder().gene("EGFR").type(TypeAlteration.LOSS).build();
         ActionabilityEntry entryEGFR =
-                ImmutableActionabilityEntry.builder().gene("EGFR").type(Type.LOSS).onlyHighDriver(true).conclusion("EGFR").build();
+                ImmutableActionabilityEntry.builder().match("EGFR").type(TypeAlteration.LOSS).condition(Condition.ALWAYS).conclusion("EGFR").build();
         actionabilityMap.put(keyEGFR, entryEGFR);
 
         ConclusionAlgo.generateCNVConclusion(conclusion, gainLosse, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
@@ -216,34 +229,34 @@ public class ConclusionAlgoTest {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
 
-        ActionabilityKey keyInternal = ImmutableActionabilityKey.builder().gene("BRAF").type(Type.INTERNAL_DELETION).build();
+        ActionabilityKey keyInternal = ImmutableActionabilityKey.builder().gene("BRAF").type(TypeAlteration.INTERNAL_DELETION).build();
         ActionabilityEntry entryInternal = ImmutableActionabilityEntry.builder()
-                .gene("BRAF")
-                .type(Type.INTERNAL_DELETION)
-                .onlyHighDriver(true)
+                .match("BRAF")
+                .type(TypeAlteration.INTERNAL_DELETION)
+                .condition(Condition.ALWAYS)
                 .conclusion("BRAF")
                 .build();
         actionabilityMap.put(keyInternal, entryInternal);
 
-        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("MET").type(Type.FUSION).build();
+        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("MET").type(TypeAlteration.FUSION).build();
         ActionabilityEntry entry =
-                ImmutableActionabilityEntry.builder().gene("MET").type(Type.FUSION).onlyHighDriver(true).conclusion("MET").build();
+                ImmutableActionabilityEntry.builder().match("MET").type(TypeAlteration.FUSION).condition(Condition.ALWAYS).conclusion("MET").build();
         actionabilityMap.put(key, entry);
 
-        ActionabilityKey keyKDD1 = ImmutableActionabilityKey.builder().gene("EGFR").type(Type.KINASE_DOMAIN_DUPLICATION).build();
+        ActionabilityKey keyKDD1 = ImmutableActionabilityKey.builder().gene("EGFR").type(TypeAlteration.KINASE_DOMAIN_DUPLICATION).build();
         ActionabilityEntry entryKDD1 = ImmutableActionabilityEntry.builder()
-                .gene("EGFR")
-                .type(Type.KINASE_DOMAIN_DUPLICATION)
-                .onlyHighDriver(true)
+                .match("EGFR")
+                .type(TypeAlteration.KINASE_DOMAIN_DUPLICATION)
+                .condition(Condition.ALWAYS)
                 .conclusion("EGFR")
                 .build();
         actionabilityMap.put(keyKDD1, entryKDD1);
 
-        ActionabilityKey keyKDD2 = ImmutableActionabilityKey.builder().gene("EGFR").type(Type.KINASE_DOMAIN_DUPLICATION).build();
+        ActionabilityKey keyKDD2 = ImmutableActionabilityKey.builder().gene("EGFR").type(TypeAlteration.KINASE_DOMAIN_DUPLICATION).build();
         ActionabilityEntry entryKDD2 = ImmutableActionabilityEntry.builder()
-                .gene("EGFR")
-                .type(Type.KINASE_DOMAIN_DUPLICATION)
-                .onlyHighDriver(true)
+                .match("EGFR")
+                .type(TypeAlteration.KINASE_DOMAIN_DUPLICATION)
+                .condition(Condition.ALWAYS)
                 .conclusion("EGFR")
                 .build();
         actionabilityMap.put(keyKDD2, entryKDD2);
@@ -262,9 +275,13 @@ public class ConclusionAlgoTest {
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList(createHomozygousDisruption("PTEN"));
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
-        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("PTEN").type(Type.INACTIVATION).build();
-        ActionabilityEntry entry =
-                ImmutableActionabilityEntry.builder().gene("PTEN").type(Type.INACTIVATION).onlyHighDriver(true).conclusion("PTEN").build();
+        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("PTEN").type(TypeAlteration.INACTIVATION).build();
+        ActionabilityEntry entry = ImmutableActionabilityEntry.builder()
+                .match("PTEN")
+                .type(TypeAlteration.INACTIVATION)
+                .condition(Condition.ALWAYS)
+                .conclusion("PTEN")
+                .build();
         actionabilityMap.put(key, entry);
         ConclusionAlgo.generateHomozygousDisruptionConclusion(conclusion,
                 homozygousDisruptions,
@@ -282,14 +299,14 @@ public class ConclusionAlgoTest {
         List<AnnotatedVirus> annotatedVirus = annotatedVirus();
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
-        ActionabilityKey keyEBV = ImmutableActionabilityKey.builder().gene("EBV").type(Type.POSITIVE).build();
+        ActionabilityKey keyEBV = ImmutableActionabilityKey.builder().gene("EBV").type(TypeAlteration.POSITIVE).build();
         ActionabilityEntry entryEBV =
-                ImmutableActionabilityEntry.builder().gene("EBV").type(Type.POSITIVE).onlyHighDriver(true).conclusion("EBV").build();
+                ImmutableActionabilityEntry.builder().match("EBV").type(TypeAlteration.POSITIVE).condition(Condition.ALWAYS).conclusion("EBV").build();
         actionabilityMap.put(keyEBV, entryEBV);
 
-        ActionabilityKey keyHPV = ImmutableActionabilityKey.builder().gene("HPV").type(Type.POSITIVE).build();
+        ActionabilityKey keyHPV = ImmutableActionabilityKey.builder().gene("HPV").type(TypeAlteration.POSITIVE).build();
         ActionabilityEntry entryHPV =
-                ImmutableActionabilityEntry.builder().gene("HPV").type(Type.POSITIVE).onlyHighDriver(true).conclusion("HPV").build();
+                ImmutableActionabilityEntry.builder().match("HPV").type(TypeAlteration.POSITIVE).condition(Condition.ALWAYS).conclusion("HPV").build();
         actionabilityMap.put(keyHPV, entryHPV);
         ConclusionAlgo.generateVirusConclusion(conclusion, annotatedVirus, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
         assertEquals(conclusion.size(), 2);
@@ -301,9 +318,9 @@ public class ConclusionAlgoTest {
     public void canGenerateHrdConclusion() {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
-        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("HRD").type(Type.POSITIVE).build();
+        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("HRD").type(TypeAlteration.POSITIVE).build();
         ActionabilityEntry entry =
-                ImmutableActionabilityEntry.builder().gene("HRD").type(Type.POSITIVE).onlyHighDriver(false).conclusion("HRD").build();
+                ImmutableActionabilityEntry.builder().match("HRD").type(TypeAlteration.POSITIVE).condition(Condition.ALWAYS).conclusion("HRD").build();
         actionabilityMap.put(key, entry);
 
         ChordAnalysis analysis = ImmutableChordAnalysis.builder()
@@ -311,7 +328,7 @@ public class ConclusionAlgoTest {
                 .hrdValue(0.8)
                 .hrStatus(ChordStatus.HR_DEFICIENT)
                 .build();
-        ConclusionAlgo.generateHrdConclusion(conclusion, analysis, actionabilityMap);
+        ConclusionAlgo.generateHrdConclusion(conclusion, analysis, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
         assertEquals(conclusion.get(0), "- HRD(0.8) HRD");
     }
 
@@ -319,9 +336,9 @@ public class ConclusionAlgoTest {
     public void canGenerateHrpConclusion() {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
-        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("HRD").type(Type.POSITIVE).build();
+        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("HRD").type(TypeAlteration.POSITIVE).build();
         ActionabilityEntry entry =
-                ImmutableActionabilityEntry.builder().gene("HRD").type(Type.POSITIVE).onlyHighDriver(false).conclusion("HRD").build();
+                ImmutableActionabilityEntry.builder().match("HRD").type(TypeAlteration.POSITIVE).condition(Condition.ALWAYS).conclusion("HRD").build();
         actionabilityMap.put(key, entry);
 
         ChordAnalysis analysis = ImmutableChordAnalysis.builder()
@@ -329,7 +346,7 @@ public class ConclusionAlgoTest {
                 .hrdValue(0.4)
                 .hrStatus(ChordStatus.HR_PROFICIENT)
                 .build();
-        ConclusionAlgo.generateHrdConclusion(conclusion, analysis, actionabilityMap);
+        ConclusionAlgo.generateHrdConclusion(conclusion, analysis, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
         assertNull(conclusion.get(0));
     }
 
@@ -337,11 +354,11 @@ public class ConclusionAlgoTest {
     public void canGenerateMSIConclusion() {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
-        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("MSI").type(Type.POSITIVE).build();
+        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("MSI").type(TypeAlteration.POSITIVE).build();
         ActionabilityEntry entry =
-                ImmutableActionabilityEntry.builder().gene("MSI").type(Type.POSITIVE).onlyHighDriver(false).conclusion("MSI").build();
+                ImmutableActionabilityEntry.builder().match("MSI").type(TypeAlteration.POSITIVE).condition(Condition.ALWAYS).conclusion("MSI").build();
         actionabilityMap.put(key, entry);
-        ConclusionAlgo.generateMSIConclusion(conclusion, MicrosatelliteStatus.MSI, 4.5, actionabilityMap);
+        ConclusionAlgo.generateMSIConclusion(conclusion, MicrosatelliteStatus.MSI, 4.5, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
         assertEquals(conclusion.get(0), "- MSI(4.5)MSI");
     }
 
@@ -349,11 +366,11 @@ public class ConclusionAlgoTest {
     public void canGenerateMSSConclusion() {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
-        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("MSI").type(Type.POSITIVE).build();
+        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("MSI").type(TypeAlteration.POSITIVE).build();
         ActionabilityEntry entry =
-                ImmutableActionabilityEntry.builder().gene("MSI").type(Type.POSITIVE).onlyHighDriver(false).conclusion("MSI").build();
+                ImmutableActionabilityEntry.builder().match("MSI").type(TypeAlteration.POSITIVE).condition(Condition.ALWAYS).conclusion("MSI").build();
         actionabilityMap.put(key, entry);
-        ConclusionAlgo.generateMSIConclusion(conclusion, MicrosatelliteStatus.MSS, 3.2, actionabilityMap);
+        ConclusionAlgo.generateMSIConclusion(conclusion, MicrosatelliteStatus.MSS, 3.2, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
         assertNull(conclusion.get(0));
     }
 
@@ -361,11 +378,15 @@ public class ConclusionAlgoTest {
     public void canGenerateTMLHighConclusion() {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
-        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("High-TML").type(Type.POSITIVE).build();
-        ActionabilityEntry entry =
-                ImmutableActionabilityEntry.builder().gene("High-TML").type(Type.POSITIVE).onlyHighDriver(false).conclusion("TML").build();
+        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("High-TML").type(TypeAlteration.POSITIVE).build();
+        ActionabilityEntry entry = ImmutableActionabilityEntry.builder()
+                .match("High-TML")
+                .type(TypeAlteration.POSITIVE)
+                .condition(Condition.ALWAYS)
+                .conclusion("TML")
+                .build();
         actionabilityMap.put(key, entry);
-        ConclusionAlgo.generateTMLConclusion(conclusion, TumorMutationalStatus.HIGH, 200, actionabilityMap);
+        ConclusionAlgo.generateTMLConclusion(conclusion, TumorMutationalStatus.HIGH, 200, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
         assertEquals(conclusion.get(0), "- TML(200) TML");
     }
 
@@ -373,11 +394,15 @@ public class ConclusionAlgoTest {
     public void canGenerateTMLLowConclusion() {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
-        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("High-TML").type(Type.POSITIVE).build();
-        ActionabilityEntry entry =
-                ImmutableActionabilityEntry.builder().gene("High-TML").type(Type.POSITIVE).onlyHighDriver(false).conclusion("TML").build();
+        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("High-TML").type(TypeAlteration.POSITIVE).build();
+        ActionabilityEntry entry = ImmutableActionabilityEntry.builder()
+                .match("High-TML")
+                .type(TypeAlteration.POSITIVE)
+                .condition(Condition.ALWAYS)
+                .conclusion("TML")
+                .build();
         actionabilityMap.put(key, entry);
-        ConclusionAlgo.generateTMLConclusion(conclusion, TumorMutationalStatus.LOW, 100, actionabilityMap);
+        ConclusionAlgo.generateTMLConclusion(conclusion, TumorMutationalStatus.LOW, 100, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
         assertNull(conclusion.get(0));
     }
 
@@ -385,11 +410,15 @@ public class ConclusionAlgoTest {
     public void canGenerateTMBHighConclusion() {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
-        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("High-TMB").type(Type.POSITIVE).build();
-        ActionabilityEntry entry =
-                ImmutableActionabilityEntry.builder().gene("High-TMB").type(Type.POSITIVE).onlyHighDriver(false).conclusion("TMB").build();
+        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("High-TMB").type(TypeAlteration.POSITIVE).build();
+        ActionabilityEntry entry = ImmutableActionabilityEntry.builder()
+                .match("High-TMB")
+                .type(TypeAlteration.POSITIVE)
+                .condition(Condition.ALWAYS)
+                .conclusion("TMB")
+                .build();
         actionabilityMap.put(key, entry);
-        ConclusionAlgo.generateTMBConclusion(conclusion, 15, actionabilityMap);
+        ConclusionAlgo.generateTMBConclusion(conclusion, 15, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
         assertEquals(conclusion.get(0), "- TMB( 15.0)TMB");
     }
 
@@ -397,11 +426,15 @@ public class ConclusionAlgoTest {
     public void canGenerateTMBLowConclusion() {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
-        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("High-TMB").type(Type.POSITIVE).build();
-        ActionabilityEntry entry =
-                ImmutableActionabilityEntry.builder().gene("High-TMB").type(Type.POSITIVE).onlyHighDriver(false).conclusion("TMB").build();
+        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("High-TMB").type(TypeAlteration.POSITIVE).build();
+        ActionabilityEntry entry = ImmutableActionabilityEntry.builder()
+                .match("High-TMB")
+                .type(TypeAlteration.POSITIVE)
+                .condition(Condition.ALWAYS)
+                .conclusion("TMB")
+                .build();
         actionabilityMap.put(key, entry);
-        ConclusionAlgo.generateTMBConclusion(conclusion, 9, actionabilityMap);
+        ConclusionAlgo.generateTMBConclusion(conclusion, 9, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
         assertNull(conclusion.get(0));
     }
 
@@ -409,11 +442,11 @@ public class ConclusionAlgoTest {
     public void canGenertatePurityConclusionBelow() {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
-        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("purity").type(Type.PURITY).build();
+        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("purity").type(TypeAlteration.PURITY).build();
         ActionabilityEntry entry = ImmutableActionabilityEntry.builder()
-                .gene("purity")
-                .type(Type.PURITY)
-                .onlyHighDriver(false)
+                .match("purity")
+                .type(TypeAlteration.PURITY)
+                .condition(Condition.OTHER)
                 .conclusion("low purity (XX%)")
                 .build();
         actionabilityMap.put(key, entry);
@@ -425,11 +458,11 @@ public class ConclusionAlgoTest {
     public void canGenertatePurityConclusionAbove() {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
-        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("purity").type(Type.PURITY).build();
+        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("purity").type(TypeAlteration.PURITY).build();
         ActionabilityEntry entry = ImmutableActionabilityEntry.builder()
-                .gene("purity")
-                .type(Type.PURITY)
-                .onlyHighDriver(false)
+                .match("purity")
+                .type(TypeAlteration.PURITY)
+                .condition(Condition.OTHER)
                 .conclusion("low purity (XX%)")
                 .build();
         actionabilityMap.put(key, entry);
@@ -443,11 +476,11 @@ public class ConclusionAlgoTest {
         Set<String> actionable = Sets.newHashSet();
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
-        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("no_oncogenic").type(Type.NO_ONCOGENIC).build();
+        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("no_oncogenic").type(TypeAlteration.NO_ONCOGENIC).build();
         ActionabilityEntry entry = ImmutableActionabilityEntry.builder()
-                .gene("no_oncogenic")
-                .type(Type.NO_ONCOGENIC)
-                .onlyHighDriver(false)
+                .match("no_oncogenic")
+                .type(TypeAlteration.NO_ONCOGENIC)
+                .condition(Condition.OTHER)
                 .conclusion("no_oncogenic")
                 .build();
         actionabilityMap.put(key, entry);
@@ -461,11 +494,11 @@ public class ConclusionAlgoTest {
         Set<String> actionable = Sets.newHashSet();
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
-        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("no_actionable").type(Type.NO_ACTIONABLE).build();
+        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("no_actionable").type(TypeAlteration.NO_ACTIONABLE).build();
         ActionabilityEntry entry = ImmutableActionabilityEntry.builder()
-                .gene("no_actionable")
-                .type(Type.NO_ACTIONABLE)
-                .onlyHighDriver(false)
+                .match("no_actionable")
+                .type(TypeAlteration.NO_ACTIONABLE)
+                .condition(Condition.OTHER)
                 .conclusion("no_actionable")
                 .build();
         actionabilityMap.put(key, entry);
@@ -479,11 +512,11 @@ public class ConclusionAlgoTest {
     public void canGenerateFindings() {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
-        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("findings").type(Type.FINDINGS).build();
+        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("findings").type(TypeAlteration.FINDINGS).build();
         ActionabilityEntry entry = ImmutableActionabilityEntry.builder()
-                .gene("findings")
-                .type(Type.FINDINGS)
-                .onlyHighDriver(false)
+                .match("findings")
+                .type(TypeAlteration.FINDINGS)
+                .condition(Condition.OTHER)
                 .conclusion("findings")
                 .build();
         actionabilityMap.put(key, entry);
@@ -516,10 +549,8 @@ public class ConclusionAlgoTest {
 
         List<ReportableVariant> reportableSomatic =
                 ReportableVariantFactory.toReportableSomaticVariants(Lists.newArrayList(variant1, variant2, variant3),
-                        Lists.newArrayList(DriverCatalogTestFactory.createCanonicalSomaticMutationEntryForGene("APC",
-                                        0.4,
-                                        "transcript1",
-                                        ONCO),
+                        Lists.newArrayList(
+                                DriverCatalogTestFactory.createCanonicalSomaticMutationEntryForGene("APC", 0.4, "transcript1", ONCO),
                                 DriverCatalogTestFactory.createCanonicalSomaticMutationEntryForGene("BRCA2", 0.9, "transcript1", TSG),
                                 DriverCatalogTestFactory.createCanonicalSomaticMutationEntryForGene("BRCA1", 0.7, "transcript1", TSG)));
 
