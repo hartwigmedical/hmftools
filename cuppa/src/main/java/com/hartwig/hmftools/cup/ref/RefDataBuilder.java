@@ -60,7 +60,7 @@ public class RefDataBuilder
             mClassifiers.add(new RefGeneExpression(mConfig, mSampleDataCache, cmd));
 
         if(RefAltSpliceJunctions.requiresBuild(mConfig))
-            mClassifiers.add(new RefAltSpliceJunctions(mConfig, mSampleDataCache));
+            mClassifiers.add(new RefAltSpliceJunctions(mConfig, mSampleDataCache, cmd));
     }
 
     private void loadSampleData(final CommandLine cmd)

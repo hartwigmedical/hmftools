@@ -235,8 +235,10 @@ public class CuppaConfig
 
     private String getRefDataFile(final CommandLine cmd, final String configStr, final String defaultFilename)
     {
-        final String fileName = cmd.getOptionValue(configStr, defaultFilename);
-        return RefDataDir + fileName;
+        if(cmd.hasOption(configStr))
+            return cmd.getOptionValue(configStr);
+
+        return RefDataDir + defaultFilename;
     }
 
     private String getCohortSampleDataFile(

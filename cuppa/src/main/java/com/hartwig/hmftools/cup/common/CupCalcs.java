@@ -19,7 +19,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.Matrix;
 
 public class CupCalcs
 {
@@ -220,6 +222,65 @@ public class CupCalcs
         }
 
         return adjustedCounts;
+    }
+
+    public static void addPanCancerNoise(final Matrix cancerMatrix, int noiseAllocation)
+    {
+        // determine the median count per bucket across the cancer types
+        double[] bucketMedians = new double[cancerMatrix.Rows];
+        double medianTotal = 0;
+
+        final double[][] data = cancerMatrix.getData();
+        List<Double> sortedCounts = Lists.newArrayListWithCapacity(cancerMatrix.Cols);
+
+        int medianIndex = cancerMatrix.Cols / 2;
+        int medianLowerIndex = (cancerMatrix.Cols % 2) == 0 ? medianIndex - 1 : medianIndex;
+
+        if((cancerMatrix.Cols % 2) == 1)
+            ++medianIndex;
+
+        for(int b = 0; b < cancerMatrix.Rows; ++b)
+        {
+            sortedCounts.clear();
+
+            for(int i = 0; i < cancerMatrix.Cols; ++i)
+            {
+                int index = 0;
+                double count = data[b][i];
+                while(index < sortedCounts.size())
+                {
+                    if(count > sortedCounts.get(index))
+                        break;
+                    else
+                        ++index;
+                }
+
+                sortedCounts.add(index, count);
+            }
+
+            double medianCount = 0;
+
+            if(medianIndex == medianLowerIndex)
+                medianCount = sortedCounts.get(medianIndex);
+            else
+                medianCount = (sortedCounts.get(medianLowerIndex) + sortedCounts.get(medianIndex)) * 0.5;
+
+            medianTotal += medianCount;
+            bucketMedians[b] = medianCount;
+        }
+
+        // now scale these to the noise allocation
+        for(int b = 0; b < cancerMatrix.Rows; ++b)
+        {
+            double bucketMedian = bucketMedians[b];
+            double bucketPerc = bucketMedian / medianTotal;
+            double bucketAlloc = bucketPerc * noiseAllocation;
+
+            for(int i = 0; i < cancerMatrix.Cols; ++i)
+            {
+                data[b][i] += bucketAlloc;
+            }
+        }
     }
 
 }

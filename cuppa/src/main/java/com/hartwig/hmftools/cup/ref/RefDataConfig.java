@@ -18,9 +18,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.feature.RefFeatures;
+import com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions;
 import com.hartwig.hmftools.cup.rna.RefGeneExpression;
 import com.hartwig.hmftools.cup.somatics.RefSomatics;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -152,6 +152,7 @@ public class RefDataConfig
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
 
         RefGeneExpression.addCmdLineArgs(options);
+        RefAltSpliceJunctions.addCmdLineArgs(options);
         RefSomatics.addCmdLineArgs(options);
         RefFeatures.addCmdLineArgs(options);
     }
