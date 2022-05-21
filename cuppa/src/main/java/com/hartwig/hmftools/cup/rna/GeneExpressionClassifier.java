@@ -11,8 +11,8 @@ import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
 import static com.hartwig.hmftools.cup.common.ClassifierType.EXPRESSION_COHORT;
 import static com.hartwig.hmftools.cup.common.ClassifierType.EXPRESSION_PAIRWISE;
 import static com.hartwig.hmftools.cup.common.CupCalcs.adjustRefCounts;
-import static com.hartwig.hmftools.cup.common.CupConstants.RNA_GENE_EXP_CSS_THRESHOLD;
-import static com.hartwig.hmftools.cup.common.CupConstants.RNA_GENE_EXP_DIFF_EXPONENT;
+import static com.hartwig.hmftools.cup.common.CupConstants.GENE_EXP_CSS_THRESHOLD;
+import static com.hartwig.hmftools.cup.common.CupConstants.GENE_EXP_DIFF_EXPONENT;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_MAX_MATCHES;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
@@ -255,10 +255,10 @@ public class GeneExpressionClassifier implements CuppaClassifier
 
             double css = calcCosineSim(sampleGeneTPMs, refPosFreqs);
 
-            if(css < RNA_GENE_EXP_CSS_THRESHOLD)
+            if(css < GENE_EXP_CSS_THRESHOLD)
                 continue;
 
-            double cssWeight = pow(RNA_GENE_EXP_DIFF_EXPONENT, -100 * (1 - css));
+            double cssWeight = pow(GENE_EXP_DIFF_EXPONENT, -100 * (1 - css));
 
             double weightedCss = css * cssWeight;
             cancerCssTotals.put(refCancerType, weightedCss);
@@ -302,7 +302,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
 
             double css = calcCosineSim(sampleTPMs, otherSampleTPMs);
 
-            if(css < RNA_GENE_EXP_CSS_THRESHOLD)
+            if(css < GENE_EXP_CSS_THRESHOLD)
                 continue;
 
             if(mConfig.WriteSimilarities)
@@ -315,7 +315,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
             if(!isKnownCancerType(refCancerType))
                 continue;
 
-            double cssWeight = pow(RNA_GENE_EXP_DIFF_EXPONENT, -100 * (1 - css));
+            double cssWeight = pow(GENE_EXP_DIFF_EXPONENT, -100 * (1 - css));
 
             int cancerSampleCount = mRefCancerSampleCounts.get(refCancerType);
             double weightedCss = css * cssWeight / sqrt(cancerSampleCount);

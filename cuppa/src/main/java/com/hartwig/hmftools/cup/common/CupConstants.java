@@ -7,40 +7,45 @@ import com.hartwig.hmftools.common.purple.Gender;
 
 public class CupConstants
 {
-    public static final double SNV_CSS_THRESHOLD = 0.01;
+    // somatics
+    public static final double SNV_96_CSS_THRESHOLD = 0.01;
+    public static final double SNV_96_CSS_DIFF_EXPONENT = 8;
+    public static final double UNDEFINED_SIG_PERC_MAX_MULTIPLE = 100.01;
 
+    public static final double GEN_POS_CSS_THRESHOLD = 0.01;
+    public static final double GEN_POS_DIFF_EXPONENT = 10;
+    public static final double GEN_POS_CN_ADJUST_MAX = 4;
+    public static final int GEN_POS_BUCKET_SIZE = 500000;
+    public static final int GEN_POS_MAX_SAMPLE_COUNT = 20000;
+    public static final int GEN_POS_NOISE_ALLOCATION = 100000;
+
+    // pairwise similarities
     public static final double CSS_SIMILARITY_CUTOFF = 0.01;
     public static final int CSS_SIMILARITY_MAX_MATCHES = 20;
 
-    public static final double SNV_POS_FREQ_CSS_THRESHOLD = 0.01;
-    public static final double RNA_GENE_EXP_CSS_THRESHOLD = 0.01;
+    // gene expression
+    public static final double GENE_EXP_CSS_THRESHOLD = 0.01;
+    public static final double GENE_EXP_DIFF_EXPONENT = 50;
 
-    public static final double SNV_CSS_DIFF_EXPONENT = 8;
-    public static final double SNV_POS_FREQ_DIFF_EXPONENT = 10;
-    public static final double RNA_GENE_EXP_DIFF_EXPONENT = 50;
-    public static final double RNA_ALT_SJ_DIFF_EXPONENT = 3.5;
+    // alternate splice junctions
+    public static final double ALT_SJ_DIFF_EXPONENT = 3.5;
+    public static final int ALT_SJ_NOISE_ALLOCATION = 500000;
 
-    public static final double GEN_POS_CN_ADJUST_MAX = 4;
-
-    public static final int POS_FREQ_BUCKET_SIZE = 500000;
-    public static final int POS_FREQ_MAX_SAMPLE_COUNT = 20000;
-
+    // common
     public static final double MIN_CLASSIFIER_SCORE = 0.01;
-
-    public static final double FEATURE_DAMPEN_FACTOR = 0.8;
     public static final double COMBINED_DAMPEN_FACTOR = 0.4;
     public static final double DNA_DAMPEN_FACTOR = 0.65;
     public static final double RNA_DAMPEN_FACTOR = 0.7;
+    public static final double UNDEFINED_PERC_MAX_MULTIPLE = 1.01;
+
+    // drivers
+    public static final double DRIVER_ZERO_PREVALENCE_ALLOCATION = 0.10;
+    public static final double NON_DRIVER_ZERO_PREVALENCE_ALLOCATION = 0.01;
+    public static final double FEATURE_DAMPEN_FACTOR = 0.8;
 
     public static final String CANCER_TYPE_UNKNOWN = "Unknown";
     public static final String CANCER_TYPE_OTHER = "Other";
     public static final String CANCER_TYPE_PAN = "ALL";
-
-    public static final double DRIVER_ZERO_PREVALENCE_ALLOCATION = 0.10;
-    public static final double NON_DRIVER_ZERO_PREVALENCE_ALLOCATION = 0.01;
-
-    public static final double UNDEFINED_SIG_PERC_MAX_MULTIPLE = 100.01;
-    public static final double UNDEFINED_PERC_MAX_MULTIPLE = 1.01;
 
     public static final List<String> AID_APOBEC_TRINUCLEOTIDE_CONTEXTS = Lists.newArrayList(
             "C>T_TCA", "C>T_TCC", "C>T_TCG", "C>T_TCT", "C>G_TCA", "C>G_TCC", "C>G_TCG", "C>G_TCT");

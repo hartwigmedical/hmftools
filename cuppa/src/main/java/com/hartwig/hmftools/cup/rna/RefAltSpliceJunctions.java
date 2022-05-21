@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_ALT_SJ_CANCER;
 import static com.hartwig.hmftools.cup.common.CategoryType.ALT_SJ;
 import static com.hartwig.hmftools.cup.common.CupCalcs.addPanCancerNoise;
+import static com.hartwig.hmftools.cup.common.CupConstants.ALT_SJ_NOISE_ALLOCATION;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -51,7 +52,7 @@ public class RefAltSpliceJunctions implements RefClassifier
         mConfig = config;
         mSampleDataCache = sampleDataCache;
 
-        mNoiseAllocation = cmd != null ? Integer.parseInt(cmd.getOptionValue(ALT_SJ_NOISE_ALLOC, "0")) : 0;
+        mNoiseAllocation = cmd != null ? Integer.parseInt(cmd.getOptionValue(ALT_SJ_NOISE_ALLOC, String.valueOf(ALT_SJ_NOISE_ALLOCATION))) : 0;
     }
 
     public static void addCmdLineArgs(@NotNull Options options)
@@ -237,8 +238,13 @@ public class RefAltSpliceJunctions implements RefClassifier
                 ++altSjIndex;
             }
 
-            CUP_LOGGER.info("loaded matrix(rows={} cols={}) from file({}) zeros({}) ones({}) exceedsShort({})",
-                    altSjSiteCount, sampleCount, filename, zeroCount, oneCount, maxShortCount);
+            CUP_LOGGER.info("loaded matrix(rows={} cols={}) from file({})", altSjSiteCount, sampleCount, filename);
+
+            if(maxShortCount > 0)
+            {
+                CUP_LOGGER.warn("file({}) zeros({}) ones({}) capped {} short values", filename, zeroCount, oneCount, maxShortCount);
+            }
+
         }
         catch (IOException exception)
         {

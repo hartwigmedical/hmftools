@@ -18,8 +18,8 @@ import com.hartwig.hmftools.common.utils.Matrix;
 
 public final class SomaticsCommon
 {
-    public static final String EXCLUDE_AID_APOBEC = "exclude_aid_apobec_gen_pos";
-    public static final String EXCLUDE_AID_APOBEC_DESC = "Exclude 8 AID/APOBEC trinucleotide contexts from genomic positions";
+    public static final String INCLUDE_AID_APOBEC = "include_aid_apobec_gen_pos";
+    public static final String INCLUDE_AID_APOBEC_DESC = "Include 8 AID/APOBEC trinucleotide contexts in genomic positions";
 
     public static final String NORMALISE_COPY_NUMBER = "normalise_cn";
     public static final String NORMALISE_COPY_NUMBER_DESC = "Adjust genomic-position counts by copy number ";

@@ -25,12 +25,12 @@ import static com.hartwig.hmftools.cup.common.CupCalcs.convertToPercentages;
 import static com.hartwig.hmftools.cup.common.CupConstants.AID_APOBEC_TRINUCLEOTIDE_CONTEXTS;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_MAX_MATCHES;
-import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_BUCKET_SIZE;
-import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_MAX_SAMPLE_COUNT;
-import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_DIFF_EXPONENT;
-import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_THRESHOLD;
-import static com.hartwig.hmftools.cup.common.CupConstants.SNV_POS_FREQ_CSS_THRESHOLD;
-import static com.hartwig.hmftools.cup.common.CupConstants.SNV_POS_FREQ_DIFF_EXPONENT;
+import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_BUCKET_SIZE;
+import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_MAX_SAMPLE_COUNT;
+import static com.hartwig.hmftools.cup.common.CupConstants.SNV_96_CSS_DIFF_EXPONENT;
+import static com.hartwig.hmftools.cup.common.CupConstants.SNV_96_CSS_THRESHOLD;
+import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_CSS_THRESHOLD;
+import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_DIFF_EXPONENT;
 import static com.hartwig.hmftools.cup.common.CupConstants.UNDEFINED_PERC_MAX_MULTIPLE;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
@@ -51,8 +51,8 @@ import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBE
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC_SIG_DESC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.NORMALISE_COPY_NUMBER;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.NORMALISE_COPY_NUMBER_DESC;
-import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_AID_APOBEC;
-import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_AID_APOBEC_DESC;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC_DESC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.applyMaxCssAdjustment;
 import static com.hartwig.hmftools.cup.somatics.TrinucleotideCounts.convertSomaticVariantsToSnvCounts;
 
@@ -106,7 +106,7 @@ public class SomaticClassifier implements CuppaClassifier
     private boolean mIsValid;
     private BufferedWriter mCssWriter;
 
-    private final boolean mExcludeAidApobecGenPos;
+    private final boolean mIncludeAidApobecGenPos;
     private final boolean mExcludeAidApobecSnv96;
 
     private final boolean mApplyCopyNumber; // to genomic positions
@@ -154,13 +154,13 @@ public class SomaticClassifier implements CuppaClassifier
         mRefSnvPosFreqCancerTypes = Lists.newArrayList();
         mRefSamplePosFreqIndex = Maps.newHashMap();
 
-        mExcludeAidApobecGenPos = cmd != null ? cmd.hasOption(EXCLUDE_AID_APOBEC) : false;
+        mIncludeAidApobecGenPos = cmd != null && cmd.hasOption(INCLUDE_AID_APOBEC);
         mExcludeAidApobecSnv96 = cmd != null ? cmd.hasOption(EXCLUDE_SNV_96_AID_APOBEC) : false;
         mApplyCopyNumber = cmd != null ? cmd.hasOption(NORMALISE_COPY_NUMBER) : false;
         mAidApobecSnv96Buckets = Lists.newArrayList();
 
-        mCssExponentSnv = cmd != null ? Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_SNV, "8")) : SNV_CSS_DIFF_EXPONENT;
-        mCssExponentGenPos = cmd != null ? Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_GEN_POS, "10")) : SNV_POS_FREQ_DIFF_EXPONENT;
+        mCssExponentSnv = cmd != null ? Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_SNV, "8")) : SNV_96_CSS_DIFF_EXPONENT;
+        mCssExponentGenPos = cmd != null ? Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_GEN_POS, "10")) : GEN_POS_DIFF_EXPONENT;
         mMaxCssAdjustFactorSnv = cmd != null ? Double.parseDouble(cmd.getOptionValue(MAX_CSS_ADJUST_FACTOR_SNV, "0")) : 0;
         mMaxCssAdjustFactorGenPos = cmd != null ? Double.parseDouble(cmd.getOptionValue(MAX_CSS_ADJUST_FACTOR_GEN_POS, "0")) : 0;
         mWriteSnvSims = cmd != null ? cmd.hasOption(WRITE_SNV_SIMILARITIES) : false;
@@ -172,9 +172,9 @@ public class SomaticClassifier implements CuppaClassifier
         mSigContributions = new SigContributions(mConfig, mSampleDataCache);
 
         int posFreqBucketSize = cmd != null && cmd.hasOption(SNV_POS_FREQ_POS_SIZE) ?
-                Integer.parseInt(cmd.getOptionValue(SNV_POS_FREQ_POS_SIZE)) : POS_FREQ_BUCKET_SIZE;
+                Integer.parseInt(cmd.getOptionValue(SNV_POS_FREQ_POS_SIZE)) : GEN_POS_BUCKET_SIZE;
 
-        mPosFrequencies = new PositionFrequencies(posFreqBucketSize, POS_FREQ_MAX_SAMPLE_COUNT);
+        mPosFrequencies = new PositionFrequencies(posFreqBucketSize, GEN_POS_MAX_SAMPLE_COUNT);
 
         if(mConfig.RefSnvCountsFile.isEmpty() && mConfig.RefSigContributionFile.isEmpty() && mConfig.RefSnvCancerPosFreqFile.isEmpty())
             return;
@@ -216,7 +216,7 @@ public class SomaticClassifier implements CuppaClassifier
 
         if(mApplyCopyNumber && !mConfig.runClassifier(SAMPLE_TRAIT))
         {
-            CUP_LOGGER.error("gennomic-position copy number normalisation requires sample traits for purity");
+            CUP_LOGGER.error("genomic-position copy number normalisation requires sample traits for purity");
             mIsValid = false;
         }
 
@@ -230,7 +230,7 @@ public class SomaticClassifier implements CuppaClassifier
 
     public static void addCmdLineArgs(Options options)
     {
-        options.addOption(EXCLUDE_AID_APOBEC, false, EXCLUDE_AID_APOBEC_DESC);
+        options.addOption(INCLUDE_AID_APOBEC, false, INCLUDE_AID_APOBEC_DESC);
         options.addOption(NORMALISE_COPY_NUMBER, false, NORMALISE_COPY_NUMBER_DESC);
         options.addOption(EXCLUDE_SNV_96_AID_APOBEC, false, EXCLUDE_SNV_96_AID_APOBEC_DESC);
         options.addOption(INCLUDE_AID_APOBEC_SIG, false, INCLUDE_AID_APOBEC_SIG_DESC);
@@ -274,7 +274,7 @@ public class SomaticClassifier implements CuppaClassifier
 
                 mSampleSnvCounts = convertSomaticVariantsToSnvCounts(sampleId, somaticVariants, mSampleSnvCountsIndex);
 
-                AidApobecStatus aidApobecStatus = mExcludeAidApobecGenPos ? AidApobecStatus.FALSE_ONLY : AidApobecStatus.ALL;
+                AidApobecStatus aidApobecStatus = mIncludeAidApobecGenPos ? AidApobecStatus.ALL : AidApobecStatus.FALSE_ONLY;
                 mSamplePosFrequencies = convertSomaticVariantsToPosFrequencies(
                         sampleId, somaticVariants, mSamplePosFreqIndex, mPosFrequencies, aidApobecStatus);
             }
@@ -418,7 +418,7 @@ public class SomaticClassifier implements CuppaClassifier
 
             double css = calcCosineSim(sampleCounts, otherSampleCounts);
 
-            if(css < SNV_CSS_THRESHOLD)
+            if(css < SNV_96_CSS_THRESHOLD)
                 continue;
 
             if(mWriteSnvSims && mConfig.WriteSimilarities)
@@ -544,7 +544,7 @@ public class SomaticClassifier implements CuppaClassifier
 
             boolean matchesCancerType = sample.cancerType().equals(refCancerType);
 
-            double adjustMultiplier = sampleTotal > POS_FREQ_MAX_SAMPLE_COUNT ? POS_FREQ_MAX_SAMPLE_COUNT / sampleTotal : 1;
+            double adjustMultiplier = sampleTotal > GEN_POS_MAX_SAMPLE_COUNT ? GEN_POS_MAX_SAMPLE_COUNT / sampleTotal : 1;
 
             final double[] refPosFreqs = sample.isRefSample() && matchesCancerType ?
                     adjustRefCounts(mRefCancerSnvPosFrequencies.getCol(i), sampleCounts, adjustMultiplier) : mRefCancerSnvPosFrequencies.getCol(i);
@@ -555,7 +555,7 @@ public class SomaticClassifier implements CuppaClassifier
 
             writeGenPosCssValues(sample, refCancerType, css);
 
-            if(css < SNV_POS_FREQ_CSS_THRESHOLD)
+            if(css < GEN_POS_CSS_THRESHOLD)
                 continue;
 
             double cssWeight = pow(mCssExponentGenPos, -100 * (1 - css));
@@ -676,7 +676,7 @@ public class SomaticClassifier implements CuppaClassifier
 
             double css = calcCosineSim(sampleCounts, otherSampleCounts);
 
-            if(css < SNV_CSS_THRESHOLD)
+            if(css < SNV_96_CSS_THRESHOLD)
                 continue;
 
             recordCssSimilarity(

@@ -40,8 +40,6 @@ public class SigContributions
     private final SomaticSigs mSomaticSigs;
     private final Map<String,Map<String,Double>> mSampleSigContributions;
     private final Map<String,Map<String,double[]>> mRefCancerSigContribPercentiles;
-    private final boolean mAidApobecSigFeature;
-    private final Map<String,double[]> mRefCancerAidApobecPercentiles;
 
     public SigContributions(final CuppaConfig config, final SampleDataCache sampleDataCache)
     {
@@ -51,22 +49,6 @@ public class SigContributions
         mSomaticSigs = new SomaticSigs(mConfig.RefSnvSignaturesFile);
         mSampleSigContributions = Maps.newHashMap();
         mRefCancerSigContribPercentiles = Maps.newHashMap();
-
-        mAidApobecSigFeature = false;
-        // mAidApobecSigFeature = cmd != null ? cmd.hasOption(INCLUDE_AID_APOBEC_SIG) : false;
-        mRefCancerAidApobecPercentiles = Maps.newHashMap();
-
-        if(mAidApobecSigFeature)
-        {
-            for(Map.Entry<String,Map<String,double[]>> entry : mRefCancerSigContribPercentiles.entrySet())
-            {
-                String cancerType = entry.getKey();
-                final double[] aaPercentiles = entry.getValue().get(SIG_NAME_2);
-
-                if(aaPercentiles != null)
-                    mRefCancerAidApobecPercentiles.put(cancerType, aaPercentiles);
-            }
-        }
     }
 
     public Map<String,Map<String,double[]>> getRefCancerSigContribPercentiles() { return mRefCancerSigContribPercentiles; }
@@ -118,27 +100,7 @@ public class SigContributions
             results.add(new SampleResult(
                     sample.Id, SNV, PERCENTILE, signatureDisplayName(sigName), String.valueOf(round(sampleSigContrib)), cancerResults));
         }
-
-        /*
-        if(mAidApobecSigFeature)
-        {
-            // note that in the ref data, sigs @ & 13 have already been combined
-            double aidApobecContrib = sampleSigContribs.entrySet().stream()
-                    .filter(x -> x.getKey().equals(SIG_NAME_2) || x.getKey().equals(SIG_NAME_13))
-                    .mapToDouble(x -> x.getValue()).sum();
-
-            int cancerTypeCount = mSampleDataCache.RefCancerSampleData.size();
-            int cancerSampleCount = sample.isRefSample() ? mSampleDataCache.getCancerSampleCount(sample.cancerType()) : 0;
-
-            final Map<String,Double> aidApobecSigsHigh = calcPercentilePrevalence(
-                    sample, cancerSampleCount, cancerTypeCount, mRefCancerAidApobecPercentiles, aidApobecContrib, false);
-
-            results.add(new SampleResult(
-                    sample.Id, SNV, LIKELIHOOD, "AID_APOBEC_SIG", String.format("%.0f", aidApobecContrib), aidApobecSigsHigh));
-        }
-        */
     }
-
 
     public boolean loadSigContributions(final Matrix snvCounts)
     {

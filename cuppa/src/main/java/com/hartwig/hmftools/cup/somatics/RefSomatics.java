@@ -22,8 +22,9 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
 import static com.hartwig.hmftools.cup.common.CupCalcs.addPanCancerNoise;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OTHER;
-import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_BUCKET_SIZE;
-import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_MAX_SAMPLE_COUNT;
+import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_BUCKET_SIZE;
+import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_MAX_SAMPLE_COUNT;
+import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_NOISE_ALLOCATION;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.parseFileSet;
 import static com.hartwig.hmftools.cup.somatics.CopyNumberProfile.buildCopyNumberProfile;
@@ -39,8 +40,8 @@ import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.DEC_3_FORMAT;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INTEGER_FORMAT;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.NORMALISE_COPY_NUMBER;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.NORMALISE_COPY_NUMBER_DESC;
-import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_AID_APOBEC;
-import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_AID_APOBEC_DESC;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC_DESC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.loadMultipleMatrixFiles;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.writeMatrix;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.writeSampleMatrix;
@@ -60,7 +61,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.cup.common.CategoryType;
-import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 import com.hartwig.hmftools.cup.ref.RefClassifier;
@@ -86,7 +86,7 @@ public class RefSomatics implements RefClassifier
     private final Map<String,Integer> mPosFreqCountsIndex;
     private boolean mWritePosFreqMatrixData;
 
-    private final boolean mExcludeAidApobec;
+    private final boolean mIncludeAidApobec;
 
     private final boolean mBuildCopyNumber;
     private final boolean mApplyCopyNumber; // to genomic positions
@@ -125,16 +125,16 @@ public class RefSomatics implements RefClassifier
         mPosFreqCountsIndex = Maps.newHashMap();
         mWritePosFreqMatrixData = false;
 
-        mExcludeAidApobec = cmd.hasOption(EXCLUDE_AID_APOBEC);
+        mIncludeAidApobec = cmd.hasOption(INCLUDE_AID_APOBEC);
         mApplyCopyNumber = cmd.hasOption(NORMALISE_COPY_NUMBER);
 
         int posFreqBucketSize = cmd.hasOption(SNV_POS_FREQ_POS_SIZE) ?
-                Integer.parseInt(cmd.getOptionValue(SNV_POS_FREQ_POS_SIZE)) : POS_FREQ_BUCKET_SIZE;
+                Integer.parseInt(cmd.getOptionValue(SNV_POS_FREQ_POS_SIZE)) : GEN_POS_BUCKET_SIZE;
 
-        mPosFrequencies = new PositionFrequencies(posFreqBucketSize, POS_FREQ_MAX_SAMPLE_COUNT);
+        mPosFrequencies = new PositionFrequencies(posFreqBucketSize, GEN_POS_MAX_SAMPLE_COUNT);
 
         mBuildCopyNumber = cmd.hasOption(BUILD_CN_PROFILE);
-        mGenPosNoiseAllocation = Integer.parseInt(cmd.getOptionValue(GEN_POS_NOISE_ALLOC, "0"));
+        mGenPosNoiseAllocation = Integer.parseInt(cmd.getOptionValue(GEN_POS_NOISE_ALLOC, String.valueOf(GEN_POS_NOISE_ALLOCATION)));
         mCopyNumberProfile = null;
     }
 
@@ -154,7 +154,7 @@ public class RefSomatics implements RefClassifier
     public static void addCmdLineArgs(@NotNull Options options)
     {
         options.addOption(SNV_POS_FREQ_POS_SIZE, true, "Genomic position bucket size (default: 20000)");
-        options.addOption(EXCLUDE_AID_APOBEC, false, EXCLUDE_AID_APOBEC_DESC);
+        options.addOption(INCLUDE_AID_APOBEC, false, INCLUDE_AID_APOBEC_DESC);
         options.addOption(NORMALISE_COPY_NUMBER, false, NORMALISE_COPY_NUMBER_DESC);
         options.addOption(BUILD_CN_PROFILE, false, "Build a copy-number profile to match genomic positions");
         options.addOption(GEN_POS_NOISE_ALLOC, true, GEN_POS_NOISE_ALLOC_DESC);
@@ -205,14 +205,10 @@ public class RefSomatics implements RefClassifier
             writeSampleMatrix(mTriNucCounts, mTriNucCountsIndex, mConfig.OutputDir + REF_FILE_SNV_COUNTS, INTEGER_FORMAT);
 
         if(mWritePosFreqMatrixData)
-        {
             writeSampleMatrix(mPosFreqCounts, mPosFreqCountsIndex, mConfig.OutputDir + REF_FILE_SAMPLE_POS_FREQ_COUNTS, INTEGER_FORMAT);
-        }
 
         if(mBuildCopyNumber)
-        {
             writeSampleMatrix(mCopyNumberProfile, mPosFreqCountsIndex, mConfig.OutputDir + REF_FILE_COPY_NUMBER_PROFILE, DEC_3_FORMAT);
-        }
 
         Matrix sampleGenPosCounts = null;
 
@@ -398,7 +394,7 @@ public class RefSomatics implements RefClassifier
                 int refSampleIndex = mPosFreqCountsIndex.size();
                 mPosFreqCountsIndex.put(sampleId, refSampleIndex);
 
-                AidApobecStatus aidApobecStatus = mExcludeAidApobec ? AidApobecStatus.FALSE_ONLY : AidApobecStatus.ALL;
+                AidApobecStatus aidApobecStatus = mIncludeAidApobec ? AidApobecStatus.ALL : AidApobecStatus.FALSE_ONLY;
                 extractPositionFrequencyCounts(variants, mPosFrequencies, aidApobecStatus);
                 mPosFreqCounts.setCol(refSampleIndex, mPosFrequencies.getCounts());
             }

@@ -52,6 +52,7 @@ import com.hartwig.hmftools.cup.feature.FeatureClassifier;
 import com.hartwig.hmftools.cup.rna.AltSjClassifier;
 import com.hartwig.hmftools.cup.rna.GeneExpressionClassifier;
 import com.hartwig.hmftools.cup.somatics.SomaticClassifier;
+import com.hartwig.hmftools.cup.traits.SampleTraitClassifier;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -382,6 +383,7 @@ public class CuppaConfig
         AltSjClassifier.addCmdLineArgs(options);
         SomaticClassifier.addCmdLineArgs(options);
         FeatureClassifier.addCmdLineArgs(options);
+        SampleTraitClassifier.addCmdLineArgs(options);
 
         options.addOption(OUTPUT_DIR, true, "Path to output files");
         options.addOption(OUTPUT_FILE_ID, true, "Output file ID");

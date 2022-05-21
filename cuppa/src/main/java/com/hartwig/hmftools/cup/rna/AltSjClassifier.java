@@ -12,8 +12,6 @@ import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_P
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.formKey;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
-import static com.hartwig.hmftools.common.utils.MatrixUtils.DEFAULT_MATRIX_DELIM;
 import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
@@ -27,14 +25,13 @@ import static com.hartwig.hmftools.cup.common.ClassifierType.ALT_SJ_COHORT;
 import static com.hartwig.hmftools.cup.common.ClassifierType.ALT_SJ_PAIRWISE;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_MAX_MATCHES;
-import static com.hartwig.hmftools.cup.common.CupConstants.RNA_ALT_SJ_DIFF_EXPONENT;
-import static com.hartwig.hmftools.cup.common.CupConstants.RNA_GENE_EXP_CSS_THRESHOLD;
+import static com.hartwig.hmftools.cup.common.CupConstants.ALT_SJ_DIFF_EXPONENT;
+import static com.hartwig.hmftools.cup.common.CupConstants.GENE_EXP_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.SampleData.RNA_READ_LENGTH_NONE;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
-import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.ASJ_LOCATION_COL_COUNT;
 import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.FLD_POS_END;
 import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.FLD_POS_START;
 import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.loadSampleAltSjMatrixData;
@@ -111,7 +108,7 @@ public class AltSjClassifier implements CuppaClassifier
         mSampleFragCounts = null;
         mCssWriter = null;
 
-        mWeightExponent = Double.parseDouble(cmd.getOptionValue(WEIGHT_EXPONENT, String.valueOf(RNA_ALT_SJ_DIFF_EXPONENT)));
+        mWeightExponent = Double.parseDouble(cmd.getOptionValue(WEIGHT_EXPONENT, String.valueOf(ALT_SJ_DIFF_EXPONENT)));
 
         if(cmd.hasOption(FRAG_COUNT_LOG_VALUE))
         {
@@ -286,7 +283,7 @@ public class AltSjClassifier implements CuppaClassifier
             // now any adjustments have been made, zero out any low-fragment-count sites
             double css = calcCosineSim(refAsjFragCounts, adjSampleFragCounts, false, mMinSampleFragments > 0);
 
-            if(css < RNA_GENE_EXP_CSS_THRESHOLD)
+            if(css < GENE_EXP_CSS_THRESHOLD)
                 continue;
 
             writeCssResult(sample, totalFrags, altSjSites, cohortData.CancerType, css);
@@ -366,7 +363,7 @@ public class AltSjClassifier implements CuppaClassifier
 
             double css = calcCosineSim(sampleFragCounts, refSampleFragCounts);
 
-            if(css < RNA_GENE_EXP_CSS_THRESHOLD)
+            if(css < GENE_EXP_CSS_THRESHOLD)
                 continue;
 
             if(mConfig.WriteSimilarities)

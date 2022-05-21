@@ -20,7 +20,7 @@ import static com.hartwig.hmftools.cup.feature.FeaturePrevData.featureTypeName;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
 import static com.hartwig.hmftools.cup.feature.FeaturesCommon.MIN_AMP_MULTIPLE;
 import static com.hartwig.hmftools.cup.feature.FeaturesCommon.RESTRICT_DRIVER_AMP_GENES;
-import static com.hartwig.hmftools.cup.feature.FeaturesCommon.SPLIT_DRIVER_AMP;
+import static com.hartwig.hmftools.cup.feature.FeaturesCommon.COMBINE_DRIVER_AMP;
 import static com.hartwig.hmftools.cup.feature.FeaturesCommon.convertAndFilterDriverAmps;
 import static com.hartwig.hmftools.cup.feature.FeaturesCommon.filterDriverAmps;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.parseFileSet;
@@ -61,7 +61,7 @@ public class RefFeatures implements RefClassifier
         mConfig = config;
         mSampleDataCache = sampleDataCache;
 
-        mSplitDriverAmps = cmd.hasOption(SPLIT_DRIVER_AMP);
+        mSplitDriverAmps = !cmd.hasOption(COMBINE_DRIVER_AMP);
         mRestrictAmpGenes = cmd.hasOption(RESTRICT_DRIVER_AMP_GENES);
         mMinAmpCnMultiple = Double.parseDouble(cmd.getOptionValue(MIN_AMP_MULTIPLE, "0"));
 

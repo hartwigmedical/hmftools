@@ -16,13 +16,13 @@ import org.apache.commons.cli.Options;
 
 public final class FeaturesCommon
 {
-    public static final String SPLIT_DRIVER_AMP = "split_driver_amp";
+    public static final String COMBINE_DRIVER_AMP = "combine_driver_amp";
     public static final String RESTRICT_DRIVER_AMP_GENES = "restrict_driver_amp_genes";
     public static final String MIN_AMP_MULTIPLE = "min_amp_multiple";
 
     public static void addCmdLineArgs(final Options options)
     {
-        options.addOption(SPLIT_DRIVER_AMP, false, "Split driver AMPs from other driver events");
+        options.addOption(COMBINE_DRIVER_AMP, false, "Combine driver AMPs with other driver events");
         options.addOption(RESTRICT_DRIVER_AMP_GENES, false, "Restrict driver AMPs to specifc list of genes");
         options.addOption(MIN_AMP_MULTIPLE, true, "AMP CN multiple of ploidy for use as a feature");
     }
