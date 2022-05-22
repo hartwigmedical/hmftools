@@ -30,12 +30,12 @@ import static com.hartwig.hmftools.cup.ref.RefDataConfig.parseFileSet;
 import static com.hartwig.hmftools.cup.somatics.CopyNumberProfile.buildCopyNumberProfile;
 import static com.hartwig.hmftools.cup.somatics.GenomicPositions.buildCancerMatrix;
 import static com.hartwig.hmftools.cup.somatics.GenomicPositions.extractPositionFrequencyCounts;
+import static com.hartwig.hmftools.cup.somatics.SigContributions.buildCancerSignatureContributions;
+import static com.hartwig.hmftools.cup.somatics.SigContributions.buildSampleSignatureContributions;
 import static com.hartwig.hmftools.cup.somatics.SomaticClassifier.SNV_POS_FREQ_POS_SIZE;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSigContribsFromCohortFile;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSomaticVariants;
-import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_13;
-import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_2;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.DEC_3_FORMAT;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INTEGER_FORMAT;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.NORMALISE_COPY_NUMBER;
@@ -75,7 +75,6 @@ public class RefSomatics implements RefClassifier
     private final RefDataConfig mConfig;
     private final SampleDataCache mSampleDataCache;
 
-    private final Map<String,Map<String,List<Double>>> mCancerSigContribs;
     private final Map<String,List<Double>> mCancerSnvCounts;
 
     private Matrix mTriNucCounts; // counts per tri-nucleotide bucket
@@ -112,7 +111,6 @@ public class RefSomatics implements RefClassifier
         mConfig = config;
         mSampleDataCache = sampleDataCache;
 
-        mCancerSigContribs = Maps.newHashMap();
         mCancerSnvCounts = Maps.newHashMap();
 
         mRefDataWriter = null;
@@ -432,67 +430,18 @@ public class RefSomatics implements RefClassifier
             SomaticDataLoader.loadSigContribsFromDatabase(
                     mConfig.DbAccess, mSampleDataCache.refSampleIds(true), sampleSigContributions);
         }
+        else
+        {
+            // calculate from SNV counts
+            sampleSigContributions.putAll(buildSampleSignatureContributions(mTriNucCounts, mTriNucCountsIndex));
+        }
 
         writeCohortData(sampleSigContributions);
 
-        for(Map.Entry<String,Map<String,Double>> entry : sampleSigContributions.entrySet())
-        {
-            final String sampleId = entry.getKey();
-            final Map<String,Double> sigAllocations = entry.getValue();
+        Map<String,Map<String,List<Double>>> cancerSigContribs = buildCancerSignatureContributions(
+                mSampleDataCache.RefSampleCancerTypeMap, sampleSigContributions);
 
-            final String cancerType = mSampleDataCache.RefSampleCancerTypeMap.get(sampleId);
-
-            if(cancerType == null)
-            {
-                // expected if a smaller ref sample set is being run
-                // CUP_LOGGER.debug("sample({}) signatures missing cancer type", sampleId);
-                continue;
-            }
-
-            Map<String,List<Double>> sigDataMap = mCancerSigContribs.get(cancerType);
-
-            if(sigDataMap == null)
-            {
-                sigDataMap = Maps.newHashMap();
-                mCancerSigContribs.put(cancerType, sigDataMap);
-            }
-
-            for(String sigName : SomaticSigs.REPORTABLE_SIGS.keySet())
-            {
-                double sigContrib = sigAllocations.containsKey(sigName) ? sigAllocations.get(sigName) : 0;
-
-                // combine 2 & 13
-                if(sigName.equalsIgnoreCase(SIG_NAME_13))
-                    continue;
-
-                if(sigName.equalsIgnoreCase(SIG_NAME_2))
-                {
-                    sigContrib += sigAllocations.containsKey(SIG_NAME_13) ? sigAllocations.get(SIG_NAME_13) : 0;
-                }
-
-                List<Double> sigContribs = sigDataMap.get(sigName);
-
-                if(sigContribs == null)
-                {
-                    sigDataMap.put(sigName, Lists.newArrayList(sigContrib));
-                    continue;
-                }
-
-                // add in ascending order
-                int index = 0;
-                while(index < sigContribs.size())
-                {
-                    if(sigContrib < sigContribs.get(index))
-                        break;
-
-                    ++index;
-                }
-
-                sigContribs.add(index, sigContrib);
-            }
-        }
-
-        for(Map.Entry<String,Map<String,List<Double>>> entry : mCancerSigContribs.entrySet())
+        for(Map.Entry<String,Map<String,List<Double>>> entry : cancerSigContribs.entrySet())
         {
             final String cancerType = entry.getKey();
 
@@ -506,11 +455,6 @@ public class RefSomatics implements RefClassifier
                 writeRefSigData(cancerType, sigName, percentiles);
             }
         }
-    }
-
-    public static String convertSignatureName(final String sigName)
-    {
-        return sigName.replaceAll("Signature.", "Sig");
     }
 
     private void buildSnvCountPercentiles()
@@ -696,7 +640,7 @@ public class RefSomatics implements RefClassifier
         {
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write(SampleTraitsData.header());
+            writer.write("SampleId,SigName,Allocation");
             writer.newLine();
 
             for(Map.Entry<String,Map<String,Double>> entry : sampleSigContributions.entrySet())
@@ -710,7 +654,7 @@ public class RefSomatics implements RefClassifier
 
                     if(SomaticSigs.REPORTABLE_SIGS.keySet().contains(sigName))
                     {
-                        writer.write(String.format("%s,%s,%s", sampleId, sigName, sigEntry.getValue()));
+                        writer.write(String.format("%s,%s,%.1f", sampleId, sigName, sigEntry.getValue()));
                         writer.newLine();
                     }
                 }

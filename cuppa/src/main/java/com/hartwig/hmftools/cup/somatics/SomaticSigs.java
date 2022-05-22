@@ -69,6 +69,11 @@ public class SomaticSigs
         return displayName != null ? displayName : "UNKNOWN";
     }
 
+    public static String convertSignatureName(final String sigName)
+    {
+        return sigName.replaceAll("Signature.", "Sig");
+    }
+
     public String getSigName(int index) { return index < mSignatureNames.size() ? mSignatureNames.get(index) : ""; }
 
     public final double[] fitSampleCounts(final double[] sampleCounts)
