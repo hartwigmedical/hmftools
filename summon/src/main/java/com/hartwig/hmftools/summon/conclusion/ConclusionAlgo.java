@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
+import com.hartwig.hmftools.summon.SummonApplication;
 import com.hartwig.hmftools.summon.SummonData;
 import com.hartwig.hmftools.summon.actionability.ActionabilityEntry;
 import com.hartwig.hmftools.summon.actionability.ActionabilityKey;
@@ -175,10 +176,10 @@ public class ConclusionAlgo {
                         ActionabilityKey keyBiallelic =
                                 ImmutableActionabilityKey.builder().gene("biallelic").type(TypeAlteration.NOT_BIALLELIC).build();
                         ActionabilityEntry entryBiallelic = actionabilityMap.get(keyBiallelic);
-                        if (entry.condition() == Condition.OTHER) {
+                        if (entryBiallelic.condition() == Condition.OTHER) {
                             conclusion.put(conclusion.size(),
                                     "- " + reportableVariant.gene() + "(" + reportableVariant.canonicalHgvsProteinImpact() + ") "
-                                            + entry.conclusion() + entryBiallelic.conclusion());
+                                            + entry.conclusion() + " " + entryBiallelic.conclusion());
                         }
                     } else {
                         conclusion.put(conclusion.size(),

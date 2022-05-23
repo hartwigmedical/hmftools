@@ -169,6 +169,16 @@ public class ConclusionAlgoTest {
                 .build();
         actionabilityMap.put(keyGermline, entryGermline);
 
+
+        ActionabilityKey keyBiallelic = ImmutableActionabilityKey.builder().gene("biallelic").type(TypeAlteration.NOT_BIALLELIC).build();
+        ActionabilityEntry entryBiallelic = ImmutableActionabilityEntry.builder()
+                .match("biallelic")
+                .type(TypeAlteration.NOT_BIALLELIC)
+                .condition(Condition.OTHER)
+                .conclusion("not biallelic")
+                .build();
+        actionabilityMap.put(keyBiallelic, entryBiallelic);
+
         ConclusionAlgo.generateVariantConclusion(conclusion,
                 reportableVariants,
                 actionabilityMap,
@@ -177,7 +187,7 @@ public class ConclusionAlgoTest {
                 Sets.newHashSet(),
                 Sets.newHashSet());
         assertEquals(conclusion.size(), 3);
-        assertEquals(conclusion.get(0), "- CHEK2(p.?) CHEK2");
+        assertEquals(conclusion.get(0), "- CHEK2(p.?) CHEK2 not biallelic");
         assertEquals(conclusion.get(1), "- APC(p.?) APC");
         assertEquals(conclusion.get(2), "- BRCA2(p.?) BRCA2");
         assertNull(conclusion.get(3));
@@ -591,6 +601,7 @@ public class ConclusionAlgoTest {
                 .gene("APC")
                 .canonicalTranscript("transcript1")
                 .canonicalHgvsProteinImpact("p.?")
+                .biallelic(true)
                 .build();
 
         SomaticVariant variant2 = SomaticVariantTestFactory.builder()
@@ -598,6 +609,7 @@ public class ConclusionAlgoTest {
                 .gene("BRCA2")
                 .canonicalTranscript("transcript1")
                 .canonicalHgvsProteinImpact("p.?")
+                .biallelic(true)
                 .build();
 
         SomaticVariant variant3 = SomaticVariantTestFactory.builder()
@@ -605,6 +617,7 @@ public class ConclusionAlgoTest {
                 .gene("BRCA1")
                 .canonicalTranscript("transcript1")
                 .canonicalHgvsProteinImpact("p.?")
+                .biallelic(true)
                 .build();
 
         List<ReportableVariant> reportableSomatic =
@@ -621,6 +634,7 @@ public class ConclusionAlgoTest {
                 .gene("CHEK2")
                 .canonicalTranscript("transcript1")
                 .canonicalHgvsProteinImpact("p.?")
+                .biallelic(false)
                 .build();
 
         List<ReportableVariant> reportableGermline = ReportableVariantFactory.toReportableGermlineVariants(Lists.newArrayList(variant4),
