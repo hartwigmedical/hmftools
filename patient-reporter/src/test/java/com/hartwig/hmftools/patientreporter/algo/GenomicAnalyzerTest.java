@@ -32,31 +32,7 @@ public class GenomicAnalyzerTest {
 
         PatientReporterConfig config = PatientReporterTestFactory.createTestReporterConfig();
 
-        assertNotNull(analyzer.run("sample", "fakeSampleBarcode", "reference", "fakeReferenceBarcode", config, LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION));
-    }
-
-    @Test
-    public void canRunOnTestRunAnonymised() throws IOException {
-        AnalysedReportData testReportData = PatientReporterTestFactory.loadTestAnalysedReportData();
-
-        GenomicAnalyzer analyzer = new GenomicAnalyzer(testReportData.germlineReportingModel());
-
-        PatientReporterConfig config = PatientReporterTestFactory.createTestReporterConfig();
-
-        assertNotNull(analyzer.run("fakeSampleId", "sample", "fakeReferenceId", "reference", config, LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION));
-    }
-
-    @Test
-    public void testAnonymisedMakesNoDifference() throws IOException {
-        AnalysedReportData testReportData = PatientReporterTestFactory.loadTestAnalysedReportData();
-
-        GenomicAnalyzer analyzer = new GenomicAnalyzer(testReportData.germlineReportingModel());
-
-        PatientReporterConfig config = PatientReporterTestFactory.createTestReporterConfig();
-
-        GenomicAnalysis report_non_anonymised = analyzer.run("sample", "fakeSampleBarcode", "reference", "fakeReferenceBarcode", config, LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION);
-        GenomicAnalysis report_anonymised = analyzer.run("fakeSampleId", "sample", "fakeReferenceId", "reference", config, LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION);
-        assertEquals(report_non_anonymised, report_anonymised);
+        assertNotNull(analyzer.run("sample", "reference", config, LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION));
     }
 
     @Test

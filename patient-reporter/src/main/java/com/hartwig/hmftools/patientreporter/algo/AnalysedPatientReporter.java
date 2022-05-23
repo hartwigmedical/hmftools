@@ -69,9 +69,7 @@ public class AnalysedPatientReporter {
 
         GenomicAnalyzer genomicAnalyzer = new GenomicAnalyzer(reportData.germlineReportingModel());
         GenomicAnalysis genomicAnalysis = genomicAnalyzer.run(sampleMetadata.tumorSampleId(),
-                sampleMetadata.tumorSampleBarcode(),
                 sampleMetadata.refSampleId(),
-                sampleMetadata.refSampleBarcode(),
                 config,
                 sampleReport.germlineReportingLevel());
 
