@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.stats.Percentiles.buildPercentiles;
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.SNV_TRINUCLEOTIDE_BUCKET_COUNT;
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.populateBucketMap;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.copy;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -12,6 +13,7 @@ import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SIG_DATA_FILE;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.CUP_REF_FILE_PREFIX;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CANCER_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CN_ADJUSTED_SAMPLE_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_COPY_NUMBER_PROFILE;
@@ -36,6 +38,7 @@ import static com.hartwig.hmftools.cup.somatics.SomaticClassifier.SNV_POS_FREQ_P
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSigContribsFromCohortFile;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSomaticVariants;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.DEC_1_FORMAT;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.DEC_3_FORMAT;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INTEGER_FORMAT;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.NORMALISE_COPY_NUMBER;
@@ -92,6 +95,9 @@ public class RefSomatics implements RefClassifier
     private Matrix mCopyNumberProfile; // same dimensions as genomic position
     private final int mGenPosNoiseAllocation;
 
+    private final int mTriNucNoiseAllocation;
+    private final boolean mTriNucNoiseUniform;
+
     private final PositionFrequencies mPosFrequencies;
 
     private BufferedWriter mRefDataWriter;
@@ -102,9 +108,14 @@ public class RefSomatics implements RefClassifier
     private static final String MATRIX_TYPE_CN_PROFILE = "CN_PROFILE";
 
     // config
-    private static final String BUILD_CN_PROFILE = "build_copy_number";
     public static final String GEN_POS_NOISE_ALLOC = "gen_pos_noise_alloc";
-    public static final String GEN_POS_NOISE_ALLOC_DESC = "Add genomic position counts from pan-cancer medians";
+    public static final String GEN_POS_NOISE_ALLOC_DESC = "Add genomic position noise from pan-cancer medians";
+
+    public static final String SNV_96_NOISE_ALLOC = "snv_noise_alloc";
+    public static final String SNV_96_NOISE_UNIFORM = "snv_noise_uniform";
+    public static final String SNV_96_NOISE_ALLOC_DESC = "Add SNV-96 noise from ref sample medians";
+
+    private static final String BUILD_CN_PROFILE = "build_copy_number";
 
     public RefSomatics(final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
@@ -131,8 +142,12 @@ public class RefSomatics implements RefClassifier
 
         mPosFrequencies = new PositionFrequencies(posFreqBucketSize, GEN_POS_MAX_SAMPLE_COUNT);
 
-        mBuildCopyNumber = cmd.hasOption(BUILD_CN_PROFILE);
         mGenPosNoiseAllocation = Integer.parseInt(cmd.getOptionValue(GEN_POS_NOISE_ALLOC, String.valueOf(GEN_POS_NOISE_ALLOCATION)));
+
+        mTriNucNoiseAllocation = Integer.parseInt(cmd.getOptionValue(SNV_96_NOISE_ALLOC, "0"));
+        mTriNucNoiseUniform = cmd.hasOption(SNV_96_NOISE_UNIFORM);
+
+        mBuildCopyNumber = cmd.hasOption(BUILD_CN_PROFILE);
         mCopyNumberProfile = null;
     }
 
@@ -153,9 +168,12 @@ public class RefSomatics implements RefClassifier
     {
         options.addOption(SNV_POS_FREQ_POS_SIZE, true, "Genomic position bucket size (default: 20000)");
         options.addOption(INCLUDE_AID_APOBEC, false, INCLUDE_AID_APOBEC_DESC);
+        options.addOption(GEN_POS_NOISE_ALLOC, true, GEN_POS_NOISE_ALLOC_DESC);
+        options.addOption(SNV_96_NOISE_ALLOC, true, SNV_96_NOISE_ALLOC_DESC);
+        options.addOption(SNV_96_NOISE_UNIFORM, false, "Apply SNV-96 noise uniformly across all buckets");
+
         options.addOption(NORMALISE_COPY_NUMBER, false, NORMALISE_COPY_NUMBER_DESC);
         options.addOption(BUILD_CN_PROFILE, false, "Build a copy-number profile to match genomic positions");
-        options.addOption(GEN_POS_NOISE_ALLOC, true, GEN_POS_NOISE_ALLOC_DESC);
     }
 
     public void buildRefDataSets()
@@ -200,13 +218,25 @@ public class RefSomatics implements RefClassifier
 
         // write out sample matrix data unless they were already correct
         if(mWriteTriNucMatrixData)
+        {
             writeSampleMatrix(mTriNucCounts, mTriNucCountsIndex, mConfig.OutputDir + REF_FILE_SNV_COUNTS, INTEGER_FORMAT);
+        }
+
+        if(mTriNucNoiseAllocation > 0)
+        {
+            Matrix countsWithNoise = new Matrix(mTriNucCounts.Rows, mTriNucCounts.Cols);
+            copy(mTriNucCounts.getData(), countsWithNoise.getData());
+            TrinucleotideCounts.addNoise(countsWithNoise, mTriNucNoiseAllocation, mTriNucNoiseUniform);
+
+            String triNucFilename = mConfig.OutputDir + CUP_REF_FILE_PREFIX + "_snv_counts_noise.csv";
+            writeSampleMatrix(countsWithNoise, mTriNucCountsIndex, triNucFilename, DEC_3_FORMAT);
+        }
 
         if(mWritePosFreqMatrixData)
             writeSampleMatrix(mPosFreqCounts, mPosFreqCountsIndex, mConfig.OutputDir + REF_FILE_SAMPLE_POS_FREQ_COUNTS, INTEGER_FORMAT);
 
         if(mBuildCopyNumber)
-            writeSampleMatrix(mCopyNumberProfile, mPosFreqCountsIndex, mConfig.OutputDir + REF_FILE_COPY_NUMBER_PROFILE, DEC_3_FORMAT);
+            writeSampleMatrix(mCopyNumberProfile, mPosFreqCountsIndex, mConfig.OutputDir + REF_FILE_COPY_NUMBER_PROFILE, DEC_1_FORMAT);
 
         Matrix sampleGenPosCounts = null;
 

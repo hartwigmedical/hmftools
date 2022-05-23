@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
+import static com.hartwig.hmftools.common.utils.VectorUtils.optimisedAdd;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.COMBINED;
 import static com.hartwig.hmftools.cup.common.ClassifierType.FEATURE;
@@ -226,36 +227,32 @@ public class CupCalcs
 
     public static void addPanCancerNoise(final Matrix cancerMatrix, int noiseAllocation)
     {
+        addMedianNoise(cancerMatrix, cancerMatrix, noiseAllocation);
+    }
+
+    public static void addMedianNoise(final Matrix sourceMatrix, final Matrix destMatrix, int noiseAllocation)
+    {
         // determine the median count per bucket across the cancer types
-        double[] bucketMedians = new double[cancerMatrix.Rows];
+        double[] bucketMedians = new double[sourceMatrix.Rows];
         double medianTotal = 0;
 
-        final double[][] data = cancerMatrix.getData();
-        List<Double> sortedCounts = Lists.newArrayListWithCapacity(cancerMatrix.Cols);
+        final double[][] sourceData = sourceMatrix.getData();
+        List<Double> sortedCounts = Lists.newArrayListWithCapacity(sourceMatrix.Cols);
 
-        int medianIndex = cancerMatrix.Cols / 2;
-        int medianLowerIndex = (cancerMatrix.Cols % 2) == 0 ? medianIndex - 1 : medianIndex;
+        int medianIndex = sourceMatrix.Cols / 2;
+        int medianLowerIndex = (sourceMatrix.Cols % 2) == 0 ? medianIndex - 1 : medianIndex;
 
-        if((cancerMatrix.Cols % 2) == 1)
+        if((sourceMatrix.Cols % 2) == 1)
             ++medianIndex;
 
-        for(int b = 0; b < cancerMatrix.Rows; ++b)
+        for(int b = 0; b < sourceMatrix.Rows; ++b)
         {
             sortedCounts.clear();
 
-            for(int i = 0; i < cancerMatrix.Cols; ++i)
+            for(int i = 0; i < sourceMatrix.Cols; ++i)
             {
-                int index = 0;
-                double count = data[b][i];
-                while(index < sortedCounts.size())
-                {
-                    if(count > sortedCounts.get(index))
-                        break;
-                    else
-                        ++index;
-                }
-
-                sortedCounts.add(index, count);
+                double count = sourceData[b][i];
+                optimisedAdd(sortedCounts, count, true);
             }
 
             double medianCount = 0;
@@ -270,15 +267,16 @@ public class CupCalcs
         }
 
         // now scale these to the noise allocation
-        for(int b = 0; b < cancerMatrix.Rows; ++b)
+        final double[][] destData = destMatrix.getData();
+        for(int b = 0; b < sourceMatrix.Rows; ++b)
         {
             double bucketMedian = bucketMedians[b];
             double bucketPerc = bucketMedian / medianTotal;
             double bucketAlloc = bucketPerc * noiseAllocation;
 
-            for(int i = 0; i < cancerMatrix.Cols; ++i)
+            for(int i = 0; i < sourceMatrix.Cols; ++i)
             {
-                data[b][i] += bucketAlloc;
+                destData[b][i] += bucketAlloc;
             }
         }
     }

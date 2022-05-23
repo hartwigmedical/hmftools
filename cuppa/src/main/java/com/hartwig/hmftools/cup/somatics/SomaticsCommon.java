@@ -31,6 +31,7 @@ public final class SomaticsCommon
     public static final String INCLUDE_AID_APOBEC_SIG_DESC = "Add an enriched AID/APOBEC signature feature";
 
     public static final String INTEGER_FORMAT = "%.0f";
+    public static final String DEC_1_FORMAT = "%.1f";
     public static final String DEC_3_FORMAT = "%.3f";
 
     public static void applyMaxCssAdjustment(double maxCssScore, final Map<String,Double> cancerCssTotals, double adjustFactor)
@@ -121,15 +122,15 @@ public final class SomaticsCommon
 
                 for(int i = 1; i < sampleIds.size(); ++i)
                 {
-                    int index = sampleCountsIndex.get(sampleIds.get(i));
+                    int sampleIndex = sampleCountsIndex.get(sampleIds.get(i));
 
-                    if(index >= matrix.Cols)
+                    if(sampleIndex >= matrix.Cols)
                     {
                         CUP_LOGGER.error("file({}) invalid col({}) sampleId({})", filename, i, sampleIds.get(i));
                         return;
                     }
 
-                    writer.write(String.format("," + decFormat, matrixData[b][sampleCountsIndex.get(sampleIds.get(i))]));
+                    writer.write(String.format("," + decFormat, matrixData[b][sampleIndex]));
                 }
 
                 writer.newLine();

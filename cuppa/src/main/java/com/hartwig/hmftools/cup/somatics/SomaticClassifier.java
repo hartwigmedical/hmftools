@@ -40,6 +40,8 @@ import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilari
 import static com.hartwig.hmftools.cup.somatics.CopyNumberProfile.extractSampleCopyNumberProfile;
 import static com.hartwig.hmftools.cup.somatics.CopyNumberProfile.normaliseGenPosCountsByCopyNumber;
 import static com.hartwig.hmftools.cup.somatics.GenomicPositions.convertSomaticVariantsToPosFrequencies;
+import static com.hartwig.hmftools.cup.somatics.RefSomatics.SNV_96_NOISE_ALLOC;
+import static com.hartwig.hmftools.cup.somatics.RefSomatics.SNV_96_NOISE_ALLOC_DESC;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSignaturePercentileData;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSampleCountsFromFile;
@@ -104,7 +106,7 @@ public class SomaticClassifier implements CuppaClassifier
     private final PositionFrequencies mPosFrequencies;
 
     private boolean mIsValid;
-    private BufferedWriter mCssWriter;
+    private BufferedWriter mGenPosSampleCssWriter;
 
     private final boolean mIncludeAidApobecGenPos;
     private final boolean mExcludeAidApobecSnv96;
@@ -113,6 +115,7 @@ public class SomaticClassifier implements CuppaClassifier
     private Matrix mRefSampleCopyNumberProfiles;
     private Matrix mCopyNumberProfile; // same dimensions as genomic position
 
+    private final int mTriNucNoiseAllocation;
     private final double mMaxCssAdjustFactorSnv;
     private final double mMaxCssAdjustFactorGenPos;
     private final double mCssExponentSnv;
@@ -122,6 +125,7 @@ public class SomaticClassifier implements CuppaClassifier
 
     private final List<Integer> mAidApobecSnv96Buckets;
 
+    // config
     public static final String MAX_CSS_ADJUST_FACTOR_SNV = "css_max_factor_snv";
     public static final String MAX_CSS_ADJUST_FACTOR_GEN_POS = "css_max_factor_gen_pos";
 
@@ -156,6 +160,7 @@ public class SomaticClassifier implements CuppaClassifier
 
         mIncludeAidApobecGenPos = cmd != null && cmd.hasOption(INCLUDE_AID_APOBEC);
         mExcludeAidApobecSnv96 = cmd != null ? cmd.hasOption(EXCLUDE_SNV_96_AID_APOBEC) : false;
+
         mApplyCopyNumber = cmd != null ? cmd.hasOption(NORMALISE_COPY_NUMBER) : false;
         mAidApobecSnv96Buckets = Lists.newArrayList();
 
@@ -165,9 +170,10 @@ public class SomaticClassifier implements CuppaClassifier
         mMaxCssAdjustFactorGenPos = cmd != null ? Double.parseDouble(cmd.getOptionValue(MAX_CSS_ADJUST_FACTOR_GEN_POS, "0")) : 0;
         mWriteSnvSims = cmd != null ? cmd.hasOption(WRITE_SNV_SIMILARITIES) : false;
         mWriteGenPosSims = cmd != null ? cmd.hasOption(WRITE_GEN_POS_SIMILARITIES) : false;
+        mTriNucNoiseAllocation = cmd != null ? Integer.parseInt(cmd.getOptionValue(SNV_96_NOISE_ALLOC, "0")) : 0;
 
         mIsValid = true;
-        mCssWriter = null;
+        mGenPosSampleCssWriter = null;
 
         mSigContributions = new SigContributions(mConfig, mSampleDataCache);
 
@@ -234,11 +240,13 @@ public class SomaticClassifier implements CuppaClassifier
         options.addOption(NORMALISE_COPY_NUMBER, false, NORMALISE_COPY_NUMBER_DESC);
         options.addOption(EXCLUDE_SNV_96_AID_APOBEC, false, EXCLUDE_SNV_96_AID_APOBEC_DESC);
         options.addOption(INCLUDE_AID_APOBEC_SIG, false, INCLUDE_AID_APOBEC_SIG_DESC);
+        options.addOption(SNV_96_NOISE_ALLOC, true, SNV_96_NOISE_ALLOC_DESC);
         options.addOption(MAX_CSS_ADJUST_FACTOR_SNV, true, "Max CSS adustment factor for SNV 96");
         options.addOption(MAX_CSS_ADJUST_FACTOR_GEN_POS, true, "Max CSS adustment factor for genomic pos frequency");
         options.addOption(CSS_EXPONENT_SNV, true, "Max CSS adustment factor for SNV 96");
         options.addOption(CSS_EXPONENT_GEN_POS, true, "Max CSS adustment factor for SNV 96");
         options.addOption(SNV_POS_FREQ_POS_SIZE, true, "Genomic position bucket size (default: 20000)");
+        options.addOption(WRITE_SNV_SIMILARITIES, false, "Write SNV-96 CSS to file");
         options.addOption(WRITE_GEN_POS_CSS, false, "Write gen-pos CSS to file");
     }
 
@@ -247,7 +255,7 @@ public class SomaticClassifier implements CuppaClassifier
 
     public void close()
     {
-        closeBufferedWriter(mCssWriter);
+        closeBufferedWriter(mGenPosSampleCssWriter);
     }
 
     private boolean loadSampleCounts()
@@ -307,6 +315,11 @@ public class SomaticClassifier implements CuppaClassifier
             else
             {
                 mSampleSnvCounts = loadSampleCountsFromFile(mConfig.SampleSnvCountsFile, mSampleSnvCountsIndex);
+
+                if(mSampleSnvCounts == null)
+                {
+                    CUP_LOGGER.error("missing file: {}", mConfig.SampleSnvCountsFile);
+                }
             }
 
             if(mConfig.SampleSnvPosFreqFile.equals(mConfig.RefSnvSamplePosFreqFile))
@@ -317,6 +330,11 @@ public class SomaticClassifier implements CuppaClassifier
             else
             {
                 mSamplePosFrequencies = loadSampleMatrixData(mConfig.SampleSnvPosFreqFile, mSamplePosFreqIndex);
+
+                if(mSampleSnvCounts == null)
+                {
+                    CUP_LOGGER.error("missing file: {}", mConfig.SampleSnvPosFreqFile);
+                }
             }
 
             return mSampleSnvCounts != null && mSamplePosFrequencies != null;
@@ -341,6 +359,9 @@ public class SomaticClassifier implements CuppaClassifier
 
         final double[] sampleCounts = mSampleSnvCounts.getCol(sampleCountsIndex);
         int snvTotal = (int)sumVector(sampleCounts);
+
+        // reverse any noise additions before using the total count
+        snvTotal = max(snvTotal - mTriNucNoiseAllocation, 0);
 
         addSnv96CssResults(sample, sampleCounts, snvTotal, results, similarities);
         addPosFreqCssResults(sample, results, similarities);
@@ -591,9 +612,9 @@ public class SomaticClassifier implements CuppaClassifier
         {
             final String filename = mConfig.OutputDir + "CUP.GEN_POS_CSS.csv";
 
-            mCssWriter = createBufferedWriter(filename, false);
-            mCssWriter.write("SampleId,CancerType,RefCancerType,Css");
-            mCssWriter.newLine();
+            mGenPosSampleCssWriter = createBufferedWriter(filename, false);
+            mGenPosSampleCssWriter.write("SampleId,CancerType,RefCancerType,Css");
+            mGenPosSampleCssWriter.newLine();
 
             if(mRefCancerSnvPosFrequencies != null)
             {
@@ -638,13 +659,13 @@ public class SomaticClassifier implements CuppaClassifier
 
     private void writeGenPosCssValues(final SampleData sample, final String refCancerType, double css)
     {
-        if(mCssWriter == null)
+        if(mGenPosSampleCssWriter == null)
             return;
 
         try
         {
-            mCssWriter.write(String.format("%s,%s,%s,%.4f", sample.Id, sample.cancerType(), refCancerType, css));
-            mCssWriter.newLine();
+            mGenPosSampleCssWriter.write(String.format("%s,%s,%s,%.4f", sample.Id, sample.cancerType(), refCancerType, css));
+            mGenPosSampleCssWriter.newLine();
         }
         catch(IOException e)
         {

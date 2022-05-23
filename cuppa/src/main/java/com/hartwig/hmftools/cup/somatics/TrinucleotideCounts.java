@@ -2,14 +2,17 @@ package com.hartwig.hmftools.cup.somatics;
 
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.populateBucketMap;
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.variantContext;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.copy;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.cup.common.CupCalcs;
 
 public final class TrinucleotideCounts
 {
@@ -60,4 +63,25 @@ public final class TrinucleotideCounts
         return sampleSnvCounts;
     }
 
+    public static void addNoise(final Matrix snvCounts, int noiseAllocation, boolean applyFixed)
+    {
+        // calculate the median counts per bucket, then allocate a fix amount proportionally to all counts
+        if(applyFixed)
+        {
+            double bucketNoise = noiseAllocation / snvCounts.Rows;
+
+            final double[][] data = snvCounts.getData();
+            for(int s = 0; s < snvCounts.Cols; ++s)
+            {
+                for(int b = 0; b < snvCounts.Rows; ++b)
+                {
+                    data[b][s] += bucketNoise;
+                }
+            }
+        }
+        else
+        {
+            CupCalcs.addMedianNoise(snvCounts, snvCounts, noiseAllocation);
+        }
+    }
 }
