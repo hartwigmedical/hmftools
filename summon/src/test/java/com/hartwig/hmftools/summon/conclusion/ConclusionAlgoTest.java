@@ -520,7 +520,7 @@ public class ConclusionAlgoTest {
                 .conclusion("low purity (XX%)")
                 .build();
         actionabilityMap.put(key, entry);
-        ConclusionAlgo.genertatePurityConclusion(conclusion, 0.1, actionabilityMap);
+        ConclusionAlgo.genertatePurityConclusion(conclusion, 0.1, true, actionabilityMap);
         assertEquals(conclusion.get(0), "- low purity (0.1%)");
     }
 
@@ -536,8 +536,24 @@ public class ConclusionAlgoTest {
                 .conclusion("low purity (XX%)")
                 .build();
         actionabilityMap.put(key, entry);
-        ConclusionAlgo.genertatePurityConclusion(conclusion, 0.3, actionabilityMap);
+        ConclusionAlgo.genertatePurityConclusion(conclusion, 0.3, true, actionabilityMap);
         assertNull(conclusion.get(0));
+    }
+
+    @Test
+    public void canGenertatePurityConclusionReliable() {
+        Map<Integer, String> conclusion = Maps.newHashMap();
+        Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
+        ActionabilityKey key = ImmutableActionabilityKey.builder().gene("purity_unreliable").type(TypeAlteration.PURITY_UNRELIABLE).build();
+        ActionabilityEntry entry = ImmutableActionabilityEntry.builder()
+                .match("purity_unreliable")
+                .type(TypeAlteration.PURITY_UNRELIABLE)
+                .condition(Condition.OTHER)
+                .conclusion("unreliable")
+                .build();
+        actionabilityMap.put(key, entry);
+        ConclusionAlgo.genertatePurityConclusion(conclusion, 0.3, false, actionabilityMap);
+        assertEquals(conclusion.get(0), "- unreliable");
     }
 
     @Test

@@ -19,6 +19,7 @@ public class TypeAlterationTest {
         assertEquals(TypeAlteration.POSITIVE, TypeAlteration.toType("POSITIVE"));
         assertEquals(TypeAlteration.RESISTANCE_MUTATION, TypeAlteration.toType("RESISTANCE_MUTATION"));
         assertEquals(TypeAlteration.PURITY, TypeAlteration.toType("PURITY"));
+        assertEquals(TypeAlteration.PURITY_UNRELIABLE, TypeAlteration.toType("PURITY_UNRELIABLE"));
         assertEquals(TypeAlteration.NO_ONCOGENIC, TypeAlteration.toType("NO_ONCOGENIC"));
         assertEquals(TypeAlteration.NO_ACTIONABLE, TypeAlteration.toType("NO_ACTIONABLE"));
         assertEquals(TypeAlteration.FINDINGS, TypeAlteration.toType("FINDINGS"));

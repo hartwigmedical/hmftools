@@ -23,7 +23,6 @@ import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
-import com.hartwig.hmftools.summon.SummonApplication;
 import com.hartwig.hmftools.summon.SummonData;
 import com.hartwig.hmftools.summon.actionability.ActionabilityEntry;
 import com.hartwig.hmftools.summon.actionability.ActionabilityKey;
@@ -63,7 +62,7 @@ public class ConclusionAlgo {
         List<ReportableHomozygousDisruption> homozygousDisruptions = summonData.linx().homozygousDisruptions();
         List<AnnotatedVirus> reportableViruses = summonData.virusInterpreter().reportableViruses();
 
-        genertatePurityConclusion(conclusion, summonData.purple().purity(), actionabilityMap);
+        genertatePurityConclusion(conclusion, summonData.purple().purity(), summonData.purple().hasReliablePurity(), actionabilityMap);
         generateCUPPAConclusion(conclusion, summonData.molecularTissueOrigin(), actionabilityMap);
         generateVariantConclusion(conclusion, reportableVariants, actionabilityMap, driverGenesMap, oncogenic, actionable, HRD);
         generateCNVConclusion(conclusion, reportableGainLosses, actionabilityMap, oncogenic, actionable);
@@ -376,9 +375,16 @@ public class ConclusionAlgo {
         }
     }
 
-    public static void genertatePurityConclusion(@NotNull Map<Integer, String> conclusion, double purity,
+    public static void genertatePurityConclusion(@NotNull Map<Integer, String> conclusion, double purity, boolean hasRelaiblePurity,
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
-        if (purity < 0.195) {
+        if (!hasRelaiblePurity) {
+            ActionabilityKey keyReliable = ImmutableActionabilityKey.builder().gene("purity_unreliable").type(TypeAlteration.PURITY_UNRELIABLE).build();
+
+            ActionabilityEntry entryReliable = actionabilityMap.get(keyReliable);
+            if (entryReliable != null && entryReliable.condition() == Condition.OTHER) {
+                conclusion.put(conclusion.size(), "- " + entryReliable.conclusion());
+            }
+        } else if (purity < 0.195) {
             ActionabilityKey keyPurity = ImmutableActionabilityKey.builder().gene("purity").type(TypeAlteration.PURITY).build();
 
             ActionabilityEntry entry = actionabilityMap.get(keyPurity);

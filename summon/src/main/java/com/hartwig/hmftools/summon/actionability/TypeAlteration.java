@@ -14,6 +14,7 @@ public enum TypeAlteration {
     POSITIVE,
     RESISTANCE_MUTATION,
     PURITY,
+    PURITY_UNRELIABLE,
     NO_ONCOGENIC,
     NO_ACTIONABLE,
     FINDINGS,
