@@ -356,13 +356,16 @@ public class SampleAnalyser implements Callable
         mCohortDataWriter.getVisWriter().writeOutput(
                 mVisSampleData, mAnalyser.getClusters(), mAllVariants, mCnDataLoader.getChrCnDataMap());
 
-        List<DriverCatalog> driverCatalogs = null;
-        List<LinxDriver> linxDrivers = null;
+        List<DriverCatalog> driverCatalogs = Lists.newArrayList();
+        List<LinxDriver> linxDrivers = Lists.newArrayList();
 
         if(!mConfig.IsGermline)
         {
-            driverCatalogs = Lists.newArrayList(mDriverGeneAnnotator.getDriverCatalog());
-            linxDrivers = mDriverGeneAnnotator.getDriverOutputList();
+            if(mDriverGeneAnnotator != null)
+            {
+                driverCatalogs.addAll(mDriverGeneAnnotator.getDriverCatalog());
+                linxDrivers.addAll(mDriverGeneAnnotator.getDriverOutputList());
+            }
 
             // include any reportable disruptions for genes which do not already have homozgous distruptins
             mFusionAnalyser.getDisruptionFinder().addReportableDisruptions(driverCatalogs);
