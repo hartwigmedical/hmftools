@@ -21,6 +21,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.common.NoiseRefCache;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefClassifier;
@@ -34,6 +35,7 @@ public class RefGeneExpression implements RefClassifier
 {
     private final RefDataConfig mConfig;
     private final SampleDataCache mSampleDataCache;
+    private final NoiseRefCache mNoiseRefCache;
 
     private Matrix mGeneCancerExpressionData;
     private Matrix mGeneSampleExpressionData;
@@ -42,10 +44,11 @@ public class RefGeneExpression implements RefClassifier
     private final List<String> mGeneNames;
     private final List<String> mCancerTypes;
 
-    public RefGeneExpression(final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
+    public RefGeneExpression(final RefDataConfig config, final SampleDataCache sampleDataCache, final NoiseRefCache noiseRefCache)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
+        mNoiseRefCache = noiseRefCache;
 
         mGeneCancerExpressionData = null;
         mGeneSampleExpressionData = null;

@@ -48,6 +48,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.common.NoiseRefCache;
 import com.hartwig.hmftools.cup.feature.FeatureClassifier;
 import com.hartwig.hmftools.cup.rna.AltSjClassifier;
 import com.hartwig.hmftools.cup.rna.GeneExpressionClassifier;
@@ -106,6 +107,8 @@ public class CuppaConfig
     public final String SampleGeneExpFile;
     public final String SampleAltSjFile;
 
+    public final NoiseRefCache NoiseAdjustments;
+
     // database access
     public final DatabaseAccess DbAccess;
 
@@ -153,6 +156,8 @@ public class CuppaConfig
     private static final String REF_RNA_ALT_SJ_CANCER_FILE = "ref_alt_sj_cancer_file";
     public static final String REF_RNA_ALT_SJ_SAMPLE_FILE = "ref_alt_sj_sample_file";
     public static final String REF_SNV_SIGNATURES_FILE = "ref_snv_signatures_file";
+
+    public static final String NOISE_ALLOCATIONS = "noise_allocations";
 
     public static final String WRITE_SIMS = "write_similarities";
     public static final String WRITE_DETAILED_SCORES = "write_detailed_scores";
@@ -223,6 +228,9 @@ public class CuppaConfig
         SampleSnvPosFreqFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_SNV_POS_FREQ_FILE, REF_FILE_SAMPLE_POS_FREQ_COUNTS, SNV);
         SampleGeneExpFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_GENE_EXP_FILE, REF_FILE_GENE_EXP_SAMPLE, GENE_EXP);
         SampleAltSjFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_ALT_SJ_FILE, REF_FILE_ALT_SJ_SAMPLE, ALT_SJ);
+
+        NoiseAdjustments = new NoiseRefCache(RefDataDir);
+        NoiseAdjustments.loadNoiseAllocations(cmd.getOptionValue(NOISE_ALLOCATIONS));
 
         OutputDir = parseOutputDir(cmd);
         OutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID, "");
@@ -429,6 +437,8 @@ public class CuppaConfig
         SampleSvFile = "";
         SampleGeneExpFile = "";
         SampleAltSjFile = "";
+
+        NoiseAdjustments = new NoiseRefCache(null);
 
         DbAccess = null;
         WriteSimilarities = false;

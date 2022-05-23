@@ -11,13 +11,15 @@ public class CupConstants
     public static final double SNV_96_CSS_THRESHOLD = 0.01;
     public static final double SNV_96_CSS_DIFF_EXPONENT = 8;
     public static final double UNDEFINED_SIG_PERC_MAX_MULTIPLE = 100.01;
+    public static final int SNV_96_NOISE_ALLOCATION = 100;
 
     public static final double GEN_POS_CSS_THRESHOLD = 0.01;
     public static final double GEN_POS_DIFF_EXPONENT = 10;
     public static final double GEN_POS_CN_ADJUST_MAX = 4;
     public static final int GEN_POS_BUCKET_SIZE = 500000;
     public static final int GEN_POS_MAX_SAMPLE_COUNT = 20000;
-    public static final int GEN_POS_NOISE_ALLOCATION = 100000;
+    public static final int GEN_POS_COHORT_NOISE_ALLOCATION = 100000;
+    // public static final int GEN_POS_PAIRWISE_NOISE_ALLOCATION = 500;
 
     // pairwise similarities
     public static final double CSS_SIMILARITY_CUTOFF = 0.01;

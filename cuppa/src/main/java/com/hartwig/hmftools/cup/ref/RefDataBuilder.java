@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.cup.CuppaConfig.classifierEnabled;
 
 import java.util.List;
 
+import com.hartwig.hmftools.cup.common.NoiseRefCache;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.feature.RefFeatures;
 import com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions;
@@ -32,6 +33,7 @@ public class RefDataBuilder
     private final SampleDataCache mSampleDataCache;
 
     private final List<RefClassifier> mClassifiers;
+    private final NoiseRefCache mNoiseRefCache;
 
     public RefDataBuilder(final CommandLine cmd)
     {
@@ -41,6 +43,8 @@ public class RefDataBuilder
 
         loadSampleData(cmd);
 
+        mNoiseRefCache = new NoiseRefCache(mConfig.OutputDir);
+
         mClassifiers = Lists.newArrayList();
 
         // build / load traits first since some subsequent classifiers use its data (eg purity & ploidy)
@@ -48,7 +52,7 @@ public class RefDataBuilder
             mClassifiers.add(new RefSampleTraits(mConfig, mSampleDataCache, cmd));
 
         if(RefSomatics.requiresBuild(mConfig))
-            mClassifiers.add(new RefSomatics(mConfig, mSampleDataCache, cmd));
+            mClassifiers.add(new RefSomatics(mConfig, mSampleDataCache, cmd, mNoiseRefCache));
 
         if(RefSvData.requiresBuild(mConfig))
             mClassifiers.add(new RefSvData(mConfig, mSampleDataCache));
@@ -57,10 +61,10 @@ public class RefDataBuilder
             mClassifiers.add(new RefFeatures(mConfig, mSampleDataCache, cmd));
 
         if(RefGeneExpression.requiresBuild(mConfig))
-            mClassifiers.add(new RefGeneExpression(mConfig, mSampleDataCache, cmd));
+            mClassifiers.add(new RefGeneExpression(mConfig, mSampleDataCache, mNoiseRefCache));
 
         if(RefAltSpliceJunctions.requiresBuild(mConfig))
-            mClassifiers.add(new RefAltSpliceJunctions(mConfig, mSampleDataCache, cmd));
+            mClassifiers.add(new RefAltSpliceJunctions(mConfig, mSampleDataCache, cmd, mNoiseRefCache));
     }
 
     private void loadSampleData(final CommandLine cmd)
@@ -88,6 +92,8 @@ public class RefDataBuilder
 
             classifier.buildRefDataSets();
         }
+
+        mNoiseRefCache.writeNoiseAdjustments();
 
         CUP_LOGGER.info("CUP ref data building complete");
     }

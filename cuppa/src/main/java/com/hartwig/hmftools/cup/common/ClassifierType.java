@@ -2,8 +2,9 @@ package com.hartwig.hmftools.cup.common;
 
 public enum ClassifierType
 {
-    SNV_96_PAIRWISE_SIMILARITY,
-    GENOMIC_POSITION_SIMILARITY,
+    SNV_96_PAIRWISE,
+    GENOMIC_POSITION_COHORT,
+    GENOMIC_POSITION_PAIRWISE,
     EXPRESSION_PAIRWISE,
     EXPRESSION_COHORT,
     FEATURE,
@@ -13,7 +14,7 @@ public enum ClassifierType
 
     public static boolean isDna(final ClassifierType type)
     {
-        return type == SNV_96_PAIRWISE_SIMILARITY || type == GENOMIC_POSITION_SIMILARITY || type == FEATURE || type == GENDER;
+        return type == SNV_96_PAIRWISE || type == GENOMIC_POSITION_COHORT || type == GENOMIC_POSITION_PAIRWISE || type == FEATURE || type == GENDER;
     }
 
     public static boolean isRna(final ClassifierType type)

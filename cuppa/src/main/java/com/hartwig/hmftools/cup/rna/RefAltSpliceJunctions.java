@@ -10,8 +10,7 @@ import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_ALT_SJ_CANCER;
 import static com.hartwig.hmftools.cup.common.CategoryType.ALT_SJ;
-import static com.hartwig.hmftools.cup.common.CupCalcs.addPanCancerNoise;
-import static com.hartwig.hmftools.cup.common.CupConstants.ALT_SJ_NOISE_ALLOCATION;
+import static com.hartwig.hmftools.cup.common.ClassifierType.ALT_SJ_COHORT;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -26,38 +25,29 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.common.NoiseRefCache;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefClassifier;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
-import org.jetbrains.annotations.NotNull;
 
 public class RefAltSpliceJunctions implements RefClassifier
 {
     private final RefDataConfig mConfig;
     private final SampleDataCache mSampleDataCache;
-
-    private final int mNoiseAllocation;
+    private final NoiseRefCache mNoiseRefCache;
 
     public static final String FLD_POS_START = "PosStart";
     public static final String FLD_POS_END = "PosEnd";
 
-    public static final String ALT_SJ_NOISE_ALLOC = "alt_sj_noise_alloc";
-
-    public RefAltSpliceJunctions(final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
+    public RefAltSpliceJunctions(
+            final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd, final NoiseRefCache noiseRefCache)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
-
-        mNoiseAllocation = cmd != null ? Integer.parseInt(cmd.getOptionValue(ALT_SJ_NOISE_ALLOC, String.valueOf(ALT_SJ_NOISE_ALLOCATION))) : 0;
-    }
-
-    public static void addCmdLineArgs(@NotNull Options options)
-    {
-        options.addOption(ALT_SJ_NOISE_ALLOC, true, "Alt-SJ noise allocation");
+        mNoiseRefCache = noiseRefCache;
     }
 
     public CategoryType categoryType() { return ALT_SJ; }
@@ -113,11 +103,8 @@ public class RefAltSpliceJunctions implements RefClassifier
             }
         }
 
-        if(mNoiseAllocation > 0)
-        {
-            CUP_LOGGER.debug("applying alt-SJ noise({}) to cancer matrix", mNoiseAllocation);
-            addPanCancerNoise(cancerFragCounts, mNoiseAllocation);
-        }
+        final double[] altSjMedians = NoiseRefCache.generateMedianValues(cancerFragCounts);
+        mNoiseRefCache.addNoiseData(ALT_SJ_COHORT, altSjMedians);
 
         CUP_LOGGER.debug("writing RNA alt-SJ cancer reference data");
 

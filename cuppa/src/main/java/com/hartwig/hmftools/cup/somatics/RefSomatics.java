@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.stats.Percentiles.buildPercentiles;
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.SNV_TRINUCLEOTIDE_BUCKET_COUNT;
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.populateBucketMap;
-import static com.hartwig.hmftools.common.utils.MatrixUtils.copy;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -13,7 +12,6 @@ import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SIG_DATA_FILE;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.CUP_REF_FILE_PREFIX;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CANCER_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CN_ADJUSTED_SAMPLE_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_COPY_NUMBER_PROFILE;
@@ -22,11 +20,11 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SIG_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SNV_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
-import static com.hartwig.hmftools.cup.common.CupCalcs.addPanCancerNoise;
+import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_COHORT;
+import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_BUCKET_SIZE;
 import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_MAX_SAMPLE_COUNT;
-import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_NOISE_ALLOCATION;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.parseFileSet;
 import static com.hartwig.hmftools.cup.somatics.CopyNumberProfile.buildCopyNumberProfile;
@@ -64,10 +62,10 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.common.NoiseRefCache;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 import com.hartwig.hmftools.cup.ref.RefClassifier;
-import com.hartwig.hmftools.cup.traits.SampleTraitsData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -77,6 +75,7 @@ public class RefSomatics implements RefClassifier
 {
     private final RefDataConfig mConfig;
     private final SampleDataCache mSampleDataCache;
+    private final NoiseRefCache mNoiseRefCache;
 
     private final Map<String,List<Double>> mCancerSnvCounts;
 
@@ -93,10 +92,6 @@ public class RefSomatics implements RefClassifier
     private final boolean mBuildCopyNumber;
     private final boolean mApplyCopyNumber; // to genomic positions
     private Matrix mCopyNumberProfile; // same dimensions as genomic position
-    private final int mGenPosNoiseAllocation;
-
-    private final int mTriNucNoiseAllocation;
-    private final boolean mTriNucNoiseUniform;
 
     private final PositionFrequencies mPosFrequencies;
 
@@ -108,19 +103,14 @@ public class RefSomatics implements RefClassifier
     private static final String MATRIX_TYPE_CN_PROFILE = "CN_PROFILE";
 
     // config
-    public static final String GEN_POS_NOISE_ALLOC = "gen_pos_noise_alloc";
-    public static final String GEN_POS_NOISE_ALLOC_DESC = "Add genomic position noise from pan-cancer medians";
-
-    public static final String SNV_96_NOISE_ALLOC = "snv_noise_alloc";
-    public static final String SNV_96_NOISE_UNIFORM = "snv_noise_uniform";
-    public static final String SNV_96_NOISE_ALLOC_DESC = "Add SNV-96 noise from ref sample medians";
-
     private static final String BUILD_CN_PROFILE = "build_copy_number";
 
-    public RefSomatics(final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
+    public RefSomatics(
+            final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd, final NoiseRefCache noiseRefCache)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
+        mNoiseRefCache = noiseRefCache;
 
         mCancerSnvCounts = Maps.newHashMap();
 
@@ -141,11 +131,6 @@ public class RefSomatics implements RefClassifier
                 Integer.parseInt(cmd.getOptionValue(SNV_POS_FREQ_POS_SIZE)) : GEN_POS_BUCKET_SIZE;
 
         mPosFrequencies = new PositionFrequencies(posFreqBucketSize, GEN_POS_MAX_SAMPLE_COUNT);
-
-        mGenPosNoiseAllocation = Integer.parseInt(cmd.getOptionValue(GEN_POS_NOISE_ALLOC, String.valueOf(GEN_POS_NOISE_ALLOCATION)));
-
-        mTriNucNoiseAllocation = Integer.parseInt(cmd.getOptionValue(SNV_96_NOISE_ALLOC, "0"));
-        mTriNucNoiseUniform = cmd.hasOption(SNV_96_NOISE_UNIFORM);
 
         mBuildCopyNumber = cmd.hasOption(BUILD_CN_PROFILE);
         mCopyNumberProfile = null;
@@ -168,10 +153,6 @@ public class RefSomatics implements RefClassifier
     {
         options.addOption(SNV_POS_FREQ_POS_SIZE, true, "Genomic position bucket size (default: 20000)");
         options.addOption(INCLUDE_AID_APOBEC, false, INCLUDE_AID_APOBEC_DESC);
-        options.addOption(GEN_POS_NOISE_ALLOC, true, GEN_POS_NOISE_ALLOC_DESC);
-        options.addOption(SNV_96_NOISE_ALLOC, true, SNV_96_NOISE_ALLOC_DESC);
-        options.addOption(SNV_96_NOISE_UNIFORM, false, "Apply SNV-96 noise uniformly across all buckets");
-
         options.addOption(NORMALISE_COPY_NUMBER, false, NORMALISE_COPY_NUMBER_DESC);
         options.addOption(BUILD_CN_PROFILE, false, "Build a copy-number profile to match genomic positions");
     }
@@ -222,15 +203,8 @@ public class RefSomatics implements RefClassifier
             writeSampleMatrix(mTriNucCounts, mTriNucCountsIndex, mConfig.OutputDir + REF_FILE_SNV_COUNTS, INTEGER_FORMAT);
         }
 
-        if(mTriNucNoiseAllocation > 0)
-        {
-            Matrix countsWithNoise = new Matrix(mTriNucCounts.Rows, mTriNucCounts.Cols);
-            copy(mTriNucCounts.getData(), countsWithNoise.getData());
-            TrinucleotideCounts.addNoise(countsWithNoise, mTriNucNoiseAllocation, mTriNucNoiseUniform);
-
-            String triNucFilename = mConfig.OutputDir + CUP_REF_FILE_PREFIX + "_snv_counts_noise.csv";
-            writeSampleMatrix(countsWithNoise, mTriNucCountsIndex, triNucFilename, DEC_3_FORMAT);
-        }
+        final double[] triNucMedians = NoiseRefCache.generateMedianValues(mTriNucCounts);
+        mNoiseRefCache.addNoiseData(SNV_96_PAIRWISE, triNucMedians);
 
         if(mWritePosFreqMatrixData)
             writeSampleMatrix(mPosFreqCounts, mPosFreqCountsIndex, mConfig.OutputDir + REF_FILE_SAMPLE_POS_FREQ_COUNTS, INTEGER_FORMAT);
@@ -271,8 +245,8 @@ public class RefSomatics implements RefClassifier
         Matrix cancerGenPosMatrix = buildCancerMatrix(
                 sampleGenPosCounts, mPosFreqCountsIndex, cancerTypes, mSampleDataCache.RefCancerSampleData, mPosFrequencies.getMaxSampleCount());
 
-        if(mGenPosNoiseAllocation > 0)
-            addPanCancerNoise(cancerGenPosMatrix, mGenPosNoiseAllocation);
+        final double[] genPosMedians = NoiseRefCache.generateMedianValues(cancerGenPosMatrix);
+        mNoiseRefCache.addNoiseData(GENOMIC_POSITION_COHORT, genPosMedians);
 
         writeMatrix(cancerGenPosMatrix, cancerTypes, mConfig.OutputDir + REF_FILE_CANCER_POS_FREQ_COUNTS, DEC_3_FORMAT);
 

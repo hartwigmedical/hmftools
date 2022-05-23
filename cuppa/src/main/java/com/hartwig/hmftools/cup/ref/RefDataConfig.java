@@ -152,7 +152,6 @@ public class RefDataConfig
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
 
         RefGeneExpression.addCmdLineArgs(options);
-        RefAltSpliceJunctions.addCmdLineArgs(options);
         RefSomatics.addCmdLineArgs(options);
         RefFeatures.addCmdLineArgs(options);
     }

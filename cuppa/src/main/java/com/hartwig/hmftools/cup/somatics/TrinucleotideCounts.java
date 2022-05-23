@@ -62,26 +62,4 @@ public final class TrinucleotideCounts
 
         return sampleSnvCounts;
     }
-
-    public static void addNoise(final Matrix snvCounts, int noiseAllocation, boolean applyFixed)
-    {
-        // calculate the median counts per bucket, then allocate a fix amount proportionally to all counts
-        if(applyFixed)
-        {
-            double bucketNoise = noiseAllocation / snvCounts.Rows;
-
-            final double[][] data = snvCounts.getData();
-            for(int s = 0; s < snvCounts.Cols; ++s)
-            {
-                for(int b = 0; b < snvCounts.Rows; ++b)
-                {
-                    data[b][s] += bucketNoise;
-                }
-            }
-        }
-        else
-        {
-            CupCalcs.addMedianNoise(snvCounts, snvCounts, noiseAllocation);
-        }
-    }
 }
