@@ -5,8 +5,8 @@ import static com.hartwig.hmftools.cup.CuppaUtilsTest.TEST_CT_002;
 import static com.hartwig.hmftools.cup.CuppaUtilsTest.TEST_SAMPLE_001;
 import static com.hartwig.hmftools.cup.CuppaUtilsTest.TEST_SAMPLE_002;
 import static com.hartwig.hmftools.cup.CuppaUtilsTest.TEST_SAMPLE_003;
-import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_COHORT;
-import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE;
+import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_SIMILARITY;
+import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE_SIMILARITY;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
@@ -73,12 +73,12 @@ public class SomaticClassifierTest
 
         classifier.processSample(testSample, results, similarities);
 
-        SampleResult result = results.stream().filter(x -> x.DataType.equals(SNV_96_PAIRWISE.toString())).findFirst().orElse(null);
+        SampleResult result = results.stream().filter(x -> x.DataType.equals(SNV_96_PAIRWISE_SIMILARITY.toString())).findFirst().orElse(null);
         assertTrue(result != null);
         assertEquals(0.36, result.CancerTypeValues.get(TEST_CT_001), 0.01);
         assertEquals(0.64, result.CancerTypeValues.get(TEST_CT_002), 0.01);
 
-        result = results.stream().filter(x -> x.DataType.equals(GENOMIC_POSITION_COHORT.toString())).findFirst().orElse(null);
+        result = results.stream().filter(x -> x.DataType.equals(GENOMIC_POSITION_SIMILARITY.toString())).findFirst().orElse(null);
         assertTrue(result != null);
         assertEquals(0.48, result.CancerTypeValues.get(TEST_CT_001), 0.01);
         assertEquals(0.52, result.CancerTypeValues.get(TEST_CT_002), 0.01);
@@ -88,12 +88,12 @@ public class SomaticClassifierTest
         classifier.processSample(refSample1, results, similarities);
 
         // cannot match it's own cancer type
-        result = results.stream().filter(x -> x.DataType.equals(SNV_96_PAIRWISE.toString())).findFirst().orElse(null);
+        result = results.stream().filter(x -> x.DataType.equals(SNV_96_PAIRWISE_SIMILARITY.toString())).findFirst().orElse(null);
         assertTrue(result != null);
         assertEquals(1.0, result.CancerTypeValues.get(TEST_CT_002), 0.01);
 
         // shifted way towards the CT 2 owing to subtraction
-        result = results.stream().filter(x -> x.DataType.equals(GENOMIC_POSITION_COHORT.toString())).findFirst().orElse(null);
+        result = results.stream().filter(x -> x.DataType.equals(GENOMIC_POSITION_SIMILARITY.toString())).findFirst().orElse(null);
         assertTrue(result != null);
         assertEquals(0.04, result.CancerTypeValues.get(TEST_CT_001), 0.01);
         assertEquals(0.96, result.CancerTypeValues.get(TEST_CT_002), 0.01);
@@ -101,11 +101,11 @@ public class SomaticClassifierTest
         results.clear();
         classifier.processSample(refSample2, results, similarities);
 
-        result = results.stream().filter(x -> x.DataType.equals(SNV_96_PAIRWISE.toString())).findFirst().orElse(null);
+        result = results.stream().filter(x -> x.DataType.equals(SNV_96_PAIRWISE_SIMILARITY.toString())).findFirst().orElse(null);
         assertTrue(result != null);
         assertEquals(1.0, result.CancerTypeValues.get(TEST_CT_001), 0.01);
 
-        result = results.stream().filter(x -> x.DataType.equals(GENOMIC_POSITION_COHORT.toString())).findFirst().orElse(null);
+        result = results.stream().filter(x -> x.DataType.equals(GENOMIC_POSITION_SIMILARITY.toString())).findFirst().orElse(null);
         assertTrue(result != null);
         assertEquals(0.99, result.CancerTypeValues.get(TEST_CT_001), 0.01);
         assertEquals(0.01, result.CancerTypeValues.get(TEST_CT_002), 0.01);

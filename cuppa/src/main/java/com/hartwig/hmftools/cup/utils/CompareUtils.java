@@ -11,8 +11,20 @@ public final class CompareUtils
 {
     public static boolean resultsMatch(final SampleResult first, final SampleResult second)
     {
-        return first.Category == second.Category && first.DataType.equals(second.DataType) && first.Result == second.Result;
+        return first.Category == second.Category && dataTypesMatch(first.DataType, second.DataType) && first.Result == second.Result;
     }
+
+    private static boolean dataTypesMatch(final String dataType1, final String dataType2)
+    {
+        return dataType1.equals(dataType2); // || (isGenPosDataType(dataType1) && isGenPosDataType(dataType2));
+    }
+
+    /*
+    private static boolean isGenPosDataType(final String dataType)
+    {
+        return dataType.equals(GENOMIC_POSITION_SIMILARITY.toString()) || dataType.equals(GENOMIC_POSITION_PAIRWISE.toString());
+    }
+    */
 
     public static String topRefResult(final SampleResult result)
     {

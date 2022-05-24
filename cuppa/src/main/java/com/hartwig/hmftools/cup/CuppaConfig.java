@@ -382,6 +382,7 @@ public class CuppaConfig
         options.addOption(REF_RNA_GENE_EXP_SAMPLE_FILE, true, "Reference RNA sample gene expression file, default: " + REF_FILE_GENE_EXP_SAMPLE);
         options.addOption(REF_RNA_ALT_SJ_CANCER_FILE, true, "Reference RNA alternative splice-junction cancer file, default: " + REF_FILE_ALT_SJ_CANCER);
         options.addOption(REF_RNA_ALT_SJ_SAMPLE_FILE, true, "Reference RNA alternative splice-junction sample file, default: " + REF_FILE_ALT_SJ_SAMPLE);
+        options.addOption(NOISE_ALLOCATIONS, true, "Noise allocations by classifier type, or 'NONE' or 'DEFAULTS'");
 
         options.addOption(WRITE_SIMS, false, "Write top-20 CSS similarities to file");
         options.addOption(WRITE_DETAILED_SCORES, false, "Cohort-only - write detailed (non-classifier) data");

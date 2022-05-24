@@ -17,8 +17,8 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
-import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_COHORT;
-import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE;
+import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_SIMILARITY;
+import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE_SIMILARITY;
 import static com.hartwig.hmftools.cup.common.CupCalcs.adjustRefCounts;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.CupCalcs.convertToPercentages;
@@ -85,28 +85,28 @@ public class SomaticClassifier implements CuppaClassifier
     private final CuppaConfig mConfig;
     private final SampleDataCache mSampleDataCache;
 
-    private Matrix mRefSampleCounts;
+    private Matrix mRefSampleSnv96Counts;
     private final List<String> mRefSampleNames;
     private final Map<String,double[]> mRefCancerSnvCountPercentiles;
 
-    private Matrix mRefCancerSnvPosFrequencies;
-    private final List<String> mRefSnvPosFreqCancerTypes;
+    private Matrix mRefCancerGenPosCounts;
+    private final List<String> mRefGenPosCancerTypes;
 
-    private Matrix mRefSamplePosFrequencies;
-    private final Map<String,Integer> mRefSamplePosFreqIndex;
+    private Matrix mRefSampleGenPosCounts;
+    private final Map<String,Integer> mRefSampleGenPosCountsIndex;
 
-    private Matrix mSampleSnvCounts;
-    private final Map<String,Integer> mSampleSnvCountsIndex; // index of a sampleId into the sample SNV counts matrix
+    private Matrix mSampleSnv96Counts;
+    private final Map<String,Integer> mSampleSnv96CountsIndex; // index of a sampleId into the sample SNV counts matrix
     private final Map<String,Integer> mSampleSnvTotals;
 
-    private Matrix mSamplePosFrequencies;
-    private final Map<String,Integer> mSamplePosFreqIndex;
+    private Matrix mSampleGenPosCounts;
+    private final Map<String,Integer> mSampleGenPosCountsIndex;
 
     private final SigContributions mSigContributions;
     private final PositionFrequencies mPosFrequencies;
 
     private boolean mIsValid;
-    private BufferedWriter mGenPosSampleCssWriter;
+    private BufferedWriter mGenPosCohortCssWriter;
 
     private final boolean mIncludeAidApobecGenPos;
     private final boolean mExcludeAidApobecSnv96;
@@ -115,6 +115,7 @@ public class SomaticClassifier implements CuppaClassifier
     private Matrix mRefSampleCopyNumberProfiles;
     private Matrix mCopyNumberProfile; // same dimensions as genomic position
 
+    private final boolean mRunPairwiseGenPos;
     private final double mMaxCssAdjustFactorSnv;
     private final double mMaxCssAdjustFactorGenPos;
     private final double mCssExponentSnv;
@@ -128,6 +129,7 @@ public class SomaticClassifier implements CuppaClassifier
     public static final String MAX_CSS_ADJUST_FACTOR_SNV = "css_max_factor_snv";
     public static final String MAX_CSS_ADJUST_FACTOR_GEN_POS = "css_max_factor_gen_pos";
 
+    public static final String GEN_POS_PAIRWISE = "gen_pos_pairwise";
     public static final String CSS_EXPONENT_SNV = "css_exponent_snv";
     public static final String CSS_EXPONENT_GEN_POS = "css_exponent_gen_pos";
 
@@ -144,25 +146,27 @@ public class SomaticClassifier implements CuppaClassifier
         mConfig = config;
         mSampleDataCache = sampleDataCache;
 
-        mSampleSnvCounts = null;
-        mRefCancerSnvPosFrequencies = null;
-        mRefSamplePosFrequencies = null;
+        mSampleSnv96Counts = null;
+        mRefCancerGenPosCounts = null;
+        mRefSampleGenPosCounts = null;
         mRefSampleCopyNumberProfiles = null;
-        mSampleSnvCountsIndex = Maps.newHashMap();
-        mSamplePosFreqIndex = Maps.newHashMap();
+        mSampleSnv96CountsIndex = Maps.newHashMap();
+        mSampleGenPosCountsIndex = Maps.newHashMap();
         mSampleSnvTotals = Maps.newHashMap();
 
-        mRefSampleCounts = null;
+        mRefSampleSnv96Counts = null;
         mRefSampleNames = Lists.newArrayList();
         mRefCancerSnvCountPercentiles = Maps.newHashMap();
-        mRefSnvPosFreqCancerTypes = Lists.newArrayList();
-        mRefSamplePosFreqIndex = Maps.newHashMap();
+        mRefGenPosCancerTypes = Lists.newArrayList();
+        mRefSampleGenPosCountsIndex = Maps.newHashMap();
 
         mIncludeAidApobecGenPos = cmd != null && cmd.hasOption(INCLUDE_AID_APOBEC);
         mExcludeAidApobecSnv96 = cmd != null ? cmd.hasOption(EXCLUDE_SNV_96_AID_APOBEC) : false;
 
         mApplyCopyNumber = cmd != null ? cmd.hasOption(NORMALISE_COPY_NUMBER) : false;
         mAidApobecSnv96Buckets = Lists.newArrayList();
+
+        mRunPairwiseGenPos = cmd != null && cmd.hasOption(GEN_POS_PAIRWISE);
 
         mCssExponentSnv = cmd != null ? Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_SNV, "8")) : SNV_96_CSS_DIFF_EXPONENT;
         mCssExponentGenPos = cmd != null ? Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_GEN_POS, "10")) : GEN_POS_DIFF_EXPONENT;
@@ -172,7 +176,7 @@ public class SomaticClassifier implements CuppaClassifier
         mWriteGenPosSims = cmd != null ? cmd.hasOption(WRITE_GEN_POS_SIMILARITIES) : false;
 
         mIsValid = true;
-        mGenPosSampleCssWriter = null;
+        mGenPosCohortCssWriter = null;
 
         mSigContributions = new SigContributions(mConfig, mSampleDataCache);
 
@@ -187,10 +191,10 @@ public class SomaticClassifier implements CuppaClassifier
         loadRefSignaturePercentileData(
                 mConfig.RefSigContributionFile, mSigContributions.getRefCancerSigContribPercentiles(), mRefCancerSnvCountPercentiles);
 
-        mRefSampleCounts = loadRefSampleCounts(mConfig.RefSnvCountsFile, mRefSampleNames, Lists.newArrayList("BucketName"));
+        mRefSampleSnv96Counts = loadRefSampleCounts(mConfig.RefSnvCountsFile, mRefSampleNames, Lists.newArrayList("BucketName"));
 
-        mRefCancerSnvPosFrequencies = loadRefSampleCounts(mConfig.RefSnvCancerPosFreqFile, mRefSnvPosFreqCancerTypes, Lists.newArrayList());
-        mRefSamplePosFrequencies = loadSampleMatrixData(mConfig.RefSnvSamplePosFreqFile, mRefSamplePosFreqIndex);
+        mRefCancerGenPosCounts = loadRefSampleCounts(mConfig.RefSnvCancerPosFreqFile, mRefGenPosCancerTypes, Lists.newArrayList());
+        mRefSampleGenPosCounts = loadSampleMatrixData(mConfig.RefSnvSamplePosFreqFile, mRefSampleGenPosCountsIndex);
 
         if(mApplyCopyNumber)
         {
@@ -208,16 +212,16 @@ public class SomaticClassifier implements CuppaClassifier
             mRefSampleCopyNumberProfiles = null;
         }
 
-        if(mRefSampleCounts == null || mRefCancerSnvPosFrequencies == null || (mApplyCopyNumber && mRefSampleCopyNumberProfiles == null))
+        if(mRefSampleSnv96Counts == null || mRefCancerGenPosCounts == null || (mApplyCopyNumber && mRefSampleCopyNumberProfiles == null))
         {
             CUP_LOGGER.error("invalid somatic matrix data: SNV-96() GenPos({}) CopyNumber({})",
-                    mRefSampleCounts != null, mRefCancerSnvPosFrequencies != null,
+                    mRefSampleSnv96Counts != null, mRefCancerGenPosCounts != null,
                     (!mApplyCopyNumber || mRefSampleCopyNumberProfiles != null));
             mIsValid = false;
         }
 
         mIsValid &= loadSampleCounts();
-        mIsValid &= mSigContributions.loadSigContributions(mSampleSnvCounts);
+        mIsValid &= mSigContributions.loadSigContributions(mSampleSnv96Counts);
 
         if(mApplyCopyNumber && !mConfig.runClassifier(SAMPLE_TRAIT))
         {
@@ -227,33 +231,68 @@ public class SomaticClassifier implements CuppaClassifier
 
         if(mIsValid)
         {
-            // record SNV totals
-            for(Map.Entry<String,Integer> entry : mSampleSnvCountsIndex.entrySet())
+            // record SNV totals, prior to any noise adjustments
+            for(int s = 0; s < mRefSampleNames.size(); ++s)
             {
-                String sampleId = entry.getKey();
-                final double[] sampleCounts = mSampleSnvCounts.getCol(entry.getValue());
+                String sampleId = mRefSampleNames.get(s);
+                final double[] sampleCounts = mRefSampleSnv96Counts.getCol(s);
                 int snvTotal = (int) sumVector(sampleCounts);
                 mSampleSnvTotals.put(sampleId, snvTotal);
             }
 
-            // apply any specified noise
-            if(mConfig.NoiseAdjustments.makeNoiseAdjustment(SNV_96_PAIRWISE))
+            if(!mConfig.SampleSnvCountsFile.equals(mConfig.RefSnvCountsFile))
             {
-                final double[] noiseAdjustments = mConfig.NoiseAdjustments.getNoiseData(SNV_96_PAIRWISE);
-                int noiseAllocation = mConfig.NoiseAdjustments.getNoiseAllocation(SNV_96_PAIRWISE);
+                for(Map.Entry<String, Integer> entry : mSampleSnv96CountsIndex.entrySet())
+                {
+                    String sampleId = entry.getKey();
 
-                NoiseRefCache.applyNoise(mRefSampleCounts, noiseAdjustments, noiseAllocation);
+                    if(mSampleSnvTotals.containsKey(sampleId))
+                        continue;
 
-                if(mSampleSnvCounts != mRefSampleCounts)
-                    NoiseRefCache.applyNoise(mSampleSnvCounts, noiseAdjustments, noiseAllocation);
+                    final double[] sampleCounts = mSampleSnv96Counts.getCol(entry.getValue());
+                    int snvTotal = (int) sumVector(sampleCounts);
+                    mSampleSnvTotals.put(sampleId, snvTotal);
+                }
             }
 
-            if(mConfig.NoiseAdjustments.makeNoiseAdjustment(GENOMIC_POSITION_COHORT))
+            // apply any specified noise
+            if(mConfig.NoiseAdjustments.makeNoiseAdjustment(SNV_96_PAIRWISE_SIMILARITY))
             {
-                final double[] noiseAdjustments = mConfig.NoiseAdjustments.getNoiseData(GENOMIC_POSITION_COHORT);
-                int noiseAllocation = mConfig.NoiseAdjustments.getNoiseAllocation(GENOMIC_POSITION_COHORT);
+                final double[] noiseAdjustments = mConfig.NoiseAdjustments.getNoiseData(SNV_96_PAIRWISE_SIMILARITY);
+                int noiseAllocation = mConfig.NoiseAdjustments.getNoiseAllocation(SNV_96_PAIRWISE_SIMILARITY);
 
-                NoiseRefCache.applyNoise(mRefCancerSnvPosFrequencies, noiseAdjustments, noiseAllocation);
+                CUP_LOGGER.debug("appying noise({}) to SNV-96 counts", noiseAllocation);
+
+                NoiseRefCache.applyNoise(mRefSampleSnv96Counts, noiseAdjustments, noiseAllocation);
+
+                if(mSampleSnv96Counts != mRefSampleSnv96Counts)
+                    NoiseRefCache.applyNoise(mSampleSnv96Counts, noiseAdjustments, noiseAllocation);
+            }
+
+            if(mRunPairwiseGenPos)
+            {
+                /*
+                if(mConfig.NoiseAdjustments.hasNoiseAllocation(GENOMIC_POSITION_PAIRWISE)
+                && mConfig.NoiseAdjustments.hasNoiseData(GENOMIC_POSITION_SIMILARITY))
+                {
+                    final double[] noiseAdjustments = mConfig.NoiseAdjustments.getNoiseData(GENOMIC_POSITION_SIMILARITY);
+                    int noiseAllocation = mConfig.NoiseAdjustments.getNoiseAllocation(GENOMIC_POSITION_PAIRWISE);
+
+                    NoiseRefCache.applyNoise(mRefSampleGenPosCounts, noiseAdjustments, noiseAllocation);
+                }
+                */
+            }
+            else
+            {
+                if(mConfig.NoiseAdjustments.makeNoiseAdjustment(GENOMIC_POSITION_SIMILARITY))
+                {
+                    final double[] noiseAdjustments = mConfig.NoiseAdjustments.getNoiseData(GENOMIC_POSITION_SIMILARITY);
+                    int noiseAllocation = mConfig.NoiseAdjustments.getNoiseAllocation(GENOMIC_POSITION_SIMILARITY);
+
+                    CUP_LOGGER.debug("appying noise({}) to genomic position cohort counts", noiseAllocation);
+
+                    NoiseRefCache.applyNoise(mRefCancerGenPosCounts, noiseAdjustments, noiseAllocation);
+                }
             }
         }
 
@@ -268,6 +307,7 @@ public class SomaticClassifier implements CuppaClassifier
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(INCLUDE_AID_APOBEC, false, INCLUDE_AID_APOBEC_DESC);
+        options.addOption(GEN_POS_PAIRWISE, false, "Run genomic position as a pairwise classifier");
         options.addOption(NORMALISE_COPY_NUMBER, false, NORMALISE_COPY_NUMBER_DESC);
         options.addOption(EXCLUDE_SNV_96_AID_APOBEC, false, EXCLUDE_SNV_96_AID_APOBEC_DESC);
         options.addOption(INCLUDE_AID_APOBEC_SIG, false, INCLUDE_AID_APOBEC_SIG_DESC);
@@ -285,7 +325,7 @@ public class SomaticClassifier implements CuppaClassifier
 
     public void close()
     {
-        closeBufferedWriter(mGenPosSampleCssWriter);
+        closeBufferedWriter(mGenPosCohortCssWriter);
     }
 
     private boolean loadSampleCounts()
@@ -310,11 +350,11 @@ public class SomaticClassifier implements CuppaClassifier
                     somaticVariants.addAll(loadSomaticVariants(somaticVcfFile, Lists.newArrayList(SNP)));
                 }
 
-                mSampleSnvCounts = convertSomaticVariantsToSnvCounts(sampleId, somaticVariants, mSampleSnvCountsIndex);
+                mSampleSnv96Counts = convertSomaticVariantsToSnvCounts(sampleId, somaticVariants, mSampleSnv96CountsIndex);
 
                 AidApobecStatus aidApobecStatus = mIncludeAidApobecGenPos ? AidApobecStatus.ALL : AidApobecStatus.FALSE_ONLY;
-                mSamplePosFrequencies = convertSomaticVariantsToPosFrequencies(
-                        sampleId, somaticVariants, mSamplePosFreqIndex, mPosFrequencies, aidApobecStatus);
+                mSampleGenPosCounts = convertSomaticVariantsToPosFrequencies(
+                        sampleId, somaticVariants, mSampleGenPosCountsIndex, mPosFrequencies, aidApobecStatus);
             }
             else
             {
@@ -324,29 +364,29 @@ public class SomaticClassifier implements CuppaClassifier
                 final String snvPosFreqFile = !mConfig.SampleSnvPosFreqFile.isEmpty() ?
                         mConfig.SampleSnvPosFreqFile : mConfig.SampleDataDir + sampleId + ".sig.pos_freq_counts.csv";
 
-                mSampleSnvCounts = loadSampleCountsFromFile(snvCountsFile, mSampleSnvCountsIndex);
-                mSamplePosFrequencies = loadSampleMatrixData(snvPosFreqFile, mSamplePosFreqIndex);
+                mSampleSnv96Counts = loadSampleCountsFromFile(snvCountsFile, mSampleSnv96CountsIndex);
+                mSampleGenPosCounts = loadSampleMatrixData(snvPosFreqFile, mSampleGenPosCountsIndex);
             }
 
-            return mSampleSnvCounts != null && mSamplePosFrequencies != null;
+            return mSampleSnv96Counts != null && mSampleGenPosCounts != null;
         }
 
         if(!mConfig.SampleSnvCountsFile.isEmpty() && !mConfig.SampleSnvPosFreqFile.isEmpty())
         {
             if(mConfig.SampleSnvCountsFile.equals(mConfig.RefSnvCountsFile))
             {
-                mSampleSnvCounts = mRefSampleCounts;
+                mSampleSnv96Counts = mRefSampleSnv96Counts;
 
                 for(int i = 0; i < mRefSampleNames.size(); ++i)
                 {
-                    mSampleSnvCountsIndex.put(mRefSampleNames.get(i), i);
+                    mSampleSnv96CountsIndex.put(mRefSampleNames.get(i), i);
                 }
             }
             else
             {
-                mSampleSnvCounts = loadSampleCountsFromFile(mConfig.SampleSnvCountsFile, mSampleSnvCountsIndex);
+                mSampleSnv96Counts = loadSampleCountsFromFile(mConfig.SampleSnvCountsFile, mSampleSnv96CountsIndex);
 
-                if(mSampleSnvCounts == null)
+                if(mSampleSnv96Counts == null)
                 {
                     CUP_LOGGER.error("missing file: {}", mConfig.SampleSnvCountsFile);
                 }
@@ -354,20 +394,20 @@ public class SomaticClassifier implements CuppaClassifier
 
             if(mConfig.SampleSnvPosFreqFile.equals(mConfig.RefSnvSamplePosFreqFile))
             {
-                mSamplePosFrequencies = mRefSamplePosFrequencies;
-                mSamplePosFreqIndex.putAll(mRefSamplePosFreqIndex);
+                mSampleGenPosCounts = mRefSampleGenPosCounts;
+                mSampleGenPosCountsIndex.putAll(mRefSampleGenPosCountsIndex);
             }
             else
             {
-                mSamplePosFrequencies = loadSampleMatrixData(mConfig.SampleSnvPosFreqFile, mSamplePosFreqIndex);
+                mSampleGenPosCounts = loadSampleMatrixData(mConfig.SampleSnvPosFreqFile, mSampleGenPosCountsIndex);
 
-                if(mSampleSnvCounts == null)
+                if(mSampleSnv96Counts == null)
                 {
                     CUP_LOGGER.error("missing file: {}", mConfig.SampleSnvPosFreqFile);
                 }
             }
 
-            return mSampleSnvCounts != null && mSamplePosFrequencies != null;
+            return mSampleSnv96Counts != null && mSampleGenPosCounts != null;
         }
 
         CUP_LOGGER.error("no sample SNV count source specified");
@@ -376,10 +416,10 @@ public class SomaticClassifier implements CuppaClassifier
 
     public void processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
     {
-        if(!mIsValid || mRefSampleCounts == null)
+        if(!mIsValid || mRefSampleSnv96Counts == null)
             return;
 
-        Integer sampleCountsIndex = mSampleSnvCountsIndex.get(sample.Id);
+        Integer sampleCountsIndex = mSampleSnv96CountsIndex.get(sample.Id);
 
         if(sampleCountsIndex == null)
         {
@@ -387,11 +427,11 @@ public class SomaticClassifier implements CuppaClassifier
             return;
         }
 
-        final double[] sampleCounts = mSampleSnvCounts.getCol(sampleCountsIndex);
+        final double[] sampleCounts = mSampleSnv96Counts.getCol(sampleCountsIndex);
         int snvTotal = mSampleSnvTotals.get(sample.Id);
 
         addSnv96CssResults(sample, sampleCounts, snvTotal, results, similarities);
-        addPosFreqCssResults(sample, results, similarities);
+        addGenomicPositionCssResults(sample, snvTotal, results, similarities);
 
         mSigContributions.addSigContributionResults(sample, results);
 
@@ -432,7 +472,7 @@ public class SomaticClassifier implements CuppaClassifier
             final SampleData sample, final double[] sampleCounts, int snvTotal,
             final List<SampleResult> results, final List<SampleSimilarity> similarities)
     {
-        int refSampleCount = mRefSampleCounts.Cols;
+        int refSampleCount = mRefSampleSnv96Counts.Cols;
 
         final List<SampleSimilarity> topMatches = Lists.newArrayList();
         final Map<String,Double> cancerCssTotals = Maps.newHashMap();
@@ -462,7 +502,7 @@ public class SomaticClassifier implements CuppaClassifier
             if(!checkIsValidCancerType(sample, refCancerType, cancerCssTotals))
                 continue;
 
-            final double[] otherSampleCounts = mRefSampleCounts.getCol(s);
+            final double[] otherSampleCounts = mRefSampleSnv96Counts.getCol(s);
 
             double css = calcCosineSim(sampleCounts, otherSampleCounts);
 
@@ -472,7 +512,214 @@ public class SomaticClassifier implements CuppaClassifier
             if(mWriteSnvSims && mConfig.WriteSimilarities)
             {
                 recordCssSimilarity(
-                        topMatches, sample.Id, refSampleId, css, SNV_96_PAIRWISE.toString(),
+                        topMatches, sample.Id, refSampleId, css, SNV_96_PAIRWISE_SIMILARITY.toString(),
+                        CSS_SIMILARITY_MAX_MATCHES, CSS_SIMILARITY_CUTOFF);
+            }
+
+            if(!isKnownCancerType(refCancerType))
+                continue;
+
+            maxCssScore = max(css, maxCssScore);
+
+            double cssWeight = pow(mCssExponentSnv, -100 * (1 - css));
+
+            int otherSnvTotal = mSampleSnvTotals.get(refSampleId);
+
+            double mutLoadWeight = min(otherSnvTotal, snvTotal) / (double)max(otherSnvTotal, snvTotal);
+
+            int cancerTypeCount = mSampleDataCache.getCancerSampleCount(refCancerType);
+            double weightedCss = css * cssWeight * mutLoadWeight / sqrt(cancerTypeCount);
+
+            Double total = cancerCssTotals.get(refCancerType);
+
+            if(total == null)
+                cancerCssTotals.put(refCancerType, weightedCss);
+            else
+                cancerCssTotals.put(refCancerType, total + weightedCss);
+        }
+
+        double totalCss = cancerCssTotals.values().stream().mapToDouble(x -> x).sum(); // prior to any conversion
+
+        convertToPercentages(cancerCssTotals);
+
+        if(totalCss > 0)
+            applyMaxCssAdjustment(maxCssScore, cancerCssTotals, mMaxCssAdjustFactorSnv);
+
+        results.add(new SampleResult(
+                sample.Id, CLASSIFIER, LIKELIHOOD, SNV_96_PAIRWISE_SIMILARITY.toString(), String.format("%.4g", totalCss), cancerCssTotals));
+
+        // for non-ref cohorts, also report closest matches from amongst these
+        if(mWriteSnvSims && mConfig.WriteSimilarities && mSampleDataCache.isMultiSampleNonRef())
+        {
+            for(Map.Entry<String,Integer> entry : mSampleSnv96CountsIndex.entrySet())
+            {
+                final String nonRefSampleId = entry.getKey();
+
+                if(nonRefSampleId.equals(sample.Id))
+                    continue;
+
+                final double[] otherSampleCounts = mSampleSnv96Counts.getCol(entry.getValue());
+
+                double css = calcCosineSim(sampleCounts, otherSampleCounts);
+
+                if(mConfig.WriteSimilarities)
+                {
+                    recordCssSimilarity(
+                            topMatches, sample.Id, nonRefSampleId, css, SNV_96_PAIRWISE_SIMILARITY.toString(),
+                            CSS_SIMILARITY_MAX_MATCHES, CSS_SIMILARITY_CUTOFF);
+                }
+            }
+        }
+
+        similarities.addAll(topMatches);
+    }
+
+    private void addGenomicPositionCssResults(
+            final SampleData sample, int snvTotal, final List<SampleResult> results, final List<SampleSimilarity> similarities)
+    {
+        Integer sampleCountsIndex = mSampleGenPosCountsIndex.get(sample.Id);
+
+        if(sampleCountsIndex == null)
+        {
+            CUP_LOGGER.debug("sample({}) has no SNV pos-freq data", sample.Id);
+            return;
+        }
+
+        double[] sampleCounts = mSampleGenPosCounts.getCol(sampleCountsIndex);
+
+        if(mApplyCopyNumber)
+        {
+            double samplePloidy = mSampleDataCache.RefSampleTraitsData.get(sample.Id).Ploidy;
+
+            double[] sampleCnProfile = null;
+
+            if(sample.isRefSample())
+            {
+                sampleCnProfile = mRefSampleCopyNumberProfiles.getCol(sampleCountsIndex);
+            }
+            else if(!mConfig.SampleDataDir.isEmpty())
+            {
+                final String copyNumberFile = PurpleCopyNumberFile.generateFilenameForReading(mConfig.SampleDataDir, sample.Id);
+                sampleCnProfile = extractSampleCopyNumberProfile(sample.Id, mConfig.DbAccess, copyNumberFile, mPosFrequencies);
+            }
+
+            if(sampleCnProfile == null)
+            {
+                CUP_LOGGER.error("sample({}) missing Purple copy number data for normalisation", sample.Id);
+                mIsValid = false;
+                return;
+            }
+
+            sampleCounts = normaliseGenPosCountsByCopyNumber(samplePloidy, sampleCounts, sampleCnProfile);
+        }
+
+        if(mRunPairwiseGenPos)
+        {
+            addPairwiseGenPosCssResults(sample, sampleCounts, snvTotal, results, similarities);
+        }
+        else
+        {
+            addCohortGenPosCssResults(sample, sampleCounts, snvTotal, results, similarities);
+        }
+    }
+
+    private void addCohortGenPosCssResults(
+            final SampleData sample, final double[] sampleCounts, double snvTotal,
+            final List<SampleResult> results, final List<SampleSimilarity> similarities)
+    {
+        // first run CSS against cancer cohorts
+        int refCancerCount = mRefCancerGenPosCounts.Cols;
+        double maxCssScore = 0;
+
+        final Map<String,Double> cancerCssTotals = Maps.newHashMap();
+
+        for(int i = 0; i < refCancerCount; ++i)
+        {
+            final String refCancerType = mRefGenPosCancerTypes.get(i);
+
+            if(!isKnownCancerType(refCancerType))
+                continue;
+
+            if(!checkIsValidCancerType(sample, refCancerType, cancerCssTotals))
+                continue;
+
+            boolean matchesCancerType = sample.cancerType().equals(refCancerType);
+
+            double adjustMultiplier = snvTotal > GEN_POS_MAX_SAMPLE_COUNT ? GEN_POS_MAX_SAMPLE_COUNT / snvTotal : 1;
+
+            final double[] refPosFreqs = sample.isRefSample() && matchesCancerType ?
+                    adjustRefCounts(mRefCancerGenPosCounts.getCol(i), sampleCounts, adjustMultiplier) : mRefCancerGenPosCounts.getCol(i);
+
+            double css = calcCosineSim(sampleCounts, refPosFreqs);
+
+            maxCssScore = max(css, maxCssScore);
+
+            writeGenPosCssValues(sample, refCancerType, css);
+
+            if(css < GEN_POS_CSS_THRESHOLD)
+                continue;
+
+            double cssWeight = pow(mCssExponentGenPos, -100 * (1 - css));
+
+            double weightedCss = css * cssWeight;
+
+            Double total = cancerCssTotals.get(refCancerType);
+
+            if(total == null)
+                cancerCssTotals.put(refCancerType, weightedCss);
+            else
+                cancerCssTotals.put(refCancerType, total + weightedCss);
+        }
+
+        double totalCss = cancerCssTotals.values().stream().mapToDouble(x -> x).sum();
+
+        convertToPercentages(cancerCssTotals);
+
+        if(totalCss > 0)
+            applyMaxCssAdjustment(maxCssScore, cancerCssTotals, mMaxCssAdjustFactorGenPos);
+
+        results.add(new SampleResult(
+                sample.Id, CLASSIFIER, LIKELIHOOD, GENOMIC_POSITION_SIMILARITY.toString(), String.format("%.4g", totalCss), cancerCssTotals));
+    }
+
+
+    private void addPairwiseGenPosCssResults(
+            final SampleData sample, final double[] sampleCounts, double snvTotal,
+            final List<SampleResult> results, final List<SampleSimilarity> similarities)
+    {
+        int refSampleCount = mRefSampleSnv96Counts.Cols;
+
+        final List<SampleSimilarity> topMatches = Lists.newArrayList();
+        final Map<String,Double> cancerCssTotals = Maps.newHashMap();
+
+        double maxCssScore = 0;
+
+        for(int s = 0; s < refSampleCount; ++s)
+        {
+            final String refSampleId = mRefSampleNames.get(s);
+
+            if(!mSampleDataCache.hasRefSample(refSampleId))
+                continue;
+
+            if(refSampleId.equals(sample.Id))
+                continue;
+
+            final String refCancerType = mSampleDataCache.RefSampleCancerTypeMap.get(refSampleId);
+
+            if(!checkIsValidCancerType(sample, refCancerType, cancerCssTotals))
+                continue;
+
+            final double[] otherSampleCounts = mRefSampleGenPosCounts.getCol(s);
+
+            double css = calcCosineSim(sampleCounts, otherSampleCounts);
+
+            if(css < GEN_POS_CSS_THRESHOLD)
+                continue;
+
+            if(mWriteSnvSims && mConfig.WriteSimilarities)
+            {
+                recordCssSimilarity(
+                        topMatches, sample.Id, refSampleId, css, GENOMIC_POSITION_SIMILARITY.toString(),
                         CSS_SIMILARITY_MAX_MATCHES, CSS_SIMILARITY_CUTOFF);
             }
 
@@ -505,132 +752,7 @@ public class SomaticClassifier implements CuppaClassifier
             applyMaxCssAdjustment(maxCssScore, cancerCssTotals, mMaxCssAdjustFactorSnv);
 
         results.add(new SampleResult(
-                sample.Id, CLASSIFIER, LIKELIHOOD, SNV_96_PAIRWISE.toString(), String.format("%.4g", totalCss), cancerCssTotals));
-
-        // for non-ref cohorts, also report closest matches from amongst these
-        if(mWriteSnvSims && mConfig.WriteSimilarities && mSampleDataCache.isMultiSampleNonRef())
-        {
-            for(Map.Entry<String,Integer> entry : mSampleSnvCountsIndex.entrySet())
-            {
-                final String nonRefSampleId = entry.getKey();
-
-                if(nonRefSampleId.equals(sample.Id))
-                    continue;
-
-                final double[] otherSampleCounts = mSampleSnvCounts.getCol(entry.getValue());
-
-                double css = calcCosineSim(sampleCounts, otherSampleCounts);
-
-                if(mConfig.WriteSimilarities)
-                {
-                    recordCssSimilarity(
-                            topMatches, sample.Id, nonRefSampleId, css, SNV_96_PAIRWISE.toString(),
-                            CSS_SIMILARITY_MAX_MATCHES, CSS_SIMILARITY_CUTOFF);
-                }
-            }
-        }
-
-        similarities.addAll(topMatches);
-    }
-
-    private void addPosFreqCssResults(
-            final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
-    {
-        Integer sampleCountsIndex = mSamplePosFreqIndex.get(sample.Id);
-
-        if(sampleCountsIndex == null)
-        {
-            CUP_LOGGER.debug("sample({}) has no SNV pos-freq data", sample.Id);
-            return;
-        }
-
-        double[] sampleCounts = mSamplePosFrequencies.getCol(sampleCountsIndex);
-
-        if(mApplyCopyNumber)
-        {
-            double samplePloidy = mSampleDataCache.RefSampleTraitsData.get(sample.Id).Ploidy;
-
-            double[] sampleCnProfile = null;
-
-            if(sample.isRefSample())
-            {
-                sampleCnProfile = mRefSampleCopyNumberProfiles.getCol(sampleCountsIndex);
-            }
-            else if(!mConfig.SampleDataDir.isEmpty())
-            {
-                final String copyNumberFile = PurpleCopyNumberFile.generateFilenameForReading(mConfig.SampleDataDir, sample.Id);
-                sampleCnProfile = extractSampleCopyNumberProfile(sample.Id, mConfig.DbAccess, copyNumberFile, mPosFrequencies);
-            }
-
-            if(sampleCnProfile == null)
-            {
-                CUP_LOGGER.error("sample({}) missing Purple copy number data for normalisation", sample.Id);
-                mIsValid = false;
-                return;
-            }
-
-            sampleCounts = normaliseGenPosCountsByCopyNumber(samplePloidy, sampleCounts, sampleCnProfile);
-        }
-
-        double sampleTotal = sumVector(sampleCounts);
-
-        // first run CSS against cancer cohorts
-        int refCancerCount = mRefCancerSnvPosFrequencies.Cols;
-        double maxCssScore = 0;
-
-        final Map<String,Double> cancerCssTotals = Maps.newHashMap();
-
-        for(int i = 0; i < refCancerCount; ++i)
-        {
-            final String refCancerType = mRefSnvPosFreqCancerTypes.get(i);
-
-            if(!isKnownCancerType(refCancerType))
-                continue;
-
-            if(!checkIsValidCancerType(sample, refCancerType, cancerCssTotals))
-                continue;
-
-            boolean matchesCancerType = sample.cancerType().equals(refCancerType);
-
-            double adjustMultiplier = sampleTotal > GEN_POS_MAX_SAMPLE_COUNT ? GEN_POS_MAX_SAMPLE_COUNT / sampleTotal : 1;
-
-            final double[] refPosFreqs = sample.isRefSample() && matchesCancerType ?
-                    adjustRefCounts(mRefCancerSnvPosFrequencies.getCol(i), sampleCounts, adjustMultiplier) : mRefCancerSnvPosFrequencies.getCol(i);
-
-            double css = calcCosineSim(sampleCounts, refPosFreqs);
-
-            maxCssScore = max(css, maxCssScore);
-
-            writeGenPosCssValues(sample, refCancerType, css);
-
-            if(css < GEN_POS_CSS_THRESHOLD)
-                continue;
-
-            double cssWeight = pow(mCssExponentGenPos, -100 * (1 - css));
-
-            double weightedCss = css * cssWeight;
-
-            Double total = cancerCssTotals.get(refCancerType);
-
-            if(total == null)
-                cancerCssTotals.put(refCancerType, weightedCss);
-            else
-                cancerCssTotals.put(refCancerType, total + weightedCss);
-        }
-
-        double totalCss = cancerCssTotals.values().stream().mapToDouble(x -> x).sum();
-
-        convertToPercentages(cancerCssTotals);
-
-        if(totalCss > 0)
-            applyMaxCssAdjustment(maxCssScore, cancerCssTotals, mMaxCssAdjustFactorGenPos);
-
-        results.add(new SampleResult(
-                sample.Id, CLASSIFIER, LIKELIHOOD, GENOMIC_POSITION_COHORT.toString(), String.format("%.4g", totalCss), cancerCssTotals));
-
-        // then run pairwise analysis if similarities are being analysed
-        if(mWriteGenPosSims)
-            addSnvPosSimilarities(sample, sampleCounts, similarities);
+                sample.Id, CLASSIFIER, LIKELIHOOD, GENOMIC_POSITION_SIMILARITY.toString(), String.format("%.4g", totalCss), cancerCssTotals));
     }
 
     private void initialiseOutputFiles()
@@ -639,34 +761,34 @@ public class SomaticClassifier implements CuppaClassifier
         {
             final String filename = mConfig.OutputDir + "CUP.GEN_POS_CSS.csv";
 
-            mGenPosSampleCssWriter = createBufferedWriter(filename, false);
-            mGenPosSampleCssWriter.write("SampleId,CancerType,RefCancerType,Css");
-            mGenPosSampleCssWriter.newLine();
+            mGenPosCohortCssWriter = createBufferedWriter(filename, false);
+            mGenPosCohortCssWriter.write("SampleId,CancerType,RefCancerType,Css");
+            mGenPosCohortCssWriter.newLine();
 
-            if(mRefCancerSnvPosFrequencies != null)
+            if(mRefCancerGenPosCounts != null)
             {
                 // separately write cancer-type gen pos CSS values
                 BufferedWriter writer = createBufferedWriter(mConfig.OutputDir + "CUP.GEN_POS_CANCER_CSS.csv", false);
                 writer.write("RefCancerType1,RefCancerType2,Css");
                 writer.newLine();
 
-                for(int i = 0; i < mRefSnvPosFreqCancerTypes.size() - 1; ++i)
+                for(int i = 0; i < mRefGenPosCancerTypes.size() - 1; ++i)
                 {
-                    final String refCancerType1 = mRefSnvPosFreqCancerTypes.get(i);
+                    final String refCancerType1 = mRefGenPosCancerTypes.get(i);
 
                     if(!isKnownCancerType(refCancerType1))
                         continue;
 
-                    final double[] refCounts1 = mRefCancerSnvPosFrequencies.getCol(i);
+                    final double[] refCounts1 = mRefCancerGenPosCounts.getCol(i);
 
-                    for(int j = i + 1; j < mRefSnvPosFreqCancerTypes.size(); ++j)
+                    for(int j = i + 1; j < mRefGenPosCancerTypes.size(); ++j)
                     {
-                        final String refCancerType2 = mRefSnvPosFreqCancerTypes.get(j);
+                        final String refCancerType2 = mRefGenPosCancerTypes.get(j);
 
                         if(!isKnownCancerType(refCancerType1))
                             continue;
 
-                        final double[] refCounts2 = mRefCancerSnvPosFrequencies.getCol(j);
+                        final double[] refCounts2 = mRefCancerGenPosCounts.getCol(j);
 
                         double css = calcCosineSim(refCounts1, refCounts2);
 
@@ -686,53 +808,18 @@ public class SomaticClassifier implements CuppaClassifier
 
     private void writeGenPosCssValues(final SampleData sample, final String refCancerType, double css)
     {
-        if(mGenPosSampleCssWriter == null)
+        if(mGenPosCohortCssWriter == null)
             return;
 
         try
         {
-            mGenPosSampleCssWriter.write(String.format("%s,%s,%s,%.4f", sample.Id, sample.cancerType(), refCancerType, css));
-            mGenPosSampleCssWriter.newLine();
+            mGenPosCohortCssWriter.write(String.format("%s,%s,%s,%.4f", sample.Id, sample.cancerType(), refCancerType, css));
+            mGenPosCohortCssWriter.newLine();
         }
         catch(IOException e)
         {
             CUP_LOGGER.error("failed to write sample similarity: {}", e.toString());
         }
-    }
-
-    private void addSnvPosSimilarities(final SampleData sample, final double[] sampleCounts, final List<SampleSimilarity> similarities)
-    {
-        // not currently used
-        if(mRefSamplePosFrequencies == null || !mConfig.WriteSimilarities)
-            return;
-
-        final List<SampleSimilarity> topMatches = Lists.newArrayList();
-
-        for(Map.Entry<String,Integer> entry : mRefSamplePosFreqIndex.entrySet())
-        {
-            final String refSampleId = entry.getKey();
-
-            if(refSampleId.equals(sample.Id))
-                continue;
-
-            final String refCancerType = mSampleDataCache.RefSampleCancerTypeMap.get(refSampleId);
-
-            if(refCancerType == null || !sample.isCandidateCancerType(refCancerType))
-                continue;
-
-            final double[] otherSampleCounts = mRefSamplePosFrequencies.getCol(entry.getValue());
-
-            double css = calcCosineSim(sampleCounts, otherSampleCounts);
-
-            if(css < SNV_96_CSS_THRESHOLD)
-                continue;
-
-            recordCssSimilarity(
-                    topMatches, sample.Id, refSampleId, css, GENOMIC_POSITION_COHORT.toString(),
-                    GEN_POS_CSS_SIMILARITY_MAX_MATCHES, CSS_SIMILARITY_CUTOFF);
-        }
-
-        similarities.addAll(topMatches);
     }
 
     private void excludeAidApobecBuckets()
@@ -747,9 +834,9 @@ public class SomaticClassifier implements CuppaClassifier
             int bucketIndex = bucketNameIndexMap.get(bucketName);
             mAidApobecSnv96Buckets.add(bucketIndex);
 
-            for(int i = 0; i < mRefSampleCounts.Cols; ++i)
+            for(int i = 0; i < mRefSampleSnv96Counts.Cols; ++i)
             {
-                mRefSampleCounts.set(bucketIndex, i, 0);
+                mRefSampleSnv96Counts.set(bucketIndex, i, 0);
             }
         }
     }
@@ -757,50 +844,50 @@ public class SomaticClassifier implements CuppaClassifier
     @VisibleForTesting
     public void addRefData(final List<double[]> snvCounts, final List<double[]> posFreqCounts, final Map<String,double[]> cancerPosFreqCounts)
     {
-        mRefSampleCounts = new Matrix(snvCounts.get(0).length, snvCounts.size());
+        mRefSampleSnv96Counts = new Matrix(snvCounts.get(0).length, snvCounts.size());
 
         for(int i = 0; i < snvCounts.size(); ++i)
         {
-            mRefSampleCounts.setCol(i, snvCounts.get(i));
+            mRefSampleSnv96Counts.setCol(i, snvCounts.get(i));
             mRefSampleNames.add(mSampleDataCache.RefSampleDataList.get(i).Id);
         }
 
-        mRefCancerSnvPosFrequencies = new Matrix(posFreqCounts.get(0).length, cancerPosFreqCounts.size());
+        mRefCancerGenPosCounts = new Matrix(posFreqCounts.get(0).length, cancerPosFreqCounts.size());
 
         int cancerIndex = 0;
         for(Map.Entry<String,double[]> entry : cancerPosFreqCounts.entrySet())
         {
-            mRefSnvPosFreqCancerTypes.add(entry.getKey());
-            mRefCancerSnvPosFrequencies.setCol(cancerIndex, entry.getValue());
+            mRefGenPosCancerTypes.add(entry.getKey());
+            mRefCancerGenPosCounts.setCol(cancerIndex, entry.getValue());
             ++cancerIndex;
         }
 
-        mRefSamplePosFrequencies = new Matrix(posFreqCounts.get(0).length, posFreqCounts.size());
+        mRefSampleGenPosCounts = new Matrix(posFreqCounts.get(0).length, posFreqCounts.size());
 
         for(int i = 0; i < posFreqCounts.size(); ++i)
         {
-            mRefSamplePosFrequencies.setCol(i, posFreqCounts.get(i));
-            mRefSamplePosFreqIndex.put(mSampleDataCache.RefSampleDataList.get(i).Id, i);
+            mRefSampleGenPosCounts.setCol(i, posFreqCounts.get(i));
+            mRefSampleGenPosCountsIndex.put(mSampleDataCache.RefSampleDataList.get(i).Id, i);
         }
     }
 
     public void addSampleData(final List<String> sampleIds, final List<double[]> snvCounts, final List<double[]> posFreqCounts)
     {
-        mSampleSnvCounts = new Matrix(snvCounts.get(0).length, snvCounts.size());
+        mSampleSnv96Counts = new Matrix(snvCounts.get(0).length, snvCounts.size());
 
         for(int i = 0; i < snvCounts.size(); ++i)
         {
-            mSampleSnvCounts.setCol(i, snvCounts.get(i));
-            mSampleSnvCountsIndex.put(sampleIds.get(i), i);
+            mSampleSnv96Counts.setCol(i, snvCounts.get(i));
+            mSampleSnv96CountsIndex.put(sampleIds.get(i), i);
             mSampleSnvTotals.put(sampleIds.get(i), (int)sumVector(snvCounts.get(i)));
         }
 
-        mSamplePosFrequencies = new Matrix(posFreqCounts.get(0).length, posFreqCounts.size());
+        mSampleGenPosCounts = new Matrix(posFreqCounts.get(0).length, posFreqCounts.size());
 
         for(int i = 0; i < posFreqCounts.size(); ++i)
         {
-            mSamplePosFrequencies.setCol(i, posFreqCounts.get(i));
-            mSamplePosFreqIndex.put(sampleIds.get(i), i);
+            mSampleGenPosCounts.setCol(i, posFreqCounts.get(i));
+            mSampleGenPosCountsIndex.put(sampleIds.get(i), i);
         }
     }
 

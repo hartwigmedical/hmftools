@@ -20,8 +20,8 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SIG_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SNV_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
-import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_COHORT;
-import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE;
+import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_SIMILARITY;
+import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE_SIMILARITY;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_BUCKET_SIZE;
 import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_MAX_SAMPLE_COUNT;
@@ -79,13 +79,13 @@ public class RefSomatics implements RefClassifier
 
     private final Map<String,List<Double>> mCancerSnvCounts;
 
-    private Matrix mTriNucCounts; // counts per tri-nucleotide bucket
-    private final Map<String,Integer> mTriNucCountsIndex;
-    private boolean mWriteTriNucMatrixData;
+    private Matrix mSnv96Counts; // counts per tri-nucleotide bucket
+    private final Map<String,Integer> mSnv96CountsIndex;
+    private boolean mWriteSnv96MatrixData;
 
-    private Matrix mPosFreqCounts; // counts per genomic position
-    private final Map<String,Integer> mPosFreqCountsIndex;
-    private boolean mWritePosFreqMatrixData;
+    private Matrix mGenPosCounts; // counts per genomic position
+    private final Map<String,Integer> mGenPosCountsIndex;
+    private boolean mWriteGenPosMatrixData;
 
     private final boolean mIncludeAidApobec;
 
@@ -116,13 +116,13 @@ public class RefSomatics implements RefClassifier
 
         mRefDataWriter = null;
 
-        mTriNucCounts = null;
-        mTriNucCountsIndex = Maps.newHashMap();
-        mWriteTriNucMatrixData = false;
+        mSnv96Counts = null;
+        mSnv96CountsIndex = Maps.newHashMap();
+        mWriteSnv96MatrixData = false;
 
-        mPosFreqCounts = null;
-        mPosFreqCountsIndex = Maps.newHashMap();
-        mWritePosFreqMatrixData = false;
+        mGenPosCounts = null;
+        mGenPosCountsIndex = Maps.newHashMap();
+        mWriteGenPosMatrixData = false;
 
         mIncludeAidApobec = cmd.hasOption(INCLUDE_AID_APOBEC);
         mApplyCopyNumber = cmd.hasOption(NORMALISE_COPY_NUMBER);
@@ -170,15 +170,15 @@ public class RefSomatics implements RefClassifier
         if(combineCohortFiles)
         {
             final List<String> refSampleIds = mSampleDataCache.refSampleIds(false);
-            mTriNucCounts = loadMultipleMatrixFiles(snvCountFiles, refSampleIds, mTriNucCountsIndex, MATRIX_TYPE_SNV_96);
-            mPosFreqCounts = loadMultipleMatrixFiles(posFreqCountFiles, refSampleIds, mPosFreqCountsIndex, MATRIX_TYPE_GEN_POS);
-            mCopyNumberProfile = loadMultipleMatrixFiles(cnProfileFiles, refSampleIds, mPosFreqCountsIndex, MATRIX_TYPE_CN_PROFILE);
-            mWriteTriNucMatrixData = mWritePosFreqMatrixData = true;
+            mSnv96Counts = loadMultipleMatrixFiles(snvCountFiles, refSampleIds, mSnv96CountsIndex, MATRIX_TYPE_SNV_96);
+            mGenPosCounts = loadMultipleMatrixFiles(posFreqCountFiles, refSampleIds, mGenPosCountsIndex, MATRIX_TYPE_GEN_POS);
+            mCopyNumberProfile = loadMultipleMatrixFiles(cnProfileFiles, refSampleIds, mGenPosCountsIndex, MATRIX_TYPE_CN_PROFILE);
+            mWriteSnv96MatrixData = mWriteGenPosMatrixData = true;
         }
         else
         {
-            mTriNucCounts = loadReferenceSnvCounts(mConfig.Snv96MatrixFile, mTriNucCountsIndex, MATRIX_TYPE_SNV_96);
-            mPosFreqCounts = loadReferenceSnvCounts(mConfig.GenPosMatrixFile, mPosFreqCountsIndex, MATRIX_TYPE_GEN_POS);
+            mSnv96Counts = loadReferenceSnvCounts(mConfig.Snv96MatrixFile, mSnv96CountsIndex, MATRIX_TYPE_SNV_96);
+            mGenPosCounts = loadReferenceSnvCounts(mConfig.GenPosMatrixFile, mGenPosCountsIndex, MATRIX_TYPE_GEN_POS);
 
             retrieveMissingSampleCounts();
 
@@ -190,27 +190,27 @@ public class RefSomatics implements RefClassifier
             else if(mBuildCopyNumber)
             {
                 final List<String> refSampleIds = mSampleDataCache.refSampleIds(false);
-                mCopyNumberProfile = buildCopyNumberProfile(refSampleIds, mConfig, mPosFreqCountsIndex, mPosFrequencies);
+                mCopyNumberProfile = buildCopyNumberProfile(refSampleIds, mConfig, mGenPosCountsIndex, mPosFrequencies);
             }
         }
 
-        mTriNucCounts.cacheTranspose();
-        mPosFreqCounts.cacheTranspose();
+        mSnv96Counts.cacheTranspose();
+        mGenPosCounts.cacheTranspose();
 
         // write out sample matrix data unless they were already correct
-        if(mWriteTriNucMatrixData)
+        if(mWriteSnv96MatrixData)
         {
-            writeSampleMatrix(mTriNucCounts, mTriNucCountsIndex, mConfig.OutputDir + REF_FILE_SNV_COUNTS, INTEGER_FORMAT);
+            writeSampleMatrix(mSnv96Counts, mSnv96CountsIndex, mConfig.OutputDir + REF_FILE_SNV_COUNTS, INTEGER_FORMAT);
         }
 
-        final double[] triNucMedians = NoiseRefCache.generateMedianValues(mTriNucCounts);
-        mNoiseRefCache.addNoiseData(SNV_96_PAIRWISE, triNucMedians);
+        final double[] triNucMedians = NoiseRefCache.generateMedianValues(mSnv96Counts);
+        mNoiseRefCache.addNoiseData(SNV_96_PAIRWISE_SIMILARITY, triNucMedians);
 
-        if(mWritePosFreqMatrixData)
-            writeSampleMatrix(mPosFreqCounts, mPosFreqCountsIndex, mConfig.OutputDir + REF_FILE_SAMPLE_POS_FREQ_COUNTS, INTEGER_FORMAT);
+        if(mWriteGenPosMatrixData)
+            writeSampleMatrix(mGenPosCounts, mGenPosCountsIndex, mConfig.OutputDir + REF_FILE_SAMPLE_POS_FREQ_COUNTS, INTEGER_FORMAT);
 
         if(mBuildCopyNumber)
-            writeSampleMatrix(mCopyNumberProfile, mPosFreqCountsIndex, mConfig.OutputDir + REF_FILE_COPY_NUMBER_PROFILE, DEC_1_FORMAT);
+            writeSampleMatrix(mCopyNumberProfile, mGenPosCountsIndex, mConfig.OutputDir + REF_FILE_COPY_NUMBER_PROFILE, DEC_1_FORMAT);
 
         Matrix sampleGenPosCounts = null;
 
@@ -219,7 +219,7 @@ public class RefSomatics implements RefClassifier
             CUP_LOGGER.info("normalising sample pos-freq counts with copy-number");
 
             Matrix sampleCnNormalisedCounts = CopyNumberProfile.buildSampleCopyNumberNormalisedCounts(
-                    mPosFreqCounts, mPosFreqCountsIndex, mCopyNumberProfile, mSampleDataCache.RefSampleDataList,
+                    mGenPosCounts, mGenPosCountsIndex, mCopyNumberProfile, mSampleDataCache.RefSampleDataList,
                     mSampleDataCache.RefSampleTraitsData);
 
             sampleGenPosCounts = sampleCnNormalisedCounts;
@@ -227,13 +227,13 @@ public class RefSomatics implements RefClassifier
             if(mBuildCopyNumber)
             {
                 writeSampleMatrix(
-                        sampleCnNormalisedCounts, mPosFreqCountsIndex,
+                        sampleCnNormalisedCounts, mGenPosCountsIndex,
                         mConfig.OutputDir + REF_FILE_CN_ADJUSTED_SAMPLE_POS_FREQ_COUNTS, DEC_3_FORMAT);
             }
         }
         else
         {
-            sampleGenPosCounts = mPosFreqCounts;
+            sampleGenPosCounts = mGenPosCounts;
         }
 
         buildSignaturePercentiles();
@@ -243,10 +243,13 @@ public class RefSomatics implements RefClassifier
                 .filter(x -> !x.equals(CANCER_TYPE_OTHER)).collect(Collectors.toList());
 
         Matrix cancerGenPosMatrix = buildCancerMatrix(
-                sampleGenPosCounts, mPosFreqCountsIndex, cancerTypes, mSampleDataCache.RefCancerSampleData, mPosFrequencies.getMaxSampleCount());
+                sampleGenPosCounts, mGenPosCountsIndex, cancerTypes, mSampleDataCache.RefCancerSampleData, mPosFrequencies.getMaxSampleCount());
 
-        final double[] genPosMedians = NoiseRefCache.generateMedianValues(cancerGenPosMatrix);
-        mNoiseRefCache.addNoiseData(GENOMIC_POSITION_COHORT, genPosMedians);
+        final double[] genPosCohortMedians = NoiseRefCache.generateMedianValues(cancerGenPosMatrix);
+        mNoiseRefCache.addNoiseData(GENOMIC_POSITION_SIMILARITY, genPosCohortMedians);
+
+        // final double[] genPosSampleMedians = NoiseRefCache.generateMedianValues(mGenPosCounts);
+        // mNoiseRefCache.addNoiseData(GENOMIC_POSITION_PAIRWISE, genPosSampleMedians);
 
         writeMatrix(cancerGenPosMatrix, cancerTypes, mConfig.OutputDir + REF_FILE_CANCER_POS_FREQ_COUNTS, DEC_3_FORMAT);
 
@@ -258,9 +261,9 @@ public class RefSomatics implements RefClassifier
         if(refFilename.isEmpty())
         {
             if(type.equals(MATRIX_TYPE_SNV_96))
-                mWriteTriNucMatrixData = true;
+                mWriteSnv96MatrixData = true;
             else
-                mWritePosFreqMatrixData = true;
+                mWriteGenPosMatrixData = true;
 
             return null;
         }
@@ -286,9 +289,9 @@ public class RefSomatics implements RefClassifier
             }
 
             if(type.equals(MATRIX_TYPE_SNV_96))
-                mWriteTriNucMatrixData = false;
+                mWriteSnv96MatrixData = false;
             else
-                mWritePosFreqMatrixData = false;
+                mWriteGenPosMatrixData = false;
 
             return existingRefSampleCounts;
         }
@@ -316,9 +319,9 @@ public class RefSomatics implements RefClassifier
         }
 
         if(type.equals(MATRIX_TYPE_SNV_96))
-            mWriteTriNucMatrixData = true;
+            mWriteSnv96MatrixData = true;
         else
-            mWritePosFreqMatrixData = true;
+            mWriteGenPosMatrixData = true;
 
         return refMatrix;
     }
@@ -329,7 +332,7 @@ public class RefSomatics implements RefClassifier
         final List<String> refSampleIds = mSampleDataCache.refSampleIds(false);
 
         long missingSamples = refSampleIds.stream()
-                .filter(x -> !mTriNucCountsIndex.containsKey(x) || !mPosFreqCountsIndex.containsKey(x)).count();
+                .filter(x -> !mSnv96CountsIndex.containsKey(x) || !mGenPosCountsIndex.containsKey(x)).count();
 
         if(missingSamples == 0)
             return;
@@ -337,14 +340,14 @@ public class RefSomatics implements RefClassifier
         int refSampleCount = refSampleIds.size();
         CUP_LOGGER.debug("retrieving SNV data for {} samples from refSampleCount({})", missingSamples, refSampleCount);
 
-        if(mTriNucCounts == null)
+        if(mSnv96Counts == null)
         {
-            mTriNucCounts = new Matrix(SNV_TRINUCLEOTIDE_BUCKET_COUNT, refSampleCount);
+            mSnv96Counts = new Matrix(SNV_TRINUCLEOTIDE_BUCKET_COUNT, refSampleCount);
         }
 
-        if(mPosFreqCounts == null)
+        if(mGenPosCounts == null)
         {
-            mPosFreqCounts = new Matrix(mPosFrequencies.getBucketCount(), refSampleCount);
+            mGenPosCounts = new Matrix(mPosFrequencies.getBucketCount(), refSampleCount);
         }
 
         final Map<String,Integer> triNucBucketNameMap = Maps.newHashMap();
@@ -356,8 +359,8 @@ public class RefSomatics implements RefClassifier
         for(int i = 0; i < refSampleCount; ++i)
         {
             final String sampleId = refSampleIds.get(i);
-            boolean needsTriNucCounts = !mTriNucCountsIndex.containsKey(sampleId);
-            boolean needsPosFreqCounts = !mPosFreqCountsIndex.containsKey(sampleId);
+            boolean needsTriNucCounts = !mSnv96CountsIndex.containsKey(sampleId);
+            boolean needsPosFreqCounts = !mGenPosCountsIndex.containsKey(sampleId);
 
             if(!needsPosFreqCounts && !needsTriNucCounts)
                 continue;
@@ -386,19 +389,19 @@ public class RefSomatics implements RefClassifier
             {
                 final double[] triNucCounts = extractTrinucleotideCounts(variants, triNucBucketNameMap);
 
-                int refSampleIndex = mTriNucCountsIndex.size();
-                mTriNucCounts.setCol(refSampleIndex, triNucCounts);
-                mTriNucCountsIndex.put(sampleId, refSampleIndex);
+                int refSampleIndex = mSnv96CountsIndex.size();
+                mSnv96Counts.setCol(refSampleIndex, triNucCounts);
+                mSnv96CountsIndex.put(sampleId, refSampleIndex);
             }
 
             if(needsPosFreqCounts)
             {
-                int refSampleIndex = mPosFreqCountsIndex.size();
-                mPosFreqCountsIndex.put(sampleId, refSampleIndex);
+                int refSampleIndex = mGenPosCountsIndex.size();
+                mGenPosCountsIndex.put(sampleId, refSampleIndex);
 
                 AidApobecStatus aidApobecStatus = mIncludeAidApobec ? AidApobecStatus.ALL : AidApobecStatus.FALSE_ONLY;
                 extractPositionFrequencyCounts(variants, mPosFrequencies, aidApobecStatus);
-                mPosFreqCounts.setCol(refSampleIndex, mPosFrequencies.getCounts());
+                mGenPosCounts.setCol(refSampleIndex, mPosFrequencies.getCounts());
             }
         }
     }
@@ -437,7 +440,7 @@ public class RefSomatics implements RefClassifier
         else
         {
             // calculate from SNV counts
-            sampleSigContributions.putAll(buildSampleSignatureContributions(mTriNucCounts, mTriNucCountsIndex));
+            sampleSigContributions.putAll(buildSampleSignatureContributions(mSnv96Counts, mSnv96CountsIndex));
         }
 
         writeCohortData(sampleSigContributions);
@@ -463,10 +466,10 @@ public class RefSomatics implements RefClassifier
 
     private void buildSnvCountPercentiles()
     {
-        for(Map.Entry<String,Integer> entry : mTriNucCountsIndex.entrySet())
+        for(Map.Entry<String,Integer> entry : mSnv96CountsIndex.entrySet())
         {
             final String sampleId = entry.getKey();
-            double sampleTotal = sumVector(mTriNucCounts.getCol(entry.getValue()));
+            double sampleTotal = sumVector(mSnv96Counts.getCol(entry.getValue()));
 
             final String cancerType = mSampleDataCache.RefSampleCancerTypeMap.get(sampleId);
 

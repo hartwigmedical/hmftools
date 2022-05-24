@@ -6,11 +6,10 @@ import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaConfig.SUBSET_DELIM;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_NOISE_ADJUSTMENTS;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_NOISE_MEDIANS;
 import static com.hartwig.hmftools.cup.common.ClassifierType.ALT_SJ_COHORT;
-import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_COHORT;
-import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_PAIRWISE;
-import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE;
+import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_SIMILARITY;
+import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE_SIMILARITY;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -27,7 +26,7 @@ import com.hartwig.hmftools.common.utils.Matrix;
 public class NoiseRefCache
 {
     private final String mRefNoiseFile;
-    private final Map<ClassifierType,double[]> mClassifierNoiseAdjustments;
+    private final Map<ClassifierType,double[]> mClassifierNoiseMedians;
     private final Map<ClassifierType,Integer> mClassifierNoiseAllocations;
 
     public static final String NOISE_ALLOC_DEFAULTS = "DEFAULTS";
@@ -35,12 +34,12 @@ public class NoiseRefCache
 
     public NoiseRefCache(final String refDataDir)
     {
-        mClassifierNoiseAdjustments = Maps.newHashMap();
+        mClassifierNoiseMedians = Maps.newHashMap();
         mClassifierNoiseAllocations = Maps.newHashMap();
 
         if(refDataDir != null)
         {
-            mRefNoiseFile = refDataDir + REF_FILE_NOISE_ADJUSTMENTS;
+            mRefNoiseFile = refDataDir + REF_FILE_NOISE_MEDIANS;
 
             if(Files.exists(Paths.get(mRefNoiseFile)))
                 loadAdjustments(mRefNoiseFile);
@@ -53,15 +52,18 @@ public class NoiseRefCache
 
     public boolean makeNoiseAdjustment(final ClassifierType classifierType)
     {
-        return mClassifierNoiseAdjustments.containsKey(classifierType) && mClassifierNoiseAllocations.containsKey(classifierType);
+        return mClassifierNoiseMedians.containsKey(classifierType) && mClassifierNoiseAllocations.containsKey(classifierType);
     }
 
-    public double[] getNoiseData(final ClassifierType classifierType) { return mClassifierNoiseAdjustments.get(classifierType); }
+    public double[] getNoiseData(final ClassifierType classifierType) { return mClassifierNoiseMedians.get(classifierType); }
     public int getNoiseAllocation(final ClassifierType classifierType) { return mClassifierNoiseAllocations.get(classifierType); }
 
-    public void addNoiseData(final ClassifierType classifierType, final double[] noiseAdjustments)
+    public boolean hasNoiseData(final ClassifierType classifierType) { return mClassifierNoiseMedians.containsKey(classifierType); }
+    public boolean hasNoiseAllocation(final ClassifierType classifierType) { return mClassifierNoiseAllocations.containsKey(classifierType); }
+
+    public void addNoiseData(final ClassifierType classifierType, final double[] noiseMedians)
     {
-        mClassifierNoiseAdjustments.put(classifierType, noiseAdjustments);
+        mClassifierNoiseMedians.put(classifierType, noiseMedians);
     }
 
     public void loadNoiseAllocations(final String config)
@@ -75,8 +77,8 @@ public class NoiseRefCache
         if(config.equals(NOISE_ALLOC_DEFAULTS))
         {
             mClassifierNoiseAllocations.put(ALT_SJ_COHORT, CupConstants.ALT_SJ_NOISE_ALLOCATION);
-            mClassifierNoiseAllocations.put(SNV_96_PAIRWISE, CupConstants.SNV_96_NOISE_ALLOCATION);
-            mClassifierNoiseAllocations.put(GENOMIC_POSITION_COHORT, CupConstants.GEN_POS_COHORT_NOISE_ALLOCATION);
+            mClassifierNoiseAllocations.put(SNV_96_PAIRWISE_SIMILARITY, CupConstants.SNV_96_NOISE_ALLOCATION);
+            mClassifierNoiseAllocations.put(GENOMIC_POSITION_SIMILARITY, CupConstants.GEN_POS_COHORT_NOISE_ALLOCATION);
 
             // to be determined
             //mClassifierNoiseAllocations.put(GENOMIC_POSITION_PAIRWISE, CupConstants.GEN_POS_PAIRWISE_NOISE_ALLOCATION);
@@ -111,9 +113,12 @@ public class NoiseRefCache
                     noiseAdjustments[i - 1] = Double.parseDouble(values[i]);
                 }
 
-                CUP_LOGGER.info("classifier({}) loaded ref noise adjustments", classifierType);
-                mClassifierNoiseAdjustments.put(classifierType, noiseAdjustments);
+                mClassifierNoiseMedians.put(classifierType, noiseAdjustments);
             }
+
+            if(!mClassifierNoiseMedians.isEmpty())
+                CUP_LOGGER.info("loaded ref noise medians for classifiers: {}", mClassifierNoiseMedians.keySet());
+
         }
         catch (IOException e)
         {
@@ -123,17 +128,17 @@ public class NoiseRefCache
 
     public void writeNoiseAdjustments()
     {
-        if(mClassifierNoiseAdjustments.isEmpty() || mRefNoiseFile == null)
+        if(mClassifierNoiseMedians.isEmpty() || mRefNoiseFile == null)
             return;
 
         try
         {
             BufferedWriter writer = createBufferedWriter(mRefNoiseFile, false);
 
-            writer.write("Classifier,Adjustments");
+            writer.write("Classifier,Medians");
             writer.newLine();
 
-            for(Map.Entry<ClassifierType,double[]> entry : mClassifierNoiseAdjustments.entrySet())
+            for(Map.Entry<ClassifierType,double[]> entry : mClassifierNoiseMedians.entrySet())
             {
                 writer.write(String.format("%s", entry.getKey()));
 
