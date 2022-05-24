@@ -2,9 +2,9 @@
 ROSE match all the genomic events and signatures that are determined by the Hartwig pipeline to the actionability treatment options in the Netherlands. 
 
 ## Contents
-- [How is actionability matched against genomic events?](#actionability-of-genomic-event)
+- [How is actionability matched against genomic events?](#matching-of-actionability)
 - [What output is produced by ROSE?](#rose-output)
-- [Which known issues are present in ROSE?](#rose-output)
+- [Which known issues are present in ROSE?](#known-issues)
 - [Version history and download links](#version-history-and-download-links)
 
 ## Matching of actionability
