@@ -148,7 +148,7 @@ public class SampleFitter
             return false;
         }
 
-        mSignatures = loadMatrixDataFile(mSignaturesFile, mSignatureNames);
+        mSignatures = loadMatrixDataFile(mSignaturesFile, mSignatureNames, false);
 
         if(mVcfFile != null)
         {

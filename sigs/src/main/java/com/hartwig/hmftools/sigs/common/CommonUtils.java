@@ -62,7 +62,7 @@ public class CommonUtils
 
     public static Matrix loadSampleMatrixCounts(final String filename, final List<String> sampleIds)
     {
-        return MatrixFile.loadMatrixDataFile(filename, sampleIds, Lists.newArrayList("BucketName"));
+        return MatrixFile.loadMatrixDataFile(filename, sampleIds, Lists.newArrayList("BucketName"), false);
     }
 
     public static List<Integer> getCombinedList(final List<Integer> list1, final List<Integer> list2)

@@ -58,7 +58,9 @@ public class ExpressionCohortCompare
     private void loadGeneExpression()
     {
         final List<String> ignoreFields = Lists.newArrayList(FLD_GENE_ID, FLD_GENE_NAME);
-        mGeneExpressionMatrix = loadMatrixDataFile(mConfig.Expression.GeneExpMatrixFile, mSampleIndexMap, ignoreFields);
+
+        // TODO: consider transposing on load rather than afterwards
+        mGeneExpressionMatrix = loadMatrixDataFile(mConfig.Expression.GeneExpMatrixFile, mSampleIndexMap, ignoreFields, false);
         mGeneExpressionMatrix.cacheTranspose();
 
         // keep track of gene ids and names

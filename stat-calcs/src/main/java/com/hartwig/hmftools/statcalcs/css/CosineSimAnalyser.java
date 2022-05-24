@@ -78,7 +78,7 @@ public class CosineSimAnalyser
         mUseElevated = cmd.hasOption(USE_ELEVATED);
         mRangeMap = Maps.newHashMap();
 
-        mSampleCounts = loadMatrixDataFile(cmd.getOptionValue(SAMPLE_COUNTS_FILE), mSampleCountsIndex, null);
+        mSampleCounts = loadMatrixDataFile(cmd.getOptionValue(SAMPLE_COUNTS_FILE), mSampleCountsIndex, null, false);
         mSampleCounts.cacheTranspose();
 
         mSampleCancerTypes = Maps.newHashMap();
@@ -98,7 +98,7 @@ public class CosineSimAnalyser
         {
             STAT_LOGGER.info("loading reference data from file({})", cmd.getOptionValue(REF_COUNTS_FILE));
 
-            mReferenceSampleCounts = loadMatrixDataFile(cmd.getOptionValue(REF_COUNTS_FILE), mRefNames);
+            mReferenceSampleCounts = loadMatrixDataFile(cmd.getOptionValue(REF_COUNTS_FILE), mRefNames, false);
             mReferenceSampleCounts.cacheTranspose();
         }
         else

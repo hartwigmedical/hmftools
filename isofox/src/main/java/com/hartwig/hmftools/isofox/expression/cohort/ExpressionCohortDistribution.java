@@ -348,7 +348,7 @@ public class ExpressionCohortDistribution
         if(mTranscriptScope)
             ignoreFields.add(FLD_TRANS_NAME);
 
-        mExpressionMatrix = loadMatrixDataFile(mConfig.Expression.GeneExpMatrixFile, mSampleIndexMap, ignoreFields);
+        mExpressionMatrix = loadMatrixDataFile(mConfig.Expression.GeneExpMatrixFile, mSampleIndexMap, ignoreFields, false);
 
         ISF_LOGGER.debug("loaded genes({}) and {} samples expression matrix data", mGeneTransIds.size(), mExpressionMatrix.Cols);
         return true;

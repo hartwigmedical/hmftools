@@ -161,7 +161,7 @@ public class PositionFreqBuilder
         final Map<String,Integer> newChrPosIndexMap = Maps.newHashMap();
         int newPosCacheSize = initialisePositionCache(mNewBucketSize, mChromosomeLengths, newChrPosIndexMap);
 
-        final Matrix oldSampleCounts = loadMatrixDataFile(mSamplePosCountsFile, sampleNames);
+        final Matrix oldSampleCounts = loadMatrixDataFile(mSamplePosCountsFile, sampleNames, false);
         final double[][] oldCounts = oldSampleCounts.getData();
 
         final Matrix newSampleCounts = new Matrix(newPosCacheSize, oldSampleCounts.Cols);
