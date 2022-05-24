@@ -90,6 +90,17 @@ public class Matrix
         }
     }
 
+    public void setRow(int rowIndex, final int[] data)
+    {
+        if(rowIndex >= Rows)
+            return;
+
+        for(int i = 0; i < Cols; ++i)
+        {
+            mData[rowIndex][i] = data[i];
+        }
+    }
+
     public void setCol(int colIndex, final double[] data)
     {
         if(colIndex >= Cols)

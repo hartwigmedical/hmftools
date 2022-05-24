@@ -74,7 +74,7 @@ public class RnaExpressionMatrix
         if(mTranscriptScope)
             ignoreFields.add(FLD_TRANS_NAME);
 
-        Matrix matrix = loadMatrixDataFile(filename, mSampleIdIndexMap, ignoreFields);
+        Matrix matrix = loadMatrixDataFile(filename, mSampleIdIndexMap, ignoreFields, false);
 
         List<Integer> excludedRows = Lists.newArrayList();
 

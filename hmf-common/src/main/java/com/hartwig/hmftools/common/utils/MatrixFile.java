@@ -18,11 +18,12 @@ public final class MatrixFile
 
     private static final Logger LOGGER = LogManager.getLogger(MatrixFile.class);
 
-    public static Matrix loadMatrixDataFile(final String filename, final Map<String,Integer> columnDataIndex, final List<String> ignoreFields)
+    public static Matrix loadMatrixDataFile(
+            final String filename, final Map<String,Integer> columnDataIndex, final List<String> ignoreFields, boolean transpose)
     {
         final List<String> columnNames = Lists.newArrayList();
 
-        Matrix sigMatrix = loadMatrixDataFile(filename, columnNames, ignoreFields);
+        Matrix sigMatrix = loadMatrixDataFile(filename, columnNames, ignoreFields, transpose);
 
         for(int c = 0; c < columnNames.size(); ++c)
         {
@@ -32,18 +33,19 @@ public final class MatrixFile
         return sigMatrix;
     }
 
-    public static Matrix loadMatrixDataFile(final String filename, final List<String> columnNames)
+    public static Matrix loadMatrixDataFile(final String filename, final List<String> columnNames, boolean transpose)
     {
-        return loadMatrixDataFile(filename, columnNames, null);
+        return loadMatrixDataFile(filename, columnNames, null, transpose);
     }
 
-    public static Matrix loadMatrixDataFile(final String filename, final List<String> columnNames, final List<String> ignoreFields)
+    public static Matrix loadMatrixDataFile(
+            final String filename, final List<String> columnNames, final List<String> ignoreFields, boolean transpose)
     {
         try
         {
             final List<String> fileData = Files.readAllLines(new File(filename).toPath());
 
-            Matrix matrix = loadMatrixDataFile(fileData, columnNames, ignoreFields);
+            Matrix matrix = loadMatrixDataFile(fileData, columnNames, ignoreFields, transpose);
 
             LOGGER.info("loaded matrix(rows={} cols={}) from file({})", matrix.Rows, matrix.Cols, filename);
 
@@ -56,7 +58,8 @@ public final class MatrixFile
         }
     }
 
-    public static Matrix loadMatrixDataFile(final List<String> fileData, final List<String> columnNames, final List<String> ignoreFields)
+    public static Matrix loadMatrixDataFile(
+            final List<String> fileData, final List<String> columnNames, final List<String> ignoreFields, boolean transpose)
     {
         // read field names
         if(fileData.size() <= 1)
@@ -66,8 +69,8 @@ public final class MatrixFile
         }
 
         final String header = fileData.get(0);
-        columnNames.addAll(Lists.newArrayList(header.split(DEFAULT_MATRIX_DELIM, -1)));
         fileData.remove(0);
+        columnNames.addAll(Lists.newArrayList(header.split(DEFAULT_MATRIX_DELIM, -1)));
 
         List<Integer> ignoreCols = Lists.newArrayList();
 
@@ -91,12 +94,12 @@ public final class MatrixFile
         int rowCount = fileData.size();
         int invalidRowCount = 0;
 
-        Matrix matrix = new Matrix(rowCount, colCount);
+        Matrix matrix = transpose ? new Matrix(colCount, rowCount) : new Matrix(rowCount, colCount);
         final double[][] matrixData = matrix.getData();
 
-        for(int r = 0; r < rowCount; ++r)
+        for(int rowIndex = 0; rowIndex < rowCount; ++rowIndex)
         {
-            final String line = fileData.get(r);
+            final String line = fileData.get(rowIndex);
             final String[] items = line.split(DEFAULT_MATRIX_DELIM, -1);
 
             if(items.length != colCount + ignoreCols.size())
@@ -105,14 +108,18 @@ public final class MatrixFile
                 continue;
             }
 
-            int c = 0;
+            int colIndex = 0;
             for(int i = 0; i < items.length; ++i)
             {
                 if(ignoreCols.contains(i))
                     continue;
 
-                matrixData[r][c] = Double.parseDouble(items[i]);
-                ++c;
+                if(transpose)
+                    matrixData[colIndex][rowIndex] = Double.parseDouble(items[i]);
+                else
+                    matrixData[rowIndex][colIndex] = Double.parseDouble(items[i]);
+
+                ++colIndex;
             }
         }
 
