@@ -534,6 +534,11 @@ public class ConclusionAlgoTest {
                 .reportedType(KnownFusionType.EXON_DEL_DUP.toString())
                 .name("EGFR-EGFR")
                 .build());
+        fusion.add(linxFusionBuilder("EGFR", "EGFR", true).fusedExonUp(15)
+                .fusedExonDown(23)
+                .reportedType(KnownFusionType.EXON_DEL_DUP.toString())
+                .name("EGFR-EGFR")
+                .build());
         return fusion;
     }
 

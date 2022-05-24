@@ -230,15 +230,6 @@ public class ConclusionAlgo {
         for (LinxFusion fusion : reportableFusions) {
             oncogenic.add("fusion");
 
-            if (fusion.reportedType().equals(KnownFusionType.EXON_DEL_DUP.toString())) {
-                ActionabilityKey keyFusion =
-                        ImmutableActionabilityKey.builder().gene(fusion.geneStart()).type(TypeAlteration.INTERNAL_DELETION).build();
-                ActionabilityEntry entry = actionabilityMap.get(keyFusion);
-                if (entry != null && entry.condition() == Condition.ALWAYS) {
-                    conclusion.put(conclusion.size(), "- " + fusion.name() + " " + entry.conclusion());
-                    actionable.add("fusion");
-                }
-            }
             if (fusion.reportedType().equals(KnownFusionType.EXON_DEL_DUP.toString()) && fusion.geneStart().equals("EGFR") && (
                     fusion.fusedExonUp() == 25 && fusion.fusedExonDown() == 14) || (fusion.fusedExonUp() == 26
                     && fusion.fusedExonDown() == 18)) {
@@ -249,8 +240,15 @@ public class ConclusionAlgo {
                     conclusion.put(conclusion.size(), "- " + fusion.name() + " " + entry.conclusion());
                     actionable.add("fusion");
                 }
-            }
-            if (FUSION_TYPES.contains(fusion.reportedType())) {
+            } else if (fusion.reportedType().equals(KnownFusionType.EXON_DEL_DUP.toString())) {
+                ActionabilityKey keyFusion =
+                        ImmutableActionabilityKey.builder().gene(fusion.geneStart()).type(TypeAlteration.INTERNAL_DELETION).build();
+                ActionabilityEntry entry = actionabilityMap.get(keyFusion);
+                if (entry != null && entry.condition() == Condition.ALWAYS) {
+                    conclusion.put(conclusion.size(), "- " + fusion.name() + " " + entry.conclusion());
+                    actionable.add("fusion");
+                }
+            } else if (FUSION_TYPES.contains(fusion.reportedType())) {
                 ActionabilityKey keyFusionStart =
                         ImmutableActionabilityKey.builder().gene(fusion.geneStart()).type(TypeAlteration.FUSION).build();
                 ActionabilityKey keyFusionEnd =
