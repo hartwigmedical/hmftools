@@ -30,6 +30,7 @@ import com.hartwig.hmftools.rose.actionability.Condition;
 import com.hartwig.hmftools.rose.actionability.ImmutableActionabilityKey;
 import com.hartwig.hmftools.rose.actionability.TypeAlteration;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 import com.google.common.collect.Sets;
@@ -41,7 +42,6 @@ public class ConclusionAlgo {
             KnownFusionType.KNOWN_PAIR.toString(),
             KnownFusionType.IG_KNOWN_PAIR.toString(),
             KnownFusionType.IG_PROMISCUOUS.toString());
-    private static final Set<String> VIRUS = Sets.newHashSet("HPV", "EBV");
     private static final Set<String> HRD_GENES = Sets.newHashSet("BRCA1", "BRCA2", "PALB2", "RAD51B", "RAD51C");
 
     @NotNull
@@ -185,7 +185,6 @@ public class ConclusionAlgo {
                                 "- " + reportableVariant.gene() + "(" + reportableVariant.canonicalHgvsProteinImpact() + ") "
                                         + entry.conclusion());
                     }
-
                 }
             }
         }
@@ -231,15 +230,6 @@ public class ConclusionAlgo {
         for (LinxFusion fusion : reportableFusions) {
             oncogenic.add("fusion");
 
-            if (fusion.reportedType().equals(KnownFusionType.EXON_DEL_DUP.toString())) {
-                ActionabilityKey keyFusion =
-                        ImmutableActionabilityKey.builder().gene(fusion.geneStart()).type(TypeAlteration.INTERNAL_DELETION).build();
-                ActionabilityEntry entry = actionabilityMap.get(keyFusion);
-                if (entry != null && entry.condition() == Condition.ALWAYS) {
-                    conclusion.put(conclusion.size(), "- " + fusion.name() + " " + entry.conclusion());
-                    actionable.add("fusion");
-                }
-            }
             if (fusion.reportedType().equals(KnownFusionType.EXON_DEL_DUP.toString()) && fusion.geneStart().equals("EGFR") && (
                     fusion.fusedExonUp() == 25 && fusion.fusedExonDown() == 14) || (fusion.fusedExonUp() == 26
                     && fusion.fusedExonDown() == 18)) {
@@ -250,8 +240,15 @@ public class ConclusionAlgo {
                     conclusion.put(conclusion.size(), "- " + fusion.name() + " " + entry.conclusion());
                     actionable.add("fusion");
                 }
-            }
-            if (FUSION_TYPES.contains(fusion.reportedType())) {
+            } else if (fusion.reportedType().equals(KnownFusionType.EXON_DEL_DUP.toString())) {
+                ActionabilityKey keyFusion =
+                        ImmutableActionabilityKey.builder().gene(fusion.geneStart()).type(TypeAlteration.INTERNAL_DELETION).build();
+                ActionabilityEntry entry = actionabilityMap.get(keyFusion);
+                if (entry != null && entry.condition() == Condition.ALWAYS) {
+                    conclusion.put(conclusion.size(), "- " + fusion.name() + " " + entry.conclusion());
+                    actionable.add("fusion");
+                }
+            } else if (FUSION_TYPES.contains(fusion.reportedType())) {
                 ActionabilityKey keyFusionStart =
                         ImmutableActionabilityKey.builder().gene(fusion.geneStart()).type(TypeAlteration.FUSION).build();
                 ActionabilityKey keyFusionEnd =
@@ -294,16 +291,14 @@ public class ConclusionAlgo {
         for (AnnotatedVirus annotatedVirus : reportableViruses) {
             oncogenic.add("virus");
 
-            if (annotatedVirus.virusDriverLikelihoodType() == VirusLikelihoodType.HIGH && VIRUS.contains(annotatedVirus.interpretation())) {
-                ActionabilityKey keyVirus =
-                        ImmutableActionabilityKey.builder().gene(annotatedVirus.interpretation()).type(TypeAlteration.POSITIVE).build();
-                ActionabilityEntry entry = actionabilityMap.get(keyVirus);
-                if (entry != null && entry.condition() == Condition.ALWAYS) {
-                    if ((annotatedVirus.virusDriverLikelihoodType() == VirusLikelihoodType.HIGH)) {
-                        conclusion.put(conclusion.size(), "- " + annotatedVirus.interpretation() + " " + entry.conclusion());
-                        actionable.add("virus");
-                    }
-                }
+            ActionabilityKey keyVirus = ImmutableActionabilityKey.builder()
+                    .gene(annotatedVirus.interpretation() != null ? annotatedVirus.interpretation() : Strings.EMPTY)
+                    .type(TypeAlteration.POSITIVE)
+                    .build();
+            ActionabilityEntry entry = actionabilityMap.get(keyVirus);
+            if (entry != null && entry.condition() == Condition.ALWAYS) {
+                conclusion.put(conclusion.size(), "- " + annotatedVirus.interpretation() + " " + entry.conclusion());
+                actionable.add("virus");
             }
         }
     }
@@ -378,7 +373,8 @@ public class ConclusionAlgo {
     public static void genertatePurityConclusion(@NotNull Map<Integer, String> conclusion, double purity, boolean hasRelaiblePurity,
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
         if (!hasRelaiblePurity) {
-            ActionabilityKey keyReliable = ImmutableActionabilityKey.builder().gene("purity_unreliable").type(TypeAlteration.PURITY_UNRELIABLE).build();
+            ActionabilityKey keyReliable =
+                    ImmutableActionabilityKey.builder().gene("purity_unreliable").type(TypeAlteration.PURITY_UNRELIABLE).build();
 
             ActionabilityEntry entryReliable = actionabilityMap.get(keyReliable);
             if (entryReliable != null && entryReliable.condition() == Condition.OTHER) {
