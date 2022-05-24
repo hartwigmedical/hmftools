@@ -16,6 +16,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.common.utils.MatrixFile;
 import com.hartwig.hmftools.common.utils.MatrixUtils;
 
 import org.apache.commons.cli.Options;
@@ -61,7 +62,7 @@ public class CommonUtils
 
     public static Matrix loadSampleMatrixCounts(final String filename, final List<String> sampleIds)
     {
-        return MatrixUtils.loadMatrixDataFile(filename, sampleIds, Lists.newArrayList("BucketName"));
+        return MatrixFile.loadMatrixDataFile(filename, sampleIds, Lists.newArrayList("BucketName"));
     }
 
     public static List<Integer> getCombinedList(final List<Integer> list1, final List<Integer> list2)

@@ -1,13 +1,10 @@
 package com.hartwig.hmftools.common.utils;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.List;
-import java.util.Map;
+import static java.lang.Math.min;
 
-import com.google.common.collect.Lists;
+import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
+
+import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,8 +12,6 @@ import org.apache.logging.log4j.Logger;
 public class MatrixUtils
 {
     private static final Logger LOGGER = LogManager.getLogger(MatrixUtils.class);
-
-    public static final String DEFAULT_MATRIX_DELIM = ",";
 
     public static double sumMatrix(final double[][] data)
     {
@@ -90,150 +85,248 @@ public class MatrixUtils
         return matrix;
     }
 
-    public static Matrix loadMatrixDataFile(final String filename, final Map<String,Integer> columnDataIndex, final List<String> ignoreFields)
+    public static void scalarMultiplyRateAdjusted(final Matrix matrix, final Matrix other, double rateAdjust, int adjustColLimit)
     {
-        final List<String> columnNames = Lists.newArrayList();
+        // apply the scalar multiplication, but dampen the first X columns for the ref signatures
+        final double[][] data = matrix.getData();
+        final double[][] otherData = other.getData();
 
-        Matrix sigMatrix = loadMatrixDataFile(filename, columnNames, ignoreFields);
-
-        for(int c = 0; c < columnNames.size(); ++c)
+        for(int i = 0; i < matrix.Rows; i++)
         {
-            columnDataIndex.put(columnNames.get(c), c);
-        }
-
-        return sigMatrix;
-    }
-
-    public static Matrix loadMatrixDataFile(final String filename, final List<String> columnNames)
-    {
-        return loadMatrixDataFile(filename, columnNames, null);
-    }
-
-    public static Matrix loadMatrixDataFile(final String filename, final List<String> columnNames, final List<String> ignoreFields)
-    {
-        try
-        {
-            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
-
-            Matrix matrix = loadMatrixDataFile(fileData, columnNames, ignoreFields);
-
-            LOGGER.info("loaded matrix(rows={} cols={}) from file({})", matrix.Rows, matrix.Cols, filename);
-
-            return matrix;
-        }
-        catch (IOException exception)
-        {
-            LOGGER.error("failed to read matrix data file({}): {}", filename, exception.toString());
-            return null;
-        }
-
-    }
-
-    public static Matrix loadMatrixDataFile(final List<String> fileData, final List<String> columnNames, final List<String> ignoreFields)
-    {
-        // read field names
-        if(fileData.size() <= 1)
-        {
-            LOGGER.error("empty matrix data");
-            return null;
-        }
-
-        final String header = fileData.get(0);
-        columnNames.addAll(Lists.newArrayList(header.split(DEFAULT_MATRIX_DELIM, -1)));
-        fileData.remove(0);
-
-        List<Integer> ignoreCols = Lists.newArrayList();
-
-        if(ignoreFields != null)
-        {
-            for(int i = 0; i < columnNames.size(); ++i)
+            for(int j = 0; j < matrix.Cols; j++)
             {
-                if(ignoreFields.contains(columnNames.get(i)))
+                if(j < adjustColLimit)
                 {
-                    ignoreCols.add(i);
-
-                    if(ignoreCols.size() == ignoreFields.size())
-                        break;
+                    if(otherData[i][j] >= 1)
+                        data[i][j] *= 1 + (otherData[i][j] - 1) * rateAdjust;
+                    else
+                        data[i][j] *= 1 - (1 - otherData[i][j]) * rateAdjust;
+                }
+                else
+                {
+                    data[i][j] *= otherData[i][j];
                 }
             }
-
-            ignoreFields.forEach(x -> columnNames.remove(x));
         }
+    }
 
-        int colCount = columnNames.size();
-        int rowCount = fileData.size();
-        int invalidRowCount = 0;
+    public static void scalarDivide(final Matrix matrix, final Matrix other)
+    {
+        scalarDivide(matrix, other, false);
+    }
 
-        Matrix matrix = new Matrix(rowCount, colCount);
-        final double[][] matrixData = matrix.getData();
+    public static void scalarDivide(final Matrix matrix, final Matrix other, boolean allowZeros)
+    {
+        // scalar product; this *= b
+        final double[][] data = matrix.getData();
+        final double[][] otherData = other.getData();
 
-        for(int r = 0; r < rowCount; ++r)
+        for(int i = 0; i < matrix.Rows; i++)
         {
-            final String line = fileData.get(r);
-            final String[] items = line.split(DEFAULT_MATRIX_DELIM, -1);
-
-            if(items.length != colCount + ignoreCols.size())
+            for(int j = 0; j < matrix.Cols; j++)
             {
-                ++invalidRowCount;
-                continue;
-            }
+                if(otherData[i][j] == 0)
+                {
+                    if(allowZeros)
+                        continue;
 
-            int c = 0;
-            for(int i = 0; i < items.length; ++i)
-            {
-                if(ignoreCols.contains(i))
-                    continue;
+                    LOGGER.error("divide by zero at i={}, j={}", i, j);
+                    return;
+                }
 
-                matrixData[r][c] = Double.parseDouble(items[i]);
-                ++c;
+                data[i][j] /= otherData[i][j];
             }
         }
+    }
 
-        if(invalidRowCount > 0)
+    public void scalarInvert(final Matrix matrix)
+    {
+        final double[][] data = matrix.getData();
+        for(int i = 0; i < matrix.Rows; i++) {
+
+            for (int j = 0; j < matrix.Cols; j++) {
+
+                data[i][j] =  1/data[i][j];
+            }
+        }
+    }
+
+    public static double sum(final Matrix matrix)
+    {
+        return sumMatrix(matrix.getData());
+    }
+
+    public static double sumDiffSq(final Matrix matrix, final Matrix other)
+    {
+        // distance squared
+        final double[][] data = matrix.getData();
+        final double[][] otherData = other.getData();
+        double d = 0;
+
+        for(int i = 0; i < matrix.Rows; i++)
         {
-            LOGGER.warn("matrix(rows={} cols={}) has {} invalid rows", matrix.Rows, matrix.Cols, invalidRowCount);
+            for(int j = 0; j < matrix.Cols; j++)
+            {
+                double v = data[i][j] - otherData[i][j];
+                d += v*v;
+            }
+        }
+
+        return d;
+    }
+
+    public static Matrix redimension(final Matrix other, int rows, int cols)
+    {
+        if(other.Rows == rows && other.Cols== cols)
+            return other;
+
+        // returns a resized matrix, copying any data that can be
+        Matrix matrix = new Matrix(rows, cols);
+
+        int minRows = min(other.Rows, matrix.Rows);
+        int minCols = min(other.Cols, matrix.Cols);
+
+        final double[][] otherData = other.getData();
+        final double[][] mData = matrix.getData();
+
+        for(int i = 0; i < minRows; i++)
+        {
+            for (int j = 0; j < minCols; j++)
+            {
+                mData[i][j] = otherData[i][j];
+            }
         }
 
         return matrix;
     }
 
-    public static void writeMatrixData(
-            final BufferedWriter writer, final List<String> headers, final Matrix matrix, boolean asInt) throws IOException
+    public static Matrix multiply(final Matrix matrix, final Matrix other)
     {
-        if(headers != null)
-        {
-            int i = 0;
-            for (; i < headers.size() - 1; ++i)
-            {
-                writer.write(String.format("%s,", headers.get(i)));
-            }
-            writer.write(String.format("%s", headers.get(i)));
+        Matrix newMatrix = new Matrix(matrix.Rows, other.Cols);
+        multiply(matrix, other, newMatrix, false);
+        return newMatrix;
+    }
 
-            writer.newLine();
+    public static void multiply(final Matrix matrix, final Matrix other, Matrix dest, boolean initialiseDest)
+    {
+        // matrix multiply: c[i][j] = sum_k a[i][k] * b[k][j]
+        if(matrix.Cols != other.Rows)
+        {
+            LOGGER.error("incorrect row or column");
+            return;
         }
 
-        final double[][] sigData = matrix.getData();
+        final double[][] otherData = other.getData();
 
-        for(int i = 0; i < matrix.Rows; ++i)
+        if(initialiseDest)
+            dest.initialise(0);
+
+        final double[][] data = matrix.getData();
+        double[][] destData = dest.getData();
+
+        for(int i = 0; i < matrix.Rows; i++)
         {
-            for(int j = 0; j < matrix.Cols; ++j)
+            for(int j = 0; j < other.Cols; j++)
             {
-                if(asInt)
-                    writer.write(String.format("%.0f", sigData[i][j]));
+                int commonColCount = matrix.Cols; // also = other.rowCount()
+
+                for(int c = 0; c < commonColCount; c++)
+                {
+                    destData[i][j] += data[i][c] * otherData[c][j];
+                }
+            }
+        }
+    }
+
+    public static void scalarMultiply(final Matrix matrix, final Matrix other)
+    {
+        // scalar product; this *= b
+        final double[][] data = matrix.getData();
+        final double[][] otherData = other.getData();
+
+        for(int i = 0; i < matrix.Rows; i++)
+        {
+            for(int j = 0; j < matrix.Cols; j++)
+            {
+                data[i][j] *= otherData[i][j];
+            }
+        }
+    }
+
+    public static Matrix getDiff(final Matrix first, final Matrix second, boolean relative)
+    {
+        // return a matrix with the diffs between all entries
+        Matrix results = new Matrix(first.Rows, first.Cols);
+
+        if(first.Rows != second.Rows || first.Cols != second.Cols)
+            return results;
+
+        final double[][] fData = first.getData();
+        final double[][] sData = second.getData();
+        double[][] resultData = results.getData();
+
+        for(int i = 0; i < first.Rows; i++) {
+
+            for (int j = 0; j < first.Cols; j++) {
+
+                double diff = fData[i][j] - sData[i][j];
+
+                if(relative)
+                {
+                    if(sData[i][j] != 0)
+                    {
+                        resultData[i][j] = diff / sData[i][j];
+                    }
+                }
                 else
-                    writer.write(String.format("%.6f", sigData[i][j]));
+                {
+                    resultData[i][j] = diff;
+                }
+            }
+        }
 
-                if(j < matrix.Cols-1)
-                    writer.write(String.format(",", sigData[i][j]));
+        return results;
+    }
+
+    public static Matrix extractNonZeros(final Matrix matrix)
+    {
+        // check for columns with all zeros and remove them from the matrix
+        int nonZeroColCount = 0;
+
+        for (int i = 0; i < matrix.Cols; ++i) {
+
+            double colSum = sumVector(matrix.getCol(i));
+
+            if (colSum > 0)
+                ++nonZeroColCount;
+        }
+
+        if (nonZeroColCount == matrix.Cols)
+            return matrix;
+
+        Matrix newMatrix = new Matrix(matrix.Rows, nonZeroColCount);
+
+        final double[][] mData = matrix.getData();
+        double[][] nData = newMatrix.getData();
+
+        int colIndex = 0;
+        for (int i = 0; i < matrix.Cols; ++i)
+        {
+            double colSum = sumVector(matrix.getCol(i));
+
+            if (colSum == 0)
+                continue;
+
+            for (int j = 0; j < matrix.Rows; j++)
+            {
+                nData[j][colIndex] = mData[j][i];
             }
 
-            writer.newLine();
+            ++colIndex;
         }
+
+        return newMatrix;
     }
 
-    public static void writeMatrixData(final BufferedWriter writer, final Matrix matrix, boolean asInt) throws IOException
-    {
-        writeMatrixData(writer, null, matrix, asInt);
-    }
 
 }

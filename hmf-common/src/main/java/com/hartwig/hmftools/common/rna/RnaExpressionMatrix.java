@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_TRANS_NAME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.RNA_LOGGER;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
+import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
 
 import java.io.File;
 import java.io.IOException;

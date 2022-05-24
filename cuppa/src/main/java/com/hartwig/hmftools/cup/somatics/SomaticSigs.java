@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.cup.somatics;
 
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
-import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
+import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

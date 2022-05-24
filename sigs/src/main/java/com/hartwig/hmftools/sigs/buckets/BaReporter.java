@@ -36,6 +36,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.common.utils.MatrixUtils;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -103,7 +104,7 @@ public class BaReporter
         mOutputFileId = outputFileId;
         mSampleCounts = sampleCounts;
 
-        mTotalCount = mSampleCounts.sum();
+        mTotalCount = MatrixUtils.sum(mSampleCounts);
         mBucketCount = mSampleCounts.Rows;
         mSampleCount = mSampleCounts.Cols;
         mActiveSampleCount = mSampleCount;

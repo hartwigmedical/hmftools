@@ -13,6 +13,7 @@ import java.util.Random;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.common.utils.MatrixUtils;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -65,7 +66,7 @@ public class NmfCalculator
 
         mSigCount = 0; // will be set for each run
         mSampleCounts = sampleBucketCounts;
-        mTotalCount = mSampleCounts.sum();
+        mTotalCount = MatrixUtils.sum(mSampleCounts);
 
         mBucketCount = sampleBucketCounts.Rows;
         mSampleCount = sampleBucketCounts.Cols;
@@ -146,7 +147,7 @@ public class NmfCalculator
 
         if(mConfig.LogVerbose && mRefSignatures != null && mRefContributions != null)
         {
-            mW.multiply(mH, mV, true);
+            MatrixUtils.multiply(mW, mH, mV, true);
             calcResiduals();
 
             LOGGER.debug(String.format("run %d: pre-fit: totalResiduals(%.0f) vs total(%.0f) as percent(%.5f)",
@@ -352,7 +353,7 @@ public class NmfCalculator
             }
 
             // compare the original counts to the calculated matrix
-            currentCost = mSampleCounts.sumDiffSq(mV);
+            currentCost = MatrixUtils.sumDiffSq(mSampleCounts, mV);
 
             if(i == 0)
                 initCost = currentCost;
@@ -483,7 +484,7 @@ public class NmfCalculator
 
     public void produceFit()
     {
-        mW.multiply(mH, mV, true); // ensure fit is the latest
+        MatrixUtils.multiply(mW, mH, mV, true); // ensure fit is the latest
     }
 
     private void applyAdjustments()
@@ -508,29 +509,29 @@ public class NmfCalculator
 
         // update contribution matrix
         Matrix wt = mW.transpose();
-        Matrix hAdj = wt.multiply(mSampleCounts);
-        Matrix hd = wt.multiply(mV);
+        Matrix hAdj = MatrixUtils.multiply(wt, mSampleCounts);
+        Matrix hd = MatrixUtils.multiply(wt, mV);
 
-        hAdj.scalarDivide(hd, true);
-        mH.scalarMultiply(hAdj);
+        MatrixUtils.scalarDivide(hAdj, hd, true);
+        MatrixUtils.scalarMultiply(mH, hAdj);
 
         if(mConfig.SigFloatRate > 0)
         {
             // update signatures matrix
             Matrix ht = mH.transpose();
-            Matrix wAdj = mSampleCounts.multiply(ht);
-            Matrix wd1 = mW.multiply(mH);
-            Matrix wd = wd1.multiply(ht);
+            Matrix wAdj = MatrixUtils.multiply(mSampleCounts, ht);
+            Matrix wd1 = MatrixUtils.multiply(mW, mH);
+            Matrix wd = MatrixUtils.multiply(wd1, ht);
 
-            wAdj.scalarDivide(wd, true);
+            MatrixUtils.scalarDivide(wAdj, wd, true);
 
             if(mConfig.SigFloatRate == 1)
             {
-                mW.scalarMultiply(wAdj);
+                MatrixUtils.scalarMultiply(mW, wAdj);
             }
             else
             {
-                mW.scalarMultiplyRateAdjusted(wAdj, mConfig.SigFloatRate, mRefSignatures.Cols);
+                MatrixUtils.scalarMultiplyRateAdjusted(mW, wAdj, mConfig.SigFloatRate, mRefSignatures.Cols);
             }
         }
     }
@@ -538,7 +539,7 @@ public class NmfCalculator
     private void modelBrunet()
     {
         Matrix vWH = mSampleCounts;
-        vWH.scalarDivide(mV);
+        MatrixUtils.scalarDivide(vWH, mV);
 
         Matrix wSum = new Matrix(mSigCount, mSampleCount);
         double[][] wSumData = wSum.getData();
@@ -553,16 +554,16 @@ public class NmfCalculator
         }
 
         Matrix wt = mW.transpose();
-        Matrix wt_vWH = wt.multiply(vWH);
+        Matrix wt_vWH = MatrixUtils.multiply(wt, vWH);
         Matrix hAdj = wt_vWH;
-        hAdj.scalarDivide(wSum);
+        MatrixUtils.scalarDivide(hAdj, wSum);
 
-        mH.scalarMultiply(hAdj);
+        MatrixUtils.scalarMultiply(mH, hAdj);
 
         // recalc V and WH using the new H
-        mV = mW.multiply(mH);
+        mV = MatrixUtils.multiply(mW, mH);
         vWH = mSampleCounts;
-        vWH.scalarDivide(mV);
+        MatrixUtils.scalarDivide(vWH, mV);
 
         // now adjust W
         Matrix hSum = new Matrix(mBucketCount, mSigCount);
@@ -578,11 +579,11 @@ public class NmfCalculator
         }
 
         Matrix ht = mH.transpose();
-        Matrix vWH_ht = vWH.multiply(ht);
+        Matrix vWH_ht = MatrixUtils.multiply(vWH, ht);
         Matrix wAdj = vWH_ht;
-        wAdj.scalarDivide(hSum);
+        MatrixUtils.scalarDivide(wAdj, hSum);
 
-        mW.scalarMultiply(wAdj);
+        MatrixUtils.scalarMultiply(mW, wAdj);
     }
 
     private void calcResiduals()
@@ -698,7 +699,7 @@ public class NmfCalculator
             return;
         }
 
-        double sumDiff = mV.sumDiffSq(vCopy);
+        double sumDiff = MatrixUtils.sumDiffSq(mV, vCopy);
         boolean matrixEqual = mV.equals(vCopy);
 
         if(!doublesEqual(sumDiff, 0) || !matrixEqual)
@@ -711,20 +712,20 @@ public class NmfCalculator
 
     private void logMatrixDiffs()
     {
-        Matrix relDiff = Matrix.getDiff(mV, mPrevV, true);
-        Matrix absDiff = Matrix.getDiff(mV, mPrevV, false);
-        double avgPercChange = relDiff.sum() / (mV.Rows * mV.Cols);
-        LOGGER.debug(String.format("V-matrix diffs: abs(%.0f) relative(%.4f)", absDiff.sum(), avgPercChange));
+        Matrix relDiff = MatrixUtils.getDiff(mV, mPrevV, true);
+        Matrix absDiff = MatrixUtils.getDiff(mV, mPrevV, false);
+        double avgPercChange = MatrixUtils.sum(relDiff) / (mV.Rows * mV.Cols);
+        LOGGER.debug(String.format("V-matrix diffs: abs(%.0f) relative(%.4f)", MatrixUtils.sum(absDiff), avgPercChange));
 
-        relDiff = Matrix.getDiff(mW, mPrevW, true);
-        absDiff = Matrix.getDiff(mW, mPrevW, false);
-        avgPercChange = relDiff.sum() / (mW.Rows * mW.Cols);
-        LOGGER.debug(String.format("W-matrix diffs: abs(%.0f) relative(%.4f)", absDiff.sum(), avgPercChange));
+        relDiff = MatrixUtils.getDiff(mW, mPrevW, true);
+        absDiff = MatrixUtils.getDiff(mW, mPrevW, false);
+        avgPercChange = MatrixUtils.sum(relDiff) / (mW.Rows * mW.Cols);
+        LOGGER.debug(String.format("W-matrix diffs: abs(%.0f) relative(%.4f)", MatrixUtils.sum(absDiff), avgPercChange));
 
-        relDiff = Matrix.getDiff(mH, mPrevH, true);
-        absDiff = Matrix.getDiff(mH, mPrevH, false);
-        avgPercChange = relDiff.sum() / (mH.Rows * mH.Cols);
-        LOGGER.debug(String.format("H-matrix diffs: abs(%.0f) relative(%.4f)", absDiff.sum(), avgPercChange));
+        relDiff = MatrixUtils.getDiff(mH, mPrevH, true);
+        absDiff = MatrixUtils.getDiff(mH, mPrevH, false);
+        avgPercChange = MatrixUtils.sum(relDiff) / (mH.Rows * mH.Cols);
+        LOGGER.debug(String.format("H-matrix diffs: abs(%.0f) relative(%.4f)", MatrixUtils.sum(absDiff), avgPercChange));
 
     }
 }
