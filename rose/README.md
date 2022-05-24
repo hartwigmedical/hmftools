@@ -2,7 +2,7 @@
 ROSE match all the genomic events and signatures that are determined by the Hartwig pipeline to the actionability treatment options in the Netherlands. 
 
 ## Contents
-- [What is present in the actionability database?](#actionability-db)
+- [What is present in the actionability database?](#actionability-database)
 - [How is actionability matched against genomic events and signatures?](#matching-of-actionability)
 - [What output is produced by ROSE?](#rose-output)
 - [Which known issues are present in ROSE?](#known-issues)
@@ -47,7 +47,7 @@ important to know for interpretation of the clinical relevance:
 Field  | Description
 ---|---
 PURITY | Disclaimer sentence when there is a lower tumor purity low (below the 20%) 
-PURITY_UNRELIABLE | Disclaimer sentence when the tumor purity could be relaible determined 
+PURITY_UNRELIABLE | Disclaimer sentence when the tumor purity could be reliably determined 
 FINDINGS | A general sentence for what can be detected in the report
 GERMLINE | A sentence if the small variant is detected in the germline of the patient but also called in the tumor 
 CUPPA | The molecular tissue of origin classifier prediction with likelihood >= 80%
