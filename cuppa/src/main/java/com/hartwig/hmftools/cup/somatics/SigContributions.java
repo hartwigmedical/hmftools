@@ -149,7 +149,7 @@ public class SigContributions
         {
             CUP_LOGGER.debug("sample({}) running SNV signatures", sampleId);
 
-            final double[] sigAllocations = mSomaticSigs.fitSampleCounts(snvCounts.getCol(0));
+            final double[] sigAllocations = mSomaticSigs.fitSampleCounts(snvCounts.getRow(0));
 
             if(sigAllocations == null)
             {

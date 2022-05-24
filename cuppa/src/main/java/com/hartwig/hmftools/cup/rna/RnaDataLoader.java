@@ -16,7 +16,6 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.rna.GeneExpressionFile;
 import com.hartwig.hmftools.common.utils.Matrix;
 
 public class RnaDataLoader
@@ -55,7 +54,7 @@ public class RnaDataLoader
     public static Matrix loadSampleGeneExpressionMatrix(
             final String filename, final Map<String,Integer> refGeneIdIndexMap, final Map<String,Integer> sampleIndexMap)
     {
-        Matrix sampleMatrix = loadMatrixDataFile(filename, sampleIndexMap, GENE_EXP_IGNORE_FIELDS);
+        Matrix sampleMatrix = loadMatrixDataFile(filename, sampleIndexMap, GENE_EXP_IGNORE_FIELDS, true);
 
         // ensure genes are ordered as per the reference data
         final Map<String,Integer> sampleGeneIdIndices = Maps.newHashMap();
@@ -107,7 +106,7 @@ public class RnaDataLoader
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, ",");
             fileData.remove(0);
 
-            Matrix matrix = new Matrix(geneIdIndexMap.size(), 1);
+            Matrix matrix = new Matrix(1, geneIdIndexMap.size());
 
             // GeneId,GeneName, etc AdjTPM
 
@@ -133,7 +132,7 @@ public class RnaDataLoader
 
                 double logTpm = log(adjTpm + 1);
 
-                matrix.set(geneIdIndex, 0, logTpm);
+                matrix.set(0, geneIdIndex, logTpm);
             }
 
             if(unknownGeneCount > 0)

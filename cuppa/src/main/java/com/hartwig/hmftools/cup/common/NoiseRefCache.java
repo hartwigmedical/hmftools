@@ -163,24 +163,26 @@ public class NoiseRefCache
     public static double[] generateMedianValues(final Matrix matrix)
     {
         // determine the median count per bucket across the cancer types
-        double[] bucketMedians = new double[matrix.Rows];
+        double[] bucketMedians = new double[matrix.Cols];
 
         final double[][] sourceData = matrix.getData();
-        List<Double> sortedCounts = Lists.newArrayListWithCapacity(matrix.Cols);
 
-        int medianIndex = matrix.Cols / 2;
-        int medianLowerIndex = (matrix.Cols % 2) == 0 ? medianIndex - 1 : medianIndex;
+        int dataItemCount = matrix.Rows; // ie samples, cancer types
+        List<Double> sortedCounts = Lists.newArrayListWithCapacity(dataItemCount);
 
-        if((matrix.Cols % 2) == 1)
+        int medianIndex = dataItemCount / 2;
+        int medianLowerIndex = (dataItemCount % 2) == 0 ? medianIndex - 1 : medianIndex;
+
+        if((dataItemCount % 2) == 1)
             ++medianIndex;
 
-        for(int b = 0; b < matrix.Rows; ++b)
+        for(int bucketIndex = 0; bucketIndex < matrix.Cols; ++bucketIndex)
         {
             sortedCounts.clear();
 
-            for(int i = 0; i < matrix.Cols; ++i)
+            for(int i = 0; i < matrix.Rows; ++i)
             {
-                double count = sourceData[b][i];
+                double count = sourceData[i][bucketIndex];
                 optimisedAdd(sortedCounts, count, true);
             }
 
@@ -191,7 +193,7 @@ public class NoiseRefCache
             else
                 medianCount = (sortedCounts.get(medianLowerIndex) + sortedCounts.get(medianIndex)) * 0.5;
 
-            bucketMedians[b] = medianCount;
+            bucketMedians[bucketIndex] = medianCount;
         }
 
         return bucketMedians;
@@ -203,15 +205,15 @@ public class NoiseRefCache
 
         // now scale these to the noise allocation
         final double[][] data = matrix.getData();
-        for(int b = 0; b < matrix.Rows; ++b)
+        for(int bucketIndex = 0; bucketIndex < matrix.Cols; ++bucketIndex)
         {
-            double bucketMedian = bucketMedians[b];
+            double bucketMedian = bucketMedians[bucketIndex];
             double bucketPerc = bucketMedian / medianTotal;
             double bucketAlloc = bucketPerc * noiseAllocation;
 
-            for(int i = 0; i < matrix.Cols; ++i)
+            for(int i = 0; i < matrix.Rows; ++i)
             {
-                data[b][i] += bucketAlloc;
+                data[i][bucketIndex] += bucketAlloc;
             }
         }
     }

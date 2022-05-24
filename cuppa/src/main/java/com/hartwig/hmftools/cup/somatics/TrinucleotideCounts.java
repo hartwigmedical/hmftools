@@ -55,9 +55,9 @@ public final class TrinucleotideCounts
 
         final double[] triNucCounts = extractTrinucleotideCounts(variants, triNucBucketNameMap);
 
-        final Matrix sampleSnvCounts = new Matrix(triNucCounts.length, 1);
+        final Matrix sampleSnvCounts = new Matrix(1, triNucCounts.length);
 
-        sampleSnvCounts.setCol(0, triNucCounts);
+        sampleSnvCounts.setRow(0, triNucCounts);
         sampleSnvCountsIndex.put(sampleId, 0);
 
         return sampleSnvCounts;

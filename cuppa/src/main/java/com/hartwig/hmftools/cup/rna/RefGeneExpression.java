@@ -82,6 +82,7 @@ public class RefGeneExpression implements RefClassifier
             return;
         }
 
+        // keep this as buckets by cancer types to make the writing easier
         mGeneCancerExpressionData = new Matrix(mGeneSampleExpressionData.Rows, mSampleDataCache.RefCancerSampleData.size());
         final double[][] cancerMatrixData = mGeneCancerExpressionData.getData();
 
@@ -101,7 +102,7 @@ public class RefGeneExpression implements RefClassifier
                     continue;
                 }
 
-                final double[] sampleTPMs = mGeneSampleExpressionData.getCol(countsIndex);
+                final double[] sampleTPMs = mGeneSampleExpressionData.getRow(countsIndex);
 
                 for(int b = 0; b < sampleTPMs.length; ++b)
                 {
@@ -120,8 +121,7 @@ public class RefGeneExpression implements RefClassifier
         if(filename.isEmpty())
             return;
 
-        mGeneSampleExpressionData = loadMatrixDataFile(filename, mSampleTpmIndex, GENE_EXP_IGNORE_FIELDS);
-        mGeneSampleExpressionData.cacheTranspose();
+        mGeneSampleExpressionData = loadMatrixDataFile(filename, mSampleTpmIndex, GENE_EXP_IGNORE_FIELDS, true);
 
         // populate the gene info
         try

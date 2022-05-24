@@ -3,6 +3,7 @@ package com.hartwig.hmftools.cup.somatics;
 import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.MatrixFile.DEFAULT_MATRIX_DELIM;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CupCalcs.convertToPercentages;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
@@ -72,8 +73,10 @@ public final class SomaticsCommon
 
             if(combinedMatrix == null)
             {
-                combinedMatrix = new Matrix(subMatrix.Rows, refSampleCount);
+                combinedMatrix = new Matrix(refSampleCount, subMatrix.Rows);
             }
+
+            final double[][] combinedData = combinedMatrix.getData();
 
             for(int s = 0; s < samplesList.size(); ++s)
             {
@@ -84,16 +87,14 @@ public final class SomaticsCommon
 
                 sampleCountsIndex.put(sampleId, sampleIndex);
 
-                for(int r = 0; r < combinedMatrix.Rows; ++r)
+                for(int b = 0; b < combinedMatrix.Cols; ++b)
                 {
-                    combinedMatrix.set(r, sampleIndex, subData[r][s]);
+                    combinedData[sampleIndex][b] = subData[s][b];
                 }
 
                 ++sampleIndex;
             }
         }
-
-        combinedMatrix.cacheTranspose();
 
         return combinedMatrix;
     }
@@ -116,6 +117,32 @@ public final class SomaticsCommon
 
             final double[][] matrixData = matrix.getData();
 
+            // handle the transposed data - return to the form Samples in the cols, bucket data in the rows
+            for(int bucket = 0; bucket < matrix.Cols; ++bucket)
+            {
+                int sampleIndex = sampleCountsIndex.get(sampleIds.get(0));
+
+                writer.write(String.format(decFormat, matrixData[sampleIndex][bucket]));
+
+                for(int s = 1; s < sampleIds.size(); ++s)
+                {
+                    sampleIndex = sampleCountsIndex.get(sampleIds.get(s));
+
+                    if(sampleIndex >= matrix.Rows)
+                    {
+                        CUP_LOGGER.error("file({}) invalid row({}) sampleId({})", filename, s, sampleIds.get(s));
+                        return;
+                    }
+
+                    writer.write(String.format(DEFAULT_MATRIX_DELIM + decFormat, matrixData[sampleIndex][bucket]));
+                }
+
+                writer.newLine();
+            }
+
+            /*
+            // for each row, write out the counts for all samples
+
             for(int b = 0; b < matrix.Rows; ++b)
             {
                 writer.write(String.format(decFormat, matrixData[b][sampleCountsIndex.get(sampleIds.get(0))]));
@@ -135,6 +162,7 @@ public final class SomaticsCommon
 
                 writer.newLine();
             }
+            */
 
             writer.close();
         }
@@ -154,24 +182,38 @@ public final class SomaticsCommon
             writer.write(columnNames.get(0));
             for(int i = 1; i < columnNames.size(); ++i)
             {
-                writer.write(String.format(",%s", columnNames.get(i)));
+                writer.write(DEFAULT_MATRIX_DELIM + columnNames.get(i));
             }
 
             writer.newLine();
 
             final double[][] data = matrix.getData();
 
+            for(int b = 0; b < matrix.Cols; ++b)
+            {
+                writer.write(String.format(decFormat, data[0][b]));
+
+                for(int i = 1; i < matrix.Rows; ++i)
+                {
+                    writer.write(String.format(DEFAULT_MATRIX_DELIM + decFormat, data[i][b]));
+                }
+
+                writer.newLine();
+            }
+
+            /*
             for(int b = 0; b < matrix.Rows; ++b)
             {
                 writer.write(String.format(decFormat, data[b][0]));
 
                 for(int i = 1; i < matrix.Cols; ++i)
                 {
-                    writer.write(String.format("," + decFormat, data[b][i]));
+                    writer.write(String.format(DEFAULT_MATRIX_DELIM + decFormat, data[b][i]));
                 }
 
                 writer.newLine();
             }
+            */
 
             writer.close();
         }

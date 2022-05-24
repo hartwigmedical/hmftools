@@ -72,9 +72,9 @@ public final class GenomicPositions
         posFrequencies.clear();
         extractPositionFrequencyCounts(variants, posFrequencies, aidApobecStatus);
 
-        final Matrix matrix = new Matrix(posFrequencies.getCounts().length, 1);
+        final Matrix matrix = new Matrix(1, posFrequencies.getCounts().length);
 
-        matrix.setCol(0, posFrequencies.getCounts());
+        matrix.setRow(0, posFrequencies.getCounts());
         samplePosFreqIndex.put(sampleId, 0);
 
         return matrix;
@@ -107,7 +107,7 @@ public final class GenomicPositions
                 }
 
                 int sampleIndex = sampleIndexMap.get(sample.Id);
-                double[] sampleCounts = samplePosFreqCounts.getCol(sampleIndex);
+                double[] sampleCounts = samplePosFreqCounts.getRow(sampleIndex);
 
                 if(sampleCounts == null)
                     continue;
@@ -118,7 +118,7 @@ public final class GenomicPositions
 
                 for(int b = 0; b < sampleCounts.length; ++b)
                 {
-                    matrixData[b][i] += reductionFactor * sampleCounts[b];
+                    matrixData[i][b] += reductionFactor * sampleCounts[b];
                 }
             }
         }

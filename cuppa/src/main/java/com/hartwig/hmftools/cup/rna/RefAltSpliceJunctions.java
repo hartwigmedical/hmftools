@@ -75,7 +75,7 @@ public class RefAltSpliceJunctions implements RefClassifier
             return;
 
         // columns contain the alt-SJ locations
-        Matrix cancerFragCounts = new Matrix(altSjSiteCount, mSampleDataCache.RefCancerSampleData.size());
+        Matrix cancerFragCounts = new Matrix(mSampleDataCache.RefCancerSampleData.size(), altSjSiteCount);
         final double[][] cancerMatrixData = cancerFragCounts.getData();
 
         for(Map.Entry<String,List<SampleData>> entry : mSampleDataCache.RefCancerSampleData.entrySet())
@@ -98,7 +98,7 @@ public class RefAltSpliceJunctions implements RefClassifier
 
                 for(int b = 0; b < fragCounts.length; ++b)
                 {
-                    cancerMatrixData[b][cancerIndex] += fragCounts[b];
+                    cancerMatrixData[cancerIndex][b] += fragCounts[b];
                 }
             }
         }
@@ -335,6 +335,19 @@ public class RefAltSpliceJunctions implements RefClassifier
 
             final double[][] matrixData = fragCountMatrix.getData();
 
+            for(int b = 0; b < fragCountMatrix.Cols; ++b) // columns are the alt-SJ locations
+            {
+                writer.write(String.format("%s", asjLocations.get(b)));
+
+                for(int i = 0; i < fragCountMatrix.Rows; ++i)
+                {
+                    writer.write(String.format(",%.1f", matrixData[i][b]));
+                }
+
+                writer.newLine();
+            }
+
+            /*
             for(int i = 0; i < fragCountMatrix.Rows; ++i) // rows are the alt-SJ locations
             {
                 writer.write(String.format("%s", asjLocations.get(i)));
@@ -346,6 +359,7 @@ public class RefAltSpliceJunctions implements RefClassifier
 
                 writer.newLine();
             }
+            */
 
             closeBufferedWriter(writer);
         }

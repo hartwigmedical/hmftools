@@ -25,8 +25,6 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.jooq.Record;
-import org.jooq.Record18;
-import org.jooq.Record7;
 import org.jooq.Record8;
 import org.jooq.Result;
 
@@ -44,10 +42,7 @@ public class SomaticDataLoader
         if(filename.isEmpty() || !Files.exists(Paths.get(filename)))
             return null;
 
-        Matrix sampleCounts = loadMatrixDataFile(filename, sampleCountsIndex, Lists.newArrayList("BucketName"));
-        sampleCounts.cacheTranspose();
-
-        return sampleCounts;
+        return loadMatrixDataFile(filename, sampleCountsIndex, Lists.newArrayList("BucketName"), true);
     }
 
     public static Matrix loadSampleMatrixData(final String filename, final Map<String,Integer> sampleCountsIndex)
@@ -55,10 +50,7 @@ public class SomaticDataLoader
         if(filename.isEmpty() || !Files.exists(Paths.get(filename)))
             return null;
 
-        Matrix sampleCounts = loadMatrixDataFile(filename, sampleCountsIndex, null);
-        sampleCounts.cacheTranspose();
-
-        return sampleCounts;
+        return loadMatrixDataFile(filename, sampleCountsIndex, null, true);
     }
 
     public static boolean loadSigContribsFromDatabase(
@@ -98,14 +90,13 @@ public class SomaticDataLoader
         return populateRefPercentileData(filename, refCancerSigContribs, refCancerSnvCounts);
     }
 
-    public static Matrix loadRefSampleCounts(final String filename, final List<String> refSampleNames, final List<String> ignoreCols)
+    public static Matrix loadRefSampleCounts(
+            final String filename, final List<String> refSampleNames, final List<String> ignoreCols)
     {
         if(filename.isEmpty() || !Files.exists(Paths.get(filename)))
             return null;
 
-        Matrix refSampleCounts = loadMatrixDataFile(filename, refSampleNames, ignoreCols);
-        refSampleCounts.cacheTranspose();
-        return refSampleCounts;
+        return loadMatrixDataFile(filename, refSampleNames, ignoreCols, true);
     }
 
     public static List<SomaticVariant> loadSomaticVariants(final String sampleId, final DatabaseAccess dbAccess)

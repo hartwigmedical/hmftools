@@ -61,6 +61,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.common.utils.VectorUtils;
 import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.NoiseRefCache;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
@@ -127,8 +128,7 @@ public class RefSomatics implements RefClassifier
         mIncludeAidApobec = cmd.hasOption(INCLUDE_AID_APOBEC);
         mApplyCopyNumber = cmd.hasOption(NORMALISE_COPY_NUMBER);
 
-        int posFreqBucketSize = cmd.hasOption(SNV_POS_FREQ_POS_SIZE) ?
-                Integer.parseInt(cmd.getOptionValue(SNV_POS_FREQ_POS_SIZE)) : GEN_POS_BUCKET_SIZE;
+        int posFreqBucketSize = Integer.parseInt(cmd.getOptionValue(SNV_POS_FREQ_POS_SIZE, String.valueOf(GEN_POS_BUCKET_SIZE)));
 
         mPosFrequencies = new PositionFrequencies(posFreqBucketSize, GEN_POS_MAX_SAMPLE_COUNT);
 
@@ -193,9 +193,6 @@ public class RefSomatics implements RefClassifier
                 mCopyNumberProfile = buildCopyNumberProfile(refSampleIds, mConfig, mGenPosCountsIndex, mPosFrequencies);
             }
         }
-
-        mSnv96Counts.cacheTranspose();
-        mGenPosCounts.cacheTranspose();
 
         // write out sample matrix data unless they were already correct
         if(mWriteSnv96MatrixData)
@@ -299,9 +296,7 @@ public class RefSomatics implements RefClassifier
         // take any existing counts
         if(existingRefSampleCounts != null)
         {
-            existingRefSampleCounts.cacheTranspose();
-
-            refMatrix = new Matrix(existingRefSampleCounts.Rows, refSampleIds.size());
+            refMatrix = new Matrix(refSampleIds.size(), existingRefSampleCounts.Rows);
 
             int refSampleIndex = 0;
 
@@ -312,7 +307,7 @@ public class RefSomatics implements RefClassifier
                 if(!mSampleDataCache.hasRefSample(sampleId))
                     continue;
 
-                refMatrix.setCol(refSampleIndex, existingRefSampleCounts.getCol(i));
+                refMatrix.setRow(refSampleIndex, existingRefSampleCounts.getRow(i));
                 sampleCountsIndex.put(existingRefSampleIds.get(i), refSampleIndex);
                 ++refSampleIndex;
             }
@@ -342,12 +337,12 @@ public class RefSomatics implements RefClassifier
 
         if(mSnv96Counts == null)
         {
-            mSnv96Counts = new Matrix(SNV_TRINUCLEOTIDE_BUCKET_COUNT, refSampleCount);
+            mSnv96Counts = new Matrix(refSampleCount, SNV_TRINUCLEOTIDE_BUCKET_COUNT);
         }
 
         if(mGenPosCounts == null)
         {
-            mGenPosCounts = new Matrix(mPosFrequencies.getBucketCount(), refSampleCount);
+            mGenPosCounts = new Matrix(refSampleCount, mPosFrequencies.getBucketCount());
         }
 
         final Map<String,Integer> triNucBucketNameMap = Maps.newHashMap();
@@ -390,7 +385,7 @@ public class RefSomatics implements RefClassifier
                 final double[] triNucCounts = extractTrinucleotideCounts(variants, triNucBucketNameMap);
 
                 int refSampleIndex = mSnv96CountsIndex.size();
-                mSnv96Counts.setCol(refSampleIndex, triNucCounts);
+                mSnv96Counts.setRow(refSampleIndex, triNucCounts);
                 mSnv96CountsIndex.put(sampleId, refSampleIndex);
             }
 
@@ -401,7 +396,7 @@ public class RefSomatics implements RefClassifier
 
                 AidApobecStatus aidApobecStatus = mIncludeAidApobec ? AidApobecStatus.ALL : AidApobecStatus.FALSE_ONLY;
                 extractPositionFrequencyCounts(variants, mPosFrequencies, aidApobecStatus);
-                mGenPosCounts.setCol(refSampleIndex, mPosFrequencies.getCounts());
+                mGenPosCounts.setRow(refSampleIndex, mPosFrequencies.getCounts());
             }
         }
     }
@@ -469,7 +464,7 @@ public class RefSomatics implements RefClassifier
         for(Map.Entry<String,Integer> entry : mSnv96CountsIndex.entrySet())
         {
             final String sampleId = entry.getKey();
-            double sampleTotal = sumVector(mSnv96Counts.getCol(entry.getValue()));
+            double sampleTotal = sumVector(mSnv96Counts.getRow(entry.getValue()));
 
             final String cancerType = mSampleDataCache.RefSampleCancerTypeMap.get(sampleId);
 
@@ -487,16 +482,7 @@ public class RefSomatics implements RefClassifier
             }
             else
             {
-                int index = 0;
-                while(index < sampleCounts.size())
-                {
-                    if(sampleTotal < sampleCounts.get(index))
-                        break;
-
-                    ++index;
-                }
-
-                sampleCounts.add(index, sampleTotal);
+                VectorUtils.optimisedAdd(sampleCounts, sampleTotal, true);
             }
         }
 

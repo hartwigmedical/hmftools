@@ -46,7 +46,7 @@ public class SomaticSigs
 
         if(signaturesFile != null && !signaturesFile.isEmpty() && Files.exists(Paths.get(signaturesFile)))
         {
-            mSignatures = loadMatrixDataFile(signaturesFile, mSignatureNames);
+            mSignatures = loadMatrixDataFile(signaturesFile, mSignatureNames, false);
         }
         else
         {
@@ -55,7 +55,7 @@ public class SomaticSigs
             final List<String> sigDefinitionLines = new BufferedReader(new InputStreamReader(
                     SomaticSigs.class.getResourceAsStream(sigDefinitionsFile))).lines().collect(Collectors.toList());
 
-            mSignatures = loadMatrixDataFile(sigDefinitionLines, mSignatureNames, Lists.newArrayList());
+            mSignatures = loadMatrixDataFile(sigDefinitionLines, mSignatureNames, Lists.newArrayList(), false);
         }
 
         mLeastSquaresFitter = mSignatures != null ? new LeastSquaresFit(mSignatures.Rows, mSignatures.Cols) : null;

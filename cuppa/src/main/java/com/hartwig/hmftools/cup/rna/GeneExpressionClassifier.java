@@ -104,15 +104,14 @@ public class GeneExpressionClassifier implements CuppaClassifier
         if(mRunPairwiseCss)
         {
             loadGeneIdIndices(mConfig.RefGeneExpSampleFile, mGeneIdIndexMap);
-            mRefSampleGeneExpression = loadMatrixDataFile(mConfig.RefGeneExpSampleFile, mRefSampleGeneExpIndexMap, GENE_EXP_IGNORE_FIELDS);
+            mRefSampleGeneExpression = loadMatrixDataFile(
+                    mConfig.RefGeneExpSampleFile, mRefSampleGeneExpIndexMap, GENE_EXP_IGNORE_FIELDS, true);
 
             if(mRefSampleGeneExpression ==  null)
             {
                 mIsValid = false;
                 return;
             }
-
-            mRefSampleGeneExpression.cacheTranspose();
         }
 
         if(mRunCancerCss)
@@ -120,15 +119,13 @@ public class GeneExpressionClassifier implements CuppaClassifier
             if(mGeneIdIndexMap.isEmpty())
                 loadGeneIdIndices(mConfig.RefGeneExpCancerFile, mGeneIdIndexMap);
 
-            mRefCancerTypeGeneExpression = loadMatrixDataFile(mConfig.RefGeneExpCancerFile, mRefCancerTypes, GENE_EXP_IGNORE_FIELDS);
+            mRefCancerTypeGeneExpression = loadMatrixDataFile(mConfig.RefGeneExpCancerFile, mRefCancerTypes, GENE_EXP_IGNORE_FIELDS, true);
 
             if(mRefCancerTypeGeneExpression ==  null)
             {
                 mIsValid = false;
                 return;
             }
-
-            mRefCancerTypeGeneExpression.cacheTranspose();
         }
 
         buildCancerSampleCounts();
@@ -161,8 +158,6 @@ public class GeneExpressionClassifier implements CuppaClassifier
                 mIsValid = false;
                 return;
             }
-
-            mSampleGeneExpression.cacheTranspose();
         }
     }
 
@@ -223,7 +218,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
             return;
         }
 
-        final double[] sampleGeneTPMs = mSampleGeneExpression.getCol(sampleCountsIndex);
+        final double[] sampleGeneTPMs = mSampleGeneExpression.getRow(sampleCountsIndex);
 
         if(mRunCancerCss)
             addCancerCssResults(sample, sampleGeneTPMs, results);
@@ -234,7 +229,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
 
     private void addCancerCssResults(final SampleData sample, final double[] sampleGeneTPMs, final List<SampleResult> results)
     {
-        int refCancerCount = mRefCancerTypeGeneExpression.Cols;
+        int refCancerCount = mRefCancerTypeGeneExpression.Rows;
 
         final Map<String,Double> cancerCssTotals = Maps.newHashMap();
 
@@ -251,7 +246,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
             boolean matchesCancerType = sample.cancerType().equals(refCancerType);
 
             final double[] refPosFreqs = sample.isRefSample() && matchesCancerType ?
-                    adjustRefCounts(mRefCancerTypeGeneExpression.getCol(i), sampleGeneTPMs, 1) : mRefCancerTypeGeneExpression.getCol(i);
+                    adjustRefCounts(mRefCancerTypeGeneExpression.getRow(i), sampleGeneTPMs, 1) : mRefCancerTypeGeneExpression.getRow(i);
 
             double css = calcCosineSim(sampleGeneTPMs, refPosFreqs);
 
@@ -298,7 +293,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
                 continue;
 
             int refSampleCountsIndex = entry.getValue();
-            final double[] otherSampleTPMs = mRefSampleGeneExpression.getCol(refSampleCountsIndex);
+            final double[] otherSampleTPMs = mRefSampleGeneExpression.getRow(refSampleCountsIndex);
 
             double css = calcCosineSim(sampleTPMs, otherSampleTPMs);
 

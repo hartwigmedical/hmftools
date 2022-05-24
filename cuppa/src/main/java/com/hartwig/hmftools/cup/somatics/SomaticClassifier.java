@@ -235,7 +235,7 @@ public class SomaticClassifier implements CuppaClassifier
             for(int s = 0; s < mRefSampleNames.size(); ++s)
             {
                 String sampleId = mRefSampleNames.get(s);
-                final double[] sampleCounts = mRefSampleSnv96Counts.getCol(s);
+                final double[] sampleCounts = mRefSampleSnv96Counts.getRow(s);
                 int snvTotal = (int) sumVector(sampleCounts);
                 mSampleSnvTotals.put(sampleId, snvTotal);
             }
@@ -249,7 +249,7 @@ public class SomaticClassifier implements CuppaClassifier
                     if(mSampleSnvTotals.containsKey(sampleId))
                         continue;
 
-                    final double[] sampleCounts = mSampleSnv96Counts.getCol(entry.getValue());
+                    final double[] sampleCounts = mSampleSnv96Counts.getRow(entry.getValue());
                     int snvTotal = (int) sumVector(sampleCounts);
                     mSampleSnvTotals.put(sampleId, snvTotal);
                 }
@@ -427,11 +427,11 @@ public class SomaticClassifier implements CuppaClassifier
             return;
         }
 
-        final double[] sampleCounts = mSampleSnv96Counts.getCol(sampleCountsIndex);
+        final double[] sampleCounts = mSampleSnv96Counts.getRow(sampleCountsIndex);
         int snvTotal = mSampleSnvTotals.get(sample.Id);
 
         addSnv96CssResults(sample, sampleCounts, snvTotal, results, similarities);
-        addGenomicPositionCssResults(sample, snvTotal, results, similarities);
+        addGenomicPositionCssResults(sample, results, similarities);
 
         mSigContributions.addSigContributionResults(sample, results);
 
@@ -472,7 +472,7 @@ public class SomaticClassifier implements CuppaClassifier
             final SampleData sample, final double[] sampleCounts, int snvTotal,
             final List<SampleResult> results, final List<SampleSimilarity> similarities)
     {
-        int refSampleCount = mRefSampleSnv96Counts.Cols;
+        int refSampleCount = mRefSampleSnv96Counts.Rows;
 
         final List<SampleSimilarity> topMatches = Lists.newArrayList();
         final Map<String,Double> cancerCssTotals = Maps.newHashMap();
@@ -502,7 +502,7 @@ public class SomaticClassifier implements CuppaClassifier
             if(!checkIsValidCancerType(sample, refCancerType, cancerCssTotals))
                 continue;
 
-            final double[] otherSampleCounts = mRefSampleSnv96Counts.getCol(s);
+            final double[] otherSampleCounts = mRefSampleSnv96Counts.getRow(s);
 
             double css = calcCosineSim(sampleCounts, otherSampleCounts);
 
@@ -558,7 +558,7 @@ public class SomaticClassifier implements CuppaClassifier
                 if(nonRefSampleId.equals(sample.Id))
                     continue;
 
-                final double[] otherSampleCounts = mSampleSnv96Counts.getCol(entry.getValue());
+                final double[] otherSampleCounts = mSampleSnv96Counts.getRow(entry.getValue());
 
                 double css = calcCosineSim(sampleCounts, otherSampleCounts);
 
@@ -575,7 +575,7 @@ public class SomaticClassifier implements CuppaClassifier
     }
 
     private void addGenomicPositionCssResults(
-            final SampleData sample, int snvTotal, final List<SampleResult> results, final List<SampleSimilarity> similarities)
+            final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
     {
         Integer sampleCountsIndex = mSampleGenPosCountsIndex.get(sample.Id);
 
@@ -585,7 +585,8 @@ public class SomaticClassifier implements CuppaClassifier
             return;
         }
 
-        double[] sampleCounts = mSampleGenPosCounts.getCol(sampleCountsIndex);
+        double[] sampleCounts = mSampleGenPosCounts.getRow(sampleCountsIndex);
+        double sampleTotal = sumVector(sampleCounts);
 
         if(mApplyCopyNumber)
         {
@@ -615,11 +616,11 @@ public class SomaticClassifier implements CuppaClassifier
 
         if(mRunPairwiseGenPos)
         {
-            addPairwiseGenPosCssResults(sample, sampleCounts, snvTotal, results, similarities);
+            addPairwiseGenPosCssResults(sample, sampleCounts, sampleTotal, results, similarities);
         }
         else
         {
-            addCohortGenPosCssResults(sample, sampleCounts, snvTotal, results, similarities);
+            addCohortGenPosCssResults(sample, sampleCounts, sampleTotal, results, similarities);
         }
     }
 
@@ -628,7 +629,7 @@ public class SomaticClassifier implements CuppaClassifier
             final List<SampleResult> results, final List<SampleSimilarity> similarities)
     {
         // first run CSS against cancer cohorts
-        int refCancerCount = mRefCancerGenPosCounts.Cols;
+        int refCancerCount = mRefCancerGenPosCounts.Rows;
         double maxCssScore = 0;
 
         final Map<String,Double> cancerCssTotals = Maps.newHashMap();
@@ -648,7 +649,7 @@ public class SomaticClassifier implements CuppaClassifier
             double adjustMultiplier = snvTotal > GEN_POS_MAX_SAMPLE_COUNT ? GEN_POS_MAX_SAMPLE_COUNT / snvTotal : 1;
 
             final double[] refPosFreqs = sample.isRefSample() && matchesCancerType ?
-                    adjustRefCounts(mRefCancerGenPosCounts.getCol(i), sampleCounts, adjustMultiplier) : mRefCancerGenPosCounts.getCol(i);
+                    adjustRefCounts(mRefCancerGenPosCounts.getRow(i), sampleCounts, adjustMultiplier) : mRefCancerGenPosCounts.getRow(i);
 
             double css = calcCosineSim(sampleCounts, refPosFreqs);
 
@@ -687,7 +688,7 @@ public class SomaticClassifier implements CuppaClassifier
             final SampleData sample, final double[] sampleCounts, double snvTotal,
             final List<SampleResult> results, final List<SampleSimilarity> similarities)
     {
-        int refSampleCount = mRefSampleSnv96Counts.Cols;
+        int refSampleCount = mRefSampleSnv96Counts.Rows;
 
         final List<SampleSimilarity> topMatches = Lists.newArrayList();
         final Map<String,Double> cancerCssTotals = Maps.newHashMap();
@@ -709,7 +710,7 @@ public class SomaticClassifier implements CuppaClassifier
             if(!checkIsValidCancerType(sample, refCancerType, cancerCssTotals))
                 continue;
 
-            final double[] otherSampleCounts = mRefSampleGenPosCounts.getCol(s);
+            final double[] otherSampleCounts = mRefSampleGenPosCounts.getRow(s);
 
             double css = calcCosineSim(sampleCounts, otherSampleCounts);
 
@@ -779,7 +780,7 @@ public class SomaticClassifier implements CuppaClassifier
                     if(!isKnownCancerType(refCancerType1))
                         continue;
 
-                    final double[] refCounts1 = mRefCancerGenPosCounts.getCol(i);
+                    final double[] refCounts1 = mRefCancerGenPosCounts.getRow(i);
 
                     for(int j = i + 1; j < mRefGenPosCancerTypes.size(); ++j)
                     {
@@ -788,7 +789,7 @@ public class SomaticClassifier implements CuppaClassifier
                         if(!isKnownCancerType(refCancerType1))
                             continue;
 
-                        final double[] refCounts2 = mRefCancerGenPosCounts.getCol(j);
+                        final double[] refCounts2 = mRefCancerGenPosCounts.getRow(j);
 
                         double css = calcCosineSim(refCounts1, refCounts2);
 
@@ -834,9 +835,9 @@ public class SomaticClassifier implements CuppaClassifier
             int bucketIndex = bucketNameIndexMap.get(bucketName);
             mAidApobecSnv96Buckets.add(bucketIndex);
 
-            for(int i = 0; i < mRefSampleSnv96Counts.Cols; ++i)
+            for(int s = 0; s < mRefSampleSnv96Counts.Rows; ++s)
             {
-                mRefSampleSnv96Counts.set(bucketIndex, i, 0);
+                mRefSampleSnv96Counts.set(s, bucketIndex, 0);
             }
         }
     }
@@ -844,49 +845,49 @@ public class SomaticClassifier implements CuppaClassifier
     @VisibleForTesting
     public void addRefData(final List<double[]> snvCounts, final List<double[]> posFreqCounts, final Map<String,double[]> cancerPosFreqCounts)
     {
-        mRefSampleSnv96Counts = new Matrix(snvCounts.get(0).length, snvCounts.size());
+        mRefSampleSnv96Counts = new Matrix(snvCounts.size(), snvCounts.get(0).length);
 
         for(int i = 0; i < snvCounts.size(); ++i)
         {
-            mRefSampleSnv96Counts.setCol(i, snvCounts.get(i));
+            mRefSampleSnv96Counts.setRow(i, snvCounts.get(i));
             mRefSampleNames.add(mSampleDataCache.RefSampleDataList.get(i).Id);
         }
 
-        mRefCancerGenPosCounts = new Matrix(posFreqCounts.get(0).length, cancerPosFreqCounts.size());
+        mRefCancerGenPosCounts = new Matrix(cancerPosFreqCounts.size(), posFreqCounts.get(0).length);
 
         int cancerIndex = 0;
         for(Map.Entry<String,double[]> entry : cancerPosFreqCounts.entrySet())
         {
             mRefGenPosCancerTypes.add(entry.getKey());
-            mRefCancerGenPosCounts.setCol(cancerIndex, entry.getValue());
+            mRefCancerGenPosCounts.setRow(cancerIndex, entry.getValue());
             ++cancerIndex;
         }
 
-        mRefSampleGenPosCounts = new Matrix(posFreqCounts.get(0).length, posFreqCounts.size());
+        mRefSampleGenPosCounts = new Matrix(posFreqCounts.size(), posFreqCounts.get(0).length);
 
         for(int i = 0; i < posFreqCounts.size(); ++i)
         {
-            mRefSampleGenPosCounts.setCol(i, posFreqCounts.get(i));
+            mRefSampleGenPosCounts.setRow(i, posFreqCounts.get(i));
             mRefSampleGenPosCountsIndex.put(mSampleDataCache.RefSampleDataList.get(i).Id, i);
         }
     }
 
     public void addSampleData(final List<String> sampleIds, final List<double[]> snvCounts, final List<double[]> posFreqCounts)
     {
-        mSampleSnv96Counts = new Matrix(snvCounts.get(0).length, snvCounts.size());
+        mSampleSnv96Counts = new Matrix(snvCounts.size(), snvCounts.get(0).length);
 
         for(int i = 0; i < snvCounts.size(); ++i)
         {
-            mSampleSnv96Counts.setCol(i, snvCounts.get(i));
+            mSampleSnv96Counts.setRow(i, snvCounts.get(i));
             mSampleSnv96CountsIndex.put(sampleIds.get(i), i);
             mSampleSnvTotals.put(sampleIds.get(i), (int)sumVector(snvCounts.get(i)));
         }
 
-        mSampleGenPosCounts = new Matrix(posFreqCounts.get(0).length, posFreqCounts.size());
+        mSampleGenPosCounts = new Matrix(posFreqCounts.size(), posFreqCounts.get(0).length);
 
         for(int i = 0; i < posFreqCounts.size(); ++i)
         {
-            mSampleGenPosCounts.setCol(i, posFreqCounts.get(i));
+            mSampleGenPosCounts.setRow(i, posFreqCounts.get(i));
             mSampleGenPosCountsIndex.put(sampleIds.get(i), i);
         }
     }
