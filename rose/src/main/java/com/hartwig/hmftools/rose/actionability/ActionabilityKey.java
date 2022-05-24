@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ActionabilityKey {
 
     @NotNull
-    public abstract String gene();
+    public abstract String match();
 
     @Nullable
     public abstract TypeAlteration type();

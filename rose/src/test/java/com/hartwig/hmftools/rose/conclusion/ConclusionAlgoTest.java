@@ -86,9 +86,9 @@ public class ConclusionAlgoTest {
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
 
         actionabilityMap = testActionabilityMap(actionabilityMap,
-                "CUPPA_inconclusive",
+                "CUPPA_INCONCLUSIVE",
                 TypeAlteration.CUPPA_INCONCLUSIVE,
-                "CUPPA_inconclusive",
+                "CUPPA_INCONCLUSIVE",
                 Condition.OTHER,
                 "results inconclusive");
 
@@ -114,7 +114,7 @@ public class ConclusionAlgoTest {
         actionabilityMap = testActionabilityMap(actionabilityMap, "BRCA2", TypeAlteration.INACTIVATION, "BRCA2", Condition.ONLY_HIGH, "BRCA2");
         actionabilityMap = testActionabilityMap(actionabilityMap, "BRCA1", TypeAlteration.INACTIVATION, "BRCA1", Condition.ONLY_HIGH, "BRCA1");
         actionabilityMap = testActionabilityMap(actionabilityMap, "germline", TypeAlteration.GERMLINE, "germline", Condition.ONLY_HIGH, "germline");
-        actionabilityMap = testActionabilityMap(actionabilityMap, "biallelic", TypeAlteration.NOT_BIALLELIC, "biallelic", Condition.OTHER, "not biallelic");
+        actionabilityMap = testActionabilityMap(actionabilityMap, "NOT_BIALLELIC", TypeAlteration.NOT_BIALLELIC, "NOT_BIALLELIC", Condition.OTHER, "not biallelic");
 
         ConclusionAlgo.generateVariantConclusion(conclusion,
                 reportableVariants,
@@ -321,7 +321,7 @@ public class ConclusionAlgoTest {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         actionabilityMap =
-                testActionabilityMap(actionabilityMap, "purity", TypeAlteration.PURITY, "purity", Condition.OTHER, "low purity (XX%)");
+                testActionabilityMap(actionabilityMap, "PURITY", TypeAlteration.PURITY, "PURITY", Condition.OTHER, "low purity (XX%)");
 
         ConclusionAlgo.genertatePurityConclusion(conclusion, 0.1, true, actionabilityMap);
         assertEquals(conclusion.get(0), "- low purity (0.1%)");
@@ -332,7 +332,7 @@ public class ConclusionAlgoTest {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         actionabilityMap =
-                testActionabilityMap(actionabilityMap, "purity", TypeAlteration.PURITY, "purity", Condition.OTHER, "low purity (XX%)");
+                testActionabilityMap(actionabilityMap, "PURITY", TypeAlteration.PURITY, "PURITY", Condition.OTHER, "low purity (XX%)");
 
         ConclusionAlgo.genertatePurityConclusion(conclusion, 0.3, true, actionabilityMap);
         assertNull(conclusion.get(0));
@@ -343,9 +343,9 @@ public class ConclusionAlgoTest {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         actionabilityMap = testActionabilityMap(actionabilityMap,
-                "purity_unreliable",
+                "PURITY_UNRELIABLE",
                 TypeAlteration.PURITY_UNRELIABLE,
-                "purity_unreliable",
+                "PURITY_UNRELIABLE",
                 Condition.OTHER,
                 "unreliable");
 
@@ -358,9 +358,9 @@ public class ConclusionAlgoTest {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         actionabilityMap = testActionabilityMap(actionabilityMap,
-                "no_oncogenic",
+                "NO_ONCOGENIC",
                 TypeAlteration.NO_ONCOGENIC,
-                "no_oncogenic",
+                "NO_ONCOGENIC",
                 Condition.OTHER,
                 "no_oncogenic");
 
@@ -374,9 +374,9 @@ public class ConclusionAlgoTest {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         actionabilityMap = testActionabilityMap(actionabilityMap,
-                "no_actionable",
+                "NO_ACTIONABLE",
                 TypeAlteration.NO_ACTIONABLE,
-                "no_actionable",
+                "NO_ACTIONABLE",
                 Condition.OTHER,
                 "no_actionable");
 
@@ -391,9 +391,9 @@ public class ConclusionAlgoTest {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         actionabilityMap = testActionabilityMap(actionabilityMap,
-                "findings",
+                "FINDINGS",
                 TypeAlteration.FINDINGS,
-                "findings",
+                "FINDINGS",
                 Condition.OTHER,
                 "findings");
 
@@ -405,7 +405,7 @@ public class ConclusionAlgoTest {
     public Map<ActionabilityKey, ActionabilityEntry> testActionabilityMap(
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap, @NotNull String gene,
             @NotNull TypeAlteration typeAlteration, @NotNull String match, @NotNull Condition condition, @NotNull String conclusion) {
-        ActionabilityKey key = ImmutableActionabilityKey.builder().gene(gene).type(typeAlteration).build();
+        ActionabilityKey key = ImmutableActionabilityKey.builder().match(gene).type(typeAlteration).build();
         ActionabilityEntry entry =
                 ImmutableActionabilityEntry.builder().match(match).type(typeAlteration).condition(condition).conclusion(conclusion).build();
         actionabilityMap.put(key, entry);
