@@ -10,37 +10,37 @@
 
     <modules>
         <module>hmf-common</module>
-        <module>patient-db</module>
-        <module>gene-utils</module>
-        <module>stat-calcs</module>
-        <module>hmf-id-generator</module>
-        <module>fastq-stats</module>
-        <module>health-checker</module>
-        <module>paddle</module>
-        <module>compar</module>
-        <module>amber</module>
-        <module>cobalt</module>
-        <module>sage</module>
-        <module>gripss</module>
-        <module>purple</module>
-        <module>linx</module>
-        <module>sv-tools</module>
-        <module>virus-interpreter</module>
-        <module>lilac</module>
-        <module>neo</module>
-        <module>sigs</module>
-        <module>teal</module>
-        <module>cuppa</module>
-        <module>isofox</module>
-        <module>pave</module>
-        <module>ckb-importer</module>
-        <module>iclusion-importer</module>
-        <module>vicc-importer</module>
-        <module>serve</module>
-        <module>protect</module>
-        <module>orange</module>
-        <module>patient-reporter</module>
-        <module>summon</module>
+<!--        <module>patient-db</module>-->
+<!--        <module>gene-utils</module>-->
+<!--        <module>stat-calcs</module>-->
+<!--        <module>hmf-id-generator</module>-->
+<!--        <module>fastq-stats</module>-->
+<!--        <module>health-checker</module>-->
+<!--        <module>paddle</module>-->
+<!--        <module>compar</module>-->
+<!--        <module>amber</module>-->
+<!--        <module>cobalt</module>-->
+<!--        <module>sage</module>-->
+<!--        <module>gripss</module>-->
+<!--        <module>purple</module>-->
+<!--        <module>linx</module>-->
+<!--        <module>sv-tools</module>-->
+<!--        <module>virus-interpreter</module>-->
+<!--        <module>lilac</module>-->
+<!--        <module>neo</module>-->
+<!--        <module>sigs</module>-->
+<!--        <module>teal</module>-->
+<!--        <module>cuppa</module>-->
+<!--        <module>isofox</module>-->
+<!--        <module>pave</module>-->
+<!--        <module>ckb-importer</module>-->
+<!--        <module>iclusion-importer</module>-->
+<!--        <module>vicc-importer</module>-->
+<!--        <module>serve</module>-->
+<!--        <module>protect</module>-->
+<!--        <module>orange</module>-->
+<!--        <module>patient-reporter</module>-->
+        <module>rose</module>
     </modules>
 
     <properties>
@@ -86,7 +86,7 @@
         <teal.version>1.0.1</teal.version>
         <vicc-importer.version>1.2</vicc-importer.version>
         <virus-interpreter.version>1.2</virus-interpreter.version>
-        <summon.version>0.1</summon.version>
+        <rose.version>0.1</rose.version>
 
         <commons.cli.version>1.3.1</commons.cli.version>
         <immutables.version>2.5.5</immutables.version>
