@@ -2,10 +2,55 @@
 ROSE match all the genomic events and signatures that are determined by the Hartwig pipeline to the actionability treatment options in the Netherlands. 
 
 ## Contents
-- [How is actionability matched against genomic events?](#matching-of-actionability)
+- [What is present in the actionability database?](#actionability-db)
+- [How is actionability matched against genomic events and signatures?](#matching-of-actionability)
 - [What output is produced by ROSE?](#rose-output)
 - [Which known issues are present in ROSE?](#known-issues)
 - [Version history and download links](#version-history-and-download-links)
+
+## Actionability database
+For determining which genomic event or signature is actionable in the NL an actionability database is used. This database has the following format:
+
+Field  | Description | Example
+---|---|---
+match | The gene name or signature which could be actionable together with the type alteration | RAD51B
+type_alteration | The alteration of the event |  INACTIVATION
+condition | The condition where the event should meet with | ONLY_HIGH
+conclusion | The clinical sentence which will be added into the conclusion | inactivation, potential benefit from PARP inhibitors (clinical trial)
+
+The field type_alteration could contain the following values:
+
+Field  | Description
+---|---
+ONLY_HIGH | Only using actionable evidence for variants with high driver likelihood
+ALWAYS | Always using actionable evidence
+ALWAYS_NO_ACTIONABLE | Always add events to summary unless they aren't actionable events
+OTHER | Other general messages to events
+
+The field condition could contain the following values:
+
+Field  | Description
+---|---
+AMPLIFICATION | The gene is actionable for amplification
+EXTRACELLULAR_DOMAIN_MUTATION | ???
+FUSION | The gene is actionable when the gene is present on 3' promiscuous or 5' promiscuous as fusion partner
+INACTIVATION | The gene is actionable when the event inactivated the gene
+INTERNAL_DELETION |
+KINASE_DOMAIN_DUPLICATION |
+LOSS |
+POSITIVE |
+RESISTANCE_MUTATION |
+PURITY |
+PURITY_UNRELIABLE |
+FINDINGS |
+GERMLINE | T
+CUPPA |
+CUPPA_INCONCLUSIVE |
+NO_ONCOGENIC |
+NO_ACTIONABLE |
+NO_HRD_CAUSE |
+NO_MSI_HRD_PROFILE |
+NOT_BIALLELIC |
 
 ## Matching of actionability
 
@@ -79,50 +124,6 @@ Next to
 
 Evidence on signatures is matched based on the comparator and cutoff defined by the evidence rule.
 If the evidence rule provides no comparator and cutoff, the interpretation of the algorithm producing the signature is used to match.
-
-
-This database has the follwoing format: 
-
-Field  | Description                             | Example
----|-----------------------------------------|---
-match | The                                     | RAD51B
-type_alteration | The alteration of the event             |  INACTIVATION
-condition | The condition where the event should met with | ONLY_HIGH
-conclusion | The clinical sentence which will be added into the conclusion | inactivation, potential benefit from PARP inhibitors (clinical trial)
-
-The field type_alteration could contain the following values: 
-
-Field  | Description
----|---
-ONLY_HIGH | Only using actionable evidence for variants with high driver likelihood 
-ALWAYS | Always using actionable evidence 
-ALWAYS_NO_ACTIONABLE | Always add events to summary unless they aren't actionable events 
-OTHER | Other general messages to events  
-
-The field condition could contain the following values:
-
-Field  | Description
----|---
-AMPLIFICATION | The gene is actionable for amplification
-EXTRACELLULAR_DOMAIN_MUTATION | ???
-FUSION | The gene is actionable when the gene is present on 3' promiscuous or 5' promiscuous as fusion partner
-INACTIVATION | The gene is actionable when the event inactivated the gene
-INTERNAL_DELETION | 
-KINASE_DOMAIN_DUPLICATION | 
-LOSS | 
-POSITIVE | 
-RESISTANCE_MUTATION | 
-PURITY | 
-PURITY_UNRELIABLE | 
-FINDINGS | 
-GERMLINE | T
-CUPPA | 
-CUPPA_INCONCLUSIVE | 
-NO_ONCOGENIC | 
-NO_ACTIONABLE | 
-NO_HRD_CAUSE | 
-NO_MSI_HRD_PROFILE | 
-NOT_BIALLELIC |
 
 ## ROSE output
 
