@@ -297,5 +297,10 @@ The outputs of TEAL is a 'telbam' file (ie a bam restricted to fragments where a
 * TEAL could aslo count relatve amount T-Type, C-Type, G-Type and J-Type content per sample (relevant for ALT pathway identification)
 
 # Version History and Download Links
+- [1.0.1](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.0.1)
+  - Fix crash bug in the writing of output file.
+- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.0)
+  - Downgrade error to warning if a read group cannot be completed.
+  - Fix loading of cobalt file.
 - [1.0_beta](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.0_beta)
     - First release
