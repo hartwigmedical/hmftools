@@ -1,29 +1,18 @@
 package com.hartwig.hmftools.cup.somatics;
 
-import static com.hartwig.hmftools.common.sigs.SnvSigUtils.contextFromVariant;
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.variantContext;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CupConstants.AID_APOBEC_TRINUCLEOTIDE_CONTEXTS;
-import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.cup.somatics.AidApobecStatus.ALL;
 import static com.hartwig.hmftools.cup.somatics.AidApobecStatus.FALSE_ONLY;
 import static com.hartwig.hmftools.cup.somatics.AidApobecStatus.TRUE_ONLY;
-import static com.hartwig.hmftools.cup.somatics.CopyNumberProfile.normaliseGenPosCountsByCopyNumber;
-import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.DEC_3_FORMAT;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.utils.Matrix;
-import com.hartwig.hmftools.common.utils.VectorUtils;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.cup.common.SampleData;
 

@@ -37,8 +37,6 @@ import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
-import static com.hartwig.hmftools.cup.somatics.CopyNumberProfile.extractSampleCopyNumberProfile;
-import static com.hartwig.hmftools.cup.somatics.CopyNumberProfile.normaliseGenPosCountsByCopyNumber;
 import static com.hartwig.hmftools.cup.somatics.GenomicPositions.convertSomaticVariantsToPosFrequencies;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSignaturePercentileData;
@@ -49,8 +47,6 @@ import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_SNV_96_AI
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_SNV_96_AID_APOBEC_DESC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC_SIG;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC_SIG_DESC;
-import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.NORMALISE_COPY_NUMBER;
-import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.NORMALISE_COPY_NUMBER_DESC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC_DESC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.applyMaxCssAdjustment;
@@ -111,10 +107,6 @@ public class SomaticClassifier implements CuppaClassifier
     private final boolean mIncludeAidApobecGenPos;
     private final boolean mExcludeAidApobecSnv96;
 
-    private final boolean mApplyCopyNumber; // to genomic positions
-    private Matrix mRefSampleCopyNumberProfiles;
-    private Matrix mCopyNumberProfile; // same dimensions as genomic position
-
     private final boolean mRunPairwiseGenPos;
     private final double mMaxCssAdjustFactorSnv;
     private final double mMaxCssAdjustFactorGenPos;
@@ -149,7 +141,6 @@ public class SomaticClassifier implements CuppaClassifier
         mSampleSnv96Counts = null;
         mRefCancerGenPosCounts = null;
         mRefSampleGenPosCounts = null;
-        mRefSampleCopyNumberProfiles = null;
         mSampleSnv96CountsIndex = Maps.newHashMap();
         mSampleGenPosCountsIndex = Maps.newHashMap();
         mSampleSnvTotals = Maps.newHashMap();
@@ -163,7 +154,6 @@ public class SomaticClassifier implements CuppaClassifier
         mIncludeAidApobecGenPos = cmd != null && cmd.hasOption(INCLUDE_AID_APOBEC);
         mExcludeAidApobecSnv96 = cmd != null ? cmd.hasOption(EXCLUDE_SNV_96_AID_APOBEC) : false;
 
-        mApplyCopyNumber = cmd != null ? cmd.hasOption(NORMALISE_COPY_NUMBER) : false;
         mAidApobecSnv96Buckets = Lists.newArrayList();
 
         mRunPairwiseGenPos = cmd != null && cmd.hasOption(GEN_POS_PAIRWISE);
@@ -196,38 +186,15 @@ public class SomaticClassifier implements CuppaClassifier
         mRefCancerGenPosCounts = loadRefSampleCounts(mConfig.RefSnvCancerPosFreqFile, mRefGenPosCancerTypes, Lists.newArrayList());
         mRefSampleGenPosCounts = loadSampleMatrixData(mConfig.RefSnvSamplePosFreqFile, mRefSampleGenPosCountsIndex);
 
-        if(mApplyCopyNumber)
+        if(mRefSampleSnv96Counts == null || mRefCancerGenPosCounts == null)
         {
-            // uses gen-pos sample map for CN profile
-            mRefSampleCopyNumberProfiles = loadSampleMatrixData(mConfig.RefCopyNumberProfileFile, Maps.newHashMap());
-
-            if(!mConfig.SampleDataFile.equals(mConfig.RefSampleDataFile))
-            {
-                CUP_LOGGER.error("only ref-sample analysis support for CN normalisation");
-                mIsValid = false;
-            }
-        }
-        else
-        {
-            mRefSampleCopyNumberProfiles = null;
-        }
-
-        if(mRefSampleSnv96Counts == null || mRefCancerGenPosCounts == null || (mApplyCopyNumber && mRefSampleCopyNumberProfiles == null))
-        {
-            CUP_LOGGER.error("invalid somatic matrix data: SNV-96() GenPos({}) CopyNumber({})",
-                    mRefSampleSnv96Counts != null, mRefCancerGenPosCounts != null,
-                    (!mApplyCopyNumber || mRefSampleCopyNumberProfiles != null));
+            CUP_LOGGER.error("invalid somatic matrix data: SNV-96({}) GenPos({})",
+                    mRefSampleSnv96Counts != null, mRefCancerGenPosCounts != null);
             mIsValid = false;
         }
 
         mIsValid &= loadSampleCounts();
         mIsValid &= mSigContributions.loadSigContributions(mSampleSnv96Counts);
-
-        if(mApplyCopyNumber && !mConfig.runClassifier(SAMPLE_TRAIT))
-        {
-            CUP_LOGGER.error("genomic-position copy number normalisation requires sample traits for purity");
-            mIsValid = false;
-        }
 
         if(mIsValid)
         {
@@ -308,7 +275,6 @@ public class SomaticClassifier implements CuppaClassifier
     {
         options.addOption(INCLUDE_AID_APOBEC, false, INCLUDE_AID_APOBEC_DESC);
         options.addOption(GEN_POS_PAIRWISE, false, "Run genomic position as a pairwise classifier");
-        options.addOption(NORMALISE_COPY_NUMBER, false, NORMALISE_COPY_NUMBER_DESC);
         options.addOption(EXCLUDE_SNV_96_AID_APOBEC, false, EXCLUDE_SNV_96_AID_APOBEC_DESC);
         options.addOption(INCLUDE_AID_APOBEC_SIG, false, INCLUDE_AID_APOBEC_SIG_DESC);
         options.addOption(MAX_CSS_ADJUST_FACTOR_SNV, true, "Max CSS adustment factor for SNV 96");
@@ -587,32 +553,6 @@ public class SomaticClassifier implements CuppaClassifier
 
         double[] sampleCounts = mSampleGenPosCounts.getRow(sampleCountsIndex);
         double sampleTotal = sumVector(sampleCounts);
-
-        if(mApplyCopyNumber)
-        {
-            double samplePloidy = mSampleDataCache.RefSampleTraitsData.get(sample.Id).Ploidy;
-
-            double[] sampleCnProfile = null;
-
-            if(sample.isRefSample())
-            {
-                sampleCnProfile = mRefSampleCopyNumberProfiles.getCol(sampleCountsIndex);
-            }
-            else if(!mConfig.SampleDataDir.isEmpty())
-            {
-                final String copyNumberFile = PurpleCopyNumberFile.generateFilenameForReading(mConfig.SampleDataDir, sample.Id);
-                sampleCnProfile = extractSampleCopyNumberProfile(sample.Id, mConfig.DbAccess, copyNumberFile, mPosFrequencies);
-            }
-
-            if(sampleCnProfile == null)
-            {
-                CUP_LOGGER.error("sample({}) missing Purple copy number data for normalisation", sample.Id);
-                mIsValid = false;
-                return;
-            }
-
-            sampleCounts = normaliseGenPosCountsByCopyNumber(samplePloidy, sampleCounts, sampleCnProfile);
-        }
 
         if(mRunPairwiseGenPos)
         {
