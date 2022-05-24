@@ -58,6 +58,6 @@ public class RoseApplication {
 
         String filename = RoseConclusionFile.generateFilename(config.outputDir(), config.tumorSampleId());
         LOGGER.info("Writing actionability conclusion to file: {}", filename);
-        RoseConclusionFile.write(filename, actionabilityConclusion);
+        RoseConclusionFile.write(filename, actionabilityConclusion, config.tumorSampleId());
     }
 }
