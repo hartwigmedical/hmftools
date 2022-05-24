@@ -190,8 +190,8 @@ class TelomereLengthCalc(
             DoubleColumn.create("purity"),
             DoubleColumn.create("ploidy"),
             DoubleColumn.create("duplicateProportion"),
-            IntColumn.create("meanReadsPerKb"),
-            IntColumn.create("gc50ReadsPerKb"))
+            DoubleColumn.create("meanReadsPerKb"),
+            DoubleColumn.create("gc50ReadsPerKb"))
 
         val row = teloLengthTable.appendRow()
         row.setString("sampleId", sampleId)
