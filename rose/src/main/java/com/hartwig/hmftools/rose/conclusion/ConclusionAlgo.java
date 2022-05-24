@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.rose.conclusion;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -43,6 +46,12 @@ public class ConclusionAlgo {
             KnownFusionType.IG_KNOWN_PAIR.toString(),
             KnownFusionType.IG_PROMISCUOUS.toString());
     private static final Set<String> HRD_GENES = Sets.newHashSet("BRCA1", "BRCA2", "PALB2", "RAD51B", "RAD51C");
+
+    private static final DecimalFormat DOUBLE_DECIMAL_FORMAT = decimalFormat("#.##");
+    private static final double TMB_CUTOFF = 10;
+    private static final double PURITY_CUTOFF = 0.195;
+
+
 
     @NotNull
     public static ActionabilityConclusion generateConclusion(@NotNull RoseData roseData) {
@@ -233,8 +242,10 @@ public class ConclusionAlgo {
             if (fusion.reportedType().equals(KnownFusionType.EXON_DEL_DUP.toString()) && fusion.geneStart().equals("EGFR") && (
                     fusion.fusedExonUp() == 25 && fusion.fusedExonDown() == 14) || (fusion.fusedExonUp() == 26
                     && fusion.fusedExonDown() == 18)) {
-                ActionabilityKey keyFusion =
-                        ImmutableActionabilityKey.builder().match(fusion.geneStart()).type(TypeAlteration.KINASE_DOMAIN_DUPLICATION).build();
+                ActionabilityKey keyFusion = ImmutableActionabilityKey.builder()
+                        .match(fusion.geneStart())
+                        .type(TypeAlteration.KINASE_DOMAIN_DUPLICATION)
+                        .build();
                 ActionabilityEntry entry = actionabilityMap.get(keyFusion);
                 if (entry != null && entry.condition() == Condition.ALWAYS) {
                     conclusion.put(conclusion.size(), "- " + fusion.name() + " " + entry.conclusion());
@@ -318,9 +329,9 @@ public class ConclusionAlgo {
                         conclusion.put(conclusion.size(),
                                 "- " + "HRD(" + chordAnalysis.hrdValue() + ") " + entry.conclusion() + entryNoHRd.conclusion());
                     }
-                } else {
-                    conclusion.put(conclusion.size(), "- " + "HRD(" + chordAnalysis.hrdValue() + ") " + entry.conclusion());
                 }
+                conclusion.put(conclusion.size(),
+                        "- " + "HRD(" + DOUBLE_DECIMAL_FORMAT.format(chordAnalysis.hrdValue()) + ") " + entry.conclusion());
 
                 actionable.add("HRD");
                 oncogenic.add("HRD");
@@ -335,7 +346,7 @@ public class ConclusionAlgo {
             ActionabilityKey keyMSI = ImmutableActionabilityKey.builder().match("MSI").type(TypeAlteration.POSITIVE).build();
             ActionabilityEntry entry = actionabilityMap.get(keyMSI);
             if (entry != null && entry.condition() == Condition.ALWAYS) {
-                conclusion.put(conclusion.size(), "- " + "MSI(" + microsatelliteMb + ")" + entry.conclusion());
+                conclusion.put(conclusion.size(), "- " + "MSI(" + DOUBLE_DECIMAL_FORMAT.format(microsatelliteMb) + ")" + entry.conclusion());
                 actionable.add("MSI");
                 oncogenic.add("MSI");
             }
@@ -359,7 +370,7 @@ public class ConclusionAlgo {
     public static void generateTMBConclusion(@NotNull Map<Integer, String> conclusion, double tumorMutationalBurden,
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap, @NotNull Set<String> oncogenic,
             @NotNull Set<String> actionable) {
-        if (tumorMutationalBurden >= 10) {
+        if (tumorMutationalBurden >= TMB_CUTOFF) {
             ActionabilityKey keyTMB = ImmutableActionabilityKey.builder().match("High-TMB").type(TypeAlteration.POSITIVE).build();
             ActionabilityEntry entry = actionabilityMap.get(keyTMB);
             if (entry != null && entry.condition() == Condition.ALWAYS) {
@@ -380,7 +391,7 @@ public class ConclusionAlgo {
             if (entryReliable != null && entryReliable.condition() == Condition.OTHER) {
                 conclusion.put(conclusion.size(), "- " + entryReliable.conclusion());
             }
-        } else if (purity < 0.195) {
+        } else if (purity < PURITY_CUTOFF) {
             ActionabilityKey keyPurity = ImmutableActionabilityKey.builder().match("PURITY").type(TypeAlteration.PURITY).build();
 
             ActionabilityEntry entry = actionabilityMap.get(keyPurity);
@@ -419,5 +430,11 @@ public class ConclusionAlgo {
         if (entry != null && entry.condition() == Condition.OTHER) {
             conclusion.put(conclusion.size(), "- " + entry.conclusion());
         }
+    }
+
+    @NotNull
+    public static DecimalFormat decimalFormat(@NotNull String format) {
+        // To make sure every decimal format uses a dot as separator rather than a comma.
+        return new DecimalFormat(format, DecimalFormatSymbols.getInstance(Locale.ENGLISH));
     }
 }
