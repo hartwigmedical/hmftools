@@ -39,8 +39,8 @@
         <module>serve</module>
         <module>protect</module>
         <module>orange</module>
-        <module>patient-reporter</module>
         <module>rose</module>
+        <module>patient-reporter</module>
     </modules>
 
     <properties>
