@@ -83,7 +83,7 @@
         <sigs.version>1.0</sigs.version>
         <serve.version>1.11</serve.version>
         <sv-tools.version>1.0</sv-tools.version>
-        <teal.version>1.0</teal.version>
+        <teal.version>1.0.1</teal.version>
         <vicc-importer.version>1.2</vicc-importer.version>
         <virus-interpreter.version>1.2</virus-interpreter.version>
         <summon.version>0.1</summon.version>

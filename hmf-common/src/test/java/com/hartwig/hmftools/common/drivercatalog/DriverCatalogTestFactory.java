@@ -10,25 +10,25 @@ public final class DriverCatalogTestFactory {
 
     @NotNull
     public static DriverCatalog createNonCanonicalSomaticMutationEntryForGene(@NotNull String gene, double likelihood,
-            @NotNull String transcript) {
-        return create(gene, likelihood, DriverType.MUTATION, transcript, false);
+            @NotNull String transcript, @NotNull DriverCategory category) {
+        return create(gene, likelihood, DriverType.MUTATION, transcript, false, category);
     }
 
     @NotNull
     public static DriverCatalog createCanonicalSomaticMutationEntryForGene(@NotNull String gene, double likelihood,
-            @NotNull String transcript) {
-        return create(gene, likelihood, DriverType.MUTATION, transcript, true);
+            @NotNull String transcript, @NotNull DriverCategory category) {
+        return create(gene, likelihood, DriverType.MUTATION, transcript, true, category);
     }
 
     @NotNull
     public static DriverCatalog createCanonicalGermlineMutationEntryForGene(@NotNull String gene, double likelihood,
-            @NotNull String transcript) {
-        return create(gene, likelihood, DriverType.GERMLINE_MUTATION, transcript, true);
+            @NotNull String transcript, @NotNull DriverCategory category) {
+        return create(gene, likelihood, DriverType.GERMLINE_MUTATION, transcript, true, category);
     }
 
     @NotNull
     private static DriverCatalog create(@NotNull String gene, double likelihood, @NotNull DriverType type, @NotNull String transcript,
-            boolean isCanonical) {
+            boolean isCanonical, @NotNull DriverCategory category) {
         return ImmutableDriverCatalog.builder()
                 .chromosome(Strings.EMPTY)
                 .chromosomeBand(Strings.EMPTY)
@@ -36,7 +36,7 @@ public final class DriverCatalogTestFactory {
                 .transcript(transcript)
                 .isCanonical(isCanonical)
                 .driver(type)
-                .category(DriverCategory.ONCO)
+                .category(category)
                 .likelihoodMethod(LikelihoodMethod.DNDS)
                 .driverLikelihood(likelihood)
                 .missense(0)

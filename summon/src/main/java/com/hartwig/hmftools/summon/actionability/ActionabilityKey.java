@@ -13,5 +13,5 @@ public abstract class ActionabilityKey {
     public abstract String gene();
 
     @Nullable
-    public abstract Type type();
+    public abstract TypeAlteration type();
 }
