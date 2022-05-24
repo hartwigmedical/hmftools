@@ -18,39 +18,45 @@ type_alteration | The alteration of the event |  INACTIVATION
 condition | The condition where the event should meet with | ONLY_HIGH
 conclusion | The clinical sentence which will be added into the conclusion | inactivation, potential benefit from PARP inhibitors (clinical trial)
 
-The field type_alteration could contain the following values:
-
-Field  | Description
----|---
-ONLY_HIGH | Only using actionable evidence for variants with high driver likelihood
-ALWAYS | Always using actionable evidence
-ALWAYS_NO_ACTIONABLE | Always add events to summary unless they aren't actionable events
-OTHER | Other general messages to events
-
 The field condition could contain the following values:
 
 Field  | Description
 ---|---
-AMPLIFICATION | The gene is actionable for amplification
-EXTRACELLULAR_DOMAIN_MUTATION | ???
-FUSION | The gene is actionable when the gene is present on 3' promiscuous or 5' promiscuous as fusion partner
-INACTIVATION | The gene is actionable when the event inactivated the gene
-INTERNAL_DELETION |
-KINASE_DOMAIN_DUPLICATION |
-LOSS |
-POSITIVE |
-RESISTANCE_MUTATION |
-PURITY |
-PURITY_UNRELIABLE |
-FINDINGS |
-GERMLINE | T
-CUPPA |
-CUPPA_INCONCLUSIVE |
-NO_ONCOGENIC |
-NO_ACTIONABLE |
-NO_HRD_CAUSE |
-NO_MSI_HRD_PROFILE |
-NOT_BIALLELIC |
+ONLY_HIGH | Only using actionable evidence for genomic events with high driver likelihood
+ALWAYS | Always using actionable evidence unless driver likelihood 
+ALWAYS_NO_ACTIONABLE | Always add genomic events to summary unless they aren't actionable events
+OTHER | Other general messages to events
+
+The field type alteration could contain the following values which are specific for genomic alterations/alterations:
+
+Field  | Description
+---|---
+AMPLIFICATION | Actionable when the gene is amplified 
+EXTRACELLULAR_DOMAIN_MUTATION | Actionable when a mutation is in the extracellular domain domain 
+FUSION | Actionable when the fusion is KNOWN_PAIR, PROMISCUOUS_3, PROMISCUOUS_5, IG_KNOWN_PAIR or IG_PROMISCUOUS as annotated by PURPLE
+INACTIVATION | Actionable when gene is inactivated 
+INTERNAL_DELETION | Actionable when there is a EXON_DEL_DUP fusion of that gene 
+KINASE_DOMAIN_DUPLICATION | Actionable when the genomic event determined a kinase domain duplication
+LOSS | Actionable when the gene is deleted
+POSITIVE | Actionable when there is a positive call for a specific signature e.g. HRD deficient 
+RESISTANCE_MUTATION | Actionable when it is related to a resistence mutation
+
+The field type alteration could contain also the following values which are related to disclaimers or general information which is 
+important to know for interpretation of the clinical relevance:
+
+Field  | Description
+---|---
+PURITY | Disclaimer sentence when there is a lower tumor purity low (below the 20%) 
+PURITY_UNRELIABLE | Disclaimer sentence when the tumor purity could be relaible determined 
+FINDINGS | A general sentence for what can be detected in the report
+GERMLINE | A sentence if the small variant is detected in the germline of the patient but also called in the tumor 
+CUPPA | The molecular tissue of origin classifier prediction with likelihood >= 80%
+CUPPA_INCONCLUSIVE | The molecular tissue of origin classifier prediction which couldn't determined with enough likelihood 
+NO_ONCOGENIC | The WGS analyse could not detected any oncogenic genomic event/signature
+NO_ACTIONABLE | The WGS analyse could not detected any oncogenic genomic event/signature wich is actionable 
+NO_HRD_CAUSE | The WGS analys detected an HRD mutational profile but no support is found for this signature 
+NO_MSI_HRD_PROFILE | The WGS analys detected HRD/MSI support but the mutational profile isn't detected 
+NOT_BIALLELIC | The WGS analyse called a TSG small variant but the variant itself isn't biallelic  
 
 ## Matching of actionability
 
