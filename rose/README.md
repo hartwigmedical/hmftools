@@ -107,7 +107,7 @@ The signatures are categorized in four categories and actionability is matched f
 
 ###### HRD
 When a tumor has the signature homologous recombination repair, which means a value >= 0.5 with the status omologous recombination 
-deficient, according to[CHORD](https://github.com/UMCUGenetics/CHORD) the signature is match for actionability. Also, when there is no 
+deficient, according to [CHORD](https://github.com/UMCUGenetics/CHORD) the signature is match for actionability. Also, when there is no 
 support for this signature this will be also mentioned. 
 
 ###### MSI
