@@ -376,6 +376,10 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   - Remove "negative" from list of CKB events which are interpreted as inactivation events.
   - Move TMB evidence from CKB to evidence for tumor mutational burden rather than mutational load.
   - Various updates are made to ingestion of ACTIN source
+  - Various updates are made to ingestion of iClusion source
+    - Hotspot ERBB2 P780-Y781insGSP will be interpreted correctly 
+    - Interpret EXON XX LOSS as internal deletion 
+    - Interpret EXON XX DELETION as exon mutation 
   - Fix bug with consolidation of resistant vs responsive evidence. These were previously consolidated together rather than independently.
 - [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.10)
   - Solve issues of v1.9
