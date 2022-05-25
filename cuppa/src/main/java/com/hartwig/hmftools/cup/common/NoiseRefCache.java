@@ -201,6 +201,9 @@ public class NoiseRefCache
 
     public static void applyNoise(final Matrix matrix, final double[] bucketMedians, int noiseAllocation)
     {
+        if(noiseAllocation <= 0)
+            return;
+
         double medianTotal = sumVector(bucketMedians);
 
         // now scale these to the noise allocation
