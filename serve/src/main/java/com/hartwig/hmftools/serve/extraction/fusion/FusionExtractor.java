@@ -81,8 +81,6 @@ public class FusionExtractor {
             if (wordsUp.length == 2 && wordsDown.length == 2) {
                 exonRankUp = extractExonRank(event, wordsUp[0].split(" "));
                 exonRankDown = extractExonRank(event, wordsDown[1].split(" "));
-                LOGGER.info(exonRankUp);
-                LOGGER.info(exonRankDown);
             }
         } else {
             String[] wordsUp = event.split(" ");
