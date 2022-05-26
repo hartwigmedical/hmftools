@@ -14,8 +14,16 @@ import org.junit.Test;
 public class OrangeAlgoTest {
 
     @Test
-    public void canCreateReportFromTestDir() throws IOException {
-        OrangeConfig config = OrangeConfigTestFactory.createTestOrangeConfig();
+    public void canRunReportFromTestDirDNA() throws IOException {
+        OrangeConfig config = OrangeConfigTestFactory.createDNAConfig();
+        OrangeAlgo algo = OrangeAlgo.fromConfig(config);
+
+        assertNotNull(algo.run(config));
+    }
+
+    @Test
+    public void canRunReportFromTestDirDNARNA() throws IOException {
+        OrangeConfig config = OrangeConfigTestFactory.createDNARNAConfig();
         OrangeAlgo algo = OrangeAlgo.fromConfig(config);
 
         assertNotNull(algo.run(config));
@@ -24,7 +32,7 @@ public class OrangeAlgoTest {
     @Test
     public void canCreateReportWithoutTumorDoids() throws IOException {
         OrangeConfig config = ImmutableOrangeConfig.builder()
-                .from(OrangeConfigTestFactory.createTestOrangeConfig())
+                .from(OrangeConfigTestFactory.createDNAConfig())
                 .primaryTumorDoids(Sets.newHashSet())
                 .build();
 

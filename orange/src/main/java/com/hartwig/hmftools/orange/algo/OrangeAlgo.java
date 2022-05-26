@@ -27,6 +27,8 @@ import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.flagstat.Flagstat;
 import com.hartwig.hmftools.common.flagstat.FlagstatFile;
+import com.hartwig.hmftools.common.isofox.IsofoxData;
+import com.hartwig.hmftools.common.isofox.IsofoxDataLoader;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxDataLoader;
 import com.hartwig.hmftools.common.metrics.WGSMetrics;
@@ -108,6 +110,7 @@ public class OrangeAlgo {
                 .germlineMVLHPerGene(loadGermlineMVLHPerGene(config))
                 .purple(purple)
                 .linx(loadLinxData(config))
+                .isofox(loadIsofoxData(config))
                 .virusInterpreter(loadVirusInterpreterData(config))
                 .chord(loadChordAnalysis(config))
                 .cuppa(loadCuppaData(config))
@@ -214,6 +217,37 @@ public class OrangeAlgo {
                 config.linxDriverTsv());
     }
 
+    @Nullable
+    private static IsofoxData loadIsofoxData(@NotNull OrangeConfig config) throws IOException {
+        String isofoxCancerType = config.isofoxCancerType();
+        String isofoxGeneDistributionCsv = config.isofoxGeneDistributionCsv();
+        String isofoxAltSjCohortCsv = config.isofoxAltSjCohortCsv();
+
+        String isofoxSummaryCsv = config.isofoxSummaryCsv();
+        String isofoxGeneDataCsv = config.isofoxGeneDataCsv();
+        String isofoxFusionCsv = config.isofoxGeneDataCsv();
+        String isofoxAltSpliceJunctionCsv = config.isofoxAltSpliceJunctionCsv();
+
+        if (anyNull(isofoxCancerType,
+                isofoxGeneDistributionCsv,
+                isofoxAltSjCohortCsv,
+                isofoxSummaryCsv,
+                isofoxGeneDataCsv,
+                isofoxFusionCsv,
+                isofoxAltSpliceJunctionCsv)) {
+            LOGGER.info("Skipping ISOFOX data loading as input is incomplete");
+            return null;
+        }
+
+        return IsofoxDataLoader.load(isofoxCancerType,
+                isofoxGeneDistributionCsv,
+                isofoxAltSjCohortCsv,
+                isofoxSummaryCsv,
+                isofoxGeneDataCsv,
+                isofoxFusionCsv,
+                isofoxAltSpliceJunctionCsv);
+    }
+
     @NotNull
     private static VirusInterpreterData loadVirusInterpreterData(@NotNull OrangeConfig config) throws IOException {
         return VirusInterpreterDataLoader.load(config.annotatedVirusTsv());
@@ -317,5 +351,15 @@ public class OrangeAlgo {
                 .cuppaSummaryPlot(config.cuppaSummaryPlot())
                 .cuppaFeaturePlot(config.cuppaFeaturePlot())
                 .build();
+    }
+
+    private static boolean anyNull(@Nullable Object... objects) {
+        for (Object object : objects) {
+            if (object == null) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
