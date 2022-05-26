@@ -92,7 +92,6 @@ public class CupCalcs
 
         final List<SampleResult> prevalenceResults = allResults.stream()
                 .filter(x -> x.Result == LIKELIHOOD)
-                // .filter(x -> x.Category != CLASSIFIER)
                 .collect(Collectors.toList());
 
         if(prevalenceResults.isEmpty())
@@ -174,7 +173,7 @@ public class CupCalcs
     {
         // combined a set of classifier into a single new combined result
         final List<SampleResult> classifierResults = results.stream()
-                .filter(x -> x.Result == CLASSIFIER)
+                .filter(x -> x.Result == CLASSIFIER && x.Category != COMBINED)
                 .collect(Collectors.toList());
 
         if(classifierResults.size() == 1)

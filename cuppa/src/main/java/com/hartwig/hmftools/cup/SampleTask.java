@@ -97,12 +97,6 @@ public class SampleTask implements Callable
             classifier.processSample(sample, allResults, similarities);
         }
 
-        // collapse any sub-types into parent types
-        if(!mSampleDataCache.RefCancerMappings.isEmpty())
-        {
-            collapseCancerSubtypes(allResults);
-        }
-
         // combine all features into a single classifier
         SampleResult combinedFeatureResult = calcCombinedFeatureResult(sample, allResults, mSampleDataCache.SampleIds.size() > 1);
 
@@ -124,7 +118,7 @@ public class SampleTask implements Callable
         if(hasDnaCategories)
         {
             final List<SampleResult> dnaResults = allResults.stream()
-                    .filter(x -> x.Result == CLASSIFIER && isDna(ClassifierType.valueOf(x.DataType)))
+                    .filter(x -> x.Result == CLASSIFIER && CategoryType.isDna(x.Category))
                     .collect(Collectors.toList());
 
             if(dnaResults.isEmpty())
@@ -143,7 +137,7 @@ public class SampleTask implements Callable
         if(hasRnaCategories)
         {
             final List<SampleResult> rnaResults = allResults.stream()
-                    .filter(x -> x.Result == CLASSIFIER && isRna(ClassifierType.valueOf(x.DataType)))
+                    .filter(x -> x.Result == CLASSIFIER && CategoryType.isRna(x.Category))
                     .collect(Collectors.toList());
 
             if(rnaResults.isEmpty())
@@ -168,14 +162,23 @@ public class SampleTask implements Callable
                 allResults.add(classifierScoreResult);
         }
 
+        // collapse any sub-types into parent types
+        if(!mSampleDataCache.RefCancerMappings.isEmpty())
+        {
+            collapseCancerSubtypes(allResults);
+        }
+
         mResultsWriter.writeSampleData(sample, allResults);
         mResultsWriter.writeSampleSimilarities(sample, similarities);
     }
 
-    private void collapseCancerSubtypes(final List<SampleResult> allResults)
+    private void collapseCancerSubtypes(final List<SampleResult> results)
     {
-        for(SampleResult result : allResults)
+        for(SampleResult result : results)
         {
+            if(result.Result != CLASSIFIER)
+                continue;
+
             final Map<String,Double> cancerTypeResults = result.CancerTypeValues;
 
             for(Map.Entry<String,String> mapping : mSampleDataCache.RefCancerMappings.entrySet())
@@ -185,17 +188,7 @@ public class SampleTask implements Callable
 
                 if(subtypeProb != null && mainTypeProb != null)
                 {
-                    if(result.Result == LIKELIHOOD)
-                    {
-                        if(!result.DataType.equals(ClassifierType.GENDER.toString()))
-                            cancerTypeResults.put(mapping.getValue(), subtypeProb + mainTypeProb);
-                    }
-                    else
-                    {
-                        // take the maximum for prevalence and percentiles
-                        cancerTypeResults.put(mapping.getValue(), min(subtypeProb, mainTypeProb));
-                    }
-
+                    cancerTypeResults.put(mapping.getValue(), subtypeProb + mainTypeProb);
                     cancerTypeResults.remove(mapping.getKey());
                 }
             }
