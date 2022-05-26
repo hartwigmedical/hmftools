@@ -246,6 +246,71 @@ public class GeneExpressionClassifier implements CuppaClassifier
             addSampleCssResults(sample, sampleGeneTPMs, results, similarities);
     }
 
+    private void addSampleCssResults(
+            final SampleData sample, final double[] sampleTPMs, final List<SampleResult> results, final List<SampleSimilarity> similarities)
+    {
+        final Map<String,Double> cancerCssTotals = Maps.newHashMap();
+
+        final List<SampleSimilarity> topMatches = Lists.newArrayList();
+
+        for(Map.Entry<String,List<SampleData>> refCancerEntry : mSampleDataCache.RefCancerSampleData.entrySet())
+        {
+            final String refCancerType = refCancerEntry.getKey();
+
+            if(!isKnownCancerType(refCancerType) || !checkIsValidCancerType(sample, refCancerType, cancerCssTotals))
+                continue;
+
+            double totalWeightedCss = 0;
+
+            for(SampleData refSample : refCancerEntry.getValue())
+            {
+                if(refSample.Id.equals(sample.Id))
+                    continue;
+
+                Integer refSampleIndex = mRefSampleGeneExpIndexMap.get(refSample.Id);
+
+                if(refSampleIndex == null)
+                    continue;
+
+                final double[] otherSampleTPMs = mRefSampleGeneExpression.getRow(refSampleIndex);
+
+                double css = calcCosineSim(sampleTPMs, otherSampleTPMs);
+
+                if(css < GENE_EXP_CSS_THRESHOLD)
+                    continue;
+
+                if(mConfig.WriteSimilarities)
+                {
+                    recordCssSimilarity(
+                            topMatches, sample.Id, refSample.Id, css, EXPRESSION_PAIRWISE.toString(),
+                            CSS_SIMILARITY_MAX_MATCHES, CSS_SIMILARITY_CUTOFF);
+                }
+
+                double cssWeight = pow(mCssExponent, -100 * (1 - css));
+
+                int cancerSampleCount = mRefCancerSampleCounts.get(refCancerType);
+                double weightedCss = css * cssWeight / sqrt(cancerSampleCount);
+
+                totalWeightedCss += weightedCss;
+            }
+
+            cancerCssTotals.put(refCancerType, totalWeightedCss);
+        }
+
+        double totalCss = cancerCssTotals.values().stream().mapToDouble(x -> x).sum();
+
+        for(Map.Entry<String,Double> entry : cancerCssTotals.entrySet())
+        {
+            double prob = totalCss > 0 ? entry.getValue() / totalCss : 0;
+            cancerCssTotals.put(entry.getKey(), prob);
+        }
+
+        results.add(new SampleResult(
+                sample.Id, CLASSIFIER, LIKELIHOOD, EXPRESSION_PAIRWISE.toString(), String.format("%.4g", totalCss), cancerCssTotals));
+
+        similarities.addAll(topMatches);
+    }
+
     private void addCancerCssResults(final SampleData sample, final double[] sampleGeneTPMs, final List<SampleResult> results)
     {
         int refCancerCount = mRefCancerTypeGeneExpression.Rows;
@@ -288,72 +353,4 @@ public class GeneExpressionClassifier implements CuppaClassifier
         results.add(new SampleResult(
                 sample.Id, CLASSIFIER, LIKELIHOOD, EXPRESSION_COHORT.toString(), String.format("%.4g", totalCss), cancerCssTotals));
     }
-
-    private void addSampleCssResults(
-            final SampleData sample, final double[] sampleTPMs, final List<SampleResult> results, final List<SampleSimilarity> similarities)
-    {
-        final Map<String,Double> cancerCssTotals = Maps.newHashMap();
-
-        final List<SampleSimilarity> topMatches = Lists.newArrayList();
-
-        for(Map.Entry<String,Integer> entry : mRefSampleGeneExpIndexMap.entrySet())
-        {
-            final String refSampleId = entry.getKey();
-
-            if(refSampleId.equals(sample.Id))
-                continue;
-
-            final String refCancerType = mSampleDataCache.RefSampleCancerTypeMap.get(refSampleId);
-
-            if(refCancerType == null)
-                continue;
-
-            if(!checkIsValidCancerType(sample, refCancerType, cancerCssTotals))
-                continue;
-
-            int refSampleCountsIndex = entry.getValue();
-            final double[] otherSampleTPMs = mRefSampleGeneExpression.getRow(refSampleCountsIndex);
-
-            double css = calcCosineSim(sampleTPMs, otherSampleTPMs);
-
-            if(css < GENE_EXP_CSS_THRESHOLD)
-                continue;
-
-            if(mConfig.WriteSimilarities)
-            {
-                recordCssSimilarity(
-                        topMatches, sample.Id, refSampleId, css, EXPRESSION_PAIRWISE.toString(),
-                        CSS_SIMILARITY_MAX_MATCHES, CSS_SIMILARITY_CUTOFF);
-            }
-
-            if(!isKnownCancerType(refCancerType))
-                continue;
-
-            double cssWeight = pow(mCssExponent, -100 * (1 - css));
-
-            int cancerSampleCount = mRefCancerSampleCounts.get(refCancerType);
-            double weightedCss = css * cssWeight / sqrt(cancerSampleCount);
-
-            Double total = cancerCssTotals.get(refCancerType);
-
-            if(total == null)
-                cancerCssTotals.put(refCancerType, weightedCss);
-            else
-                cancerCssTotals.put(refCancerType, total + weightedCss);
-        }
-
-        double totalCss = cancerCssTotals.values().stream().mapToDouble(x -> x).sum();
-
-        for(Map.Entry<String,Double> entry : cancerCssTotals.entrySet())
-        {
-            double prob = totalCss > 0 ? entry.getValue() / totalCss : 0;
-            cancerCssTotals.put(entry.getKey(), prob);
-        }
-
-        results.add(new SampleResult(
-                sample.Id, CLASSIFIER, LIKELIHOOD, EXPRESSION_PAIRWISE.toString(), String.format("%.4g", totalCss), cancerCssTotals));
-
-        similarities.addAll(topMatches);
-    }
-
 }

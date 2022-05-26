@@ -55,14 +55,8 @@ public class RefGeneExpression implements RefClassifier
     private final List<String> mCancerTypes;
 
     private final boolean mTpmInLogForm;
-    private final boolean mExcludeEnrichedGenes;
 
     private static final String TPM_IN_LOG_FORM = "tpm_as_log";
-    private static final String EXCLUDE_ENRICHED_GENES = "exclude_enriched_genes";
-
-    private final List<String> ENRICHED_GENES = Lists.newArrayList(
-            "ENSG00000265150","ENSG00000258486", "ENSG00000202198", "ENSG00000266037", "ENSG00000263740", "ENSG00000265735",
-            "ENSG00000276168", "ENSG00000274012", "ENSG00000278771", "ENSG00000283293"); // union of v37 and v38
 
     public RefGeneExpression(final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
@@ -78,13 +72,11 @@ public class RefGeneExpression implements RefClassifier
         mSampleNames = Lists.newArrayList();
 
         mTpmInLogForm = cmd.hasOption(TPM_IN_LOG_FORM);
-        mExcludeEnrichedGenes = cmd.hasOption(EXCLUDE_ENRICHED_GENES);
     }
 
     public static void addCmdLineArgs(@NotNull Options options)
     {
         options.addOption(TPM_IN_LOG_FORM, false, "Expect TPM in log form");
-        options.addOption(EXCLUDE_ENRICHED_GENES, false, "Exclude  enriched genes as defined by Isofox");
     }
 
     public CategoryType categoryType() { return GENE_EXP; }
@@ -208,14 +200,7 @@ public class RefGeneExpression implements RefClassifier
             while((line = fileReader.readLine()) != null)
             {
                 final String[] items = line.split(DATA_DELIM, -1);
-                String geneId = items[0];
-
-                if(ENRICHED_GENES.contains(geneId))
-                {
-                    enrichedGeneIndices.add(mGeneIds.size());
-                }
-
-                mGeneIds.add(geneId);
+                mGeneIds.add(items[0]);
                 mGeneNames.add(items[1]);
             }
 
@@ -242,12 +227,6 @@ public class RefGeneExpression implements RefClassifier
                 {
                     // transformation: double logTpm = log(adjTpm + 1);
                     double value = sampleTPMs[b];
-
-                    if(mExcludeEnrichedGenes && enrichedGeneIndices.contains(b))
-                    {
-                        sampleData[i][b] = 0;
-                        continue;
-                    }
 
                     if(mTpmInLogForm)
                         sampleData[i][b] = exp(value) - 1;
