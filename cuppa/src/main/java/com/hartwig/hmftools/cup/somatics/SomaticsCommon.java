@@ -22,11 +22,11 @@ public final class SomaticsCommon
     public static final String INCLUDE_AID_APOBEC = "include_aid_apobec_gen_pos";
     public static final String INCLUDE_AID_APOBEC_DESC = "Include 8 AID/APOBEC trinucleotide contexts in genomic positions";
 
-    public static final String EXCLUDE_SNV_96_AID_APOBEC = "exclude_aid_apobec_snv_96";
-    public static final String EXCLUDE_SNV_96_AID_APOBEC_DESC = "Exclude 8 AID/APOBEC trinucleotide contexts from SNV-96 counts";
-
     public static final String INCLUDE_AID_APOBEC_SIG = "aid_apobec_sig_feature";
     public static final String INCLUDE_AID_APOBEC_SIG_DESC = "Add an enriched AID/APOBEC signature feature";
+
+    public static final String EXCLUDE_GEN_POS_CHR_X = "exclude_gen_pos_chr_x";
+    public static final String EXCLUDE_GEN_POS_CHR_X_DESC = "Exclude chromosome X from genomic position";
 
     public static final String INTEGER_FORMAT = "%.0f";
     public static final String DEC_1_FORMAT = "%.1f";

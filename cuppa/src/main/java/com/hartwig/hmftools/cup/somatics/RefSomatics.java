@@ -26,6 +26,7 @@ import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_MAX_SAMPLE_CO
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.parseFileSet;
 import static com.hartwig.hmftools.cup.somatics.GenomicPositions.buildCancerMatrix;
+import static com.hartwig.hmftools.cup.somatics.GenomicPositions.excludeChromosome;
 import static com.hartwig.hmftools.cup.somatics.GenomicPositions.extractPositionFrequencyCounts;
 import static com.hartwig.hmftools.cup.somatics.SigContributions.buildCancerSignatureContributions;
 import static com.hartwig.hmftools.cup.somatics.SigContributions.buildSampleSignatureContributions;
@@ -34,6 +35,8 @@ import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleC
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSigContribsFromCohortFile;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSomaticVariants;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.DEC_3_FORMAT;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_GEN_POS_CHR_X;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_GEN_POS_CHR_X_DESC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INTEGER_FORMAT;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC_DESC;
@@ -79,6 +82,7 @@ public class RefSomatics implements RefClassifier
     private boolean mWriteGenPosMatrixData;
 
     private final boolean mIncludeAidApobec;
+    private final boolean mExcludeGenPosChrX;
 
     private final PositionFrequencies mPosFrequencies;
 
@@ -107,6 +111,7 @@ public class RefSomatics implements RefClassifier
         mWriteGenPosMatrixData = false;
 
         mIncludeAidApobec = cmd.hasOption(INCLUDE_AID_APOBEC);
+        mExcludeGenPosChrX = cmd.hasOption(EXCLUDE_GEN_POS_CHR_X);
 
         int posFreqBucketSize = Integer.parseInt(cmd.getOptionValue(SNV_POS_FREQ_POS_SIZE, String.valueOf(GEN_POS_BUCKET_SIZE)));
 
@@ -130,6 +135,7 @@ public class RefSomatics implements RefClassifier
     {
         options.addOption(SNV_POS_FREQ_POS_SIZE, true, "Genomic position bucket size (default: 20000)");
         options.addOption(INCLUDE_AID_APOBEC, false, INCLUDE_AID_APOBEC_DESC);
+        options.addOption(EXCLUDE_GEN_POS_CHR_X, false, EXCLUDE_GEN_POS_CHR_X_DESC);
     }
 
     public void buildRefDataSets()
@@ -154,6 +160,13 @@ public class RefSomatics implements RefClassifier
             mGenPosCounts = loadReferenceSnvCounts(mConfig.GenPosMatrixFile, mGenPosCountsIndex, MATRIX_TYPE_GEN_POS);
 
             retrieveMissingSampleCounts();
+        }
+
+        if(mExcludeGenPosChrX)
+        {
+            String chrX = mPosFrequencies.isValidChromosome("X") ? "X" : "chrX";
+            excludeChromosome(mGenPosCounts, mPosFrequencies, chrX);
+            mWriteGenPosMatrixData = true;
         }
 
         // write out sample matrix data unless they were already correct

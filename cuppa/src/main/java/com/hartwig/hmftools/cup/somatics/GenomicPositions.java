@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.cup.somatics.AidApobecStatus.TRUE_ONLY;
 import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -67,6 +68,44 @@ public final class GenomicPositions
         samplePosFreqIndex.put(sampleId, 0);
 
         return matrix;
+    }
+
+    public static void excludeChromosome(final Matrix matrix, final PositionFrequencies posFrequencies, final String chromosome)
+    {
+        int chromosomeStartIndex = posFrequencies.getBucketIndex(chromosome, 0);
+
+        String nextChromosome = "";
+        for(int i = 0; i < HumanChromosome.values().length; ++i)
+        {
+            if(HumanChromosome.values()[i].toString().equals(chromosome))
+            {
+                if(i < HumanChromosome.values().length - 1)
+                    nextChromosome = HumanChromosome.values()[i + 1].toString();
+
+                break;
+            }
+        }
+
+        int chromosomeEndIndex;
+
+        if(!nextChromosome.isEmpty())
+        {
+            chromosomeEndIndex = posFrequencies.getBucketIndex(nextChromosome, 0) - 1;
+        }
+        else
+        {
+            chromosomeEndIndex = posFrequencies.getBucketCount() - 1;
+        }
+
+        final double[][] data = matrix.getData();
+
+        for(int b = chromosomeStartIndex; b <= chromosomeEndIndex; ++b)
+        {
+            for(int i = 0; i < matrix.Rows; ++i)
+            {
+                data[i][b] = 0;
+            }
+        }
     }
 
     public static Matrix buildCancerMatrix(

@@ -22,7 +22,6 @@ public class PositionFrequencies
     private final int mBucketSize;
 
     // position mapping
-    private final Map<String,Integer> mChromosomeLengths;
     private final Map<String,Integer> mChromosomePosIndex;
     private int mPositionCacheSize;
     private int mMaxSampleCount;
@@ -42,7 +41,6 @@ public class PositionFrequencies
         mBucketSize = bucketSize;
         mMaxSampleCount = maxSampleCount;
 
-        mChromosomeLengths = chromosomeLengths;
         mChromosomePosIndex = Maps.newHashMap();
 
         mChrPosBucketFrequencies = Maps.newHashMap();

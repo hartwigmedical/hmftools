@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cup.utils;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
@@ -51,6 +53,8 @@ public class CuppaCompare
     private final String mFileNew;
     private final boolean mAllowCancerTypeRemap;
 
+    private final Map<String,ResultCounts> mDataTypeResults;
+
     private final BufferedWriter mWriter;
     
     private static final String FILE_ORIG = "orig_file";
@@ -87,6 +91,8 @@ public class CuppaCompare
             mNewSampleCancerTypes = loadSampleData(cmd.getOptionValue(NEW_SAMPLE_DATA));
             mAllowCancerTypeRemap = cmd.hasOption(ALLOW_CANCER_TYPE_REMAP);
         }
+
+        mDataTypeResults = Maps.newHashMap();
 
         mWriter = initialiseWriter(outputDir, cmd.getOptionValue(OUTPUT_ID), mAllowCancerTypeRemap);
     }
@@ -202,8 +208,15 @@ public class CuppaCompare
             }
         }
 
-        // CUP_LOGGER.info("bothCorrect({}) origCorrect({}) newCorrect({}) neither({}) unmatched(samples={} cancerTypes={})",
-        //        bothCorrect, origOnlyCorrect, newOnlyCorrect, bothIncorrect, unmatchedSamples, missingCancerTypes);
+        for(Map.Entry<String,ResultCounts> entry : mDataTypeResults.entrySet())
+        {
+            String dataType = entry.getKey();
+            ResultCounts resultCounts = entry.getValue();
+
+            CUP_LOGGER.info(format("dataType(%s) bothCorrect(%d) bothIncorrect(%d) orig(correct=%d rate=%.3f) newCorrect(%d rate=%.3f)",
+                    dataType, resultCounts.BothCorrect, resultCounts.BothIncorrect,
+                    resultCounts.OrigCorrect, resultCounts.origRate(), resultCounts.NewCorrect, resultCounts.newRate()));
+        }
 
         closeBufferedWriter(mWriter);
     }
@@ -258,6 +271,26 @@ public class CuppaCompare
         return !mClassifiers.isEmpty() && !mClassifiers.contains(dataType);
     }
 
+    private void addResultCount(final String dataType, final String matchType)
+    {
+        ResultCounts results = mDataTypeResults.get(dataType);
+
+        if(results == null)
+        {
+            results = new ResultCounts();
+            mDataTypeResults.put(dataType, results);
+        }
+
+        if(matchType.equals(MATCH_TYPE_CORRECT))
+            ++results.BothCorrect;
+        if(matchType.equals(MATCH_TYPE_INCORRECT))
+            ++results.BothIncorrect;
+        if(matchType.equals(MATCH_TYPE_ORIG_CORRECT))
+            ++results.OrigCorrect;
+        if(matchType.equals(MATCH_TYPE_NEW_CORRECT))
+            ++results.NewCorrect;
+    }
+
     private void processResults(
             final String sampleId, boolean sampleInBoth, final String origRefCancerType, final String newRefCancerType,
             final SampleResult origResult, final SampleResult newResult)
@@ -279,14 +312,16 @@ public class CuppaCompare
                 boolean isCorrect = topRefResult(result).equals(refCancerType);
                 String matchType = isCorrect ? MATCH_TYPE_CORRECT : MATCH_TYPE_INCORRECT;
 
-                mWriter.write(String.format("%s,%s,%s,%s,%s", sampleId, status, result.DataType, refCancerType, matchType));
+                addResultCount(result.DataType, matchType);
+
+                mWriter.write(format("%s,%s,%s,%s,%s", sampleId, status, result.DataType, refCancerType, matchType));
 
                 if(mAllowCancerTypeRemap)
-                    mWriter.write(String.format(",%s,%s", origRefCancerType, newRefCancerType));
+                    mWriter.write(format(",%s,%s", origRefCancerType, newRefCancerType));
                 else
-                    mWriter.write(String.format(",%s", origRefCancerType));
+                    mWriter.write(format(",%s", origRefCancerType));
 
-                mWriter.write(String.format(",%s,%s",
+                mWriter.write(format(",%s,%s",
                         origResult != null ? resultInfoCsv(origResult, refCancerType) : EMPTY_RESULTS_CSV,
                         newResult != null ? resultInfoCsv(newResult, refCancerType) : EMPTY_RESULTS_CSV));
 
@@ -311,14 +346,16 @@ public class CuppaCompare
                 else
                     matchType = MATCH_TYPE_INCORRECT;
 
-                mWriter.write(String.format("%s,%s,%s,%s", sampleId, STATUS_BOTH, origResult.DataType, matchType));
+                addResultCount(origResult.DataType, matchType);
+
+                mWriter.write(format("%s,%s,%s,%s", sampleId, STATUS_BOTH, origResult.DataType, matchType));
 
                 if(mAllowCancerTypeRemap)
-                    mWriter.write(String.format(",%s,%s", origRefCancerType, newRefCancerType));
+                    mWriter.write(format(",%s,%s", origRefCancerType, newRefCancerType));
                 else
-                    mWriter.write(String.format(",%s", origRefCancerType));
+                    mWriter.write(format(",%s", origRefCancerType));
 
-                mWriter.write(String.format(",%s,%s", resultInfoCsv(origResult, origRefCancerType), resultInfoCsv(newResult, newRefCancerType)));
+                mWriter.write(format(",%s,%s", resultInfoCsv(origResult, origRefCancerType), resultInfoCsv(newResult, newRefCancerType)));
 
                 mWriter.newLine();
             }
@@ -358,6 +395,27 @@ public class CuppaCompare
         }
 
         return sampleCancerTypes;
+    }
+
+    private class ResultCounts
+    {
+        public int BothCorrect;
+        public int BothIncorrect;
+        public int NewCorrect;
+        public int OrigCorrect;
+
+        public ResultCounts()
+        {
+            BothCorrect = 0;
+            BothIncorrect = 0;
+            NewCorrect = 0;
+            OrigCorrect = 0;
+        }
+
+        public int total() { return BothCorrect + BothIncorrect + OrigCorrect + NewCorrect; }
+
+        public double newRate() { return (BothCorrect + NewCorrect) / (double)total(); }
+        public double origRate() { return (BothCorrect + OrigCorrect) / (double)total(); }
     }
 
     public static void main(@NotNull final String[] args) throws ParseException

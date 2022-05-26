@@ -20,6 +20,9 @@ public class CupConstants
     public static final int GEN_POS_COHORT_NOISE_ALLOCATION = 100000;
     // public static final int GEN_POS_PAIRWISE_NOISE_ALLOCATION = 500;
 
+    // traits
+    public static final double BREAST_MALE_GENDER_RATE = 0.1;
+
     // pairwise similarities
     public static final double CSS_SIMILARITY_CUTOFF = 0.01;
     public static final int CSS_SIMILARITY_MAX_MATCHES = 20;
@@ -56,6 +59,7 @@ public class CupConstants
     public static final String CANCER_TYPE_OVARY = "Ovary";
     public static final String CANCER_TYPE_UTERUS = "Uterus";
     public static final String CANCER_TYPE_TESTIS = "Testis";
+    public static final String CANCER_TYPE_BREAST = "Breast";
 
     public static boolean isCandidateCancerType(final Gender gender, final String cancerType)
     {
