@@ -225,7 +225,7 @@ public class OrangeAlgo {
 
         String isofoxSummaryCsv = config.isofoxSummaryCsv();
         String isofoxGeneDataCsv = config.isofoxGeneDataCsv();
-        String isofoxFusionCsv = config.isofoxGeneDataCsv();
+        String isofoxFusionCsv = config.isofoxFusionCsv();
         String isofoxAltSpliceJunctionCsv = config.isofoxAltSpliceJunctionCsv();
 
         if (anyNull(isofoxCancerType,
