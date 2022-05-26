@@ -14,6 +14,7 @@ import com.hartwig.hmftools.orange.report.chapters.FrontPageChapter;
 import com.hartwig.hmftools.orange.report.chapters.GermlineFindingsChapter;
 import com.hartwig.hmftools.orange.report.chapters.ImmunologyChapter;
 import com.hartwig.hmftools.orange.report.chapters.QualityControlChapter;
+import com.hartwig.hmftools.orange.report.chapters.RNAChapter;
 import com.hartwig.hmftools.orange.report.chapters.ReportChapter;
 import com.hartwig.hmftools.orange.report.chapters.SomaticFindingsChapter;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
@@ -53,8 +54,8 @@ public class ReportWriter {
     private void writePdf(@NotNull OrangeReport report) throws IOException {
         ReportChapter[] chapters = new ReportChapter[] { new FrontPageChapter(report, reportConfig.reportGermline()),
                 new SomaticFindingsChapter(report, reportConfig), new GermlineFindingsChapter(report, reportConfig.reportGermline()),
-                new ImmunologyChapter(report), new CohortComparisonChapter(report), new ClinicalEvidenceChapter(report, reportConfig),
-                new QualityControlChapter(report) };
+                new ImmunologyChapter(report), new RNAChapter(report), new CohortComparisonChapter(report),
+                new ClinicalEvidenceChapter(report, reportConfig), new QualityControlChapter(report) };
 
         String platinumVersion = report.platinumVersion() != null ? report.platinumVersion() : ReportResources.NOT_AVAILABLE;
         writePdfChapters(report.sampleId(), platinumVersion, chapters);
