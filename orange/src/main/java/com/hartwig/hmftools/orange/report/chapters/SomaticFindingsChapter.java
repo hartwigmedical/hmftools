@@ -116,11 +116,11 @@ public class SomaticFindingsChapter implements ReportChapter {
 
     private void addFusions(@NotNull Document document) {
         String titleDrivers = "Driver fusions (" + report.linx().reportableFusions().size() + ")";
-        document.add(FusionTable.build(titleDrivers, contentWidth(), report.linx().reportableFusions()));
+        document.add(FusionTable.build(titleDrivers, contentWidth(), report.linx().reportableFusions(), report.isofox()));
 
         List<LinxFusion> nonDriverFusions = FusionSelector.selectNonDriverFusions(report.linx().unreportedFusions(), report.protect());
         String titleNonDrivers = "Other potentially interesting fusions (" + nonDriverFusions.size() + ")";
-        document.add(FusionTable.build(titleNonDrivers, contentWidth(), max10(nonDriverFusions)));
+        document.add(FusionTable.build(titleNonDrivers, contentWidth(), max10(nonDriverFusions), report.isofox()));
     }
 
     private void addViralPresence(@NotNull Document document) {

@@ -39,9 +39,8 @@ public final class GeneCopyNumberTable {
         Table table = Tables.createContent(width,
                 new float[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
                 new Cell[] { Cells.createHeader("Chr"), Cells.createHeader("Region"), Cells.createHeader("Gene"),
-                        Cells.createHeader("Type"), Cells.createHeader("CN"), Cells.createHeader("TPM"),
-                        Cells.createHeader("Cohort Perc"), Cells.createHeader("Cohort FC"), Cells.createHeader("Cancer Perc"),
-                        Cells.createHeader("Cancer FC") });
+                        Cells.createHeader("Type"), Cells.createHeader("CN"), Cells.createHeader("TPM"), Cells.createHeader("Perc (Type))"),
+                        Cells.createHeader("FC (Type)"), Cells.createHeader("Perc (DB)"), Cells.createHeader("FC (DB)") });
 
         for (ReportableGainLoss gainLoss : sort(gainLosses)) {
             table.addCell(Cells.createContent(gainLoss.chromosome()));
@@ -51,12 +50,12 @@ public final class GeneCopyNumberTable {
             table.addCell(Cells.createContent(String.valueOf(gainLoss.minCopies())));
 
             GeneExpression expression = findExpressionForGene(isofox, gainLoss.gene());
-            if (expression != null){
+            if (expression != null) {
                 table.addCell(Cells.createContent(SINGLE_DIGIT.format(expression.tpm())));
-                table.addCell(Cells.createContent(PERCENTAGE.format(expression.percentileCohort() * 100)));
-                table.addCell(Cells.createContent(formatFoldChange(expression.tpm() / expression.medianTpmCohort())));
                 table.addCell(Cells.createContent(PERCENTAGE.format(expression.percentileCancer() * 100)));
                 table.addCell(Cells.createContent(formatFoldChange(expression.tpm() / expression.medianTpmCancer())));
+                table.addCell(Cells.createContent(PERCENTAGE.format(expression.percentileCohort() * 100)));
+                table.addCell(Cells.createContent(formatFoldChange(expression.tpm() / expression.medianTpmCohort())));
             } else {
                 table.addCell(Cells.createContent(Strings.EMPTY));
                 table.addCell(Cells.createContent(Strings.EMPTY));

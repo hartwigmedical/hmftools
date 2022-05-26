@@ -4,6 +4,8 @@ import java.text.DecimalFormat;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.isofox.IsofoxData;
+import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.sv.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.orange.report.ReportResources;
@@ -14,6 +16,7 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class FusionTable {
 
@@ -23,7 +26,7 @@ public final class FusionTable {
     }
 
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<LinxFusion> fusions) {
+    public static Table build(@NotNull String title, float width, @NotNull List<LinxFusion> fusions, @Nullable IsofoxData isofox) {
         if (fusions.isEmpty()) {
             return Tables.createEmpty(title, width);
         }
@@ -42,8 +45,8 @@ public final class FusionTable {
             details.addCell(Cells.createValue(threeStartString(fusion)));
             details.addCell(Cells.createKey("Junction CN"));
             details.addCell(Cells.createValue(SINGLE_DIGIT.format(fusion.junctionCopyNumber())));
-            details.addCell(Cells.createKey("RNA expression"));
-            details.addCell(Cells.createValue(ReportResources.NOT_AVAILABLE));
+            details.addCell(Cells.createKey("RNA fragment support"));
+            details.addCell(Cells.createValue(rnaFragmentSupport(isofox, fusion)));
             details.addCell(Cells.createKey("Phasing"));
             details.addCell(Cells.createValue(fusion.phased().displayStr()));
             details.addCell(Cells.createKey("Reported type (DL)"));
@@ -69,6 +72,21 @@ public final class FusionTable {
     @NotNull
     private static String threeStartString(@NotNull LinxFusion fusion) {
         return fusion.geneEnd() + " " + fusion.geneContextEnd() + " (" + fusion.geneTranscriptEnd() + ")";
+    }
+
+    @NotNull
+    private static String rnaFragmentSupport(@Nullable IsofoxData isofox, @NotNull LinxFusion fusion) {
+        if (isofox == null) {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
+        for (RnaFusion rnaFusion : isofox.fusions()) {
+            if (rnaFusion.name().equals(fusion.name())) {
+                return String.valueOf(rnaFusion.discordantFrags() + rnaFusion.realignedFrags() + rnaFusion.splitFragments());
+            }
+        }
+
+        return "0";
     }
 
     @NotNull

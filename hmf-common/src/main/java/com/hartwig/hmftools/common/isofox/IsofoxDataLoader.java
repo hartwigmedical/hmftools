@@ -26,7 +26,7 @@ public final class IsofoxDataLoader {
     public static IsofoxData load(@NotNull String isofoxCancerType, @NotNull String isofoxGeneDistributionCsv,
             @NotNull String isofoxAltSjCohortCsv, @NotNull String isofoxSummaryCsv, @NotNull String isofoxGeneDataCsv,
             @NotNull String isofoxFusionCsv, @NotNull String isofoxAltSpliceJunctionCsv) throws IOException {
-        LOGGER.info("Loading ISOFOX data from {}", new File(isofoxSummaryCsv).getParent());
+        LOGGER.info("Loading ISOFOX data from {} using cancer type '{}'", new File(isofoxSummaryCsv).getParent(), isofoxCancerType);
 
         List<String> summaryLines = Files.readAllLines(Paths.get(isofoxSummaryCsv));
         RnaStatistics summary = RnaStatistics.fromCsv(summaryLines.get(1));
