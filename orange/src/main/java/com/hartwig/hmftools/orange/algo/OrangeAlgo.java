@@ -21,6 +21,7 @@ import com.hartwig.hmftools.common.cuppa.CuppaData;
 import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
 import com.hartwig.hmftools.common.cuppa.CuppaEntry;
 import com.hartwig.hmftools.common.cuppa.CuppaFactory;
+import com.hartwig.hmftools.common.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.common.doid.DoidNode;
@@ -265,9 +266,9 @@ public class OrangeAlgo {
         LOGGER.info(" Loaded {} entries from {}", cuppaEntries.size(), config.cuppaResultCsv());
 
         CuppaData cuppaData = CuppaFactory.create(cuppaEntries);
-        LOGGER.info(" Predicted cancer type '{}' with likelihood {}",
-                cuppaData.predictedCancerType(),
-                cuppaData.bestPredictionLikelihood());
+        CuppaPrediction best = cuppaData.predictions().get(0);
+        LOGGER.info(" Predicted cancer type '{}' with likelihood {}", best.cancerType(), best.likelihood());
+
         return cuppaData;
     }
 

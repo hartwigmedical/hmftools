@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.cuppa;
 
+import java.util.List;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -9,9 +11,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class CuppaData {
 
     @NotNull
-    public abstract String predictedCancerType();
-
-    public abstract double bestPredictionLikelihood();
+    public abstract List<CuppaPrediction> predictions();
 
     public abstract int simpleDups32To200B();
 
