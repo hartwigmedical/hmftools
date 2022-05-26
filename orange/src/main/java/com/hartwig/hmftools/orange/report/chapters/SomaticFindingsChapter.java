@@ -102,16 +102,16 @@ public class SomaticFindingsChapter implements ReportChapter {
 
     private void addSomaticAmpDels(@NotNull Document document) {
         String titleDrivers = "Driver amps/dels (" + report.purple().reportableGainsLosses().size() + ")";
-        document.add(GeneCopyNumberTable.build(titleDrivers, contentWidth(), report.purple().reportableGainsLosses()));
+        document.add(GeneCopyNumberTable.build(titleDrivers, contentWidth(), report.purple().reportableGainsLosses(), report.isofox()));
 
         List<ReportableGainLoss> gains = CopyNumberSelector.selectNonDriverGains(report.purple().unreportedGainsLosses());
         String titleGains = "Other regions with amps (" + gains.size() + ")";
-        document.add(GeneCopyNumberTable.build(titleGains, contentWidth(), max10(gains)));
+        document.add(GeneCopyNumberTable.build(titleGains, contentWidth(), max10(gains), report.isofox()));
 
         List<ReportableGainLoss> losses =
                 CopyNumberSelector.selectNonDriverLosses(report.purple().unreportedGainsLosses(), report.purple().reportableGainsLosses());
         String titleLosses = "Regions with deletions in genes in other autosomal regions (" + losses.size() + ")";
-        document.add(GeneCopyNumberTable.build(titleLosses, contentWidth(), max10(losses)));
+        document.add(GeneCopyNumberTable.build(titleLosses, contentWidth(), max10(losses), report.isofox()));
     }
 
     private void addFusions(@NotNull Document document) {

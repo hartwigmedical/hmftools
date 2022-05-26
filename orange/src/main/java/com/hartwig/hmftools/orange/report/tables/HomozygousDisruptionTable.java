@@ -39,8 +39,8 @@ public final class HomozygousDisruptionTable {
     @NotNull
     private static List<ReportableHomozygousDisruption> sort(@NotNull List<ReportableHomozygousDisruption> homozygousDisruptions) {
         return homozygousDisruptions.stream().sorted((disruption1, disruption2) -> {
-            String location1 = ChromosomeUtil.zeroPrefixed(disruption1.chromosome() + disruption1.chromosomeBand());
-            String location2 = ChromosomeUtil.zeroPrefixed(disruption2.chromosome() + disruption2.chromosomeBand());
+            String location1 = Chromosomes.zeroPrefixed(disruption1.chromosome() + disruption1.chromosomeBand());
+            String location2 = Chromosomes.zeroPrefixed(disruption2.chromosome() + disruption2.chromosomeBand());
 
             if (location1.equals(location2)) {
                 return disruption1.gene().compareTo(disruption2.gene());

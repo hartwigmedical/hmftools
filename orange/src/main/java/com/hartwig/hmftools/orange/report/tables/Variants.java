@@ -12,13 +12,11 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-final class VariantUtil {
+final class Variants {
 
-    private static final String UPSTREAM_GENE_VARIANT = "upstream_gene_variant";
+    private static final Logger LOGGER = LogManager.getLogger(Variants.class);
 
-    private static final Logger LOGGER = LogManager.getLogger(VariantUtil.class);
-
-    private VariantUtil() {
+    private Variants() {
     }
 
     @NotNull
