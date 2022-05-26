@@ -161,7 +161,8 @@ public class FeatureClassifier implements CuppaClassifier
             final String featureName = maxLikelihood == 1 ?
                     String.format("%s (1)", feature.Name) : String.format("%s (%.2f)", feature.Name, maxLikelihood);
 
-            SampleResult result = new SampleResult(sample.Id, FEATURE, PREVALENCE, feature.Type.toString(), featureName, cancerTypeValues);
+            SampleResult result = new SampleResult(
+                    sample.Id, FEATURE, PREVALENCE, feature.Type.toString(), featureName, cancerTypeValues);
             results.add(result);
         }
     }

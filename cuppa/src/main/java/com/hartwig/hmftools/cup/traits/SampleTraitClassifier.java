@@ -2,8 +2,6 @@ package com.hartwig.hmftools.cup.traits;
 
 import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
-import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.CupConstants.UNDEFINED_PERC_MAX_MULTIPLE;
@@ -11,8 +9,6 @@ import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.common.ResultType.PREVALENCE;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
-import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC;
-import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC_DESC;
 import static com.hartwig.hmftools.cup.traits.SampleTraitType.GENDER;
 import static com.hartwig.hmftools.cup.traits.SampleTraitType.MS_INDELS_TMB;
 import static com.hartwig.hmftools.cup.traits.SampleTraitType.PLOIDY;
@@ -38,6 +34,7 @@ import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.ClassifierType;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
+import com.hartwig.hmftools.cup.common.ResultType;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
@@ -216,7 +213,7 @@ public class SampleTraitClassifier implements CuppaClassifier
         }
 
         SampleResult result = new SampleResult(
-                sample.Id, CLASSIFIER, LIKELIHOOD, ClassifierType.GENDER.toString(), sampleTraits.GenderType.toString(), cancerProbs);
+                sample.Id, SAMPLE_TRAIT, ResultType.CLASSIFIER, ClassifierType.GENDER.toString(), sampleTraits.GenderType.toString(), cancerProbs);
 
         results.add(result);
     }

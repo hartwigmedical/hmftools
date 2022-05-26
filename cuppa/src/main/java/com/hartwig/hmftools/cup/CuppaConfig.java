@@ -26,7 +26,6 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_RATES;
 import static com.hartwig.hmftools.cup.common.CategoryType.ALL_CATEGORIES;
 import static com.hartwig.hmftools.cup.common.CategoryType.ALT_SJ;
-import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.COMBINED;
 import static com.hartwig.hmftools.cup.common.CategoryType.DNA_CATEGORIES;
 import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
@@ -113,6 +112,7 @@ public class CuppaConfig
 
     public final boolean WriteSimilarities;
     public final boolean WriteDetailedScores;
+    public final boolean WriteCondensed;
 
     public final String OutputDir;
     public final String OutputFileId;
@@ -160,6 +160,7 @@ public class CuppaConfig
 
     public static final String WRITE_SIMS = "write_similarities";
     public static final String WRITE_DETAILED_SCORES = "write_detailed_scores";
+    public static final String WRITE_CONDENSED = "write_condensed";
 
     public static final String OUTPUT_FILE_ID = "output_id";
     public static final String LOG_DEBUG = "log_debug";
@@ -170,6 +171,7 @@ public class CuppaConfig
     // file fields
     public static final String FLD_SAMPLE_ID = "SampleId";
     public static final String FLD_CANCER_TYPE = "CancerType";
+    public static final String FLD_CANCER_SUBTYPE = "CancerSubtype";
     public static final String FLD_RNA_READ_LENGTH = "RnaReadLength";
     public static final String CANCER_SUBTYPE_OTHER = "Other";
     public static final String DATA_DELIM = ",";
@@ -235,6 +237,7 @@ public class CuppaConfig
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "1"));
 
         WriteSimilarities = cmd.hasOption(WRITE_SIMS);
+        WriteCondensed = cmd.hasOption(WRITE_CONDENSED);
         WriteDetailedScores = cmd.hasOption(WRITE_DETAILED_SCORES);
 
         DbAccess = createDatabaseAccess(cmd);
@@ -313,7 +316,7 @@ public class CuppaConfig
         {
             if(cmd.getOptionValue(CATEGORIES).equals(ALL_CATEGORIES))
             {
-                Arrays.stream(CategoryType.values()).filter(x -> x != CLASSIFIER && x != COMBINED).forEach(x -> categories.add(x));
+                Arrays.stream(CategoryType.values()).filter(x -> x != COMBINED).forEach(x -> categories.add(x));
             }
             else if(cmd.getOptionValue(CATEGORIES).equals(DNA_CATEGORIES))
             {
@@ -383,6 +386,7 @@ public class CuppaConfig
 
         options.addOption(WRITE_SIMS, false, "Write top-20 CSS similarities to file");
         options.addOption(WRITE_DETAILED_SCORES, false, "Cohort-only - write detailed (non-classifier) data");
+        options.addOption(WRITE_CONDENSED, false, "Write sample results as single line");
 
         addDatabaseCmdLineArgs(options);
         GeneExpressionClassifier.addCmdLineArgs(options);
@@ -440,6 +444,7 @@ public class CuppaConfig
         DbAccess = null;
         WriteSimilarities = false;
         WriteDetailedScores = false;
+        WriteCondensed = false;
         OutputDir = "";
         OutputFileId = "";
         Threads = 0;

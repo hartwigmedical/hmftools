@@ -16,6 +16,8 @@ import static com.hartwig.hmftools.cup.CuppaConfig.FLD_CANCER_TYPE;
 import static com.hartwig.hmftools.cup.CuppaConfig.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.SUBSET_DELIM;
+import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_BREAST;
+import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_BREAST_TRIPLE_NEGATIVE;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.cup.utils.CompareUtils.EMPTY_RESULTS_CSV;
 import static com.hartwig.hmftools.cup.utils.CompareUtils.resultInfoCsv;
@@ -291,6 +293,12 @@ public class CuppaCompare
             ++results.NewCorrect;
     }
 
+    private static boolean isCorrectSubtype(final String cancerType1, final String cancerType2)
+    {
+        return (cancerType1.equals(CANCER_TYPE_BREAST_TRIPLE_NEGATIVE) && cancerType2.equals(CANCER_TYPE_BREAST))
+                || (cancerType1.equals(CANCER_TYPE_BREAST) && cancerType2.equals(CANCER_TYPE_BREAST_TRIPLE_NEGATIVE));
+    }
+
     private void processResults(
             final String sampleId, boolean sampleInBoth, final String origRefCancerType, final String newRefCancerType,
             final SampleResult origResult, final SampleResult newResult)
@@ -309,7 +317,7 @@ public class CuppaCompare
                         (origResult != null ? STATUS_ORIG_DATATYPE : STATUS_NEW_DATATYPE) :
                         (origResult != null ? STATUS_ORIG_SAMPLE : STATUS_NEW_SAMPLE);
 
-                boolean isCorrect = topRefResult(result).equals(refCancerType);
+                boolean isCorrect = topRefResult(result).equals(refCancerType) || isCorrectSubtype(topRefResult(result), refCancerType);
                 String matchType = isCorrect ? MATCH_TYPE_CORRECT : MATCH_TYPE_INCORRECT;
 
                 addResultCount(result.DataType, matchType);
@@ -332,8 +340,10 @@ public class CuppaCompare
                 if(skipClassifier(origResult.DataType))
                     return;
 
-                boolean origCorrect = topRefResult(origResult).equals(origRefCancerType);
-                boolean newCorrect = topRefResult(newResult).equals(newRefCancerType);
+                String topOrigType = topRefResult(origResult);
+                String topNewType = topRefResult(newResult);
+                boolean origCorrect = topOrigType.equals(origRefCancerType) || isCorrectSubtype(topOrigType, origRefCancerType);
+                boolean newCorrect = topNewType.equals(newRefCancerType) || isCorrectSubtype(topNewType, newRefCancerType);
 
                 String matchType;
 

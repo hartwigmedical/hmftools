@@ -31,6 +31,8 @@ public class SampleDataCache
     public final Map<String,Integer> RefSampleRnaReadLength;
     public final Map<String,SampleTraitsData> RefSampleTraitsData;
 
+    public final Map<String,String> RefCancerMappings; // subtypes to parent types
+
     private boolean mIsValid;
 
     public SampleDataCache()
@@ -43,6 +45,7 @@ public class SampleDataCache
         RefSampleDataList = Lists.newArrayList();
         RefSampleRnaReadLength = Maps.newHashMap();
         RefSampleTraitsData = Maps.newHashMap();
+        RefCancerMappings = Maps.newHashMap();
 
         SpecificSample = null;
         mIsValid = true;
@@ -102,6 +105,11 @@ public class SampleDataCache
                 RefCancerSampleData.put(sample.cancerType(), Lists.newArrayList(sample));
             else
                 cancerSampleData.add(sample);
+
+            if(!sample.cancerType().equals(sample.cancerMainType()))
+            {
+                RefCancerMappings.put(sample.cancerType(), sample.cancerMainType());
+            }
         }
 
         RefSampleCancerTypeMap.put(sample.Id, sample.cancerType());

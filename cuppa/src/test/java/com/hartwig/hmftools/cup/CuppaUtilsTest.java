@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.cup;
 
 import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
-import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.common.CupCalcs.adjustRefCounts;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcCombinedFeatureResult;
@@ -140,7 +139,7 @@ public class CuppaUtilsTest
 
         SampleResult combResult = calcCombinedFeatureResult(sample, results, false);
 
-        assertEquals(CLASSIFIER, combResult.Category);
+        assertEquals(FEATURE, combResult.Category);
         assertEquals(0.63, combResult.CancerTypeValues.get(TEST_CT_001), 0.01);
         assertEquals(0.36, combResult.CancerTypeValues.get(TEST_CT_002), 0.01);
     }

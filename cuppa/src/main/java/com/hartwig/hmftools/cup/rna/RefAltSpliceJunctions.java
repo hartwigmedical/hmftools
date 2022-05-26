@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_ALT_SJ_CANCER;
 import static com.hartwig.hmftools.cup.common.CategoryType.ALT_SJ;
 import static com.hartwig.hmftools.cup.common.ClassifierType.ALT_SJ_COHORT;
-import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_SIMILARITY;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

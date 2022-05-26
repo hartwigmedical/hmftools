@@ -20,13 +20,13 @@ import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsInde
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.common.CategoryType.ALT_SJ;
-import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.ClassifierType.ALT_SJ_COHORT;
 import static com.hartwig.hmftools.cup.common.ClassifierType.ALT_SJ_PAIRWISE;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_MAX_MATCHES;
 import static com.hartwig.hmftools.cup.common.CupConstants.ALT_SJ_DIFF_EXPONENT;
 import static com.hartwig.hmftools.cup.common.CupConstants.GENE_EXP_CSS_THRESHOLD;
+import static com.hartwig.hmftools.cup.common.ResultType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.SampleData.RNA_READ_LENGTH_NONE;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
@@ -325,7 +325,7 @@ public class AltSjClassifier implements CuppaClassifier
         }
 
         results.add(new SampleResult(
-                sample.Id, CLASSIFIER, LIKELIHOOD, ALT_SJ_COHORT.toString(), String.format("%.4g", totalCss), cancerCssTotals));
+                sample.Id, ALT_SJ, CLASSIFIER, ALT_SJ_COHORT.toString(), String.format("%.4g", totalCss), cancerCssTotals));
     }
 
     private void addSampleCssResults(
@@ -398,7 +398,7 @@ public class AltSjClassifier implements CuppaClassifier
         }
 
         results.add(new SampleResult(
-                sample.Id, CLASSIFIER, LIKELIHOOD, ALT_SJ_PAIRWISE.toString(), String.format("%.4g", totalCss), cancerCssTotals));
+                sample.Id, ALT_SJ, CLASSIFIER, ALT_SJ_PAIRWISE.toString(), String.format("%.4g", totalCss), cancerCssTotals));
 
         similarities.addAll(topMatches);
     }

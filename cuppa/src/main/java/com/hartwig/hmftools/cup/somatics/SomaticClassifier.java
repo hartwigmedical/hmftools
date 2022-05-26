@@ -13,16 +13,16 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
-import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
-import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_SIMILARITY;
-import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE_SIMILARITY;
+import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_COHORT;
+import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE;
 import static com.hartwig.hmftools.cup.common.CupCalcs.adjustRefCounts;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.CupCalcs.convertToPercentages;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_MAX_MATCHES;
+import static com.hartwig.hmftools.cup.common.CupConstants.DATA_TYPE_SNV_COUNT;
 import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_BUCKET_SIZE;
 import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_MAX_SAMPLE_COUNT;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_96_CSS_DIFF_EXPONENT;
@@ -30,6 +30,7 @@ import static com.hartwig.hmftools.cup.common.CupConstants.SNV_96_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_DIFF_EXPONENT;
 import static com.hartwig.hmftools.cup.common.CupConstants.UNDEFINED_PERC_MAX_MULTIPLE;
+import static com.hartwig.hmftools.cup.common.ResultType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
@@ -56,9 +57,7 @@ import java.util.Map;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
-import com.hartwig.hmftools.common.sigs.SnvSigUtils;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.cup.common.CategoryType;
@@ -68,7 +67,6 @@ import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 import com.hartwig.hmftools.cup.common.SampleSimilarity;
-import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Sample;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -214,10 +212,10 @@ public class SomaticClassifier implements CuppaClassifier
             }
 
             // apply any specified noise
-            if(mConfig.NoiseAdjustments.makeNoiseAdjustment(SNV_96_PAIRWISE_SIMILARITY))
+            if(mConfig.NoiseAdjustments.makeNoiseAdjustment(SNV_96_PAIRWISE))
             {
-                final double[] noiseAdjustments = mConfig.NoiseAdjustments.getNoiseData(SNV_96_PAIRWISE_SIMILARITY);
-                int noiseAllocation = mConfig.NoiseAdjustments.getNoiseAllocation(SNV_96_PAIRWISE_SIMILARITY);
+                final double[] noiseAdjustments = mConfig.NoiseAdjustments.getNoiseData(SNV_96_PAIRWISE);
+                int noiseAllocation = mConfig.NoiseAdjustments.getNoiseAllocation(SNV_96_PAIRWISE);
 
                 CUP_LOGGER.info("applying noise({}) to SNV-96 counts", noiseAllocation);
 
@@ -227,10 +225,10 @@ public class SomaticClassifier implements CuppaClassifier
                     NoiseRefCache.applyNoise(mSampleSnv96Counts, noiseAdjustments, noiseAllocation);
             }
 
-            if(mRunPairwiseGenPos && mConfig.NoiseAdjustments.makeNoiseAdjustment(GENOMIC_POSITION_SIMILARITY))
+            if(mRunPairwiseGenPos && mConfig.NoiseAdjustments.makeNoiseAdjustment(GENOMIC_POSITION_COHORT))
             {
-                final double[] noiseAdjustments = mConfig.NoiseAdjustments.getNoiseData(GENOMIC_POSITION_SIMILARITY);
-                int noiseAllocation = mConfig.NoiseAdjustments.getNoiseAllocation(GENOMIC_POSITION_SIMILARITY);
+                final double[] noiseAdjustments = mConfig.NoiseAdjustments.getNoiseData(GENOMIC_POSITION_COHORT);
+                int noiseAllocation = mConfig.NoiseAdjustments.getNoiseAllocation(GENOMIC_POSITION_COHORT);
 
                 CUP_LOGGER.debug("applying noise({}) to genomic position sample counts", noiseAllocation);
 
@@ -376,7 +374,7 @@ public class SomaticClassifier implements CuppaClassifier
         }
 
         SampleResult result = new SampleResult(
-                sample.Id, SAMPLE_TRAIT, PERCENTILE, "SNV_COUNT", String.valueOf(snvTotal), cancerTypeValues);
+                sample.Id, SAMPLE_TRAIT, PERCENTILE, DATA_TYPE_SNV_COUNT, String.valueOf(snvTotal), cancerTypeValues);
 
         results.add(result);
 
@@ -386,12 +384,12 @@ public class SomaticClassifier implements CuppaClassifier
         final Map<String,Double> cancerPrevsLow = calcPercentilePrevalence(
                 sample, cancerSampleCount, cancerTypeCount, mRefCancerSnvCountPercentiles, snvTotal,  true);
 
-        results.add(new SampleResult(sample.Id, SNV, LIKELIHOOD, "SNV_COUNT_LOW", String.valueOf(snvTotal), cancerPrevsLow));
+        results.add(new SampleResult(sample.Id, SNV, LIKELIHOOD, DATA_TYPE_SNV_COUNT + "_LOW", String.valueOf(snvTotal), cancerPrevsLow));
 
         final Map<String,Double> cancerPrevsHigh = calcPercentilePrevalence(
                 sample, cancerSampleCount, cancerTypeCount, mRefCancerSnvCountPercentiles, snvTotal, false);
 
-        results.add(new SampleResult(sample.Id, SNV, LIKELIHOOD, "SNV_COUNT_HIGH", String.valueOf(snvTotal), cancerPrevsHigh));
+        results.add(new SampleResult(sample.Id, SNV, LIKELIHOOD, DATA_TYPE_SNV_COUNT + "_HIGH", String.valueOf(snvTotal), cancerPrevsHigh));
     }
 
     private void addSnv96CssResults(
@@ -441,7 +439,7 @@ public class SomaticClassifier implements CuppaClassifier
                 if(mWriteSnvSims && mConfig.WriteSimilarities)
                 {
                     recordCssSimilarity(
-                            topMatches, sample.Id, refSample.Id, css, SNV_96_PAIRWISE_SIMILARITY.toString(),
+                            topMatches, sample.Id, refSample.Id, css, SNV_96_PAIRWISE.toString(),
                             CSS_SIMILARITY_MAX_MATCHES, CSS_SIMILARITY_CUTOFF);
                 }
 
@@ -470,7 +468,7 @@ public class SomaticClassifier implements CuppaClassifier
             applyMaxCssAdjustment(maxCssScore, cancerCssTotals, mMaxCssAdjustFactorSnv);
 
         results.add(new SampleResult(
-                sample.Id, CLASSIFIER, LIKELIHOOD, SNV_96_PAIRWISE_SIMILARITY.toString(), String.format("%.4g", totalCss), cancerCssTotals));
+                sample.Id, SNV, CLASSIFIER, SNV_96_PAIRWISE.toString(), String.format("%.4g", totalCss), cancerCssTotals));
 
         // for non-ref cohorts, also report closest matches from amongst these
         if(mWriteSnvSims && mConfig.WriteSimilarities && mSampleDataCache.isMultiSampleNonRef())
@@ -489,7 +487,7 @@ public class SomaticClassifier implements CuppaClassifier
                 if(mConfig.WriteSimilarities)
                 {
                     recordCssSimilarity(
-                            topMatches, sample.Id, nonRefSampleId, css, SNV_96_PAIRWISE_SIMILARITY.toString(),
+                            topMatches, sample.Id, nonRefSampleId, css, SNV_96_PAIRWISE.toString(),
                             CSS_SIMILARITY_MAX_MATCHES, CSS_SIMILARITY_CUTOFF);
                 }
             }
@@ -578,7 +576,7 @@ public class SomaticClassifier implements CuppaClassifier
             applyMaxCssAdjustment(maxCssScore, cancerCssTotals, mMaxCssAdjustFactorGenPos);
 
         results.add(new SampleResult(
-                sample.Id, CLASSIFIER, LIKELIHOOD, GENOMIC_POSITION_SIMILARITY.toString(), String.format("%.4g", totalCss), cancerCssTotals));
+                sample.Id, SNV, CLASSIFIER, GENOMIC_POSITION_COHORT.toString(), String.format("%.4g", totalCss), cancerCssTotals));
     }
 
 
@@ -620,7 +618,7 @@ public class SomaticClassifier implements CuppaClassifier
                 if(mWriteGenPosSims && mConfig.WriteSimilarities)
                 {
                     recordCssSimilarity(
-                            topMatches, sample.Id, refSample.Id, css, GENOMIC_POSITION_SIMILARITY.toString(),
+                            topMatches, sample.Id, refSample.Id, css, GENOMIC_POSITION_COHORT.toString(),
                             20, CSS_SIMILARITY_CUTOFF);
 
                     /* record scores for all matching cancer-type samples
@@ -658,7 +656,7 @@ public class SomaticClassifier implements CuppaClassifier
             applyMaxCssAdjustment(maxCssScore, cancerCssTotals, mMaxCssAdjustFactorSnv);
 
         results.add(new SampleResult(
-                sample.Id, CLASSIFIER, LIKELIHOOD, GENOMIC_POSITION_SIMILARITY.toString(), String.format("%.4g", totalCss), cancerCssTotals));
+                sample.Id, SNV, CLASSIFIER, GENOMIC_POSITION_COHORT.toString(), String.format("%.4g", totalCss), cancerCssTotals));
 
         similarities.addAll(topMatches);
     }

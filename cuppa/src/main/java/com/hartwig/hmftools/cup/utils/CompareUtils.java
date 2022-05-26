@@ -2,9 +2,11 @@ package com.hartwig.hmftools.cup.utils;
 
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 
+import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.cup.common.SampleResult;
 
 public final class CompareUtils
@@ -42,6 +44,32 @@ public final class CompareUtils
 
         return topCancerType;
     }
+
+    public static List<String> getRankedCancerTypes(final SampleResult result)
+    {
+        List<String> cancerTypes = Lists.newArrayList();
+        List<Double> scores = Lists.newArrayList();
+
+        for(Map.Entry<String,Double> entry : result.CancerTypeValues.entrySet())
+        {
+            int index = 0;
+            double score = entry.getValue();
+
+            while(index < scores.size())
+            {
+                if(score > scores.get(index))
+                    break;
+
+                ++index;
+            }
+
+            scores.add(index, score);
+            cancerTypes.add(index, entry.getKey());
+        }
+
+        return cancerTypes;
+    }
+
 
     public static final String EMPTY_RESULTS_CSV = DATA_DELIM + DATA_DELIM;
 

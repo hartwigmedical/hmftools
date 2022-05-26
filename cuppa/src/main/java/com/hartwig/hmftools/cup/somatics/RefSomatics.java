@@ -18,8 +18,8 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SIG_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SNV_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
-import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_SIMILARITY;
-import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE_SIMILARITY;
+import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_COHORT;
+import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_BUCKET_SIZE;
 import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_MAX_SAMPLE_COUNT;
@@ -169,6 +169,10 @@ public class RefSomatics implements RefClassifier
             mWriteGenPosMatrixData = true;
         }
 
+        // always exclude Y, if not already when the counts were made
+        String chrY = mPosFrequencies.isValidChromosome("Y") ? "Y" : "chrY";
+        excludeChromosome(mGenPosCounts, mPosFrequencies, chrY);
+
         // write out sample matrix data unless they were already correct
         if(mWriteSnv96MatrixData)
         {
@@ -176,7 +180,7 @@ public class RefSomatics implements RefClassifier
         }
 
         final double[] triNucMedians = NoiseRefCache.generateMedianValues(mSnv96Counts);
-        mConfig.NoiseAdjustments.addNoiseData(SNV_96_PAIRWISE_SIMILARITY, triNucMedians);
+        mConfig.NoiseAdjustments.addNoiseData(SNV_96_PAIRWISE, triNucMedians);
 
         if(mWriteGenPosMatrixData)
             writeSampleMatrix(mGenPosCounts, mGenPosCountsIndex, mConfig.OutputDir + REF_FILE_SAMPLE_POS_FREQ_COUNTS, INTEGER_FORMAT);
@@ -192,9 +196,9 @@ public class RefSomatics implements RefClassifier
 
         final double[] genPosCohortMedians = NoiseRefCache.generateMedianValues(cancerGenPosMatrix);
 
-        if(mConfig.NoiseAdjustments.hasNoiseAllocation(GENOMIC_POSITION_SIMILARITY))
+        if(mConfig.NoiseAdjustments.hasNoiseAllocation(GENOMIC_POSITION_COHORT))
         {
-            int noiseAllocation = mConfig.NoiseAdjustments.getNoiseAllocation(GENOMIC_POSITION_SIMILARITY);
+            int noiseAllocation = mConfig.NoiseAdjustments.getNoiseAllocation(GENOMIC_POSITION_COHORT);
             CUP_LOGGER.debug("applying noise({}) to genomic position cohort counts", noiseAllocation);
 
             NoiseRefCache.applyNoise(cancerGenPosMatrix, genPosCohortMedians, noiseAllocation);
@@ -493,30 +497,6 @@ public class RefSomatics implements RefClassifier
 
                 writer.newLine();
             }
-
-            /*
-            // for each row, write out the counts for all samples
-
-            for(int b = 0; b < matrix.Rows; ++b)
-            {
-                writer.write(String.format(decFormat, matrixData[b][sampleCountsIndex.get(sampleIds.get(0))]));
-
-                for(int i = 1; i < sampleIds.size(); ++i)
-                {
-                    int sampleIndex = sampleCountsIndex.get(sampleIds.get(i));
-
-                    if(sampleIndex >= matrix.Cols)
-                    {
-                        CUP_LOGGER.error("file({}) invalid col({}) sampleId({})", filename, i, sampleIds.get(i));
-                        return;
-                    }
-
-                    writer.write(String.format("," + decFormat, matrixData[b][sampleIndex]));
-                }
-
-                writer.newLine();
-            }
-            */
 
             writer.close();
         }

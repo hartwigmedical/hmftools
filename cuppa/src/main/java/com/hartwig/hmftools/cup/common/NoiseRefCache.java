@@ -8,8 +8,8 @@ import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaConfig.SUBSET_DELIM;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_NOISE_MEDIANS;
 import static com.hartwig.hmftools.cup.common.ClassifierType.ALT_SJ_COHORT;
-import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_SIMILARITY;
-import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE_SIMILARITY;
+import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_COHORT;
+import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -77,8 +77,8 @@ public class NoiseRefCache
         if(config.equals(NOISE_ALLOC_DEFAULTS))
         {
             mClassifierNoiseAllocations.put(ALT_SJ_COHORT, CupConstants.ALT_SJ_NOISE_ALLOCATION);
-            mClassifierNoiseAllocations.put(SNV_96_PAIRWISE_SIMILARITY, CupConstants.SNV_96_NOISE_ALLOCATION);
-            mClassifierNoiseAllocations.put(GENOMIC_POSITION_SIMILARITY, CupConstants.GEN_POS_COHORT_NOISE_ALLOCATION);
+            mClassifierNoiseAllocations.put(SNV_96_PAIRWISE, CupConstants.SNV_96_NOISE_ALLOCATION);
+            mClassifierNoiseAllocations.put(GENOMIC_POSITION_COHORT, CupConstants.GEN_POS_COHORT_NOISE_ALLOCATION);
             return;
         }
 
@@ -101,7 +101,7 @@ public class NoiseRefCache
             for(final String line : fileData)
             {
                 String[] values = line.split(DATA_DELIM, -1);
-                ClassifierType classifierType = ClassifierType.valueOf(values[0]);
+                ClassifierType classifierType = ClassifierType.fromString(values[0]);
 
                 double[] noiseAdjustments = new double[values.length - 1];
 

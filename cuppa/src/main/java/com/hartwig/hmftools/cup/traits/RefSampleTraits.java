@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSvFile;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CupConstants.BREAST_MALE_GENDER_RATE;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_BREAST;
+import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_BREAST_TRIPLE_NEGATIVE;
 import static com.hartwig.hmftools.cup.common.CupConstants.isCandidateCancerType;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.GENDER_RATES;
@@ -95,6 +96,7 @@ public class RefSampleTraits implements RefClassifier
         {
             // -gender_rates "Breast;1;0.1"
             mGenderRates.put(CANCER_TYPE_BREAST, new double[] {1.0, BREAST_MALE_GENDER_RATE} );
+            mGenderRates.put(CANCER_TYPE_BREAST_TRIPLE_NEGATIVE, new double[] {1.0, BREAST_MALE_GENDER_RATE} );
         }
 
         // add in the default zero-prevalence ones

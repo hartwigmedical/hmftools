@@ -6,7 +6,6 @@ import static java.lang.Math.sqrt;
 import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
 import static com.hartwig.hmftools.cup.common.ClassifierType.EXPRESSION_COHORT;
 import static com.hartwig.hmftools.cup.common.ClassifierType.EXPRESSION_PAIRWISE;
@@ -15,6 +14,7 @@ import static com.hartwig.hmftools.cup.common.CupConstants.GENE_EXP_CSS_THRESHOL
 import static com.hartwig.hmftools.cup.common.CupConstants.GENE_EXP_DIFF_EXPONENT;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_MAX_MATCHES;
+import static com.hartwig.hmftools.cup.common.ResultType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
@@ -306,7 +306,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
         }
 
         results.add(new SampleResult(
-                sample.Id, CLASSIFIER, LIKELIHOOD, EXPRESSION_PAIRWISE.toString(), String.format("%.4g", totalCss), cancerCssTotals));
+                sample.Id, GENE_EXP, CLASSIFIER, EXPRESSION_PAIRWISE.toString(), String.format("%.4g", totalCss), cancerCssTotals));
 
         similarities.addAll(topMatches);
     }
@@ -351,6 +351,6 @@ public class GeneExpressionClassifier implements CuppaClassifier
         }
 
         results.add(new SampleResult(
-                sample.Id, CLASSIFIER, LIKELIHOOD, EXPRESSION_COHORT.toString(), String.format("%.4g", totalCss), cancerCssTotals));
+                sample.Id, GENE_EXP, CLASSIFIER, EXPRESSION_COHORT.toString(), String.format("%.4g", totalCss), cancerCssTotals));
     }
 }

@@ -60,6 +60,14 @@ public class CupConstants
     public static final String CANCER_TYPE_UTERUS = "Uterus";
     public static final String CANCER_TYPE_TESTIS = "Testis";
     public static final String CANCER_TYPE_BREAST = "Breast";
+    public static final String CANCER_TYPE_BREAST_TRIPLE_NEGATIVE = "Breast triple negative";
+
+    // common data types
+    public static final String DATA_TYPE_SNV_COUNT = "SNV_COUNT";
+
+    public static final String DATA_TYPE_DNA_COMBINED = "DNA_COMBINED";
+    public static final String DATA_TYPE_RNA_COMBINED = "RNA_COMBINED";
+    public static final String DATA_TYPE_COMBINED = "COMBINED";
 
     public static boolean isCandidateCancerType(final Gender gender, final String cancerType)
     {
