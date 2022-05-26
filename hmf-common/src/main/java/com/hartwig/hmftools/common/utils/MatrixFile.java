@@ -114,10 +114,12 @@ public final class MatrixFile
                 if(ignoreCols.contains(i))
                     continue;
 
+                Double value = !items[i].isEmpty() ? Double.parseDouble(items[i]) : 0;
+
                 if(transpose)
-                    matrixData[colIndex][rowIndex] = Double.parseDouble(items[i]);
+                    matrixData[colIndex][rowIndex] = value;
                 else
-                    matrixData[rowIndex][colIndex] = Double.parseDouble(items[i]);
+                    matrixData[rowIndex][colIndex] = value;
 
                 ++colIndex;
             }

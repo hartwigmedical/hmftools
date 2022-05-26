@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_ALT_SJ_CANCER;
 import static com.hartwig.hmftools.cup.common.CategoryType.ALT_SJ;
 import static com.hartwig.hmftools.cup.common.ClassifierType.ALT_SJ_COHORT;
+import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_SIMILARITY;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -37,17 +38,15 @@ public class RefAltSpliceJunctions implements RefClassifier
 {
     private final RefDataConfig mConfig;
     private final SampleDataCache mSampleDataCache;
-    private final NoiseRefCache mNoiseRefCache;
 
     public static final String FLD_POS_START = "PosStart";
     public static final String FLD_POS_END = "PosEnd";
 
     public RefAltSpliceJunctions(
-            final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd, final NoiseRefCache noiseRefCache)
+            final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
-        mNoiseRefCache = noiseRefCache;
     }
 
     public CategoryType categoryType() { return ALT_SJ; }
@@ -74,7 +73,7 @@ public class RefAltSpliceJunctions implements RefClassifier
         if(sampleFragCounts == null)
             return;
 
-        // columns contain the alt-SJ locations
+        // alt-SJs in the columns, cancer types in the rows since the noise allocation expects this
         Matrix cancerFragCounts = new Matrix(mSampleDataCache.RefCancerSampleData.size(), altSjSiteCount);
         final double[][] cancerMatrixData = cancerFragCounts.getData();
 
@@ -104,11 +103,20 @@ public class RefAltSpliceJunctions implements RefClassifier
         }
 
         final double[] altSjMedians = NoiseRefCache.generateMedianValues(cancerFragCounts);
-        mNoiseRefCache.addNoiseData(ALT_SJ_COHORT, altSjMedians);
+
+        if(mConfig.NoiseAdjustments.hasNoiseAllocation(ALT_SJ_COHORT))
+        {
+            int noiseAllocation = mConfig.NoiseAdjustments.getNoiseAllocation(ALT_SJ_COHORT);
+            CUP_LOGGER.debug("applying noise({}) to alt-SJ cohort counts", noiseAllocation);
+
+            NoiseRefCache.applyNoise(cancerFragCounts, altSjMedians, noiseAllocation);
+        }
+
+        // no need to write medians unless to try out pairwise in the classifer
 
         CUP_LOGGER.debug("writing RNA alt-SJ cancer reference data");
 
-        writeMatrixData(cancerFragCounts, cancerTypes, asjLocations);
+        writeCancerAltSjMatrixData(cancerFragCounts, cancerTypes, asjLocations);
     }
 
     public static final int ASJ_LOCATION_COL_COUNT = 4;
@@ -316,7 +324,7 @@ public class RefAltSpliceJunctions implements RefClassifier
         return sampleMatrix;
     }
 
-    private void writeMatrixData(
+    private void writeCancerAltSjMatrixData(
             final Matrix fragCountMatrix, final List<String> cancerTypes, final List<String> asjLocations)
     {
         try

@@ -33,7 +33,6 @@ public class RefDataBuilder
     private final SampleDataCache mSampleDataCache;
 
     private final List<RefClassifier> mClassifiers;
-    private final NoiseRefCache mNoiseRefCache;
 
     public RefDataBuilder(final CommandLine cmd)
     {
@@ -43,7 +42,6 @@ public class RefDataBuilder
 
         loadSampleData(cmd);
 
-        mNoiseRefCache = new NoiseRefCache(mConfig.OutputDir);
 
         mClassifiers = Lists.newArrayList();
 
@@ -52,7 +50,7 @@ public class RefDataBuilder
             mClassifiers.add(new RefSampleTraits(mConfig, mSampleDataCache, cmd));
 
         if(RefSomatics.requiresBuild(mConfig))
-            mClassifiers.add(new RefSomatics(mConfig, mSampleDataCache, cmd, mNoiseRefCache));
+            mClassifiers.add(new RefSomatics(mConfig, mSampleDataCache, cmd));
 
         if(RefSvData.requiresBuild(mConfig))
             mClassifiers.add(new RefSvData(mConfig, mSampleDataCache));
@@ -61,10 +59,10 @@ public class RefDataBuilder
             mClassifiers.add(new RefFeatures(mConfig, mSampleDataCache, cmd));
 
         if(RefGeneExpression.requiresBuild(mConfig))
-            mClassifiers.add(new RefGeneExpression(mConfig, mSampleDataCache, mNoiseRefCache));
+            mClassifiers.add(new RefGeneExpression(mConfig, mSampleDataCache, cmd));
 
         if(RefAltSpliceJunctions.requiresBuild(mConfig))
-            mClassifiers.add(new RefAltSpliceJunctions(mConfig, mSampleDataCache, cmd, mNoiseRefCache));
+            mClassifiers.add(new RefAltSpliceJunctions(mConfig, mSampleDataCache, cmd));
     }
 
     private void loadSampleData(final CommandLine cmd)
@@ -93,7 +91,7 @@ public class RefDataBuilder
             classifier.buildRefDataSets();
         }
 
-        mNoiseRefCache.writeNoiseAdjustments();
+        mConfig.NoiseAdjustments.writeNoiseAdjustments();
 
         CUP_LOGGER.info("CUP ref data building complete");
     }

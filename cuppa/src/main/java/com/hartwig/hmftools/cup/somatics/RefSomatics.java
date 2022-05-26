@@ -5,16 +5,14 @@ import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.stats.Percentiles.buildPercentiles;
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.SNV_TRINUCLEOTIDE_BUCKET_COUNT;
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.populateBucketMap;
+import static com.hartwig.hmftools.common.utils.MatrixFile.DEFAULT_MATRIX_DELIM;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SIG_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CANCER_POS_FREQ_COUNTS;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CN_ADJUSTED_SAMPLE_POS_FREQ_COUNTS;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_COPY_NUMBER_PROFILE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SIG_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SNV_COUNTS;
@@ -35,18 +33,14 @@ import static com.hartwig.hmftools.cup.somatics.SomaticClassifier.SNV_POS_FREQ_P
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSigContribsFromCohortFile;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSomaticVariants;
-import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.DEC_1_FORMAT;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.DEC_3_FORMAT;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INTEGER_FORMAT;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC_DESC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.loadMultipleMatrixFiles;
-import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.writeMatrix;
-import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.writeSampleMatrix;
 import static com.hartwig.hmftools.cup.somatics.TrinucleotideCounts.extractTrinucleotideCounts;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -73,7 +67,6 @@ public class RefSomatics implements RefClassifier
 {
     private final RefDataConfig mConfig;
     private final SampleDataCache mSampleDataCache;
-    private final NoiseRefCache mNoiseRefCache;
 
     private final Map<String,List<Double>> mCancerSnvCounts;
 
@@ -96,11 +89,10 @@ public class RefSomatics implements RefClassifier
     private static final String MATRIX_TYPE_GEN_POS = "GEN_POS";
 
     public RefSomatics(
-            final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd, final NoiseRefCache noiseRefCache)
+            final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
-        mNoiseRefCache = noiseRefCache;
 
         mCancerSnvCounts = Maps.newHashMap();
 
@@ -146,7 +138,6 @@ public class RefSomatics implements RefClassifier
 
         final List<String> snvCountFiles = parseFileSet(mConfig.Snv96MatrixFile);
         final List<String> posFreqCountFiles = parseFileSet(mConfig.GenPosMatrixFile);
-        final List<String> cnProfileFiles = parseFileSet(mConfig.CopyNumberMatrixFile);
 
         boolean combineCohortFiles = snvCountFiles.size() > 1 && posFreqCountFiles.size() == snvCountFiles.size();
 
@@ -172,7 +163,7 @@ public class RefSomatics implements RefClassifier
         }
 
         final double[] triNucMedians = NoiseRefCache.generateMedianValues(mSnv96Counts);
-        mNoiseRefCache.addNoiseData(SNV_96_PAIRWISE_SIMILARITY, triNucMedians);
+        mConfig.NoiseAdjustments.addNoiseData(SNV_96_PAIRWISE_SIMILARITY, triNucMedians);
 
         if(mWriteGenPosMatrixData)
             writeSampleMatrix(mGenPosCounts, mGenPosCountsIndex, mConfig.OutputDir + REF_FILE_SAMPLE_POS_FREQ_COUNTS, INTEGER_FORMAT);
@@ -187,12 +178,19 @@ public class RefSomatics implements RefClassifier
                 mGenPosCounts, mGenPosCountsIndex, cancerTypes, mSampleDataCache.RefCancerSampleData, mPosFrequencies.getMaxSampleCount());
 
         final double[] genPosCohortMedians = NoiseRefCache.generateMedianValues(cancerGenPosMatrix);
-        mNoiseRefCache.addNoiseData(GENOMIC_POSITION_SIMILARITY, genPosCohortMedians);
 
-        // final double[] genPosSampleMedians = NoiseRefCache.generateMedianValues(mGenPosCounts);
-        // mNoiseRefCache.addNoiseData(GENOMIC_POSITION_PAIRWISE, genPosSampleMedians);
+        if(mConfig.NoiseAdjustments.hasNoiseAllocation(GENOMIC_POSITION_SIMILARITY))
+        {
+            int noiseAllocation = mConfig.NoiseAdjustments.getNoiseAllocation(GENOMIC_POSITION_SIMILARITY);
+            CUP_LOGGER.debug("applying noise({}) to genomic position cohort counts", noiseAllocation);
 
-        writeMatrix(cancerGenPosMatrix, cancerTypes, mConfig.OutputDir + REF_FILE_CANCER_POS_FREQ_COUNTS, DEC_3_FORMAT);
+            NoiseRefCache.applyNoise(cancerGenPosMatrix, genPosCohortMedians, noiseAllocation);
+        }
+
+        // currently no need to write gen-pos medians since not using pairwise in the classifer
+        // mConfig.NoiseAdjustments.addNoiseData(GENOMIC_POSITION_SIMILARITY, genPosCohortMedians);
+
+        writeCancerGenPosMatrix(cancerGenPosMatrix, cancerTypes, mConfig.OutputDir + REF_FILE_CANCER_POS_FREQ_COUNTS, DEC_3_FORMAT);
 
         closeBufferedWriter(mRefDataWriter);
     }
@@ -441,7 +439,118 @@ public class RefSomatics implements RefClassifier
             writeRefSnvCountData(cancerType, percentiles);
         }
     }
-    
+
+    public static void writeSampleMatrix(
+            final Matrix matrix, final Map<String,Integer> sampleCountsIndex, final String filename, final String decFormat)
+    {
+        try
+        {
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            final List<String> sampleIds = sampleCountsIndex.keySet().stream().collect(Collectors.toList());
+            writer.write(sampleIds.get(0));
+            for(int i = 1; i < sampleIds.size(); ++i)
+            {
+                writer.write(String.format(",%s", sampleIds.get(i)));
+            }
+
+            writer.newLine();
+
+            final double[][] matrixData = matrix.getData();
+
+            // handle the transposed data - return to the form Samples in the cols, bucket data in the rows
+            for(int bucket = 0; bucket < matrix.Cols; ++bucket)
+            {
+                int sampleIndex = sampleCountsIndex.get(sampleIds.get(0));
+
+                writer.write(String.format(decFormat, matrixData[sampleIndex][bucket]));
+
+                for(int s = 1; s < sampleIds.size(); ++s)
+                {
+                    sampleIndex = sampleCountsIndex.get(sampleIds.get(s));
+
+                    if(sampleIndex >= matrix.Rows)
+                    {
+                        CUP_LOGGER.error("file({}) invalid row({}) sampleId({})", filename, s, sampleIds.get(s));
+                        return;
+                    }
+
+                    writer.write(String.format(DEFAULT_MATRIX_DELIM + decFormat, matrixData[sampleIndex][bucket]));
+                }
+
+                writer.newLine();
+            }
+
+            /*
+            // for each row, write out the counts for all samples
+
+            for(int b = 0; b < matrix.Rows; ++b)
+            {
+                writer.write(String.format(decFormat, matrixData[b][sampleCountsIndex.get(sampleIds.get(0))]));
+
+                for(int i = 1; i < sampleIds.size(); ++i)
+                {
+                    int sampleIndex = sampleCountsIndex.get(sampleIds.get(i));
+
+                    if(sampleIndex >= matrix.Cols)
+                    {
+                        CUP_LOGGER.error("file({}) invalid col({}) sampleId({})", filename, i, sampleIds.get(i));
+                        return;
+                    }
+
+                    writer.write(String.format("," + decFormat, matrixData[b][sampleIndex]));
+                }
+
+                writer.newLine();
+            }
+            */
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            CUP_LOGGER.error("failed to write ref sample SNV counts: {}", e.toString());
+        }
+    }
+
+    private static void writeCancerGenPosMatrix(
+            final Matrix matrix, final List<String> columnNames, final String filename, final String decFormat)
+    {
+        // cancer types in the rows, positions in the columns
+        try
+        {
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            writer.write(columnNames.get(0));
+            for(int i = 1; i < columnNames.size(); ++i)
+            {
+                writer.write(DEFAULT_MATRIX_DELIM + columnNames.get(i));
+            }
+
+            writer.newLine();
+
+            final double[][] data = matrix.getData();
+
+            for(int b = 0; b < matrix.Cols; ++b)
+            {
+                writer.write(String.format(decFormat, data[0][b]));
+
+                for(int i = 1; i < matrix.Rows; ++i)
+                {
+                    writer.write(String.format(DEFAULT_MATRIX_DELIM + decFormat, data[i][b]));
+                }
+
+                writer.newLine();
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            CUP_LOGGER.error("failed to write ref matrix data: {}", e.toString());
+        }
+    }
+
     private void initialiseRefDataWriter()
     {
         try
@@ -500,63 +609,6 @@ public class RefSomatics implements RefClassifier
         {
             CUP_LOGGER.error("failed to write signatures ref data output: {}", e.toString());
         }
-    }
-
-    public static boolean populateRefPercentileData(
-            final String filename, final Map<String,Map<String,double[]>> cancerSigContribs, final Map<String,double[]> cancerSnvCounts)
-    {
-        try
-        {
-            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
-
-            final String header = fileData.get(0);
-            fileData.remove(0);
-
-            for(final String line : fileData)
-            {
-                // SampleId,DataType,Pct_0.00 etc
-                final String[] items = line.split(DATA_DELIM, -1);
-                String cancerType = items[0];
-
-                String dataType = items[1];
-
-                double[] percentileData = new double[PERCENTILE_COUNT];
-
-                int startIndex = 2;
-
-                for(int i = startIndex; i < items.length; ++i)
-                {
-                    double value = Double.parseDouble(items[i]);
-                    percentileData[i - startIndex] = value;
-                }
-
-                if(dataType.equals(REF_SIG_TYPE_SNV_COUNT))
-                {
-                    cancerSnvCounts.put(cancerType, percentileData);
-                }
-                else
-                {
-                    String sigName = dataType;
-
-                    Map<String, double[]> sigContribsMap = cancerSigContribs.get(cancerType);
-
-                    if(sigContribsMap == null)
-                    {
-                        sigContribsMap = Maps.newHashMap();
-                        cancerSigContribs.put(cancerType, sigContribsMap);
-                    }
-
-                    sigContribsMap.put(sigName, percentileData);
-                }
-            }
-        }
-        catch (IOException e)
-        {
-            CUP_LOGGER.error("failed to read sig contrib percentile data file({}): {}", filename, e.toString());
-            return false;
-        }
-
-        return true;
     }
 
     private void writeCohortData(final Map<String,Map<String,Double>> sampleSigContributions)

@@ -1,10 +1,11 @@
 package com.hartwig.hmftools.cup.somatics;
 
+import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
-import static com.hartwig.hmftools.cup.somatics.RefSomatics.populateRefPercentileData;
+import static com.hartwig.hmftools.cup.somatics.RefSomatics.REF_SIG_TYPE_SNV_COUNT;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.convertSignatureName;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
 
@@ -87,7 +88,58 @@ public class SomaticDataLoader
         if(filename.isEmpty())
             return true;
 
-        return populateRefPercentileData(filename, refCancerSigContribs, refCancerSnvCounts);
+        try
+        {
+            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
+
+            final String header = fileData.get(0);
+            fileData.remove(0);
+
+            for(final String line : fileData)
+            {
+                // SampleId,DataType,Pct_0.00 etc
+                final String[] items = line.split(DATA_DELIM, -1);
+                String cancerType = items[0];
+
+                String dataType = items[1];
+
+                double[] percentileData = new double[PERCENTILE_COUNT];
+
+                int startIndex = 2;
+
+                for(int i = startIndex; i < items.length; ++i)
+                {
+                    double value = Double.parseDouble(items[i]);
+                    percentileData[i - startIndex] = value;
+                }
+
+                if(dataType.equals(REF_SIG_TYPE_SNV_COUNT))
+                {
+                    refCancerSnvCounts.put(cancerType, percentileData);
+                }
+                else
+                {
+                    String sigName = dataType;
+
+                    Map<String, double[]> sigContribsMap = refCancerSigContribs.get(cancerType);
+
+                    if(sigContribsMap == null)
+                    {
+                        sigContribsMap = Maps.newHashMap();
+                        refCancerSigContribs.put(cancerType, sigContribsMap);
+                    }
+
+                    sigContribsMap.put(sigName, percentileData);
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            CUP_LOGGER.error("failed to read sig contrib percentile data file({}): {}", filename, e.toString());
+            return false;
+        }
+
+        return true;
     }
 
     public static Matrix loadRefSampleCounts(

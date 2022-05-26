@@ -79,9 +79,6 @@ public class NoiseRefCache
             mClassifierNoiseAllocations.put(ALT_SJ_COHORT, CupConstants.ALT_SJ_NOISE_ALLOCATION);
             mClassifierNoiseAllocations.put(SNV_96_PAIRWISE_SIMILARITY, CupConstants.SNV_96_NOISE_ALLOCATION);
             mClassifierNoiseAllocations.put(GENOMIC_POSITION_SIMILARITY, CupConstants.GEN_POS_COHORT_NOISE_ALLOCATION);
-
-            // to be determined
-            //mClassifierNoiseAllocations.put(GENOMIC_POSITION_PAIRWISE, CupConstants.GEN_POS_PAIRWISE_NOISE_ALLOCATION);
             return;
         }
 

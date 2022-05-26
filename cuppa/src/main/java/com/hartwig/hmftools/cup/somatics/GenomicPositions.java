@@ -73,7 +73,8 @@ public final class GenomicPositions
             final Matrix samplePosFreqCounts, final Map<String,Integer> sampleIndexMap,
             final List<String> cancerTypes, final Map<String,List<SampleData>> refCancerSampleData, int maxSampleCount)
     {
-        Matrix cancerGenPosMatrix = new Matrix(samplePosFreqCounts.Rows, cancerTypes.size());
+        // positions in the columns as per the sample matrix
+        Matrix cancerGenPosMatrix = new Matrix(cancerTypes.size(), samplePosFreqCounts.Cols);
         final double[][] matrixData = cancerGenPosMatrix.getData();
 
         for(int i = 0; i < cancerTypes.size(); ++i)

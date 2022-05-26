@@ -34,6 +34,7 @@ import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
+import com.hartwig.hmftools.cup.common.NoiseRefCache;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
@@ -61,10 +62,12 @@ public class GeneExpressionClassifier implements CuppaClassifier
 
     private final boolean mRunPairwiseCss;
     private final boolean mRunCancerCss;
+    private final double mCssExponent;
 
-    private static final String RNA_METHODS = "rna_methods";
-    private static final String RNA_METHOD_PAIRWISE_CSS = "pairwise_css";
-    private static final String RNA_METHOD_CANCER_CSS = "cancer_css";
+    private static final String RNA_METHODS = "gene_exp_rna_methods";
+    private static final String CSS_METHOD_PAIRWISE = "pairwise_css";
+    private static final String CSS_METHOD_CANCER = "cancer_css";
+    private static final String CSS_EXPONENT = "gene_exp_css_exp";
 
     private boolean mIsValid;
 
@@ -87,8 +90,9 @@ public class GeneExpressionClassifier implements CuppaClassifier
 
         final String rnaMethods = cmd.getOptionValue(RNA_METHODS);
 
-        mRunPairwiseCss = rnaMethods == null || rnaMethods.contains(RNA_METHOD_PAIRWISE_CSS);
-        mRunCancerCss = rnaMethods != null && rnaMethods.contains(RNA_METHOD_CANCER_CSS);
+        mRunPairwiseCss = rnaMethods == null || rnaMethods.contains(CSS_METHOD_PAIRWISE);
+        mRunCancerCss = rnaMethods != null && rnaMethods.contains(CSS_METHOD_CANCER);
+        mCssExponent = Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT, String.valueOf(GENE_EXP_DIFF_EXPONENT)));
 
         mIsValid = true;
 
@@ -159,7 +163,31 @@ public class GeneExpressionClassifier implements CuppaClassifier
                 return;
             }
         }
+
+        // apply any specified noise
+        if(mConfig.NoiseAdjustments.makeNoiseAdjustment(EXPRESSION_PAIRWISE))
+        {
+            final double[] noiseAdjustments = mConfig.NoiseAdjustments.getNoiseData(EXPRESSION_PAIRWISE);
+            int noiseAllocation = mConfig.NoiseAdjustments.getNoiseAllocation(EXPRESSION_PAIRWISE);
+
+            CUP_LOGGER.debug("appying noise({}) to gene expression", noiseAllocation);
+
+            NoiseRefCache.applyNoise(mRefSampleGeneExpression, noiseAdjustments, noiseAllocation);
+
+            if(mSampleGeneExpression != mRefSampleGeneExpression)
+                NoiseRefCache.applyNoise(mSampleGeneExpression, noiseAdjustments, noiseAllocation);
+        }
     }
+
+    public static void addCmdLineArgs(Options options)
+    {
+        options.addOption(RNA_METHODS, true, "Types of RNA gene expression methods");
+        options.addOption(CSS_EXPONENT, true, "Gene expression CSS exponent");
+    }
+
+    public CategoryType categoryType() { return GENE_EXP; }
+    public boolean isValid() { return mIsValid; }
+    public void close() {}
 
     private void buildCancerSampleCounts()
     {
@@ -192,15 +220,6 @@ public class GeneExpressionClassifier implements CuppaClassifier
             CUP_LOGGER.debug("RNA ref cancer({}) samples({})", entry.getKey(), entry.getValue());
         }
     }
-
-    public static void addCmdLineArgs(Options options)
-    {
-        options.addOption(RNA_METHODS, true, "Types of RNA gene expression methods");
-    }
-
-    public CategoryType categoryType() { return GENE_EXP; }
-    public boolean isValid() { return mIsValid; }
-    public void close() {}
 
     public void processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
     {
@@ -253,7 +272,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
             if(css < GENE_EXP_CSS_THRESHOLD)
                 continue;
 
-            double cssWeight = pow(GENE_EXP_DIFF_EXPONENT, -100 * (1 - css));
+            double cssWeight = pow(mCssExponent, -100 * (1 - css));
 
             double weightedCss = css * cssWeight;
             cancerCssTotals.put(refCancerType, weightedCss);
@@ -310,7 +329,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
             if(!isKnownCancerType(refCancerType))
                 continue;
 
-            double cssWeight = pow(GENE_EXP_DIFF_EXPONENT, -100 * (1 - css));
+            double cssWeight = pow(mCssExponent, -100 * (1 - css));
 
             int cancerSampleCount = mRefCancerSampleCounts.get(refCancerType);
             double weightedCss = css * cssWeight / sqrt(cancerSampleCount);
