@@ -242,7 +242,7 @@ CUPPA calculates a consensus mutation distribution for each cohort by counting S
 
 The genomic position similarity likelihood for a given sample is determined by first calculating the cosine similarity (CSS) of a sample to each cohort consensus distribution and then weighing using the following algorithm:
 ```
-Score(sample=s,cancerType=i) = 8^[100*(CSS(i,s)-BestCSS(s))] 
+Score(sample=s,cancerType=i) = 10^[100*(CSS(i,s)-BestCSS(s))] 
 ```
 CUPPA sums the scores across each tumor type to estimate a likelihood for each cancer type:
 ```
