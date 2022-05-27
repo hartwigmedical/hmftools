@@ -106,6 +106,7 @@ public class CuppaConfig
     public final String SampleAltSjFile;
 
     public final NoiseRefCache NoiseAdjustments;
+    public final boolean NoSubtypeCollapse;
 
     // database access
     public final DatabaseAccess DbAccess;
@@ -157,6 +158,7 @@ public class CuppaConfig
 
     public static final String NOISE_ALLOCATIONS = "noise_allocations";
     public static final String NOISE_ALLOCATIONS_DESC = "Noise allocations by classifier type, or 'NONE' or 'DEFAULTS'";
+    public static final String NO_SUBTYPE_COLLAPSE = "no_subtype_collapse";
 
     public static final String WRITE_SIMS = "write_similarities";
     public static final String WRITE_DETAILED_SCORES = "write_detailed_scores";
@@ -231,6 +233,8 @@ public class CuppaConfig
 
         NoiseAdjustments = new NoiseRefCache(RefDataDir);
         NoiseAdjustments.loadNoiseAllocations(cmd.getOptionValue(NOISE_ALLOCATIONS));
+
+        NoSubtypeCollapse = cmd.hasOption(NO_SUBTYPE_COLLAPSE);
 
         OutputDir = parseOutputDir(cmd);
         OutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID, "");
@@ -383,6 +387,7 @@ public class CuppaConfig
         options.addOption(REF_RNA_ALT_SJ_CANCER_FILE, true, "Reference RNA alternative splice-junction cancer file, default: " + REF_FILE_ALT_SJ_CANCER);
         options.addOption(REF_RNA_ALT_SJ_SAMPLE_FILE, true, "Reference RNA alternative splice-junction sample file, default: " + REF_FILE_ALT_SJ_SAMPLE);
         options.addOption(NOISE_ALLOCATIONS, true, NOISE_ALLOCATIONS_DESC);
+        options.addOption(NO_SUBTYPE_COLLAPSE, false, "Keep cancer sub-types separated in final classifiers");
 
         options.addOption(WRITE_SIMS, false, "Write top-20 CSS similarities to file");
         options.addOption(WRITE_DETAILED_SCORES, false, "Cohort-only - write detailed (non-classifier) data");
@@ -440,6 +445,7 @@ public class CuppaConfig
         SampleAltSjFile = "";
 
         NoiseAdjustments = new NoiseRefCache(null);
+        NoSubtypeCollapse = false;
 
         DbAccess = null;
         WriteSimilarities = false;

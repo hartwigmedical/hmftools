@@ -95,6 +95,10 @@ public class SampleData
         {
             sample.setRnaReadLength(Integer.parseInt(items[fieldsIndexMap.get(FLD_RNA_READ_LENGTH)]));
         }
+        else if(fieldsIndexMap.containsKey("ReadLength"))
+        {
+            sample.setRnaReadLength(Integer.parseInt(items[fieldsIndexMap.get("ReadLength")]));
+        }
 
         return sample;
     }

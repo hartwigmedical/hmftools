@@ -9,16 +9,15 @@ import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENE_EXP_CANCER;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENE_EXP_SAMPLE;
 import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
-import static com.hartwig.hmftools.cup.common.ClassifierType.ALT_SJ_COHORT;
 import static com.hartwig.hmftools.cup.common.ClassifierType.EXPRESSION_PAIRWISE;
-import static com.hartwig.hmftools.cup.rna.RnaDataLoader.GENE_EXP_IGNORE_FIELDS;
+import static com.hartwig.hmftools.cup.rna.GeneExpressionDataLoader.GENE_EXP_IGNORE_FIELDS;
+import static com.hartwig.hmftools.cup.rna.GeneExpressionDataLoader.loadGeneExpressionMatrix;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -90,12 +89,47 @@ public class RefGeneExpression implements RefClassifier
     {
         CUP_LOGGER.debug("loading RNA gene expression data");
 
-        loadRefRnaGeneExpression(mConfig.GeneExpMatrixFile);
+        // loadRefRnaGeneExpression(mConfig.GeneExpMatrixFile);
+
+        Matrix sampleGeneExpression = loadGeneExpressionMatrix(
+                mConfig.GeneExpMatrixFile, mSampleTpmIndex, mSampleNames, mGeneIds, mGeneNames);
+
+        // CUP_LOGGER.debug("loaded {} gene for expression ref data", geneIds.size());
+
+        // limit to the ref samples and then creating columns in the same order as loaded
+        mSampleGeneExpression = new Matrix(mSampleDataCache.RefSampleDataList.size(), mGeneIds.size());
 
         if(mSampleGeneExpression == null)
         {
             CUP_LOGGER.warn("RNA gene expression data load failed");
             return;
+        }
+
+        double[][] sampleData = mSampleGeneExpression.getData();
+
+        for(int i = 0; i < mSampleDataCache.RefSampleDataList.size(); ++i)
+        {
+            SampleData refSample = mSampleDataCache.RefSampleDataList.get(i);
+
+            if(!mSampleNames.contains(refSample.Id))
+            {
+                CUP_LOGGER.error("sample({}) missing from gene expression matrix", refSample.Id);
+                continue;
+            }
+
+            int countsIndex = mSampleTpmIndex.get(refSample.Id);
+            double[] sampleTPMs = sampleGeneExpression.getRow(countsIndex);
+
+            for(int b = 0; b < sampleTPMs.length; ++b)
+            {
+                // transformation: double logTpm = log(adjTpm + 1);
+                double value = sampleTPMs[b];
+
+                if(mTpmInLogForm)
+                    sampleData[i][b] = exp(value) - 1;
+                else
+                    sampleData[i][b] = value;
+            }
         }
 
         if(mConfig.NoiseAdjustments.hasNoiseAllocation(EXPRESSION_PAIRWISE))
@@ -192,8 +226,6 @@ public class RefGeneExpression implements RefClassifier
             {
                 mSampleNames.add(columns[i]);
             }
-
-            List<Integer> enrichedGeneIndices = Lists.newArrayList();
 
             String line = null;
 

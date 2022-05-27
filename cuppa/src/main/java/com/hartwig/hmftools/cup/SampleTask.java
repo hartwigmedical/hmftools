@@ -163,7 +163,7 @@ public class SampleTask implements Callable
         }
 
         // collapse any sub-types into parent types
-        if(!mSampleDataCache.RefCancerMappings.isEmpty())
+        if(!mSampleDataCache.RefCancerMappings.isEmpty() && !mConfig.NoSubtypeCollapse)
         {
             collapseCancerSubtypes(allResults);
         }

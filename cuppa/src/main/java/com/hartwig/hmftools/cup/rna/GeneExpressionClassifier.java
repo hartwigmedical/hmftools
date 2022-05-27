@@ -15,14 +15,14 @@ import static com.hartwig.hmftools.cup.common.CupConstants.GENE_EXP_DIFF_EXPONEN
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_MAX_MATCHES;
 import static com.hartwig.hmftools.cup.common.ResultType.CLASSIFIER;
-import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
-import static com.hartwig.hmftools.cup.rna.RnaDataLoader.GENE_EXP_IGNORE_FIELDS;
-import static com.hartwig.hmftools.cup.rna.RnaDataLoader.loadGeneIdIndices;
-import static com.hartwig.hmftools.cup.rna.RnaDataLoader.loadSampleGeneExpressionFile;
-import static com.hartwig.hmftools.cup.rna.RnaDataLoader.loadSampleGeneExpressionMatrix;
+import static com.hartwig.hmftools.cup.rna.GeneExpressionDataLoader.GENE_EXP_IGNORE_FIELDS;
+import static com.hartwig.hmftools.cup.rna.GeneExpressionDataLoader.loadGeneExpressionMatrix;
+import static com.hartwig.hmftools.cup.rna.GeneExpressionDataLoader.loadGeneIdIndices;
+import static com.hartwig.hmftools.cup.rna.GeneExpressionDataLoader.loadSampleGeneExpressionFile;
+import static com.hartwig.hmftools.cup.rna.GeneExpressionDataLoader.loadSampleGeneExpressionMatrix;
 
 import java.util.List;
 import java.util.Map;
@@ -105,21 +105,27 @@ public class GeneExpressionClassifier implements CuppaClassifier
         if(mRunCancerCss && mConfig.RefGeneExpCancerFile.isEmpty())
             return;
 
-        if(mRunPairwiseCss)
-        {
-            loadGeneIdIndices(mConfig.RefGeneExpSampleFile, mGeneIdIndexMap);
-            mRefSampleGeneExpression = loadMatrixDataFile(
-                    mConfig.RefGeneExpSampleFile, mRefSampleGeneExpIndexMap, GENE_EXP_IGNORE_FIELDS, true);
+        final List<String> sampleNames = Lists.newArrayList();
+        final List<String> geneNames = Lists.newArrayList();
+        final List<String> geneIds = Lists.newArrayList();
 
-            if(mRefSampleGeneExpression ==  null)
-            {
-                mIsValid = false;
-                return;
-            }
+        mRefSampleGeneExpression = loadGeneExpressionMatrix(
+                mConfig.RefGeneExpSampleFile, mRefSampleGeneExpIndexMap, sampleNames, geneIds, geneNames);
+
+        for(int i = 0; i < geneIds.size(); ++i)
+        {
+            mGeneIdIndexMap.put(geneIds.get(i), i);
+        }
+
+        if(mRefSampleGeneExpression ==  null)
+        {
+            mIsValid = false;
+            return;
         }
 
         if(mRunCancerCss)
         {
+            // TODO: could make a stand-alone method to load in column headers and geneIds, and use this for both cancer and sample data
             if(mGeneIdIndexMap.isEmpty())
                 loadGeneIdIndices(mConfig.RefGeneExpCancerFile, mGeneIdIndexMap);
 
