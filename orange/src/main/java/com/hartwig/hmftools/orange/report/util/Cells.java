@@ -30,9 +30,14 @@ public final class Cells {
 
     @NotNull
     public static Cell createTransparent(@NotNull String text) {
+        return createTransparent(new Paragraph(text));
+    }
+
+    @NotNull
+    public static Cell createTransparent(@NotNull IBlockElement element) {
         Cell cell = createBorderlessBase();
         cell.addStyle(ReportResources.tableContentStyle());
-        cell.add(new Paragraph(text));
+        cell.add(element);
         return cell;
     }
 
@@ -79,9 +84,14 @@ public final class Cells {
 
     @NotNull
     public static Cell createValue(@NotNull String text) {
+        return createValue(new Paragraph(text));
+    }
+
+    @NotNull
+    public static Cell createValue(@NotNull IBlockElement element) {
         Cell cell = createBorderlessBase();
         cell.addStyle(ReportResources.valueStyle());
-        cell.add(new Paragraph(text));
+        cell.add(element);
         return cell;
     }
 

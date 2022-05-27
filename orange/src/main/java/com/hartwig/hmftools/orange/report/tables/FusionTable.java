@@ -12,9 +12,12 @@ import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.IBlockElement;
+import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
 
+import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -35,7 +38,7 @@ public final class FusionTable {
                 new float[] { 1, 5 },
                 new Cell[] { Cells.createHeader("Fusion"), Cells.createHeader("Details") });
 
-        for (LinxFusion fusion : sort(fusions)) {
+        for (LinxFusion fusion : sortLinx(fusions)) {
             table.addCell(Cells.createContent(fusion.name()));
 
             Table details = new Table(UnitValue.createPercentArray(new float[] { 1, 3 }));
@@ -46,7 +49,7 @@ public final class FusionTable {
             details.addCell(Cells.createKey("Junction CN"));
             details.addCell(Cells.createValue(SINGLE_DIGIT.format(fusion.junctionCopyNumber())));
             details.addCell(Cells.createKey("RNA fragment support"));
-            details.addCell(Cells.createValue(rnaFragmentSupport(isofox, fusion)));
+            details.addCell(Cells.createValue(rnaFragmentSupportTable(isofox, fusion)).setKeepTogether(true));
             details.addCell(Cells.createKey("Phasing"));
             details.addCell(Cells.createValue(fusion.phased().displayStr()));
             details.addCell(Cells.createKey("Reported type (DL)"));
@@ -75,22 +78,48 @@ public final class FusionTable {
     }
 
     @NotNull
-    private static String rnaFragmentSupport(@Nullable IsofoxData isofox, @NotNull LinxFusion fusion) {
+    private static IBlockElement rnaFragmentSupportTable(@Nullable IsofoxData isofox, @NotNull LinxFusion fusion) {
         if (isofox == null) {
-            return ReportResources.NOT_AVAILABLE;
+            return new Paragraph("-");
         }
 
+        List<RnaFusion> matches = Lists.newArrayList();
         for (RnaFusion rnaFusion : isofox.fusions()) {
             if (rnaFusion.name().equals(fusion.name())) {
-                return String.valueOf(rnaFusion.discordantFrags() + rnaFusion.realignedFrags() + rnaFusion.splitFragments());
+                matches.add(rnaFusion);
             }
         }
 
-        return "0";
+        if (matches.isEmpty()) {
+            return new Paragraph("None");
+        }
+
+        Table fragmentSupportTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
+        for (RnaFusion rnaFusion : max5(sortRna(matches))) {
+            String up = rnaFusion.chromosomeUp() + ":" + rnaFusion.positionUp();
+            String down = rnaFusion.chromosomeDown() + ":" + rnaFusion.positionDown();
+            fragmentSupportTable.addCell(Cells.createKey(up + "-" + down));
+
+            String split = rnaFusion.splitFragments() + " split";
+            String realigned = rnaFusion.realignedFrags() + " realig.";
+            String discord = rnaFusion.discordantFrags() + " discord.";
+            fragmentSupportTable.addCell(Cells.createValue(split + " / " + realigned + " / " + discord + " fragments"));
+        }
+
+        return fragmentSupportTable;
     }
 
     @NotNull
-    private static List<LinxFusion> sort(@NotNull List<LinxFusion> fusions) {
+    private static List<RnaFusion> sortRna(@NotNull List<RnaFusion> rnaFusions) {
+        return rnaFusions.stream().sorted((fusion1, fusion2) -> {
+            int sumFragments1 = fusion1.splitFragments() + fusion1.realignedFrags() + fusion1.discordantFrags();
+            int sumFragments2 = fusion2.splitFragments() + fusion2.realignedFrags() + fusion2.discordantFrags();
+            return Integer.compare(sumFragments2, sumFragments1);
+        }).collect(Collectors.toList());
+    }
+
+    @NotNull
+    private static List<LinxFusion> sortLinx(@NotNull List<LinxFusion> fusions) {
         return fusions.stream().sorted((fusion1, fusion2) -> {
             if (fusion1.likelihood() == fusion2.likelihood()) {
                 if (fusion1.geneStart().equals(fusion2.geneStart())) {
@@ -102,5 +131,10 @@ public final class FusionTable {
                 return fusion1.likelihood() == FusionLikelihoodType.HIGH ? -1 : 1;
             }
         }).collect(Collectors.toList());
+    }
+
+    @NotNull
+    private static <T> List<T> max5(@NotNull List<T> elements) {
+        return elements.subList(0, Math.min(5, elements.size()));
     }
 }
