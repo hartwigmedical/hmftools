@@ -97,6 +97,8 @@ investigate potential causes for QC failure.
 - Upcoming
   - Proper support for RNA
     - Isofox data is loaded when provided through command line
+    - Amps and dels are annotated with expression data (including percentiles and fold change)
+    - Fusions are annotated by RNA fragment support (from novel splice junctions for `EXON_DEL_DUP` and rna fusions otherwise)
   - Improvements to CUPPA
     - Cuppa data loader favors overall combined score > DNA combined score > RNA combined score.
     - Cuppa data loader retains the combined prediction for every cancer type, not just the best prediction.
