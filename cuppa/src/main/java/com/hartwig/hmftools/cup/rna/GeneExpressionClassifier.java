@@ -2,6 +2,7 @@ package com.hartwig.hmftools.cup.rna;
 
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
@@ -63,11 +64,13 @@ public class GeneExpressionClassifier implements CuppaClassifier
     private final boolean mRunPairwiseCss;
     private final boolean mRunCancerCss;
     private final double mCssExponent;
+    private final boolean mMatchReadLength;
 
     private static final String RNA_METHODS = "gene_exp_rna_methods";
     private static final String CSS_METHOD_PAIRWISE = "pairwise_css";
     private static final String CSS_METHOD_CANCER = "cancer_css";
     private static final String CSS_EXPONENT = "gene_exp_css_exp";
+    private static final String MATCH_READ_LENGTH = "gene_exp_match_read_length";
 
     private boolean mIsValid;
 
@@ -93,6 +96,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
         mRunPairwiseCss = rnaMethods == null || rnaMethods.contains(CSS_METHOD_PAIRWISE);
         mRunCancerCss = rnaMethods != null && rnaMethods.contains(CSS_METHOD_CANCER);
         mCssExponent = Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT, String.valueOf(GENE_EXP_DIFF_EXPONENT)));
+        mMatchReadLength = cmd.hasOption(MATCH_READ_LENGTH);
 
         mIsValid = true;
 
@@ -189,35 +193,37 @@ public class GeneExpressionClassifier implements CuppaClassifier
     {
         options.addOption(RNA_METHODS, true, "Types of RNA gene expression methods");
         options.addOption(CSS_EXPONENT, true, "Gene expression CSS exponent");
+        options.addOption(MATCH_READ_LENGTH, false, "Gene expression pairwise only amongst matching read-length samples");
     }
 
     public CategoryType categoryType() { return GENE_EXP; }
     public boolean isValid() { return mIsValid; }
     public void close() {}
 
+    private String formCancerType(final SampleData sample)
+    {
+        if(mMatchReadLength)
+            return format("%s_%d", sample.cancerType(), sample.rnaReadLength());
+        else
+            return sample.cancerType();
+    }
+
     private void buildCancerSampleCounts()
     {
-        if(mRefSampleGeneExpIndexMap.isEmpty())
+        for(Map.Entry<String,List<SampleData>> refCancerEntry : mSampleDataCache.RefCancerSampleData.entrySet())
         {
-            for(Map.Entry<String,List<SampleData>> entry : mSampleDataCache.RefCancerSampleData.entrySet())
+            for(SampleData refSample : refCancerEntry.getValue())
             {
-                mRefCancerSampleCounts.put(entry.getKey(), entry.getValue().size());
-            }
-        }
-        else
-        {
-            for(final String refSampleId : mRefSampleGeneExpIndexMap.keySet())
-            {
-                final String refCancerType = mSampleDataCache.RefSampleCancerTypeMap.get(refSampleId);
-
-                if(refCancerType == null)
+                if(!mRefSampleGeneExpIndexMap.containsKey(refSample.Id))
                     continue;
 
-                Integer sampleCount = mRefCancerSampleCounts.get(refCancerType);
+                final String cancerType = formCancerType(refSample);
+
+                Integer sampleCount = mRefCancerSampleCounts.get(cancerType);
                 if(sampleCount == null)
-                    mRefCancerSampleCounts.put(refCancerType, 1);
+                    mRefCancerSampleCounts.put(cancerType, 1);
                 else
-                    mRefCancerSampleCounts.put(refCancerType, sampleCount + 1);
+                    mRefCancerSampleCounts.put(cancerType, sampleCount + 1);
             }
         }
 
@@ -273,6 +279,9 @@ public class GeneExpressionClassifier implements CuppaClassifier
                 if(refSample.Id.equals(sample.Id))
                     continue;
 
+                if(mMatchReadLength && refSample.rnaReadLength() != sample.rnaReadLength())
+                    continue;
+
                 Integer refSampleIndex = mRefSampleGeneExpIndexMap.get(refSample.Id);
 
                 if(refSampleIndex == null)
@@ -294,7 +303,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
 
                 double cssWeight = pow(mCssExponent, -100 * (1 - css));
 
-                int cancerSampleCount = mRefCancerSampleCounts.get(refCancerType);
+                int cancerSampleCount = mRefCancerSampleCounts.get(formCancerType(refSample));
                 double weightedCss = css * cssWeight / sqrt(cancerSampleCount);
 
                 totalWeightedCss += weightedCss;
@@ -312,7 +321,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
         }
 
         results.add(new SampleResult(
-                sample.Id, GENE_EXP, CLASSIFIER, EXPRESSION_PAIRWISE.toString(), String.format("%.4g", totalCss), cancerCssTotals));
+                sample.Id, GENE_EXP, CLASSIFIER, EXPRESSION_PAIRWISE.toString(), format("%.4g", totalCss), cancerCssTotals));
 
         similarities.addAll(topMatches);
     }
@@ -357,6 +366,6 @@ public class GeneExpressionClassifier implements CuppaClassifier
         }
 
         results.add(new SampleResult(
-                sample.Id, GENE_EXP, CLASSIFIER, EXPRESSION_COHORT.toString(), String.format("%.4g", totalCss), cancerCssTotals));
+                sample.Id, GENE_EXP, CLASSIFIER, EXPRESSION_COHORT.toString(), format("%.4g", totalCss), cancerCssTotals));
     }
 }
