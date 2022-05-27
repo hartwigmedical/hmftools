@@ -4,7 +4,9 @@ import java.text.DecimalFormat;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.isofox.IsofoxData;
+import com.hartwig.hmftools.common.rna.GeneExpression;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.sv.linx.FusionLikelihoodType;
@@ -25,6 +27,7 @@ import org.jetbrains.annotations.Nullable;
 public final class FusionTable {
 
     private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#0.0");
+    private static final DecimalFormat PERCENTAGE = ReportResources.decimalFormat("#'%'");
 
     private FusionTable() {
     }
@@ -49,7 +52,7 @@ public final class FusionTable {
             details.addCell(Cells.createValue(threeStartString(fusion)));
             details.addCell(Cells.createKey("Junction CN"));
             details.addCell(Cells.createValue(SINGLE_DIGIT.format(fusion.junctionCopyNumber())));
-            details.addCell(Cells.createKey("RNA fragment support"));
+            details.addCell(Cells.createKey("RNA support"));
             details.addCell(Cells.createValue(rnaFragmentSupportTable(isofox, fusion)).setKeepTogether(true));
             details.addCell(Cells.createKey("Phasing"));
             details.addCell(Cells.createValue(fusion.phased().displayStr()));
@@ -84,12 +87,36 @@ public final class FusionTable {
             return new Paragraph("-");
         }
 
-        // TODO Potentially add expression of 3' gene in case of IG fusion.
-        if (fusion.reportedType().equals("EXON_DEL_DUP")) {
+        if (fusion.reportedType().equals(KnownFusionType.IG_KNOWN_PAIR.toString()) || fusion.reportedType()
+                .equals(KnownFusionType.IG_PROMISCUOUS.toString())) {
+            return supportFromExpressionOfGeneEnd(isofox, fusion);
+        } else if (fusion.reportedType().equals(KnownFusionType.EXON_DEL_DUP.toString())) {
             return supportFromSpliceJunctions(isofox, fusion);
         } else {
             return supportFromRnaFusions(isofox, fusion);
         }
+    }
+
+    @NotNull
+    private static IBlockElement supportFromExpressionOfGeneEnd(@NotNull IsofoxData isofox, @NotNull LinxFusion fusion) {
+        GeneExpression threeExpression = null;
+        for (GeneExpression geneExpression : isofox.geneExpressions()) {
+            if (geneExpression.geneName().equals(fusion.geneEnd())) {
+                threeExpression = geneExpression;
+                break;
+            }
+        }
+
+        if (threeExpression == null) {
+            return new Paragraph("None");
+        }
+
+        String tpmString = "TPM " + SINGLE_DIGIT.format(threeExpression.tpm());
+        String fcTypeString = "FC " + SINGLE_DIGIT.format(threeExpression.tpm() / threeExpression.medianTpmCancer());
+        String typeString = " Type percentile " + PERCENTAGE.format(threeExpression.percentileCancer() * 100) + " (" + fcTypeString + ")";
+        String fcDbString = "FC " + SINGLE_DIGIT.format(threeExpression.tpm() / threeExpression.medianTpmCohort());
+        String dbString = " DB percentile " + PERCENTAGE.format(threeExpression.percentileCohort() * 100) + " (" + fcDbString + ")";
+        return new Paragraph(threeExpression.geneName() +  " " + tpmString + ", " + typeString + ", " + dbString);
     }
 
     @NotNull
