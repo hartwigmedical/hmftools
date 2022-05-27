@@ -84,7 +84,7 @@ public final class FusionTable {
     @NotNull
     private static IBlockElement rnaFragmentSupportTable(@Nullable IsofoxData isofox, @NotNull LinxFusion fusion) {
         if (isofox == null) {
-            return new Paragraph("-");
+            return new Paragraph(ReportResources.NOT_AVAILABLE);
         }
 
         if (fusion.reportedType().equals(KnownFusionType.IG_KNOWN_PAIR.toString()) || fusion.reportedType()
@@ -116,7 +116,8 @@ public final class FusionTable {
         String typeString = " Type percentile " + PERCENTAGE.format(threeExpression.percentileCancer() * 100) + " (" + fcTypeString + ")";
         String fcDbString = "FC " + SINGLE_DIGIT.format(threeExpression.tpm() / threeExpression.medianTpmCohort());
         String dbString = " DB percentile " + PERCENTAGE.format(threeExpression.percentileCohort() * 100) + " (" + fcDbString + ")";
-        return new Paragraph(threeExpression.geneName() +  " " + tpmString + ", " + typeString + ", " + dbString);
+
+        return new Paragraph(threeExpression.geneName() + " " + tpmString + ", " + typeString + ", " + dbString);
     }
 
     @NotNull
@@ -137,7 +138,9 @@ public final class FusionTable {
             fragmentSupportTable.addCell(Cells.createKey(
                     junction.chromosome() + ":" + junction.junctionStart() + "-" + junction.junctionEnd()));
 
-            fragmentSupportTable.addCell(Cells.createValue(junction.type() + " (" + junction.fragmentCount() + " fragments)"));
+            String fragments = junction.fragmentCount() + " fragments";
+            String depth = junction.depthStart() + " / " + junction.depthEnd() + " depth";
+            fragmentSupportTable.addCell(Cells.createValue(junction.type() + " (" + fragments + ", " + depth + ")"));
         }
 
         return fragmentSupportTable;
@@ -172,7 +175,9 @@ public final class FusionTable {
             String split = rnaFusion.splitFragments() + " split";
             String realigned = rnaFusion.realignedFrags() + " realig.";
             String discord = rnaFusion.discordantFrags() + " discord.";
-            fragmentSupportTable.addCell(Cells.createValue(split + " / " + realigned + " / " + discord + " fragments"));
+            String fragments = split + " / " + realigned + " / " + discord + " fragments";
+            String depth = rnaFusion.depthUp() + " / " + rnaFusion.depthDown() + " depth";
+            fragmentSupportTable.addCell(Cells.createValue(fragments + ", " + depth));
         }
 
         return fragmentSupportTable;
