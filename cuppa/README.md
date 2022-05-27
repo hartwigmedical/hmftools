@@ -257,7 +257,7 @@ Unlike the genomic position similarity which determines a consensus view of muta
 
 Once a pairwise CSS has been determined, a score is calculated for each pair using the following formula:
 ```
-Score(i,j) = 8^[-100*(1-CSS)] ^[ maxCSS^8] * mutationCountWeightFactor * cohortSizeWeightFactor
+Score(i,j) = 50^[-100*(1-CSS)] ^[ maxCSS^8] * mutationCountWeightFactor * cohortSizeWeightFactor
 ```
 Where:
 * MaxCSS is the maximum pairwise CSS for any sample in the cohort. This factor reduces confidences in general for samples that have no close pairwise match.
