@@ -65,6 +65,7 @@ public final class OrangeConfigTestFactory {
         return ImmutableOrangeConfig.builder()
                 .tumorSampleId(TUMOR_SAMPLE_ID)
                 .referenceSampleId(REFERENCE_SAMPLE_ID)
+                .rnaConfig(null)
                 .reportConfig(reportConfig)
                 .addPrimaryTumorDoids(MELANOMA_DOID)
                 .outputDir(Strings.EMPTY)
@@ -103,13 +104,18 @@ public final class OrangeConfigTestFactory {
 
     @NotNull
     public static OrangeConfig createDNARNAConfig() {
-        return ImmutableOrangeConfig.builder().from(createDNAConfig())
-                .isofoxGeneDistributionCsv(ISOFOX_GENE_DISTRIBUTION_CSV)
-                .isofoxAltSjCohortCsv(ISOFOX_ALT_SJ_COHORT_CSV)
-                .isofoxSummaryCsv(ISOFOX_SUMMARY_CSV)
-                .isofoxGeneDataCsv(ISOFOX_GENE_DATA_CSV)
-                .isofoxFusionCsv(ISOFOX_FUSION_CSV)
-                .isofoxAltSpliceJunctionCsv(ISOFOX_ALT_SPLICE_JUNCTION_CSV)
+        // We use tumor_sample as rnaSampleId since we have no real ISOFOX test data for our test_run
+        return ImmutableOrangeConfig.builder()
+                .from(createDNAConfig())
+                .rnaConfig(ImmutableOrangeRNAConfig.builder()
+                        .rnaSampleId("tumor_sample")
+                        .isofoxGeneDistributionCsv(ISOFOX_GENE_DISTRIBUTION_CSV)
+                        .isofoxAltSjCohortCsv(ISOFOX_ALT_SJ_COHORT_CSV)
+                        .isofoxSummaryCsv(ISOFOX_SUMMARY_CSV)
+                        .isofoxGeneDataCsv(ISOFOX_GENE_DATA_CSV)
+                        .isofoxFusionCsv(ISOFOX_FUSION_CSV)
+                        .isofoxAltSpliceJunctionCsv(ISOFOX_ALT_SPLICE_JUNCTION_CSV)
+                        .build())
                 .build();
     }
 }

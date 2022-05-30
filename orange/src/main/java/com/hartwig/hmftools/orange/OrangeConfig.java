@@ -10,6 +10,7 @@ import com.hartwig.hmftools.orange.report.ReportConfig;
 import com.hartwig.hmftools.orange.util.Config;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
@@ -31,7 +32,6 @@ public interface OrangeConfig {
     // General params needed for every analysis
     String TUMOR_SAMPLE_ID = "tumor_sample_id";
     String REFERENCE_SAMPLE_ID = "reference_sample_id";
-    String RNA_SAMPLE_ID = "rna_sample_id";
     String PRIMARY_TUMOR_DOIDS = "primary_tumor_doids";
     String OUTPUT_DIRECTORY = "output_dir";
 
@@ -39,8 +39,6 @@ public interface OrangeConfig {
     String DOID_JSON = "doid_json";
     String COHORT_MAPPING_TSV = "cohort_mapping_tsv";
     String COHORT_PERCENTILES_TSV = "cohort_percentiles_tsv";
-    String ISOFOX_GENE_DISTRIBUTION_CSV = "isofox_gene_distribution_csv";
-    String ISOFOX_ALT_SJ_COHORT_CSV = "isofox_alt_sj_cohort_csv";
 
     // Files containing the actual genomic results for this sample.
     String PIPELINE_VERSION_FILE = "pipeline_version_file";
@@ -64,10 +62,6 @@ public interface OrangeConfig {
     String LINX_DRIVER_CATALOG_TSV = "linx_driver_catalog_tsv";
     String LINX_DRIVER_TSV = "linx_driver_tsv";
     String LINX_PLOT_DIRECTORY = "linx_plot_directory";
-    String ISOFOX_SUMMARY_CSV = "isofox_summary_csv";
-    String ISOFOX_GENE_DATA_CSV = "isofox_gene_data_csv";
-    String ISOFOX_FUSION_CSV = "isofox_fusion_csv";
-    String ISOFOX_ALT_SPLICE_JUNCTION_CSV = "isofox_alt_splice_junction_csv";
     String ANNOTATED_VIRUS_TSV = "annotated_virus_tsv";
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
     String CUPPA_RESULT_CSV = "cuppa_result_csv";
@@ -87,15 +81,12 @@ public interface OrangeConfig {
 
         options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which ORANGE will run.");
         options.addOption(REFERENCE_SAMPLE_ID, true, "(Optional) The reference sample of the tumor sample for which ORANGE will run.");
-        options.addOption(RNA_SAMPLE_ID, true, "(Optional) The RNA sample of the tumor sample for which ORANGE will run.");
         options.addOption(PRIMARY_TUMOR_DOIDS, true, "A semicolon-separated list of DOIDs representing the primary tumor of patient.");
         options.addOption(OUTPUT_DIRECTORY, true, "Path to where the ORANGE output data will be written to.");
 
         options.addOption(DOID_JSON, true, "Path to JSON file containing the full DOID tree.");
         options.addOption(COHORT_MAPPING_TSV, true, "Path to cohort mapping TSV.");
         options.addOption(COHORT_PERCENTILES_TSV, true, "Path to cohort percentiles TSV.");
-        options.addOption(ISOFOX_GENE_DISTRIBUTION_CSV, true, "Path to isofox gene distribution CSV.");
-        options.addOption(ISOFOX_ALT_SJ_COHORT_CSV, true, "Path to isofox alt SJ cohort CSV.");
 
         options.addOption(PIPELINE_VERSION_FILE, true, "Path towards the pipeline version file.");
         options.addOption(REF_SAMPLE_WGS_METRICS_FILE, true, "Path towards the ref sample WGS metrics file.");
@@ -118,10 +109,6 @@ public interface OrangeConfig {
         options.addOption(LINX_DRIVER_CATALOG_TSV, true, "Path towards the LINX driver catalog TSV.");
         options.addOption(LINX_DRIVER_TSV, true, "Path towards the LINX driver TSV.");
         options.addOption(LINX_PLOT_DIRECTORY, true, "Path towards the directory holding all linx plots.");
-        options.addOption(ISOFOX_SUMMARY_CSV, true, "Path towards the ISOFOX summary data.");
-        options.addOption(ISOFOX_GENE_DATA_CSV, true, "Path towards the ISOFOX gene data.");
-        options.addOption(ISOFOX_FUSION_CSV, true, "Path towards the ISOFOX fusion data.");
-        options.addOption(ISOFOX_ALT_SPLICE_JUNCTION_CSV, true, "Path towards the ISOFOX alt splice junction data.");
         options.addOption(ANNOTATED_VIRUS_TSV, true, "Path towards the annotated virus TSV.");
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
         options.addOption(CUPPA_RESULT_CSV, true, "Path towards the Cuppa result CSV.");
@@ -134,6 +121,10 @@ public interface OrangeConfig {
         options.addOption(DISABLE_GERMLINE, false, "If provided, germline results are not added to the report");
         options.addOption(MAX_EVIDENCE_LEVEL, true, "If provided, only evidence up to provided maximum level are added to report");
 
+        for (Option rnaOption : OrangeRNAConfig.createOptions().getOptions()) {
+            options.addOption(rnaOption);
+        }
+
         return options;
     }
 
@@ -144,7 +135,7 @@ public interface OrangeConfig {
     String referenceSampleId();
 
     @Nullable
-    String rnaSampleId();
+    OrangeRNAConfig rnaConfig();
 
     @NotNull
     ReportConfig reportConfig();
@@ -163,12 +154,6 @@ public interface OrangeConfig {
 
     @NotNull
     String cohortPercentilesTsv();
-
-    @Nullable
-    String isofoxGeneDistributionCsv();
-
-    @Nullable
-    String isofoxAltSjCohortCsv();
 
     @Nullable
     String pipelineVersionFile();
@@ -233,18 +218,6 @@ public interface OrangeConfig {
     @NotNull
     String linxPlotDirectory();
 
-    @Nullable
-    String isofoxSummaryCsv();
-
-    @Nullable
-    String isofoxGeneDataCsv();
-
-    @Nullable
-    String isofoxFusionCsv();
-
-    @Nullable
-    String isofoxAltSpliceJunctionCsv();
-
     @NotNull
     String annotatedVirusTsv();
 
@@ -291,23 +264,16 @@ public interface OrangeConfig {
             LOGGER.debug("Ref sample configured to {}", refSampleId);
         }
 
-        String rnaSampleId = Config.optionalValue(cmd, RNA_SAMPLE_ID);
-        if (rnaSampleId != null) {
-            LOGGER.debug("RNA sample configured to {}", rnaSampleId);
-        }
-
         return ImmutableOrangeConfig.builder()
                 .tumorSampleId(Config.nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
                 .referenceSampleId(refSampleId)
-                .rnaSampleId(rnaSampleId)
+                .rnaConfig(OrangeRNAConfig.createConfig(cmd))
                 .reportConfig(report)
                 .primaryTumorDoids(toStringSet(Config.nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .outputDir(Config.outputDir(cmd, OUTPUT_DIRECTORY))
                 .doidJsonFile(Config.nonOptionalFile(cmd, DOID_JSON))
                 .cohortMappingTsv(Config.nonOptionalFile(cmd, COHORT_MAPPING_TSV))
                 .cohortPercentilesTsv(Config.nonOptionalFile(cmd, COHORT_PERCENTILES_TSV))
-                .isofoxGeneDistributionCsv(Config.optionalFile(cmd, ISOFOX_GENE_DISTRIBUTION_CSV))
-                .isofoxAltSjCohortCsv(Config.optionalFile(cmd, ISOFOX_ALT_SJ_COHORT_CSV))
                 .pipelineVersionFile(Config.optionalValue(cmd, PIPELINE_VERSION_FILE))
                 .refSampleWGSMetricsFile(Config.nonOptionalValue(cmd, REF_SAMPLE_WGS_METRICS_FILE))
                 .refSampleFlagstatFile(Config.nonOptionalValue(cmd, REF_SAMPLE_FLAGSTAT_FILE))
@@ -329,10 +295,6 @@ public interface OrangeConfig {
                 .linxDriverCatalogTsv(Config.nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV))
                 .linxDriverTsv(Config.nonOptionalFile(cmd, LINX_DRIVER_TSV))
                 .linxPlotDirectory(Config.nonOptionalValue(cmd, LINX_PLOT_DIRECTORY))
-                .isofoxSummaryCsv(Config.optionalFile(cmd, ISOFOX_SUMMARY_CSV))
-                .isofoxGeneDataCsv(Config.optionalFile(cmd, ISOFOX_GENE_DATA_CSV))
-                .isofoxFusionCsv(Config.optionalFile(cmd, ISOFOX_FUSION_CSV))
-                .isofoxAltSpliceJunctionCsv(Config.optionalFile(cmd, ISOFOX_ALT_SPLICE_JUNCTION_CSV))
                 .annotatedVirusTsv(Config.nonOptionalFile(cmd, ANNOTATED_VIRUS_TSV))
                 .chordPredictionTxt(Config.nonOptionalFile(cmd, CHORD_PREDICTION_TXT))
                 .cuppaResultCsv(Config.nonOptionalFile(cmd, CUPPA_RESULT_CSV))

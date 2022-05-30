@@ -44,6 +44,7 @@ import com.hartwig.hmftools.common.purple.PurpleDataLoader;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.orange.OrangeConfig;
+import com.hartwig.hmftools.orange.OrangeRNAConfig;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableObservation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSample;
@@ -205,7 +206,7 @@ public class OrangeAlgo {
     private static PurpleData loadPurpleData(@NotNull OrangeConfig config) throws IOException {
         return PurpleDataLoader.load(config.tumorSampleId(),
                 config.referenceSampleId(),
-                config.rnaSampleId(),
+                config.rnaConfig() != null ? config.rnaConfig().rnaSampleId() : null,
                 config.purpleQcFile(),
                 config.purplePurityTsv(),
                 config.purpleSomaticDriverCatalogTsv(),
@@ -226,21 +227,9 @@ public class OrangeAlgo {
 
     @Nullable
     private IsofoxData loadIsofoxData(@NotNull OrangeConfig config) throws IOException {
-        String isofoxGeneDistributionCsv = config.isofoxGeneDistributionCsv();
-        String isofoxAltSjCohortCsv = config.isofoxAltSjCohortCsv();
-
-        String isofoxSummaryCsv = config.isofoxSummaryCsv();
-        String isofoxGeneDataCsv = config.isofoxGeneDataCsv();
-        String isofoxFusionCsv = config.isofoxFusionCsv();
-        String isofoxAltSpliceJunctionCsv = config.isofoxAltSpliceJunctionCsv();
-
-        if (anyNull(isofoxGeneDistributionCsv,
-                isofoxAltSjCohortCsv,
-                isofoxSummaryCsv,
-                isofoxGeneDataCsv,
-                isofoxFusionCsv,
-                isofoxAltSpliceJunctionCsv)) {
-            LOGGER.info("Skipping ISOFOX data loading as input is incomplete");
+        OrangeRNAConfig rna = config.rnaConfig();
+        if (rna == null) {
+            LOGGER.info("Skipping ISOFOX data loading as RNA is not configured");
             return null;
         }
 
@@ -251,12 +240,12 @@ public class OrangeAlgo {
         }
 
         return IsofoxDataLoader.load(isofoxCancerType,
-                isofoxGeneDistributionCsv,
-                isofoxAltSjCohortCsv,
-                isofoxSummaryCsv,
-                isofoxGeneDataCsv,
-                isofoxFusionCsv,
-                isofoxAltSpliceJunctionCsv);
+                rna.isofoxGeneDistributionCsv(),
+                rna.isofoxAltSjCohortCsv(),
+                rna.isofoxSummaryCsv(),
+                rna.isofoxGeneDataCsv(),
+                rna.isofoxFusionCsv(),
+                rna.isofoxAltSpliceJunctionCsv());
     }
 
     @NotNull
@@ -365,15 +354,4 @@ public class OrangeAlgo {
     private static Sample createSample(@NotNull OrangeConfig config) {
         return ImmutableSample.builder().sampleId(config.tumorSampleId()).doids(config.primaryTumorDoids()).build();
     }
-
-    private static boolean anyNull(@Nullable Object... objects) {
-        for (Object object : objects) {
-            if (object == null) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
 }
