@@ -30,6 +30,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.flagstat.Flagstat;
 import com.hartwig.hmftools.common.flagstat.FlagstatFile;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.isofox.IsofoxData;
 import com.hartwig.hmftools.common.isofox.IsofoxDataLoader;
 import com.hartwig.hmftools.common.linx.LinxData;
@@ -80,6 +81,8 @@ public class OrangeAlgo {
     private final CohortPercentilesModel percentilesModel;
     @NotNull
     private final List<DriverGene> driverGenes;
+    @NotNull
+    private final KnownFusionCache knownFusionCache;
 
     @NotNull
     public static OrangeAlgo fromConfig(@NotNull OrangeConfig config) throws IOException {
@@ -101,15 +104,24 @@ public class OrangeAlgo {
         List<DriverGene> driverGenes = DriverGeneFile.read(config.driverGenePanelTsv());
         LOGGER.info(" Read {} driver genes", driverGenes.size());
 
-        return new OrangeAlgo(doidEntry, mapper, percentilesModel, driverGenes);
+        LOGGER.info("Reading known fusions from {}", config.knownFusionFile());
+        KnownFusionCache knownFusionCache = new KnownFusionCache();
+        if (!knownFusionCache.loadFile(config.knownFusionFile())) {
+            throw new IOException("Could not load known fusions from " + config.knownFusionFile());
+        }
+        LOGGER.info(" Read {} known fusion entries", knownFusionCache.getData().size());
+
+        return new OrangeAlgo(doidEntry, mapper, percentilesModel, driverGenes, knownFusionCache);
     }
 
     private OrangeAlgo(@NotNull final DoidEntry doidEntry, @NotNull final CohortMapper cohortMapper,
-            @NotNull final CohortPercentilesModel percentilesModel, @NotNull final List<DriverGene> driverGenes) {
+            @NotNull final CohortPercentilesModel percentilesModel, @NotNull final List<DriverGene> driverGenes,
+            @NotNull final KnownFusionCache knownFusionCache) {
         this.doidEntry = doidEntry;
         this.cohortMapper = cohortMapper;
         this.percentilesModel = percentilesModel;
         this.driverGenes = driverGenes;
+        this.knownFusionCache = knownFusionCache;
     }
 
     @NotNull
