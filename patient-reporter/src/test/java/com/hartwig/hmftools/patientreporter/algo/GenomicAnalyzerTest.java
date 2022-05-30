@@ -41,34 +41,6 @@ public class GenomicAnalyzerTest {
     }
 
     @Test
-    @Ignore
-    public void canRunOnTestRunAnonymised() throws IOException {
-        // TODO Fix up purple germline vcf.
-        AnalysedReportData testReportData = PatientReporterTestFactory.loadTestAnalysedReportData();
-
-        GenomicAnalyzer analyzer = new GenomicAnalyzer(testReportData.germlineReportingModel());
-
-        PatientReporterConfig config = PatientReporterTestFactory.createTestReporterConfig();
-
-        assertNotNull(analyzer.run("fakeSampleId", "sample", "fakeReferenceId", "reference", config, LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION));
-    }
-
-    @Test
-    @Ignore
-    public void testAnonymisedMakesNoDifference() throws IOException {
-        // TODO Fix up purple germline vcf.
-        AnalysedReportData testReportData = PatientReporterTestFactory.loadTestAnalysedReportData();
-
-        GenomicAnalyzer analyzer = new GenomicAnalyzer(testReportData.germlineReportingModel());
-
-        PatientReporterConfig config = PatientReporterTestFactory.createTestReporterConfig();
-
-        GenomicAnalysis report_non_anonymised = analyzer.run("sample", "fakeSampleBarcode", "reference", "fakeReferenceBarcode", config, LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION);
-        GenomicAnalysis report_anonymised = analyzer.run("fakeSampleId", "sample", "fakeReferenceId", "reference", config, LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION);
-        assertEquals(report_non_anonymised, report_anonymised);
-    }
-
-    @Test
     public void canTestHasOtherGermlineVariantWithDifferentPhaseSet() {
         List<ReportableVariant> reportableVariants1 =
                 testReportableVariants("MUTYH", GenotypeStatus.HET, null, "MUTYH", GenotypeStatus.HET, null);
