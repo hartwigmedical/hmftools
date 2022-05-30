@@ -36,7 +36,7 @@ public class GenomicAnalyzerTest {
         GenomicAnalyzer analyzer = new GenomicAnalyzer(testReportData.germlineReportingModel());
 
         PatientReporterConfig config = PatientReporterTestFactory.createTestReporterConfig();
-
+        
         assertNotNull(analyzer.run("sample", "reference", config, LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION));
     }
 
