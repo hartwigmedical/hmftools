@@ -10,6 +10,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.cuppa.CuppaData;
+import com.hartwig.hmftools.common.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
@@ -22,6 +23,7 @@ import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
+import com.hartwig.hmftools.orange.algo.interpretation.CuppaInterpretation;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
 import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
@@ -81,19 +83,20 @@ public class FrontPageChapter implements ReportChapter {
                 new Cell[] { Cells.createHeader("Configured Primary Tumor"), Cells.createHeader("Cuppa Cancer Type"),
                         Cells.createHeader("QC") });
 
-        table.addCell(Cells.createContent(toConfiguredPrimaryTumor(report.configuredPrimaryTumor())));
-        table.addCell(Cells.createContent(toCuppaCancerType(report.cuppa())));
+        table.addCell(Cells.createContent(configuredPrimaryTumor(report.configuredPrimaryTumor())));
+        table.addCell(Cells.createContent(cuppaCancerType(report.cuppa())));
         table.addCell(Cells.createContent(purpleQCString()));
         document.add(Tables.createWrapping(table));
     }
 
     @NotNull
-    private static String toCuppaCancerType(@NotNull CuppaData cuppa) {
-        return cuppa.predictedCancerType() + " (" + PERCENTAGE.format(cuppa.bestPredictionLikelihood() * 100) + ")";
+    private static String cuppaCancerType(@NotNull CuppaData cuppa) {
+        CuppaPrediction best = CuppaInterpretation.best(cuppa);
+        return best.cancerType() + " (" + PERCENTAGE.format(best.likelihood() * 100) + ")";
     }
 
     @NotNull
-    private static String toConfiguredPrimaryTumor(@NotNull Set<DoidNode> nodes) {
+    private static String configuredPrimaryTumor(@NotNull Set<DoidNode> nodes) {
         Set<String> configured = Sets.newHashSet();
         for (DoidNode node : nodes) {
             configured.add(node.doidTerm() + " (DOID " + node.doid() + ")");

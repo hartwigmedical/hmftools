@@ -84,7 +84,7 @@ public class TestReportGenerator {
 
     @NotNull
     private static OrangeConfig buildConfig() {
-        return ImmutableOrangeConfig.builder().from(OrangeConfigTestFactory.createTestOrangeConfig()).outputDir(REPORT_BASE_DIR).build();
+        return ImmutableOrangeConfig.builder().from(OrangeConfigTestFactory.createDNAConfig()).outputDir(REPORT_BASE_DIR).build();
     }
 
     @NotNull

@@ -46,8 +46,8 @@ public final class GeneDisruptionTable {
     @NotNull
     public static List<ReportableGeneDisruption> sort(@NotNull List<ReportableGeneDisruption> disruptions) {
         return disruptions.stream().sorted((disruption1, disruption2) -> {
-            String locationAndGene1 = ChromosomeUtil.zeroPrefixed(disruption1.location()) + disruption1.gene();
-            String locationAndGene2 = ChromosomeUtil.zeroPrefixed(disruption2.location()) + disruption2.gene();
+            String locationAndGene1 = Chromosomes.zeroPrefixed(disruption1.location()) + disruption1.gene();
+            String locationAndGene2 = Chromosomes.zeroPrefixed(disruption2.location()) + disruption2.gene();
 
             if (locationAndGene1.equals(locationAndGene2)) {
                 return disruption1.firstAffectedExon() - disruption2.firstAffectedExon();

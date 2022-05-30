@@ -1,0 +1,3 @@
+FusionId,Valid,ChrUp,PosUp,OrientUp,GeneIdUp,GeneNameUp,StrandUp,JuncTypeUp,CoverageUp,MaxAnchorLengthUp,ChrDown,PosDown,OrientDown,GeneIdDown,GeneNameDown,StrandDown,JuncTypeDown,CoverageDown,MaxAnchorLengthDown,SVType,TotalFragments,SplitFrags,RealignedFrags,DiscordantFrags,RelatedSplicedIds,CohortCount,Filter,KnownFusionType
+Id_1,true,4,85978,1,GENE_ID1,GENE_1,1,UNKNOWN,12,138,4,367143,-1,GENE_ID2,GENE_2,1,UNKNOWN,78,63,DEL,16,12,0,4,NONE,0,PASS,OTHER
+Id_2,true,4,124555,1,GENE_ID2,GENE_2,1,KNOWN,3,139,4,212441,-1,GENE_ID1,GENE_1,1,CANONICAL,3,62,DEL,3,3,0,0,NONE,0,PASS,OTHER

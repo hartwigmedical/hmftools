@@ -2,6 +2,7 @@ package com.hartwig.hmftools.serve.extraction.fusion;
 
 import static com.hartwig.hmftools.serve.extraction.fusion.FusionAnnotationConfig.EXONIC_FUSIONS_MAP;
 
+import java.sql.Array;
 import java.util.List;
 import java.util.Set;
 
@@ -71,8 +72,24 @@ public class FusionExtractor {
             return null;
         }
 
-        Integer exonRank = extractExonRank(event);
-        if (exonRank == null) {
+        Integer exonRankUp = null;
+        Integer exonRankDown = null;
+
+        if (event.contains("-")) {
+            String[] wordsUp = event.split("-");
+            String[] wordsDown = event.split("-");
+            if (wordsUp.length == 2 && wordsDown.length == 2) {
+                exonRankUp = extractExonRank(event, wordsUp[0].split(" "));
+                exonRankDown = extractExonRank(event, wordsDown[1].split(" "));
+            }
+        } else {
+            String[] wordsUp = event.split(" ");
+            String[] wordsDown = event.split(" ");
+            exonRankUp = extractExonRank(event, wordsUp);
+            exonRankDown = extractExonRank(event, wordsDown);
+        }
+
+        if (exonRankUp == null || exonRankDown == null) {
             return null;
         }
 
@@ -80,13 +97,13 @@ public class FusionExtractor {
         int exonDown;
         switch (exonicDelDupType) {
             case FULL_EXONIC_DELETION: {
-                exonUp = exonRank - 1;
-                exonDown = exonRank + 1;
+                exonUp = exonRankUp - 1;
+                exonDown = exonRankDown + 1;
                 break;
             }
             case PARTIAL_EXONIC_DELETION: {
-                exonUp = exonRank;
-                exonDown = exonRank;
+                exonUp = exonRankUp;
+                exonDown = exonRankDown;
                 break;
             }
             default: {
@@ -105,9 +122,9 @@ public class FusionExtractor {
     }
 
     @Nullable
-    private static Integer extractExonRank(@NotNull String event) {
+    private static Integer extractExonRank(@NotNull String event, @NotNull String [] words) {
         List<Integer> exons = Lists.newArrayList();
-        String[] words = event.split(" ");
+
         for (String word : words) {
             if (isInteger(word)) {
                 exons.add(Integer.valueOf(word));

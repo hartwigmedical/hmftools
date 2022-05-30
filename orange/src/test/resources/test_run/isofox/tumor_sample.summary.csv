@@ -1,0 +1,2 @@
+SampleId,TotalFragments,DuplicateFragments,SplicedFragmentPerc,UnsplicedFragmentPerc,AltFragmentPerc,ChimericFragmentPerc,ReadLength,FragLength5th,FragLength50th,FragLength95th,EnrichedGenePercent,MedianGCRatio
+tumor_sample,143741629,105571109,0.430,0.488,0.060,0.022,151,97,214,468,0.097,0.445
