@@ -19,9 +19,9 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface OrangeCohortGeneratorConfig {
+public interface OrangeCohortDataGeneratorConfig {
 
-    Logger LOGGER = LogManager.getLogger(OrangeCohortGeneratorConfig.class);
+    Logger LOGGER = LogManager.getLogger(OrangeCohortDataGeneratorConfig.class);
 
     String DOID_JSON = "doid_json";
     String COHORT_MAPPING_TSV = "cohort_mapping_tsv";
@@ -53,13 +53,13 @@ public interface OrangeCohortGeneratorConfig {
     String outputDirectory();
 
     @NotNull
-    static OrangeCohortGeneratorConfig createConfig(@NotNull CommandLine cmd) throws ParseException, IOException {
+    static OrangeCohortDataGeneratorConfig createConfig(@NotNull CommandLine cmd) throws ParseException, IOException {
         if (cmd.hasOption(LOG_DEBUG)) {
             Configurator.setRootLevel(Level.DEBUG);
             LOGGER.debug("Switched root level logging to DEBUG");
         }
 
-        return ImmutableOrangeCohortGeneratorConfig.builder()
+        return ImmutableOrangeCohortDataGeneratorConfig.builder()
                 .doidJson(Config.nonOptionalFile(cmd, DOID_JSON))
                 .cohortMappingTsv(Config.nonOptionalFile(cmd, COHORT_MAPPING_TSV))
                 .outputDirectory(Config.outputDir(cmd, OUTPUT_DIRECTORY))
