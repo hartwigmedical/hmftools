@@ -1,18 +1,36 @@
 package com.hartwig.hmftools.orange.report.interpretation;
 
 import java.text.DecimalFormat;
+import java.util.List;
 
 import com.hartwig.hmftools.common.rna.GeneExpression;
 import com.hartwig.hmftools.orange.report.ReportResources;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class Expressions {
+
+    private static final Logger LOGGER = LogManager.getLogger(Expressions.class);
 
     private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#.#");
     private static final DecimalFormat PERCENTAGE = ReportResources.decimalFormat("#'%'");
 
     private Expressions() {
+    }
+
+    @Nullable
+    public static GeneExpression findByGene(@NotNull List<GeneExpression> expressions, @NotNull String geneToFind) {
+        for (GeneExpression expression : expressions) {
+            if (expression.geneName().equals(geneToFind)) {
+                return expression;
+            }
+        }
+
+        LOGGER.warn("Could not find expression data for gene '{}'", geneToFind);
+        return null;
     }
 
     @NotNull

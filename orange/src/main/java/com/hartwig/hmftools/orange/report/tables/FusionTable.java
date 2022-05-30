@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.sv.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.orange.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.interpretation.Expressions;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.layout.element.Cell;
@@ -27,7 +28,6 @@ import org.jetbrains.annotations.Nullable;
 public final class FusionTable {
 
     private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#0.0");
-    private static final DecimalFormat PERCENTAGE = ReportResources.decimalFormat("#'%'");
 
     private FusionTable() {
     }
@@ -100,25 +100,19 @@ public final class FusionTable {
 
     @NotNull
     private static IBlockElement supportFromExpressionOfGeneEnd(@NotNull IsofoxInterpretedData isofox, @NotNull LinxFusion fusion) {
-        GeneExpression threeExpression = null;
-        for (GeneExpression geneExpression : isofox.allGeneExpressions()) {
-            if (geneExpression.geneName().equals(fusion.geneEnd())) {
-                threeExpression = geneExpression;
-                break;
-            }
-        }
+        GeneExpression geneEndExpression = Expressions.findByGene(isofox.allGeneExpressions(), fusion.geneEnd());
 
-        if (threeExpression == null) {
+        if (geneEndExpression == null) {
             return new Paragraph("None");
         }
 
-        String tpmString = "TPM " + SINGLE_DIGIT.format(threeExpression.tpm());
-        String fcTypeString = "FC " + SINGLE_DIGIT.format(threeExpression.tpm() / threeExpression.medianTpmCancer());
-        String typeString = " Type percentile " + PERCENTAGE.format(threeExpression.percentileCancer() * 100) + " (" + fcTypeString + ")";
-        String fcDbString = "FC " + SINGLE_DIGIT.format(threeExpression.tpm() / threeExpression.medianTpmCohort());
-        String dbString = " DB percentile " + PERCENTAGE.format(threeExpression.percentileCohort() * 100) + " (" + fcDbString + ")";
+        String tpmString = "TPM " + Expressions.tpm(geneEndExpression);
+        String fcTypeString = "FC " + Expressions.foldChangeType(geneEndExpression);
+        String typeString = " Type percentile " + Expressions.percentileType(geneEndExpression) + " (" + fcTypeString + ")";
+        String fcDbString = "FC " + Expressions.foldChangeDatabase(geneEndExpression);
+        String dbString = " DB percentile " + Expressions.percentileDatabase(geneEndExpression) + " (" + fcDbString + ")";
 
-        return new Paragraph(threeExpression.geneName() + " " + tpmString + ", " + typeString + ", " + dbString);
+        return new Paragraph(geneEndExpression.geneName() + " " + tpmString + ", " + typeString + ", " + dbString);
     }
 
     @NotNull

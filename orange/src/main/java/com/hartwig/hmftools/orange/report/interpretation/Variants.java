@@ -75,12 +75,14 @@ public final class Variants {
 
     @NotNull
     public static String variantField(@NotNull ReportableVariant variant) {
-        // Reuse PROTECT formatting for ORANGE report.
         String addon = Strings.EMPTY;
         if (!variant.isCanonical()) {
             addon = " (alt)";
         }
-        return variant.gene() + addon + " " + AminoAcids.forceSingleLetterProteinAnnotation(ProtectEventGenerator.variantEvent(variant));
+
+        // Reuse PROTECT formatting for ORANGE report.
+        String event = ProtectEventGenerator.variantEvent(variant);
+        return variant.gene() + addon + " " + AminoAcids.forceSingleLetterProteinAnnotation(event);
     }
 
     @NotNull

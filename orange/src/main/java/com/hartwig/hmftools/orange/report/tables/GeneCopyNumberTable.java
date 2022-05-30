@@ -67,19 +67,12 @@ public final class GeneCopyNumberTable {
     }
 
     @Nullable
-    private static GeneExpression findExpressionForGene(@Nullable IsofoxInterpretedData isofox, @NotNull String gene) {
+    private static GeneExpression findExpressionForGene(@Nullable IsofoxInterpretedData isofox, @NotNull String geneToFind) {
         if (isofox == null) {
             return null;
         }
 
-        for (GeneExpression expression : isofox.allGeneExpressions()) {
-            if (expression.geneName().equals(gene)) {
-                return expression;
-            }
-        }
-
-        LOGGER.warn("Could not find expression data for gene '{}'", gene);
-        return null;
+        return Expressions.findByGene(isofox.allGeneExpressions(), geneToFind);
     }
 
     @NotNull
