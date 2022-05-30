@@ -21,12 +21,15 @@ import com.hartwig.hmftools.common.cuppa.CuppaData;
 import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
 import com.hartwig.hmftools.common.cuppa.CuppaEntry;
 import com.hartwig.hmftools.common.cuppa.CuppaFactory;
+import com.hartwig.hmftools.common.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.flagstat.Flagstat;
 import com.hartwig.hmftools.common.flagstat.FlagstatFile;
+import com.hartwig.hmftools.common.isofox.IsofoxData;
+import com.hartwig.hmftools.common.isofox.IsofoxDataLoader;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxDataLoader;
 import com.hartwig.hmftools.common.metrics.WGSMetrics;
@@ -108,6 +111,7 @@ public class OrangeAlgo {
                 .germlineMVLHPerGene(loadGermlineMVLHPerGene(config))
                 .purple(purple)
                 .linx(loadLinxData(config))
+                .isofox(loadIsofoxData(config))
                 .virusInterpreter(loadVirusInterpreterData(config))
                 .chord(loadChordAnalysis(config))
                 .cuppa(loadCuppaData(config))
@@ -196,6 +200,7 @@ public class OrangeAlgo {
     private static PurpleData loadPurpleData(@NotNull OrangeConfig config) throws IOException {
         return PurpleDataLoader.load(config.tumorSampleId(),
                 config.referenceSampleId(),
+                config.rnaSampleId(),
                 config.purpleQcFile(),
                 config.purplePurityTsv(),
                 config.purpleSomaticDriverCatalogTsv(),
@@ -212,6 +217,37 @@ public class OrangeAlgo {
                 null,
                 config.linxDriverCatalogTsv(),
                 config.linxDriverTsv());
+    }
+
+    @Nullable
+    private static IsofoxData loadIsofoxData(@NotNull OrangeConfig config) throws IOException {
+        String isofoxCancerType = config.isofoxCancerType();
+        String isofoxGeneDistributionCsv = config.isofoxGeneDistributionCsv();
+        String isofoxAltSjCohortCsv = config.isofoxAltSjCohortCsv();
+
+        String isofoxSummaryCsv = config.isofoxSummaryCsv();
+        String isofoxGeneDataCsv = config.isofoxGeneDataCsv();
+        String isofoxFusionCsv = config.isofoxFusionCsv();
+        String isofoxAltSpliceJunctionCsv = config.isofoxAltSpliceJunctionCsv();
+
+        if (anyNull(isofoxCancerType,
+                isofoxGeneDistributionCsv,
+                isofoxAltSjCohortCsv,
+                isofoxSummaryCsv,
+                isofoxGeneDataCsv,
+                isofoxFusionCsv,
+                isofoxAltSpliceJunctionCsv)) {
+            LOGGER.info("Skipping ISOFOX data loading as input is incomplete");
+            return null;
+        }
+
+        return IsofoxDataLoader.load(isofoxCancerType,
+                isofoxGeneDistributionCsv,
+                isofoxAltSjCohortCsv,
+                isofoxSummaryCsv,
+                isofoxGeneDataCsv,
+                isofoxFusionCsv,
+                isofoxAltSpliceJunctionCsv);
     }
 
     @NotNull
@@ -231,9 +267,9 @@ public class OrangeAlgo {
         LOGGER.info(" Loaded {} entries from {}", cuppaEntries.size(), config.cuppaResultCsv());
 
         CuppaData cuppaData = CuppaFactory.create(cuppaEntries);
-        LOGGER.info(" Predicted cancer type '{}' with likelihood {}",
-                cuppaData.predictedCancerType(),
-                cuppaData.bestPredictionLikelihood());
+        CuppaPrediction best = cuppaData.predictions().get(0);
+        LOGGER.info(" Predicted cancer type '{}' with likelihood {}", best.cancerType(), best.likelihood());
+
         return cuppaData;
     }
 
@@ -317,5 +353,15 @@ public class OrangeAlgo {
                 .cuppaSummaryPlot(config.cuppaSummaryPlot())
                 .cuppaFeaturePlot(config.cuppaFeaturePlot())
                 .build();
+    }
+
+    private static boolean anyNull(@Nullable Object... objects) {
+        for (Object object : objects) {
+            if (object == null) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

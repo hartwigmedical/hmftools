@@ -16,7 +16,7 @@ public final class IclusionExtractorFactory {
     @NotNull
     public static IclusionExtractor buildIclusionExtractor(@NotNull EventClassifierConfig config,
             @NotNull RefGenomeResource refGenomeResource, @NotNull DoidLookup missingDoidLookup) {
-        return new IclusionExtractor(EventExtractorFactory.create(config, refGenomeResource, DriverInconsistencyMode.FILTER),
+        return new IclusionExtractor(EventExtractorFactory.create(config, refGenomeResource, DriverInconsistencyMode.WARN_ONLY),
                 new ActionableTrialFactory(missingDoidLookup));
     }
 }

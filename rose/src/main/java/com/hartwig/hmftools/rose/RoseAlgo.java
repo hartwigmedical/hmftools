@@ -76,6 +76,7 @@ public class RoseAlgo {
     private static PurpleData loadPurpleData(@NotNull RoseConfig config) throws IOException {
         return PurpleDataLoader.load(config.tumorSampleId(),
                 config.refSampleId(),
+                null,
                 config.purpleQcFile(),
                 config.purplePurityTsv(),
                 config.purpleSomaticDriverCatalogTsv(),

@@ -59,11 +59,9 @@ NO_MSI_HRD_PROFILE | The WGS analys detected HRD/MSI support but the mutational 
 NOT_BIALLELIC | The WGS analyse called a TSG small variant but the variant itself isn't biallelic  
 
 ## Matching of actionability based on genomic events and signatures
-
 Genomic events and signatures are categorized in six categories and actionability is matched for every category independently.
 
 #### SNVs and (small) INDELs
-
 Small variants (SNVs and INDELs) are determined by [PURPLE](../purple/README.md). For the small variants, the variants should be meets 
 with the following conditions:
 - For variants which are present in ONCO genes: 
@@ -81,19 +79,16 @@ Do note that germline and somatic variants are treated equally. It is not consid
 present in the germline already or has been acquired by the tumor somatically.
 
 #### Copy numbers
-
 Actionability on amplifications and deletions is considered applicable in case a gene has been classified as amplified or deleted by
 [PURPLE](../purple/README.md). If an CNV is called, the actionability will be match with the following type alteration: 
 - If it is an amplification the type alteration will be AMPLIFICATION
 - If it is a deletion the type alteration will be LOSS
 
 #### Homozygous disruptions
-
 When a gene has been homozygously disrupted according to [LINX](../linx/README.md), the actionability will always match with the
 type alteration INACTIVATION.
 
 #### Fusions
-
 For fusions that are deemed reportable according to [LINX](../linx/README.md), the following matching is performed:
 - Fusions will be match to the actionability unless the driver likelihood 
 - If fusion type is EXON_DEL_DUP this will match to the type alteration INTERNAL_DELETION actionability
@@ -103,7 +98,6 @@ actionability of KINASE_DOMAIN_DUPLICATION for EGFR
 FUSION for actionability when the fusion gene is either on 3' promiscuous or 5' side 
 
 #### Viral presence
-
 For matching viral presence to actionability, the interpretation by [Virus Interpreter](../virus-interpreter/README.md) is used. 
 The type alteration will be POSITIVE and the virus should be present in the actionability database. Also, the actionability is meets 
 unless the driver likelihood
@@ -113,7 +107,7 @@ The signatures are categorized in four categories and actionability is matched f
 
 ###### HRD
 When a tumor has the signature homologous recombination repair, which means a value >= 0.5 with the status omologous recombination 
-deficient, according to[CHORD](https://github.com/UMCUGenetics/CHORD) the signature is match for actionability. Also, when there is no 
+deficient, according to [CHORD](https://github.com/UMCUGenetics/CHORD) the signature is match for actionability. Also, when there is no 
 support for this signature this will be also mentioned. 
 
 ###### MSI

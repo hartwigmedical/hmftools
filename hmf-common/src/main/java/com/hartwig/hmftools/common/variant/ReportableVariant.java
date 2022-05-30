@@ -74,6 +74,12 @@ public abstract class ReportableVariant implements Variant {
     @Override
     public abstract int alleleReadCount();
 
+    @Nullable
+    public abstract Integer rnaAlleleReadCount();
+
+    @Nullable
+    public abstract Integer rnaTotalReadCount();
+
     public abstract double totalCopyNumber();
 
     public abstract double alleleCopyNumber();

@@ -94,6 +94,14 @@ investigate potential causes for QC failure.
  - BQR plots from both reference and tumor sample from [SAGE](../sage)
 
 ### Version History and Download Links
+- Upcoming
+  - Proper support for RNA
+    - Isofox data is loaded when provided through command line
+    - Amps and dels are annotated with expression data (including percentiles and fold change)
+    - Fusions are annotated by RNA fragment support (from novel splice junctions for `EXON_DEL_DUP` and rna fusions otherwise)
+  - Improvements to CUPPA
+    - Cuppa data loader favors overall combined score > DNA combined score > RNA combined score.
+    - Cuppa data loader retains the combined prediction for every cancer type, not just the best prediction.
 - [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.8)
   - Only show every source name once in clinical evidence section.
   - Fix bug with selecting variants that are unreported but have evidence.

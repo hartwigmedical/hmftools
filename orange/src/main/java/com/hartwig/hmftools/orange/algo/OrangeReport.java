@@ -8,6 +8,7 @@ import java.util.Set;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.cuppa.CuppaData;
 import com.hartwig.hmftools.common.doid.DoidNode;
+import com.hartwig.hmftools.common.isofox.IsofoxData;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
@@ -50,6 +51,9 @@ public abstract class OrangeReport {
 
     @NotNull
     public abstract LinxData linx();
+
+    @Nullable
+    public abstract IsofoxData isofox();
 
     @NotNull
     public abstract VirusInterpreterData virusInterpreter();

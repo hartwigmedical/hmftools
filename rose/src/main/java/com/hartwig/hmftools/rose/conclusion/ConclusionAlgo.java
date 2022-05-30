@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.rose.conclusion;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -22,7 +25,6 @@ import com.hartwig.hmftools.common.variant.ReportableVariantSource;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
-import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.rose.RoseData;
 import com.hartwig.hmftools.rose.actionability.ActionabilityEntry;
 import com.hartwig.hmftools.rose.actionability.ActionabilityKey;
@@ -43,6 +45,10 @@ public class ConclusionAlgo {
             KnownFusionType.IG_KNOWN_PAIR.toString(),
             KnownFusionType.IG_PROMISCUOUS.toString());
     private static final Set<String> HRD_GENES = Sets.newHashSet("BRCA1", "BRCA2", "PALB2", "RAD51B", "RAD51C");
+
+    private static final DecimalFormat DOUBLE_DECIMAL_FORMAT = decimalFormat("#.##");
+    private static final double TMB_CUTOFF = 10;
+    private static final double PURITY_CUTOFF = 0.195;
 
     @NotNull
     public static ActionabilityConclusion generateConclusion(@NotNull RoseData roseData) {
@@ -109,7 +115,7 @@ public class ConclusionAlgo {
     public static Map<ActionabilityKey, ActionabilityEntry> generateActionabilityMap(@NotNull List<ActionabilityEntry> actionabilityDB) {
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         for (ActionabilityEntry entry : actionabilityDB) {
-            ActionabilityKey key = ImmutableActionabilityKey.builder().gene(entry.match()).type(entry.type()).build();
+            ActionabilityKey key = ImmutableActionabilityKey.builder().match(entry.match()).type(entry.type()).build();
             actionabilityMap.put(key, entry);
         }
         return actionabilityMap;
@@ -129,14 +135,14 @@ public class ConclusionAlgo {
 
         if (molecularTissueOrigin.conclusion().contains("results inconclusive")) {
             ActionabilityKey keyCuppaInconclusice =
-                    ImmutableActionabilityKey.builder().gene("CUPPA_inconclusive").type(TypeAlteration.CUPPA_INCONCLUSIVE).build();
+                    ImmutableActionabilityKey.builder().match("CUPPA_INCONCLUSIVE").type(TypeAlteration.CUPPA_INCONCLUSIVE).build();
 
             ActionabilityEntry entry = actionabilityMap.get(keyCuppaInconclusice);
             if (entry != null && entry.condition() == Condition.OTHER) {
                 conclusion.put(conclusion.size(), "- " + entry.conclusion());
             }
         } else {
-            ActionabilityKey keyCuppa = ImmutableActionabilityKey.builder().gene("CUPPA").type(TypeAlteration.CUPPA).build();
+            ActionabilityKey keyCuppa = ImmutableActionabilityKey.builder().match("CUPPA").type(TypeAlteration.CUPPA).build();
 
             ActionabilityEntry entry = actionabilityMap.get(keyCuppa);
             if (entry != null && entry.condition() == Condition.OTHER) {
@@ -151,12 +157,17 @@ public class ConclusionAlgo {
             @NotNull Set<String> HRD) {
 
         for (ReportableVariant reportableVariant : reportableVariants) {
+            String variant =
+                    reportableVariant.canonicalHgvsProteinImpact().isEmpty() || reportableVariant.canonicalHgvsProteinImpact().equals("p.?")
+                            ? reportableVariant.canonicalHgvsCodingImpact()
+                            : reportableVariant.canonicalHgvsProteinImpact();
+
             if (HRD_GENES.contains(reportableVariant.gene())) {
                 HRD.add(reportableVariant.gene());
             }
             oncogenic.add(reportableVariant.source() == ReportableVariantSource.SOMATIC ? "somaticVariant" : "germlineVariant");
             ActionabilityKey keySomaticVariant = ImmutableActionabilityKey.builder()
-                    .gene(reportableVariant.gene())
+                    .match(reportableVariant.gene())
                     .type(driverGenesMap.get(reportableVariant.gene()).likelihoodType().equals(DriverCategory.ONCO)
                             ? TypeAlteration.ACTIVATING_MUTATION
                             : TypeAlteration.INACTIVATION)
@@ -173,16 +184,16 @@ public class ConclusionAlgo {
                     if (driverGenesMap.get(reportableVariant.gene()).likelihoodType().equals(DriverCategory.TSG)
                             && !reportableVariant.biallelic()) {
                         ActionabilityKey keyBiallelic =
-                                ImmutableActionabilityKey.builder().gene("biallelic").type(TypeAlteration.NOT_BIALLELIC).build();
+                                ImmutableActionabilityKey.builder().match("NOT_BIALLELIC").type(TypeAlteration.NOT_BIALLELIC).build();
                         ActionabilityEntry entryBiallelic = actionabilityMap.get(keyBiallelic);
                         if (entryBiallelic.condition() == Condition.OTHER) {
                             conclusion.put(conclusion.size(),
-                                    "- " + reportableVariant.gene() + "(" + reportableVariant.canonicalHgvsProteinImpact() + ") "
+                                    "- " + reportableVariant.gene() + "(" + variant + ") "
                                             + entry.conclusion() + " " + entryBiallelic.conclusion());
                         }
                     } else {
                         conclusion.put(conclusion.size(),
-                                "- " + reportableVariant.gene() + "(" + reportableVariant.canonicalHgvsProteinImpact() + ") "
+                                "- " + reportableVariant.gene() + "(" + variant + ") "
                                         + entry.conclusion());
                     }
                 }
@@ -200,10 +211,10 @@ public class ConclusionAlgo {
                     .display()
                     .equals(CopyNumberInterpretation.PARTIAL_LOSS.display())) {
 
-                ActionabilityKey keyVirus = ImmutableActionabilityKey.builder().gene(gainLoss.gene()).type(TypeAlteration.LOSS).build();
+                ActionabilityKey keyVirus = ImmutableActionabilityKey.builder().match(gainLoss.gene()).type(TypeAlteration.LOSS).build();
                 ActionabilityEntry entry = actionabilityMap.get(keyVirus);
 
-                if (entry != null && entry.condition() == Condition.ALWAYS) {
+                if (entry != null && (entry.condition() == Condition.ALWAYS || entry.condition() == Condition.ALWAYS_NO_ACTIONABLE)) {
                     conclusion.put(conclusion.size(), "- " + gainLoss.gene() + " " + entry.conclusion());
                     actionable.add("CNV");
                 }
@@ -213,7 +224,7 @@ public class ConclusionAlgo {
                     .display()
                     .equals(CopyNumberInterpretation.PARTIAL_GAIN.display())) {
                 ActionabilityKey keyVirus =
-                        ImmutableActionabilityKey.builder().gene(gainLoss.gene()).type(TypeAlteration.AMPLIFICATION).build();
+                        ImmutableActionabilityKey.builder().match(gainLoss.gene()).type(TypeAlteration.AMPLIFICATION).build();
                 ActionabilityEntry entry = actionabilityMap.get(keyVirus);
 
                 if (entry != null && entry.condition() == Condition.ALWAYS) {
@@ -233,8 +244,10 @@ public class ConclusionAlgo {
             if (fusion.reportedType().equals(KnownFusionType.EXON_DEL_DUP.toString()) && fusion.geneStart().equals("EGFR") && (
                     fusion.fusedExonUp() == 25 && fusion.fusedExonDown() == 14) || (fusion.fusedExonUp() == 26
                     && fusion.fusedExonDown() == 18)) {
-                ActionabilityKey keyFusion =
-                        ImmutableActionabilityKey.builder().gene(fusion.geneStart()).type(TypeAlteration.KINASE_DOMAIN_DUPLICATION).build();
+                ActionabilityKey keyFusion = ImmutableActionabilityKey.builder()
+                        .match(fusion.geneStart())
+                        .type(TypeAlteration.KINASE_DOMAIN_DUPLICATION)
+                        .build();
                 ActionabilityEntry entry = actionabilityMap.get(keyFusion);
                 if (entry != null && entry.condition() == Condition.ALWAYS) {
                     conclusion.put(conclusion.size(), "- " + fusion.name() + " " + entry.conclusion());
@@ -242,7 +255,7 @@ public class ConclusionAlgo {
                 }
             } else if (fusion.reportedType().equals(KnownFusionType.EXON_DEL_DUP.toString())) {
                 ActionabilityKey keyFusion =
-                        ImmutableActionabilityKey.builder().gene(fusion.geneStart()).type(TypeAlteration.INTERNAL_DELETION).build();
+                        ImmutableActionabilityKey.builder().match(fusion.geneStart()).type(TypeAlteration.INTERNAL_DELETION).build();
                 ActionabilityEntry entry = actionabilityMap.get(keyFusion);
                 if (entry != null && entry.condition() == Condition.ALWAYS) {
                     conclusion.put(conclusion.size(), "- " + fusion.name() + " " + entry.conclusion());
@@ -250,9 +263,9 @@ public class ConclusionAlgo {
                 }
             } else if (FUSION_TYPES.contains(fusion.reportedType())) {
                 ActionabilityKey keyFusionStart =
-                        ImmutableActionabilityKey.builder().gene(fusion.geneStart()).type(TypeAlteration.FUSION).build();
+                        ImmutableActionabilityKey.builder().match(fusion.geneStart()).type(TypeAlteration.FUSION).build();
                 ActionabilityKey keyFusionEnd =
-                        ImmutableActionabilityKey.builder().gene(fusion.geneEnd()).type(TypeAlteration.FUSION).build();
+                        ImmutableActionabilityKey.builder().match(fusion.geneEnd()).type(TypeAlteration.FUSION).build();
 
                 ActionabilityEntry entryStart = actionabilityMap.get(keyFusionStart);
                 ActionabilityEntry entryEnd = actionabilityMap.get(keyFusionEnd);
@@ -276,7 +289,7 @@ public class ConclusionAlgo {
             oncogenic.add("homozygousDisruption");
 
             ActionabilityKey keyHomozygousDisruption =
-                    ImmutableActionabilityKey.builder().gene(homozygousDisruption.gene()).type(TypeAlteration.INACTIVATION).build();
+                    ImmutableActionabilityKey.builder().match(homozygousDisruption.gene()).type(TypeAlteration.INACTIVATION).build();
             ActionabilityEntry entry = actionabilityMap.get(keyHomozygousDisruption);
             if (entry != null && entry.condition() == Condition.ALWAYS) {
                 conclusion.put(conclusion.size(), "- " + homozygousDisruption.gene() + " " + entry.conclusion());
@@ -292,7 +305,7 @@ public class ConclusionAlgo {
             oncogenic.add("virus");
 
             ActionabilityKey keyVirus = ImmutableActionabilityKey.builder()
-                    .gene(annotatedVirus.interpretation() != null ? annotatedVirus.interpretation() : Strings.EMPTY)
+                    .match(annotatedVirus.interpretation() != null ? annotatedVirus.interpretation() : Strings.EMPTY)
                     .type(TypeAlteration.POSITIVE)
                     .build();
             ActionabilityEntry entry = actionabilityMap.get(keyVirus);
@@ -307,20 +320,20 @@ public class ConclusionAlgo {
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap, @NotNull Set<String> oncogenic,
             @NotNull Set<String> actionable, @NotNull Set<String> HRD) {
         if (chordAnalysis.hrStatus() == ChordStatus.HR_DEFICIENT) {
-            ActionabilityKey keyHRD = ImmutableActionabilityKey.builder().gene("HRD").type(TypeAlteration.POSITIVE).build();
+            ActionabilityKey keyHRD = ImmutableActionabilityKey.builder().match("HRD").type(TypeAlteration.POSITIVE).build();
             ActionabilityEntry entry = actionabilityMap.get(keyHRD);
             if (entry != null && entry.condition() == Condition.ALWAYS) {
                 if (HRD.size() == 0) {
                     ActionabilityKey keyNoHRD =
-                            ImmutableActionabilityKey.builder().gene("no_HRD_cause").type(TypeAlteration.NO_HRD_CAUSE).build();
+                            ImmutableActionabilityKey.builder().match("NO_HRD_CAUSE").type(TypeAlteration.NO_HRD_CAUSE).build();
                     ActionabilityEntry entryNoHRd = actionabilityMap.get(keyNoHRD);
                     if (entryNoHRd != null && entry.condition() == Condition.OTHER) {
                         conclusion.put(conclusion.size(),
                                 "- " + "HRD(" + chordAnalysis.hrdValue() + ") " + entry.conclusion() + entryNoHRd.conclusion());
                     }
-                } else {
-                    conclusion.put(conclusion.size(), "- " + "HRD(" + chordAnalysis.hrdValue() + ") " + entry.conclusion());
                 }
+                conclusion.put(conclusion.size(),
+                        "- " + "HRD(" + DOUBLE_DECIMAL_FORMAT.format(chordAnalysis.hrdValue()) + ") " + entry.conclusion());
 
                 actionable.add("HRD");
                 oncogenic.add("HRD");
@@ -332,10 +345,11 @@ public class ConclusionAlgo {
             double microsatelliteMb, @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap, @NotNull Set<String> oncogenic,
             @NotNull Set<String> actionable) {
         if (microsatelliteStatus == MicrosatelliteStatus.MSI) {
-            ActionabilityKey keyMSI = ImmutableActionabilityKey.builder().gene("MSI").type(TypeAlteration.POSITIVE).build();
+            ActionabilityKey keyMSI = ImmutableActionabilityKey.builder().match("MSI").type(TypeAlteration.POSITIVE).build();
             ActionabilityEntry entry = actionabilityMap.get(keyMSI);
             if (entry != null && entry.condition() == Condition.ALWAYS) {
-                conclusion.put(conclusion.size(), "- " + "MSI(" + microsatelliteMb + ")" + entry.conclusion());
+                conclusion.put(conclusion.size(),
+                        "- " + "MSI(" + DOUBLE_DECIMAL_FORMAT.format(microsatelliteMb) + ")" + entry.conclusion());
                 actionable.add("MSI");
                 oncogenic.add("MSI");
             }
@@ -346,7 +360,7 @@ public class ConclusionAlgo {
             int tumorMutationalLoad, @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap, @NotNull Set<String> oncogenic,
             @NotNull Set<String> actionable) {
         if (tumorMutationalStatus == TumorMutationalStatus.HIGH) {
-            ActionabilityKey keyTML = ImmutableActionabilityKey.builder().gene("High-TML").type(TypeAlteration.POSITIVE).build();
+            ActionabilityKey keyTML = ImmutableActionabilityKey.builder().match("High-TML").type(TypeAlteration.POSITIVE).build();
             ActionabilityEntry entry = actionabilityMap.get(keyTML);
             if (entry != null && entry.condition() == Condition.ALWAYS) {
                 conclusion.put(conclusion.size(), "- " + "TML(" + tumorMutationalLoad + ") " + entry.conclusion());
@@ -359,8 +373,8 @@ public class ConclusionAlgo {
     public static void generateTMBConclusion(@NotNull Map<Integer, String> conclusion, double tumorMutationalBurden,
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap, @NotNull Set<String> oncogenic,
             @NotNull Set<String> actionable) {
-        if (tumorMutationalBurden >= 10) {
-            ActionabilityKey keyTMB = ImmutableActionabilityKey.builder().gene("High-TMB").type(TypeAlteration.POSITIVE).build();
+        if (tumorMutationalBurden >= TMB_CUTOFF) {
+            ActionabilityKey keyTMB = ImmutableActionabilityKey.builder().match("High-TMB").type(TypeAlteration.POSITIVE).build();
             ActionabilityEntry entry = actionabilityMap.get(keyTMB);
             if (entry != null && entry.condition() == Condition.ALWAYS) {
                 conclusion.put(conclusion.size(), "- " + "TMB( " + tumorMutationalBurden + ")" + entry.conclusion());
@@ -374,14 +388,14 @@ public class ConclusionAlgo {
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
         if (!hasRelaiblePurity) {
             ActionabilityKey keyReliable =
-                    ImmutableActionabilityKey.builder().gene("purity_unreliable").type(TypeAlteration.PURITY_UNRELIABLE).build();
+                    ImmutableActionabilityKey.builder().match("PURITY_UNRELIABLE").type(TypeAlteration.PURITY_UNRELIABLE).build();
 
             ActionabilityEntry entryReliable = actionabilityMap.get(keyReliable);
             if (entryReliable != null && entryReliable.condition() == Condition.OTHER) {
                 conclusion.put(conclusion.size(), "- " + entryReliable.conclusion());
             }
-        } else if (purity < 0.195) {
-            ActionabilityKey keyPurity = ImmutableActionabilityKey.builder().gene("purity").type(TypeAlteration.PURITY).build();
+        } else if (purity < PURITY_CUTOFF) {
+            ActionabilityKey keyPurity = ImmutableActionabilityKey.builder().match("PURITY").type(TypeAlteration.PURITY).build();
 
             ActionabilityEntry entry = actionabilityMap.get(keyPurity);
             if (entry != null && entry.condition() == Condition.OTHER) {
@@ -395,7 +409,7 @@ public class ConclusionAlgo {
             @NotNull Set<String> actionable) {
         if (oncogenic.size() == 0) {
             ActionabilityKey keyOncogenic =
-                    ImmutableActionabilityKey.builder().gene("no_oncogenic").type(TypeAlteration.NO_ONCOGENIC).build();
+                    ImmutableActionabilityKey.builder().match("NO_ONCOGENIC").type(TypeAlteration.NO_ONCOGENIC).build();
 
             ActionabilityEntry entry = actionabilityMap.get(keyOncogenic);
             if (entry != null && entry.condition() == Condition.OTHER) {
@@ -403,7 +417,7 @@ public class ConclusionAlgo {
             }
         } else if (actionable.size() == 0) {
             ActionabilityKey keyActionable =
-                    ImmutableActionabilityKey.builder().gene("no_actionable").type(TypeAlteration.NO_ACTIONABLE).build();
+                    ImmutableActionabilityKey.builder().match("NO_ACTIONABLE").type(TypeAlteration.NO_ACTIONABLE).build();
             ActionabilityEntry entry = actionabilityMap.get(keyActionable);
             if (entry != null && entry.condition() == Condition.OTHER) {
                 conclusion.put(conclusion.size(), "- " + entry.conclusion());
@@ -413,11 +427,17 @@ public class ConclusionAlgo {
 
     public static void generateFindings(@NotNull Map<Integer, String> conclusion,
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
-        ActionabilityKey keyOncogenic = ImmutableActionabilityKey.builder().gene("findings").type(TypeAlteration.FINDINGS).build();
+        ActionabilityKey keyOncogenic = ImmutableActionabilityKey.builder().match("FINDINGS").type(TypeAlteration.FINDINGS).build();
 
         ActionabilityEntry entry = actionabilityMap.get(keyOncogenic);
         if (entry != null && entry.condition() == Condition.OTHER) {
             conclusion.put(conclusion.size(), "- " + entry.conclusion());
         }
+    }
+
+    @NotNull
+    public static DecimalFormat decimalFormat(@NotNull String format) {
+        // To make sure every decimal format uses a dot as separator rather than a comma.
+        return new DecimalFormat(format, DecimalFormatSymbols.getInstance(Locale.ENGLISH));
     }
 }

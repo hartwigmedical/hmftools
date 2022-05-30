@@ -14,7 +14,7 @@ public class ReportWriterTest {
 
     @Test
     public void canGenerateTestReportFromTestResources() throws IOException {
-        OrangeConfig config = OrangeConfigTestFactory.createTestOrangeConfig();
+        OrangeConfig config = OrangeConfigTestFactory.createDNAConfig();
         OrangeReport report = OrangeAlgo.fromConfig(config).run(config);
 
         ReportWriter writer = ReportWriterFactory.createInMemoryWriter(config);

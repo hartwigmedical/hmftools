@@ -9,7 +9,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class IclusionProteinAnnotationExtractor implements EventPreprocessor {
 
-    private static final Set<String> CAPITALIZED_STRINGS_TO_UNCAPITALIZE = Sets.newHashSet("DELINS", "DEL", "INS", "DUP", "FS");
+    private static final Set<String> CAPITALIZED_STRINGS_TO_UNCAPITALIZE =
+            Sets.newHashSet("DELINS", "DEL", "INS", "DUP", "FS", "delins", "del", "ins", "dup", "fs");
 
     public IclusionProteinAnnotationExtractor() {
     }
@@ -19,8 +20,8 @@ public class IclusionProteinAnnotationExtractor implements EventPreprocessor {
     public String apply(@NotNull String event) {
         String proteinAnnotation = event;
 
-        if (proteinAnnotation.contains("ins")) {
-            proteinAnnotation = proteinAnnotation.replace("-", "_");
+        if (proteinAnnotation.contains("-")) {
+            proteinAnnotation = proteinAnnotation.replace("-", "_").toUpperCase();
         }
 
         // iClusion tends to use DEL/INS/FS rather than del/ins/fs

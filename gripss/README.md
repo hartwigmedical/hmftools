@@ -11,6 +11,7 @@ Repeat masker annotations must be included in the GRIDSS output before running G
 java -jar gripss.jar \
    -sample SAMPLE_T \
    -reference SAMPLE_N \
+   -ref_genome_version 37 \
    -ref_genome /path/to/Homo_sapiens_assembly.fasta \
    -pon_sgl_file /path/to/gridss_pon_single_breakend.bed \
    -pon_sv_file /path/to/gridss_pon_breakpoint.bedpe \

@@ -16,4 +16,5 @@ More detailed descriptions of the following algorithms are available from the li
  - [PROTECT](./protect/README.md)
  - [Cuppa](./cuppa/README.md)
  - [Virus Interpreter](./virus-interpreter/README.md)
+ - [ROSE](./rose/README.md)
  - [ORANGE](./orange/README.md)

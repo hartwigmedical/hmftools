@@ -31,14 +31,14 @@ public final class GermlineVariantTable {
                         Cells.createHeader("RNA VAF"), Cells.createHeader("Biallelic"), Cells.createHeader("Hotspot"),
                         Cells.createHeader("Genotype") });
 
-        for (ReportableVariant variant : VariantUtil.sort(variants)) {
-            table.addCell(Cells.createContent(VariantUtil.variantField(variant)));
+        for (ReportableVariant variant : Variants.sort(variants)) {
+            table.addCell(Cells.createContent(Variants.variantField(variant)));
             table.addCell(Cells.createContent(SINGLE_DIGIT.format(variant.alleleCopyNumber())));
             table.addCell(Cells.createContent(SINGLE_DIGIT.format(variant.totalCopyNumber())));
             table.addCell(Cells.createContent(SINGLE_DIGIT.format(variant.minorAlleleCopyNumber())));
             table.addCell(Cells.createContent(ReportResources.NOT_AVAILABLE));
             table.addCell(Cells.createContent(variant.biallelic() ? "Yes" : "No"));
-            table.addCell(Cells.createContent(VariantUtil.hotspotField(variant)));
+            table.addCell(Cells.createContent(Variants.hotspotField(variant)));
             table.addCell(Cells.createContent(variant.genotypeStatus().simplifiedDisplay()));
         }
 

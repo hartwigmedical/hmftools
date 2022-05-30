@@ -26,6 +26,5 @@ public class MolecularTissueOriginFileTest {
         assertEquals("Lower GI tract (likelihood=80.4%)", molecularTissueOrigin.conclusion());
         assertEquals("Lower GI tract", molecularTissueOrigin.predictedOrigin());
         assertEquals("likelihood=80.4%", molecularTissueOrigin.predictionLikelihood());
-
     }
 }

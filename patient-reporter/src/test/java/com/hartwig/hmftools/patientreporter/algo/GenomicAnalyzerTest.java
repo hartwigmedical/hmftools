@@ -1,5 +1,10 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -16,11 +21,11 @@ import com.hartwig.hmftools.patientreporter.PatientReporterConfig;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 
 import org.apache.logging.log4j.util.Strings;
+import org.immutables.value.internal.$processor$.meta.$GsonMirrors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.junit.Ignore;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 public class GenomicAnalyzerTest {
 
