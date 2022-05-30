@@ -102,6 +102,7 @@ public class ProtectAlgo {
     private static PurpleData loadPurpleData(@NotNull ProtectConfig config) throws IOException {
         return PurpleDataLoader.load(config.tumorSampleId(),
                 config.referenceSampleId(),
+                null,
                 config.purpleQcFile(),
                 config.purplePurityTsv(),
                 config.purpleSomaticDriverCatalogTsv(),

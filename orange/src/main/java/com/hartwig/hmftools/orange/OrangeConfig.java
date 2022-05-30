@@ -31,6 +31,7 @@ public interface OrangeConfig {
     // General params needed for every analysis
     String TUMOR_SAMPLE_ID = "tumor_sample_id";
     String REFERENCE_SAMPLE_ID = "reference_sample_id";
+    String RNA_SAMPLE_ID = "rna_sample_id";
     String PRIMARY_TUMOR_DOIDS = "primary_tumor_doids";
     String OUTPUT_DIRECTORY = "output_dir";
 
@@ -87,6 +88,7 @@ public interface OrangeConfig {
 
         options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which ORANGE will run.");
         options.addOption(REFERENCE_SAMPLE_ID, true, "(Optional) The reference sample of the tumor sample for which ORANGE will run.");
+        options.addOption(RNA_SAMPLE_ID, true, "(Optional) The RNA sample of the tumor sample for which ORANGE will run.");
         options.addOption(PRIMARY_TUMOR_DOIDS, true, "A semicolon-separated list of DOIDs representing the primary tumor of patient.");
         options.addOption(OUTPUT_DIRECTORY, true, "Path to where the ORANGE output data will be written to.");
 
@@ -142,6 +144,9 @@ public interface OrangeConfig {
 
     @Nullable
     String referenceSampleId();
+
+    @Nullable
+    String rnaSampleId();
 
     @NotNull
     ReportConfig reportConfig();
@@ -291,6 +296,7 @@ public interface OrangeConfig {
         return ImmutableOrangeConfig.builder()
                 .tumorSampleId(Config.nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
                 .referenceSampleId(Config.optionalValue(cmd, REFERENCE_SAMPLE_ID))
+                .rnaSampleId(Config.optionalValue(cmd, RNA_SAMPLE_ID))
                 .reportConfig(report)
                 .primaryTumorDoids(toStringSet(Config.nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .outputDir(Config.outputDir(cmd, OUTPUT_DIRECTORY))
