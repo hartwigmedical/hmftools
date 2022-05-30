@@ -1,11 +1,7 @@
 package com.hartwig.hmftools.cup;
 
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.cup.CupAnalyser.allClassifiersValid;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.common.ClassifierType.isDna;
-import static com.hartwig.hmftools.cup.common.ClassifierType.isRna;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcCombinedClassifierScoreResult;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcCombinedFeatureResult;
 import static com.hartwig.hmftools.cup.common.CupCalcs.fillMissingCancerTypeValues;
@@ -16,7 +12,6 @@ import static com.hartwig.hmftools.cup.common.CupConstants.DATA_TYPE_RNA_COMBINE
 import static com.hartwig.hmftools.cup.common.CupConstants.DNA_DAMPEN_FACTOR;
 import static com.hartwig.hmftools.cup.common.CupConstants.RNA_DAMPEN_FACTOR;
 import static com.hartwig.hmftools.cup.common.ResultType.CLASSIFIER;
-import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 
 import java.util.List;
 import java.util.Map;
@@ -26,7 +21,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.cup.common.CategoryType;
-import com.hartwig.hmftools.cup.common.ClassifierType;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;

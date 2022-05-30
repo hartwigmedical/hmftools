@@ -9,16 +9,17 @@ public class CupConstants
 {
     // somatics
     public static final double SNV_96_CSS_THRESHOLD = 0.01;
-    public static final double SNV_96_CSS_DIFF_EXPONENT = 8;
+    public static final double SNV_96_CSS_DIFF_EXPONENT = 10;
     public static final double UNDEFINED_SIG_PERC_MAX_MULTIPLE = 100.01;
     public static final int SNV_96_NOISE_ALLOCATION = 100;
 
     public static final double GEN_POS_CSS_THRESHOLD = 0.01;
-    public static final double GEN_POS_DIFF_EXPONENT = 10;
+    public static final double GEN_POS_CSS_EXPONENT = 30;
+    public static final double GEN_POS_CSS_EXPONENT_TAIL = 3;
+    public static final double GEN_POS_CSS_EXPONENT_CUTOFF = 0.012;
     public static final int GEN_POS_BUCKET_SIZE = 500000;
     public static final int GEN_POS_MAX_SAMPLE_COUNT = 20000;
     public static final int GEN_POS_COHORT_NOISE_ALLOCATION = 100000;
-    // public static final int GEN_POS_PAIRWISE_NOISE_ALLOCATION = 500;
 
     // traits
     public static final double BREAST_MALE_GENDER_RATE = 0.1;
@@ -45,7 +46,7 @@ public class CupConstants
     // drivers
     public static final double DRIVER_ZERO_PREVALENCE_ALLOCATION = 0.10;
     public static final double NON_DRIVER_ZERO_PREVALENCE_ALLOCATION = 0.01;
-    public static final double FEATURE_DAMPEN_FACTOR = 0.8;
+    public static final double FEATURE_DAMPEN_FACTOR = 0.75;
 
     public static final String CANCER_TYPE_UNKNOWN = "Unknown";
     public static final String CANCER_TYPE_OTHER = "Other";

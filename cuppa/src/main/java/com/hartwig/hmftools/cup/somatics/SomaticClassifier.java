@@ -24,11 +24,13 @@ import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_MAX_MATCHES;
 import static com.hartwig.hmftools.cup.common.CupConstants.DATA_TYPE_SNV_COUNT;
 import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_BUCKET_SIZE;
+import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_CSS_EXPONENT_CUTOFF;
+import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_CSS_EXPONENT_TAIL;
 import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_MAX_SAMPLE_COUNT;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_96_CSS_DIFF_EXPONENT;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_96_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_CSS_THRESHOLD;
-import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_DIFF_EXPONENT;
+import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_CSS_EXPONENT;
 import static com.hartwig.hmftools.cup.common.CupConstants.UNDEFINED_PERC_MAX_MULTIPLE;
 import static com.hartwig.hmftools.cup.common.ResultType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
@@ -105,7 +107,9 @@ public class SomaticClassifier implements CuppaClassifier
     private final double mMaxCssAdjustFactorSnv;
     private final double mMaxCssAdjustFactorGenPos;
     private final double mCssExponentSnv;
-    private final double mCssExponentGenPos;
+    private final double mGenPosCssExponent;
+    private final double mGenPosCssExponentTail;
+    private final double mGenPosCssExponentCutoff;
     private final boolean mWriteGenPosSims;
     private final boolean mWriteSnvSims;
 
@@ -114,16 +118,16 @@ public class SomaticClassifier implements CuppaClassifier
     public static final String MAX_CSS_ADJUST_FACTOR_GEN_POS = "css_max_factor_gen_pos";
 
     public static final String GEN_POS_PAIRWISE = "gen_pos_pairwise";
-    public static final String CSS_EXPONENT_SNV = "css_exponent_snv";
-    public static final String CSS_EXPONENT_GEN_POS = "css_exponent_gen_pos";
+    public static final String CSS_EXPONENT_SNV = "snv_css_exponent";
+    public static final String CSS_EXPONENT_GEN_POS = "gen_pos_css_exponent";
+    public static final String CSS_EXPONENT_GEN_POS_TAIL = "gen_pos_css_exponent_tail";
+    public static final String CSS_EXPONENT_GEN_POS_CUTOFF = "gen_pos_css_exponent_cutoff";
 
-    public static final String SNV_POS_FREQ_POS_SIZE = "pos_freq_bucket_size";
+    public static final String SNV_POS_FREQ_POS_SIZE = "gen_pos_bucket_size";
 
     public static final String WRITE_GEN_POS_CSS = "write_gen_pos_css";
     public static final String WRITE_GEN_POS_SIMILARITIES = "write_gen_pos_sims";
     public static final String WRITE_SNV_SIMILARITIES = "write_snv_sims";
-
-    private static final int GEN_POS_CSS_SIMILARITY_MAX_MATCHES = 100;
 
     public SomaticClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
@@ -143,16 +147,34 @@ public class SomaticClassifier implements CuppaClassifier
         mRefGenPosCancerTypes = Lists.newArrayList();
         mRefSampleGenPosCountsIndex = Maps.newHashMap();
 
-        mIncludeAidApobecGenPos = cmd != null && cmd.hasOption(INCLUDE_AID_APOBEC);
+        if(cmd != null)
+        {
+            mIncludeAidApobecGenPos = cmd.hasOption(INCLUDE_AID_APOBEC);
+            mRunPairwiseGenPos = cmd.hasOption(GEN_POS_PAIRWISE);
 
-        mRunPairwiseGenPos = cmd != null && cmd.hasOption(GEN_POS_PAIRWISE);
+            mCssExponentSnv = Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_SNV, String.valueOf(SNV_96_CSS_DIFF_EXPONENT)));
+            mGenPosCssExponent = Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_GEN_POS, String.valueOf(GEN_POS_CSS_EXPONENT)));
+            mGenPosCssExponentTail = Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_GEN_POS_TAIL, String.valueOf(GEN_POS_CSS_EXPONENT_TAIL)));
+            mGenPosCssExponentCutoff = Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_GEN_POS_CUTOFF, String.valueOf(GEN_POS_CSS_EXPONENT_CUTOFF)));
 
-        mCssExponentSnv = cmd != null ? Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_SNV, "8")) : SNV_96_CSS_DIFF_EXPONENT;
-        mCssExponentGenPos = cmd != null ? Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_GEN_POS, "10")) : GEN_POS_DIFF_EXPONENT;
-        mMaxCssAdjustFactorSnv = cmd != null ? Double.parseDouble(cmd.getOptionValue(MAX_CSS_ADJUST_FACTOR_SNV, "0")) : 0;
-        mMaxCssAdjustFactorGenPos = cmd != null ? Double.parseDouble(cmd.getOptionValue(MAX_CSS_ADJUST_FACTOR_GEN_POS, "0")) : 0;
-        mWriteSnvSims = cmd != null ? cmd.hasOption(WRITE_SNV_SIMILARITIES) : false;
-        mWriteGenPosSims = cmd != null ? cmd.hasOption(WRITE_GEN_POS_SIMILARITIES) : false;
+            mMaxCssAdjustFactorSnv = Double.parseDouble(cmd.getOptionValue(MAX_CSS_ADJUST_FACTOR_SNV, "0"));
+            mMaxCssAdjustFactorGenPos = Double.parseDouble(cmd.getOptionValue(MAX_CSS_ADJUST_FACTOR_GEN_POS, "0"));
+            mWriteSnvSims = cmd.hasOption(WRITE_SNV_SIMILARITIES);
+            mWriteGenPosSims = cmd.hasOption(WRITE_GEN_POS_SIMILARITIES);
+        }
+        else
+        {
+            mIncludeAidApobecGenPos = false;
+            mRunPairwiseGenPos = false;
+            mCssExponentSnv = SNV_96_CSS_DIFF_EXPONENT;
+            mGenPosCssExponent = GEN_POS_CSS_EXPONENT;
+            mGenPosCssExponentTail = 0;
+            mGenPosCssExponentCutoff = 0;
+            mMaxCssAdjustFactorSnv = 0;
+            mMaxCssAdjustFactorGenPos = 0;
+            mWriteSnvSims = false;
+            mWriteGenPosSims = false;
+        }
 
         mIsValid = true;
         mGenPosCohortCssWriter = null;
@@ -249,8 +271,10 @@ public class SomaticClassifier implements CuppaClassifier
         options.addOption(INCLUDE_AID_APOBEC_SIG, false, INCLUDE_AID_APOBEC_SIG_DESC);
         options.addOption(MAX_CSS_ADJUST_FACTOR_SNV, true, "Max CSS adustment factor for SNV 96");
         options.addOption(MAX_CSS_ADJUST_FACTOR_GEN_POS, true, "Max CSS adustment factor for genomic pos frequency");
-        options.addOption(CSS_EXPONENT_SNV, true, "Max CSS adustment factor for SNV 96");
-        options.addOption(CSS_EXPONENT_GEN_POS, true, "Max CSS adustment factor for SNV 96");
+        options.addOption(CSS_EXPONENT_SNV, true, "SNV 96 CSS exponent for tail");
+        options.addOption(CSS_EXPONENT_GEN_POS, true, "Genomic position CSS exponent");
+        options.addOption(CSS_EXPONENT_GEN_POS_TAIL, true, "Genomic position CSS exponent for tail");
+        options.addOption(CSS_EXPONENT_GEN_POS_CUTOFF, true, "Genomic position CSS exponent cutoff");
         options.addOption(SNV_POS_FREQ_POS_SIZE, true, "Genomic position bucket size (default: 20000)");
         options.addOption(WRITE_SNV_SIMILARITIES, false, "Write SNV-96 CSS to file");
         options.addOption(WRITE_GEN_POS_SIMILARITIES, false, "Write genomic position CSS to file");
@@ -553,30 +577,40 @@ public class SomaticClassifier implements CuppaClassifier
 
             writeGenPosCssValues(sample, refCancerType, css);
 
-            if(css < GEN_POS_CSS_THRESHOLD)
-                continue;
+            cancerCssTotals.put(refCancerType, css);
+        }
 
-            double cssWeight = pow(mCssExponentGenPos, -100 * (1 - css));
+        double totalWeightedCss = 0;
+        for(Map.Entry<String,Double> entry : cancerCssTotals.entrySet())
+        {
+            String cancerType = entry.getKey();
+            double css = entry.getValue();
+
+            double cssWeight;
+
+            if(mGenPosCssExponentCutoff > 0 && mGenPosCssExponentTail > 0)
+            {
+                cssWeight = pow(mGenPosCssExponent, -100 * min(maxCssScore - css, mGenPosCssExponentCutoff))
+                        * pow(mGenPosCssExponentTail, -100 * max(maxCssScore - css, mGenPosCssExponentCutoff));
+            }
+            else
+            {
+                cssWeight = pow(mGenPosCssExponent, -100 * (maxCssScore - css));
+            }
 
             double weightedCss = css * cssWeight;
 
-            Double total = cancerCssTotals.get(refCancerType);
-
-            if(total == null)
-                cancerCssTotals.put(refCancerType, weightedCss);
-            else
-                cancerCssTotals.put(refCancerType, total + weightedCss);
+            cancerCssTotals.put(cancerType, weightedCss);
+            totalWeightedCss += weightedCss;
         }
-
-        double totalCss = cancerCssTotals.values().stream().mapToDouble(x -> x).sum();
 
         convertToPercentages(cancerCssTotals);
 
-        if(totalCss > 0)
+        if(totalWeightedCss > 0)
             applyMaxCssAdjustment(maxCssScore, cancerCssTotals, mMaxCssAdjustFactorGenPos);
 
         results.add(new SampleResult(
-                sample.Id, SNV, CLASSIFIER, GENOMIC_POSITION_COHORT.toString(), String.format("%.4g", totalCss), cancerCssTotals));
+                sample.Id, SNV, CLASSIFIER, GENOMIC_POSITION_COHORT.toString(), String.format("%.4g", totalWeightedCss), cancerCssTotals));
     }
 
 
@@ -634,7 +668,7 @@ public class SomaticClassifier implements CuppaClassifier
 
                 maxCssScore = max(css, maxCssScore);
 
-                double cssWeight = pow(mCssExponentGenPos, -100 * (1 - css));
+                double cssWeight = pow(mGenPosCssExponent, -100 * (1 - css));
 
                 double otherSnvTotal = sumVector(otherSampleCounts);
                 double mutLoadWeight = min(otherSnvTotal, snvTotal) / max(otherSnvTotal, snvTotal);
@@ -665,7 +699,7 @@ public class SomaticClassifier implements CuppaClassifier
     {
         try
         {
-            final String filename = mConfig.OutputDir + "CUP.GEN_POS_CSS.csv";
+            final String filename = mConfig.formOutputFilename("GEN_POS_CSS");
 
             mGenPosCohortCssWriter = createBufferedWriter(filename, false);
             mGenPosCohortCssWriter.write("SampleId,CancerType,RefCancerType,Css");
@@ -712,7 +746,7 @@ public class SomaticClassifier implements CuppaClassifier
         }
     }
 
-    private void writeGenPosCssValues(final SampleData sample, final String refCancerType, double css)
+    private synchronized void writeGenPosCssValues(final SampleData sample, final String refCancerType, double css)
     {
         if(mGenPosCohortCssWriter == null)
             return;

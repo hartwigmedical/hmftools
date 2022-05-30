@@ -77,7 +77,7 @@ public class ResultsWriter
 
                 mCondensedWriter = createBufferedWriter(condensedFilename, false);
 
-                mCondensedWriter.write("SampleId,Platform,RefCancerType,RefRank,Combined1,Combined2,Combined3");
+                mCondensedWriter.write("SampleId,Platform,CancerType,CancerTypeRank,Combined1,Combined2,Combined3");
                 mCondensedWriter.write(",CombinedScore1,CombinedScore2,CombinedScore3");
 
                 mCondensedWriter.write(",Snv96Score,TopSnv96,TopSnv96Score,GenPosScore,TopGenPos,TopGenPosScore");
