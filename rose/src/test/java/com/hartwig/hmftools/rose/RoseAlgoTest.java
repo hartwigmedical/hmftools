@@ -8,7 +8,6 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.logging.log4j.util.Strings;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class RoseAlgoTest {
@@ -37,15 +36,13 @@ public class RoseAlgoTest {
     private static final String DRIVER_GENE_38_TSV = Resources.getResource("drivercatalog/driver.gene.panel.tsv").getPath();
 
     @Test
-    @Ignore
     public void canRunProtectAlgo() throws IOException {
-        // TODO fix up purple somatic vcf ("ref" sample is missing in header)
         RoseConfig config = ImmutableRoseConfig.builder()
                 .outputDir(Strings.EMPTY)
                 .actionabilityDatabaseTsv(ACTIONABILITY_DATABASE_TSV)
                 .refGenomeVersion(RefGenomeVersion.V37)
                 .tumorSampleId("sample")
-                .refSampleId("ref")
+                .refSampleId("reference")
                 .purplePurityTsv(PURPLE_PURITY_TSV)
                 .purpleQcFile(PURPLE_QC_FILE)
                 .purpleSomaticDriverCatalogTsv(PURPLE_SOMATIC_DRIVER_CATALOG_TSV)

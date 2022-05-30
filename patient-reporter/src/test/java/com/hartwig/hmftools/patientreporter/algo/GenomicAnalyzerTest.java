@@ -21,6 +21,7 @@ import com.hartwig.hmftools.patientreporter.PatientReporterConfig;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 
 import org.apache.logging.log4j.util.Strings;
+import org.immutables.value.internal.$processor$.meta.$GsonMirrors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Ignore;
@@ -29,9 +30,7 @@ import org.junit.Test;
 public class GenomicAnalyzerTest {
 
     @Test
-    @Ignore
     public void canRunOnTestRun() throws IOException {
-        // TODO Fix up purple somatic vcf.
         AnalysedReportData testReportData = PatientReporterTestFactory.loadTestAnalysedReportData();
 
         GenomicAnalyzer analyzer = new GenomicAnalyzer(testReportData.germlineReportingModel());
@@ -44,7 +43,6 @@ public class GenomicAnalyzerTest {
     @Test
     @Ignore
     public void canRunOnTestRunAnonymised() throws IOException {
-        // TODO Fix up purple somatic vcf.
         AnalysedReportData testReportData = PatientReporterTestFactory.loadTestAnalysedReportData();
 
         GenomicAnalyzer analyzer = new GenomicAnalyzer(testReportData.germlineReportingModel());
@@ -57,7 +55,6 @@ public class GenomicAnalyzerTest {
     @Test
     @Ignore
     public void testAnonymisedMakesNoDifference() throws IOException {
-        // TODO fix up purple VCFs
         AnalysedReportData testReportData = PatientReporterTestFactory.loadTestAnalysedReportData();
 
         GenomicAnalyzer analyzer = new GenomicAnalyzer(testReportData.germlineReportingModel());
