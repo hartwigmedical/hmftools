@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.report.tables;
+package com.hartwig.hmftools.orange.report.interpretation;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-final class Variants {
+public final class Variants {
 
     private static final Logger LOGGER = LogManager.getLogger(Variants.class);
 

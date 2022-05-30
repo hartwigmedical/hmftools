@@ -5,6 +5,7 @@ import java.text.DecimalFormat;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.tables.ExpressionTable;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.kernel.geom.PageSize;
@@ -47,12 +48,9 @@ public class RNAChapter implements ReportChapter {
             document.add(new Paragraph(ReportResources.NOT_AVAILABLE).addStyle(ReportResources.tableContentStyle()));
         } else {
             addKeyQC(document, isofox);
-            addHighExpressionGenes(document, isofox);
-            addLowExpressionGenes(document, isofox);
-            addNovelKnownRNAFusions(document, isofox);
-            addNovelPromiscuousRNAFusions(document, isofox);
-            addSkippedExonNovelSpliceJunctions(document, isofox);
-            addNovelExonIntronNovelSpliceJunctions(document, isofox);
+            addExpressionTables(document, isofox);
+            addRNAFusionTables(document, isofox);
+            addNovelSpliceJunctionTables(document, isofox);
         }
     }
 
@@ -72,27 +70,19 @@ public class RNAChapter implements ReportChapter {
         document.add(Tables.createWrapping(table));
     }
 
-    private static void addHighExpressionGenes(@NotNull Document document, @NotNull IsofoxInterpretedData isofox) {
+    private void addExpressionTables(@NotNull Document document, @NotNull IsofoxInterpretedData isofox) {
+        String titleHighExpression = "Genes with high expression (" + isofox.reportableHighExpression().size() + ")";
+        document.add(ExpressionTable.build(titleHighExpression, contentWidth(), isofox.reportableHighExpression()));
+
+        String titleLowExpression = "Genes with low expression (" + isofox.reportableLowExpression().size() + ")";
+        document.add(ExpressionTable.build(titleLowExpression, contentWidth(), isofox.reportableLowExpression()));
+    }
+
+    private void addRNAFusionTables(@NotNull Document document, @NotNull IsofoxInterpretedData isofox) {
 
     }
 
-    private static void addLowExpressionGenes(@NotNull Document document, @NotNull IsofoxInterpretedData isofox) {
-
-    }
-
-    private static void addNovelKnownRNAFusions(@NotNull Document document, @NotNull IsofoxInterpretedData isofox) {
-
-    }
-
-    private static void addNovelPromiscuousRNAFusions(@NotNull Document document, @NotNull IsofoxInterpretedData isofox) {
-
-    }
-
-    private static void addSkippedExonNovelSpliceJunctions(@NotNull Document document, @NotNull IsofoxInterpretedData isofox) {
-
-    }
-
-    private static void addNovelExonIntronNovelSpliceJunctions(@NotNull Document document, @NotNull IsofoxInterpretedData isofox) {
+    private void addNovelSpliceJunctionTables(@NotNull Document document, @NotNull IsofoxInterpretedData isofox) {
 
     }
 }

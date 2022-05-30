@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.orange.report.tables;
 
-import java.text.DecimalFormat;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -8,6 +7,8 @@ import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.rna.GeneExpression;
 import com.hartwig.hmftools.orange.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.interpretation.Chromosomes;
+import com.hartwig.hmftools.orange.report.interpretation.Expressions;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.layout.element.Cell;
@@ -20,9 +21,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class GeneCopyNumberTable {
-
-    private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#.#");
-    private static final DecimalFormat PERCENTAGE = ReportResources.decimalFormat("#'%'");
 
     private static final Logger LOGGER = LogManager.getLogger(GeneCopyNumberTable.class);
 
@@ -51,26 +49,21 @@ public final class GeneCopyNumberTable {
 
             GeneExpression expression = findExpressionForGene(isofox, gainLoss.gene());
             if (expression != null) {
-                table.addCell(Cells.createContent(SINGLE_DIGIT.format(expression.tpm())));
-                table.addCell(Cells.createContent(PERCENTAGE.format(expression.percentileCancer() * 100)));
-                table.addCell(Cells.createContent(formatFoldChange(expression.tpm() / expression.medianTpmCancer())));
-                table.addCell(Cells.createContent(PERCENTAGE.format(expression.percentileCohort() * 100)));
-                table.addCell(Cells.createContent(formatFoldChange(expression.tpm() / expression.medianTpmCohort())));
+                table.addCell(Cells.createContent(Expressions.tpm(expression)));
+                table.addCell(Cells.createContent(Expressions.percentileType(expression)));
+                table.addCell(Cells.createContent(Expressions.foldChangeType(expression)));
+                table.addCell(Cells.createContent(Expressions.percentileDatabase(expression)));
+                table.addCell(Cells.createContent(Expressions.foldChangeDatabase(expression)));
             } else {
-                table.addCell(Cells.createContent(Strings.EMPTY));
-                table.addCell(Cells.createContent(Strings.EMPTY));
-                table.addCell(Cells.createContent(Strings.EMPTY));
-                table.addCell(Cells.createContent(Strings.EMPTY));
-                table.addCell(Cells.createContent(Strings.EMPTY));
+                table.addCell(Cells.createContent(ReportResources.NOT_AVAILABLE));
+                table.addCell(Cells.createContent(ReportResources.NOT_AVAILABLE));
+                table.addCell(Cells.createContent(ReportResources.NOT_AVAILABLE));
+                table.addCell(Cells.createContent(ReportResources.NOT_AVAILABLE));
+                table.addCell(Cells.createContent(ReportResources.NOT_AVAILABLE));
             }
         }
 
         return Tables.createWrapping(table, title);
-    }
-
-    @NotNull
-    private static String formatFoldChange(double foldChange) {
-        return foldChange > 1000 ? ">1000" : SINGLE_DIGIT.format(foldChange);
     }
 
     @Nullable

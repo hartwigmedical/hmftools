@@ -69,17 +69,6 @@ public final class Config {
         return value;
     }
 
-    @Nullable
-    public static String optionalFile(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
-        String value = optionalValue(cmd, param);
-
-        if (value != null && !pathExists(value)) {
-            throw new ParseException("Parameter '" + param + "' must be an existing file: " + value);
-        }
-
-        return value;
-    }
-
     public static boolean pathExists(@NotNull String path) {
         return Files.exists(new File(path).toPath());
     }
