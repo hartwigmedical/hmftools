@@ -4,9 +4,9 @@ import java.text.DecimalFormat;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.isofox.IsofoxData;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.rna.GeneExpression;
+import com.hartwig.hmftools.orange.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
@@ -31,7 +31,7 @@ public final class GeneCopyNumberTable {
 
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<ReportableGainLoss> gainLosses,
-            @Nullable IsofoxData isofox) {
+            @Nullable IsofoxInterpretedData isofox) {
         if (gainLosses.isEmpty()) {
             return Tables.createEmpty(title, width);
         }
@@ -74,12 +74,12 @@ public final class GeneCopyNumberTable {
     }
 
     @Nullable
-    private static GeneExpression findExpressionForGene(@Nullable IsofoxData isofox, @NotNull String gene) {
+    private static GeneExpression findExpressionForGene(@Nullable IsofoxInterpretedData isofox, @NotNull String gene) {
         if (isofox == null) {
             return null;
         }
 
-        for (GeneExpression expression : isofox.geneExpressions()) {
+        for (GeneExpression expression : isofox.allGeneExpressions()) {
             if (expression.geneName().equals(gene)) {
                 return expression;
             }

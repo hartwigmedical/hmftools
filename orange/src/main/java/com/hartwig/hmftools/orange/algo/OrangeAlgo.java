@@ -61,6 +61,8 @@ import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentiles;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesFile;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesModel;
 import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
+import com.hartwig.hmftools.orange.isofox.IsofoxInterpretedData;
+import com.hartwig.hmftools.orange.isofox.IsofoxInterpreter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -128,6 +130,13 @@ public class OrangeAlgo {
     public OrangeReport run(@NotNull OrangeConfig config) throws IOException {
         PurpleData purple = loadPurpleData(config);
 
+        IsofoxData isofox = loadIsofoxData(config);
+
+        IsofoxInterpretedData isofoxInterpreted = null;
+        if (isofox != null) {
+            isofoxInterpreted = IsofoxInterpreter.interpret(isofox, driverGenes, knownFusionCache);
+        }
+
         return ImmutableOrangeReport.builder()
                 .sampleId(config.tumorSampleId())
                 .reportDate(LocalDate.now())
@@ -138,7 +147,7 @@ public class OrangeAlgo {
                 .germlineMVLHPerGene(loadGermlineMVLHPerGene(config))
                 .purple(purple)
                 .linx(loadLinxData(config))
-                .isofox(loadIsofoxData(config))
+                .isofox(isofoxInterpreted)
                 .virusInterpreter(loadVirusInterpreterData(config))
                 .chord(loadChordAnalysis(config))
                 .cuppa(loadCuppaData(config))
