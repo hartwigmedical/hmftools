@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.orange.report.ReportResources;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -92,5 +93,14 @@ final class Variants {
             default:
                 return "No";
         }
+    }
+
+    @NotNull
+    public static String rnaDepthField(@NotNull ReportableVariant variant) {
+        if (variant.rnaAlleleReadCount() == null || variant.rnaTotalReadCount() == null) {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
+        return variant.rnaAlleleReadCount() + " / " + variant.rnaTotalReadCount();
     }
 }
