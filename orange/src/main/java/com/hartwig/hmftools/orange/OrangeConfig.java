@@ -41,7 +41,6 @@ public interface OrangeConfig {
     String COHORT_PERCENTILES_TSV = "cohort_percentiles_tsv";
     String ISOFOX_GENE_DISTRIBUTION_CSV = "isofox_gene_distribution_csv";
     String ISOFOX_ALT_SJ_COHORT_CSV = "isofox_alt_sj_cohort_csv";
-    String ISOFOX_CANCER_TYPE = "isofox_cancer_type";
 
     // Files containing the actual genomic results for this sample.
     String PIPELINE_VERSION_FILE = "pipeline_version_file";
@@ -97,7 +96,6 @@ public interface OrangeConfig {
         options.addOption(COHORT_PERCENTILES_TSV, true, "Path to cohort percentiles TSV.");
         options.addOption(ISOFOX_GENE_DISTRIBUTION_CSV, true, "Path to isofox gene distribution CSV.");
         options.addOption(ISOFOX_ALT_SJ_COHORT_CSV, true, "Path to isofox alt SJ cohort CSV.");
-        options.addOption(ISOFOX_CANCER_TYPE, true, "The cancer type of the sample mapped to ISOFOX cohorts");
 
         options.addOption(PIPELINE_VERSION_FILE, true, "Path towards the pipeline version file.");
         options.addOption(REF_SAMPLE_WGS_METRICS_FILE, true, "Path towards the ref sample WGS metrics file.");
@@ -171,9 +169,6 @@ public interface OrangeConfig {
 
     @Nullable
     String isofoxAltSjCohortCsv();
-
-    @Nullable
-    String isofoxCancerType();
 
     @Nullable
     String pipelineVersionFile();
@@ -280,9 +275,7 @@ public interface OrangeConfig {
 
         ReportConfig report = ImmutableReportConfig.builder()
                 .reportGermline(!cmd.hasOption(DISABLE_GERMLINE))
-                .maxEvidenceLevel(cmd.hasOption(MAX_EVIDENCE_LEVEL)
-                        ? EvidenceLevel.valueOf(cmd.getOptionValue(MAX_EVIDENCE_LEVEL))
-                        : null)
+                .maxEvidenceLevel(cmd.hasOption(MAX_EVIDENCE_LEVEL) ? EvidenceLevel.valueOf(cmd.getOptionValue(MAX_EVIDENCE_LEVEL)) : null)
                 .build();
 
         if (!report.reportGermline()) {
@@ -293,10 +286,20 @@ public interface OrangeConfig {
             LOGGER.info("Max reporting level configured to {}", report.maxEvidenceLevel());
         }
 
+        String refSampleId = Config.optionalValue(cmd, REFERENCE_SAMPLE_ID);
+        if (refSampleId != null) {
+            LOGGER.debug("Ref sample configured to {}", refSampleId);
+        }
+
+        String rnaSampleId = Config.optionalValue(cmd, RNA_SAMPLE_ID);
+        if (rnaSampleId != null) {
+            LOGGER.debug("RNA sample configured to {}", rnaSampleId);
+        }
+
         return ImmutableOrangeConfig.builder()
                 .tumorSampleId(Config.nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
-                .referenceSampleId(Config.optionalValue(cmd, REFERENCE_SAMPLE_ID))
-                .rnaSampleId(Config.optionalValue(cmd, RNA_SAMPLE_ID))
+                .referenceSampleId(refSampleId)
+                .rnaSampleId(rnaSampleId)
                 .reportConfig(report)
                 .primaryTumorDoids(toStringSet(Config.nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .outputDir(Config.outputDir(cmd, OUTPUT_DIRECTORY))
@@ -305,7 +308,6 @@ public interface OrangeConfig {
                 .cohortPercentilesTsv(Config.nonOptionalFile(cmd, COHORT_PERCENTILES_TSV))
                 .isofoxGeneDistributionCsv(Config.optionalFile(cmd, ISOFOX_GENE_DISTRIBUTION_CSV))
                 .isofoxAltSjCohortCsv(Config.optionalFile(cmd, ISOFOX_ALT_SJ_COHORT_CSV))
-                .isofoxCancerType(Config.optionalValue(cmd, ISOFOX_CANCER_TYPE))
                 .pipelineVersionFile(Config.optionalValue(cmd, PIPELINE_VERSION_FILE))
                 .refSampleWGSMetricsFile(Config.nonOptionalValue(cmd, REF_SAMPLE_WGS_METRICS_FILE))
                 .refSampleFlagstatFile(Config.nonOptionalValue(cmd, REF_SAMPLE_FLAGSTAT_FILE))

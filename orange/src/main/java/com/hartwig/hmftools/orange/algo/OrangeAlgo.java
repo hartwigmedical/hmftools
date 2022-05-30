@@ -48,6 +48,7 @@ import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableObservation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSample;
 import com.hartwig.hmftools.orange.cohort.datamodel.Observation;
+import com.hartwig.hmftools.orange.cohort.datamodel.Sample;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortMapper;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortMapping;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortMappingFile;
@@ -71,6 +72,8 @@ public class OrangeAlgo {
     @NotNull
     private final DoidEntry doidEntry;
     @NotNull
+    private final CohortMapper cohortMapper;
+    @NotNull
     private final CohortPercentilesModel percentilesModel;
 
     @NotNull
@@ -89,11 +92,13 @@ public class OrangeAlgo {
         LOGGER.info(" Read {} percentiles", percentilesMap.values().size());
         CohortPercentilesModel percentilesModel = new CohortPercentilesModel(mapper, percentilesMap);
 
-        return new OrangeAlgo(doidEntry, percentilesModel);
+        return new OrangeAlgo(doidEntry, mapper, percentilesModel);
     }
 
-    private OrangeAlgo(@NotNull final DoidEntry doidEntry, @NotNull final CohortPercentilesModel percentilesModel) {
+    private OrangeAlgo(@NotNull final DoidEntry doidEntry, @NotNull final CohortMapper cohortMapper,
+            @NotNull final CohortPercentilesModel percentilesModel) {
         this.doidEntry = doidEntry;
+        this.cohortMapper = cohortMapper;
         this.percentilesModel = percentilesModel;
     }
 
@@ -220,8 +225,7 @@ public class OrangeAlgo {
     }
 
     @Nullable
-    private static IsofoxData loadIsofoxData(@NotNull OrangeConfig config) throws IOException {
-        String isofoxCancerType = config.isofoxCancerType();
+    private IsofoxData loadIsofoxData(@NotNull OrangeConfig config) throws IOException {
         String isofoxGeneDistributionCsv = config.isofoxGeneDistributionCsv();
         String isofoxAltSjCohortCsv = config.isofoxAltSjCohortCsv();
 
@@ -230,14 +234,19 @@ public class OrangeAlgo {
         String isofoxFusionCsv = config.isofoxFusionCsv();
         String isofoxAltSpliceJunctionCsv = config.isofoxAltSpliceJunctionCsv();
 
-        if (anyNull(isofoxCancerType,
-                isofoxGeneDistributionCsv,
+        if (anyNull(isofoxGeneDistributionCsv,
                 isofoxAltSjCohortCsv,
                 isofoxSummaryCsv,
                 isofoxGeneDataCsv,
                 isofoxFusionCsv,
                 isofoxAltSpliceJunctionCsv)) {
             LOGGER.info("Skipping ISOFOX data loading as input is incomplete");
+            return null;
+        }
+
+        String isofoxCancerType = cohortMapper.cancerTypeForSample(createSample(config));
+        if (isofoxCancerType == null) {
+            LOGGER.warn("Could not resolve isofox cancer type for {}" + config.tumorSampleId());
             return null;
         }
 
@@ -295,11 +304,8 @@ public class OrangeAlgo {
     private Map<PercentileType, Evaluation> evaluateCohortPercentiles(@NotNull OrangeConfig config, @NotNull PurpleData purple) {
         PercentileType type = PercentileType.SV_TMB;
 
-        Observation svTmbObservation = ImmutableObservation.builder()
-                .sample(ImmutableSample.builder().sampleId(config.tumorSampleId()).doids(config.primaryTumorDoids()).build())
-                .type(type)
-                .value(purple.svTumorMutationalBurden())
-                .build();
+        Observation svTmbObservation =
+                ImmutableObservation.builder().sample(createSample(config)).type(type).value(purple.svTumorMutationalBurden()).build();
 
         LOGGER.info("Determining SV TMB percentile for value {}", svTmbObservation.value());
         Map<PercentileType, Evaluation> evaluations = Maps.newHashMap();
@@ -355,6 +361,11 @@ public class OrangeAlgo {
                 .build();
     }
 
+    @NotNull
+    private static Sample createSample(@NotNull OrangeConfig config) {
+        return ImmutableSample.builder().sampleId(config.tumorSampleId()).doids(config.primaryTumorDoids()).build();
+    }
+
     private static boolean anyNull(@Nullable Object... objects) {
         for (Object object : objects) {
             if (object == null) {
@@ -364,4 +375,5 @@ public class OrangeAlgo {
 
         return false;
     }
+
 }
