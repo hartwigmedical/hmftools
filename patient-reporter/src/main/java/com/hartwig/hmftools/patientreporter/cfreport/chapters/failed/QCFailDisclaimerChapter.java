@@ -192,7 +192,7 @@ public class QCFailDisclaimerChapter implements ReportChapter {
         return createContentParagraphTwice("The biomaterials are evaluated at ",
                 ReportResources.HARTWIG_ADDRESS,
                 " and are known as HMF sample ID  ",
-                failReport.sampleReport().tumorSampleId());
+                failReport.sampleReport().sampleNameForReport());
     }
 
     @NotNull

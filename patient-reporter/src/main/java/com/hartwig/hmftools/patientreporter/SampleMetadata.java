@@ -20,4 +20,7 @@ public abstract class SampleMetadata {
 
     @NotNull
     public abstract String tumorSampleBarcode();
+
+    @NotNull
+    public abstract String sampleNameForReport();
 }

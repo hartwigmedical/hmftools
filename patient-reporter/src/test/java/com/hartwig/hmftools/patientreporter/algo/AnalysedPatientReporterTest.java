@@ -33,6 +33,7 @@ public class AnalysedPatientReporterTest {
                 .refSampleBarcode(Strings.EMPTY)
                 .tumorSampleId(TUMOR_SAMPLE_ID)
                 .tumorSampleBarcode(Strings.EMPTY)
+                .sampleNameForReport(TUMOR_SAMPLE_ID)
                 .build();
 
         assertNotNull(reporter.run(sampleMetadata, config));

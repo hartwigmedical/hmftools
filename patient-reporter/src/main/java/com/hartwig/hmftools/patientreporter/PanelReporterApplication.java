@@ -127,17 +127,20 @@ public class PanelReporterApplication {
 
     @NotNull
     private static SampleMetadata buildSampleMetadata(@NotNull PanelReporterConfig config) {
+        String sampleNameForReport = config.sampleNameForReport();
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
                 .refSampleId(null)
                 .refSampleBarcode(null)
                 .tumorSampleId(config.tumorSampleId())
                 .tumorSampleBarcode(config.tumorSampleBarcode())
+                .sampleNameForReport(sampleNameForReport != null ? sampleNameForReport : config.tumorSampleId())
                 .build();
 
         LOGGER.info("Printing sample meta data for {}", sampleMetadata.tumorSampleId());
         LOGGER.info(" Tumor sample barcode: {}", sampleMetadata.tumorSampleBarcode());
         LOGGER.info(" Ref sample: {}", sampleMetadata.refSampleId());
         LOGGER.info(" Ref sample barcode: {}", sampleMetadata.refSampleBarcode());
+        LOGGER.info(" Sample name for report: {}", sampleMetadata.sampleNameForReport());
 
         return sampleMetadata;
     }

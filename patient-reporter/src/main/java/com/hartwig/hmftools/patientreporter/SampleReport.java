@@ -83,6 +83,13 @@ public abstract class SampleReport {
         return sampleMetadata().tumorSampleBarcode();
     }
 
+    @NotNull
+    @Value.Derived
+    public String sampleNameForReport() {
+        return sampleMetadata().sampleNameForReport();
+    }
+
+
     @Nullable
     @Value.Derived
     public String earliestArrivalDate() {

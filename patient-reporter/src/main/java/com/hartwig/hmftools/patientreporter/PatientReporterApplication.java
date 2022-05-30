@@ -134,17 +134,20 @@ public class PatientReporterApplication {
 
     @NotNull
     private static SampleMetadata buildSampleMetadata(@NotNull PatientReporterConfig config) {
+        String sampleNameForReport = config.sampleNameForReport();
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
                 .refSampleId(config.refSampleId())
                 .refSampleBarcode(config.refSampleBarcode())
                 .tumorSampleId(config.tumorSampleId())
                 .tumorSampleBarcode(config.tumorSampleBarcode())
+                .sampleNameForReport(sampleNameForReport != null ? sampleNameForReport : config.tumorSampleId())
                 .build();
 
         LOGGER.info("Printing sample meta data for {}", sampleMetadata.tumorSampleId());
         LOGGER.info(" Tumor sample barcode: {}", sampleMetadata.tumorSampleBarcode());
         LOGGER.info(" Ref sample: {}", sampleMetadata.refSampleId());
         LOGGER.info(" Ref sample barcode: {}", sampleMetadata.refSampleBarcode());
+        LOGGER.info(" Sample name for report: {}", sampleMetadata.sampleNameForReport());
 
         return sampleMetadata;
     }
