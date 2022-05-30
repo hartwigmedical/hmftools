@@ -21,7 +21,6 @@ public final class OrangeConfigTestFactory {
             Resources.getResource("cohort/percentile/example_cohort_percentiles.tsv").getPath();
     private static final String ISOFOX_GENE_DISTRIBUTION_CSV = Resources.getResource("isofox/empty.gene_distribution.csv").getPath();
     private static final String ISOFOX_ALT_SJ_COHORT_CSV = Resources.getResource("isofox/empty.alt_sj.cohort.csv").getPath();
-    private static final String ISOFOX_CANCER_TYPE = "Skin";
 
     private static final String RUN_DIRECTORY = Resources.getResource("test_run").getPath();
     private static final String PIPELINE_VERSION_FILE = RUN_DIRECTORY + "/pipeline.version";
@@ -107,7 +106,6 @@ public final class OrangeConfigTestFactory {
         return ImmutableOrangeConfig.builder().from(createDNAConfig())
                 .isofoxGeneDistributionCsv(ISOFOX_GENE_DISTRIBUTION_CSV)
                 .isofoxAltSjCohortCsv(ISOFOX_ALT_SJ_COHORT_CSV)
-                .isofoxCancerType(ISOFOX_CANCER_TYPE)
                 .isofoxSummaryCsv(ISOFOX_SUMMARY_CSV)
                 .isofoxGeneDataCsv(ISOFOX_GENE_DATA_CSV)
                 .isofoxFusionCsv(ISOFOX_FUSION_CSV)
