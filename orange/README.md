@@ -96,7 +96,7 @@ investigate potential causes for QC failure.
 ### Version History and Download Links
 - Upcoming
   - Proper support for RNA
-    - Isofox data is loaded when provided through command line
+    - rnaSampleId and isofox data files can be configured through command line.
     - RNA Depth is picked up in case purple somatic/germline variants have been annotated with RNA. 
     - Amps and dels are annotated with expression data (including percentiles and fold change)
     - Fusions are annotated by RNA fragment support (from novel splice junctions for `EXON_DEL_DUP` and rna fusions otherwise)
