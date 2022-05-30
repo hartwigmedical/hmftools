@@ -28,7 +28,7 @@ public final class SomaticVariantTable {
         }
 
         Table table = Tables.createContent(width,
-                new float[] { 3, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+                new float[] { 3, 1, 1, 1, 1, 1, 1, 1, 1, 2 },
                 new Cell[] { Cells.createHeader("Variant"), Cells.createHeader("VCN"), Cells.createHeader("CN"), Cells.createHeader("MACN"),
                         Cells.createHeader("Biallelic"), Cells.createHeader("Hotspot"), Cells.createHeader("DL"), Cells.createHeader("CL"),
                         Cells.createHeader("Phase ID"), Cells.createHeader("RNA Depth") });
