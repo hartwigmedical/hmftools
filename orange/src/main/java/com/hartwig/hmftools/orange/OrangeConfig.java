@@ -39,6 +39,7 @@ public interface OrangeConfig {
     String DOID_JSON = "doid_json";
     String COHORT_MAPPING_TSV = "cohort_mapping_tsv";
     String COHORT_PERCENTILES_TSV = "cohort_percentiles_tsv";
+    String DRIVER_GENE_PANEL_TSV = "driver_gene_panel_tsv";
 
     // Files containing the actual genomic results for this sample.
     String PIPELINE_VERSION_FILE = "pipeline_version_file";
@@ -87,6 +88,7 @@ public interface OrangeConfig {
         options.addOption(DOID_JSON, true, "Path to JSON file containing the full DOID tree.");
         options.addOption(COHORT_MAPPING_TSV, true, "Path to cohort mapping TSV.");
         options.addOption(COHORT_PERCENTILES_TSV, true, "Path to cohort percentiles TSV.");
+        options.addOption(DRIVER_GENE_PANEL_TSV, true, "Path to the driver gene panel TSV.");
 
         options.addOption(PIPELINE_VERSION_FILE, true, "Path towards the pipeline version file.");
         options.addOption(REF_SAMPLE_WGS_METRICS_FILE, true, "Path towards the ref sample WGS metrics file.");
@@ -154,6 +156,9 @@ public interface OrangeConfig {
 
     @NotNull
     String cohortPercentilesTsv();
+
+    @NotNull
+    String driverGenePanelTsv();
 
     @Nullable
     String pipelineVersionFile();
@@ -274,6 +279,7 @@ public interface OrangeConfig {
                 .doidJsonFile(Config.nonOptionalFile(cmd, DOID_JSON))
                 .cohortMappingTsv(Config.nonOptionalFile(cmd, COHORT_MAPPING_TSV))
                 .cohortPercentilesTsv(Config.nonOptionalFile(cmd, COHORT_PERCENTILES_TSV))
+                .driverGenePanelTsv(Config.nonOptionalFile(cmd, DRIVER_GENE_PANEL_TSV))
                 .pipelineVersionFile(Config.optionalValue(cmd, PIPELINE_VERSION_FILE))
                 .refSampleWGSMetricsFile(Config.nonOptionalValue(cmd, REF_SAMPLE_WGS_METRICS_FILE))
                 .refSampleFlagstatFile(Config.nonOptionalValue(cmd, REF_SAMPLE_FLAGSTAT_FILE))

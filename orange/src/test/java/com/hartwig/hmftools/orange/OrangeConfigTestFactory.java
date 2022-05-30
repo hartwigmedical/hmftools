@@ -19,6 +19,7 @@ public final class OrangeConfigTestFactory {
     private static final String COHORT_MAPPING_TSV = Resources.getResource("cohort/mapping/example_cohort_mapping.tsv").getPath();
     private static final String COHORT_PERCENTILES_TSV =
             Resources.getResource("cohort/percentile/example_cohort_percentiles.tsv").getPath();
+    private static final String DRIVER_GENE_PANEL_TSV = Resources.getResource("driver/example.DriverGenePanel.tsv").getPath();
     private static final String ISOFOX_GENE_DISTRIBUTION_CSV = Resources.getResource("isofox/empty.gene_distribution.csv").getPath();
     private static final String ISOFOX_ALT_SJ_COHORT_CSV = Resources.getResource("isofox/empty.alt_sj.cohort.csv").getPath();
 
@@ -72,6 +73,7 @@ public final class OrangeConfigTestFactory {
                 .doidJsonFile(DOID_JSON)
                 .cohortMappingTsv(COHORT_MAPPING_TSV)
                 .cohortPercentilesTsv(COHORT_PERCENTILES_TSV)
+                .driverGenePanelTsv(DRIVER_GENE_PANEL_TSV)
                 .pipelineVersionFile(PIPELINE_VERSION_FILE)
                 .refSampleWGSMetricsFile(REF_SAMPLE_WGS_METRICS_FILE)
                 .refSampleFlagstatFile(REF_SAMPLE_FLAGSTAT_FILE)

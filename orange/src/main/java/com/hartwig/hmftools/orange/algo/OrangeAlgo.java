@@ -26,6 +26,8 @@ import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.doid.DoidParents;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.flagstat.Flagstat;
 import com.hartwig.hmftools.common.flagstat.FlagstatFile;
 import com.hartwig.hmftools.common.isofox.IsofoxData;
@@ -76,6 +78,8 @@ public class OrangeAlgo {
     private final CohortMapper cohortMapper;
     @NotNull
     private final CohortPercentilesModel percentilesModel;
+    @NotNull
+    private final List<DriverGene> driverGenes;
 
     @NotNull
     public static OrangeAlgo fromConfig(@NotNull OrangeConfig config) throws IOException {
@@ -93,14 +97,19 @@ public class OrangeAlgo {
         LOGGER.info(" Read {} percentiles", percentilesMap.values().size());
         CohortPercentilesModel percentilesModel = new CohortPercentilesModel(mapper, percentilesMap);
 
-        return new OrangeAlgo(doidEntry, mapper, percentilesModel);
+        LOGGER.info("Reading driver genes from {}", config.driverGenePanelTsv());
+        List<DriverGene> driverGenes = DriverGeneFile.read(config.driverGenePanelTsv());
+        LOGGER.info(" Read {} driver genes", driverGenes.size());
+
+        return new OrangeAlgo(doidEntry, mapper, percentilesModel, driverGenes);
     }
 
     private OrangeAlgo(@NotNull final DoidEntry doidEntry, @NotNull final CohortMapper cohortMapper,
-            @NotNull final CohortPercentilesModel percentilesModel) {
+            @NotNull final CohortPercentilesModel percentilesModel, @NotNull final List<DriverGene> driverGenes) {
         this.doidEntry = doidEntry;
         this.cohortMapper = cohortMapper;
         this.percentilesModel = percentilesModel;
+        this.driverGenes = driverGenes;
     }
 
     @NotNull
