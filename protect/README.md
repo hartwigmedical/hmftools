@@ -123,7 +123,7 @@ evidenceUrls | A list of urls with additional information about the evidence | h
 ## Version History and Download Links
 - [2.2](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v2.2)
   - Fixed bug in hotspot matching in case everything matches except for the alt (eg V600K against V600R).
-  - Fix bug with consolidation of resistant vs responsive evidence. These were previously consolidated together rather than independently.
+  - Add consolidation for no benefit evidence.
   - Add support for matching evidence for low TML, low TMB and MSS (reported always false)
 - [2.1](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v2.1)
   - Annotate whether evidence is based on a high driver event 
