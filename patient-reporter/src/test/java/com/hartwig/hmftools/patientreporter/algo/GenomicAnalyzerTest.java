@@ -43,6 +43,7 @@ public class GenomicAnalyzerTest {
     @Test
     @Ignore
     public void canRunOnTestRunAnonymised() throws IOException {
+        // TODO Fix up purple germline vcf.
         AnalysedReportData testReportData = PatientReporterTestFactory.loadTestAnalysedReportData();
 
         GenomicAnalyzer analyzer = new GenomicAnalyzer(testReportData.germlineReportingModel());
@@ -55,6 +56,7 @@ public class GenomicAnalyzerTest {
     @Test
     @Ignore
     public void testAnonymisedMakesNoDifference() throws IOException {
+        // TODO Fix up purple germline vcf.
         AnalysedReportData testReportData = PatientReporterTestFactory.loadTestAnalysedReportData();
 
         GenomicAnalyzer analyzer = new GenomicAnalyzer(testReportData.germlineReportingModel());
