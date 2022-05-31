@@ -74,10 +74,11 @@ public class SomaticVariantFactory implements VariantContextFilter
 
     @NotNull
     public List<SomaticVariant> fromVCFFile(@NotNull final String tumor, @Nullable final String reference,
-            @Nullable final String alternativeTumorId, @Nullable final String alternativeReferenceId, @NotNull final String vcfFile)
-            throws IOException
+            @NotNull final String vcfFile) throws IOException
     {
-        return fromVCFFileWithoutCheck(tumor, reference, alternativeTumorId, alternativeReferenceId, null, vcfFile);
+        final List<SomaticVariant> result = Lists.newArrayList();
+        fromVCFFile(tumor, reference, null, vcfFile, true, result::add);
+        return result;
     }
 
     @NotNull
@@ -86,16 +87,6 @@ public class SomaticVariantFactory implements VariantContextFilter
     {
         final List<SomaticVariant> result = Lists.newArrayList();
         fromVCFFile(tumor, reference, rna, vcfFile, true, result::add);
-        return result;
-    }
-
-    @NotNull
-    public List<SomaticVariant> fromVCFFileWithoutCheck(@NotNull final String tumor, @Nullable final String reference,
-            @Nullable final String alternativeTumorId, @Nullable final String alternativeReferenceId,
-            @Nullable final String rna, @NotNull final String vcfFile) throws IOException
-    {
-        final List<SomaticVariant> result = Lists.newArrayList();
-        fromVCFFile(tumor, reference, alternativeTumorId, alternativeReferenceId, rna, vcfFile, false, result::add);
         return result;
     }
 

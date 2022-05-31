@@ -50,8 +50,6 @@ public class ConclusionAlgo {
     private static final double TMB_CUTOFF = 10;
     private static final double PURITY_CUTOFF = 0.195;
 
-
-
     @NotNull
     public static ActionabilityConclusion generateConclusion(@NotNull RoseData roseData) {
         Map<Integer, String> conclusion = Maps.newHashMap();
@@ -148,7 +146,7 @@ public class ConclusionAlgo {
 
             ActionabilityEntry entry = actionabilityMap.get(keyCuppa);
             if (entry != null && entry.condition() == Condition.OTHER) {
-                conclusion.put(conclusion.size(), "- " + entry.conclusion());
+                conclusion.put(conclusion.size(), "- " + molecularTissueOrigin.conclusion() + " " + entry.conclusion());
             }
         }
     }
@@ -159,6 +157,11 @@ public class ConclusionAlgo {
             @NotNull Set<String> HRD) {
 
         for (ReportableVariant reportableVariant : reportableVariants) {
+            String variant =
+                    reportableVariant.canonicalHgvsProteinImpact().isEmpty() || reportableVariant.canonicalHgvsProteinImpact().equals("p.?")
+                            ? reportableVariant.canonicalHgvsCodingImpact()
+                            : reportableVariant.canonicalHgvsProteinImpact();
+
             if (HRD_GENES.contains(reportableVariant.gene())) {
                 HRD.add(reportableVariant.gene());
             }
@@ -185,12 +188,12 @@ public class ConclusionAlgo {
                         ActionabilityEntry entryBiallelic = actionabilityMap.get(keyBiallelic);
                         if (entryBiallelic.condition() == Condition.OTHER) {
                             conclusion.put(conclusion.size(),
-                                    "- " + reportableVariant.gene() + "(" + reportableVariant.canonicalHgvsProteinImpact() + ") "
+                                    "- " + reportableVariant.gene() + " (" + variant + ") "
                                             + entry.conclusion() + " " + entryBiallelic.conclusion());
                         }
                     } else {
                         conclusion.put(conclusion.size(),
-                                "- " + reportableVariant.gene() + "(" + reportableVariant.canonicalHgvsProteinImpact() + ") "
+                                "- " + reportableVariant.gene() + " (" + variant + ") "
                                         + entry.conclusion());
                     }
                 }
@@ -345,7 +348,8 @@ public class ConclusionAlgo {
             ActionabilityKey keyMSI = ImmutableActionabilityKey.builder().match("MSI").type(TypeAlteration.POSITIVE).build();
             ActionabilityEntry entry = actionabilityMap.get(keyMSI);
             if (entry != null && entry.condition() == Condition.ALWAYS) {
-                conclusion.put(conclusion.size(), "- " + "MSI(" + DOUBLE_DECIMAL_FORMAT.format(microsatelliteMb) + ")" + entry.conclusion());
+                conclusion.put(conclusion.size(),
+                        "- " + "MSI(" + DOUBLE_DECIMAL_FORMAT.format(microsatelliteMb) + ")" + entry.conclusion());
                 actionable.add("MSI");
                 oncogenic.add("MSI");
             }

@@ -42,7 +42,7 @@ public class RoseAlgoTest {
                 .actionabilityDatabaseTsv(ACTIONABILITY_DATABASE_TSV)
                 .refGenomeVersion(RefGenomeVersion.V37)
                 .tumorSampleId("sample")
-                .refSampleId("ref")
+                .refSampleId("reference")
                 .purplePurityTsv(PURPLE_PURITY_TSV)
                 .purpleQcFile(PURPLE_QC_FILE)
                 .purpleSomaticDriverCatalogTsv(PURPLE_SOMATIC_DRIVER_CATALOG_TSV)

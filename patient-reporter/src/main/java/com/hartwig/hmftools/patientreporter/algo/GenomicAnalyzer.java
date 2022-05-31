@@ -48,8 +48,10 @@ public class GenomicAnalyzer {
     public GenomicAnalysis run(@NotNull String tumorSampleId, @NotNull String tumorSampleBarcode,
             @Nullable String referenceSampleId, @Nullable String referenceSampleBarcode, @NotNull PatientReporterConfig config,
             @NotNull LimsGermlineReportingLevel germlineReportingLevel) throws IOException {
+        // TODO Handle alternate sampleIds differently (see also email from David Koetsier, 16th of May 2022.
         PurpleData purpleData = PurpleDataLoader.load(tumorSampleId,
                 referenceSampleId,
+                null,
                 config.purpleQcFile(),
                 config.purplePurityTsv(),
                 config.purpleSomaticDriverCatalogTsv(),
@@ -58,9 +60,7 @@ public class GenomicAnalyzer {
                 config.purpleGermlineVariantVcf(),
                 null,
                 config.purpleSomaticCopyNumberTsv(),
-                config.refGenomeVersion(),
-                tumorSampleBarcode,
-                referenceSampleBarcode);
+                config.refGenomeVersion());
 
         LinxData linxData = LinxDataLoader.load(config.linxFusionTsv(),
                 config.linxBreakendTsv(),

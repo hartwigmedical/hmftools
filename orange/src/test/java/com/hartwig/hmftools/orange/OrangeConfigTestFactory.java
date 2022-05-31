@@ -19,9 +19,10 @@ public final class OrangeConfigTestFactory {
     private static final String COHORT_MAPPING_TSV = Resources.getResource("cohort/mapping/example_cohort_mapping.tsv").getPath();
     private static final String COHORT_PERCENTILES_TSV =
             Resources.getResource("cohort/percentile/example_cohort_percentiles.tsv").getPath();
+    private static final String DRIVER_GENE_PANEL_TSV = Resources.getResource("driver/example.DriverGenePanel.tsv").getPath();
+    private static final String KNOWN_FUSION_FILE = Resources.getResource("known_fusion_data/known_fusion_file.csv").getPath();
     private static final String ISOFOX_GENE_DISTRIBUTION_CSV = Resources.getResource("isofox/empty.gene_distribution.csv").getPath();
     private static final String ISOFOX_ALT_SJ_COHORT_CSV = Resources.getResource("isofox/empty.alt_sj.cohort.csv").getPath();
-    private static final String ISOFOX_CANCER_TYPE = "Skin";
 
     private static final String RUN_DIRECTORY = Resources.getResource("test_run").getPath();
     private static final String PIPELINE_VERSION_FILE = RUN_DIRECTORY + "/pipeline.version";
@@ -66,12 +67,15 @@ public final class OrangeConfigTestFactory {
         return ImmutableOrangeConfig.builder()
                 .tumorSampleId(TUMOR_SAMPLE_ID)
                 .referenceSampleId(REFERENCE_SAMPLE_ID)
+                .rnaConfig(null)
                 .reportConfig(reportConfig)
                 .addPrimaryTumorDoids(MELANOMA_DOID)
                 .outputDir(Strings.EMPTY)
                 .doidJsonFile(DOID_JSON)
                 .cohortMappingTsv(COHORT_MAPPING_TSV)
                 .cohortPercentilesTsv(COHORT_PERCENTILES_TSV)
+                .driverGenePanelTsv(DRIVER_GENE_PANEL_TSV)
+                .knownFusionFile(KNOWN_FUSION_FILE)
                 .pipelineVersionFile(PIPELINE_VERSION_FILE)
                 .refSampleWGSMetricsFile(REF_SAMPLE_WGS_METRICS_FILE)
                 .refSampleFlagstatFile(REF_SAMPLE_FLAGSTAT_FILE)
@@ -104,14 +108,18 @@ public final class OrangeConfigTestFactory {
 
     @NotNull
     public static OrangeConfig createDNARNAConfig() {
-        return ImmutableOrangeConfig.builder().from(createDNAConfig())
-                .isofoxGeneDistributionCsv(ISOFOX_GENE_DISTRIBUTION_CSV)
-                .isofoxAltSjCohortCsv(ISOFOX_ALT_SJ_COHORT_CSV)
-                .isofoxCancerType(ISOFOX_CANCER_TYPE)
-                .isofoxSummaryCsv(ISOFOX_SUMMARY_CSV)
-                .isofoxGeneDataCsv(ISOFOX_GENE_DATA_CSV)
-                .isofoxFusionCsv(ISOFOX_FUSION_CSV)
-                .isofoxAltSpliceJunctionCsv(ISOFOX_ALT_SPLICE_JUNCTION_CSV)
+        // We use tumor_sample as rnaSampleId since we have no real ISOFOX test data for our test_run
+        return ImmutableOrangeConfig.builder()
+                .from(createDNAConfig())
+                .rnaConfig(ImmutableOrangeRNAConfig.builder()
+                        .rnaSampleId("tumor_sample")
+                        .isofoxGeneDistributionCsv(ISOFOX_GENE_DISTRIBUTION_CSV)
+                        .isofoxAltSjCohortCsv(ISOFOX_ALT_SJ_COHORT_CSV)
+                        .isofoxSummaryCsv(ISOFOX_SUMMARY_CSV)
+                        .isofoxGeneDataCsv(ISOFOX_GENE_DATA_CSV)
+                        .isofoxFusionCsv(ISOFOX_FUSION_CSV)
+                        .isofoxAltSpliceJunctionCsv(ISOFOX_ALT_SPLICE_JUNCTION_CSV)
+                        .build())
                 .build();
     }
 }

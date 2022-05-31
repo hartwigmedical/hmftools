@@ -145,6 +145,7 @@ public final class ReportableVariantFactory {
 
     @NotNull
     public static ImmutableReportableVariant.Builder fromVariant(@NotNull SomaticVariant variant, @NotNull ReportableVariantSource source) {
+        AllelicDepth rnaDepth = variant.rnaDepth();
         return ImmutableReportableVariant.builder()
                 .type(variant.type())
                 .source(source)
@@ -161,6 +162,8 @@ public final class ReportableVariantFactory {
                 .canonicalHgvsProteinImpact(variant.canonicalHgvsProteinImpact())
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
+                .rnaAlleleReadCount(rnaDepth != null ? rnaDepth.alleleReadCount() : null)
+                .rnaTotalReadCount(rnaDepth != null ? rnaDepth.totalReadCount() : null)
                 .totalCopyNumber(variant.adjustedCopyNumber())
                 .minorAlleleCopyNumber(variant.minorAlleleCopyNumber())
                 .alleleCopyNumber(calcAlleleCopyNumber(variant.adjustedCopyNumber(), variant.adjustedVAF()))

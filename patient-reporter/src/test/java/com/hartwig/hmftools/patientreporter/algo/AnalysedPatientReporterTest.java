@@ -19,7 +19,7 @@ import org.junit.Test;
 
 public class AnalysedPatientReporterTest {
 
-    private static final String REF_SAMPLE_ID = "ref_sample";
+    private static final String REF_SAMPLE_ID = "reference";
     private static final String TUMOR_SAMPLE_ID = "sample";
 
     @Test

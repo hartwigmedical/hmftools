@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.report.tables;
+package com.hartwig.hmftools.orange.report.interpretation;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -6,13 +6,14 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.orange.report.ReportResources;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-final class Variants {
+public final class Variants {
 
     private static final Logger LOGGER = LogManager.getLogger(Variants.class);
 
@@ -74,12 +75,14 @@ final class Variants {
 
     @NotNull
     public static String variantField(@NotNull ReportableVariant variant) {
-        // Reuse PROTECT formatting for ORANGE report.
         String addon = Strings.EMPTY;
         if (!variant.isCanonical()) {
             addon = " (alt)";
         }
-        return variant.gene() + addon + " " + AminoAcids.forceSingleLetterProteinAnnotation(ProtectEventGenerator.variantEvent(variant));
+
+        // Reuse PROTECT formatting for ORANGE report.
+        String event = ProtectEventGenerator.variantEvent(variant);
+        return variant.gene() + addon + " " + AminoAcids.forceSingleLetterProteinAnnotation(event);
     }
 
     @NotNull
@@ -92,5 +95,14 @@ final class Variants {
             default:
                 return "No";
         }
+    }
+
+    @NotNull
+    public static String rnaDepthField(@NotNull ReportableVariant variant) {
+        if (variant.rnaAlleleReadCount() == null || variant.rnaTotalReadCount() == null) {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
+        return variant.rnaAlleleReadCount() + " / " + variant.rnaTotalReadCount();
     }
 }
