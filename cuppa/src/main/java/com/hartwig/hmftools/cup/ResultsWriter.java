@@ -80,6 +80,8 @@ public class ResultsWriter
                 mCondensedWriter.write("SampleId,Platform,CancerType,CancerTypeRank,Combined1,Combined2,Combined3");
                 mCondensedWriter.write(",CombinedScore,CombinedScore1,CombinedScore2,CombinedScore3");
 
+                mCondensedWriter.write(",DnaCombinedScore,TopDnaCombined,TopDnaCombinedScore");
+                mCondensedWriter.write(",RnaCombinedScore,TopRnaCombined,TopRnaCombinedScore");
                 mCondensedWriter.write(",Snv96Score,TopSnv96,TopSnv96Score,GenPosScore,TopGenPos,TopGenPosScore");
                 mCondensedWriter.write(",FeatureScore,TopFeature,TopFeatureScore,ExpressionScore,TopExpression,TopExpressionScore");
                 mCondensedWriter.write(",AltSjScore,TopAltSj,TopAltSjScore");
@@ -185,8 +187,8 @@ public class ResultsWriter
                 combinedResult.CancerTypeValues.get(rankedCancerTypes.get(2))));
 
         List<String> classifiers = Lists.newArrayList(
-                SNV_96_PAIRWISE.toString(), GENOMIC_POSITION_COHORT.toString(), FEATURE.toString(),
-                EXPRESSION_PAIRWISE.toString(), ALT_SJ_COHORT.toString());
+                DATA_TYPE_DNA_COMBINED, DATA_TYPE_RNA_COMBINED, SNV_96_PAIRWISE.toString(), GENOMIC_POSITION_COHORT.toString(),
+                FEATURE.toString(), EXPRESSION_PAIRWISE.toString(), ALT_SJ_COHORT.toString());
 
         for(String classifier : classifiers)
         {
