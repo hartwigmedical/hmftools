@@ -152,14 +152,11 @@ public final class SequenceCount
     {
         Map<String,Integer> seqCounts = get(index);
 
-        String sequence = "";
+        String sequence = "-";
         int maxCountSeq = 0;
 
         for(Map.Entry<String,Integer> entry : seqCounts.entrySet())
         {
-            if(entry.getValue() < mMinCount)
-                continue;
-
             if(entry.getValue() > maxCountSeq)
             {
                 sequence = entry.getKey();
