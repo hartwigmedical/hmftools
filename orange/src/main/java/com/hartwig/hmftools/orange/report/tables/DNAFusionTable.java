@@ -25,11 +25,11 @@ import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class FusionTable {
+public final class DNAFusionTable {
 
     private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#0.0");
 
-    private FusionTable() {
+    private DNAFusionTable() {
     }
 
     @NotNull

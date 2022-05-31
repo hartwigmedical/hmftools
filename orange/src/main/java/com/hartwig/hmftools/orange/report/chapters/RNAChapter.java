@@ -6,6 +6,8 @@ import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.tables.ExpressionTable;
+import com.hartwig.hmftools.orange.report.tables.NovelSpliceJunctionTable;
+import com.hartwig.hmftools.orange.report.tables.RNAFusionTable;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.kernel.geom.PageSize;
@@ -79,10 +81,21 @@ public class RNAChapter implements ReportChapter {
     }
 
     private void addRNAFusionTables(@NotNull Document document, @NotNull IsofoxInterpretedData isofox) {
+        String titleKnownFusions = "Known fusions detected in RNA and not in DNA (" + isofox.reportableNovelKnownFusions().size() + ")";
+        document.add(RNAFusionTable.build(titleKnownFusions, contentWidth(), isofox.reportableNovelKnownFusions()));
 
+        String titlePromiscuousFusions =
+                "Promiscuous fusions detected in RNA and not in DNA (" + isofox.reportableNovelPromiscuousFusions().size() + ")";
+        document.add(RNAFusionTable.build(titlePromiscuousFusions, contentWidth(), isofox.reportableNovelPromiscuousFusions()));
     }
 
     private void addNovelSpliceJunctionTables(@NotNull Document document, @NotNull IsofoxInterpretedData isofox) {
+        String titleSkippedExonJunctions =
+                "Potentially interesting novel splice junctions - Skipped exons (" + isofox.reportableSkippedExons().size() + ")";
+        document.add(NovelSpliceJunctionTable.build(titleSkippedExonJunctions, contentWidth(), isofox.reportableSkippedExons()));
 
+        String titleNovelExonIntronJunctions =
+                "Potentially interesting novel splice junctions - Novel exon/intron (" + isofox.reportableNovelExonsIntrons().size() + ")";
+        document.add(NovelSpliceJunctionTable.build(titleNovelExonIntronJunctions, contentWidth(), isofox.reportableNovelExonsIntrons()));
     }
 }
