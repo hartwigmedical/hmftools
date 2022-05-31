@@ -146,7 +146,7 @@ public class ConclusionAlgo {
 
             ActionabilityEntry entry = actionabilityMap.get(keyCuppa);
             if (entry != null && entry.condition() == Condition.OTHER) {
-                conclusion.put(conclusion.size(), "- " + molecularTissueOrigin.conclusion() + " " + entry.conclusion());
+                conclusion.put(conclusion.size(), "- " + entry.conclusion() + " " + molecularTissueOrigin.conclusion());
             }
         }
     }

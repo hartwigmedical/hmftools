@@ -77,7 +77,7 @@ public class ConclusionAlgoTest {
         MolecularTissueOrigin molecularTissueOrigin =
                 ImmutableMolecularTissueOrigin.builder().plotPath(Strings.EMPTY).conclusion("Melanoma").build();
         ConclusionAlgo.generateCUPPAConclusion(conclusion, molecularTissueOrigin, actionabilityMap);
-        assertEquals(conclusion.get(0), "- Melanoma CUPPA");
+        assertEquals(conclusion.get(0), "- CUPPA Melanoma");
     }
 
     @Test
