@@ -51,7 +51,6 @@ import com.hartwig.hmftools.rose.actionability.TypeAlteration;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class ConclusionAlgoTest {
@@ -100,7 +99,6 @@ public class ConclusionAlgoTest {
     }
 
     @Test
-    @Ignore
     public void canGenerateVariantsConclusion() {
         List<ReportableVariant> reportableVariants = canGenerateVariants();
         Map<String, DriverGene> driverGenesMap = Maps.newHashMap();
@@ -126,9 +124,9 @@ public class ConclusionAlgoTest {
                 Sets.newHashSet(),
                 Sets.newHashSet());
         assertEquals(conclusion.size(), 3);
-        assertEquals(conclusion.get(0), "- CHEK2(p.?) CHEK2 not biallelic");
-        assertEquals(conclusion.get(1), "- APC(p.?) APC");
-        assertEquals(conclusion.get(2), "- BRCA2(p.?) BRCA2");
+        assertEquals(conclusion.get(0), "- CHEK2 (c.123A>C) CHEK2 not biallelic");
+        assertEquals(conclusion.get(1), "- APC (p.Val600Arg) APC");
+        assertEquals(conclusion.get(2), "- BRCA2 (c.123A>C) BRCA2");
         assertNull(conclusion.get(3));
     }
 
@@ -420,7 +418,8 @@ public class ConclusionAlgoTest {
                 .reported(true)
                 .gene("APC")
                 .canonicalTranscript("transcript1")
-                .canonicalHgvsProteinImpact("p.?")
+                .canonicalHgvsProteinImpact("p.Val600Arg")
+                .canonicalHgvsCodingImpact("c.123A>C")
                 .biallelic(true)
                 .build();
 
@@ -429,6 +428,7 @@ public class ConclusionAlgoTest {
                 .gene("BRCA2")
                 .canonicalTranscript("transcript1")
                 .canonicalHgvsProteinImpact("p.?")
+                .canonicalHgvsCodingImpact("c.123A>C")
                 .biallelic(true)
                 .build();
 
@@ -436,7 +436,8 @@ public class ConclusionAlgoTest {
                 .reported(true)
                 .gene("BRCA1")
                 .canonicalTranscript("transcript1")
-                .canonicalHgvsProteinImpact("p.?")
+                .canonicalHgvsProteinImpact("p.Val600Arg")
+                .canonicalHgvsCodingImpact("c.123A>C")
                 .biallelic(true)
                 .build();
 
@@ -453,7 +454,8 @@ public class ConclusionAlgoTest {
                 .reported(true)
                 .gene("CHEK2")
                 .canonicalTranscript("transcript1")
-                .canonicalHgvsProteinImpact("p.?")
+                .canonicalHgvsProteinImpact("")
+                .canonicalHgvsCodingImpact("c.123A>C")
                 .biallelic(false)
                 .build();
 
