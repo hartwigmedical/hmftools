@@ -141,7 +141,7 @@ public class CuppaUtilsTest
 
         assertEquals(FEATURE, combResult.Category);
         assertEquals(0.63, combResult.CancerTypeValues.get(TEST_CT_001), 0.01);
-        assertEquals(0.36, combResult.CancerTypeValues.get(TEST_CT_002), 0.01);
+        assertEquals(0.37, combResult.CancerTypeValues.get(TEST_CT_002), 0.01);
     }
 
 }

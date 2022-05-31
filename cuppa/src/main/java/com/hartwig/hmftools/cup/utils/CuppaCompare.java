@@ -285,11 +285,11 @@ public class CuppaCompare
 
         if(matchType.equals(MATCH_TYPE_CORRECT))
             ++results.BothCorrect;
-        if(matchType.equals(MATCH_TYPE_INCORRECT))
+        else if(matchType.equals(MATCH_TYPE_INCORRECT))
             ++results.BothIncorrect;
-        if(matchType.equals(MATCH_TYPE_ORIG_CORRECT))
+        else if(matchType.equals(MATCH_TYPE_ORIG_CORRECT))
             ++results.OrigCorrect;
-        if(matchType.equals(MATCH_TYPE_NEW_CORRECT))
+        else if(matchType.equals(MATCH_TYPE_NEW_CORRECT))
             ++results.NewCorrect;
     }
 
@@ -322,7 +322,7 @@ public class CuppaCompare
 
                 addResultCount(result.DataType, matchType);
 
-                mWriter.write(format("%s,%s,%s,%s,%s", sampleId, status, result.DataType, refCancerType, matchType));
+                mWriter.write(format("%s,%s,%s,%s", sampleId, status, result.DataType, matchType));
 
                 if(mAllowCancerTypeRemap)
                     mWriter.write(format(",%s,%s", origRefCancerType, newRefCancerType));

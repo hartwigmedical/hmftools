@@ -78,7 +78,7 @@ public class ResultsWriter
                 mCondensedWriter = createBufferedWriter(condensedFilename, false);
 
                 mCondensedWriter.write("SampleId,Platform,CancerType,CancerTypeRank,Combined1,Combined2,Combined3");
-                mCondensedWriter.write(",CombinedScore1,CombinedScore2,CombinedScore3");
+                mCondensedWriter.write(",CombinedScore,CombinedScore1,CombinedScore2,CombinedScore3");
 
                 mCondensedWriter.write(",Snv96Score,TopSnv96,TopSnv96Score,GenPosScore,TopGenPos,TopGenPosScore");
                 mCondensedWriter.write(",FeatureScore,TopFeature,TopFeatureScore,ExpressionScore,TopExpression,TopExpressionScore");
@@ -174,11 +174,12 @@ public class ResultsWriter
 
         // SampleId,RefCancerType,RefRank,Platform
 
-        final String refCancerType = sample.cancerMainType();
-        mCondensedWriter.write(format("%s,%s,%s,%d", sample.Id, platform, refCancerType, refRank + 1));
+        final String sampleCancerType = sample.cancerMainType();
+        mCondensedWriter.write(format("%s,%s,%s,%d", sample.Id, platform, sampleCancerType, refRank + 1));
 
-        mCondensedWriter.write(format(",%s,%s,%s,%.4f,%.4f,%.4f",
+        mCondensedWriter.write(format(",%s,%s,%s,%.4f,%.4f,%.4f,%.4f",
                 rankedCancerTypes.get(0), rankedCancerTypes.get(1), rankedCancerTypes.get(2),
+                combinedResult.CancerTypeValues.get(sampleCancerType),
                 combinedResult.CancerTypeValues.get(rankedCancerTypes.get(0)),
                 combinedResult.CancerTypeValues.get(rankedCancerTypes.get(1)),
                 combinedResult.CancerTypeValues.get(rankedCancerTypes.get(2))));
@@ -197,7 +198,7 @@ public class ResultsWriter
                 String topCancerType = topRefResult(result);
 
                 mCondensedWriter.write(format(",%.4f,%s,%.4f",
-                        result.CancerTypeValues.get(refCancerType), topCancerType, result.CancerTypeValues.get(topCancerType)));
+                        result.CancerTypeValues.get(sampleCancerType), topCancerType, result.CancerTypeValues.get(topCancerType)));
             }
             else
             {

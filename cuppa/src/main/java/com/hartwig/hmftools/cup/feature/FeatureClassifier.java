@@ -87,7 +87,7 @@ public class FeatureClassifier implements CuppaClassifier
 
         mIsValid &= loadSampleFeatures();
 
-        boolean splitAmps = cmd == null || cmd.hasOption(COMBINE_DRIVER_AMP);
+        boolean splitAmps = cmd == null || !cmd.hasOption(COMBINE_DRIVER_AMP);
         double minAmpCnMultiple = cmd != null ? Double.parseDouble(cmd.getOptionValue(MIN_AMP_MULTIPLE, "0")) : 0;
 
         if(splitAmps)

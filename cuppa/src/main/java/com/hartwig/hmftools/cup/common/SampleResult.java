@@ -151,7 +151,6 @@ public class SampleResult
                         category = GENE_EXP;
                     else
                         continue;
-
                 }
                 else
                 {
