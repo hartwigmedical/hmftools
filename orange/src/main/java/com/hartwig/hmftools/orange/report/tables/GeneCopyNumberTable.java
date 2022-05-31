@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.rna.GeneExpression;
-import com.hartwig.hmftools.orange.isofox.IsofoxInterpretedData;
+import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Chromosomes;
 import com.hartwig.hmftools.orange.report.interpretation.Expressions;

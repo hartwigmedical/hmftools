@@ -48,6 +48,8 @@ import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.OrangeRNAConfig;
+import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
+import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableObservation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSample;
@@ -61,8 +63,6 @@ import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentiles;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesFile;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesModel;
 import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
-import com.hartwig.hmftools.orange.isofox.IsofoxInterpretedData;
-import com.hartwig.hmftools.orange.isofox.IsofoxInterpreter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

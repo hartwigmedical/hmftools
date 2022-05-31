@@ -3,7 +3,7 @@ package com.hartwig.hmftools.orange.report.chapters;
 import java.text.DecimalFormat;
 
 import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.isofox.IsofoxInterpretedData;
+import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.tables.ExpressionTable;
 import com.hartwig.hmftools.orange.report.util.Cells;
