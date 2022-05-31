@@ -74,10 +74,10 @@ public class RNAChapter implements ReportChapter {
 
     private void addExpressionTables(@NotNull Document document, @NotNull IsofoxInterpretedData isofox) {
         String titleHighExpression = "Genes with high expression (" + isofox.reportableHighExpression().size() + ")";
-        document.add(ExpressionTable.build(titleHighExpression, contentWidth(), isofox.reportableHighExpression()));
+        document.add(ExpressionTable.build(titleHighExpression, contentWidth(), isofox.reportableHighExpression(), false));
 
         String titleLowExpression = "Genes with low expression (" + isofox.reportableLowExpression().size() + ")";
-        document.add(ExpressionTable.build(titleLowExpression, contentWidth(), isofox.reportableLowExpression()));
+        document.add(ExpressionTable.build(titleLowExpression, contentWidth(), isofox.reportableLowExpression(), true));
     }
 
     private void addRNAFusionTables(@NotNull Document document, @NotNull IsofoxInterpretedData isofox) {

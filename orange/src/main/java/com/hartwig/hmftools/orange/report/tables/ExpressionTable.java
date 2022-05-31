@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.orange.report.tables;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.primitives.Doubles;
 import com.hartwig.hmftools.common.rna.GeneExpression;
 import com.hartwig.hmftools.orange.report.interpretation.Expressions;
 import com.hartwig.hmftools.orange.report.util.Cells;
@@ -19,7 +19,7 @@ public final class ExpressionTable {
     }
 
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<GeneExpression> expressions) {
+    public static Table build(@NotNull String title, float width, @NotNull List<GeneExpression> expressions, boolean sortAscending) {
         if (expressions.isEmpty()) {
             return Tables.createEmpty(title, width);
         }
@@ -29,7 +29,7 @@ public final class ExpressionTable {
                 new Cell[] { Cells.createHeader("Gene"), Cells.createHeader("TPM"), Cells.createHeader("Perc (Type)"),
                         Cells.createHeader("FC (Type)"), Cells.createHeader("Perc (DB)"), Cells.createHeader("FC (DB)") });
 
-        for (GeneExpression expression : sort(expressions)) {
+        for (GeneExpression expression : sort(expressions, sortAscending)) {
             table.addCell(Cells.createContent(expression.geneName()));
             table.addCell(Cells.createContent(Expressions.tpm(expression)));
             table.addCell(Cells.createContent(Expressions.percentileType(expression)));
@@ -42,7 +42,13 @@ public final class ExpressionTable {
     }
 
     @NotNull
-    private static List<GeneExpression> sort(@NotNull List<GeneExpression> expressions) {
-        return expressions.stream().sorted(Comparator.comparing(GeneExpression::geneName)).collect(Collectors.toList());
+    private static List<GeneExpression> sort(@NotNull List<GeneExpression> expressions, boolean sortDescending) {
+        return expressions.stream().sorted((expression1, expression2) -> {
+            if (sortDescending) {
+                return Doubles.compare(expression1.percentileCohort(), expression2.percentileCohort());
+            } else {
+                return Doubles.compare(expression2.percentileCohort(), expression1.percentileCohort());
+            }
+        }).collect(Collectors.toList());
     }
 }
