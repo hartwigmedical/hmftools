@@ -25,14 +25,14 @@ public final class NovelSpliceJunctionTable {
 
         Table table = Tables.createContent(width,
                 new float[] { 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-                new Cell[] { Cells.createHeader("Chromosome"), Cells.createHeader("Gene"), Cells.createHeader("Junction Start"),
-                        Cells.createHeader("Junction End"), Cells.createHeader("Type"), Cells.createHeader("Depth Start/End"),
-                        Cells.createHeader("Region Start/End"), Cells.createHeader("Fragment Count"),
-                        Cells.createHeader("Cohort frequency") });
+                new Cell[] { Cells.createHeader("Gene"), Cells.createHeader("Chromosome"), Cells.createHeader("Junc (Start)"),
+                        Cells.createHeader("Junc (End)"), Cells.createHeader("Type"), Cells.createHeader("Depth S/E"),
+                        Cells.createHeader("Region S/E"), Cells.createHeader("Frag Count"),
+                        Cells.createHeader("Cohort freq") });
 
         for (NovelSpliceJunction junction : sort(junctions)) {
-            table.addCell(Cells.createContent(junction.chromosome()));
             table.addCell(Cells.createContent(junction.geneName()));
+            table.addCell(Cells.createContent(junction.chromosome()));
             table.addCell(Cells.createContent(String.valueOf(junction.junctionStart())));
             table.addCell(Cells.createContent(String.valueOf(junction.junctionEnd())));
             table.addCell(Cells.createContent(junction.type()));
