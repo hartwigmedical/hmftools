@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cup.common;
 
 import static com.hartwig.hmftools.cup.CuppaConfig.CANCER_SUBTYPE_OTHER;
+import static com.hartwig.hmftools.cup.CuppaConfig.FLD_CANCER_SUBTYPE;
 import static com.hartwig.hmftools.cup.CuppaConfig.FLD_CANCER_TYPE;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaConfig.FLD_RNA_READ_LENGTH;
@@ -50,7 +51,13 @@ public class SampleData
         mRnaReadLength = RNA_READ_LENGTH_NONE;
     }
 
-    public String cancerType() { return mCancerType; }
+    public String cancerType()
+    {
+        return !CancerSubtype.isEmpty() && !CancerSubtype.equals(CANCER_TYPE_UNKNOWN) ? CancerSubtype : mCancerType ;
+    }
+
+    public String cancerMainType() { return mCancerType; }
+
     public void setCancerType(final String cancerType) { mCancerType = cancerType; }
 
     public Gender gender() { return mGenderType; }
@@ -76,7 +83,7 @@ public class SampleData
         final String sampleId = items[fieldsIndexMap.get(FLD_SAMPLE_ID)];
 
         String cancerType = extractOptionalField(fieldsIndexMap, items, FLD_CANCER_TYPE, CANCER_TYPE_UNKNOWN);
-        String cancerSubtype = extractOptionalField(fieldsIndexMap, items, "CancerSubtype", CANCER_TYPE_UNKNOWN);
+        String cancerSubtype = extractOptionalField(fieldsIndexMap, items, FLD_CANCER_SUBTYPE, CANCER_TYPE_UNKNOWN);
         String primaryLocation = extractOptionalField(fieldsIndexMap, items, "PrimaryTumorLocation", CANCER_SUBTYPE_OTHER);
         String primarySubLocation = extractOptionalField(fieldsIndexMap, items, "PrimaryTumorSubLocation", "");
         String primaryType = extractOptionalField(fieldsIndexMap, items, "PrimaryTumorType", "");
@@ -88,10 +95,11 @@ public class SampleData
         {
             sample.setRnaReadLength(Integer.parseInt(items[fieldsIndexMap.get(FLD_RNA_READ_LENGTH)]));
         }
-        else if(fieldsIndexMap.containsKey("ReadLength")) // previous field name
+        else if(fieldsIndexMap.containsKey("ReadLength"))
         {
             sample.setRnaReadLength(Integer.parseInt(items[fieldsIndexMap.get("ReadLength")]));
         }
+
         return sample;
     }
 

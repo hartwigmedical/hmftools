@@ -146,7 +146,7 @@ public class ConclusionAlgo {
 
             ActionabilityEntry entry = actionabilityMap.get(keyCuppa);
             if (entry != null && entry.condition() == Condition.OTHER) {
-                conclusion.put(conclusion.size(), "- " + entry.conclusion());
+                conclusion.put(conclusion.size(), "- " + molecularTissueOrigin.conclusion() + " " + entry.conclusion());
             }
         }
     }
@@ -188,12 +188,12 @@ public class ConclusionAlgo {
                         ActionabilityEntry entryBiallelic = actionabilityMap.get(keyBiallelic);
                         if (entryBiallelic.condition() == Condition.OTHER) {
                             conclusion.put(conclusion.size(),
-                                    "- " + reportableVariant.gene() + "(" + variant + ") "
+                                    "- " + reportableVariant.gene() + " (" + variant + ") "
                                             + entry.conclusion() + " " + entryBiallelic.conclusion());
                         }
                     } else {
                         conclusion.put(conclusion.size(),
-                                "- " + reportableVariant.gene() + "(" + variant + ") "
+                                "- " + reportableVariant.gene() + " (" + variant + ") "
                                         + entry.conclusion());
                     }
                 }

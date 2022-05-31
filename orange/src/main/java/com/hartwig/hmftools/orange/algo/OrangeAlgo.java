@@ -26,8 +26,11 @@ import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.doid.DoidParents;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.flagstat.Flagstat;
 import com.hartwig.hmftools.common.flagstat.FlagstatFile;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.isofox.IsofoxData;
 import com.hartwig.hmftools.common.isofox.IsofoxDataLoader;
 import com.hartwig.hmftools.common.linx.LinxData;
@@ -44,10 +47,14 @@ import com.hartwig.hmftools.common.purple.PurpleDataLoader;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.orange.OrangeConfig;
+import com.hartwig.hmftools.orange.OrangeRNAConfig;
+import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
+import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableObservation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSample;
 import com.hartwig.hmftools.orange.cohort.datamodel.Observation;
+import com.hartwig.hmftools.orange.cohort.datamodel.Sample;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortMapper;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortMapping;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortMappingFile;
@@ -71,7 +78,13 @@ public class OrangeAlgo {
     @NotNull
     private final DoidEntry doidEntry;
     @NotNull
+    private final CohortMapper cohortMapper;
+    @NotNull
     private final CohortPercentilesModel percentilesModel;
+    @NotNull
+    private final List<DriverGene> driverGenes;
+    @NotNull
+    private final KnownFusionCache knownFusionCache;
 
     @NotNull
     public static OrangeAlgo fromConfig(@NotNull OrangeConfig config) throws IOException {
@@ -89,17 +102,40 @@ public class OrangeAlgo {
         LOGGER.info(" Read {} percentiles", percentilesMap.values().size());
         CohortPercentilesModel percentilesModel = new CohortPercentilesModel(mapper, percentilesMap);
 
-        return new OrangeAlgo(doidEntry, percentilesModel);
+        LOGGER.info("Reading driver genes from {}", config.driverGenePanelTsv());
+        List<DriverGene> driverGenes = DriverGeneFile.read(config.driverGenePanelTsv());
+        LOGGER.info(" Read {} driver genes", driverGenes.size());
+
+        LOGGER.info("Reading known fusions from {}", config.knownFusionFile());
+        KnownFusionCache knownFusionCache = new KnownFusionCache();
+        if (!knownFusionCache.loadFile(config.knownFusionFile())) {
+            throw new IOException("Could not load known fusions from " + config.knownFusionFile());
+        }
+        LOGGER.info(" Read {} known fusion entries", knownFusionCache.getData().size());
+
+        return new OrangeAlgo(doidEntry, mapper, percentilesModel, driverGenes, knownFusionCache);
     }
 
-    private OrangeAlgo(@NotNull final DoidEntry doidEntry, @NotNull final CohortPercentilesModel percentilesModel) {
+    private OrangeAlgo(@NotNull final DoidEntry doidEntry, @NotNull final CohortMapper cohortMapper,
+            @NotNull final CohortPercentilesModel percentilesModel, @NotNull final List<DriverGene> driverGenes,
+            @NotNull final KnownFusionCache knownFusionCache) {
         this.doidEntry = doidEntry;
+        this.cohortMapper = cohortMapper;
         this.percentilesModel = percentilesModel;
+        this.driverGenes = driverGenes;
+        this.knownFusionCache = knownFusionCache;
     }
 
     @NotNull
     public OrangeReport run(@NotNull OrangeConfig config) throws IOException {
         PurpleData purple = loadPurpleData(config);
+
+        IsofoxData isofox = loadIsofoxData(config);
+
+        IsofoxInterpretedData isofoxInterpreted = null;
+        if (isofox != null) {
+            isofoxInterpreted = IsofoxInterpreter.interpret(isofox, driverGenes, knownFusionCache);
+        }
 
         return ImmutableOrangeReport.builder()
                 .sampleId(config.tumorSampleId())
@@ -111,7 +147,7 @@ public class OrangeAlgo {
                 .germlineMVLHPerGene(loadGermlineMVLHPerGene(config))
                 .purple(purple)
                 .linx(loadLinxData(config))
-                .isofox(loadIsofoxData(config))
+                .isofox(isofoxInterpreted)
                 .virusInterpreter(loadVirusInterpreterData(config))
                 .chord(loadChordAnalysis(config))
                 .cuppa(loadCuppaData(config))
@@ -200,7 +236,7 @@ public class OrangeAlgo {
     private static PurpleData loadPurpleData(@NotNull OrangeConfig config) throws IOException {
         return PurpleDataLoader.load(config.tumorSampleId(),
                 config.referenceSampleId(),
-                config.rnaSampleId(),
+                config.rnaConfig() != null ? config.rnaConfig().rnaSampleId() : null,
                 config.purpleQcFile(),
                 config.purplePurityTsv(),
                 config.purpleSomaticDriverCatalogTsv(),
@@ -220,34 +256,26 @@ public class OrangeAlgo {
     }
 
     @Nullable
-    private static IsofoxData loadIsofoxData(@NotNull OrangeConfig config) throws IOException {
-        String isofoxCancerType = config.isofoxCancerType();
-        String isofoxGeneDistributionCsv = config.isofoxGeneDistributionCsv();
-        String isofoxAltSjCohortCsv = config.isofoxAltSjCohortCsv();
+    private IsofoxData loadIsofoxData(@NotNull OrangeConfig config) throws IOException {
+        OrangeRNAConfig rna = config.rnaConfig();
+        if (rna == null) {
+            LOGGER.info("Skipping ISOFOX data loading as RNA is not configured");
+            return null;
+        }
 
-        String isofoxSummaryCsv = config.isofoxSummaryCsv();
-        String isofoxGeneDataCsv = config.isofoxGeneDataCsv();
-        String isofoxFusionCsv = config.isofoxFusionCsv();
-        String isofoxAltSpliceJunctionCsv = config.isofoxAltSpliceJunctionCsv();
-
-        if (anyNull(isofoxCancerType,
-                isofoxGeneDistributionCsv,
-                isofoxAltSjCohortCsv,
-                isofoxSummaryCsv,
-                isofoxGeneDataCsv,
-                isofoxFusionCsv,
-                isofoxAltSpliceJunctionCsv)) {
-            LOGGER.info("Skipping ISOFOX data loading as input is incomplete");
+        String isofoxCancerType = cohortMapper.cancerTypeForSample(createSample(config));
+        if (isofoxCancerType == null) {
+            LOGGER.warn("Could not resolve isofox cancer type for {}" + config.tumorSampleId());
             return null;
         }
 
         return IsofoxDataLoader.load(isofoxCancerType,
-                isofoxGeneDistributionCsv,
-                isofoxAltSjCohortCsv,
-                isofoxSummaryCsv,
-                isofoxGeneDataCsv,
-                isofoxFusionCsv,
-                isofoxAltSpliceJunctionCsv);
+                rna.isofoxGeneDistributionCsv(),
+                rna.isofoxAltSjCohortCsv(),
+                rna.isofoxSummaryCsv(),
+                rna.isofoxGeneDataCsv(),
+                rna.isofoxFusionCsv(),
+                rna.isofoxAltSpliceJunctionCsv());
     }
 
     @NotNull
@@ -295,11 +323,8 @@ public class OrangeAlgo {
     private Map<PercentileType, Evaluation> evaluateCohortPercentiles(@NotNull OrangeConfig config, @NotNull PurpleData purple) {
         PercentileType type = PercentileType.SV_TMB;
 
-        Observation svTmbObservation = ImmutableObservation.builder()
-                .sample(ImmutableSample.builder().sampleId(config.tumorSampleId()).doids(config.primaryTumorDoids()).build())
-                .type(type)
-                .value(purple.svTumorMutationalBurden())
-                .build();
+        Observation svTmbObservation =
+                ImmutableObservation.builder().sample(createSample(config)).type(type).value(purple.svTumorMutationalBurden()).build();
 
         LOGGER.info("Determining SV TMB percentile for value {}", svTmbObservation.value());
         Map<PercentileType, Evaluation> evaluations = Maps.newHashMap();
@@ -355,13 +380,8 @@ public class OrangeAlgo {
                 .build();
     }
 
-    private static boolean anyNull(@Nullable Object... objects) {
-        for (Object object : objects) {
-            if (object == null) {
-                return true;
-            }
-        }
-
-        return false;
+    @NotNull
+    private static Sample createSample(@NotNull OrangeConfig config) {
+        return ImmutableSample.builder().sampleId(config.tumorSampleId()).doids(config.primaryTumorDoids()).build();
     }
 }

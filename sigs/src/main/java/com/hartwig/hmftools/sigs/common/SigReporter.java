@@ -12,6 +12,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.common.utils.MatrixUtils;
 import com.hartwig.hmftools.sigs.nmf.NmfConfig;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
@@ -58,7 +59,7 @@ public class SigReporter {
 
         mSampleCount = mContributions.Cols;
         mBucketCount = mSignatures.Rows;
-        mTotalCount = mSampleCounts.sum();
+        mTotalCount = MatrixUtils.sum(mSampleCounts);
         mSigCount = mSignatures.Cols;
 
         mBucketTotals = new double[mBucketCount];
@@ -79,7 +80,7 @@ public class SigReporter {
         mTotalResiduals = 0;
         mNetResiduals = 0;
 
-        mFittedCounts = mSignatures.multiply(mContributions);
+        mFittedCounts = MatrixUtils.multiply(mSignatures, mContributions);
     }
 
     public void runAnalysis()

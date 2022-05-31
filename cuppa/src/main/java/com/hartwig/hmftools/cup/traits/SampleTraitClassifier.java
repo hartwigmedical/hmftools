@@ -2,8 +2,6 @@ package com.hartwig.hmftools.cup.traits;
 
 import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
-import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.CupConstants.UNDEFINED_PERC_MAX_MULTIPLE;
@@ -13,6 +11,7 @@ import static com.hartwig.hmftools.cup.common.ResultType.PREVALENCE;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.traits.SampleTraitType.GENDER;
 import static com.hartwig.hmftools.cup.traits.SampleTraitType.MS_INDELS_TMB;
+import static com.hartwig.hmftools.cup.traits.SampleTraitType.PLOIDY;
 import static com.hartwig.hmftools.cup.traits.SampleTraitType.WGD;
 import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.GENDER_FEMALE_INDEX;
 import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.GENDER_MALE_INDEX;
@@ -35,10 +34,14 @@ import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.ClassifierType;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
+import com.hartwig.hmftools.cup.common.ResultType;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 import com.hartwig.hmftools.cup.common.SampleSimilarity;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 
 public class SampleTraitClassifier implements CuppaClassifier
 {
@@ -49,12 +52,15 @@ public class SampleTraitClassifier implements CuppaClassifier
 
     private final Map<SampleTraitType,Map<String,double[]>> mRefTraitPercentiles;
     private final Map<SampleTraitType,Map<String,Double>> mRefTraitRates;
+    private final boolean mApplyPloidyLikelihood;
 
     private final Map<String,double[]> mRefGenderRates;
 
+    private static final String APPLY_PLOIDY_LIKELIHOOD = "apply_ploidy_likelihood";
+
     private boolean mIsValid;
 
-    public SampleTraitClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache)
+    public SampleTraitClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
@@ -63,6 +69,9 @@ public class SampleTraitClassifier implements CuppaClassifier
         mRefTraitPercentiles = Maps.newHashMap();
         mRefTraitRates = Maps.newHashMap();
         mRefGenderRates = Maps.newHashMap();
+
+        mApplyPloidyLikelihood = cmd.hasOption(APPLY_PLOIDY_LIKELIHOOD);
+
         mIsValid = true;
 
         if(mConfig.RefTraitPercFile.isEmpty() && mConfig.RefTraitRateFile.isEmpty())
@@ -105,6 +114,11 @@ public class SampleTraitClassifier implements CuppaClassifier
     public CategoryType categoryType() { return SAMPLE_TRAIT; }
     public boolean isValid() { return mIsValid; }
     public void close() {}
+
+    public static void addCmdLineArgs(Options options)
+    {
+        options.addOption(APPLY_PLOIDY_LIKELIHOOD, false, "Add ploidy high/low likelihood feature");
+    }
 
     private boolean loadSampleTraitsData()
     {
@@ -170,7 +184,13 @@ public class SampleTraitClassifier implements CuppaClassifier
         }
 
         addTraitPrevalences(sample, sampleTraits, results);
-        addTraitLikelihoods(sample, sampleTraits, results);
+
+        int cancerSampleCount = sample.isRefSample() ? mSampleDataCache.getCancerSampleCount(sample.cancerType()) : 0;
+        addTraitLikelihoods(sample, cancerSampleCount, results, MS_INDELS_TMB, sampleTraits.IndelsMbPerMb);
+
+        if(mApplyPloidyLikelihood)
+            addTraitLikelihoods(sample, cancerSampleCount, results, PLOIDY, sampleTraits.Ploidy);
+
         addGenderClassifier(sample, sampleTraits, results);
     }
 
@@ -193,7 +213,7 @@ public class SampleTraitClassifier implements CuppaClassifier
         }
 
         SampleResult result = new SampleResult(
-                sample.Id, CLASSIFIER, LIKELIHOOD, ClassifierType.GENDER.toString(), sampleTraits.GenderType.toString(), cancerProbs);
+                sample.Id, SAMPLE_TRAIT, ResultType.CLASSIFIER, ClassifierType.GENDER.toString(), sampleTraits.GenderType.toString(), cancerProbs);
 
         results.add(result);
     }
@@ -262,23 +282,22 @@ public class SampleTraitClassifier implements CuppaClassifier
         }
     }
 
-    private void addTraitLikelihoods(final SampleData sample, final SampleTraitsData sampleTraits, final List<SampleResult> results)
+    private void addTraitLikelihoods(
+            final SampleData sample, int cancerSampleCount, final List<SampleResult> results, final SampleTraitType traitType, double traitValue)
     {
         int cancerTypeCount = mSampleDataCache.RefCancerSampleData.size();
-        int cancerSampleCount = sample.isRefSample() ? mSampleDataCache.getCancerSampleCount(sample.cancerType()) : 0;
 
-        final Map<String,double[]> indelPercentiles = mRefTraitPercentiles.get(MS_INDELS_TMB);
-        double indelMb = sampleTraits.IndelsMbPerMb;
+        final Map<String, double[]> indelPercentiles = mRefTraitPercentiles.get(traitType);
 
-        final Map<String,Double> cancerPrevsLow = calcPercentilePrevalence(
-                sample, cancerSampleCount, cancerTypeCount, indelPercentiles, indelMb,  true);
-        results.add(new SampleResult(sample.Id, SAMPLE_TRAIT, LIKELIHOOD, MS_INDELS_TMB + "_LOW",
-                String.format("%.4f", indelMb), cancerPrevsLow));
+        final Map<String, Double> cancerPrevsLow = calcPercentilePrevalence(
+                sample, cancerSampleCount, cancerTypeCount, indelPercentiles, traitValue, true);
+        results.add(new SampleResult(sample.Id, SAMPLE_TRAIT, LIKELIHOOD, traitType.toString() + "_LOW",
+                String.format("%.4f", traitValue), cancerPrevsLow));
 
-        final Map<String,Double> cancerPrevsHigh = calcPercentilePrevalence(
-                sample, cancerSampleCount, cancerTypeCount, indelPercentiles, indelMb, false);
-        results.add(new SampleResult(sample.Id, SAMPLE_TRAIT, LIKELIHOOD, MS_INDELS_TMB + "_HIGH",
-                String.format("%.4f", indelMb), cancerPrevsHigh));
+        final Map<String, Double> cancerPrevsHigh = calcPercentilePrevalence(
+                sample, cancerSampleCount, cancerTypeCount, indelPercentiles, traitValue, false);
+        results.add(new SampleResult(sample.Id, SAMPLE_TRAIT, LIKELIHOOD, traitType.toString() + "_HIGH",
+                String.format("%.4f", traitValue), cancerPrevsHigh));
     }
 
     private static boolean isReportableType(final SampleTraitType type)

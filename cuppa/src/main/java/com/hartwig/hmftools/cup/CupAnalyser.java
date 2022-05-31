@@ -66,7 +66,7 @@ public class CupAnalyser
         }
 
         if(mConfig.runClassifier(SAMPLE_TRAIT)) // added first since other classifiers depend on ploidy & purity
-            mClassifiers.add(new SampleTraitClassifier(mConfig, mSampleDataCache));
+            mClassifiers.add(new SampleTraitClassifier(mConfig, mSampleDataCache, cmd));
 
         if(mConfig.runClassifier(SNV))
             mClassifiers.add(new SomaticClassifier(mConfig, mSampleDataCache, cmd));

@@ -232,14 +232,15 @@ public class SageAppendApplication
         if(oldVersion == null)
             return 0;
 
-        String oldVersionString = oldVersion.getValue();
+        String[] versionComponents = oldVersion.getValue().split("\\.", -1);
+
         try
         {
-            return Double.parseDouble(oldVersionString);
+            return Double.parseDouble(versionComponents[0]) + Double.parseDouble(versionComponents[1]);
         }
         catch(Exception e)
         {
-            SG_LOGGER.error("failed to parse Sage version: {}", oldVersionString);
+            SG_LOGGER.error("failed to parse Sage version: {}", oldVersion.getValue());
             return 0;
         }
     }

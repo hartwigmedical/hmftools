@@ -51,7 +51,6 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
-import com.hartwig.hmftools.isofox.common.DuplicateReadTracker;
 import com.hartwig.hmftools.isofox.common.FragmentMatchType;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
@@ -107,7 +106,6 @@ public class BamFragmentAllocator
 
     private final BufferedWriter mReadDataWriter;
     private int mEnrichedGeneFragments;
-    private final DuplicateReadTracker mDuplicateTracker;
     private ChrBaseRegion mExcludedRegion;
 
     private static final int GENE_LOG_COUNT = 5000000;
@@ -136,15 +134,15 @@ public class BamFragmentAllocator
                 SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile)) : null;
 
         // duplicates aren't counted towards fusions so can be ignored if only running fusions
-        // reads with supplementary alignment data are only used for fusions
-        boolean keepDuplicates = mRunFusions || mConfig.runFunction(TRANSCRIPT_COUNTS);
+        boolean keepDuplicates = mConfig.runFunction(TRANSCRIPT_COUNTS) && !mConfig.DropDuplicates;
+
+        // reads with supplementary alignment data are only used for chimeric read handling (eg fusions & alt-SJs)
         boolean keepSupplementaries = mRunFusions || mConfig.runFunction(ALT_SPLICE_JUNCTIONS) || mConfig.runFunction(UNMAPPED_READS);
+
         boolean keepSecondaries = mConfig.runFunction(TRANSCRIPT_COUNTS);
         int minMapQuality = keepSecondaries ? 0 : SINGLE_MAP_QUALITY;
 
         mBamSlicer = new BamSlicer(minMapQuality, keepDuplicates, keepSupplementaries, keepSecondaries);
-
-        mDuplicateTracker = new DuplicateReadTracker(mConfig.MarkDuplicates);
 
         mReadDataWriter = resultsWriter.getReadDataWriter();
         mBaseDepth = new BaseDepth();
@@ -176,7 +174,6 @@ public class BamFragmentAllocator
         mRetainedIntronFinder.setGeneData(null);
         mSpliceSiteCounter.clear();
 
-        mDuplicateTracker.clear();
         mCurrentGenes = null;
         mExcludedRegion = null;
     }
@@ -266,17 +263,6 @@ public class BamFragmentAllocator
         {
             processEnrichedRegionRead(record);
             return;
-        }
-
-        if(mDuplicateTracker.checkDuplicates(record))
-        {
-            if(mConfig.DropDuplicates)
-            {
-                if(record.getFirstOfPairFlag())
-                    mCurrentGenes.addCount(DUPLICATE, 1);
-
-                return;
-            }
         }
 
         ++mTotalBamReadCount;

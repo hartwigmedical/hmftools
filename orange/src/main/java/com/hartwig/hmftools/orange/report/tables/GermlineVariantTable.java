@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.interpretation.Variants;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.layout.element.Cell;

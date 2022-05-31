@@ -3,14 +3,14 @@ package com.hartwig.hmftools.cup.rna;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
-import static com.hartwig.hmftools.common.utils.MatrixUtils.DEFAULT_MATRIX_DELIM;
+import static com.hartwig.hmftools.common.utils.MatrixFile.DEFAULT_MATRIX_DELIM;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_ALT_SJ_CANCER;
 import static com.hartwig.hmftools.cup.common.CategoryType.ALT_SJ;
-import static com.hartwig.hmftools.cup.common.CupCalcs.addPanCancerNoise;
+import static com.hartwig.hmftools.cup.common.ClassifierType.ALT_SJ_COHORT;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -25,38 +25,27 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.common.NoiseRefCache;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefClassifier;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
-import org.jetbrains.annotations.NotNull;
 
 public class RefAltSpliceJunctions implements RefClassifier
 {
     private final RefDataConfig mConfig;
     private final SampleDataCache mSampleDataCache;
 
-    private final int mNoiseAllocation;
-
     public static final String FLD_POS_START = "PosStart";
     public static final String FLD_POS_END = "PosEnd";
 
-    public static final String ALT_SJ_NOISE_ALLOC = "alt_sj_noise_alloc";
-
-    public RefAltSpliceJunctions(final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
+    public RefAltSpliceJunctions(
+            final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
-
-        mNoiseAllocation = cmd != null ? Integer.parseInt(cmd.getOptionValue(ALT_SJ_NOISE_ALLOC, "0")) : 0;
-    }
-
-    public static void addCmdLineArgs(@NotNull Options options)
-    {
-        options.addOption(ALT_SJ_NOISE_ALLOC, true, "Alt-SJ noise allocation");
     }
 
     public CategoryType categoryType() { return ALT_SJ; }
@@ -83,8 +72,8 @@ public class RefAltSpliceJunctions implements RefClassifier
         if(sampleFragCounts == null)
             return;
 
-        // columns contain the alt-SJ locations
-        Matrix cancerFragCounts = new Matrix(altSjSiteCount, mSampleDataCache.RefCancerSampleData.size());
+        // alt-SJs in the columns, cancer types in the rows since the noise allocation expects this
+        Matrix cancerFragCounts = new Matrix(mSampleDataCache.RefCancerSampleData.size(), altSjSiteCount);
         final double[][] cancerMatrixData = cancerFragCounts.getData();
 
         for(Map.Entry<String,List<SampleData>> entry : mSampleDataCache.RefCancerSampleData.entrySet())
@@ -107,20 +96,26 @@ public class RefAltSpliceJunctions implements RefClassifier
 
                 for(int b = 0; b < fragCounts.length; ++b)
                 {
-                    cancerMatrixData[b][cancerIndex] += fragCounts[b];
+                    cancerMatrixData[cancerIndex][b] += fragCounts[b];
                 }
             }
         }
 
-        if(mNoiseAllocation > 0)
+        final double[] altSjMedians = NoiseRefCache.generateMedianValues(cancerFragCounts);
+
+        if(mConfig.NoiseAdjustments.hasNoiseAllocation(ALT_SJ_COHORT))
         {
-            CUP_LOGGER.debug("applying alt-SJ noise({}) to cancer matrix", mNoiseAllocation);
-            addPanCancerNoise(cancerFragCounts, mNoiseAllocation);
+            int noiseAllocation = mConfig.NoiseAdjustments.getNoiseAllocation(ALT_SJ_COHORT);
+            CUP_LOGGER.debug("applying noise({}) to alt-SJ cohort counts", noiseAllocation);
+
+            NoiseRefCache.applyNoise(cancerFragCounts, altSjMedians, noiseAllocation);
         }
+
+        // no need to write medians unless to try out pairwise in the classifer
 
         CUP_LOGGER.debug("writing RNA alt-SJ cancer reference data");
 
-        writeMatrixData(cancerFragCounts, cancerTypes, asjLocations);
+        writeCancerAltSjMatrixData(cancerFragCounts, cancerTypes, asjLocations);
     }
 
     public static final int ASJ_LOCATION_COL_COUNT = 4;
@@ -237,8 +232,13 @@ public class RefAltSpliceJunctions implements RefClassifier
                 ++altSjIndex;
             }
 
-            CUP_LOGGER.info("loaded matrix(rows={} cols={}) from file({}) zeros({}) ones({}) exceedsShort({})",
-                    altSjSiteCount, sampleCount, filename, zeroCount, oneCount, maxShortCount);
+            CUP_LOGGER.info("loaded matrix(rows={} cols={}) from file({})", altSjSiteCount, sampleCount, filename);
+
+            if(maxShortCount > 0)
+            {
+                CUP_LOGGER.warn("file({}) zeros({}) ones({}) capped {} short values", filename, zeroCount, oneCount, maxShortCount);
+            }
+
         }
         catch (IOException exception)
         {
@@ -323,7 +323,7 @@ public class RefAltSpliceJunctions implements RefClassifier
         return sampleMatrix;
     }
 
-    private void writeMatrixData(
+    private void writeCancerAltSjMatrixData(
             final Matrix fragCountMatrix, final List<String> cancerTypes, final List<String> asjLocations)
     {
         try
@@ -342,6 +342,19 @@ public class RefAltSpliceJunctions implements RefClassifier
 
             final double[][] matrixData = fragCountMatrix.getData();
 
+            for(int b = 0; b < fragCountMatrix.Cols; ++b) // columns are the alt-SJ locations
+            {
+                writer.write(String.format("%s", asjLocations.get(b)));
+
+                for(int i = 0; i < fragCountMatrix.Rows; ++i)
+                {
+                    writer.write(String.format(",%.1f", matrixData[i][b]));
+                }
+
+                writer.newLine();
+            }
+
+            /*
             for(int i = 0; i < fragCountMatrix.Rows; ++i) // rows are the alt-SJ locations
             {
                 writer.write(String.format("%s", asjLocations.get(i)));
@@ -353,6 +366,7 @@ public class RefAltSpliceJunctions implements RefClassifier
 
                 writer.newLine();
             }
+            */
 
             closeBufferedWriter(writer);
         }

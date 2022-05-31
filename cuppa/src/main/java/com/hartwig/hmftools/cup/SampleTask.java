@@ -2,24 +2,25 @@ package com.hartwig.hmftools.cup;
 
 import static com.hartwig.hmftools.cup.CupAnalyser.allClassifiersValid;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
-import static com.hartwig.hmftools.cup.common.ClassifierType.isDna;
-import static com.hartwig.hmftools.cup.common.ClassifierType.isRna;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcCombinedClassifierScoreResult;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcCombinedFeatureResult;
 import static com.hartwig.hmftools.cup.common.CupCalcs.fillMissingCancerTypeValues;
 import static com.hartwig.hmftools.cup.common.CupConstants.COMBINED_DAMPEN_FACTOR;
+import static com.hartwig.hmftools.cup.common.CupConstants.DATA_TYPE_COMBINED;
+import static com.hartwig.hmftools.cup.common.CupConstants.DATA_TYPE_DNA_COMBINED;
+import static com.hartwig.hmftools.cup.common.CupConstants.DATA_TYPE_RNA_COMBINED;
 import static com.hartwig.hmftools.cup.common.CupConstants.DNA_DAMPEN_FACTOR;
 import static com.hartwig.hmftools.cup.common.CupConstants.RNA_DAMPEN_FACTOR;
+import static com.hartwig.hmftools.cup.common.ResultType.CLASSIFIER;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.cup.common.CategoryType;
-import com.hartwig.hmftools.cup.common.ClassifierType;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
@@ -100,16 +101,18 @@ public class SampleTask implements Callable
         boolean hasRnaCategories = mConfig.Categories.stream().anyMatch(x -> CategoryType.isRna(x));
 
         // ensure each cancer type has a probability for the classifiers to ensure an even application of the min-probability
-        final Set<String> refCancerTypes = mSampleDataCache.RefCancerSampleData.keySet();
+        final Set<String> refCancerTypes = mSampleDataCache.RefCancerSampleData.keySet().stream()
+                .filter(x -> !mSampleDataCache.RefCancerMappings.containsKey(x))
+                .collect(Collectors.toSet());
 
         allResults.stream()
-                .filter(x -> x.Category == CLASSIFIER)
+                .filter(x -> x.Result == CLASSIFIER)
                 .forEach(x -> fillMissingCancerTypeValues(x.CancerTypeValues, refCancerTypes));
 
         if(hasDnaCategories)
         {
             final List<SampleResult> dnaResults = allResults.stream()
-                    .filter(x -> x.Category == CLASSIFIER && isDna(ClassifierType.valueOf(x.DataType)))
+                    .filter(x -> x.Result == CLASSIFIER && CategoryType.isDna(x.Category))
                     .collect(Collectors.toList());
 
             if(dnaResults.isEmpty())
@@ -118,7 +121,7 @@ public class SampleTask implements Callable
             }
             else
             {
-                SampleResult dnaScoreResult = calcCombinedClassifierScoreResult(sample, dnaResults, "DNA_COMBINED", DNA_DAMPEN_FACTOR);
+                SampleResult dnaScoreResult = calcCombinedClassifierScoreResult(sample, dnaResults, DATA_TYPE_DNA_COMBINED, DNA_DAMPEN_FACTOR);
 
                 if(dnaScoreResult != null)
                     allResults.add(dnaScoreResult);
@@ -128,7 +131,7 @@ public class SampleTask implements Callable
         if(hasRnaCategories)
         {
             final List<SampleResult> rnaResults = allResults.stream()
-                    .filter(x -> x.Category == CLASSIFIER && isRna(ClassifierType.valueOf(x.DataType)))
+                    .filter(x -> x.Result == CLASSIFIER && CategoryType.isRna(x.Category))
                     .collect(Collectors.toList());
 
             if(rnaResults.isEmpty())
@@ -137,7 +140,7 @@ public class SampleTask implements Callable
             }
             else
             {
-                SampleResult rnaScoreResult = calcCombinedClassifierScoreResult(sample, rnaResults, "RNA_COMBINED", RNA_DAMPEN_FACTOR);
+                SampleResult rnaScoreResult = calcCombinedClassifierScoreResult(sample, rnaResults, DATA_TYPE_RNA_COMBINED, RNA_DAMPEN_FACTOR);
 
                 if(rnaScoreResult != null)
                     allResults.add(rnaScoreResult);
@@ -147,14 +150,43 @@ public class SampleTask implements Callable
         if(hasDnaCategories && hasRnaCategories)
         {
             SampleResult classifierScoreResult =
-                    calcCombinedClassifierScoreResult(sample, allResults, "COMBINED", COMBINED_DAMPEN_FACTOR);
+                    calcCombinedClassifierScoreResult(sample, allResults, DATA_TYPE_COMBINED, COMBINED_DAMPEN_FACTOR);
 
             if(classifierScoreResult != null)
                 allResults.add(classifierScoreResult);
         }
 
+        // collapse any sub-types into parent types
+        if(!mSampleDataCache.RefCancerMappings.isEmpty() && !mConfig.NoSubtypeCollapse)
+        {
+            collapseCancerSubtypes(allResults);
+        }
+
         mResultsWriter.writeSampleData(sample, allResults);
         mResultsWriter.writeSampleSimilarities(sample, similarities);
+    }
+
+    private void collapseCancerSubtypes(final List<SampleResult> results)
+    {
+        for(SampleResult result : results)
+        {
+            if(result.Result != CLASSIFIER)
+                continue;
+
+            final Map<String,Double> cancerTypeResults = result.CancerTypeValues;
+
+            for(Map.Entry<String,String> mapping : mSampleDataCache.RefCancerMappings.entrySet())
+            {
+                Double subtypeProb = cancerTypeResults.get(mapping.getKey());
+                Double mainTypeProb = cancerTypeResults.get(mapping.getValue());
+
+                if(subtypeProb != null && mainTypeProb != null)
+                {
+                    cancerTypeResults.put(mapping.getValue(), subtypeProb + mainTypeProb);
+                    cancerTypeResults.remove(mapping.getKey());
+                }
+            }
+        }
     }
 
 }

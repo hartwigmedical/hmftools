@@ -93,12 +93,12 @@ public class SampleData
         SpecificRegions = ChrBaseRegion.loadSpecificRegions(cmd);
 
         boolean useCohortFiles = cmd.hasOption(LOAD_COHORT_FILES);
-        final String svDataFile = useCohortFiles ? COHORT_VIS_SVS_FILE : VisSvData.generateFilename(mSampleDataDir, Sample);
-        final String linksFile = useCohortFiles ? COHORT_VIS_LINKS_FILE : VisSegment.generateFilename(mSampleDataDir, Sample);
-        final String cnaFile = useCohortFiles ? COHORT_VIS_COPY_NUMBER_FILE : VisCopyNumber.generateFilename(mSampleDataDir, Sample);
-        final String geneExonFile = useCohortFiles ? COHORT_VIS_GENE_EXONS_FILE : VisGeneExon.generateFilename(mSampleDataDir, Sample);
-        final String proteinFile = useCohortFiles ? COHORT_VIS_PROTEIN_FILE : VisProteinDomain.generateFilename(mSampleDataDir, Sample);
-        final String fusionFile = useCohortFiles ? COHORT_VIS_FUSIONS_FILE : VisFusion.generateFilename(mSampleDataDir, Sample);
+        final String svDataFile = useCohortFiles ? mSampleDataDir + COHORT_VIS_SVS_FILE : VisSvData.generateFilename(mSampleDataDir, Sample);
+        final String linksFile = useCohortFiles ? mSampleDataDir + COHORT_VIS_LINKS_FILE : VisSegment.generateFilename(mSampleDataDir, Sample);
+        final String cnaFile = useCohortFiles ? mSampleDataDir + COHORT_VIS_COPY_NUMBER_FILE : VisCopyNumber.generateFilename(mSampleDataDir, Sample);
+        final String geneExonFile = useCohortFiles ? mSampleDataDir + COHORT_VIS_GENE_EXONS_FILE : VisGeneExon.generateFilename(mSampleDataDir, Sample);
+        final String proteinFile = useCohortFiles ? mSampleDataDir + COHORT_VIS_PROTEIN_FILE : VisProteinDomain.generateFilename(mSampleDataDir, Sample);
+        final String fusionFile = useCohortFiles ? mSampleDataDir + COHORT_VIS_FUSIONS_FILE : VisFusion.generateFilename(mSampleDataDir, Sample);
 
         Clusters = parseClusters(cmd);
         Chromosomes = parseChromosomes(cmd);

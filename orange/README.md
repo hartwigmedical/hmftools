@@ -95,12 +95,16 @@ investigate potential causes for QC failure.
 
 ### Version History and Download Links
 - Upcoming
+  - Add mandatory `driver_gene_panel_tsv` and `known_fusion_file` inputs to support interpretation of isofox results
   - Proper support for RNA
-    - Isofox data is loaded when provided through command line
-    - RNA Depth is picked up in case purple somatic/germline variants have been annotated with RNA. 
+    - `rna_sample_id`, 2 isofox cohort files and 4 isofox data files can be configured through command line.
+    - RNA Depth for variants is picked up in case purple somatic/germline variants have been annotated with RNA. 
     - Amps and dels are annotated with expression data (including percentiles and fold change)
-    - Fusions are annotated by RNA fragment support (from novel splice junctions for `EXON_DEL_DUP` and rna fusions otherwise)
-    - IG fusions are annotated with the expression data of the 3' gene
+    - Fusions are annotated by RNA support:
+        - For `EXON_DEL_DUP` a list of novel splice junctions is used for annotation.
+        - IG fusions are annotated with the expression data of the 3' gene
+        - All other fusions are annotated with their equivalent counterparts in RNA.
+    - A new chapter is added with RNA statistics and various types of novel findings compared to DNA. 
   - Improvements to CUPPA
     - Cuppa data loader favors overall combined score > DNA combined score > RNA combined score.
     - Cuppa data loader retains the combined prediction for every cancer type, not just the best prediction.

@@ -5,7 +5,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.sigs.NoiseCalcs.calcPoissonRangeGivenProb;
-import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
+import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.utils.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
@@ -78,7 +78,7 @@ public class CosineSimAnalyser
         mUseElevated = cmd.hasOption(USE_ELEVATED);
         mRangeMap = Maps.newHashMap();
 
-        mSampleCounts = loadMatrixDataFile(cmd.getOptionValue(SAMPLE_COUNTS_FILE), mSampleCountsIndex, null);
+        mSampleCounts = loadMatrixDataFile(cmd.getOptionValue(SAMPLE_COUNTS_FILE), mSampleCountsIndex, null, false);
         mSampleCounts.cacheTranspose();
 
         mSampleCancerTypes = Maps.newHashMap();
@@ -98,7 +98,7 @@ public class CosineSimAnalyser
         {
             STAT_LOGGER.info("loading reference data from file({})", cmd.getOptionValue(REF_COUNTS_FILE));
 
-            mReferenceSampleCounts = loadMatrixDataFile(cmd.getOptionValue(REF_COUNTS_FILE), mRefNames);
+            mReferenceSampleCounts = loadMatrixDataFile(cmd.getOptionValue(REF_COUNTS_FILE), mRefNames, false);
             mReferenceSampleCounts.cacheTranspose();
         }
         else

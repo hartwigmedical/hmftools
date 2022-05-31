@@ -1,0 +1,3 @@
+gene	reportMissense	reportNonsense	reportSplice	reportDeletion	reportDisruption	reportAmplification	reportSomaticHotspot	likelihoodType	reportGermlineVariant	reportGermlineHotspot	reportGermlineDisruption	additionalReportedTranscripts
+GENE1	true	true	true	true	true	false	true	TSG	VARIANT_NOT_LOST	VARIANT_NOT_LOST	true		
+GENE2	true	false	false	false	false	true	true	ONCO	NONE	NONE	false		

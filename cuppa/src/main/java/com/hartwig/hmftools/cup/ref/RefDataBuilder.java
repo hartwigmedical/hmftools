@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.cup.CuppaConfig.classifierEnabled;
 
 import java.util.List;
 
+import com.hartwig.hmftools.cup.common.NoiseRefCache;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.feature.RefFeatures;
 import com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions;
@@ -40,6 +41,7 @@ public class RefDataBuilder
         mSampleDataCache = new SampleDataCache();
 
         loadSampleData(cmd);
+
 
         mClassifiers = Lists.newArrayList();
 
@@ -88,6 +90,8 @@ public class RefDataBuilder
 
             classifier.buildRefDataSets();
         }
+
+        mConfig.NoiseAdjustments.writeNoiseAdjustments();
 
         CUP_LOGGER.info("CUP ref data building complete");
     }

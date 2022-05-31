@@ -14,8 +14,8 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.typeAsInt;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM_CHR;
-import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.DOUBLE_MINUTES;
-import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.runAnnotation;
+import static com.hartwig.hmftools.linx.analysis.AnnotationExtension.CANDIDATE_VIS_DOUBLE_MINUTES;
+import static com.hartwig.hmftools.linx.analysis.AnnotationExtension.DOUBLE_MINUTES;
 import static com.hartwig.hmftools.linx.analysis.DoubleMinuteData.getMajorAlleleJcnRatio;
 import static com.hartwig.hmftools.linx.analysis.DoubleMinuteData.variantExceedsBothAdjacentJcn;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
@@ -82,8 +82,8 @@ public class DoubleMinuteFinder implements CohortFileInterface
         mDoubleMinutes = Maps.newHashMap();
         mConfig = config;
 
-        mLogCandidates = runAnnotation(config.RequiredAnnotations, DOUBLE_MINUTES);
-        mShowCandidates = runAnnotation(config.RequiredAnnotations, "SHOW_DM");
+        mLogCandidates = config.AnnotationExtensions.contains(DOUBLE_MINUTES);
+        mShowCandidates = config.AnnotationExtensions.contains(CANDIDATE_VIS_DOUBLE_MINUTES);
 
         mCohortDataWriter = cohortDataWriter;
 

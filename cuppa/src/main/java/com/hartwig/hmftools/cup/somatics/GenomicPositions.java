@@ -1,29 +1,19 @@
 package com.hartwig.hmftools.cup.somatics;
 
-import static com.hartwig.hmftools.common.sigs.SnvSigUtils.contextFromVariant;
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.variantContext;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CupConstants.AID_APOBEC_TRINUCLEOTIDE_CONTEXTS;
-import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.cup.somatics.AidApobecStatus.ALL;
 import static com.hartwig.hmftools.cup.somatics.AidApobecStatus.FALSE_ONLY;
 import static com.hartwig.hmftools.cup.somatics.AidApobecStatus.TRUE_ONLY;
-import static com.hartwig.hmftools.cup.somatics.CopyNumberProfile.normaliseGenPosCountsByCopyNumber;
-import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.DEC_3_FORMAT;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.utils.Matrix;
-import com.hartwig.hmftools.common.utils.VectorUtils;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.cup.common.SampleData;
 
@@ -72,19 +62,58 @@ public final class GenomicPositions
         posFrequencies.clear();
         extractPositionFrequencyCounts(variants, posFrequencies, aidApobecStatus);
 
-        final Matrix matrix = new Matrix(posFrequencies.getCounts().length, 1);
+        final Matrix matrix = new Matrix(1, posFrequencies.getCounts().length);
 
-        matrix.setCol(0, posFrequencies.getCounts());
+        matrix.setRow(0, posFrequencies.getCounts());
         samplePosFreqIndex.put(sampleId, 0);
 
         return matrix;
+    }
+
+    public static void excludeChromosome(final Matrix matrix, final PositionFrequencies posFrequencies, final String chromosome)
+    {
+        int chromosomeStartIndex = posFrequencies.getBucketIndex(chromosome, 0);
+
+        String nextChromosome = "";
+        for(int i = 0; i < HumanChromosome.values().length; ++i)
+        {
+            if(HumanChromosome.values()[i].toString().equals(chromosome))
+            {
+                if(i < HumanChromosome.values().length - 1)
+                    nextChromosome = HumanChromosome.values()[i + 1].toString();
+
+                break;
+            }
+        }
+
+        int chromosomeEndIndex;
+
+        if(!nextChromosome.isEmpty())
+        {
+            chromosomeEndIndex = posFrequencies.getBucketIndex(nextChromosome, 0) - 1;
+        }
+        else
+        {
+            chromosomeEndIndex = posFrequencies.getBucketCount() - 1;
+        }
+
+        final double[][] data = matrix.getData();
+
+        for(int b = chromosomeStartIndex; b <= chromosomeEndIndex; ++b)
+        {
+            for(int i = 0; i < matrix.Rows; ++i)
+            {
+                data[i][b] = 0;
+            }
+        }
     }
 
     public static Matrix buildCancerMatrix(
             final Matrix samplePosFreqCounts, final Map<String,Integer> sampleIndexMap,
             final List<String> cancerTypes, final Map<String,List<SampleData>> refCancerSampleData, int maxSampleCount)
     {
-        Matrix cancerGenPosMatrix = new Matrix(samplePosFreqCounts.Rows, cancerTypes.size());
+        // positions in the columns as per the sample matrix
+        Matrix cancerGenPosMatrix = new Matrix(cancerTypes.size(), samplePosFreqCounts.Cols);
         final double[][] matrixData = cancerGenPosMatrix.getData();
 
         for(int i = 0; i < cancerTypes.size(); ++i)
@@ -107,7 +136,7 @@ public final class GenomicPositions
                 }
 
                 int sampleIndex = sampleIndexMap.get(sample.Id);
-                double[] sampleCounts = samplePosFreqCounts.getCol(sampleIndex);
+                double[] sampleCounts = samplePosFreqCounts.getRow(sampleIndex);
 
                 if(sampleCounts == null)
                     continue;
@@ -118,7 +147,7 @@ public final class GenomicPositions
 
                 for(int b = 0; b < sampleCounts.length; ++b)
                 {
-                    matrixData[b][i] += reductionFactor * sampleCounts[b];
+                    matrixData[i][b] += reductionFactor * sampleCounts[b];
                 }
             }
         }

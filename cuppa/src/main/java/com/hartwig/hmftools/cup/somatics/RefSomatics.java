@@ -5,49 +5,45 @@ import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.stats.Percentiles.buildPercentiles;
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.SNV_TRINUCLEOTIDE_BUCKET_COUNT;
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.populateBucketMap;
+import static com.hartwig.hmftools.common.utils.MatrixFile.DEFAULT_MATRIX_DELIM;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SIG_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CANCER_POS_FREQ_COUNTS;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CN_ADJUSTED_SAMPLE_POS_FREQ_COUNTS;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_COPY_NUMBER_PROFILE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SIG_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SNV_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
-import static com.hartwig.hmftools.cup.common.CupCalcs.addPanCancerNoise;
+import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_COHORT;
+import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OTHER;
-import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_BUCKET_SIZE;
-import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_MAX_SAMPLE_COUNT;
+import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_BUCKET_SIZE;
+import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_MAX_SAMPLE_COUNT;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.parseFileSet;
-import static com.hartwig.hmftools.cup.somatics.CopyNumberProfile.buildCopyNumberProfile;
 import static com.hartwig.hmftools.cup.somatics.GenomicPositions.buildCancerMatrix;
+import static com.hartwig.hmftools.cup.somatics.GenomicPositions.excludeChromosome;
 import static com.hartwig.hmftools.cup.somatics.GenomicPositions.extractPositionFrequencyCounts;
+import static com.hartwig.hmftools.cup.somatics.SigContributions.buildCancerSignatureContributions;
+import static com.hartwig.hmftools.cup.somatics.SigContributions.buildSampleSignatureContributions;
 import static com.hartwig.hmftools.cup.somatics.SomaticClassifier.SNV_POS_FREQ_POS_SIZE;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSigContribsFromCohortFile;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSomaticVariants;
-import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_13;
-import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_2;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.DEC_3_FORMAT;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_GEN_POS_CHR_X;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_GEN_POS_CHR_X_DESC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INTEGER_FORMAT;
-import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.NORMALISE_COPY_NUMBER;
-import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.NORMALISE_COPY_NUMBER_DESC;
-import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_AID_APOBEC;
-import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_AID_APOBEC_DESC;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC_DESC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.loadMultipleMatrixFiles;
-import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.writeMatrix;
-import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.writeSampleMatrix;
 import static com.hartwig.hmftools.cup.somatics.TrinucleotideCounts.extractTrinucleotideCounts;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -59,12 +55,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.common.utils.VectorUtils;
 import com.hartwig.hmftools.cup.common.CategoryType;
-import com.hartwig.hmftools.cup.common.SampleData;
+import com.hartwig.hmftools.cup.common.NoiseRefCache;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 import com.hartwig.hmftools.cup.ref.RefClassifier;
-import com.hartwig.hmftools.cup.traits.SampleTraitsData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -75,23 +71,18 @@ public class RefSomatics implements RefClassifier
     private final RefDataConfig mConfig;
     private final SampleDataCache mSampleDataCache;
 
-    private final Map<String,Map<String,List<Double>>> mCancerSigContribs;
     private final Map<String,List<Double>> mCancerSnvCounts;
 
-    private Matrix mTriNucCounts; // counts per tri-nucleotide bucket
-    private final Map<String,Integer> mTriNucCountsIndex;
-    private boolean mWriteTriNucMatrixData;
+    private Matrix mSnv96Counts; // counts per tri-nucleotide bucket
+    private final Map<String,Integer> mSnv96CountsIndex;
+    private boolean mWriteSnv96MatrixData;
 
-    private Matrix mPosFreqCounts; // counts per genomic position
-    private final Map<String,Integer> mPosFreqCountsIndex;
-    private boolean mWritePosFreqMatrixData;
+    private Matrix mGenPosCounts; // counts per genomic position
+    private final Map<String,Integer> mGenPosCountsIndex;
+    private boolean mWriteGenPosMatrixData;
 
-    private final boolean mExcludeAidApobec;
-
-    private final boolean mBuildCopyNumber;
-    private final boolean mApplyCopyNumber; // to genomic positions
-    private Matrix mCopyNumberProfile; // same dimensions as genomic position
-    private final int mGenPosNoiseAllocation;
+    private final boolean mIncludeAidApobec;
+    private final boolean mExcludeGenPosChrX;
 
     private final PositionFrequencies mPosFrequencies;
 
@@ -100,42 +91,31 @@ public class RefSomatics implements RefClassifier
     public static final String REF_SIG_TYPE_SNV_COUNT = "SnvCount";
     private static final String MATRIX_TYPE_SNV_96 = "SNV_96";
     private static final String MATRIX_TYPE_GEN_POS = "GEN_POS";
-    private static final String MATRIX_TYPE_CN_PROFILE = "CN_PROFILE";
 
-    // config
-    private static final String BUILD_CN_PROFILE = "build_copy_number";
-    public static final String GEN_POS_NOISE_ALLOC = "gen_pos_noise_alloc";
-    public static final String GEN_POS_NOISE_ALLOC_DESC = "Add genomic position counts from pan-cancer medians";
-
-    public RefSomatics(final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
+    public RefSomatics(
+            final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
 
-        mCancerSigContribs = Maps.newHashMap();
         mCancerSnvCounts = Maps.newHashMap();
 
         mRefDataWriter = null;
 
-        mTriNucCounts = null;
-        mTriNucCountsIndex = Maps.newHashMap();
-        mWriteTriNucMatrixData = false;
+        mSnv96Counts = null;
+        mSnv96CountsIndex = Maps.newHashMap();
+        mWriteSnv96MatrixData = false;
 
-        mPosFreqCounts = null;
-        mPosFreqCountsIndex = Maps.newHashMap();
-        mWritePosFreqMatrixData = false;
+        mGenPosCounts = null;
+        mGenPosCountsIndex = Maps.newHashMap();
+        mWriteGenPosMatrixData = false;
 
-        mExcludeAidApobec = cmd.hasOption(EXCLUDE_AID_APOBEC);
-        mApplyCopyNumber = cmd.hasOption(NORMALISE_COPY_NUMBER);
+        mIncludeAidApobec = cmd.hasOption(INCLUDE_AID_APOBEC);
+        mExcludeGenPosChrX = cmd.hasOption(EXCLUDE_GEN_POS_CHR_X);
 
-        int posFreqBucketSize = cmd.hasOption(SNV_POS_FREQ_POS_SIZE) ?
-                Integer.parseInt(cmd.getOptionValue(SNV_POS_FREQ_POS_SIZE)) : POS_FREQ_BUCKET_SIZE;
+        int posFreqBucketSize = Integer.parseInt(cmd.getOptionValue(SNV_POS_FREQ_POS_SIZE, String.valueOf(GEN_POS_BUCKET_SIZE)));
 
-        mPosFrequencies = new PositionFrequencies(posFreqBucketSize, POS_FREQ_MAX_SAMPLE_COUNT);
-
-        mBuildCopyNumber = cmd.hasOption(BUILD_CN_PROFILE);
-        mGenPosNoiseAllocation = Integer.parseInt(cmd.getOptionValue(GEN_POS_NOISE_ALLOC, "0"));
-        mCopyNumberProfile = null;
+        mPosFrequencies = new PositionFrequencies(posFreqBucketSize, GEN_POS_MAX_SAMPLE_COUNT);
     }
 
     public CategoryType categoryType() { return SNV; }
@@ -154,10 +134,8 @@ public class RefSomatics implements RefClassifier
     public static void addCmdLineArgs(@NotNull Options options)
     {
         options.addOption(SNV_POS_FREQ_POS_SIZE, true, "Genomic position bucket size (default: 20000)");
-        options.addOption(EXCLUDE_AID_APOBEC, false, EXCLUDE_AID_APOBEC_DESC);
-        options.addOption(NORMALISE_COPY_NUMBER, false, NORMALISE_COPY_NUMBER_DESC);
-        options.addOption(BUILD_CN_PROFILE, false, "Build a copy-number profile to match genomic positions");
-        options.addOption(GEN_POS_NOISE_ALLOC, true, GEN_POS_NOISE_ALLOC_DESC);
+        options.addOption(INCLUDE_AID_APOBEC, false, INCLUDE_AID_APOBEC_DESC);
+        options.addOption(EXCLUDE_GEN_POS_CHR_X, false, EXCLUDE_GEN_POS_CHR_X_DESC);
     }
 
     public void buildRefDataSets()
@@ -166,77 +144,46 @@ public class RefSomatics implements RefClassifier
 
         final List<String> snvCountFiles = parseFileSet(mConfig.Snv96MatrixFile);
         final List<String> posFreqCountFiles = parseFileSet(mConfig.GenPosMatrixFile);
-        final List<String> cnProfileFiles = parseFileSet(mConfig.CopyNumberMatrixFile);
 
         boolean combineCohortFiles = snvCountFiles.size() > 1 && posFreqCountFiles.size() == snvCountFiles.size();
 
         if(combineCohortFiles)
         {
             final List<String> refSampleIds = mSampleDataCache.refSampleIds(false);
-            mTriNucCounts = loadMultipleMatrixFiles(snvCountFiles, refSampleIds, mTriNucCountsIndex, MATRIX_TYPE_SNV_96);
-            mPosFreqCounts = loadMultipleMatrixFiles(posFreqCountFiles, refSampleIds, mPosFreqCountsIndex, MATRIX_TYPE_GEN_POS);
-            mCopyNumberProfile = loadMultipleMatrixFiles(cnProfileFiles, refSampleIds, mPosFreqCountsIndex, MATRIX_TYPE_CN_PROFILE);
-            mWriteTriNucMatrixData = mWritePosFreqMatrixData = true;
+            mSnv96Counts = loadMultipleMatrixFiles(snvCountFiles, refSampleIds, mSnv96CountsIndex, MATRIX_TYPE_SNV_96);
+            mGenPosCounts = loadMultipleMatrixFiles(posFreqCountFiles, refSampleIds, mGenPosCountsIndex, MATRIX_TYPE_GEN_POS);
+            mWriteSnv96MatrixData = mWriteGenPosMatrixData = true;
         }
         else
         {
-            mTriNucCounts = loadReferenceSnvCounts(mConfig.Snv96MatrixFile, mTriNucCountsIndex, MATRIX_TYPE_SNV_96);
-            mPosFreqCounts = loadReferenceSnvCounts(mConfig.GenPosMatrixFile, mPosFreqCountsIndex, MATRIX_TYPE_GEN_POS);
+            mSnv96Counts = loadReferenceSnvCounts(mConfig.Snv96MatrixFile, mSnv96CountsIndex, MATRIX_TYPE_SNV_96);
+            mGenPosCounts = loadReferenceSnvCounts(mConfig.GenPosMatrixFile, mGenPosCountsIndex, MATRIX_TYPE_GEN_POS);
 
             retrieveMissingSampleCounts();
-
-            if(!mConfig.CopyNumberMatrixFile.isEmpty())
-            {
-                final List<String> existingRefSampleIds = Lists.newArrayList();
-                mCopyNumberProfile = loadRefSampleCounts(mConfig.CopyNumberMatrixFile, existingRefSampleIds, Lists.newArrayList());
-            }
-            else if(mBuildCopyNumber)
-            {
-                final List<String> refSampleIds = mSampleDataCache.refSampleIds(false);
-                mCopyNumberProfile = buildCopyNumberProfile(refSampleIds, mConfig, mPosFreqCountsIndex, mPosFrequencies);
-            }
         }
 
-        mTriNucCounts.cacheTranspose();
-        mPosFreqCounts.cacheTranspose();
+        if(mExcludeGenPosChrX)
+        {
+            String chrX = mPosFrequencies.isValidChromosome("X") ? "X" : "chrX";
+            excludeChromosome(mGenPosCounts, mPosFrequencies, chrX);
+            mWriteGenPosMatrixData = true;
+        }
+
+        // always exclude Y, if not already when the counts were made
+        String chrY = mPosFrequencies.isValidChromosome("Y") ? "Y" : "chrY";
+        excludeChromosome(mGenPosCounts, mPosFrequencies, chrY);
 
         // write out sample matrix data unless they were already correct
-        if(mWriteTriNucMatrixData)
-            writeSampleMatrix(mTriNucCounts, mTriNucCountsIndex, mConfig.OutputDir + REF_FILE_SNV_COUNTS, INTEGER_FORMAT);
-
-        if(mWritePosFreqMatrixData)
+        if(mWriteSnv96MatrixData)
         {
-            writeSampleMatrix(mPosFreqCounts, mPosFreqCountsIndex, mConfig.OutputDir + REF_FILE_SAMPLE_POS_FREQ_COUNTS, INTEGER_FORMAT);
+            writeSampleMatrix(mSnv96Counts, mSnv96CountsIndex, mConfig.OutputDir + REF_FILE_SNV_COUNTS, INTEGER_FORMAT);
         }
 
-        if(mBuildCopyNumber)
-        {
-            writeSampleMatrix(mCopyNumberProfile, mPosFreqCountsIndex, mConfig.OutputDir + REF_FILE_COPY_NUMBER_PROFILE, DEC_3_FORMAT);
-        }
+        final double[] triNucMedians = NoiseRefCache.generateMedianValues(mSnv96Counts);
+        mConfig.NoiseAdjustments.addNoiseData(SNV_96_PAIRWISE, triNucMedians);
 
-        Matrix sampleGenPosCounts = null;
-
-        if(mApplyCopyNumber)
-        {
-            CUP_LOGGER.info("normalising sample pos-freq counts with copy-number");
-
-            Matrix sampleCnNormalisedCounts = CopyNumberProfile.buildSampleCopyNumberNormalisedCounts(
-                    mPosFreqCounts, mPosFreqCountsIndex, mCopyNumberProfile, mSampleDataCache.RefSampleDataList,
-                    mSampleDataCache.RefSampleTraitsData);
-
-            sampleGenPosCounts = sampleCnNormalisedCounts;
-
-            if(mBuildCopyNumber)
-            {
-                writeSampleMatrix(
-                        sampleCnNormalisedCounts, mPosFreqCountsIndex,
-                        mConfig.OutputDir + REF_FILE_CN_ADJUSTED_SAMPLE_POS_FREQ_COUNTS, DEC_3_FORMAT);
-            }
-        }
-        else
-        {
-            sampleGenPosCounts = mPosFreqCounts;
-        }
+        if(mWriteGenPosMatrixData)
+            writeSampleMatrix(mGenPosCounts, mGenPosCountsIndex, mConfig.OutputDir + REF_FILE_SAMPLE_POS_FREQ_COUNTS, INTEGER_FORMAT);
 
         buildSignaturePercentiles();
         buildSnvCountPercentiles();
@@ -245,12 +192,22 @@ public class RefSomatics implements RefClassifier
                 .filter(x -> !x.equals(CANCER_TYPE_OTHER)).collect(Collectors.toList());
 
         Matrix cancerGenPosMatrix = buildCancerMatrix(
-                sampleGenPosCounts, mPosFreqCountsIndex, cancerTypes, mSampleDataCache.RefCancerSampleData, mPosFrequencies.getMaxSampleCount());
+                mGenPosCounts, mGenPosCountsIndex, cancerTypes, mSampleDataCache.RefCancerSampleData, mPosFrequencies.getMaxSampleCount());
 
-        if(mGenPosNoiseAllocation > 0)
-            addPanCancerNoise(cancerGenPosMatrix, mGenPosNoiseAllocation);
+        final double[] genPosCohortMedians = NoiseRefCache.generateMedianValues(cancerGenPosMatrix);
 
-        writeMatrix(cancerGenPosMatrix, cancerTypes, mConfig.OutputDir + REF_FILE_CANCER_POS_FREQ_COUNTS, DEC_3_FORMAT);
+        if(mConfig.NoiseAdjustments.hasNoiseAllocation(GENOMIC_POSITION_COHORT))
+        {
+            int noiseAllocation = mConfig.NoiseAdjustments.getNoiseAllocation(GENOMIC_POSITION_COHORT);
+            CUP_LOGGER.debug("applying noise({}) to genomic position cohort counts", noiseAllocation);
+
+            NoiseRefCache.applyNoise(cancerGenPosMatrix, genPosCohortMedians, noiseAllocation);
+        }
+
+        // currently no need to write gen-pos medians since not using pairwise in the classifer
+        // mConfig.NoiseAdjustments.addNoiseData(GENOMIC_POSITION_SIMILARITY, genPosCohortMedians);
+
+        writeCancerGenPosMatrix(cancerGenPosMatrix, cancerTypes, mConfig.OutputDir + REF_FILE_CANCER_POS_FREQ_COUNTS, DEC_3_FORMAT);
 
         closeBufferedWriter(mRefDataWriter);
     }
@@ -260,9 +217,9 @@ public class RefSomatics implements RefClassifier
         if(refFilename.isEmpty())
         {
             if(type.equals(MATRIX_TYPE_SNV_96))
-                mWriteTriNucMatrixData = true;
+                mWriteSnv96MatrixData = true;
             else
-                mWritePosFreqMatrixData = true;
+                mWriteGenPosMatrixData = true;
 
             return null;
         }
@@ -288,9 +245,9 @@ public class RefSomatics implements RefClassifier
             }
 
             if(type.equals(MATRIX_TYPE_SNV_96))
-                mWriteTriNucMatrixData = false;
+                mWriteSnv96MatrixData = false;
             else
-                mWritePosFreqMatrixData = false;
+                mWriteGenPosMatrixData = false;
 
             return existingRefSampleCounts;
         }
@@ -298,9 +255,7 @@ public class RefSomatics implements RefClassifier
         // take any existing counts
         if(existingRefSampleCounts != null)
         {
-            existingRefSampleCounts.cacheTranspose();
-
-            refMatrix = new Matrix(existingRefSampleCounts.Rows, refSampleIds.size());
+            refMatrix = new Matrix(refSampleIds.size(), existingRefSampleCounts.Rows);
 
             int refSampleIndex = 0;
 
@@ -311,16 +266,16 @@ public class RefSomatics implements RefClassifier
                 if(!mSampleDataCache.hasRefSample(sampleId))
                     continue;
 
-                refMatrix.setCol(refSampleIndex, existingRefSampleCounts.getCol(i));
+                refMatrix.setRow(refSampleIndex, existingRefSampleCounts.getRow(i));
                 sampleCountsIndex.put(existingRefSampleIds.get(i), refSampleIndex);
                 ++refSampleIndex;
             }
         }
 
         if(type.equals(MATRIX_TYPE_SNV_96))
-            mWriteTriNucMatrixData = true;
+            mWriteSnv96MatrixData = true;
         else
-            mWritePosFreqMatrixData = true;
+            mWriteGenPosMatrixData = true;
 
         return refMatrix;
     }
@@ -331,7 +286,7 @@ public class RefSomatics implements RefClassifier
         final List<String> refSampleIds = mSampleDataCache.refSampleIds(false);
 
         long missingSamples = refSampleIds.stream()
-                .filter(x -> !mTriNucCountsIndex.containsKey(x) || !mPosFreqCountsIndex.containsKey(x)).count();
+                .filter(x -> !mSnv96CountsIndex.containsKey(x) || !mGenPosCountsIndex.containsKey(x)).count();
 
         if(missingSamples == 0)
             return;
@@ -339,14 +294,14 @@ public class RefSomatics implements RefClassifier
         int refSampleCount = refSampleIds.size();
         CUP_LOGGER.debug("retrieving SNV data for {} samples from refSampleCount({})", missingSamples, refSampleCount);
 
-        if(mTriNucCounts == null)
+        if(mSnv96Counts == null)
         {
-            mTriNucCounts = new Matrix(SNV_TRINUCLEOTIDE_BUCKET_COUNT, refSampleCount);
+            mSnv96Counts = new Matrix(refSampleCount, SNV_TRINUCLEOTIDE_BUCKET_COUNT);
         }
 
-        if(mPosFreqCounts == null)
+        if(mGenPosCounts == null)
         {
-            mPosFreqCounts = new Matrix(mPosFrequencies.getBucketCount(), refSampleCount);
+            mGenPosCounts = new Matrix(refSampleCount, mPosFrequencies.getBucketCount());
         }
 
         final Map<String,Integer> triNucBucketNameMap = Maps.newHashMap();
@@ -358,8 +313,8 @@ public class RefSomatics implements RefClassifier
         for(int i = 0; i < refSampleCount; ++i)
         {
             final String sampleId = refSampleIds.get(i);
-            boolean needsTriNucCounts = !mTriNucCountsIndex.containsKey(sampleId);
-            boolean needsPosFreqCounts = !mPosFreqCountsIndex.containsKey(sampleId);
+            boolean needsTriNucCounts = !mSnv96CountsIndex.containsKey(sampleId);
+            boolean needsPosFreqCounts = !mGenPosCountsIndex.containsKey(sampleId);
 
             if(!needsPosFreqCounts && !needsTriNucCounts)
                 continue;
@@ -388,19 +343,19 @@ public class RefSomatics implements RefClassifier
             {
                 final double[] triNucCounts = extractTrinucleotideCounts(variants, triNucBucketNameMap);
 
-                int refSampleIndex = mTriNucCountsIndex.size();
-                mTriNucCounts.setCol(refSampleIndex, triNucCounts);
-                mTriNucCountsIndex.put(sampleId, refSampleIndex);
+                int refSampleIndex = mSnv96CountsIndex.size();
+                mSnv96Counts.setRow(refSampleIndex, triNucCounts);
+                mSnv96CountsIndex.put(sampleId, refSampleIndex);
             }
 
             if(needsPosFreqCounts)
             {
-                int refSampleIndex = mPosFreqCountsIndex.size();
-                mPosFreqCountsIndex.put(sampleId, refSampleIndex);
+                int refSampleIndex = mGenPosCountsIndex.size();
+                mGenPosCountsIndex.put(sampleId, refSampleIndex);
 
-                AidApobecStatus aidApobecStatus = mExcludeAidApobec ? AidApobecStatus.FALSE_ONLY : AidApobecStatus.ALL;
+                AidApobecStatus aidApobecStatus = mIncludeAidApobec ? AidApobecStatus.ALL : AidApobecStatus.FALSE_ONLY;
                 extractPositionFrequencyCounts(variants, mPosFrequencies, aidApobecStatus);
-                mPosFreqCounts.setCol(refSampleIndex, mPosFrequencies.getCounts());
+                mGenPosCounts.setRow(refSampleIndex, mPosFrequencies.getCounts());
             }
         }
     }
@@ -436,67 +391,18 @@ public class RefSomatics implements RefClassifier
             SomaticDataLoader.loadSigContribsFromDatabase(
                     mConfig.DbAccess, mSampleDataCache.refSampleIds(true), sampleSigContributions);
         }
+        else
+        {
+            // calculate from SNV counts
+            sampleSigContributions.putAll(buildSampleSignatureContributions(mSnv96Counts, mSnv96CountsIndex));
+        }
 
         writeCohortData(sampleSigContributions);
 
-        for(Map.Entry<String,Map<String,Double>> entry : sampleSigContributions.entrySet())
-        {
-            final String sampleId = entry.getKey();
-            final Map<String,Double> sigAllocations = entry.getValue();
+        Map<String,Map<String,List<Double>>> cancerSigContribs = buildCancerSignatureContributions(
+                mSampleDataCache.RefSampleCancerTypeMap, sampleSigContributions);
 
-            final String cancerType = mSampleDataCache.RefSampleCancerTypeMap.get(sampleId);
-
-            if(cancerType == null)
-            {
-                // expected if a smaller ref sample set is being run
-                // CUP_LOGGER.debug("sample({}) signatures missing cancer type", sampleId);
-                continue;
-            }
-
-            Map<String,List<Double>> sigDataMap = mCancerSigContribs.get(cancerType);
-
-            if(sigDataMap == null)
-            {
-                sigDataMap = Maps.newHashMap();
-                mCancerSigContribs.put(cancerType, sigDataMap);
-            }
-
-            for(String sigName : SomaticSigs.REPORTABLE_SIGS.keySet())
-            {
-                double sigContrib = sigAllocations.containsKey(sigName) ? sigAllocations.get(sigName) : 0;
-
-                // combine 2 & 13
-                if(sigName.equalsIgnoreCase(SIG_NAME_13))
-                    continue;
-
-                if(sigName.equalsIgnoreCase(SIG_NAME_2))
-                {
-                    sigContrib += sigAllocations.containsKey(SIG_NAME_13) ? sigAllocations.get(SIG_NAME_13) : 0;
-                }
-
-                List<Double> sigContribs = sigDataMap.get(sigName);
-
-                if(sigContribs == null)
-                {
-                    sigDataMap.put(sigName, Lists.newArrayList(sigContrib));
-                    continue;
-                }
-
-                // add in ascending order
-                int index = 0;
-                while(index < sigContribs.size())
-                {
-                    if(sigContrib < sigContribs.get(index))
-                        break;
-
-                    ++index;
-                }
-
-                sigContribs.add(index, sigContrib);
-            }
-        }
-
-        for(Map.Entry<String,Map<String,List<Double>>> entry : mCancerSigContribs.entrySet())
+        for(Map.Entry<String,Map<String,List<Double>>> entry : cancerSigContribs.entrySet())
         {
             final String cancerType = entry.getKey();
 
@@ -512,17 +418,12 @@ public class RefSomatics implements RefClassifier
         }
     }
 
-    public static String convertSignatureName(final String sigName)
-    {
-        return sigName.replaceAll("Signature.", "Sig");
-    }
-
     private void buildSnvCountPercentiles()
     {
-        for(Map.Entry<String,Integer> entry : mTriNucCountsIndex.entrySet())
+        for(Map.Entry<String,Integer> entry : mSnv96CountsIndex.entrySet())
         {
             final String sampleId = entry.getKey();
-            double sampleTotal = sumVector(mTriNucCounts.getCol(entry.getValue()));
+            double sampleTotal = sumVector(mSnv96Counts.getRow(entry.getValue()));
 
             final String cancerType = mSampleDataCache.RefSampleCancerTypeMap.get(sampleId);
 
@@ -540,16 +441,7 @@ public class RefSomatics implements RefClassifier
             }
             else
             {
-                int index = 0;
-                while(index < sampleCounts.size())
-                {
-                    if(sampleTotal < sampleCounts.get(index))
-                        break;
-
-                    ++index;
-                }
-
-                sampleCounts.add(index, sampleTotal);
+                VectorUtils.optimisedAdd(sampleCounts, sampleTotal, true);
             }
         }
 
@@ -564,7 +456,94 @@ public class RefSomatics implements RefClassifier
             writeRefSnvCountData(cancerType, percentiles);
         }
     }
-    
+
+    public static void writeSampleMatrix(
+            final Matrix matrix, final Map<String,Integer> sampleCountsIndex, final String filename, final String decFormat)
+    {
+        try
+        {
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            final List<String> sampleIds = sampleCountsIndex.keySet().stream().collect(Collectors.toList());
+            writer.write(sampleIds.get(0));
+            for(int i = 1; i < sampleIds.size(); ++i)
+            {
+                writer.write(String.format(",%s", sampleIds.get(i)));
+            }
+
+            writer.newLine();
+
+            final double[][] matrixData = matrix.getData();
+
+            // handle the transposed data - return to the form Samples in the cols, bucket data in the rows
+            for(int bucket = 0; bucket < matrix.Cols; ++bucket)
+            {
+                int sampleIndex = sampleCountsIndex.get(sampleIds.get(0));
+
+                writer.write(String.format(decFormat, matrixData[sampleIndex][bucket]));
+
+                for(int s = 1; s < sampleIds.size(); ++s)
+                {
+                    sampleIndex = sampleCountsIndex.get(sampleIds.get(s));
+
+                    if(sampleIndex >= matrix.Rows)
+                    {
+                        CUP_LOGGER.error("file({}) invalid row({}) sampleId({})", filename, s, sampleIds.get(s));
+                        return;
+                    }
+
+                    writer.write(String.format(DEFAULT_MATRIX_DELIM + decFormat, matrixData[sampleIndex][bucket]));
+                }
+
+                writer.newLine();
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            CUP_LOGGER.error("failed to write ref sample SNV counts: {}", e.toString());
+        }
+    }
+
+    private static void writeCancerGenPosMatrix(
+            final Matrix matrix, final List<String> columnNames, final String filename, final String decFormat)
+    {
+        // cancer types in the rows, positions in the columns
+        try
+        {
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            writer.write(columnNames.get(0));
+            for(int i = 1; i < columnNames.size(); ++i)
+            {
+                writer.write(DEFAULT_MATRIX_DELIM + columnNames.get(i));
+            }
+
+            writer.newLine();
+
+            final double[][] data = matrix.getData();
+
+            for(int b = 0; b < matrix.Cols; ++b)
+            {
+                writer.write(String.format(decFormat, data[0][b]));
+
+                for(int i = 1; i < matrix.Rows; ++i)
+                {
+                    writer.write(String.format(DEFAULT_MATRIX_DELIM + decFormat, data[i][b]));
+                }
+
+                writer.newLine();
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            CUP_LOGGER.error("failed to write ref matrix data: {}", e.toString());
+        }
+    }
+
     private void initialiseRefDataWriter()
     {
         try
@@ -625,63 +604,6 @@ public class RefSomatics implements RefClassifier
         }
     }
 
-    public static boolean populateRefPercentileData(
-            final String filename, final Map<String,Map<String,double[]>> cancerSigContribs, final Map<String,double[]> cancerSnvCounts)
-    {
-        try
-        {
-            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
-
-            final String header = fileData.get(0);
-            fileData.remove(0);
-
-            for(final String line : fileData)
-            {
-                // SampleId,DataType,Pct_0.00 etc
-                final String[] items = line.split(DATA_DELIM, -1);
-                String cancerType = items[0];
-
-                String dataType = items[1];
-
-                double[] percentileData = new double[PERCENTILE_COUNT];
-
-                int startIndex = 2;
-
-                for(int i = startIndex; i < items.length; ++i)
-                {
-                    double value = Double.parseDouble(items[i]);
-                    percentileData[i - startIndex] = value;
-                }
-
-                if(dataType.equals(REF_SIG_TYPE_SNV_COUNT))
-                {
-                    cancerSnvCounts.put(cancerType, percentileData);
-                }
-                else
-                {
-                    String sigName = dataType;
-
-                    Map<String, double[]> sigContribsMap = cancerSigContribs.get(cancerType);
-
-                    if(sigContribsMap == null)
-                    {
-                        sigContribsMap = Maps.newHashMap();
-                        cancerSigContribs.put(cancerType, sigContribsMap);
-                    }
-
-                    sigContribsMap.put(sigName, percentileData);
-                }
-            }
-        }
-        catch (IOException e)
-        {
-            CUP_LOGGER.error("failed to read sig contrib percentile data file({}): {}", filename, e.toString());
-            return false;
-        }
-
-        return true;
-    }
-
     private void writeCohortData(final Map<String,Map<String,Double>> sampleSigContributions)
     {
         if(!mConfig.WriteCohortFiles)
@@ -700,7 +622,7 @@ public class RefSomatics implements RefClassifier
         {
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write(SampleTraitsData.header());
+            writer.write("SampleId,SigName,Allocation");
             writer.newLine();
 
             for(Map.Entry<String,Map<String,Double>> entry : sampleSigContributions.entrySet())
@@ -714,7 +636,7 @@ public class RefSomatics implements RefClassifier
 
                     if(SomaticSigs.REPORTABLE_SIGS.keySet().contains(sigName))
                     {
-                        writer.write(String.format("%s,%s,%s", sampleId, sigName, sigEntry.getValue()));
+                        writer.write(String.format("%s,%s,%.1f", sampleId, sigName, sigEntry.getValue()));
                         writer.newLine();
                     }
                 }

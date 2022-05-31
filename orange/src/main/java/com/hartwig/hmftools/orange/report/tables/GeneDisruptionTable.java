@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.linx.ReportableGeneDisruption;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.interpretation.Chromosomes;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.layout.element.Cell;

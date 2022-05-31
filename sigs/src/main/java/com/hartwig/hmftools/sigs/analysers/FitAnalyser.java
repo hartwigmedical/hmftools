@@ -8,8 +8,8 @@ import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_EXCESS;
 import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_UNALLOCATED;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
-import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
-import static com.hartwig.hmftools.common.utils.MatrixUtils.writeMatrixData;
+import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
+import static com.hartwig.hmftools.common.utils.MatrixFile.writeMatrixData;
 import static com.hartwig.hmftools.common.utils.VectorUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
@@ -93,7 +93,7 @@ public class FitAnalyser
             mSampleIds.addAll(Arrays.stream(cmd.getOptionValue(SAMPLE_IDS).split(";", -1)).collect(Collectors.toList()));
 
             final List<String> sampleIds = Lists.newArrayList();
-            Matrix allCounts = loadMatrixDataFile(cmd.getOptionValue(SAMPLE_COUNTS_FILE), sampleIds);
+            Matrix allCounts = loadMatrixDataFile(cmd.getOptionValue(SAMPLE_COUNTS_FILE), sampleIds, false);
 
             mSampleCounts = new Matrix(allCounts.Rows, mSampleIds.size());
 
@@ -108,13 +108,13 @@ public class FitAnalyser
         }
         else
         {
-            mSampleCounts = loadMatrixDataFile(cmd.getOptionValue(SAMPLE_COUNTS_FILE), mSampleIds);
+            mSampleCounts = loadMatrixDataFile(cmd.getOptionValue(SAMPLE_COUNTS_FILE), mSampleIds, false);
         }
 
         mSampleCounts.cacheTranspose();
 
         mSigNames = Lists.newArrayList();
-        mSignatures = loadMatrixDataFile(cmd.getOptionValue(SIGNATURES_FILE), mSigNames);
+        mSignatures = loadMatrixDataFile(cmd.getOptionValue(SIGNATURES_FILE), mSigNames, false);
         mSignatures.cacheTranspose();
 
         mNoiseRangeMap = Maps.newHashMap();

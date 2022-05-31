@@ -6,8 +6,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INF;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.LINE_CHAINS;
-import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.runAnnotation;
+import static com.hartwig.hmftools.linx.analysis.AnnotationExtension.LINE_CHAINS;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.CLUSTER_ALLELE_JCN_MIN;
@@ -156,7 +155,7 @@ public class ChainFinder
     {
         mDiagnostics.setLogClusterSize(config.Output.LogChainingMaxSize);
 
-        if(runAnnotation(config.RequiredAnnotations, LINE_CHAINS))
+        if(config.AnnotationExtensions.contains(LINE_CHAINS))
             mLineChainer.enableLogging();
     }
 

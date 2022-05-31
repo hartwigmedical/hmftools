@@ -17,6 +17,9 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_RATES;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSvFile;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
+import static com.hartwig.hmftools.cup.common.CupConstants.BREAST_MALE_GENDER_RATE;
+import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_BREAST;
+import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_BREAST_TRIPLE_NEGATIVE;
 import static com.hartwig.hmftools.cup.common.CupConstants.isCandidateCancerType;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.GENDER_RATES;
@@ -88,19 +91,25 @@ public class RefSampleTraits implements RefClassifier
                     mGenderRates.put(genderData[0], rates);
                 }
             }
+        }
+        else
+        {
+            // -gender_rates "Breast;1;0.1"
+            mGenderRates.put(CANCER_TYPE_BREAST, new double[] {1.0, BREAST_MALE_GENDER_RATE} );
+            mGenderRates.put(CANCER_TYPE_BREAST_TRIPLE_NEGATIVE, new double[] {1.0, BREAST_MALE_GENDER_RATE} );
+        }
 
-            // add in the default zero-prevalence ones
-            for(String cancerType : mSampleDataCache.RefCancerSampleData.keySet())
-            {
-                if(mGenderRates.containsKey(cancerType))
-                    continue;
+        // add in the default zero-prevalence ones
+        for(String cancerType : mSampleDataCache.RefCancerSampleData.keySet())
+        {
+            if(mGenderRates.containsKey(cancerType))
+                continue;
 
-                double[] rates = new double[2];
+            double[] rates = new double[2];
 
-                rates[GENDER_FEMALE_INDEX] = isCandidateCancerType(Gender.FEMALE, cancerType) ? 1 : 0;
-                rates[GENDER_MALE_INDEX] = isCandidateCancerType(Gender.MALE, cancerType) ? 1 : 0;
-                mGenderRates.put(cancerType, rates);
-            }
+            rates[GENDER_FEMALE_INDEX] = isCandidateCancerType(Gender.FEMALE, cancerType) ? 1 : 0;
+            rates[GENDER_MALE_INDEX] = isCandidateCancerType(Gender.MALE, cancerType) ? 1 : 0;
+            mGenderRates.put(cancerType, rates);
         }
     }
 

@@ -5,7 +5,8 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.cup.CuppaConfig.CATEGORIES;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.LOG_DEBUG;
-import static com.hartwig.hmftools.cup.CuppaConfig.REF_CN_PROFILE_FILE;
+import static com.hartwig.hmftools.cup.CuppaConfig.NOISE_ALLOCATIONS;
+import static com.hartwig.hmftools.cup.CuppaConfig.NOISE_ALLOCATIONS_DESC;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SNV_COUNTS_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SNV_SAMPLE_POS_FREQ_FILE;
@@ -19,8 +20,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.common.NoiseRefCache;
 import com.hartwig.hmftools.cup.feature.RefFeatures;
-import com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions;
 import com.hartwig.hmftools.cup.rna.RefGeneExpression;
 import com.hartwig.hmftools.cup.somatics.RefSomatics;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -42,7 +43,6 @@ public class RefDataConfig
     public final String CohortFeaturesFile;
     public final String GenPosMatrixFile;
     public final String Snv96MatrixFile;
-    public final String CopyNumberMatrixFile;
     public final String GeneExpMatrixFile;
     public final String AltSjMatrixFile;
     public final String FeatureOverrideFile;
@@ -53,6 +53,8 @@ public class RefDataConfig
     public final String IsofoxDir;
 
     public final DatabaseAccess DbAccess;
+
+    public final NoiseRefCache NoiseAdjustments;
 
     public final boolean WriteCohortFiles; // re-write data sourced from database or flat files into single cohort files
 
@@ -96,7 +98,6 @@ public class RefDataConfig
 
         GenPosMatrixFile = cmd.getOptionValue(REF_SNV_SAMPLE_POS_FREQ_FILE, "");
         Snv96MatrixFile = cmd.getOptionValue(REF_SNV_COUNTS_FILE, "");
-        CopyNumberMatrixFile = cmd.getOptionValue(REF_CN_PROFILE_FILE, "");
 
         GeneExpMatrixFile = cmd.getOptionValue(REF_GENE_EXP_DATA_FILE, "");
         AltSjMatrixFile = cmd.getOptionValue(REF_ALT_SJ_DATA_FILE, "");
@@ -106,6 +107,9 @@ public class RefDataConfig
         DbAccess = createDatabaseAccess(cmd);
 
         OutputDir = parseOutputDir(cmd);
+
+        NoiseAdjustments = new NoiseRefCache(OutputDir);
+        NoiseAdjustments.loadNoiseAllocations(cmd.getOptionValue(NOISE_ALLOCATIONS));
 
         WriteCohortFiles = cmd.hasOption(WRITE_COHORT_FILES);
     }
@@ -129,7 +133,6 @@ public class RefDataConfig
         options.addOption(REF_SAMPLE_DATA_FILE, true, "Ref sample data file");
         options.addOption(REF_SNV_SAMPLE_POS_FREQ_FILE, true, "Ref SNV position frequency matrix data file");
         options.addOption(REF_SNV_COUNTS_FILE, true, "Ref SNV trinucleotide matrix data file");
-        options.addOption(REF_CN_PROFILE_FILE, true, "Ref sample copy number profile matrix data file");
 
         options.addOption(REF_COHORT_FEATURES_FILE, true, "Ref sample features data file");
         options.addOption(REF_COHORT_SAMPLE_TRAITS_FILE, true, "Ref sample cohort traits file");
@@ -143,6 +146,7 @@ public class RefDataConfig
 
         options.addOption(REF_FEATURE_OVERRIDE_FILE, true, "Ref feature override data file");
 
+        options.addOption(NOISE_ALLOCATIONS, true, NOISE_ALLOCATIONS_DESC);
         options.addOption(GENDER_RATES, true, "Gender-rate overrides - format CancerType;MalePerc;FemalePerc, etc");
         options.addOption(WRITE_COHORT_FILES, false, "Re-write ref data as cohort files");
 
@@ -152,7 +156,6 @@ public class RefDataConfig
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
 
         RefGeneExpression.addCmdLineArgs(options);
-        RefAltSpliceJunctions.addCmdLineArgs(options);
         RefSomatics.addCmdLineArgs(options);
         RefFeatures.addCmdLineArgs(options);
     }

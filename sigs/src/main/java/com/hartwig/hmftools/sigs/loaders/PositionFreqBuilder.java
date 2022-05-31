@@ -8,8 +8,8 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
-import static com.hartwig.hmftools.common.utils.MatrixUtils.writeMatrixData;
+import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
+import static com.hartwig.hmftools.common.utils.MatrixFile.writeMatrixData;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SIG_LOGGER;
@@ -161,7 +161,7 @@ public class PositionFreqBuilder
         final Map<String,Integer> newChrPosIndexMap = Maps.newHashMap();
         int newPosCacheSize = initialisePositionCache(mNewBucketSize, mChromosomeLengths, newChrPosIndexMap);
 
-        final Matrix oldSampleCounts = loadMatrixDataFile(mSamplePosCountsFile, sampleNames);
+        final Matrix oldSampleCounts = loadMatrixDataFile(mSamplePosCountsFile, sampleNames, false);
         final double[][] oldCounts = oldSampleCounts.getData();
 
         final Matrix newSampleCounts = new Matrix(newPosCacheSize, oldSampleCounts.Cols);

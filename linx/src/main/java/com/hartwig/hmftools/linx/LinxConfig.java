@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSepar
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
 import static com.hartwig.hmftools.linx.SvFileLoader.VCF_FILE;
+import static com.hartwig.hmftools.linx.analysis.AnnotationExtension.DOUBLE_MINUTES;
 import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.hasDatabaseConfig;
 
@@ -27,6 +28,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.ConfigUtils;
+import com.hartwig.hmftools.linx.analysis.AnnotationExtension;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
 
 import org.apache.commons.cli.CommandLine;
@@ -53,7 +55,7 @@ public class LinxConfig
     public final String IndelFile;
 
     public boolean LogVerbose;
-    public final List<String> RequiredAnnotations;
+    public final List<AnnotationExtension> AnnotationExtensions;
 
     public final LinxOutput Output;
 
@@ -82,7 +84,7 @@ public class LinxConfig
     // clustering analysis options
     private static final String CLUSTER_BASE_DISTANCE = "proximity_distance";
     private static final String CHAINING_SV_LIMIT = "chaining_sv_limit";
-    private static final String REQUIRED_ANNOTATIONS = "annotations";
+    private static final String ANNOTATION_EXTENSIONS = "annotations";
 
     public static RefGenomeVersion RG_VERSION = V37;
 
@@ -163,12 +165,7 @@ public class LinxConfig
         IndelAnnotation = cmd.hasOption(INDEL_ANNOTATIONS);
         IndelFile = cmd.getOptionValue(INDEL_FILE, "");
 
-        RequiredAnnotations = Lists.newArrayList();
-
-        if(cmd.hasOption(REQUIRED_ANNOTATIONS))
-        {
-            Arrays.stream(cmd.getOptionValue(REQUIRED_ANNOTATIONS).split(ITEM_DELIM, -1)).forEach(x -> RequiredAnnotations.add(x));
-        }
+        AnnotationExtensions = AnnotationExtension.fromConfig(cmd.getOptionValue(ANNOTATION_EXTENSIONS, ""));
 
         DriverGenes = loadDriverGenes(cmd);
         RunDrivers = cmd.hasOption(CHECK_DRIVERS) && !DriverGenes.isEmpty();
@@ -288,7 +285,7 @@ public class LinxConfig
         LineElementFile = "";
         IndelFile = "";
         IndelAnnotation = false;
-        RequiredAnnotations = Lists.newArrayList();
+        AnnotationExtensions = Lists.newArrayList();
         mSampleIds = Lists.newArrayList();
         LogVerbose = false;
         Output = new LinxOutput();
@@ -348,7 +345,7 @@ public class LinxConfig
         options.addOption(GERMLINE, false, "Process germline SVs");
         options.addOption(GENE_ID_FILE, true, "Limit to Ensembl gene ids specified in file");
         options.addOption(CHAINING_SV_LIMIT, true, "Optional: max cluster size for chaining");
-        options.addOption(REQUIRED_ANNOTATIONS, true, "Optional: string list of annotations");
+        options.addOption(ANNOTATION_EXTENSIONS, true, "Optional: string list of annotations");
         options.addOption(INDEL_ANNOTATIONS, false, "Optional: annotate clusters and TIs with INDELs");
         options.addOption(INDEL_FILE, true, "Optional: cached set of INDELs");
         options.addOption(THREADS, true, "Cohort mode: number of threads");
