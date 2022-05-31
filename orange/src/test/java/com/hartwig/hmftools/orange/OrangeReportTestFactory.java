@@ -8,6 +8,7 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.chord.ChordTestFactory;
 import com.hartwig.hmftools.common.cuppa.CuppaTestFactory;
 import com.hartwig.hmftools.common.flagstat.FlagstatTestFactory;
+import com.hartwig.hmftools.common.isofox.IsofoxTestFactory;
 import com.hartwig.hmftools.common.linx.ImmutableLinxData;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
@@ -17,6 +18,10 @@ import com.hartwig.hmftools.common.protect.ProtectTestFactory;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleData;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleTestFactory;
+import com.hartwig.hmftools.common.rna.GeneExpression;
+import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
+import com.hartwig.hmftools.common.rna.RnaFusion;
+import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
@@ -33,6 +38,8 @@ import com.hartwig.hmftools.orange.algo.ImmutableOrangeSample;
 import com.hartwig.hmftools.orange.algo.OrangePlots;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.OrangeSample;
+import com.hartwig.hmftools.orange.algo.isofox.ImmutableIsofoxInterpretedData;
+import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -66,6 +73,7 @@ public final class OrangeReportTestFactory {
                 .from(createMinimalTestReport())
                 .purple(createTestPurpleData())
                 .linx(createTestLinxData())
+                .isofox(createTestIsofoxData())
                 .protect(createTestProtectData())
                 .virusInterpreter(createTestVirusInterpreterData())
                 .build();
@@ -133,6 +141,104 @@ public final class OrangeReportTestFactory {
     }
 
     @NotNull
+    private static IsofoxInterpretedData createTestIsofoxData() {
+        RnaStatistics statistics = IsofoxTestFactory.rnaStatisticsBuilder().totalFragments(120000).duplicateFragments(60000).build();
+
+        GeneExpression highExpression = IsofoxTestFactory.geneExpressionBuilder()
+                .geneName("MYC")
+                .tpm(126.27)
+                .medianTpmCancer(41)
+                .percentileCancer(0.91)
+                .medianTpmCohort(37)
+                .percentileCohort(0.93)
+                .build();
+
+        GeneExpression lowExpression = IsofoxTestFactory.geneExpressionBuilder()
+                .geneName("CDKN2A")
+                .tpm(5.34)
+                .medianTpmCancer(18.32)
+                .percentileCancer(0.04)
+                .medianTpmCohort(16)
+                .percentileCohort(0.07)
+                .build();
+
+        RnaFusion novelKnownFusion = IsofoxTestFactory.rnaFusionBuilder()
+                .name("PTPRK_RSPO3")
+                .chromosomeUp("6")
+                .positionUp(128841405)
+                .chromosomeDown("6")
+                .positionDown(127469792)
+                .svType("INV")
+                .junctionTypeUp("KNOWN")
+                .junctionTypeDown("KNOWN")
+                .depthUp(73)
+                .depthDown(49)
+                .splitFragments(8)
+                .realignedFrags(0)
+                .discordantFrags(1)
+                .cohortFrequency(3)
+                .build();
+
+        RnaFusion novelPromiscuousFusion = IsofoxTestFactory.rnaFusionBuilder()
+                .name("NAP1L4_BRAF")
+                .chromosomeUp("11")
+                .positionUp(2972480)
+                .chromosomeDown("7")
+                .positionDown(140487380)
+                .svType("BND")
+                .junctionTypeUp("KNOWN")
+                .junctionTypeDown("KNOWN")
+                .depthUp(9)
+                .depthDown(19)
+                .splitFragments(5)
+                .realignedFrags(2)
+                .discordantFrags(3)
+                .cohortFrequency(1)
+                .build();
+
+        NovelSpliceJunction novelSkippedExon = IsofoxTestFactory.novelSpliceJunctionBuilder()
+                .chromosome("1")
+                .geneName("ALK")
+                .junctionStart(50403003)
+                .junctionEnd(60403003)
+                .type("SKIPPED_EXONS")
+                .depthStart(12)
+                .depthEnd(14)
+                .regionStart("SPLICE_JUNC")
+                .regionEnd("SPLICE_JUNC")
+                .fragmentCount(5)
+                .cohortFrequency(3)
+                .build();
+
+        NovelSpliceJunction novelIntron = IsofoxTestFactory.novelSpliceJunctionBuilder()
+                .chromosome("1")
+                .geneName("ALK")
+                .junctionStart(50403003)
+                .junctionEnd(60403003)
+                .type("NOVEL_INTRON")
+                .depthStart(24)
+                .depthEnd(12)
+                .regionStart("EXONIC")
+                .regionEnd("EXONIC")
+                .fragmentCount(43)
+                .cohortFrequency(12)
+                .build();
+
+        return ImmutableIsofoxInterpretedData.builder()
+                .summary(statistics)
+                .addAllAllGeneExpressions(Lists.newArrayList(highExpression, lowExpression))
+                .addReportableHighExpression(highExpression)
+                .addReportableLowExpression(lowExpression)
+                .addAllAllFusions(Lists.newArrayList(novelKnownFusion, novelPromiscuousFusion))
+                .addReportableNovelKnownFusions(novelKnownFusion)
+                .addReportableNovelPromiscuousFusions(novelPromiscuousFusion)
+                .addAllAllNovelSpliceJunctions(Lists.newArrayList(novelSkippedExon, novelIntron))
+                .addReportableSkippedExons(novelSkippedExon)
+                .addReportableNovelExonsIntrons(novelIntron)
+                .build();
+    }
+
+    @NotNull
     private static List<ProtectEvidence> createTestProtectData() {
         List<ProtectEvidence> evidences = Lists.newArrayList();
 
@@ -149,6 +255,7 @@ public final class OrangeReportTestFactory {
     @NotNull
     private static VirusInterpreterData createTestVirusInterpreterData() {
         List<AnnotatedVirus> reportableViruses = Lists.newArrayList();
+
         reportableViruses.add(ImmutableAnnotatedVirus.builder()
                 .taxid(1)
                 .name("virus A")
@@ -163,6 +270,5 @@ public final class OrangeReportTestFactory {
                 .build());
 
         return ImmutableVirusInterpreterData.builder().reportableViruses(reportableViruses).build();
-
     }
 }

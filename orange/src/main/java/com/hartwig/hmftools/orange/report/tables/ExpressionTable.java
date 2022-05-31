@@ -11,7 +11,6 @@ import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ExpressionTable {
@@ -26,14 +25,11 @@ public final class ExpressionTable {
         }
 
         Table table = Tables.createContent(width,
-                new float[] { 1, 1, 1, 1, 1, 1, 1, 1 },
-                new Cell[] { Cells.createHeader("Chromosome"), Cells.createHeader("Region"), Cells.createHeader("Gene"),
-                        Cells.createHeader("TPM"), Cells.createHeader("Perc (Type)"), Cells.createHeader("FC (Type)"),
-                        Cells.createHeader("Perc (DB)"), Cells.createHeader("FC (DB)") });
+                new float[] { 1, 1, 1, 1, 1, 1 },
+                new Cell[] { Cells.createHeader("Gene"), Cells.createHeader("TPM"), Cells.createHeader("Perc (Type)"),
+                        Cells.createHeader("FC (Type)"), Cells.createHeader("Perc (DB)"), Cells.createHeader("FC (DB)") });
 
         for (GeneExpression expression : sort(expressions)) {
-            table.addCell(Cells.createContent(Strings.EMPTY));
-            table.addCell(Cells.createContent(Strings.EMPTY));
             table.addCell(Cells.createContent(expression.geneName()));
             table.addCell(Cells.createContent(Expressions.tpm(expression)));
             table.addCell(Cells.createContent(Expressions.percentileType(expression)));
