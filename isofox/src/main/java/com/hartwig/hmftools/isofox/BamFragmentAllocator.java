@@ -265,14 +265,6 @@ public class BamFragmentAllocator
             return;
         }
 
-        if(record.getDuplicateReadFlag())
-        {
-            if(record.getFirstOfPairFlag()) // only count once per fragment
-                mCurrentGenes.addCount(DUPLICATE, 1);
-
-            return;
-        }
-
         ++mTotalBamReadCount;
         ++mGeneReadCount;
 
