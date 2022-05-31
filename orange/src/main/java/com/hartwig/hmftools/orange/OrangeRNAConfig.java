@@ -33,18 +33,19 @@ public interface OrangeRNAConfig {
 
         options.addOption(RNA_SAMPLE_ID, true, "(Optional) The RNA sample of the tumor sample for which ORANGE will run.");
 
-        options.addOption(ISOFOX_GENE_DISTRIBUTION_CSV, true, "Path to isofox gene distribution CSV.");
-        options.addOption(ISOFOX_ALT_SJ_COHORT_CSV, true, "Path to isofox alt SJ cohort CSV.");
+        options.addOption(ISOFOX_GENE_DISTRIBUTION_CSV, true, "(Optional) Path to isofox gene distribution CSV.");
+        options.addOption(ISOFOX_ALT_SJ_COHORT_CSV, true, "(Optional) Path to isofox alt SJ cohort CSV.");
 
-        options.addOption(ISOFOX_SUMMARY_CSV, true, "Path towards the ISOFOX summary data.");
-        options.addOption(ISOFOX_GENE_DATA_CSV, true, "Path towards the ISOFOX gene data.");
-        options.addOption(ISOFOX_FUSION_CSV, true, "Path towards the ISOFOX fusion data.");
-        options.addOption(ISOFOX_ALT_SPLICE_JUNCTION_CSV, true, "Path towards the ISOFOX alt splice junction data.");
+        options.addOption(ISOFOX_SUMMARY_CSV, true, "(Optional) Path towards the ISOFOX summary data.");
+        options.addOption(ISOFOX_GENE_DATA_CSV, true, "(Optional) Path towards the ISOFOX gene data.");
+        options.addOption(ISOFOX_FUSION_CSV, true, "(Optional) Path towards the ISOFOX fusion data.");
+        options.addOption(ISOFOX_ALT_SPLICE_JUNCTION_CSV, true, "(Optional) Path towards the ISOFOX alt splice junction data.");
 
         return options;
     }
 
-    @NotNull
+    // TODO Make mandatory once SAGE RNA annotation is more stable
+    @Nullable
     String rnaSampleId();
 
     @NotNull
@@ -67,13 +68,20 @@ public interface OrangeRNAConfig {
 
     @NotNull
     static OrangeRNAConfig createConfig(@NotNull CommandLine cmd) throws ParseException {
-        String rnaSampleId = Config.optionalValue(cmd, RNA_SAMPLE_ID);
-        if (rnaSampleId != null) {
-            LOGGER.debug("RNA sample configured to {}", rnaSampleId);
+        if (missesAnyOption(cmd,
+                ISOFOX_GENE_DISTRIBUTION_CSV,
+                ISOFOX_ALT_SJ_COHORT_CSV,
+                ISOFOX_SUMMARY_CSV,
+                ISOFOX_GENE_DATA_CSV,
+                ISOFOX_FUSION_CSV,
+                ISOFOX_ALT_SPLICE_JUNCTION_CSV)) {
+            LOGGER.debug("No proper RNA input fed to ORANGE");
+            return null;
         }
 
-        if (rnaSampleId == null) {
-            return null;
+        String rnaSampleId = Config.optionalValue(cmd, RNA_SAMPLE_ID);
+        if (rnaSampleId != null) {
+            LOGGER.debug("RNA sample configured as {}", rnaSampleId);
         }
 
         return ImmutableOrangeRNAConfig.builder()
@@ -85,5 +93,15 @@ public interface OrangeRNAConfig {
                 .isofoxFusionCsv(Config.nonOptionalFile(cmd, ISOFOX_FUSION_CSV))
                 .isofoxAltSpliceJunctionCsv(Config.nonOptionalFile(cmd, ISOFOX_ALT_SPLICE_JUNCTION_CSV))
                 .build();
+    }
+
+    private static boolean missesAnyOption(@NotNull CommandLine cmd, @NotNull String... options) {
+        for (String option : options) {
+            if (!cmd.hasOption(option)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
