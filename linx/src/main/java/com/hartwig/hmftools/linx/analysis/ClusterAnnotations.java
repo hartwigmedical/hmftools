@@ -48,22 +48,6 @@ import org.apache.commons.math3.distribution.PoissonDistribution;
 
 public class ClusterAnnotations
 {
-    public static final String ALL_ANNOTATIONS = "ALL";
-    public static final String DOUBLE_MINUTES = "DM";
-    public static final String LINE_CHAINS = "LINE_CHAINS";
-    public static final String UNDER_CLUSTERING = "UC";
-
-    public static boolean runAnnotation(final List<String> annotationsList, final String annotation)
-    {
-        if(annotationsList.isEmpty())
-            return false;
-
-        if(annotationsList.contains(ALL_ANNOTATIONS))
-            return true;
-
-        return annotationsList.contains(annotation);
-    }
-
     public static void annotateTemplatedInsertions(final SvCluster cluster, final Map<String, List<SvBreakend>> chrBreakendMap)
     {
         /* for each TI cache if:

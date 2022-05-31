@@ -5,12 +5,12 @@ import static java.lang.Math.min;
 import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
-import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.COMBINED;
 import static com.hartwig.hmftools.cup.common.ClassifierType.FEATURE;
 import static com.hartwig.hmftools.cup.common.ClassifierType.applyMinScore;
 import static com.hartwig.hmftools.cup.common.CupConstants.FEATURE_DAMPEN_FACTOR;
 import static com.hartwig.hmftools.cup.common.CupConstants.MIN_CLASSIFIER_SCORE;
+import static com.hartwig.hmftools.cup.common.ResultType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 
@@ -19,9 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.Matrix;
 
 public class CupCalcs
 {
@@ -94,7 +92,6 @@ public class CupCalcs
 
         final List<SampleResult> prevalenceResults = allResults.stream()
                 .filter(x -> x.Result == LIKELIHOOD)
-                .filter(x -> x.Category != CLASSIFIER)
                 .collect(Collectors.toList());
 
         if(prevalenceResults.isEmpty())
@@ -123,7 +120,7 @@ public class CupCalcs
         if(purgeContributors)
             prevalenceResults.forEach(x -> allResults.remove(x));
 
-        return new SampleResult(sample.Id, CLASSIFIER, LIKELIHOOD, FEATURE.toString(), "", cancerPrevalenceValues);
+        return new SampleResult(sample.Id, CategoryType.FEATURE, CLASSIFIER, FEATURE.toString(), "", cancerPrevalenceValues);
     }
 
     public static void convertToPercentages(final Map<String,Double> dataMap)
@@ -176,7 +173,7 @@ public class CupCalcs
     {
         // combined a set of classifier into a single new combined result
         final List<SampleResult> classifierResults = results.stream()
-                .filter(x -> x.Category == CLASSIFIER)
+                .filter(x -> x.Result == CLASSIFIER && x.Category != COMBINED)
                 .collect(Collectors.toList());
 
         if(classifierResults.size() == 1)
@@ -209,7 +206,7 @@ public class CupCalcs
         dampenProbabilities(cancerTypeValues, dampenFactor);
         convertToPercentages(cancerTypeValues);
 
-        return new SampleResult(sample.Id, COMBINED, LIKELIHOOD, dataType, "", cancerTypeValues);
+        return new SampleResult(sample.Id, COMBINED, CLASSIFIER, dataType, "", cancerTypeValues);
     }
 
     public static double[] adjustRefCounts(final double[] refCounts, final double[] sampleCounts, final double sampleFactor)
@@ -223,64 +220,4 @@ public class CupCalcs
 
         return adjustedCounts;
     }
-
-    public static void addPanCancerNoise(final Matrix cancerMatrix, int noiseAllocation)
-    {
-        // determine the median count per bucket across the cancer types
-        double[] bucketMedians = new double[cancerMatrix.Rows];
-        double medianTotal = 0;
-
-        final double[][] data = cancerMatrix.getData();
-        List<Double> sortedCounts = Lists.newArrayListWithCapacity(cancerMatrix.Cols);
-
-        int medianIndex = cancerMatrix.Cols / 2;
-        int medianLowerIndex = (cancerMatrix.Cols % 2) == 0 ? medianIndex - 1 : medianIndex;
-
-        if((cancerMatrix.Cols % 2) == 1)
-            ++medianIndex;
-
-        for(int b = 0; b < cancerMatrix.Rows; ++b)
-        {
-            sortedCounts.clear();
-
-            for(int i = 0; i < cancerMatrix.Cols; ++i)
-            {
-                int index = 0;
-                double count = data[b][i];
-                while(index < sortedCounts.size())
-                {
-                    if(count > sortedCounts.get(index))
-                        break;
-                    else
-                        ++index;
-                }
-
-                sortedCounts.add(index, count);
-            }
-
-            double medianCount = 0;
-
-            if(medianIndex == medianLowerIndex)
-                medianCount = sortedCounts.get(medianIndex);
-            else
-                medianCount = (sortedCounts.get(medianLowerIndex) + sortedCounts.get(medianIndex)) * 0.5;
-
-            medianTotal += medianCount;
-            bucketMedians[b] = medianCount;
-        }
-
-        // now scale these to the noise allocation
-        for(int b = 0; b < cancerMatrix.Rows; ++b)
-        {
-            double bucketMedian = bucketMedians[b];
-            double bucketPerc = bucketMedian / medianTotal;
-            double bucketAlloc = bucketPerc * noiseAllocation;
-
-            for(int i = 0; i < cancerMatrix.Cols; ++i)
-            {
-                data[b][i] += bucketAlloc;
-            }
-        }
-    }
-
 }

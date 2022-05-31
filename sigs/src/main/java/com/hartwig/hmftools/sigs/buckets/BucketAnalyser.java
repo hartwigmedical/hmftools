@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.common.sigs.NoiseCalcs.calcPoissonRangeGivenP
 import static com.hartwig.hmftools.common.sigs.NoiseCalcs.calcRangeValue;
 import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
 import static com.hartwig.hmftools.common.utils.MatrixUtils.createMatrixFromListData;
-import static com.hartwig.hmftools.common.utils.MatrixUtils.writeMatrixData;
+import static com.hartwig.hmftools.common.utils.MatrixFile.writeMatrixData;
 import static com.hartwig.hmftools.common.utils.VectorUtils.addVector;
 import static com.hartwig.hmftools.common.utils.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.utils.VectorUtils.getSortedVectorIndices;
@@ -55,7 +55,7 @@ import static com.hartwig.hmftools.sigs.common.CommonUtils.getDiffList;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.getMatchingList;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.getNewFile;
 import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
-import static com.hartwig.hmftools.common.utils.Matrix.redimension;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.redimension;
 import static com.hartwig.hmftools.sigs.nmf.NmfConfig.NMF_REF_SIG_FILE;
 
 import java.io.BufferedWriter;
@@ -68,6 +68,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
+import com.hartwig.hmftools.common.utils.MatrixUtils;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.sigs.nmf.NmfConfig;
@@ -694,8 +695,8 @@ public class BucketAnalyser
 
         mElevatedCounts.cacheTranspose();
 
-        mBackgroundCount = mBackgroundSigDiscovery.getBackgroundCounts().sum();
-        mElevatedCount = mElevatedCounts.sum();
+        mBackgroundCount = MatrixUtils.sum(mBackgroundSigDiscovery.getBackgroundCounts());
+        mElevatedCount = MatrixUtils.sum(mElevatedCounts);
 
         SIG_LOGGER.debug(String.format("total counts: background(%s perc=%.3f) elevated(%s perc=%.3f) of total(%s)",
                 sizeToStr(mBackgroundCount), mBackgroundCount/mTotalCount,

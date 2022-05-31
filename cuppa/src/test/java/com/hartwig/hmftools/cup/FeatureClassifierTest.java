@@ -7,8 +7,6 @@ import static com.hartwig.hmftools.cup.CuppaUtilsTest.TEST_SAMPLE_001;
 import static com.hartwig.hmftools.cup.CuppaUtilsTest.TEST_SAMPLE_002;
 import static com.hartwig.hmftools.cup.CuppaUtilsTest.TEST_SAMPLE_003;
 import static com.hartwig.hmftools.cup.common.ClassifierType.FEATURE;
-import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_SIMILARITY;
-import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE_SIMILARITY;
 import static com.hartwig.hmftools.cup.feature.FeatureType.AMP;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
 import static com.hartwig.hmftools.cup.feature.FeatureType.FUSION;
@@ -28,13 +26,8 @@ import com.hartwig.hmftools.cup.common.SampleResult;
 import com.hartwig.hmftools.cup.common.SampleSimilarity;
 import com.hartwig.hmftools.cup.feature.FeatureClassifier;
 import com.hartwig.hmftools.cup.feature.FeaturePrevData;
-import com.hartwig.hmftools.cup.feature.FeatureType;
 import com.hartwig.hmftools.cup.feature.SampleFeatureData;
-import com.hartwig.hmftools.cup.somatics.SomaticClassifier;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.Options;
 import org.junit.Test;
 
 public class FeatureClassifierTest

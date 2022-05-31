@@ -17,10 +17,11 @@ import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFro
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadRefFeatureOverrides;
 import static com.hartwig.hmftools.cup.feature.FeaturePrevData.TYPE_NAME_DELIM;
 import static com.hartwig.hmftools.cup.feature.FeaturePrevData.featureTypeName;
+import static com.hartwig.hmftools.cup.feature.FeatureType.AMP;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
 import static com.hartwig.hmftools.cup.feature.FeaturesCommon.MIN_AMP_MULTIPLE;
 import static com.hartwig.hmftools.cup.feature.FeaturesCommon.RESTRICT_DRIVER_AMP_GENES;
-import static com.hartwig.hmftools.cup.feature.FeaturesCommon.SPLIT_DRIVER_AMP;
+import static com.hartwig.hmftools.cup.feature.FeaturesCommon.COMBINE_DRIVER_AMP;
 import static com.hartwig.hmftools.cup.feature.FeaturesCommon.convertAndFilterDriverAmps;
 import static com.hartwig.hmftools.cup.feature.FeaturesCommon.filterDriverAmps;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.parseFileSet;
@@ -61,7 +62,7 @@ public class RefFeatures implements RefClassifier
         mConfig = config;
         mSampleDataCache = sampleDataCache;
 
-        mSplitDriverAmps = cmd.hasOption(SPLIT_DRIVER_AMP);
+        mSplitDriverAmps = !cmd.hasOption(COMBINE_DRIVER_AMP);
         mRestrictAmpGenes = cmd.hasOption(RESTRICT_DRIVER_AMP_GENES);
         mMinAmpCnMultiple = Double.parseDouble(cmd.getOptionValue(MIN_AMP_MULTIPLE, "0"));
 
@@ -182,7 +183,7 @@ public class RefFeatures implements RefClassifier
                 if(feature.Likelihood == 0)
                     continue;
 
-                if(feature.Type == DRIVER)
+                if(feature.Type == DRIVER || feature.Type == AMP)
                     driverTotal += feature.Likelihood;
 
                 String nameType = featureTypeName(feature.Type, feature.Name);
@@ -211,14 +212,11 @@ public class RefFeatures implements RefClassifier
             List<Double> sampleDrivers = driversPerSampleMap.get(cancerType);
             if(sampleDrivers == null)
             {
-                sampleDrivers = Lists.newArrayList(driverTotal);
+                sampleDrivers = Lists.newArrayList();
                 driversPerSampleMap.put(cancerType, sampleDrivers);
             }
-            else
-            {
-                sampleDrivers.add(driverTotal);
-            }
 
+            sampleDrivers.add(driverTotal);
             panCancerDriversPerSample.add(driverTotal);
         }
     }

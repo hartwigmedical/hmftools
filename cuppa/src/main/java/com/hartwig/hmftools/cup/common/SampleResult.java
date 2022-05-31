@@ -1,11 +1,20 @@
 package com.hartwig.hmftools.cup.common;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
-import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
+import static com.hartwig.hmftools.cup.common.CategoryType.ALT_SJ;
 import static com.hartwig.hmftools.cup.common.CategoryType.COMBINED;
+import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
+import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
+import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
+import static com.hartwig.hmftools.cup.common.ClassifierType.ALT_SJ_COHORT;
+import static com.hartwig.hmftools.cup.common.ClassifierType.EXPRESSION_PAIRWISE;
 import static com.hartwig.hmftools.cup.common.ClassifierType.GENDER;
+import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_COHORT;
+import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -29,8 +38,8 @@ public class SampleResult
     public final Map<String,Double> CancerTypeValues;
 
     public SampleResult(
-            final String sampleId, final CategoryType category, final ResultType resultType, final String dataType, final String value,
-            final Map<String,Double> cancerTypeValues)
+            final String sampleId, final CategoryType category, final ResultType resultType,
+            final String dataType, final String value, final Map<String,Double> cancerTypeValues)
     {
         SampleId = sampleId;
         Category = category;
@@ -49,7 +58,7 @@ public class SampleResult
         return false;
     }
 
-    public static String csvHeader()
+    public static String detailedHeader()
     {
         StringJoiner sj = new StringJoiner(DATA_DELIM);
         sj.add("SampleId");
@@ -62,14 +71,14 @@ public class SampleResult
         return sj.toString();
     }
 
-    public void write(final BufferedWriter writer) throws IOException
+    public void writeDetailed(final BufferedWriter writer) throws IOException
     {
-        final String sampleStr = String.format("%s,%s,%s,%s,%s",
+        final String sampleStr = format("%s,%s,%s,%s,%s",
                 SampleId, Category, Result, DataType, Value);
 
         for(Map.Entry<String,Double> cancerValues : CancerTypeValues.entrySet())
         {
-            writer.write(String.format("%s,%s,%.3g",
+            writer.write(format("%s,%s,%.3g",
                     sampleStr, cancerValues.getKey(), cancerValues.getValue()));
             writer.newLine();
         }
@@ -77,7 +86,7 @@ public class SampleResult
 
     public String toString()
     {
-        return String.format("sample(%s) cat(%s) resultType(%s) type(%s) value(%s)",
+        return format("sample(%s) cat(%s) resultType(%s) type(%s) value(%s)",
                 SampleId, Category, Result, DataType, Value);
     }
 
@@ -109,17 +118,52 @@ public class SampleResult
                 String[] values = line.split(DATA_DELIM, -1);
 
                 String sampleId = values[sampleIdIndex];
-                CategoryType category = CategoryType.valueOf(values[categoryIndex]);
-
-                if(!CategoryType.isSummary(category))
-                    continue;
 
                 String dataType = values[dataTypeIndex];
 
                 if(dataType.equals(GENDER.toString()))
                     continue;
 
-                ResultType resultType = ResultType.valueOf(values[resultTypeIndex]);
+                String categoryStr = values[categoryIndex];
+                ResultType resultType;
+
+                CategoryType category;
+
+                if(categoryStr.equals("CLASSIFIER"))
+                {
+                    resultType = ResultType.CLASSIFIER;
+
+                    if(dataType.equals("SNV_96_PAIRWISE_SIMILARITY"))
+                        dataType = SNV_96_PAIRWISE.toString();
+                    else if(dataType.equals("GENOMIC_POSITION_SIMILARITY"))
+                        dataType = GENOMIC_POSITION_COHORT.toString();
+
+                    // translate old types:
+                    if(dataType.equals(SNV_96_PAIRWISE.toString()))
+                        category = SNV;
+                    else if(dataType.equals(GENOMIC_POSITION_COHORT.toString()))
+                        category = SNV;
+                    else if(dataType.equals(ClassifierType.FEATURE.toString()))
+                        category = FEATURE;
+                    else if(dataType.equals(ALT_SJ_COHORT.toString()))
+                        category = ALT_SJ;
+                    else if(dataType.equals(EXPRESSION_PAIRWISE.toString()))
+                        category = GENE_EXP;
+                    else
+                        continue;
+                }
+                else
+                {
+                    category = CategoryType.valueOf(categoryStr);
+                    resultType = ResultType.valueOf(values[resultTypeIndex]);
+
+                    if(category == COMBINED)
+                        resultType = ResultType.CLASSIFIER;
+                }
+
+                if(resultType != ResultType.CLASSIFIER && category != COMBINED)
+                    continue;
+
                 String value = values[valueIndex];
                 String refCancerType = values[refCancerTypeIndex];
                 double refValue = Double.parseDouble(values[refValueIndex]);

@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.cup.somatics;
 
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
-import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
+import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -46,7 +46,7 @@ public class SomaticSigs
 
         if(signaturesFile != null && !signaturesFile.isEmpty() && Files.exists(Paths.get(signaturesFile)))
         {
-            mSignatures = loadMatrixDataFile(signaturesFile, mSignatureNames);
+            mSignatures = loadMatrixDataFile(signaturesFile, mSignatureNames, false);
         }
         else
         {
@@ -55,7 +55,7 @@ public class SomaticSigs
             final List<String> sigDefinitionLines = new BufferedReader(new InputStreamReader(
                     SomaticSigs.class.getResourceAsStream(sigDefinitionsFile))).lines().collect(Collectors.toList());
 
-            mSignatures = loadMatrixDataFile(sigDefinitionLines, mSignatureNames, Lists.newArrayList());
+            mSignatures = loadMatrixDataFile(sigDefinitionLines, mSignatureNames, Lists.newArrayList(), false);
         }
 
         mLeastSquaresFitter = mSignatures != null ? new LeastSquaresFit(mSignatures.Rows, mSignatures.Cols) : null;
@@ -67,6 +67,11 @@ public class SomaticSigs
     {
         final String displayName = REPORTABLE_SIGS.get(sigName);
         return displayName != null ? displayName : "UNKNOWN";
+    }
+
+    public static String convertSignatureName(final String sigName)
+    {
+        return sigName.replaceAll("Signature.", "Sig");
     }
 
     public String getSigName(int index) { return index < mSignatureNames.size() ? mSignatureNames.get(index) : ""; }

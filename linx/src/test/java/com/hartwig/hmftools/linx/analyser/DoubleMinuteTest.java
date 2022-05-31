@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
-import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.DOUBLE_MINUTES;
 import static com.hartwig.hmftools.linx.analysis.DoubleMinuteData.SEG_DATA_COUNT;
 import static com.hartwig.hmftools.linx.types.ResolvedType.COMPLEX;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
@@ -198,7 +197,7 @@ public class DoubleMinuteTest
         cluster = tester.getClusters().get(0);
         assertTrue(cluster != null);
         assertEquals(COMPLEX, cluster.getResolvedType());
-        assertTrue(cluster.getAnnotations().contains(DOUBLE_MINUTES));
+        assertTrue(cluster.getAnnotations().contains(CLUSTER_ANNOT_DM));
         assertEquals(2, cluster.getDoubleMinuteSVs().size());
     }
 
@@ -258,7 +257,7 @@ public class DoubleMinuteTest
         assertTrue(cluster != null);
 
         assertEquals(COMPLEX, cluster.getResolvedType());
-        assertTrue(cluster.getAnnotations().contains(DOUBLE_MINUTES));
+        assertTrue(cluster.getAnnotations().contains(CLUSTER_ANNOT_DM));
 
         assertTrue(cluster.getDoubleMinuteSVs().contains(var1));
         assertTrue(cluster.getDoubleMinuteSVs().contains(var3));
@@ -291,7 +290,7 @@ public class DoubleMinuteTest
         assertTrue(cluster != null);
 
         assertEquals(COMPLEX, cluster.getResolvedType());
-        assertTrue(cluster.getAnnotations().contains(DOUBLE_MINUTES));
+        assertTrue(cluster.getAnnotations().contains(CLUSTER_ANNOT_DM));
 
         assertEquals(1, cluster.getDoubleMinuteSVs().size());
         assertTrue(cluster.getDoubleMinuteSVs().contains(var1));

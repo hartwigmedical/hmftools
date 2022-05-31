@@ -2,14 +2,17 @@ package com.hartwig.hmftools.cup.somatics;
 
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.populateBucketMap;
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.variantContext;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.copy;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.cup.common.CupCalcs;
 
 public final class TrinucleotideCounts
 {
@@ -52,12 +55,11 @@ public final class TrinucleotideCounts
 
         final double[] triNucCounts = extractTrinucleotideCounts(variants, triNucBucketNameMap);
 
-        final Matrix sampleSnvCounts = new Matrix(triNucCounts.length, 1);
+        final Matrix sampleSnvCounts = new Matrix(1, triNucCounts.length);
 
-        sampleSnvCounts.setCol(0, triNucCounts);
+        sampleSnvCounts.setRow(0, triNucCounts);
         sampleSnvCountsIndex.put(sampleId, 0);
 
         return sampleSnvCounts;
     }
-
 }

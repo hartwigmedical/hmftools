@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_MISALLOCATED;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
 import static com.hartwig.hmftools.common.utils.VectorUtils.vectorMultiply;
-import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
+import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -148,7 +148,7 @@ public class SampleFitter
             return false;
         }
 
-        mSignatures = loadMatrixDataFile(mSignaturesFile, mSignatureNames);
+        mSignatures = loadMatrixDataFile(mSignaturesFile, mSignatureNames, false);
 
         if(mVcfFile != null)
         {

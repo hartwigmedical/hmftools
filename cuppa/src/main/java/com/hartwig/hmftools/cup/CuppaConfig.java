@@ -26,7 +26,6 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_RATES;
 import static com.hartwig.hmftools.cup.common.CategoryType.ALL_CATEGORIES;
 import static com.hartwig.hmftools.cup.common.CategoryType.ALT_SJ;
-import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.COMBINED;
 import static com.hartwig.hmftools.cup.common.CategoryType.DNA_CATEGORIES;
 import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
@@ -48,10 +47,12 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.common.NoiseRefCache;
 import com.hartwig.hmftools.cup.feature.FeatureClassifier;
 import com.hartwig.hmftools.cup.rna.AltSjClassifier;
 import com.hartwig.hmftools.cup.rna.GeneExpressionClassifier;
 import com.hartwig.hmftools.cup.somatics.SomaticClassifier;
+import com.hartwig.hmftools.cup.traits.SampleTraitClassifier;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -69,7 +70,6 @@ public class CuppaConfig
 
     public final String RefSampleDataFile;
     public final String RefSnvCountsFile;
-    public final String RefCopyNumberProfileFile;
     public final String RefSvPercFile;
     public final String RefSigContributionFile;
     public final String RefFeaturePrevFile;
@@ -105,11 +105,15 @@ public class CuppaConfig
     public final String SampleGeneExpFile;
     public final String SampleAltSjFile;
 
+    public final NoiseRefCache NoiseAdjustments;
+    public final boolean NoSubtypeCollapse;
+
     // database access
     public final DatabaseAccess DbAccess;
 
     public final boolean WriteSimilarities;
     public final boolean WriteDetailedScores;
+    public final boolean WriteCondensed;
 
     public final String OutputDir;
     public final String OutputFileId;
@@ -137,7 +141,6 @@ public class CuppaConfig
 
     public static final String REF_SAMPLE_DATA_FILE = "ref_sample_data_file";
     public static final String REF_SNV_COUNTS_FILE = "ref_snv_counts_file";
-    public static final String REF_CN_PROFILE_FILE = "ref_cn_profile_file";
     public static final String REF_SNV_SAMPLE_POS_FREQ_FILE = "ref_sample_snv_pos_freq_file";
     private static final String REF_SNV_CANCER_POS_FREQ_FILE = "ref_cancer_snv_pos_freq_file";
     private static final String REF_SIG_CONTRIB_FILE = "ref_sig_contrib_file";
@@ -153,8 +156,13 @@ public class CuppaConfig
     public static final String REF_RNA_ALT_SJ_SAMPLE_FILE = "ref_alt_sj_sample_file";
     public static final String REF_SNV_SIGNATURES_FILE = "ref_snv_signatures_file";
 
+    public static final String NOISE_ALLOCATIONS = "noise_allocations";
+    public static final String NOISE_ALLOCATIONS_DESC = "Noise allocations by classifier type, or 'NONE' or 'DEFAULTS'";
+    public static final String NO_SUBTYPE_COLLAPSE = "no_subtype_collapse";
+
     public static final String WRITE_SIMS = "write_similarities";
     public static final String WRITE_DETAILED_SCORES = "write_detailed_scores";
+    public static final String WRITE_CONDENSED = "write_condensed";
 
     public static final String OUTPUT_FILE_ID = "output_id";
     public static final String LOG_DEBUG = "log_debug";
@@ -165,6 +173,7 @@ public class CuppaConfig
     // file fields
     public static final String FLD_SAMPLE_ID = "SampleId";
     public static final String FLD_CANCER_TYPE = "CancerType";
+    public static final String FLD_CANCER_SUBTYPE = "CancerSubtype";
     public static final String FLD_RNA_READ_LENGTH = "RnaReadLength";
     public static final String CANCER_SUBTYPE_OTHER = "Other";
     public static final String DATA_DELIM = ",";
@@ -180,7 +189,6 @@ public class CuppaConfig
 
         RefSampleDataFile = getRefDataFile(cmd, REF_SAMPLE_DATA_FILE, REF_FILE_SAMPLE_DATA);
         RefSnvCountsFile = getRefDataFile(cmd, REF_SNV_COUNTS_FILE, REF_FILE_SNV_COUNTS);
-        RefCopyNumberProfileFile = getRefDataFile(cmd, REF_CN_PROFILE_FILE, REF_FILE_COPY_NUMBER_PROFILE);
         RefSigContributionFile = getRefDataFile(cmd, REF_SIG_CONTRIB_FILE, REF_FILE_SIG_PERC);
         RefFeaturePrevFile = getRefDataFile(cmd, REF_FEAT_PREV_FILE, REF_FILE_FEATURE_PREV);
         RefTraitPercFile = getRefDataFile(cmd, REF_TRAIT_PERC_FILE, REF_FILE_TRAIT_PERC);
@@ -223,11 +231,17 @@ public class CuppaConfig
         SampleGeneExpFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_GENE_EXP_FILE, REF_FILE_GENE_EXP_SAMPLE, GENE_EXP);
         SampleAltSjFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_ALT_SJ_FILE, REF_FILE_ALT_SJ_SAMPLE, ALT_SJ);
 
+        NoiseAdjustments = new NoiseRefCache(RefDataDir);
+        NoiseAdjustments.loadNoiseAllocations(cmd.getOptionValue(NOISE_ALLOCATIONS));
+
+        NoSubtypeCollapse = cmd.hasOption(NO_SUBTYPE_COLLAPSE);
+
         OutputDir = parseOutputDir(cmd);
         OutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID, "");
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "1"));
 
         WriteSimilarities = cmd.hasOption(WRITE_SIMS);
+        WriteCondensed = cmd.hasOption(WRITE_CONDENSED);
         WriteDetailedScores = cmd.hasOption(WRITE_DETAILED_SCORES);
 
         DbAccess = createDatabaseAccess(cmd);
@@ -306,7 +320,7 @@ public class CuppaConfig
         {
             if(cmd.getOptionValue(CATEGORIES).equals(ALL_CATEGORIES))
             {
-                Arrays.stream(CategoryType.values()).filter(x -> x != CLASSIFIER && x != COMBINED).forEach(x -> categories.add(x));
+                Arrays.stream(CategoryType.values()).filter(x -> x != COMBINED).forEach(x -> categories.add(x));
             }
             else if(cmd.getOptionValue(CATEGORIES).equals(DNA_CATEGORIES))
             {
@@ -359,7 +373,6 @@ public class CuppaConfig
 
         options.addOption(REF_SAMPLE_DATA_FILE, true, "Reference sample data, default: " + REF_FILE_SAMPLE_DATA);
         options.addOption(REF_SNV_COUNTS_FILE, true, "Reference SNV sample counts, default: " + REF_FILE_SNV_COUNTS);
-        options.addOption(REF_CN_PROFILE_FILE, true, "Reference copy-number profile, default: " + REF_FILE_COPY_NUMBER_PROFILE);
         options.addOption(REF_SIG_CONTRIB_FILE, true, "SNV signatures, default: " + REF_FILE_SIG_PERC);
         options.addOption(REF_FEAT_PREV_FILE, true, "Reference driver prevalence, default: " + REF_FILE_FEATURE_PREV);
         options.addOption(REF_SV_PERC_FILE, true, "Reference SV percentiles file, default: " + REF_FILE_SV_PERC);
@@ -373,15 +386,19 @@ public class CuppaConfig
         options.addOption(REF_RNA_GENE_EXP_SAMPLE_FILE, true, "Reference RNA sample gene expression file, default: " + REF_FILE_GENE_EXP_SAMPLE);
         options.addOption(REF_RNA_ALT_SJ_CANCER_FILE, true, "Reference RNA alternative splice-junction cancer file, default: " + REF_FILE_ALT_SJ_CANCER);
         options.addOption(REF_RNA_ALT_SJ_SAMPLE_FILE, true, "Reference RNA alternative splice-junction sample file, default: " + REF_FILE_ALT_SJ_SAMPLE);
+        options.addOption(NOISE_ALLOCATIONS, true, NOISE_ALLOCATIONS_DESC);
+        options.addOption(NO_SUBTYPE_COLLAPSE, false, "Keep cancer sub-types separated in final classifiers");
 
         options.addOption(WRITE_SIMS, false, "Write top-20 CSS similarities to file");
         options.addOption(WRITE_DETAILED_SCORES, false, "Cohort-only - write detailed (non-classifier) data");
+        options.addOption(WRITE_CONDENSED, false, "Write sample results as single line");
 
         addDatabaseCmdLineArgs(options);
         GeneExpressionClassifier.addCmdLineArgs(options);
         AltSjClassifier.addCmdLineArgs(options);
         SomaticClassifier.addCmdLineArgs(options);
         FeatureClassifier.addCmdLineArgs(options);
+        SampleTraitClassifier.addCmdLineArgs(options);
 
         options.addOption(OUTPUT_DIR, true, "Path to output files");
         options.addOption(OUTPUT_FILE_ID, true, "Output file ID");
@@ -395,7 +412,6 @@ public class CuppaConfig
         RefDataDir = "";
         RefSampleDataFile = "";
         RefSnvCountsFile = "";
-        RefCopyNumberProfileFile = "";
         RefSvPercFile = "";
         RefSigContributionFile = "";
         RefFeaturePrevFile = "";
@@ -428,9 +444,13 @@ public class CuppaConfig
         SampleGeneExpFile = "";
         SampleAltSjFile = "";
 
+        NoiseAdjustments = new NoiseRefCache(null);
+        NoSubtypeCollapse = false;
+
         DbAccess = null;
         WriteSimilarities = false;
         WriteDetailedScores = false;
+        WriteCondensed = false;
         OutputDir = "";
         OutputFileId = "";
         Threads = 0;

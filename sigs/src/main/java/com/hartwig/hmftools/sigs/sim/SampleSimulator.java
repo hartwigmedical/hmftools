@@ -8,7 +8,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.utils.VectorUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.utils.MatrixUtils.createMatrixFromListData;
-import static com.hartwig.hmftools.common.utils.MatrixUtils.writeMatrixData;
+import static com.hartwig.hmftools.common.utils.MatrixFile.writeMatrixData;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.LOG_DEBUG;
@@ -17,7 +17,7 @@ import static com.hartwig.hmftools.sigs.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.getNewFile;
 import static com.hartwig.hmftools.common.sigs.DataUtils.getPoissonRandom;
 import static com.hartwig.hmftools.common.sigs.DataUtils.getPoissonRandomLarge;
-import static com.hartwig.hmftools.common.utils.Matrix.extractNonZeros;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.extractNonZeros;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Random;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.MatrixUtils;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
@@ -334,7 +335,7 @@ public class SampleSimulator
         // calculate counts, min, max, mean and median values per bucket
         final double[][] scData = mOutputMatrix.getData();
 
-        double totalCount = mOutputMatrix.sum();
+        double totalCount = MatrixUtils.sum(mOutputMatrix);
         int sampleCount = mOutputMatrix.Cols;
         int medianIndex = sampleCount / 2; // not averaged for even sample counts
 

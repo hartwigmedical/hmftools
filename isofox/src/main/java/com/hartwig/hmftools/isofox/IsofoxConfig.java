@@ -70,7 +70,6 @@ public class IsofoxConfig
     private static final String BAM_FILE = "bam_file";
     private static final String LONG_FRAGMENT_LIMIT = "long_frag_limit";
     private static final String DROP_DUPLICATES = "drop_dups";
-    private static final String MARK_DUPLICATES = "mark_dups";
     private static final String SINGLE_MAP_QUAL = "single_map_qual";
     public static final String GENE_ID_FILE = "gene_id_file";
 
@@ -114,7 +113,6 @@ public class IsofoxConfig
     public final int GeneReadLimit;
     public int MaxFragmentLength;
     public final boolean DropDuplicates;
-    public final boolean MarkDuplicates;
 
     public final boolean WriteExonData;
     public final boolean WriteReadData;
@@ -198,7 +196,6 @@ public class IsofoxConfig
         MaxFragmentLength = Integer.parseInt(cmd.getOptionValue(LONG_FRAGMENT_LIMIT, String.valueOf(DEFAULT_MAX_FRAGMENT_SIZE)));
         IsofoxConstants.SINGLE_MAP_QUALITY = Short.parseShort(cmd.getOptionValue(SINGLE_MAP_QUAL, String.valueOf(DEFAULT_SINGLE_MAP_QUALITY)));
         DropDuplicates = cmd.hasOption(DROP_DUPLICATES);
-        MarkDuplicates = cmd.hasOption(MARK_DUPLICATES);
 
         WriteExonData = cmd.hasOption(WRITE_EXON_DATA);
         WriteFragmentLengths = cmd.hasOption(WRITE_FRAG_LENGTHS);
@@ -407,7 +404,6 @@ public class IsofoxConfig
         GeneReadLimit = 0;
         MaxFragmentLength = DEFAULT_MAX_FRAGMENT_SIZE;
         DropDuplicates = false;
-        MarkDuplicates = false;
 
         ReadLength = 0;
         FragmentSizeData = Lists.newArrayList();
@@ -451,7 +447,6 @@ public class IsofoxConfig
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version - accepts 37 (default) or 38");
         options.addOption(LONG_FRAGMENT_LIMIT, true, "Max RNA fragment size");
         options.addOption(DROP_DUPLICATES, false, "Include duplicate fragments in expression calculations");
-        options.addOption(MARK_DUPLICATES, false, "Manually identify duplicate fragments");
         options.addOption(FRAG_LENGTH_MIN_COUNT, true, "Fragment length measurement - min read fragments required");
         options.addOption(FRAG_LENGTHS_BY_GENE, false, "Write fragment lengths by gene");
         options.addOption(BAM_FILE, true, "RNA BAM file location");

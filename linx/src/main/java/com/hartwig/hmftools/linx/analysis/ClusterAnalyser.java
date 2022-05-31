@@ -1,13 +1,12 @@
 package com.hartwig.hmftools.linx.analysis;
 
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.UNDER_CLUSTERING;
+import static com.hartwig.hmftools.linx.analysis.AnnotationExtension.UNDER_CLUSTERING;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateClusterChains;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateClusterDeletions;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateReplicationBeforeRepair;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateTemplatedInsertions;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.reportUnderclustering;
-import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.runAnnotation;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.annotateNearestSvData;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.associateBreakendCnEvents;
@@ -458,7 +457,7 @@ public class ClusterAnalyser {
 
         mClusters.forEach(this::reportClusterFeatures);
 
-        if(runAnnotation(mConfig.RequiredAnnotations, UNDER_CLUSTERING))
+        if(mConfig.AnnotationExtensions.contains(UNDER_CLUSTERING))
         {
             reportUnderclustering(mSampleId, mClusters, mState.getChrBreakendMap());
         }

@@ -1,11 +1,12 @@
 package com.hartwig.hmftools.cup.somatics;
 
-import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
+import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
+import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
-import static com.hartwig.hmftools.cup.somatics.RefSomatics.convertSignatureName;
-import static com.hartwig.hmftools.cup.somatics.RefSomatics.populateRefPercentileData;
+import static com.hartwig.hmftools.cup.somatics.RefSomatics.REF_SIG_TYPE_SNV_COUNT;
+import static com.hartwig.hmftools.cup.somatics.SomaticSigs.convertSignatureName;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
@@ -25,8 +26,6 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.jooq.Record;
-import org.jooq.Record18;
-import org.jooq.Record7;
 import org.jooq.Record8;
 import org.jooq.Result;
 
@@ -44,10 +43,7 @@ public class SomaticDataLoader
         if(filename.isEmpty() || !Files.exists(Paths.get(filename)))
             return null;
 
-        Matrix sampleCounts = loadMatrixDataFile(filename, sampleCountsIndex, Lists.newArrayList("BucketName"));
-        sampleCounts.cacheTranspose();
-
-        return sampleCounts;
+        return loadMatrixDataFile(filename, sampleCountsIndex, Lists.newArrayList("BucketName"), true);
     }
 
     public static Matrix loadSampleMatrixData(final String filename, final Map<String,Integer> sampleCountsIndex)
@@ -55,10 +51,7 @@ public class SomaticDataLoader
         if(filename.isEmpty() || !Files.exists(Paths.get(filename)))
             return null;
 
-        Matrix sampleCounts = loadMatrixDataFile(filename, sampleCountsIndex, null);
-        sampleCounts.cacheTranspose();
-
-        return sampleCounts;
+        return loadMatrixDataFile(filename, sampleCountsIndex, null, true);
     }
 
     public static boolean loadSigContribsFromDatabase(
@@ -95,17 +88,67 @@ public class SomaticDataLoader
         if(filename.isEmpty())
             return true;
 
-        return populateRefPercentileData(filename, refCancerSigContribs, refCancerSnvCounts);
+        try
+        {
+            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
+
+            final String header = fileData.get(0);
+            fileData.remove(0);
+
+            for(final String line : fileData)
+            {
+                // SampleId,DataType,Pct_0.00 etc
+                final String[] items = line.split(DATA_DELIM, -1);
+                String cancerType = items[0];
+
+                String dataType = items[1];
+
+                double[] percentileData = new double[PERCENTILE_COUNT];
+
+                int startIndex = 2;
+
+                for(int i = startIndex; i < items.length; ++i)
+                {
+                    double value = Double.parseDouble(items[i]);
+                    percentileData[i - startIndex] = value;
+                }
+
+                if(dataType.equals(REF_SIG_TYPE_SNV_COUNT))
+                {
+                    refCancerSnvCounts.put(cancerType, percentileData);
+                }
+                else
+                {
+                    String sigName = dataType;
+
+                    Map<String, double[]> sigContribsMap = refCancerSigContribs.get(cancerType);
+
+                    if(sigContribsMap == null)
+                    {
+                        sigContribsMap = Maps.newHashMap();
+                        refCancerSigContribs.put(cancerType, sigContribsMap);
+                    }
+
+                    sigContribsMap.put(sigName, percentileData);
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            CUP_LOGGER.error("failed to read sig contrib percentile data file({}): {}", filename, e.toString());
+            return false;
+        }
+
+        return true;
     }
 
-    public static Matrix loadRefSampleCounts(final String filename, final List<String> refSampleNames, final List<String> ignoreCols)
+    public static Matrix loadRefSampleCounts(
+            final String filename, final List<String> refSampleNames, final List<String> ignoreCols)
     {
         if(filename.isEmpty() || !Files.exists(Paths.get(filename)))
             return null;
 
-        Matrix refSampleCounts = loadMatrixDataFile(filename, refSampleNames, ignoreCols);
-        refSampleCounts.cacheTranspose();
-        return refSampleCounts;
+        return loadMatrixDataFile(filename, refSampleNames, ignoreCols, true);
     }
 
     public static List<SomaticVariant> loadSomaticVariants(final String sampleId, final DatabaseAccess dbAccess)

@@ -495,7 +495,7 @@ public class FeatureDataLoader
 
                 SampleFeatureData feature = new SampleFeatureData(sampleId, driver.gene(), DRIVER, driver.driverLikelihood());
 
-                if(driver.driver() == DriverType.AMP)
+                if(driver.driver() == DriverType.AMP || driver.driver() == DriverType.PARTIAL_AMP)
                 {
                     feature.ExtraInfo.put(DRIVER_TYPE, DRIVER_TYPE_AMP);
                     feature.ExtraInfo.put(AMP_CN, String.format("%.1f", driver.maxCopyNumber()));

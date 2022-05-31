@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.DB_BATCH_INSERT_SIZE;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.checkStringLength;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GENECOPYNUMBER;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GERMLINEDELETION;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Copynumber.COPYNUMBER;
@@ -182,7 +183,7 @@ class GeneCopyNumberDAO
                 deletion.TumorStatus.toString(),
                 DatabaseUtil.decimal(deletion.GermlineCopyNumber),
                 DatabaseUtil.decimal(deletion.TumorCopyNumber),
-                deletion.Filter,
+                checkStringLength(deletion.Filter, GERMLINEDELETION.FILTER),
                 deletion.CohortFrequency,
                 deletion.Reported,
                 timestamp);
