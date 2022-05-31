@@ -24,10 +24,10 @@ public final class RNAFusionTable {
         }
 
         Table table = Tables.createContent(width,
-                new float[] { 1, 1, 1, 1, 1, 1, 1, 1 },
+                new float[] { 2, 2, 2, 1, 2, 1, 2, 1 },
                 new Cell[] { Cells.createHeader("Name"), Cells.createHeader("Pos (Up)"), Cells.createHeader("Pos (Down)"),
                         Cells.createHeader("SV Type"), Cells.createHeader("Junction U/D"), Cells.createHeader("Depth U/D"),
-                        Cells.createHeader("Frags (spl./realig./disc.)"), Cells.createHeader("Cohort freq") });
+                        Cells.createHeader("Frags (spl./re./disc.)"), Cells.createHeader("Cohort freq") });
 
         for (RnaFusion fusion : sort(fusions)) {
             table.addCell(Cells.createContent(fusion.name()));
