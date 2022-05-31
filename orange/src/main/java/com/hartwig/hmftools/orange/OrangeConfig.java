@@ -271,7 +271,7 @@ public interface OrangeConfig {
 
         String refSampleId = Config.optionalValue(cmd, REFERENCE_SAMPLE_ID);
         if (refSampleId != null) {
-            LOGGER.debug("Ref sample configured to {}", refSampleId);
+            LOGGER.debug("Ref sample configured as {}", refSampleId);
         }
 
         return ImmutableOrangeConfig.builder()
