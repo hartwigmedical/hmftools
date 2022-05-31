@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.algo.interpretation;
+package com.hartwig.hmftools.orange.algo.cuppa;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
