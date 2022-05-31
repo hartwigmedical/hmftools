@@ -129,12 +129,13 @@ public class OrangeAlgo {
     @NotNull
     public OrangeReport run(@NotNull OrangeConfig config) throws IOException {
         PurpleData purple = loadPurpleData(config);
+        LinxData linx = loadLinxData(config);
 
         IsofoxData isofox = loadIsofoxData(config);
 
         IsofoxInterpretedData isofoxInterpreted = null;
         if (isofox != null) {
-            isofoxInterpreted = IsofoxInterpreter.interpret(isofox, driverGenes, knownFusionCache);
+            isofoxInterpreted = IsofoxInterpreter.interpret(isofox, linx, driverGenes, knownFusionCache);
         }
 
         return ImmutableOrangeReport.builder()
@@ -146,7 +147,7 @@ public class OrangeAlgo {
                 .tumorSample(loadSampleData(config, true))
                 .germlineMVLHPerGene(loadGermlineMVLHPerGene(config))
                 .purple(purple)
-                .linx(loadLinxData(config))
+                .linx(linx)
                 .isofox(isofoxInterpreted)
                 .virusInterpreter(loadVirusInterpreterData(config))
                 .chord(loadChordAnalysis(config))
