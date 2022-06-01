@@ -24,7 +24,7 @@ public final class NovelSpliceJunctionTable {
         }
 
         Table table = Tables.createContent(width,
-                new float[] { 1, 1, 2, 2, 3, 1, 3, 1, 1 },
+                new float[] { 1, 1, 2, 2, 2, 2, 3, 1, 1 },
                 new Cell[] { Cells.createHeader("Gene"), Cells.createHeader("Chr."), Cells.createHeader("Junc (Start)"),
                         Cells.createHeader("Junc (End)"), Cells.createHeader("Type"), Cells.createHeader("Depth S/E"),
                         Cells.createHeader("Region S/E"), Cells.createHeader("Frag Count"),
