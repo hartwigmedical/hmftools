@@ -400,7 +400,7 @@ public interface PatientReporterConfig {
                 .isCorrectedReport(cmd.hasOption(CORRECTED_REPORT))
                 .isCorrectedReportExtern(cmd.hasOption(CORRECTED_REPORT_EXTERN))
                 .onlyCreatePDF(cmd.hasOption(ONLY_CREATE_PDF))
-                .sampleNameForReport(cmd.hasOption(SAMPLE_NAME_FOR_REPORT) ? nonOptionalValue(cmd, SAMPLE_NAME_FOR_REPORT) : null)
+                .sampleNameForReport(cmd.getOptionValue(SAMPLE_NAME_FOR_REPORT))
                 .requirePipelineVersionFile(requirePipelineVersion)
                 .pipelineVersionFile(pipelineVersion)
                 .expectedPipelineVersion(cmd.getOptionValue(EXPECTED_PIPELINE_VERSION))
