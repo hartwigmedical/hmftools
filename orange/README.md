@@ -95,6 +95,7 @@ investigate potential causes for QC failure.
 
 ### Version History and Download Links
 - Upcoming
+  - Added DPYD status on front page
   - Add mandatory `driver_gene_panel_tsv` and `known_fusion_file` inputs to support interpretation of isofox results
   - Support for germline SVs
     - `linx_germline_disruption_tsv` configures the LINX germline disruptions.
