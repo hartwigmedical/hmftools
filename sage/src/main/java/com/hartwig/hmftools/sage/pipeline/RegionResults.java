@@ -39,7 +39,12 @@ public class RegionResults
         mTotalReads += totalReads;
     }
 
-    public synchronized void addPerfCounters(final List<PerformanceCounter> perfCounters, int maxMemory)
+    public synchronized void addMaxMemory(int maxMemory)
+    {
+        mMaxMemoryUsage = max(mMaxMemoryUsage, maxMemory);
+    }
+
+    public synchronized void addPerfCounters(final List<PerformanceCounter> perfCounters)
     {
         if(mPerfCounters.isEmpty())
         {
@@ -52,8 +57,6 @@ public class RegionResults
                 mPerfCounters.get(j).merge(perfCounters.get(j));
             }
         }
-
-        mMaxMemoryUsage = max(mMaxMemoryUsage, maxMemory);
     }
 
     public int totalReads() { return mTotalReads; }

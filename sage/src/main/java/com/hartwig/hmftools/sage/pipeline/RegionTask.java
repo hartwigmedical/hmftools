@@ -191,6 +191,8 @@ public class RegionTask
         mPerfCounters.add(mEvidenceStage.getVariantPhaser().getPerfCounter());
 
         if(mConfig.logPerfStats())
-            mResults.addPerfCounters(mPerfCounters, calcMemoryUsage(false));
+            mResults.addPerfCounters(mPerfCounters);
+
+        mResults.addMaxMemory(calcMemoryUsage(false));
     }
 }
