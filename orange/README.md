@@ -100,6 +100,7 @@ investigate potential causes for QC failure.
     - `linx_germline_disruption_tsv` configures the LINX germline disruptions.
   - Support for germline deletions
     - `piurple_germline_deletion_tsv` configures the PURPLE germline deletions.
+    - Reported germline deletions are displayed in the Germline Findings chapter.
   - Support for LILAC
     - `lilac_result_csv` and `lilac_qc_csv` configure the LILAC data files
   - Proper support for RNA
