@@ -91,7 +91,7 @@ public final class DNAFusionTable {
         if (fusion.reportedType().equals(KnownFusionType.IG_KNOWN_PAIR.toString()) || fusion.reportedType()
                 .equals(KnownFusionType.IG_PROMISCUOUS.toString())) {
             return supportFromExpressionOfGeneEnd(isofox, fusion);
-        } else if (fusion.reportedType().equals(KnownFusionType.EXON_DEL_DUP.toString())) {
+        } else if (fusion.geneStart().equals(fusion.geneEnd())) {
             return supportFromSpliceJunctions(isofox, fusion);
         } else {
             return supportFromRnaFusions(isofox, fusion);

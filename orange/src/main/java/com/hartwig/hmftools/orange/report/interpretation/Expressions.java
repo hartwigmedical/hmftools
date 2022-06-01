@@ -16,7 +16,7 @@ public final class Expressions {
     private static final Logger LOGGER = LogManager.getLogger(Expressions.class);
 
     private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#.#");
-    private static final DecimalFormat PERCENTAGE = ReportResources.decimalFormat("#'%'");
+    private static final DecimalFormat TWO_DIGIT = ReportResources.decimalFormat("#.##");
 
     private Expressions() {
     }
@@ -40,7 +40,7 @@ public final class Expressions {
 
     @NotNull
     public static String percentileType(@NotNull GeneExpression expression) {
-        return PERCENTAGE.format(expression.percentileCancer() * 100);
+        return TWO_DIGIT.format(expression.percentileCancer());
     }
 
     @NotNull
@@ -50,7 +50,7 @@ public final class Expressions {
 
     @NotNull
     public static String percentileDatabase(@NotNull GeneExpression expression) {
-        return PERCENTAGE.format(expression.percentileCohort() * 100);
+        return TWO_DIGIT.format(expression.percentileCohort());
     }
 
     @NotNull
