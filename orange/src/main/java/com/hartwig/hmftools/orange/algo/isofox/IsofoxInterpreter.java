@@ -29,18 +29,20 @@ public final class IsofoxInterpreter {
     @NotNull
     public static IsofoxInterpretedData interpret(@NotNull IsofoxData isofox, @NotNull LinxData linx, @NotNull List<DriverGene> driverGenes,
             @NotNull KnownFusionCache knownFusionCache) {
+        List<LinxFusion> allFusions = Lists.newArrayList();
+        allFusions.addAll(linx.reportableFusions());
+        allFusions.addAll(linx.unreportedFusions());
+
         return ImmutableIsofoxInterpretedData.builder()
                 .summary(isofox.summary())
                 .allGeneExpressions(isofox.geneExpressions())
                 .reportableHighExpression(selectHighExpressionGenes(isofox.geneExpressions(), driverGenes))
                 .reportableLowExpression(selectLowExpressionGenes(isofox.geneExpressions(), driverGenes))
                 .allFusions(isofox.fusions())
-                .reportableNovelKnownFusions(selectNovelKnownFusions(isofox.fusions(), linx.reportableFusions(), knownFusionCache))
-                .reportableNovelPromiscuousFusions(selectNovelPromiscuousFusions(isofox.fusions(),
-                        linx.reportableFusions(),
-                        knownFusionCache))
+                .reportableNovelKnownFusions(selectNovelKnownFusions(isofox.fusions(), allFusions, knownFusionCache))
+                .reportableNovelPromiscuousFusions(selectNovelPromiscuousFusions(isofox.fusions(), allFusions, knownFusionCache))
                 .allNovelSpliceJunctions(isofox.novelSpliceJunctions())
-                .reportableSkippedExons(selectSkippedExons(isofox.novelSpliceJunctions(), linx.reportableFusions(), knownFusionCache))
+                .reportableSkippedExons(selectSkippedExons(isofox.novelSpliceJunctions(), allFusions, knownFusionCache))
                 .reportableNovelExonsIntrons(selectNovelExonsIntrons(isofox.novelSpliceJunctions(), driverGenes))
                 .build();
     }
@@ -96,7 +98,7 @@ public final class IsofoxInterpreter {
             String geneUp = geneUp(rnaFusion);
             String geneDown = geneDown(rnaFusion);
             if (geneUp != null && geneDown != null) {
-                if (knownFusionCache.hasKnownFusion(geneUp, geneDown) && !hasReportedLinxFusion(linxFusions, geneUp, geneDown)) {
+                if (knownFusionCache.hasKnownFusion(geneUp, geneDown) && !hasLinxFusion(linxFusions, geneUp, geneDown)) {
                     result.add(rnaFusion);
                 }
             }
@@ -120,7 +122,7 @@ public final class IsofoxInterpreter {
                 boolean isPromiscuous =
                         knownFusionCache.hasPromiscuousFiveGene(geneUp) || knownFusionCache.hasPromiscuousThreeGene(geneDown);
                 boolean isKnown = knownFusionCache.hasKnownFusion(geneUp, geneDown);
-                if (isPromiscuous && !isKnown && !hasReportedLinxFusion(linxFusions, geneUp, geneDown)) {
+                if (isPromiscuous && !isKnown && !hasLinxFusion(linxFusions, geneUp, geneDown)) {
                     result.add(rnaFusion);
                 }
             }
@@ -143,9 +145,9 @@ public final class IsofoxInterpreter {
         return split >= 0 && split < rnaFusion.name().length() - 1 ? rnaFusion.name().substring(split + 1) : null;
     }
 
-    private static boolean hasReportedLinxFusion(@NotNull List<LinxFusion> linxFusions, @NotNull String geneUp, @NotNull String geneDown) {
+    private static boolean hasLinxFusion(@NotNull List<LinxFusion> linxFusions, @NotNull String geneUp, @NotNull String geneDown) {
         for (LinxFusion linxFusion : linxFusions) {
-            if (linxFusion.reported() && linxFusion.geneStart().equals(geneUp) && linxFusion.geneEnd().equals(geneDown)) {
+            if (linxFusion.geneStart().equals(geneUp) && linxFusion.geneEnd().equals(geneDown)) {
                 return true;
             }
         }
@@ -162,7 +164,7 @@ public final class IsofoxInterpreter {
                 boolean isTypeMatch = junction.type().equals("SKIPPED_EXONS");
                 boolean hasSufficientFragments = junction.fragmentCount() > 5;
                 boolean hasLimitedCohortFreq = junction.cohortFrequency() < 30;
-                boolean hasReportedLinxFusion = hasReportedLinxFusion(linxFusions, junction.geneName(), junction.geneName());
+                boolean hasReportedLinxFusion = hasLinxFusion(linxFusions, junction.geneName(), junction.geneName());
                 if (isTypeMatch && hasSufficientFragments && hasLimitedCohortFreq && !hasReportedLinxFusion) {
                     result.add(junction);
                 }
