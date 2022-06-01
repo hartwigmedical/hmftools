@@ -1,1 +1,3 @@
 gene	chromosome	regionStart	regionEnd	depthWindowCount	exonStart	exonEnd	detectionMethod	germlineStatus	tumorStatus	germlineCopyNumber	tumorCopyNumber	filter	cohortFrequency	reported
+SMAD2	18	45376001	45378000	2	7	7	SEGMENT	HET_DELETION	HET_DELETION	1.60	1.75	INCONSISTENT_CN;COHORT_FREQ	981	false
+IGLL5	22	23101001	23240000	126	1	3	SEGMENT	HET_DELETION	HET_DELETION	1.20	4.08	INCONSISTENT_CN	0	false
