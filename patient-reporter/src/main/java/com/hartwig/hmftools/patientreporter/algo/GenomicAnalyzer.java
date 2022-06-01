@@ -67,6 +67,7 @@ public class GenomicAnalyzer {
                 config.linxBreakendTsv(),
                 config.linxSvsTsv(),
                 config.linxDriverCatalogTsv(),
+                null,
                 null);
 
         VirusInterpreterData virusInterpreterData = VirusInterpreterDataLoader.load(config.annotatedVirusTsv());

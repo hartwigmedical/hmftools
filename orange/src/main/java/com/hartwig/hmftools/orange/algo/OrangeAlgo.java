@@ -254,7 +254,8 @@ public class OrangeAlgo {
                 config.linxBreakendTsv(),
                 null,
                 config.linxDriverCatalogTsv(),
-                config.linxDriverTsv());
+                config.linxDriverTsv(),
+                config.linxGermlineDisruptionTsv());
     }
 
     @Nullable

@@ -34,8 +34,8 @@ public class RoseAlgo {
     private final List<DriverGene> driverGenes;
 
     @NotNull
-    public static RoseAlgo build(@NotNull String actionabilityDatabaseTsv, @NotNull String driverGene37Tsv,
-            @NotNull String driverGene38Tsv, @NotNull RefGenomeVersion refGenomeVersion) throws IOException {
+    public static RoseAlgo build(@NotNull String actionabilityDatabaseTsv, @NotNull String driverGene37Tsv, @NotNull String driverGene38Tsv,
+            @NotNull RefGenomeVersion refGenomeVersion) throws IOException {
         List<ActionabilityEntry> actionabilityEntry = ActionabilityFileReader.read(actionabilityDatabaseTsv);
         List<DriverGene> driverGenes = refGenomeVersion == RefGenomeVersion.V37
                 ? readDriverGenesFromFile(driverGene37Tsv)
@@ -100,7 +100,7 @@ public class RoseAlgo {
 
     @NotNull
     private static LinxData loadLinxData(@NotNull RoseConfig config) throws IOException {
-        return LinxDataLoader.load(config.linxFusionTsv(), config.linxBreakendTsv(), null, config.linxDriverCatalogTsv(), null);
+        return LinxDataLoader.load(config.linxFusionTsv(), config.linxBreakendTsv(), null, config.linxDriverCatalogTsv(), null, null);
     }
 
     @NotNull

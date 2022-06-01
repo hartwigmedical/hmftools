@@ -46,7 +46,7 @@ public final class OrangeConfigTestFactory {
     private static final String LINX_BREAKEND_TSV = RUN_DIRECTORY + "/linx/tumor_sample.linx.breakend.tsv";
     private static final String LINX_DRIVER_CATALOG_TSV = RUN_DIRECTORY + "/linx/tumor_sample.linx.driver.catalog.tsv";
     private static final String LINX_DRIVER_TSV = RUN_DIRECTORY + "/linx/tumor_sample.linx.drivers.tsv";
-    private static final String LINX_GERMLINE_DISRUPTION_TSV = RUN_DIRECTORY + "/linx/tumor_sample.linx.germline.disruption.tsv";
+    private static final String LINX_GERMLINE_DISRUPTION_TSV = RUN_DIRECTORY + "/linx_germline/tumor_sample.linx.germline.disruption.tsv";
     private static final String LINX_PLOT_DIRECTORY = RUN_DIRECTORY + "/linx/plot";
     private static final String ISOFOX_SUMMARY_CSV = RUN_DIRECTORY + "/isofox/tumor_sample.summary.csv";
     private static final String ISOFOX_GENE_DATA_CSV = RUN_DIRECTORY + "/isofox/tumor_sample.gene_data.csv";
