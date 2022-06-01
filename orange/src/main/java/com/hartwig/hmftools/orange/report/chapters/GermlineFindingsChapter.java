@@ -6,8 +6,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
+import com.hartwig.hmftools.common.purple.gene.GermlineDeletion;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.selection.GermlineVariantSelector;
@@ -28,6 +30,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class GermlineFindingsChapter implements ReportChapter {
 
+    private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#.#");
     private static final DecimalFormat PERCENTAGE_FORMAT = ReportResources.decimalFormat("#.0'%'");
 
     @NotNull
@@ -56,6 +59,7 @@ public class GermlineFindingsChapter implements ReportChapter {
         document.add(new Paragraph(name()).addStyle(ReportResources.chapterTitleStyle()));
         if (reportGermline) {
             addGermlineVariants(document);
+            addGermlineDeletions(document);
             addMVLHAnalysis(document);
             addGermlineCNAberrations(document);
             addPharmacogenetics(document);
@@ -71,6 +75,41 @@ public class GermlineFindingsChapter implements ReportChapter {
         List<ReportableVariant> nonDriverVariants = GermlineVariantSelector.selectNonDrivers(report.purple().unreportedGermlineVariants());
         String titleNonDrivers = "Other potentially relevant variants (" + nonDriverVariants.size() + ")";
         document.add(GermlineVariantTable.build(titleNonDrivers, contentWidth(), nonDriverVariants));
+    }
+
+    private void addGermlineDeletions(@NotNull Document document) {
+        List<GermlineDeletion> reportedDeletions = reported(report.purple().germlineDeletions());
+        String title = "Driver germline deletions (" + reportedDeletions.size() + ")";
+        if (reportedDeletions.isEmpty()) {
+            document.add(Tables.createEmpty(title, contentWidth()));
+        } else {
+            Table table = Tables.createContent(contentWidth(),
+                    new float[] { 1, 1, 1, 1, 1, 1 },
+                    new Cell[] { Cells.createHeader("Gene"), Cells.createHeader("Chromosome"), Cells.createHeader("Germline status"),
+                            Cells.createHeader("Tumor status"), Cells.createHeader("Germline CN"), Cells.createHeader("Tumor CN") });
+
+            for (GermlineDeletion deletion :reportedDeletions) {
+                table.addCell(Cells.createContent(deletion.GeneName));
+                table.addCell(Cells.createContent(deletion.Chromosome));
+                table.addCell(Cells.createContent(deletion.NormalStatus.toString()));
+                table.addCell(Cells.createContent(deletion.TumorStatus.toString()));
+                table.addCell(Cells.createContent(SINGLE_DIGIT.format(deletion.GermlineCopyNumber)));
+                table.addCell(Cells.createContent(SINGLE_DIGIT.format(deletion.TumorCopyNumber)));
+            }
+
+            document.add(Tables.createWrapping(table, title));
+        }
+    }
+
+    @NotNull
+    private static List<GermlineDeletion> reported(@NotNull List<GermlineDeletion> deletions) {
+        List<GermlineDeletion> filtered = Lists.newArrayList();
+        for (GermlineDeletion deletion : deletions) {
+            if (deletion.Reported) {
+                filtered.add(deletion);
+            }
+        }
+        return filtered;
     }
 
     private void addMVLHAnalysis(@NotNull Document document) {
