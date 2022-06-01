@@ -37,7 +37,7 @@ public class ReportingDb {
     public void appendPanelReport(@NotNull PanelReport report, @NotNull String outputDirectory) throws IOException {
 
         if (shouldBeAddedToReportingDb(report.sampleReport())) {
-            String sampleId = report.sampleReport().tumorSampleId();
+            String sampleName = report.sampleReport().sampleNameForReport();
             LimsCohortConfig cohort = report.sampleReport().cohort();
             String tumorBarcode = report.sampleReport().tumorSampleBarcode();
 
@@ -53,7 +53,7 @@ public class ReportingDb {
                 }
             }
 
-            writeApiUpdateJson(outputDirectory, tumorBarcode, sampleId, cohort, reportType, report.reportDate(), NA_STRING, null, null);
+            writeApiUpdateJson(outputDirectory, tumorBarcode, sampleName, cohort, reportType, report.reportDate(), NA_STRING, null, null);
 
         }
     }
@@ -61,7 +61,7 @@ public class ReportingDb {
     public void appendPanelFailReport(@NotNull PanelFailReport report, @NotNull String outputDirectory) throws IOException {
 
         if (shouldBeAddedToReportingDb(report.sampleReport())) {
-            String sampleId = report.sampleReport().tumorSampleId();
+            String sampleName = report.sampleReport().sampleNameForReport();
             LimsCohortConfig cohort = report.sampleReport().cohort();
             String tumorBarcode = report.sampleReport().tumorSampleBarcode();
 
@@ -77,14 +77,14 @@ public class ReportingDb {
                 }
             }
 
-            writeApiUpdateJson(outputDirectory, tumorBarcode, sampleId, cohort, reportType, report.reportDate(), NA_STRING, null, null);
+            writeApiUpdateJson(outputDirectory, tumorBarcode, sampleName, cohort, reportType, report.reportDate(), NA_STRING, null, null);
 
         }
     }
 
     public void appendAnalysedReport(@NotNull AnalysedPatientReport report, @NotNull String outputDirectory) throws IOException {
         if (shouldBeAddedToReportingDb(report.sampleReport())) {
-            String sampleId = report.sampleReport().tumorSampleId();
+            String sampleName = report.sampleReport().sampleNameForReport();
             LimsCohortConfig cohort = report.sampleReport().cohort();
 
             String tumorBarcode = report.sampleReport().tumorSampleBarcode();
@@ -97,10 +97,10 @@ public class ReportingDb {
 
 
             if (report.sampleReport().cohort().reportConclusion() && report.clinicalSummary().isEmpty()) {
-                LOGGER.warn("Skipping addition to reporting db, missing summary for sample '{}'!", sampleId);
+                LOGGER.warn("Skipping addition to reporting db, missing summary for sample '{}'!", sampleName);
                 writeApiUpdateJson(outputDirectory,
                         tumorBarcode,
-                        sampleId,
+                        sampleName,
                         cohort,
                         "report_without_conclusion",
                         report.reportDate(),
@@ -126,7 +126,7 @@ public class ReportingDb {
 
                 writeApiUpdateJson(outputDirectory,
                         tumorBarcode,
-                        sampleId,
+                        sampleName,
                         cohort,
                         reportType,
                         report.reportDate(),
@@ -137,10 +137,10 @@ public class ReportingDb {
         }
     }
 
-    private void writeApiUpdateJson(final String outputDirectory, final String tumorBarcode, final String sampleId,
+    private void writeApiUpdateJson(final String outputDirectory, final String tumorBarcode, final String sampleName,
             final LimsCohortConfig cohort, final String reportType, final String reportDate, final String purity,
             final Boolean hasReliableQuality, final Boolean hasReliablePurity) throws IOException {
-        File outputFile = new File(outputDirectory, format("%s_%s_%s_api-update.json", sampleId, tumorBarcode, reportType));
+        File outputFile = new File(outputDirectory, format("%s_%s_%s_api-update.json", sampleName, tumorBarcode, reportType));
         Map<String, Object> payload = new HashMap<>();
         payload.put("barcode", tumorBarcode);
         payload.put("report_type", reportType);
@@ -161,7 +161,7 @@ public class ReportingDb {
 
     public void appendQCFailReport(@NotNull QCFailReport report, @NotNull String outputDirectory) throws IOException {
         if (shouldBeAddedToReportingDb(report.sampleReport())) {
-            String sampleId = report.sampleReport().tumorSampleId();
+            String sampleName = report.sampleReport().sampleNameForReport();
             LimsCohortConfig cohort = report.sampleReport().cohort();
             String tumorBarcode = report.sampleReport().tumorSampleBarcode();
 
@@ -175,18 +175,18 @@ public class ReportingDb {
                 }
             }
 
-            writeApiUpdateJson(outputDirectory, tumorBarcode, sampleId, cohort, reportType, report.reportDate(), NA_STRING, null, null);
+            writeApiUpdateJson(outputDirectory, tumorBarcode, sampleName, cohort, reportType, report.reportDate(), NA_STRING, null, null);
 
         }
     }
 
     private static boolean shouldBeAddedToReportingDb(@NotNull SampleReport report) {
-        String sampleId = report.tumorSampleId();
-        if (sampleId.startsWith("COLO")) {
-            LOGGER.info("Sample '{}' filtered for reporting db because it appears to be belong to COLO test samples", sampleId);
+        String sampleName = report.sampleNameForReport();
+        if (sampleName.startsWith("COLO")) {
+            LOGGER.info("Sample '{}' filtered for reporting db because it appears to be belong to COLO test samples", sampleName);
             return false;
         } else if (report.cohort().cohortId().isEmpty()) {
-            LOGGER.info("Sample '{}' filtered for reporting db since it does not belong to a cohort and likely a test sample", sampleId);
+            LOGGER.info("Sample '{}' filtered for reporting db since it does not belong to a cohort and likely a test sample", sampleName);
             return false;
         }
         return true;
