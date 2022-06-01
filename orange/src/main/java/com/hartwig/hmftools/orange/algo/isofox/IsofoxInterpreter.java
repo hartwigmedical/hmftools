@@ -77,6 +77,17 @@ public final class IsofoxInterpreter {
     }
 
     @NotNull
+    private static Set<String> extractGenesOfType(@NotNull List<DriverGene> driverGenes, @NotNull DriverCategory categoryToInclude) {
+        Set<String> filtered = Sets.newHashSet();
+        for (DriverGene driverGene : driverGenes) {
+            if (driverGene.likelihoodType() == categoryToInclude) {
+                filtered.add(driverGene.gene());
+            }
+        }
+        return filtered;
+    }
+
+    @NotNull
     private static List<RnaFusion> selectNovelKnownFusions(@NotNull List<RnaFusion> rnaFusions, @NotNull List<LinxFusion> linxFusions,
             @NotNull KnownFusionCache knownFusionCache) {
         List<RnaFusion> result = Lists.newArrayList();
@@ -183,16 +194,5 @@ public final class IsofoxInterpreter {
         }
 
         return result;
-    }
-
-    @NotNull
-    private static Set<String> extractGenesOfType(@NotNull List<DriverGene> driverGenes, @NotNull DriverCategory categoryToInclude) {
-        Set<String> filtered = Sets.newHashSet();
-        for (DriverGene driverGene : driverGenes) {
-            if (driverGene.likelihoodType() == categoryToInclude) {
-                filtered.add(driverGene.gene());
-            }
-        }
-        return filtered;
     }
 }

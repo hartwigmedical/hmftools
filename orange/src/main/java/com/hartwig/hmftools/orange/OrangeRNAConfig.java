@@ -44,7 +44,7 @@ public interface OrangeRNAConfig {
         return options;
     }
 
-    // TODO Make mandatory once SAGE RNA annotation is more stable
+    // TODO Make mandatory once SAGE RNA annotation consistently runs across samples germline + somatic (v5.29 platinum)
     @Nullable
     String rnaSampleId();
 
