@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.sv.linx.LinxDriver;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
+import com.hartwig.hmftools.common.sv.linx.LinxGermlineSv;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -27,4 +28,10 @@ public interface LinxData {
 
     @NotNull
     List<LinxDriver> drivers();
+
+    @NotNull
+    List<LinxGermlineSv> reportableGermlineDisruptions();
+
+    @NotNull
+    List<LinxGermlineSv> unreportedGermlineDisruptions();
 }

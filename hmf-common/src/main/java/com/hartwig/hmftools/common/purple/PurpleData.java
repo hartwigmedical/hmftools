@@ -76,7 +76,10 @@ public interface PurpleData {
     List<ReportableGainLoss> unreportedSomaticGainsLosses();
 
     @NotNull
-    List<GermlineDeletion> germlineDeletions();
+    List<GermlineDeletion> reportableGermlineDeletions();
+
+    @NotNull
+    List<GermlineDeletion> unreportedGermlineDeletions();
 
     @NotNull
     List<CnPerChromosomeArmData> cnPerChromosome();

@@ -5,8 +5,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.gene.GermlineDeletion;
@@ -78,9 +78,8 @@ public class GermlineFindingsChapter implements ReportChapter {
     }
 
     private void addGermlineDeletions(@NotNull Document document) {
-        List<GermlineDeletion> reportedDeletions = reported(report.purple().germlineDeletions());
-        String title = "Driver germline deletions (" + reportedDeletions.size() + ")";
-        if (reportedDeletions.isEmpty()) {
+        String title = "Driver germline deletions (" + report.purple().reportableGermlineDeletions().size() + ")";
+        if (report.purple().reportableGermlineDeletions().isEmpty()) {
             document.add(Tables.createEmpty(title, contentWidth()));
         } else {
             Table table = Tables.createContent(contentWidth(),
@@ -88,7 +87,7 @@ public class GermlineFindingsChapter implements ReportChapter {
                     new Cell[] { Cells.createHeader("Gene"), Cells.createHeader("Chromosome"), Cells.createHeader("Germline status"),
                             Cells.createHeader("Tumor status"), Cells.createHeader("Germline CN"), Cells.createHeader("Tumor CN") });
 
-            for (GermlineDeletion deletion :reportedDeletions) {
+            for (GermlineDeletion deletion : sort(report.purple().reportableGermlineDeletions())) {
                 table.addCell(Cells.createContent(deletion.GeneName));
                 table.addCell(Cells.createContent(deletion.Chromosome));
                 table.addCell(Cells.createContent(deletion.NormalStatus.toString()));
@@ -102,14 +101,8 @@ public class GermlineFindingsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static List<GermlineDeletion> reported(@NotNull List<GermlineDeletion> deletions) {
-        List<GermlineDeletion> filtered = Lists.newArrayList();
-        for (GermlineDeletion deletion : deletions) {
-            if (deletion.Reported) {
-                filtered.add(deletion);
-            }
-        }
-        return filtered;
+    private static List<GermlineDeletion> sort(@NotNull List<GermlineDeletion> deletions) {
+        return deletions.stream().sorted(Comparator.comparing(deletion -> deletion.GeneName)).collect(Collectors.toList());
     }
 
     private void addMVLHAnalysis(@NotNull Document document) {

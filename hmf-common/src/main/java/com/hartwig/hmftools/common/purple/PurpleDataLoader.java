@@ -120,10 +120,14 @@ public final class PurpleDataLoader {
             LOGGER.debug(" Skipped loading germline variants since no reference sample configured");
         }
 
-        List<GermlineDeletion> germlineDeletions = Lists.newArrayList();
+        List<GermlineDeletion> reportableGermlineDeletions = Lists.newArrayList();
+        List<GermlineDeletion> unreportedGermlineDeletions = Lists.newArrayList();
         if (purpleGermlineDeletionTsv != null) {
-            germlineDeletions = GermlineDeletion.read(purpleGermlineDeletionTsv);
-            LOGGER.info(" Loaded {} germline deletions from {}", germlineDeletions.size(), purpleGermlineDeletionTsv);
+            List<GermlineDeletion> allGermlineDeletions = GermlineDeletion.read(purpleGermlineDeletionTsv);
+            LOGGER.debug(" Loaded {} germline deletions from {}", allGermlineDeletions.size(), purpleGermlineDeletionTsv);
+
+            reportableGermlineDeletions = selectReportedDeletions(allGermlineDeletions);
+            unreportedGermlineDeletions = selectUnreportedDeletions(allGermlineDeletions);
         }
 
         List<SomaticVariant> somaticVariants =
@@ -159,7 +163,8 @@ public final class PurpleDataLoader {
                 .unreportedGermlineVariants(unreportedGermlineVariants)
                 .reportableSomaticGainsLosses(reportableSomaticGainsLosses)
                 .unreportedSomaticGainsLosses(unreportedSomaticGainsLosses)
-                .germlineDeletions(germlineDeletions)
+                .reportableGermlineDeletions(reportableGermlineDeletions)
+                .unreportedGermlineDeletions(unreportedGermlineDeletions)
                 .cnPerChromosome(cnPerChromosome)
                 .build();
     }
@@ -269,6 +274,28 @@ public final class PurpleDataLoader {
             }
         }
         return unreportedGainsLosses;
+    }
+
+    @NotNull
+    private static List<GermlineDeletion> selectReportedDeletions(final List<GermlineDeletion> allGermlineDeletions) {
+        List<GermlineDeletion> reported = Lists.newArrayList();
+        for (GermlineDeletion deletion : allGermlineDeletions) {
+            if (deletion.Reported) {
+                reported.add(deletion);
+            }
+        }
+        return reported;
+    }
+
+    @NotNull
+    private static List<GermlineDeletion> selectUnreportedDeletions(final List<GermlineDeletion> allGermlineDeletions) {
+        List<GermlineDeletion> unreported = Lists.newArrayList();
+        for (GermlineDeletion deletion : allGermlineDeletions) {
+            if (!deletion.Reported) {
+                unreported.add(deletion);
+            }
+        }
+        return unreported;
     }
 
     @NotNull

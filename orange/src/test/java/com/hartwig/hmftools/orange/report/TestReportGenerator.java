@@ -97,6 +97,7 @@ public class TestReportGenerator {
                         .unreportedGermlineVariants(Lists.newArrayList())
                         .unreportedSomaticGainsLosses(Lists.newArrayList())
                         .unreportedSomaticVariants(Lists.newArrayList())
+                        .unreportedGermlineDeletions(Lists.newArrayList())
                         .build())
                 .linx(ImmutableLinxData.builder().from(report.linx()).unreportedFusions(Lists.newArrayList()).build());
 
