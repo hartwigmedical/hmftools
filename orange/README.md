@@ -95,16 +95,16 @@ investigate potential causes for QC failure.
 
 ### Version History and Download Links
 - Upcoming
-  - Added DPYD status on front page
-  - Add mandatory `driver_gene_panel_tsv` and `known_fusion_file` inputs to support interpretation of isofox results
+  - Add DPYD status on front page
   - Support for germline SVs
     - `linx_germline_disruption_tsv` configures the LINX germline disruptions.
   - Support for germline deletions
-    - `piurple_germline_deletion_tsv` configures the PURPLE germline deletions.
+    - `purple_germline_deletion_tsv` configures the PURPLE germline deletions.
     - Reported germline deletions are displayed in the Germline Findings chapter.
   - Support for LILAC
     - `lilac_result_csv` and `lilac_qc_csv` configure the LILAC data files
   - Proper support for RNA
+    - Add mandatory `driver_gene_panel_tsv` and `known_fusion_file` inputs to support interpretation of isofox results
     - RNA Depth for variants is picked up in case purple somatic/germline variants have been annotated with RNA. 
     - Amps and dels are annotated with expression data (including percentiles and fold change)
     - Fusions are annotated by RNA support:
@@ -124,7 +124,7 @@ investigate potential causes for QC failure.
   - Fix bug with selecting variants that are unreported but have evidence.
   - Improve support for multiple drivers on same gene but with different transcripts.
 - [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.7)
-  - Support for Protect v2.1
+  - Support for PROTECT v2.1
   - Support multiple LPS per variant in SAGE
 - [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.6)
   - Transform germline variants to somatic in case germline is switched off (somatic findings + drivers on front page)
