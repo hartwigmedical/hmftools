@@ -96,15 +96,24 @@ investigate potential causes for QC failure.
 ### Version History and Download Links
 - Upcoming
   - Add mandatory `driver_gene_panel_tsv` and `known_fusion_file` inputs to support interpretation of isofox results
+  - Support for germline SVs
+    - `linx_germline_disruption_tsv` configures the LINX germline disruptions.
+  - Support for germline deletions
+    - `piurple_germline_deletion_tsv` configures the PURPLE germline deletions.
+  - Support for LILAC
+    - `lilac_result_csv` and `lilac_qc_csv` configure the LILAC data files
   - Proper support for RNA
-    - `rna_sample_id`, 2 isofox cohort files and 4 isofox data files can be configured through command line.
     - RNA Depth for variants is picked up in case purple somatic/germline variants have been annotated with RNA. 
     - Amps and dels are annotated with expression data (including percentiles and fold change)
     - Fusions are annotated by RNA support:
-        - For `EXON_DEL_DUP` a list of novel splice junctions is used for annotation.
+        - For `EXON_DEL_DUP` and other inter-gene fusions, a list of novel splice junctions is used for annotation.
         - IG fusions are annotated with the expression data of the 3' gene
         - All other fusions are annotated with their equivalent counterparts in RNA.
-    - A new chapter is added with RNA statistics and various types of novel findings compared to DNA. 
+    - A new chapter is added with RNA statistics and various types of novel findings compared to DNA.
+    - Config impact:
+        - `rna_sample_id` enables RNA-annotated variant loading when configured as-expected.
+        - `isofox_gene_distribution_csv` and `isofox_alt_sj_cohort_csv` enable annotation of isofox results.
+        - `isofox_summary_csv`, `isofox_gene_data_csv`, `isofox_fusion_csv`, `isofox_alt_splice_junction_csv` are the actual isofox data files. 
   - Improvements to CUPPA
     - Cuppa data loader favors overall combined score > DNA combined score > RNA combined score.
     - Cuppa data loader retains the combined prediction for every cancer type, not just the best prediction.
