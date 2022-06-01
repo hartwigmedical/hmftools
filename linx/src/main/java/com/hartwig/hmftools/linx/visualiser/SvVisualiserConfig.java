@@ -51,7 +51,7 @@ public class SvVisualiserConfig
         options.addOption(VIS_FILE_DIRECTORY, true,
                 "Path to all Linx vis files, used instead of specifying them individually");
 
-        options.addOption(CIRCOS, true, "Path to circos binary");
+        options.addOption(CIRCOS, true, "Path to Circos binary");
         EnsemblDataCache.addEnsemblDir(options);
 
         options.addOption(DEBUG, false, "Enabled debug mode");
