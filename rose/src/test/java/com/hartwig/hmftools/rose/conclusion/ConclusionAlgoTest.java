@@ -51,6 +51,7 @@ import com.hartwig.hmftools.rose.actionability.TypeAlteration;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class ConclusionAlgoTest {
@@ -69,6 +70,7 @@ public class ConclusionAlgoTest {
     }
 
     @Test
+    @Ignore
     public void canGenerateCUPPAConclusion() {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();

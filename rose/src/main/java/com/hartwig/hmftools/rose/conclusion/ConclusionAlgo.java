@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
@@ -35,8 +36,6 @@ import com.hartwig.hmftools.rose.actionability.TypeAlteration;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-import com.google.common.collect.Sets;
-
 public class ConclusionAlgo {
 
     private static final Set<String> FUSION_TYPES = Sets.newHashSet(KnownFusionType.PROMISCUOUS_3.toString(),
@@ -63,7 +62,7 @@ public class ConclusionAlgo {
         List<ReportableVariant> reportableGermlineVariants = roseData.purple().reportableGermlineVariants();
         List<ReportableVariant> reportableVariants =
                 ReportableVariantFactory.mergeVariantLists(reportableGermlineVariants, reportableSomaticVariants);
-        List<ReportableGainLoss> reportableGainLosses = roseData.purple().reportableGainsLosses();
+        List<ReportableGainLoss> reportableGainLosses = roseData.purple().reportableSomaticGainsLosses();
         List<LinxFusion> reportableFusions = roseData.linx().reportableFusions();
         List<ReportableHomozygousDisruption> homozygousDisruptions = roseData.linx().homozygousDisruptions();
         List<AnnotatedVirus> reportableViruses = roseData.virusInterpreter().reportableViruses();

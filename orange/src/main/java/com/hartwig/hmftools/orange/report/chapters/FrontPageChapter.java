@@ -230,14 +230,14 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private String copyNumberDriverString() {
-        if (report.purple().reportableGainsLosses().isEmpty()) {
+        if (report.purple().reportableSomaticGainsLosses().isEmpty()) {
             return NONE;
         } else {
             Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
-            for (ReportableGainLoss gainLoss : report.purple().reportableGainsLosses()) {
+            for (ReportableGainLoss gainLoss : report.purple().reportableSomaticGainsLosses()) {
                 genes.add(gainLoss.gene());
             }
-            return report.purple().reportableGainsLosses().size() + " (" + concat(genes) + ")";
+            return report.purple().reportableSomaticGainsLosses().size() + " (" + concat(genes) + ")";
         }
     }
 

@@ -244,7 +244,8 @@ public class OrangeAlgo {
                 config.purpleSomaticVariantVcf(),
                 config.purpleGermlineDriverCatalogTsv(),
                 config.purpleGermlineVariantVcf(),
-                config.purpleGeneCopyNumberTsv());
+                config.purpleGeneCopyNumberTsv(),
+                config.purpleGermlineDeletionTsv());
     }
 
     @NotNull

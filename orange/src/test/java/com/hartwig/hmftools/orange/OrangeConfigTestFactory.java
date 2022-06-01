@@ -40,11 +40,13 @@ public final class OrangeConfigTestFactory {
     private static final String PURPLE_SOMATIC_VARIANT_VCF = RUN_DIRECTORY + "/purple/tumor_sample.purple.somatic.vcf";
     private static final String PURPLE_GERMLINE_VARIANT_VCF = RUN_DIRECTORY + "/purple/tumor_sample.purple.germline.vcf";
     private static final String PURPLE_GENE_COPY_NUMBER_TSV = RUN_DIRECTORY + "/purple/tumor_sample.purple.cnv.gene.tsv";
+    private static final String PURPLE_GERMLINE_DELETION_TSV = RUN_DIRECTORY + "/purple/tumor_sample.purple.germline.deletion.tsv";
     private static final String PURPLE_PLOT_DIRECTORY = RUN_DIRECTORY + "/purple/plot";
     private static final String LINX_FUSION_TSV = RUN_DIRECTORY + "/linx/tumor_sample.linx.fusion.tsv";
     private static final String LINX_BREAKEND_TSV = RUN_DIRECTORY + "/linx/tumor_sample.linx.breakend.tsv";
     private static final String LINX_DRIVER_CATALOG_TSV = RUN_DIRECTORY + "/linx/tumor_sample.linx.driver.catalog.tsv";
     private static final String LINX_DRIVER_TSV = RUN_DIRECTORY + "/linx/tumor_sample.linx.drivers.tsv";
+    private static final String LINX_GERMLINE_DISRUPTION_TSV = RUN_DIRECTORY + "/linx/tumor_sample.linx.germline.disruption.tsv";
     private static final String LINX_PLOT_DIRECTORY = RUN_DIRECTORY + "/linx/plot";
     private static final String ISOFOX_SUMMARY_CSV = RUN_DIRECTORY + "/isofox/tumor_sample.summary.csv";
     private static final String ISOFOX_GENE_DATA_CSV = RUN_DIRECTORY + "/isofox/tumor_sample.gene_data.csv";
@@ -91,11 +93,13 @@ public final class OrangeConfigTestFactory {
                 .purpleGermlineDriverCatalogTsv(PURPLE_GERMLINE_DRIVER_CATALOG_TSV)
                 .purpleSomaticVariantVcf(PURPLE_SOMATIC_VARIANT_VCF)
                 .purpleGermlineVariantVcf(PURPLE_GERMLINE_VARIANT_VCF)
+                .purpleGermlineDeletionTsv(PURPLE_GERMLINE_DELETION_TSV)
                 .purplePlotDirectory(PURPLE_PLOT_DIRECTORY)
                 .linxFusionTsv(LINX_FUSION_TSV)
                 .linxBreakendTsv(LINX_BREAKEND_TSV)
                 .linxDriverCatalogTsv(LINX_DRIVER_CATALOG_TSV)
                 .linxDriverTsv(LINX_DRIVER_TSV)
+                .linxGermlineDisruptionTsv(LINX_GERMLINE_DISRUPTION_TSV)
                 .linxPlotDirectory(LINX_PLOT_DIRECTORY)
                 .annotatedVirusTsv(ANNOTATED_VIRUS_TSV)
                 .chordPredictionTxt(CHORD_PREDICTION_TXT)

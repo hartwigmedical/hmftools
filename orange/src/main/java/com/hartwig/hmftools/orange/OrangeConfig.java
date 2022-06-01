@@ -58,11 +58,13 @@ public interface OrangeConfig {
     String PURPLE_GERMLINE_DRIVER_CATALOG_TSV = "purple_germline_driver_catalog_tsv";
     String PURPLE_SOMATIC_VARIANT_VCF = "purple_somatic_variant_vcf";
     String PURPLE_GERMLINE_VARIANT_VCF = "purple_germline_variant_vcf";
+    String PURPLE_GERMLINE_DELETION_TSV = "purple_germline_deletion_tsv";
     String PURPLE_PLOT_DIRECTORY = "purple_plot_directory";
     String LINX_FUSION_TSV = "linx_fusion_tsv";
     String LINX_BREAKEND_TSV = "linx_breakend_tsv";
     String LINX_DRIVER_CATALOG_TSV = "linx_driver_catalog_tsv";
     String LINX_DRIVER_TSV = "linx_driver_tsv";
+    String LINX_GERMLINE_DISRUPTION_TSV = "linx_germline_disruption_tsv";
     String LINX_PLOT_DIRECTORY = "linx_plot_directory";
     String ANNOTATED_VIRUS_TSV = "annotated_virus_tsv";
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
@@ -107,11 +109,13 @@ public interface OrangeConfig {
         options.addOption(PURPLE_GERMLINE_DRIVER_CATALOG_TSV, true, "Path towards the purple germline driver catalog TSV.");
         options.addOption(PURPLE_SOMATIC_VARIANT_VCF, true, "Path towards the purple somatic variant VCF.");
         options.addOption(PURPLE_GERMLINE_VARIANT_VCF, true, "Path towards the purple germline variant VCF.");
+        options.addOption(PURPLE_GERMLINE_DELETION_TSV, true, "Path towards the purple germline deletion TSV.");
         options.addOption(PURPLE_PLOT_DIRECTORY, true, "Path towards the directory holding all purple plots.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the LINX fusion TSV.");
         options.addOption(LINX_BREAKEND_TSV, true, "Path towards the LINX breakend TSV.");
         options.addOption(LINX_DRIVER_CATALOG_TSV, true, "Path towards the LINX driver catalog TSV.");
         options.addOption(LINX_DRIVER_TSV, true, "Path towards the LINX driver TSV.");
+        options.addOption(LINX_GERMLINE_DISRUPTION_TSV, true, "Path towards the LINX germline disruption TSV.");
         options.addOption(LINX_PLOT_DIRECTORY, true, "Path towards the directory holding all linx plots.");
         options.addOption(ANNOTATED_VIRUS_TSV, true, "Path towards the annotated virus TSV.");
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
@@ -211,6 +215,9 @@ public interface OrangeConfig {
     String purpleGermlineVariantVcf();
 
     @NotNull
+    String purpleGermlineDeletionTsv();
+
+    @NotNull
     String purplePlotDirectory();
 
     @NotNull
@@ -224,6 +231,9 @@ public interface OrangeConfig {
 
     @NotNull
     String linxDriverTsv();
+
+    @NotNull
+    String linxGermlineDisruptionTsv();
 
     @NotNull
     String linxPlotDirectory();
@@ -301,11 +311,13 @@ public interface OrangeConfig {
                 .purpleGermlineDriverCatalogTsv(Config.nonOptionalFile(cmd, PURPLE_GERMLINE_DRIVER_CATALOG_TSV))
                 .purpleSomaticVariantVcf(Config.nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF))
                 .purpleGermlineVariantVcf(Config.nonOptionalFile(cmd, PURPLE_GERMLINE_VARIANT_VCF))
+                .purpleGermlineDeletionTsv(Config.nonOptionalFile(cmd, PURPLE_GERMLINE_DELETION_TSV))
                 .purplePlotDirectory(Config.nonOptionalDir(cmd, PURPLE_PLOT_DIRECTORY))
                 .linxFusionTsv(Config.nonOptionalFile(cmd, LINX_FUSION_TSV))
                 .linxBreakendTsv(Config.nonOptionalFile(cmd, LINX_BREAKEND_TSV))
                 .linxDriverCatalogTsv(Config.nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV))
                 .linxDriverTsv(Config.nonOptionalFile(cmd, LINX_DRIVER_TSV))
+                .linxGermlineDisruptionTsv(Config.nonOptionalFile(cmd, LINX_GERMLINE_DISRUPTION_TSV))
                 .linxPlotDirectory(Config.nonOptionalValue(cmd, LINX_PLOT_DIRECTORY))
                 .annotatedVirusTsv(Config.nonOptionalFile(cmd, ANNOTATED_VIRUS_TSV))
                 .chordPredictionTxt(Config.nonOptionalFile(cmd, CHORD_PREDICTION_TXT))

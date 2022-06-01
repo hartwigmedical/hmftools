@@ -83,7 +83,10 @@ public class RoseAlgo {
                 config.purpleSomaticVariantVcf(),
                 config.purpleGermlineDriverCatalogTsv(),
                 config.purpleGermlineVariantVcf(),
-                config.purpleSomaticCopyNumberTsv());
+                config.purpleSomaticCopyNumberTsv(),
+                null,
+                null,
+                null);
     }
 
     @NotNull
