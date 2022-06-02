@@ -1,11 +1,6 @@
 package com.hartwig.hmftools.sage.evidence;
 
-import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
@@ -16,37 +11,30 @@ import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.candidate.AltContext;
 import com.hartwig.hmftools.sage.candidate.RefContextConsumer;
 import com.hartwig.hmftools.sage.candidate.RefContextCache;
+import com.hartwig.hmftools.sage.common.SamSlicerInterface;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.coverage.GeneCoverage;
 import com.hartwig.hmftools.sage.common.RefSequence;
-import com.hartwig.hmftools.sage.common.SamSlicer;
 
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.cram.ref.ReferenceSource;
-import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 public class CandidateEvidence
 {
     private final SageConfig mConfig;
     private final List<VariantHotspot> mHotspots;
     private final List<BaseRegion> mPanel;
-    private final ReferenceSequenceFile mRefGenome;
     private final Coverage mCoverage;
 
     private int mTotalReadsProcessed;
 
     public CandidateEvidence(
-            final SageConfig config, final List<VariantHotspot> hotspots, final List<BaseRegion> panel,
-            final ReferenceSequenceFile refGenome, final Coverage coverage)
+            final SageConfig config, final List<VariantHotspot> hotspots, final List<BaseRegion> panel, final Coverage coverage)
     {
         mConfig = config;
         mPanel = panel;
         mHotspots = hotspots;
-        mRefGenome = refGenome;
         mCoverage = coverage;
 
         mTotalReadsProcessed = 0;
@@ -55,7 +43,7 @@ public class CandidateEvidence
     public int totalReadsProcessed() { return mTotalReadsProcessed; }
 
     public List<AltContext> readBam(
-            final String sample, final SamReader bamReader, final RefSequence refSequence, final ChrBaseRegion bounds)
+            final String sample, final SamSlicerInterface samSlicer, final RefSequence refSequence, final ChrBaseRegion bounds)
     {
         final List<GeneCoverage> geneCoverage = mCoverage.coverage(sample, bounds.Chromosome);
         final RefContextCache refContextCache = new RefContextCache(mConfig, mHotspots, mPanel);
@@ -71,7 +59,7 @@ public class CandidateEvidence
             }
         };
 
-        List<AltContext> altContexts = readBam(bamReader, bounds, consumer, refContextCache);
+        List<AltContext> altContexts = readBam(samSlicer, bounds, consumer, refContextCache);
 
         mTotalReadsProcessed += refContextConsumer.getReadCount();
 
@@ -80,14 +68,11 @@ public class CandidateEvidence
 
     @NotNull
     private List<AltContext> readBam(
-            final SamReader bamReader, final ChrBaseRegion bounds, final Consumer<SAMRecord> recordConsumer, final RefContextCache refContextCache)
+            final SamSlicerInterface samSlicer, final ChrBaseRegion bounds, final Consumer<SAMRecord> recordConsumer, final RefContextCache refContextCache)
     {
         final List<AltContext> altContexts = Lists.newArrayList();
 
-        final SamSlicer slicer = mConfig.PanelOnly ?
-                new SamSlicer(0, bounds, mPanel) : new SamSlicer(0, bounds);
-
-        slicer.slice(bamReader, recordConsumer);
+        samSlicer.slice(recordConsumer);
 
         // add all valid alt contexts
         altContexts.addAll(refContextCache.altContexts());

@@ -49,4 +49,11 @@ public class CandidateCreationTest
         assertEquals("C", altRead.Ref);
         assertEquals("C" + insertBases, altRead.Alt);
     }
+
+
+
+
+
+
+
 }

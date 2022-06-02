@@ -13,7 +13,6 @@ import htsjdk.samtools.SAMRecord;
 
 public class ReadContextFactoryTest
 {
-
     private ReadContextFactory victim;
 
     @Before

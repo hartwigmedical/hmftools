@@ -12,38 +12,29 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 
-public class SamSlicer
+public class SamSlicer implements SamSlicerInterface
 {
+    private final SamReader mSamReader;
     private final List<ChrBaseRegion> mRegions;
 
     private final BamSlicer mBamSlicer;
 
-    public SamSlicer(final int minMappingQuality, final ChrBaseRegion slice)
+    public SamSlicer(final SamReader samReader, final int minMappingQuality, final List<ChrBaseRegion> regions)
     {
-        mBamSlicer = new BamSlicer(minMappingQuality, false, false, false);
-        mRegions = Collections.singletonList(slice);
-    }
-
-    public SamSlicer(final int minMappingQuality, final ChrBaseRegion slice, final List<BaseRegion> panel)
-    {
+        mSamReader = samReader;
         mBamSlicer = new BamSlicer(minMappingQuality);
-        mRegions = Lists.newArrayList();
-
-        for(final BaseRegion panelRegion : panel)
-        {
-            if(panelRegion.start() <= slice.end() && panelRegion.end() >= slice.start())
-            {
-                ChrBaseRegion overlap = new ChrBaseRegion(slice.Chromosome,
-                        Math.max(panelRegion.start(), slice.start()),
-                        Math.min(panelRegion.end(), slice.end()));
-
-                mRegions.add(overlap);
-            }
-        }
+        mRegions = regions;
     }
 
+    /*
     public void slice(final SamReader samReader, final Consumer<SAMRecord> consumer)
     {
         mBamSlicer.slice(samReader, mRegions, consumer);
+    }
+    */
+
+    public void slice(final Consumer<SAMRecord> consumer)
+    {
+        mBamSlicer.slice(mSamReader, mRegions, consumer);
     }
 }

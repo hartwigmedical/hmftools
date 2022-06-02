@@ -2,7 +2,6 @@ package com.hartwig.hmftools.sage.pipeline;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageCommon.calcMemoryUsage;
-import static com.hartwig.hmftools.sage.SageCommon.logMemoryUsage;
 
 import java.util.List;
 import java.util.Map;
@@ -20,6 +19,7 @@ import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.sage.filter.VariantFilters;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
@@ -29,7 +29,6 @@ import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.dedup.VariantDeduper;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 
-import htsjdk.samtools.SamReader;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 public class RegionTask
@@ -58,7 +57,7 @@ public class RegionTask
             final int taskId, final ChrBaseRegion region, final RegionResults results, final SageConfig config, final ReferenceSequenceFile refGenome,
             final List<VariantHotspot> hotspots, final List<BaseRegion> panelRegions, final List<TranscriptData> transcripts,
             final List<BaseRegion> highConfidenceRegions, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap,
-            final PhaseSetCounter phaseSetCounter, final Coverage coverage, final Map<String,SamReader> bamReaders)
+            final PhaseSetCounter phaseSetCounter, final Coverage coverage, final SamSlicerFactory samSlicerFactory)
     {
         mTaskId = taskId;
         mRegion = region;
@@ -66,8 +65,8 @@ public class RegionTask
         mConfig = config;
         mRefGenome = refGenome;
 
-        mCandidateState = new CandidateStage(config, refGenome, hotspots, panelRegions, highConfidenceRegions, coverage, bamReaders);
-        mEvidenceStage = new EvidenceStage(config, refGenome, qualityRecalibrationMap, phaseSetCounter, bamReaders);
+        mCandidateState = new CandidateStage(config, refGenome, hotspots, panelRegions, highConfidenceRegions, coverage, samSlicerFactory);
+        mEvidenceStage = new EvidenceStage(config, refGenome, qualityRecalibrationMap, phaseSetCounter, samSlicerFactory);
 
         mVariantDeduper = new VariantDeduper(transcripts);
 
