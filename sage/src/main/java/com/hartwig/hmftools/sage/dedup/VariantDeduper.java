@@ -33,8 +33,6 @@ public class VariantDeduper
         dedupMatchingVariants(variants);
     }
 
-    private void acceptDedupedVariant(final SageVariant variant) {}
-
     public static boolean longerContainsShorter(final SageVariant shorter, final SageVariant longer)
     {
         return longerContainsShorter(shorter.variant(), longer.variant());

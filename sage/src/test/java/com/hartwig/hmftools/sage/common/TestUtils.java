@@ -131,6 +131,7 @@ public class TestUtils
         // to be correct this should match the cigar element count
         record.setAttribute("NM", 1);
         record.setFirstOfPairFlag(true);
+
         record.setReadPairedFlag(true);
         record.setProperPairFlag(true);
 

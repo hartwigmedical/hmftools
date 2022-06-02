@@ -204,7 +204,8 @@ public class GermlineDeletionDrivers
 
         int exonRankMin = 0;
         int exonRankMax = 0;
-        StringJoiner geneNames = new StringJoiner(";");
+
+        List<GeneData> deletedGenes = Lists.newArrayList();
 
         for(GeneData geneData : overlappingGenes)
         {
@@ -231,7 +232,7 @@ public class GermlineDeletionDrivers
             }
 
             transcripts.add(transData);
-            geneNames.add(geneData.GeneName);
+            deletedGenes.add(geneData);
         }
 
         if(transcripts.isEmpty())
@@ -256,11 +257,14 @@ public class GermlineDeletionDrivers
 
         boolean anyReported = filters.isEmpty() && driverGenes.stream().anyMatch(x -> x.reportGermlineDisruption());
 
-        mDeletions.add(new GermlineDeletion(
-                geneNames.toString(), region.chromosome(), region.start(), region.end(),
-                region.depthWindowCount(), exonRankMin, exonRankMax,
-                GermlineDetectionMethod.SEGMENT, region.germlineStatus(), tumorStatus, germlineCopyNumber, tumorCopyNumber,
-                filter, cohortFrequency, anyReported));
+        for(GeneData geneData : deletedGenes)
+        {
+            mDeletions.add(new GermlineDeletion(
+                    geneData.GeneName, region.chromosome(), geneData.KaryotypeBand, region.start(), region.end(),
+                    region.depthWindowCount(), exonRankMin, exonRankMax,
+                    GermlineDetectionMethod.SEGMENT, region.germlineStatus(), tumorStatus, germlineCopyNumber, tumorCopyNumber,
+                    filter, cohortFrequency, anyReported));
+        }
 
         for(TranscriptData transData : transcripts)
         {
