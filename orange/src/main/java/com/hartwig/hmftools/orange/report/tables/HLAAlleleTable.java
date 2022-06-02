@@ -62,23 +62,23 @@ public final class HLAAlleleTable {
     private static String mutationString(@NotNull LilacAllele allele) {
         StringJoiner joiner = new StringJoiner(", ");
         if (Doubles.positive(allele.somaticMissense())) {
-            joiner.add(SINGLE_DIGIT.format(allele.somaticMissense() + " missense"));
+            joiner.add(SINGLE_DIGIT.format(allele.somaticMissense()) + " missense");
         }
 
         if (Doubles.positive(allele.somaticNonsenseOrFrameshift())) {
-            joiner.add(SINGLE_DIGIT.format(allele.somaticNonsenseOrFrameshift() + " nonsense or frameshift"));
+            joiner.add(SINGLE_DIGIT.format(allele.somaticNonsenseOrFrameshift()) + " nonsense or frameshift");
         }
 
         if (Doubles.positive(allele.somaticSplice())) {
-            joiner.add(SINGLE_DIGIT.format(allele.somaticSplice() + " splice"));
+            joiner.add(SINGLE_DIGIT.format(allele.somaticSplice()) + " splice");
         }
 
         if (Doubles.positive(allele.somaticSynonymous())) {
-            joiner.add(SINGLE_DIGIT.format(allele.somaticSynonymous() + " synonymous"));
+            joiner.add(SINGLE_DIGIT.format(allele.somaticSynonymous()) + " synonymous");
         }
 
         if (Doubles.positive(allele.somaticInframeIndel())) {
-            joiner.add(SINGLE_DIGIT.format(allele.somaticInframeIndel() + " inframe indel"));
+            joiner.add(SINGLE_DIGIT.format(allele.somaticInframeIndel()) + " inframe indel");
         }
 
         String result = joiner.toString();

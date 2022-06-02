@@ -153,7 +153,7 @@ public final class OrangeReportTestFactory {
     private static LilacData createTestLilacData() {
         List<LilacAllele> alleles = Lists.newArrayList();
         alleles.add(LilacTestFactory.builder().name("Allele 1").build());
-        alleles.add(LilacTestFactory.builder().name("Allele 2").build());
+        alleles.add(LilacTestFactory.builder().name("Allele 2").somaticInframeIndel(1D).build());
 
         return ImmutableLilacData.builder().qc("PASS").alleles(alleles).build();
     }
