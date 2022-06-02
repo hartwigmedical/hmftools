@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.report.interpretation;
 
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,6 +15,8 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class Variants {
+
+    private static final DecimalFormat PERCENTAGE_FORMAT = new DecimalFormat("#'%'");
 
     private static final Logger LOGGER = LogManager.getLogger(Variants.class);
 
@@ -99,10 +102,19 @@ public final class Variants {
 
     @NotNull
     public static String rnaDepthField(@NotNull ReportableVariant variant) {
-        if (variant.rnaAlleleReadCount() == null || variant.rnaTotalReadCount() == null) {
+        Integer alleleReadCount = variant.rnaAlleleReadCount();
+        Integer totalReadCount = variant.rnaTotalReadCount();
+
+        if (alleleReadCount == null || totalReadCount == null) {
             return ReportResources.NOT_AVAILABLE;
         }
 
-        return variant.rnaAlleleReadCount() + " / " + variant.rnaTotalReadCount();
+        String vafAddon = Strings.EMPTY;
+        if (totalReadCount > 0) {
+            double vaf = alleleReadCount / (double) totalReadCount;
+            vafAddon = " (" + PERCENTAGE_FORMAT.format(vaf * 100) + ")";
+        }
+
+        return alleleReadCount + "/" + totalReadCount + vafAddon;
     }
 }
