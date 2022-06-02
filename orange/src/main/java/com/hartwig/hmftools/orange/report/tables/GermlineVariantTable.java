@@ -29,7 +29,7 @@ public final class GermlineVariantTable {
         Table table = Tables.createContent(width,
                 new float[] { 3, 1, 1, 1, 1, 1, 1, 1 },
                 new Cell[] { Cells.createHeader("Variant"), Cells.createHeader("VCN"), Cells.createHeader("CN"), Cells.createHeader("MACN"),
-                        Cells.createHeader("RNA VAF"), Cells.createHeader("Biallelic"), Cells.createHeader("Hotspot"),
+                        Cells.createHeader("RNA Depth"), Cells.createHeader("Biallelic"), Cells.createHeader("Hotspot"),
                         Cells.createHeader("Genotype") });
 
         for (ReportableVariant variant : Variants.sort(variants)) {
@@ -37,7 +37,7 @@ public final class GermlineVariantTable {
             table.addCell(Cells.createContent(SINGLE_DIGIT.format(variant.alleleCopyNumber())));
             table.addCell(Cells.createContent(SINGLE_DIGIT.format(variant.totalCopyNumber())));
             table.addCell(Cells.createContent(SINGLE_DIGIT.format(variant.minorAlleleCopyNumber())));
-            table.addCell(Cells.createContent(ReportResources.NOT_AVAILABLE));
+            table.addCell(Cells.createContent(Variants.rnaDepthField(variant)));
             table.addCell(Cells.createContent(variant.biallelic() ? "Yes" : "No"));
             table.addCell(Cells.createContent(Variants.hotspotField(variant)));
             table.addCell(Cells.createContent(variant.genotypeStatus().simplifiedDisplay()));

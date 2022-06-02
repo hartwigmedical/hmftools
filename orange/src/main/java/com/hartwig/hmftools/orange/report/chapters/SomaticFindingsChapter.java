@@ -12,7 +12,7 @@ import com.hartwig.hmftools.orange.algo.selection.FusionSelector;
 import com.hartwig.hmftools.orange.algo.selection.SomaticVariantSelector;
 import com.hartwig.hmftools.orange.report.ReportConfig;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.tables.FusionTable;
+import com.hartwig.hmftools.orange.report.tables.DNAFusionTable;
 import com.hartwig.hmftools.orange.report.tables.GeneCopyNumberTable;
 import com.hartwig.hmftools.orange.report.tables.GeneDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.HomozygousDisruptionTable;
@@ -101,26 +101,26 @@ public class SomaticFindingsChapter implements ReportChapter {
     }
 
     private void addSomaticAmpDels(@NotNull Document document) {
-        String titleDrivers = "Driver amps/dels (" + report.purple().reportableGainsLosses().size() + ")";
-        document.add(GeneCopyNumberTable.build(titleDrivers, contentWidth(), report.purple().reportableGainsLosses(), report.isofox()));
+        String titleDrivers = "Driver amps/dels (" + report.purple().reportableSomaticGainsLosses().size() + ")";
+        document.add(GeneCopyNumberTable.build(titleDrivers, contentWidth(), report.purple().reportableSomaticGainsLosses(), report.isofox()));
 
-        List<ReportableGainLoss> gains = CopyNumberSelector.selectNonDriverGains(report.purple().unreportedGainsLosses());
+        List<ReportableGainLoss> gains = CopyNumberSelector.selectNonDriverGains(report.purple().unreportedSomaticGainsLosses());
         String titleGains = "Other regions with amps (" + gains.size() + ")";
         document.add(GeneCopyNumberTable.build(titleGains, contentWidth(), max10(gains), report.isofox()));
 
         List<ReportableGainLoss> losses =
-                CopyNumberSelector.selectNonDriverLosses(report.purple().unreportedGainsLosses(), report.purple().reportableGainsLosses());
+                CopyNumberSelector.selectNonDriverLosses(report.purple().unreportedSomaticGainsLosses(), report.purple().reportableSomaticGainsLosses());
         String titleLosses = "Regions with deletions in genes in other autosomal regions (" + losses.size() + ")";
         document.add(GeneCopyNumberTable.build(titleLosses, contentWidth(), max10(losses), report.isofox()));
     }
 
     private void addFusions(@NotNull Document document) {
         String titleDrivers = "Driver fusions (" + report.linx().reportableFusions().size() + ")";
-        document.add(FusionTable.build(titleDrivers, contentWidth(), report.linx().reportableFusions(), report.isofox()));
+        document.add(DNAFusionTable.build(titleDrivers, contentWidth(), report.linx().reportableFusions(), report.isofox()));
 
         List<LinxFusion> nonDriverFusions = FusionSelector.selectNonDriverFusions(report.linx().unreportedFusions(), report.protect());
         String titleNonDrivers = "Other potentially interesting fusions (" + nonDriverFusions.size() + ")";
-        document.add(FusionTable.build(titleNonDrivers, contentWidth(), max10(nonDriverFusions), report.isofox()));
+        document.add(DNAFusionTable.build(titleNonDrivers, contentWidth(), max10(nonDriverFusions), report.isofox()));
     }
 
     private void addViralPresence(@NotNull Document document) {

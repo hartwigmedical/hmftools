@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.rna.GeneExpression;
-import com.hartwig.hmftools.orange.isofox.IsofoxInterpretedData;
+import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Chromosomes;
 import com.hartwig.hmftools.orange.report.interpretation.Expressions;
@@ -37,7 +37,7 @@ public final class GeneCopyNumberTable {
         Table table = Tables.createContent(width,
                 new float[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
                 new Cell[] { Cells.createHeader("Chr"), Cells.createHeader("Region"), Cells.createHeader("Gene"),
-                        Cells.createHeader("Type"), Cells.createHeader("CN"), Cells.createHeader("TPM"), Cells.createHeader("Perc (Type))"),
+                        Cells.createHeader("Type"), Cells.createHeader("CN"), Cells.createHeader("TPM"), Cells.createHeader("Perc (Type)"),
                         Cells.createHeader("FC (Type)"), Cells.createHeader("Perc (DB)"), Cells.createHeader("FC (DB)") });
 
         for (ReportableGainLoss gainLoss : sort(gainLosses)) {

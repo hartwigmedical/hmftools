@@ -60,12 +60,14 @@ public class GenomicAnalyzer {
                 config.purpleGermlineVariantVcf(),
                 null,
                 config.purpleSomaticCopyNumberTsv(),
+                null,
                 config.refGenomeVersion());
 
         LinxData linxData = LinxDataLoader.load(config.linxFusionTsv(),
                 config.linxBreakendTsv(),
                 config.linxSvsTsv(),
                 config.linxDriverCatalogTsv(),
+                null,
                 null);
 
         VirusInterpreterData virusInterpreterData = VirusInterpreterDataLoader.load(config.annotatedVirusTsv());
@@ -101,7 +103,7 @@ public class GenomicAnalyzer {
                 .tumorMutationalBurden(purpleData.tumorMutationalBurdenPerMb())
                 .chordHrdValue(chordAnalysis.hrdValue())
                 .chordHrdStatus(chordAnalysis.hrStatus())
-                .gainsAndLosses(purpleData.reportableGainsLosses())
+                .gainsAndLosses(purpleData.reportableSomaticGainsLosses())
                 .cnPerChromosome(purpleData.cnPerChromosome())
                 .geneFusions(linxData.reportableFusions())
                 .geneDisruptions(linxData.geneDisruptions())

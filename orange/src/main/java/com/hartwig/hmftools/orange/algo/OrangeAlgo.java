@@ -48,6 +48,8 @@ import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.OrangeRNAConfig;
+import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
+import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableObservation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSample;
@@ -61,8 +63,6 @@ import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentiles;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesFile;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesModel;
 import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
-import com.hartwig.hmftools.orange.isofox.IsofoxInterpretedData;
-import com.hartwig.hmftools.orange.isofox.IsofoxInterpreter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -129,12 +129,13 @@ public class OrangeAlgo {
     @NotNull
     public OrangeReport run(@NotNull OrangeConfig config) throws IOException {
         PurpleData purple = loadPurpleData(config);
+        LinxData linx = loadLinxData(config);
 
         IsofoxData isofox = loadIsofoxData(config);
 
         IsofoxInterpretedData isofoxInterpreted = null;
         if (isofox != null) {
-            isofoxInterpreted = IsofoxInterpreter.interpret(isofox, driverGenes, knownFusionCache);
+            isofoxInterpreted = IsofoxInterpreter.interpret(isofox, linx, driverGenes, knownFusionCache);
         }
 
         return ImmutableOrangeReport.builder()
@@ -146,7 +147,7 @@ public class OrangeAlgo {
                 .tumorSample(loadSampleData(config, true))
                 .germlineMVLHPerGene(loadGermlineMVLHPerGene(config))
                 .purple(purple)
-                .linx(loadLinxData(config))
+                .linx(linx)
                 .isofox(isofoxInterpreted)
                 .virusInterpreter(loadVirusInterpreterData(config))
                 .chord(loadChordAnalysis(config))
@@ -243,7 +244,8 @@ public class OrangeAlgo {
                 config.purpleSomaticVariantVcf(),
                 config.purpleGermlineDriverCatalogTsv(),
                 config.purpleGermlineVariantVcf(),
-                config.purpleGeneCopyNumberTsv());
+                config.purpleGeneCopyNumberTsv(),
+                config.purpleGermlineDeletionTsv());
     }
 
     @NotNull
@@ -252,7 +254,8 @@ public class OrangeAlgo {
                 config.linxBreakendTsv(),
                 null,
                 config.linxDriverCatalogTsv(),
-                config.linxDriverTsv());
+                config.linxDriverTsv(),
+                config.linxGermlineDisruptionTsv());
     }
 
     @Nullable

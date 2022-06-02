@@ -370,9 +370,9 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   - The actionable output is the database that [PROTECT](../protect/README.md) bases its clinical evidence matching on.
   
 ## Version History and Download Links
-- Upcoming
+- [1.11](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.11)
   - Use correct blacklisted tumor locations for solid tumors 
-  - Update mutation type filter for exon insertions and deletions
+  - Update bug in mutation type filter for exon insertions and deletions
   - Remove "negative" from list of CKB events which are interpreted as inactivation events.
   - Move TMB evidence from CKB to evidence for tumor mutational burden rather than mutational load.
   - Various updates are made to ingestion of ACTIN source

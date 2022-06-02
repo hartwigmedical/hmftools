@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.cuppa.CuppaData;
 import com.hartwig.hmftools.common.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
@@ -23,7 +24,7 @@ import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.algo.interpretation.CuppaInterpretation;
+import com.hartwig.hmftools.orange.algo.cuppa.CuppaInterpretation;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
 import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
@@ -144,6 +145,8 @@ public class FrontPageChapter implements ReportChapter {
         summary.addCell(Cells.createValue(tmlString()));
         summary.addCell(Cells.createKey("HR deficiency score:"));
         summary.addCell(Cells.createValue(hrDeficiencyString()));
+        summary.addCell(Cells.createKey("DPYD status:"));
+        summary.addCell(Cells.createValue(dpydStatus()));
         summary.addCell(Cells.createKey("Number of SVs:"));
         summary.addCell(Cells.createValue(svTmbString()));
         summary.addCell(Cells.createKey("Max complex cluster size:"));
@@ -159,7 +162,7 @@ public class FrontPageChapter implements ReportChapter {
 
         Image circosImage = Images.build(report.plots().purpleFinalCircosPlot());
         circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
-        circosImage.setMaxHeight(280);
+        circosImage.setMaxHeight(290);
 
         topTable.addCell(summary);
         topTable.addCell(circosImage);
@@ -169,7 +172,7 @@ public class FrontPageChapter implements ReportChapter {
 
         Image clonalityImage = Images.build(report.plots().purpleClonalityPlot());
         clonalityImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
-        clonalityImage.setMaxHeight(280);
+        clonalityImage.setMaxHeight(270);
 
         table.addCell(clonalityImage);
         document.add(table);
@@ -230,14 +233,14 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private String copyNumberDriverString() {
-        if (report.purple().reportableGainsLosses().isEmpty()) {
+        if (report.purple().reportableSomaticGainsLosses().isEmpty()) {
             return NONE;
         } else {
             Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
-            for (ReportableGainLoss gainLoss : report.purple().reportableGainsLosses()) {
+            for (ReportableGainLoss gainLoss : report.purple().reportableSomaticGainsLosses()) {
                 genes.add(gainLoss.gene());
             }
-            return report.purple().reportableGainsLosses().size() + " (" + concat(genes) + ")";
+            return report.purple().reportableSomaticGainsLosses().size() + " (" + concat(genes) + ")";
         }
     }
 
@@ -315,6 +318,17 @@ public class FrontPageChapter implements ReportChapter {
             }
             return SINGLE_DIGIT.format(chord.hrdValue()) + " (" + chord.hrStatus().display() + addon + ")";
         }
+    }
+
+    @NotNull
+    private String dpydStatus() {
+        Set<String> haplotypes = Sets.newHashSet();
+        for (PeachGenotype genotype : report.peach()) {
+            if (genotype.gene().equals("DPYD")) {
+                haplotypes.add(genotype.haplotype() + " (" + genotype.function() + ")");
+            }
+        }
+        return !haplotypes.isEmpty() ? concat(haplotypes) : NONE;
     }
 
     @NotNull

@@ -15,6 +15,7 @@ import com.hartwig.hmftools.orange.OrangeReportTestFactory;
 import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
 import com.hartwig.hmftools.orange.algo.OrangeAlgo;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
+import com.hartwig.hmftools.orange.algo.isofox.ImmutableIsofoxInterpretedData;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableEvaluation;
 import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
@@ -89,15 +90,26 @@ public class TestReportGenerator {
 
     @NotNull
     private static OrangeReport removeUnreported(@NotNull OrangeReport report) {
-        return ImmutableOrangeReport.builder()
+        ImmutableOrangeReport.Builder builder = ImmutableOrangeReport.builder()
                 .from(report)
                 .purple(ImmutablePurpleData.builder()
                         .from(report.purple())
                         .unreportedGermlineVariants(Lists.newArrayList())
-                        .unreportedGainsLosses(Lists.newArrayList())
+                        .unreportedSomaticGainsLosses(Lists.newArrayList())
                         .unreportedSomaticVariants(Lists.newArrayList())
+                        .unreportedGermlineDeletions(Lists.newArrayList())
                         .build())
-                .linx(ImmutableLinxData.builder().from(report.linx()).unreportedFusions(Lists.newArrayList()).build())
-                .build();
+                .linx(ImmutableLinxData.builder().from(report.linx()).unreportedFusions(Lists.newArrayList()).build());
+
+        if (report.isofox() != null) {
+            builder.isofox(ImmutableIsofoxInterpretedData.builder()
+                    .from(report.isofox())
+                    .allGeneExpressions(Lists.newArrayList())
+                    .allFusions(Lists.newArrayList())
+                    .allNovelSpliceJunctions(Lists.newArrayList())
+                    .build());
+        }
+
+        return builder.build();
     }
 }

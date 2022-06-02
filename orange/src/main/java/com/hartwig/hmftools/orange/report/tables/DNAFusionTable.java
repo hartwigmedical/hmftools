@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.sv.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
-import com.hartwig.hmftools.orange.isofox.IsofoxInterpretedData;
+import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Expressions;
 import com.hartwig.hmftools.orange.report.util.Cells;
@@ -25,11 +25,11 @@ import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class FusionTable {
+public final class DNAFusionTable {
 
     private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#0.0");
 
-    private FusionTable() {
+    private DNAFusionTable() {
     }
 
     @NotNull
@@ -91,7 +91,7 @@ public final class FusionTable {
         if (fusion.reportedType().equals(KnownFusionType.IG_KNOWN_PAIR.toString()) || fusion.reportedType()
                 .equals(KnownFusionType.IG_PROMISCUOUS.toString())) {
             return supportFromExpressionOfGeneEnd(isofox, fusion);
-        } else if (fusion.reportedType().equals(KnownFusionType.EXON_DEL_DUP.toString())) {
+        } else if (fusion.geneStart().equals(fusion.geneEnd())) {
             return supportFromSpliceJunctions(isofox, fusion);
         } else {
             return supportFromRnaFusions(isofox, fusion);
