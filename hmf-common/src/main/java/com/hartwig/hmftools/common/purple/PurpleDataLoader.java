@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
@@ -45,6 +46,23 @@ import org.jetbrains.annotations.Nullable;
 public final class PurpleDataLoader {
 
     private static final Logger LOGGER = LogManager.getLogger(PurpleDataLoader.class);
+
+    private static final Set<String> GENES_RELEVANT_FOR_LOH = Sets.newHashSet();
+
+    static {
+        // Relevant in case of HRD:
+        GENES_RELEVANT_FOR_LOH.add("BRCA1");
+        GENES_RELEVANT_FOR_LOH.add("BRCA2");
+        GENES_RELEVANT_FOR_LOH.add("PALB2");
+        GENES_RELEVANT_FOR_LOH.add("RAD51C");
+
+        // Relevant in case of MSI:
+        GENES_RELEVANT_FOR_LOH.add("MSH6");
+        GENES_RELEVANT_FOR_LOH.add("MSH2");
+        GENES_RELEVANT_FOR_LOH.add("MLH1");
+        GENES_RELEVANT_FOR_LOH.add("PMS2");
+        GENES_RELEVANT_FOR_LOH.add("EPCAM");
+    }
 
     private PurpleDataLoader() {
     }
@@ -86,12 +104,19 @@ public final class PurpleDataLoader {
         LOGGER.info("  Extracted {} reportable somatic gains and losses from driver catalog", reportableSomaticGainsLosses.size());
 
         List<ReportableGainLoss> unreportedSomaticGainsLosses = Lists.newArrayList();
+        List<GeneCopyNumber> lohGenes = Lists.newArrayList();
         if (purpleGeneCopyNumberTsv != null) {
+            List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCopyNumberTsv);
+            LOGGER.debug(" Loaded {} gene copy numbers entries from {}", geneCopyNumbers.size(), purpleGeneCopyNumberTsv);
+
             unreportedSomaticGainsLosses =
-                    extractUnreportedSomaticGainsLosses(purpleGeneCopyNumberTsv, purityContext, reportableSomaticGainsLosses);
+                    extractUnreportedSomaticGainsLosses(geneCopyNumbers, purityContext, reportableSomaticGainsLosses);
             LOGGER.info("  Extracted {} additional unreported somatic gains and losses from {}",
                     unreportedSomaticGainsLosses.size(),
                     purpleGeneCopyNumberTsv);
+
+            lohGenes = extractRelevantLOHGenes(geneCopyNumbers);
+            LOGGER.info("  Extracted {} LOH genes from {}", lohGenes.size(), purpleGeneCopyNumberTsv);
         }
 
         List<CnPerChromosomeArmData> cnPerChromosome = Lists.newArrayList();
@@ -165,6 +190,7 @@ public final class PurpleDataLoader {
                 .unreportedSomaticGainsLosses(unreportedSomaticGainsLosses)
                 .reportableGermlineDeletions(reportableGermlineDeletions)
                 .unreportedGermlineDeletions(unreportedGermlineDeletions)
+                .lohGenes(lohGenes)
                 .cnPerChromosome(cnPerChromosome)
                 .build();
     }
@@ -208,11 +234,8 @@ public final class PurpleDataLoader {
     }
 
     @NotNull
-    private static List<ReportableGainLoss> extractUnreportedSomaticGainsLosses(@NotNull String purpleGeneCopyNumberTsv,
-            @NotNull PurityContext purityContext, @NotNull List<ReportableGainLoss> reportableSomaticGainsLosses) throws IOException {
-        List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCopyNumberTsv);
-        LOGGER.debug(" Loaded {} gene copy numbers entries from {}", geneCopyNumbers.size(), purpleGeneCopyNumberTsv);
-
+    private static List<ReportableGainLoss> extractUnreportedSomaticGainsLosses(@NotNull List<GeneCopyNumber> geneCopyNumbers,
+            @NotNull PurityContext purityContext, @NotNull List<ReportableGainLoss> reportableSomaticGainsLosses) {
         List<ReportableGainLoss> allGainsLosses =
                 extractAllGainsLosses(purityContext.qc().status(), purityContext.bestFit().ploidy(), geneCopyNumbers);
         LOGGER.debug("  Extracted {} somatic gains and losses from gene copy numbers", allGainsLosses.size());
@@ -274,6 +297,18 @@ public final class PurpleDataLoader {
             }
         }
         return unreportedGainsLosses;
+    }
+
+    @NotNull
+    private static List<GeneCopyNumber> extractRelevantLOHGenes(@NotNull List<GeneCopyNumber> geneCopyNumbers) {
+        List<GeneCopyNumber> reportableLOH = Lists.newArrayList();
+        for (GeneCopyNumber geneCopyNumber : geneCopyNumbers) {
+            if (GENES_RELEVANT_FOR_LOH.contains(geneCopyNumber.geneName()) && geneCopyNumber.minMinorAlleleCopyNumber() < 0.5
+                    && geneCopyNumber.minCopyNumber() > 0.5) {
+                reportableLOH.add(geneCopyNumber);
+            }
+        }
+        return reportableLOH;
     }
 
     @NotNull

@@ -8,6 +8,7 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.chord.ChordTestFactory;
 import com.hartwig.hmftools.common.cuppa.CuppaTestFactory;
 import com.hartwig.hmftools.common.flagstat.FlagstatTestFactory;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.isofox.IsofoxTestFactory;
 import com.hartwig.hmftools.common.linx.ImmutableLinxData;
 import com.hartwig.hmftools.common.linx.LinxData;
@@ -56,6 +57,7 @@ public final class OrangeReportTestFactory {
         return ImmutableOrangeReport.builder()
                 .sampleId(TEST_SAMPLE)
                 .reportDate(LocalDate.of(2021, 11, 19))
+                .refGenomeVersion(RefGenomeVersion.V37)
                 .refSample(createMinimalOrangeSample())
                 .tumorSample(createMinimalOrangeSample())
                 .purple(PurpleTestFactory.createMinimalTestPurpleData())
