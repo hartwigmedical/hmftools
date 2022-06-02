@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityMethod;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
@@ -80,6 +81,9 @@ public interface PurpleData {
 
     @NotNull
     List<GermlineDeletion> unreportedGermlineDeletions();
+
+    @NotNull
+    List<GeneCopyNumber> lohGenes();
 
     @NotNull
     List<CnPerChromosomeArmData> cnPerChromosome();
