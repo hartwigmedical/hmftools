@@ -98,6 +98,7 @@ investigate potential causes for QC failure.
   - Add DPYD status on front page
   - Support for germline SVs
     - `linx_germline_disruption_tsv` configures the LINX germline disruptions.
+    - Reported germline disruptions are displayed in the Germline Findings chapter.
   - Support for germline deletions
     - `purple_germline_deletion_tsv` configures the PURPLE germline deletions.
     - Reported germline deletions are displayed in the Germline Findings chapter.

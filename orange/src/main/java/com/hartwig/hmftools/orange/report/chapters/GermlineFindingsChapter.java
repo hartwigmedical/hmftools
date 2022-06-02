@@ -5,15 +5,15 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
-import com.hartwig.hmftools.common.purple.gene.GermlineDeletion;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.selection.GermlineVariantSelector;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.tables.GermlineDeletionTable;
+import com.hartwig.hmftools.orange.report.tables.GermlineDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.GermlineVariantTable;
 import com.hartwig.hmftools.orange.report.tables.PharmacogeneticsTable;
 import com.hartwig.hmftools.orange.report.util.Cells;
@@ -57,9 +57,11 @@ public class GermlineFindingsChapter implements ReportChapter {
     @Override
     public void render(@NotNull final Document document) {
         document.add(new Paragraph(name()).addStyle(ReportResources.chapterTitleStyle()));
+
         if (reportGermline) {
             addGermlineVariants(document);
             addGermlineDeletions(document);
+            addGermlineDisruptions(document);
             addMVLHAnalysis(document);
             addGermlineCNAberrations(document);
             addPharmacogenetics(document);
@@ -79,30 +81,12 @@ public class GermlineFindingsChapter implements ReportChapter {
 
     private void addGermlineDeletions(@NotNull Document document) {
         String title = "Driver germline deletions (" + report.purple().reportableGermlineDeletions().size() + ")";
-        if (report.purple().reportableGermlineDeletions().isEmpty()) {
-            document.add(Tables.createEmpty(title, contentWidth()));
-        } else {
-            Table table = Tables.createContent(contentWidth(),
-                    new float[] { 1, 1, 1, 1, 1, 1 },
-                    new Cell[] { Cells.createHeader("Gene"), Cells.createHeader("Chromosome"), Cells.createHeader("Germline status"),
-                            Cells.createHeader("Tumor status"), Cells.createHeader("Germline CN"), Cells.createHeader("Tumor CN") });
-
-            for (GermlineDeletion deletion : sort(report.purple().reportableGermlineDeletions())) {
-                table.addCell(Cells.createContent(deletion.GeneName));
-                table.addCell(Cells.createContent(deletion.Chromosome));
-                table.addCell(Cells.createContent(deletion.NormalStatus.toString()));
-                table.addCell(Cells.createContent(deletion.TumorStatus.toString()));
-                table.addCell(Cells.createContent(SINGLE_DIGIT.format(deletion.GermlineCopyNumber)));
-                table.addCell(Cells.createContent(SINGLE_DIGIT.format(deletion.TumorCopyNumber)));
-            }
-
-            document.add(Tables.createWrapping(table, title));
-        }
+        document.add(GermlineDeletionTable.build(title, contentWidth(), report.purple().reportableGermlineDeletions()));
     }
 
-    @NotNull
-    private static List<GermlineDeletion> sort(@NotNull List<GermlineDeletion> deletions) {
-        return deletions.stream().sorted(Comparator.comparing(deletion -> deletion.GeneName)).collect(Collectors.toList());
+    private void addGermlineDisruptions(@NotNull Document document) {
+        String title = "Driver germline disruptions (" + report.linx().reportableGermlineDisruptions().size() + ")";
+        document.add(GermlineDisruptionTable.build(title, contentWidth(), report.linx().reportableGermlineDisruptions()));
     }
 
     private void addMVLHAnalysis(@NotNull Document document) {
