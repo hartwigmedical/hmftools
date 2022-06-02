@@ -785,6 +785,7 @@ CREATE TABLE germlineDeletion
     sampleId varchar(50) NOT NULL,
     gene varchar(50) NOT NULL,
     chromosome varchar(10) NOT NULL,
+    chromosomeBand varchar(50) NOT NULL,
     regionStart int not null,
     regionEnd int not null,
     depthWindowCount int not null,
