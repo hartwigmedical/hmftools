@@ -9,9 +9,13 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.FileReaderUtils;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class LilacDataLoader {
+
+    private static final Logger LOGGER = LogManager.getLogger(LilacDataLoader.class);
 
     private static final String DELIMITER = ",";
 
@@ -20,7 +24,15 @@ public final class LilacDataLoader {
 
     @NotNull
     public static LilacData load(@NotNull String lilacQcCsv, @NotNull String lilacResultCsv) throws IOException {
-        return ImmutableLilacData.builder().qc(readQC(lilacQcCsv)).records(readRecords(lilacResultCsv)).build();
+        LOGGER.info("Loading LILAC data from {}", new File(lilacQcCsv).getParent());
+
+        String qc = readQC(lilacQcCsv);
+        LOGGER.info(" Read QC status '{}' from {}", qc, lilacQcCsv);
+
+        List<LilacRecord> records = readRecords(lilacResultCsv);
+        LOGGER.info(" Read {} LILAC records from {}", records.size(), lilacResultCsv);
+
+        return ImmutableLilacData.builder().qc(qc).records(records).build();
     }
 
     @NotNull
