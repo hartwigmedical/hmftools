@@ -21,10 +21,7 @@ import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
-import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
-import com.hartwig.hmftools.patientreporter.SampleMetadata;
-import com.hartwig.hmftools.patientreporter.SampleReport;
-import com.hartwig.hmftools.patientreporter.SampleReportFactory;
+import com.hartwig.hmftools.patientreporter.*;
 import com.hartwig.hmftools.patientreporter.pipeline.PipelineVersion;
 
 import org.apache.commons.compress.utils.Lists;
@@ -48,10 +45,8 @@ public class QCFailReporter {
     }
 
     @NotNull
-    public QCFailReport run(@Nullable QCFailReason reason, @NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv,
-            @NotNull String purpleQCFile, @Nullable String comments, boolean correctedReport, boolean correctedReportExtern,
-            @NotNull String expectedPipelineVersion, boolean overridePipelineVersion, @Nullable String pipelineVersionFile,
-            boolean requirePipelineVersionFile, @NotNull String peachGenotypeTsv) throws IOException {
+    public QCFailReport run(@NotNull SampleMetadata sampleMetadata, @NotNull PatientReporterConfig config) throws IOException {
+        QCFailReason reason = config.qcFailReason();
         assert reason != null;
 
         String patientId = reportData.limsModel().patientId(sampleMetadata.tumorSampleBarcode());
@@ -62,11 +57,11 @@ public class QCFailReporter {
 
         if (reason.equals(QCFailReason.SUFFICIENT_TCP_QC_FAILURE) || reason.equals(QCFailReason.INSUFFICIENT_TCP_DEEP_WGS)) {
 
-            String pipelineVersion = null;
-            if (requirePipelineVersionFile) {
+            if (config.requirePipelineVersionFile()) {
+                String pipelineVersionFile = config.pipelineVersionFile();
                 assert pipelineVersionFile != null;
-                pipelineVersion = PipelineVersionFile.majorDotMinorVersion(pipelineVersionFile);
-                PipelineVersion.checkPipelineVersion(pipelineVersion, expectedPipelineVersion, overridePipelineVersion);
+                String pipelineVersion = PipelineVersionFile.majorDotMinorVersion(pipelineVersionFile);
+                PipelineVersion.checkPipelineVersion(pipelineVersion, config.expectedPipelineVersion(), config.overridePipelineVersion());
             }
         }
 
@@ -79,8 +74,9 @@ public class QCFailReporter {
         String wgsPurityString = null;
         Set<PurpleQCStatus> purpleQc = Sets.newHashSet();
         if (reason.isDeepWGSDataAvailable()) {
+            String purplePurityTsv = config.purplePurityTsv();
             LOGGER.info("Loading PURPLE data from {}", new File(purplePurityTsv).getParent());
-            PurityContext purityContext = PurityContextFile.readWithQC(purpleQCFile, purplePurityTsv);
+            PurityContext purityContext = PurityContextFile.readWithQC(config.purpleQcFile(), purplePurityTsv);
 
             String formattedPurity = new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100);
             boolean hasReliablePurity = CheckPurpleQuality.checkHasReliablePurity(purityContext);
@@ -93,7 +89,7 @@ public class QCFailReporter {
 
         List<PeachGenotype> peachGenotypesOverrule = Lists.newArrayList();
         if (reason.isDeepWGSDataAvailable() && !purpleQc.contains(PurpleQCStatus.FAIL_CONTAMINATION)) {
-            List<PeachGenotype> peachGenotypes = loadPeachData(peachGenotypeTsv);
+            List<PeachGenotype> peachGenotypes = loadPeachData(config.peachGenotypeTsv());
             peachGenotypesOverrule = sampleReport.reportPharmogenetics() ? peachGenotypes : Lists.newArrayList();
         }
 
@@ -102,9 +98,9 @@ public class QCFailReporter {
                 .qsFormNumber(reason.qcFormNumber())
                 .reason(reason)
                 .wgsPurityString(wgsPurityString)
-                .comments(Optional.ofNullable(comments))
-                .isCorrectedReport(correctedReport)
-                .isCorrectedReportExtern(correctedReportExtern)
+                .comments(Optional.ofNullable(config.comments()))
+                .isCorrectedReport(config.isCorrectedReport())
+                .isCorrectedReportExtern(config.isCorrectedReportExtern())
                 .signaturePath(reportData.signaturePath())
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())

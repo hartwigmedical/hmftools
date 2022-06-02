@@ -99,18 +99,7 @@ public class PatientReporterApplication {
 
     private void generateQCFail(@NotNull SampleMetadata sampleMetadata) throws IOException {
         QCFailReporter reporter = new QCFailReporter(buildBaseReportData(config), reportDate);
-        QCFailReport report = reporter.run(config.qcFailReason(),
-                sampleMetadata,
-                config.purplePurityTsv(),
-                config.purpleQcFile(),
-                config.comments(),
-                config.isCorrectedReport(),
-                config.isCorrectedReportExtern(),
-                config.expectedPipelineVersion(),
-                config.overridePipelineVersion(),
-                config.pipelineVersionFile(),
-                config.requirePipelineVersionFile(),
-                config.peachGenotypeTsv());
+        QCFailReport report = reporter.run(sampleMetadata, config);
         LOGGER.info("Cohort of this sample is: {}", report.sampleReport().cohort().cohortId());
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
