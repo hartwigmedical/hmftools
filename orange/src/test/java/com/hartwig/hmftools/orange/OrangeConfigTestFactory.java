@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.orange;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.orange.report.ImmutableReportConfig;
 import com.hartwig.hmftools.orange.report.ReportConfig;
@@ -74,6 +75,7 @@ public final class OrangeConfigTestFactory {
                 .rnaConfig(null)
                 .reportConfig(reportConfig)
                 .addPrimaryTumorDoids(MELANOMA_DOID)
+                .refGenomeVersion(RefGenomeVersion.V37)
                 .outputDir(Strings.EMPTY)
                 .doidJsonFile(DOID_JSON)
                 .cohortMappingTsv(COHORT_MAPPING_TSV)
