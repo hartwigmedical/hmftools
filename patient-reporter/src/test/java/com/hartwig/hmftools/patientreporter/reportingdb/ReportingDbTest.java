@@ -33,7 +33,7 @@ import org.junit.Test;
 public class ReportingDbTest {
 
     @Test
-    public void shouldWriteApiUpdateJson() throws IOException {
+    public void writeApiUpdateJson() throws IOException {
         File reportingDbTsv = File.createTempFile("reporting-db-test", ".tsv");
 
         BufferedWriter writer = new BufferedWriter(new FileWriter(reportingDbTsv, true));

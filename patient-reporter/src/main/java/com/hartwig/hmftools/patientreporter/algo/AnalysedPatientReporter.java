@@ -54,7 +54,11 @@ public class AnalysedPatientReporter {
         PatientPrimaryTumor patientPrimaryTumor =
                 PatientPrimaryTumorFunctions.findPrimaryTumorForPatient(reportData.patientPrimaryTumors(), patientId);
 
-        SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientPrimaryTumor);
+        SampleReport sampleReport = SampleReportFactory.fromLimsModel(
+                sampleMetadata,
+                reportData.limsModel(),
+                patientPrimaryTumor,
+                config.allowDefaultCohortConfig());
 
         String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId(), sampleReport.cohort());
         String specialRemark = reportData.specialRemarkModel().findSpecialRemarkForSample(sampleMetadata.tumorSampleId());

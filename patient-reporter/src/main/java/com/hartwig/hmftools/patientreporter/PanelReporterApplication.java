@@ -84,7 +84,8 @@ public class PanelReporterApplication {
                 config.overridePipelineVersion(),
                 config.pipelineVersionFile(),
                 config.requirePipelineVersionFile(),
-                config.panelVCFname());
+                config.panelVCFname(),
+                config.allowDefaultCohortConfig());
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
         String outputFilePath = generateOutputFilePathForPanelResultReport(config.outputDirReport(), report);
@@ -104,7 +105,8 @@ public class PanelReporterApplication {
                 config.comments(),
                 config.isCorrectedReport(),
                 config.isCorrectedReportExtern(),
-                config.panelQcFailReason());
+                config.panelQcFailReason(),
+                config.allowDefaultCohortConfig());
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
         String outputFilePath = generateOutputFilePathForPanelResultReport(config.outputDirReport(), report);
