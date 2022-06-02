@@ -47,6 +47,19 @@ public class RefGenomeSource implements RefGenomeInterface
         return refBases.toString();
     }
 
+    @Override
+    public int getChromosomeLength(final String chromosome)
+    {
+        return mRefGenome.getSequenceDictionary().getSequence(chromosome).getSequenceLength();
+    }
+
+    @Override
+    public byte[] getBases(final String chromosome, int posStart, int posEnd)
+    {
+        return mRefGenome.getSubsequenceAt(chromosome, posStart, posEnd).getBases();
+    }
+
+
     public static RefGenomeSource loadRefGenome(final String filename)
     {
         if(filename == null || filename.isEmpty())
