@@ -96,14 +96,15 @@ investigate potential causes for QC failure.
 ### Version History and Download Links
 - Upcoming
   - Add DPYD status on front page
+  - `ref_genome_version` configures the ref genome version used, and is propagated into JSON output and report (QC chapter).
   - Support for germline SVs
-    - `linx_germline_disruption_tsv` configures the LINX germline disruptions.
+    - `linx_germline_disruption_tsv` configures the path towards the LINX germline disruptions.
     - Reported germline disruptions are displayed in the Germline Findings chapter.
   - Support for germline deletions
-    - `purple_germline_deletion_tsv` configures the PURPLE germline deletions.
+    - `purple_germline_deletion_tsv` configures the path towards the PURPLE germline deletions.
     - Reported germline deletions are displayed in the Germline Findings chapter.
   - Support for LILAC
-    - `lilac_result_csv` and `lilac_qc_csv` configure the LILAC data files
+    - `lilac_result_csv` and `lilac_qc_csv` configure the paths to the LILAC data files
   - Proper support for RNA
     - Add mandatory `driver_gene_panel_tsv` and `known_fusion_file` inputs to support interpretation of isofox results
     - RNA Depth for variants is picked up in case purple somatic/germline variants have been annotated with RNA. 

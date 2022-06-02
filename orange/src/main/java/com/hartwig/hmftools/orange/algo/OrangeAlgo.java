@@ -142,6 +142,7 @@ public class OrangeAlgo {
                 .sampleId(config.tumorSampleId())
                 .reportDate(LocalDate.now())
                 .configuredPrimaryTumor(loadConfiguredPrimaryTumor(config))
+                .refGenomeVersion(config.refGenomeVersion())
                 .platinumVersion(determinePlatinumVersion(config))
                 .refSample(loadSampleData(config, false))
                 .tumorSample(loadSampleData(config, true))
