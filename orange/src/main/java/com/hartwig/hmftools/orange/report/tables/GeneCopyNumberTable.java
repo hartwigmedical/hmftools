@@ -14,15 +14,11 @@ import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class GeneCopyNumberTable {
-
-    private static final Logger LOGGER = LogManager.getLogger(GeneCopyNumberTable.class);
 
     private GeneCopyNumberTable() {
     }

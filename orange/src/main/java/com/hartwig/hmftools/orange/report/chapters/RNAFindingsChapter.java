@@ -18,21 +18,21 @@ import com.itextpdf.layout.element.Table;
 
 import org.jetbrains.annotations.NotNull;
 
-public class RNAChapter implements ReportChapter {
+public class RNAFindingsChapter implements ReportChapter {
 
     private static final DecimalFormat PERCENTAGE_FORMAT = ReportResources.decimalFormat("#'%'");
 
     @NotNull
     private final OrangeReport report;
 
-    public RNAChapter(@NotNull final OrangeReport report) {
+    public RNAFindingsChapter(@NotNull final OrangeReport report) {
         this.report = report;
     }
 
     @NotNull
     @Override
     public String name() {
-        return "RNA";
+        return "RNA Findings";
     }
 
     @NotNull
