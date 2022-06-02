@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class LOHSelector {
+public final class LossOfHeterozygositySelector {
 
     private static final Set<String> HRD_GENES = Sets.newHashSet();
     private static final Set<String> MSI_GENES = Sets.newHashSet();
@@ -29,11 +29,11 @@ public final class LOHSelector {
         MSI_GENES.add("EPCAM");
     }
 
-    private LOHSelector() {
+    private LossOfHeterozygositySelector() {
     }
 
     @NotNull
-    public static List<GeneCopyNumber> selectReportableLOHGenes(@NotNull List<GeneCopyNumber> lohGenes,
+    public static List<GeneCopyNumber> selectHRDOrMSIGenes(@NotNull List<GeneCopyNumber> lohGenes,
             @NotNull MicrosatelliteStatus microsatelliteStatus, @NotNull ChordStatus chordStatus) {
         List<GeneCopyNumber> reportable = Lists.newArrayList();
         for (GeneCopyNumber lohGene : lohGenes) {

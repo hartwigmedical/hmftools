@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
@@ -46,23 +45,6 @@ import org.jetbrains.annotations.Nullable;
 public final class PurpleDataLoader {
 
     private static final Logger LOGGER = LogManager.getLogger(PurpleDataLoader.class);
-
-    private static final Set<String> GENES_RELEVANT_FOR_LOH = Sets.newHashSet();
-
-    static {
-        // Relevant in case of HRD:
-        GENES_RELEVANT_FOR_LOH.add("BRCA1");
-        GENES_RELEVANT_FOR_LOH.add("BRCA2");
-        GENES_RELEVANT_FOR_LOH.add("PALB2");
-        GENES_RELEVANT_FOR_LOH.add("RAD51C");
-
-        // Relevant in case of MSI:
-        GENES_RELEVANT_FOR_LOH.add("MSH6");
-        GENES_RELEVANT_FOR_LOH.add("MSH2");
-        GENES_RELEVANT_FOR_LOH.add("MLH1");
-        GENES_RELEVANT_FOR_LOH.add("PMS2");
-        GENES_RELEVANT_FOR_LOH.add("EPCAM");
-    }
 
     private PurpleDataLoader() {
     }
@@ -115,7 +97,7 @@ public final class PurpleDataLoader {
                     unreportedSomaticGainsLosses.size(),
                     purpleGeneCopyNumberTsv);
 
-            lohGenes = extractRelevantLOHGenes(geneCopyNumbers);
+            lohGenes = extractLOHGenes(geneCopyNumbers);
             LOGGER.info("  Extracted {} LOH genes from {}", lohGenes.size(), purpleGeneCopyNumberTsv);
         }
 
@@ -300,15 +282,14 @@ public final class PurpleDataLoader {
     }
 
     @NotNull
-    private static List<GeneCopyNumber> extractRelevantLOHGenes(@NotNull List<GeneCopyNumber> geneCopyNumbers) {
-        List<GeneCopyNumber> reportableLOH = Lists.newArrayList();
+    private static List<GeneCopyNumber> extractLOHGenes(@NotNull List<GeneCopyNumber> geneCopyNumbers) {
+        List<GeneCopyNumber> genesWithLOH = Lists.newArrayList();
         for (GeneCopyNumber geneCopyNumber : geneCopyNumbers) {
-            if (GENES_RELEVANT_FOR_LOH.contains(geneCopyNumber.geneName()) && geneCopyNumber.minMinorAlleleCopyNumber() < 0.5
-                    && geneCopyNumber.minCopyNumber() > 0.5) {
-                reportableLOH.add(geneCopyNumber);
+            if (geneCopyNumber.minMinorAlleleCopyNumber() < 0.5 && geneCopyNumber.minCopyNumber() > 0.5) {
+                genesWithLOH.add(geneCopyNumber);
             }
         }
-        return reportableLOH;
+        return genesWithLOH;
     }
 
     @NotNull

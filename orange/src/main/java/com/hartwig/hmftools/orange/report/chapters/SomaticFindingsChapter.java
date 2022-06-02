@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.selection.CopyNumberSelector;
 import com.hartwig.hmftools.orange.algo.selection.FusionSelector;
-import com.hartwig.hmftools.orange.algo.selection.LOHSelector;
+import com.hartwig.hmftools.orange.algo.selection.LossOfHeterozygositySelector;
 import com.hartwig.hmftools.orange.algo.selection.SomaticVariantSelector;
 import com.hartwig.hmftools.orange.report.ReportConfig;
 import com.hartwig.hmftools.orange.report.ReportResources;
@@ -149,10 +149,10 @@ public class SomaticFindingsChapter implements ReportChapter {
     }
 
     private void addLossOfHeterozygosity(@NotNull Document document) {
-        List<GeneCopyNumber> reportableLOHGenes = LOHSelector.selectReportableLOHGenes(report.purple().lohGenes(),
+        List<GeneCopyNumber> reportableLOHGenes = LossOfHeterozygositySelector.selectHRDOrMSIGenes(report.purple().lohGenes(),
                 report.purple().microsatelliteStatus(),
                 report.chord().hrStatus());
-        String title = "Potentially interesting LOH events (" + reportableLOHGenes.size() + ")";
+        String title = "Potentially interesting LOH events in case of MSI or HRD (" + reportableLOHGenes.size() + ")";
         document.add(LossOfHeterozygosityTable.build(title, contentWidth(), reportableLOHGenes));
     }
 
