@@ -121,9 +121,11 @@ investigate potential causes for QC failure.
     - Reported germline deletions are displayed in the Germline Findings chapter.
   - Support for LILAC
     - `lilac_result_csv` and `lilac_qc_csv` configure the paths to the LILAC data files
+    - Immunology chapter displays the LILAC QC status along with the HLA alleles found.
   - Addition of potentially relevant LOH events:
     - In case of HRD: LOH is reported for BRCA1, BRCA2, PALB2, RAD51C
     - In case of MSI: LOH is reported for MLH1, MSH2, MSH6, PMS2, EPCAM
+  - Evidence labeled as having `NO_BENEFIT` from PROTECT are filtered out for reporting.
 - [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.8)
   - Only show every source name once in clinical evidence section.
   - Fix bug with selecting variants that are unreported but have evidence.

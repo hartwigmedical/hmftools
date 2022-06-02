@@ -6,10 +6,10 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class LilacRecord {
+public abstract class LilacAllele {
 
     @NotNull
-    public abstract String allele();
+    public abstract String name();
 
     public abstract int refFragments();
 

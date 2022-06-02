@@ -48,7 +48,7 @@ public class ImmunologyChapter implements ReportChapter {
 
         document.add(Tables.createWrapping(qc, "HLA QC"));
 
-        String title = "HLA Alleles (" + report.lilac().records().size() + ")";
-        document.add(HLAAlleleTable.build(title, contentWidth(), report.lilac().records()));
+        String title = "HLA Alleles (" + report.lilac().alleles().size() + ")";
+        document.add(HLAAlleleTable.build(title, contentWidth(), report.lilac().alleles()));
     }
 }

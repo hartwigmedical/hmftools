@@ -9,9 +9,9 @@ public final class LilacTestFactory {
     }
 
     @NotNull
-    public static ImmutableLilacRecord.Builder builder() {
-        return ImmutableLilacRecord.builder()
-                .allele(Strings.EMPTY)
+    public static ImmutableLilacAllele.Builder builder() {
+        return ImmutableLilacAllele.builder()
+                .name(Strings.EMPTY)
                 .refFragments(0)
                 .tumorFragments(0)
                 .tumorCopyNumber(0D)

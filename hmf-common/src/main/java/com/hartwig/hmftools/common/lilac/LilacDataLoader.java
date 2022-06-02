@@ -29,10 +29,10 @@ public final class LilacDataLoader {
         String qc = readQC(lilacQcCsv);
         LOGGER.info(" Read QC status '{}' from {}", qc, lilacQcCsv);
 
-        List<LilacRecord> records = readRecords(lilacResultCsv);
-        LOGGER.info(" Read {} LILAC records from {}", records.size(), lilacResultCsv);
+        List<LilacAllele> alleles = readAlleles(lilacResultCsv);
+        LOGGER.info(" Read {} LILAC alleles from {}", alleles.size(), lilacResultCsv);
 
-        return ImmutableLilacData.builder().qc(qc).records(records).build();
+        return ImmutableLilacData.builder().qc(qc).alleles(alleles).build();
     }
 
     @NotNull
@@ -47,19 +47,19 @@ public final class LilacDataLoader {
     }
 
     @NotNull
-    private static List<LilacRecord> readRecords(@NotNull String lilacResultCsv) throws IOException {
+    private static List<LilacAllele> readAlleles(@NotNull String lilacResultCsv) throws IOException {
         List<String> lines = Files.readAllLines(new File(lilacResultCsv).toPath());
 
         Map<String, Integer> fields = FileReaderUtils.createFieldsIndexMap(lines.get(0), DELIMITER);
 
-        List<LilacRecord> records = Lists.newArrayList();
+        List<LilacAllele> alleles = Lists.newArrayList();
         for (String line : lines.subList(1, lines.size())) {
             String[] values = line.split(DELIMITER);
 
             int rnaTotal = Integer.parseInt(values[fields.get("RnaTotal")]);
 
-            records.add(ImmutableLilacRecord.builder()
-                    .allele(values[fields.get("Allele")])
+            alleles.add(ImmutableLilacAllele.builder()
+                    .name(values[fields.get("Allele")])
                     .refFragments(Integer.parseInt(values[fields.get("RefTotal")]))
                     .tumorFragments(Integer.parseInt(values[fields.get("TumorTotal")]))
                     .rnaFragments(rnaTotal > 0 ? rnaTotal : null)
@@ -72,6 +72,6 @@ public final class LilacDataLoader {
                     .build());
         }
 
-        return records;
+        return alleles;
     }
 }

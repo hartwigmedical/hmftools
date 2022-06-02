@@ -11,8 +11,8 @@ import com.hartwig.hmftools.common.flagstat.FlagstatTestFactory;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.isofox.IsofoxTestFactory;
 import com.hartwig.hmftools.common.lilac.ImmutableLilacData;
+import com.hartwig.hmftools.common.lilac.LilacAllele;
 import com.hartwig.hmftools.common.lilac.LilacData;
-import com.hartwig.hmftools.common.lilac.LilacRecord;
 import com.hartwig.hmftools.common.lilac.LilacTestFactory;
 import com.hartwig.hmftools.common.linx.ImmutableLinxData;
 import com.hartwig.hmftools.common.linx.LinxData;
@@ -151,11 +151,11 @@ public final class OrangeReportTestFactory {
 
     @NotNull
     private static LilacData createTestLilacData() {
-        List<LilacRecord> records = Lists.newArrayList();
-        records.add(LilacTestFactory.builder().allele("Allele 1").build());
-        records.add(LilacTestFactory.builder().allele("Allele 2").build());
+        List<LilacAllele> alleles = Lists.newArrayList();
+        alleles.add(LilacTestFactory.builder().name("Allele 1").build());
+        alleles.add(LilacTestFactory.builder().name("Allele 2").build());
 
-        return ImmutableLilacData.builder().qc("PASS").records(records).build();
+        return ImmutableLilacData.builder().qc("PASS").alleles(alleles).build();
     }
 
     @NotNull
