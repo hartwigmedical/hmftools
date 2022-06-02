@@ -63,6 +63,8 @@ public class ReadContextCounter implements VariantHotspot
     private int mRawAltBaseQuality;
     private int mRawRefBaseQuality;
 
+    private int mSoftClipInsertSupport;
+
     private List<Integer> mLocalPhaseSets;
     private List<int[]> mLpsCounts;
 
@@ -109,6 +111,7 @@ public class ReadContextCounter implements VariantHotspot
         mRawRefSupport = 0;
         mRawAltBaseQuality = 0;
         mRawRefBaseQuality = 0;
+        mSoftClipInsertSupport = 0;
 
         mLocalPhaseSets = null;
         mLpsCounts = null;
@@ -172,6 +175,7 @@ public class ReadContextCounter implements VariantHotspot
     public int rawRefSupport() { return mRawRefSupport; }
     public int rawAltBaseQuality() { return mRawAltBaseQuality; }
     public int rawRefBaseQuality() { return mRawRefBaseQuality; }
+    public int softClipInsertSupport() { return mSoftClipInsertSupport; }
 
     public void addLocalPhaseSet(int lps, int readCount, double allocCount)
     {
@@ -230,6 +234,9 @@ public class ReadContextCounter implements VariantHotspot
         mRawRefSupport += rawContext.RefSupport ? 1 : 0;
         mRawAltBaseQuality += rawContext.AltQuality;
         mRawRefBaseQuality += rawContext.RefQuality;
+
+        if(rawContext.ReadIndexInSoftClip && rawContext.AltSupport)
+            ++mSoftClipInsertSupport;
 
         if(readIndex < 0)
             return UNRELATED;

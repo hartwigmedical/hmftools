@@ -75,6 +75,7 @@ public class SageConfig
     public final int MaxReadDepth;
     public final int MaxReadDepthPanel;
     public final int ReadContextFlankSize;
+    public final boolean FindSoftClipInserts;
 
     public final String RefGenomeFile;
     public final RefGenomeVersion RefGenVersion;
@@ -118,6 +119,7 @@ public class SageConfig
     private static final String COVERAGE_BED = "coverage_bed";
     private static final String VALIDATION_STRINGENCY = "validation_stringency";
     private static final String INCLUDE_MT = "include_mt";
+    private static final String FIND_SC_INSERTS = "find_sc_inserts";
 
     private static final String SPECIFIC_CHROMOSOMES = "specific_chr";
     private static final String SPECIFIC_POSITIONS = "specific_positions";
@@ -219,6 +221,8 @@ public class SageConfig
         MaxReadDepth = getConfigValue(cmd, MAX_READ_DEPTH, DEFAULT_MAX_READ_DEPTH);
         MaxReadDepthPanel = getConfigValue(cmd, MAX_READ_DEPTH_PANEL, DEFAULT_MAX_READ_DEPTH_PANEL);
         MaxRealignmentDepth = getConfigValue(cmd, MAX_REALIGNMENT_DEPTH, DEFAULT_MAX_REALIGNMENT_DEPTH);
+
+        FindSoftClipInserts = cmd.hasOption(FIND_SC_INSERTS);
 
         Filter = new FilterConfig(cmd);
         Quality = new QualityConfig(cmd);
@@ -344,6 +348,8 @@ public class SageConfig
         options.addOption(LOG_LPS_DATA, false, "Log local phasing data");
         options.addOption(PERF_WARN_TIME, true, "Log details of partitions taking longer than X seconds");
 
+        options.addOption(FIND_SC_INSERTS, false, "Search soft-clipped bases for insert candidates");
+
         commonOptions().getOptions().forEach(options::addOption);
         FilterConfig.createOptions().getOptions().forEach(options::addOption);
         addEnsemblDir(options);
@@ -412,6 +418,7 @@ public class SageConfig
         MaxReadDepth = DEFAULT_MAX_READ_DEPTH;
         MaxReadDepthPanel = DEFAULT_MAX_READ_DEPTH_PANEL;
         ReadContextFlankSize = DEFAULT_READ_CONTEXT_FLANK_SIZE;
+        FindSoftClipInserts = false;
         RefGenomeFile = "refGenome";
         HighConfidenceBed = "highConf";
         CoverageBed = "coverage";

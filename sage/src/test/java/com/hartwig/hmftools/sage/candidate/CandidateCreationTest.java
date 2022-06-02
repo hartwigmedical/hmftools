@@ -14,7 +14,6 @@ import htsjdk.samtools.SAMRecord;
 
 public class CandidateCreationTest
 {
-
     @Test
     public void testSoftClipInsert()
     {
@@ -49,8 +48,5 @@ public class CandidateCreationTest
         assertNotNull(altRead);
         assertEquals("C", altRead.Ref);
         assertEquals("C" + insertBases, altRead.Alt);
-
     }
-
-
 }

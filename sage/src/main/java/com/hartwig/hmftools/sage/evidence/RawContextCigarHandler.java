@@ -39,14 +39,18 @@ public class RawContextCigarHandler implements CigarHandler
             int readStartPos = record.getReadPositionAtReferencePosition(record.getAlignmentStart());
             int readIndex = readStartPos - 1 - record.getAlignmentStart()
                     + mVariant.position() - mVariant.alt().length() + mVariant.ref().length();
-            mResult = RawContext.inSoftClip(readIndex);
+
+            boolean altSupport = mIsInsert && element.getLength() >= mVariant.alt().length() && matchesString(record, readIndex, mVariant.alt());
+            int baseQuality = altSupport ? baseQuality(readIndex, record, mVariant.alt().length()) : 0;
+
+            mResult = RawContext.inSoftClip(readIndex, altSupport, baseQuality);
         }
     }
 
     @Override
     public void handleRightSoftClip(final SAMRecord record, final CigarElement element, int readIndex, int refPosition)
     {
-        if(mResult != null)
+        if(mResult != null && !mIsInsert)
             return;
 
         int refPositionEnd = refPosition + element.getLength() - 1;
@@ -55,21 +59,42 @@ public class RawContextCigarHandler implements CigarHandler
             throw new IllegalStateException("Variant is after record");
         }
 
-        if(mVariant.position() >= refPosition && mVariant.position() <= refPositionEnd)
+        if(mIsInsert)
         {
-            int alignmentEnd = record.getAlignmentEnd();
-            int actualIndex = record.getReadPositionAtReferencePosition(alignmentEnd) - 1 - alignmentEnd + (int) mVariant.position();
-            mResult = RawContext.inSoftClip(actualIndex);
+            // for inserts from the soft-clipped bases, the variant's position will be the last ref position prior to the SC start
+            if(mVariant.position() != record.getAlignmentEnd())
+                return;
+
+            // int readStartPos = record.getReadPositionAtReferencePosition(record.getAlignmentEnd()) - 1;
+            int readVariantStartPos = readIndex - 1;
+
+            boolean altSupport = element.getLength() >= mVariant.alt().length() && matchesString(record, readVariantStartPos, mVariant.alt());
+            int baseQuality = altSupport ? baseQuality(readVariantStartPos, record, mVariant.alt().length()) : 0;
+
+            if(!altSupport)
+                return;
+
+            mResult = RawContext.inSoftClip(readVariantStartPos, altSupport, baseQuality);
+        }
+        else
+        {
+            if(mVariant.position() >= refPosition && mVariant.position() <= refPositionEnd)
+            {
+                int alignmentEnd = record.getAlignmentEnd();
+                int actualIndex = record.getReadPositionAtReferencePosition(alignmentEnd) - 1 - alignmentEnd + (int) mVariant.position();
+
+                mResult = RawContext.inSoftClip(actualIndex, false, 0);
+            }
         }
     }
 
     @Override
-    public void handleAlignment(final SAMRecord record, final CigarElement e, int readIndex, int refPosition)
+    public void handleAlignment(final SAMRecord record, final CigarElement element, int readIndex, int refPosition)
     {
         if(mResult != null)
             return;
 
-        int refPositionEnd = refPosition + e.getLength() - 1;
+        int refPositionEnd = refPosition + element.getLength() - 1;
 
         if(refPosition <= mVariant.position() && mVariant.position() <= refPositionEnd)
         {
@@ -144,13 +169,20 @@ public class RawContextCigarHandler implements CigarHandler
 
     private static boolean matchesString(final SAMRecord record, int index, final String expected)
     {
+        if(index < 0)
+            return false;
+
+        int readLength = record.getReadBases().length;
+
         for(int i = 0; i < expected.length(); i++)
         {
-            if((byte) expected.charAt(i) != record.getReadBases()[index + i])
-            {
+            if(index + i >= readLength)
                 return false;
-            }
+
+            if((byte) expected.charAt(i) != record.getReadBases()[index + i])
+                return false;
         }
+
         return true;
     }
 

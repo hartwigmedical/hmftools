@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_IMPROPER_PAIR;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_JITTER;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_QUALITY;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.SC_INSERT_SUPPORT;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.STRAND_BIAS;
 
 import java.util.List;
@@ -83,8 +84,9 @@ public final class VariantContextFactory
 
     public static Genotype createGenotype(final ReadContextCounter counter, final String sampleId)
     {
-        return new GenotypeBuilder(sampleId)
-                .DP(counter.depth())
+        GenotypeBuilder builder = new GenotypeBuilder(sampleId);
+
+        builder.DP(counter.depth())
                 .AD(new int[] { counter.refSupport(), counter.altSupport() })
                 .attribute(READ_CONTEXT_QUALITY, counter.quality())
                 .attribute(READ_CONTEXT_COUNT, counter.counts())
@@ -95,7 +97,11 @@ public final class VariantContextFactory
                 .attribute(RAW_DEPTH, counter.rawDepth())
                 .attribute(STRAND_BIAS, counter.strandBias())
                 .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, counter.vaf())
-                .alleles(NO_CALL)
-                .make();
+                .alleles(NO_CALL);
+
+        if(counter.softClipInsertSupport() > 0)
+            builder.attribute(SC_INSERT_SUPPORT, counter.softClipInsertSupport());
+
+        return builder.make();
     }
 }
