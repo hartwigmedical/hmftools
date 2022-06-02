@@ -40,6 +40,11 @@ public class SamSlicerFactory
         return mSamSlicers.get(sampleId);
     }
 
+    public void addSamSlicer(final String sampleId, final SamSlicerInterface samSlicer)
+    {
+        mSamSlicers.put(sampleId, samSlicer);
+    }
+
     public void buildBamReaders(final SageConfig config, final IndexedFastaSequenceFile refGenome)
     {
         List<String> allSamples = Lists.newArrayList(config.TumorIds);

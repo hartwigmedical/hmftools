@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
@@ -38,7 +39,7 @@ public class RegionTask
     private final RegionResults mResults;
 
     private final SageConfig mConfig;
-    private final ReferenceSequenceFile mRefGenome;
+    private final RefGenomeInterface mRefGenome;
 
     private final CandidateStage mCandidateState;
     private final EvidenceStage mEvidenceStage;
@@ -54,7 +55,7 @@ public class RegionTask
     public static final int PC_VARIANTS = 2;
 
     public RegionTask(
-            final int taskId, final ChrBaseRegion region, final RegionResults results, final SageConfig config, final ReferenceSequenceFile refGenome,
+            final int taskId, final ChrBaseRegion region, final RegionResults results, final SageConfig config, final RefGenomeInterface refGenome,
             final List<VariantHotspot> hotspots, final List<BaseRegion> panelRegions, final List<TranscriptData> transcripts,
             final List<BaseRegion> highConfidenceRegions, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap,
             final PhaseSetCounter phaseSetCounter, final Coverage coverage, final SamSlicerFactory samSlicerFactory)
@@ -65,7 +66,7 @@ public class RegionTask
         mConfig = config;
         mRefGenome = refGenome;
 
-        mCandidateState = new CandidateStage(config, refGenome, hotspots, panelRegions, highConfidenceRegions, coverage, samSlicerFactory);
+        mCandidateState = new CandidateStage(config, hotspots, panelRegions, highConfidenceRegions, coverage, samSlicerFactory);
         mEvidenceStage = new EvidenceStage(config, refGenome, qualityRecalibrationMap, phaseSetCounter, samSlicerFactory);
 
         mVariantDeduper = new VariantDeduper(transcripts);

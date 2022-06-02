@@ -59,16 +59,15 @@ public class CandidateEvidence
             }
         };
 
-        List<AltContext> altContexts = readBam(samSlicer, bounds, consumer, refContextCache);
+        List<AltContext> altContexts = readBam(samSlicer, consumer, refContextCache);
 
         mTotalReadsProcessed += refContextConsumer.getReadCount();
 
         return altContexts;
     }
 
-    @NotNull
     private List<AltContext> readBam(
-            final SamSlicerInterface samSlicer, final ChrBaseRegion bounds, final Consumer<SAMRecord> recordConsumer, final RefContextCache refContextCache)
+            final SamSlicerInterface samSlicer, final Consumer<SAMRecord> recordConsumer, final RefContextCache refContextCache)
     {
         final List<AltContext> altContexts = Lists.newArrayList();
 

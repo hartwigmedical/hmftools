@@ -9,6 +9,7 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.RefSequence;
@@ -32,7 +33,8 @@ public class RegionAppendTask implements Callable
 
     private final SageConfig mConfig;
     private final EvidenceStage mEvidenceStage;
-    private final IndexedFastaSequenceFile mRefGenome;
+    private final IndexedFastaSequenceFile mRefGenomeFile;
+    private final RefGenomeSource mRefGenome;
 
     private final List<VariantContext> mOriginalVariants;
     private final List<VariantContext> mFinalVariants;
@@ -48,12 +50,13 @@ public class RegionAppendTask implements Callable
         mFinalVariants = Lists.newArrayList();
 
         mConfig = config;
-        mRefGenome = refGenome;
+        mRefGenomeFile = refGenome;
+        mRefGenome = new RefGenomeSource(mRefGenomeFile);
 
         SamSlicerFactory samSlicerFactory = new SamSlicerFactory();
-        samSlicerFactory.buildBamReaders(mConfig, mRefGenome);
+        samSlicerFactory.buildBamReaders(mConfig, mRefGenomeFile);
 
-        mEvidenceStage = new EvidenceStage(config, refGenome, qualityRecalibrationMap, new PhaseSetCounter(), samSlicerFactory);
+        mEvidenceStage = new EvidenceStage(config, mRefGenome, qualityRecalibrationMap, new PhaseSetCounter(), samSlicerFactory);
     }
 
     public List<VariantContext> finalVariants() { return mFinalVariants; }
@@ -63,7 +66,7 @@ public class RegionAppendTask implements Callable
     {
         SG_LOGGER.trace("{}: region({}) finding evidence", mTaskId, mRegion);
 
-        RefSequence refSequence = new RefSequence(mRegion, mRefGenome);
+        RefSequence refSequence = new RefSequence(mRegion, mRefGenomeFile);
 
         List<Candidate> candidates = mOriginalVariants.stream()
                 .map(x -> CandidateSerialization.toCandidate(x, refSequence)).collect(Collectors.toList());

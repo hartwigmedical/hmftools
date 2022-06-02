@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.SageConfig;
@@ -29,7 +30,7 @@ public class EvidenceStage
     private final VariantPhaser mVariantPhaser;
 
     public EvidenceStage(
-            final SageConfig config, final ReferenceSequenceFile refGenome, final Map<String,QualityRecalibrationMap> qualityRecalibrationMap,
+            final SageConfig config, final RefGenomeInterface refGenome, final Map<String,QualityRecalibrationMap> qualityRecalibrationMap,
             final PhaseSetCounter phaseSetCounter, final SamSlicerFactory samSlicerFactory)
     {
         mConfig = config;

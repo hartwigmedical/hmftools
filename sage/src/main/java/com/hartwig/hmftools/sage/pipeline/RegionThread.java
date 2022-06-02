@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -28,7 +29,8 @@ public class RegionThread extends Thread
 {
     private final String mChromosome;
     private final SageConfig mConfig;
-    private final IndexedFastaSequenceFile mRefGenome;
+    private final IndexedFastaSequenceFile mRefGenomeFile;
+    private final RefGenomeSource mRefGenome;
 
     private final Map<String, QualityRecalibrationMap> mQualityRecalibrationMap;
     private final Coverage mCoverage;
@@ -55,7 +57,8 @@ public class RegionThread extends Thread
         mChromosome = chromosome;
         mConfig = config;
         mSamSlicerFactory = new SamSlicerFactory();
-        mRefGenome = loadRefGenome(config.RefGenomeFile);
+        mRefGenomeFile = loadRefGenome(config.RefGenomeFile);
+        mRefGenome = new RefGenomeSource(mRefGenomeFile);
         mQualityRecalibrationMap = qualityRecalibrationMap;
         mCoverage = coverage;
         mPhaseSetCounter = phaseSetCounter;
@@ -69,7 +72,7 @@ public class RegionThread extends Thread
         mPartitions = partitions;
 
         // create readers for each sample and BAM
-        mSamSlicerFactory.buildBamReaders(mConfig, mRefGenome);
+        mSamSlicerFactory.buildBamReaders(mConfig, mRefGenomeFile);
 
         start();
     }

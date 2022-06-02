@@ -19,8 +19,6 @@ import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.CandidateEvidence;
 import com.hartwig.hmftools.sage.common.RefSequence;
 
-import htsjdk.samtools.reference.ReferenceSequenceFile;
-
 public class CandidateStage
 {
     private final SageConfig mConfig;
@@ -31,7 +29,7 @@ public class CandidateStage
     private final SamSlicerFactory mSamSlicerFactory;
 
     public CandidateStage(
-            final SageConfig config, final ReferenceSequenceFile refGenome, final List<VariantHotspot> hotspots,
+            final SageConfig config, final List<VariantHotspot> hotspots,
             final List<BaseRegion> panelRegions, final List<BaseRegion> highConfidenceRegions, final Coverage coverage,
             final SamSlicerFactory samSlicerFactory)
     {

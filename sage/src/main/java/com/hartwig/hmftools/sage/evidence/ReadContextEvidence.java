@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.SageConfig;
@@ -27,7 +28,7 @@ public class ReadContextEvidence
 {
     private final int mTypicalReadLength;
     private final SageConfig mSageConfig;
-    private final ReferenceSequenceFile mRefGenome;
+    private final RefGenomeInterface mRefGenome;
     private final ReadContextCounterFactory mFactory;
     private final Map<String,QualityRecalibrationMap> mQualityRecalibrationMap;
 
@@ -40,7 +41,7 @@ public class ReadContextEvidence
     private VariantPhaser mVariantPhaser;
 
     public ReadContextEvidence(
-            final SageConfig config, final ReferenceSequenceFile refGenome,
+            final SageConfig config, final RefGenomeInterface refGenome,
             final Map<String,QualityRecalibrationMap> qualityRecalibrationMap)
     {
         mSageConfig = config;

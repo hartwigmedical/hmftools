@@ -397,10 +397,10 @@ public class SageConfig
     {
         SampleDataDir = "";
         ResourceDir = "";
-        ReferenceIds = Lists.newArrayList("referencIds");
-        ReferenceBams = Lists.newArrayList("referenceBams");
-        TumorIds = Lists.newArrayList("tumorIds");
-        TumorBams = Lists.newArrayList("tumorBams");
+        ReferenceIds = Lists.newArrayList();
+        ReferenceBams = Lists.newArrayList();
+        TumorIds = Lists.newArrayList();
+        TumorBams = Lists.newArrayList();
         PanelBed = "panel";
         PanelOnly = false;
         MnvEnabled = DEFAULT_MNV;
