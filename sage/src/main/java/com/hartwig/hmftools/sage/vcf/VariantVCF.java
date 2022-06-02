@@ -67,6 +67,9 @@ public class VariantVCF implements AutoCloseable
     private static final String READ_CONTEXT_AF_DESCRIPTION =
             "Allelic frequency calculated from read context counts as (Full + Partial + Core + Realigned + Alt) / Coverage";
 
+    public static final String SC_INSERT_SUPPORT = "SC_INS_COUNT";
+    private static final String SC_INSERT_SUPPORT_DESCRIPTION = "Soft-clip insert support";
+
     public static final String READ_CONTEXT_IMPROPER_PAIR = "RC_IPC";
     private static final String READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION = "Read context improper pair count";
 
@@ -154,24 +157,19 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_KEY)));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_ALLELE_DEPTHS)));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.DEPTH_KEY)));
-        header.addMetaDataLine(new VCFFormatHeaderLine(VCFConstants.ALLELE_FREQUENCY_KEY,
-                1,
-                VCFHeaderLineType.Float,
-                READ_CONTEXT_AF_DESCRIPTION));
+        header.addMetaDataLine(new VCFFormatHeaderLine(
+                VCFConstants.ALLELE_FREQUENCY_KEY, 1, VCFHeaderLineType.Float, READ_CONTEXT_AF_DESCRIPTION));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_JITTER, 3, VCFHeaderLineType.Integer, READ_CONTEXT_JITTER_DESCRIPTION));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_ALLELIC_DEPTH, 2, VCFHeaderLineType.Integer, "Raw allelic depth"));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_ALLELIC_BASE_QUALITY, 2, VCFHeaderLineType.Integer, "Raw allelic base quality"));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_DEPTH, 1, VCFHeaderLineType.Integer, "Raw read depth"));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, 7, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESCRIPTION));
-        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_IMPROPER_PAIR,
-                1,
-                VCFHeaderLineType.Integer,
-                READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION));
-        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_QUALITY,
-                7,
-                VCFHeaderLineType.Integer,
-                READ_CONTEXT_QUALITY_DESCRIPTION));
+        header.addMetaDataLine(new VCFFormatHeaderLine(SC_INSERT_SUPPORT, 1, VCFHeaderLineType.Integer, SC_INSERT_SUPPORT_DESCRIPTION));
+        header.addMetaDataLine(new VCFFormatHeaderLine(
+                READ_CONTEXT_IMPROPER_PAIR, 1, VCFHeaderLineType.Integer, READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION));
+        header.addMetaDataLine(new VCFFormatHeaderLine(
+                READ_CONTEXT_QUALITY, 7, VCFHeaderLineType.Integer, READ_CONTEXT_QUALITY_DESCRIPTION));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(STRAND_BIAS, 1, VCFHeaderLineType.Float, STRAND_BIAS_DESC));
 
@@ -180,22 +178,14 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_INDEX, 1, VCFHeaderLineType.Integer, "Read context index"));
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_LEFT_FLANK, 1, VCFHeaderLineType.String, "Read context left flank"));
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_RIGHT_FLANK, 1, VCFHeaderLineType.String, "Read context right flank"));
-        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_REPEAT_COUNT,
-                1,
-                VCFHeaderLineType.Integer,
-                READ_CONTEXT_REPEAT_COUNT_DESCRIPTION));
-        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_REPEAT_SEQUENCE,
-                1,
-                VCFHeaderLineType.String,
-                READ_CONTEXT_REPEAT_SEQUENCE_DESCRIPTION));
-        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_MICRO_HOMOLOGY,
-                1,
-                VCFHeaderLineType.String,
-                READ_CONTEXT_MICRO_HOMOLOGY_DESCRIPTION));
-        header.addMetaDataLine(new VCFInfoHeaderLine(MIXED_SOMATIC_GERMLINE,
-                1,
-                VCFHeaderLineType.Integer,
-                MIXED_SOMATIC_GERMLINE_DESCRIPTION));
+        header.addMetaDataLine(new VCFInfoHeaderLine(
+                READ_CONTEXT_REPEAT_COUNT,1, VCFHeaderLineType.Integer, READ_CONTEXT_REPEAT_COUNT_DESCRIPTION));
+        header.addMetaDataLine(new VCFInfoHeaderLine(
+                READ_CONTEXT_REPEAT_SEQUENCE, 1, VCFHeaderLineType.String, READ_CONTEXT_REPEAT_SEQUENCE_DESCRIPTION));
+        header.addMetaDataLine(new VCFInfoHeaderLine(
+                READ_CONTEXT_MICRO_HOMOLOGY, 1, VCFHeaderLineType.String, READ_CONTEXT_MICRO_HOMOLOGY_DESCRIPTION));
+        header.addMetaDataLine(new VCFInfoHeaderLine(
+                MIXED_SOMATIC_GERMLINE, 1, VCFHeaderLineType.Integer, MIXED_SOMATIC_GERMLINE_DESCRIPTION));
 
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_MNV_FILTER, "Filter duplicate MNV"));
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_SNV_MNV_FILTER, "Variant duplicate MNV vs SNV"));

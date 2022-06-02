@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.SC_INSERT_MIN_FLANK_LENGTH;
+import static com.hartwig.hmftools.sage.SageConstants.SC_INSERT_MIN_LENGTH;
 
 import java.util.List;
 import java.util.Optional;
@@ -106,10 +107,12 @@ public class RefContextConsumer implements Consumer<SAMRecord>
                         .ifPresent(altReads::add);
             }
 
-            /*
             @Override
             public void handleLeftSoftClip(final SAMRecord record, final CigarElement element)
             {
+                if(!mConfig.FindSoftClipInserts)
+                    return;
+
                 AltRead altRead = processSoftClip(
                         record, element.getLength(), 0, refBases, readExceedsQuality, numberOfEvents, true);
 
@@ -120,14 +123,15 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             @Override
             public void handleRightSoftClip(final SAMRecord record, final CigarElement element, int readIndex, int refPosition)
             {
+                if(!mConfig.FindSoftClipInserts)
+                    return;
+
                 AltRead altRead = processSoftClip(
                         record, element.getLength(), readIndex, refBases, readExceedsQuality, numberOfEvents, false);
 
                 if(altRead != null)
                     altReads.add(altRead);
             }
-            */
-
         };
 
         CigarTraversal.traverseCigar(record, handler);
@@ -304,8 +308,6 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         if(scLength < SC_INSERT_MIN_FLANK_LENGTH + 1)
             return null;
 
-        boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.MinMapQuality;
-
         AltRead altRead = processSoftClip(
                 record.getAlignmentStart(), record.getAlignmentEnd(), record.getReadString(), scLength, scReadIndex, refBases, onLeft);
 
@@ -341,9 +343,11 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         final ReadContext readContext =
                 (findReadContext || true) ? mReadContextFactory.createInsertContext(altRead.Alt, refPosition, readIndex, record, refBases) : null;
 
-        SG_LOGGER.debug("soft-clipped insert({}:{} {}>{}) read(index={} {}) softClip(len={} index={} on {})",
+        SG_LOGGER.info("soft-clipped insert({}:{} {}>{}) read(index={} {}) softClip(len={} index={} on {})",
                 record.getContig(), refPosition, altRead.Ref, altRead.Alt, readIndex, record.getReadName(),
                 scLength, scReadIndex, onLeft ? "left" : "right");
+
+        boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.MinMapQuality;
 
         return new AltRead(refContext, altRead.Ref, altRead.Alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext);
     }
@@ -364,6 +368,9 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             int scMatchIndex = scBases.lastIndexOf(requiredRefBases);
 
             if(scMatchIndex <= 0)
+                return null;
+
+            if(scMatchIndex < SC_INSERT_MIN_LENGTH)
                 return null;
 
             int scIndexMatchEnd = scMatchIndex + SC_INSERT_MIN_FLANK_LENGTH - 1;

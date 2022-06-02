@@ -2,8 +2,6 @@ package com.hartwig.hmftools.sage.pipeline;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -31,7 +29,9 @@ public class RegionResults
     public synchronized void addFinalVariants(final int taskId, final List<SageVariant> variants)
     {
         mTotaVariants += variants.size();
-        mVcfWriter.writeVariants(taskId, variants);
+
+        if(mVcfWriter != null)
+            mVcfWriter.writeVariants(taskId, variants);
     }
 
     public synchronized void addTotalReads(int totalReads)
@@ -39,7 +39,12 @@ public class RegionResults
         mTotalReads += totalReads;
     }
 
-    public synchronized void addPerfCounters(final List<PerformanceCounter> perfCounters, int maxMemory)
+    public synchronized void addMaxMemory(int maxMemory)
+    {
+        mMaxMemoryUsage = max(mMaxMemoryUsage, maxMemory);
+    }
+
+    public synchronized void addPerfCounters(final List<PerformanceCounter> perfCounters)
     {
         if(mPerfCounters.isEmpty())
         {
@@ -52,8 +57,6 @@ public class RegionResults
                 mPerfCounters.get(j).merge(perfCounters.get(j));
             }
         }
-
-        mMaxMemoryUsage = max(mMaxMemoryUsage, maxMemory);
     }
 
     public int totalReads() { return mTotalReads; }

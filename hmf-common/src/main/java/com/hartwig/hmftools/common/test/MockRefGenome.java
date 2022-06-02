@@ -8,16 +8,42 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLength;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 // test implementation of the ref genome
 public class MockRefGenome implements RefGenomeInterface
 {
     public final Map<String,String> RefGenomeMap;
+    public final Map<String,Integer> ChromosomeLengths;
 
     public MockRefGenome()
     {
         RefGenomeMap = Maps.newHashMap();
+        ChromosomeLengths = Maps.newHashMap();
+    }
+
+    public void populateChromosomeLengths(final RefGenomeVersion version)
+    {
+        RefGenomeCoordinates coords = version == RefGenomeVersion.V38 ? RefGenomeCoordinates.COORDS_38 : RefGenomeCoordinates.COORDS_37;
+        coords.Lengths.entrySet().stream().forEach(x -> ChromosomeLengths.put(x.getKey().toString(), x.getValue()));
+    }
+
+    @Override
+    public int getChromosomeLength(final String chromosome)
+    {
+        if(ChromosomeLengths.containsKey(chromosome))
+            return ChromosomeLengths.get(chromosome);
+
+        return RefGenomeCoordinates.COORDS_37.length(chromosome);
+    }
+
+    @Override
+    public byte[] getBases(final String chromosome, int posStart, int posEnd)
+    {
+        return getBaseString(chromosome, posStart, posEnd).getBytes();
     }
 
     @Override

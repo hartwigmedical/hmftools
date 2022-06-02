@@ -6,5 +6,9 @@ public interface RefGenomeInterface
 {
     String getBaseString(final String chromosome, int posStart, int posEnd);
 
-    String getBaseString(final String chromosome, final List<int[]> baseRanges)
+    String getBaseString(final String chromosome, final List<int[]> baseRanges);
+
+    int getChromosomeLength(final String chromosome);
+
+    byte[] getBases(final String chromosome, int posStart, int posEnd);
 ;}

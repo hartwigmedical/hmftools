@@ -8,26 +8,27 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.common.SamSlicerFactory;
+import com.hartwig.hmftools.sage.common.SamSlicerInterface;
 import com.hartwig.hmftools.sage.phase.VariantPhaser;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.common.RefSequence;
-import com.hartwig.hmftools.sage.common.SamSlicer;
 import com.hartwig.hmftools.sage.read.NumberEvents;
 
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SamReader;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 public class ReadContextEvidence
 {
     private final int mTypicalReadLength;
     private final SageConfig mSageConfig;
-    private final ReferenceSequenceFile mRefGenome;
+    private final RefGenomeInterface mRefGenome;
     private final ReadContextCounterFactory mFactory;
     private final Map<String,QualityRecalibrationMap> mQualityRecalibrationMap;
 
@@ -40,7 +41,7 @@ public class ReadContextEvidence
     private VariantPhaser mVariantPhaser;
 
     public ReadContextEvidence(
-            final SageConfig config, final ReferenceSequenceFile refGenome,
+            final SageConfig config, final RefGenomeInterface refGenome,
             final Map<String,QualityRecalibrationMap> qualityRecalibrationMap)
     {
         mSageConfig = config;
@@ -57,7 +58,7 @@ public class ReadContextEvidence
     }
 
     public List<ReadContextCounter> collectEvidence(
-            final List<Candidate> candidates, final String sample, final SamReader bamReader, final VariantPhaser variantPhaser)
+            final List<Candidate> candidates, final String sample, final SamSlicerFactory samSlicerFactory, final VariantPhaser variantPhaser)
     {
         mReadCounters = mFactory.create(candidates);
         mLastCandidateIndex = 0;
@@ -82,9 +83,8 @@ public class ReadContextEvidence
         QualityRecalibrationMap qrMap = mQualityRecalibrationMap.get(sample);
         mQualityCalculator = new QualityCalculator(mSageConfig.Quality, qrMap, mRefSequence.IndexedBases);
 
-        final SamSlicer slicer = new SamSlicer(0, sliceRegion);
-
-        slicer.slice(bamReader, this::processReadRecord);
+        final SamSlicerInterface samSlicer = samSlicerFactory.getSamSlicer(sample, Lists.newArrayList(sliceRegion));
+        samSlicer.slice(this::processReadRecord);
 
         return mReadCounters;
     }
