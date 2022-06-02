@@ -146,7 +146,11 @@ public final class DedupIndel
             String coreString = indexedBases.coreString();
             int altIndex = indexedBases.Index - indexedBases.LeftCoreIndex;
             int postAltIndex = altIndex + variant.alt().length();
-            String coreRefString = coreString.substring(0, altIndex) + variant.ref() + coreString.substring(postAltIndex);
+            String coreRefString = coreString.substring(0, altIndex) + variant.ref();
+
+            if(postAltIndex <= coreString.length())
+                coreRefString += coreString.substring(postAltIndex);
+
             String coreFlankRefBases = indexedBases.leftFlankString() + coreRefString + indexedBases.rightFlankString();
             return new CoreFlanksRefBases(coreRefString, coreFlankRefBases);
         }

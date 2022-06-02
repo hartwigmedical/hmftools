@@ -30,8 +30,7 @@ public class ReadContextFactory
     }
 
     public ReadContext createDelContext(
-            final String ref, int refPosition, int readIndex, final SAMRecord record,
-            final IndexedBases refBases)
+            final String ref, int refPosition, int readIndex, final SAMRecord record, final IndexedBases refBases)
     {
         int refIndex = refBases.index(refPosition);
 
@@ -69,8 +68,7 @@ public class ReadContextFactory
     }
 
     public ReadContext createInsertContext(
-            final String alt, int refPosition, int readIndex,
-            final SAMRecord record, final IndexedBases refBases)
+            final String alt, int refPosition, int readIndex, final SAMRecord record, final IndexedBases refBases)
     {
         int refIndex = refBases.index(refPosition);
 

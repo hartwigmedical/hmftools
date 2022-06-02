@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.phase;
 
 import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
@@ -8,28 +9,39 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.common.TestUtils.addLocalPhaseSet;
 import static com.hartwig.hmftools.sage.common.TestUtils.clearFilters;
+import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.sage.common.TestUtils.createVariant;
 import static com.hartwig.hmftools.sage.common.TestUtils.createVariantHotspot;
 import static com.hartwig.hmftools.sage.common.TestUtils.setTumorQuality;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_GERMLINE_DEPTH;
 import static com.hartwig.hmftools.sage.dedup.DedupIndel.dedupIndels;
 import static com.hartwig.hmftools.sage.dedup.VariantDeduper.longerContainsShorter;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_INDEL_FILTER;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+
+import static junit.framework.TestCase.assertEquals;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.test.GeneTestUtils;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.IndexedBases;
+import com.hartwig.hmftools.sage.common.RegionTaskTester;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.dedup.DedupMixedGermlineSomatic;
 import com.hartwig.hmftools.sage.dedup.DedupSnvMnv;
+import com.hartwig.hmftools.sage.pipeline.RegionTask;
 
 import org.junit.Test;
+
+import htsjdk.samtools.SAMRecord;
 
 public class VariantDedupTest
 {
@@ -327,4 +339,72 @@ public class VariantDedupTest
         assertTrue(var2.isPassing()); // MNV has longer read context
     }
 
+    @Test
+    public void testIndelDedupCrash()
+    {
+        ChrBaseRegion region = new ChrBaseRegion(CHR_1, 1, 150);
+
+        RegionTaskTester tester = new RegionTaskTester();
+
+        tester.PanelRegions.add(new BaseRegion(1, 1000));
+
+        RegionTask task = tester.createRegionTask(region);
+
+        // bases from 19883401
+        String refBases = "ATGCTTATGGCACAAGGGTTTGCCTTCATGCCTGTGTTTACTGCACATAGTGCTTCTTCTTTTTTTTTTTTTTTTTTCATTTACCTCAGTAATTGTAAAAGGGCTTCAAGCCA"
+                + "CATTTCCTACAAACATTCTTAAGTCTGGCATCATACAGTGAGGTTACAGAAATGAGAACTGTGGCAAGCCCTGGAACATCACTGTGGAAGAGCAGTAACATTTATGGAAATGAATTGATAACATTCATTAAGGCTAT";
+
+        tester.RefGenome.RefGenomeMap.put(CHR_1, refBases + generateRandomBases(1100)); // need to cover the ref sequence buffer
+
+        List<SAMRecord> reads = Lists.newArrayList(
+                createSamRecord(
+                        "READ_01", CHR_1,  21,
+                        "GCCTTCATGCCTGTGTTTACTGCACATAGTGCTTCTTCTTTTTTTTTTTTTTTTTCATTTACCTCAGTAATTGTAAAAGGGCTTCAAGCCACATTTTCTAAGACACTTCTACAAACATTCTTAAGTCTGGCATCATACAGTGAGGTTACAG",
+                        "38M1D57M11I45M"),
+                createSamRecord(
+                        "READ_02", CHR_1,  25,
+                        "TCATGCCTGTGTTTACTGCACATAGTGCTTCTTCTTTTTTTTTTTTTTTTTCATTTACCTCAGTAATTGTAAAAGGGCTTCAAGCCACATTTTCTAAGACACTTCTACAAACATTCTTAAGTCTGGCATCATACAGTGAGGTTAAAGAAAT",
+                        "34M1D57M11I49M"),
+                createSamRecord(
+                        "READ_03", CHR_1,  34,
+                        "TGTTTACTGCACATAGTGCTTCTTCTTTTTTTTTTTTTTTTCATTTACCTCAGTAATTGTAAAAGGGCTTCAAGCCACATTTTCTAAGACACTTCTACAAACATTCTTAAGTCTGGCATCATACAGTGAGGTTACAGAAATGAGAACTGTG",
+                        "25M2D56M11I59M"),
+                createSamRecord(
+                        "READ_04", CHR_1,  59,
+                        "CTTTTTTTTTTTTTTTTTCATTTACCTCAGTAATTGTAAAAGGGCTTCAAGCCACATTTTCTAAGACACTTCTACAAACATTCTTAAGTCTGGCATCATACAGTGAGGTTACAGAAATGAGAACTGTGGCAAGCCCTGGAACATCACTGTG",
+                        "60M11I80M"),
+                createSamRecord(
+                        "READ_05", CHR_1,  73,
+                        "TTTTCATTTACCTCAGTAATTGTAAAAGGGCTTCAAGCCACATTTTCTAAGACACTTCTACAAACATTCTTAAGTCTGGCATCATACAGTGAGGTTACAGAAATGAGAACTGTGGCAAGCCCTGGAACATCACTGTGGAAGAGCAGTAACA",
+                        "46M11I94M"),
+                createSamRecord(
+                        "READ_06", CHR_1,  73,
+                        "TTTTCATTTACCTCAGTAATTGTAAAAGGGCTTCAAGCCACATTTTCTAAGACACTTCTACAAACATTCTTAAGTCTGGCATCATACAGTGAGGTTACAGAAATGAGAACTGTGGCAAGCCCTGGAACATCACTGTGGAAGAGCAGTAACA",
+                        "46M11I94M"),
+                createSamRecord(
+                        "READ_06", CHR_1,  1, // 19883391, with TTTCCTGGGA
+                        "TGCTTATGGCACAAGGGTTTGCCTTCTTGCCTGTGTTTACTGCACATAGTGCTTATTATTTTTTTTTTTTTTTTTCATTTACCTCAGTAATTGTAAAAGGGCTTCAAGCCACATTTTCTAAGACACTTCTACAAACATTCT",
+                        "57M1D59M25S"));
+
+        reads.get(1).setFirstOfPairFlag(false);
+        reads.get(3).setFirstOfPairFlag(false);
+        reads.get(5).setFirstOfPairFlag(false);
+
+        tester.TumorSamSlicer.ReadRecords.addAll(reads);
+        tester.TumorSamSlicer.ReadRecords.addAll(reads); // to get over qual thresholds
+
+        task.run();
+
+        SageVariant var1 = task.getVariants().stream().filter(x -> x.position() == 116).findFirst().orElse(null);
+        SageVariant var2 = task.getVariants().stream().filter(x -> x.position() == 118 && x.isIndel()).findFirst().orElse(null);
+        SageVariant var3 = task.getVariants().stream().filter(x -> x.position() == 118 && !x.isIndel()).findFirst().orElse(null);
+
+        assertNotNull(var1);
+        assertNotNull(var2);
+        assertNotNull(var3);
+
+        assertTrue(var1.isPassing());
+        assertTrue(var2.isPassing());
+        assertTrue(var3.filters().contains(DEDUP_INDEL_FILTER));
+    }
 }
