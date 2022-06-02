@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.candidate;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
+import static com.hartwig.hmftools.sage.SageConstants.SC_INSERT_MIN_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
 
 import static junit.framework.TestCase.assertEquals;
