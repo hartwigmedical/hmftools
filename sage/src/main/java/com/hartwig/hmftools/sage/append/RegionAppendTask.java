@@ -3,29 +3,25 @@ package com.hartwig.hmftools.sage.append;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.vcf.VariantContextFactory.createGenotype;
 
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.pipeline.EvidenceStage;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.cram.ref.ReferenceSource;
-import htsjdk.samtools.reference.ReferenceSequenceFile;
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
@@ -37,14 +33,15 @@ public class RegionAppendTask implements Callable
 
     private final SageConfig mConfig;
     private final EvidenceStage mEvidenceStage;
-    private final ReferenceSequenceFile mRefGenome;
+    private final IndexedFastaSequenceFile mRefGenomeFile;
+    private final RefGenomeSource mRefGenome;
 
     private final List<VariantContext> mOriginalVariants;
     private final List<VariantContext> mFinalVariants;
 
     public RegionAppendTask(
             final int taskId, final ChrBaseRegion region, final List<VariantContext> variants,
-            final SageConfig config, final ReferenceSequenceFile refGenome,
+            final SageConfig config, final IndexedFastaSequenceFile refGenome,
             final Map<String,QualityRecalibrationMap> qualityRecalibrationMap)
     {
         mTaskId = taskId;
@@ -53,24 +50,13 @@ public class RegionAppendTask implements Callable
         mFinalVariants = Lists.newArrayList();
 
         mConfig = config;
-        mRefGenome = refGenome;
+        mRefGenomeFile = refGenome;
+        mRefGenome = new RefGenomeSource(mRefGenomeFile);
 
-        Map<String,SamReader> bamReaders = Maps.newHashMap();
+        SamSlicerFactory samSlicerFactory = new SamSlicerFactory();
+        samSlicerFactory.buildBamReaders(mConfig, mRefGenomeFile);
 
-        for(int i = 0; i < mConfig.ReferenceIds.size(); i++)
-        {
-            final String sample = mConfig.ReferenceIds.get(i);
-            final String bamFile = mConfig.ReferenceBams.get(i);
-
-            SamReader bamReader = SamReaderFactory.makeDefault()
-                    .validationStringency(mConfig.Stringency)
-                    .referenceSource(new ReferenceSource(mRefGenome))
-                    .open(new File(bamFile));
-
-            bamReaders.put(sample, bamReader);
-        }
-
-        mEvidenceStage = new EvidenceStage(config, refGenome, qualityRecalibrationMap, new PhaseSetCounter(), bamReaders);
+        mEvidenceStage = new EvidenceStage(config, mRefGenome, qualityRecalibrationMap, new PhaseSetCounter(), samSlicerFactory);
     }
 
     public List<VariantContext> finalVariants() { return mFinalVariants; }
@@ -80,7 +66,7 @@ public class RegionAppendTask implements Callable
     {
         SG_LOGGER.trace("{}: region({}) finding evidence", mTaskId, mRegion);
 
-        RefSequence refSequence = new RefSequence(mRegion, mRefGenome);
+        RefSequence refSequence = new RefSequence(mRegion, mRefGenomeFile);
 
         List<Candidate> candidates = mOriginalVariants.stream()
                 .map(x -> CandidateSerialization.toCandidate(x, refSequence)).collect(Collectors.toList());

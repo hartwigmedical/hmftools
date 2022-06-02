@@ -19,6 +19,7 @@ public final class GermlineDeletion
 {
     public final String GeneName;
     public final String Chromosome;
+    public final String ChromosomeBand;
     public final int RegionStart;
     public final int RegionEnd;
     public final int DepthWindowCount;
@@ -34,13 +35,14 @@ public final class GermlineDeletion
     public final boolean Reported;
 
     public GermlineDeletion(
-            final String geneName, final String chromosome, final int regionStart, final int regionEnd, final int depthWindowCount,
-            final int exonStart, final int exonEnd, final GermlineDetectionMethod detectionMethod, final GermlineStatus normalStatus,
-            final GermlineStatus tumorStatus, final double germlineCopyNumber, final double tumorCopyNumber, final String filter,
-            final int cohortFrequency, final boolean reported)
+            final String geneName, final String chromosome, final String chromosomeBand, final int regionStart, final int regionEnd,
+            final int depthWindowCount, final int exonStart, final int exonEnd, final GermlineDetectionMethod detectionMethod,
+            final GermlineStatus normalStatus, final GermlineStatus tumorStatus, final double germlineCopyNumber, final double tumorCopyNumber,
+            final String filter, final int cohortFrequency, final boolean reported)
     {
         GeneName = geneName;
         Chromosome = chromosome;
+        ChromosomeBand = chromosomeBand;
         RegionStart = regionStart;
         RegionEnd = regionEnd;
         DepthWindowCount = depthWindowCount;
@@ -88,6 +90,7 @@ public final class GermlineDeletion
         return new StringJoiner(DELIMITER, "", "")
                 .add("gene")
                 .add("chromosome")
+                .add("chromosomeBand")
                 .add("regionStart")
                 .add("regionEnd")
                 .add("depthWindowCount")
@@ -109,6 +112,7 @@ public final class GermlineDeletion
         return new StringJoiner(DELIMITER)
                 .add(deletion.GeneName)
                 .add(deletion.Chromosome)
+                .add(deletion.ChromosomeBand)
                 .add(String.valueOf(deletion.RegionStart))
                 .add(String.valueOf(deletion.RegionEnd))
                 .add(String.valueOf(deletion.DepthWindowCount))
@@ -139,6 +143,7 @@ public final class GermlineDeletion
             deletions.add(new GermlineDeletion(
                     values[fieldsIndexMap.get("gene")],
                     values[fieldsIndexMap.get("chromosome")],
+                    fieldsIndexMap.containsKey("chromosomeBand") ? values[fieldsIndexMap.get("chromosomeBand")] : "",
                     Integer.parseInt(values[fieldsIndexMap.get("regionStart")]), Integer.parseInt(values[fieldsIndexMap.get("regionEnd")]),
                     Integer.parseInt(values[fieldsIndexMap.get("depthWindowCount")]),
                     Integer.parseInt(values[fieldsIndexMap.get("exonStart")]), Integer.parseInt(values[fieldsIndexMap.get("exonEnd")]),

@@ -4,6 +4,7 @@ import java.text.DecimalFormat;
 import java.util.List;
 
 import com.hartwig.hmftools.common.rna.GeneExpression;
+import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.orange.report.ReportResources;
 
 import org.apache.logging.log4j.LogManager;
@@ -16,7 +17,7 @@ public final class Expressions {
     private static final Logger LOGGER = LogManager.getLogger(Expressions.class);
 
     private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#.#");
-    private static final DecimalFormat PERCENTAGE = ReportResources.decimalFormat("#'%'");
+    private static final DecimalFormat TWO_DIGIT = ReportResources.decimalFormat("#.##");
 
     private Expressions() {
     }
@@ -40,26 +41,31 @@ public final class Expressions {
 
     @NotNull
     public static String percentileType(@NotNull GeneExpression expression) {
-        return PERCENTAGE.format(expression.percentileCancer() * 100);
+        return TWO_DIGIT.format(expression.percentileCancer());
     }
 
     @NotNull
     public static String foldChangeType(@NotNull GeneExpression expression) {
-        return formatFoldChange(expression.tpm() / expression.medianTpmCancer());
+        return toFoldChange(expression.tpm(), expression.medianTpmCancer());
     }
 
     @NotNull
     public static String percentileDatabase(@NotNull GeneExpression expression) {
-        return PERCENTAGE.format(expression.percentileCohort() * 100);
+        return TWO_DIGIT.format(expression.percentileCohort());
     }
 
     @NotNull
     public static String foldChangeDatabase(@NotNull GeneExpression expression) {
-        return formatFoldChange(expression.tpm() / expression.medianTpmCohort());
+        return toFoldChange(expression.tpm(), expression.medianTpmCohort());
     }
 
     @NotNull
-    private static String formatFoldChange(double foldChange) {
+    private static String toFoldChange(double expression, double median) {
+        if (Doubles.lessOrEqual(median, 0)) {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
+        double foldChange = expression / median;
         return foldChange > 1000 ? ">1000" : SINGLE_DIGIT.format(foldChange);
     }
 }

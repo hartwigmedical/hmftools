@@ -62,12 +62,13 @@ public class QualityControlChapter implements ReportChapter {
 
     private void addKeyQC(@NotNull Document document) {
         Table table = Tables.createContent(contentWidth(),
-                new float[] { 2, 1, 1, 1, 1, 1 },
-                new Cell[] { Cells.createHeader("QC"), Cells.createHeader("Fit Method"), Cells.createHeader("Mean Depth"),
-                        Cells.createHeader("Contamination"), Cells.createHeader("Uns. CN segments"),
+                new float[] { 2, 1, 1, 1, 1, 1, 1 },
+                new Cell[] { Cells.createHeader("QC"), Cells.createHeader("Ref Genome"), Cells.createHeader("Fit Method"),
+                        Cells.createHeader("Mean Depth"), Cells.createHeader("Contamination"), Cells.createHeader("Uns. Segments"),
                         Cells.createHeader("Deleted Genes") });
 
         table.addCell(Cells.createContent(purpleQCString()));
+        table.addCell(Cells.createContent(report.refGenomeVersion().toString()));
         table.addCell(Cells.createContent(report.purple().fittedPurityMethod().toString()));
         table.addCell(Cells.createContent(String.valueOf(report.purple().qc().amberMeanDepth())));
         table.addCell(Cells.createContent(PERCENTAGE_FORMAT.format(report.purple().qc().contamination() * 100)));
@@ -99,9 +100,8 @@ public class QualityControlChapter implements ReportChapter {
 
         Table flagstat = Tables.createContent(contentWidth(),
                 new float[] { 1, 1, 1, 1, 1 },
-                new Cell[] { Cells.createHeader(Strings.EMPTY), Cells.createHeader("Unique RC"),
-                        Cells.createHeader("Secondary RC"), Cells.createHeader("Supplementary RC"),
-                        Cells.createHeader("Mapped Proportion") });
+                new Cell[] { Cells.createHeader(Strings.EMPTY), Cells.createHeader("Unique RC"), Cells.createHeader("Secondary RC"),
+                        Cells.createHeader("Supplementary RC"), Cells.createHeader("Mapped Proportion") });
 
         flagstat.addCell(Cells.createContent("Ref Sample"));
         flagstat.addCell(Cells.createContent(String.valueOf(refFlagstat.uniqueReadCount())));
@@ -124,9 +124,8 @@ public class QualityControlChapter implements ReportChapter {
 
         Table coverage = Tables.createContent(contentWidth(),
                 new float[] { 1, 1, 1, 1, 1 },
-                new Cell[] { Cells.createHeader(Strings.EMPTY), Cells.createHeader("Mean Coverage"),
-                        Cells.createHeader("SD Coverage"), Cells.createHeader("Median Coverage"),
-                        Cells.createHeader("Mad Coverage") });
+                new Cell[] { Cells.createHeader(Strings.EMPTY), Cells.createHeader("Mean Coverage"), Cells.createHeader("SD Coverage"),
+                        Cells.createHeader("Median Coverage"), Cells.createHeader("Mad Coverage") });
 
         coverage.addCell(Cells.createContent("Ref Sample"));
         coverage.addCell(Cells.createContent(SINGLE_DIGIT.format(refMetrics.meanCoverage())));
@@ -150,8 +149,8 @@ public class QualityControlChapter implements ReportChapter {
         Table percentages = Tables.createContent(contentWidth(),
                 new float[] { 1, 1, 1, 1, 1, 1, 1, 1, 1 },
                 new Cell[] { Cells.createHeader(Strings.EMPTY), Cells.createHeader("Adapter"), Cells.createHeader("BaseQ"),
-                        Cells.createHeader("Capped"), Cells.createHeader("Dupe"), Cells.createHeader("MapQ"),
-                        Cells.createHeader("Overlap"), Cells.createHeader("Unpaired"), Cells.createHeader("Total") });
+                        Cells.createHeader("Capped"), Cells.createHeader("Dupe"), Cells.createHeader("MapQ"), Cells.createHeader("Overlap"),
+                        Cells.createHeader("Unpaired"), Cells.createHeader("Total") });
 
         percentages.addCell(Cells.createContent("Ref Sample"));
         percentages.addCell(Cells.createContent(percent(refMetrics.pctExcAdapter())));

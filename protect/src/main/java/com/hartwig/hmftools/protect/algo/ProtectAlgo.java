@@ -109,7 +109,10 @@ public class ProtectAlgo {
                 config.purpleSomaticVariantVcf(),
                 config.purpleGermlineDriverCatalogTsv(),
                 config.purpleGermlineVariantVcf(),
-                config.purpleGeneCopyNumberTsv());
+                config.purpleGeneCopyNumberTsv(),
+                null,
+                null,
+                null);
     }
 
     @NotNull
@@ -131,7 +134,7 @@ public class ProtectAlgo {
                 purpleData.unreportedSomaticVariants());
         printExtraction("somatic and germline variants", variantEvidence);
         List<ProtectEvidence> copyNumberEvidence =
-                copyNumberEvidenceFactory.evidence(purpleData.reportableGainsLosses(), purpleData.unreportedGainsLosses());
+                copyNumberEvidenceFactory.evidence(purpleData.reportableSomaticGainsLosses(), purpleData.unreportedSomaticGainsLosses());
         printExtraction("amplifications and deletions", copyNumberEvidence);
         List<ProtectEvidence> disruptionEvidence = disruptionEvidenceFactory.evidence(linxData.homozygousDisruptions());
         printExtraction("homozygous disruptions", disruptionEvidence);

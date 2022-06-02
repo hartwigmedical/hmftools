@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.orange;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.orange.report.ImmutableReportConfig;
 import com.hartwig.hmftools.orange.report.ReportConfig;
@@ -40,16 +41,20 @@ public final class OrangeConfigTestFactory {
     private static final String PURPLE_SOMATIC_VARIANT_VCF = RUN_DIRECTORY + "/purple/tumor_sample.purple.somatic.vcf";
     private static final String PURPLE_GERMLINE_VARIANT_VCF = RUN_DIRECTORY + "/purple/tumor_sample.purple.germline.vcf";
     private static final String PURPLE_GENE_COPY_NUMBER_TSV = RUN_DIRECTORY + "/purple/tumor_sample.purple.cnv.gene.tsv";
+    private static final String PURPLE_GERMLINE_DELETION_TSV = RUN_DIRECTORY + "/purple/tumor_sample.purple.germline.deletion.tsv";
     private static final String PURPLE_PLOT_DIRECTORY = RUN_DIRECTORY + "/purple/plot";
     private static final String LINX_FUSION_TSV = RUN_DIRECTORY + "/linx/tumor_sample.linx.fusion.tsv";
     private static final String LINX_BREAKEND_TSV = RUN_DIRECTORY + "/linx/tumor_sample.linx.breakend.tsv";
     private static final String LINX_DRIVER_CATALOG_TSV = RUN_DIRECTORY + "/linx/tumor_sample.linx.driver.catalog.tsv";
     private static final String LINX_DRIVER_TSV = RUN_DIRECTORY + "/linx/tumor_sample.linx.drivers.tsv";
+    private static final String LINX_GERMLINE_DISRUPTION_TSV = RUN_DIRECTORY + "/linx_germline/tumor_sample.linx.germline.disruption.tsv";
     private static final String LINX_PLOT_DIRECTORY = RUN_DIRECTORY + "/linx/plot";
     private static final String ISOFOX_SUMMARY_CSV = RUN_DIRECTORY + "/isofox/tumor_sample.summary.csv";
     private static final String ISOFOX_GENE_DATA_CSV = RUN_DIRECTORY + "/isofox/tumor_sample.gene_data.csv";
     private static final String ISOFOX_FUSION_CSV = RUN_DIRECTORY + "/isofox/tumor_sample.pass_fusions.csv";
     private static final String ISOFOX_ALT_SPLICE_JUNCTION_CSV = RUN_DIRECTORY + "/isofox/tumor_sample.alt_splice_junc.csv";
+    private static final String LILAC_RESULT_CSV = RUN_DIRECTORY + "/lilac/tumor_sample.lilac.csv";
+    private static final String LILAC_QC_CSV = RUN_DIRECTORY + "/lilac/tumor_sample.lilac.qc.csv";
     private static final String ANNOTATED_VIRUS_TSV = RUN_DIRECTORY + "/virusbreakend/tumor_sample.virus.annotated.tsv";
     private static final String CHORD_PREDICTION_TXT = RUN_DIRECTORY + "/chord/tumor_sample_chord_prediction.txt";
     private static final String CUPPA_RESULT_CSV = RUN_DIRECTORY + "/cuppa/tumor_sample.cup.data.csv";
@@ -70,6 +75,7 @@ public final class OrangeConfigTestFactory {
                 .rnaConfig(null)
                 .reportConfig(reportConfig)
                 .addPrimaryTumorDoids(MELANOMA_DOID)
+                .refGenomeVersion(RefGenomeVersion.V37)
                 .outputDir(Strings.EMPTY)
                 .doidJsonFile(DOID_JSON)
                 .cohortMappingTsv(COHORT_MAPPING_TSV)
@@ -91,12 +97,16 @@ public final class OrangeConfigTestFactory {
                 .purpleGermlineDriverCatalogTsv(PURPLE_GERMLINE_DRIVER_CATALOG_TSV)
                 .purpleSomaticVariantVcf(PURPLE_SOMATIC_VARIANT_VCF)
                 .purpleGermlineVariantVcf(PURPLE_GERMLINE_VARIANT_VCF)
+                .purpleGermlineDeletionTsv(PURPLE_GERMLINE_DELETION_TSV)
                 .purplePlotDirectory(PURPLE_PLOT_DIRECTORY)
                 .linxFusionTsv(LINX_FUSION_TSV)
                 .linxBreakendTsv(LINX_BREAKEND_TSV)
                 .linxDriverCatalogTsv(LINX_DRIVER_CATALOG_TSV)
                 .linxDriverTsv(LINX_DRIVER_TSV)
+                .linxGermlineDisruptionTsv(LINX_GERMLINE_DISRUPTION_TSV)
                 .linxPlotDirectory(LINX_PLOT_DIRECTORY)
+                .lilacResultCsv(LILAC_RESULT_CSV)
+                .lilacQcCsv(LILAC_QC_CSV)
                 .annotatedVirusTsv(ANNOTATED_VIRUS_TSV)
                 .chordPredictionTxt(CHORD_PREDICTION_TXT)
                 .cuppaResultCsv(CUPPA_RESULT_CSV)

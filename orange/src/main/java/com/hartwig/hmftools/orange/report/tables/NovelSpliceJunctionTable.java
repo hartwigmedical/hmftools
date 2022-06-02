@@ -24,13 +24,22 @@ public final class NovelSpliceJunctionTable {
         }
 
         Table table = Tables.createContent(width,
-                new float[] { 1, 1, 1, 1, 1, 1, 1, 1 },
-                new Cell[] { Cells.createHeader("Name"), Cells.createHeader("Pos (Up)"), Cells.createHeader("Pos (Down)"),
-                        Cells.createHeader("SV Type"), Cells.createHeader("Junction Up/Down"), Cells.createHeader("Depth Up/Down"),
-                        Cells.createHeader("Frag support (split/realigned/discordant)"), Cells.createHeader("Cohort freq") });
+                new float[] { 1, 1, 2, 2, 2, 2, 3, 1, 1 },
+                new Cell[] { Cells.createHeader("Gene"), Cells.createHeader("Chr."), Cells.createHeader("Junc (Start)"),
+                        Cells.createHeader("Junc (End)"), Cells.createHeader("Type"), Cells.createHeader("Depth S/E"),
+                        Cells.createHeader("Region S/E"), Cells.createHeader("Frag Count"),
+                        Cells.createHeader("Cohort freq") });
 
         for (NovelSpliceJunction junction : sort(junctions)) {
-            // TODO
+            table.addCell(Cells.createContent(junction.geneName()));
+            table.addCell(Cells.createContent(junction.chromosome()));
+            table.addCell(Cells.createContent(String.valueOf(junction.junctionStart())));
+            table.addCell(Cells.createContent(String.valueOf(junction.junctionEnd())));
+            table.addCell(Cells.createContent(junction.type()));
+            table.addCell(Cells.createContent(junction.depthStart() + "/"  + junction.depthEnd()));
+            table.addCell(Cells.createContent(junction.regionStart() + "/"  + junction.regionEnd()));
+            table.addCell(Cells.createContent(String.valueOf(junction.fragmentCount())));
+            table.addCell(Cells.createContent(String.valueOf(junction.cohortFrequency())));
         }
 
         return Tables.createWrapping(table, title);

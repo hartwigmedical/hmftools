@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.SageConfig;
 
@@ -91,5 +92,25 @@ public class ChromosomePartition
 
         return partitions;
     }
+
+    public static List<ChrBaseRegion> getPanelRegions(final ChrBaseRegion slice, final List<BaseRegion> panel)
+    {
+        List<ChrBaseRegion> regions = Lists.newArrayList();
+
+        for(final BaseRegion panelRegion : panel)
+        {
+            if(panelRegion.start() <= slice.end() && panelRegion.end() >= slice.start())
+            {
+                ChrBaseRegion overlap = new ChrBaseRegion(slice.Chromosome,
+                        Math.max(panelRegion.start(), slice.start()),
+                        Math.min(panelRegion.end(), slice.end()));
+
+                regions.add(overlap);
+            }
+        }
+
+        return regions;
+    }
+
 
 }

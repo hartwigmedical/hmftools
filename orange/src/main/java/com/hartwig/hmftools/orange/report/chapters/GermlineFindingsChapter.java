@@ -12,6 +12,8 @@ import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.selection.GermlineVariantSelector;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.tables.GermlineDeletionTable;
+import com.hartwig.hmftools.orange.report.tables.GermlineDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.GermlineVariantTable;
 import com.hartwig.hmftools.orange.report.tables.PharmacogeneticsTable;
 import com.hartwig.hmftools.orange.report.util.Cells;
@@ -28,6 +30,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class GermlineFindingsChapter implements ReportChapter {
 
+    private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#.#");
     private static final DecimalFormat PERCENTAGE_FORMAT = ReportResources.decimalFormat("#.0'%'");
 
     @NotNull
@@ -54,8 +57,11 @@ public class GermlineFindingsChapter implements ReportChapter {
     @Override
     public void render(@NotNull final Document document) {
         document.add(new Paragraph(name()).addStyle(ReportResources.chapterTitleStyle()));
+
         if (reportGermline) {
             addGermlineVariants(document);
+            addGermlineDeletions(document);
+            addGermlineDisruptions(document);
             addMVLHAnalysis(document);
             addGermlineCNAberrations(document);
             addPharmacogenetics(document);
@@ -71,6 +77,16 @@ public class GermlineFindingsChapter implements ReportChapter {
         List<ReportableVariant> nonDriverVariants = GermlineVariantSelector.selectNonDrivers(report.purple().unreportedGermlineVariants());
         String titleNonDrivers = "Other potentially relevant variants (" + nonDriverVariants.size() + ")";
         document.add(GermlineVariantTable.build(titleNonDrivers, contentWidth(), nonDriverVariants));
+    }
+
+    private void addGermlineDeletions(@NotNull Document document) {
+        String title = "Driver germline deletions (" + report.purple().reportableGermlineDeletions().size() + ")";
+        document.add(GermlineDeletionTable.build(title, contentWidth(), report.purple().reportableGermlineDeletions()));
+    }
+
+    private void addGermlineDisruptions(@NotNull Document document) {
+        String title = "Driver germline disruptions (" + report.linx().reportableGermlineDisruptions().size() + ")";
+        document.add(GermlineDisruptionTable.build(title, contentWidth(), report.linx().reportableGermlineDisruptions()));
     }
 
     private void addMVLHAnalysis(@NotNull Document document) {

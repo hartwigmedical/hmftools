@@ -121,7 +121,7 @@ public class ClinicalEvidenceChapter implements ReportChapter {
         boolean hasEvidence = false;
         for (String treatment : sortedTreatments) {
             List<ProtectEvidence> evidences = treatmentMap.get(treatment);
-            if (allowedHighestLevel == highestEvidence(treatmentMap.get(treatment))) {
+            if (allowedHighestLevel == highestEvidence(evidences) && containsEvidenceForDisplay(evidences)) {
                 table.addCell(Cells.createContent(treatment));
 
                 Table responsiveTable = Tables.createContent(contentWidth() / 3, new float[] { 1 }, new Cell[] {});
@@ -150,6 +150,15 @@ public class ClinicalEvidenceChapter implements ReportChapter {
         }
 
         return hasEvidence;
+    }
+
+    private static boolean containsEvidenceForDisplay(@NotNull List<ProtectEvidence> evidences) {
+        for (ProtectEvidence evidence : evidences) {
+            if (evidence.direction().isResponsive() || evidence.direction().isResistant()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @NotNull

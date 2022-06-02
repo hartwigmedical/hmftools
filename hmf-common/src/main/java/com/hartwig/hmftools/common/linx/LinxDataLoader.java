@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
 import com.hartwig.hmftools.common.sv.linx.LinxDriver;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
+import com.hartwig.hmftools.common.sv.linx.LinxGermlineSv;
 import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
 
 import org.apache.commons.compress.utils.Lists;
@@ -24,14 +25,15 @@ public final class LinxDataLoader {
     }
 
     @NotNull
-    public static LinxData load(@NotNull String linxFusionTsv, @NotNull String linxBreakendTsv,
-            @NotNull String linxDriverCatalogTsv) throws IOException {
-        return load(linxFusionTsv, linxBreakendTsv, null, linxDriverCatalogTsv, null);
+    public static LinxData load(@NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxDriverCatalogTsv)
+            throws IOException {
+        return load(linxFusionTsv, linxBreakendTsv, null, linxDriverCatalogTsv, null, null);
     }
 
     @NotNull
     public static LinxData load(@NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @Nullable String linxSvsTsv,
-            @NotNull String linxDriverCatalogTsv, @Nullable String linxDriverTsv) throws IOException {
+            @NotNull String linxDriverCatalogTsv, @Nullable String linxDriverTsv, @Nullable String linxGermlineDisruptionTsv)
+            throws IOException {
         LOGGER.info("Loading LINX data from {}", new File(linxFusionTsv).getParent());
         List<LinxFusion> fusions = LinxFusion.read(linxFusionTsv);
 
@@ -68,12 +70,32 @@ public final class LinxDataLoader {
             LOGGER.info(" Loaded {} drivers from {}", drivers.size(), linxDriverTsv);
         }
 
+        List<LinxGermlineSv> reportableGermlineDisruptions = Lists.newArrayList();
+        List<LinxGermlineSv> unreportedGermlineDisruptions = Lists.newArrayList();
+        if (linxGermlineDisruptionTsv != null) {
+            List<LinxGermlineSv> germlineSvs = LinxGermlineSv.read(linxGermlineDisruptionTsv);
+
+            for (LinxGermlineSv germlineSv : germlineSvs) {
+                if (germlineSv.Reported) {
+                    reportableGermlineDisruptions.add(germlineSv);
+                } else {
+                    unreportedGermlineDisruptions.add(germlineSv);
+                }
+            }
+            LOGGER.info(" Loaded {} germline disruptions (of which {} are reportable) from {}",
+                    germlineSvs.size(),
+                    reportableGermlineDisruptions.size(),
+                    linxGermlineDisruptionTsv);
+        }
+
         return ImmutableLinxData.builder()
                 .reportableFusions(reportableFusions)
                 .unreportedFusions(unreportedFusions)
                 .geneDisruptions(geneDisruptions)
                 .homozygousDisruptions(homozygousDisruptions)
                 .drivers(drivers)
+                .reportableGermlineDisruptions(reportableGermlineDisruptions)
+                .unreportedGermlineDisruptions(unreportedGermlineDisruptions)
                 .build();
     }
 }

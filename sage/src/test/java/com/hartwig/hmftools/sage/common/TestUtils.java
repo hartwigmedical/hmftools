@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.common;
 
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
@@ -12,6 +13,9 @@ import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
+
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordSetBuilder;
 
 public class TestUtils
 {
@@ -104,6 +108,34 @@ public class TestUtils
 
         return new ReadContextCounter(0, variant, readContext, VariantTier.LOW_CONFIDENCE,
                 100, 1, false);
+    }
+
+    public static SAMRecord createSamRecord(
+            final String readId, final String chromosome, int readStart, final String readBases, final String cigar)
+    {
+        SAMRecordSetBuilder recordBuilder = new SAMRecordSetBuilder();
+        recordBuilder.setUnmappedHasBasesAndQualities(false);
+        SAMRecord record = recordBuilder.addFrag(
+                readId, 1, readStart, false, false, cigar, readBases, 37, false);
+
+        record.setReadBases(readBases.getBytes());
+
+        final byte[] qualities = new byte[readBases.length()];
+
+        for(int i = 0; i < readBases.length(); ++i)
+            qualities[i] = 37;
+
+        record.setBaseQualities(qualities);
+        record.setReferenceName(chromosome);
+
+        // to be correct this should match the cigar element count
+        record.setAttribute("NM", 1);
+        record.setFirstOfPairFlag(true);
+
+        record.setReadPairedFlag(true);
+        record.setProperPairFlag(true);
+
+        return record;
     }
 
 }

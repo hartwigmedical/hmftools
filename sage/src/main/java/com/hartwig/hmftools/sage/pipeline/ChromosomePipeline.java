@@ -8,10 +8,8 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
@@ -30,7 +28,6 @@ import com.hartwig.hmftools.sage.common.PartitionTask;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
-import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.vcf.VcfWriter;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -54,8 +51,6 @@ public class ChromosomePipeline implements AutoCloseable
     private final List<VariantHotspot> mHotspots;
     private final List<TranscriptData> mTranscripts;
     private final List<BaseRegion> mHighConfidenceRegions;
-
-    private static final EnumSet<VariantTier> PANEL_ONLY_TIERS = EnumSet.of(VariantTier.HOTSPOT, VariantTier.PANEL);
 
     public ChromosomePipeline(
             final String chromosome, final SageConfig config,
@@ -118,8 +113,7 @@ public class ChromosomePipeline implements AutoCloseable
         {
             workers.add(new RegionThread(
                     mChromosome, mConfig, mQualityRecalibrationMap, mCoverage, mPhaseSetCounter,
-                    mPanelRegions, mHotspots, mTranscripts, mHighConfidenceRegions,
-                    mPartitions, mRegionResults));
+                    mPanelRegions, mHotspots, mTranscripts, mHighConfidenceRegions, mPartitions, mRegionResults));
         }
 
         for(Thread worker : workers)

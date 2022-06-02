@@ -19,7 +19,6 @@ import org.junit.Test;
 
 public class AltContextTest
 {
-
     private static final String CHROM = "1";
     private static final int POS = 1000;
 

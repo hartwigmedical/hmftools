@@ -154,5 +154,5 @@ conclusion | The clinical conclusion of the sample | BRCA2 inactivation, potenti
 - We don't interpret the type alteration for NO_MSI_HRD_PROFILE, EXTRACELLULAR_DOMAIN_MUTATION and RESISTANCE_MUTATION
 
 ## Version History and Download Links
-- (Upcoming)
+- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/rose-v1.0)
     - Initial release. 

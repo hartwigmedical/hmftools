@@ -51,6 +51,7 @@ public class Candidate
             mRawBaseQualityAlt = altContext.rawAltBaseQuality();
 
         }
+
         mMaxDepth = Math.max(mMaxDepth, altContext.rawDepth());
     }
 

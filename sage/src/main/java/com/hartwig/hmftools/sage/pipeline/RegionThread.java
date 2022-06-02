@@ -4,8 +4,6 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.ReferenceData.loadRefGenome;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -13,27 +11,26 @@ import java.util.Queue;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.PartitionTask;
+import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.cram.ref.ReferenceSource;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class RegionThread extends Thread
 {
     private final String mChromosome;
     private final SageConfig mConfig;
-    private final IndexedFastaSequenceFile mRefGenome;
+    private final IndexedFastaSequenceFile mRefGenomeFile;
+    private final RefGenomeSource mRefGenome;
 
     private final Map<String, QualityRecalibrationMap> mQualityRecalibrationMap;
     private final Coverage mCoverage;
@@ -48,7 +45,7 @@ public class RegionThread extends Thread
     private final List<TranscriptData> mTranscripts;
     private final List<BaseRegion> mHighConfidenceRegions;
 
-    private final Map<String,SamReader> mBamReaders;
+    private final SamSlicerFactory mSamSlicerFactory;
 
     public RegionThread(
             final String chromosome, final SageConfig config,
@@ -59,7 +56,9 @@ public class RegionThread extends Thread
     {
         mChromosome = chromosome;
         mConfig = config;
-        mRefGenome = loadRefGenome(config.RefGenomeFile);
+        mSamSlicerFactory = new SamSlicerFactory();
+        mRefGenomeFile = loadRefGenome(config.RefGenomeFile);
+        mRefGenome = new RefGenomeSource(mRefGenomeFile);
         mQualityRecalibrationMap = qualityRecalibrationMap;
         mCoverage = coverage;
         mPhaseSetCounter = phaseSetCounter;
@@ -73,26 +72,7 @@ public class RegionThread extends Thread
         mPartitions = partitions;
 
         // create readers for each sample and BAM
-        mBamReaders = Maps.newHashMap();
-
-        List<String> allSamples = Lists.newArrayList(mConfig.TumorIds);
-        allSamples.addAll(mConfig.ReferenceIds);
-
-        List<String> allBams = Lists.newArrayList(mConfig.TumorBams);
-        allBams.addAll(mConfig.ReferenceBams);
-
-        for(int i = 0; i < allSamples.size(); i++)
-        {
-            final String sample = allSamples.get(i);
-            final String bamFile = allBams.get(i);
-
-            SamReader bamReader = SamReaderFactory.makeDefault()
-                    .validationStringency(mConfig.Stringency)
-                    .referenceSource(new ReferenceSource(mRefGenome))
-                    .open(new File(bamFile));
-
-            mBamReaders.put(sample, bamReader);
-        }
+        mSamSlicerFactory.buildBamReaders(mConfig, mRefGenomeFile);
 
         start();
     }
@@ -121,17 +101,7 @@ public class RegionThread extends Thread
             }
         }
 
-        try
-        {
-            for(SamReader bamReader : mBamReaders.values())
-            {
-                bamReader.close();
-            }
-        }
-        catch(IOException e)
-        {
-            SG_LOGGER.error("failed to close bam file: {}", e.toString());
-        }
+        mSamSlicerFactory.close();
     }
 
     private RegionTask createRegionTask(final PartitionTask partitionTask)
@@ -155,6 +125,6 @@ public class RegionThread extends Thread
 
         return new RegionTask(
                 partitionTask.TaskId, region, mRegionResults, mConfig, mRefGenome, regionHotspots, regionPanel, regionsTranscripts,
-                regionHighConfidence, mQualityRecalibrationMap, mPhaseSetCounter, mCoverage, mBamReaders);
+                regionHighConfidence, mQualityRecalibrationMap, mPhaseSetCounter, mCoverage, mSamSlicerFactory);
     }
 }

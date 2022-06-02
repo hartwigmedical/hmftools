@@ -1,8 +1,7 @@
 package com.hartwig.hmftools.sage.dedup;
 
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_INDEL_FILTER;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_MNV_FILTER;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_SNV_MNV_FILTER;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -86,13 +85,13 @@ public final class DedupIndel
 
         // filter as DEDUP whichever has a shorter CORE or if identical, the lowest quality
 
-        final String[] firstRefBases = extractCoreFlanksLessAlt(first);
-        final String[] secondRefBases = extractCoreFlanksLessAlt(second);
+        final CoreFlanksRefBases firstRefBases = extractCoreFlanksLessAlt(first);
+        final CoreFlanksRefBases secondRefBases = extractCoreFlanksLessAlt(second);
 
         boolean applyFilter = false;
 
-        if(secondRefBases[CORE_FLANKS_STR].contains(firstRefBases[CORE_STR])
-        || firstRefBases[CORE_FLANKS_STR].contains(secondRefBases[CORE_STR]))
+        if(secondRefBases.CorePlusFlanks.contains(firstRefBases.Core)
+        || firstRefBases.CorePlusFlanks.contains(secondRefBases.Core))
         {
             applyFilter = true;
         }
@@ -138,18 +137,29 @@ public final class DedupIndel
         return variant.position() >= delStart && variant.position() + variant.ref().length() - 1 <= delEnd;
     }
 
-    private static final int CORE_STR = 0;
-    private static final int CORE_FLANKS_STR = 1;
-
-    private static String[] extractCoreFlanksLessAlt(final SageVariant variant)
+    private static CoreFlanksRefBases extractCoreFlanksLessAlt(final SageVariant variant)
     {
         final IndexedBases indexedBases = variant.readContext().indexedBases();
-        String coreString = indexedBases.coreString();
-        int altIndex = indexedBases.Index - indexedBases.LeftCoreIndex;
-        int postAltIndex = altIndex + variant.alt().length();
-        String coreRefString = coreString.substring(0, altIndex) + variant.ref() + coreString.substring(postAltIndex);
-        String coreFlankRefBases = indexedBases.leftFlankString() + coreRefString + indexedBases.rightFlankString();
-        return new String[] { coreRefString, coreFlankRefBases };
+
+        try
+        {
+            String coreString = indexedBases.coreString();
+            int altIndex = indexedBases.Index - indexedBases.LeftCoreIndex;
+            int postAltIndex = altIndex + variant.alt().length();
+            String coreRefString = coreString.substring(0, altIndex) + variant.ref();
+
+            if(postAltIndex <= coreString.length())
+                coreRefString += coreString.substring(postAltIndex);
+
+            String coreFlankRefBases = indexedBases.leftFlankString() + coreRefString + indexedBases.rightFlankString();
+            return new CoreFlanksRefBases(coreRefString, coreFlankRefBases);
+        }
+        catch(Exception e)
+        {
+            SG_LOGGER.error("var({}) error extracting core and flanks: {}",
+                    variant, indexedBases);
+            return new CoreFlanksRefBases("", "");
+        }
     }
 
 }

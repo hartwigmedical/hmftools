@@ -5,9 +5,12 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.common.SamSlicerFactory;
+import com.hartwig.hmftools.sage.common.SamSlicerInterface;
 import com.hartwig.hmftools.sage.evidence.ReadContextEvidence;
 import com.hartwig.hmftools.sage.phase.VariantPhaser;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
@@ -21,17 +24,17 @@ import htsjdk.samtools.reference.ReferenceSequenceFile;
 public class EvidenceStage
 {
     private final SageConfig mConfig;
-    private final Map<String,SamReader> mBamReaders;
+    private final SamSlicerFactory mSamSlicerFactory;
 
     private final ReadContextEvidence mReadContextEvidence;
     private final VariantPhaser mVariantPhaser;
 
     public EvidenceStage(
-            final SageConfig config, final ReferenceSequenceFile refGenome, final Map<String,QualityRecalibrationMap> qualityRecalibrationMap,
-            final PhaseSetCounter phaseSetCounter, final Map<String,SamReader> bamReaders)
+            final SageConfig config, final RefGenomeInterface refGenome, final Map<String,QualityRecalibrationMap> qualityRecalibrationMap,
+            final PhaseSetCounter phaseSetCounter, final SamSlicerFactory samSlicerFactory)
     {
         mConfig = config;
-        mBamReaders = bamReaders;
+        mSamSlicerFactory = samSlicerFactory;
 
         mReadContextEvidence = new ReadContextEvidence(config, refGenome, qualityRecalibrationMap);
         mVariantPhaser = new VariantPhaser(phaseSetCounter);
@@ -54,7 +57,7 @@ public class EvidenceStage
             boolean collectPhasingGroups = checkPhasing && (i == 0);
 
             List<ReadContextCounter> readCounters = mReadContextEvidence.collectEvidence(
-                    candidates, sample, mBamReaders.get(sample), collectPhasingGroups ? mVariantPhaser : null);
+                    candidates, sample, mSamSlicerFactory, collectPhasingGroups ? mVariantPhaser : null);
 
             readContextCounters.addCounters(readCounters, sampleCount);
         }
