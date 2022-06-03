@@ -94,12 +94,17 @@ public class TestReportGenerator {
                 .from(report)
                 .purple(ImmutablePurpleData.builder()
                         .from(report.purple())
+                        .unreportedSomaticVariants(Lists.newArrayList())
                         .unreportedGermlineVariants(Lists.newArrayList())
                         .unreportedSomaticGainsLosses(Lists.newArrayList())
-                        .unreportedSomaticVariants(Lists.newArrayList())
                         .unreportedGermlineDeletions(Lists.newArrayList())
+                        .lohGenes(Lists.newArrayList())
                         .build())
-                .linx(ImmutableLinxData.builder().from(report.linx()).unreportedFusions(Lists.newArrayList()).build());
+                .linx(ImmutableLinxData.builder()
+                        .from(report.linx())
+                        .unreportedFusions(Lists.newArrayList())
+                        .unreportedGermlineDisruptions(Lists.newArrayList())
+                        .build());
 
         if (report.isofox() != null) {
             builder.isofox(ImmutableIsofoxInterpretedData.builder()

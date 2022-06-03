@@ -30,7 +30,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class GermlineFindingsChapter implements ReportChapter {
 
-    private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#.#");
     private static final DecimalFormat PERCENTAGE_FORMAT = ReportResources.decimalFormat("#.0'%'");
 
     @NotNull

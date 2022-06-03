@@ -1,13 +1,27 @@
 package com.hartwig.hmftools.sage.candidate;
 
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
+import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_INDEL_FILTER;
+
+import static org.junit.Assert.assertTrue;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
 
-import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.sage.common.IndexedBases;
+import java.util.List;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.codon.Nucleotides;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.sage.common.IndexedBases;
+import com.hartwig.hmftools.sage.common.RegionTaskTester;
+import com.hartwig.hmftools.sage.common.SageVariant;
+import com.hartwig.hmftools.sage.pipeline.RegionTask;
+
+import org.junit.Assert;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
@@ -50,6 +64,54 @@ public class CandidateCreationTest
         assertEquals("C" + insertBases, altRead.Alt);
     }
 
+    @Test
+    public void testSoftClipInsertProd1()
+    {
+        ChrBaseRegion region = new ChrBaseRegion(CHR_1, 1, 150);
 
+        RegionTaskTester tester = new RegionTaskTester();
 
+        tester.PanelRegions.add(new BaseRegion(1, 1000));
+
+        RegionTask task = tester.createRegionTask(region);
+
+        // bases from 21,974,750 -> 950
+        String refBases = "TCTACCCGACCCCGGGCCGCGGCCGTGGCCAGCCAGTCAGCCGAAGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCCGCTGCCTGCTCTCCCC"
+                + "CTCTCCGCAGCCGCCGAGCGCACGCGGTCCGCCCCACCCTCTGGTGACCAGCCAGCCCCTCCTCTTTCTTCCTCCGGTGCTGGCGGAAGAG";
+
+        tester.RefGenome.RefGenomeMap.put(CHR_1, refBases + generateRandomBases(1100)); // need to cover the ref sequence buffer
+
+        List<SAMRecord> reads = Lists.newArrayList(
+                createSamRecord(
+                        "36996", CHR_1,  45,
+                        "TGGCCAGCCAGTCAGCCGAAGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCCGCTGCCTG",
+                        "44S57M"),
+                createSamRecord(
+                        "8077", CHR_1,  45,
+                        "GCCAGCCAGTCAGCCGAAGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCCGCACCCTGCT",
+                        "42S59M"),
+                createSamRecord(
+                        "19351", CHR_1,  45,
+                        "CGCCAGGCAGCCGAAGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCCGCTGCCTGCTCTC",
+                        "39S62M"),
+                createSamRecord(
+                        "24001", CHR_1,  45,
+                        "AGCCGAAGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCCGCTGCCTGCTCTCCCCCTCTC",
+                        "31S70M"));
+
+        reads.get(1).setFirstOfPairFlag(false);
+        reads.get(3).setFirstOfPairFlag(false);
+
+        tester.TumorSamSlicer.ReadRecords.addAll(reads);
+        tester.TumorSamSlicer.ReadRecords.addAll(reads); // repeat to get over qual thresholds
+        tester.TumorSamSlicer.ReadRecords.addAll(reads);
+
+        task.run();
+
+        SageVariant var = task.getVariants().stream().filter(x -> x.position() == 44 && x.isIndel()).findFirst().orElse(null);
+
+        Assert.assertNotNull(var);
+        assertEquals(12, var.tumorReadCounters().get(0).softClipInsertSupport());
+        // assertTrue(var.isPassing());
+    }
 }

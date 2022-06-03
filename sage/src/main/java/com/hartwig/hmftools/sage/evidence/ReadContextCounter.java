@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.sage.evidence;
 
 import static java.lang.Math.max;
-import static java.lang.Math.min;
-import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_EVIDENCE_MAP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;

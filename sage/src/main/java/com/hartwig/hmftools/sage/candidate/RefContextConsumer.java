@@ -320,13 +320,14 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         if(onLeft)
         {
             refPosition = record.getAlignmentStart() - 1;
-            readIndex = scLength;
+
+            // set to start at the ref/alt base prior to the insert
+            readIndex = scLength - altRead.Alt.length();
         }
         else
         {
             refPosition = record.getAlignmentEnd();
             readIndex = record.getReadBases().length - scLength - 1;
-            // readIndex = scLength - 1 - altRead.Alt.length(); // not sure why it was set like this
         }
 
         if(!mBounds.containsPosition(refPosition))
@@ -334,16 +335,18 @@ public class RefContextConsumer implements Consumer<SAMRecord>
 
         boolean findReadContext = withinReadContext(readIndex, record);
 
+        // if(!withinReadContext(readIndex, record))
+        //    return null;
+
         final RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
         if(reachedDepthLimit(refContext))
             return null;
 
         final int baseQuality = baseQuality(readIndex, record, altRead.Alt.length());
 
-        final ReadContext readContext =
-                (findReadContext || true) ? mReadContextFactory.createInsertContext(altRead.Alt, refPosition, readIndex, record, refBases) : null;
+        final ReadContext readContext = mReadContextFactory.createInsertContext(altRead.Alt, refPosition, readIndex, record, refBases);
 
-        SG_LOGGER.info("soft-clipped insert({}:{} {}>{}) read(index={} {}) softClip(len={} index={} on {})",
+        SG_LOGGER.trace("soft-clipped insert({}:{} {}>{}) read(index={} {}) softClip(len={} index={} on {})",
                 record.getContig(), refPosition, altRead.Ref, altRead.Alt, readIndex, record.getReadName(),
                 scLength, scReadIndex, onLeft ? "left" : "right");
 
@@ -361,8 +364,13 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             int prevRefPos = readStart - 1;
             int refIndexOffset = prevRefPos - refBases.Position;
 
-            String requiredRefBases = new String(
-                    refBases.Bases, refBases.Index + refIndexOffset - SC_INSERT_MIN_FLANK_LENGTH + 1, SC_INSERT_MIN_FLANK_LENGTH);
+            int refIndexStart = refBases.Index + refIndexOffset - SC_INSERT_MIN_FLANK_LENGTH + 1;
+            int refIndexEnd = refIndexStart + SC_INSERT_MIN_FLANK_LENGTH;
+
+            if(refIndexStart < 0 || refIndexEnd > refBases.Bases.length) // can occur with SCs at the start of a chromosome
+                return null;
+
+            String requiredRefBases = new String(refBases.Bases, refIndexStart, SC_INSERT_MIN_FLANK_LENGTH);
 
             String scBases = readBases.substring(0, scLength);
             int scMatchIndex = scBases.lastIndexOf(requiredRefBases);
@@ -392,7 +400,14 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         {
             int nextRefPos = readEnd + 1;
             int refIndexOffset = nextRefPos - refBases.Position;
-            String requiredRefBases = new String(refBases.Bases, refBases.Index + refIndexOffset, SC_INSERT_MIN_FLANK_LENGTH);
+
+            int refIndexStart = refBases.Index + refIndexOffset;
+            int refIndexEnd = refIndexStart + SC_INSERT_MIN_FLANK_LENGTH;
+
+            if(refIndexStart < 0 || refIndexEnd > refBases.Bases.length) // can occur with SCs at the start of a chromosome
+                return null;
+
+            String requiredRefBases = new String(refBases.Bases, refIndexStart, SC_INSERT_MIN_FLANK_LENGTH);
 
             String scBases = readBases.substring(scReadIndex);
             int scMatchIndex = scBases.indexOf(requiredRefBases);

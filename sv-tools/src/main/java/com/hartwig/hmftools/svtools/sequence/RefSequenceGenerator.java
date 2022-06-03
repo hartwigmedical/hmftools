@@ -95,7 +95,7 @@ public class RefSequenceGenerator
             {
                 String[] bedInfo = line.split("\t");
 
-                if(bedInfo.length != 4)
+                if(bedInfo.length < 3)
                 {
                     LOGGER.error("invalid bed file line: {}", line);
                     return;
@@ -104,7 +104,7 @@ public class RefSequenceGenerator
                 String chromosome = bedInfo[0];
                 int posStart = Integer.parseInt(bedInfo[1]);
                 int posEnd = Integer.parseInt(bedInfo[2]);
-                String seqName = bedInfo[3];
+                String seqName = bedInfo.length >= 4 ? bedInfo[3] : "";
 
                 LOGGER.debug("writing ref-genome sequence for {}: for chr({}) pos({} -> {})", seqName, chromosome, posStart, posEnd);
 

@@ -340,7 +340,7 @@ public class VariantDedupTest
     }
 
     @Test
-    public void testIndelDedupCrash()
+    public void testMultipleIndelDedup()
     {
         ChrBaseRegion region = new ChrBaseRegion(CHR_1, 1, 150);
 

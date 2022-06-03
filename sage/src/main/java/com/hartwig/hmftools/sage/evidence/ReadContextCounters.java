@@ -46,19 +46,6 @@ public class ReadContextCounters
         return mSampleCandidateReadCounters.get(candidateIndex);
     }
 
-    public List<ReadContextCounter> getVariantReadCounters(final VariantHotspot variant)
-    {
-        final VariantHotspotComparator variantComparator = new VariantHotspotComparator();
-
-        List<ReadContextCounter> readCounters = Lists.newArrayList();
-
-        mSampleCandidateReadCounters.stream()
-                .filter(x -> variantComparator.compare(x.get(0).variant(), variant) == 0)
-                .forEach(x -> readCounters.addAll(x));
-
-        return readCounters;
-    }
-
     public void addCounters(final List<ReadContextCounter> sampleReadCounters, int expectedCount)
     {
         if(sampleReadCounters.size() != mCandidates.size())

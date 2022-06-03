@@ -94,23 +94,23 @@ investigate potential causes for QC failure.
  - BQR plots from both reference and tumor sample from [SAGE](../sage)
 
 ### Version History and Download Links
-- Upcoming
+- [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.9)
   - Proper support for RNA
-    - Add mandatory `driver_gene_panel_tsv` and `known_fusion_file` inputs to support interpretation of isofox results
+    - Add (mandatory) `driver_gene_panel_tsv` and `known_fusion_file` inputs to support interpretation of isofox results
     - RNA Depth for variants is picked up in case purple somatic/germline variants have been annotated with RNA. 
-    - Amps and dels are annotated with expression data (including percentiles and fold change)
+    - Amps and dels are annotated with expression data (tpm, plus percentiles and fold change)
     - Fusions are annotated by RNA support:
         - For `EXON_DEL_DUP` and other inter-gene fusions, a list of novel splice junctions is used for annotation.
         - IG fusions are annotated with the expression data of the 3' gene
         - All other fusions are annotated with their equivalent counterparts in RNA.
-    - A new chapter is added with RNA statistics and various types of novel findings compared to DNA.
+    - A new chapter is added with RNA statistics and various types of novel findings that were not found in DNA.
     - Config impact:
         - `rna_sample_id` enables RNA-annotated variant loading when configured as-expected.
         - `isofox_gene_distribution_csv` and `isofox_alt_sj_cohort_csv` enable annotation of isofox results.
         - `isofox_summary_csv`, `isofox_gene_data_csv`, `isofox_fusion_csv`, `isofox_alt_splice_junction_csv` are the actual isofox data files. 
-  - Improvements to CUPPA
-    - Cuppa data loader favors overall combined score > DNA combined score > RNA combined score.
-    - Cuppa data loader retains the combined prediction for every cancer type, not just the best prediction.
+  - (Technical) improvements to CUPPA
+    - CUPPA data loader favors overall combined score > DNA combined score > RNA combined score.
+    - CUPPA data loader retains the combined prediction for every cancer type, not just the best prediction.
   - Add DPYD status on front page
   - `ref_genome_version` configures the ref genome version used, and is propagated into JSON output and report (QC chapter).
   - Support for germline SVs
@@ -121,9 +121,11 @@ investigate potential causes for QC failure.
     - Reported germline deletions are displayed in the Germline Findings chapter.
   - Support for LILAC
     - `lilac_result_csv` and `lilac_qc_csv` configure the paths to the LILAC data files
+    - Immunology chapter displays the LILAC QC status along with the HLA alleles found.
   - Addition of potentially relevant LOH events:
     - In case of HRD: LOH is reported for BRCA1, BRCA2, PALB2, RAD51C
     - In case of MSI: LOH is reported for MLH1, MSH2, MSH6, PMS2, EPCAM
+  - Evidence labeled as having `NO_BENEFIT` from PROTECT are filtered out for reporting.
 - [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.8)
   - Only show every source name once in clinical evidence section.
   - Fix bug with selecting variants that are unreported but have evidence.

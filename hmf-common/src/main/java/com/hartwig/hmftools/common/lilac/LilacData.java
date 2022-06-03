@@ -14,5 +14,5 @@ public abstract class LilacData {
     public abstract String qc();
 
     @NotNull
-    public abstract List<LilacRecord> records();
+    public abstract List<LilacAllele> alleles();
 }

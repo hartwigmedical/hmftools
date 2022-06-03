@@ -3,6 +3,7 @@ package com.hartwig.hmftools.pave;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
+import static htsjdk.variant.vcf.VCFHeaderLineCount.UNBOUNDED;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -77,8 +78,8 @@ public class ClinvarAnnotation
 
     public static void addHeader(final VCFHeader header)
     {
-        header.addMetaDataLine(new VCFInfoHeaderLine(CLNSIG, 1, VCFHeaderLineType.String, CLNSIG_DESC));
-        header.addMetaDataLine(new VCFInfoHeaderLine(CLNSIGCONF, 1, VCFHeaderLineType.String, CLNSIGCONF_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(CLNSIG, UNBOUNDED, VCFHeaderLineType.String, CLNSIG_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(CLNSIGCONF, UNBOUNDED, VCFHeaderLineType.String, CLNSIGCONF_DESC));
     }
 
     public static void addCmdLineArgs(Options options)
