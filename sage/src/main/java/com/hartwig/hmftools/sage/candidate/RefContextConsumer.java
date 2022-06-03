@@ -320,13 +320,14 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         if(onLeft)
         {
             refPosition = record.getAlignmentStart() - 1;
-            readIndex = scLength;
+
+            // set to start at the ref/alt base prior to the insert
+            readIndex = scLength - altRead.Alt.length();
         }
         else
         {
             refPosition = record.getAlignmentEnd();
             readIndex = record.getReadBases().length - scLength - 1;
-            // readIndex = scLength - 1 - altRead.Alt.length(); // not sure why it was set like this
         }
 
         if(!mBounds.containsPosition(refPosition))

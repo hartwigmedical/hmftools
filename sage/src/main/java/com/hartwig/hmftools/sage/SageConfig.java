@@ -418,7 +418,7 @@ public class SageConfig
         MaxReadDepth = DEFAULT_MAX_READ_DEPTH;
         MaxReadDepthPanel = DEFAULT_MAX_READ_DEPTH_PANEL;
         ReadContextFlankSize = DEFAULT_READ_CONTEXT_FLANK_SIZE;
-        FindSoftClipInserts = false;
+        FindSoftClipInserts = true;
         RefGenomeFile = "refGenome";
         HighConfidenceBed = "highConf";
         CoverageBed = "coverage";
