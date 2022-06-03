@@ -8,6 +8,7 @@ import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.IBlockElement;
 import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.VerticalAlignment;
 
 import org.jetbrains.annotations.NotNull;
@@ -31,6 +32,16 @@ public final class Cells {
     @NotNull
     public static Cell createTransparent(@NotNull String text) {
         return createTransparent(new Paragraph(text));
+    }
+
+    @NotNull
+    public static Cell createSpanningEntry(@NotNull Table table, @NotNull String text) {
+        Cell cell = new Cell(1, table.getNumberOfColumns());
+        cell.add(new Paragraph(text));
+        cell.setBorder(Border.NO_BORDER);
+        cell.setBorderBottom(new SolidBorder(ReportResources.PALETTE_MID_GREY, 0.25F));
+        cell.addStyle(ReportResources.tableContentStyle());
+        return cell;
     }
 
     @NotNull

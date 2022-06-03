@@ -10,6 +10,10 @@ import com.hartwig.hmftools.common.cuppa.CuppaTestFactory;
 import com.hartwig.hmftools.common.flagstat.FlagstatTestFactory;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.isofox.IsofoxTestFactory;
+import com.hartwig.hmftools.common.lilac.ImmutableLilacData;
+import com.hartwig.hmftools.common.lilac.LilacAllele;
+import com.hartwig.hmftools.common.lilac.LilacData;
+import com.hartwig.hmftools.common.lilac.LilacTestFactory;
 import com.hartwig.hmftools.common.linx.ImmutableLinxData;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
@@ -42,6 +46,7 @@ import com.hartwig.hmftools.orange.algo.OrangeSample;
 import com.hartwig.hmftools.orange.algo.isofox.ImmutableIsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class OrangeReportTestFactory {
@@ -62,6 +67,7 @@ public final class OrangeReportTestFactory {
                 .tumorSample(createMinimalOrangeSample())
                 .purple(PurpleTestFactory.createMinimalTestPurpleData())
                 .linx(ImmutableLinxData.builder().build())
+                .lilac(ImmutableLilacData.builder().qc(Strings.EMPTY).build())
                 .virusInterpreter(ImmutableVirusInterpreterData.builder().build())
                 .chord(ChordTestFactory.createMinimalTestChordAnalysis())
                 .cuppa(CuppaTestFactory.createMinimalCuppaData())
@@ -75,6 +81,7 @@ public final class OrangeReportTestFactory {
                 .from(createMinimalTestReport())
                 .purple(createTestPurpleData())
                 .linx(createTestLinxData())
+                .lilac(createTestLilacData())
                 .isofox(createTestIsofoxData())
                 .protect(createTestProtectData())
                 .virusInterpreter(createTestVirusInterpreterData())
@@ -140,6 +147,15 @@ public final class OrangeReportTestFactory {
                 .addReportableFusions(fusion)
                 .addReportableFusions(fusion)
                 .build();
+    }
+
+    @NotNull
+    private static LilacData createTestLilacData() {
+        List<LilacAllele> alleles = Lists.newArrayList();
+        alleles.add(LilacTestFactory.builder().name("Allele 1").build());
+        alleles.add(LilacTestFactory.builder().name("Allele 2").somaticInframeIndel(1D).build());
+
+        return ImmutableLilacData.builder().qc("PASS").alleles(alleles).build();
     }
 
     @NotNull
