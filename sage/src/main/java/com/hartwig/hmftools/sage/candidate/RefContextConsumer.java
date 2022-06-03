@@ -335,14 +335,16 @@ public class RefContextConsumer implements Consumer<SAMRecord>
 
         boolean findReadContext = withinReadContext(readIndex, record);
 
+        // if(!withinReadContext(readIndex, record))
+        //    return null;
+
         final RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
         if(reachedDepthLimit(refContext))
             return null;
 
         final int baseQuality = baseQuality(readIndex, record, altRead.Alt.length());
 
-        final ReadContext readContext =
-                (findReadContext || true) ? mReadContextFactory.createInsertContext(altRead.Alt, refPosition, readIndex, record, refBases) : null;
+        final ReadContext readContext = mReadContextFactory.createInsertContext(altRead.Alt, refPosition, readIndex, record, refBases);
 
         SG_LOGGER.trace("soft-clipped insert({}:{} {}>{}) read(index={} {}) softClip(len={} index={} on {})",
                 record.getContig(), refPosition, altRead.Ref, altRead.Alt, readIndex, record.getReadName(),

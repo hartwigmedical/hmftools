@@ -65,7 +65,6 @@ public class RawContextCigarHandler implements CigarHandler
             if(mVariant.position() != record.getAlignmentEnd())
                 return;
 
-            // int readStartPos = record.getReadPositionAtReferencePosition(record.getAlignmentEnd()) - 1;
             int readVariantStartPos = readIndex - 1;
 
             boolean altSupport = element.getLength() >= mVariant.alt().length() && matchesString(record, readVariantStartPos, mVariant.alt());
