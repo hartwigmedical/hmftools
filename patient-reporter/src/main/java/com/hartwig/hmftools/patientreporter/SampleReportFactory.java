@@ -32,7 +32,10 @@ public final class SampleReportFactory {
         LocalDate arrivalDateRefSample = null;
 
         if (refSampleBarcode != null && refSampleId != null) {
-            lims.validateSampleBarcodeCombination(refSampleBarcode, refSampleId, tumorSampleBarcode, tumorSampleId);
+            if (!refSampleBarcode.equals(refSampleId) || !tumorSampleBarcode.equals(tumorSampleId)){
+                // Don't need to check for anonymised runs
+                lims.validateSampleBarcodeCombination(refSampleBarcode, refSampleId, tumorSampleBarcode, tumorSampleId);
+            }
 
             arrivalDateRefSample = lims.arrivalDate(refSampleBarcode, refSampleId);
             if (arrivalDateRefSample == null) {
