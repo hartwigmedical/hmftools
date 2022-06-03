@@ -21,6 +21,7 @@ SNV/Indel clonality. In addition to this front page, the following chapters are 
   - [Somatic Findings](#somatic-findings): What potentially relevant mutations have been found in the tumor specifically?
   - [Germline Findings](#germline-findings): What potentially relevant mutations have been found in the germline data? 
   - [Immunology](#immunology): What can we tell about the immunogenicity of the tumor sample?
+  - [RNA Findings](#rna-findings): What potentially relevant findings do we detect in RNA?
   - [Cohort Comparison](#cohort-comparison): How do the various properties of this tumor compare to existing cancer cohorts?
   - [Clinical Evidence](#clinical-evidence): What genomic evidence has been found in favor of, or against, specific treatments?
   - [Quality Control](#quality-control): Various stats and graphs regarding the quality of the data and interpretation thereof. 
@@ -41,7 +42,7 @@ interesting and added to the report:
     1. Variants which have clinical evidence but are not part of the reporting gene panel.
     1. Coding variants that are not reported but are phased with variants that are reported.
     1. Variants that are considered relevant for tumor type classification according to Cuppa.
- - Other regions with amps or autosomal losses:
+ - Other regions with amps, or with deletions in other autosomal regions:
     1. Any chromosomal band location with at least one gene lost or fully amplified or loss is considered potentially interesting.
         - For a band with more than one gene amplified, the gene with the highest minimum copy number is picked.
         - For a band with a loss that has no losses reported in this band already, a random gene is picked.
@@ -51,20 +52,48 @@ interesting and added to the report:
     1. Any fusion with clinical evidence is picked. 
     1. A maximum of 10 additional fusions (randomly picked) are reported as potentially interesting.
  - Other viral presence
-    1. Any viral presence that is not otherwise reported is reported as potentially interesting. 
+    1. Any viral presence that is not otherwise reported is reported as potentially interesting.
+ - Potentially interesting LOH events
+    1. In case MSI is detected, LOH (if present) is shown for the following genes: MLH1, MSH2, MSH6, PMS2, EPCAM
+    1. In case HRD (based on CHORD) is detected, LOH (if present) is shown for the following genes: BRCA1, BRCA2, RAD51C, PALB2
+
+In case ORANGE was run in DNA+RNA mode, DNA findings will be annotated with RNA:
+ - Driver and potentially interesting variants are annotated with RNA depth
+ - Driver and potentially interesting amps/dels are annotated with TPM, and corresponding percentile and foldChange for database and applicable tumor type
+ - Driver and potentially interesting fusions are annotated depending on fusion type:
+    1. `EXON_DEL_DUP` and other intra-gene fusions are annotated with exon-skipping novel splice junctions
+    1. @IG fusions are annotated with TPM of the 3' fusion gene
+    1. Other fusions are annotated with RNA fusion details (detected fusions in RNA, and corresponding fragment support and depth of 5' and 3' junction)  
     
 ### Germline Findings
 
 In addition to all germline SNV/Indel tumor drivers determined by [PURPLE](../purple), the following is added to the report:
  - Other potentially relevant variants
     1. Any hotspots that are not configured to be reported.
-    1. Any hotspots that are filtered based on quality.
-    
-The germline CN aberrations are determined by [PURPLE](../purple) and include aberrations such as klinefelter or trisomy X. 
+    1. Any hotspots that are filtered based on quality. 
+ - Potentially pathogenic germline deletions
+ - Potentially pathogenic germline disruptions
+
+Germline CN aberrations are determined by [PURPLE](../purple) and include aberrations such as klinefelter or trisomy X. 
 
 ### Immunology
 
-The immunology chapter is work-in-progress and will report on various immunology properties of the tumor sample.
+The immunology chapter is work-in-progress and will report on various immunology properties of the tumor sample. 
+
+The chapter currently presents the following:
+- HLA-A/B/C details
+    1. QC Status
+    1. Detected alleles, annotated with #total fragments and somatic annotation (tumor copy number, #mutations) 
+
+### RNA Findings
+
+If run with RNA, this chapter displays potentially interesting RNA details:
+ -  QC Details
+ -  Drive gene panel genes with high TPM (>90th percentile database & tumor type) or low TPM (<5th percentile database or tumor type)
+ -  Potentially interesting support for Known or Promiscuous fusions not detected in our DNA analysis pipeline
+ -  Potentially interesting novel splice junctions
+    1. Exon-skipping events in `EXON_DEL_DUP` fusion genes
+    1. Novel exon/intron events in driver gene panel genes
 
 ### Cohort Comparison
 
@@ -100,7 +129,7 @@ investigate potential causes for QC failure.
     - RNA Depth for variants is picked up in case purple somatic/germline variants have been annotated with RNA. 
     - Amps and dels are annotated with expression data (tpm, plus percentiles and fold change)
     - Fusions are annotated by RNA support:
-        - For `EXON_DEL_DUP` and other inter-gene fusions, a list of novel splice junctions is used for annotation.
+        - For `EXON_DEL_DUP` and other intra-gene fusions, a list of novel splice junctions is used for annotation.
         - IG fusions are annotated with the expression data of the 3' gene
         - All other fusions are annotated with their equivalent counterparts in RNA.
     - A new chapter is added with RNA statistics and various types of novel findings that were not found in DNA.
