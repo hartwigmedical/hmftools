@@ -79,12 +79,12 @@ public class GermlineFindingsChapter implements ReportChapter {
     }
 
     private void addGermlineDeletions(@NotNull Document document) {
-        String title = "Driver germline deletions (" + report.purple().reportableGermlineDeletions().size() + ")";
+        String title = "Potentially pathogenic germline deletions (" + report.purple().reportableGermlineDeletions().size() + ")";
         document.add(GermlineDeletionTable.build(title, contentWidth(), report.purple().reportableGermlineDeletions()));
     }
 
     private void addGermlineDisruptions(@NotNull Document document) {
-        String title = "Driver germline disruptions (" + report.linx().reportableGermlineDisruptions().size() + ")";
+        String title = "Potentially pathogenic germline disruptions (" + report.linx().reportableGermlineDisruptions().size() + ")";
         document.add(GermlineDisruptionTable.build(title, contentWidth(), report.linx().reportableGermlineDisruptions()));
     }
 
