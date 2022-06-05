@@ -145,9 +145,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
     {
         // ignore HLA genes
         if(HlaCommon.overlaps(record.getContig(), record.getStart(), record.getEnd()))
-        {
             return true;
-        }
 
         int eventsPenalty = (numberOfEvents - 1) * mConfig.Quality.MapQualityReadEventsPenalty;
 
@@ -333,7 +331,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         if(!mBounds.containsPosition(refPosition))
             return null;
 
-        boolean findReadContext = withinReadContext(readIndex, record);
+        // boolean findReadContext = withinReadContext(readIndex, record);
 
         // if(!withinReadContext(readIndex, record))
         //    return null;

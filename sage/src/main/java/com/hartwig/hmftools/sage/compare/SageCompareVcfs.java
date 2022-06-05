@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
@@ -31,6 +32,7 @@ import static com.hartwig.hmftools.sage.compare.DiffType.NO_ORIG;
 import static com.hartwig.hmftools.sage.compare.DiffType.QUAL;
 import static com.hartwig.hmftools.sage.compare.DiffType.TIER;
 import static com.hartwig.hmftools.sage.compare.DiffType.hasValueDiff;
+import static com.hartwig.hmftools.sage.compare.VariantData.comparePositions;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -40,6 +42,7 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.tribble.AbstractFeatureReader;
@@ -58,6 +61,7 @@ public class SageCompareVcfs
     // comparison config
     private final double mDiffAbsPermitted;
     private final double mDiffPercPermitted;
+    private final boolean mPassOnly;
 
     private final BufferedWriter mWriter;
 
@@ -73,6 +77,7 @@ public class SageCompareVcfs
 
     private static final String DIFF_ABS = "diff_abs";
     private static final String DIFF_PERC = "diff_perc";
+    private static final String PASS_ONLY = "pass_only";
 
     private static final double DEFAULT_DIFF_PERC = 0.1;
     private static final double DEFAULT_DIFF_ABS = 2;
@@ -87,6 +92,7 @@ public class SageCompareVcfs
 
         mDiffAbsPermitted = Double.parseDouble(cmd.getOptionValue(DIFF_ABS, String.valueOf(DEFAULT_DIFF_ABS)));
         mDiffPercPermitted = Double.parseDouble(cmd.getOptionValue(DIFF_PERC, String.valueOf(DEFAULT_DIFF_PERC)));
+        mPassOnly = cmd.hasOption(PASS_ONLY);
 
         mWriter = initialiseWriter();
 
@@ -123,13 +129,42 @@ public class SageCompareVcfs
             VariantData origVar = VariantData.fromContext((VariantContext)origIter.next());
             VariantData newVar = VariantData.fromContext((VariantContext)newIter.next());
 
+            List<VariantData> origVariants = Lists.newArrayList();
+            List<VariantData> newVariants = Lists.newArrayList();
+
             while(newVar != null || origVar != null)
             {
                 int totalComparisons = totalComparisons();
 
-                if(totalComparisons > 0 && (totalComparisons % 10000) == 0)
+                if(totalComparisons > 0 && (totalComparisons % 100000) == 0)
                 {
                     SG_LOGGER.info("processed {} variants", totalComparisons);
+                }
+
+                if(!origVariants.isEmpty() && !newVariants.isEmpty())
+                {
+                    boolean positionMatch = false;
+
+                    if(origVar != null && comparePositions(origVariants.get(0), origVar) == 0)
+                    {
+                        origVariants.add(origVar);
+                        origVar = getNextVariant(origIter);
+                        positionMatch = true;
+                    }
+
+                    if(newVar != null && comparePositions(newVariants.get(0), newVar) == 0)
+                    {
+                        newVariants.add(newVar);
+                        positionMatch = true;
+                        newVar = getNextVariant(newIter);
+                    }
+
+                    if(positionMatch)
+                        continue; // keep looking for more at this position
+
+                    // run comparisons within this group
+                    compareVariants(origVariants, newVariants);
+                    continue;
                 }
 
                 if(newVar != null && origVar != null)
@@ -138,7 +173,10 @@ public class SageCompareVcfs
 
                     if(posCompare == 0)
                     {
-                        compareVariants(origVar, newVar);
+                        origVariants.add(origVar);
+                        newVariants.add(newVar);
+
+                        // check for others at this exact position
 
                         origVar = getNextVariant(origIter);
                         newVar = getNextVariant(newIter);
@@ -185,24 +223,61 @@ public class SageCompareVcfs
 
     private int totalComparisons() { return mCompareCount + mUnmatchedNewCount + mUnmatchedOrigCount; }
 
-    private static int comparePositions(final VariantData first, final VariantData second)
+    private void compareVariants(final List<VariantData> origVariants, final List<VariantData> newVariants)
     {
-        // return -1 if first is earlier in genomic space than second
-        if(first.Chromosome.equals(second.Chromosome))
+        int origIndex = 0;
+        while(origIndex < origVariants.size())
         {
-            if(first.Position == second.Position)
-                return 0;
+            VariantData origVar = origVariants.get(origIndex);
 
-            return first.Position < second.Position ? -1: 1;
+            boolean matched = false;
+            int newIndex = 0;
+            while(newIndex < newVariants.size())
+            {
+                VariantData newVar = newVariants.get(newIndex);
+
+                if(origVar.matches(newVar))
+                {
+                    compareVariants(origVar, newVar);
+                    newVariants.remove(newIndex);
+                    origVariants.remove(origIndex);
+                    matched = true;
+                    break;
+                }
+
+                ++newIndex;
+            }
+
+            if(!matched)
+                ++origIndex;
         }
-        else
-        {
-            return HumanChromosome.lowerChromosome(first.Chromosome, second.Chromosome) ? -1 : 1;
-        }
+
+        origVariants.forEach(x -> writeUnmatchedVariant(x, false));
+        newVariants.forEach(x -> writeUnmatchedVariant(x, true));
+
+        origVariants.clear();
+        newVariants.clear();
     }
 
     private void compareVariants(final VariantData origVar, final VariantData newVar)
     {
+        if(mPassOnly)
+        {
+            if(!origVar.isPassing() && !newVar.isPassing())
+                return;
+
+            if(!origVar.isPassing())
+            {
+                writeUnmatchedVariant(newVar, true);
+                return;
+            }
+            else if(!newVar.isPassing())
+            {
+                writeUnmatchedVariant(origVar, false);
+                return;
+            }
+        }
+
         mCompareCount++;
 
         // compare quals
@@ -229,8 +304,8 @@ public class SageCompareVcfs
 
         if(!newFilterDiffs.isEmpty() || !origFilterDiffs.isEmpty())
         {
-            boolean origIsPass = origVar.context().isNotFiltered() || (origFilters.size() == 1 && origFilters.contains(PASS));
-            boolean newIsPass = newVar.context().isNotFiltered() || (newFilters.size() == 1 && newFilters.contains(PASS));
+            boolean origIsPass = origVar.isPassing();
+            boolean newIsPass = newVar.isPassing();
 
             if(origIsPass != newIsPass)
             {
@@ -295,6 +370,9 @@ public class SageCompareVcfs
 
     private void writeUnmatchedVariant(final VariantData var, boolean isNew)
     {
+        if(mPassOnly && !var.isPassing())
+            return;
+
         if(isNew)
         {
             mUnmatchedNewCount++;
@@ -303,7 +381,7 @@ public class SageCompareVcfs
         else
         {
             mUnmatchedOrigCount++;
-            writeDiffs(var, var, NO_NEW, "", "");
+            writeDiffs(var, null, NO_NEW, "", "");
         }
     }
 
@@ -339,6 +417,9 @@ public class SageCompareVcfs
                 maxDepth = max(maxDepth, newVar.allelicDepth() + newVar.referenceDepth());
             }
 
+            if(sharedFilters.isEmpty())
+                sharedFilters.add(PASS);
+
             mWriter.write(String.format(",%.0f,%.0f,%s,%d",
                     origVar != null ? origVar.qual() : -1, newVar != null ? newVar.qual() : -1, filtersStr(sharedFilters), maxDepth));
 
@@ -360,9 +441,10 @@ public class SageCompareVcfs
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = new Options();
-        options.addOption(SAMPLE, true, "Name of the tumor sample");
-        options.addOption(ORIGINAL_VCF, true, "Optional, name of the reference sample");
-        options.addOption(NEW_VCF, true, "Path to the GRIDSS structural variant VCF file");
+        options.addOption(SAMPLE, true, "Sample name");
+        options.addOption(ORIGINAL_VCF, true, "Original VCF file");
+        options.addOption(NEW_VCF, true, "New VCF file");
+        options.addOption(PASS_ONLY, false, "Only compare passing variants");
 
         addOutputOptions(options);
         addLoggingOptions(options);
