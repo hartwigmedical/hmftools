@@ -270,10 +270,8 @@ public class ReadContextCounter implements VariantHotspot
                     ExpandedBasesFactory.expand(position(), readIndex, record) :
                     new IndexedBases(position(), readIndex, record.getReadBases());
 
-            int nonIndelLength = mIsIndel ? 0 : alt().length();
-
             final ReadContextMatch match = mReadContext.indexedBases().matchAtPosition(
-                    readBases, wildcardMatchInCore, record.getBaseQualities(), nonIndelLength);
+                    readBases, wildcardMatchInCore, record.getBaseQualities());
 
             if(!match.equals(ReadContextMatch.NONE))
             {

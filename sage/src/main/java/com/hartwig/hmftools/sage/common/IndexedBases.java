@@ -129,17 +129,17 @@ public class IndexedBases
 
     public ReadContextMatch matchAtPosition(final IndexedBases other)
     {
-        return getMatchType(false, other, other.length(),null, 0);
+        return getMatchType(false, other, other.length(),null);
     }
 
     public ReadContextMatch matchAtPosition(
-            final IndexedBases other, boolean wildcardAllowedInCore, final byte[] otherBaseQuals, int nonIndelLength)
+            final IndexedBases other, boolean wildcardAllowedInCore, final byte[] otherBaseQuals)
     {
-        return getMatchType(wildcardAllowedInCore, other, length(), otherBaseQuals, nonIndelLength);
+        return getMatchType(wildcardAllowedInCore, other, length(), otherBaseQuals);
     }
 
     private ReadContextMatch getMatchType(
-            boolean wildcardAllowedInCore, final IndexedBases other, int otherLength, final byte[] otherBaseQuals, int nonIndelLength)
+            boolean wildcardAllowedInCore, final IndexedBases other, int otherLength, final byte[] otherBaseQuals)
     {
         int otherReadIndex = other.Index;
 
