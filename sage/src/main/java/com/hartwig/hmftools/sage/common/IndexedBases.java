@@ -132,6 +132,11 @@ public class IndexedBases
         return getMatchType(false, other, other.length(),null);
     }
 
+    public ReadContextMatch matchAtPosition(final IndexedBases other, final byte[] otherBaseQuals)
+    {
+        return getMatchType(false, other, other.length(),otherBaseQuals);
+    }
+
     public ReadContextMatch matchAtPosition(
             final IndexedBases other, boolean wildcardAllowedInCore, final byte[] otherBaseQuals)
     {

@@ -65,13 +65,19 @@ public class AltContext implements VariantHotspot
 
     public void addReadContext(int numberOfEvents, final ReadContext newReadContext)
     {
+        addReadContext(numberOfEvents, newReadContext, null);
+    }
+
+    public void addReadContext(int numberOfEvents, final ReadContext newReadContext, final byte[] baseQualities)
+    {
         int partialMatch = 0;
         int coreMatch = 0;
         ReadContextCandidate fullMatchCandidate = null;
 
         for(ReadContextCandidate candidate : mReadContextCandidates)
         {
-            final ReadContextMatch match = candidate.readContext().indexedBases().matchAtPosition(newReadContext.indexedBases());
+            final ReadContextMatch match = candidate.readContext().indexedBases().matchAtPosition(
+                    newReadContext.indexedBases(), baseQualities);
 
             switch(match)
             {

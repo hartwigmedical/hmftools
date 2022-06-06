@@ -133,7 +133,6 @@ public class Realigned
         }
 
         return NO_REPEAT;
-
     }
 
     private static class Repeat

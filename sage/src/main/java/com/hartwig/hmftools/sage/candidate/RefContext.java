@@ -41,7 +41,7 @@ public class RefContext implements GenomePosition
 
     public void processAltRead(
             final String ref, final String alt, int baseQuality, boolean sufficientMapQuality,
-            int numberOfEvents, final ReadContext readContext)
+            int numberOfEvents, final ReadContext readContext, final byte[] baseQualities)
     {
         final AltContext altContext = getOrCreateAltContext(ref, alt);
         altContext.incrementAltRead(baseQuality);
@@ -51,7 +51,7 @@ public class RefContext implements GenomePosition
 
         if(readContext != null && !readContext.hasIncompleteCore())
         {
-            altContext.addReadContext(numberOfEvents, readContext);
+            altContext.addReadContext(numberOfEvents, readContext, baseQualities);
         }
     }
 

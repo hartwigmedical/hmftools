@@ -44,7 +44,7 @@ public class QualityCalculator
 
     public static double jitterPenalty(final QualityConfig config, int repeatCount)
     {
-        return (config.JitterPenalty * Math.max(0, repeatCount - config.JitterMinRepeatCount));
+        return config.JitterPenalty * Math.max(0, repeatCount - config.JitterMinRepeatCount);
     }
 
     public double calculateQualityScore(
