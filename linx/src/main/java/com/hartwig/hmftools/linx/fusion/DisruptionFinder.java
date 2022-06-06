@@ -185,18 +185,10 @@ public class DisruptionFinder implements CohortFileInterface
             if(se == SE_END && var.isSglBreakend())
                 continue;
 
-            final SvBreakend breakend = var.getBreakend(se);
-            double undisruptedCopyNumber = getUndisruptedCopyNumber(breakend);
-
             final List<BreakendGeneData> svGenes = se == SE_START ? genesStart : genesEnd;
 
             for(BreakendGeneData gene : svGenes)
             {
-                BreakendTransData canonicalTrans = gene.canonical();
-
-                if(canonicalTrans != null)
-                    canonicalTrans.setUndisruptedCopyNumber(undisruptedCopyNumber);
-
                 // line clusters can insert into an intron and look disruptive if a single breakend is involved,
                 // but are only inserting a (non-disruptive) shard
                 if(cluster.getResolvedType() == LINE)
@@ -806,7 +798,7 @@ public class DisruptionFinder implements CohortFileInterface
         mGermlineDisruptions.writeGermlineSVs(mDisruptions, sampleId, outputDir, dbAccess);
     }
 
-    private static double getUndisruptedCopyNumber(final SvBreakend breakend)
+    public static double getUndisruptedCopyNumber(final SvBreakend breakend)
     {
         double cnLowSide = breakend.copyNumberLowSide();
 

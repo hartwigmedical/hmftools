@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.configPathValid;
+import static com.hartwig.hmftools.linx.fusion.DisruptionFinder.getUndisruptedCopyNumber;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.FUSION_MAX_CHAIN_LENGTH;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscript;
@@ -1041,6 +1042,20 @@ public class FusionDisruptionAnalyser
 
             if(!transcripts.contains(fusion.downstreamTrans()))
                 transcripts.add(fusion.downstreamTrans());
+        }
+
+        // set undisrupted copy number for all persisted breakends
+        for(BreakendTransData transcript : transcripts)
+        {
+            SvVarData var = svList.stream().filter(x -> x.id() == transcript.gene().id()).findFirst().orElse(null);
+
+            if(var != null)
+            {
+                final SvBreakend breakend = var.getBreakend(transcript.gene().isStart());
+
+                if(breakend != null)
+                    transcript.setUndisruptedCopyNumber(getUndisruptedCopyNumber(breakend));
+            }
         }
 
         return transcripts;
