@@ -224,13 +224,12 @@ LILAC also optionally accepts a RNA bam.  As per the fragments in the bam are co
 
 ### QC metrics and PON
 
-LILAC produces a comprehensive set of QC metrics and provides warning statuses if the typing confidence may be diminished.   The full list of possible QC warnings is
+LILAC produces a comprehensive set of QC metrics and provides warning statuses if the typing confidence may be diminished. The full list of possible QC warnings is
 
 Warning | Description 
 --- | ---
 WARN_UNMATCHED_TYPE | all A, B or C types eliminated
 WARN_UNMATCHED_INDEL | A novel (non PON) indel is present that was not fit to any allele supported by at least 0.5% of fitted fragments. 
-WARN_UNMATCHED_PON_INDEL | A PON indel is present that was not fit to any allele supported by at least 0.5% of fitted fragments. 
 WARN_UNMATCHED_HAPLOTYPE | A novel (non PON) haplotype is present that was not fit to any allele supported by at least 1% of fitted fragments.
 WARN_UNMATCHED_AMINO_ACID | A novel (non PON) amino acid is present that was not fit to any allele supported by at least 1% of fitted fragments. 
 WARN_UNMATCHED_SOMATIC_VARIANT | A somatic variant from the input vcf could not be assigned to any allele
