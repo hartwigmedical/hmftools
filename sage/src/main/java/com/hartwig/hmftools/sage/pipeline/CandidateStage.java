@@ -54,7 +54,7 @@ public class CandidateStage
         {
             final String sample = mConfig.TumorIds.get(i);
 
-            SamSlicerInterface samSlicer = mSamSlicerFactory.getSamSlicer(sample, sliceRegions);
+            SamSlicerInterface samSlicer = mSamSlicerFactory.getSamSlicer(sample, sliceRegions, true);
 
             List<AltContext> altContexts = mCandidateEvidence.readBam(sample, samSlicer, refSequence, region);
 

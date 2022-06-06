@@ -71,7 +71,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         if(reachedDepthLimit(record))
             return;
 
-        int numberOfEvents = NumberEvents.calc(record, mRefGenome);
+        int numberOfEvents = !record.getSupplementaryAlignmentFlag() ? NumberEvents.calc(record, mRefGenome) : 0;
         int scEvents = (int)NumberEvents.calcSoftClipAdjustment(record);
         int adjustedMapQual = calcAdjustedMapQualLessEventsPenalty(record, numberOfEvents);
         boolean readExceedsQuality = adjustedMapQual > 0;
@@ -94,6 +94,9 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             @Override
             public void handleAlignment(final SAMRecord record, final CigarElement element, final int readIndex, final int refPosition)
             {
+                if(record.isSecondaryOrSupplementary())
+                    return;
+
                 if(!readExceedsScAdjustedQuality)
                 {
                     if(mHotspotPositions.stream().noneMatch(x -> positionWithin(x, record.getStart(), record.getEnd())))
@@ -107,6 +110,9 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             @Override
             public void handleInsert(final SAMRecord record, final CigarElement element, final int readIndex, final int refPosition)
             {
+                if(record.isSecondaryOrSupplementary())
+                    return;
+
                 AltRead altRead = processInsert(
                         element, record, readIndex, refPosition, refBases, numberOfEvents, readExceedsQuality, readExceedsScAdjustedQuality);
 
@@ -117,6 +123,9 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             @Override
             public void handleDelete(final SAMRecord record, final CigarElement element, final int readIndex, final int refPosition)
             {
+                if(record.isSecondaryOrSupplementary())
+                    return;
+
                 AltRead altRead = processDel(
                         element, record, readIndex, refPosition, refBases, numberOfEvents, readExceedsQuality, readExceedsScAdjustedQuality);
 
@@ -365,7 +374,9 @@ public class RefContextConsumer implements Consumer<SAMRecord>
 
         boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.MinMapQuality;
 
-        return new AltRead(refContext, altRead.Ref, altRead.Alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext);
+        AltRead altReadFull = new AltRead(refContext, altRead.Ref, altRead.Alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext);
+        // altReadFull.setBaseQualities(record.getBaseQualities()); // currently unused
+        return altReadFull;
     }
 
     public static AltRead processSoftClip(
