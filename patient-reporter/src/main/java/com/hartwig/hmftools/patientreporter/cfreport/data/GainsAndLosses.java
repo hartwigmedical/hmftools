@@ -8,7 +8,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.interpretation.CopyNumberInterpretation;
-import com.hartwig.hmftools.common.purple.interpretation.ReportableGainLoss;
+import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 import com.hartwig.hmftools.common.utils.DataUtil;
 
@@ -20,8 +20,8 @@ public final class GainsAndLosses {
     }
 
     @NotNull
-    public static List<ReportableGainLoss> sort(@NotNull List<ReportableGainLoss> reportableGainsAndLosses) {
-        return reportableGainsAndLosses.stream().sorted((gainLoss1, gainLoss2) -> {
+    public static List<GainLoss> sort(@NotNull List<GainLoss> gainsAndLosses) {
+        return gainsAndLosses.stream().sorted((gainLoss1, gainLoss2) -> {
             String location1 = GeneUtil.zeroPrefixed(gainLoss1.chromosome() + gainLoss1.chromosomeBand());
             String location2 = GeneUtil.zeroPrefixed(gainLoss2.chromosome() + gainLoss2.chromosomeBand());
 
@@ -34,9 +34,9 @@ public final class GainsAndLosses {
     }
 
     @NotNull
-    public static Set<String> amplifiedGenes(@NotNull List<ReportableGainLoss> reportableGainLosses) {
+    public static Set<String> amplifiedGenes(@NotNull List<GainLoss> reportableGainLosses) {
         Set<String> genes = Sets.newHashSet();
-        for (ReportableGainLoss gainLoss : reportableGainLosses) {
+        for (GainLoss gainLoss : reportableGainLosses) {
             if (gainLoss.interpretation() == CopyNumberInterpretation.FULL_GAIN
                     || gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_GAIN) {
                 genes.add(gainLoss.gene());
@@ -46,9 +46,9 @@ public final class GainsAndLosses {
     }
 
     @NotNull
-    public static Set<String> lostGenes(@NotNull List<ReportableGainLoss> reportableGainLosses) {
+    public static Set<String> lostGenes(@NotNull List<GainLoss> reportableGainLosses) {
         Set<String> genes = Sets.newHashSet();
-        for (ReportableGainLoss gainLoss : reportableGainLosses) {
+        for (GainLoss gainLoss : reportableGainLosses) {
             if (gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS
                     || gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS) {
                 genes.add(gainLoss.gene());
@@ -59,7 +59,7 @@ public final class GainsAndLosses {
 
     @NotNull
     public static String chromosomeArmCopyNumber(@NotNull List<CnPerChromosomeArmData> cnPerChromosomeData,
-            @NotNull ReportableGainLoss gainLoss) {
+            @NotNull GainLoss gainLoss) {
         ChromosomeArm chromosomeArm;
         if (gainLoss.chromosomeBand().startsWith("p")) {
             chromosomeArm = ChromosomeArm.P_ARM;

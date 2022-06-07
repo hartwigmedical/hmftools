@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.purple.interpretation.CopyNumberInterpretation;
-import com.hartwig.hmftools.common.purple.interpretation.ReportableGainLoss;
+import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
@@ -62,7 +62,7 @@ public class ConclusionAlgo {
         List<ReportableVariant> reportableGermlineVariants = roseData.purple().reportableGermlineVariants();
         List<ReportableVariant> reportableVariants =
                 ReportableVariantFactory.mergeVariantLists(reportableGermlineVariants, reportableSomaticVariants);
-        List<ReportableGainLoss> reportableGainLosses = roseData.purple().reportableSomaticGainsLosses();
+        List<GainLoss> reportableGainLosses = roseData.purple().reportableSomaticGainsLosses();
         List<LinxFusion> reportableFusions = roseData.linx().reportableFusions();
         List<ReportableHomozygousDisruption> homozygousDisruptions = roseData.linx().homozygousDisruptions();
         List<AnnotatedVirus> reportableViruses = roseData.virusInterpreter().reportableViruses();
@@ -201,9 +201,9 @@ public class ConclusionAlgo {
     }
 
     public static void generateCNVConclusion(@NotNull Map<Integer, String> conclusion,
-            @NotNull List<ReportableGainLoss> reportableGainLosses, @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap,
+            @NotNull List<GainLoss> reportableGainLosses, @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap,
             @NotNull Set<String> oncogenic, @NotNull Set<String> actionable) {
-        for (ReportableGainLoss gainLoss : reportableGainLosses) {
+        for (GainLoss gainLoss : reportableGainLosses) {
             oncogenic.add("CNV");
 
             if (gainLoss.interpretation().display().equals(CopyNumberInterpretation.FULL_LOSS.display()) || gainLoss.interpretation()

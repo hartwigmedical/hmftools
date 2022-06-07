@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
-import com.hartwig.hmftools.common.purple.interpretation.ReportableGainLoss;
+import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
@@ -69,7 +69,7 @@ public abstract class GenomicAnalysis {
     public abstract ChordStatus chordHrdStatus();
 
     @NotNull
-    public abstract List<ReportableGainLoss> gainsAndLosses();
+    public abstract List<GainLoss> gainsAndLosses();
 
     @NotNull
     public abstract List<CnPerChromosomeArmData> cnPerChromosome();

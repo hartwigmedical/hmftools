@@ -7,7 +7,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.interpretation.CopyNumberInterpretation;
-import com.hartwig.hmftools.common.purple.interpretation.ReportableGainLoss;
+import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
 
@@ -30,14 +30,13 @@ public class CopyNumberEvidence {
     }
 
     @NotNull
-    public List<ProtectEvidence> evidence(@NotNull List<ReportableGainLoss> reportableGainsLosses,
-            @NotNull List<ReportableGainLoss> unreportedGainsLosses) {
+    public List<ProtectEvidence> evidence(@NotNull List<GainLoss> reportableGainsLosses, @NotNull List<GainLoss> unreportedGainsLosses) {
         List<ProtectEvidence> result = Lists.newArrayList();
-        for (ReportableGainLoss reportableGainLoss : reportableGainsLosses) {
+        for (GainLoss reportableGainLoss : reportableGainsLosses) {
             result.addAll(evidence(reportableGainLoss, true));
         }
 
-        for (ReportableGainLoss unreportedGainLoss : unreportedGainsLosses) {
+        for (GainLoss unreportedGainLoss : unreportedGainsLosses) {
             result.addAll(evidence(unreportedGainLoss, false));
         }
 
@@ -45,7 +44,7 @@ public class CopyNumberEvidence {
     }
 
     @NotNull
-    private List<ProtectEvidence> evidence(@NotNull ReportableGainLoss gainLoss, boolean report) {
+    private List<ProtectEvidence> evidence(@NotNull GainLoss gainLoss, boolean report) {
         List<ProtectEvidence> result = Lists.newArrayList();
         for (ActionableGene actionable : actionableGenes) {
             if (actionable.gene().equals(gainLoss.gene()) && isTypeMatch(actionable, gainLoss)) {
@@ -64,7 +63,7 @@ public class CopyNumberEvidence {
         return result;
     }
 
-    private static boolean isTypeMatch(@NotNull ActionableGene actionable, @NotNull ReportableGainLoss reportable) {
+    private static boolean isTypeMatch(@NotNull ActionableGene actionable, @NotNull GainLoss reportable) {
         switch (actionable.event()) {
             case AMPLIFICATION:
                 return reportable.interpretation() == CopyNumberInterpretation.FULL_GAIN

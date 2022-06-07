@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.linx.ReportableGeneDisruption;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
-import com.hartwig.hmftools.common.purple.interpretation.ReportableGainLoss;
+import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
@@ -220,7 +220,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createGainsAndLossesTable(@NotNull List<ReportableGainLoss> gainsAndLosses, boolean hasReliablePurity,
+    private static Table createGainsAndLossesTable(@NotNull List<GainLoss> gainsAndLosses, boolean hasReliablePurity,
             @NotNull List<CnPerChromosomeArmData> cnPerChromosome) {
         String title = "Tumor specific gains & losses";
         if (gainsAndLosses.isEmpty()) {
@@ -233,8 +233,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
                         TableUtil.createHeaderCell("max copies"),
                         TableUtil.createHeaderCell("Chromosome arm copies").setTextAlignment(TextAlignment.CENTER) });
 
-        List<ReportableGainLoss> sortedGainsAndLosses = GainsAndLosses.sort(gainsAndLosses);
-        for (ReportableGainLoss gainLoss : sortedGainsAndLosses) {
+        List<GainLoss> sortedGainsAndLosses = GainsAndLosses.sort(gainsAndLosses);
+        for (GainLoss gainLoss : sortedGainsAndLosses) {
             contentTable.addCell(TableUtil.createContentCell(gainLoss.chromosome()));
             contentTable.addCell(TableUtil.createContentCell(gainLoss.chromosomeBand()));
             contentTable.addCell(TableUtil.createContentCell(gainLoss.gene()));

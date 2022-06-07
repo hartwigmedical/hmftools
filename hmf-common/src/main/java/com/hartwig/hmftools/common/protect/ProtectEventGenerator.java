@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.protect;
 
 import com.hartwig.hmftools.common.protect.variant.OtherEffectsInterpreter;
-import com.hartwig.hmftools.common.purple.interpretation.ReportableGainLoss;
+import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.Variant;
@@ -59,7 +59,7 @@ public final class ProtectEventGenerator {
     }
 
     @NotNull
-    public static String copyNumberEvent(@NotNull ReportableGainLoss gainLoss) {
+    public static String copyNumberEvent(@NotNull GainLoss gainLoss) {
         return gainLoss.interpretation().display();
     }
 

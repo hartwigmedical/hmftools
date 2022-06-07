@@ -10,9 +10,9 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.common.protect.ProtectSource;
-import com.hartwig.hmftools.common.purple.PurpleTestFactory;
 import com.hartwig.hmftools.common.purple.interpretation.CopyNumberInterpretation;
-import com.hartwig.hmftools.common.purple.interpretation.ReportableGainLoss;
+import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
+import com.hartwig.hmftools.common.purple.interpretation.GainLossTestFactory;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.serve.ServeTestFactory;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
@@ -50,12 +50,12 @@ public class CopyNumberEvidenceTest {
         CopyNumberEvidence copyNumberEvidence =
                 new CopyNumberEvidence(EvidenceTestFactory.create(), Lists.newArrayList(amp, inactivation, fusion));
 
-        ReportableGainLoss reportableAmp = PurpleTestFactory.createReportableGainLoss(geneAmp, CopyNumberInterpretation.FULL_GAIN);
-        ReportableGainLoss reportableDel = PurpleTestFactory.createReportableGainLoss(geneDel, CopyNumberInterpretation.FULL_LOSS);
-        ReportableGainLoss ampOnOtherGene = PurpleTestFactory.createReportableGainLoss("other gene", CopyNumberInterpretation.PARTIAL_GAIN);
+        GainLoss reportableAmp = GainLossTestFactory.createGainLoss(geneAmp, CopyNumberInterpretation.FULL_GAIN);
+        GainLoss reportableDel = GainLossTestFactory.createGainLoss(geneDel, CopyNumberInterpretation.FULL_LOSS);
+        GainLoss ampOnOtherGene = GainLossTestFactory.createGainLoss("other gene", CopyNumberInterpretation.PARTIAL_GAIN);
 
-        List<ReportableGainLoss> reportableGainLosses = Lists.newArrayList(reportableAmp, reportableDel, ampOnOtherGene);
-        List<ReportableGainLoss> unreportedGainLosses = Lists.newArrayList();
+        List<GainLoss> reportableGainLosses = Lists.newArrayList(reportableAmp, reportableDel, ampOnOtherGene);
+        List<GainLoss> unreportedGainLosses = Lists.newArrayList();
         List<ProtectEvidence> evidences = copyNumberEvidence.evidence(reportableGainLosses, unreportedGainLosses);
 
         assertEquals(2, evidences.size());

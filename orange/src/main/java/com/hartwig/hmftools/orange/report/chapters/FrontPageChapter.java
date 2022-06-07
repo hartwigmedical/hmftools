@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
-import com.hartwig.hmftools.common.purple.interpretation.ReportableGainLoss;
+import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
@@ -237,7 +237,7 @@ public class FrontPageChapter implements ReportChapter {
             return NONE;
         } else {
             Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
-            for (ReportableGainLoss gainLoss : report.purple().reportableSomaticGainsLosses()) {
+            for (GainLoss gainLoss : report.purple().reportableSomaticGainsLosses()) {
                 genes.add(gainLoss.gene());
             }
             return report.purple().reportableSomaticGainsLosses().size() + " (" + concat(genes) + ")";

@@ -3,7 +3,7 @@ package com.hartwig.hmftools.orange.report.tables;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.purple.interpretation.ReportableGainLoss;
+import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.common.rna.GeneExpression;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.report.ReportResources;
@@ -24,7 +24,7 @@ public final class GeneCopyNumberTable {
     }
 
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<ReportableGainLoss> gainLosses,
+    public static Table build(@NotNull String title, float width, @NotNull List<GainLoss> gainLosses,
             @Nullable IsofoxInterpretedData isofox) {
         if (gainLosses.isEmpty()) {
             return Tables.createEmpty(title, width);
@@ -36,7 +36,7 @@ public final class GeneCopyNumberTable {
                         Cells.createHeader("Type"), Cells.createHeader("CN"), Cells.createHeader("TPM"), Cells.createHeader("Perc (Type)"),
                         Cells.createHeader("FC (Type)"), Cells.createHeader("Perc (DB)"), Cells.createHeader("FC (DB)") });
 
-        for (ReportableGainLoss gainLoss : sort(gainLosses)) {
+        for (GainLoss gainLoss : sort(gainLosses)) {
             table.addCell(Cells.createContent(gainLoss.chromosome()));
             table.addCell(Cells.createContent(gainLoss.chromosomeBand()));
             table.addCell(Cells.createContent(displayGene(gainLoss)));
@@ -72,8 +72,8 @@ public final class GeneCopyNumberTable {
     }
 
     @NotNull
-    private static List<ReportableGainLoss> sort(@NotNull List<ReportableGainLoss> reportableGainsAndLosses) {
-        return reportableGainsAndLosses.stream().sorted((gainLoss1, gainLoss2) -> {
+    private static List<GainLoss> sort(@NotNull List<GainLoss> gainsAndLosses) {
+        return gainsAndLosses.stream().sorted((gainLoss1, gainLoss2) -> {
             String location1 = Chromosomes.zeroPrefixed(gainLoss1.chromosome() + gainLoss1.chromosomeBand());
             String location2 = Chromosomes.zeroPrefixed(gainLoss2.chromosome() + gainLoss2.chromosomeBand());
 
@@ -86,7 +86,7 @@ public final class GeneCopyNumberTable {
     }
 
     @NotNull
-    private static String displayGene(@NotNull ReportableGainLoss gainLoss) {
+    private static String displayGene(@NotNull GainLoss gainLoss) {
         String addon = Strings.EMPTY;
         if (!gainLoss.isCanonical()) {
             addon = " (alt)";

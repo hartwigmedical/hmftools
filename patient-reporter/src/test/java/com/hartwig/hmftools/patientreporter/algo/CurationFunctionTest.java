@@ -16,9 +16,9 @@ import com.hartwig.hmftools.common.protect.ImmutableProtectSource;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.common.protect.ProtectTestFactory;
-import com.hartwig.hmftools.common.purple.PurpleTestFactory;
-import com.hartwig.hmftools.common.purple.interpretation.ImmutableReportableGainLoss;
-import com.hartwig.hmftools.common.purple.interpretation.ReportableGainLoss;
+import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
+import com.hartwig.hmftools.common.purple.interpretation.GainLossTestFactory;
+import com.hartwig.hmftools.common.purple.interpretation.ImmutableGainLoss;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
@@ -125,8 +125,8 @@ public class CurationFunctionTest {
 
     @Test
     public void canCurateGainsAndLosses() {
-        List<ReportableGainLoss> gainLoss = gainloss();
-        List<ReportableGainLoss> curated = CurationFunction.curateGainsAndLosses(gainLoss);
+        List<GainLoss> gainLoss = gainloss();
+        List<GainLoss> curated = CurationFunction.curateGainsAndLosses(gainLoss);
 
         assertEquals(curated.size(), 3);
         assertEquals(findByGeneGainLoss(curated, "BRAF", true), "BRAF");
@@ -135,8 +135,8 @@ public class CurationFunctionTest {
     }
 
     @NotNull
-    private static String findByGeneGainLoss(List<ReportableGainLoss> curate, @NotNull String gene, boolean isCanonical) {
-        for (ReportableGainLoss gainLoss : curate) {
+    private static String findByGeneGainLoss(List<GainLoss> curate, @NotNull String gene, boolean isCanonical) {
+        for (GainLoss gainLoss : curate) {
             if (gainLoss.gene().equals(gene) && gainLoss.isCanonical() == isCanonical) {
                 return gainLoss.gene();
             }
@@ -263,19 +263,19 @@ public class CurationFunctionTest {
     }
 
     @NotNull
-    public List<ReportableGainLoss> gainloss() {
-        ReportableGainLoss gainLoss1 = ImmutableReportableGainLoss.builder()
-                .from(PurpleTestFactory.createTestReportableGainLoss())
+    public List<GainLoss> gainloss() {
+        GainLoss gainLoss1 = ImmutableGainLoss.builder()
+                .from(GainLossTestFactory.createTestGainLoss())
                 .gene("BRAF")
                 .isCanonical(true)
                 .build();
-        ReportableGainLoss gainLoss2 = ImmutableReportableGainLoss.builder()
-                .from(PurpleTestFactory.createTestReportableGainLoss())
+        GainLoss gainLoss2 = ImmutableGainLoss.builder()
+                .from(GainLossTestFactory.createTestGainLoss())
                 .gene("CDKN2A")
                 .isCanonical(true)
                 .build();
-        ReportableGainLoss gainLoss3 = ImmutableReportableGainLoss.builder()
-                .from(PurpleTestFactory.createTestReportableGainLoss())
+        GainLoss gainLoss3 = ImmutableGainLoss.builder()
+                .from(GainLossTestFactory.createTestGainLoss())
                 .gene("CDKN2A")
                 .isCanonical(false)
                 .build();
