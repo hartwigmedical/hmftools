@@ -580,7 +580,7 @@ Phasing improvements
 - **Phasing across exon boundaries with WTS data** - May be relevant for neo-epitope prediction or functional consequence.
 
 # Version History and Download Links
-- [3.0](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.0_beta)
+- [3.0](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.0)
 - [2.8](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.8)
   - Right align inserts that would otherwise be outside a coding region in the same manner as deletes
 - [2.7](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.7)
