@@ -127,6 +127,8 @@ investigate potential causes for QC failure.
  - BQR plots from both reference and tumor sample from [SAGE](../sage)
 
 ### Version History and Download Links
+- Upcoming
+  - Variants with a phased inframe canonical effect are dedup'ed prior to reporting. 
 - [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.9)
   - Proper support for RNA
     - Add (mandatory) `driver_gene_panel_tsv` and `known_fusion_file` inputs to support interpretation of isofox results

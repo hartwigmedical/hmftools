@@ -34,7 +34,7 @@ public final class SomaticVariantTable {
                         Cells.createHeader("Biallelic"), Cells.createHeader("Hotspot"), Cells.createHeader("DL"), Cells.createHeader("CL"),
                         Cells.createHeader("Phase ID"), Cells.createHeader("RNA Depth") });
 
-        for (ReportableVariant variant : Variants.sort(variants)) {
+        for (ReportableVariant variant : Variants.sort(Variants.dedup(variants))) {
             table.addCell(Cells.createContent(Variants.variantField(variant)));
             table.addCell(Cells.createContent(SINGLE_DIGIT.format(variant.alleleCopyNumber())));
             table.addCell(Cells.createContent(SINGLE_DIGIT.format(variant.totalCopyNumber())));
