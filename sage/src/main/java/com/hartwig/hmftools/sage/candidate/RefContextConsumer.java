@@ -361,6 +361,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             return null;
 
         final RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
+
         if(reachedDepthLimit(refContext))
             return null;
 
@@ -375,7 +376,6 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.MinMapQuality;
 
         AltRead altReadFull = new AltRead(refContext, altRead.Ref, altRead.Alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext);
-        // altReadFull.setBaseQualities(record.getBaseQualities()); // currently unused
         return altReadFull;
     }
 

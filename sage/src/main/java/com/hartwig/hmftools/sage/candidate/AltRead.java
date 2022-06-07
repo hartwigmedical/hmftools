@@ -17,9 +17,6 @@ public class AltRead
     @Nullable
     private ReadContext mReadContext;
 
-    @Nullable
-    private byte[] mBaseQuals;
-
     public AltRead(
             final RefContext refContext, final String ref, final String alt, final int baseQuality, final int numberOfEvents,
             final boolean sufficientMapQuality, final ReadContext readContext)
@@ -32,15 +29,12 @@ public class AltRead
         SufficientMapQuality = sufficientMapQuality;
 
         mReadContext = readContext;
-        mBaseQuals = null;
     }
 
     public boolean containsReadContext()
     {
         return mReadContext != null;
     }
-
-    public void setBaseQualities(final byte[] baseQuals) { mBaseQuals = null; }
 
     public int position()
     {
@@ -76,7 +70,7 @@ public class AltRead
 
     public void updateRefContext()
     {
-        mRefContext.processAltRead(Ref, Alt, BaseQuality, SufficientMapQuality, NumberOfEvents, mReadContext, mBaseQuals);
+        mRefContext.processAltRead(Ref, Alt, BaseQuality, SufficientMapQuality, NumberOfEvents, mReadContext);
     }
 
     public String toString() { return String.format("%s>%s", Ref, Alt); }

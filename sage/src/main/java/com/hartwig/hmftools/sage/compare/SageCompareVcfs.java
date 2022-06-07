@@ -102,6 +102,8 @@ public class SageCompareVcfs
         mUnmatchedNewCount = 0;
     }
 
+    private static final int LOG_COUNT = 100000;
+
     public void run()
     {
         if(mOriginalVcf == null || mNewVcf == null)
@@ -132,12 +134,15 @@ public class SageCompareVcfs
             List<VariantData> origVariants = Lists.newArrayList();
             List<VariantData> newVariants = Lists.newArrayList();
 
+            int nextLog = LOG_COUNT;
+
             while(newVar != null || origVar != null)
             {
                 int totalComparisons = totalComparisons();
 
-                if(totalComparisons > 0 && (totalComparisons % 100000) == 0)
+                if(totalComparisons >= nextLog)
                 {
+                    nextLog += LOG_COUNT;
                     SG_LOGGER.info("processed {} variants", totalComparisons);
                 }
 
