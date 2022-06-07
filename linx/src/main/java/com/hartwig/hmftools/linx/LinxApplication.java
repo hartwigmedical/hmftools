@@ -165,7 +165,7 @@ public class LinxApplication
 
         CohortDataWriter cohortDataWriter = new CohortDataWriter(config, ensemblDataCache);
 
-        SvAnnotators svAnnotators = new SvAnnotators(config, ensemblDataCache, dbAccess, cohortDataWriter);
+        SvAnnotators svAnnotators = new SvAnnotators(config, ensemblDataCache, dbAccess);
 
         List<SampleAnalyser> sampleAnalysers = Lists.newArrayList();
 
