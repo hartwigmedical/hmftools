@@ -24,6 +24,7 @@ public class SageConstants
     public static final int DEFAULT_BQR_MIN_MAP_QUAL = 10;
 
     public static final int MATCHING_BASE_QUALITY = 20;
+    public static final int CORE_LOW_QUAL_MISMATCH_BASE_LENGTH = 20;
     public static final double SC_READ_EVENTS_FACTOR = 12;
 
     public static final int SC_INSERT_MIN_FLANK_LENGTH = 10;
