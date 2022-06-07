@@ -6,7 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.protect.variant.OtherEffectsTestFactory;
 import com.hartwig.hmftools.common.purple.PurpleTestFactory;
-import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
+import com.hartwig.hmftools.common.purple.interpretation.ReportableGainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.test.SomaticVariantTestFactory;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;

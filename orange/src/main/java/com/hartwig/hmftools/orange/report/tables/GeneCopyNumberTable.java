@@ -3,7 +3,7 @@ package com.hartwig.hmftools.orange.report.tables;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
+import com.hartwig.hmftools.common.purple.interpretation.ReportableGainLoss;
 import com.hartwig.hmftools.common.rna.GeneExpression;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.report.ReportResources;

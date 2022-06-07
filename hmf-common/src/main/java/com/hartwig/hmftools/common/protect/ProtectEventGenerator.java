@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.protect;
 
 import com.hartwig.hmftools.common.protect.variant.OtherEffectsInterpreter;
-import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
+import com.hartwig.hmftools.common.purple.interpretation.ReportableGainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.Variant;
