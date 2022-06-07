@@ -25,7 +25,7 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantSource;
-import com.hartwig.hmftools.common.variant.VariantTestFactory;
+import com.hartwig.hmftools.common.variant.ReportableVariantTestFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -259,7 +259,7 @@ public class CurationFunctionTest {
 
     @NotNull
     private static ImmutableReportableVariant.Builder createTestReportableVariantBuilder() {
-        return ImmutableReportableVariant.builder().from(VariantTestFactory.create());
+        return ImmutableReportableVariant.builder().from(ReportableVariantTestFactory.create());
     }
 
     @NotNull

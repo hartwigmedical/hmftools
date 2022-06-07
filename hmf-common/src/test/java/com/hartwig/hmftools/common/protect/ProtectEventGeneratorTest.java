@@ -11,8 +11,8 @@ import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.test.SomaticVariantTestFactory;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.common.variant.ReportableVariantTestFactory;
 import com.hartwig.hmftools.common.variant.Variant;
-import com.hartwig.hmftools.common.variant.VariantTestFactory;
 
 import org.junit.Test;
 
@@ -20,11 +20,14 @@ public class ProtectEventGeneratorTest {
 
     @Test
     public void canGenerateEventForReportableVariant() {
-        ReportableVariant base = VariantTestFactory.builder().isCanonical(true).canonicalHgvsCodingImpact("coding").build();
+        ReportableVariant base = ReportableVariantTestFactory.builder().isCanonical(true).canonicalHgvsCodingImpact("coding").build();
         assertEquals("coding", ProtectEventGenerator.variantEvent(base));
 
-        ReportableVariant nonCanonical =
-                VariantTestFactory.builder().from(base).isCanonical(false).otherReportedEffects(OtherEffectsTestFactory.create()).build();
+        ReportableVariant nonCanonical = ReportableVariantTestFactory.builder()
+                .from(base)
+                .isCanonical(false)
+                .otherReportedEffects(OtherEffectsTestFactory.create())
+                .build();
         assertNotNull(ProtectEventGenerator.variantEvent(nonCanonical));
     }
 

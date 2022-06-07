@@ -5,9 +5,9 @@ import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class VariantTestFactory {
+public final class ReportableVariantTestFactory {
 
-    private VariantTestFactory() {
+    private ReportableVariantTestFactory() {
     }
 
     @NotNull

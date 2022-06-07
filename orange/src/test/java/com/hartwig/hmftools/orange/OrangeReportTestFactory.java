@@ -30,7 +30,7 @@ import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
-import com.hartwig.hmftools.common.variant.VariantTestFactory;
+import com.hartwig.hmftools.common.variant.ReportableVariantTestFactory;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.common.virus.ImmutableVirusInterpreterData;
@@ -116,17 +116,17 @@ public final class OrangeReportTestFactory {
         return ImmutablePurpleData.builder()
                 .from(PurpleTestFactory.createMinimalTestPurpleData())
                 .addReportableSomaticVariants(ImmutableReportableVariant.builder()
-                        .from(VariantTestFactory.create())
+                        .from(ReportableVariantTestFactory.create())
                         .gene("ARID1A")
                         .canonicalHgvsCodingImpact("c.1920+9571_1920+9596delAGTGAACCGTTGACTAGAGTTTGGTT")
                         .build())
                 .addReportableSomaticVariants(ImmutableReportableVariant.builder()
-                        .from(VariantTestFactory.create())
+                        .from(ReportableVariantTestFactory.create())
                         .gene("USH2A")
                         .canonicalHgvsCodingImpact("c.8558+420_8558+442delCCGATACGATGAAAGAAAAGAGC")
                         .build())
                 .addReportableSomaticVariants(ImmutableReportableVariant.builder()
-                        .from(VariantTestFactory.create())
+                        .from(ReportableVariantTestFactory.create())
                         .gene("USH2A")
                         .canonicalHgvsCodingImpact("c.11712-884A>T")
                         .localPhaseSet(42256)

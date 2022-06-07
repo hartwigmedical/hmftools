@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantSource;
-import com.hartwig.hmftools.common.variant.VariantTestFactory;
+import com.hartwig.hmftools.common.variant.ReportableVariantTestFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedReportData;
@@ -47,7 +47,7 @@ public class GermlineReportingModelTest {
     @NotNull
     private static ReportableVariant testReportableVariant(@NotNull String gene, @NotNull GenotypeStatus genotypeStatus) {
         return ImmutableReportableVariant.builder()
-                .from(VariantTestFactory.create())
+                .from(ReportableVariantTestFactory.create())
                 .type(VariantType.SNP)
                 .source(ReportableVariantSource.GERMLINE)
                 .gene(gene)
