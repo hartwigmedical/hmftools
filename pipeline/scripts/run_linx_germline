@@ -1,0 +1,26 @@
+#!/bin/bash
+
+linx_jar=$1 && shift
+tumor_id=$1 && shift
+sv_vcf=$1 && shift
+output_dir=$1 && shift
+ref_genome_version=$1 && shift
+line_element_file=$1 && shift
+ensembl_dir=$1 && shift
+driver_gene_panel=$1 && shift
+
+echo "Running Linx germline for ${tumor_id}, output dir ${output_dir}"
+
+if [[ ! -d "${output_dir}" ]]; then
+  mkdir ${output_dir}
+fi
+
+java -jar ${linx_jar} \
+  -sample ${tumor_id} \
+  -germline \
+  -sv_vcf ${sv_vcf} \
+  -ref_genome_version ${ref_genome_version} \
+  -line_element_file ${line_element_file} \
+  -ensembl_data_dir ${ensembl_dir} \
+  -driver_gene_panel ${driver_gene_panel} \
+  -output_dir ${output_dir} \
