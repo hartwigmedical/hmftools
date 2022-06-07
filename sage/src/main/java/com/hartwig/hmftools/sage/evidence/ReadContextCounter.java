@@ -270,10 +270,8 @@ public class ReadContextCounter implements VariantHotspot
                     ExpandedBasesFactory.expand(position(), readIndex, record) :
                     new IndexedBases(position(), readIndex, record.getReadBases());
 
-            int nonIndelLength = mIsIndel ? 0 : alt().length();
-
             final ReadContextMatch match = mReadContext.indexedBases().matchAtPosition(
-                    readBases, wildcardMatchInCore, record.getBaseQualities(), nonIndelLength);
+                    readBases, wildcardMatchInCore, record.getBaseQualities());
 
             if(!match.equals(ReadContextMatch.NONE))
             {
@@ -304,10 +302,10 @@ public class ReadContextCounter implements VariantHotspot
             }
         }
 
-        // Check if REALIGNED
-        final RealignedContext realignment = realignmentContext(Realign, readIndex, record);
-        final RealignedType realignmentType = realignment.Type;
-        if(realignmentType.equals(RealignedType.EXACT))
+        final RealignedContext realignment = Realign ? realignmentContext(readIndex, record) : null;
+        RealignedType realignedType = realignment != null ? realignment.Type : RealignedType.NONE;
+
+        if(realignedType == RealignedType.EXACT)
         {
             mCounts[RC_REALIGNED]++;
             mQualities[RC_REALIGNED] += quality;
@@ -317,10 +315,8 @@ public class ReadContextCounter implements VariantHotspot
             return SUPPORT;
         }
 
-        if(realignmentType.equals(RealignedType.NONE) && rawContext.ReadIndexInSoftClip)
-        {
+        if(realignedType == RealignedType.NONE && rawContext.ReadIndexInSoftClip && !rawContext.AltSupport)
             return UNRELATED;
-        }
 
         ReadMatchType matchType = UNRELATED;
 
@@ -341,7 +337,7 @@ public class ReadContextCounter implements VariantHotspot
         }
 
         // Jitter Penalty
-        switch(realignmentType)
+        switch(realignment.Type)
         {
             case LENGTHENED:
                 mJitterPenalty += jitterPenalty(qualityConfig, realignment.RepeatCount);
@@ -364,11 +360,8 @@ public class ReadContextCounter implements VariantHotspot
             mReverseStrand++;
     }
 
-    private RealignedContext realignmentContext(boolean realign, int readIndex, SAMRecord record)
+    private RealignedContext realignmentContext(int readIndex, SAMRecord record)
     {
-        if(!realign)
-            return new RealignedContext(RealignedType.NONE, 0);
-
         int index = mReadContext.readBasesPositionIndex();
         int leftIndex = mReadContext.readBasesLeftCentreIndex();
         int rightIndex = mReadContext.readBasesRightCentreIndex();

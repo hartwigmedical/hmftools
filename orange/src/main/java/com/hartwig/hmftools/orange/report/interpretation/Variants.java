@@ -2,13 +2,18 @@ package com.hartwig.hmftools.orange.report.interpretation;
 
 import java.text.DecimalFormat;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
+import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 import com.hartwig.hmftools.orange.report.ReportResources;
 
+import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
@@ -16,11 +21,51 @@ import org.jetbrains.annotations.NotNull;
 
 public final class Variants {
 
-    private static final DecimalFormat PERCENTAGE_FORMAT = new DecimalFormat("#'%'");
-
     private static final Logger LOGGER = LogManager.getLogger(Variants.class);
 
+    private static final Set<String> PHASED_EFFECTS =
+            Sets.newHashSet(VariantEffect.PHASED_INFRAME_DELETION.effect(), VariantEffect.PHASED_INFRAME_INSERTION.effect());
+
+    private static final DecimalFormat PERCENTAGE_FORMAT = new DecimalFormat("#'%'");
+
     private Variants() {
+    }
+
+    @NotNull
+    public static List<ReportableVariant> dedup(@NotNull List<ReportableVariant> variants) {
+        List<ReportableVariant> filtered = Lists.newArrayList();
+        for (ReportableVariant variant : variants) {
+            if (!(PHASED_EFFECTS.contains(variant.canonicalEffect()) && hasSameEffectWithHigherVCN(variants, variant))) {
+                filtered.add(variant);
+            } else {
+                LOGGER.debug("Dedup'ing variant '{}'", variant);
+            }
+        }
+        return filtered;
+    }
+
+    private static boolean hasSameEffectWithHigherVCN(@NotNull List<ReportableVariant> variants,
+            @NotNull ReportableVariant variantToMatch) {
+        // We assume that variants with same effect have unique hgvs coding impact.
+        Double minAlleleCopyNumber = null;
+        String uniqueHgvsCodingImpact = null;
+        for (ReportableVariant variant : variants) {
+            if (variant.canonicalEffect().equals(variantToMatch.canonicalEffect()) && variant.gene().equals(variantToMatch.gene())
+                    && variant.canonicalHgvsProteinImpact().equals(variantToMatch.canonicalHgvsProteinImpact())) {
+                if (minAlleleCopyNumber == null || Doubles.lessThan(variant.alleleCopyNumber(), minAlleleCopyNumber)) {
+                    minAlleleCopyNumber = variant.alleleCopyNumber();
+                    uniqueHgvsCodingImpact = variant.canonicalHgvsCodingImpact();
+                } else if (Doubles.equal(variant.alleleCopyNumber(), minAlleleCopyNumber)) {
+                    uniqueHgvsCodingImpact = variant.canonicalHgvsCodingImpact().compareTo(uniqueHgvsCodingImpact) > 0
+                            ? variant.canonicalHgvsCodingImpact()
+                            : uniqueHgvsCodingImpact;
+                }
+            }
+        }
+
+        boolean matchesMinAlleleCopyNumber = Doubles.equal(variantToMatch.alleleCopyNumber(), minAlleleCopyNumber);
+        boolean matchesBestHgvsCodingImpact = variantToMatch.canonicalHgvsCodingImpact().equals(uniqueHgvsCodingImpact);
+        return (!(matchesMinAlleleCopyNumber && matchesBestHgvsCodingImpact));
     }
 
     @NotNull

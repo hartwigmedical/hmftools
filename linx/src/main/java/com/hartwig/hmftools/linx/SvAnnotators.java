@@ -16,9 +16,7 @@ public class SvAnnotators
     public final PseudoGeneFinder PseudoGeneFinder;
     public final IndelAnnotator IndelAnnotator;
 
-    public SvAnnotators(
-            final LinxConfig config, final EnsemblDataCache geneDataCache, final DatabaseAccess dbAccess,
-            final CohortDataWriter cohortDataWriter)
+    public SvAnnotators(final LinxConfig config, final EnsemblDataCache geneDataCache, final DatabaseAccess dbAccess)
     {
         FragileSiteAnnotator = new FragileSiteAnnotator();
         FragileSiteAnnotator.loadFragileSitesFile(config.FragileSiteFile);

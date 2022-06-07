@@ -26,7 +26,7 @@ public class AltContextTest
     public void testIncompleteReadContext()
     {
         final RefContext refContext = new RefContext(CHROM, POS, false);
-        final AltContext victim = new AltContext(refContext, "C", "T");
+        final AltContext altContext = new AltContext(refContext, "C", "T");
         final String core1 = "GATAC";
         final String core2 = "GATAA";
 
@@ -37,17 +37,17 @@ public class AltContextTest
 
         // Ordering should not matter!
         Collections.shuffle(readContexts);
-        readContexts.forEach(x -> victim.addReadContext(0, x));
+        readContexts.forEach(x -> altContext.addReadContext(0, x));
 
-        victim.selectCandidates();
-        assertFalse(victim.hasValidCandidate());
+        altContext.selectCandidates();
+        assertFalse(altContext.hasValidCandidate());
     }
 
     @Test
     public void testFullMatch()
     {
         final RefContext refContext = new RefContext(CHROM, POS, false);
-        final AltContext victim = new AltContext(refContext, "C", "T");
+        final AltContext altContext = new AltContext(refContext, "C", "T");
         final String core1 = "GATAC";
 
         final List<ReadContext> readContexts = Lists.newArrayList();
@@ -57,18 +57,18 @@ public class AltContextTest
 
         // Ordering should not matter!
         Collections.shuffle(readContexts);
-        readContexts.forEach(x -> victim.addReadContext(0, x));
+        readContexts.forEach(x -> altContext.addReadContext(0, x));
 
-        victim.selectCandidates();
-        assertTrue(victim.hasValidCandidate());
-        assertEquals("AG" + core1 + "AG", new String(victim.readContext().readBases()));
+        altContext.selectCandidates();
+        assertTrue(altContext.hasValidCandidate());
+        assertEquals("AG" + core1 + "AG", new String(altContext.readContext().readBases()));
     }
 
     @Test
     public void testCoreMatchAfterFullMatch()
     {
         final RefContext refContext = new RefContext(CHROM, POS, false);
-        final AltContext victim = new AltContext(refContext, "C", "T");
+        final AltContext altContext = new AltContext(refContext, "C", "T");
 
         final String core1 = "GATAC";
         final String core2 = "GATAA";
@@ -87,18 +87,18 @@ public class AltContextTest
 
         // Ordering should not matter!
         Collections.shuffle(readContexts);
-        readContexts.forEach(x -> victim.addReadContext(0, x));
+        readContexts.forEach(x -> altContext.addReadContext(0, x));
 
-        victim.selectCandidates();
-        assertTrue(victim.hasValidCandidate());
-        assertEquals("AG" + core1 + "AG", new String(victim.readContext().readBases()));
+        altContext.selectCandidates();
+        assertTrue(altContext.hasValidCandidate());
+        assertEquals("AG" + core1 + "AG", new String(altContext.readContext().readBases()));
     }
 
     @Test
     public void testPartialMatchAfterFullMatch()
     {
         final RefContext refContext = new RefContext(CHROM, POS, false);
-        final AltContext victim = new AltContext(refContext, "C", "T");
+        final AltContext altContext = new AltContext(refContext, "C", "T");
 
         final String core1 = "GATAC";
         final String core2 = "GATAA";
@@ -117,11 +117,11 @@ public class AltContextTest
 
         // Ordering should not matter!
         Collections.shuffle(readContexts);
-        readContexts.forEach(x -> victim.addReadContext(0, x));
+        readContexts.forEach(x -> altContext.addReadContext(0, x));
 
-        victim.selectCandidates();
-        assertTrue(victim.hasValidCandidate());
-        assertEquals("AG" + core1 + "AG", new String(victim.readContext().readBases()));
+        altContext.selectCandidates();
+        assertTrue(altContext.hasValidCandidate());
+        assertEquals("AG" + core1 + "AG", new String(altContext.readContext().readBases()));
     }
 
     @Test
@@ -130,26 +130,26 @@ public class AltContextTest
         String core = "CAT";
 
         final RefContext refContext = new RefContext(CHROM, POS, false);
-        final AltContext victim = new AltContext(refContext, "C", "T");
+        final AltContext altContext = new AltContext(refContext, "C", "T");
 
-        victim.addReadContext(3, simpleReadContext("AAA", core, "CCC"));
-        assertEquals("AAACATCCC", new String(victim.interimReadContexts().get(0).readContext().readBases()));
+        altContext.addReadContext(3, simpleReadContext("AAA", core, "CCC"));
+        assertEquals("AAACATCCC", new String(altContext.interimReadContexts().get(0).readContext().readBases()));
 
         // Adding same size shouldn't change it
-        victim.addReadContext(2, simpleReadContext("TTA", core, "CGG"));
-        assertEquals("AAACATCCC", new String(victim.interimReadContexts().get(0).readContext().readBases()));
+        altContext.addReadContext(2, simpleReadContext("TTA", core, "CGG"));
+        assertEquals("AAACATCCC", new String(altContext.interimReadContexts().get(0).readContext().readBases()));
 
         // Adding one to left won't change it
-        victim.addReadContext(3, simpleReadContext("TAAA", core, "CCC"));
-        assertEquals("AAACATCCC", new String(victim.interimReadContexts().get(0).readContext().readBases()));
+        altContext.addReadContext(3, simpleReadContext("TAAA", core, "CCC"));
+        assertEquals("AAACATCCC", new String(altContext.interimReadContexts().get(0).readContext().readBases()));
 
         // Adding one to right won't change it
-        victim.addReadContext(3, simpleReadContext("AAA", core, "CCCG"));
-        assertEquals("AAACATCCC", new String(victim.interimReadContexts().get(0).readContext().readBases()));
+        altContext.addReadContext(3, simpleReadContext("AAA", core, "CCCG"));
+        assertEquals("AAACATCCC", new String(altContext.interimReadContexts().get(0).readContext().readBases()));
 
         // Adding one to both WILL change it
-        victim.addReadContext(3, simpleReadContext("TAAA", core, "CCCG"));
-        AltContext.ReadContextCandidate finalCandidate = victim.interimReadContexts().get(0);
+        altContext.addReadContext(3, simpleReadContext("TAAA", core, "CCCG"));
+        AltContext.ReadContextCandidate finalCandidate = altContext.interimReadContexts().get(0);
 
         assertEquals("TAAACATCCCG", new String(finalCandidate.readContext().readBases()));
         assertEquals(2, finalCandidate.minNumberOfEvents());

@@ -57,12 +57,11 @@ Note that if the somatic variants also contain a reference or an rna sample (or 
 java -cp patient-db.jar com.hartwig.hmftools.patientdb.LoadLinxData \ 
     -sample COLO829T \
     -linx_dir /path/COLO829/linx \
-    -data_type [both=default, somatic, germline] \
     -db_user writer -db_pass writer_password \
     -db_url mysql://localhost:3306/patientdb?serverTimezone=UTC
 ```
 
-Either somatic or germline data only can be loaded if the data_type config is provided.
+Either somatic or germline data only can be loaded if the configs -somatic_only and -germline_only are included.
 
 ## Use Queries
 

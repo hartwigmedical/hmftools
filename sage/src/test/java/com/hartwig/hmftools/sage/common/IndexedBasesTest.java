@@ -132,48 +132,48 @@ public class IndexedBasesTest
         fill(readQuals, highQual);
 
         IndexedBases testBases = new IndexedBases(position, readIndex, leftCoreIndex, rightCoreIndex, flankSize, refBases.getBytes());
-        assertEquals(ReadContextMatch.FULL, indexedBases.matchAtPosition(testBases, false, readQuals, 1));
+        assertEquals(ReadContextMatch.FULL, indexedBases.matchAtPosition(testBases, false, readQuals));
 
         // base diff in core - permitted if not in an actual SNV or MNV
         String readBases = preLeftFlank + leftFlank + "ATTCC" + rightFlank;
         testBases = new IndexedBases(position, readIndex, leftCoreIndex, rightCoreIndex, flankSize, readBases.getBytes());
-        assertEquals(ReadContextMatch.NONE, indexedBases.matchAtPosition(testBases, false, readQuals, 1));
+        assertEquals(ReadContextMatch.NONE, indexedBases.matchAtPosition(testBases, false, readQuals));
 
         // with low qual at that base
         readQuals[leftCoreIndex + 1] = MATCHING_BASE_QUALITY - 1;
-        //assertEquals(ReadContextMatch.FULL, indexedBases.matchAtPosition(testBases, false, readQuals, 1));
+        //assertEquals(ReadContextMatch.FULL, indexedBases.matchAtPosition(testBases, false, readQuals));
 
         // not permitted in the alt itself
         readBases = preLeftFlank + leftFlank + "AAGCC" + rightFlank;
         testBases = new IndexedBases(position, readIndex, leftCoreIndex, rightCoreIndex, flankSize, readBases.getBytes());
-        assertEquals(ReadContextMatch.NONE, indexedBases.matchAtPosition(testBases, false, readQuals, 1));
+        assertEquals(ReadContextMatch.NONE, indexedBases.matchAtPosition(testBases, false, readQuals));
 
         // with low qual at that base
         readQuals[leftCoreIndex + 2] = MATCHING_BASE_QUALITY - 1;
-        assertEquals(ReadContextMatch.NONE, indexedBases.matchAtPosition(testBases, false, readQuals, 1));
+        assertEquals(ReadContextMatch.NONE, indexedBases.matchAtPosition(testBases, false, readQuals));
 
         // low qual mismatch in left flank
         readBases = preLeftFlank + "GGGAG" + core + rightFlank;
         testBases = new IndexedBases(position, readIndex, leftCoreIndex, rightCoreIndex, flankSize, readBases.getBytes());
-        assertEquals(ReadContextMatch.CORE, indexedBases.matchAtPosition(testBases, false, readQuals, 1));
+        assertEquals(ReadContextMatch.CORE, indexedBases.matchAtPosition(testBases, false, readQuals));
 
         readQuals[leftFlankIndex + 3] = MATCHING_BASE_QUALITY - 1;
-        assertEquals(ReadContextMatch.FULL, indexedBases.matchAtPosition(testBases, false, readQuals, 1));
+        assertEquals(ReadContextMatch.FULL, indexedBases.matchAtPosition(testBases, false, readQuals));
 
         // low qual mismstch in right flank
         readBases = preLeftFlank + leftFlank + core + "GAAAA";
         testBases = new IndexedBases(position, readIndex, leftCoreIndex, rightCoreIndex, flankSize, readBases.getBytes());
-        assertEquals(ReadContextMatch.CORE, indexedBases.matchAtPosition(testBases, false, readQuals, 1));
+        assertEquals(ReadContextMatch.CORE, indexedBases.matchAtPosition(testBases, false, readQuals));
 
         readQuals[rightCoreIndex + 1] = MATCHING_BASE_QUALITY - 1;
-        assertEquals(ReadContextMatch.FULL, indexedBases.matchAtPosition(testBases, false, readQuals, 1));
+        assertEquals(ReadContextMatch.FULL, indexedBases.matchAtPosition(testBases, false, readQuals));
 
         readBases = preLeftFlank + leftFlank + core + "AAAAG";
         testBases = new IndexedBases(position, readIndex, leftCoreIndex, rightCoreIndex, flankSize, readBases.getBytes());
-        assertEquals(ReadContextMatch.CORE, indexedBases.matchAtPosition(testBases, false, readQuals, 1));
+        assertEquals(ReadContextMatch.CORE, indexedBases.matchAtPosition(testBases, false, readQuals));
 
         readQuals[rightCoreIndex + 5] = MATCHING_BASE_QUALITY - 1;
-        assertEquals(ReadContextMatch.FULL, indexedBases.matchAtPosition(testBases, false, readQuals, 1));
+        assertEquals(ReadContextMatch.FULL, indexedBases.matchAtPosition(testBases, false, readQuals));
     }
 
     @Test

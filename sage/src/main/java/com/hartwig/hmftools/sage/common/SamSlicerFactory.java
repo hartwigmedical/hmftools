@@ -29,12 +29,12 @@ public class SamSlicerFactory
         mBamReaders = Maps.newHashMap();
     }
 
-    public SamSlicerInterface getSamSlicer(final String sampleId, final List<ChrBaseRegion> regions)
+    public SamSlicerInterface getSamSlicer(final String sampleId, final List<ChrBaseRegion> regions, boolean keepSupplementaries)
     {
         if(!mBamReaders.isEmpty())
         {
             SamReader bamReader = mBamReaders.get(sampleId);
-            return new SamSlicer(bamReader, 0, regions);
+            return new SamSlicer(bamReader, 0, regions, keepSupplementaries);
         }
 
         return mSamSlicers.get(sampleId);

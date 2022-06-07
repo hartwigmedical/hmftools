@@ -83,7 +83,7 @@ public class ReadContextEvidence
         QualityRecalibrationMap qrMap = mQualityRecalibrationMap.get(sample);
         mQualityCalculator = new QualityCalculator(mSageConfig.Quality, qrMap, mRefSequence.IndexedBases);
 
-        final SamSlicerInterface samSlicer = samSlicerFactory.getSamSlicer(sample, Lists.newArrayList(sliceRegion));
+        final SamSlicerInterface samSlicer = samSlicerFactory.getSamSlicer(sample, Lists.newArrayList(sliceRegion), false);
         samSlicer.slice(this::processReadRecord);
 
         return mReadCounters;

@@ -16,10 +16,10 @@ public class SamSlicer implements SamSlicerInterface
 
     private final BamSlicer mBamSlicer;
 
-    public SamSlicer(final SamReader samReader, final int minMappingQuality, final List<ChrBaseRegion> regions)
+    public SamSlicer(final SamReader samReader, final int minMappingQuality, final List<ChrBaseRegion> regions, boolean keepSupplementaries)
     {
         mSamReader = samReader;
-        mBamSlicer = new BamSlicer(minMappingQuality);
+        mBamSlicer = new BamSlicer(minMappingQuality, false, keepSupplementaries, false);
         mRegions = regions;
     }
 

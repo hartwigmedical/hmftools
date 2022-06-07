@@ -224,7 +224,7 @@ LILAC also optionally accepts a RNA bam.  As per the fragments in the bam are co
 
 ### QC metrics and PON
 
-LILAC produces a comprehensive set of QC metrics and provides warning statuses if the typing confidence may be diminished.   The full list of possible QC warnings is
+LILAC produces a comprehensive set of QC metrics and provides warning statuses if the typing confidence may be diminished. The full list of possible QC warnings is
 
 Warning | Description 
 --- | ---
@@ -369,8 +369,8 @@ nucleotide matches are permitted.
  </pre>
 
 ## Version History and Download Links
-- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.0)
-- [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.1)
 - [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.2)
+- [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.1)
+- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.0)
 
  

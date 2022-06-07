@@ -100,13 +100,18 @@ public class LoadPurpleData
                     loadGermline & loadSomatic ? "somatic and germline" : (loadSomatic ? "somatic" : "germline"),
                     purpleDir);
 
-            loadCommonData(sampleId, dbAccess, purpleDir);
+            final String sample = sampleId;
 
-            if(loadSomatic)
-                loadSomaticData(sampleId, referenceId, rnaId, dbAccess, purpleDir);
+            dbAccess.context().transaction(tr ->
+            {
+                loadCommonData(sample, dbAccess, purpleDir);
 
-            if(loadGermline)
-                loadGermlineData(sampleId, referenceId, rnaId, dbAccess, purpleDir);
+                if(loadSomatic)
+                    loadSomaticData(sample, referenceId, rnaId, dbAccess, purpleDir);
+
+                if(loadGermline)
+                    loadGermlineData(sample, referenceId, rnaId, dbAccess, purpleDir);
+            });
 
             LOGGER.info("Purple data loading complete");
         }
@@ -149,12 +154,8 @@ public class LoadPurpleData
             return;
         }
 
-        if(requiredFiles.stream().anyMatch(x -> !Files.exists(Paths.get(x))))
-        {
-            LOGGER.info("skipping somatic data - files are missing:");
-            requiredFiles.stream().filter(x -> !Files.exists(Paths.get(x))).forEach(x -> logMissingFile(x));
+        if(hasMissingFiles(requiredFiles, "somatic"))
             System.exit(1);
-        }
 
         List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(geneCopyNumberFile);
         List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(copyNumberFile);
@@ -195,14 +196,6 @@ public class LoadPurpleData
                 somaticVariantFactory.getCreatedCount(), somaticVariantFactory.getFilteredCount());
     }
 
-    private static void logMissingFile(final String filename)
-    {
-        if(!Files.exists(Paths.get(filename)))
-        {
-            LOGGER.warn("missing file {}", filename);
-        }
-    }
-    
     private static void loadGermlineData(
             final String sampleId, final String referenceId, final String rnaId,
             final DatabaseAccess dbAccess, final String purpleDir) throws Exception
@@ -221,12 +214,8 @@ public class LoadPurpleData
             return;
         }
 
-        if(requiredFiles.stream().anyMatch(x -> !Files.exists(Paths.get(x))))
-        {
-            LOGGER.warn("skipping germline data - files are missing:");
-            requiredFiles.stream().filter(x -> !Files.exists(Paths.get(x))).forEach(x -> logMissingFile(x));
+        if(hasMissingFiles(requiredFiles, "germline"))
             System.exit(1);
-        }
 
         List<GermlineDeletion> germlineDeletions = GermlineDeletion.read(germlineDeletionsFile);
 
@@ -253,6 +242,24 @@ public class LoadPurpleData
         }
 
         LOGGER.info("loaded {} germlime variants", variantCount);
+    }
+
+    public static boolean hasMissingFiles(final List<String> requiredFiles, final String sourceType)
+    {
+        if(requiredFiles.stream().allMatch(x -> Files.exists(Paths.get(x))))
+            return false;
+
+        LOGGER.warn("skipping {} data - files are missing:", sourceType);
+
+        for(String filename : requiredFiles)
+        {
+            if(!Files.exists(Paths.get(filename)))
+            {
+                LOGGER.warn("missing file {}", filename);
+            }
+        }
+
+        return true;
     }
 
     @NotNull

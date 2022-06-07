@@ -145,18 +145,6 @@ public class ReferenceData
             return false;
         }
 
-        // Validate Coverage Bed
-        if(mConfig.PanelOnly && !CoveragePanel.isEmpty())
-        {
-            // TODO: just need to test that the coverage regions are covered by the panel bed
-            /*
-            if(!GenomeRegionsValidation.isSubset(mPanelWithHotspots.values(), mCoveragePanel.values()))
-            {
-                throw new IOException("Coverage bed must be a subset of panel bed when running in panel only mode");
-            }
-            */
-        }
-
         return true;
     }
 
