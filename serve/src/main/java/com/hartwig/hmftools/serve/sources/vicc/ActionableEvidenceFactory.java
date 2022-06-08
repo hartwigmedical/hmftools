@@ -18,6 +18,7 @@ import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.serve.sources.vicc.curation.DrugCurator;
 import com.hartwig.hmftools.serve.sources.vicc.curation.EvidenceLevelCurator;
+import com.hartwig.hmftools.serve.treatment.ImmutableTreatment;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.Phenotype;
 import com.hartwig.hmftools.vicc.datamodel.PhenotypeType;
@@ -128,8 +129,10 @@ class ActionableEvidenceFactory {
                     }
 
                     for (List<String> drugList : drugLists) {
-                        actionableEvidences.add(builder.treatment(formatDrugList(drugList))
-                                .drugClasses(Sets.newHashSet())
+                        actionableEvidences.add(builder.treatment(ImmutableTreatment.builder()
+                                        .treament(formatDrugList(drugList))
+                                        .drugClasses(Sets.newHashSet())
+                                        .build())
                                 .applicableCancerType(ImmutableCancerType.builder().name(cancerType).doid(doid).build())
                                 .blacklistCancerTypes(blacklistedCancerTypes)
                                 .build());

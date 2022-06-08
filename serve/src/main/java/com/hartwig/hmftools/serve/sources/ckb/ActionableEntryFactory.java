@@ -16,6 +16,7 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.cancertype.CancerType;
 import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
+import com.hartwig.hmftools.serve.treatment.ImmutableTreatment;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -69,7 +70,7 @@ class ActionableEntryFactory {
             EvidenceDirection direction = resolveDirection(evidence.responseType());
             String doid = extractAndCurateDoid(evidence.indication().termId());
 
-            for (RelevantTreatmentApproaches relevantTreatmentApproaches: evidence.relevantTreatmentApproaches()) {
+            for (RelevantTreatmentApproaches relevantTreatmentApproaches : evidence.relevantTreatmentApproaches()) {
                 drugClasses.add(relevantTreatmentApproaches.drugClass().drugClass());
             }
 
@@ -106,8 +107,7 @@ class ActionableEntryFactory {
                         .source(Knowledgebase.CKB)
                         .sourceEvent(sourceEvent)
                         .sourceUrls(sourceUrls)
-                        .treatment(treatment)
-                        .drugClasses(drugClasses)
+                        .treatment(ImmutableTreatment.builder().treament(treatment).drugClasses(drugClasses).build())
                         .applicableCancerType(ImmutableCancerType.builder().name(cancerType).doid(doid).build())
                         .blacklistCancerTypes(blacklistedCancerTypes)
                         .level(level)

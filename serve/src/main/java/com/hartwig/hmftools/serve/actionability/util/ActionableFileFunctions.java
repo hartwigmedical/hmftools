@@ -11,6 +11,8 @@ import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.cancertype.CancerType;
 import com.hartwig.hmftools.serve.cancertype.CancerTypeFactory;
 import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
+import com.hartwig.hmftools.serve.treatment.ImmutableTreatment;
+import com.hartwig.hmftools.serve.treatment.Treatment;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -65,15 +67,13 @@ public final class ActionableFileFunctions {
 
             @NotNull
             @Override
-            public String treatment() {
-                return values[startingPosition + 3];
-            }
+            public Treatment treatment() {
+                int drugClassPosition = startingPosition + 4;
+                return ImmutableTreatment.builder()
+                        .treament(values[startingPosition + 3])
+                        .drugClasses(values.length > drugClassPosition ? stringToDrugClasses(values[drugClassPosition]) : Sets.newHashSet())
+                        .build();
 
-            @NotNull
-            @Override
-            public Set<String> drugClasses() {
-                int urlPosition = startingPosition + 4;
-                return values.length > urlPosition ? stringToDrugClasses(values[urlPosition]) : Sets.newHashSet();
             }
 
             @NotNull
@@ -114,8 +114,8 @@ public final class ActionableFileFunctions {
         return new StringJoiner(FIELD_DELIMITER).add(event.source().toString())
                 .add(event.sourceEvent())
                 .add(urlsToString(event.sourceUrls()))
-                .add(event.treatment())
-                .add(drugClassesToString(event.drugClasses()))
+                .add(event.treatment().treament())
+                .add(drugClassesToString(event.treatment().drugClasses()))
                 .add(event.applicableCancerType().name())
                 .add(event.applicableCancerType().doid())
                 .add(CancerTypeFactory.toString(event.blacklistCancerTypes()))

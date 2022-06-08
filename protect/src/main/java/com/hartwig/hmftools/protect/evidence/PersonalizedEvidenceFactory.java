@@ -46,8 +46,8 @@ public class PersonalizedEvidenceFactory {
     @NotNull
     public ImmutableProtectEvidence.Builder evidenceBuilder(@NotNull ActionableEvent actionable) {
         return ImmutableProtectEvidence.builder()
-                .treatment(actionable.treatment())
-                .onLabel(isOnLabel(actionable.applicableCancerType(), actionable.blacklistCancerTypes(), actionable.treatment()))
+                .treatment(actionable.treatment().treament())
+                .onLabel(isOnLabel(actionable.applicableCancerType(), actionable.blacklistCancerTypes(), actionable.treatment().treament()))
                 .level(actionable.level())
                 .direction(actionable.direction())
                 .sources(Sets.newHashSet(resolveProtectSource(actionable)));

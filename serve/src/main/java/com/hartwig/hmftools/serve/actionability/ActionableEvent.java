@@ -6,6 +6,7 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.cancertype.CancerType;
+import com.hartwig.hmftools.serve.treatment.Treatment;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -21,10 +22,7 @@ public interface ActionableEvent {
     Set<String> sourceUrls();
 
     @NotNull
-    String treatment();
-
-    @NotNull
-    Set<String> drugClasses();
+    Treatment treatment();
 
     @NotNull
     CancerType applicableCancerType();

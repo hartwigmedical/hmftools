@@ -29,6 +29,7 @@ import com.hartwig.hmftools.serve.cancertype.CancerType;
 import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicAnnotation;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
+import com.hartwig.hmftools.serve.treatment.ImmutableTreatment;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -148,7 +149,7 @@ public class PersonalizedEvidenceFactoryTest {
         ActionableEvent event = ActionabilityTestUtil.create(Knowledgebase.CKB,
                 "amp",
                 Sets.newHashSet(),
-                "treatment A", Sets.newHashSet("drugClasses"),
+                ImmutableTreatment.builder().treament("treatment A").drugClasses(Sets.newHashSet("drugClasses")).build(),
                 ImmutableCancerType.builder().name(cancerType).doid(doid).build(),
                 blacklist,
                 EvidenceLevel.A,

@@ -6,6 +6,8 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
+import com.hartwig.hmftools.serve.treatment.ImmutableTreatment;
+import com.hartwig.hmftools.serve.treatment.Treatment;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,7 +30,6 @@ public final class ActinTrialFactory {
                 .sourceEvent(sourceEvent)
                 .sourceUrls(Sets.newHashSet())
                 .treatment(extractTreatment(entry))
-                .drugClasses(Sets.newHashSet("study"))
                 .applicableCancerType(ImmutableCancerType.builder().name("Cancer").doid("162").build())
                 .blacklistCancerTypes(Sets.newHashSet())
                 .level(EvidenceLevel.B)
@@ -38,7 +39,7 @@ public final class ActinTrialFactory {
     }
 
     @NotNull
-    private static String extractTreatment(@NotNull ActinEntry entry) {
+    private static Treatment extractTreatment(@NotNull ActinEntry entry) {
         String addon = Strings.EMPTY;
         if (entry.cohort() != null) {
             if (entry.cohort().contains(TRIAL_COHORT_SEPARATOR)) {
@@ -47,6 +48,6 @@ public final class ActinTrialFactory {
             addon = TRIAL_COHORT_SEPARATOR + entry.cohort();
         }
 
-        return entry.trial() + addon;
+        return ImmutableTreatment.builder().treament(entry.trial() + addon).drugClasses(Sets.newHashSet("study")).build();
     }
 }

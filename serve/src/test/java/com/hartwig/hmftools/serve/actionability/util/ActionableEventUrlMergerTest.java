@@ -13,6 +13,7 @@ import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
 import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
+import com.hartwig.hmftools.serve.treatment.ImmutableTreatment;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -41,8 +42,7 @@ public class ActionableEventUrlMergerTest {
                 .from(ActionabilityTestUtil.create(Knowledgebase.VICC_CGI,
                         "source event",
                         Sets.newHashSet(),
-                        "treatment",
-                        Sets.newHashSet("drugClasses"),
+                        ImmutableTreatment.builder().treament("treatment").drugClasses(Sets.newHashSet("drugClasses")).build(),
                         ImmutableCancerType.builder().name("applicable cancerType").doid("applicable doid").build(),
                         Sets.newHashSet(ImmutableCancerType.builder().name("blacklist cancerType").doid("blacklist doid").build()),
                         EvidenceLevel.A,

@@ -33,7 +33,7 @@ public class ActionableEntryFactoryTest {
         ActionableEntry characteristics = entryCharacteristicsSet.iterator().next();
         assertEquals(Strings.EMPTY, characteristics.sourceEvent());
         assertEquals(Knowledgebase.CKB, characteristics.source());
-        assertEquals("AB", characteristics.treatment());
+        assertEquals("AB", characteristics.treatment().treament());
         assertEquals("AB", characteristics.applicableCancerType().name());
         assertEquals("162", characteristics.applicableCancerType().doid());
         assertEquals(Sets.newHashSet(ImmutableCancerType.builder().name("Refractory hematologic cancer").doid("712").build(),
@@ -56,7 +56,7 @@ public class ActionableEntryFactoryTest {
         ActionableEntry amplification = entryAmplificationSet.iterator().next();
         assertEquals("KRAS", amplification.sourceEvent());
         assertEquals(Knowledgebase.CKB, amplification.source());
-        assertEquals("AB", amplification.treatment());
+        assertEquals("AB", amplification.treatment().treament());
         assertEquals("AB", amplification.applicableCancerType().name());
         assertEquals("163", amplification.applicableCancerType().doid());
         assertTrue(amplification.blacklistCancerTypes().isEmpty());
@@ -70,7 +70,7 @@ public class ActionableEntryFactoryTest {
         ActionableEntry hotspot = entryHotspotSet.iterator().next();
         assertEquals("BRAF", hotspot.sourceEvent());
         assertEquals(Knowledgebase.CKB, hotspot.source());
-        assertEquals("AB", hotspot.treatment());
+        assertEquals("AB", hotspot.treatment().treament());
         assertEquals("AB", hotspot.applicableCancerType().name());
         assertEquals("162", hotspot.applicableCancerType().doid());
         assertEquals(Sets.newHashSet(ImmutableCancerType.builder().name("Refractory hematologic cancer").doid("712").build(),
