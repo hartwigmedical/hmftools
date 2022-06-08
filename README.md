@@ -41,7 +41,7 @@ Component | Description | Current Version
 ---|---|---
 [Isofox](./isofox/README.md) | WTS Transcript Abundance, Fusions & Novel Splice Junctions | [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/isofox-v1.5)
 
-### Resource Files
+## Resource Files
 Resources used by the HMF algorithms can be downloaded from https://resources.hartwigmedicalfoundation.nl
 
 The complete set of resource files required to run the DNA pipeline described above can be found here.
