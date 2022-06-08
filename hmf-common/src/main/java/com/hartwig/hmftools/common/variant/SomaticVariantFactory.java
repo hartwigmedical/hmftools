@@ -74,7 +74,6 @@ public class SomaticVariantFactory implements VariantContextFilter
 
     @NotNull
     public List<SomaticVariant> fromVCFFile(@NotNull final String tumor, @Nullable final String reference,
-
             @NotNull final String vcfFile) throws IOException
     {
         final List<SomaticVariant> result = Lists.newArrayList();
