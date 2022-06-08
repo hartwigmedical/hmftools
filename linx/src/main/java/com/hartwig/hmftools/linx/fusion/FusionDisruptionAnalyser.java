@@ -397,11 +397,11 @@ public class FusionDisruptionAnalyser
         if(mNeoEpitopeWriter != null)
             mNeoEpitopeWriter.initialiseSample(mSampleId);
 
-        finalSingleSVFusions(svList);
+        findSingleSVFusions(svList);
         findChainedFusions(clusters);
     }
 
-    private void finalSingleSVFusions(final List<SvVarData> svList)
+    private void findSingleSVFusions(final List<SvVarData> svList)
     {
         // always report SVs by themselves
         for(final SvVarData var : svList)
