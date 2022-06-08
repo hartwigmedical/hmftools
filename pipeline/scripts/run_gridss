@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# sample and meta data
+sample_data=$1
+sample_array=($(echo $sample_data | tr "," " "))
+tumor_id=${sample_array[0]}
+reference_id=${sample_array[1]}
+
+# assume BAM names match tumor and reference names
+tumor_bam=${tumor_id}.bam
+reference_bam=${reference_id}.bam
+
+gridss_app=$HMF_TOOL_DIR/gridss
+gridss_jar=$HMF_TOOL_DIR/gridss.jar
+
+export PATH=$PATH:/data/tools/samtools/1.14:/data/tools/bwa/0.7.17
+
+# resource files
+ref_genome=$HMF_RESOURCE_DIR/ref_genome/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
+blacklist_bed=$HMF_RESOURCE_DIR/gridss/ENCFF001TDO.38.bed.gz
+gridss_config=$HMF_TOOL_DIR/gridss.properties
+
+sample_dir=$SAMPLES_DIR/${tumor_id}
+
+tumor_bam=${sample_dir}/bam/${tumor_id}.bam
+reference_bam=${sample_dir}/bam/${reference_id}.bam
+
+output_dir=${sample_dir}/gridss
+if [[ ! -d "${output_dir}" ]]; then
+  mkdir ${output_dir}
+fi
+
+output_vcf=${output_dir}/${tumor_id}.gridss.unfiltered.vcf.gz
+assembly_bam ${output_dir}/${tumor_id}.assembly.bam
+
+max_memory=$MAX_MEMORY
+
+arguments="--output ${output_vcf} \
+  --assembly ${assembly_bam} \
+  --workingdir ${output_dir}/gridss_working \
+  --reference ${ref_genome} \
+  --jar ${gridss_jar} \
+  --blacklist ${blacklist_bed} \
+  --configuration ${gridss_config} \
+  --labels "${reference_id},${tumor_id}" \
+  --jvmheap ${max_memory}G \
+  --threads $MAX_THREADS  \
+  --externalaligner \
+  ${reference_bam} ${tumor_bam}"
+
+echo "Running Gridss for ${tumor_id} and ${reference_id}"
+echo "Gridss args: ${arguments}"
+echo ""
+
+# GRIDSS command
+${gridss_app} ${arguments}
+
+

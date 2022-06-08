@@ -9,11 +9,19 @@ line_element_file=$1 && shift
 ensembl_dir=$1 && shift
 driver_gene_panel=$1 && shift
 
-echo "Running Linx germline for ${tumor_id}, output dir ${output_dir}"
-
 if [[ ! -d "${output_dir}" ]]; then
   mkdir ${output_dir}
 fi
+
+svs_tsv=${output_dir}/${tumor_id}.linx.svs.tsv
+
+if [[ -f "${svs_tsv}" ]]; then
+  echo "Skipping Linx germline for ${tumor_id}, since SV annotations file ${svs_tsv} exists"
+  exit
+fi
+
+echo "Running Linx germline for ${tumor_id}, output dir ${output_dir}"
+
 
 java -jar ${linx_jar} \
   -sample ${tumor_id} \

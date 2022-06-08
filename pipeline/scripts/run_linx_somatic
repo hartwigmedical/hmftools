@@ -11,12 +11,20 @@ line_element_file=$1 && shift
 ensembl_dir=$1 && shift
 driver_gene_panel=$1 && shift
 known_fusion_file=$1 && shift
-
-echo "Running Linx somatic for ${tumor_id}, output dir ${output_dir}"
+circos=$1 && shift
 
 if [[ ! -d "${output_dir}" ]]; then
   mkdir ${output_dir}
 fi
+
+svs_tsv=${output_dir}/${tumor_id}.linx.svs.tsv
+
+if [[ -f "${svs_tsv}" ]]; then
+  echo "Skipping Linx somatic for ${tumor_id}, since SV annotations file ${svs_tsv} exists"
+  exit
+fi
+
+echo "Running Linx somatic for ${tumor_id}, output dir ${output_dir}"
 
 java -jar ${linx_jar} \
   -sample ${tumor_id} \
@@ -29,3 +37,14 @@ java -jar ${linx_jar} \
   -check_fusions -known_fusion_file ${known_fusion_file} \
   -check_drivers -driver_gene_panel ${driver_gene_panel} \
   -output_dir ${output_dir} \
+
+
+# run the visualiser to create Circos plots for each chromosome and non-trivial cluster
+java -cp ${linx_jar} com.hartwig.hmftools.linx.visualiser.SvVisualiser \
+    -sample ${tumor_id} \
+    -plot_out ${output_dir}/plots/ \
+    -data_out ${output_dir}/plot_data/ \
+    -vis_file_dir ${output_dir} \
+    -ensembl_data_dir ${ensembl_dir} \
+    -circos ${circos} \
+    -debug \
