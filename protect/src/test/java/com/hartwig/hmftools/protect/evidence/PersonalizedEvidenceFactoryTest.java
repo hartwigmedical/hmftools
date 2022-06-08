@@ -90,6 +90,19 @@ public class PersonalizedEvidenceFactoryTest {
                 .build();
         assertEquals(ProtectEvidenceType.INACTIVATION, PersonalizedEvidenceFactory.determineEvidenceType(gene));
 
+        ActionableGene amplification = ImmutableActionableGene.builder()
+                .from(ServeTestFactory.createTestActionableGene())
+                .event(GeneLevelEvent.AMPLIFICATION)
+                .build();
+        assertEquals(ProtectEvidenceType.AMPLIFICATION, PersonalizedEvidenceFactory.determineEvidenceType(amplification));
+
+        ActionableGene overexpression = ImmutableActionableGene.builder()
+                .from(ServeTestFactory.createTestActionableGene())
+                .event(GeneLevelEvent.OVER_EXPRESSION)
+                .build();
+        assertEquals(ProtectEvidenceType.OVER_EXPRESSION, PersonalizedEvidenceFactory.determineEvidenceType(overexpression));
+
+
         assertEquals(ProtectEvidenceType.FUSION_PAIR,
                 PersonalizedEvidenceFactory.determineEvidenceType(ServeTestFactory.createTestActionableFusion()));
 

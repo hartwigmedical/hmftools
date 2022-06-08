@@ -131,8 +131,12 @@ public class PersonalizedEvidenceFactory {
         switch (gene.event()) {
             case AMPLIFICATION:
                 return ProtectEvidenceType.AMPLIFICATION;
+            case OVER_EXPRESSION:
+                return ProtectEvidenceType.OVER_EXPRESSION;
             case DELETION:
                 return ProtectEvidenceType.DELETION;
+            case UNDER_EXPRESSION:
+                return ProtectEvidenceType.UNDER_EXPRESSION;
             case ACTIVATION:
                 return ProtectEvidenceType.ACTIVATION;
             case INACTIVATION:
