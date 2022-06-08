@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.copynumber;
+package com.hartwig.hmftools.common.purple.interpretation;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.utils.Doubles;
@@ -6,21 +6,14 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import org.jetbrains.annotations.NotNull;
 
 public enum CopyNumberInterpretation {
-    FULL_GAIN("full gain"),
-    PARTIAL_GAIN("partial gain"),
-    FULL_LOSS("full loss"),
-    PARTIAL_LOSS("partial loss");
-
-    @NotNull
-    private final String display;
-
-    CopyNumberInterpretation(@NotNull final String display) {
-        this.display = display;
-    }
+    FULL_GAIN,
+    PARTIAL_GAIN,
+    FULL_LOSS,
+    PARTIAL_LOSS;
 
     @NotNull
     public String display() {
-        return display;
+        return this.toString().toLowerCase().replaceAll("_", " ");
     }
 
     @NotNull

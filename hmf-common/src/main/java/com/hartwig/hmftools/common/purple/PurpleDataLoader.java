@@ -23,12 +23,12 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.cnchromosome.GenerateCnPerChromosome;
-import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
-import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss;
-import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.gene.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.interpretation.CopyNumberInterpretation;
+import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
+import com.hartwig.hmftools.common.purple.interpretation.ImmutableGainLoss;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
@@ -52,26 +52,6 @@ public final class PurpleDataLoader {
     @NotNull
     public static PurpleData load(@NotNull String tumorSample, @Nullable String referenceSample, @Nullable String rnaSample,
             @NotNull String qcFile, @NotNull String purityTsv, @NotNull String somaticDriverCatalogTsv, @NotNull String somaticVariantVcf,
-            @NotNull String germlineDriverCatalogTsv, @NotNull String germlineVariantVcf, @NotNull String purpleGeneCopyNumberTsv,
-            @NotNull String purpleGermlineDeletionTsv) throws IOException {
-        return load(tumorSample,
-                referenceSample,
-                rnaSample,
-                qcFile,
-                purityTsv,
-                somaticDriverCatalogTsv,
-                somaticVariantVcf,
-                germlineDriverCatalogTsv,
-                germlineVariantVcf,
-                purpleGeneCopyNumberTsv,
-                null,
-                purpleGermlineDeletionTsv,
-                null);
-    }
-
-    @NotNull
-    public static PurpleData load(@NotNull String tumorSample, @Nullable String referenceSample, @Nullable String rnaSample,
-            @NotNull String qcFile, @NotNull String purityTsv, @NotNull String somaticDriverCatalogTsv, @NotNull String somaticVariantVcf,
             @NotNull String germlineDriverCatalogTsv, @NotNull String germlineVariantVcf, @Nullable String purpleGeneCopyNumberTsv,
             @Nullable String purpleSomaticCopyNumberTsv, @Nullable String purpleGermlineDeletionTsv,
             @Nullable RefGenomeVersion refGenomeVersion) throws IOException {
@@ -82,10 +62,10 @@ public final class PurpleDataLoader {
         List<DriverCatalog> somaticDriverCatalog = DriverCatalogFile.read(somaticDriverCatalogTsv);
         LOGGER.info(" Loaded {} somatic driver catalog entries from {}", somaticDriverCatalog.size(), somaticDriverCatalogTsv);
 
-        List<ReportableGainLoss> reportableSomaticGainsLosses = extractSomaticGainsLosses(somaticDriverCatalog);
+        List<GainLoss> reportableSomaticGainsLosses = extractSomaticGainsLosses(somaticDriverCatalog);
         LOGGER.info("  Extracted {} reportable somatic gains and losses from driver catalog", reportableSomaticGainsLosses.size());
 
-        List<ReportableGainLoss> unreportedSomaticGainsLosses = Lists.newArrayList();
+        List<GainLoss> unreportedSomaticGainsLosses = Lists.newArrayList();
         List<GeneCopyNumber> lohGenes = Lists.newArrayList();
         if (purpleGeneCopyNumberTsv != null) {
             List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCopyNumberTsv);
@@ -200,8 +180,8 @@ public final class PurpleDataLoader {
     }
 
     @NotNull
-    private static List<ReportableGainLoss> extractSomaticGainsLosses(@NotNull List<DriverCatalog> drivers) {
-        List<ReportableGainLoss> gainsLosses = Lists.newArrayList();
+    private static List<GainLoss> extractSomaticGainsLosses(@NotNull List<DriverCatalog> drivers) {
+        List<GainLoss> gainsLosses = Lists.newArrayList();
 
         Map<DriverCatalogKey, DriverCatalog> geneDriverMap = DriverCatalogMap.toDriverMap(drivers);
         for (DriverCatalogKey key : geneDriverMap.keySet()) {
@@ -216,9 +196,9 @@ public final class PurpleDataLoader {
     }
 
     @NotNull
-    private static List<ReportableGainLoss> extractUnreportedSomaticGainsLosses(@NotNull List<GeneCopyNumber> geneCopyNumbers,
-            @NotNull PurityContext purityContext, @NotNull List<ReportableGainLoss> reportableSomaticGainsLosses) {
-        List<ReportableGainLoss> allGainsLosses =
+    private static List<GainLoss> extractUnreportedSomaticGainsLosses(@NotNull List<GeneCopyNumber> geneCopyNumbers,
+            @NotNull PurityContext purityContext, @NotNull List<GainLoss> reportableSomaticGainsLosses) {
+        List<GainLoss> allGainsLosses =
                 extractAllGainsLosses(purityContext.qc().status(), purityContext.bestFit().ploidy(), geneCopyNumbers);
         LOGGER.debug("  Extracted {} somatic gains and losses from gene copy numbers", allGainsLosses.size());
 
@@ -226,7 +206,7 @@ public final class PurpleDataLoader {
     }
 
     @NotNull
-    private static List<ReportableGainLoss> extractAllGainsLosses(@NotNull Set<PurpleQCStatus> qcStatus, double ploidy,
+    private static List<GainLoss> extractAllGainsLosses(@NotNull Set<PurpleQCStatus> qcStatus, double ploidy,
             @NotNull List<GeneCopyNumber> geneCopyNumbers) {
         List<DriverGene> allGenes = Lists.newArrayList();
         for (GeneCopyNumber geneCopyNumber : geneCopyNumbers) {
@@ -255,8 +235,8 @@ public final class PurpleDataLoader {
     }
 
     @NotNull
-    private static ReportableGainLoss toReportableGainLoss(@NotNull DriverCatalog driver) {
-        return ImmutableReportableGainLoss.builder()
+    private static GainLoss toReportableGainLoss(@NotNull DriverCatalog driver) {
+        return ImmutableGainLoss.builder()
                 .chromosome(driver.chromosome())
                 .chromosomeBand(driver.chromosomeBand())
                 .gene(driver.gene())
@@ -270,10 +250,10 @@ public final class PurpleDataLoader {
 
     @VisibleForTesting
     @NotNull
-    static List<ReportableGainLoss> selectUnreportedGainsLosses(@NotNull List<ReportableGainLoss> allGainsLosses,
-            @NotNull List<ReportableGainLoss> reportableGainsLosses) {
-        List<ReportableGainLoss> unreportedGainsLosses = Lists.newArrayList();
-        for (ReportableGainLoss gainLoss : allGainsLosses) {
+    static List<GainLoss> selectUnreportedGainsLosses(@NotNull List<GainLoss> allGainsLosses,
+            @NotNull List<GainLoss> reportableGainsLosses) {
+        List<GainLoss> unreportedGainsLosses = Lists.newArrayList();
+        for (GainLoss gainLoss : allGainsLosses) {
             if (!reportableGainsLosses.contains(gainLoss)) {
                 unreportedGainsLosses.add(gainLoss);
             }
@@ -293,7 +273,7 @@ public final class PurpleDataLoader {
     }
 
     @NotNull
-    private static List<GermlineDeletion> selectReportedDeletions(final List<GermlineDeletion> allGermlineDeletions) {
+    private static List<GermlineDeletion> selectReportedDeletions(@NotNull List<GermlineDeletion> allGermlineDeletions) {
         List<GermlineDeletion> reported = Lists.newArrayList();
         for (GermlineDeletion deletion : allGermlineDeletions) {
             if (deletion.Reported) {
@@ -304,7 +284,7 @@ public final class PurpleDataLoader {
     }
 
     @NotNull
-    private static List<GermlineDeletion> selectUnreportedDeletions(final List<GermlineDeletion> allGermlineDeletions) {
+    private static List<GermlineDeletion> selectUnreportedDeletions(@NotNull List<GermlineDeletion> allGermlineDeletions) {
         List<GermlineDeletion> unreported = Lists.newArrayList();
         for (GermlineDeletion deletion : allGermlineDeletions) {
             if (!deletion.Reported) {

@@ -28,10 +28,10 @@ import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.linx.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
-import com.hartwig.hmftools.common.purple.PurpleTestFactory;
-import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
-import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss;
-import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
+import com.hartwig.hmftools.common.purple.interpretation.CopyNumberInterpretation;
+import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
+import com.hartwig.hmftools.common.purple.interpretation.GainLossTestFactory;
+import com.hartwig.hmftools.common.purple.interpretation.ImmutableGainLoss;
 import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.test.SomaticVariantTestFactory;
@@ -134,7 +134,7 @@ public class ConclusionAlgoTest {
 
     @Test
     public void canGenerateCNVConclusion() {
-        List<ReportableGainLoss> gainLosse = gainloss();
+        List<GainLoss> gainLosse = gainloss();
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
 
@@ -488,18 +488,18 @@ public class ConclusionAlgoTest {
     }
 
     @NotNull
-    public List<ReportableGainLoss> gainloss() {
-        ReportableGainLoss gainLoss1 = ImmutableReportableGainLoss.builder()
-                .from(PurpleTestFactory.createReportableGainLoss("BRAF", CopyNumberInterpretation.FULL_GAIN))
+    public List<GainLoss> gainloss() {
+        GainLoss gainLoss1 = ImmutableGainLoss.builder()
+                .from(GainLossTestFactory.createGainLoss("BRAF", CopyNumberInterpretation.FULL_GAIN))
                 .build();
-        ReportableGainLoss gainLoss2 = ImmutableReportableGainLoss.builder()
-                .from(PurpleTestFactory.createReportableGainLoss("KRAS", CopyNumberInterpretation.PARTIAL_GAIN))
+        GainLoss gainLoss2 = ImmutableGainLoss.builder()
+                .from(GainLossTestFactory.createGainLoss("KRAS", CopyNumberInterpretation.PARTIAL_GAIN))
                 .build();
-        ReportableGainLoss gainLoss3 = ImmutableReportableGainLoss.builder()
-                .from(PurpleTestFactory.createReportableGainLoss("CDKN2A", CopyNumberInterpretation.FULL_LOSS))
+        GainLoss gainLoss3 = ImmutableGainLoss.builder()
+                .from(GainLossTestFactory.createGainLoss("CDKN2A", CopyNumberInterpretation.FULL_LOSS))
                 .build();
-        ReportableGainLoss gainLoss4 = ImmutableReportableGainLoss.builder()
-                .from(PurpleTestFactory.createReportableGainLoss("EGFR", CopyNumberInterpretation.PARTIAL_LOSS))
+        GainLoss gainLoss4 = ImmutableGainLoss.builder()
+                .from(GainLossTestFactory.createGainLoss("EGFR", CopyNumberInterpretation.PARTIAL_LOSS))
                 .build();
         return Lists.newArrayList(gainLoss1, gainLoss2, gainLoss3, gainLoss4);
     }

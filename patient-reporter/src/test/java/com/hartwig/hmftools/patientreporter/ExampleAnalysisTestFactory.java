@@ -37,9 +37,9 @@ import com.hartwig.hmftools.common.protect.ProtectSource;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.cnchromosome.ImmutableCnPerChromosomeArmData;
-import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
-import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss;
-import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
+import com.hartwig.hmftools.common.purple.interpretation.CopyNumberInterpretation;
+import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
+import com.hartwig.hmftools.common.purple.interpretation.ImmutableGainLoss;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
@@ -102,7 +102,7 @@ public final class ExampleAnalysisTestFactory {
         List<ProtectEvidence> offLabelEvidence = createCOLO829OffLabelEvidence();
         List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants(config.reportGermline());
         Map<ReportableVariant, Boolean> notifyGermlineStatusPerVariant = notifyAllGermlineVariants(reportableVariants);
-        List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
+        List<GainLoss> gainsAndLosses = createCOLO829GainsLosses();
         List<LinxFusion> fusions = Lists.newArrayList();
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
@@ -1091,8 +1091,8 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static List<ReportableGainLoss> createCOLO829GainsLosses() {
-        ReportableGainLoss gainLoss1 = ImmutableReportableGainLoss.builder()
+    private static List<GainLoss> createCOLO829GainsLosses() {
+        GainLoss gainLoss1 = ImmutableGainLoss.builder()
                 .chromosome("10")
                 .chromosomeBand("q23.31")
                 .gene("PTEN")

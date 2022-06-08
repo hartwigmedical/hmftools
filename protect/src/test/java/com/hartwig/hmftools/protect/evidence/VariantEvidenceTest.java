@@ -14,8 +14,8 @@ import com.hartwig.hmftools.common.test.SomaticVariantTestFactory;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.common.variant.ReportableVariantTestFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.VariantTestFactory;
 import com.hartwig.hmftools.serve.ServeTestFactory;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
@@ -51,7 +51,7 @@ public class VariantEvidenceTest {
                 new VariantEvidence(EvidenceTestFactory.create(), Lists.newArrayList(hotspot), Lists.newArrayList(), Lists.newArrayList());
 
         ReportableVariant variantMatch = ImmutableReportableVariant.builder()
-                .from(VariantTestFactory.create())
+                .from(ReportableVariantTestFactory.create())
                 .gene("reportable")
                 .chromosome(chromosome)
                 .position(position)
@@ -60,7 +60,7 @@ public class VariantEvidenceTest {
                 .build();
 
         ReportableVariant variantWrongPosition = ImmutableReportableVariant.builder()
-                .from(VariantTestFactory.create())
+                .from(ReportableVariantTestFactory.create())
                 .gene("wrong position")
                 .chromosome(chromosome)
                 .position(position + 1)
@@ -69,7 +69,7 @@ public class VariantEvidenceTest {
                 .build();
 
         ReportableVariant variantWrongAlt = ImmutableReportableVariant.builder()
-                .from(VariantTestFactory.create())
+                .from(ReportableVariantTestFactory.create())
                 .gene("wrong alt")
                 .chromosome(chromosome)
                 .position(position)
@@ -77,13 +77,8 @@ public class VariantEvidenceTest {
                 .alt("G")
                 .build();
 
-        SomaticVariant unreportedMatch = SomaticVariantTestFactory.builder()
-                .gene("unreported")
-                .chromosome(chromosome)
-                .position(position)
-                .ref(ref)
-                .alt(alt)
-                .build();
+        SomaticVariant unreportedMatch =
+                SomaticVariantTestFactory.builder().gene("unreported").chromosome(chromosome).position(position).ref(ref).alt(alt).build();
 
         List<ProtectEvidence> evidences = variantEvidence.evidence(Lists.newArrayList(variantMatch, variantWrongAlt, variantWrongPosition),
                 Lists.newArrayList(),
@@ -124,7 +119,7 @@ public class VariantEvidenceTest {
                 new VariantEvidence(EvidenceTestFactory.create(), Lists.newArrayList(), Lists.newArrayList(range), Lists.newArrayList());
 
         ReportableVariant variantMatch = ImmutableReportableVariant.builder()
-                .from(VariantTestFactory.create())
+                .from(ReportableVariantTestFactory.create())
                 .gene(gene)
                 .chromosome(chromosome)
                 .position(start + 1)
@@ -133,7 +128,7 @@ public class VariantEvidenceTest {
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .build();
         ReportableVariant variantOutsideRange = ImmutableReportableVariant.builder()
-                .from(VariantTestFactory.create())
+                .from(ReportableVariantTestFactory.create())
                 .gene(gene)
                 .chromosome(chromosome)
                 .position(start - 1)
@@ -142,7 +137,7 @@ public class VariantEvidenceTest {
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .build();
         ReportableVariant variantWrongGene = ImmutableReportableVariant.builder()
-                .from(VariantTestFactory.create())
+                .from(ReportableVariantTestFactory.create())
                 .gene("wrong gene")
                 .chromosome(chromosome)
                 .position(start + 1)
@@ -150,7 +145,7 @@ public class VariantEvidenceTest {
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .build();
         ReportableVariant variantWrongMutationType = ImmutableReportableVariant.builder()
-                .from(VariantTestFactory.create())
+                .from(ReportableVariantTestFactory.create())
                 .gene(gene)
                 .chromosome(chromosome)
                 .position(start + 1)
@@ -244,7 +239,7 @@ public class VariantEvidenceTest {
     @NotNull
     private static ReportableVariant withGeneAndDriverLikelihood(@NotNull String gene, double driverLikelihood) {
         return ImmutableReportableVariant.builder()
-                .from(VariantTestFactory.create())
+                .from(ReportableVariantTestFactory.create())
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .gene(gene)
                 .driverLikelihood(driverLikelihood)

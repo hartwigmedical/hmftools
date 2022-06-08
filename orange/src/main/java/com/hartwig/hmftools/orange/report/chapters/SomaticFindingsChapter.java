@@ -2,8 +2,8 @@ package com.hartwig.hmftools.orange.report.chapters;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
@@ -111,11 +111,11 @@ public class SomaticFindingsChapter implements ReportChapter {
                 report.purple().reportableSomaticGainsLosses(),
                 report.isofox()));
 
-        List<ReportableGainLoss> gains = CopyNumberSelector.selectNonDriverGains(report.purple().unreportedSomaticGainsLosses());
+        List<GainLoss> gains = CopyNumberSelector.selectNonDriverGains(report.purple().unreportedSomaticGainsLosses());
         String titleGains = "Other regions with amps (" + gains.size() + ")";
         document.add(GeneCopyNumberTable.build(titleGains, contentWidth(), max10(gains), report.isofox()));
 
-        List<ReportableGainLoss> losses = CopyNumberSelector.selectNonDriverLosses(report.purple().unreportedSomaticGainsLosses(),
+        List<GainLoss> losses = CopyNumberSelector.selectNonDriverLosses(report.purple().unreportedSomaticGainsLosses(),
                 report.purple().reportableSomaticGainsLosses());
         String titleLosses = "Regions with deletions in genes in other autosomal regions (" + losses.size() + ")";
         document.add(GeneCopyNumberTable.build(titleLosses, contentWidth(), max10(losses), report.isofox()));

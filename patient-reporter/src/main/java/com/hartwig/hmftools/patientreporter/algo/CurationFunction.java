@@ -11,8 +11,8 @@ import com.hartwig.hmftools.common.linx.ReportableGeneDisruption;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss;
-import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
+import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
+import com.hartwig.hmftools.common.purple.interpretation.ImmutableGainLoss;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 
@@ -113,13 +113,13 @@ public final class CurationFunction {
 
     @NotNull
     @VisibleForTesting
-    static List<ReportableGainLoss> curateGainsAndLosses(@NotNull List<ReportableGainLoss> gainsAndLosses) {
-        List<ReportableGainLoss> curateGainsAndLosses = Lists.newArrayList();
-        for (ReportableGainLoss gainLoss : gainsAndLosses) {
+    static List<GainLoss> curateGainsAndLosses(@NotNull List<GainLoss> gainsAndLosses) {
+        List<GainLoss> curateGainsAndLosses = Lists.newArrayList();
+        for (GainLoss gainLoss : gainsAndLosses) {
             if (gainLoss.gene().equals(GENE_CDKN2A) && gainLoss.isCanonical()) {
-                curateGainsAndLosses.add(ImmutableReportableGainLoss.builder().from(gainLoss).gene(GENE_CDKN2A_CANONICAL).build());
+                curateGainsAndLosses.add(ImmutableGainLoss.builder().from(gainLoss).gene(GENE_CDKN2A_CANONICAL).build());
             } else if (gainLoss.gene().equals(GENE_CDKN2A) && !gainLoss.isCanonical()) {
-                curateGainsAndLosses.add(ImmutableReportableGainLoss.builder().from(gainLoss).gene(GENE_CDKN2A_NON_CANONICAL).build());
+                curateGainsAndLosses.add(ImmutableGainLoss.builder().from(gainLoss).gene(GENE_CDKN2A_NON_CANONICAL).build());
             } else {
                 curateGainsAndLosses.add(gainLoss);
             }

@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
-import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
+import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
@@ -219,73 +219,73 @@ public class FrontPageChapter implements ReportChapter {
     private static String variantDriverString(@NotNull List<ReportableVariant> variants) {
         if (variants.isEmpty()) {
             return NONE;
-        } else {
-            Set<String> highDriverGenes = Sets.newTreeSet(Comparator.naturalOrder());
-            for (ReportableVariant variant : variants) {
-                if (variant.driverLikelihoodInterpretation() == DriverInterpretation.HIGH) {
-                    highDriverGenes.add(variant.gene());
-                }
-            }
-
-            return !highDriverGenes.isEmpty() ? variants.size() + " (" + concat(highDriverGenes) + ")" : String.valueOf(variants.size());
         }
+
+        Set<String> highDriverGenes = Sets.newTreeSet(Comparator.naturalOrder());
+        for (ReportableVariant variant : variants) {
+            if (variant.driverLikelihoodInterpretation() == DriverInterpretation.HIGH) {
+                highDriverGenes.add(variant.gene());
+            }
+        }
+
+        return !highDriverGenes.isEmpty() ? variants.size() + " (" + concat(highDriverGenes) + ")" : String.valueOf(variants.size());
     }
 
     @NotNull
     private String copyNumberDriverString() {
         if (report.purple().reportableSomaticGainsLosses().isEmpty()) {
             return NONE;
-        } else {
-            Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
-            for (ReportableGainLoss gainLoss : report.purple().reportableSomaticGainsLosses()) {
-                genes.add(gainLoss.gene());
-            }
-            return report.purple().reportableSomaticGainsLosses().size() + " (" + concat(genes) + ")";
         }
+
+        Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
+        for (GainLoss gainLoss : report.purple().reportableSomaticGainsLosses()) {
+            genes.add(gainLoss.gene());
+        }
+        return report.purple().reportableSomaticGainsLosses().size() + " (" + concat(genes) + ")";
     }
 
     @NotNull
     private String disruptionDriverString() {
         if (report.linx().homozygousDisruptions().isEmpty()) {
             return NONE;
-        } else {
-            Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
-            for (ReportableHomozygousDisruption disruption : report.linx().homozygousDisruptions()) {
-                genes.add(disruption.gene());
-            }
-            return report.linx().homozygousDisruptions().size() + " (" + concat(genes) + ")";
         }
+
+        Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
+        for (ReportableHomozygousDisruption disruption : report.linx().homozygousDisruptions()) {
+            genes.add(disruption.gene());
+        }
+        return report.linx().homozygousDisruptions().size() + " (" + concat(genes) + ")";
     }
 
     @NotNull
     private String fusionDriverString() {
         if (report.linx().reportableFusions().isEmpty()) {
             return NONE;
-        } else {
-            Set<String> fusions = Sets.newTreeSet(Comparator.naturalOrder());
-            for (LinxFusion fusion : report.linx().reportableFusions()) {
-                fusions.add(fusion.name());
-            }
-            return report.linx().reportableFusions().size() + " (" + concat(fusions) + ")";
         }
+
+        Set<String> fusions = Sets.newTreeSet(Comparator.naturalOrder());
+        for (LinxFusion fusion : report.linx().reportableFusions()) {
+            fusions.add(fusion.name());
+        }
+        return report.linx().reportableFusions().size() + " (" + concat(fusions) + ")";
     }
 
     @NotNull
     private String virusString() {
         if (report.virusInterpreter().reportableViruses().isEmpty()) {
             return NONE;
-        } else {
-            Set<String> viruses = Sets.newTreeSet(Comparator.naturalOrder());
-            for (AnnotatedVirus virus : report.virusInterpreter().reportableViruses()) {
-                if (virus.interpretation() != null) {
-                    viruses.add(virus.interpretation());
-                } else {
-                    viruses.add(virus.name());
-                }
-            }
-
-            return report.virusInterpreter().reportableViruses().size() + " (" + concat(viruses) + ")";
         }
+
+        Set<String> viruses = Sets.newTreeSet(Comparator.naturalOrder());
+        for (AnnotatedVirus virus : report.virusInterpreter().reportableViruses()) {
+            if (virus.interpretation() != null) {
+                viruses.add(virus.interpretation());
+            } else {
+                viruses.add(virus.name());
+            }
+        }
+
+        return report.virusInterpreter().reportableViruses().size() + " (" + concat(viruses) + ")";
     }
 
     @NotNull
@@ -305,19 +305,19 @@ public class FrontPageChapter implements ReportChapter {
         ChordAnalysis chord = report.chord();
         if (chord.hrStatus() == ChordStatus.CANNOT_BE_DETERMINED) {
             return ChordStatus.CANNOT_BE_DETERMINED.display();
-        } else {
-            String addon = Strings.EMPTY;
-            if (chord.hrStatus() == ChordStatus.HR_DEFICIENT) {
-                if (chord.hrdType().contains("BRCA1")) {
-                    addon = " - BRCA1 (" + TWO_DIGITS.format(chord.BRCA1Value()) + ")";
-                } else if (chord.hrdType().contains("BRCA2")) {
-                    addon = " - BRCA2 (" + TWO_DIGITS.format(chord.BRCA2Value()) + ")";
-                } else {
-                    addon = chord.hrdType();
-                }
-            }
-            return SINGLE_DIGIT.format(chord.hrdValue()) + " (" + chord.hrStatus().display() + addon + ")";
         }
+
+        String addon = Strings.EMPTY;
+        if (chord.hrStatus() == ChordStatus.HR_DEFICIENT) {
+            if (chord.hrdType().contains("BRCA1")) {
+                addon = " - BRCA1 (" + TWO_DIGITS.format(chord.BRCA1Value()) + ")";
+            } else if (chord.hrdType().contains("BRCA2")) {
+                addon = " - BRCA2 (" + TWO_DIGITS.format(chord.BRCA2Value()) + ")";
+            } else {
+                addon = chord.hrdType();
+            }
+        }
+        return SINGLE_DIGIT.format(chord.hrdValue()) + " (" + chord.hrStatus().display() + addon + ")";
     }
 
     @NotNull

@@ -1,31 +1,31 @@
 # Relevant Oncogenic Summary of Eligibility
-ROSE match all the genomic events and signatures that are determined by the Hartwig pipeline to the actionability treatment options in the Netherlands. 
+ROSE makes an actionability summary of the clinical relevant (for the Netherlands) genomic events and signatures as determined by the Hartwig pipeline. 
 
 ## Contents
-- [What is present in the actionability database?](#actionability-database)
+- [What is present in the summary database?](#actionability-summary)
 - [How is actionability matched against genomic events and signatures?](#matching-of-actionability-based-on-genomic-events-and-signatures)
 - [What output is produced by ROSE?](#rose-output)
 - [Which known issues are present in ROSE?](#known-issues)
 - [Version history and download links](#version-history-and-download-links)
 
-## Actionability database
-For determining which genomic event or signature is actionable in the NL an actionability database is used. This database has the following format:
+## Actionability summary
+For determining which genomic events or signatures are actionable in the NL an actionability summary database is used. This database has the following format:
 
-Field  | Description | Example
----|---|---
+Field  | Description                                                                            | Example
+---|----------------------------------------------------------------------------------------|---
 match | The gene name or signature which could be actionable together with the type alteration | RAD51B
-type_alteration | The alteration of the event |  INACTIVATION
-condition | The condition where the event should meet with | ONLY_HIGH
-conclusion | The clinical sentence which will be added into the conclusion | inactivation, potential benefit from PARP inhibitors (clinical trial)
+type_alteration | The alteration of the event                                                            |  INACTIVATION
+condition | The condition whether the summary sentence should be displayed                         | ONLY_HIGH
+conclusion | The summary sentence which will be added into the conclusion                           | inactivation, potential benefit from PARP inhibitors (clinical trial)
 
 The field condition could contain the following values:
 
 Field  | Description
 ---|---
-ONLY_HIGH | Only using actionable evidence for genomic events with high driver likelihood
-ALWAYS | Always using actionable evidence unless driver likelihood 
-ALWAYS_NO_ACTIONABLE | Always add genomic events to summary unless they aren't actionable events
-OTHER | Other general messages to events
+ONLY_HIGH | Only display summary sentence for actionable event when it is a high diver event 
+ALWAYS | Always display summary sentence for actionable event independent of the driver likelihood 
+ALWAYS_NO_ACTIONABLE | Display summary sentence for non-acionable event (independant of driver likelihood)
+OTHER | Other general summary sentences that should be displayed
 
 The field type alteration could contain the following values which are specific for genomic alterations/alterations:
 
@@ -41,22 +41,22 @@ LOSS | Actionable when the gene is deleted
 POSITIVE | Actionable when there is a positive call for a specific signature e.g. HRD deficient 
 RESISTANCE_MUTATION | Actionable when it is related to a resistence mutation
 
-The field type alteration could contain also the following values which are related to disclaimers or general information which is 
+The field type alteration could also contain the following values which are related to disclaimers or general information which are 
 important to know for interpretation of the clinical relevance:
 
 Field  | Description
 ---|---
-PURITY | Disclaimer sentence when there is a lower tumor purity low (below the 20%) 
-PURITY_UNRELIABLE | Disclaimer sentence when the tumor purity could be relaible determined 
+PURITY | Disclaimer sentence when there is a lower tumor purity (below the 20%) 
+PURITY_UNRELIABLE | Disclaimer sentence when the tumor purity could not be determined reliable
 FINDINGS | A general sentence for what can be detected in the report
 GERMLINE | A sentence if the small variant is detected in the germline of the patient but also called in the tumor 
-CUPPA | The molecular tissue of origin classifier prediction with likelihood >= 80%
-CUPPA_INCONCLUSIVE | The molecular tissue of origin classifier prediction which couldn't determined with enough likelihood 
-NO_ONCOGENIC | The WGS analyse could not detected any oncogenic genomic event/signature
-NO_ACTIONABLE | The WGS analyse could not detected any oncogenic genomic event/signature wich is actionable 
-NO_HRD_CAUSE | The WGS analys detected an HRD mutational profile but no support is found for this signature 
-NO_MSI_HRD_PROFILE | The WGS analys detected HRD/MSI support but the mutational profile isn't detected 
-NOT_BIALLELIC | The WGS analyse called a TSG small variant but the variant itself isn't biallelic  
+CUPPA | The molecular tissue of origin classifier prediction with a likelihood >= 80%
+CUPPA_INCONCLUSIVE | The molecular tissue of origin classifier prediction could not be determined with a likelihood >= 80%
+NO_ONCOGENIC | The WGS analyse could not detect any oncogenic genomic event/signature
+NO_ACTIONABLE | The WGS analyse could not detect any oncogenic genomic event/signature wich is actionable 
+NO_HRD_CAUSE | The WGS analyse detected an HRD mutational profile but no genomic event has been found to support this signature 
+NO_MSI_HRD_PROFILE | The WGS analyse detected no genomic event supportting the HRD/MSI signature that has been found  
+NOT_BIALLELIC | The WGS analyse called a TSG small variant but the variant itself is not biallelic  
 
 ## Matching of actionability based on genomic events and signatures
 Genomic events and signatures are categorized in six categories and actionability is matched for every category independently.

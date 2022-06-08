@@ -8,9 +8,9 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.cnchromosome.ImmutableCnPerChromosomeArmData;
-import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
-import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss;
-import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
+import com.hartwig.hmftools.common.purple.interpretation.CopyNumberInterpretation;
+import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
+import com.hartwig.hmftools.common.purple.interpretation.ImmutableGainLoss;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 import com.hartwig.hmftools.common.utils.DataUtil;
 
@@ -87,8 +87,8 @@ public class GainsAndLossesTest {
     }
 
     @NotNull
-    private static ReportableGainLoss testGainLoss(@NotNull String chromosome, @NotNull String chromosomeBand) {
-        return ImmutableReportableGainLoss.builder()
+    private static GainLoss testGainLoss(@NotNull String chromosome, @NotNull String chromosomeBand) {
+        return ImmutableGainLoss.builder()
                 .chromosome(chromosome)
                 .chromosomeBand(chromosomeBand)
                 .gene(Strings.EMPTY)

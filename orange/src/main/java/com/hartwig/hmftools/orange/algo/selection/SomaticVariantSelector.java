@@ -18,7 +18,7 @@ import org.jetbrains.annotations.Nullable;
 
 public final class SomaticVariantSelector {
 
-    private static final Set<String> CUPPA_GENES = Sets.newHashSet("ALB", "SFTPB", "SLC34A2");
+    static final Set<String> CUPPA_GENES = Sets.newHashSet("ALB", "SFTPB", "SLC34A2");
 
     private SomaticVariantSelector() {
     }

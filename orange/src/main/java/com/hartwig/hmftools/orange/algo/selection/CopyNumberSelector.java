@@ -6,8 +6,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
-import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
+import com.hartwig.hmftools.common.purple.interpretation.CopyNumberInterpretation;
+import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
@@ -18,15 +18,15 @@ public final class CopyNumberSelector {
     }
 
     @NotNull
-    public static List<ReportableGainLoss> selectNonDriverGains(@NotNull List<ReportableGainLoss> unreportedGainsLosses) {
-        List<ReportableGainLoss> unreportedFullGains = unreportedGainsLosses.stream()
+    public static List<GainLoss> selectNonDriverGains(@NotNull List<GainLoss> unreportedGainsLosses) {
+        List<GainLoss> unreportedFullGains = unreportedGainsLosses.stream()
                 .filter(gainLoss -> gainLoss.interpretation() == CopyNumberInterpretation.FULL_GAIN)
                 .collect(Collectors.toList());
 
-        Map<CopyNumberKey, ReportableGainLoss> maxGainPerLocation = Maps.newHashMap();
-        for (ReportableGainLoss gain : unreportedFullGains) {
+        Map<CopyNumberKey, GainLoss> maxGainPerLocation = Maps.newHashMap();
+        for (GainLoss gain : unreportedFullGains) {
             CopyNumberKey key = new CopyNumberKey(gain.chromosome(), gain.chromosomeBand());
-            ReportableGainLoss maxGain = maxGainPerLocation.get(key);
+            GainLoss maxGain = maxGainPerLocation.get(key);
             if (maxGain == null || gain.minCopies() > maxGain.minCopies()) {
                 maxGainPerLocation.put(key, gain);
             }
@@ -39,21 +39,21 @@ public final class CopyNumberSelector {
     }
 
     @NotNull
-    public static List<ReportableGainLoss> selectNonDriverLosses(@NotNull List<ReportableGainLoss> unreportedGainsLosses,
-            @NotNull List<ReportableGainLoss> reportedGainLosses) {
-        List<ReportableGainLoss> lossesNoAllosomes = Lists.newArrayList();
+    public static List<GainLoss> selectNonDriverLosses(@NotNull List<GainLoss> unreportedGainsLosses,
+            @NotNull List<GainLoss> reportedGainLosses) {
+        List<GainLoss> lossesNoAllosomes = Lists.newArrayList();
 
-        List<ReportableGainLoss> unreportedLosses = unreportedGainsLosses.stream()
+        List<GainLoss> unreportedLosses = unreportedGainsLosses.stream()
                 .filter(gainLoss -> gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS
                         || gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS)
                 .collect(Collectors.toList());
 
-        List<ReportableGainLoss> reportedLosses = reportedGainLosses.stream()
+        List<GainLoss> reportedLosses = reportedGainLosses.stream()
                 .filter(gainLoss -> gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS
                         || gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS)
                 .collect(Collectors.toList());
 
-        for (ReportableGainLoss loss : unreportedLosses) {
+        for (GainLoss loss : unreportedLosses) {
             if (!HumanChromosome.fromString(loss.chromosome()).isAllosome() && !locusPresent(reportedLosses,
                     loss.chromosome(),
                     loss.chromosomeBand())) {
@@ -61,8 +61,8 @@ public final class CopyNumberSelector {
             }
         }
 
-        Map<CopyNumberKey, ReportableGainLoss> oneLossPerLocation = Maps.newHashMap();
-        for (ReportableGainLoss loss : lossesNoAllosomes) {
+        Map<CopyNumberKey, GainLoss> oneLossPerLocation = Maps.newHashMap();
+        for (GainLoss loss : lossesNoAllosomes) {
             CopyNumberKey key = new CopyNumberKey(loss.chromosome(), loss.chromosomeBand());
             if (!oneLossPerLocation.containsKey(key)) {
                 oneLossPerLocation.put(key, loss);
@@ -72,9 +72,9 @@ public final class CopyNumberSelector {
         return Lists.newArrayList(oneLossPerLocation.values().iterator());
     }
 
-    private static boolean locusPresent(@NotNull List<ReportableGainLoss> gainsLosses, @NotNull String chromosome,
+    private static boolean locusPresent(@NotNull List<GainLoss> gainsLosses, @NotNull String chromosome,
             @NotNull String chromosomeBand) {
-        for (ReportableGainLoss gainLoss : gainsLosses) {
+        for (GainLoss gainLoss : gainsLosses) {
             if (gainLoss.chromosome().equals(chromosome) && gainLoss.chromosomeBand().equals(chromosomeBand)) {
                 return true;
             }
