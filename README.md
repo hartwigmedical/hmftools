@@ -6,7 +6,11 @@ This repository contains the suite of tools used in the Hartwig Medical Foundati
 
 ![HMF_Pipeline](pipeline/hmf_tools_pipeline.png)
 
-The table below has links for the full functional detail and configuration for the key components in our DNA pipeline. The versions match those used in the current HMF GCP pipeline which can be run using [Platinum](https://github.com/hartwigmedical/platinum). Demo scripts to run each component in turn are provided [here](./pipeline/scripts/).
+The table below has links for the full functional detail and configuration for the key components in our DNA pipeline. 
+
+The versions match those used in the current HMF GCP pipeline which can be run using [Platinum](https://github.com/hartwigmedical/platinum). 
+
+Demo scripts to run each component in turn are provided [here](./pipeline/scripts/).
 
 Component | Description | Current Version
 ---|---|---
@@ -21,7 +25,7 @@ Component | Description | Current Version
 [Teal](./lilac/README.md) | Measures telomere content and estimates telomeric length | [1.0.1](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.0.1)
 [Cuppa](./cuppa/README.md) | Tissue of origin prediction from WGS/WTS | [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.6)
 
-[Chord](https://github.com/UMCUGenetics/CHORD) and [GRIDSS](https://github.com/PapenfussLab/gridss) are supported externally to HMF.
+Note that [Chord](https://github.com/UMCUGenetics/CHORD) and [GRIDSS](https://github.com/PapenfussLab/gridss) are supported externally to HMF.
 
 ## Actionability and Clinical Reporting Tools
 
