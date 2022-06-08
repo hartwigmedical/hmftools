@@ -214,10 +214,7 @@ public final class ServeTestFactory {
 
     @NotNull
     public static ActionableCharacteristic createTestActionableCharacteristicForSource(@NotNull Knowledgebase source) {
-        return ImmutableActionableCharacteristic.builder()
-                .from(createTestActionableCharacteristic())
-                .source(source)
-                .build();
+        return ImmutableActionableCharacteristic.builder().from(createTestActionableCharacteristic()).source(source).build();
     }
 
     @NotNull
@@ -249,6 +246,7 @@ public final class ServeTestFactory {
                 "source event",
                 Sets.newHashSet(),
                 "treatment",
+                Sets.newHashSet("drugClasses"),
                 ImmutableCancerType.builder().name("applicable name").doid("applicable doid").build(),
                 Sets.newHashSet(ImmutableCancerType.builder().name("blacklist name").doid("blacklist doid").build()),
                 EvidenceLevel.A,

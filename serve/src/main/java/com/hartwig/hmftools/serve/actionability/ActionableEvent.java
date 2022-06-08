@@ -24,6 +24,9 @@ public interface ActionableEvent {
     String treatment();
 
     @NotNull
+    Set<String> drugClasses();
+
+    @NotNull
     CancerType applicableCancerType();
 
     @NotNull

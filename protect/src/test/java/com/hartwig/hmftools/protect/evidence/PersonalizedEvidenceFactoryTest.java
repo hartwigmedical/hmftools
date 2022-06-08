@@ -148,7 +148,7 @@ public class PersonalizedEvidenceFactoryTest {
         ActionableEvent event = ActionabilityTestUtil.create(Knowledgebase.CKB,
                 "amp",
                 Sets.newHashSet(),
-                "treatment A",
+                "treatment A", Sets.newHashSet("drugClasses"),
                 ImmutableCancerType.builder().name(cancerType).doid(doid).build(),
                 blacklist,
                 EvidenceLevel.A,

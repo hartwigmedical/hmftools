@@ -22,6 +22,7 @@ public class ActionableFileFunctionsTest {
                 "source event",
                 Sets.newHashSet(),
                 "treatment",
+                Sets.newHashSet("drugClasses"),
                 ImmutableCancerType.builder().name("applicable name").doid("applicable doid").build(),
                 Sets.newHashSet(ImmutableCancerType.builder().name("blacklist name").doid("blacklist doid").build()),
                 EvidenceLevel.C,

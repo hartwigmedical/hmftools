@@ -10,6 +10,7 @@ import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.drug.Drug;
 import com.hartwig.hmftools.ckb.datamodel.evidence.Evidence;
 import com.hartwig.hmftools.ckb.datamodel.reference.Reference;
+import com.hartwig.hmftools.ckb.datamodel.treatmentapproaches.RelevantTreatmentApproaches;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
@@ -62,11 +63,15 @@ class ActionableEntryFactory {
     @NotNull
     public static Set<ActionableEntry> toActionableEntries(@NotNull CkbEntry entry, @NotNull String sourceEvent) {
         Set<ActionableEntry> actionableEntries = Sets.newHashSet();
-
+        Set<String> drugClasses = Sets.newHashSet();
         for (Evidence evidence : evidencesWithUsableType(entry.evidences())) {
             EvidenceLevel level = resolveLevel(evidence.ampCapAscoEvidenceLevel());
             EvidenceDirection direction = resolveDirection(evidence.responseType());
             String doid = extractAndCurateDoid(evidence.indication().termId());
+
+            for (RelevantTreatmentApproaches relevantTreatmentApproaches: evidence.relevantTreatmentApproaches()) {
+                drugClasses.add(relevantTreatmentApproaches.drugClass().drugClass());
+            }
 
             if (level != null && direction != null && doid != null) {
                 String treatment = evidence.therapy().therapyName();
@@ -102,6 +107,7 @@ class ActionableEntryFactory {
                         .sourceEvent(sourceEvent)
                         .sourceUrls(sourceUrls)
                         .treatment(treatment)
+                        .drugClasses(drugClasses)
                         .applicableCancerType(ImmutableCancerType.builder().name(cancerType).doid(doid).build())
                         .blacklistCancerTypes(blacklistedCancerTypes)
                         .level(level)

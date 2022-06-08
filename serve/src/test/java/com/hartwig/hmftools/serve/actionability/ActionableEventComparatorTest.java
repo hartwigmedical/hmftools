@@ -44,6 +44,7 @@ public class ActionableEventComparatorTest {
                 Strings.EMPTY,
                 Sets.newHashSet(),
                 treatment,
+                Sets.newHashSet("drugClasses"),
                 ImmutableCancerType.builder().name(applicableCancerType).doid(Strings.EMPTY).build(),
                 Sets.newHashSet(),
                 level,

@@ -71,6 +71,7 @@ public class ActionableTrialFactory {
                 .sourceEvent(sourceEvent)
                 .sourceUrls(Sets.newHashSet("https://trial-eye.com/hmf/" + trial.id()))
                 .treatment(trial.acronym())
+                .drugClasses(Sets.newHashSet("study"))
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .evidenceUrls(Sets.newHashSet());

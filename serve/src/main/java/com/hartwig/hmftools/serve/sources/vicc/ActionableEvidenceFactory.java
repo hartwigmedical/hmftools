@@ -38,7 +38,8 @@ class ActionableEvidenceFactory {
 
     private static final String CANCER_TYPE_SEPARATOR = ";";
     static final CancerType LEUKEMIA_TYPE = ImmutableCancerType.builder().name("Leukemia").doid("1240").build();
-    static final CancerType REFRACTORY_HEMATOLOGIC_TYPE = ImmutableCancerType.builder().name("Refractory hematologic cancer").doid("712").build();
+    static final CancerType REFRACTORY_HEMATOLOGIC_TYPE =
+            ImmutableCancerType.builder().name("Refractory hematologic cancer").doid("712").build();
     static final CancerType BONE_MARROW_TYPE = ImmutableCancerType.builder().name("Bone marrow cancer").doid("4960").build();
 
     private static final Set<String> RESPONSIVE_DIRECTIONS = Sets.newHashSet();
@@ -128,6 +129,7 @@ class ActionableEvidenceFactory {
 
                     for (List<String> drugList : drugLists) {
                         actionableEvidences.add(builder.treatment(formatDrugList(drugList))
+                                .drugClasses(Sets.newHashSet())
                                 .applicableCancerType(ImmutableCancerType.builder().name(cancerType).doid(doid).build())
                                 .blacklistCancerTypes(blacklistedCancerTypes)
                                 .build());

@@ -42,6 +42,7 @@ public class ActionableEventUrlMergerTest {
                         "source event",
                         Sets.newHashSet(),
                         "treatment",
+                        Sets.newHashSet("drugClasses"),
                         ImmutableCancerType.builder().name("applicable cancerType").doid("applicable doid").build(),
                         Sets.newHashSet(ImmutableCancerType.builder().name("blacklist cancerType").doid("blacklist doid").build()),
                         EvidenceLevel.A,

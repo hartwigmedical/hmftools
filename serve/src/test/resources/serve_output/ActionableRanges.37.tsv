@@ -1,3 +1,3 @@
-gene	transcript	chromosome	start	end	mutationType	rangeType	rank	source	sourceEvent	sourceUrls	treatment	applicableCancerType	applicableDoid	blacklistCancerTypes	level	direction	evidenceUrls
-BRAF	ENST00000288602	7	140453136	140453137	MISSENSE	CODON	600	VICC_CGI	600X		Vemurafenib	Skin Melanoma	X		A	RESPONSIVE	http
-EGFR	ENST00000275493	7	55241707	55279321	INFRAME	EXON	21	VICC_CGI	exon 21		Erlotinib	Lung Adeno	X		B	RESISTANT	http
+gene	transcript	chromosome	start	end	mutationType	rangeType	rank	source	sourceEvent	sourceUrls	treatment	drugClasses	applicableCancerType	applicableDoid	blacklistCancerTypes	level	direction	evidenceUrls
+BRAF	ENST00000288602	7	140453136	140453137	MISSENSE	CODON	600	VICC_CGI	600X		Vemurafenib		Skin Melanoma	X		A	RESPONSIVE	http
+EGFR	ENST00000275493	7	55241707	55279321	INFRAME	EXON	21	VICC_CGI	exon 21		Erlotinib		Lung Adeno	X		B	RESISTANT	http

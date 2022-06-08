@@ -28,6 +28,7 @@ public final class ActinTrialFactory {
                 .sourceEvent(sourceEvent)
                 .sourceUrls(Sets.newHashSet())
                 .treatment(extractTreatment(entry))
+                .drugClasses(Sets.newHashSet("study"))
                 .applicableCancerType(ImmutableCancerType.builder().name("Cancer").doid("162").build())
                 .blacklistCancerTypes(Sets.newHashSet())
                 .level(EvidenceLevel.B)
