@@ -13,6 +13,7 @@ import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharact
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
+import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLA;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.cancertype.CancerType;
 import com.hartwig.hmftools.serve.cancertype.CancerTypeFactory;
@@ -108,6 +109,8 @@ public class PersonalizedEvidenceFactory {
             return ProtectEvidenceType.FUSION_PAIR;
         } else if (actionable instanceof ActionableCharacteristic) {
             return fromActionableCharacteristic((ActionableCharacteristic) actionable);
+        } else if (actionable instanceof ActionableHLA) {
+            return ProtectEvidenceType.HLA;
         } else {
             throw new IllegalStateException("Unexpected actionable event detected in variant evidence: " + actionable);
         }
