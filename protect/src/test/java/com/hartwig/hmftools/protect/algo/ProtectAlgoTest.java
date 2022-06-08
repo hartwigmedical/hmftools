@@ -36,6 +36,8 @@ public class ProtectAlgoTest {
     private static final String LINX_DRIVER_CATALOG_TSV = Resources.getResource("test_run/linx/sample.linx.driver.catalog.tsv").getPath();
     private static final String ANNOTATED_VIRUS_TSV = Resources.getResource("test_run/virusbreakend/sample.virus.annotated.tsv").getPath();
     private static final String CHORD_PREDICTION_TXT = Resources.getResource("test_run/chord/sample_chord_prediction.txt").getPath();
+    private static final String LILAC_RESULT_CSV = Resources.getResource("test_run/lilac/tumor_sample.lilac.csv").getPath();
+    private static final String LILAC_QC_CSV = Resources.getResource("test_run/lilac/tumor_sample.lilac.qc.csv").getPath();
 
     @Test
     public void canRunProtectAlgo() throws IOException {
@@ -58,6 +60,8 @@ public class ProtectAlgoTest {
                 .linxDriverCatalogTsv(LINX_DRIVER_CATALOG_TSV)
                 .annotatedVirusTsv(ANNOTATED_VIRUS_TSV)
                 .chordPredictionTxt(CHORD_PREDICTION_TXT)
+                .lilacResultCsv(LILAC_RESULT_CSV)
+                .lilacQcCsv(LILAC_QC_CSV)
                 .build();
 
         ActionableEvents events = ActionableEventsLoader.readFromDir(config.serveActionabilityDir(), config.refGenomeVersion());
