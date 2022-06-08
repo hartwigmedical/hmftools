@@ -36,8 +36,7 @@ public class ReadContextCounterFactory
                     candidate.readContext(),
                     candidate.tier(),
                     maxCoverage(candidate),
-                    candidate.minNumberOfEvents(),
-                    candidate.maxReadDepth() < mConfig.MaxRealignmentDepth));
+                    candidate.minNumberOfEvents()));
         }
 
         return readCounters;

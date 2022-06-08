@@ -32,7 +32,6 @@ import htsjdk.samtools.SAMRecord;
 public class ReadContextCounter implements VariantHotspot
 {
     public final VariantTier Tier;
-    public final boolean Realign;
     public final int MaxCoverage;
 
     private final int mId;
@@ -41,7 +40,6 @@ public class ReadContextCounter implements VariantHotspot
     private final ReadContext mReadContext;
     private final int mMinNumberOfEvents;
     private final boolean mIsMnv;
-    private final boolean mIsIndel;
 
     private final int[] mQualities;
     private final int[] mCounts;
@@ -78,19 +76,17 @@ public class ReadContextCounter implements VariantHotspot
 
     public ReadContextCounter(
             final int id, final VariantHotspot variant, final ReadContext readContext, final VariantTier tier,
-            final int maxCoverage, final int minNumberOfEvents, boolean realign)
+            final int maxCoverage, final int minNumberOfEvents)
     {
         mId = id;
 
         Tier = tier;
-        Realign = realign;
         MaxCoverage = maxCoverage;
         mMinNumberOfEvents = minNumberOfEvents;
 
         mReadContext = readContext;
         mVariant = variant;
         mIsMnv = variant.isMNV();
-        mIsIndel = variant.isIndel();
 
         mQualities = new int[RC_MAX];
         mCounts = new int[RC_MAX];
@@ -304,7 +300,7 @@ public class ReadContextCounter implements VariantHotspot
             }
         }
 
-        final RealignedContext realignment = Realign ? realignmentContext(readIndex, record) : null;
+        final RealignedContext realignment = realignmentContext(readIndex, record);
         RealignedType realignedType = realignment != null ? realignment.Type : RealignedType.NONE;
 
         if(realignedType == RealignedType.EXACT)

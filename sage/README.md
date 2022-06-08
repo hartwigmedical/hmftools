@@ -66,7 +66,6 @@ resource_dir | None | Path to all resource files, in which case specify the file
 threads | 2 | Number of threads to use
 max_read_depth | 1000 | Maximum number of reads to look for evidence of any `HIGH_CONFIDENCE` or `LOW_CONFIDENCE` variant. Reads in excess of this are ignored.  
 max_read_depth_panel | 100,000 | Maximum number of reads to look for evidence of any `HOTSPOT` or `PANEL` variant. Reads in excess of this are ignored.  
-max_realignment_depth | 1000 | Do not look for evidence of realigned variant if its read depth exceeds this value
 min_map_quality | 10 | Min mapping quality to apply to non-hotspot variants
 coverage_bed | NA | Write file with counts of depth of each base of the supplied bed file
 validation_stringency | STRICT | SAM validation strategy: STRICT, SILENT, LENIENT
@@ -169,10 +168,9 @@ The cardinality of `reference` must match `reference_bam` and must not already e
 Argument | Default | Description 
 ---|---|---
 threads | 2 | Number of threads to use
-chr | NA | Limit sage to comma separated list of chromosomes
+specifc_chr | NA | Limit sage to comma separated list of chromosomes
 max_read_depth | 1000 | Maximum number of reads to look for evidence of any `HIGH_CONFIDENCE` or `LOW_CONFIDENCE` variant. Reads in excess of this are ignored.  
 max_read_depth_panel | 100,000 | Maximum number of reads to look for evidence of any `HOTSPOT` or `PANEL` variant. Reads in excess of this are ignored.  
-max_realignment_depth | 1000 | Do not look for evidence of realigned variant if its read depth exceeds this value
 min_map_quality | 10 | Min mapping quality to apply to non-hotspot variants
 
 The optional [base quality recalibration](#optional-base-quality-recalibration-arguments) and [quality](#optional-quality-arguments) arguments also apply.  
@@ -582,43 +580,10 @@ Phasing improvements
 # Version History and Download Links
 - [3.0](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.0)
 - [2.8](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.8)
-  - Right align inserts that would otherwise be outside a coding region in the same manner as deletes
 - [2.7](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.7)
-  - Calculate NM field if not present in alignment file
 - [2.6](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.6)
-  - Coverage is now calculated on supplied bed file rather than on panel bed file
-  - Added validation_stringency parameter
 - [2.5](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.5)
-  - Gene panel coverage including estimate of missed variant likelihood 
-  - Changed default value of max_germline_rel_raw_base_qual for HOTSPOTS to 50% (from 100%)
-  - Improved VAF estimation by including alt match type 
 - [2.4](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.4)
-  - Added SageAppendApplication to [append additional reference samples](#append-reference-samples) to existing SAGE output. 
-  - Do not hard filter germline variants in the same local phase set as passing somatic variants
-  - Large skipped reference sections (representating a splice junction gap in RNA) contribute towards FULL or PARTIAL matches.
 - [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.3)
-  - Extend local phase set detection to maximum of 60 bases
-  - Favour reads with variants closer to the centre when determining read context
-  - Fix bug creating BQR plots with too many quality scores
 - [2.2](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.2)
-  - Realignment of inframe indels
-  - Improved MNV deduplication
-  - Detection of phased inframe indels
-  - Base Quality Recalibration
-  - Improved sensitivity in high depth regions
-  - Tumor only support
-  - Mitochondria support
-  - Multiple tumor support
-  - Multiple reference (or RNA) support
-  - Removed explicit RNA support (can use additional reference instead)
-  - Performance and memory improvements
 - [2.1](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.1)
-  - Reduced memory footprint
-  - Add version info to VCF
-  - RNA support
-  - CRAM support
-  - Filter variants with ref containing bases other then G,A,T,C
-  - Look for read context of variants that are partially soft clipped
-  - Ref genome 38 support
-- 2.0
-  - Revamped small indel / SNV caller

@@ -136,9 +136,6 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             @Override
             public void handleLeftSoftClip(final SAMRecord record, final CigarElement element)
             {
-                if(!mConfig.FindSoftClipInserts)
-                    return;
-
                 AltRead altRead = processSoftClip(
                         record, element.getLength(), 0, refBases, readExceedsQuality, numberOfEvents, true);
 
@@ -149,9 +146,6 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             @Override
             public void handleRightSoftClip(final SAMRecord record, final CigarElement element, int readIndex, int refPosition)
             {
-                if(!mConfig.FindSoftClipInserts)
-                    return;
-
                 AltRead altRead = processSoftClip(
                         record, element.getLength(), readIndex, refBases, readExceedsQuality, numberOfEvents, false);
 

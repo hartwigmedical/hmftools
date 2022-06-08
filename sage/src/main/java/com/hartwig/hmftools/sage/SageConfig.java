@@ -14,13 +14,11 @@ import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGION
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH_PANEL;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_REALIGNMENT_DEPTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MNV;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_SLICE_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.ITEM_DELIM;
-import static com.hartwig.hmftools.sage.SageConstants.SUB_ITEM_DELIM;
 
 import static htsjdk.samtools.ValidationStringency.DEFAULT_STRINGENCY;
 
@@ -28,7 +26,6 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -71,11 +68,9 @@ public class SageConfig
     public final boolean IncludeMT;
     public final int RegionSliceSize;
     public final int MinMapQuality;
-    public final int MaxRealignmentDepth;
     public final int MaxReadDepth;
     public final int MaxReadDepthPanel;
     public final int ReadContextFlankSize;
-    public final boolean FindSoftClipInserts;
 
     public final String RefGenomeFile;
     public final RefGenomeVersion RefGenVersion;
@@ -111,7 +106,6 @@ public class SageConfig
     private static final String HOTSPOTS = "hotspots";
     private static final String MAX_READ_DEPTH = "max_read_depth";
     private static final String MAX_READ_DEPTH_PANEL = "max_read_depth_panel";
-    private static final String MAX_REALIGNMENT_DEPTH = "max_realignment_depth";
     private static final String REF_GENOME_VERSION = "ref_genome_version";
     private static final String SLICE_SIZE = "slice_size";
     private static final String MNV = "mnv_enabled";
@@ -119,7 +113,6 @@ public class SageConfig
     private static final String COVERAGE_BED = "coverage_bed";
     private static final String VALIDATION_STRINGENCY = "validation_stringency";
     private static final String INCLUDE_MT = "include_mt";
-    private static final String FIND_SC_INSERTS = "find_sc_inserts";
 
     private static final String SPECIFIC_CHROMOSOMES = "specific_chr";
     private static final String SPECIFIC_POSITIONS = "specific_positions";
@@ -220,9 +213,6 @@ public class SageConfig
         MinMapQuality = getConfigValue(cmd, MIN_MAP_QUALITY, DEFAULT_MIN_MAP_QUALITY);
         MaxReadDepth = getConfigValue(cmd, MAX_READ_DEPTH, DEFAULT_MAX_READ_DEPTH);
         MaxReadDepthPanel = getConfigValue(cmd, MAX_READ_DEPTH_PANEL, DEFAULT_MAX_READ_DEPTH_PANEL);
-        MaxRealignmentDepth = getConfigValue(cmd, MAX_REALIGNMENT_DEPTH, DEFAULT_MAX_REALIGNMENT_DEPTH);
-
-        FindSoftClipInserts = cmd.hasOption(FIND_SC_INSERTS);
 
         Filter = new FilterConfig(cmd);
         Quality = new QualityConfig(cmd);
@@ -348,8 +338,6 @@ public class SageConfig
         options.addOption(LOG_LPS_DATA, false, "Log local phasing data");
         options.addOption(PERF_WARN_TIME, true, "Log details of partitions taking longer than X seconds");
 
-        options.addOption(FIND_SC_INSERTS, false, "Search soft-clipped bases for insert candidates");
-
         commonOptions().getOptions().forEach(options::addOption);
         FilterConfig.createOptions().getOptions().forEach(options::addOption);
         addEnsemblDir(options);
@@ -376,7 +364,6 @@ public class SageConfig
 
         options.addOption(MAX_READ_DEPTH, true, "Max depth to look for evidence [" + DEFAULT_MAX_READ_DEPTH + "]");
         options.addOption(MAX_READ_DEPTH_PANEL, true, "Max depth to look for evidence in panel [" + DEFAULT_MAX_READ_DEPTH_PANEL + "]");
-        options.addOption(MAX_REALIGNMENT_DEPTH, true, "Max depth to check for realignment [" + DEFAULT_MAX_REALIGNMENT_DEPTH + "]");
 
         QualityConfig.createOptions().getOptions().forEach(options::addOption);
         QualityRecalibrationConfig.createOptions().getOptions().forEach(options::addOption);
@@ -414,11 +401,9 @@ public class SageConfig
         IncludeMT = false;
         RegionSliceSize = 500_000;
         MinMapQuality = DEFAULT_MIN_MAP_QUALITY;
-        MaxRealignmentDepth = DEFAULT_MAX_REALIGNMENT_DEPTH;
         MaxReadDepth = DEFAULT_MAX_READ_DEPTH;
         MaxReadDepthPanel = DEFAULT_MAX_READ_DEPTH_PANEL;
         ReadContextFlankSize = DEFAULT_READ_CONTEXT_FLANK_SIZE;
-        FindSoftClipInserts = true;
         RefGenomeFile = "refGenome";
         HighConfidenceBed = "highConf";
         CoverageBed = "coverage";
