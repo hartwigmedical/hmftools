@@ -23,7 +23,7 @@ Component | Description | Current Version
 [Linx](./linx/README.md) | SV annotation, clustering & chaining, fusion and disruption calling | [1.19](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.19)
 [Lilac](./lilac/README.md) | HLA typing | [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.2)
 [Teal](./lilac/README.md) | Measures telomere content and estimates telomeric length | [1.0.1](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.0.1)
-[Cuppa](./cuppa/README.md) | Tissue of origin prediction from WTS / WGS | [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.6)
+[Cuppa](./cuppa/README.md) | Tissue of origin prediction from WGS/WTS | [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.6)
 
 ## Actionability and Clinical Reporting Tools
 
