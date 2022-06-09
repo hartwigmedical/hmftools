@@ -337,7 +337,7 @@ public class ReadContextCounter implements VariantHotspot
         }
 
         // Jitter Penalty
-        switch(realignment.Type)
+        switch(realignedType)
         {
             case LENGTHENED:
                 mJitterPenalty += jitterPenalty(qualityConfig, realignment.RepeatCount);
