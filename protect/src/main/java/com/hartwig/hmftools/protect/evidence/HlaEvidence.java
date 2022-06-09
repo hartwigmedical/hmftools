@@ -26,24 +26,26 @@ public class HlaEvidence {
     public List<ProtectEvidence> evidence(@NotNull LilacData lilacData) {
         List<ProtectEvidence> result = Lists.newArrayList();
         for (LilacAllele lilacAllele : lilacData.alleles()) {
-            result.addAll(evidence(lilacAllele));
+            result.addAll(evidence(lilacAllele, lilacData.qc()));
         }
 
         return result;
     }
 
     @NotNull
-    private List<ProtectEvidence> evidence(@NotNull LilacAllele lilacAllele) {
+    private List<ProtectEvidence> evidence(@NotNull LilacAllele lilacAllele, @NotNull String lilacQc) {
         List<ProtectEvidence> result = Lists.newArrayList();
 
         for (ActionableHLA hla : actionableHLA) {
             if (hla.hlaType().equals(lilacAllele.name())) {
-                ProtectEvidence evidence = personalizedEvidenceFactory.somaticReportableEvidence(hla)
-                        .gene(hla.hlaType())
-                        .isCanonical(false)
-                        .event(lilacAllele.name())
-                        .build();
-                result.add(evidence);
+                    ProtectEvidence evidence = personalizedEvidenceFactory.evidenceBuilder(hla)
+                            .gene(hla.hlaType())
+                            .isCanonical(false)
+                            .event(lilacAllele.name())
+                            .reported(lilacQc.equals("PASS"))
+                            .germline(false)
+                            .build();
+                    result.add(evidence);
             }
         }
         return result;
