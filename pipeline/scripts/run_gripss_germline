@@ -1,7 +1,7 @@
 #!/bin/bash
 
 gripss_jar=$1 && shift
-reference_id=$1 && shift
+tumor_id=$1 && shift
 output_dir=$1 && shift
 gridss_vcf=$1 && shift
 ref_genome_version=$1 && shift
@@ -14,7 +14,7 @@ if [[ ! -d "${output_dir}" ]]; then
   mkdir ${output_dir}
 fi
 
-output_vcf=${output_dir}/${reference_id}.gripss.filtered.germline.vcf.gz
+output_vcf=${output_dir}/${tumor_id}.gripss.filtered.germline.vcf.gz
 
 if [[ -f "${output_vcf}" ]]; then
   echo "Skipping Gripss germline for ${tumor_id}, since VCF ${output_vcf} exists"
@@ -26,10 +26,10 @@ if [[ ! -f "${gridss_vcf}" ]]; then
   exit
 fi
 
-echo "Running Gripss germline for ${reference_id}, output dir ${output_dir}"
+echo "Running Gripss germline for ${tumor_id}, output dir ${output_dir}"
 
 java -jar ${gripss_jar} \
-  -sample ${reference_id} \
+  -sample ${tumor_id} \
   -ref_genome ${ref_genome} \
   -ref_genome_version ${ref_genome_version} \
   -known_hotspot_file ${known_hotspot_file} \
