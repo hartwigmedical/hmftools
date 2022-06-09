@@ -4,8 +4,6 @@ import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.read.ExpandedBasesFactory;
 
-import org.jetbrains.annotations.NotNull;
-
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
@@ -41,7 +39,7 @@ public class RawContextCigarHandler implements CigarHandler
                     + mVariant.position() - mVariant.alt().length() + mVariant.ref().length();
 
             boolean altSupport = mIsInsert && element.getLength() >= mVariant.alt().length() && matchesString(record, readIndex, mVariant.alt());
-            int baseQuality = altSupport ? baseQuality(readIndex, record, mVariant.alt().length()) : 0;
+            int baseQuality = altSupport ? avgBaseQuality(readIndex, record, mVariant.alt().length()) : 0;
 
             mResult = RawContext.inSoftClip(readIndex, altSupport, baseQuality);
         }
@@ -68,7 +66,7 @@ public class RawContextCigarHandler implements CigarHandler
             int readVariantStartPos = readIndex - 1;
 
             boolean altSupport = element.getLength() >= mVariant.alt().length() && matchesString(record, readVariantStartPos, mVariant.alt());
-            int baseQuality = altSupport ? baseQuality(readVariantStartPos, record, mVariant.alt().length()) : 0;
+            int baseQuality = altSupport ? avgBaseQuality(readVariantStartPos, record, mVariant.alt().length()) : 0;
 
             if(!altSupport)
                 return;
@@ -116,10 +114,9 @@ public class RawContextCigarHandler implements CigarHandler
         if(refPosition == mVariant.position())
         {
             boolean altSupport = mIsInsert && e.getLength() == mVariant.alt().length() - 1 && matchesString(record, readIndex, mVariant.alt());
-            int baseQuality = altSupport ? baseQuality(readIndex, record, mVariant.alt().length()) : 0;
+            int baseQuality = altSupport ? avgBaseQuality(readIndex, record, mVariant.alt().length()) : 0;
             mResult = RawContext.indel(readIndex, altSupport, baseQuality);
         }
-
     }
 
     @Override
@@ -134,7 +131,7 @@ public class RawContextCigarHandler implements CigarHandler
             boolean altSupport = mIsDelete && e.getLength() == mVariant.ref().length() - 1 && matchesFirstBase(record,
                     readIndex,
                     mVariant.ref());
-            int baseQuality = altSupport ? baseQuality(readIndex, record, 2) : 0;
+            int baseQuality = altSupport ? avgBaseQuality(readIndex, record, 2) : 0;
             mResult = RawContext.indel(readIndex, altSupport, baseQuality);
         }
         else if(refPositionEnd >= mVariant.position())
@@ -185,14 +182,18 @@ public class RawContextCigarHandler implements CigarHandler
         return true;
     }
 
-    private int baseQuality(int readIndex, SAMRecord record, int length)
+    private int avgBaseQuality(int readIndex, SAMRecord record, int length)
     {
         int maxIndex = Math.min(readIndex + length, record.getBaseQualities().length) - 1;
-        int quality = Integer.MAX_VALUE;
+
+        double qualityTotal = 0;
+
         for(int i = readIndex; i <= maxIndex; i++)
         {
-            quality = Math.min(quality, record.getBaseQualities()[i]);
+            qualityTotal += record.getBaseQualities()[i];
         }
-        return quality;
+
+        int baseLength = maxIndex - readIndex + 1;
+        return qualityTotal > 0 ? (int)(qualityTotal / baseLength) : 0;
     }
 }
