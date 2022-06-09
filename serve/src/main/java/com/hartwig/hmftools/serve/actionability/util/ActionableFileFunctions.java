@@ -11,6 +11,8 @@ import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.cancertype.CancerType;
 import com.hartwig.hmftools.serve.cancertype.CancerTypeFactory;
 import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
+import com.hartwig.hmftools.serve.treatment.ImmutableTreatment;
+import com.hartwig.hmftools.serve.treatment.Treatment;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -29,6 +31,7 @@ public final class ActionableFileFunctions {
                 .add("sourceEvent")
                 .add("sourceUrls")
                 .add("treatment")
+                .add("drugClasses")
                 .add("applicableCancerType")
                 .add("applicableDoid")
                 .add("blacklistCancerTypes")
@@ -64,38 +67,43 @@ public final class ActionableFileFunctions {
 
             @NotNull
             @Override
-            public String treatment() {
-                return values[startingPosition + 3];
+            public Treatment treatment() {
+                int drugClassPosition = startingPosition + 4;
+                return ImmutableTreatment.builder()
+                        .treament(values[startingPosition + 3])
+                        .drugClasses(values.length > drugClassPosition ? stringToDrugClasses(values[drugClassPosition]) : Sets.newHashSet())
+                        .build();
+
             }
 
             @NotNull
             @Override
             public CancerType applicableCancerType() {
-                return ImmutableCancerType.builder().name(values[startingPosition + 4]).doid(values[startingPosition + 5]).build();
+                return ImmutableCancerType.builder().name(values[startingPosition + 5]).doid(values[startingPosition + 6]).build();
             }
 
             @NotNull
             @Override
             public Set<CancerType> blacklistCancerTypes() {
-                return CancerTypeFactory.fromString(values[startingPosition + 6]);
+                return CancerTypeFactory.fromString(values[startingPosition + 7]);
             }
 
             @NotNull
             @Override
             public EvidenceLevel level() {
-                return EvidenceLevel.valueOf(values[startingPosition + 7]);
+                return EvidenceLevel.valueOf(values[startingPosition + 8]);
             }
 
             @NotNull
             @Override
             public EvidenceDirection direction() {
-                return EvidenceDirection.valueOf(values[startingPosition + 8]);
+                return EvidenceDirection.valueOf(values[startingPosition + 9]);
             }
 
             @NotNull
             @Override
             public Set<String> evidenceUrls() {
-                int urlPosition = startingPosition + 9;
+                int urlPosition = startingPosition + 10;
                 return values.length > urlPosition ? stringToUrls(values[urlPosition]) : Sets.newHashSet();
             }
         };
@@ -106,7 +114,8 @@ public final class ActionableFileFunctions {
         return new StringJoiner(FIELD_DELIMITER).add(event.source().toString())
                 .add(event.sourceEvent())
                 .add(urlsToString(event.sourceUrls()))
-                .add(event.treatment())
+                .add(event.treatment().treament())
+                .add(drugClassesToString(event.treatment().drugClasses()))
                 .add(event.applicableCancerType().name())
                 .add(event.applicableCancerType().doid())
                 .add(CancerTypeFactory.toString(event.blacklistCancerTypes()))
@@ -125,6 +134,20 @@ public final class ActionableFileFunctions {
     private static String urlsToString(@NotNull Set<String> urls) {
         StringJoiner joiner = new StringJoiner(URL_DELIMITER);
         for (String url : urls) {
+            joiner.add(url);
+        }
+        return joiner.toString();
+    }
+
+    @NotNull
+    private static Set<String> stringToDrugClasses(@NotNull String fieldValue) {
+        return Sets.newHashSet(fieldValue.split(URL_DELIMITER));
+    }
+
+    @NotNull
+    private static String drugClassesToString(@NotNull Set<String> drugClasses) {
+        StringJoiner joiner = new StringJoiner(URL_DELIMITER);
+        for (String url : drugClasses) {
             joiner.add(url);
         }
         return joiner.toString();

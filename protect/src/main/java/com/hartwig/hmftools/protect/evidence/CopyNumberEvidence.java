@@ -25,7 +25,8 @@ public class CopyNumberEvidence {
         this.personalizedEvidenceFactory = personalizedEvidenceFactory;
         this.actionableGenes = actionableGenes.stream()
                 .filter(x -> x.event() == GeneLevelEvent.INACTIVATION || x.event() == GeneLevelEvent.AMPLIFICATION
-                        || x.event() == GeneLevelEvent.DELETION)
+                        || x.event() == GeneLevelEvent.OVER_EXPRESSION || x.event() == GeneLevelEvent.DELETION
+                        || x.event() == GeneLevelEvent.UNDER_EXPRESSION)
                 .collect(Collectors.toList());
     }
 
@@ -66,10 +67,12 @@ public class CopyNumberEvidence {
     private static boolean isTypeMatch(@NotNull ActionableGene actionable, @NotNull GainLoss reportable) {
         switch (actionable.event()) {
             case AMPLIFICATION:
+            case OVER_EXPRESSION:
                 return reportable.interpretation() == CopyNumberInterpretation.FULL_GAIN
                         || reportable.interpretation() == CopyNumberInterpretation.PARTIAL_GAIN;
             case INACTIVATION:
             case DELETION:
+            case UNDER_EXPRESSION:
                 return reportable.interpretation() == CopyNumberInterpretation.FULL_LOSS
                         || reportable.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS;
             default:

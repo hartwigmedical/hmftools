@@ -40,6 +40,7 @@ import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
 import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
+import com.hartwig.hmftools.serve.treatment.ImmutableTreatment;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -214,10 +215,7 @@ public final class ServeTestFactory {
 
     @NotNull
     public static ActionableCharacteristic createTestActionableCharacteristicForSource(@NotNull Knowledgebase source) {
-        return ImmutableActionableCharacteristic.builder()
-                .from(createTestActionableCharacteristic())
-                .source(source)
-                .build();
+        return ImmutableActionableCharacteristic.builder().from(createTestActionableCharacteristic()).source(source).build();
     }
 
     @NotNull
@@ -248,7 +246,7 @@ public final class ServeTestFactory {
         return ActionabilityTestUtil.create(source,
                 "source event",
                 Sets.newHashSet(),
-                "treatment",
+                ImmutableTreatment.builder().treament("treatment").drugClasses(Sets.newHashSet("drugClasses")).build(),
                 ImmutableCancerType.builder().name("applicable name").doid("applicable doid").build(),
                 Sets.newHashSet(ImmutableCancerType.builder().name("blacklist name").doid("blacklist doid").build()),
                 EvidenceLevel.A,

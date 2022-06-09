@@ -24,9 +24,17 @@ public class CkbClassificationConfig {
     private static final Set<String> WILD_TYPE_KEY_PHRASES = wildTypeKeyPhrases();
     private static final Set<String> AMPLIFICATION_KEYWORDS = amplificationKeywords();
     private static final Set<String> AMPLIFICATION_KEY_PHRASES = amplificationKeyPhrases();
+
+    private static final Set<String> OVER_EXPRESSION_KEYWORDS = overExpressionKeywords();
+
+    private static final Set<String> OVER_EXPRESSION_KEY_PHRASES = overExpressionKeyPhrases();
     private static final Set<String> DELETION_BLACKLIST_KEY_PHRASES = deletionBlacklistKeyPhrases();
     private static final Set<String> DELETION_KEYWORDS = deletionKeywords();
     private static final Set<String> DELETION_KEY_PHRASES = deletionKeyPhrases();
+
+    private static final Set<String> UNDER_EXPRESSION_KEYWORDS = underExpressionKeywords();
+
+    private static final Set<String> UNDER_EXPRESSION_KEY_PHRASES = underExpressionKeyPhrases();
     private static final Set<String> EXONIC_DEL_DUP_FUSION_KEY_PHRASES = exonicDelDupFusionKeyPhrases();
     private static final Set<String> EXONIC_DEL_DUP_FUSION_EVENTS = exonicDelDupFusionEvents();
     private static final Set<String> FUSION_PAIR_EVENTS_TO_SKIP = fusionPairEventsToSkip();
@@ -63,9 +71,13 @@ public class CkbClassificationConfig {
                 .wildTypeKeyPhrases(WILD_TYPE_KEY_PHRASES)
                 .amplificationKeywords(AMPLIFICATION_KEYWORDS)
                 .amplificationKeyPhrases(AMPLIFICATION_KEY_PHRASES)
+                .overExpressionKeywords(OVER_EXPRESSION_KEYWORDS)
+                .overExpressionKeyPhrases(OVER_EXPRESSION_KEY_PHRASES)
                 .deletionBlacklistKeyPhrases(DELETION_BLACKLIST_KEY_PHRASES)
                 .deletionKeywords(DELETION_KEYWORDS)
                 .deletionKeyPhrases(DELETION_KEY_PHRASES)
+                .underExpressionKeywords(UNDER_EXPRESSION_KEYWORDS)
+                .underExpressionKeyPhrases(UNDER_EXPRESSION_KEY_PHRASES)
                 .exonicDelDupFusionKeyPhrases(EXONIC_DEL_DUP_FUSION_KEY_PHRASES)
                 .exonicDelDupFusionEvents(EXONIC_DEL_DUP_FUSION_EVENTS)
                 .fusionPairEventsToSkip(FUSION_PAIR_EVENTS_TO_SKIP)
@@ -161,6 +173,16 @@ public class CkbClassificationConfig {
 
     @NotNull
     private static Set<String> amplificationKeyPhrases() {
+        return Sets.newHashSet();
+    }
+
+    @NotNull
+    private static Set<String> overExpressionKeywords() {
+        return Sets.newHashSet();
+    }
+
+    @NotNull
+    private static Set<String> overExpressionKeyPhrases() {
         Set<String> set = Sets.newHashSet();
         set.add("over exp");
         return set;
@@ -183,6 +205,16 @@ public class CkbClassificationConfig {
 
     @NotNull
     private static Set<String> deletionKeyPhrases() {
+        return Sets.newHashSet();
+    }
+
+    @NotNull
+    private static Set<String> underExpressionKeywords() {
+        return Sets.newHashSet();
+    }
+
+    @NotNull
+    private static Set<String> underExpressionKeyPhrases() {
         Set<String> set = Sets.newHashSet();
         set.add("dec exp");
         return set;

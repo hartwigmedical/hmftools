@@ -4,7 +4,7 @@ This repository contains the suite of tools used in the Hartwig Medical Foundati
 
 ## DNA Pipeline Components
 
-![HMF_Pipeline](pipeline/hmf_tools_pipeline.png)
+![HMF_Pipeline](./pipeline/hmf_tools_pipeline.png)
 
 The table below has links for the full functional detail and configuration for each component. The versions match those used in the current HMF GCP pipeline which can be run using [Platinum](https://github.com/hartwigmedical/platinum).
 
@@ -41,11 +41,11 @@ Resource files for each component (GRCh37 and GRCh38) are available to download 
 
 Component | Description | Current Version
 ---|---|---
-[Serve](./serve/README.md) | Harmonisation of evidence from clinical annotation databases | 
-[Protect](./protect/README.md) | Matching of molecular results to treatments and clinical trials |
-[Rose](./rose/README.md) | Actionability of clinically relevant molecular findings |
-[Virus Interpreter](./virus-interpreter/README.md) | Filtering, annotation and intepretation of virus breakend data |
-[Orange](./orange/README.md) | PDF summary report of all WGS output | 
+[Serve](./serve/README.md) | Harmonisation of evidence from clinical annotation databases | [1.11](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.11) 
+[Protect](./protect/README.md) | Matching of molecular results to treatments and clinical trials | [2.2](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v2.2)
+[Rose](./rose/README.md) | Actionability of clinically relevant molecular findings | [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/rose-v1.0)
+[Virus Interpreter](./virus-interpreter/README.md) | Filtering, annotation and interpretation of virus breakend data | [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/virus-interpreter-v1.2)
+[Orange](./orange/README.md) | PDF summary report and JSON file of all WGS output | [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.9)
 
 ## RNA Tools
 

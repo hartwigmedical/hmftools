@@ -29,6 +29,7 @@ import com.hartwig.hmftools.serve.cancertype.CancerType;
 import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicAnnotation;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
+import com.hartwig.hmftools.serve.treatment.ImmutableTreatment;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -89,6 +90,19 @@ public class PersonalizedEvidenceFactoryTest {
                 .build();
         assertEquals(ProtectEvidenceType.INACTIVATION, PersonalizedEvidenceFactory.determineEvidenceType(gene));
 
+        ActionableGene amplification = ImmutableActionableGene.builder()
+                .from(ServeTestFactory.createTestActionableGene())
+                .event(GeneLevelEvent.AMPLIFICATION)
+                .build();
+        assertEquals(ProtectEvidenceType.AMPLIFICATION, PersonalizedEvidenceFactory.determineEvidenceType(amplification));
+
+        ActionableGene overexpression = ImmutableActionableGene.builder()
+                .from(ServeTestFactory.createTestActionableGene())
+                .event(GeneLevelEvent.OVER_EXPRESSION)
+                .build();
+        assertEquals(ProtectEvidenceType.OVER_EXPRESSION, PersonalizedEvidenceFactory.determineEvidenceType(overexpression));
+
+
         assertEquals(ProtectEvidenceType.FUSION_PAIR,
                 PersonalizedEvidenceFactory.determineEvidenceType(ServeTestFactory.createTestActionableFusion()));
 
@@ -148,7 +162,7 @@ public class PersonalizedEvidenceFactoryTest {
         ActionableEvent event = ActionabilityTestUtil.create(Knowledgebase.CKB,
                 "amp",
                 Sets.newHashSet(),
-                "treatment A",
+                ImmutableTreatment.builder().treament("treatment A").drugClasses(Sets.newHashSet("drugClasses")).build(),
                 ImmutableCancerType.builder().name(cancerType).doid(doid).build(),
                 blacklist,
                 EvidenceLevel.A,

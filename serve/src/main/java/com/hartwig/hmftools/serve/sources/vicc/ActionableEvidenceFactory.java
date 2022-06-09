@@ -18,6 +18,7 @@ import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.serve.sources.vicc.curation.DrugCurator;
 import com.hartwig.hmftools.serve.sources.vicc.curation.EvidenceLevelCurator;
+import com.hartwig.hmftools.serve.treatment.ImmutableTreatment;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.Phenotype;
 import com.hartwig.hmftools.vicc.datamodel.PhenotypeType;
@@ -38,7 +39,8 @@ class ActionableEvidenceFactory {
 
     private static final String CANCER_TYPE_SEPARATOR = ";";
     static final CancerType LEUKEMIA_TYPE = ImmutableCancerType.builder().name("Leukemia").doid("1240").build();
-    static final CancerType REFRACTORY_HEMATOLOGIC_TYPE = ImmutableCancerType.builder().name("Refractory hematologic cancer").doid("712").build();
+    static final CancerType REFRACTORY_HEMATOLOGIC_TYPE =
+            ImmutableCancerType.builder().name("Refractory hematologic cancer").doid("712").build();
     static final CancerType BONE_MARROW_TYPE = ImmutableCancerType.builder().name("Bone marrow cancer").doid("4960").build();
 
     private static final Set<String> RESPONSIVE_DIRECTIONS = Sets.newHashSet();
@@ -127,7 +129,10 @@ class ActionableEvidenceFactory {
                     }
 
                     for (List<String> drugList : drugLists) {
-                        actionableEvidences.add(builder.treatment(formatDrugList(drugList))
+                        actionableEvidences.add(builder.treatment(ImmutableTreatment.builder()
+                                        .treament(formatDrugList(drugList))
+                                        .drugClasses(Sets.newHashSet())
+                                        .build())
                                 .applicableCancerType(ImmutableCancerType.builder().name(cancerType).doid(doid).build())
                                 .blacklistCancerTypes(blacklistedCancerTypes)
                                 .build());
