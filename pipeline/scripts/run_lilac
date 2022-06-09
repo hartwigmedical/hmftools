@@ -24,6 +24,11 @@ if [[ -f "${lilac_tsv}" ]]; then
   exit
 fi
 
+if [[ ! -f "${somatic_vcf}" ]]; then
+  echo "Missing Purple somatic VCF, not running Lilac for ${tumor_id}"
+  exit
+fi
+
 echo "Running Lilac for ${reference_id} and ${tumor_id}, output dir ${output_dir}"
 
 java -jar ${lilac_jar} \

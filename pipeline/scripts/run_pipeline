@@ -34,10 +34,6 @@ reference_bam=${sample_dir}/${reference_id}.bam
 
 echo "Sample output dir: ${sample_dir}"
 
-if [[ ! -d "${sample_dir}" ]]; then
-  mkdir ${sample_dir}
-fi
-
 # set resource files
 #  | [ "${ref_genome_version}" == "37" ]
 if [ "${ref_genome_version}" == "V37" ]; then
@@ -69,11 +65,50 @@ if [ "${ref_genome_version}" == "V37" ]; then
   fragile_site_file=${resources_dir}/sv/fragile_sites_hmf.37.csv
   line_element_file=${resources_dir}/sv/line_elements.37.csv
   known_fusion_file=${resources_dir}/sv/known_fusion_data.37.csv
+  sv_blacklist_bed=${resources_dir}/sv/ENCFF001TDO.37.bed.gz
+  gridss_config=${resources_dir}/sv/gridss.properties
 
   # Copy number (for Amber, Cobalt, Purple)
   amber_loci_vcf=${resources_dir}/copy_number/GermlineHetPon.37.vcf.gz
   gc_profile=${resources_dir}/copy_number/GC_profile.1000bp.37.cnp
   germline_del_freq_file=${resources_dir}/copy_number/cohort_germline_del_freq.37.csv
+
+  # Immune (for Lilac)
+  lilac_resource_dir=${resources_dir}/immune/
+
+else
+  echo "Reference genome version GRCh38"
+
+  ref_genome=${resources_dir}/ref_genome/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
+  ensembl_dir=${resources_dir}/common/ensembl_data/
+  driver_gene_panel=${resources_dir}/common/DriverGenePanel.38.tsv
+
+  # Point mutations (for Sage, Pave)
+  sage_somatic_hotspots=${resources_dir}/variants/KnownHotspots.somatic.38.vcf.gz
+  sage_germline_hotspots=${resources_dir}/variants/KnownHotspots.germline.38.vcf.gz
+  sage_somatic_panel_bed=${resources_dir}/variants/ActionableCodingPanel.somatic.38.bed.gz
+  sage_germline_panel_bed=${resources_dir}/variants/ActionableCodingPanel.germline.38.bed.gz
+  high_confidence_bed=${resources_dir}/variants/HG001_GRCh38_GIAB_highconf_CG-IllFB-IllGATKHC-Ion-10X-SOLID_CHROM1-X_v.3.3.2_highconf_nosomaticdel_noCENorHET7.bed.gz
+  somatic_pon_file=${resources_dir}/variants/SageGermlinePon.98x.38.tsv.gz
+  mappability_bed=${resources_dir}/variants/mappability_150.38.bed.gz
+  clinvar_vcf=${resources_dir}/variants/clinvar.38.vcf.gz
+  germline_blacklist_bed=${resources_dir}/variants/KnownBlacklist.germline.38.bed
+  germline_blacklist_vcf=${resources_dir}/variants/KnownBlacklist.germline.38.vcf.gz
+
+  # SVs (for Gripss, Linx)
+  sv_hotspot_file=${resources_dir}/sv/known_fusions.38.bedpe
+  sv_pon_file=${resources_dir}/sv/gridss_pon_breakpoint.38.bedpe.gz
+  sgl_pon_file=${resources_dir}/sv/gridss_pon_single_breakend.38.bed.gz
+  fragile_site_file=${resources_dir}/sv/fragile_sites_hmf.38.csv
+  line_element_file=${resources_dir}/sv/line_elements.38.csv
+  known_fusion_file=${resources_dir}/sv/known_fusion_data.38.csv
+  sv_blacklist_bed=${resources_dir}/sv/ENCFF001TDO.38.bed.gz
+  gridss_config=${resources_dir}/sv/gridss.properties
+
+  # Copy number (for Amber, Cobalt, Purple)
+  amber_loci_vcf=${resources_dir}/copy_number/GermlineHetPon.38.vcf.gz
+  gc_profile=${resources_dir}/copy_number/GC_profile.1000bp.38.cnp
+  germline_del_freq_file=${resources_dir}/copy_number/cohort_germline_del_freq.38.csv
 
   # Immune (for Lilac)
   lilac_resource_dir=${resources_dir}/immune/
@@ -89,7 +124,10 @@ cobalt_jar=${tools_dir}/cobalt.jar
 purple_jar=${tools_dir}/purple.jar
 linx_jar=${tools_dir}/linx.jar
 lilac_jar=${tools_dir}/lilac.jar
+
 circos=${tools_dir}/circos
+
+max_memory=16
 
 
 # Sage somatic
@@ -134,11 +172,19 @@ ${scripts_dir}/run_pave_germline ${pave_jar} \
   ${ensembl_dir} ${driver_gene_panel} ${mappability_bed} ${clinvar_vcf} ${germline_blacklist_bed} ${germline_blacklist_vcf} \
 
 
-# Assume GRIDSS has been run separately
-gridss_vcf=${sample_dir}/gridss/${tumor_id}.gridss.unfiltered.vcf.gz
+# GRIDSS 
+gridss_dir=${sample_dir}/gridss
+
+${scripts_dir}/run_gridss ${tools_dir} \
+  ${tumor_id} ${tumor_bam} ${reference_id} ${reference_bam} \
+  ${gridss_dir} \
+  ${ref_genome} ${sv_blacklist_bed} ${gridss_config} \
+  ${threads} ${max_memory} \
+
 
 # Gripss somatic
 gripss_somatic_dir=${sample_dir}/gripss_somatic
+gridss_vcf=${sample_dir}/gridss/${tumor_id}.gridss.unfiltered.vcf.gz
 
 ${scripts_dir}/run_gripss_somatic ${gripss_jar} \
   ${tumor_id}  ${reference_id} \

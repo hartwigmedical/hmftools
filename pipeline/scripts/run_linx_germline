@@ -20,6 +20,11 @@ if [[ -f "${svs_tsv}" ]]; then
   exit
 fi
 
+if [[ ! -f "${sv_vcf}" ]]; then
+  echo "Missing Gripss SV VCF, not running Linx germline for ${tumor_id}"
+  exit
+fi
+
 echo "Running Linx germline for ${tumor_id}, output dir ${output_dir}"
 
 

@@ -3,12 +3,16 @@
 gripss_jar=$1 && shift
 reference_id=$1 && shift
 output_dir=$1 && shift
-sv_vcf=$1 && shift
+gridss_vcf=$1 && shift
 ref_genome_version=$1 && shift
 ref_genome=$1 && shift
 known_hotspot_file=$1 && shift
 pon_sv_file=$1 && shift
 pon_sgl_file=$1 && shift
+
+if [[ ! -d "${output_dir}" ]]; then
+  mkdir ${output_dir}
+fi
 
 output_vcf=${output_dir}/${reference_id}.gripss.filtered.germline.vcf.gz
 
@@ -17,11 +21,12 @@ if [[ -f "${output_vcf}" ]]; then
   exit
 fi
 
-echo "Running Gripss germline for ${reference_id}, output dir ${output_dir}"
-
-if [[ ! -d "${output_dir}" ]]; then
-  mkdir ${output_dir}
+if [[ ! -f "${gridss_vcf}" ]]; then
+  echo "Missing Gridss VCF, not running Gripss germline for ${tumor_id}"
+  exit
 fi
+
+echo "Running Gripss germline for ${reference_id}, output dir ${output_dir}"
 
 java -jar ${gripss_jar} \
   -sample ${reference_id} \
@@ -30,6 +35,6 @@ java -jar ${gripss_jar} \
   -known_hotspot_file ${known_hotspot_file} \
   -pon_sv_file ${pon_sv_file} \
   -pon_sgl_file ${pon_sgl_file} \
-  -vcf ${sv_vcf} \
+  -vcf ${gridss_vcf} \
   -output_dir ${output_dir} \
   -output_id germline \

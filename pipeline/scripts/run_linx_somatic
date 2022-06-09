@@ -24,6 +24,11 @@ if [[ -f "${svs_tsv}" ]]; then
   exit
 fi
 
+if [[ ! -f "${sv_vcf}" ]]; then
+  echo "Missing Purple SV VCF, not running Linx somatic for ${tumor_id}"
+  exit
+fi
+
 echo "Running Linx somatic for ${tumor_id}, output dir ${output_dir}"
 
 java -jar ${linx_jar} \

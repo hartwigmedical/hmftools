@@ -32,6 +32,11 @@ if [[ -f "${purity_tsv}" ]]; then
   exit
 fi
 
+if [[ ! -f "${sv_vcf}" ]]; then
+  echo "Missing Gripss VCF, not running Purple for ${tumor_id}"
+  exit
+fi
+
 echo "Running Purple for ${tumor_id}, output dir ${output_dir}"
 
 java -jar ${purple_jar} \
