@@ -121,6 +121,9 @@ rangeRank | In case of EXON or CODON, the index of the exon or codon on which th
 evidenceUrls | A list of urls with additional information about the evidence | https://pubmed.ncbi.nlm.nih.gov
 
 ## Version History and Download Links
+- (Upcoming)
+  - Support matching of HLA matching 
+  - Make distinction of amplification verus over-expression and deletion versus under-expression
 - [2.2](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v2.2)
   - Fixed bug in hotspot matching in case everything matches except for the alt (eg V600K against V600R).
   - Add consolidation for no benefit evidence.

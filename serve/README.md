@@ -370,6 +370,9 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   - The actionable output is the database that [PROTECT](../protect/README.md) bases its clinical evidence matching on.
   
 ## Version History and Download Links
+- (Upcoming)
+  - Make distinction of amplification verus over-expression and deletion versus under-expression
+  - Add drug classes of drugs 
 - [1.11](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.11)
   - Use correct blacklisted tumor locations for solid tumors 
   - Update bug in mutation type filter for exon insertions and deletions
