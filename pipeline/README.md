@@ -37,3 +37,8 @@ The pipeline takes about 10 mins to run on these.
 ## Output
 Each component will write its output to a separate directory.
 Plots for Purple and Linx are generated to './sample/purple/plots' and './sample/linx_somatic/plots'.
+
+<p align="center">
+    <img src="../COLO829T.chr10.003.png" width="700" alt="COLO829 chr10">
+</p>
+
