@@ -262,14 +262,16 @@ public class ReadContextCounter implements VariantHotspot
         if(!baseDeleted)
         {
             boolean wildcardMatchInCore = mVariant.isSNV() && mReadContext.microhomology().isEmpty();
-            boolean lowQualMismatchInCore = mVariant.isIndel() && mReadContext.indexedBases().coreLength() >= CORE_LOW_QUAL_MISMATCH_BASE_LENGTH;
+
+            int maxCoreMismatches = mVariant.isIndel() && mVariant.alt().length() >= CORE_LOW_QUAL_MISMATCH_BASE_LENGTH ?
+                    mVariant.alt().length() / CORE_LOW_QUAL_MISMATCH_BASE_LENGTH : 0;
 
             IndexedBases readBases = record.getCigar().containsOperator(CigarOperator.N) ?
                     ExpandedBasesFactory.expand(position(), readIndex, record) :
                     new IndexedBases(position(), readIndex, record.getReadBases());
 
             final ReadContextMatch match = mReadContext.indexedBases().matchAtPosition(
-                    readBases, wildcardMatchInCore, lowQualMismatchInCore, record.getBaseQualities());
+                    readBases, record.getBaseQualities(), wildcardMatchInCore, maxCoreMismatches);
 
             if(!match.equals(ReadContextMatch.NONE))
             {
