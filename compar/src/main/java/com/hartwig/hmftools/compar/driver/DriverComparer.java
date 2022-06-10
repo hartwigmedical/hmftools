@@ -2,6 +2,8 @@ package com.hartwig.hmftools.compar.driver;
 
 import static com.hartwig.hmftools.compar.Category.DRIVER;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.driver.DriverData.FLD_DRIVER_LIKELIHOOD;
+import static com.hartwig.hmftools.compar.driver.DriverData.FLD_DRIVER_MIN_CN;
 
 import java.io.IOException;
 import java.util.List;
@@ -15,6 +17,7 @@ import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.DiffThresholds;
 import com.hartwig.hmftools.compar.FileSources;
 import com.hartwig.hmftools.compar.Mismatch;
 import com.hartwig.hmftools.compar.ItemComparer;
@@ -33,6 +36,13 @@ public class DriverComparer implements ItemComparer
     public Category category() { return DRIVER; }
 
     @Override
+    public void registerThresholds(final DiffThresholds thresholds)
+    {
+        thresholds.addFieldThreshold(FLD_DRIVER_LIKELIHOOD, 0.1, 0);
+        thresholds.addFieldThreshold(FLD_DRIVER_MIN_CN, 0.2, 0.1);
+    }
+
+    @Override
     public void processSample(final String sampleId, final List<Mismatch> mismatches)
     {
         CommonUtils.processSample(this, mConfig, sampleId, mismatches);
@@ -42,13 +52,14 @@ public class DriverComparer implements ItemComparer
     public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess)
     {
         final List<DriverCatalog> drivers = dbAccess.readDriverCatalog(sampleId);
-        final List<LinxDriver> svDrivers = dbAccess.readSvDriver(sampleId);
+        // final List<LinxDriver> svDrivers = dbAccess.readSvDriver(sampleId);
 
         final List<ComparableItem> driverDataList = Lists.newArrayList();
 
         for(DriverCatalog driver : drivers)
         {
-            List<LinxDriver> svDriverList = svDrivers.stream().filter(x -> x.gene().equals(driver.gene())).collect(Collectors.toList());
+            // svDrivers.stream().filter(x -> x.gene().equals(driver.gene())).collect(Collectors.toList());
+            List<LinxDriver> svDriverList = Lists.newArrayList();
             driverDataList.add(new DriverData(driver, svDriverList, mConfig.getGeneMappedName(driver.gene())));
         }
 
@@ -62,7 +73,8 @@ public class DriverComparer implements ItemComparer
 
         try
         {
-            List<LinxDriver> svDrivers = LinxDriver.read(LinxDriver.generateFilename(fileSources.Linx, sampleId));
+            List<LinxDriver> svDrivers = Lists.newArrayList();
+            // List<LinxDriver> svDrivers = LinxDriver.read(LinxDriver.generateFilename(fileSources.Linx, sampleId));
 
             List<DriverCatalog> drivers =
                     DriverCatalogFile.read(LinxDriver.generateCatalogFilename(fileSources.Linx, sampleId, true));
@@ -75,7 +87,7 @@ public class DriverComparer implements ItemComparer
         }
         catch(IOException e)
         {
-            CMP_LOGGER.info("sample({}) failed to load Linx driver data: {}", sampleId, e.toString());
+            CMP_LOGGER.info("sample({}) failed to load driver data: {}", sampleId, e.toString());
         }
 
         return comparableItems;

@@ -3,7 +3,6 @@ package com.hartwig.hmftools.compar;
 public enum Category
 {
     PURITY,
-    COPY_NUMBER,
     DRIVER,
     SOMATIC_VARIANT,
     GERMLINE_VARIANT,

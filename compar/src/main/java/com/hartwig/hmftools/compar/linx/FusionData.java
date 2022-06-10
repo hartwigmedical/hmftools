@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.compar.linx;
 
 import static com.hartwig.hmftools.compar.Category.FUSION;
-import static com.hartwig.hmftools.compar.CommonUtils.checkDiff;
+import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 
 import java.util.List;
@@ -10,6 +10,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.DiffThresholds;
 import com.hartwig.hmftools.compar.MatchLevel;
 import com.hartwig.hmftools.compar.Mismatch;
 
@@ -56,7 +57,7 @@ public class FusionData implements ComparableItem
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel)
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds)
     {
         final FusionData otherFusion = (FusionData)other;
 
@@ -65,24 +66,14 @@ public class FusionData implements ComparableItem
         checkDiff(diffs, "reported", Fusion.reported(), otherFusion.Fusion.reported());
         checkDiff(diffs, "reportedType", Fusion.reportedType(), otherFusion.Fusion.reportedType());
 
-        if(matchLevel == REPORTABLE)
-            return null;
-
         checkDiff(diffs, "phased", Fusion.phased().toString(), otherFusion.Fusion.phased().toString());
         checkDiff(diffs, "likelihood", Fusion.likelihood().toString(), otherFusion.Fusion.likelihood().toString());
         checkDiff(diffs, "fusedExonsUp", Fusion.fusedExonUp(), otherFusion.Fusion.fusedExonUp());
         checkDiff(diffs, "fusedExonsDown", Fusion.fusedExonDown(), otherFusion.Fusion.fusedExonDown());
-
-        /*
-            public abstract int chainLength();
-            public abstract int chainLinks();
-            public abstract boolean chainTerminated();
-            public abstract String domainsKept();
-            public abstract String domainsLost();
-            public abstract int skippedExonsUp();
-            public abstract int skippedExonsDown();
-
-         */
+        checkDiff(diffs, "chainLinks", Fusion.chainLinks(), otherFusion.Fusion.chainLinks());
+        checkDiff(diffs, "chainTerminated", Fusion.chainTerminated(), otherFusion.Fusion.chainTerminated());
+        checkDiff(diffs, "domainsKept", Fusion.domainsKept(), otherFusion.Fusion.domainsKept());
+        checkDiff(diffs, "domainsLost", Fusion.domainsLost(), otherFusion.Fusion.domainsLost());
 
         return null;
     }

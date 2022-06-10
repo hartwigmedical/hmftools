@@ -2,7 +2,7 @@ package com.hartwig.hmftools.compar.linx;
 
 import static com.hartwig.hmftools.compar.Category.LINX_DATA;
 import static com.hartwig.hmftools.compar.CommonUtils.ITEM_DELIM;
-import static com.hartwig.hmftools.compar.CommonUtils.checkDiff;
+import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 
 import java.util.Arrays;
@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.sv.linx.LinxCluster;
 import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.DiffThresholds;
 import com.hartwig.hmftools.compar.MatchLevel;
 import com.hartwig.hmftools.compar.Mismatch;
 
@@ -77,7 +78,7 @@ public class LinxSvData implements ComparableItem
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel)
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds)
     {
         final LinxSvData otherSv = (LinxSvData)other;
 
@@ -93,7 +94,7 @@ public class LinxSvData implements ComparableItem
         double jcn = Annotation.junctionCopyNumberMin() + Annotation.junctionCopyNumberMax();
         double jcnOther = otherSv.Annotation.junctionCopyNumberMin() + otherSv.Annotation.junctionCopyNumberMax();
 
-        checkDiff(diffs, "jcn", jcn, jcnOther);
+        // checkDiff(diffs, "jcn", jcn, jcnOther);
 
         if(!genesEqual(Annotation.geneStart(), otherSv.Annotation.geneStart()) || !genesEqual(Annotation.geneEnd(), otherSv.Annotation.geneEnd()))
         {

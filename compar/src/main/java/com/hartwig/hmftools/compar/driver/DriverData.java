@@ -2,7 +2,7 @@ package com.hartwig.hmftools.compar.driver;
 
 import static com.hartwig.hmftools.compar.Category.DRIVER;
 import static com.hartwig.hmftools.compar.CommonUtils.ITEM_DELIM;
-import static com.hartwig.hmftools.compar.CommonUtils.checkDiff;
+import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 
 import java.util.List;
@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.sv.linx.LinxDriver;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.DiffThresholds;
 import com.hartwig.hmftools.compar.MatchLevel;
 import com.hartwig.hmftools.compar.Mismatch;
 
@@ -22,6 +23,9 @@ public class DriverData implements ComparableItem
     public final DriverCatalog DriverCatalog;
     public final String MappedGeneName; // overridden with new mapped name if applicable
     public final List<LinxDriver> SvDrivers;
+
+    protected static final String FLD_DRIVER_LIKELIHOOD = "driverLikelihood";
+    protected static final String FLD_DRIVER_MIN_CN = "driverMinCopyNumber";
 
     public DriverData(final DriverCatalog driverCatalog, final List<LinxDriver> svDrivers, final String mappedName)
     {
@@ -54,8 +58,6 @@ public class DriverData implements ComparableItem
     {
         final DriverData otherDriver = (DriverData)other;
 
-        //if(!DriverCatalog.gene().equals(otherDriver.DriverCatalog.gene()))
-
         if(!MappedGeneName.equals(otherDriver.MappedGeneName))
             return false;
 
@@ -72,26 +74,28 @@ public class DriverData implements ComparableItem
             }
         }
 
+        if(!DriverCatalog.transcript().equals(otherDriver.DriverCatalog.transcript()))
+            return false;
 
         return true;
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel)
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds)
     {
         final DriverData otherDriver = (DriverData)other;
 
         final List<String> diffs = Lists.newArrayList();
 
-        if(matchLevel == REPORTABLE)
-            return null;
-
         checkDiff(
                 diffs, "likelihoodMethod",
                 DriverCatalog.likelihoodMethod().toString(), otherDriver.DriverCatalog.likelihoodMethod().toString());
 
-        checkDiff(diffs, "likelihood", DriverCatalog.driverLikelihood(), otherDriver.DriverCatalog.driverLikelihood());
+        checkDiff(diffs, FLD_DRIVER_LIKELIHOOD, DriverCatalog.driverLikelihood(), otherDriver.DriverCatalog.driverLikelihood(), thresholds);
 
+        checkDiff(diffs, FLD_DRIVER_MIN_CN, DriverCatalog.minCopyNumber(), otherDriver.DriverCatalog.minCopyNumber(), thresholds);
+
+        /*
         // check matches in Linx cluster event types
         boolean hasDiffs = ((DriverData) other).SvDrivers.size() != SvDrivers.size();
 
@@ -118,7 +122,7 @@ public class DriverData implements ComparableItem
             diffs.add(String.format("svDriver eventTypes(%s/%s)",
                     eventTypes.toString(), otherEventTypes.toString()));
         }
-
+        */
 
         return null;
     }

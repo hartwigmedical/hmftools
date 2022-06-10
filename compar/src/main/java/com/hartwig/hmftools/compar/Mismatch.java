@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.compar;
 
 import static com.hartwig.hmftools.compar.CommonUtils.DATA_DELIM;
-import static com.hartwig.hmftools.compar.CommonUtils.diffsStr;
+import static com.hartwig.hmftools.compar.DiffFunctions.diffsStr;
 
 import java.util.List;
 import java.util.StringJoiner;

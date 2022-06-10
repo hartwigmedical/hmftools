@@ -1,20 +1,28 @@
 package com.hartwig.hmftools.compar.linx;
 
+import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_VCF_SUFFIX;
+import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.compar.Category.DISRUPTION;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_UNDISRUPTED_CN;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;
+import com.hartwig.hmftools.common.sv.EnrichedStructuralVariantFactory;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
+import com.hartwig.hmftools.common.sv.StructuralVariantData;
+import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
+import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.DiffThresholds;
 import com.hartwig.hmftools.compar.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.Mismatch;
@@ -33,6 +41,12 @@ public class DisruptionComparer implements ItemComparer
     public Category category() { return DISRUPTION; }
 
     @Override
+    public void registerThresholds(final DiffThresholds thresholds)
+    {
+        thresholds.addFieldThreshold(FLD_UNDISRUPTED_CN, 0.2, 0.1);
+    }
+
+        @Override
     public void processSample(final String sampleId, final List<Mismatch> mismatches)
     {
         CommonUtils.processSample(this, mConfig, sampleId, mismatches);
@@ -41,12 +55,9 @@ public class DisruptionComparer implements ItemComparer
     @Override
     public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess)
     {
-        List<LinxBreakend> breakends = dbAccess.readBreakends(sampleId);
-        Map<String,DisruptionData> disruptions = Maps.newHashMap();
-
-        breakends.forEach(x -> processBreakend(x, disruptions));
-
-        return disruptions.values().stream().collect(Collectors.toList());
+        final List<StructuralVariantData> svDataList = dbAccess.readStructuralVariantData(sampleId);
+        final List<LinxBreakend> breakends = dbAccess.readBreakends(sampleId);
+        return buildBreakends(svDataList, breakends);
     }
 
     @Override
@@ -54,12 +65,25 @@ public class DisruptionComparer implements ItemComparer
     {
         try
         {
+            final List<StructuralVariantData> svDataList = Lists.newArrayList();
+
+            String vcfFile = fileSources.Purple + sampleId + PURPLE_SV_VCF_SUFFIX;
+            List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfFile, new AlwaysPassFilter());
+            List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(variants);
+
+            int svId = 0;
+
+            for(EnrichedStructuralVariant variant : enrichedVariants)
+            {
+                svDataList.add(convertSvData(variant, svId++)); // valid to set ID again since read this way in Linx
+            }
+
             List<LinxBreakend> breakends = LinxBreakend.read(LinxBreakend.generateFilename(fileSources.Linx, sampleId));
-            Map<String,DisruptionData> disruptions = Maps.newHashMap();
 
-            breakends.forEach(x -> processBreakend(x, disruptions));
+            CMP_LOGGER.debug("sample({}) loaded {} SVs {} breakends",sampleId, svDataList.size(), breakends.size());
 
-            return disruptions.values().stream().collect(Collectors.toList());
+            return buildBreakends(svDataList, breakends);
+
         }
         catch(IOException e)
         {
@@ -68,25 +92,24 @@ public class DisruptionComparer implements ItemComparer
         }
     }
 
-    private void processBreakend(final LinxBreakend breakend, final Map<String,DisruptionData> disruptions)
+    private List<ComparableItem> buildBreakends(final List<StructuralVariantData> svDataList, final List<LinxBreakend> breakends)
     {
-        if(!mConfig.DriverGenes.isEmpty() && !mConfig.DriverGenes.contains(breakend.gene()))
-            return;
+        List<ComparableItem> items = Lists.newArrayList();
 
-        String mappedName = mConfig.getGeneMappedName(breakend.gene());
-
-        if(mappedName == null)
-            return; // ignore genes that have been dropped
-
-        DisruptionData disruptionData = disruptions.get(mappedName);
-
-        if(disruptionData == null)
+        for(StructuralVariantData var : svDataList)
         {
-            disruptionData = new DisruptionData(mappedName);
-            disruptions.put(mappedName, disruptionData);
+            List<LinxBreakend> svBreakends = breakends.stream().filter(x -> x.svId() == var.id()).collect(Collectors.toList());
+
+            for(LinxBreakend breakend : svBreakends)
+            {
+                breakends.remove(breakend);
+
+                DisruptionData disruptionData = new DisruptionData(var, breakend);
+                items.add(disruptionData);
+            }
         }
 
-        disruptionData.breakends().add(breakend);
-    }
+        return items;
 
+    }
 }

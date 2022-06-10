@@ -10,7 +10,7 @@ public interface ComparableItem
 
     boolean reportable();
 
-    Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel);
+    Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds);
 
     String key();
 

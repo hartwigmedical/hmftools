@@ -52,6 +52,8 @@ public class ComparConfig
     public final Set<String> DriverGenes;
     public final GeneNameMapping GeneMapping;
 
+    public final DiffThresholds Thresholds;
+
     public final String OutputDir;
     public final String OutputId;
 
@@ -66,6 +68,7 @@ public class ComparConfig
 
     public static final String DB_SOURCES = "db_sources";
     public static final String FILE_SOURCES = "file_sources";
+    public static final String THRESHOLDS = "thresholds";
 
     public static final String SAMPLE = "sample";
     public static final String SOURCE_SAMPLE_MAPPINGS = "source_sample_mappings";
@@ -128,6 +131,9 @@ public class ComparConfig
         loadDatabaseSources(cmd);
         loadFileSources(cmd);
 
+        Thresholds = new DiffThresholds();
+        Thresholds.loadConfig(cmd.getOptionValue(THRESHOLDS, ""));
+
         SourceSampleIds = Maps.newHashMap();
         if(cmd.hasOption(SOURCE_SAMPLE_MAPPINGS))
         {
@@ -162,6 +168,7 @@ public class ComparConfig
         {
             GeneMapping = null;
         }
+
     }
 
     public String sourceSampleId(final String source, final String sampleId)
@@ -295,6 +302,7 @@ public class ComparConfig
         options.addOption(SAMPLE_ID_FILE, true, "Sample data file");
         options.addOption(SOURCE_SAMPLE_MAPPINGS, true, "Optional specific source suffixes");
         options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
+        options.addOption(THRESHOLDS, true, "In form: Field,AbsoluteDiff,PercentDiff, separated by ';'");
 
         options.addOption(DB_SOURCES, true, "Database configurations keyed by soure name");
         options.addOption(FILE_SOURCES, true, "File locations keyed by source name");

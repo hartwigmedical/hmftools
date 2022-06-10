@@ -24,4 +24,6 @@ public interface ItemComparer
         return mismatch.toCsv();
     }
 
+    default void registerThresholds(final DiffThresholds thresholds) {}
+
 }

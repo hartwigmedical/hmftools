@@ -1,31 +1,32 @@
 package com.hartwig.hmftools.compar.linx;
 
 import static com.hartwig.hmftools.compar.Category.DISRUPTION;
-import static com.hartwig.hmftools.compar.CommonUtils.checkDiff;
+import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.DiffThresholds;
 import com.hartwig.hmftools.compar.MatchLevel;
 import com.hartwig.hmftools.compar.Mismatch;
 
 public class DisruptionData implements ComparableItem
 {
-    public final String MappedGeneName;
+    public final StructuralVariantData SvData;
+    public final LinxBreakend Breakend;
 
-    private final List<LinxBreakend> mBreakends;
+    protected static final String FLD_UNDISRUPTED_CN = "undisruptedCopyNumber";
 
-    public DisruptionData(final String mappedName)
+    public DisruptionData(final StructuralVariantData svData, final LinxBreakend breakend)
     {
-        MappedGeneName = mappedName;
-        mBreakends = Lists.newArrayList();
+        SvData = svData;
+        Breakend = breakend;
     }
-
-    public final List<LinxBreakend> breakends() { return mBreakends; }
 
     @Override
     public Category category() { return DISRUPTION; }
@@ -33,8 +34,9 @@ public class DisruptionData implements ComparableItem
     @Override
     public String key()
     {
-        return String.format("%s_%s_%d", MappedGeneName, reportable(), mBreakends.size());
-        // return String.format("%d_%s_%s", Breakend.svId(), Breakend.isStart(), Breakend.gene());
+        return String.format("%s %d_%s %s_%d - %s_%d %s",
+                SvData.id(), SvData.type(), SvData.startChromosome(), SvData.startPosition(), SvData.endChromosome(), SvData.endPosition(),
+                Breakend.gene());
     }
 
     @Override
@@ -49,47 +51,42 @@ public class DisruptionData implements ComparableItem
     }
 
     @Override
-    public boolean reportable() { return mBreakends.stream().anyMatch(x -> x.reportedDisruption()); }
-
-    public boolean hasDisruptive() { return mBreakends.stream().anyMatch(x -> x.disruptive()); }
+    public boolean reportable() { return Breakend.reportedDisruption(); }
 
     @Override
     public boolean matches(final ComparableItem other)
     {
-        final DisruptionData otherBreakend = (DisruptionData)other;
+        final DisruptionData otherSv = (DisruptionData)other;
 
-        if(!otherBreakend.MappedGeneName.equals(MappedGeneName))
+        if(otherSv.SvData.type() != SvData.type())
             return false;
 
-        /*
-        if(!otherBreakend.Breakend.transcriptId().equals(Breakend.transcriptId()))
+        if(!otherSv.SvData.startChromosome().equals(SvData.startChromosome()) || !otherSv.SvData.endChromosome().equals(SvData.endChromosome()))
             return false;
 
-        if(otherBreakend.Breakend.nextSpliceExonRank() != Breakend.nextSpliceExonRank())
+        if(otherSv.SvData.startPosition() != SvData.startPosition() || otherSv.SvData.endPosition() != SvData.endPosition())
             return false;
 
-        if(!otherBreakend.Breakend.codingContext().equals(Breakend.codingContext()))
+        if(otherSv.SvData.startOrientation() != SvData.startOrientation() || otherSv.SvData.endOrientation() != SvData.endOrientation())
             return false;
-
-        if(!otherBreakend.Breakend.regionType().equals(Breakend.regionType()))
-            return false;
-
-        if(otherBreakend.Breakend.isStart() != Breakend.isStart())
-            return false;
-        */
 
         return true;
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel)
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds)
     {
         final DisruptionData otherBreakend = (DisruptionData)other;
 
         final List<String> diffs = Lists.newArrayList();
 
         checkDiff(diffs, "reported", reportable(), otherBreakend.reportable());
-        checkDiff(diffs, "disruptive", hasDisruptive(), otherBreakend.hasDisruptive());
+        checkDiff(diffs, "geneOrientation", Breakend.geneOrientation(), otherBreakend.Breakend.geneOrientation());
+        checkDiff(diffs, "nextSpliceExonRank", Breakend.nextSpliceExonRank(), otherBreakend.Breakend.nextSpliceExonRank());
+        checkDiff(diffs, "regionType", Breakend.regionType(), otherBreakend.Breakend.regionType());
+        checkDiff(diffs, "codingContext", Breakend.codingContext(), otherBreakend.Breakend.codingContext());
+
+        checkDiff(diffs, FLD_UNDISRUPTED_CN, Breakend.undisruptedCopyNumber(), otherBreakend.Breakend.undisruptedCopyNumber(), thresholds);
 
         if(matchLevel == REPORTABLE)
             return null;

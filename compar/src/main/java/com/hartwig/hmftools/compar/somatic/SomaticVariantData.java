@@ -1,10 +1,8 @@
 package com.hartwig.hmftools.compar.somatic;
 
 import static com.hartwig.hmftools.compar.Category.SOMATIC_VARIANT;
-import static com.hartwig.hmftools.compar.CommonUtils.DEFAULT_DIFF_PERC;
-import static com.hartwig.hmftools.compar.CommonUtils.checkDiff;
-import static com.hartwig.hmftools.compar.CommonUtils.checkFilterDiffs;
-import static com.hartwig.hmftools.compar.CommonUtils.filtersStr;
+import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
+import static com.hartwig.hmftools.compar.DiffFunctions.checkFilterDiffs;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.compar.MismatchType.VALUE;
 
@@ -17,6 +15,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.DiffThresholds;
 import com.hartwig.hmftools.compar.MatchLevel;
 import com.hartwig.hmftools.compar.Mismatch;
 
@@ -24,6 +23,9 @@ public class SomaticVariantData implements ComparableItem
 {
     public final SomaticVariant Variant;
     public final Set<String> Filters;
+
+    protected static final String FLD_QUAL = "qual";
+    protected static final String FLD_SUBCLONAL_LIKELIHOOD = "subclonalLikelihood";
 
     public SomaticVariantData(final SomaticVariant variant)
     {
@@ -82,20 +84,15 @@ public class SomaticVariantData implements ComparableItem
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel)
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds)
     {
         final SomaticVariantData otherVar = (SomaticVariantData) other;
 
-        final List<String> diffs = findDiffs(Variant, otherVar.Variant, matchLevel);
+        final List<String> diffs = findVariantDiffs(Variant, otherVar.Variant, thresholds);
 
-        if(matchLevel != REPORTABLE)
-        {
-            checkDiff(diffs, "hasLPS", Variant.hasLocalPhaseSets(), otherVar.Variant.hasLocalPhaseSets());
+        checkDiff(diffs, "hasLPS", Variant.hasLocalPhaseSets(), otherVar.Variant.hasLocalPhaseSets());
 
-            checkDiff(
-                    diffs, "subclonalLikelihood", Variant.subclonalLikelihood(), otherVar.Variant.subclonalLikelihood(),
-                    VAR_SUBCLONAL_DIFF, DEFAULT_DIFF_PERC, true);
-        }
+        checkDiff(diffs, FLD_SUBCLONAL_LIKELIHOOD, Variant.subclonalLikelihood(), otherVar.Variant.subclonalLikelihood(), thresholds);
 
         // compare filters
         checkFilterDiffs(Filters, otherVar.Filters, diffs);
@@ -106,30 +103,26 @@ public class SomaticVariantData implements ComparableItem
         return new Mismatch(this, other, VALUE, diffs);
     }
 
-    protected static final double VAR_QUAL_DIFF = 20;
-    protected static final double VAR_QUAL_PERC_DIFF = 0.2;
-    protected static final double VAR_SUBCLONAL_DIFF = 0.6;
-
-    public static final List<String> findDiffs(final SomaticVariant refVar, final SomaticVariant otherVar, final MatchLevel matchLevel)
+    // shared with germline variant
+    public static final List<String> findVariantDiffs(
+            final SomaticVariant refVar, final SomaticVariant otherVar, final DiffThresholds thresholds)
     {
         final List<String> diffs = Lists.newArrayList();
 
         checkDiff(diffs, "reported", refVar.reported(), otherVar.reported());
 
-        if(matchLevel != REPORTABLE)
-        {
-            checkDiff(diffs, "hotspot", refVar.hotspot().toString(), otherVar.hotspot().toString());
-            checkDiff(diffs, "tier", refVar.tier().toString(), otherVar.tier().toString());
-            checkDiff(diffs, "biallelic", refVar.biallelic(), otherVar.biallelic());
-            checkDiff(diffs, "gene", refVar.gene(), otherVar.gene());
-            checkDiff(diffs, "canonicalEffect", refVar.canonicalEffect(), otherVar.canonicalEffect());
-            checkDiff(diffs, "canonicalCodingEffect", refVar.canonicalCodingEffect().toString(), otherVar.canonicalCodingEffect()
-                    .toString());
-            checkDiff(diffs, "canonicalHgvsCoding", refVar.canonicalHgvsCodingImpact(), otherVar.canonicalHgvsCodingImpact());
-            checkDiff(diffs, "canonicalHgvsProtein", refVar.canonicalHgvsProteinImpact(), otherVar.canonicalHgvsProteinImpact());
-            checkDiff(diffs, "otherReportedEffects", refVar.otherReportedEffects(), otherVar.otherReportedEffects());
-            checkDiff(diffs, "qual", (int) refVar.qual(), (int) otherVar.qual(), VAR_QUAL_DIFF, VAR_QUAL_PERC_DIFF, true);
-        }
+        checkDiff(diffs, "hotspot", refVar.hotspot().toString(), otherVar.hotspot().toString());
+        checkDiff(diffs, "tier", refVar.tier().toString(), otherVar.tier().toString());
+        checkDiff(diffs, "biallelic", refVar.biallelic(), otherVar.biallelic());
+        checkDiff(diffs, "gene", refVar.gene(), otherVar.gene());
+        checkDiff(diffs, "canonicalEffect", refVar.canonicalEffect(), otherVar.canonicalEffect());
+        checkDiff(diffs, "canonicalCodingEffect", refVar.canonicalCodingEffect().toString(), otherVar.canonicalCodingEffect()
+                .toString());
+        checkDiff(diffs, "canonicalHgvsCoding", refVar.canonicalHgvsCodingImpact(), otherVar.canonicalHgvsCodingImpact());
+        checkDiff(diffs, "canonicalHgvsProtein", refVar.canonicalHgvsProteinImpact(), otherVar.canonicalHgvsProteinImpact());
+        checkDiff(diffs, "otherReportedEffects", refVar.otherReportedEffects(), otherVar.otherReportedEffects());
+
+        checkDiff(diffs, FLD_QUAL, (int) refVar.qual(), (int) otherVar.qual(), thresholds);
 
         return diffs;
     }
