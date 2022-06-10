@@ -574,6 +574,7 @@ Variant calling Improvements
 - **Complex events in key cancer genes** - Any messy read profile is likely to be something interesting if it falls within a well known cancer gene.  We should make sure not to miss any of these
 - **BQR based on read position** - some library preparations have strong positional biases.  Adjusting for this would reduce FP.
 - **BQR at long palindromicsequences** - some library preparations frequently have errors in palindromic regions.  Adjusting for this would reduce FP.
+- **Germline filtering for very long core regions** - If the core is very long we may have insufficient coverage in the germline to filter.
 
 Phasing improvements
 - **Only first tumor sample is currently phased** - Reference and additional tumor samples are not utilised for phasing
