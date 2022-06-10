@@ -348,7 +348,7 @@ A match can be:
   - `REALIGNED` - Core and both flanks match read exactly but offset from the expected position.
   - `ALT` - variant matches but CORE does not
 
-Note that CORE must match precisely whereas errors are tolerated in flanks so long as raw base qual at mismatch base < 20.   
+Note that errors are tolerated in flanks so long as raw base qual at mismatch base < 20. The CORE must match precisely except for INS over 20 bases in length where 1 mismatch with raw base qual <20 is tolerated per 20 bases of insertion.
 
 Failing any of the above matches, SAGE searches for matches that would occur if a repeat in the complete read context was extended or retracted.  Matches of this type we call 'jitter' and are tallied as `LENGTHENED` or `SHORTENED`. 
 
