@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.compar;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.max;
-
 import static com.hartwig.hmftools.compar.CommonUtils.ITEM_DELIM;
 
 import java.util.List;
@@ -44,60 +41,6 @@ public final class DiffFunctions
 
         return false;
     }
-
-
-    /*
-    public static final double DEFAULT_DIFF = 0.1;
-    public static final double DEFAULT_DIFF_PERC = 0.1;
-
-    public static boolean checkDiff(final List<String> diffs, final String name, double value1, double value2)
-    {
-        return checkDiff(diffs, name, value1, value2, DEFAULT_DIFF, DEFAULT_DIFF_PERC, true);
-    }
-
-    public static boolean checkDiff(
-            final List<String> diffs, final String name, double value1, double value2,
-            double maxAbsDiff, double maxRelDiff, boolean requireBothDiff)
-    {
-        if(!hasSignificantDiff(value1, value2, maxAbsDiff, maxRelDiff, requireBothDiff))
-            return false;
-
-        diffs.add(String.format("%s(%.3f/%.3f)", name, value1, value2));
-        return true;
-    }
-
-    public static boolean checkDiff(final List<String> diffs, final String name, int value1, int value2)
-    {
-        return checkDiff(diffs, name, value1, value2, DEFAULT_DIFF, DEFAULT_DIFF_PERC, true);
-    }
-
-    public static boolean checkDiff(
-            final List<String> diffs, final String name, int value1, int value2,
-            double maxAbsDiff, double maxRelDiff, boolean requireBothDiff)
-    {
-        if(!hasSignificantDiff(value1, value2, maxAbsDiff, maxRelDiff, requireBothDiff))
-            return false;
-
-        diffs.add(String.format("%s(%d/%d)", name, value1, value2));
-        return true;
-    }
-
-    public static boolean hasSignificantDiff(double value1, double value2, double maxAbsDiff, double maxRelDiff, boolean requireBothDiff)
-    {
-        // return TRUE if the values are DIFFERENT
-        if(value1 == 0 && value2 == 0)
-            return false;
-
-        double absDiff = abs(value1 - value2);
-        boolean hasAbsDiff = absDiff > maxAbsDiff;
-        boolean hasRelDiff = absDiff / max(value1, value2) > maxRelDiff;
-
-        if(requireBothDiff)
-            return hasAbsDiff && hasRelDiff;
-        else
-            return hasAbsDiff || hasRelDiff;
-    }
-    */
 
     public static boolean checkDiff(final List<String> diffs, final String name, boolean value1, boolean value2)
     {

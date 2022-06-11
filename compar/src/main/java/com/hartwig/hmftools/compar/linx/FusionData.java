@@ -3,6 +3,7 @@ package com.hartwig.hmftools.compar.linx;
 import static com.hartwig.hmftools.compar.Category.FUSION;
 import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
+import static com.hartwig.hmftools.compar.MismatchType.VALUE;
 
 import java.util.List;
 
@@ -38,10 +39,9 @@ public class FusionData implements ComparableItem
     public List<String> displayValues()
     {
         List<String> values = Lists.newArrayList();
-//        values.add(String.format("Qual(%.0f)", Variant.qual()));
-//        values.add(String.format("Tier(%s)", Variant.tier().toString()));
-//        values.add(String.format("TotalReadCount(%d)", Variant.totalReadCount()));
-//        values.add(String.format("AlleleReadCount(%d)", Variant.alleleReadCount()));
+        values.add(String.format("reportedType=%s", Fusion.reportedType()));
+        values.add(String.format("phased=%s", Fusion.phased()));
+        values.add(String.format("likelihood=%s", Fusion.likelihood()));
         return values;
     }
 
@@ -75,6 +75,6 @@ public class FusionData implements ComparableItem
         checkDiff(diffs, "domainsKept", Fusion.domainsKept(), otherFusion.Fusion.domainsKept());
         checkDiff(diffs, "domainsLost", Fusion.domainsLost(), otherFusion.Fusion.domainsLost());
 
-        return null;
+        return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
     }
 }

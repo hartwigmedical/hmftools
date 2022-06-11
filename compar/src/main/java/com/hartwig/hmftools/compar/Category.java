@@ -6,8 +6,7 @@ public enum Category
     DRIVER,
     SOMATIC_VARIANT,
     GERMLINE_VARIANT,
-    SV,
-    LINX_DATA,
+    GERMLINE_DELETION,
     FUSION,
     DISRUPTION;
 

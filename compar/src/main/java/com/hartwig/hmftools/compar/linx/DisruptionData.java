@@ -3,6 +3,7 @@ package com.hartwig.hmftools.compar.linx;
 import static com.hartwig.hmftools.compar.Category.DISRUPTION;
 import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
+import static com.hartwig.hmftools.compar.MismatchType.VALUE;
 
 import java.util.List;
 
@@ -34,19 +35,17 @@ public class DisruptionData implements ComparableItem
     @Override
     public String key()
     {
-        return String.format("%s %d_%s %s_%d - %s_%d %s",
-                SvData.id(), SvData.type(), SvData.startChromosome(), SvData.startPosition(), SvData.endChromosome(), SvData.endPosition(),
-                Breakend.gene());
+        return String.format("%s %d_%s %s:%d-%s:%d",
+                Breakend.gene(), SvData.id(), SvData.type(),
+                SvData.startChromosome(), SvData.startPosition(), SvData.endChromosome(), SvData.endPosition());
     }
 
     @Override
     public List<String> displayValues()
     {
         List<String> values = Lists.newArrayList();
-//        values.add(String.format("Qual(%.0f)", Variant.qual()));
-//        values.add(String.format("Tier(%s)", Variant.tier().toString()));
-//        values.add(String.format("TotalReadCount(%d)", Variant.totalReadCount()));
-//        values.add(String.format("AlleleReadCount(%d)", Variant.alleleReadCount()));
+        values.add(String.format("regionType=%s", Breakend.regionType()));
+        values.add(String.format("codingContext=%s", Breakend.codingContext()));
         return values;
     }
 
@@ -88,10 +87,6 @@ public class DisruptionData implements ComparableItem
 
         checkDiff(diffs, FLD_UNDISRUPTED_CN, Breakend.undisruptedCopyNumber(), otherBreakend.Breakend.undisruptedCopyNumber(), thresholds);
 
-        if(matchLevel == REPORTABLE)
-            return null;
-
-
-        return null;
+        return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
     }
 }

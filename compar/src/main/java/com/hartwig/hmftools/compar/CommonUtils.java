@@ -3,11 +3,10 @@ package com.hartwig.hmftools.compar;
 import static com.hartwig.hmftools.compar.Category.DISRUPTION;
 import static com.hartwig.hmftools.compar.Category.DRIVER;
 import static com.hartwig.hmftools.compar.Category.FUSION;
+import static com.hartwig.hmftools.compar.Category.GERMLINE_DELETION;
 import static com.hartwig.hmftools.compar.Category.GERMLINE_VARIANT;
-import static com.hartwig.hmftools.compar.Category.LINX_DATA;
 import static com.hartwig.hmftools.compar.Category.PURITY;
 import static com.hartwig.hmftools.compar.Category.SOMATIC_VARIANT;
-import static com.hartwig.hmftools.compar.Category.SV;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.compar.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.compar.MismatchType.REF_ONLY;
@@ -18,6 +17,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.compar.driver.DriverComparer;
 import com.hartwig.hmftools.compar.linx.DisruptionComparer;
 import com.hartwig.hmftools.compar.linx.FusionComparer;
+import com.hartwig.hmftools.compar.purple.GermlineDeletionComparer;
 import com.hartwig.hmftools.compar.purple.PurityComparer;
 import com.hartwig.hmftools.compar.somatic.GermlineVariantComparer;
 import com.hartwig.hmftools.compar.somatic.SomaticVariantComparer;
@@ -38,10 +38,8 @@ public class CommonUtils
         if(config.Categories.containsKey(DRIVER))
             comparators.add(new DriverComparer(config));
 
-        /*
-        if(config.Categories.containsKey(LINX_DATA) || config.Categories.containsKey(SV))
-            comparators.add(new LinxSvComparer(config));
-        */
+        if(config.Categories.containsKey(GERMLINE_DELETION))
+            comparators.add(new GermlineDeletionComparer(config));
 
         if(config.Categories.containsKey(FUSION))
             comparators.add(new FusionComparer(config));
@@ -147,5 +145,4 @@ public class CommonUtils
         items2.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
                 .forEach(x -> mismatches.add(new Mismatch(null, x, NEW_ONLY, emptyDiffs)));
     }
-
 }

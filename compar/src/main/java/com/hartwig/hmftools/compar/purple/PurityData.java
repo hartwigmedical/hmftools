@@ -3,6 +3,7 @@ package com.hartwig.hmftools.compar.purple;
 import static com.hartwig.hmftools.compar.Category.PURITY;
 import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
+import static com.hartwig.hmftools.compar.MismatchType.VALUE;
 
 import java.util.List;
 import java.util.Set;
@@ -51,9 +52,14 @@ public class PurityData implements ComparableItem
     public List<String> displayValues()
     {
         List<String> values = Lists.newArrayList();
-        values.add(String.format("Pass(%s)", Purity.qc().pass()));
-        values.add(String.format("Purity(%.2f)", Purity.bestFit().purity()));
-        values.add(String.format("Ploidy(%.2f)", Purity.bestFit().ploidy()));
+        values.add(String.format("%s=%.2f", FLD_PURITY, Purity.bestFit().purity()));
+        values.add(String.format("%s=%.2f", FLD_PLOIDY, Purity.bestFit().ploidy()));
+        values.add(String.format("%s=%.2f", FLD_TMB, Purity.tumorMutationalBurdenPerMb()));
+        values.add(String.format("%s=%.2f", FLD_MS_INDELS, Purity.microsatelliteIndelsPerMb()));
+        values.add(String.format("%s=%d", FLD_TML, Purity.tumorMutationalLoad()));
+        values.add(String.format("fitMethod=%s", Purity.method()));
+        values.add(String.format("msStatus=%s", Purity.microsatelliteStatus()));
+
         return values;
     }
 
@@ -113,7 +119,7 @@ public class PurityData implements ComparableItem
                 diffs, "tmlStatus",
                 Purity.tumorMutationalLoadStatus().toString(), otherPurity.Purity.tumorMutationalLoadStatus().toString());
 
-        return null;
+        return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
     }
 
     private static String germlineAberrations(final Set<GermlineAberration> aberrations)

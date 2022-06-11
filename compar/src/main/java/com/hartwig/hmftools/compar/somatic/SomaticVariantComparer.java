@@ -7,8 +7,8 @@ import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.DiffFunctions.diffsStr;
 import static com.hartwig.hmftools.compar.Mismatch.commonCsv;
 import static com.hartwig.hmftools.compar.Mismatch.commonHeader;
-import static com.hartwig.hmftools.compar.somatic.SomaticVariantData.FLD_QUAL;
 import static com.hartwig.hmftools.compar.somatic.SomaticVariantData.FLD_SUBCLONAL_LIKELIHOOD;
+import static com.hartwig.hmftools.compar.somatic.VariantCommon.FLD_QUAL;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
@@ -59,6 +59,9 @@ public class SomaticVariantComparer implements ItemComparer
     }
 
     @Override
+    public boolean hasDetailedOutput() { return true; }
+
+    @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
         thresholds.addFieldThreshold(FLD_QUAL, 20, 0.2);
@@ -102,12 +105,16 @@ public class SomaticVariantComparer implements ItemComparer
         {
             final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false);
 
-            for(VariantContext variant : reader.iterator())
+            for(VariantContext variantContext : reader.iterator())
             {
-                if(filter.test(variant))
+                if(filter.test(variantContext))
                 {
-                    final SomaticVariant somaticVariant = variantFactory.createVariant(sampleId, variant).orElse(null);
-                    comparableItems.add(new SomaticVariantData(somaticVariant));
+                    final SomaticVariant variant = variantFactory.createVariant(sampleId, variantContext).orElse(null);
+
+                    if(variant == null)
+                        continue;
+
+                    comparableItems.add(new SomaticVariantData(variant));
                 }
             }
 
@@ -124,7 +131,7 @@ public class SomaticVariantComparer implements ItemComparer
     @Override
     public String outputHeader()
     {
-        return commonHeader() + ",RefFilter,RefQual,OtherQual,RefTier,OtherTier,RefTotalReads,NewTotalReads"
+        return commonHeader() + ",RefFilter,RefQual,NewQual,RefTier,NewTier,RefTotalReads,NewTotalReads"
                 + ",RefAlleleReads,NewAlleleReads,RefLPS,NewLPS,Differences";
     }
 

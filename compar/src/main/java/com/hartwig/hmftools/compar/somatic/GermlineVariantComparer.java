@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.compar.Category.GERMLINE_VARIANT;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.DiffFunctions.diffsStr;
 import static com.hartwig.hmftools.compar.Mismatch.commonCsv;
-import static com.hartwig.hmftools.compar.somatic.SomaticVariantData.FLD_QUAL;
+import static com.hartwig.hmftools.compar.somatic.VariantCommon.FLD_QUAL;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GERMLINEVARIANT;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
@@ -57,6 +57,9 @@ public class GermlineVariantComparer implements ItemComparer
     }
 
     @Override
+    public boolean hasDetailedOutput() { return true; }
+
+    @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
         // same as somatic
@@ -99,12 +102,16 @@ public class GermlineVariantComparer implements ItemComparer
         {
             final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false);
 
-            for(VariantContext variant : reader.iterator())
+            for(VariantContext variantContext : reader.iterator())
             {
-                if(filter.test(variant))
+                if(filter.test(variantContext))
                 {
-                    final SomaticVariant somaticVariant = variantFactory.createVariant(sampleId, variant).orElse(null);
-                    comparableItems.add(new GermlineVariantData(somaticVariant));
+                    final SomaticVariant variant = variantFactory.createVariant(sampleId, variantContext).orElse(null);
+
+                    if(variant == null)
+                        continue;
+
+                    comparableItems.add(new GermlineVariantData(variant));
                 }
             }
 
@@ -121,7 +128,7 @@ public class GermlineVariantComparer implements ItemComparer
     @Override
     public String outputHeader()
     {
-        return "Category,MismatchType,Key,RefQual,OtherQual,RefTier,OtherTier,RefTotalReads,OtherTotalReads,RefAlleleReads,OtherAlleleReads,Differences";
+        return "Category,MismatchType,Key,RefQual,NewQual,RefTier,NewTier,RefTotalReads,NewTotalReads,RefAlleleReads,NewAlleleReads,Differences";
     }
 
     @Override

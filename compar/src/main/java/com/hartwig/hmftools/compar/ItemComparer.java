@@ -14,6 +14,8 @@ public interface ItemComparer
 
     List<ComparableItem> loadFromFile(final String sampleId, final FileSources fileSources);
 
+    default boolean hasDetailedOutput() { return false; }
+
     default String outputHeader()
     {
         return Mismatch.header();

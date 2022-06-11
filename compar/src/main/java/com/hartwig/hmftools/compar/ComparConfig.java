@@ -57,7 +57,7 @@ public class ComparConfig
     public final String OutputDir;
     public final String OutputId;
 
-    public final boolean WriteConsolidated;
+    public final boolean WriteDetailed;
     public final int Threads;
 
     private boolean mIsValid;
@@ -74,7 +74,7 @@ public class ComparConfig
     public static final String SOURCE_SAMPLE_MAPPINGS = "source_sample_mappings";
     public static final String SAMPLE_ID_FILE = "sample_id_file";
     public static final String THREADS = "threads";
-    public static final String WRITE_CONSOLIDATED = "write_consolidated";
+    public static final String WRITE_DETAILED_FILES = "write_detailed";
 
     public static final Logger CMP_LOGGER = LogManager.getLogger(ComparConfig.class);
 
@@ -87,7 +87,7 @@ public class ComparConfig
 
         Categories = Maps.newHashMap();
 
-        MatchLevel matchLevel = cmd.hasOption(MATCH_LEVEL) ? MatchLevel.valueOf(cmd.getOptionValue(MATCH_LEVEL)) : REPORTABLE;
+        MatchLevel matchLevel = MatchLevel.valueOf(cmd.getOptionValue(MATCH_LEVEL, REPORTABLE.toString()));
 
         if(!cmd.hasOption(CATEGORIES) || cmd.getOptionValue(CATEGORIES).equals(ALL_CATEGORIES))
         {
@@ -122,7 +122,7 @@ public class ComparConfig
 
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
-        WriteConsolidated = cmd.hasOption(WRITE_CONSOLIDATED);
+        WriteDetailed = cmd.hasOption(WRITE_DETAILED_FILES);
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
 
         DbConnections = Maps.newHashMap();
@@ -295,9 +295,9 @@ public class ComparConfig
     {
         options.addOption(
                 CATEGORIES, true,
-                "Categories to check separated by ';' from: DRIVER, LINX_DATA, FUSION, DISRUPTION");
+                "Categories to check separated by ';' from: PURITY, DRIVER, SOMATIC_VARIANT, GERMLINE_VARIANT, FUSION, DISRUPTION");
 
-        options.addOption(MATCH_LEVEL, true, "Match level from REPORTABLE, MODERATE or DETAILED");
+        options.addOption(MATCH_LEVEL, true, "Match level from REPORTABLE (default) or DETAILED");
         options.addOption(SAMPLE, true, "Sample data file");
         options.addOption(SAMPLE_ID_FILE, true, "Sample data file");
         options.addOption(SOURCE_SAMPLE_MAPPINGS, true, "Optional specific source suffixes");
@@ -306,7 +306,7 @@ public class ComparConfig
 
         options.addOption(DB_SOURCES, true, "Database configurations keyed by soure name");
         options.addOption(FILE_SOURCES, true, "File locations keyed by source name");
-        options.addOption(WRITE_CONSOLIDATED, false, "Write diffs to single file");
+        options.addOption(WRITE_DETAILED_FILES, false, "Write per-type details files");
         options.addOption(THREADS, true, "Thread count (default 0, not multi-threaded)");
 
         addDatabaseCmdLineArgs(options);

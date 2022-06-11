@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.compar.driver.DriverData.FLD_DRIVER_MIN_CN;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
@@ -58,9 +57,7 @@ public class DriverComparer implements ItemComparer
 
         for(DriverCatalog driver : drivers)
         {
-            // svDrivers.stream().filter(x -> x.gene().equals(driver.gene())).collect(Collectors.toList());
-            List<LinxDriver> svDriverList = Lists.newArrayList();
-            driverDataList.add(new DriverData(driver, svDriverList, mConfig.getGeneMappedName(driver.gene())));
+            driverDataList.add(new DriverData(driver, mConfig.getGeneMappedName(driver.gene())));
         }
 
         return driverDataList;
@@ -73,16 +70,12 @@ public class DriverComparer implements ItemComparer
 
         try
         {
-            List<LinxDriver> svDrivers = Lists.newArrayList();
-            // List<LinxDriver> svDrivers = LinxDriver.read(LinxDriver.generateFilename(fileSources.Linx, sampleId));
-
             List<DriverCatalog> drivers =
                     DriverCatalogFile.read(LinxDriver.generateCatalogFilename(fileSources.Linx, sampleId, true));
 
             for(DriverCatalog driver : drivers)
             {
-                List<LinxDriver> svDriverList = svDrivers.stream().filter(x -> x.gene().equals(driver.gene())).collect(Collectors.toList());
-                comparableItems.add(new DriverData(driver, svDriverList, mConfig.getGeneMappedName(driver.gene())));
+                comparableItems.add(new DriverData(driver, mConfig.getGeneMappedName(driver.gene())));
             }
         }
         catch(IOException e)

@@ -39,7 +39,7 @@ public class MismatchWriter
 
         try
         {
-            if(mConfig.WriteConsolidated)
+            if(!mConfig.WriteDetailed)
             {
                 String outputFile = filePrefix + "combined.csv";
 
@@ -59,6 +59,9 @@ public class MismatchWriter
 
                 for(ItemComparer comparer : comparers)
                 {
+                    if(!comparer.hasDetailedOutput())
+                        continue;
+
                     String outputFile = filePrefix + comparer.category().toString().toLowerCase() + ".csv";
 
                     CMP_LOGGER.info("writing output results: {}", outputFile);
@@ -101,14 +104,20 @@ public class MismatchWriter
         try
         {
             Category category = comparer.category();
-            BufferedWriter writer = mCategoryWriters.containsKey(category) ? mCategoryWriters.get(category) : mCombinedWriter;
+
+            boolean hasSpecificWriter = mCategoryWriters.containsKey(category);
+            BufferedWriter writer = hasSpecificWriter ? mCategoryWriters.get(category) : mCombinedWriter;
 
             for(Mismatch mismatch : mismatches)
             {
                 if(sampleId != null && mConfig.multiSample())
                     writer.write(String.format("%s,", sampleId));
 
-                writer.write(comparer.mismatchOutput(mismatch));
+                if(hasSpecificWriter)
+                    writer.write(comparer.mismatchOutput(mismatch));
+                else
+                    writer.write(mismatch.toCsv());
+
                 writer.newLine();
             }
         }

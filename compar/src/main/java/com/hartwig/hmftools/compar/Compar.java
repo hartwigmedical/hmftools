@@ -3,20 +3,13 @@ package com.hartwig.hmftools.compar;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.compar.CommonUtils.buildComparers;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 
 import org.apache.commons.cli.CommandLine;

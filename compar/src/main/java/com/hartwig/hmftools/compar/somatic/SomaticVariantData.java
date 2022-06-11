@@ -5,6 +5,8 @@ import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.DiffFunctions.checkFilterDiffs;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.compar.MismatchType.VALUE;
+import static com.hartwig.hmftools.compar.somatic.VariantCommon.addDisplayValues;
+import static com.hartwig.hmftools.compar.somatic.VariantCommon.findVariantDiffs;
 
 import java.util.Arrays;
 import java.util.List;
@@ -24,7 +26,6 @@ public class SomaticVariantData implements ComparableItem
     public final SomaticVariant Variant;
     public final Set<String> Filters;
 
-    protected static final String FLD_QUAL = "qual";
     protected static final String FLD_SUBCLONAL_LIKELIHOOD = "subclonalLikelihood";
 
     public SomaticVariantData(final SomaticVariant variant)
@@ -48,11 +49,10 @@ public class SomaticVariantData implements ComparableItem
     public List<String> displayValues()
     {
         List<String> values = Lists.newArrayList();
-        values.add(String.format("Qual(%.0f)", Variant.qual()));
-        values.add(String.format("Tier(%s)", Variant.tier().toString()));
-        values.add(String.format("TotalReadCount(%d)", Variant.totalReadCount()));
-        values.add(String.format("AlleleReadCount(%d)", Variant.alleleReadCount()));
-        values.add(String.format("LPS(%s)", Variant.localPhaseSetsStr()));
+        addDisplayValues(Variant, values);
+        values.add(String.format("biallelic=%s", Variant.biallelic()));
+        values.add(String.format("hasLPS=%s", Variant.hasLocalPhaseSets()));
+
         return values;
     }
 
@@ -97,33 +97,7 @@ public class SomaticVariantData implements ComparableItem
         // compare filters
         checkFilterDiffs(Filters, otherVar.Filters, diffs);
 
-        if(diffs.isEmpty())
-            return null;
-
-        return new Mismatch(this, other, VALUE, diffs);
+        return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
     }
 
-    // shared with germline variant
-    public static final List<String> findVariantDiffs(
-            final SomaticVariant refVar, final SomaticVariant otherVar, final DiffThresholds thresholds)
-    {
-        final List<String> diffs = Lists.newArrayList();
-
-        checkDiff(diffs, "reported", refVar.reported(), otherVar.reported());
-
-        checkDiff(diffs, "hotspot", refVar.hotspot().toString(), otherVar.hotspot().toString());
-        checkDiff(diffs, "tier", refVar.tier().toString(), otherVar.tier().toString());
-        checkDiff(diffs, "biallelic", refVar.biallelic(), otherVar.biallelic());
-        checkDiff(diffs, "gene", refVar.gene(), otherVar.gene());
-        checkDiff(diffs, "canonicalEffect", refVar.canonicalEffect(), otherVar.canonicalEffect());
-        checkDiff(diffs, "canonicalCodingEffect", refVar.canonicalCodingEffect().toString(), otherVar.canonicalCodingEffect()
-                .toString());
-        checkDiff(diffs, "canonicalHgvsCoding", refVar.canonicalHgvsCodingImpact(), otherVar.canonicalHgvsCodingImpact());
-        checkDiff(diffs, "canonicalHgvsProtein", refVar.canonicalHgvsProteinImpact(), otherVar.canonicalHgvsProteinImpact());
-        checkDiff(diffs, "otherReportedEffects", refVar.otherReportedEffects(), otherVar.otherReportedEffects());
-
-        checkDiff(diffs, FLD_QUAL, (int) refVar.qual(), (int) otherVar.qual(), thresholds);
-
-        return diffs;
-    }
 }
