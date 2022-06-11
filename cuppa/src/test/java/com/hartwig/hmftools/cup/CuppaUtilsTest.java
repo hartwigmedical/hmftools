@@ -14,14 +14,13 @@ import static junit.framework.TestCase.assertTrue;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.cup.common.ClassifierType;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 
-import org.apache.commons.compress.utils.Lists;
-import org.junit.Assert;
 import org.junit.Test;
 
 public class CuppaUtilsTest
@@ -63,7 +62,7 @@ public class CuppaUtilsTest
     }
 
     @Test
-    public void tesAdjustRefCalcs()
+    public void testAdjustRefCalcs()
     {
         final double[] refCounts = new double[] {10, 20, 30, 40};
         final double[] sampleCounts = new double[] {2, 4, 6, 8};
@@ -91,7 +90,7 @@ public class CuppaUtilsTest
     }
 
     @Test
-    public void tesConvertToPercentages()
+    public void testConvertToPercentages()
     {
         // convertToPercentages
         Map<String,Double> dataMap = Maps.newHashMap();
@@ -120,7 +119,7 @@ public class CuppaUtilsTest
     }
 
     @Test
-    public void tesCombinedFeatureResult()
+    public void testCombinedFeatureResult()
     {
         SampleData sample = new SampleData(TEST_SAMPLE_001, TEST_CT_001, "");
 
