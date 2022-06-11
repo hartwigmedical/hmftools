@@ -21,7 +21,6 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.flagstat.Flagstat;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.hla.HlaType;
 import com.hartwig.hmftools.common.hla.HlaTypeDetails;
 import com.hartwig.hmftools.common.metrics.WGSMetricWithQC;
@@ -51,7 +50,6 @@ import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
 import com.hartwig.hmftools.patientdb.clinical.ecrf.EcrfModel;
 import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.ValidationFinding;
-import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
@@ -274,7 +272,12 @@ public class DatabaseAccess implements AutoCloseable {
 
     @NotNull
     public List<GeneCopyNumber> readGeneCopynumbers(@NotNull String sample, @NotNull List<String> genes) {
-        return geneCopyNumberDAO.read(sample, genes);
+        return geneCopyNumberDAO.readCopyNumbers(sample, genes);
+    }
+
+    @NotNull
+    public List<GermlineDeletion> readGermlineDeletions(@NotNull String sample) {
+        return geneCopyNumberDAO.readGermlineDeletions(sample);
     }
 
     @NotNull
