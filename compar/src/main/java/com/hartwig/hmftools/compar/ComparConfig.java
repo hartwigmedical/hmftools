@@ -313,4 +313,25 @@ public class ComparConfig
         addOutputOptions(options);
         addLoggingOptions(options);
     }
+
+    public ComparConfig()
+    {
+        mIsValid = true;
+
+        SampleIds = Lists.newArrayList();
+        Categories = Maps.newHashMap();
+        OutputDir = null;
+        OutputId = "";
+        WriteDetailed = false;
+        Threads = 0;
+
+        DbConnections = Maps.newHashMap();
+        FileSources = Maps.newHashMap();
+        SourceNames = Lists.newArrayList();
+
+        Thresholds = new DiffThresholds();
+        SourceSampleIds = Maps.newHashMap();
+        DriverGenes = Sets.newHashSet();
+        GeneMapping = null;
+    }
 }

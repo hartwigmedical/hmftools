@@ -51,7 +51,6 @@ public class DriverComparer implements ItemComparer
     public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess)
     {
         final List<DriverCatalog> drivers = dbAccess.readDriverCatalog(sampleId);
-        // final List<LinxDriver> svDrivers = dbAccess.readSvDriver(sampleId);
 
         final List<ComparableItem> driverDataList = Lists.newArrayList();
 

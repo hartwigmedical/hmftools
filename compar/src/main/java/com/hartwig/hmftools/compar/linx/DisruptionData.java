@@ -46,6 +46,8 @@ public class DisruptionData implements ComparableItem
         List<String> values = Lists.newArrayList();
         values.add(String.format("regionType=%s", Breakend.regionType()));
         values.add(String.format("codingContext=%s", Breakend.codingContext()));
+        values.add(String.format("geneOrientation=%s", Breakend.geneOrientation()));
+        values.add(String.format("nextSpliceExonRank=%d", Breakend.nextSpliceExonRank()));
         return values;
     }
 

@@ -42,6 +42,12 @@ public class FusionData implements ComparableItem
         values.add(String.format("reportedType=%s", Fusion.reportedType()));
         values.add(String.format("phased=%s", Fusion.phased()));
         values.add(String.format("likelihood=%s", Fusion.likelihood()));
+        values.add(String.format("fusedExonUp=%d", Fusion.fusedExonUp()));
+        values.add(String.format("fusedExonDown=%d", Fusion.fusedExonDown()));
+        values.add(String.format("chainLinks=%d", Fusion.chainLinks()));
+        values.add(String.format("chainTerminated=%s", Fusion.chainTerminated()));
+        values.add(String.format("domainsKept=%s", Fusion.domainsKept()));
+        values.add(String.format("domainsLost=%s", Fusion.domainsLost()));
         return values;
     }
 
@@ -68,8 +74,8 @@ public class FusionData implements ComparableItem
 
         checkDiff(diffs, "phased", Fusion.phased().toString(), otherFusion.Fusion.phased().toString());
         checkDiff(diffs, "likelihood", Fusion.likelihood().toString(), otherFusion.Fusion.likelihood().toString());
-        checkDiff(diffs, "fusedExonsUp", Fusion.fusedExonUp(), otherFusion.Fusion.fusedExonUp());
-        checkDiff(diffs, "fusedExonsDown", Fusion.fusedExonDown(), otherFusion.Fusion.fusedExonDown());
+        checkDiff(diffs, "fusedExonUp", Fusion.fusedExonUp(), otherFusion.Fusion.fusedExonUp());
+        checkDiff(diffs, "fusedExonDown", Fusion.fusedExonDown(), otherFusion.Fusion.fusedExonDown());
         checkDiff(diffs, "chainLinks", Fusion.chainLinks(), otherFusion.Fusion.chainLinks());
         checkDiff(diffs, "chainTerminated", Fusion.chainTerminated(), otherFusion.Fusion.chainTerminated());
         checkDiff(diffs, "domainsKept", Fusion.domainsKept(), otherFusion.Fusion.domainsKept());
