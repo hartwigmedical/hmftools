@@ -103,7 +103,7 @@ public class FilterConstants
 
     public static FilterConstants from(final CommandLine cmd)
     {
-        RefGenomeVersion refGenVersion = RefGenomeVersion.valueOf(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
+        RefGenomeVersion refGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
 
         return new FilterConstants(
                 Integer.parseInt(cmd.getOptionValue(HARD_MIN_TUMOR_QUAL_CFG, String.valueOf(DEFAULT_HARD_MIN_TUMOR_QUAL))),

@@ -57,7 +57,7 @@ public class GripssConfig
         OutputId = cmd.getOptionValue(OUTPUT_ID);
 
         VcfFile = cmd.getOptionValue(VCF_FILE, "");
-        RefGenVersion = cmd.hasOption(REF_GENOME_VERSION) ? RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION)) : V37;
+        RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
 
         RestrictedChromosomes = cmd.hasOption(SPECIFIC_CHROMOSOMES) ?
                 Arrays.stream(cmd.getOptionValue(SPECIFIC_CHROMOSOMES, "")
