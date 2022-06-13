@@ -33,15 +33,17 @@ public final class LossOfHeterozygositySelector {
     }
 
     @NotNull
-    public static List<GeneCopyNumber> selectHRDOrMSIGenes(@NotNull List<GeneCopyNumber> lohGenes,
+    public static List<GeneCopyNumber> selectHRDOrMSIGenesWithLOH(@NotNull List<GeneCopyNumber> allGeneCopyNumbers,
             @NotNull MicrosatelliteStatus microsatelliteStatus, @NotNull ChordStatus chordStatus) {
         List<GeneCopyNumber> reportable = Lists.newArrayList();
-        for (GeneCopyNumber lohGene : lohGenes) {
-            boolean isRelevantHRD = HRD_GENES.contains(lohGene.geneName()) && chordStatus == ChordStatus.HR_DEFICIENT;
-            boolean isRelevantMSI = MSI_GENES.contains(lohGene.geneName()) && microsatelliteStatus == MicrosatelliteStatus.MSI;
+        for (GeneCopyNumber geneCopyNumber : allGeneCopyNumbers) {
+            if (geneCopyNumber.minMinorAlleleCopyNumber() < 0.5 && geneCopyNumber.minCopyNumber() > 0.5) {
+                boolean isRelevantHRD = HRD_GENES.contains(geneCopyNumber.geneName()) && chordStatus == ChordStatus.HR_DEFICIENT;
+                boolean isRelevantMSI = MSI_GENES.contains(geneCopyNumber.geneName()) && microsatelliteStatus == MicrosatelliteStatus.MSI;
 
-            if (isRelevantHRD || isRelevantMSI) {
-                reportable.add(lohGene);
+                if (isRelevantHRD || isRelevantMSI) {
+                    reportable.add(geneCopyNumber);
+                }
             }
         }
         return reportable;

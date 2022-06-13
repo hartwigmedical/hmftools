@@ -22,7 +22,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGenePanel;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
-import com.hartwig.hmftools.common.purple.cnchromosome.GenerateCnPerChromosome;
+import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeFactory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.gene.GermlineDeletion;
@@ -66,26 +66,23 @@ public final class PurpleDataLoader {
         LOGGER.info("  Extracted {} reportable somatic gains and losses from driver catalog", reportableSomaticGainsLosses.size());
 
         List<GainLoss> unreportedSomaticGainsLosses = Lists.newArrayList();
-        List<GeneCopyNumber> lohGenes = Lists.newArrayList();
+        List<GeneCopyNumber> allGeneCopyNumbers = Lists.newArrayList();
         if (purpleGeneCopyNumberTsv != null) {
-            List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCopyNumberTsv);
-            LOGGER.debug(" Loaded {} gene copy numbers entries from {}", geneCopyNumbers.size(), purpleGeneCopyNumberTsv);
+            allGeneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCopyNumberTsv);
+            LOGGER.debug(" Loaded {} gene copy numbers entries from {}", allGeneCopyNumbers.size(), purpleGeneCopyNumberTsv);
 
             unreportedSomaticGainsLosses =
-                    extractUnreportedSomaticGainsLosses(geneCopyNumbers, purityContext, reportableSomaticGainsLosses);
+                    extractUnreportedSomaticGainsLosses(allGeneCopyNumbers, purityContext, reportableSomaticGainsLosses);
             LOGGER.info("  Extracted {} additional unreported somatic gains and losses from {}",
                     unreportedSomaticGainsLosses.size(),
                     purpleGeneCopyNumberTsv);
-
-            lohGenes = extractLOHGenes(geneCopyNumbers);
-            LOGGER.info("  Extracted {} LOH genes from {}", lohGenes.size(), purpleGeneCopyNumberTsv);
         }
 
-        List<CnPerChromosomeArmData> cnPerChromosome = Lists.newArrayList();
+        List<CnPerChromosomeArmData> copyNumberPerChromosome = Lists.newArrayList();
         if (purpleSomaticCopyNumberTsv != null && refGenomeVersion != null) {
             RefGenomeCoordinates refGenomeCoordinates =
                     refGenomeVersion == RefGenomeVersion.V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
-            cnPerChromosome = GenerateCnPerChromosome.fromPurpleSomaticCopynumberTsv(purpleSomaticCopyNumberTsv, refGenomeCoordinates);
+            copyNumberPerChromosome = CnPerChromosomeFactory.generate(purpleSomaticCopyNumberTsv, refGenomeCoordinates);
             LOGGER.info(" Generated chromosomal arm copy numbers from {}", purpleSomaticCopyNumberTsv);
         }
 
@@ -152,8 +149,8 @@ public final class PurpleDataLoader {
                 .unreportedSomaticGainsLosses(unreportedSomaticGainsLosses)
                 .reportableGermlineDeletions(reportableGermlineDeletions)
                 .unreportedGermlineDeletions(unreportedGermlineDeletions)
-                .lohGenes(lohGenes)
-                .cnPerChromosome(cnPerChromosome)
+                .allGeneCopyNumbers(allGeneCopyNumbers)
+                .copyNumberPerChromosome(copyNumberPerChromosome)
                 .build();
     }
 
@@ -259,17 +256,6 @@ public final class PurpleDataLoader {
             }
         }
         return unreportedGainsLosses;
-    }
-
-    @NotNull
-    private static List<GeneCopyNumber> extractLOHGenes(@NotNull List<GeneCopyNumber> geneCopyNumbers) {
-        List<GeneCopyNumber> genesWithLOH = Lists.newArrayList();
-        for (GeneCopyNumber geneCopyNumber : geneCopyNumbers) {
-            if (geneCopyNumber.minMinorAlleleCopyNumber() < 0.5 && geneCopyNumber.minCopyNumber() > 0.5) {
-                genesWithLOH.add(geneCopyNumber);
-            }
-        }
-        return genesWithLOH;
     }
 
     @NotNull

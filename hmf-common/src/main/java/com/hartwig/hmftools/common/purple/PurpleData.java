@@ -83,8 +83,8 @@ public interface PurpleData {
     List<GermlineDeletion> unreportedGermlineDeletions();
 
     @NotNull
-    List<GeneCopyNumber> lohGenes();
+    List<GeneCopyNumber> allGeneCopyNumbers();
 
     @NotNull
-    List<CnPerChromosomeArmData> cnPerChromosome();
+    List<CnPerChromosomeArmData> copyNumberPerChromosome();
 }

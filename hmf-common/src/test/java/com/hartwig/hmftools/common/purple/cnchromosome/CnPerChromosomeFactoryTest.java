@@ -17,7 +17,7 @@ import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class GenerateCnPerChromosomeTest
+public class CnPerChromosomeFactoryTest
 {
     private static final double EPSILON = 1.0E-3;
 
@@ -27,7 +27,7 @@ public class GenerateCnPerChromosomeTest
     public void canExtractCopyNumberPerChromosomeArmFromFile() throws IOException
     {
         List<CnPerChromosomeArmData> cnPerChromosomeArmData =
-                GenerateCnPerChromosome.fromPurpleSomaticCopynumberTsv(PURPLE_COPYNUMBER_TSV, RefGenomeCoordinates.COORDS_37);
+                CnPerChromosomeFactory.generate(PURPLE_COPYNUMBER_TSV, RefGenomeCoordinates.COORDS_37);
 
         assertNotNull(cnPerChromosomeArmData);
     }
@@ -42,7 +42,7 @@ public class GenerateCnPerChromosomeTest
         copyNumbers.add(PurpleTestUtils.createCopyNumber("1", 124035435, 249250621, 3).build());
 
         List<CnPerChromosomeArmData> cnPerChromosomeArm =
-                GenerateCnPerChromosome.extractCnPerChromosomeArm(copyNumbers, RefGenomeCoordinates.COORDS_37);
+                CnPerChromosomeFactory.extractCnPerChromosomeArm(copyNumbers, RefGenomeCoordinates.COORDS_37);
 
         assertEquals(2, cnPerChromosomeArm.size());
         CnPerChromosomeArmData cnPerChromosomeArmData1 =
