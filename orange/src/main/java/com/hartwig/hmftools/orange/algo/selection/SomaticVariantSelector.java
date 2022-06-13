@@ -8,6 +8,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
 import com.hartwig.hmftools.common.variant.ReportableVariantSource;
@@ -31,14 +32,14 @@ public final class SomaticVariantSelector {
             @NotNull List<DriverGene> driverGenes) {
         List<ReportableVariant> filtered = Lists.newArrayList();
         for (SomaticVariant variant : unreportedVariants) {
-            boolean isHotspot = variant.isHotspot();
+            boolean isNearHotspot = variant.hotspot() == Hotspot.HOTSPOT || variant.hotspot() == Hotspot.NEAR_HOTSPOT;
             boolean hasEvidence = EvidenceSelector.hasEvidence(evidences, variant.gene(), ProtectEventGenerator.variantEvent(variant));
             boolean isCodingAndHasPhasedReportedVariant =
                     !variant.gene().isEmpty() && hasReportedVariantWithPhase(reportedSomaticVariants, variant.topLocalPhaseSet());
             boolean isCuppaRelevantVariant = isRelevantForCuppa(variant);
             boolean isSynonymousButReportable = isSynonymousWithReportableWorstImpact(variant, driverGenes);
 
-            if (isHotspot || hasEvidence || isCodingAndHasPhasedReportedVariant || isCuppaRelevantVariant || isSynonymousButReportable) {
+            if (isNearHotspot || hasEvidence || isCodingAndHasPhasedReportedVariant || isCuppaRelevantVariant || isSynonymousButReportable) {
                 filtered.add(toReportable(variant));
             }
         }

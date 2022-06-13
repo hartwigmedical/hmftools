@@ -26,21 +26,22 @@ import org.junit.Test;
 public class SomaticVariantSelectorTest {
 
     @Test
-    public void canSelectUnreportedHotspots() {
+    public void canSelectUnreportedNearHotspots() {
         SomaticVariant hotspot =
-                SomaticVariantTestFactory.builder().canonicalHgvsCodingImpact("1").hotspot(Hotspot.HOTSPOT).reported(false).build();
+                SomaticVariantTestFactory.builder().canonicalEffect("hotspot").hotspot(Hotspot.HOTSPOT).reported(false).build();
+        SomaticVariant nearHotspot =
+                SomaticVariantTestFactory.builder().canonicalEffect("near hotspot").hotspot(Hotspot.NEAR_HOTSPOT).reported(false).build();
         SomaticVariant nonHotspot =
-                SomaticVariantTestFactory.builder().canonicalHgvsCodingImpact("2").hotspot(Hotspot.NON_HOTSPOT).reported(false).build();
+                SomaticVariantTestFactory.builder().canonicalEffect("non hotspot").hotspot(Hotspot.NON_HOTSPOT).reported(false).build();
 
-        List<ReportableVariant> variants = SomaticVariantSelector.selectNonDrivers(Lists.newArrayList(hotspot, nonHotspot),
+        List<ReportableVariant> variants = SomaticVariantSelector.selectNonDrivers(Lists.newArrayList(hotspot, nearHotspot, nonHotspot),
                 Lists.newArrayList(),
                 Lists.newArrayList(),
                 Lists.newArrayList());
 
-        assertEquals(1, variants.size());
-        ReportableVariant variant = variants.get(0);
-        assertEquals("1", variant.canonicalHgvsCodingImpact());
-        assertEquals(Hotspot.HOTSPOT, variant.hotspot());
+        assertEquals(2, variants.size());
+        assertNotNull(findByCanonicalEffect(variants, "hotspot"));
+        assertNotNull(findByCanonicalEffect(variants, "near hotspot"));
     }
 
     @Test
