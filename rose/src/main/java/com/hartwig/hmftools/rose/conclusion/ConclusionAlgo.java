@@ -328,11 +328,11 @@ public class ConclusionAlgo {
                     ActionabilityEntry entryNoHRd = actionabilityMap.get(keyNoHRD);
                     if (entryNoHRd != null && entry.condition() == Condition.OTHER) {
                         conclusion.put(conclusion.size(),
-                                "- " + "HRD(" + chordAnalysis.hrdValue() + ") " + entry.conclusion() + entryNoHRd.conclusion());
+                                "- " + "HRD (" + chordAnalysis.hrdValue() + ") " + entry.conclusion() + entryNoHRd.conclusion());
                     }
                 }
                 conclusion.put(conclusion.size(),
-                        "- " + "HRD(" + DOUBLE_DECIMAL_FORMAT.format(chordAnalysis.hrdValue()) + ") " + entry.conclusion());
+                        "- " + "HRD (" + DOUBLE_DECIMAL_FORMAT.format(chordAnalysis.hrdValue()) + ") " + entry.conclusion());
 
                 actionable.add("HRD");
                 oncogenic.add("HRD");
@@ -348,7 +348,7 @@ public class ConclusionAlgo {
             ActionabilityEntry entry = actionabilityMap.get(keyMSI);
             if (entry != null && entry.condition() == Condition.ALWAYS) {
                 conclusion.put(conclusion.size(),
-                        "- " + "MSI(" + DOUBLE_DECIMAL_FORMAT.format(microsatelliteMb) + ")" + entry.conclusion());
+                        "- " + "MSI (" + DOUBLE_DECIMAL_FORMAT.format(microsatelliteMb) + ")" + entry.conclusion());
                 actionable.add("MSI");
                 oncogenic.add("MSI");
             }
@@ -362,7 +362,7 @@ public class ConclusionAlgo {
             ActionabilityKey keyTML = ImmutableActionabilityKey.builder().match("High-TML").type(TypeAlteration.POSITIVE).build();
             ActionabilityEntry entry = actionabilityMap.get(keyTML);
             if (entry != null && entry.condition() == Condition.ALWAYS) {
-                conclusion.put(conclusion.size(), "- " + "TML(" + tumorMutationalLoad + ") " + entry.conclusion());
+                conclusion.put(conclusion.size(), "- " + "TML (" + tumorMutationalLoad + ") " + entry.conclusion());
                 actionable.add("TML");
                 oncogenic.add("TML");
             }
@@ -376,7 +376,7 @@ public class ConclusionAlgo {
             ActionabilityKey keyTMB = ImmutableActionabilityKey.builder().match("High-TMB").type(TypeAlteration.POSITIVE).build();
             ActionabilityEntry entry = actionabilityMap.get(keyTMB);
             if (entry != null && entry.condition() == Condition.ALWAYS) {
-                conclusion.put(conclusion.size(), "- " + "TMB( " + tumorMutationalBurden + ")" + entry.conclusion());
+                conclusion.put(conclusion.size(), "- " + "TMB ( " + tumorMutationalBurden + ")" + entry.conclusion());
                 actionable.add("TMB");
                 oncogenic.add("TMB");
             }
