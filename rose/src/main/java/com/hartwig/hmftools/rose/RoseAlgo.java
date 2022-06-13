@@ -38,12 +38,11 @@ public class RoseAlgo {
     private final List<PatientPrimaryTumor> patientPrimaryTumors;
 
     @NotNull
-    public static RoseAlgo build(@NotNull String actionabilityDatabaseTsv, @NotNull String driverGene37Tsv, @NotNull String driverGene38Tsv,
+    public static RoseAlgo build(@NotNull String actionabilityDatabaseTsv, @NotNull String driverGeneTsv,
             @NotNull RefGenomeVersion refGenomeVersion, @NotNull String primaryTumorTsv) throws IOException {
+        LOGGER.info("ROSE is running on ref genome version: {}", refGenomeVersion);
         List<ActionabilityEntry> actionabilityEntry = ActionabilityFileReader.read(actionabilityDatabaseTsv);
-        List<DriverGene> driverGenes = refGenomeVersion == RefGenomeVersion.V37
-                ? readDriverGenesFromFile(driverGene37Tsv)
-                : readDriverGenesFromFile(driverGene38Tsv);
+        List<DriverGene> driverGenes = readDriverGenesFromFile(driverGeneTsv);
         List<PatientPrimaryTumor> patientPrimaryTumors = readPatientPrimaryTumors(primaryTumorTsv);
         return new RoseAlgo(actionabilityEntry, driverGenes, patientPrimaryTumors);
     }
