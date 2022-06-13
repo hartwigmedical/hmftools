@@ -100,7 +100,7 @@ public class RoseAlgo {
 
     @NotNull
     private static LinxData loadLinxData(@NotNull RoseConfig config) throws IOException {
-        return LinxDataLoader.load(config.linxFusionTsv(), config.linxBreakendTsv(), null, config.linxDriverCatalogTsv(), null, null);
+        return LinxDataLoader.load(config.linxFusionTsv(), config.linxBreakendTsv(), config.linxDriverCatalogTsv());
     }
 
     @NotNull

@@ -55,6 +55,7 @@ public interface OrangeConfig {
     String SAGE_SOMATIC_TUMOR_SAMPLE_BQR_PLOT = "sage_somatic_tumor_sample_bqr_plot";
     String PURPLE_PURITY_TSV = "purple_purity_tsv";
     String PURPLE_QC_FILE = "purple_qc_file";
+    String PURPLE_SOMATIC_COPY_NUMBER_TSV = "purple_somatic_copy_number_tsv";
     String PURPLE_GENE_COPY_NUMBER_TSV = "purple_gene_copy_number_tsv";
     String PURPLE_SOMATIC_DRIVER_CATALOG_TSV = "purple_somatic_driver_catalog_tsv";
     String PURPLE_GERMLINE_DRIVER_CATALOG_TSV = "purple_germline_driver_catalog_tsv";
@@ -62,6 +63,7 @@ public interface OrangeConfig {
     String PURPLE_GERMLINE_VARIANT_VCF = "purple_germline_variant_vcf";
     String PURPLE_GERMLINE_DELETION_TSV = "purple_germline_deletion_tsv";
     String PURPLE_PLOT_DIRECTORY = "purple_plot_directory";
+    String LINX_STRUCTURAL_VARIANT_TSV = "linx_structural_variant_tsv";
     String LINX_FUSION_TSV = "linx_fusion_tsv";
     String LINX_BREAKEND_TSV = "linx_breakend_tsv";
     String LINX_DRIVER_CATALOG_TSV = "linx_driver_catalog_tsv";
@@ -109,13 +111,15 @@ public interface OrangeConfig {
         options.addOption(SAGE_SOMATIC_TUMOR_SAMPLE_BQR_PLOT, true, "Path towards the SAGE somatic tumor sample BQR plot.");
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
-        options.addOption(PURPLE_GENE_COPY_NUMBER_TSV, true, "Path towards the purple gene copynumber TSV.");
+        options.addOption(PURPLE_SOMATIC_COPY_NUMBER_TSV, true, "Path towards the purple somatic copy number TSV.");
+        options.addOption(PURPLE_GENE_COPY_NUMBER_TSV, true, "Path towards the purple gene copy number TSV.");
         options.addOption(PURPLE_SOMATIC_DRIVER_CATALOG_TSV, true, "Path towards the purple somatic driver catalog TSV.");
         options.addOption(PURPLE_GERMLINE_DRIVER_CATALOG_TSV, true, "Path towards the purple germline driver catalog TSV.");
         options.addOption(PURPLE_SOMATIC_VARIANT_VCF, true, "Path towards the purple somatic variant VCF.");
         options.addOption(PURPLE_GERMLINE_VARIANT_VCF, true, "Path towards the purple germline variant VCF.");
         options.addOption(PURPLE_GERMLINE_DELETION_TSV, true, "Path towards the purple germline deletion TSV.");
         options.addOption(PURPLE_PLOT_DIRECTORY, true, "Path towards the directory holding all purple plots.");
+        options.addOption(LINX_STRUCTURAL_VARIANT_TSV, true, "Path towards the LINX structural variant TSV.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the LINX fusion TSV.");
         options.addOption(LINX_BREAKEND_TSV, true, "Path towards the LINX breakend TSV.");
         options.addOption(LINX_DRIVER_CATALOG_TSV, true, "Path towards the LINX driver catalog TSV.");
@@ -210,6 +214,9 @@ public interface OrangeConfig {
     String purpleQcFile();
 
     @NotNull
+    String purpleSomaticCopyNumberTsv();
+
+    @NotNull
     String purpleGeneCopyNumberTsv();
 
     @NotNull
@@ -229,6 +236,9 @@ public interface OrangeConfig {
 
     @NotNull
     String purplePlotDirectory();
+
+    @NotNull
+    String linxStructuralVariantTsv();
 
     @NotNull
     String linxFusionTsv();
@@ -323,6 +333,7 @@ public interface OrangeConfig {
                 .sageSomaticTumorSampleBQRPlot(Config.nonOptionalFile(cmd, SAGE_SOMATIC_TUMOR_SAMPLE_BQR_PLOT))
                 .purplePurityTsv(Config.nonOptionalFile(cmd, PURPLE_PURITY_TSV))
                 .purpleQcFile(Config.nonOptionalFile(cmd, PURPLE_QC_FILE))
+                .purpleSomaticCopyNumberTsv(Config.nonOptionalFile(cmd, PURPLE_SOMATIC_COPY_NUMBER_TSV))
                 .purpleGeneCopyNumberTsv(Config.nonOptionalFile(cmd, PURPLE_GENE_COPY_NUMBER_TSV))
                 .purpleSomaticDriverCatalogTsv(Config.nonOptionalFile(cmd, PURPLE_SOMATIC_DRIVER_CATALOG_TSV))
                 .purpleGermlineDriverCatalogTsv(Config.nonOptionalFile(cmd, PURPLE_GERMLINE_DRIVER_CATALOG_TSV))
@@ -330,6 +341,7 @@ public interface OrangeConfig {
                 .purpleGermlineVariantVcf(Config.nonOptionalFile(cmd, PURPLE_GERMLINE_VARIANT_VCF))
                 .purpleGermlineDeletionTsv(Config.nonOptionalFile(cmd, PURPLE_GERMLINE_DELETION_TSV))
                 .purplePlotDirectory(Config.nonOptionalDir(cmd, PURPLE_PLOT_DIRECTORY))
+                .linxStructuralVariantTsv(Config.nonOptionalFile(cmd, LINX_STRUCTURAL_VARIANT_TSV))
                 .linxFusionTsv(Config.nonOptionalFile(cmd, LINX_FUSION_TSV))
                 .linxBreakendTsv(Config.nonOptionalFile(cmd, LINX_BREAKEND_TSV))
                 .linxDriverCatalogTsv(Config.nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV))

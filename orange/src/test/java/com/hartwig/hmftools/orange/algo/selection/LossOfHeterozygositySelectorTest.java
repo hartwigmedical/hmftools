@@ -59,5 +59,4 @@ public class LossOfHeterozygositySelectorTest {
                 ChordStatus.HR_PROFICIENT);
         assertEquals(0, none.size());
     }
-
 }

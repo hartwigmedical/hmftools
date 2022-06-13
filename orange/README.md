@@ -131,7 +131,11 @@ investigate potential causes for QC failure.
   - Add the driver gene panel to the ORANGE JSON output
   - Variants with a phased inframe canonical effect are dedup'ed prior to reporting.
   - Variants with canonical synonymous impact but reportable worst impact are added to potentially interesting variants.
-  - Unreported variants near hotspots are added as potentially interesting. 
+  - Unreported variants near hotspots are added as potentially interesting.
+  - Average chromosome arm copy numbers are calculated and stored in ORANGE JSON:
+     - New input: `purple_somatic_copy_number_tsv`
+  - Gene disruptions are annotated with sv and cluster IDs
+     - New input: `linx_structural_variant_tsv` 
 - [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.9)
   - Proper support for RNA
     - Add (mandatory) `driver_gene_panel_tsv` and `known_fusion_file` inputs to support interpretation of isofox results

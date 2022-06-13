@@ -27,11 +27,11 @@ public final class LinxDataLoader {
     @NotNull
     public static LinxData load(@NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxDriverCatalogTsv)
             throws IOException {
-        return load(linxFusionTsv, linxBreakendTsv, null, linxDriverCatalogTsv, null, null);
+        return load(null, linxFusionTsv, linxBreakendTsv, linxDriverCatalogTsv, null, null);
     }
 
     @NotNull
-    public static LinxData load(@NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @Nullable String linxSvsTsv,
+    public static LinxData load(@Nullable String linxStructuralVariantTsv, @NotNull String linxFusionTsv, @NotNull String linxBreakendTsv,
             @NotNull String linxDriverCatalogTsv, @Nullable String linxDriverTsv, @Nullable String linxGermlineDisruptionTsv)
             throws IOException {
         LOGGER.info("Loading LINX data from {}", new File(linxFusionTsv).getParent());
@@ -48,15 +48,15 @@ public final class LinxDataLoader {
         }
         LOGGER.info(" Loaded {} fusions (of which {} are reportable) from {}", fusions.size(), reportableFusions.size(), linxFusionTsv);
 
-        List<LinxSvAnnotation> linxSvs = Lists.newArrayList();
-        if (linxSvsTsv != null) {
-            linxSvs = LinxSvAnnotation.read(linxSvsTsv);
-            LOGGER.info(" Loaded {} svs from {}", linxSvs.size(), linxSvsTsv);
+        List<LinxSvAnnotation> linxStructuralVariants = Lists.newArrayList();
+        if (linxStructuralVariantTsv != null) {
+            linxStructuralVariants = LinxSvAnnotation.read(linxStructuralVariantTsv);
+            LOGGER.info(" Loaded {} structural variants from {}", linxStructuralVariants.size(), linxStructuralVariantTsv);
         }
 
         List<LinxBreakend> linxBreakends =
                 LinxBreakend.read(linxBreakendTsv).stream().filter(LinxBreakend::reportedDisruption).collect(Collectors.toList());
-        List<ReportableGeneDisruption> geneDisruptions = ReportableGeneDisruptionFactory.convert(linxBreakends, linxSvs);
+        List<ReportableGeneDisruption> geneDisruptions = ReportableGeneDisruptionFactory.convert(linxBreakends, linxStructuralVariants);
         LOGGER.debug(" Generated {} reportable disruptions based on {} breakends", geneDisruptions.size(), linxBreakends.size());
         LOGGER.info(" Loaded {} reportable disruptions from {}", geneDisruptions.size(), linxBreakendTsv);
 
