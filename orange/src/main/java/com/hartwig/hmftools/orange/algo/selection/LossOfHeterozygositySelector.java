@@ -13,8 +13,8 @@ import org.jetbrains.annotations.NotNull;
 
 public final class LossOfHeterozygositySelector {
 
-    private static final Set<String> HRD_GENES = Sets.newHashSet();
-    private static final Set<String> MSI_GENES = Sets.newHashSet();
+    static final Set<String> HRD_GENES = Sets.newHashSet();
+    static final Set<String> MSI_GENES = Sets.newHashSet();
 
     static {
         HRD_GENES.add("BRCA1");
