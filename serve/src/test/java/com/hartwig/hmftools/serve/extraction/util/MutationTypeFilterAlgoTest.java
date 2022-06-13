@@ -2,7 +2,7 @@ package com.hartwig.hmftools.serve.extraction.util;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.serve.DriverGeneTestFactory;
+import com.hartwig.hmftools.serve.DriverGenesTestFactory;
 
 import org.junit.Test;
 
@@ -13,7 +13,7 @@ public class MutationTypeFilterAlgoTest {
         String tsg = "tsg";
         String onco = "onco";
 
-        MutationTypeFilterAlgo algo = new MutationTypeFilterAlgo(DriverGeneTestFactory.createDriverGenes(tsg, onco));
+        MutationTypeFilterAlgo algo = new MutationTypeFilterAlgo(DriverGenesTestFactory.createDriverGenes(tsg, onco));
 
         assertEquals(MutationTypeFilter.NONSENSE_OR_FRAMESHIFT, algo.determine(onco, "EXON 9 FRAMESHIFT"));
         assertEquals(MutationTypeFilter.SPLICE, algo.determine(onco, "Exon 12 splice site insertion"));

@@ -87,7 +87,8 @@ public class SomaticFindingsChapter implements ReportChapter {
 
         List<ReportableVariant> nonDriverVariants = SomaticVariantSelector.selectNonDrivers(report.purple().unreportedSomaticVariants(),
                 report.purple().reportableSomaticVariants(),
-                report.protect());
+                report.protect(),
+                report.driverGenes());
         String titleNonDrivers = "Other potentially relevant variants (" + nonDriverVariants.size() + ")";
         document.add(SomaticVariantTable.build(titleNonDrivers, contentWidth(), max10(nonDriverVariants)));
     }

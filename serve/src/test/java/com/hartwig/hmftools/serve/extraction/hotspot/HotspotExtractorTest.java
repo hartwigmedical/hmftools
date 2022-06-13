@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.serve.DriverGeneTestFactory;
+import com.hartwig.hmftools.serve.DriverGenesTestFactory;
 import com.hartwig.hmftools.serve.extraction.util.DriverInconsistencyMode;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 
@@ -30,7 +30,7 @@ public class HotspotExtractorTest {
 
     @Test
     public void canFindGene() {
-        List<DriverGene> driverGenes = DriverGeneTestFactory.createDriverGenes("BRAF", "KIT");
+        List<DriverGene> driverGenes = DriverGenesTestFactory.createDriverGenes("BRAF", "KIT");
         assertEquals(DriverCategory.TSG, HotspotExtractor.findByGene(driverGenes, "BRAF"));
         assertEquals(DriverCategory.ONCO, HotspotExtractor.findByGene(driverGenes, "KIT"));
         assertNull(HotspotExtractor.findByGene(driverGenes, "KRAS"));
@@ -99,7 +99,7 @@ public class HotspotExtractorTest {
                 new TestProteinResolver(protein),
                 event -> event,
                 annotation,
-                DriverGeneTestFactory.createDriverGenes("BRAF", "KIT"));
+                DriverGenesTestFactory.createDriverGenes("BRAF", "KIT"));
     }
 
     private static class TestProteinResolver implements ProteinResolver {

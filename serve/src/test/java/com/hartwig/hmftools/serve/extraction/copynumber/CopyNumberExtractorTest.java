@@ -5,7 +5,7 @@ import static org.junit.Assert.assertNull;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.classification.EventType;
-import com.hartwig.hmftools.serve.DriverGeneTestFactory;
+import com.hartwig.hmftools.serve.DriverGenesTestFactory;
 import com.hartwig.hmftools.serve.extraction.util.DriverInconsistencyMode;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 
@@ -74,7 +74,7 @@ public class CopyNumberExtractorTest {
     @NotNull
     private static CopyNumberExtractor createTestExtractor(@NotNull DriverInconsistencyMode mode) {
         return new CopyNumberExtractor(new GeneChecker(Sets.newHashSet("PTEN", "AKT1", "KRAS")),
-                DriverGeneTestFactory.createDriverGenes("KRAS", "AKT1"),
+                DriverGenesTestFactory.createDriverGenes("KRAS", "AKT1"),
                 mode);
     }
 }
