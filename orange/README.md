@@ -40,7 +40,7 @@ interesting and added to the report:
  - Other potentially relevant variants
     1. Variants that are hotspots but not part of the reporting gene panel.
     1. Variants which have clinical evidence but are not part of the reporting gene panel.
-    1. Coding variants that are not reported but are phased with variants that are reported.
+    1. Exonic variants that are not reported but are phased with variants that are reported.
     1. Variants that are considered relevant for tumor type classification according to Cuppa.
  - Other regions with amps, or with deletions in other autosomal regions:
     1. Any chromosomal band location with at least one gene lost or fully amplified is considered potentially interesting.

@@ -34,12 +34,12 @@ public final class SomaticVariantSelector {
         for (SomaticVariant variant : unreportedVariants) {
             boolean isNearHotspot = variant.hotspot() == Hotspot.HOTSPOT || variant.hotspot() == Hotspot.NEAR_HOTSPOT;
             boolean hasEvidence = EvidenceSelector.hasEvidence(evidences, variant.gene(), ProtectEventGenerator.variantEvent(variant));
-            boolean isCodingAndHasPhasedReportedVariant =
+            boolean isExonicAndHasPhasedReportedVariant =
                     !variant.gene().isEmpty() && hasReportedVariantWithPhase(reportedSomaticVariants, variant.topLocalPhaseSet());
             boolean isCuppaRelevantVariant = isRelevantForCuppa(variant);
             boolean isSynonymousButReportable = isSynonymousWithReportableWorstImpact(variant, driverGenes);
 
-            if (isNearHotspot || hasEvidence || isCodingAndHasPhasedReportedVariant || isCuppaRelevantVariant || isSynonymousButReportable) {
+            if (isNearHotspot || hasEvidence || isExonicAndHasPhasedReportedVariant || isCuppaRelevantVariant || isSynonymousButReportable) {
                 filtered.add(toReportable(variant));
             }
         }
