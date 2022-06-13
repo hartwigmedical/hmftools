@@ -60,14 +60,12 @@ public class RoseAlgoTest {
                 .chordPredictionTxt(CHORD_PREDICTION_TXT)
                 .annotatedVirusTsv(ANNOTATED_VIRUS_TSV)
                 .molecularTissueOriginTxt(MOLECULAR_TISSUE_ORIGIN_TXT)
-                .driverGene37Tsv(DRIVER_GENE_37_TSV)
-                .driverGene38Tsv(DRIVER_GENE_38_TSV)
+                .driverGeneTsv(DRIVER_GENE_38_TSV)
                 .primaryTumorTsv(PRIMARY_TUMOR_TSV)
                 .build();
 
         RoseAlgo algo = RoseAlgo.build(config.actionabilityDatabaseTsv(),
-                config.driverGene37Tsv(),
-                config.driverGene38Tsv(),
+                config.driverGeneTsv(),
                 config.refGenomeVersion(),
                 config.primaryTumorTsv());
 
