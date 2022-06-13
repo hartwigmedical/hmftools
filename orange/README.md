@@ -128,6 +128,7 @@ investigate potential causes for QC failure.
 
 ### Version History and Download Links
 - Upcoming
+  - Add the driver gene panel to the ORANGE JSON output
   - Variants with a phased inframe canonical effect are dedup'ed prior to reporting.
   - Variants with canonical synonymous impact but reportable worst impact are added to potentially interesting variants. 
 - [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.9)
