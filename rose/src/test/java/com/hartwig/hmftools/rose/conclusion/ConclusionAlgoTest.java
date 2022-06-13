@@ -17,6 +17,8 @@ import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.chord.ChordTestFactory;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
+import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
+import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.cuppa.ImmutableMolecularTissueOrigin;
 import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogTestFactory;
@@ -70,7 +72,49 @@ public class ConclusionAlgoTest {
     }
 
     @Test
-    @Ignore
+    public void canResolveTumorLocation() {
+        PatientPrimaryTumor patientPrimaryTumorWithLocationAndType = ImmutablePatientPrimaryTumor.builder()
+                .patientIdentifier("patient ID")
+                .location("Bone/Soft tissue")
+                .subLocation(Strings.EMPTY)
+                .type("Alveolar soft part sarcoma")
+                .subType(Strings.EMPTY)
+                .extraDetails(Strings.EMPTY)
+                .doids(Sets.newHashSet())
+                .snomedConceptIds(Sets.newHashSet())
+                .isOverridden(false)
+                .build();
+        assertEquals("Bone/Soft tissue (Alveolar soft part sarcoma)", ConclusionAlgo.resolveTumorLocation(patientPrimaryTumorWithLocationAndType));
+
+        PatientPrimaryTumor patientPrimaryTumorWithLocationAndSubLocation = ImmutablePatientPrimaryTumor.builder()
+                .patientIdentifier("patient ID")
+                .location("Adrenal gland")
+                .subLocation("Adrenal cortex")
+                .type(Strings.EMPTY)
+                .subType(Strings.EMPTY)
+                .extraDetails(Strings.EMPTY)
+                .doids(Sets.newHashSet())
+                .snomedConceptIds(Sets.newHashSet())
+                .isOverridden(false)
+                .build();
+        assertEquals("Adrenal cortex", ConclusionAlgo.resolveTumorLocation(patientPrimaryTumorWithLocationAndSubLocation));
+
+        PatientPrimaryTumor patientPrimaryTumorAll = ImmutablePatientPrimaryTumor.builder()
+                .patientIdentifier("patient ID")
+                .location("Nervous system")
+                .subLocation("Olfactory nerve")
+                .type("Blastoma")
+                .subType("Olfactory neuroblastoma")
+                .extraDetails(Strings.EMPTY)
+                .doids(Sets.newHashSet())
+                .snomedConceptIds(Sets.newHashSet())
+                .isOverridden(false)
+                .build();
+        assertEquals("Olfactory nerve (Olfactory neuroblastoma)", ConclusionAlgo.resolveTumorLocation(patientPrimaryTumorAll));
+
+    }
+
+    @Test
     public void canGenerateCUPPAConclusion() {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
@@ -111,12 +155,26 @@ public class ConclusionAlgoTest {
 
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
-        actionabilityMap = testActionabilityMap(actionabilityMap, "CHEK2", TypeAlteration.INACTIVATION, "CHEK2", Condition.ONLY_HIGH, "CHEK2");
-        actionabilityMap = testActionabilityMap(actionabilityMap, "APC", TypeAlteration.ACTIVATING_MUTATION, "APC", Condition.ALWAYS_NO_ACTIONABLE, "APC");
-        actionabilityMap = testActionabilityMap(actionabilityMap, "BRCA2", TypeAlteration.INACTIVATION, "BRCA2", Condition.ONLY_HIGH, "BRCA2");
-        actionabilityMap = testActionabilityMap(actionabilityMap, "BRCA1", TypeAlteration.INACTIVATION, "BRCA1", Condition.ONLY_HIGH, "BRCA1");
-        actionabilityMap = testActionabilityMap(actionabilityMap, "germline", TypeAlteration.GERMLINE, "germline", Condition.ONLY_HIGH, "germline");
-        actionabilityMap = testActionabilityMap(actionabilityMap, "NOT_BIALLELIC", TypeAlteration.NOT_BIALLELIC, "NOT_BIALLELIC", Condition.OTHER, "not biallelic");
+        actionabilityMap =
+                testActionabilityMap(actionabilityMap, "CHEK2", TypeAlteration.INACTIVATION, "CHEK2", Condition.ONLY_HIGH, "CHEK2");
+        actionabilityMap = testActionabilityMap(actionabilityMap,
+                "APC",
+                TypeAlteration.ACTIVATING_MUTATION,
+                "APC",
+                Condition.ALWAYS_NO_ACTIONABLE,
+                "APC");
+        actionabilityMap =
+                testActionabilityMap(actionabilityMap, "BRCA2", TypeAlteration.INACTIVATION, "BRCA2", Condition.ONLY_HIGH, "BRCA2");
+        actionabilityMap =
+                testActionabilityMap(actionabilityMap, "BRCA1", TypeAlteration.INACTIVATION, "BRCA1", Condition.ONLY_HIGH, "BRCA1");
+        actionabilityMap =
+                testActionabilityMap(actionabilityMap, "germline", TypeAlteration.GERMLINE, "germline", Condition.ONLY_HIGH, "germline");
+        actionabilityMap = testActionabilityMap(actionabilityMap,
+                "NOT_BIALLELIC",
+                TypeAlteration.NOT_BIALLELIC,
+                "NOT_BIALLELIC",
+                Condition.OTHER,
+                "not biallelic");
 
         ConclusionAlgo.generateVariantConclusion(conclusion,
                 reportableVariants,
@@ -156,9 +214,11 @@ public class ConclusionAlgoTest {
         List<LinxFusion> fusions = createFusion();
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
-        actionabilityMap = testActionabilityMap(actionabilityMap, "BRAF", TypeAlteration.INTERNAL_DELETION, "BRAF", Condition.ALWAYS, "BRAF");
+        actionabilityMap =
+                testActionabilityMap(actionabilityMap, "BRAF", TypeAlteration.INTERNAL_DELETION, "BRAF", Condition.ALWAYS, "BRAF");
         actionabilityMap = testActionabilityMap(actionabilityMap, "MET", TypeAlteration.FUSION, "MET", Condition.ALWAYS, "MET");
-        actionabilityMap = testActionabilityMap(actionabilityMap, "EGFR", TypeAlteration.KINASE_DOMAIN_DUPLICATION, "EGFR", Condition.ALWAYS, "EGFR");
+        actionabilityMap =
+                testActionabilityMap(actionabilityMap, "EGFR", TypeAlteration.KINASE_DOMAIN_DUPLICATION, "EGFR", Condition.ALWAYS, "EGFR");
 
         ConclusionAlgo.generateFusionConclusion(conclusion, fusions, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
         assertEquals(conclusion.size(), 4);
@@ -215,7 +275,7 @@ public class ConclusionAlgoTest {
         Set<String> HRD = Sets.newHashSet();
         HRD.add("BRCA1");
         ConclusionAlgo.generateHrdConclusion(conclusion, analysis, actionabilityMap, Sets.newHashSet(), Sets.newHashSet(), HRD);
-        assertEquals(conclusion.get(0), "- HRD(0.8) HRD");
+        assertEquals(conclusion.get(0), "- HRD (0.8) HRD");
     }
 
     @Test
@@ -250,7 +310,7 @@ public class ConclusionAlgoTest {
                 actionabilityMap,
                 Sets.newHashSet(),
                 Sets.newHashSet());
-        assertEquals(conclusion.get(0), "- MSI(4.5)MSI");
+        assertEquals(conclusion.get(0), "- MSI (4.5) MSI");
     }
 
     @Test
@@ -280,7 +340,7 @@ public class ConclusionAlgoTest {
                 actionabilityMap,
                 Sets.newHashSet(),
                 Sets.newHashSet());
-        assertEquals(conclusion.get(0), "- TML(200) TML");
+        assertEquals(conclusion.get(0), "- TML (200) TML");
     }
 
     @Test
@@ -305,7 +365,7 @@ public class ConclusionAlgoTest {
         actionabilityMap = testActionabilityMap(actionabilityMap, "High-TMB", TypeAlteration.POSITIVE, "High-TMB", Condition.ALWAYS, "TMB");
 
         ConclusionAlgo.generateTMBConclusion(conclusion, 15, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
-        assertEquals(conclusion.get(0), "- TMB( 15.0)TMB");
+        assertEquals(conclusion.get(0), "- TMB (15.0) TMB");
     }
 
     @Test
@@ -392,12 +452,8 @@ public class ConclusionAlgoTest {
     public void canGenerateFindings() {
         Map<Integer, String> conclusion = Maps.newHashMap();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
-        actionabilityMap = testActionabilityMap(actionabilityMap,
-                "FINDINGS",
-                TypeAlteration.FINDINGS,
-                "FINDINGS",
-                Condition.OTHER,
-                "findings");
+        actionabilityMap =
+                testActionabilityMap(actionabilityMap, "FINDINGS", TypeAlteration.FINDINGS, "FINDINGS", Condition.OTHER, "findings");
 
         ConclusionAlgo.generateFindings(conclusion, actionabilityMap);
         assertEquals(conclusion.get(0), "- findings");
@@ -489,18 +545,14 @@ public class ConclusionAlgoTest {
 
     @NotNull
     public List<GainLoss> gainloss() {
-        GainLoss gainLoss1 = ImmutableGainLoss.builder()
-                .from(GainLossTestFactory.createGainLoss("BRAF", CopyNumberInterpretation.FULL_GAIN))
-                .build();
-        GainLoss gainLoss2 = ImmutableGainLoss.builder()
-                .from(GainLossTestFactory.createGainLoss("KRAS", CopyNumberInterpretation.PARTIAL_GAIN))
-                .build();
-        GainLoss gainLoss3 = ImmutableGainLoss.builder()
-                .from(GainLossTestFactory.createGainLoss("CDKN2A", CopyNumberInterpretation.FULL_LOSS))
-                .build();
-        GainLoss gainLoss4 = ImmutableGainLoss.builder()
-                .from(GainLossTestFactory.createGainLoss("EGFR", CopyNumberInterpretation.PARTIAL_LOSS))
-                .build();
+        GainLoss gainLoss1 =
+                ImmutableGainLoss.builder().from(GainLossTestFactory.createGainLoss("BRAF", CopyNumberInterpretation.FULL_GAIN)).build();
+        GainLoss gainLoss2 =
+                ImmutableGainLoss.builder().from(GainLossTestFactory.createGainLoss("KRAS", CopyNumberInterpretation.PARTIAL_GAIN)).build();
+        GainLoss gainLoss3 =
+                ImmutableGainLoss.builder().from(GainLossTestFactory.createGainLoss("CDKN2A", CopyNumberInterpretation.FULL_LOSS)).build();
+        GainLoss gainLoss4 =
+                ImmutableGainLoss.builder().from(GainLossTestFactory.createGainLoss("EGFR", CopyNumberInterpretation.PARTIAL_LOSS)).build();
         return Lists.newArrayList(gainLoss1, gainLoss2, gainLoss3, gainLoss4);
     }
 

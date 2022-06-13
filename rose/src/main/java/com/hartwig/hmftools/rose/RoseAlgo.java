@@ -5,6 +5,8 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordDataLoader;
+import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
+import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFile;
 import com.hartwig.hmftools.common.cuppa.ImmutableMolecularTissueOrigin;
 import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
 import com.hartwig.hmftools.common.cuppa.MolecularTissueOriginFile;
@@ -32,20 +34,25 @@ public class RoseAlgo {
     private final List<ActionabilityEntry> actionabilityEntry;
     @NotNull
     private final List<DriverGene> driverGenes;
+    @NotNull
+    private final List<PatientPrimaryTumor> patientPrimaryTumors;
 
     @NotNull
     public static RoseAlgo build(@NotNull String actionabilityDatabaseTsv, @NotNull String driverGene37Tsv, @NotNull String driverGene38Tsv,
-            @NotNull RefGenomeVersion refGenomeVersion) throws IOException {
+            @NotNull RefGenomeVersion refGenomeVersion, @NotNull String primaryTumorTsv) throws IOException {
         List<ActionabilityEntry> actionabilityEntry = ActionabilityFileReader.read(actionabilityDatabaseTsv);
         List<DriverGene> driverGenes = refGenomeVersion == RefGenomeVersion.V37
                 ? readDriverGenesFromFile(driverGene37Tsv)
                 : readDriverGenesFromFile(driverGene38Tsv);
-        return new RoseAlgo(actionabilityEntry, driverGenes);
+        List<PatientPrimaryTumor> patientPrimaryTumors = readPatientPrimaryTumors(primaryTumorTsv);
+        return new RoseAlgo(actionabilityEntry, driverGenes, patientPrimaryTumors);
     }
 
-    private RoseAlgo(final @NotNull List<ActionabilityEntry> actionabilityEntry, final @NotNull List<DriverGene> driverGenes) {
+    private RoseAlgo(final @NotNull List<ActionabilityEntry> actionabilityEntry, final @NotNull List<DriverGene> driverGenes,
+            final @NotNull List<PatientPrimaryTumor> patientPrimaryTumors) {
         this.actionabilityEntry = actionabilityEntry;
         this.driverGenes = driverGenes;
+        this.patientPrimaryTumors = patientPrimaryTumors;
     }
 
     @NotNull
@@ -57,11 +64,19 @@ public class RoseAlgo {
     }
 
     @NotNull
+    private static List<PatientPrimaryTumor> readPatientPrimaryTumors(@NotNull String primaryTumorTsv) throws IOException {
+        List<PatientPrimaryTumor> patientPrimaryTumors = PatientPrimaryTumorFile.read(primaryTumorTsv);
+        LOGGER.info("Loaded primary tumors for {} patients from {}", patientPrimaryTumors.size(), primaryTumorTsv);
+        return patientPrimaryTumors;
+    }
+
+    @NotNull
     public RoseData run(@NotNull RoseConfig config) throws IOException {
         PurpleData purple = loadPurpleData(config);
 
         return ImmutableRoseData.builder()
                 .sampleId(config.tumorSampleId())
+                .patientId(config.patientId())
                 .purple(purple)
                 .linx(loadLinxData(config))
                 .virusInterpreter(loadVirusInterpreterData(config))
@@ -69,6 +84,7 @@ public class RoseAlgo {
                 .molecularTissueOrigin(loadCuppaData(config))
                 .actionabilityEntries(actionabilityEntry)
                 .driverGenes(driverGenes)
+                .patientPrimaryTumors(patientPrimaryTumors)
                 .build();
     }
 
