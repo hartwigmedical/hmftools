@@ -2,6 +2,7 @@ package com.hartwig.hmftools.compar.purple;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.compar.Category.GERMLINE_DELETION;
 import static com.hartwig.hmftools.compar.Category.PURITY;
 import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.MismatchType.VALUE;
@@ -29,7 +30,7 @@ public class GermlineDeletionData implements ComparableItem
     }
 
     public Category category() {
-        return PURITY;
+        return GERMLINE_DELETION;
     }
 
     @Override

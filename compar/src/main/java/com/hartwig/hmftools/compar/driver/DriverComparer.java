@@ -56,7 +56,7 @@ public class DriverComparer implements ItemComparer
 
         for(DriverCatalog driver : drivers)
         {
-            driverDataList.add(new DriverData(driver, mConfig.getGeneMappedName(driver.gene())));
+            driverDataList.add(new DriverData(driver));
         }
 
         return driverDataList;
@@ -74,7 +74,7 @@ public class DriverComparer implements ItemComparer
 
             for(DriverCatalog driver : drivers)
             {
-                comparableItems.add(new DriverData(driver, mConfig.getGeneMappedName(driver.gene())));
+                comparableItems.add(new DriverData(driver));
             }
         }
         catch(IOException e)

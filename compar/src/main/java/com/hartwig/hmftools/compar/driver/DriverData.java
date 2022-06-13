@@ -20,15 +20,13 @@ import com.hartwig.hmftools.compar.Mismatch;
 public class DriverData implements ComparableItem
 {
     public final DriverCatalog DriverCatalog;
-    public final String MappedGeneName; // overridden with new mapped name if applicable
 
     protected static final String FLD_DRIVER_LIKELIHOOD = "driverLikelihood";
     protected static final String FLD_DRIVER_MIN_CN = "driverMinCopyNumber";
 
-    public DriverData(final DriverCatalog driverCatalog, final String mappedName)
+    public DriverData(final DriverCatalog driverCatalog)
     {
         DriverCatalog = driverCatalog;
-        MappedGeneName = mappedName;
     }
 
     @Override
@@ -58,7 +56,7 @@ public class DriverData implements ComparableItem
     {
         final DriverData otherDriver = (DriverData)other;
 
-        if(!MappedGeneName.equals(otherDriver.MappedGeneName))
+        if(!DriverCatalog.gene().equals(otherDriver.DriverCatalog.gene()))
             return false;
 
         if(DriverCatalog.driver() != otherDriver.DriverCatalog.driver())

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.compar;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.compar.CommonUtils.DATA_DELIM;
 import static com.hartwig.hmftools.compar.CommonUtils.ITEM_DELIM;
 import static com.hartwig.hmftools.compar.DiffFunctions.diffsStr;
@@ -68,4 +70,7 @@ public class Mismatch
 
         return sj.toString();
     }
+
+    public String toString() { return format("type(%s) item(%) diffs(%d)",
+            MismatchType, RefItem != null ? RefItem.key() : NewItem.key(), DiffValues.size()); }
 }
