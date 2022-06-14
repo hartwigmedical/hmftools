@@ -83,6 +83,7 @@ public interface OrangeConfig {
     // Some additional optional params and flags
     String DISABLE_GERMLINE = "disable_germline";
     String MAX_EVIDENCE_LEVEL = "max_evidence_level";
+    String LIMIT_JSON_OUTPUT = "limit_json_output";
     String LOG_DEBUG = "log_debug";
 
     @NotNull
@@ -136,9 +137,10 @@ public interface OrangeConfig {
         options.addOption(PEACH_GENOTYPE_TSV, true, "Path towards the peach genotype TSV.");
         options.addOption(PROTECT_EVIDENCE_TSV, true, "Path towards the protect evidence TSV.");
 
-        options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
         options.addOption(DISABLE_GERMLINE, false, "If provided, germline results are not added to the report");
         options.addOption(MAX_EVIDENCE_LEVEL, true, "If provided, only evidence up to provided maximum level are added to report");
+        options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
+        options.addOption(LIMIT_JSON_OUTPUT, false, "If provided, limits the json output.");
 
         for (Option rnaOption : OrangeRNAConfig.createOptions().getOptions()) {
             options.addOption(rnaOption);
@@ -293,9 +295,14 @@ public interface OrangeConfig {
         }
 
         ReportConfig report = ImmutableReportConfig.builder()
+                .limitJsonOutput(cmd.hasOption(LIMIT_JSON_OUTPUT))
                 .reportGermline(!cmd.hasOption(DISABLE_GERMLINE))
                 .maxEvidenceLevel(cmd.hasOption(MAX_EVIDENCE_LEVEL) ? EvidenceLevel.valueOf(cmd.getOptionValue(MAX_EVIDENCE_LEVEL)) : null)
                 .build();
+
+        if (report.limitJsonOutput()) {
+            LOGGER.info("JSON limitation has been enabled.");
+        }
 
         if (!report.reportGermline()) {
             LOGGER.info("Germline reporting has been disabled");
