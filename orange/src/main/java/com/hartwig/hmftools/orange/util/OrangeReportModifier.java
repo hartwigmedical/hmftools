@@ -24,6 +24,7 @@ public final class OrangeReportModifier {
     @NotNull
     public static OrangeReport limitAllListsToMaxOne(@NotNull OrangeReport report) {
         return ImmutableOrangeReport.builder().from(report)
+                .driverGenes(max1(report.driverGenes()))
                 .germlineMVLHPerGene(limitGermlineMVLHToOne(report.germlineMVLHPerGene()))
                 .purple(limitPurpleDataToOne(report.purple()))
                 .linx(limitLinxDataToOne(report.linx()))
@@ -49,6 +50,8 @@ public final class OrangeReportModifier {
                 .unreportedSomaticVariants(max1(purple.unreportedSomaticVariants()))
                 .reportableGermlineVariants(max1(purple.reportableGermlineVariants()))
                 .unreportedGermlineVariants(max1(purple.unreportedGermlineVariants()))
+                .reportableSomaticGainsLosses(max1(purple.reportableSomaticGainsLosses()))
+                .unreportedSomaticGainsLosses(max1(purple.unreportedSomaticGainsLosses()))
                 .reportableGermlineDeletions(max1(purple.reportableGermlineDeletions()))
                 .unreportedGermlineDeletions(max1(purple.unreportedGermlineDeletions()))
                 .allGeneCopyNumbers(max1(purple.allGeneCopyNumbers()))
