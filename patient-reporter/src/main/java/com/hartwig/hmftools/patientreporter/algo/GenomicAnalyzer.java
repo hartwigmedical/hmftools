@@ -45,8 +45,8 @@ public class GenomicAnalyzer {
     }
 
     @NotNull
-    public GenomicAnalysis run(@NotNull String tumorSampleId, @NotNull String tumorSampleBarcode,
-            @Nullable String referenceSampleId, @Nullable String referenceSampleBarcode, @NotNull PatientReporterConfig config,
+    public GenomicAnalysis run(@NotNull String tumorSampleId, @NotNull String tumorSampleBarcode, @Nullable String referenceSampleId,
+            @Nullable String referenceSampleBarcode, @NotNull PatientReporterConfig config,
             @NotNull LimsGermlineReportingLevel germlineReportingLevel) throws IOException {
         // TODO Handle alternate sampleIds differently (see also email from David Koetsier, 16th of May 2022.
         PurpleData purpleData = PurpleDataLoader.load(tumorSampleId,
@@ -63,9 +63,9 @@ public class GenomicAnalyzer {
                 null,
                 config.refGenomeVersion());
 
-        LinxData linxData = LinxDataLoader.load(config.linxFusionTsv(),
+        LinxData linxData = LinxDataLoader.load(config.linxSvsTsv(),
+                config.linxFusionTsv(),
                 config.linxBreakendTsv(),
-                config.linxSvsTsv(),
                 config.linxDriverCatalogTsv(),
                 null,
                 null);
@@ -104,7 +104,7 @@ public class GenomicAnalyzer {
                 .chordHrdValue(chordAnalysis.hrdValue())
                 .chordHrdStatus(chordAnalysis.hrStatus())
                 .gainsAndLosses(purpleData.reportableSomaticGainsLosses())
-                .cnPerChromosome(purpleData.cnPerChromosome())
+                .cnPerChromosome(purpleData.copyNumberPerChromosome())
                 .geneFusions(linxData.reportableFusions())
                 .geneDisruptions(linxData.geneDisruptions())
                 .homozygousDisruptions(linxData.homozygousDisruptions())

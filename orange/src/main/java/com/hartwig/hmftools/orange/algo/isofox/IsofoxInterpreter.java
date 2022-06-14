@@ -31,7 +31,7 @@ public final class IsofoxInterpreter {
             @NotNull KnownFusionCache knownFusionCache) {
         List<LinxFusion> allFusions = Lists.newArrayList();
         allFusions.addAll(linx.reportableFusions());
-        allFusions.addAll(linx.unreportedFusions());
+        allFusions.addAll(linx.allFusions());
 
         return ImmutableIsofoxInterpretedData.builder()
                 .summary(isofox.summary())

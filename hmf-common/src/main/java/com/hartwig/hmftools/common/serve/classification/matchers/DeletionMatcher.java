@@ -28,9 +28,9 @@ class DeletionMatcher implements EventMatcher {
             }
         }
 
-        String[] words = event.split(" ");
+        String[] wordsDel = event.split(" ");
         for (String keyword : deletionKeywords) {
-            for (String word : words) {
+            for (String word : wordsDel) {
                 if (word.equals(keyword)) {
                     return true;
                 }

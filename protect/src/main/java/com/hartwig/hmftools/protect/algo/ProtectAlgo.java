@@ -2,12 +2,14 @@ package com.hartwig.hmftools.protect.algo;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordDataLoader;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.lilac.LilacData;
 import com.hartwig.hmftools.common.lilac.LilacDataLoader;
 import com.hartwig.hmftools.common.linx.LinxData;
@@ -27,6 +29,7 @@ import com.hartwig.hmftools.protect.evidence.PersonalizedEvidenceFactory;
 import com.hartwig.hmftools.protect.evidence.PurpleSignatureEvidence;
 import com.hartwig.hmftools.protect.evidence.VariantEvidence;
 import com.hartwig.hmftools.protect.evidence.VirusEvidence;
+import com.hartwig.hmftools.protect.evidence.WildTypeEvidence;
 import com.hartwig.hmftools.serve.actionability.ActionableEvents;
 
 import org.apache.logging.log4j.LogManager;
@@ -53,9 +56,12 @@ public class ProtectAlgo {
     private final ChordEvidence chordEvidenceFactory;
     @NotNull
     private final HlaEvidence hlaEvidenceFactory;
+    @NotNull
+    private final WildTypeEvidence wildTypeEvidenceFactory;
 
     @NotNull
-    public static ProtectAlgo build(@NotNull ActionableEvents actionableEvents, @NotNull Set<String> patientTumorDoids) {
+    public static ProtectAlgo build(@NotNull ActionableEvents actionableEvents, @NotNull Set<String> patientTumorDoids,
+            @NotNull Map<String, DriverGene> driverGenes) {
         PersonalizedEvidenceFactory personalizedEvidenceFactory = new PersonalizedEvidenceFactory(patientTumorDoids);
 
         VariantEvidence variantEvidenceFactory = new VariantEvidence(personalizedEvidenceFactory,
@@ -71,6 +77,7 @@ public class ProtectAlgo {
         VirusEvidence virusEvidenceFactory = new VirusEvidence(personalizedEvidenceFactory, actionableEvents.characteristics());
         ChordEvidence chordEvidenceFactory = new ChordEvidence(personalizedEvidenceFactory, actionableEvents.characteristics());
         HlaEvidence hlaEvidenceFactory = new HlaEvidence(personalizedEvidenceFactory, actionableEvents.hla());
+        WildTypeEvidence wildTypeEvidenceFactory = new WildTypeEvidence(personalizedEvidenceFactory, actionableEvents.genes(), driverGenes);
 
         return new ProtectAlgo(variantEvidenceFactory,
                 copyNumberEvidenceFactory,
@@ -79,13 +86,15 @@ public class ProtectAlgo {
                 purpleSignatureEvidenceFactory,
                 virusEvidenceFactory,
                 chordEvidenceFactory,
-                hlaEvidenceFactory);
+                hlaEvidenceFactory,
+                wildTypeEvidenceFactory);
     }
 
     private ProtectAlgo(@NotNull final VariantEvidence variantEvidenceFactory, @NotNull final CopyNumberEvidence copyNumberEvidenceFactory,
             @NotNull final DisruptionEvidence disruptionEvidenceFactory, @NotNull final FusionEvidence fusionEvidenceFactory,
             @NotNull final PurpleSignatureEvidence purpleSignatureEvidenceFactory, @NotNull final VirusEvidence virusEvidenceFactory,
-            @NotNull final ChordEvidence chordEvidenceFactory, @NotNull final HlaEvidence hlaEvidenceFactory) {
+            @NotNull final ChordEvidence chordEvidenceFactory, @NotNull final HlaEvidence hlaEvidenceFactory,
+            @NotNull final WildTypeEvidence wildTypeEvidenceFactory) {
         this.variantEvidenceFactory = variantEvidenceFactory;
         this.copyNumberEvidenceFactory = copyNumberEvidenceFactory;
         this.disruptionEvidenceFactory = disruptionEvidenceFactory;
@@ -94,6 +103,7 @@ public class ProtectAlgo {
         this.virusEvidenceFactory = virusEvidenceFactory;
         this.chordEvidenceFactory = chordEvidenceFactory;
         this.hlaEvidenceFactory = hlaEvidenceFactory;
+        this.wildTypeEvidenceFactory = wildTypeEvidenceFactory;
     }
 
     @NotNull
@@ -152,7 +162,7 @@ public class ProtectAlgo {
         printExtraction("amplifications and deletions", copyNumberEvidence);
         List<ProtectEvidence> disruptionEvidence = disruptionEvidenceFactory.evidence(linxData.homozygousDisruptions());
         printExtraction("homozygous disruptions", disruptionEvidence);
-        List<ProtectEvidence> fusionEvidence = fusionEvidenceFactory.evidence(linxData.reportableFusions(), linxData.unreportedFusions());
+        List<ProtectEvidence> fusionEvidence = fusionEvidenceFactory.evidence(linxData.reportableFusions(), linxData.allFusions());
         printExtraction("fusions", fusionEvidence);
         List<ProtectEvidence> purpleSignatureEvidence = purpleSignatureEvidenceFactory.evidence(purpleData);
         printExtraction("purple signatures", purpleSignatureEvidence);
@@ -161,7 +171,13 @@ public class ProtectAlgo {
         List<ProtectEvidence> chordEvidence = chordEvidenceFactory.evidence(chordAnalysis);
         printExtraction("chord", chordEvidence);
         List<ProtectEvidence> hlaEvidence = hlaEvidenceFactory.evidence(lilacData);
-        printExtraction("hla", chordEvidence);
+        printExtraction("hla", hlaEvidence);
+        List<ProtectEvidence> wildTypeEvidence = wildTypeEvidenceFactory.evidence(purpleData.reportableGermlineVariants(),
+                purpleData.reportableSomaticVariants(),
+                purpleData.reportableSomaticGainsLosses(),
+                linxData.reportableFusions(),
+                linxData.homozygousDisruptions());
+        printExtraction("wild-type", wildTypeEvidence);
 
         List<ProtectEvidence> result = Lists.newArrayList();
         result.addAll(variantEvidence);
@@ -172,6 +188,7 @@ public class ProtectAlgo {
         result.addAll(virusEvidence);
         result.addAll(chordEvidence);
         result.addAll(hlaEvidence);
+        result.addAll(wildTypeEvidence);
 
         List<ProtectEvidence> consolidated = EvidenceConsolidation.consolidate(result);
         LOGGER.debug("Consolidated {} evidence items to {} unique evidence items", result.size(), consolidated.size());

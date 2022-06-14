@@ -11,10 +11,10 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactoryTest;
-import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberTestFactory;
+import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
@@ -150,23 +150,6 @@ public class CNADriversTest {
 
     @NotNull
     private static ImmutableGeneCopyNumber.Builder createTestCopyNumberBuilder(@NotNull String gene) {
-        return ImmutableGeneCopyNumber.builder()
-                .start(1)
-                .end(2)
-                .geneName(gene)
-                .chromosome("1")
-                .chromosomeBand("band")
-                .minRegionStart(0)
-                .minRegionStartSupport(SegmentSupport.NONE)
-                .minRegionEnd(0)
-                .minRegionEndSupport(SegmentSupport.NONE)
-                .minRegionMethod(CopyNumberMethod.UNKNOWN)
-                .minRegions(1)
-                .somaticRegions(1)
-                .minCopyNumber(0.1)
-                .maxCopyNumber(0.1)
-                .transName("trans")
-                .isCanonical(true)
-                .minMinorAlleleCopyNumber(0);
+        return GeneCopyNumberTestFactory.builder().geneName(gene);
     }
 }

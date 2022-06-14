@@ -36,13 +36,15 @@ public final class OrangeConfigTestFactory {
     private static final String SAGE_SOMATIC_TUMOR_SAMPLE_BQR_PLOT = RUN_DIRECTORY + "/sage_somatic/tumor_sample.sage.bqr.png";
     private static final String PURPLE_PURITY_TSV = RUN_DIRECTORY + "/purple/tumor_sample.purple.purity.tsv";
     private static final String PURPLE_QC_FILE = RUN_DIRECTORY + "/purple/tumor_sample.purple.qc";
+    private static final String PURPLE_SOMATIC_COPY_NUMBER_TSV = RUN_DIRECTORY + "/purple/tumor_sample.purple.cnv.somatic.tsv";
+    private static final String PURPLE_GENE_COPY_NUMBER_TSV = RUN_DIRECTORY + "/purple/tumor_sample.purple.cnv.gene.tsv";
     private static final String PURPLE_SOMATIC_DRIVER_CATALOG_TSV = RUN_DIRECTORY + "/purple/tumor_sample.driver.catalog.somatic.tsv";
     private static final String PURPLE_GERMLINE_DRIVER_CATALOG_TSV = RUN_DIRECTORY + "/purple/tumor_sample.driver.catalog.germline.tsv";
     private static final String PURPLE_SOMATIC_VARIANT_VCF = RUN_DIRECTORY + "/purple/tumor_sample.purple.somatic.vcf";
     private static final String PURPLE_GERMLINE_VARIANT_VCF = RUN_DIRECTORY + "/purple/tumor_sample.purple.germline.vcf";
-    private static final String PURPLE_GENE_COPY_NUMBER_TSV = RUN_DIRECTORY + "/purple/tumor_sample.purple.cnv.gene.tsv";
     private static final String PURPLE_GERMLINE_DELETION_TSV = RUN_DIRECTORY + "/purple/tumor_sample.purple.germline.deletion.tsv";
     private static final String PURPLE_PLOT_DIRECTORY = RUN_DIRECTORY + "/purple/plot";
+    private static final String LINX_STRUCTURAL_VARIANT_TSV = RUN_DIRECTORY + "/linx/tumor_sample.linx.svs.tsv";
     private static final String LINX_FUSION_TSV = RUN_DIRECTORY + "/linx/tumor_sample.linx.fusion.tsv";
     private static final String LINX_BREAKEND_TSV = RUN_DIRECTORY + "/linx/tumor_sample.linx.breakend.tsv";
     private static final String LINX_DRIVER_CATALOG_TSV = RUN_DIRECTORY + "/linx/tumor_sample.linx.driver.catalog.tsv";
@@ -67,7 +69,8 @@ public final class OrangeConfigTestFactory {
 
     @NotNull
     public static OrangeConfig createDNAConfig() {
-        ReportConfig reportConfig = ImmutableReportConfig.builder().reportGermline(true).maxEvidenceLevel(EvidenceLevel.B).build();
+        ReportConfig reportConfig =
+                ImmutableReportConfig.builder().limitJsonOutput(false).reportGermline(true).maxEvidenceLevel(EvidenceLevel.B).build();
 
         return ImmutableOrangeConfig.builder()
                 .tumorSampleId(TUMOR_SAMPLE_ID)
@@ -92,6 +95,7 @@ public final class OrangeConfigTestFactory {
                 .sageSomaticTumorSampleBQRPlot(SAGE_SOMATIC_TUMOR_SAMPLE_BQR_PLOT)
                 .purplePurityTsv(PURPLE_PURITY_TSV)
                 .purpleQcFile(PURPLE_QC_FILE)
+                .purpleSomaticCopyNumberTsv(PURPLE_SOMATIC_COPY_NUMBER_TSV)
                 .purpleGeneCopyNumberTsv(PURPLE_GENE_COPY_NUMBER_TSV)
                 .purpleSomaticDriverCatalogTsv(PURPLE_SOMATIC_DRIVER_CATALOG_TSV)
                 .purpleGermlineDriverCatalogTsv(PURPLE_GERMLINE_DRIVER_CATALOG_TSV)
@@ -99,6 +103,7 @@ public final class OrangeConfigTestFactory {
                 .purpleGermlineVariantVcf(PURPLE_GERMLINE_VARIANT_VCF)
                 .purpleGermlineDeletionTsv(PURPLE_GERMLINE_DELETION_TSV)
                 .purplePlotDirectory(PURPLE_PLOT_DIRECTORY)
+                .linxStructuralVariantTsv(LINX_STRUCTURAL_VARIANT_TSV)
                 .linxFusionTsv(LINX_FUSION_TSV)
                 .linxBreakendTsv(LINX_BREAKEND_TSV)
                 .linxDriverCatalogTsv(LINX_DRIVER_CATALOG_TSV)

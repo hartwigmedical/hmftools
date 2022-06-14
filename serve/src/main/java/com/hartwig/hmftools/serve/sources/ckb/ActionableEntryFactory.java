@@ -8,6 +8,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.drug.Drug;
+import com.hartwig.hmftools.ckb.datamodel.drug.DrugClass;
 import com.hartwig.hmftools.ckb.datamodel.evidence.Evidence;
 import com.hartwig.hmftools.ckb.datamodel.reference.Reference;
 import com.hartwig.hmftools.ckb.datamodel.treatmentapproaches.RelevantTreatmentApproaches;
@@ -20,6 +21,7 @@ import com.hartwig.hmftools.serve.treatment.ImmutableTreatment;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -71,7 +73,8 @@ class ActionableEntryFactory {
             String doid = extractAndCurateDoid(evidence.indication().termId());
 
             for (RelevantTreatmentApproaches relevantTreatmentApproaches : evidence.relevantTreatmentApproaches()) {
-                drugClasses.add(relevantTreatmentApproaches.drugClass().drugClass());
+                DrugClass drugClass = relevantTreatmentApproaches.drugClass();
+                drugClasses.add(drugClass == null ? Strings.EMPTY: drugClass.drugClass());
             }
 
             if (level != null && direction != null && doid != null) {

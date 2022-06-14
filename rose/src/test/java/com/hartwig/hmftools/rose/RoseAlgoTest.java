@@ -16,8 +16,10 @@ public class RoseAlgoTest {
 
     private static final String PURPLE_PURITY_TSV = Resources.getResource("test_run/purple/sample.purple.purity.tsv").getPath();
     private static final String PURPLE_QC_FILE = Resources.getResource("test_run/purple/sample.purple.qc").getPath();
-    private static final String PURPLE_SOMATIC_DRIVER_CATALOG_TSV = Resources.getResource("test_run/purple/sample.driver.catalog.somatic.tsv").getPath();
-    private static final String PURPLE_GERMLINE_DRIVER_CATALOG_TSV = Resources.getResource("test_run/purple/sample.driver.catalog.germline.tsv").getPath();
+    private static final String PURPLE_SOMATIC_DRIVER_CATALOG_TSV =
+            Resources.getResource("test_run/purple/sample.driver.catalog.somatic.tsv").getPath();
+    private static final String PURPLE_GERMLINE_DRIVER_CATALOG_TSV =
+            Resources.getResource("test_run/purple/sample.driver.catalog.germline.tsv").getPath();
     private static final String PURPLE_SOMATIC_VARIANT_VCF = Resources.getResource("test_run/purple/sample.purple.somatic.vcf").getPath();
     private static final String PURPLE_GERMLINE_VARIANT_VCF = Resources.getResource("test_run/purple/sample.purple.germline.vcf").getPath();
     private static final String PURPLE_GENE_COPY_NUMBER_TSV = Resources.getResource("test_run/purple/sample.purple.cnv.gene.tsv").getPath();
@@ -32,8 +34,8 @@ public class RoseAlgoTest {
 
     private static final String MOLECULAR_TISSUE_ORIGIN_TXT = Resources.getResource("test_run/cuppa/sample.cuppa.conclusion.txt").getPath();
 
-    private static final String DRIVER_GENE_37_TSV = Resources.getResource("drivercatalog/driver.gene.panel.tsv").getPath();
-    private static final String DRIVER_GENE_38_TSV = Resources.getResource("drivercatalog/driver.gene.panel.tsv").getPath();
+    private static final String DRIVER_GENE_TSV = Resources.getResource("drivercatalog/driver.gene.panel.tsv").getPath();
+    private static final String PRIMARY_TUMOR_TSV = Resources.getResource("primarytumor/primary_tumor.tsv").getPath();
 
     @Test
     public void canRunProtectAlgo() throws IOException {
@@ -43,6 +45,7 @@ public class RoseAlgoTest {
                 .refGenomeVersion(RefGenomeVersion.V37)
                 .tumorSampleId("sample")
                 .refSampleId("reference")
+                .patientId("patientId")
                 .purplePurityTsv(PURPLE_PURITY_TSV)
                 .purpleQcFile(PURPLE_QC_FILE)
                 .purpleSomaticDriverCatalogTsv(PURPLE_SOMATIC_DRIVER_CATALOG_TSV)
@@ -56,14 +59,14 @@ public class RoseAlgoTest {
                 .chordPredictionTxt(CHORD_PREDICTION_TXT)
                 .annotatedVirusTsv(ANNOTATED_VIRUS_TSV)
                 .molecularTissueOriginTxt(MOLECULAR_TISSUE_ORIGIN_TXT)
-                .driverGene37Tsv(DRIVER_GENE_37_TSV)
-                .driverGene38Tsv(DRIVER_GENE_38_TSV)
+                .driverGeneTsv(DRIVER_GENE_TSV)
+                .primaryTumorTsv(PRIMARY_TUMOR_TSV)
                 .build();
 
         RoseAlgo algo = RoseAlgo.build(config.actionabilityDatabaseTsv(),
-                config.driverGene37Tsv(),
-                config.driverGene38Tsv(),
-                config.refGenomeVersion());
+                config.driverGeneTsv(),
+                config.refGenomeVersion(),
+                config.primaryTumorTsv());
 
         assertNotNull(algo.run(config));
     }

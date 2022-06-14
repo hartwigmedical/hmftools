@@ -32,6 +32,7 @@ public interface ProtectConfig {
     // Input files used by the algorithm
     String SERVE_ACTIONABILITY_DIRECTORY = "serve_actionability_dir";
     String DOID_JSON = "doid_json";
+    String DRIVER_GENE_TSV = "driver_gene_tsv";
 
     // Files containing the actual genomic results for this sample.
     String PURPLE_PURITY_TSV = "purple_purity_tsv";
@@ -64,6 +65,7 @@ public interface ProtectConfig {
 
         options.addOption(SERVE_ACTIONABILITY_DIRECTORY, true, "Path towards the SERVE actionability directory.");
         options.addOption(DOID_JSON, true, "Path to JSON file containing the full DOID tree.");
+        options.addOption(DRIVER_GENE_TSV, true, "Path to driver gene TSV");
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
@@ -105,6 +107,9 @@ public interface ProtectConfig {
 
     @NotNull
     String doidJsonFile();
+
+    @NotNull
+    String driverGeneTsv();
 
     @NotNull
     String purplePurityTsv();
@@ -162,6 +167,7 @@ public interface ProtectConfig {
                 .refGenomeVersion(RefGenomeVersion.from(nonOptionalValue(cmd, RefGenomeVersion.REF_GENOME_VERSION)))
                 .serveActionabilityDir(nonOptionalDir(cmd, SERVE_ACTIONABILITY_DIRECTORY))
                 .doidJsonFile(nonOptionalFile(cmd, DOID_JSON))
+                .driverGeneTsv(nonOptionalFile(cmd, DRIVER_GENE_TSV))
                 .purplePurityTsv(nonOptionalFile(cmd, PURPLE_PURITY_TSV))
                 .purpleQcFile(nonOptionalFile(cmd, PURPLE_QC_FILE))
                 .purpleGeneCopyNumberTsv(nonOptionalFile(cmd, PURPLE_GENE_COPY_NUMBER_TSV))

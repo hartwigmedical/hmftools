@@ -13,36 +13,36 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface IsofoxInterpretedData {
+public abstract class IsofoxInterpretedData {
 
     @NotNull
-    RnaStatistics summary();
+    public abstract RnaStatistics summary();
 
     @NotNull
-    List<GeneExpression> allGeneExpressions();
+    public abstract List<GeneExpression> allGeneExpressions();
 
     @NotNull
-    List<GeneExpression> reportableHighExpression();
+    public abstract List<GeneExpression> reportableHighExpression();
 
     @NotNull
-    List<GeneExpression> reportableLowExpression();
+    public abstract List<GeneExpression> reportableLowExpression();
 
     @NotNull
-    List<RnaFusion> allFusions();
+    public abstract List<RnaFusion> allFusions();
 
     @NotNull
-    List<RnaFusion> reportableNovelKnownFusions();
+    public abstract List<RnaFusion> reportableNovelKnownFusions();
 
     @NotNull
-    List<RnaFusion> reportableNovelPromiscuousFusions();
+    public abstract List<RnaFusion> reportableNovelPromiscuousFusions();
 
     @NotNull
-    List<NovelSpliceJunction> allNovelSpliceJunctions();
+    public abstract List<NovelSpliceJunction> allNovelSpliceJunctions();
 
     @NotNull
-    List<NovelSpliceJunction> reportableSkippedExons();
+    public abstract List<NovelSpliceJunction> reportableSkippedExons();
 
     @NotNull
-    List<NovelSpliceJunction> reportableNovelExonsIntrons();
+    public abstract List<NovelSpliceJunction> reportableNovelExonsIntrons();
 
 }

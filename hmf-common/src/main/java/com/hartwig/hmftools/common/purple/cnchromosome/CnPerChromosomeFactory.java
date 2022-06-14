@@ -17,9 +17,17 @@ import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class GenerateCnPerChromosome
+public final class CnPerChromosomeFactory
 {
-    public static List<CnPerChromosomeArmData> extractCnPerChromosomeArm(
+    @NotNull
+    public static List<CnPerChromosomeArmData> generate(@NotNull String purpleSomaticCopynumberTsv,
+            @NotNull RefGenomeCoordinates refGenomeCoordinates) throws IOException
+    {
+        List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(purpleSomaticCopynumberTsv);
+        return extractCnPerChromosomeArm(copyNumbers, refGenomeCoordinates);
+    }
+
+    static List<CnPerChromosomeArmData> extractCnPerChromosomeArm(
             final List<PurpleCopyNumber> copyNumbers, RefGenomeCoordinates refGenomeCoordinates)
     {
         List<CnPerChromosomeArmData> cnPerChromosomeArmData = Lists.newArrayList();
@@ -80,13 +88,5 @@ public final class GenerateCnPerChromosome
             chromosomeArmGenomeRegionMap.put(ChromosomeArm.Q_ARM, partBeforeCentromere);
         }
         return chromosomeArmGenomeRegionMap;
-    }
-
-    @NotNull
-    public static List<CnPerChromosomeArmData> fromPurpleSomaticCopynumberTsv(@NotNull String purpleSomaticCopynumberTsv,
-            @NotNull RefGenomeCoordinates refGenomeCoordinates) throws IOException
-    {
-        List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(purpleSomaticCopynumberTsv);
-        return extractCnPerChromosomeArm(copyNumbers, refGenomeCoordinates);
     }
 }

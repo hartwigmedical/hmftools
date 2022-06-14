@@ -52,6 +52,7 @@ import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.OrangeRNAConfig;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
+import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableObservation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSample;
@@ -140,24 +141,27 @@ public class OrangeAlgo {
             isofoxInterpreted = IsofoxInterpreter.interpret(isofox, linx, driverGenes, knownFusionCache);
         }
 
+        List<ProtectEvidence> protect = loadProtectData(config);
+
         return ImmutableOrangeReport.builder()
                 .sampleId(config.tumorSampleId())
                 .reportDate(LocalDate.now())
                 .configuredPrimaryTumor(loadConfiguredPrimaryTumor(config))
                 .refGenomeVersion(config.refGenomeVersion())
                 .platinumVersion(determinePlatinumVersion(config))
+                .driverGenes(driverGenes)
                 .refSample(loadSampleData(config, false))
                 .tumorSample(loadSampleData(config, true))
                 .germlineMVLHPerGene(loadGermlineMVLHPerGene(config))
                 .purple(purple)
-                .linx(linx)
+                .linx(LinxInterpreter.interpret(linx, protect, driverGenes))
                 .isofox(isofoxInterpreted)
                 .lilac(loadLilacData(config))
                 .virusInterpreter(loadVirusInterpreterData(config))
                 .chord(loadChordAnalysis(config))
                 .cuppa(loadCuppaData(config))
                 .peach(loadPeachData(config))
-                .protect(loadProtectData(config))
+                .protect(protect)
                 .cohortEvaluations(evaluateCohortPercentiles(config, purple))
                 .plots(buildPlots(config))
                 .build();
@@ -249,16 +253,16 @@ public class OrangeAlgo {
                 config.purpleGermlineDriverCatalogTsv(),
                 config.purpleGermlineVariantVcf(),
                 config.purpleGeneCopyNumberTsv(),
-                null,
+                config.purpleSomaticCopyNumberTsv(),
                 config.purpleGermlineDeletionTsv(),
-                null);
+                config.refGenomeVersion());
     }
 
     @NotNull
     private static LinxData loadLinxData(@NotNull OrangeConfig config) throws IOException {
-        return LinxDataLoader.load(config.linxFusionTsv(),
+        return LinxDataLoader.load(config.linxStructuralVariantTsv(),
+                config.linxFusionTsv(),
                 config.linxBreakendTsv(),
-                null,
                 config.linxDriverCatalogTsv(),
                 config.linxDriverTsv(),
                 config.linxGermlineDisruptionTsv());

@@ -8,6 +8,7 @@ import com.hartwig.hmftools.orange.OrangeReportTestFactory;
 import com.hartwig.hmftools.orange.algo.OrangeAlgo;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class ReportWriterTest {
@@ -26,7 +27,7 @@ public class ReportWriterTest {
     public void canGenerateTestReportFromMinimalTestData() throws IOException {
         OrangeReport report = OrangeReportTestFactory.createMinimalTestReport();
 
-        ReportWriter writer = new ReportWriter(false, null, ImmutableReportConfig.builder().reportGermline(true).build());
+        ReportWriter writer = new ReportWriter(false, null, withGermlineReporting());
 
         writer.write(report);
     }
@@ -35,8 +36,13 @@ public class ReportWriterTest {
     public void canGenerateTestReportFromProperTestData() throws IOException {
         OrangeReport report = OrangeReportTestFactory.createProperTestReport();
 
-        ReportWriter writer = new ReportWriter(false, null, ImmutableReportConfig.builder().reportGermline(true).build());
+        ReportWriter writer = new ReportWriter(false, null, withGermlineReporting());
 
         writer.write(report);
+    }
+
+    @NotNull
+    private static ReportConfig withGermlineReporting() {
+        return ImmutableReportConfig.builder().limitJsonOutput(false).reportGermline(true).build();
     }
 }

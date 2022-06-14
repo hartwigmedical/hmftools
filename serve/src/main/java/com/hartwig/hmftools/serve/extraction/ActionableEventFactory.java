@@ -104,8 +104,16 @@ public final class ActionableEventFactory {
                 event = GeneLevelEvent.AMPLIFICATION;
                 break;
             }
+            case OVER_EXPRESSION: {
+                event = GeneLevelEvent.OVER_EXPRESSION;
+                break;
+            }
             case DELETION: {
                 event = GeneLevelEvent.DELETION;
+                break;
+            }
+            case UNDER_EXPRESSION: {
+                event = GeneLevelEvent.UNDER_EXPRESSION;
                 break;
             }
             default:

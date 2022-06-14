@@ -10,7 +10,7 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.serve.DriverGeneTestFactory;
+import com.hartwig.hmftools.serve.DriverGenesTestFactory;
 import com.hartwig.hmftools.serve.EnsemblDataCacheTestFactory;
 import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
 
@@ -31,7 +31,7 @@ public final class RefGenomeResourceTestFactory {
     public static RefGenomeResource buildTestResource37() {
         return ImmutableRefGenomeResource.builder()
                 .refSequence(loadTestRefSequence37())
-                .driverGenes(DriverGeneTestFactory.createDriverGenes("BRAF", "KIT"))
+                .driverGenes(DriverGenesTestFactory.createDriverGenes("BRAF", "KIT"))
                 .knownFusionCache(RefGenomeManagerFactoryTest.knownFusionCache())
                 .ensemblDataCache(EnsemblDataCacheTestFactory.create37())
                 .proteinResolver(new TestProteinResolver())

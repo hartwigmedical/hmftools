@@ -13,8 +13,8 @@ import org.jetbrains.annotations.NotNull;
 
 public final class LossOfHeterozygositySelector {
 
-    private static final Set<String> HRD_GENES = Sets.newHashSet();
-    private static final Set<String> MSI_GENES = Sets.newHashSet();
+    static final Set<String> HRD_GENES = Sets.newHashSet();
+    static final Set<String> MSI_GENES = Sets.newHashSet();
 
     static {
         HRD_GENES.add("BRCA1");
@@ -33,15 +33,17 @@ public final class LossOfHeterozygositySelector {
     }
 
     @NotNull
-    public static List<GeneCopyNumber> selectHRDOrMSIGenes(@NotNull List<GeneCopyNumber> lohGenes,
+    public static List<GeneCopyNumber> selectHRDOrMSIGenesWithLOH(@NotNull List<GeneCopyNumber> allGeneCopyNumbers,
             @NotNull MicrosatelliteStatus microsatelliteStatus, @NotNull ChordStatus chordStatus) {
         List<GeneCopyNumber> reportable = Lists.newArrayList();
-        for (GeneCopyNumber lohGene : lohGenes) {
-            boolean isRelevantHRD = HRD_GENES.contains(lohGene.geneName()) && chordStatus == ChordStatus.HR_DEFICIENT;
-            boolean isRelevantMSI = MSI_GENES.contains(lohGene.geneName()) && microsatelliteStatus == MicrosatelliteStatus.MSI;
+        for (GeneCopyNumber geneCopyNumber : allGeneCopyNumbers) {
+            if (geneCopyNumber.minMinorAlleleCopyNumber() < 0.5 && geneCopyNumber.minCopyNumber() > 0.5) {
+                boolean isRelevantHRD = HRD_GENES.contains(geneCopyNumber.geneName()) && chordStatus == ChordStatus.HR_DEFICIENT;
+                boolean isRelevantMSI = MSI_GENES.contains(geneCopyNumber.geneName()) && microsatelliteStatus == MicrosatelliteStatus.MSI;
 
-            if (isRelevantHRD || isRelevantMSI) {
-                reportable.add(lohGene);
+                if (isRelevantHRD || isRelevantMSI) {
+                    reportable.add(geneCopyNumber);
+                }
             }
         }
         return reportable;

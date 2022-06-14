@@ -10,7 +10,7 @@ import java.util.List;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.serve.classification.EventType;
-import com.hartwig.hmftools.serve.DriverGeneTestFactory;
+import com.hartwig.hmftools.serve.DriverGenesTestFactory;
 import com.hartwig.hmftools.serve.extraction.util.DriverInconsistencyMode;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 import com.hartwig.hmftools.serve.refgenome.RefGenomeResourceTestFactory;
@@ -26,101 +26,101 @@ public class GeneLevelExtractorTest {
     @Test
     public void canFilterInCatalogFusion() {
         GeneLevelExtractor geneLevelExtractorIgnore =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.IGNORE);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.IGNORE);
         assertNotNull(geneLevelExtractorIgnore.extract("NTRK3", EventType.PROMISCUOUS_FUSION, "NTRK3  fusion"));
 
         GeneLevelExtractor geneLevelExtractorWarn =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.WARN_ONLY);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.WARN_ONLY);
         assertNotNull(geneLevelExtractorWarn.extract("NTRK3", EventType.PROMISCUOUS_FUSION, "NTRK3  fusion"));
 
         GeneLevelExtractor geneLevelExtractorFilter =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.FILTER);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.FILTER);
         assertNotNull(geneLevelExtractorFilter.extract("NTRK3", EventType.PROMISCUOUS_FUSION, "NTRK3  fusion"));
     }
 
     @Test
     public void canFilterNotInCatalogFusion() {
         GeneLevelExtractor geneLevelExtractorIgnore =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.IGNORE);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.IGNORE);
         assertNotNull(geneLevelExtractorIgnore.extract("KIT", EventType.PROMISCUOUS_FUSION, "KIT  fusion"));
 
         GeneLevelExtractor geneLevelExtractorWarn =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.WARN_ONLY);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.WARN_ONLY);
         assertNotNull(geneLevelExtractorWarn.extract("KIT", EventType.PROMISCUOUS_FUSION, "KIT  fusion"));
 
         GeneLevelExtractor geneLevelExtractorFilter =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.FILTER);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.FILTER);
         assertNull(geneLevelExtractorFilter.extract("KIT", EventType.PROMISCUOUS_FUSION, "KIT  fusion"));
     }
 
     @Test
     public void canFilterInCatalogWildType() {
         GeneLevelExtractor geneLevelExtractorIgnore =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.IGNORE);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.IGNORE);
         assertNotNull(geneLevelExtractorIgnore.extract("KIT", EventType.WILD_TYPE, "KIT  wild type"));
 
         GeneLevelExtractor geneLevelExtractorWarn =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.WARN_ONLY);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.WARN_ONLY);
         assertNotNull(geneLevelExtractorWarn.extract("KIT", EventType.WILD_TYPE, "KIT  wild type"));
 
         GeneLevelExtractor geneLevelExtractorFilter =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.FILTER);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.FILTER);
         assertNotNull(geneLevelExtractorFilter.extract("KIT", EventType.WILD_TYPE, "KIT  wild type"));
     }
 
     @Test
     public void canFilterNotInCatalogWildType() {
         GeneLevelExtractor geneLevelExtractorIgnore =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KRAS"), DriverInconsistencyMode.IGNORE);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("STK11", "KRAS"), DriverInconsistencyMode.IGNORE);
         assertNotNull(geneLevelExtractorIgnore.extract("BRAF", EventType.WILD_TYPE, "BRAF  wild type"));
 
         GeneLevelExtractor geneLevelExtractorWarn =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KRAS"), DriverInconsistencyMode.WARN_ONLY);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("STK11", "KRAS"), DriverInconsistencyMode.WARN_ONLY);
         assertNotNull(geneLevelExtractorWarn.extract("BRAF", EventType.WILD_TYPE, "BRAF  wild type"));
 
         GeneLevelExtractor geneLevelExtractorFilter =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KRAS"), DriverInconsistencyMode.FILTER);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("STK11", "KRAS"), DriverInconsistencyMode.FILTER);
         assertNull(geneLevelExtractorFilter.extract("BRAF", EventType.WILD_TYPE, "BRAF  wild type"));
     }
 
     @Test
     public void canFilterInCatalogGeneLevel() {
         GeneLevelExtractor geneLevelExtractorIgnore =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.IGNORE);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.IGNORE);
         assertNotNull(geneLevelExtractorIgnore.extract("KIT", EventType.GENE_LEVEL, "KIT  mutant"));
 
         GeneLevelExtractor geneLevelExtractorWarnMis =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.WARN_ONLY);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.WARN_ONLY);
         assertNotNull(geneLevelExtractorWarnMis.extract("STK11", EventType.GENE_LEVEL, "STK11  act mut"));
 
         GeneLevelExtractor geneLevelExtractorFilter =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.FILTER);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.FILTER);
         assertNotNull(geneLevelExtractorFilter.extract("KIT", EventType.GENE_LEVEL, "KIT  mutant"));
 
         GeneLevelExtractor geneLevelExtractorFilterMismatch =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.FILTER);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.FILTER);
         assertNull(geneLevelExtractorFilterMismatch.extract("STK11", EventType.GENE_LEVEL, "STK11  act mut"));
     }
 
     @Test
     public void canFilterNotInCatalogGeneLevel() {
         GeneLevelExtractor geneLevelExtractorIgnore =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.IGNORE);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.IGNORE);
         assertNotNull(geneLevelExtractorIgnore.extract("MET", EventType.GENE_LEVEL, "MET  activation"));
 
         GeneLevelExtractor geneLevelExtractorWarn =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.WARN_ONLY);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.WARN_ONLY);
         assertNotNull(geneLevelExtractorWarn.extract("MET", EventType.GENE_LEVEL, "MET  activation"));
 
         GeneLevelExtractor geneLevelExtractorFilter =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.FILTER);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.FILTER);
         assertNull(geneLevelExtractorFilter.extract("MET", EventType.GENE_LEVEL, "MET  activation"));
     }
 
     @Test
     public void canExtractGeneLevelEventWiltType() {
         GeneLevelExtractor geneLevelExtractor =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.IGNORE);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.IGNORE);
         GeneLevelAnnotation geneLevelEvent = geneLevelExtractor.extract("KIT", EventType.WILD_TYPE, "KIT  wild type");
 
         assertNotNull(geneLevelEvent);
@@ -131,7 +131,7 @@ public class GeneLevelExtractorTest {
     @Test
     public void canExtractGeneLevelEventOnco() {
         GeneLevelExtractor geneLevelExtractor =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.IGNORE);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.IGNORE);
         GeneLevelAnnotation geneLevelEvent = geneLevelExtractor.extract("KIT", EventType.GENE_LEVEL, "KIT  positive");
 
         assertNotNull(geneLevelEvent);
@@ -142,7 +142,7 @@ public class GeneLevelExtractorTest {
     @Test
     public void canExtractGeneLevelEventTsg() {
         GeneLevelExtractor geneLevelExtractor =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "KIT"), DriverInconsistencyMode.IGNORE);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("TP53", "KIT"), DriverInconsistencyMode.IGNORE);
         GeneLevelAnnotation geneLevelEvent = geneLevelExtractor.extract("TP53", EventType.GENE_LEVEL, "TP53  negative");
 
         assertNotNull(geneLevelEvent);
@@ -153,7 +153,7 @@ public class GeneLevelExtractorTest {
     @Test
     public void pickEventClassificationOnConflict() {
         GeneLevelExtractor geneLevelExtractor =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.FILTER);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("STK11", "KIT"), DriverInconsistencyMode.FILTER);
 
         GeneLevelAnnotation conflictingGeneLevelEvent = geneLevelExtractor.extract("STK11", EventType.GENE_LEVEL, "STK11 positive");
         assertNull(conflictingGeneLevelEvent);
@@ -162,7 +162,7 @@ public class GeneLevelExtractorTest {
     @Test
     public void canExtractGeneLevelEventGeneral() {
         GeneLevelExtractor geneLevelExtractor =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "MET"), DriverInconsistencyMode.IGNORE);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("STK11", "MET"), DriverInconsistencyMode.IGNORE);
         GeneLevelAnnotation geneLevelEvent = geneLevelExtractor.extract("STK11", EventType.GENE_LEVEL, "Truncating Mutations");
 
         assertNotNull(geneLevelEvent);
@@ -173,7 +173,7 @@ public class GeneLevelExtractorTest {
     @Test
     public void canExtractGeneLevelEventFusion() {
         GeneLevelExtractor geneLevelExtractor =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "MET"), DriverInconsistencyMode.IGNORE);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("STK11", "MET"), DriverInconsistencyMode.IGNORE);
         GeneLevelAnnotation geneLevelEvent = geneLevelExtractor.extract("NTRK3", EventType.PROMISCUOUS_FUSION, "NTRK3 fusion");
 
         assertNotNull(geneLevelEvent);
@@ -184,14 +184,14 @@ public class GeneLevelExtractorTest {
     @Test
     public void filtersNonExistingGenes() {
         GeneLevelExtractor geneLevelExtractor =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "MET"), DriverInconsistencyMode.IGNORE);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("STK11", "MET"), DriverInconsistencyMode.IGNORE);
         assertNull(geneLevelExtractor.extract("NOT-A-GENE", EventType.PROMISCUOUS_FUSION, "NTRK3 fusion"));
     }
 
     @Test
     public void canExtractGeneLevelEvent() {
         GeneLevelExtractor geneLevelExtractor =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("NOTCH1", "MET"), DriverInconsistencyMode.FILTER);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("NOTCH1", "MET"), DriverInconsistencyMode.FILTER);
 
         assertEquals(ImmutableGeneLevelAnnotation.builder().gene("MET").event(GeneLevelEvent.ACTIVATION).build(),
                 geneLevelExtractor.extractGeneLevelEvent("MET", "MET activating mutation"));
@@ -215,7 +215,7 @@ public class GeneLevelExtractorTest {
     @Test
     public void canExtractWildTypeEvents() {
         GeneLevelExtractor geneLevelExtractor =
-                createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("NOTCH1", "MET"), DriverInconsistencyMode.IGNORE);
+                createWithDriverGenes(DriverGenesTestFactory.createDriverGenes("NOTCH1", "MET"), DriverInconsistencyMode.IGNORE);
         assertEquals(ImmutableGeneLevelAnnotation.builder().gene("MET").event(GeneLevelEvent.WILD_TYPE).build(),
                 geneLevelExtractor.extractWildTypeEvent("MET", EventType.WILD_TYPE));
         assertEquals(ImmutableGeneLevelAnnotation.builder().gene("AB").event(GeneLevelEvent.WILD_TYPE).build(),
@@ -226,7 +226,7 @@ public class GeneLevelExtractorTest {
 
     @Test
     public void canDetermineGeneLevelFromDriverGenes() {
-        List<DriverGene> driverGenes = DriverGeneTestFactory.createDriverGenes("STK11", "MET");
+        List<DriverGene> driverGenes = DriverGenesTestFactory.createDriverGenes("STK11", "MET");
 
         assertEquals(GeneLevelEvent.ACTIVATION, GeneLevelExtractor.determineGeneLevelEventFromDriverGenes(driverGenes, "MET"));
         assertEquals(GeneLevelEvent.INACTIVATION, GeneLevelExtractor.determineGeneLevelEventFromDriverGenes(driverGenes, "STK11"));
