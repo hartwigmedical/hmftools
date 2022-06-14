@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordDataLoader;
+import com.hartwig.hmftools.common.lilac.LilacData;
+import com.hartwig.hmftools.common.lilac.LilacDataLoader;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxDataLoader;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
@@ -20,6 +22,7 @@ import com.hartwig.hmftools.protect.evidence.ChordEvidence;
 import com.hartwig.hmftools.protect.evidence.CopyNumberEvidence;
 import com.hartwig.hmftools.protect.evidence.DisruptionEvidence;
 import com.hartwig.hmftools.protect.evidence.FusionEvidence;
+import com.hartwig.hmftools.protect.evidence.HlaEvidence;
 import com.hartwig.hmftools.protect.evidence.PersonalizedEvidenceFactory;
 import com.hartwig.hmftools.protect.evidence.PurpleSignatureEvidence;
 import com.hartwig.hmftools.protect.evidence.VariantEvidence;
@@ -48,6 +51,8 @@ public class ProtectAlgo {
     private final VirusEvidence virusEvidenceFactory;
     @NotNull
     private final ChordEvidence chordEvidenceFactory;
+    @NotNull
+    private final HlaEvidence hlaEvidenceFactory;
 
     @NotNull
     public static ProtectAlgo build(@NotNull ActionableEvents actionableEvents, @NotNull Set<String> patientTumorDoids) {
@@ -65,6 +70,7 @@ public class ProtectAlgo {
                 new PurpleSignatureEvidence(personalizedEvidenceFactory, actionableEvents.characteristics());
         VirusEvidence virusEvidenceFactory = new VirusEvidence(personalizedEvidenceFactory, actionableEvents.characteristics());
         ChordEvidence chordEvidenceFactory = new ChordEvidence(personalizedEvidenceFactory, actionableEvents.characteristics());
+        HlaEvidence hlaEvidenceFactory = new HlaEvidence(personalizedEvidenceFactory, actionableEvents.hla());
 
         return new ProtectAlgo(variantEvidenceFactory,
                 copyNumberEvidenceFactory,
@@ -72,13 +78,14 @@ public class ProtectAlgo {
                 fusionEvidenceFactory,
                 purpleSignatureEvidenceFactory,
                 virusEvidenceFactory,
-                chordEvidenceFactory);
+                chordEvidenceFactory,
+                hlaEvidenceFactory);
     }
 
     private ProtectAlgo(@NotNull final VariantEvidence variantEvidenceFactory, @NotNull final CopyNumberEvidence copyNumberEvidenceFactory,
             @NotNull final DisruptionEvidence disruptionEvidenceFactory, @NotNull final FusionEvidence fusionEvidenceFactory,
             @NotNull final PurpleSignatureEvidence purpleSignatureEvidenceFactory, @NotNull final VirusEvidence virusEvidenceFactory,
-            @NotNull final ChordEvidence chordEvidenceFactory) {
+            @NotNull final ChordEvidence chordEvidenceFactory, @NotNull final HlaEvidence hlaEvidenceFactory) {
         this.variantEvidenceFactory = variantEvidenceFactory;
         this.copyNumberEvidenceFactory = copyNumberEvidenceFactory;
         this.disruptionEvidenceFactory = disruptionEvidenceFactory;
@@ -86,6 +93,7 @@ public class ProtectAlgo {
         this.purpleSignatureEvidenceFactory = purpleSignatureEvidenceFactory;
         this.virusEvidenceFactory = virusEvidenceFactory;
         this.chordEvidenceFactory = chordEvidenceFactory;
+        this.hlaEvidenceFactory = hlaEvidenceFactory;
     }
 
     @NotNull
@@ -94,8 +102,9 @@ public class ProtectAlgo {
         LinxData linxData = loadLinxData(config);
         VirusInterpreterData virusInterpreterData = loadVirusInterpreterData(config);
         ChordAnalysis chordAnalysis = ChordDataLoader.load(config.chordPredictionTxt());
+        LilacData lilacData = loadLilacData(config);
 
-        return determineEvidence(purpleData, linxData, virusInterpreterData, chordAnalysis);
+        return determineEvidence(purpleData, linxData, virusInterpreterData, chordAnalysis, lilacData);
     }
 
     @NotNull
@@ -126,8 +135,13 @@ public class ProtectAlgo {
     }
 
     @NotNull
+    private static LilacData loadLilacData(@NotNull ProtectConfig config) throws IOException {
+        return LilacDataLoader.load(config.lilacQcCsv(), config.lilacResultCsv());
+    }
+
+    @NotNull
     private List<ProtectEvidence> determineEvidence(@NotNull PurpleData purpleData, @NotNull LinxData linxData,
-            @NotNull VirusInterpreterData virusInterpreterData, @NotNull ChordAnalysis chordAnalysis) {
+            @NotNull VirusInterpreterData virusInterpreterData, @NotNull ChordAnalysis chordAnalysis, @NotNull LilacData lilacData) {
         LOGGER.info("Evidence extraction started");
         List<ProtectEvidence> variantEvidence = variantEvidenceFactory.evidence(purpleData.reportableGermlineVariants(),
                 purpleData.reportableSomaticVariants(),
@@ -146,6 +160,8 @@ public class ProtectAlgo {
         printExtraction("viruses", virusEvidence);
         List<ProtectEvidence> chordEvidence = chordEvidenceFactory.evidence(chordAnalysis);
         printExtraction("chord", chordEvidence);
+        List<ProtectEvidence> hlaEvidence = hlaEvidenceFactory.evidence(lilacData);
+        printExtraction("hla", chordEvidence);
 
         List<ProtectEvidence> result = Lists.newArrayList();
         result.addAll(variantEvidence);
@@ -155,6 +171,7 @@ public class ProtectAlgo {
         result.addAll(purpleSignatureEvidence);
         result.addAll(virusEvidence);
         result.addAll(chordEvidence);
+        result.addAll(hlaEvidence);
 
         List<ProtectEvidence> consolidated = EvidenceConsolidation.consolidate(result);
         LOGGER.debug("Consolidated {} evidence items to {} unique evidence items", result.size(), consolidated.size());

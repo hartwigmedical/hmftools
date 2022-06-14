@@ -19,6 +19,11 @@ driver_gene_panel=$1 && shift
 ensembl_data_dir=$1 && shift
 germline_del_freq_file=$1 && shift
 threads=$1 && shift
+circos=$1 && shift
+
+if [[ ! -d "${output_dir}" ]]; then
+  mkdir ${output_dir}
+fi
 
 purity_tsv=${output_dir}/${tumor_id}.purple.purity.tsv
 
@@ -27,11 +32,12 @@ if [[ -f "${purity_tsv}" ]]; then
   exit
 fi
 
-echo "Running Purple for ${tumor_id}, output dir ${output_dir}"
-
-if [[ ! -d "${output_dir}" ]]; then
-  mkdir ${output_dir}
+if [[ ! -f "${sv_vcf}" ]]; then
+  echo "Missing Gripss VCF, not running Purple for ${tumor_id}"
+  exit
 fi
+
+echo "Running Purple for ${tumor_id}, output dir ${output_dir}"
 
 java -jar ${purple_jar} \
   -tumor ${tumor_id} \
@@ -51,7 +57,7 @@ java -jar ${purple_jar} \
   -somatic_vcf ${somatic_vcf} \
   -germline_vcf ${germline_vcf} \
   -run_drivers \
-  -no_charts \
+  -circos {circos} \
   -threads ${threads} \
   -output_dir ${output_dir} \
   

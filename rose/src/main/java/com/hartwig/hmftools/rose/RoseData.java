@@ -3,6 +3,7 @@ package com.hartwig.hmftools.rose;
 import java.util.List;
 
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.linx.LinxData;
@@ -21,6 +22,9 @@ public abstract class RoseData {
 
     @NotNull
     public abstract String sampleId();
+
+    @NotNull
+    public abstract String patientId();
 
     @NotNull
     public abstract PurpleData purple();
@@ -42,4 +46,6 @@ public abstract class RoseData {
 
     @NotNull
     public abstract List<DriverGene> driverGenes();
+    @NotNull
+    public abstract List<PatientPrimaryTumor> patientPrimaryTumors();
 }

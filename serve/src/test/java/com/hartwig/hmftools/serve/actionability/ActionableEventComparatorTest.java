@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
+import com.hartwig.hmftools.serve.treatment.ImmutableTreatment;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -43,7 +44,7 @@ public class ActionableEventComparatorTest {
         return ActionabilityTestUtil.create(source,
                 Strings.EMPTY,
                 Sets.newHashSet(),
-                treatment,
+                ImmutableTreatment.builder().treament(treatment).drugClasses(Sets.newHashSet("drugClasses")).build(),
                 ImmutableCancerType.builder().name(applicableCancerType).doid(Strings.EMPTY).build(),
                 Sets.newHashSet(),
                 level,

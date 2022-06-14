@@ -3,10 +3,12 @@ package com.hartwig.hmftools.compar.somatic;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SOMATIC_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.compar.Category.SOMATIC_VARIANT;
-import static com.hartwig.hmftools.compar.CommonUtils.diffsStr;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.DiffFunctions.diffsStr;
 import static com.hartwig.hmftools.compar.Mismatch.commonCsv;
 import static com.hartwig.hmftools.compar.Mismatch.commonHeader;
+import static com.hartwig.hmftools.compar.somatic.SomaticVariantData.FLD_SUBCLONAL_LIKELIHOOD;
+import static com.hartwig.hmftools.compar.somatic.VariantCommon.FLD_QUAL;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
@@ -21,9 +23,9 @@ import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.DiffThresholds;
 import com.hartwig.hmftools.compar.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.MatchLevel;
 import com.hartwig.hmftools.compar.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.SomaticVariantDAO;
@@ -57,14 +59,22 @@ public class SomaticVariantComparer implements ItemComparer
     }
 
     @Override
+    public boolean hasDetailedOutput() { return true; }
+
+    @Override
+    public void registerThresholds(final DiffThresholds thresholds)
+    {
+        thresholds.addFieldThreshold(FLD_QUAL, 20, 0.2);
+        thresholds.addFieldThreshold(FLD_SUBCLONAL_LIKELIHOOD, 0.6, 0);
+    }
+
+    @Override
     public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess)
     {
         Result<Record> result = dbAccess.context().select()
                 .from(SOMATICVARIANT)
                 .where(SOMATICVARIANT.FILTER.eq(PASS_FILTER))
                 .and(SOMATICVARIANT.SAMPLEID.eq(sampleId))
-                // .and(SOMATICVARIANT.GENE.isNotNull())
-                // .and(SOMATICVARIANT.CANONICALCODINGEFFECT.in(NONSENSE_OR_FRAMESHIFT.toString(), SPLICE.toString(), MISSENSE.toString()))
                 .fetch();
 
         final List<ComparableItem> variants = Lists.newArrayList();
@@ -91,22 +101,20 @@ public class SomaticVariantComparer implements ItemComparer
         String vcfFile = !fileSources.SomaticVcf.isEmpty() ?
                 fileSources.SomaticVcf : fileSources.Purple + sampleId + PURPLE_SOMATIC_VCF_SUFFIX;
 
-        boolean reportedOnly = mConfig.Categories.get(SOMATIC_VARIANT) == MatchLevel.REPORTABLE;
-
         try
         {
             final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false);
 
-            for(VariantContext variant : reader.iterator())
+            for(VariantContext variantContext : reader.iterator())
             {
-                if(filter.test(variant))
+                if(filter.test(variantContext))
                 {
-                    final SomaticVariant somaticVariant = variantFactory.createVariant(sampleId, variant).orElse(null);
+                    final SomaticVariant variant = variantFactory.createVariant(sampleId, variantContext).orElse(null);
 
-                    if(reportedOnly && !somaticVariant.reported())
+                    if(variant == null)
                         continue;
 
-                    comparableItems.add(new SomaticVariantData(somaticVariant));
+                    comparableItems.add(new SomaticVariantData(variant));
                 }
             }
 
@@ -123,7 +131,7 @@ public class SomaticVariantComparer implements ItemComparer
     @Override
     public String outputHeader()
     {
-        return commonHeader() + ",RefFilter,RefQual,OtherQual,RefTier,OtherTier,RefTotalReads,NewTotalReads"
+        return commonHeader() + ",RefFilter,RefQual,NewQual,RefTier,NewTier,RefTotalReads,NewTotalReads"
                 + ",RefAlleleReads,NewAlleleReads,RefLPS,NewLPS,Differences";
     }
 

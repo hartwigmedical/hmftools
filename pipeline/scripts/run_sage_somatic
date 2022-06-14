@@ -14,6 +14,10 @@ panel_bed=$1 && shift
 high_confidence_bed=$1 && shift
 threads=$1 && shift
 
+if [[ ! -d "${output_dir}" ]]; then
+  mkdir ${output_dir}
+fi
+
 output_vcf=${output_dir}/${tumor_id}.sage.somatic.vcf.gz
 
 if [[ -f "${output_vcf}" ]]; then
@@ -22,10 +26,6 @@ if [[ -f "${output_vcf}" ]]; then
 fi
 
 echo "Running Sage somatic for ${tumor_id}, output dir ${output_dir}"
-
-if [[ ! -d "${output_dir}" ]]; then
-  mkdir ${output_dir}
-fi
 
 java -jar ${sage_jar} \
   -tumor ${tumor_id} \

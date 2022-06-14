@@ -13,6 +13,7 @@ import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharact
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
+import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLA;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.cancertype.CancerType;
 import com.hartwig.hmftools.serve.cancertype.CancerTypeFactory;
@@ -46,8 +47,8 @@ public class PersonalizedEvidenceFactory {
     @NotNull
     public ImmutableProtectEvidence.Builder evidenceBuilder(@NotNull ActionableEvent actionable) {
         return ImmutableProtectEvidence.builder()
-                .treatment(actionable.treatment())
-                .onLabel(isOnLabel(actionable.applicableCancerType(), actionable.blacklistCancerTypes(), actionable.treatment()))
+                .treatment(actionable.treatment().treament())
+                .onLabel(isOnLabel(actionable.applicableCancerType(), actionable.blacklistCancerTypes(), actionable.treatment().treament()))
                 .level(actionable.level())
                 .direction(actionable.direction())
                 .sources(Sets.newHashSet(resolveProtectSource(actionable)));
@@ -108,6 +109,8 @@ public class PersonalizedEvidenceFactory {
             return ProtectEvidenceType.FUSION_PAIR;
         } else if (actionable instanceof ActionableCharacteristic) {
             return fromActionableCharacteristic((ActionableCharacteristic) actionable);
+        } else if (actionable instanceof ActionableHLA) {
+            return ProtectEvidenceType.HLA;
         } else {
             throw new IllegalStateException("Unexpected actionable event detected in variant evidence: " + actionable);
         }
@@ -131,8 +134,12 @@ public class PersonalizedEvidenceFactory {
         switch (gene.event()) {
             case AMPLIFICATION:
                 return ProtectEvidenceType.AMPLIFICATION;
+            case OVER_EXPRESSION:
+                return ProtectEvidenceType.OVER_EXPRESSION;
             case DELETION:
                 return ProtectEvidenceType.DELETION;
+            case UNDER_EXPRESSION:
+                return ProtectEvidenceType.UNDER_EXPRESSION;
             case ACTIVATION:
                 return ProtectEvidenceType.ACTIVATION;
             case INACTIVATION:

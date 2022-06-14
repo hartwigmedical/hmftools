@@ -46,6 +46,8 @@ public interface ProtectConfig {
     String LINX_DRIVER_CATALOG_TSV = "linx_driver_catalog_tsv";
     String ANNOTATED_VIRUS_TSV = "annotated_virus_tsv";
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
+    String LILAC_RESULT_CSV = "lilac_result_csv";
+    String LILAC_QC_CSV = "lilac_qc_csv";
 
     // Some additional optional params and flags
     String LOG_DEBUG = "log_debug";
@@ -75,6 +77,8 @@ public interface ProtectConfig {
         options.addOption(LINX_DRIVER_CATALOG_TSV, true, "Path towards the LINX driver catalog TSV.");
         options.addOption(ANNOTATED_VIRUS_TSV, true, "Path towards the annotated virus TSV.");
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
+        options.addOption(LILAC_RESULT_CSV, true, "Path towards the LILAC result CSV.");
+        options.addOption(LILAC_QC_CSV, true, "Path towards the LILAC QC CSV.");
 
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
 
@@ -139,6 +143,12 @@ public interface ProtectConfig {
     String chordPredictionTxt();
 
     @NotNull
+    String lilacResultCsv();
+
+    @NotNull
+    String lilacQcCsv();
+
+    @NotNull
     static ProtectConfig createConfig(@NotNull CommandLine cmd) throws ParseException, IOException {
         if (cmd.hasOption(LOG_DEBUG)) {
             Configurator.setRootLevel(Level.DEBUG);
@@ -164,6 +174,8 @@ public interface ProtectConfig {
                 .linxDriverCatalogTsv(nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV))
                 .annotatedVirusTsv(nonOptionalFile(cmd, ANNOTATED_VIRUS_TSV))
                 .chordPredictionTxt(nonOptionalFile(cmd, CHORD_PREDICTION_TXT))
+                .lilacResultCsv(nonOptionalFile(cmd, LILAC_RESULT_CSV))
+                .lilacQcCsv(nonOptionalFile(cmd, LILAC_QC_CSV))
                 .build();
     }
 

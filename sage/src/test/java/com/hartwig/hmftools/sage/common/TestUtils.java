@@ -42,7 +42,7 @@ public class TestUtils
         ReadContext readContext = new ReadContext(position, "", 0, "", indexBases, false);
 
         ReadContextCounter readCounter =  new ReadContextCounter(0, variant, readContext, VariantTier.LOW_CONFIDENCE,
-                100, 1, false);
+                100, 1);
 
         List<ReadContextCounter> tumorCounters = Lists.newArrayList(readCounter);
 
@@ -107,7 +107,7 @@ public class TestUtils
         ReadContext readContext = new ReadContext(position, "", 0, "", indexBases, false);
 
         return new ReadContextCounter(0, variant, readContext, VariantTier.LOW_CONFIDENCE,
-                100, 1, false);
+                100, 1);
     }
 
     public static SAMRecord createSamRecord(

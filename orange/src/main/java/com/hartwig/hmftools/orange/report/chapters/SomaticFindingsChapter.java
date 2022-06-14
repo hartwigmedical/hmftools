@@ -87,7 +87,8 @@ public class SomaticFindingsChapter implements ReportChapter {
 
         List<ReportableVariant> nonDriverVariants = SomaticVariantSelector.selectNonDrivers(report.purple().unreportedSomaticVariants(),
                 report.purple().reportableSomaticVariants(),
-                report.protect());
+                report.protect(),
+                report.driverGenes());
         String titleNonDrivers = "Other potentially relevant variants (" + nonDriverVariants.size() + ")";
         document.add(SomaticVariantTable.build(titleNonDrivers, contentWidth(), max10(nonDriverVariants)));
     }
@@ -149,9 +150,10 @@ public class SomaticFindingsChapter implements ReportChapter {
     }
 
     private void addLossOfHeterozygosity(@NotNull Document document) {
-        List<GeneCopyNumber> reportableLOHGenes = LossOfHeterozygositySelector.selectHRDOrMSIGenes(report.purple().lohGenes(),
-                report.purple().microsatelliteStatus(),
-                report.chord().hrStatus());
+        List<GeneCopyNumber> reportableLOHGenes =
+                LossOfHeterozygositySelector.selectHRDOrMSIGenesWithLOH(report.purple().allGeneCopyNumbers(),
+                        report.purple().microsatelliteStatus(),
+                        report.chord().hrStatus());
         String title = "Potentially interesting LOH events in case of MSI or HRD (" + reportableLOHGenes.size() + ")";
         document.add(LossOfHeterozygosityTable.build(title, contentWidth(), reportableLOHGenes));
     }

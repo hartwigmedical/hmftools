@@ -7,10 +7,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordStatus;
+import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
+import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFile;
+import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFunctions;
 import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
@@ -34,7 +38,9 @@ import com.hartwig.hmftools.rose.actionability.ImmutableActionabilityKey;
 import com.hartwig.hmftools.rose.actionability.TypeAlteration;
 
 import org.apache.logging.log4j.util.Strings;
+import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ConclusionAlgo {
 
@@ -67,6 +73,7 @@ public class ConclusionAlgo {
         List<ReportableHomozygousDisruption> homozygousDisruptions = roseData.linx().homozygousDisruptions();
         List<AnnotatedVirus> reportableViruses = roseData.virusInterpreter().reportableViruses();
 
+        genertateTumorLocationConclusion(conclusion, roseData.patientPrimaryTumors(), roseData.patientId());
         genertatePurityConclusion(conclusion, roseData.purple().purity(), roseData.purple().hasReliablePurity(), actionabilityMap);
         generateCUPPAConclusion(conclusion, roseData.molecularTissueOrigin(), actionabilityMap);
         generateVariantConclusion(conclusion, reportableVariants, actionabilityMap, driverGenesMap, oncogenic, actionable, HRD);
@@ -129,6 +136,40 @@ public class ConclusionAlgo {
         return driverGeneMap;
     }
 
+    public static void genertateTumorLocationConclusion(@NotNull Map<Integer, String> conclusion,
+            @NotNull List<PatientPrimaryTumor> patientPrimaryTumors, @NotNull String patientId) {
+        PatientPrimaryTumor patientPrimaryTumor = PatientPrimaryTumorFunctions.findPrimaryTumorForPatient(patientPrimaryTumors, patientId);
+
+        conclusion.put(conclusion.size(), resolveTumorLocation(patientPrimaryTumor) + " sample showing: ");
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static String resolveTumorLocation(@Nullable PatientPrimaryTumor patientPrimaryTumor) {
+        String mergedLocation = Strings.EMPTY;
+        String mergedType = Strings.EMPTY;
+
+        if (patientPrimaryTumor != null) {
+            if (!patientPrimaryTumor.subLocation().isEmpty()) {
+                mergedLocation = patientPrimaryTumor.subLocation();
+            } else {
+                mergedLocation = patientPrimaryTumor.location();
+            }
+
+            if (!patientPrimaryTumor.subType().isEmpty()) {
+                mergedType = patientPrimaryTumor.subType();
+            } else {
+                mergedType = patientPrimaryTumor.type();
+            }
+        }
+
+        if (!mergedType.isEmpty()) {
+            return mergedLocation + " (" + mergedType + ")";
+        } else {
+            return mergedLocation;
+        }
+    }
+
     public static void generateCUPPAConclusion(@NotNull Map<Integer, String> conclusion, MolecularTissueOrigin molecularTissueOrigin,
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
 
@@ -145,7 +186,7 @@ public class ConclusionAlgo {
 
             ActionabilityEntry entry = actionabilityMap.get(keyCuppa);
             if (entry != null && entry.condition() == Condition.OTHER) {
-                conclusion.put(conclusion.size(), "- " + entry.conclusion() + " " + molecularTissueOrigin.conclusion() + ".");
+                conclusion.put(conclusion.size(), "- " + entry.conclusion() + " " + molecularTissueOrigin.conclusion());
             }
         }
     }
@@ -187,22 +228,20 @@ public class ConclusionAlgo {
                         ActionabilityEntry entryBiallelic = actionabilityMap.get(keyBiallelic);
                         if (entryBiallelic.condition() == Condition.OTHER) {
                             conclusion.put(conclusion.size(),
-                                    "- " + reportableVariant.gene() + " (" + variant + ") "
-                                            + entry.conclusion() + " " + entryBiallelic.conclusion());
+                                    "- " + reportableVariant.gene() + " (" + variant + ") " + entry.conclusion() + " "
+                                            + entryBiallelic.conclusion());
                         }
                     } else {
-                        conclusion.put(conclusion.size(),
-                                "- " + reportableVariant.gene() + " (" + variant + ") "
-                                        + entry.conclusion());
+                        conclusion.put(conclusion.size(), "- " + reportableVariant.gene() + " (" + variant + ") " + entry.conclusion());
                     }
                 }
             }
         }
     }
 
-    public static void generateCNVConclusion(@NotNull Map<Integer, String> conclusion,
-            @NotNull List<GainLoss> reportableGainLosses, @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap,
-            @NotNull Set<String> oncogenic, @NotNull Set<String> actionable) {
+    public static void generateCNVConclusion(@NotNull Map<Integer, String> conclusion, @NotNull List<GainLoss> reportableGainLosses,
+            @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap, @NotNull Set<String> oncogenic,
+            @NotNull Set<String> actionable) {
         for (GainLoss gainLoss : reportableGainLosses) {
             oncogenic.add("CNV");
 
@@ -328,11 +367,11 @@ public class ConclusionAlgo {
                     ActionabilityEntry entryNoHRd = actionabilityMap.get(keyNoHRD);
                     if (entryNoHRd != null && entry.condition() == Condition.OTHER) {
                         conclusion.put(conclusion.size(),
-                                "- " + "HRD(" + chordAnalysis.hrdValue() + ") " + entry.conclusion() + entryNoHRd.conclusion());
+                                "- " + "HRD (" + chordAnalysis.hrdValue() + ") " + entry.conclusion() + entryNoHRd.conclusion());
                     }
                 }
                 conclusion.put(conclusion.size(),
-                        "- " + "HRD(" + DOUBLE_DECIMAL_FORMAT.format(chordAnalysis.hrdValue()) + ") " + entry.conclusion());
+                        "- " + "HRD (" + DOUBLE_DECIMAL_FORMAT.format(chordAnalysis.hrdValue()) + ") " + entry.conclusion());
 
                 actionable.add("HRD");
                 oncogenic.add("HRD");
@@ -348,7 +387,7 @@ public class ConclusionAlgo {
             ActionabilityEntry entry = actionabilityMap.get(keyMSI);
             if (entry != null && entry.condition() == Condition.ALWAYS) {
                 conclusion.put(conclusion.size(),
-                        "- " + "MSI(" + DOUBLE_DECIMAL_FORMAT.format(microsatelliteMb) + ")" + entry.conclusion());
+                        "- " + "MSI (" + DOUBLE_DECIMAL_FORMAT.format(microsatelliteMb) + ") " + entry.conclusion());
                 actionable.add("MSI");
                 oncogenic.add("MSI");
             }
@@ -362,7 +401,7 @@ public class ConclusionAlgo {
             ActionabilityKey keyTML = ImmutableActionabilityKey.builder().match("High-TML").type(TypeAlteration.POSITIVE).build();
             ActionabilityEntry entry = actionabilityMap.get(keyTML);
             if (entry != null && entry.condition() == Condition.ALWAYS) {
-                conclusion.put(conclusion.size(), "- " + "TML(" + tumorMutationalLoad + ") " + entry.conclusion());
+                conclusion.put(conclusion.size(), "- " + "TML (" + tumorMutationalLoad + ") " + entry.conclusion());
                 actionable.add("TML");
                 oncogenic.add("TML");
             }
@@ -376,7 +415,7 @@ public class ConclusionAlgo {
             ActionabilityKey keyTMB = ImmutableActionabilityKey.builder().match("High-TMB").type(TypeAlteration.POSITIVE).build();
             ActionabilityEntry entry = actionabilityMap.get(keyTMB);
             if (entry != null && entry.condition() == Condition.ALWAYS) {
-                conclusion.put(conclusion.size(), "- " + "TMB( " + tumorMutationalBurden + ")" + entry.conclusion());
+                conclusion.put(conclusion.size(), "- " + "TMB (" + tumorMutationalBurden + ") " + entry.conclusion());
                 actionable.add("TMB");
                 oncogenic.add("TMB");
             }

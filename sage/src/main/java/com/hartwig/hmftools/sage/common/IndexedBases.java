@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.common;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.sage.SageConstants.CORE_LOW_QUAL_MISMATCH_BASE_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.CORE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.FULL;
@@ -129,22 +130,24 @@ public class IndexedBases
 
     public ReadContextMatch matchAtPosition(final IndexedBases other)
     {
-        return getMatchType(false, other, other.length(),null);
+        return getMatchType(other, other.length(),null, false, 0);
     }
 
+    /*
     public ReadContextMatch matchAtPosition(final IndexedBases other, final byte[] otherBaseQuals)
     {
-        return getMatchType(false, other, other.length(),otherBaseQuals);
+        return getMatchType(other, other.length(), otherBaseQuals, false, 0);
     }
+    */
 
     public ReadContextMatch matchAtPosition(
-            final IndexedBases other, boolean wildcardAllowedInCore, final byte[] otherBaseQuals)
+            final IndexedBases other, final byte[] otherBaseQuals, boolean wildcardsInCore, int maxCoreMismatches)
     {
-        return getMatchType(wildcardAllowedInCore, other, length(), otherBaseQuals);
+        return getMatchType(other, length(), otherBaseQuals, wildcardsInCore, maxCoreMismatches);
     }
 
     private ReadContextMatch getMatchType(
-            boolean wildcardAllowedInCore, final IndexedBases other, int otherLength, final byte[] otherBaseQuals)
+            final IndexedBases other, int otherLength, final byte[] otherBaseQuals, boolean wildcardsInCore, int maxCoreMismatches)
     {
         int otherReadIndex = other.Index;
 
@@ -153,7 +156,7 @@ public class IndexedBases
 
         final byte[] otherBases = other.Bases;
 
-        boolean centreMatch = coreMatch(wildcardAllowedInCore, otherReadIndex, otherBases);
+        boolean centreMatch = coreMatch(otherReadIndex, otherBases, otherBaseQuals, wildcardsInCore, maxCoreMismatches);
         if(!centreMatch)
             return NONE;
 
@@ -174,7 +177,8 @@ public class IndexedBases
         return length() == otherLength && leftFlankingBases == leftFlankLength && rightFlankingBases == rightFlankLength ? FULL : PARTIAL;
     }
 
-    protected boolean coreMatch(boolean wildcardAllowed, int otherRefIndex, final byte[] otherBases)
+    protected boolean coreMatch(
+            int otherRefIndex, final byte[] otherBases, final byte[] otherBaseQuals, boolean wildcardAllowed, int maxCoreMismatches)
     {
         int otherLeftCentreIndex = otherLeftCoreIndex(otherRefIndex);
 
@@ -186,14 +190,52 @@ public class IndexedBases
         if(otherRightCentreIndex >= otherBases.length)
             return false;
 
+        int permittedLowQualMismatches;
+
+        if(maxCoreMismatches > 0)
+        {
+            permittedLowQualMismatches = 1;
+            --maxCoreMismatches;
+        }
+        else
+        {
+            permittedLowQualMismatches = 0;
+        }
+
         for(int i = 0; i < coreLength(); i++)
         {
-            int readIndex = LeftCoreIndex + i;
-            byte ourByte = Bases[readIndex];
-            byte otherByte = otherBases[otherLeftCentreIndex + i];
+            if(i > 0 && (i % CORE_LOW_QUAL_MISMATCH_BASE_LENGTH) == 0)
+            {
+                // allow at most 1 mis-match per X bases, so reset it if required
+                if(maxCoreMismatches > 0)
+                {
+                    permittedLowQualMismatches = 1;
+                    --maxCoreMismatches;
+                }
+                else
+                {
+                    permittedLowQualMismatches = 0;
+                }
+            }
 
-            if(!bytesMatch(wildcardAllowed, ourByte, otherByte))
-                return false;
+            int readIndex = LeftCoreIndex + i;
+            int otherByteIndex = otherLeftCentreIndex + i;
+            byte otherByte = otherBases[otherByteIndex];
+
+            if(Bases[readIndex] == otherByte)
+                continue;
+
+            if(wildcardAllowed && otherByte == MATCH_WILDCARD)
+                continue;
+
+            if(permittedLowQualMismatches > 0 && isLowBaseQual(otherBaseQuals, otherByteIndex))
+            {
+                --permittedLowQualMismatches;
+                continue;
+            }
+
+            return false;
+
         }
 
         return true;
@@ -208,11 +250,6 @@ public class IndexedBases
             return false;
 
         return baseQualities[bqIndex] < MATCHING_BASE_QUALITY;
-    }
-
-    private static boolean bytesMatch(final boolean wildcardAllowed, byte ours, byte other)
-    {
-        return (wildcardAllowed && other == MATCH_WILDCARD) || ours == other;
     }
 
     protected int rightFlankMatchingBases(int otherRefIndex, final byte[] otherBases)

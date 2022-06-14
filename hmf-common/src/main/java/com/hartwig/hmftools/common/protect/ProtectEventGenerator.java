@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.protect;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.protect.variant.OtherEffectsInterpreter;
 import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
@@ -42,8 +43,9 @@ public final class ProtectEventGenerator {
     }
 
     @NotNull
-    private static String toVariantEvent(@NotNull String protein, @NotNull String coding, @NotNull String effect) {
-        if (!protein.isEmpty()) {
+    @VisibleForTesting
+     static String toVariantEvent(@NotNull String protein, @NotNull String coding, @NotNull String effect) {
+        if (!protein.isEmpty() && !protein.equals("p.?")) {
             return protein;
         }
 

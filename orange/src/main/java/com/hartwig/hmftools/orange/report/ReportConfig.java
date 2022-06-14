@@ -10,6 +10,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface ReportConfig {
 
+    boolean limitJsonOutput();
+
     boolean reportGermline();
 
     @Nullable

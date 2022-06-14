@@ -13,6 +13,7 @@ import com.hartwig.hmftools.iclusion.datamodel.IclusionTumorLocation;
 import com.hartwig.hmftools.serve.cancertype.CancerType;
 import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
+import com.hartwig.hmftools.serve.treatment.ImmutableTreatment;
 
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
@@ -70,7 +71,7 @@ public class ActionableTrialFactory {
                 .source(Knowledgebase.ICLUSION)
                 .sourceEvent(sourceEvent)
                 .sourceUrls(Sets.newHashSet("https://trial-eye.com/hmf/" + trial.id()))
-                .treatment(trial.acronym())
+                .treatment(ImmutableTreatment.builder().treament(trial.acronym()).drugClasses(Sets.newHashSet("study")).build())
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .evidenceUrls(Sets.newHashSet());

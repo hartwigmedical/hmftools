@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.evidence;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.sage.SageConstants.CORE_LOW_QUAL_MISMATCH_BASE_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_EVIDENCE_MAP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
@@ -31,7 +32,6 @@ import htsjdk.samtools.SAMRecord;
 public class ReadContextCounter implements VariantHotspot
 {
     public final VariantTier Tier;
-    public final boolean Realign;
     public final int MaxCoverage;
 
     private final int mId;
@@ -40,7 +40,6 @@ public class ReadContextCounter implements VariantHotspot
     private final ReadContext mReadContext;
     private final int mMinNumberOfEvents;
     private final boolean mIsMnv;
-    private final boolean mIsIndel;
 
     private final int[] mQualities;
     private final int[] mCounts;
@@ -77,19 +76,17 @@ public class ReadContextCounter implements VariantHotspot
 
     public ReadContextCounter(
             final int id, final VariantHotspot variant, final ReadContext readContext, final VariantTier tier,
-            final int maxCoverage, final int minNumberOfEvents, boolean realign)
+            final int maxCoverage, final int minNumberOfEvents)
     {
         mId = id;
 
         Tier = tier;
-        Realign = realign;
         MaxCoverage = maxCoverage;
         mMinNumberOfEvents = minNumberOfEvents;
 
         mReadContext = readContext;
         mVariant = variant;
         mIsMnv = variant.isMNV();
-        mIsIndel = variant.isIndel();
 
         mQualities = new int[RC_MAX];
         mCounts = new int[RC_MAX];
@@ -266,12 +263,15 @@ public class ReadContextCounter implements VariantHotspot
         {
             boolean wildcardMatchInCore = mVariant.isSNV() && mReadContext.microhomology().isEmpty();
 
+            int maxCoreMismatches = mVariant.isIndel() && mVariant.alt().length() >= CORE_LOW_QUAL_MISMATCH_BASE_LENGTH ?
+                    mVariant.alt().length() / CORE_LOW_QUAL_MISMATCH_BASE_LENGTH : 0;
+
             IndexedBases readBases = record.getCigar().containsOperator(CigarOperator.N) ?
                     ExpandedBasesFactory.expand(position(), readIndex, record) :
                     new IndexedBases(position(), readIndex, record.getReadBases());
 
             final ReadContextMatch match = mReadContext.indexedBases().matchAtPosition(
-                    readBases, wildcardMatchInCore, record.getBaseQualities());
+                    readBases, record.getBaseQualities(), wildcardMatchInCore, maxCoreMismatches);
 
             if(!match.equals(ReadContextMatch.NONE))
             {
@@ -302,7 +302,7 @@ public class ReadContextCounter implements VariantHotspot
             }
         }
 
-        final RealignedContext realignment = Realign ? realignmentContext(readIndex, record) : null;
+        final RealignedContext realignment = realignmentContext(readIndex, record);
         RealignedType realignedType = realignment != null ? realignment.Type : RealignedType.NONE;
 
         if(realignedType == RealignedType.EXACT)
@@ -337,7 +337,7 @@ public class ReadContextCounter implements VariantHotspot
         }
 
         // Jitter Penalty
-        switch(realignment.Type)
+        switch(realignedType)
         {
             case LENGTHENED:
                 mJitterPenalty += jitterPenalty(qualityConfig, realignment.RepeatCount);

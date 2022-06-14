@@ -19,7 +19,8 @@ public class CopyNumberExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(CopyNumberExtractor.class);
 
-    private static final Set<EventType> COPY_NUMBER_EVENTS = Sets.newHashSet(EventType.AMPLIFICATION, EventType.DELETION);
+    private static final Set<EventType> COPY_NUMBER_EVENTS =
+            Sets.newHashSet(EventType.AMPLIFICATION, EventType.OVER_EXPRESSION, EventType.DELETION, EventType.UNDER_EXPRESSION);
 
     @NotNull
     private final GeneChecker geneChecker;
@@ -40,8 +41,9 @@ public class CopyNumberExtractor {
             DriverCategory driverCategory = findByGene(driverGenes, gene);
 
             if (driverInconsistencyMode.isActive()) {
-                if ((driverCategory == DriverCategory.TSG && type == EventType.AMPLIFICATION) || (driverCategory == DriverCategory.ONCO
-                        && type == EventType.DELETION) || driverCategory == null) {
+                if ((driverCategory == DriverCategory.TSG && type == EventType.AMPLIFICATION) || (driverCategory == DriverCategory.TSG
+                        && type == EventType.OVER_EXPRESSION) || (driverCategory == DriverCategory.ONCO && type == EventType.DELETION) || (
+                        driverCategory == DriverCategory.ONCO && type == EventType.UNDER_EXPRESSION) || driverCategory == null) {
                     if (driverInconsistencyMode == DriverInconsistencyMode.WARN_ONLY) {
                         LOGGER.warn("CopyNumber event mismatch for {} in driver category {} vs event type {}", gene, driverCategory, type);
                     } else if (driverInconsistencyMode == DriverInconsistencyMode.FILTER) {
@@ -76,8 +78,12 @@ public class CopyNumberExtractor {
         switch (eventType) {
             case AMPLIFICATION:
                 return CopyNumberType.AMPLIFICATION;
+            case OVER_EXPRESSION:
+                return CopyNumberType.OVER_EXPRESSION;
             case DELETION:
                 return CopyNumberType.DELETION;
+            case UNDER_EXPRESSION:
+                return CopyNumberType.UNDER_EXPRESSION;
             default:
                 throw new IllegalStateException("Could not convert event type to copy number type: " + eventType);
         }

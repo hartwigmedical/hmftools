@@ -146,6 +146,7 @@ public class OrangeAlgo {
                 .configuredPrimaryTumor(loadConfiguredPrimaryTumor(config))
                 .refGenomeVersion(config.refGenomeVersion())
                 .platinumVersion(determinePlatinumVersion(config))
+                .driverGenes(driverGenes)
                 .refSample(loadSampleData(config, false))
                 .tumorSample(loadSampleData(config, true))
                 .germlineMVLHPerGene(loadGermlineMVLHPerGene(config))
@@ -249,16 +250,16 @@ public class OrangeAlgo {
                 config.purpleGermlineDriverCatalogTsv(),
                 config.purpleGermlineVariantVcf(),
                 config.purpleGeneCopyNumberTsv(),
-                null,
+                config.purpleSomaticCopyNumberTsv(),
                 config.purpleGermlineDeletionTsv(),
-                null);
+                config.refGenomeVersion());
     }
 
     @NotNull
     private static LinxData loadLinxData(@NotNull OrangeConfig config) throws IOException {
-        return LinxDataLoader.load(config.linxFusionTsv(),
+        return LinxDataLoader.load(config.linxStructuralVariantTsv(),
+                config.linxFusionTsv(),
                 config.linxBreakendTsv(),
-                null,
                 config.linxDriverCatalogTsv(),
                 config.linxDriverTsv(),
                 config.linxGermlineDisruptionTsv());

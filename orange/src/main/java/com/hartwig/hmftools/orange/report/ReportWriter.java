@@ -17,6 +17,7 @@ import com.hartwig.hmftools.orange.report.chapters.QualityControlChapter;
 import com.hartwig.hmftools.orange.report.chapters.RNAFindingsChapter;
 import com.hartwig.hmftools.orange.report.chapters.ReportChapter;
 import com.hartwig.hmftools.orange.report.chapters.SomaticFindingsChapter;
+import com.hartwig.hmftools.orange.util.OrangeReportModifier;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
@@ -65,7 +66,9 @@ public class ReportWriter {
         if (writeToDisk && outputDir != null) {
             String outputFilePath = outputDir + File.separator + report.sampleId() + ".orange.json";
             LOGGER.info("Writing JSON report to {} ", outputFilePath);
-            String json = new GsonBuilder().serializeNulls().serializeSpecialFloatingPointValues().create().toJson(report);
+
+            OrangeReport reportToWrite = reportConfig.limitJsonOutput() ? OrangeReportModifier.limitAllListsToMaxOne(report) : report;
+            String json = new GsonBuilder().serializeNulls().serializeSpecialFloatingPointValues().create().toJson(reportToWrite);
             BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilePath));
 
             writer.write(json);

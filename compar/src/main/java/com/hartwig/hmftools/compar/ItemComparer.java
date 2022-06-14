@@ -14,6 +14,8 @@ public interface ItemComparer
 
     List<ComparableItem> loadFromFile(final String sampleId, final FileSources fileSources);
 
+    default boolean hasDetailedOutput() { return false; }
+
     default String outputHeader()
     {
         return Mismatch.header();
@@ -23,5 +25,7 @@ public interface ItemComparer
     {
         return mismatch.toCsv();
     }
+
+    default void registerThresholds(final DiffThresholds thresholds) {}
 
 }

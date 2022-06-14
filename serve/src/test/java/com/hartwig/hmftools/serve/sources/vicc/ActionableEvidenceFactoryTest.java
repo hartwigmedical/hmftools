@@ -47,7 +47,7 @@ public class ActionableEvidenceFactoryTest {
         assertEquals(2, evidences.size());
 
         ActionableEvidence eventA = findByCancerType(evidences, cancerTypeA);
-        assertEquals("Treatment", eventA.treatment());
+        assertEquals("Treatment", eventA.treatment().treament());
         assertEquals(cancerTypeA, eventA.applicableCancerType().name());
         assertEquals("1", eventA.applicableCancerType().doid());
         assertTrue(eventA.blacklistCancerTypes().isEmpty());
@@ -56,7 +56,7 @@ public class ActionableEvidenceFactoryTest {
         assertEquals(Sets.newHashSet("url"), eventA.evidenceUrls());
 
         ActionableEvidence eventB = findByCancerType(evidences, cancerTypeB);
-        assertEquals("Treatment", eventB.treatment());
+        assertEquals("Treatment", eventB.treatment().treament());
         assertEquals(cancerTypeB, eventB.applicableCancerType().name());
         assertEquals("162", eventB.applicableCancerType().doid());
         assertEquals(EvidenceLevel.A, eventB.level());

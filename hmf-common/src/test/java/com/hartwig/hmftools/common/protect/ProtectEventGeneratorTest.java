@@ -19,6 +19,15 @@ import org.junit.Test;
 public class ProtectEventGeneratorTest {
 
     @Test
+    public void canTestToVariantEvent() {
+        assertEquals("p.Gly12Cys", ProtectEventGenerator.toVariantEvent("p.Gly12Cys", "c.123A>C", "missense_variant"));
+        assertEquals("c.123A>C", ProtectEventGenerator.toVariantEvent("p.?", "c.123A>C", "missense_variant"));
+        assertEquals("c.123A>C", ProtectEventGenerator.toVariantEvent("", "c.123A>C", "missense_variant"));
+        assertEquals("upstream", ProtectEventGenerator.toVariantEvent("", "", "upstream_gene_variant"));
+        assertEquals("missense_variant", ProtectEventGenerator.toVariantEvent("", "", "missense_variant"));
+    }
+
+    @Test
     public void canGenerateEventForReportableVariant() {
         ReportableVariant base = ReportableVariantTestFactory.builder().isCanonical(true).canonicalHgvsCodingImpact("coding").build();
         assertEquals("coding", ProtectEventGenerator.variantEvent(base));

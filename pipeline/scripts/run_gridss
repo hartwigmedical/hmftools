@@ -1,0 +1,70 @@
+#!/bin/bash
+
+tools_dir=$1 && shift
+tumor_id=$1 && shift
+tumor_bam=$1 && shift
+reference_id=$1 && shift
+reference_bam=$1 && shift
+output_dir=$1 && shift
+ref_genome=$1 && shift
+blacklist_bed=$1 && shift
+gridss_config=$1 && shift
+threads=$1 && shift
+max_memory=$1 && shift
+
+if [[ ! -d "${output_dir}" ]]; then
+  mkdir ${output_dir}
+fi
+
+output_vcf=${output_dir}/${tumor_id}.gridss.unfiltered.vcf.gz
+
+if [[ -f "${output_vcf}" ]]; then
+  echo "Skipping GRIDSS for ${tumor_id}, since VCF ${output_vcf} exists"
+  exit
+fi
+
+echo "Running GRIDSS for ${tumor_id}, output dir ${output_dir}"
+
+gridss_app=${tools_dir}/gridss/gridss
+gridss_jar=${tools_dir}/gridss/gridss.jar
+
+export PATH=$PATH:${tools_dir}/samtools:${tools_dir}/bwa
+
+assembly_bam=${output_dir}/${tumor_id}.assembly.bam
+
+arguments="--output ${output_vcf} \
+  --assembly ${assembly_bam} \
+  --workingdir ${output_dir}/gridss_working \
+  --reference ${ref_genome} \
+  --jar ${gridss_jar} \
+  --blacklist ${blacklist_bed} \
+  --configuration ${gridss_config} \
+  --labels "${reference_id},${tumor_id}" \
+  --jvmheap ${max_memory}G \
+  --threads ${threads}  \
+  --externalaligner \
+  ${reference_bam} ${tumor_bam}"
+
+# echo "Gridss arguments: ${arguments}"
+
+${gridss_app} ${arguments}
+
+repeat_masker=${tools_dir}/repeatmasker
+
+if [[ -d "${repeat_masker}" ]]; then
+  echo "Running RepeatMasker"
+
+  export PATH=$PATH:${tools_dir}/repeatmasker
+
+  rm_vcf=${output_dir}/${tumor_id}.gridss.repeatmasker.vcf.gz
+
+  ${tools_dir}/gridss_annotate_vcf_repeatmasker --output ${rm_vcf} \
+    --jar gridss_jar \
+    -w ${output_dir} \
+    --rm RepeatMasker \
+    ${output_vcf}
+
+    mv ${rm_vcf} ${output_vcf}
+
+fi
+

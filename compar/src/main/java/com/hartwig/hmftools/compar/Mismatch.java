@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.compar;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.compar.CommonUtils.DATA_DELIM;
-import static com.hartwig.hmftools.compar.CommonUtils.diffsStr;
+import static com.hartwig.hmftools.compar.CommonUtils.ITEM_DELIM;
+import static com.hartwig.hmftools.compar.DiffFunctions.diffsStr;
 
 import java.util.List;
 import java.util.StringJoiner;
@@ -29,7 +32,7 @@ public class Mismatch
 
     public static String header()
     {
-        return commonHeader() + ",RefValues,NewValues,Differences";
+        return commonHeader() + ",Differences,AllValues";
     }
 
     public static String commonCsv(final Mismatch mismatch)
@@ -57,18 +60,17 @@ public class Mismatch
 
         sj.add(commonCsv(this));
 
-        if(RefItem != null)
-            sj.add(diffsStr(RefItem.displayValues()));
-        else
-            sj.add("");
-
-        if(NewItem != null)
-            sj.add(diffsStr(NewItem.displayValues()));
-        else
-            sj.add("");
-
         sj.add(diffsStr(DiffValues));
+
+        ComparableItem item = RefItem != null ? RefItem : NewItem;
+
+        StringJoiner displaySj = new StringJoiner(ITEM_DELIM);
+        item.displayValues().forEach(x -> displaySj.add(x));
+        sj.add(displaySj.toString());
 
         return sj.toString();
     }
+
+    public String toString() { return format("type(%s) item(%) diffs(%d)",
+            MismatchType, RefItem != null ? RefItem.key() : NewItem.key(), DiffValues.size()); }
 }

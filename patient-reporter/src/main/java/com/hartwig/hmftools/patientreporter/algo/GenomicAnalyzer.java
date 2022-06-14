@@ -62,9 +62,9 @@ public class GenomicAnalyzer {
                 null,
                 config.refGenomeVersion());
 
-        LinxData linxData = LinxDataLoader.load(config.linxFusionTsv(),
+        LinxData linxData = LinxDataLoader.load(config.linxSvsTsv(),
+                config.linxFusionTsv(),
                 config.linxBreakendTsv(),
-                config.linxSvsTsv(),
                 config.linxDriverCatalogTsv(),
                 null,
                 null);
@@ -103,7 +103,7 @@ public class GenomicAnalyzer {
                 .chordHrdValue(chordAnalysis.hrdValue())
                 .chordHrdStatus(chordAnalysis.hrStatus())
                 .gainsAndLosses(purpleData.reportableSomaticGainsLosses())
-                .cnPerChromosome(purpleData.cnPerChromosome())
+                .cnPerChromosome(purpleData.copyNumberPerChromosome())
                 .geneFusions(linxData.reportableFusions())
                 .geneDisruptions(linxData.geneDisruptions())
                 .homozygousDisruptions(linxData.homozygousDisruptions())

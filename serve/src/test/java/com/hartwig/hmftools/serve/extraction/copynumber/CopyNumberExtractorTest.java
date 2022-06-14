@@ -5,7 +5,7 @@ import static org.junit.Assert.assertNull;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.classification.EventType;
-import com.hartwig.hmftools.serve.DriverGeneTestFactory;
+import com.hartwig.hmftools.serve.DriverGenesTestFactory;
 import com.hartwig.hmftools.serve.extraction.util.DriverInconsistencyMode;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 
@@ -23,7 +23,7 @@ public class CopyNumberExtractorTest {
         assertEquals(CopyNumberType.AMPLIFICATION, copyNumberExtractorWarn.extract("AKT1", EventType.AMPLIFICATION).type());
 
         CopyNumberExtractor copyNumberExtractorFilter = createTestExtractor(DriverInconsistencyMode.FILTER);
-        assertEquals(CopyNumberType.AMPLIFICATION, copyNumberExtractorFilter.extract("AKT1", EventType.AMPLIFICATION).type());
+        assertEquals(CopyNumberType.OVER_EXPRESSION, copyNumberExtractorFilter.extract("AKT1", EventType.OVER_EXPRESSION).type());
 
         CopyNumberExtractor copyNumberExtractorFilterDel = createTestExtractor(DriverInconsistencyMode.FILTER);
         assertNull(copyNumberExtractorFilterDel.extract("AKT1", EventType.DELETION));
@@ -59,10 +59,10 @@ public class CopyNumberExtractorTest {
     @Test
     public void canExtractCopyNumbersDel() {
         CopyNumberExtractor copyNumberExtractor = createTestExtractor(DriverInconsistencyMode.IGNORE);
-        KnownCopyNumber del = copyNumberExtractor.extract("PTEN", EventType.DELETION);
+        KnownCopyNumber del = copyNumberExtractor.extract("PTEN", EventType.UNDER_EXPRESSION);
 
         assertEquals("PTEN", del.gene());
-        assertEquals(CopyNumberType.DELETION, del.type());
+        assertEquals(CopyNumberType.UNDER_EXPRESSION, del.type());
     }
 
     @Test
@@ -74,7 +74,7 @@ public class CopyNumberExtractorTest {
     @NotNull
     private static CopyNumberExtractor createTestExtractor(@NotNull DriverInconsistencyMode mode) {
         return new CopyNumberExtractor(new GeneChecker(Sets.newHashSet("PTEN", "AKT1", "KRAS")),
-                DriverGeneTestFactory.createDriverGenes("KRAS", "AKT1"),
+                DriverGenesTestFactory.createDriverGenes("KRAS", "AKT1"),
                 mode);
     }
 }

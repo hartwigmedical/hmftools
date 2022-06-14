@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.compar.somatic;
 
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_GERMLINE_VCF_SUFFIX;
-import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SOMATIC_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.compar.Category.GERMLINE_VARIANT;
-import static com.hartwig.hmftools.compar.CommonUtils.diffsStr;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.DiffFunctions.diffsStr;
 import static com.hartwig.hmftools.compar.Mismatch.commonCsv;
+import static com.hartwig.hmftools.compar.somatic.VariantCommon.FLD_QUAL;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GERMLINEVARIANT;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
@@ -21,9 +21,9 @@ import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.DiffThresholds;
 import com.hartwig.hmftools.compar.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.MatchLevel;
 import com.hartwig.hmftools.compar.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.SomaticVariantDAO;
@@ -54,6 +54,16 @@ public class GermlineVariantComparer implements ItemComparer
     public void processSample(final String sampleId, final List<Mismatch> mismatches)
     {
         CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+    }
+
+    @Override
+    public boolean hasDetailedOutput() { return true; }
+
+    @Override
+    public void registerThresholds(final DiffThresholds thresholds)
+    {
+        // same as somatic
+        thresholds.addFieldThreshold(FLD_QUAL, 20, 0.2);
     }
 
     @Override
@@ -88,22 +98,20 @@ public class GermlineVariantComparer implements ItemComparer
         String vcfFile = !fileSources.GermlineVcf.isEmpty() ?
                 fileSources.GermlineVcf : fileSources.Purple + sampleId + PURPLE_GERMLINE_VCF_SUFFIX;
 
-        boolean reportedOnly = mConfig.Categories.get(GERMLINE_VARIANT) == MatchLevel.REPORTABLE;
-
         try
         {
             final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false);
 
-            for(VariantContext variant : reader.iterator())
+            for(VariantContext variantContext : reader.iterator())
             {
-                if(filter.test(variant))
+                if(filter.test(variantContext))
                 {
-                    final SomaticVariant somaticVariant = variantFactory.createVariant(sampleId, variant).orElse(null);
+                    final SomaticVariant variant = variantFactory.createVariant(sampleId, variantContext).orElse(null);
 
-                    if(reportedOnly && !somaticVariant.reported())
+                    if(variant == null)
                         continue;
 
-                    comparableItems.add(new GermlineVariantData(somaticVariant));
+                    comparableItems.add(new GermlineVariantData(variant));
                 }
             }
 
@@ -120,7 +128,7 @@ public class GermlineVariantComparer implements ItemComparer
     @Override
     public String outputHeader()
     {
-        return "Category,MismatchType,Key,RefQual,OtherQual,RefTier,OtherTier,RefTotalReads,OtherTotalReads,RefAlleleReads,OtherAlleleReads,Differences";
+        return "Category,MismatchType,Key,RefQual,NewQual,RefTier,NewTier,RefTotalReads,NewTotalReads,RefAlleleReads,NewAlleleReads,Differences";
     }
 
     @Override

@@ -58,10 +58,17 @@ public class ComparTask implements Callable
         int totalMismatches = 0;
         for(ItemComparer comparer : mComparators)
         {
-            CMP_LOGGER.debug("sample({}) checking {}", sampleId, comparer.category());
-
             List<Mismatch> mismatches = Lists.newArrayList();
-            comparer.processSample(sampleId, mismatches);
+
+            try
+            {
+                comparer.processSample(sampleId, mismatches);
+            }
+            catch(Exception e)
+            {
+                CMP_LOGGER.error("sample({}) failed processing: {}", sampleId, e.toString());
+                e.printStackTrace();
+            }
 
             mWriter.writeSampleMismatches(sampleId, comparer, mismatches);
             totalMismatches += mismatches.size();

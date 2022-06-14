@@ -4,34 +4,32 @@ import org.apache.logging.log4j.util.Strings;
 
 public class MicrohomologyContext {
 
-    private final byte[] bases;
-    private final int leftAlignedPosition;
-    private final int length;
+    public final byte[] Bases;
+    private final int LeftAlignedPosition;
+    private final int Length;
 
     public MicrohomologyContext(final int leftAlignedPosition, final byte[] bases, final int length) {
-        this.bases = bases;
-        this.leftAlignedPosition = leftAlignedPosition;
-        this.length = length;
+        Bases = bases;
+        LeftAlignedPosition = leftAlignedPosition;
+        Length = length;
     }
 
     public int position() {
-        return leftAlignedPosition;
+        return LeftAlignedPosition;
     }
-
     public byte[] readSequence() {
-        return bases;
+        return Bases;
+    }
+    public int length() {
+        return Length;
     }
 
     @Override
     public String toString() {
-        return length > 0 ? new String(bases, homologyIndex(), length) : Strings.EMPTY;
-    }
-
-    public int length() {
-        return length;
+        return Length > 0 ? new String(Bases, homologyIndex(), Length) : Strings.EMPTY;
     }
 
     public int homologyIndex() {
-        return leftAlignedPosition + 1;
+        return LeftAlignedPosition + 1;
     }
 }

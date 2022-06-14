@@ -34,54 +34,84 @@ reference_bam=${sample_dir}/${reference_id}.bam
 
 echo "Sample output dir: ${sample_dir}"
 
-if [[ ! -d "${sample_dir}" ]]; then
-  mkdir ${sample_dir}
-fi
-
 # set resource files
 #  | [ "${ref_genome_version}" == "37" ]
 if [ "${ref_genome_version}" == "V37" ]; then
   echo "Reference genome version GRCh37"
 
-  ref_genome_dir='37'
+  # Reference genome
+  ref_genome=${resources_dir}/ref_genome/Homo_sapiens.GRCh37.GATK.illumina.fasta
 
   # Common
-  ref_genome=${resources_dir}/ref_genome/${ref_genome_dir}/Homo_sapiens.GRCh37.GATK.illumina.fasta
-  ensembl_dir=${resources_dir}/ensembl_data_cache/${ref_genome_dir}/
-  driver_gene_panel=${resources_dir}/gene_panel/${ref_genome_dir}/DriverGenePanel.37.tsv
+  ensembl_dir=${resources_dir}/common/ensembl_data/
+  driver_gene_panel=${resources_dir}/common/DriverGenePanel.37.tsv
 
-  # Sage
-  sage_somatic_hotspots=${resources_dir}/sage/${ref_genome_dir}/KnownHotspots.somatic.37.vcf.gz
-  sage_germline_hotspots=${resources_dir}/sage/${ref_genome_dir}/KnownHotspots.germline.37.vcf.gz
-  sage_somatic_panel_bed=${resources_dir}/sage/${ref_genome_dir}/ActionableCodingPanel.somatic.37.bed.gz
-  sage_germline_panel_bed=${resources_dir}/sage/${ref_genome_dir}/ActionableCodingPanel.germline.37.bed.gz
-  high_confidence_bed=${resources_dir}/giab_high_conf/${ref_genome_dir}/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed.gz
+  # Point mutations (for Sage, Pave)
+  sage_somatic_hotspots=${resources_dir}/variants/KnownHotspots.somatic.37.vcf.gz
+  sage_germline_hotspots=${resources_dir}/variants/KnownHotspots.germline.37.vcf.gz
+  sage_somatic_panel_bed=${resources_dir}/variants/ActionableCodingPanel.somatic.37.bed.gz
+  sage_germline_panel_bed=${resources_dir}/variants/ActionableCodingPanel.germline.37.bed.gz
+  high_confidence_bed=${resources_dir}/variants/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed.gz
+  somatic_pon_file=${resources_dir}/variants/SageGermlinePon.1000x.37.tsv.gz
+  mappability_bed=${resources_dir}/variants/mappability_150.37.bed.gz
+  clinvar_vcf=${resources_dir}/variants/clinvar.37.vcf.gz
+  germline_blacklist_bed=${resources_dir}/variants/KnownBlacklist.germline.37.bed
+  germline_blacklist_vcf=${resources_dir}/variants/KnownBlacklist.germline.37.vcf.gz
 
-  # Pave
-  somatic_pon_file=${resources_dir}/sage/${ref_genome_dir}/SageGermlinePon.1000x.37.tsv.gz
-  mappability_bed=${resources_dir}/mappability/${ref_genome_dir}/mappability_150.37.bed.gz
-  clinvar_vcf=${resources_dir}/sage/${ref_genome_dir}/clinvar.37.vcf.gz
-  germline_blacklist_bed=${resources_dir}/sage/${ref_genome_dir}/KnownBlacklist.germline.37.bed
-  germline_blacklist_vcf=${resources_dir}/sage/${ref_genome_dir}/KnownBlacklist.germline.37.vcf.gz
+  # SVs (for Gripss, Linx)
+  sv_hotspot_file=${resources_dir}/sv/known_fusions.37.bedpe
+  sv_pon_file=${resources_dir}/sv/gridss_pon_breakpoint.37.bedpe.gz
+  sgl_pon_file=${resources_dir}/sv/gridss_pon_single_breakend.37.bed.gz
+  fragile_site_file=${resources_dir}/sv/fragile_sites_hmf.37.csv
+  line_element_file=${resources_dir}/sv/line_elements.37.csv
+  known_fusion_file=${resources_dir}/sv/known_fusion_data.37.csv
+  sv_blacklist_bed=${resources_dir}/sv/ENCFF001TDO.37.bed.gz
+  gridss_config=${resources_dir}/sv/gridss.properties
 
-  # Gripss
-  sv_hotspot_file=${resources_dir}/fusions/${ref_genome_dir}/known_fusions.37.bedpe
-  sv_pon_file=${resources_dir}/gridss_pon/${ref_genome_dir}/gridss_pon_breakpoint.37.bedpe.gz
-  sgl_pon_file=${resources_dir}/gridss_pon/${ref_genome_dir}/gridss_pon_single_breakend.37.bed.gz
+  # Copy number (for Amber, Cobalt, Purple)
+  amber_loci_vcf=${resources_dir}/copy_number/GermlineHetPon.37.vcf.gz
+  gc_profile=${resources_dir}/copy_number/GC_profile.1000bp.37.cnp
+  germline_del_freq_file=${resources_dir}/copy_number/cohort_germline_del_freq.37.csv
 
-  # Amber
-  amber_loci_vcf=${resources_dir}/amber/${ref_genome_dir}/GermlineHetPon.37.vcf.gz
+  # Immune (for Lilac)
+  lilac_resource_dir=${resources_dir}/immune/
 
-  # Cobalt
-  gc_profile=${resources_dir}/gc_profiles/${ref_genome_dir}/GC_profile.1000bp.37.cnp
+else
+  echo "Reference genome version GRCh38"
 
-  # Purple
-  germline_del_freq_file=${resources_dir}/purple/${ref_genome_dir}/cohort_germline_del_freq.37.csv
+  ref_genome=${resources_dir}/ref_genome/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
+  ensembl_dir=${resources_dir}/common/ensembl_data/
+  driver_gene_panel=${resources_dir}/common/DriverGenePanel.38.tsv
 
-  # Linx
-  fragile_site_file=${resources_dir}/linx/${ref_genome_dir}/fragile_sites_hmf.37.csv
-  line_element_file=${resources_dir}/linx/${ref_genome_dir}/line_elements.37.csv
-  known_fusion_file=${resources_dir}/fusions/${ref_genome_dir}/known_fusion_data.37.csv
+  # Point mutations (for Sage, Pave)
+  sage_somatic_hotspots=${resources_dir}/variants/KnownHotspots.somatic.38.vcf.gz
+  sage_germline_hotspots=${resources_dir}/variants/KnownHotspots.germline.38.vcf.gz
+  sage_somatic_panel_bed=${resources_dir}/variants/ActionableCodingPanel.somatic.38.bed.gz
+  sage_germline_panel_bed=${resources_dir}/variants/ActionableCodingPanel.germline.38.bed.gz
+  high_confidence_bed=${resources_dir}/variants/HG001_GRCh38_GIAB_highconf_CG-IllFB-IllGATKHC-Ion-10X-SOLID_CHROM1-X_v.3.3.2_highconf_nosomaticdel_noCENorHET7.bed.gz
+  somatic_pon_file=${resources_dir}/variants/SageGermlinePon.98x.38.tsv.gz
+  mappability_bed=${resources_dir}/variants/mappability_150.38.bed.gz
+  clinvar_vcf=${resources_dir}/variants/clinvar.38.vcf.gz
+  germline_blacklist_bed=${resources_dir}/variants/KnownBlacklist.germline.38.bed
+  germline_blacklist_vcf=${resources_dir}/variants/KnownBlacklist.germline.38.vcf.gz
+
+  # SVs (for Gripss, Linx)
+  sv_hotspot_file=${resources_dir}/sv/known_fusions.38.bedpe
+  sv_pon_file=${resources_dir}/sv/gridss_pon_breakpoint.38.bedpe.gz
+  sgl_pon_file=${resources_dir}/sv/gridss_pon_single_breakend.38.bed.gz
+  fragile_site_file=${resources_dir}/sv/fragile_sites_hmf.38.csv
+  line_element_file=${resources_dir}/sv/line_elements.38.csv
+  known_fusion_file=${resources_dir}/sv/known_fusion_data.38.csv
+  sv_blacklist_bed=${resources_dir}/sv/ENCFF001TDO.38.bed.gz
+  gridss_config=${resources_dir}/sv/gridss.properties
+
+  # Copy number (for Amber, Cobalt, Purple)
+  amber_loci_vcf=${resources_dir}/copy_number/GermlineHetPon.38.vcf.gz
+  gc_profile=${resources_dir}/copy_number/GC_profile.1000bp.38.cnp
+  germline_del_freq_file=${resources_dir}/copy_number/cohort_germline_del_freq.38.csv
+
+  # Immune (for Lilac)
+  lilac_resource_dir=${resources_dir}/immune/
 
 fi
 
@@ -93,6 +123,11 @@ gripss_jar=${tools_dir}/gripss.jar
 cobalt_jar=${tools_dir}/cobalt.jar
 purple_jar=${tools_dir}/purple.jar
 linx_jar=${tools_dir}/linx.jar
+lilac_jar=${tools_dir}/lilac.jar
+
+circos=${tools_dir}/circos
+
+max_memory=16
 
 
 # Sage somatic
@@ -137,11 +172,19 @@ ${scripts_dir}/run_pave_germline ${pave_jar} \
   ${ensembl_dir} ${driver_gene_panel} ${mappability_bed} ${clinvar_vcf} ${germline_blacklist_bed} ${germline_blacklist_vcf} \
 
 
-# Assume GRIDSS has been run separately
-gridss_vcf=${sample_dir}/gridss/${tumor_id}.gridss.unfiltered.vcf.gz
+# GRIDSS 
+gridss_dir=${sample_dir}/gridss
+
+${scripts_dir}/run_gridss ${tools_dir} \
+  ${tumor_id} ${tumor_bam} ${reference_id} ${reference_bam} \
+  ${gridss_dir} \
+  ${ref_genome} ${sv_blacklist_bed} ${gridss_config} \
+  ${threads} ${max_memory} \
+
 
 # Gripss somatic
 gripss_somatic_dir=${sample_dir}/gripss_somatic
+gridss_vcf=${sample_dir}/gridss/${tumor_id}.gridss.unfiltered.vcf.gz
 
 ${scripts_dir}/run_gripss_somatic ${gripss_jar} \
   ${tumor_id}  ${reference_id} \
@@ -154,7 +197,7 @@ ${scripts_dir}/run_gripss_somatic ${gripss_jar} \
 gripss_germline_dir=${sample_dir}/gripss_germline
 
 ${scripts_dir}/run_gripss_germline ${gripss_jar} \
-  ${reference_id} \
+  ${tumor_id} \
   ${gripss_germline_dir} ${gridss_vcf} \
   ${ref_genome_version} ${ref_genome} \
   ${sv_hotspot_file} ${sv_pon_file} ${sgl_pon_file} \
@@ -193,7 +236,7 @@ ${scripts_dir}/run_purple ${purple_jar} \
   ${sv_vcf} ${sv_unfiltered_vcf} ${somatic_vcf} ${germline_vcf} ${amber_dir} ${cobalt_dir}  ${purple_dir} \
   ${ref_genome_version} ${ref_genome} ${gc_profile} ${sage_somatic_hotspots} ${sage_germline_hotspots} \
   ${driver_gene_panel} ${ensembl_dir} ${germline_del_freq_file} \
-  ${threads} \
+  ${threads} ${circos} \
 
 
 # Linx somatic
@@ -205,18 +248,30 @@ ${scripts_dir}/run_linx_somatic ${linx_jar} \
   ${tumor_id} \
   ${sv_vcf} ${purple_dir} ${linx_somatic_dir} \
   ${ref_genome_version} ${fragile_site_file} ${line_element_file} ${ensembl_dir} ${driver_gene_panel} ${known_fusion_file} \
+  ${circos} \
 
 
 # Linx germline
 linx_germline_dir=${sample_dir}/linx_germline
 
-sv_germline_vcf=${gripss_germline_dir}/${reference_id}.gripss.filtered.germline.vcf.gz
+sv_germline_vcf=${gripss_germline_dir}/${tumor_id}.gripss.filtered.germline.vcf.gz
 
 ${scripts_dir}/run_linx_germline ${linx_jar} \
-  ${reference_id} \
+  ${tumor_id} \
   ${sv_germline_vcf} ${linx_germline_dir} \
   ${ref_genome_version} ${line_element_file} ${ensembl_dir} ${driver_gene_panel} \
 
 
+# Lilac
+lilac_dir=${sample_dir}/lilac
+
+somatic_vcf=${purple_dir}/${tumor_id}.purple.somatic.vcf.gz
+gene_copy_number=${purple_dir}/${tumor_id}.purple.cnv.gene.tsv
+
+${scripts_dir}/run_lilac ${lilac_jar} \
+  ${tumor_id} ${tumor_bam} ${reference_id} ${reference_bam} \
+  ${gene_copy_number} ${somatic_vcf} ${lilac_dir} \
+  ${ref_genome_version} ${ref_genome} ${lilac_resource_dir} \
+  ${threads} \
 
 

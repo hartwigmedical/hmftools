@@ -40,7 +40,7 @@ interesting and added to the report:
  - Other potentially relevant variants
     1. Variants that are hotspots but not part of the reporting gene panel.
     1. Variants which have clinical evidence but are not part of the reporting gene panel.
-    1. Coding variants that are not reported but are phased with variants that are reported.
+    1. Exonic variants that are not reported but are phased with variants that are reported.
     1. Variants that are considered relevant for tumor type classification according to Cuppa.
  - Other regions with amps, or with deletions in other autosomal regions:
     1. Any chromosomal band location with at least one gene lost or fully amplified is considered potentially interesting.
@@ -128,7 +128,14 @@ investigate potential causes for QC failure.
 
 ### Version History and Download Links
 - Upcoming
-  - Variants with a phased inframe canonical effect are dedup'ed prior to reporting. 
+  - Add the driver gene panel to the ORANGE JSON output
+  - Variants with a phased inframe canonical effect are dedup'ed prior to reporting.
+  - Variants with canonical synonymous impact but reportable worst impact are added to potentially interesting variants.
+  - Unreported variants near hotspots are added as potentially interesting.
+  - Average chromosome arm copy numbers are calculated and stored in ORANGE JSON:
+     - New input: `purple_somatic_copy_number_tsv`
+  - Gene disruptions are annotated with sv and cluster IDs
+     - New input: `linx_structural_variant_tsv` 
 - [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.9)
   - Proper support for RNA
     - Add (mandatory) `driver_gene_panel_tsv` and `known_fusion_file` inputs to support interpretation of isofox results

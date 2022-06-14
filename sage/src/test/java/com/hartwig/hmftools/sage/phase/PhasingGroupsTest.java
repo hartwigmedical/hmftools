@@ -452,6 +452,6 @@ public class PhasingGroupsTest
         ReadContext readContext = new ReadContext(position, "", 0, "", indexBases, false);
 
         return new ReadContextCounter(id, variant, readContext, VariantTier.LOW_CONFIDENCE,
-                100, 1, false);
+                100, 1);
     }
 }

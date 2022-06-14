@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.compar.linx;
 
 import static com.hartwig.hmftools.compar.Category.FUSION;
-import static com.hartwig.hmftools.compar.CommonUtils.checkDiff;
+import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
+import static com.hartwig.hmftools.compar.MismatchType.VALUE;
 
 import java.util.List;
 
@@ -10,6 +11,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.DiffThresholds;
 import com.hartwig.hmftools.compar.MatchLevel;
 import com.hartwig.hmftools.compar.Mismatch;
 
@@ -37,10 +39,15 @@ public class FusionData implements ComparableItem
     public List<String> displayValues()
     {
         List<String> values = Lists.newArrayList();
-//        values.add(String.format("Qual(%.0f)", Variant.qual()));
-//        values.add(String.format("Tier(%s)", Variant.tier().toString()));
-//        values.add(String.format("TotalReadCount(%d)", Variant.totalReadCount()));
-//        values.add(String.format("AlleleReadCount(%d)", Variant.alleleReadCount()));
+        values.add(String.format("reportedType=%s", Fusion.reportedType()));
+        values.add(String.format("phased=%s", Fusion.phased()));
+        values.add(String.format("likelihood=%s", Fusion.likelihood()));
+        values.add(String.format("fusedExonUp=%d", Fusion.fusedExonUp()));
+        values.add(String.format("fusedExonDown=%d", Fusion.fusedExonDown()));
+        values.add(String.format("chainLinks=%d", Fusion.chainLinks()));
+        values.add(String.format("chainTerminated=%s", Fusion.chainTerminated()));
+        values.add(String.format("domainsKept=%s", Fusion.domainsKept()));
+        values.add(String.format("domainsLost=%s", Fusion.domainsLost()));
         return values;
     }
 
@@ -56,7 +63,7 @@ public class FusionData implements ComparableItem
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel)
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds)
     {
         final FusionData otherFusion = (FusionData)other;
 
@@ -65,25 +72,15 @@ public class FusionData implements ComparableItem
         checkDiff(diffs, "reported", Fusion.reported(), otherFusion.Fusion.reported());
         checkDiff(diffs, "reportedType", Fusion.reportedType(), otherFusion.Fusion.reportedType());
 
-        if(matchLevel == REPORTABLE)
-            return null;
-
         checkDiff(diffs, "phased", Fusion.phased().toString(), otherFusion.Fusion.phased().toString());
         checkDiff(diffs, "likelihood", Fusion.likelihood().toString(), otherFusion.Fusion.likelihood().toString());
-        checkDiff(diffs, "fusedExonsUp", Fusion.fusedExonUp(), otherFusion.Fusion.fusedExonUp());
-        checkDiff(diffs, "fusedExonsDown", Fusion.fusedExonDown(), otherFusion.Fusion.fusedExonDown());
+        checkDiff(diffs, "fusedExonUp", Fusion.fusedExonUp(), otherFusion.Fusion.fusedExonUp());
+        checkDiff(diffs, "fusedExonDown", Fusion.fusedExonDown(), otherFusion.Fusion.fusedExonDown());
+        checkDiff(diffs, "chainLinks", Fusion.chainLinks(), otherFusion.Fusion.chainLinks());
+        checkDiff(diffs, "chainTerminated", Fusion.chainTerminated(), otherFusion.Fusion.chainTerminated());
+        checkDiff(diffs, "domainsKept", Fusion.domainsKept(), otherFusion.Fusion.domainsKept());
+        checkDiff(diffs, "domainsLost", Fusion.domainsLost(), otherFusion.Fusion.domainsLost());
 
-        /*
-            public abstract int chainLength();
-            public abstract int chainLinks();
-            public abstract boolean chainTerminated();
-            public abstract String domainsKept();
-            public abstract String domainsLost();
-            public abstract int skippedExonsUp();
-            public abstract int skippedExonsDown();
-
-         */
-
-        return null;
+        return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
     }
 }

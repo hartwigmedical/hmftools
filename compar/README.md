@@ -22,7 +22,7 @@ Filter | Description
 sample | Tumor sample ID or
 sample_id_file | File with column header SampleId and then list of sample IDs
 categories | 'ALL', otherwise specify a comma-separated list from PURITY, COPY_NUMBER, DRIVER, SOMATIC_VARIANT, LINX_DATA, FUSION, DISRUPTION
-match_level | REPORTABLE, KEY_FIELDS or DETAILED
+match_level | REPORTABLE (default) or DETAILED
 file_sources | List of sources and their file locations - see format below
 db_sources |  List of sources and their DB locations - see format below
 output_dir | Path for output file
@@ -66,23 +66,125 @@ db_sources="PROD;mysql://localhost/prod;user1;pass1,TEST;mysql://localhost/test;
 ```
 
 
-## Data Categories
-The current types for comparison are:
-- Purple purity
-- Purple copy number
-- Purple somatic variants
-- Purple structural variants
-- Linx SV annotations and clustering
-- Linx fusions
-- Linx disruptions
-- drivers (Linx and Purple)
+## Data Categories, Fields and Thresholds
+Each data type that is compared is described below. 
+Differences in field values are considered one of the following ways
+- an exact match, eg a string value or type
+- absolute difference vs a threshold 
+- percentage difference vs a threshold
+- absolute and percentage differences vs 2 thresholds, requiring both to be exceeded
+ 
+
+### Purity
+Data key: SampleId
+
+Field | Match Type & Thresholds 
+---|---
+qcStatus | Exact
+gender | Exact
+germlineAberration | Exact
+fitMethod | Exact
+msStatus | Exact
+tmbStatus | Exact
+tmlStatus | Exact
+purity | Threshold  [0.02]
+ploidy | Threshold  [0.1]
+contamination | Threshold  [0.005]
+tmbPerMb | Threshold  [1%]
+msIndelsPerMb | Threshold  [1%]
+tml | Threshold  [1%]
+copyNumberSegments | Threshold  [10%]
+unsupportedCopyNumberSegments | Threshold  [10%]
+svTmb | Threshold  [3%]
+
+### Somatic Variant
+Data key: SampleId, Chromosome, Position, Ref and Alt
+
+Field | Match Type & Thresholds 
+---|---
+reported | Exact
+filter | Exact
+gene | Exact
+canonicalEffect | Exact
+canonicalCodingEffect | Exact
+canonicalHgvsCodingImpact | Exact
+canonicalHgvsProteinImpact | Exact
+otherTranscriptEffects | Exact
+tier | Exact
+hotspot | Exact
+biallelic | Exact
+qual | max(20,20%)
+subclonalLikelihood | [0.6]
+has LPS | true / false
+
+### Germline Variant
+Data key: SampleId, Chromosome, Position, Ref and Alt
+
+Field | Match Type & Thresholds 
+---|---
+reported | Exact
+filter | Exact
+gene | Exact
+canonicalEffect | Exact
+canonicalCodingEffect | Exact
+canonicalHgvsCodingImpact | Exact
+canonicalHgvsProteinImpact | Exact
+otherTranscriptEffects | Exact
+tier | Exact
+hotspot | Exact
+biallelic | Exact
+pathogenicity | Exact
+pathogenic | Exact
+qual | max(20,20%)
+
+### Germline Deletion
+Data key: SampleId, Gene
+
+Field | Match Type & Thresholds 
+---|---
+reported | Exact
+germlineStatus | Exact
+tumorStatus | Exact
+germlineCopyNumber | max(0.2, 10%)
+tumorCopyNumber | max(0.2, 10%)
+
+### Drivers (Linx and Purple)
+Data key: SampleId, GeneId, TranscriptId, Driver-type
+
+Field | Match Type & Thresholds 
+---|---
+likelihoodMethod | Exact
+driverLikelihood | [0.1]
+minCopyNumber | max(0.2, 10%) for AMPs and DELs
 
 
-## Match Levels
-Comparison can be performed at 3 levels:
-- REPORTABLE - only items with a reportable status are compared, and then only written as a mismatch if their reportable status diffs
-- MODERATE - key fields are compared for each category - see below for details
-- DETAILED - not yet implemented
+### Fusions
+Data key: SampleId, Fusion name
+
+Field | Match Type & Thresholds 
+---|---
+reported | Exact
+reportedType | Exact
+phased | Exact
+likelihood | Exact
+fusedExonUp | Exact
+fusedExonDown | Exact
+chainLinks | Exact
+chainTerminated | Exact
+domainsKept | Exact
+domainsLost | Exact
+
+### Disruptions
+Data key: SampleId, SV coordinates (chromosome, position, orientation), Gene, TranscriptId
+
+Field | Match Type & Thresholds 
+---|---
+reported | Exact
+geneOrientation | Exact
+regionType | Exact
+codingContext | Exact
+nextSpliceExonRank | Exact
+undisruptedCopyNumber | max(0.2, 10%)
 
 
 ## Version History and Download Links

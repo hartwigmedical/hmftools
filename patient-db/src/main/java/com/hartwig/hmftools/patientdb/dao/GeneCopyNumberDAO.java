@@ -12,9 +12,11 @@ import java.util.List;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.gene.GermlineDetectionMethod;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
@@ -25,7 +27,7 @@ import org.jooq.InsertValuesStep19;
 import org.jooq.Record;
 import org.jooq.Result;
 
-class GeneCopyNumberDAO
+public class GeneCopyNumberDAO
 {
     @NotNull
     private final DSLContext context;
@@ -36,7 +38,7 @@ class GeneCopyNumberDAO
     }
 
     @NotNull
-    List<GeneCopyNumber> read(@NotNull String sample, @NotNull List<String> genes)
+    public List<GeneCopyNumber> readCopyNumbers(@NotNull String sample, @NotNull List<String> genes)
     {
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
 
@@ -71,6 +73,36 @@ class GeneCopyNumberDAO
                     .build());
         }
         return geneCopyNumbers;
+    }
+
+    @NotNull
+    public List<GermlineDeletion> readGermlineDeletions(final String sample)
+    {
+        List<GermlineDeletion> germlineDeletions = Lists.newArrayList();
+
+        Result<Record> result = context.select().from(GERMLINEDELETION).where(GERMLINEDELETION.SAMPLEID.eq(sample)).fetch();
+
+        for(Record record : result)
+        {
+            germlineDeletions.add(new GermlineDeletion(
+                    record.getValue(GERMLINEDELETION.GENE),
+                    record.getValue(GERMLINEDELETION.CHROMOSOME),
+                    record.getValue(GERMLINEDELETION.CHROMOSOMEBAND),
+                    record.getValue(GERMLINEDELETION.REGIONSTART),
+                    record.getValue(GERMLINEDELETION.DEPTHWINDOWCOUNT),
+                    record.getValue(GERMLINEDELETION.REGIONEND),
+                    record.getValue(GERMLINEDELETION.EXONSTART),
+                    record.getValue(GERMLINEDELETION.EXONEND),
+                    GermlineDetectionMethod.valueOf(record.getValue(GERMLINEDELETION.DETECTIONMETHOD)),
+                    GermlineStatus.valueOf(record.getValue(GERMLINEDELETION.GERMLINESTATUS)),
+                    GermlineStatus.valueOf(record.getValue(GERMLINEDELETION.TUMORSTATUS)),
+                    record.getValue(GERMLINEDELETION.GERMLINECOPYNUMBER),
+                    record.getValue(GERMLINEDELETION.TUMORCOPYNUMBER),
+                    record.getValue(GERMLINEDELETION.FILTER),
+                    record.getValue(GERMLINEDELETION.COHORTFREQUENCY),
+                    record.getValue(GERMLINEDELETION.REPORTED).intValue() == 1));
+        }
+        return germlineDeletions;
     }
 
     public void writeCopyNumber(final String sample, final List<GeneCopyNumber> copyNumbers)

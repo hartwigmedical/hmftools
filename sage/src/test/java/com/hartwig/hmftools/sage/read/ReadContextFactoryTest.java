@@ -42,7 +42,7 @@ public class ReadContextFactoryTest
 
         SAMRecord record = buildSamRecord("2M3I9M", readSequence);
         ReadContext victim = this.victim.createInsertContext("AGGC", 1000, 1, record, refBases);
-        assertEquals("GAGGCT", victim.coreString());
+        assertEquals("GAGGCTC", victim.coreString());
     }
 
     @Test
@@ -90,7 +90,7 @@ public class ReadContextFactoryTest
 
         SAMRecord record = buildSamRecord("5M4I7M", readSequence);
         ReadContext victim = this.victim.createInsertContext("GATCA", 1000, 4, record, refBases);
-        assertEquals("GCGATCAA", victim.coreString());
+        assertEquals("GCGATCAAT", victim.coreString());
     }
 
     @Test
