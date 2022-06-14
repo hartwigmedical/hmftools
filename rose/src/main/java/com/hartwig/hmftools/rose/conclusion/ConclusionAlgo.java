@@ -13,7 +13,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
-import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFile;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFunctions;
 import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
@@ -39,7 +38,6 @@ import com.hartwig.hmftools.rose.actionability.ImmutableActionabilityKey;
 import com.hartwig.hmftools.rose.actionability.TypeAlteration;
 
 import org.apache.logging.log4j.util.Strings;
-import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -198,8 +196,7 @@ public class ConclusionAlgo {
             @NotNull Set<String> HRD) {
 
         for (ReportableVariant reportableVariant : reportableVariants) {
-            String variant = ProtectEventGenerator.toVariantEvent(reportableVariant.canonicalHgvsProteinImpact(),
-                    reportableVariant.canonicalHgvsCodingImpact(), reportableVariant.canonicalEffect());
+            String variant = ProtectEventGenerator.variantEvent(reportableVariant);
 
             if (HRD_GENES.contains(reportableVariant.gene())) {
                 HRD.add(reportableVariant.gene());

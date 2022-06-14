@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.linx;
 
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.sv.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.sv.linx.FusionPhasedType;
 import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
@@ -15,19 +16,19 @@ public final class LinxTestFactory {
 
     @NotNull
     public static LinxFusion createMinimalTestFusion() {
-        return testBuilder().build();
+        return builder().build();
     }
 
     @NotNull
-    public static ImmutableLinxFusion.Builder testBuilder() {
+    public static ImmutableLinxFusion.Builder builder() {
         return ImmutableLinxFusion.builder()
                 .fivePrimeBreakendId(0)
                 .threePrimeBreakendId(0)
                 .name(Strings.EMPTY)
                 .reported(false)
-                .reportedType(Strings.EMPTY)
-                .phased(FusionPhasedType.INFRAME)
-                .likelihood(FusionLikelihoodType.HIGH)
+                .reportedType(KnownFusionType.NONE.toString())
+                .phased(FusionPhasedType.OUT_OF_FRAME)
+                .likelihood(FusionLikelihoodType.NA)
                 .chainLength(0)
                 .chainLinks(0)
                 .chainTerminated(false)

@@ -27,7 +27,6 @@ import com.hartwig.hmftools.common.rna.GeneExpression;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
-import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantTestFactory;
@@ -136,7 +135,7 @@ public final class OrangeReportTestFactory {
 
     @NotNull
     private static LinxData createTestLinxData() {
-        LinxFusion fusion = ImmutableLinxFusion.builder().from(LinxTestFactory.createMinimalTestFusion()).build();
+        LinxFusion fusion = LinxTestFactory.createMinimalTestFusion();
         return ImmutableLinxData.builder()
                 .addReportableFusions(fusion)
                 .addReportableFusions(fusion)

@@ -46,8 +46,10 @@ public class SomaticVariantSelectorTest {
 
     @Test
     public void canSelectVariantsWithEvidence() {
-        SomaticVariant withEvidence = SomaticVariantTestFactory.builder().canonicalHgvsCodingImpact("1").reported(false).build();
-        SomaticVariant withoutEvidence = SomaticVariantTestFactory.builder().canonicalHgvsCodingImpact("2").reported(false).build();
+        SomaticVariant withEvidence =
+                SomaticVariantTestFactory.builder().gene("gene 1").canonicalEffect("with evidence").reported(false).build();
+        SomaticVariant withoutEvidence =
+                SomaticVariantTestFactory.builder().gene("gene 2").canonicalEffect("no evidence").reported(false).build();
 
         ProtectEvidence evidence =
                 ProtectTestFactory.builder().gene(withEvidence.gene()).event(ProtectEventGenerator.variantEvent(withEvidence)).build();
@@ -58,15 +60,16 @@ public class SomaticVariantSelectorTest {
                 Lists.newArrayList());
 
         assertEquals(1, variants.size());
-        ReportableVariant variant = variants.get(0);
-        assertEquals("1", variant.canonicalHgvsCodingImpact());
+        assertNotNull(findByCanonicalEffect(variants, "with evidence"));
     }
 
     @Test
     public void canSelectVariantsWithReportedPhaseSet() {
-        SomaticVariant withMatch = SomaticVariantTestFactory.builder().gene("gene 1").reported(false).addLocalPhaseSets(1).build();
-        SomaticVariant withoutMatch = SomaticVariantTestFactory.builder().gene("gene 2").reported(false).addLocalPhaseSets(2).build();
-        SomaticVariant withoutPhase = SomaticVariantTestFactory.builder().gene("gene 3").reported(false).build();
+        SomaticVariant withMatch =
+                SomaticVariantTestFactory.builder().gene("gene").canonicalEffect("match").reported(false).addLocalPhaseSets(1).build();
+        SomaticVariant withoutMatch =
+                SomaticVariantTestFactory.builder().gene("gene").canonicalEffect("no match").reported(false).addLocalPhaseSets(2).build();
+        SomaticVariant withoutPhase = SomaticVariantTestFactory.builder().gene("gene").canonicalEffect("no phase").reported(false).build();
 
         ReportableVariant withPhase = ReportableVariantTestFactory.builder().localPhaseSet(1).build();
         ReportableVariant noPhase = ReportableVariantTestFactory.builder().localPhaseSet(null).build();
@@ -78,21 +81,35 @@ public class SomaticVariantSelectorTest {
                         Lists.newArrayList());
 
         assertEquals(1, variants.size());
-        ReportableVariant variant = variants.get(0);
-        assertEquals("gene 1", variant.gene());
+        assertNotNull(findByCanonicalEffect(variants, "match"));
     }
 
     @Test
     public void canSelectVariantsRelevantForCuppa() {
         String cuppaGene = SomaticVariantSelector.CUPPA_GENES.iterator().next();
-        SomaticVariant cuppaRelevant =
-                SomaticVariantTestFactory.builder().gene(cuppaGene).type(VariantType.INDEL).repeatCount(4).reported(false).build();
+        SomaticVariant cuppaRelevant = SomaticVariantTestFactory.builder()
+                .canonicalEffect("relevant")
+                .gene(cuppaGene)
+                .type(VariantType.INDEL)
+                .repeatCount(4)
+                .reported(false)
+                .build();
 
-        SomaticVariant cuppaTooManyRepeats =
-                SomaticVariantTestFactory.builder().gene(cuppaGene).type(VariantType.INDEL).repeatCount(10).reported(false).build();
+        SomaticVariant cuppaTooManyRepeats = SomaticVariantTestFactory.builder()
+                .canonicalEffect("too many repeats")
+                .gene(cuppaGene)
+                .type(VariantType.INDEL)
+                .repeatCount(10)
+                .reported(false)
+                .build();
 
-        SomaticVariant wrongGene =
-                SomaticVariantTestFactory.builder().gene("wrong gene").type(VariantType.INDEL).repeatCount(4).reported(false).build();
+        SomaticVariant wrongGene = SomaticVariantTestFactory.builder()
+                .canonicalEffect("wrong")
+                .gene("wrong gene")
+                .type(VariantType.INDEL)
+                .repeatCount(4)
+                .reported(false)
+                .build();
 
         List<ReportableVariant> variants =
                 SomaticVariantSelector.selectNonDrivers(Lists.newArrayList(cuppaRelevant, cuppaTooManyRepeats, wrongGene),
@@ -101,8 +118,7 @@ public class SomaticVariantSelectorTest {
                         Lists.newArrayList());
 
         assertEquals(1, variants.size());
-        ReportableVariant variant = variants.get(0);
-        assertEquals(cuppaGene, variant.gene());
+        assertNotNull(findByCanonicalEffect(variants, "relevant"));
     }
 
     @Test
@@ -150,7 +166,6 @@ public class SomaticVariantSelectorTest {
                         Lists.newArrayList(driverGene));
 
         assertEquals(2, variants.size());
-
         assertNotNull(findByCanonicalEffect(variants, "nonsense"));
         assertNotNull(findByCanonicalEffect(variants, "missense"));
     }
@@ -169,11 +184,8 @@ public class SomaticVariantSelectorTest {
                 .gene(driverGeneNo.gene())
                 .build();
 
-        SomaticVariant otherGene = SomaticVariantTestFactory.builder()
-                .spliceRegion(true)
-                .canonicalEffect("other gene")
-                .gene(driverGeneNo.gene())
-                .build();
+        SomaticVariant otherGene =
+                SomaticVariantTestFactory.builder().spliceRegion(true).canonicalEffect("other gene").gene(driverGeneNo.gene()).build();
 
         List<ReportableVariant> variants =
                 SomaticVariantSelector.selectNonDrivers(Lists.newArrayList(reportedGene, nonReportedGene, otherGene),
@@ -182,7 +194,6 @@ public class SomaticVariantSelectorTest {
                         Lists.newArrayList(driverGeneYes, driverGeneNo));
 
         assertEquals(1, variants.size());
-
         assertNotNull(findByCanonicalEffect(variants, "all correct"));
     }
 

@@ -44,7 +44,7 @@ public final class ProtectEventGenerator {
 
     @NotNull
     @VisibleForTesting
-     public static String toVariantEvent(@NotNull String protein, @NotNull String coding, @NotNull String effect) {
+    static String toVariantEvent(@NotNull String protein, @NotNull String coding, @NotNull String effect) {
         if (!protein.isEmpty() && !protein.equals("p.?")) {
             return protein;
         }
