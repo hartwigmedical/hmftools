@@ -21,7 +21,11 @@ public class DisruptionData implements ComparableItem
     public final StructuralVariantData SvData;
     public final LinxBreakend Breakend;
 
-    protected static final String FLD_UNDISRUPTED_CN = "undisruptedCopyNumber";
+    protected static final String FLD_REGION_TYPE = "RegionType";
+    protected static final String FLD_CODING_CONTEXT = "CodingContext";
+    protected static final String FLD_GENE_ORIENT = "GeneOrientation";
+    protected static final String FLD_NEXT_SPLICE = "NextSpliceExonRank";
+    protected static final String FLD_UNDISRUPTED_CN = "UndisruptedCopyNumber";
 
     public DisruptionData(final StructuralVariantData svData, final LinxBreakend breakend)
     {
@@ -44,10 +48,12 @@ public class DisruptionData implements ComparableItem
     public List<String> displayValues()
     {
         List<String> values = Lists.newArrayList();
-        values.add(String.format("regionType=%s", Breakend.regionType()));
-        values.add(String.format("codingContext=%s", Breakend.codingContext()));
-        values.add(String.format("geneOrientation=%s", Breakend.geneOrientation()));
-        values.add(String.format("nextSpliceExonRank=%d", Breakend.nextSpliceExonRank()));
+        values.add(String.format("%s", Breakend.reportedDisruption()));
+        values.add(String.format("%s", Breakend.regionType()));
+        values.add(String.format("%s", Breakend.codingContext()));
+        values.add(String.format("%s", Breakend.geneOrientation()));
+        values.add(String.format("%d", Breakend.nextSpliceExonRank()));
+        values.add(String.format("%.2f", Breakend.undisruptedCopyNumber()));
         return values;
     }
 

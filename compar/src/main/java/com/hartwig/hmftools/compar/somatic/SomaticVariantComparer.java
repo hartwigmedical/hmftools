@@ -4,9 +4,7 @@ import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SOMATIC_VCF
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.compar.Category.SOMATIC_VARIANT;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.DiffFunctions.diffsStr;
-import static com.hartwig.hmftools.compar.Mismatch.commonCsv;
-import static com.hartwig.hmftools.compar.Mismatch.commonHeader;
+import static com.hartwig.hmftools.compar.somatic.SomaticVariantData.FLD_LPS;
 import static com.hartwig.hmftools.compar.somatic.SomaticVariantData.FLD_SUBCLONAL_LIKELIHOOD;
 import static com.hartwig.hmftools.compar.somatic.VariantCommon.FLD_QUAL;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
@@ -59,13 +57,19 @@ public class SomaticVariantComparer implements ItemComparer
     }
 
     @Override
-    public boolean hasDetailedOutput() { return true; }
-
-    @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
         thresholds.addFieldThreshold(FLD_QUAL, 20, 0.2);
         thresholds.addFieldThreshold(FLD_SUBCLONAL_LIKELIHOOD, 0.6, 0);
+    }
+
+    @Override
+    public List<String> comparedFieldNames()
+    {
+        List<String> fieldNames = VariantCommon.comparedFieldNames();
+        fieldNames.add(FLD_SUBCLONAL_LIKELIHOOD);
+        fieldNames.add(FLD_LPS);
+        return fieldNames;
     }
 
     @Override
@@ -127,28 +131,4 @@ public class SomaticVariantComparer implements ItemComparer
 
         return comparableItems;
     }
-
-    @Override
-    public String outputHeader()
-    {
-        return commonHeader() + ",RefFilter,RefQual,NewQual,RefTier,NewTier,RefTotalReads,NewTotalReads"
-                + ",RefAlleleReads,NewAlleleReads,RefLPS,NewLPS,Differences";
-    }
-
-    @Override
-    public String mismatchOutput(final Mismatch mismatch)
-    {
-        final SomaticVariantData refVar = mismatch.RefItem != null ? (SomaticVariantData)mismatch.RefItem : null;
-        final SomaticVariantData newVar = mismatch.NewItem != null ? (SomaticVariantData)mismatch.NewItem : null;
-
-        return String.format("%s,%s,%.0f,%.0f,%s,%s,%d,%d,%d,%d,%s,%s,%s",
-                commonCsv(mismatch), refVar != null ? refVar.Variant.filter() : newVar.Variant.filter(),
-                refVar != null ? refVar.Variant.qual() : 0, newVar != null ? newVar.Variant.qual() : 0,
-                refVar != null ? refVar.Variant.tier() : "", newVar != null ? newVar.Variant.tier() : "",
-                refVar != null ? refVar.Variant.totalReadCount() : 0, newVar != null ? newVar.Variant.totalReadCount() : 0,
-                refVar != null ? refVar.Variant.alleleReadCount() : 0, newVar != null ? newVar.Variant.alleleReadCount() : 0,
-                refVar != null ? refVar.Variant.localPhaseSetsStr() : "", newVar != null ? newVar.Variant.localPhaseSetsStr() : "",
-                diffsStr(mismatch.DiffValues));
-    }
-
 }

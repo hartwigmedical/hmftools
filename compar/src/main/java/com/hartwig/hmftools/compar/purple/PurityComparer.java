@@ -4,12 +4,19 @@ import static com.hartwig.hmftools.compar.Category.PURITY;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.purple.PurityData.FLD_CN_SEGS;
 import static com.hartwig.hmftools.compar.purple.PurityData.FLD_CONTAMINATION;
+import static com.hartwig.hmftools.compar.purple.PurityData.FLD_FIT_METHOD;
+import static com.hartwig.hmftools.compar.purple.PurityData.FLD_GENDER;
+import static com.hartwig.hmftools.compar.purple.PurityData.FLD_GERM_ABS;
 import static com.hartwig.hmftools.compar.purple.PurityData.FLD_MS_INDELS;
+import static com.hartwig.hmftools.compar.purple.PurityData.FLD_MS_STATUS;
 import static com.hartwig.hmftools.compar.purple.PurityData.FLD_PLOIDY;
 import static com.hartwig.hmftools.compar.purple.PurityData.FLD_PURITY;
+import static com.hartwig.hmftools.compar.purple.PurityData.FLD_QC_STATUS;
 import static com.hartwig.hmftools.compar.purple.PurityData.FLD_SV_TMB;
 import static com.hartwig.hmftools.compar.purple.PurityData.FLD_TMB;
+import static com.hartwig.hmftools.compar.purple.PurityData.FLD_TMB_STATUS;
 import static com.hartwig.hmftools.compar.purple.PurityData.FLD_TML;
+import static com.hartwig.hmftools.compar.purple.PurityData.FLD_TML_STATUS;
 import static com.hartwig.hmftools.compar.purple.PurityData.FLD_UNS_CN_SEGS;
 
 import java.io.IOException;
@@ -60,6 +67,14 @@ public class PurityComparer implements ItemComparer
     public void processSample(final String sampleId, final List<Mismatch> mismatches)
     {
         CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+    }
+
+    @Override
+    public List<String> comparedFieldNames()
+    {
+        return Lists.newArrayList(
+                FLD_PURITY, FLD_PLOIDY, FLD_CONTAMINATION, FLD_TMB, FLD_TML, FLD_MS_INDELS, FLD_SV_TMB, FLD_CN_SEGS ,FLD_UNS_CN_SEGS,
+                FLD_QC_STATUS, FLD_GENDER, FLD_GERM_ABS, FLD_FIT_METHOD, FLD_MS_STATUS, FLD_TMB_STATUS, FLD_TML_STATUS);
     }
 
     @Override

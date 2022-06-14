@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.compar.Category.GERMLINE_VARIANT;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.DiffFunctions.diffsStr;
 import static com.hartwig.hmftools.compar.Mismatch.commonCsv;
+import static com.hartwig.hmftools.compar.somatic.SomaticVariantData.FLD_LPS;
+import static com.hartwig.hmftools.compar.somatic.SomaticVariantData.FLD_SUBCLONAL_LIKELIHOOD;
 import static com.hartwig.hmftools.compar.somatic.VariantCommon.FLD_QUAL;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GERMLINEVARIANT;
 
@@ -57,13 +59,17 @@ public class GermlineVariantComparer implements ItemComparer
     }
 
     @Override
-    public boolean hasDetailedOutput() { return true; }
-
-    @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
         // same as somatic
         thresholds.addFieldThreshold(FLD_QUAL, 20, 0.2);
+    }
+
+    @Override
+    public List<String> comparedFieldNames()
+    {
+        List<String> fieldNames = VariantCommon.comparedFieldNames();
+        return fieldNames;
     }
 
     @Override
@@ -124,26 +130,4 @@ public class GermlineVariantComparer implements ItemComparer
 
         return comparableItems;
     }
-
-    @Override
-    public String outputHeader()
-    {
-        return "Category,MismatchType,Key,RefQual,NewQual,RefTier,NewTier,RefTotalReads,NewTotalReads,RefAlleleReads,NewAlleleReads,Differences";
-    }
-
-    @Override
-    public String mismatchOutput(final Mismatch mismatch)
-    {
-        final GermlineVariantData refVar = mismatch.RefItem != null ? (GermlineVariantData)mismatch.RefItem : null;
-        final GermlineVariantData otherVar = mismatch.NewItem != null ? (GermlineVariantData)mismatch.NewItem : null;
-
-        return String.format("%s,%.0f,%.0f,%s,%s,%d,%d,%d,%d,%s",
-                commonCsv(mismatch),
-                refVar != null ? refVar.Variant.qual() : 0, otherVar != null ? otherVar.Variant.qual() : 0,
-                refVar != null ? refVar.Variant.tier() : "", otherVar != null ? otherVar.Variant.tier() : "",
-                refVar != null ? refVar.Variant.totalReadCount() : 0, otherVar != null ? otherVar.Variant.totalReadCount() : 0,
-                refVar != null ? refVar.Variant.alleleReadCount() : 0, otherVar != null ? otherVar.Variant.alleleReadCount() : 0,
-                diffsStr(mismatch.DiffValues));
-    }
-
 }

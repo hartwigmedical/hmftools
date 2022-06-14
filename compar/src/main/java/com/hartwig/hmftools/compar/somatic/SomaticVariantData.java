@@ -26,7 +26,8 @@ public class SomaticVariantData implements ComparableItem
     public final SomaticVariant Variant;
     public final Set<String> Filters;
 
-    protected static final String FLD_SUBCLONAL_LIKELIHOOD = "subclonalLikelihood";
+    protected static final String FLD_SUBCLONAL_LIKELIHOOD = "SubclonalLikelihood";
+    protected static final String FLD_LPS = "HasLPS";
 
     public SomaticVariantData(final SomaticVariant variant)
     {
@@ -50,8 +51,8 @@ public class SomaticVariantData implements ComparableItem
     {
         List<String> values = Lists.newArrayList();
         addDisplayValues(Variant, values);
-        values.add(String.format("biallelic=%s", Variant.biallelic()));
-        values.add(String.format("hasLPS=%s", Variant.hasLocalPhaseSets()));
+        values.add(String.format("%.2f", Variant.subclonalLikelihood()));
+        values.add(String.format("%s", Variant.hasLocalPhaseSets()));
 
         return values;
     }

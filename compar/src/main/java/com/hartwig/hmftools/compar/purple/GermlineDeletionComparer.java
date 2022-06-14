@@ -1,9 +1,13 @@
 package com.hartwig.hmftools.compar.purple;
 
 import static com.hartwig.hmftools.compar.Category.GERMLINE_DELETION;
+import static com.hartwig.hmftools.compar.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_GERMLINE_CN;
+import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_GERMLINE_STATUS;
+import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_QC_STATUS;
 import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_TUMOR_CN;
+import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_TUMOR_STATUS;
 
 import java.io.IOException;
 import java.util.List;
@@ -43,6 +47,13 @@ public class GermlineDeletionComparer implements ItemComparer
     public void processSample(final String sampleId, final List<Mismatch> mismatches)
     {
         CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+    }
+
+    @Override
+    public List<String> comparedFieldNames()
+    {
+        return Lists.newArrayList(
+                FLD_REPORTED, FLD_QC_STATUS, FLD_GERMLINE_STATUS, FLD_TUMOR_STATUS, FLD_GERMLINE_CN, FLD_TUMOR_CN);
     }
 
     @Override

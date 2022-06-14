@@ -23,15 +23,22 @@ public class PurityData implements ComparableItem
 {
     public final PurityContext Purity;
 
-    protected static final String FLD_PURITY = "purity";
-    protected static final String FLD_PLOIDY = "ploidy";
-    protected static final String FLD_CONTAMINATION = "contamination";
-    protected static final String FLD_TMB = "tmbPerMb";
-    protected static final String FLD_MS_INDELS = "msIndelsPerMb";
-    protected static final String FLD_TML = "tml";
-    protected static final String FLD_CN_SEGS = "copyNumberSegments";
-    protected static final String FLD_UNS_CN_SEGS = "unsupportedCopyNumberSegments";
-    protected static final String FLD_SV_TMB = "svTmb";
+    protected static final String FLD_PURITY = "Purity";
+    protected static final String FLD_PLOIDY = "Ploidy";
+    protected static final String FLD_CONTAMINATION = "Contamination";
+    protected static final String FLD_TMB = "TmbPerMb";
+    protected static final String FLD_MS_INDELS = "MsIndelsPerMb";
+    protected static final String FLD_TML = "Tml";
+    protected static final String FLD_CN_SEGS = "CopyNumberSegments";
+    protected static final String FLD_UNS_CN_SEGS = "UnsupportedCopyNumberSegments";
+    protected static final String FLD_SV_TMB = "SvTmb";
+    protected static final String FLD_QC_STATUS = "QcStatus";
+    protected static final String FLD_GENDER = "Gender";
+    protected static final String FLD_GERM_ABS = "GermlineAberrations";
+    protected static final String FLD_FIT_METHOD = "FitMethod";
+    protected static final String FLD_MS_STATUS = "MsStatus";
+    protected static final String FLD_TMB_STATUS = "TmbStatus";
+    protected static final String FLD_TML_STATUS = "TmlStatus";
 
     public PurityData(final PurityContext purityContext)
     {
@@ -52,13 +59,22 @@ public class PurityData implements ComparableItem
     public List<String> displayValues()
     {
         List<String> values = Lists.newArrayList();
-        values.add(String.format("%s=%.2f", FLD_PURITY, Purity.bestFit().purity()));
-        values.add(String.format("%s=%.2f", FLD_PLOIDY, Purity.bestFit().ploidy()));
-        values.add(String.format("%s=%.2f", FLD_TMB, Purity.tumorMutationalBurdenPerMb()));
-        values.add(String.format("%s=%.2f", FLD_MS_INDELS, Purity.microsatelliteIndelsPerMb()));
-        values.add(String.format("%s=%d", FLD_TML, Purity.tumorMutationalLoad()));
-        values.add(String.format("fitMethod=%s", Purity.method()));
-        values.add(String.format("msStatus=%s", Purity.microsatelliteStatus()));
+        values.add(String.format("%.2f", Purity.bestFit().purity()));
+        values.add(String.format("%.2f", Purity.bestFit().ploidy()));
+        values.add(String.format("%.4f", Purity.qc().contamination()));
+        values.add(String.format("%.2f", Purity.tumorMutationalBurdenPerMb()));
+        values.add(String.format("%d", Purity.tumorMutationalLoad()));
+        values.add(String.format("%.4f", Purity.microsatelliteIndelsPerMb()));
+        values.add(String.format("%d", Purity.svTumorMutationalBurden()));
+        values.add(String.format("%d", Purity.qc().copyNumberSegments()));
+        values.add(String.format("%d", Purity.qc().unsupportedCopyNumberSegments()));
+        values.add(String.format("%s", qcStatus(Purity.qc().status())));
+        values.add(String.format("%s", Purity.qc().cobaltGender()));
+        values.add(String.format("%s", germlineAberrations(Purity.qc().germlineAberrations())));
+        values.add(String.format("%s", Purity.method()));
+        values.add(String.format("%s", Purity.microsatelliteStatus()));
+        values.add(String.format("%s", Purity.tumorMutationalBurdenStatus()));
+        values.add(String.format("%s", Purity.tumorMutationalLoadStatus()));
 
         return values;
     }
@@ -83,7 +99,7 @@ public class PurityData implements ComparableItem
         final List<String> diffs = Lists.newArrayList();
 
         checkDiff(diffs, FLD_PURITY, Purity.bestFit().purity(), otherPurity.Purity.bestFit().purity(), thresholds);
-        checkDiff(diffs, FLD_PLOIDY, Purity.bestFit().ploidy(), otherPurity.Purity.bestFit().ploidy(), thresholds);
+        checkDiff(diffs, FLD_PLOIDY, 1.0, otherPurity.Purity.bestFit().ploidy(), thresholds);
 
         checkDiff(diffs, FLD_CONTAMINATION, Purity.qc().contamination(), otherPurity.Purity.qc().contamination(), thresholds);
 
@@ -99,24 +115,24 @@ public class PurityData implements ComparableItem
 
         checkDiff(diffs, FLD_SV_TMB, Purity.bestFit().purity(), otherPurity.Purity.bestFit().purity(), thresholds);
 
-        checkDiff(diffs, "qcStatus", qcStatus(Purity.qc().status()), qcStatus(otherPurity.Purity.qc().status()));
+        checkDiff(diffs, FLD_QC_STATUS, qcStatus(Purity.qc().status()), qcStatus(otherPurity.Purity.qc().status()));
 
-        checkDiff(diffs, "gender", Purity.gender().toString(), otherPurity.Purity.gender().toString());
+        checkDiff(diffs, FLD_GENDER, Purity.gender().toString(), otherPurity.Purity.gender().toString());
 
         checkDiff(
-                diffs, "germlineAberrations",
+                diffs, FLD_GERM_ABS,
                 germlineAberrations(Purity.qc().germlineAberrations()), germlineAberrations(otherPurity.Purity.qc().germlineAberrations()));
 
-        checkDiff(diffs, "fitMethod", Purity.method().toString(), otherPurity.Purity.method().toString());
+        checkDiff(diffs, FLD_FIT_METHOD, Purity.method().toString(), otherPurity.Purity.method().toString());
 
-        checkDiff(diffs, "msStatus", Purity.microsatelliteStatus().toString(), otherPurity.Purity.microsatelliteStatus().toString());
+        checkDiff(diffs, FLD_MS_STATUS, Purity.microsatelliteStatus().toString(), otherPurity.Purity.microsatelliteStatus().toString());
 
         checkDiff(
-                diffs, "tmbStatus",
+                diffs, FLD_TMB_STATUS,
                 Purity.tumorMutationalBurdenStatus().toString(), otherPurity.Purity.tumorMutationalBurdenStatus().toString());
 
         checkDiff(
-                diffs, "tmlStatus",
+                diffs, FLD_TML_STATUS,
                 Purity.tumorMutationalLoadStatus().toString(), otherPurity.Purity.tumorMutationalLoadStatus().toString());
 
         return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;

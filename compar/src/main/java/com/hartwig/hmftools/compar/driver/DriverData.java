@@ -21,8 +21,8 @@ public class DriverData implements ComparableItem
 {
     public final DriverCatalog DriverCatalog;
 
-    protected static final String FLD_DRIVER_LIKELIHOOD = "driverLikelihood";
-    protected static final String FLD_DRIVER_MIN_CN = "driverMinCopyNumber";
+    protected static final String FLD_LIKELIHOOD = "Likelihood";
+    protected static final String FLD_LIKE_METHOD = "LikelihoodMethod";
 
     public DriverData(final DriverCatalog driverCatalog)
     {
@@ -42,9 +42,8 @@ public class DriverData implements ComparableItem
     public List<String> displayValues()
     {
         List<String> values = Lists.newArrayList();
-        values.add(format("likelihoodMethod=%s", DriverCatalog.likelihoodMethod()));
-        values.add(format("driverLikelihood=%.2f", DriverCatalog.driverLikelihood()));
-        values.add(format("minCopyNumber=%.2f", DriverCatalog.minCopyNumber()));
+        values.add(format("%s", DriverCatalog.likelihoodMethod()));
+        values.add(format("%.2f", DriverCatalog.driverLikelihood()));
         return values;
     }
 
@@ -86,12 +85,10 @@ public class DriverData implements ComparableItem
         final List<String> diffs = Lists.newArrayList();
 
         checkDiff(
-                diffs, "likelihoodMethod",
+                diffs, FLD_LIKE_METHOD,
                 DriverCatalog.likelihoodMethod().toString(), otherDriver.DriverCatalog.likelihoodMethod().toString());
 
-        checkDiff(diffs, FLD_DRIVER_LIKELIHOOD, DriverCatalog.driverLikelihood(), otherDriver.DriverCatalog.driverLikelihood(), thresholds);
-
-        checkDiff(diffs, FLD_DRIVER_MIN_CN, DriverCatalog.minCopyNumber(), otherDriver.DriverCatalog.minCopyNumber(), thresholds);
+        checkDiff(diffs, FLD_LIKELIHOOD, DriverCatalog.driverLikelihood(), otherDriver.DriverCatalog.driverLikelihood(), thresholds);
 
         return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
     }

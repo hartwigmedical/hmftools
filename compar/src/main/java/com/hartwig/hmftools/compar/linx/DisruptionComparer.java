@@ -3,7 +3,12 @@ package com.hartwig.hmftools.compar.linx;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.compar.Category.DISRUPTION;
+import static com.hartwig.hmftools.compar.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_CODING_CONTEXT;
+import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_GENE_ORIENT;
+import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_NEXT_SPLICE;
+import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_REGION_TYPE;
 import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_UNDISRUPTED_CN;
 
 import java.io.IOException;
@@ -50,6 +55,13 @@ public class DisruptionComparer implements ItemComparer
     public void processSample(final String sampleId, final List<Mismatch> mismatches)
     {
         CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+    }
+
+    @Override
+    public List<String> comparedFieldNames()
+    {
+        return Lists.newArrayList(
+                FLD_REPORTED, FLD_REGION_TYPE, FLD_CODING_CONTEXT, FLD_GENE_ORIENT, FLD_NEXT_SPLICE, FLD_UNDISRUPTED_CN);
     }
 
     @Override

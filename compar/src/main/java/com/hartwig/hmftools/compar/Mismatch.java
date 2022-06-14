@@ -27,12 +27,12 @@ public class Mismatch
 
     public static String commonHeader()
     {
-        return "Category,MismatchType,Key";
+        return "Category,MismatchType,Key,Differences";
     }
 
     public static String header()
     {
-        return commonHeader() + ",Differences,AllValues";
+        return commonHeader() + ",AllValues";
     }
 
     public static String commonCsv(final Mismatch mismatch)
@@ -54,7 +54,7 @@ public class Mismatch
         return sj.toString();
     }
 
-    public String toCsv()
+    public String toCsv(boolean writeFieldValues)
     {
         StringJoiner sj = new StringJoiner(DATA_DELIM);
 
@@ -62,11 +62,33 @@ public class Mismatch
 
         sj.add(diffsStr(DiffValues));
 
-        ComparableItem item = RefItem != null ? RefItem : NewItem;
+        if(writeFieldValues)
+        {
+            final List<String> refFieldValues = RefItem != null ? RefItem.displayValues() : null;
+            final List<String> newFieldValues = NewItem != null ? NewItem.displayValues() : null;
+            int fieldCount = refFieldValues != null ? refFieldValues.size() : newFieldValues.size();
 
-        StringJoiner displaySj = new StringJoiner(ITEM_DELIM);
-        item.displayValues().forEach(x -> displaySj.add(x));
-        sj.add(displaySj.toString());
+            for(int i = 0; i < fieldCount; ++i)
+            {
+                if(refFieldValues != null)
+                    sj.add(refFieldValues.get(i));
+                else
+                    sj.add("");
+
+                if(newFieldValues != null)
+                    sj.add(newFieldValues.get(i));
+                else
+                    sj.add("");
+            }
+        }
+        else
+        {
+            ComparableItem item = RefItem != null ? RefItem : NewItem;
+
+            StringJoiner displaySj = new StringJoiner(ITEM_DELIM);
+            item.displayValues().forEach(x -> displaySj.add(x));
+            sj.add(displaySj.toString());
+        }
 
         return sj.toString();
     }

@@ -21,8 +21,11 @@ public class GermlineDeletionData implements ComparableItem
 {
     public final GermlineDeletion Deletion;
 
-    protected static final String FLD_GERMLINE_CN = "germlineCopyNumber";
-    protected static final String FLD_TUMOR_CN = "tumorCopyNumber";
+    protected static final String FLD_QC_STATUS = "QcStatus";
+    protected static final String FLD_GERMLINE_STATUS = "GermlineStatus";
+    protected static final String FLD_TUMOR_STATUS = "TumorStatus";
+    protected static final String FLD_GERMLINE_CN = "GermlineCopyNumber";
+    protected static final String FLD_TUMOR_CN = "TumorCopyNumber";
 
     public GermlineDeletionData(final GermlineDeletion germlineDeletion)
     {
@@ -43,9 +46,11 @@ public class GermlineDeletionData implements ComparableItem
     public List<String> displayValues()
     {
         List<String> values = Lists.newArrayList();
-        values.add(format("reported=%s", Deletion.Reported));
-        values.add(format("germlineStatus=%s", Deletion.NormalStatus));
-        values.add(format("tumorStatus=%s", Deletion.TumorStatus));
+        values.add(format("%s", Deletion.Reported));
+        values.add(format("%s", Deletion.NormalStatus));
+        values.add(format("%s", Deletion.TumorStatus));
+        values.add(format("%s", Deletion.GermlineCopyNumber));
+        values.add(format("%s", Deletion.TumorCopyNumber));
         return values;
     }
 
@@ -68,10 +73,9 @@ public class GermlineDeletionData implements ComparableItem
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, "qcStatus", Deletion.Reported, otherDeletion.Deletion.Reported);
-        checkDiff(diffs, "germlineStatus", Deletion.NormalStatus.toString(), otherDeletion.Deletion.NormalStatus.toString());
-        checkDiff(diffs, "tumorStatus", Deletion.TumorStatus.toString(), otherDeletion.Deletion.TumorStatus.toString());
-
+        checkDiff(diffs, FLD_QC_STATUS, Deletion.Reported, otherDeletion.Deletion.Reported);
+        checkDiff(diffs, FLD_GERMLINE_STATUS, Deletion.NormalStatus.toString(), otherDeletion.Deletion.NormalStatus.toString());
+        checkDiff(diffs, FLD_TUMOR_STATUS, Deletion.TumorStatus.toString(), otherDeletion.Deletion.TumorStatus.toString());
         checkDiff(diffs, FLD_GERMLINE_CN, Deletion.GermlineCopyNumber, otherDeletion.Deletion.GermlineCopyNumber, thresholds);
         checkDiff(diffs, FLD_TUMOR_CN, Deletion.TumorCopyNumber, otherDeletion.Deletion.TumorCopyNumber, thresholds);
 

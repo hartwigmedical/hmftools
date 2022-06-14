@@ -42,15 +42,12 @@ public class DriverTest
         refItems.add(new DriverData(createDriverCatalog("KRAS", DriverType.MUTATION, 0.7, 2)));
         newItems.add(new DriverData(createDriverCatalog("KRAS", DriverType.MUTATION, 0.5, 2)));
 
-        refItems.add(new DriverData(createDriverCatalog("CDKN2A", DriverType.MUTATION, 1.0, 2)));
-        newItems.add(new DriverData(createDriverCatalog("CDKN2A", DriverType.MUTATION, 1.0, 1.5)));
-
         CommonUtils.compareItems(mismatches, MatchLevel.REPORTABLE, config.Thresholds, refItems, newItems);
 
-        assertEquals(4, mismatches.size());
+        assertEquals(3, mismatches.size());
         assertEquals(1, mismatches.stream().filter(x -> x.MismatchType == MismatchType.REF_ONLY).count());
         assertEquals(1, mismatches.stream().filter(x -> x.MismatchType == MismatchType.NEW_ONLY).count());
-        assertEquals(2, mismatches.stream().filter(x -> x.MismatchType == MismatchType.VALUE).count());
+        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType == MismatchType.VALUE).count());
     }
 
     private static DriverCatalog createDriverCatalog(final String gene, final DriverType type, double likelihood, double minCopyNumber)

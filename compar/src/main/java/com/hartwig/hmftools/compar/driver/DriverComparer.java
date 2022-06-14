@@ -2,8 +2,8 @@ package com.hartwig.hmftools.compar.driver;
 
 import static com.hartwig.hmftools.compar.Category.DRIVER;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.driver.DriverData.FLD_DRIVER_LIKELIHOOD;
-import static com.hartwig.hmftools.compar.driver.DriverData.FLD_DRIVER_MIN_CN;
+import static com.hartwig.hmftools.compar.driver.DriverData.FLD_LIKELIHOOD;
+import static com.hartwig.hmftools.compar.driver.DriverData.FLD_LIKE_METHOD;
 
 import java.io.IOException;
 import java.util.List;
@@ -37,14 +37,19 @@ public class DriverComparer implements ItemComparer
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
-        thresholds.addFieldThreshold(FLD_DRIVER_LIKELIHOOD, 0.1, 0);
-        thresholds.addFieldThreshold(FLD_DRIVER_MIN_CN, 0.2, 0.1);
+        thresholds.addFieldThreshold(FLD_LIKELIHOOD, 0.1, 0);
     }
 
     @Override
     public void processSample(final String sampleId, final List<Mismatch> mismatches)
     {
         CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+    }
+
+    @Override
+    public List<String> comparedFieldNames()
+    {
+        return Lists.newArrayList(FLD_LIKE_METHOD, FLD_LIKELIHOOD);
     }
 
     @Override

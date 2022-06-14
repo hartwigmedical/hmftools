@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.compar.somatic;
 
+import static com.hartwig.hmftools.compar.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
+import static com.hartwig.hmftools.compar.somatic.SomaticVariantData.FLD_LPS;
+import static com.hartwig.hmftools.compar.somatic.SomaticVariantData.FLD_SUBCLONAL_LIKELIHOOD;
 
 import java.util.List;
 
@@ -10,43 +13,59 @@ import com.hartwig.hmftools.compar.DiffThresholds;
 
 public final class VariantCommon
 {
-    protected static final String FLD_QUAL = "qual";
+    protected static final String FLD_HOTSPOT = "Hotspot";
+    protected static final String FLD_TIER = "Tier";
+    protected static final String FLD_BIALLELIC = "Biallelic";
+    protected static final String FLD_GENE = "Gene";
+    protected static final String FLD_CANON_EFFECT = "CanonicalEffect";
+    protected static final String FLD_CODING_EFFECT = "CanonicalCodingEffect";
+    protected static final String FLD_HGVS_CODING = "CanonicalHgvsCoding";
+    protected static final String FLD_HGVS_PROTEIN = "CanonicalHgvsProtein";
+    protected static final String FLD_OTHER_REPORTED = "OtherReportedEffects";
+    protected static final String FLD_QUAL = "Qual";
 
-    public static final List<String> findVariantDiffs(
+    protected static final List<String> findVariantDiffs(
             final SomaticVariant refVar, final SomaticVariant otherVar, final DiffThresholds thresholds)
     {
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, "reported", refVar.reported(), otherVar.reported());
-
-        checkDiff(diffs, "hotspot", refVar.hotspot().toString(), otherVar.hotspot().toString());
-        checkDiff(diffs, "tier", refVar.tier().toString(), otherVar.tier().toString());
-        checkDiff(diffs, "biallelic", refVar.biallelic(), otherVar.biallelic());
-        checkDiff(diffs, "gene", refVar.gene(), otherVar.gene());
-        checkDiff(diffs, "canonicalEffect", refVar.canonicalEffect(), otherVar.canonicalEffect());
-        checkDiff(diffs, "canonicalCodingEffect", refVar.canonicalCodingEffect().toString(), otherVar.canonicalCodingEffect()
+        checkDiff(diffs, FLD_REPORTED, refVar.reported(), otherVar.reported());
+        checkDiff(diffs, FLD_HOTSPOT, refVar.hotspot().toString(), otherVar.hotspot().toString());
+        checkDiff(diffs, FLD_TIER, refVar.tier().toString(), otherVar.tier().toString());
+        checkDiff(diffs, FLD_BIALLELIC, refVar.biallelic(), otherVar.biallelic());
+        checkDiff(diffs, FLD_GENE, refVar.gene(), otherVar.gene());
+        checkDiff(diffs, FLD_CANON_EFFECT, refVar.canonicalEffect(), otherVar.canonicalEffect());
+        checkDiff(diffs, FLD_CODING_EFFECT, refVar.canonicalCodingEffect().toString(), otherVar.canonicalCodingEffect()
                 .toString());
-        checkDiff(diffs, "canonicalHgvsCoding", refVar.canonicalHgvsCodingImpact(), otherVar.canonicalHgvsCodingImpact());
-        checkDiff(diffs, "canonicalHgvsProtein", refVar.canonicalHgvsProteinImpact(), otherVar.canonicalHgvsProteinImpact());
-        checkDiff(diffs, "otherReportedEffects", refVar.otherReportedEffects(), otherVar.otherReportedEffects());
+        checkDiff(diffs, FLD_HGVS_CODING, refVar.canonicalHgvsCodingImpact(), otherVar.canonicalHgvsCodingImpact());
+        checkDiff(diffs, FLD_HGVS_PROTEIN, refVar.canonicalHgvsProteinImpact(), otherVar.canonicalHgvsProteinImpact());
+        checkDiff(diffs, FLD_OTHER_REPORTED, refVar.otherReportedEffects(), otherVar.otherReportedEffects());
 
         checkDiff(diffs, FLD_QUAL, (int) refVar.qual(), (int) otherVar.qual(), thresholds);
 
         return diffs;
     }
 
-    public static void addDisplayValues(final SomaticVariant variant, final List<String> values)
+    protected static List<String> comparedFieldNames()
     {
-        values.add(String.format("qual=%.0f", variant.qual()));
-        values.add(String.format("hotspot=%s", variant.hotspot()));
-        values.add(String.format("tier=%s", variant.tier()));
-        values.add(String.format("biallelic=%s", variant.biallelic()));
-        values.add(String.format("gene=%s", variant.gene()));
-        values.add(String.format("canonicalEffect=%s", variant.canonicalEffect()));
-        values.add(String.format("canonicalCodingEffect=%s", variant.canonicalCodingEffect()));
-        values.add(String.format("canonicalHgvsCoding=%s", variant.canonicalHgvsCodingImpact()));
-        values.add(String.format("canonicalHgvsProtein=%s", variant.canonicalHgvsProteinImpact()));
-        values.add(String.format("hasLPS=%s", variant.hasLocalPhaseSets()));
+        return Lists.newArrayList(
+                FLD_REPORTED, FLD_HOTSPOT, FLD_TIER, FLD_BIALLELIC, FLD_GENE, FLD_CANON_EFFECT, FLD_CODING_EFFECT,
+                FLD_HGVS_CODING, FLD_HGVS_PROTEIN, FLD_OTHER_REPORTED, FLD_QUAL);
+    }
+
+    protected static void addDisplayValues(final SomaticVariant variant, final List<String> values)
+    {
+        values.add(String.format("%s", variant.reported()));
+        values.add(String.format("%s", variant.hotspot()));
+        values.add(String.format("%s", variant.tier()));
+        values.add(String.format("%s", variant.biallelic()));
+        values.add(String.format("%s", variant.gene()));
+        values.add(String.format("%s", variant.canonicalEffect()));
+        values.add(String.format("%s", variant.canonicalCodingEffect()));
+        values.add(String.format("%s", variant.canonicalHgvsCodingImpact()));
+        values.add(String.format("%s", variant.canonicalHgvsProteinImpact()));
+        values.add(String.format("%s", variant.otherReportedEffects()));
+        values.add(String.format("%.0f", variant.qual()));
     }
 
 }

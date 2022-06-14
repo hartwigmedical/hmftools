@@ -39,43 +39,45 @@ public class MismatchWriter
 
         try
         {
-            if(!mConfig.WriteDetailed)
-            {
-                String outputFile = filePrefix + "combined.csv";
+            String outputFile = filePrefix + "combined.csv";
 
-                CMP_LOGGER.info("writing output results: {}", outputFile);
+            CMP_LOGGER.info("writing output results: {}", outputFile);
 
-                mCombinedWriter = createBufferedWriter(outputFile, false);
+            mCombinedWriter = createBufferedWriter(outputFile, false);
 
-                if(mConfig.multiSample())
-                    mCombinedWriter.write("SampleId,");
+            if(mConfig.multiSample())
+                mCombinedWriter.write("SampleId,");
 
-                mCombinedWriter.write(Mismatch.header());
-                mCombinedWriter.newLine();
-            }
-            else
+            mCombinedWriter.write(Mismatch.header());
+            mCombinedWriter.newLine();
+
+            if(mConfig.WriteDetailed)
             {
                 List<ItemComparer> comparers = buildComparers(mConfig);
 
                 for(ItemComparer comparer : comparers)
                 {
-                    if(!comparer.hasDetailedOutput())
-                        continue;
+                    String detailedFile = filePrefix + comparer.category().toString().toLowerCase() + ".csv";
 
-                    String outputFile = filePrefix + comparer.category().toString().toLowerCase() + ".csv";
+                    CMP_LOGGER.info("writing output results: {}", detailedFile);
 
-                    CMP_LOGGER.info("writing output results: {}", outputFile);
-
-                    BufferedWriter writer = createBufferedWriter(outputFile, false);
+                    BufferedWriter writer = createBufferedWriter(detailedFile, false);
 
                     if(mConfig.multiSample())
                         writer.write("SampleId,");
 
-                    writer.write(comparer.outputHeader());
+                    writer.write(Mismatch.commonHeader());
+
+                    final List<String> compareFields = comparer.comparedFieldNames();
+
+                    for(String field : compareFields)
+                    {
+                        writer.write(String.format(",Ref%s,New%s", field, field));
+                    }
+
                     writer.newLine();
                     mCategoryWriters.put(comparer.category(), writer);
                 }
-
             }
         }
         catch(IOException e)
@@ -113,11 +115,7 @@ public class MismatchWriter
                 if(sampleId != null && mConfig.multiSample())
                     writer.write(String.format("%s,", sampleId));
 
-                if(hasSpecificWriter)
-                    writer.write(comparer.mismatchOutput(mismatch));
-                else
-                    writer.write(mismatch.toCsv());
-
+                writer.write(mismatch.toCsv(hasSpecificWriter));
                 writer.newLine();
             }
         }
