@@ -43,4 +43,9 @@ public final class EvidenceDriverLikelihood {
         // We use only high driver viruses for evidence matching
         return true;
     }
+
+    public static boolean interpretWildType() {
+       // All wild types genes has a low driver likelihood
+        return false;
+    }
 }
