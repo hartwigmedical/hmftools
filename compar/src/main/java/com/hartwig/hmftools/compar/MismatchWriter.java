@@ -115,7 +115,7 @@ public class MismatchWriter
                 if(sampleId != null && mConfig.multiSample())
                     writer.write(String.format("%s,", sampleId));
 
-                writer.write(mismatch.toCsv(hasSpecificWriter));
+                writer.write(mismatch.toCsv(hasSpecificWriter, comparer.comparedFieldNames()));
                 writer.newLine();
             }
         }

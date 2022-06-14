@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.compar.linx;
 
 import static com.hartwig.hmftools.compar.Category.DISRUPTION;
+import static com.hartwig.hmftools.compar.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.compar.MismatchType.VALUE;
@@ -25,7 +26,6 @@ public class DisruptionData implements ComparableItem
     protected static final String FLD_CODING_CONTEXT = "CodingContext";
     protected static final String FLD_GENE_ORIENT = "GeneOrientation";
     protected static final String FLD_NEXT_SPLICE = "NextSpliceExonRank";
-    protected static final String FLD_UNDISRUPTED_CN = "UndisruptedCopyNumber";
 
     public DisruptionData(final StructuralVariantData svData, final LinxBreakend breakend)
     {
@@ -53,7 +53,6 @@ public class DisruptionData implements ComparableItem
         values.add(String.format("%s", Breakend.codingContext()));
         values.add(String.format("%s", Breakend.geneOrientation()));
         values.add(String.format("%d", Breakend.nextSpliceExonRank()));
-        values.add(String.format("%.2f", Breakend.undisruptedCopyNumber()));
         return values;
     }
 
@@ -87,13 +86,11 @@ public class DisruptionData implements ComparableItem
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, "reported", reportable(), otherBreakend.reportable());
-        checkDiff(diffs, "geneOrientation", Breakend.geneOrientation(), otherBreakend.Breakend.geneOrientation());
-        checkDiff(diffs, "nextSpliceExonRank", Breakend.nextSpliceExonRank(), otherBreakend.Breakend.nextSpliceExonRank());
-        checkDiff(diffs, "regionType", Breakend.regionType(), otherBreakend.Breakend.regionType());
-        checkDiff(diffs, "codingContext", Breakend.codingContext(), otherBreakend.Breakend.codingContext());
-
-        checkDiff(diffs, FLD_UNDISRUPTED_CN, Breakend.undisruptedCopyNumber(), otherBreakend.Breakend.undisruptedCopyNumber(), thresholds);
+        checkDiff(diffs, FLD_REGION_TYPE, Breakend.regionType(), otherBreakend.Breakend.regionType());
+        checkDiff(diffs, FLD_CODING_CONTEXT, Breakend.codingContext(), otherBreakend.Breakend.codingContext());
+        checkDiff(diffs, FLD_REPORTED, reportable(), otherBreakend.reportable());
+        checkDiff(diffs, FLD_GENE_ORIENT, Breakend.geneOrientation(), otherBreakend.Breakend.geneOrientation());
+        checkDiff(diffs, FLD_NEXT_SPLICE, Breakend.nextSpliceExonRank(), otherBreakend.Breakend.nextSpliceExonRank());
 
         return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
     }

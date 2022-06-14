@@ -99,7 +99,7 @@ public class PurityData implements ComparableItem
         final List<String> diffs = Lists.newArrayList();
 
         checkDiff(diffs, FLD_PURITY, Purity.bestFit().purity(), otherPurity.Purity.bestFit().purity(), thresholds);
-        checkDiff(diffs, FLD_PLOIDY, 1.0, otherPurity.Purity.bestFit().ploidy(), thresholds);
+        checkDiff(diffs, FLD_PLOIDY, Purity.bestFit().ploidy(), otherPurity.Purity.bestFit().ploidy(), thresholds);
 
         checkDiff(diffs, FLD_CONTAMINATION, Purity.qc().contamination(), otherPurity.Purity.qc().contamination(), thresholds);
 

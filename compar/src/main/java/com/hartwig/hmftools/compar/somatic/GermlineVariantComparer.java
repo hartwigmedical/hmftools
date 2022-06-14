@@ -4,10 +4,6 @@ import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_GERMLINE_VC
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.compar.Category.GERMLINE_VARIANT;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.DiffFunctions.diffsStr;
-import static com.hartwig.hmftools.compar.Mismatch.commonCsv;
-import static com.hartwig.hmftools.compar.somatic.SomaticVariantData.FLD_LPS;
-import static com.hartwig.hmftools.compar.somatic.SomaticVariantData.FLD_SUBCLONAL_LIKELIHOOD;
 import static com.hartwig.hmftools.compar.somatic.VariantCommon.FLD_QUAL;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GERMLINEVARIANT;
 
@@ -17,6 +13,8 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.GermlineVariant;
+import com.hartwig.hmftools.common.variant.GermlineVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.compar.Category;
@@ -28,7 +26,7 @@ import com.hartwig.hmftools.compar.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.patientdb.dao.SomaticVariantDAO;
+import com.hartwig.hmftools.patientdb.dao.GermlineVariantDAO;
 
 import org.jooq.Record;
 import org.jooq.Result;
@@ -84,7 +82,7 @@ public class GermlineVariantComparer implements ItemComparer
         final List<ComparableItem> variants = Lists.newArrayList();
         for (Record record : result)
         {
-            SomaticVariant variant = SomaticVariantDAO.buildFromRecord(record);
+            GermlineVariant variant = GermlineVariantDAO.buildFromRecord(record);
             variants.add(new GermlineVariantData(variant));
         }
 
@@ -99,31 +97,17 @@ public class GermlineVariantComparer implements ItemComparer
         CompoundFilter filter = new CompoundFilter(true);
         filter.add(new PassingVariantFilter());
 
-        SomaticVariantFactory variantFactory = new SomaticVariantFactory(filter);
-
         String vcfFile = !fileSources.GermlineVcf.isEmpty() ?
                 fileSources.GermlineVcf : fileSources.Purple + sampleId + PURPLE_GERMLINE_VCF_SUFFIX;
 
         try
         {
-            final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false);
-
-            for(VariantContext variantContext : reader.iterator())
-            {
-                if(filter.test(variantContext))
-                {
-                    final SomaticVariant variant = variantFactory.createVariant(sampleId, variantContext).orElse(null);
-
-                    if(variant == null)
-                        continue;
-
-                    comparableItems.add(new GermlineVariantData(variant));
-                }
-            }
+            List<GermlineVariant> variants = GermlineVariantFactory.fromVCFFile(sampleId, vcfFile);
+            variants.forEach(x -> comparableItems.add(new GermlineVariantData(x)));
 
             CMP_LOGGER.debug("sample({}) loaded {} germline variants", sampleId, comparableItems.size());
         }
-        catch(IOException e)
+        catch(Exception e)
         {
             CMP_LOGGER.error("failed to read germline VCF file({}): {}", vcfFile, e.toString());
         }

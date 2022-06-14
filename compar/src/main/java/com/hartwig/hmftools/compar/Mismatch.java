@@ -54,7 +54,7 @@ public class Mismatch
         return sj.toString();
     }
 
-    public String toCsv(boolean writeFieldValues)
+    public String toCsv(boolean writeFieldValues, final List<String> comparedFieldsNames)
     {
         StringJoiner sj = new StringJoiner(DATA_DELIM);
 
@@ -86,7 +86,14 @@ public class Mismatch
             ComparableItem item = RefItem != null ? RefItem : NewItem;
 
             StringJoiner displaySj = new StringJoiner(ITEM_DELIM);
-            item.displayValues().forEach(x -> displaySj.add(x));
+
+            List<String> itemDisplayValues = item.displayValues();
+
+            for(int i = 0; i < itemDisplayValues.size(); ++i)
+            {
+                displaySj.add(format("%s=%s", comparedFieldsNames.get(i), itemDisplayValues.get(i)));
+            }
+
             sj.add(displaySj.toString());
         }
 

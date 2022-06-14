@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_CODING_CONTEXT
 import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_GENE_ORIENT;
 import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_NEXT_SPLICE;
 import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_REGION_TYPE;
-import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_UNDISRUPTED_CN;
 
 import java.io.IOException;
 import java.util.List;
@@ -48,10 +47,9 @@ public class DisruptionComparer implements ItemComparer
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
-        thresholds.addFieldThreshold(FLD_UNDISRUPTED_CN, 0.2, 0.1);
     }
 
-        @Override
+    @Override
     public void processSample(final String sampleId, final List<Mismatch> mismatches)
     {
         CommonUtils.processSample(this, mConfig, sampleId, mismatches);
@@ -61,7 +59,7 @@ public class DisruptionComparer implements ItemComparer
     public List<String> comparedFieldNames()
     {
         return Lists.newArrayList(
-                FLD_REPORTED, FLD_REGION_TYPE, FLD_CODING_CONTEXT, FLD_GENE_ORIENT, FLD_NEXT_SPLICE, FLD_UNDISRUPTED_CN);
+                FLD_REPORTED, FLD_REGION_TYPE, FLD_CODING_CONTEXT, FLD_GENE_ORIENT, FLD_NEXT_SPLICE);
     }
 
     @Override
