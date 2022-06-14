@@ -48,6 +48,6 @@ public class CombinedMatcherTest {
         return new CombinedMatcher(COMBINED_EVENTS_PER_GENE,
                 hotspotMatcher,
                 fusionPairMatcher,
-                new AmplificationMatcher(AMPLIFICATION_KEYWORDS, Sets.newHashSet(), Sets.newHashSet(), Sets.newHashSet()));
+                new AmplificationMatcher(AMPLIFICATION_KEYWORDS, Sets.newHashSet()));
     }
 }
