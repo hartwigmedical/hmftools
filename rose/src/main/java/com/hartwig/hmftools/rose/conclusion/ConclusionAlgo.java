@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
 import com.hartwig.hmftools.common.purple.interpretation.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
@@ -197,10 +198,8 @@ public class ConclusionAlgo {
             @NotNull Set<String> HRD) {
 
         for (ReportableVariant reportableVariant : reportableVariants) {
-            String variant =
-                    reportableVariant.canonicalHgvsProteinImpact().isEmpty() || reportableVariant.canonicalHgvsProteinImpact().equals("p.?")
-                            ? reportableVariant.canonicalHgvsCodingImpact()
-                            : reportableVariant.canonicalHgvsProteinImpact();
+            String variant = ProtectEventGenerator.toVariantEvent(reportableVariant.canonicalHgvsProteinImpact(),
+                    reportableVariant.canonicalHgvsCodingImpact(), reportableVariant.canonicalEffect());
 
             if (HRD_GENES.contains(reportableVariant.gene())) {
                 HRD.add(reportableVariant.gene());

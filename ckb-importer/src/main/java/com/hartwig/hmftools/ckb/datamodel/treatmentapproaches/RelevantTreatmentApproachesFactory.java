@@ -16,6 +16,7 @@ public final class RelevantTreatmentApproachesFactory {
     private RelevantTreatmentApproachesFactory() {
     }
 
+    @NotNull
     public static List<RelevantTreatmentApproaches> extractRelevantTreatmentApproaches(@NotNull CkbJsonDatabase ckbJsonDatabase,
             @NotNull List<TreatmentApproachInfo> treatmentApproachInfos) {
         List<RelevantTreatmentApproaches> relevantTreatmentApproach = Lists.newArrayList();
