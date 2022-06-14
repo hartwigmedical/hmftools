@@ -71,7 +71,8 @@ public class WildTypeEvidenceTest {
         ReportableHomozygousDisruption homozygousDisruption = create("NRAS");
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList(homozygousDisruption);
 
-        Map<String, DriverGene> mapDriverGene = createDriverMap(Lists.newArrayList("BRCA1", "BRCA2", "APC", "KRAS", "BAG4", "FGFR1", "NRAS", "EGFR"));
+        Map<String, DriverGene> mapDriverGene =
+                createDriverMap(Lists.newArrayList("BRCA1", "BRCA2", "APC", "KRAS", "BAG4", "FGFR1", "NRAS", "EGFR"));
 
         //Test wild-type with somatic variant
         ActionableGene wildTypeSomaticVariant = ImmutableActionableGene.builder()
@@ -83,7 +84,6 @@ public class WildTypeEvidenceTest {
 
         WildTypeEvidence wildTypeEvidenceSomaticVariant =
                 new WildTypeEvidence(EvidenceTestFactory.create(), Lists.newArrayList(wildTypeSomaticVariant), mapDriverGene);
-
 
         List<ProtectEvidence> evidencesWildTypeSoamticVariant = wildTypeEvidenceSomaticVariant.evidence(reportableGermlineVariant,
                 reportableSomaticVariant,
@@ -158,7 +158,8 @@ public class WildTypeEvidenceTest {
         WildTypeEvidence wildTypeEvidenceHomozygousDisruption =
                 new WildTypeEvidence(EvidenceTestFactory.create(), Lists.newArrayList(wildTypeHomozygousDisruption), mapDriverGene);
 
-        List<ProtectEvidence> evidencesWildTypeHomozygousDisruption = wildTypeEvidenceHomozygousDisruption.evidence(reportableGermlineVariant,
+        List<ProtectEvidence> evidencesWildTypeHomozygousDisruption = wildTypeEvidenceHomozygousDisruption.evidence(
+                reportableGermlineVariant,
                 reportableSomaticVariant,
                 reportableSomaticGainsLosses,
                 reportableFusions,
@@ -173,8 +174,7 @@ public class WildTypeEvidenceTest {
                 .source(Knowledgebase.CKB)
                 .build();
 
-        WildTypeEvidence wildTypeEvidence =
-                new WildTypeEvidence(EvidenceTestFactory.create(), Lists.newArrayList(wildType), mapDriverGene);
+        WildTypeEvidence wildTypeEvidence = new WildTypeEvidence(EvidenceTestFactory.create(), Lists.newArrayList(wildType), mapDriverGene);
 
         List<ProtectEvidence> evidencesWildType = wildTypeEvidence.evidence(reportableGermlineVariant,
                 reportableSomaticVariant,
@@ -187,14 +187,13 @@ public class WildTypeEvidenceTest {
     @NotNull
     private static Map<String, DriverGene> createDriverMap(@NotNull List<String> genes) {
         Map<String, DriverGene> driverGeneMap = Maps.newHashMap();
-        for (String gene: genes){
+        for (String gene : genes) {
             driverGeneMap.put(gene, createDriverGene(gene));
         }
         return driverGeneMap;
     }
 
-    public static DriverGene createDriverGene(final String name)
-    {
+    public static DriverGene createDriverGene(final String name) {
         return ImmutableDriverGene.builder()
                 .gene(name)
                 .reportMissenseAndInframe(false)
