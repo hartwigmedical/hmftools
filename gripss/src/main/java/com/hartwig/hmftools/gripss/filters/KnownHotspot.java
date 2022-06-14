@@ -21,18 +21,21 @@ public class KnownHotspot
         GeneInfo = geneInfo;
     }
 
-    public boolean matches(final StructuralVariant sv)
-    {
-        return RegionStart.containsPosition(sv.chromosome(true), sv.position(true).intValue())
-            && OrientStart == sv.orientation(true)
-            && RegionEnd.containsPosition(sv.chromosome(false), sv.position(false).intValue())
-            && OrientEnd == sv.orientation(false);
-    }
-
     public boolean matches(final String chrStart, final String chrEnd, int posStart, int posEnd, byte orientStart, byte orientEnd)
     {
-        return RegionStart.containsPosition(chrStart, posStart) && OrientStart == orientStart
-                && RegionEnd.containsPosition(chrEnd, posEnd) && OrientEnd == orientEnd;
+        if(RegionStart.containsPosition(chrStart, posStart) && OrientStart == orientStart
+        && RegionEnd.containsPosition(chrEnd, posEnd) && OrientEnd == orientEnd)
+        {
+            return true;
+        }
+
+        if(RegionStart.containsPosition(chrEnd, posEnd) && OrientStart == orientEnd
+        && RegionEnd.containsPosition(chrStart, posStart) && OrientEnd == orientStart)
+        {
+            return true;
+        }
+
+        return false;
     }
 
 }
