@@ -34,8 +34,7 @@ public class RoseAlgoTest {
 
     private static final String MOLECULAR_TISSUE_ORIGIN_TXT = Resources.getResource("test_run/cuppa/sample.cuppa.conclusion.txt").getPath();
 
-    private static final String DRIVER_GENE_37_TSV = Resources.getResource("drivercatalog/driver.gene.panel.tsv").getPath();
-    private static final String DRIVER_GENE_38_TSV = Resources.getResource("drivercatalog/driver.gene.panel.tsv").getPath();
+    private static final String DRIVER_GENE_TSV = Resources.getResource("drivercatalog/driver.gene.panel.tsv").getPath();
     private static final String PRIMARY_TUMOR_TSV = Resources.getResource("primarytumor/primary_tumor.tsv").getPath();
 
     @Test
@@ -60,7 +59,7 @@ public class RoseAlgoTest {
                 .chordPredictionTxt(CHORD_PREDICTION_TXT)
                 .annotatedVirusTsv(ANNOTATED_VIRUS_TSV)
                 .molecularTissueOriginTxt(MOLECULAR_TISSUE_ORIGIN_TXT)
-                .driverGeneTsv(DRIVER_GENE_38_TSV)
+                .driverGeneTsv(DRIVER_GENE_TSV)
                 .primaryTumorTsv(PRIMARY_TUMOR_TSV)
                 .build();
 
