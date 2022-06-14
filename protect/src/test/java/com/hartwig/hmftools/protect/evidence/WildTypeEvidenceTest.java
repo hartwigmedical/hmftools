@@ -38,7 +38,6 @@ import org.junit.Test;
 public class WildTypeEvidenceTest {
 
     @Test
-    @Ignore
     public void canDetermineWildType() {
 
         ReportableVariant variantGermline = ImmutableReportableVariant.builder()
