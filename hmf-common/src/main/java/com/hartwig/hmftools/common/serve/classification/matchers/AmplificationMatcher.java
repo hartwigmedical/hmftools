@@ -10,17 +10,11 @@ class AmplificationMatcher implements EventMatcher {
     private final Set<String> amplificationKeywords;
     @NotNull
     private final Set<String> amplificationKeyPhrases;
-    @NotNull
-    private final Set<String> overexpressionKeywords;
-    @NotNull
-    private final Set<String> overexpressionKeyPhrases;
 
-    AmplificationMatcher(@NotNull final Set<String> amplificationKeywords, @NotNull final Set<String> amplificationKeyPhrases,
-            @NotNull final Set<String> overexpressionKeywords, @NotNull final Set<String> overexpressionKeyPhrases) {
+
+    AmplificationMatcher(@NotNull final Set<String> amplificationKeywords, @NotNull final Set<String> amplificationKeyPhrases) {
         this.amplificationKeywords = amplificationKeywords;
         this.amplificationKeyPhrases = amplificationKeyPhrases;
-        this.overexpressionKeywords = overexpressionKeywords;
-        this.overexpressionKeyPhrases = overexpressionKeyPhrases;
     }
 
     @Override
@@ -35,21 +29,6 @@ class AmplificationMatcher implements EventMatcher {
         }
 
         for (String keyPhrase : amplificationKeyPhrases) {
-            if (event.contains(keyPhrase)) {
-                return true;
-            }
-        }
-
-        String[] wordsOver = event.split(" ");
-        for (String keyword : overexpressionKeywords) {
-            for (String word : wordsOver) {
-                if (word.equals(keyword)) {
-                    return true;
-                }
-            }
-        }
-
-        for (String keyPhrase : overexpressionKeyPhrases) {
             if (event.contains(keyPhrase)) {
                 return true;
             }

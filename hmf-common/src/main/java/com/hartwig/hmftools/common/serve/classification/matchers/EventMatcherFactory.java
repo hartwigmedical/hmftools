@@ -40,12 +40,14 @@ public final class EventMatcherFactory {
 
         FusionPairAndExonMatcher fusionPairAndExonMatcher = new FusionPairAndExonMatcher(config.fusionPairAndExonsPerGene());
         AmplificationMatcher amplificationMatcher = new AmplificationMatcher(config.amplificationKeywords(),
-                config.amplificationKeyPhrases(),
-                config.overExpressionKeywords(),
-                config.overExpressionKeyPhrases());
+                config.amplificationKeyPhrases());
         DeletionMatcher deletionMatcher = new DeletionMatcher(config.deletionBlacklistKeyPhrases(),
                 config.deletionKeywords(),
-                config.deletionKeyPhrases(),
+                config.deletionKeyPhrases());
+
+        OverExpressionMatcher overExpressionMatcher = new OverExpressionMatcher(config.overExpressionKeywords(),
+                config.overExpressionKeyPhrases());
+        UnderExpressionMatcher underExpressionMatcher = new UnderExpressionMatcher(
                 config.underExpressionKeywords(),
                 config.underExpressionKeyPhrases());
 
@@ -66,7 +68,9 @@ public final class EventMatcherFactory {
         map.put(EventType.GENE_LEVEL, withFirstTierMatchers(firstTierEventMatchers, geneLevelMatcher));
         map.put(EventType.WILD_TYPE, withFirstTierMatchers(firstTierEventMatchers, wildTypeMatcher));
         map.put(EventType.AMPLIFICATION, withFirstTierMatchers(firstTierEventMatchers, amplificationMatcher));
+        map.put(EventType.OVER_EXPRESSION, withFirstTierMatchers(firstTierEventMatchers, overExpressionMatcher));
         map.put(EventType.DELETION, withFirstTierMatchers(firstTierEventMatchers, deletionMatcher));
+        map.put(EventType.UNDER_EXPRESSION, withFirstTierMatchers(firstTierEventMatchers, underExpressionMatcher));
         map.put(EventType.FUSION_PAIR, withFirstTierMatchers(firstTierEventMatchers, fusionPairMatcher));
         map.put(EventType.PROMISCUOUS_FUSION, withFirstTierMatchers(firstTierEventMatchers, promiscuousFusionMatcher));
         map.put(EventType.CHARACTERISTIC, withFirstTierMatchers(firstTierEventMatchers, characteristicMatcher));
