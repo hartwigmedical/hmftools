@@ -128,7 +128,6 @@ investigate potential causes for QC failure.
 
 ### Version History and Download Links
 - Upcoming
-  - Add the driver gene panel to the ORANGE JSON output
   - Variants with a phased inframe canonical effect are dedup'ed prior to reporting.
   - Unreported variants with canonical synonymous impact but reportable worst impact are added to potentially interesting variants.
   - Unreported variants in splice regions of genes for which we report splice variants are added to potentially interesting variants.  
