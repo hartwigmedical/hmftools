@@ -155,6 +155,37 @@ public class SomaticVariantSelectorTest {
         assertNotNull(findByCanonicalEffect(variants, "missense"));
     }
 
+    @Test
+    public void canSelectSpliceRegionVariants() {
+        DriverGene driverGeneYes = DriverGeneTestFactory.builder().gene("driver 1").reportSplice(true).build();
+        DriverGene driverGeneNo = DriverGeneTestFactory.builder().gene("driver 2").reportSplice(false).build();
+
+        SomaticVariant reportedGene =
+                SomaticVariantTestFactory.builder().spliceRegion(true).canonicalEffect("all correct").gene(driverGeneYes.gene()).build();
+
+        SomaticVariant nonReportedGene = SomaticVariantTestFactory.builder()
+                .spliceRegion(true)
+                .canonicalEffect("non reported gene")
+                .gene(driverGeneNo.gene())
+                .build();
+
+        SomaticVariant otherGene = SomaticVariantTestFactory.builder()
+                .spliceRegion(true)
+                .canonicalEffect("other gene")
+                .gene(driverGeneNo.gene())
+                .build();
+
+        List<ReportableVariant> variants =
+                SomaticVariantSelector.selectNonDrivers(Lists.newArrayList(reportedGene, nonReportedGene, otherGene),
+                        Lists.newArrayList(),
+                        Lists.newArrayList(),
+                        Lists.newArrayList(driverGeneYes, driverGeneNo));
+
+        assertEquals(1, variants.size());
+
+        assertNotNull(findByCanonicalEffect(variants, "all correct"));
+    }
+
     @Nullable
     private static ReportableVariant findByCanonicalEffect(@NotNull List<ReportableVariant> variants,
             @NotNull String canonicalEffectToFind) {

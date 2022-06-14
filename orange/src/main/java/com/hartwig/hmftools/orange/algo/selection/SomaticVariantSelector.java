@@ -38,8 +38,10 @@ public final class SomaticVariantSelector {
                     !variant.gene().isEmpty() && hasReportedVariantWithPhase(reportedSomaticVariants, variant.topLocalPhaseSet());
             boolean isCuppaRelevantVariant = isRelevantForCuppa(variant);
             boolean isSynonymousButReportable = isSynonymousWithReportableWorstImpact(variant, driverGenes);
+            boolean isUnreportedSpliceVariant = isUnreportedSpliceVariant(variant, driverGenes);
 
-            if (isNearHotspot || hasEvidence || isExonicAndHasPhasedReportedVariant || isCuppaRelevantVariant || isSynonymousButReportable) {
+            if (isNearHotspot || hasEvidence || isExonicAndHasPhasedReportedVariant || isCuppaRelevantVariant || isSynonymousButReportable
+                    || isUnreportedSpliceVariant) {
                 filtered.add(toReportable(variant));
             }
         }
@@ -75,11 +77,21 @@ public final class SomaticVariantSelector {
             return false;
         }
 
-        CodingEffect effect = variant.worstCodingEffect();
-        boolean nonsenseOrFrameshift = effect == CodingEffect.NONSENSE_OR_FRAMESHIFT && driverGene.reportNonsenseAndFrameshift();
-        boolean splice = effect == CodingEffect.SPLICE && driverGene.reportSplice();
-        boolean missense = effect == CodingEffect.MISSENSE && driverGene.reportMissenseAndInframe();
+        CodingEffect worstEffect = variant.worstCodingEffect();
+        boolean nonsenseOrFrameshift = worstEffect == CodingEffect.NONSENSE_OR_FRAMESHIFT && driverGene.reportNonsenseAndFrameshift();
+        boolean splice = worstEffect == CodingEffect.SPLICE && driverGene.reportSplice();
+        boolean missense = worstEffect == CodingEffect.MISSENSE && driverGene.reportMissenseAndInframe();
         return nonsenseOrFrameshift || splice || missense;
+    }
+
+    private static boolean isUnreportedSpliceVariant(@NotNull SomaticVariant variant, @NotNull List<DriverGene> driverGenes) {
+        if (variant.spliceRegion()) {
+            DriverGene driverGene = findDriverGene(driverGenes, variant.gene());
+            if (driverGene != null) {
+                return driverGene.reportSplice();
+            }
+        }
+        return false;
     }
 
     @Nullable
