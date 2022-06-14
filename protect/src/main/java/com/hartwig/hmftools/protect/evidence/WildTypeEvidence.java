@@ -14,12 +14,9 @@ import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class WildTypeEvidence {
-    private static final Logger LOGGER = LogManager.getLogger(WildTypeEvidence.class);
 
     @NotNull
     private final PersonalizedEvidenceFactory personalizedEvidenceFactory;
@@ -40,66 +37,71 @@ public class WildTypeEvidence {
             @NotNull List<LinxFusion> reportableFusions, @NotNull List<ReportableHomozygousDisruption> homozygousDisruptions) {
         List<ProtectEvidence> evidences = Lists.newArrayList();
         for (ActionableGene wildType : actionableGenes) {
-            LOGGER.info(wildType);
 
             DriverGene driverGene = driverGenes.get(wildType.gene());
 
             if (driverGene != null) {
-                LOGGER.info(driverGene);
-
                 boolean wildTypeSomaticVariant = false;
                 boolean wildTypeGermlineVariant = false;
                 boolean wildTypeSomaticGainLoss = false;
                 boolean wildTypeFusions = false;
                 boolean wildTypeHomozygousDisruption = false;
 
-                for (ReportableVariant somaticVariant: reportableSomaticVariant) {
-                    wildTypeSomaticVariant = determineWildTypes(driverGene.gene(), somaticVariant.gene());
+                List<Boolean> somaticVariantBoolean = Lists.newArrayList();
+                List<Boolean> somaticGermlineBoolean = Lists.newArrayList();
+                List<Boolean> CNVBoolean = Lists.newArrayList();
+                List<Boolean> FusionBooleanEnd = Lists.newArrayList();
+                List<Boolean> FusionBooleanStart = Lists.newArrayList();
+                List<Boolean> HomozygousDisruptionBoolean = Lists.newArrayList();
+
+                for (ReportableVariant somaticVariant : reportableSomaticVariant) {
+                    determineWildTypes(driverGene.gene(), somaticVariant.gene(), somaticVariantBoolean);
+                    wildTypeSomaticVariant = somaticVariantBoolean.contains(true);
                 }
 
-                for (ReportableVariant germlineVariant: reportableGermlineVariant) {
-                    wildTypeGermlineVariant = determineWildTypes(driverGene.gene(), germlineVariant.gene());
+                for (ReportableVariant germlineVariant : reportableGermlineVariant) {
+                    determineWildTypes(driverGene.gene(), germlineVariant.gene(), somaticGermlineBoolean);
+                    wildTypeGermlineVariant = somaticGermlineBoolean.contains(true);
                 }
 
-                for (GainLoss gainLoss: reportableSomaticGainsLosses){
-                    wildTypeSomaticGainLoss = determineWildTypes(driverGene.gene(), gainLoss.gene());
+                for (GainLoss gainLoss : reportableSomaticGainsLosses) {
+                    determineWildTypes(driverGene.gene(), gainLoss.gene(), CNVBoolean);
+                    wildTypeSomaticGainLoss = !CNVBoolean.contains(false);
                 }
 
-                for (LinxFusion fusions: reportableFusions){
-                    boolean wildTypeFusionsStart = determineWildTypes(driverGene.gene(), fusions.geneStart());
-                    boolean wildTypeFusionsEnd = determineWildTypes(driverGene.gene(), fusions.geneEnd());
-                    wildTypeFusions = !wildTypeFusionsStart && !wildTypeFusionsEnd;
+                for (LinxFusion fusions : reportableFusions) {
+                    determineWildTypes(driverGene.gene(), fusions.geneStart(), FusionBooleanStart);
+                    determineWildTypes(driverGene.gene(), fusions.geneEnd(), FusionBooleanEnd);
+                    wildTypeFusions =
+                            (!FusionBooleanStart.contains(true) && !FusionBooleanEnd.contains(true)) || (FusionBooleanStart.contains(true)
+                                    && FusionBooleanEnd.contains(true));
                 }
 
-                for (ReportableHomozygousDisruption homozygousDisruption: homozygousDisruptions){
-                    wildTypeHomozygousDisruption = determineWildTypes(driverGene.gene(), homozygousDisruption.gene());
+                for (ReportableHomozygousDisruption homozygousDisruption : homozygousDisruptions) {
+
+                    determineWildTypes(driverGene.gene(), homozygousDisruption.gene(), HomozygousDisruptionBoolean);
+                    wildTypeHomozygousDisruption = HomozygousDisruptionBoolean.contains(true);
                 }
 
-                LOGGER.info("wildTypeSomaticVariant: " +wildTypeSomaticVariant);
-                LOGGER.info("wildTypeGermlineVariant: " + wildTypeGermlineVariant);
-                LOGGER.info("wildTypeSomaticGainLoss: " + wildTypeSomaticGainLoss);
-                LOGGER.info("wildTypeFusions: " + wildTypeFusions);
-                LOGGER.info("wildTypeHomozygousDisruption: " + wildTypeHomozygousDisruption);
                 if (wildTypeSomaticVariant && wildTypeGermlineVariant && wildTypeSomaticGainLoss && wildTypeFusions
                         && wildTypeHomozygousDisruption) {
                     evidences.add(evidence(wildType));
                 }
             }
         }
-        LOGGER.info(evidences);
         return evidences;
     }
 
-    public boolean determineWildTypes(@NotNull String driverGene, @NotNull String reportableGene) {
+    public void determineWildTypes(@NotNull String driverGene, @NotNull String reportableGene, @NotNull List<Boolean> booleanList) {
         if (driverGene.equals(reportableGene)) {
-            return false;
+            booleanList.add(false);
         } else {
-            return true;
+            booleanList.add(true);
         }
     }
 
     @NotNull
-    private ProtectEvidence evidence( @NotNull ActionableGene actionable) {
+    private ProtectEvidence evidence(@NotNull ActionableGene actionable) {
         return personalizedEvidenceFactory.somaticEvidence(actionable)
                 .reported(false)
                 .gene(actionable.gene())
