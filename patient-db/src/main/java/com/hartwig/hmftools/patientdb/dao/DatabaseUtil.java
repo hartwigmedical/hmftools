@@ -48,4 +48,14 @@ final public class DatabaseUtil {
     public static String valueNotNull(@Nullable String value) {
         return value != null ? value : Strings.EMPTY;
     }
+
+    public static boolean byteToBoolean(@Nullable Byte b)
+    {
+        if(b == null)
+        {
+            throw new IllegalStateException("NULL value present in database for non-null field");
+        }
+        return b != 0;
+    }
+
 }

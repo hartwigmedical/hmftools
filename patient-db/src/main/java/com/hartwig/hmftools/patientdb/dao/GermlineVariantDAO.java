@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.patientdb.dao;
 
+import static com.hartwig.hmftools.common.genotype.GenotypeStatus.UNKNOWN;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.checkStringLength;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTGERMLINE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Germlinevariant.GERMLINEVARIANT;
 
@@ -9,17 +11,31 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummary;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.sv.linx.LinxGermlineSv;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.GermlineVariant;
+import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.ImmutableAllelicDepthImpl;
+import com.hartwig.hmftools.common.variant.ImmutableGermlineVariantImpl;
+import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
+import com.hartwig.hmftools.common.variant.VariantTier;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStepN;
+import org.jooq.Record;
+import org.jooq.Result;
 import org.jooq.TableField;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -267,6 +283,76 @@ public class GermlineVariantDAO
                 germlineSV.LinkedByEnd,
                 germlineSV.CohortFrequency,
                 germlineSV.Reported);
+    }
+
+    @NotNull
+    public List<GermlineVariant> read(@NotNull String sample)
+    {
+        List<GermlineVariant> variants = Lists.newArrayList();
+
+        Result<Record> result = context.select().from(GERMLINEVARIANT).where(GERMLINEVARIANT.SAMPLEID.eq(sample)).fetch();
+
+        for(Record record : result)
+        {
+            variants.add(buildFromRecord(record));
+        }
+
+        return variants;
+    }
+
+    public static GermlineVariant buildFromRecord(final Record record)
+    {
+        Integer rnaAlleleReadCount = record.getValue(GERMLINEVARIANT.RNAALLELEREADCOUNT);
+        Integer rnaTotalCount = record.getValue(GERMLINEVARIANT.RNATOTALREADCOUNT);
+        AllelicDepth rnaAllelicDepth = rnaAlleleReadCount != null && rnaTotalCount != null ? ImmutableAllelicDepthImpl.builder()
+                .alleleReadCount(rnaAlleleReadCount)
+                .totalReadCount(rnaTotalCount)
+                .build() : null;
+
+        return ImmutableGermlineVariantImpl.builder()
+                .chromosome(record.getValue(GERMLINEVARIANT.CHROMOSOME))
+                .position(record.getValue(GERMLINEVARIANT.POSITION))
+                .filter(record.getValue(GERMLINEVARIANT.FILTER))
+                .type(VariantType.valueOf(record.getValue(GERMLINEVARIANT.TYPE)))
+                .ref(record.getValue(GERMLINEVARIANT.REF))
+                .alt(record.getValue(GERMLINEVARIANT.ALT))
+                .gene(record.getValue(GERMLINEVARIANT.GENE))
+                .genesAffected(record.getValue(GERMLINEVARIANT.GENESAFFECTED))
+                .worstCodingEffect(record.getValue(GERMLINEVARIANT.WORSTCODINGEFFECT).isEmpty()
+                        ? CodingEffect.UNDEFINED
+                        : CodingEffect.valueOf(record.getValue(GERMLINEVARIANT.WORSTCODINGEFFECT)))
+                .canonicalTranscript("")
+                .canonicalEffect(record.getValue(GERMLINEVARIANT.CANONICALEFFECT))
+                .canonicalCodingEffect(record.getValue(GERMLINEVARIANT.CANONICALCODINGEFFECT).isEmpty()
+                        ? CodingEffect.UNDEFINED
+                        : CodingEffect.valueOf(record.getValue(GERMLINEVARIANT.CANONICALCODINGEFFECT)))
+                .canonicalHgvsCodingImpact(record.getValue(GERMLINEVARIANT.CANONICALHGVSCODINGIMPACT))
+                .canonicalHgvsProteinImpact(record.getValue(GERMLINEVARIANT.CANONICALHGVSPROTEINIMPACT))
+                .spliceRegion(DatabaseUtil.byteToBoolean(record.getValue(GERMLINEVARIANT.SPLICEREGION)))
+                .otherReportedEffects(DatabaseUtil.valueNotNull(record.getValue(GERMLINEVARIANT.OTHERTRANSCRIPTEFFECTS)))
+                .alleleReadCount(record.getValue(GERMLINEVARIANT.GERMLINEALLELEREADCOUNT))
+                .totalReadCount(record.getValue(GERMLINEVARIANT.GERMLINETOTALREADCOUNT))
+                .adjustedCopyNumber(record.getValue(GERMLINEVARIANT.COPYNUMBER))
+                .adjustedVAF(record.getValue(GERMLINEVARIANT.ADJUSTEDVAF))
+                .variantCopyNumber(record.getValue(GERMLINEVARIANT.VARIANTCOPYNUMBER))
+                .biallelic(DatabaseUtil.byteToBoolean(record.getValue(GERMLINEVARIANT.BIALLELIC)))
+                .reported(DatabaseUtil.byteToBoolean(record.getValue(GERMLINEVARIANT.REPORTED)))
+                .trinucleotideContext(record.getValue(GERMLINEVARIANT.TRINUCLEOTIDECONTEXT))
+                .microhomology(record.getValue(GERMLINEVARIANT.MICROHOMOLOGY))
+                .repeatSequence(record.getValue(GERMLINEVARIANT.REPEATSEQUENCE))
+                .repeatCount(record.getValue(GERMLINEVARIANT.REPEATCOUNT))
+                .hotspot(Hotspot.valueOf(record.getValue(GERMLINEVARIANT.HOTSPOT)))
+                .mappability(record.getValue(GERMLINEVARIANT.MAPPABILITY))
+                .minorAlleleCopyNumber(record.getValue(GERMLINEVARIANT.MINORALLELECOPYNUMBER))
+                .tier(VariantTier.fromString(record.get(GERMLINEVARIANT.TIER)))
+                .rnaDepth(rnaAllelicDepth)
+                .qual(record.get(GERMLINEVARIANT.QUAL))
+                .genotypeStatus(UNKNOWN)
+                .germlineStatus(GermlineStatus.UNKNOWN)
+                .clinvarInfo(record.get(GERMLINEVARIANT.CLINVARINFO))
+                .pathogenicity(record.get(GERMLINEVARIANT.PATHOGENICITY))
+                .pathogenic(record.get(GERMLINEVARIANT.PATHOGENIC).intValue() == 1)
+                .build();
     }
 
 }

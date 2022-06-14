@@ -25,6 +25,7 @@ import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep18;
 import org.jooq.InsertValuesStep19;
 import org.jooq.Record;
+import org.jooq.Record15;
 import org.jooq.Result;
 
 public class GeneCopyNumberDAO
@@ -80,17 +81,23 @@ public class GeneCopyNumberDAO
     {
         List<GermlineDeletion> germlineDeletions = Lists.newArrayList();
 
-        Result<Record> result = context.select().from(GERMLINEDELETION).where(GERMLINEDELETION.SAMPLEID.eq(sample)).fetch();
+        Result<Record15<String,String,Integer,Integer,Integer,Integer,Integer,String,String,String,Double,Double,String,Integer,Byte>> result = context.select(
+                GERMLINEDELETION.GENE, GERMLINEDELETION.CHROMOSOME, GERMLINEDELETION.REGIONSTART, GERMLINEDELETION.REGIONEND,
+                GERMLINEDELETION.DEPTHWINDOWCOUNT, GERMLINEDELETION.EXONSTART, GERMLINEDELETION.EXONEND,
+                GERMLINEDELETION.DETECTIONMETHOD, GERMLINEDELETION.GERMLINESTATUS, GERMLINEDELETION.TUMORSTATUS,
+                GERMLINEDELETION.GERMLINECOPYNUMBER, GERMLINEDELETION.TUMORCOPYNUMBER, GERMLINEDELETION.FILTER,
+                GERMLINEDELETION.COHORTFREQUENCY, GERMLINEDELETION.REPORTED)
+                .from(GERMLINEDELETION).where(GERMLINEDELETION.SAMPLEID.eq(sample)).fetch();
 
         for(Record record : result)
         {
             germlineDeletions.add(new GermlineDeletion(
                     record.getValue(GERMLINEDELETION.GENE),
                     record.getValue(GERMLINEDELETION.CHROMOSOME),
-                    record.getValue(GERMLINEDELETION.CHROMOSOMEBAND),
+                    "", // record.getValue(GERMLINEDELETION.CHROMOSOMEBAND), // until 5.29 DB changes are applied to prod
                     record.getValue(GERMLINEDELETION.REGIONSTART),
-                    record.getValue(GERMLINEDELETION.DEPTHWINDOWCOUNT),
                     record.getValue(GERMLINEDELETION.REGIONEND),
+                    record.getValue(GERMLINEDELETION.DEPTHWINDOWCOUNT),
                     record.getValue(GERMLINEDELETION.EXONSTART),
                     record.getValue(GERMLINEDELETION.EXONEND),
                     GermlineDetectionMethod.valueOf(record.getValue(GERMLINEDELETION.DETECTIONMETHOD)),

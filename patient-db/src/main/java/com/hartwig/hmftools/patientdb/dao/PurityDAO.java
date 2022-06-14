@@ -73,7 +73,10 @@ class PurityDAO {
         final FittedPurityMethod method = FittedPurityMethod.valueOf(result.getValue(PURITY.FITMETHOD));
         final Gender cobaltGender = Gender.valueOf(result.getValue(PURITY.GENDER));
         final Gender amberGender = Gender.valueOf(result.getValue(PURITY.AMBERGENDER));
-        RunMode runMode = RunMode. valueOf(result.get(PURITY.RUNMODE));
+
+        String runModeStr = result.get(PURITY.RUNMODE);
+
+        RunMode runMode = runModeStr != null && !runModeStr.isEmpty() ? RunMode.valueOf(runModeStr) : RunMode.TUMOR_GERMLINE;
 
         PurpleQC purpleQC = ImmutablePurpleQC.builder()
                 .copyNumberSegments(result.getValue(PURITY.COPYNUMBERSEGMENTS))

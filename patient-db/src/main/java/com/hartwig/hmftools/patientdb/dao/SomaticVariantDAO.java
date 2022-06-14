@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.common.genotype.GenotypeStatus.UNKNOWN;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.byteToBoolean;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.checkStringLength;
 import static com.hartwig.hmftools.patientdb.dao.GermlineVariantDAO.checkTrimHgsvString;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
@@ -240,14 +241,6 @@ public class SomaticVariantDAO
                 .build();
     }
 
-    private static boolean byteToBoolean(@Nullable Byte b)
-    {
-        if(b == null)
-        {
-            throw new IllegalStateException("NULL value present in database for non-null field");
-        }
-        return b != 0;
-    }
 
     void writeAll(@NotNull final Timestamp timestamp, @NotNull String sample, @NotNull List<SomaticVariant> variants)
     {
