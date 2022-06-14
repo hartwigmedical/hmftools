@@ -4,12 +4,10 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
-import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.selection.CopyNumberSelector;
-import com.hartwig.hmftools.orange.algo.selection.FusionSelector;
 import com.hartwig.hmftools.orange.algo.selection.LossOfHeterozygositySelector;
 import com.hartwig.hmftools.orange.algo.selection.SomaticVariantSelector;
 import com.hartwig.hmftools.orange.report.ReportConfig;
@@ -126,9 +124,11 @@ public class SomaticFindingsChapter implements ReportChapter {
         String titleDrivers = "Driver fusions (" + report.linx().reportableFusions().size() + ")";
         document.add(DNAFusionTable.build(titleDrivers, contentWidth(), report.linx().reportableFusions(), report.isofox()));
 
-        List<LinxFusion> nonDriverFusions = FusionSelector.selectNonDriverFusions(report.linx().unreportedFusions(), report.protect());
-        String titleNonDrivers = "Other potentially interesting fusions (" + nonDriverFusions.size() + ")";
-        document.add(DNAFusionTable.build(titleNonDrivers, contentWidth(), max10(nonDriverFusions), report.isofox()));
+        String titleNonDrivers = "Other potentially interesting fusions (" + report.linx().potentiallyInterestingFusions().size() + ")";
+        document.add(DNAFusionTable.build(titleNonDrivers,
+                contentWidth(),
+                max10(report.linx().potentiallyInterestingFusions()),
+                report.isofox()));
     }
 
     private void addViralPresence(@NotNull Document document) {

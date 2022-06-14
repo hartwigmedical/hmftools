@@ -15,10 +15,10 @@ import org.jetbrains.annotations.Nullable;
 public interface LinxData {
 
     @NotNull
-    List<LinxFusion> reportableFusions();
+    List<LinxFusion> allFusions();
 
     @NotNull
-    List<LinxFusion> unreportedFusions();
+    List<LinxFusion> reportableFusions();
 
     @NotNull
     List<ReportableGeneDisruption> geneDisruptions();
@@ -30,8 +30,8 @@ public interface LinxData {
     List<LinxDriver> drivers();
 
     @NotNull
-    List<LinxGermlineSv> reportableGermlineDisruptions();
+    List<LinxGermlineSv> allGermlineDisruptions();
 
     @NotNull
-    List<LinxGermlineSv> unreportedGermlineDisruptions();
+    List<LinxGermlineSv> reportableGermlineDisruptions();
 }

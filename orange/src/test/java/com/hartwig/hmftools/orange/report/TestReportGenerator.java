@@ -6,7 +6,6 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.linx.ImmutableLinxData;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleData;
 import com.hartwig.hmftools.orange.ImmutableOrangeConfig;
 import com.hartwig.hmftools.orange.OrangeConfig;
@@ -16,6 +15,7 @@ import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
 import com.hartwig.hmftools.orange.algo.OrangeAlgo;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.isofox.ImmutableIsofoxInterpretedData;
+import com.hartwig.hmftools.orange.algo.linx.ImmutableLinxInterpretedData;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableEvaluation;
 import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
@@ -100,10 +100,10 @@ public class TestReportGenerator {
                         .unreportedGermlineDeletions(Lists.newArrayList())
                         .allGeneCopyNumbers(Lists.newArrayList())
                         .build())
-                .linx(ImmutableLinxData.builder()
+                .linx(ImmutableLinxInterpretedData.builder()
                         .from(report.linx())
-                        .unreportedFusions(Lists.newArrayList())
-                        .unreportedGermlineDisruptions(Lists.newArrayList())
+                        .allFusions(Lists.newArrayList())
+                        .allGermlineDisruptions(Lists.newArrayList())
                         .build());
 
         if (report.isofox() != null) {

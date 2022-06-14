@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.linx.ImmutableLinxData;
-import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleData;
 import com.hartwig.hmftools.common.purple.PurpleData;
@@ -13,6 +11,8 @@ import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.isofox.ImmutableIsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
+import com.hartwig.hmftools.orange.algo.linx.ImmutableLinxInterpretedData;
+import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -60,14 +60,14 @@ public final class OrangeReportModifier {
     }
 
     @NotNull
-    private static LinxData limitLinxDataToOne(@NotNull LinxData linx) {
-        return ImmutableLinxData.builder().reportableFusions(max1(linx.reportableFusions()))
-                .unreportedFusions(max1(linx.unreportedFusions()))
+    private static LinxInterpretedData limitLinxDataToOne(@NotNull LinxInterpretedData linx) {
+        return ImmutableLinxInterpretedData.builder().allFusions(max1(linx.allFusions()))
+                .reportableFusions(max1(linx.reportableFusions()))
                 .geneDisruptions(max1(linx.geneDisruptions()))
                 .homozygousDisruptions(max1(linx.homozygousDisruptions()))
                 .drivers(max1(linx.drivers()))
+                .allGermlineDisruptions(max1(linx.allGermlineDisruptions()))
                 .reportableGermlineDisruptions(max1(linx.reportableGermlineDisruptions()))
-                .unreportedGermlineDisruptions(max1(linx.unreportedGermlineDisruptions()))
                 .build();
     }
 

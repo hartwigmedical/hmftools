@@ -52,6 +52,7 @@ import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.OrangeRNAConfig;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
+import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableObservation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSample;
@@ -140,6 +141,8 @@ public class OrangeAlgo {
             isofoxInterpreted = IsofoxInterpreter.interpret(isofox, linx, driverGenes, knownFusionCache);
         }
 
+        List<ProtectEvidence> protect = loadProtectData(config);
+
         return ImmutableOrangeReport.builder()
                 .sampleId(config.tumorSampleId())
                 .reportDate(LocalDate.now())
@@ -151,14 +154,14 @@ public class OrangeAlgo {
                 .tumorSample(loadSampleData(config, true))
                 .germlineMVLHPerGene(loadGermlineMVLHPerGene(config))
                 .purple(purple)
-                .linx(linx)
+                .linx(LinxInterpreter.interpret(linx, protect, driverGenes))
                 .isofox(isofoxInterpreted)
                 .lilac(loadLilacData(config))
                 .virusInterpreter(loadVirusInterpreterData(config))
                 .chord(loadChordAnalysis(config))
                 .cuppa(loadCuppaData(config))
                 .peach(loadPeachData(config))
-                .protect(loadProtectData(config))
+                .protect(protect)
                 .cohortEvaluations(evaluateCohortPercentiles(config, purple))
                 .plots(buildPlots(config))
                 .build();
