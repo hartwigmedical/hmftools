@@ -12,12 +12,19 @@ class DeletionMatcher implements EventMatcher {
     private final Set<String> deletionKeywords;
     @NotNull
     private final Set<String> deletionKeyPhrases;
+    @NotNull
+    private final Set<String> underexpressionKeywords;
+    @NotNull
+    private final Set<String> underexpressionKeyPhrases;
 
     public DeletionMatcher(@NotNull final Set<String> blackListKeyPhrases, @NotNull final Set<String> deletionKeywords,
-            @NotNull final Set<String> deletionKeyPhrases) {
+            @NotNull final Set<String> deletionKeyPhrases, @NotNull final Set<String> underexpressionKeywords,
+            @NotNull final Set<String> underexpressionKeyPhrases) {
         this.blackListKeyPhrases = blackListKeyPhrases;
         this.deletionKeywords = deletionKeywords;
         this.deletionKeyPhrases = deletionKeyPhrases;
+        this.underexpressionKeywords = underexpressionKeywords;
+        this.underexpressionKeyPhrases = underexpressionKeyPhrases;
     }
 
     @Override
@@ -28,9 +35,9 @@ class DeletionMatcher implements EventMatcher {
             }
         }
 
-        String[] words = event.split(" ");
+        String[] wordsDel = event.split(" ");
         for (String keyword : deletionKeywords) {
-            for (String word : words) {
+            for (String word : wordsDel) {
                 if (word.equals(keyword)) {
                     return true;
                 }
@@ -38,6 +45,21 @@ class DeletionMatcher implements EventMatcher {
         }
 
         for (String keyPhrase : deletionKeyPhrases) {
+            if (event.contains(keyPhrase)) {
+                return true;
+            }
+        }
+
+        String[] wordsUnder = event.split(" ");
+        for (String keyword : underexpressionKeywords) {
+            for (String word : wordsUnder) {
+                if (word.equals(keyword)) {
+                    return true;
+                }
+            }
+        }
+
+        for (String keyPhrase : underexpressionKeyPhrases) {
             if (event.contains(keyPhrase)) {
                 return true;
             }

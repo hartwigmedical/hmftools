@@ -13,11 +13,17 @@ public class DeletionMatcherTest {
 
     private static final Set<String> BLACKLIST_KEY_PHRASES = Sets.newHashSet("Ex19");
     private static final Set<String> DELETION_KEYWORDS = Sets.newHashSet("del");
-    private static final Set<String> DELETION_KEY_PHRASES = Sets.newHashSet("dec exp");
+    private static final Set<String> DELETION_KEY_PHRASES = Sets.newHashSet();
+    private static final Set<String> UNDER_EXPRESSION_KEYWORDS = Sets.newHashSet();
+    private static final Set<String> UNDER_EXPRESSION_KEY_PHRASES = Sets.newHashSet("dec exp");
 
     @Test
     public void canAssessWhetherEventIsDeletion() {
-        EventMatcher matcher = new DeletionMatcher(BLACKLIST_KEY_PHRASES, DELETION_KEYWORDS, DELETION_KEY_PHRASES);
+        EventMatcher matcher = new DeletionMatcher(BLACKLIST_KEY_PHRASES,
+                DELETION_KEYWORDS,
+                DELETION_KEY_PHRASES,
+                UNDER_EXPRESSION_KEYWORDS,
+                UNDER_EXPRESSION_KEY_PHRASES);
 
         assertTrue(matcher.matches("CDKN2A", "CDKN2A del"));
         assertTrue(matcher.matches("CDKN2A", "CDKN2A dec exp"));
