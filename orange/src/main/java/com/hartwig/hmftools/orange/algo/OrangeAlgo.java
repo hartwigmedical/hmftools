@@ -3,11 +3,8 @@ package com.hartwig.hmftools.orange.algo;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -47,6 +44,8 @@ import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleDataLoader;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
+import com.hartwig.hmftools.common.wildtype.WildTypeFactory;
+import com.hartwig.hmftools.common.wildtype.WildTypeGene;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.OrangeRNAConfig;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
@@ -77,8 +76,6 @@ import org.jetbrains.annotations.Nullable;
 public class OrangeAlgo {
 
     private static final Logger LOGGER = LogManager.getLogger(OrangeAlgo.class);
-
-    private static final DecimalFormat PERCENTAGE = new DecimalFormat("#'%'", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
 
     @NotNull
     private final DoidEntry doidEntry;
@@ -144,6 +141,16 @@ public class OrangeAlgo {
         ChordAnalysis chord = loadChordAnalysis(config);
         PurpleInterpretedData purple = PurpleInterpreter.interpret(loadPurpleData(config), protect, driverGenes, chord);
 
+        List<WildTypeGene> wildTypeGenes = WildTypeFactory.filterQCWildTypes(purple.fit().qc().status(),
+                WildTypeFactory.determineWildTypeGenes(purple.reportableGermlineVariants(),
+                        purple.reportableSomaticVariants(),
+                        purple.reportableSomaticGainsLosses(),
+                        linx.reportableFusions(),
+                        linx.homozygousDisruptions(),
+                        linx.reportableGeneDisruptions(),
+                        driverGenes));
+        LOGGER.info(" Identified {} of {} driver genes to be wild-type", wildTypeGenes.size(), driverGenes.size());
+
         return ImmutableOrangeReport.builder()
                 .sampleId(config.tumorSampleId())
                 .reportDate(LocalDate.now())
@@ -155,6 +162,7 @@ public class OrangeAlgo {
                 .germlineMVLHPerGene(loadGermlineMVLHPerGene(config))
                 .purple(purple)
                 .linx(linx)
+                .wildTypeGenes(wildTypeGenes)
                 .isofox(loadIsofoxData(config, linx))
                 .lilac(loadLilacData(config))
                 .virusInterpreter(loadVirusInterpreterData(config))

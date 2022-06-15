@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.lilac.LilacData;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
+import com.hartwig.hmftools.common.wildtype.WildTypeGene;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
@@ -56,6 +57,9 @@ public abstract class OrangeReport {
 
     @NotNull
     public abstract LinxInterpretedData linx();
+
+    @NotNull
+    public abstract List<WildTypeGene> wildTypeGenes();
 
     @Nullable
     public abstract IsofoxInterpretedData isofox();

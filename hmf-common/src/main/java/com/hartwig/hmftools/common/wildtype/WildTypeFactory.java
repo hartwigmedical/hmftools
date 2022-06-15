@@ -14,71 +14,65 @@ import com.hartwig.hmftools.common.variant.ReportableVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-public class WildTypeFactory {
+public final class WildTypeFactory {
 
-    public WildTypeFactory() {
+    private WildTypeFactory() {
     }
 
+    @NotNull
     public static List<WildTypeGene> filterQCWildTypes(@NotNull Set<PurpleQCStatus> purpleQCStatus,
             @NotNull List<WildTypeGene> wildTypeGenes) {
-        List<WildTypeGene> wildTypeGenesFilter = Lists.newArrayList();
         if (!purpleQCStatus.contains(PurpleQCStatus.FAIL_NO_TUMOR) && !purpleQCStatus.contains(PurpleQCStatus.WARN_LOW_PURITY)) {
-            wildTypeGenesFilter = wildTypeGenes;
+            return wildTypeGenes;
         }
-        return wildTypeGenesFilter;
+        return Lists.newArrayList();
     }
 
-    public static List<WildTypeGene> determineWildTypeGenes(@NotNull List<ReportableVariant> reportableGermlineVariant,
-            @NotNull List<ReportableVariant> reportableSomaticVariant, @NotNull List<GainLoss> reportableSomaticGainsLosses,
+    @NotNull
+    public static List<WildTypeGene> determineWildTypeGenes(@NotNull List<ReportableVariant> reportableGermlineVariants,
+            @NotNull List<ReportableVariant> reportableSomaticVariants, @NotNull List<GainLoss> reportableSomaticGainsLosses,
             @NotNull List<LinxFusion> reportableFusions, @NotNull List<HomozygousDisruption> homozygousDisruptions,
-            @NotNull List<GeneDisruption> geneDisruptions, @NotNull List<DriverGene> driverGenes) {
-
+            @NotNull List<GeneDisruption> reportableGeneDisruptions, @NotNull List<DriverGene> driverGenes) {
         List<WildTypeGene> wildTypeGenes = Lists.newArrayList();
 
         for (DriverGene driverGene : driverGenes) {
-
             boolean hasSomaticVariant = false;
-            boolean hasGermlineVariant = false;
-            boolean hasSomaticGainLoss = false;
-            boolean hasFusion = false;
-            boolean hasHomozygousDisruption = false;
-            boolean hasGeneDisruption = false;
-
-            for (ReportableVariant somaticVariant : reportableSomaticVariant) {
+            for (ReportableVariant somaticVariant : reportableSomaticVariants) {
                 if (driverGene.gene().equals(somaticVariant.gene())) {
                     hasSomaticVariant = true;
                 }
             }
 
-            for (ReportableVariant germlineVariant : reportableGermlineVariant) {
+            boolean hasGermlineVariant = false;
+            for (ReportableVariant germlineVariant : reportableGermlineVariants) {
                 if (driverGene.gene().equals(germlineVariant.gene())) {
                     hasGermlineVariant = true;
                 }
             }
 
+            boolean hasSomaticGainLoss = false;
             for (GainLoss gainLoss : reportableSomaticGainsLosses) {
                 if (driverGene.gene().equals(gainLoss.gene())) {
                     hasSomaticGainLoss = true;
                 }
             }
 
+            boolean hasFusion = false;
             for (LinxFusion fusion : reportableFusions) {
-                if (driverGene.gene().equals(fusion.geneStart())) {
-                    hasFusion = true;
-                }
-
-                if (driverGene.gene().equals(fusion.geneEnd())) {
+                if (driverGene.gene().equals(fusion.geneStart()) || driverGene.gene().equals(fusion.geneEnd())) {
                     hasFusion = true;
                 }
             }
 
+            boolean hasHomozygousDisruption = false;
             for (HomozygousDisruption homozygousDisruption : homozygousDisruptions) {
                 if (driverGene.gene().equals(homozygousDisruption.gene())) {
                     hasFusion = true;
                 }
             }
 
-            for (GeneDisruption geneDisruption : geneDisruptions) {
+            boolean hasGeneDisruption = false;
+            for (GeneDisruption geneDisruption : reportableGeneDisruptions) {
                 if (driverGene.gene().equals(geneDisruption.gene())) {
                     hasGeneDisruption = true;
                 }

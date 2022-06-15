@@ -128,6 +128,9 @@ investigate potential causes for QC failure.
 
 ### Version History and Download Links
 - Upcoming
+  - Classify each driver gene as wild-type in case:
+    1. Purple fit is reliable
+    1. No reportable events have been found in the gene. 
   - Various additions to selection of potentially interesting events:
     - Unreported variants with canonical synonymous impact but reportable worst impact are added as potentially interesting variants.
     - Unreported variants in splice regions of genes for which we report splice variants are added as potentially interesting variants.  
