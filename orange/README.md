@@ -133,14 +133,14 @@ investigate potential causes for QC failure.
     - Unreported variants in splice regions of genes for which we report splice variants are added as potentially interesting variants.  
     - Unreported variants near hotspots are added as potentially interesting.
     - Unreported fusions of all oncogenes are added as potentially interesting fusions.
-    - Driver genes with near amplifications (2.5 < minRelCN < 3) are added as potentially interesting gains.
-    - Breakends that hit a pathogenic exon range in a promiscuous fusion gene but did not lead to fusions are added as potentially interesting.
+    - Driver genes that are nearly amplified (2.5 < minRelCN < 3) are added as potentially interesting gains.
+    - Breakends that are disruptive inside a pathogenic exon range of a promiscuous fusion gene but did not lead to fusions are added as potentially interesting disruptions.
   - Various new annotations of existing results: 
     - Gene disruptions are annotated by their cluster ID to be able to determine whether multiple events happened in same cluster or not.
         - New input: `linx_structural_variant_tsv`
     - Expression entries in the RNA chapter are annotated with their tumor CN
   - Various minor and technical improvements:
-    - Variants with a phased inframe canonical effect are dedup'ed prior to reporting.
+    - Variants with identical phased inframe canonical effect are dedup'ed prior to reporting.
     - Average chromosome arm copy numbers are calculated and stored in ORANGE JSON:
         - New input: `purple_somatic_copy_number_tsv`
     - All potentially interesting sections are now also written to the JSON output
