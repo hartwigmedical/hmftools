@@ -34,10 +34,11 @@ public class SomaticVariantSelectorTest {
         SomaticVariant nonHotspot =
                 SomaticVariantTestFactory.builder().canonicalEffect("non hotspot").hotspot(Hotspot.NON_HOTSPOT).reported(false).build();
 
-        List<ReportableVariant> variants = SomaticVariantSelector.selectNonDrivers(Lists.newArrayList(hotspot, nearHotspot, nonHotspot),
-                Lists.newArrayList(),
-                Lists.newArrayList(),
-                Lists.newArrayList());
+        List<ReportableVariant> variants =
+                SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(hotspot, nearHotspot, nonHotspot),
+                        Lists.newArrayList(),
+                        Lists.newArrayList(),
+                        Lists.newArrayList());
 
         assertEquals(2, variants.size());
         assertNotNull(findByCanonicalEffect(variants, "hotspot"));
@@ -54,10 +55,11 @@ public class SomaticVariantSelectorTest {
         ProtectEvidence evidence =
                 ProtectTestFactory.builder().gene(withEvidence.gene()).event(ProtectEventGenerator.variantEvent(withEvidence)).build();
 
-        List<ReportableVariant> variants = SomaticVariantSelector.selectNonDrivers(Lists.newArrayList(withEvidence, withoutEvidence),
-                Lists.newArrayList(),
-                Lists.newArrayList(evidence),
-                Lists.newArrayList());
+        List<ReportableVariant> variants =
+                SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(withEvidence, withoutEvidence),
+                        Lists.newArrayList(),
+                        Lists.newArrayList(evidence),
+                        Lists.newArrayList());
 
         assertEquals(1, variants.size());
         assertNotNull(findByCanonicalEffect(variants, "with evidence"));
@@ -75,7 +77,7 @@ public class SomaticVariantSelectorTest {
         ReportableVariant noPhase = ReportableVariantTestFactory.builder().localPhaseSet(null).build();
 
         List<ReportableVariant> variants =
-                SomaticVariantSelector.selectNonDrivers(Lists.newArrayList(withMatch, withoutMatch, withoutPhase),
+                SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(withMatch, withoutMatch, withoutPhase),
                         Lists.newArrayList(withPhase, noPhase),
                         Lists.newArrayList(),
                         Lists.newArrayList());
@@ -111,11 +113,9 @@ public class SomaticVariantSelectorTest {
                 .reported(false)
                 .build();
 
-        List<ReportableVariant> variants =
-                SomaticVariantSelector.selectNonDrivers(Lists.newArrayList(cuppaRelevant, cuppaTooManyRepeats, wrongGene),
-                        Lists.newArrayList(),
-                        Lists.newArrayList(),
-                        Lists.newArrayList());
+        List<ReportableVariant> variants = SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(cuppaRelevant,
+                cuppaTooManyRepeats,
+                wrongGene), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());
 
         assertEquals(1, variants.size());
         assertNotNull(findByCanonicalEffect(variants, "relevant"));
@@ -160,7 +160,7 @@ public class SomaticVariantSelectorTest {
                 .build();
 
         List<ReportableVariant> variants =
-                SomaticVariantSelector.selectNonDrivers(Lists.newArrayList(nonsense, splice, missense, wrongGene),
+                SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(nonsense, splice, missense, wrongGene),
                         Lists.newArrayList(),
                         Lists.newArrayList(),
                         Lists.newArrayList(driverGene));
@@ -188,7 +188,7 @@ public class SomaticVariantSelectorTest {
                 SomaticVariantTestFactory.builder().spliceRegion(true).canonicalEffect("other gene").gene(driverGeneNo.gene()).build();
 
         List<ReportableVariant> variants =
-                SomaticVariantSelector.selectNonDrivers(Lists.newArrayList(reportedGene, nonReportedGene, otherGene),
+                SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(reportedGene, nonReportedGene, otherGene),
                         Lists.newArrayList(),
                         Lists.newArrayList(),
                         Lists.newArrayList(driverGeneYes, driverGeneNo));

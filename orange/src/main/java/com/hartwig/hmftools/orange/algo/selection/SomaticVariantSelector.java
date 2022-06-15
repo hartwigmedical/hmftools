@@ -27,22 +27,24 @@ public final class SomaticVariantSelector {
     }
 
     @NotNull
-    public static List<ReportableVariant> selectNonDrivers(@NotNull List<SomaticVariant> unreportedVariants,
+    public static List<ReportableVariant> selectInterestingUnreportedVariants(@NotNull List<SomaticVariant> allVariants,
             @NotNull List<ReportableVariant> reportedSomaticVariants, @NotNull List<ProtectEvidence> evidences,
             @NotNull List<DriverGene> driverGenes) {
         List<ReportableVariant> filtered = Lists.newArrayList();
-        for (SomaticVariant variant : unreportedVariants) {
-            boolean isNearHotspot = variant.hotspot() == Hotspot.HOTSPOT || variant.hotspot() == Hotspot.NEAR_HOTSPOT;
-            boolean hasEvidence = EvidenceSelector.hasEvidence(evidences, variant.gene(), ProtectEventGenerator.variantEvent(variant));
-            boolean isExonicAndHasPhasedReportedVariant =
-                    !variant.gene().isEmpty() && hasReportedVariantWithPhase(reportedSomaticVariants, variant.topLocalPhaseSet());
-            boolean isCuppaRelevantVariant = isRelevantForCuppa(variant);
-            boolean isSynonymousButReportable = isSynonymousWithReportableWorstImpact(variant, driverGenes);
-            boolean isUnreportedSpliceVariant = isUnreportedSpliceVariant(variant, driverGenes);
+        for (SomaticVariant variant : allVariants) {
+            if (!variant.reported()) {
+                boolean isNearHotspot = variant.hotspot() == Hotspot.HOTSPOT || variant.hotspot() == Hotspot.NEAR_HOTSPOT;
+                boolean hasEvidence = EvidenceSelector.hasEvidence(evidences, variant.gene(), ProtectEventGenerator.variantEvent(variant));
+                boolean isExonicAndHasPhasedReportedVariant =
+                        !variant.gene().isEmpty() && hasReportedVariantWithPhase(reportedSomaticVariants, variant.topLocalPhaseSet());
+                boolean isCuppaRelevantVariant = isRelevantForCuppa(variant);
+                boolean isSynonymousButReportable = isSynonymousWithReportableWorstImpact(variant, driverGenes);
+                boolean isUnreportedSpliceVariant = isUnreportedSpliceVariant(variant, driverGenes);
 
-            if (isNearHotspot || hasEvidence || isExonicAndHasPhasedReportedVariant || isCuppaRelevantVariant || isSynonymousButReportable
-                    || isUnreportedSpliceVariant) {
-                filtered.add(toReportable(variant));
+                if (isNearHotspot || hasEvidence || isExonicAndHasPhasedReportedVariant || isCuppaRelevantVariant
+                        || isSynonymousButReportable || isUnreportedSpliceVariant) {
+                    filtered.add(toReportable(variant));
+                }
             }
         }
         return filtered;

@@ -33,19 +33,23 @@ public final class LossOfHeterozygositySelector {
     }
 
     @NotNull
-    public static List<GeneCopyNumber> selectHRDOrMSIGenesWithLOH(@NotNull List<GeneCopyNumber> allGeneCopyNumbers,
+    public static List<GeneCopyNumber> selectHRDOrMSIGenesWithLOH(@NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers,
             @NotNull MicrosatelliteStatus microsatelliteStatus, @NotNull ChordStatus chordStatus) {
-        List<GeneCopyNumber> reportable = Lists.newArrayList();
-        for (GeneCopyNumber geneCopyNumber : allGeneCopyNumbers) {
-            if (geneCopyNumber.minMinorAlleleCopyNumber() < 0.5 && geneCopyNumber.minCopyNumber() > 0.5) {
+        List<GeneCopyNumber> suspectGeneCopyNumbersWithLOH = Lists.newArrayList();
+        for (GeneCopyNumber geneCopyNumber : allSomaticGeneCopyNumbers) {
+            if (hasLOH(geneCopyNumber)) {
                 boolean isRelevantHRD = HRD_GENES.contains(geneCopyNumber.geneName()) && chordStatus == ChordStatus.HR_DEFICIENT;
                 boolean isRelevantMSI = MSI_GENES.contains(geneCopyNumber.geneName()) && microsatelliteStatus == MicrosatelliteStatus.MSI;
 
                 if (isRelevantHRD || isRelevantMSI) {
-                    reportable.add(geneCopyNumber);
+                    suspectGeneCopyNumbersWithLOH.add(geneCopyNumber);
                 }
             }
         }
-        return reportable;
+        return suspectGeneCopyNumbersWithLOH;
+    }
+
+    private static boolean hasLOH(@NotNull GeneCopyNumber geneCopyNumber) {
+        return geneCopyNumber.minMinorAlleleCopyNumber() < 0.5 && geneCopyNumber.minCopyNumber() > 0.5;
     }
 }

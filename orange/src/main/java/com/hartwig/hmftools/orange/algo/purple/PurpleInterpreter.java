@@ -1,26 +1,70 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
-import com.hartwig.hmftools.common.purple.PurpleData;
+import java.util.List;
 
+import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.purple.PurpleData;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
+import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.orange.algo.selection.CopyNumberSelector;
+import com.hartwig.hmftools.orange.algo.selection.GermlineVariantSelector;
+import com.hartwig.hmftools.orange.algo.selection.LossOfHeterozygositySelector;
+import com.hartwig.hmftools.orange.algo.selection.SomaticVariantSelector;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class PurpleInterpreter {
+
+    private static final Logger LOGGER = LogManager.getLogger(PurpleInterpreter.class);
 
     private PurpleInterpreter() {
     }
 
     @NotNull
-    public static PurpleInterpretedData interpret(@NotNull PurpleData purple) {
+    public static PurpleInterpretedData interpret(@NotNull PurpleData purple, @NotNull List<ProtectEvidence> evidences,
+            @NotNull List<DriverGene> driverGenes, @NotNull ChordAnalysis chord) {
+        List<ReportableVariant> additionalSuspectSomaticVariants =
+                SomaticVariantSelector.selectInterestingUnreportedVariants(purple.allSomaticVariants(),
+                        purple.reportableSomaticVariants(),
+                        evidences,
+                        driverGenes);
+        LOGGER.info(" Found an additional {} somatic variants that are potentially interesting", additionalSuspectSomaticVariants.size());
+
+        List<ReportableVariant> additionalSuspectGermlineVariants =
+                GermlineVariantSelector.selectInterestingUnreportedVariants(purple.allGermlineVariants());
+        LOGGER.info(" Found an additional {} germline variants that are potentially interesting", additionalSuspectGermlineVariants.size());
+
+        List<GainLoss> additionalSuspectSomaticGainsLosses =
+                CopyNumberSelector.selectInterestingUnreportedGainsLosses(purple.allSomaticGainsLosses(),
+                        purple.reportableSomaticGainsLosses());
+        LOGGER.info(" Found an additional {} somatic gains/losses that are potentially interesting",
+                additionalSuspectSomaticGainsLosses.size());
+
+        List<GeneCopyNumber> suspectGeneCopyNumbersWithLOH =
+                LossOfHeterozygositySelector.selectHRDOrMSIGenesWithLOH(purple.allSomaticGeneCopyNumbers(),
+                        purple.microsatelliteStatus(),
+                        chord.hrStatus());
+        LOGGER.info(" Found an additional {} suspect gene copy numbers with LOH", suspectGeneCopyNumbersWithLOH.size());
+
         return ImmutablePurpleInterpretedData.builder()
                 .fit(createFit(purple))
                 .characteristics(createCharacteristics(purple))
                 .allSomaticVariants(purple.allSomaticVariants())
                 .reportableSomaticVariants(purple.reportableSomaticVariants())
+                .additionalSuspectSomaticVariants(additionalSuspectSomaticVariants)
                 .allGermlineVariants(purple.allGermlineVariants())
                 .reportableGermlineVariants(purple.reportableGermlineVariants())
+                .additionalSuspectGermlineVariants(additionalSuspectGermlineVariants)
                 .allSomaticGeneCopyNumbers(purple.allSomaticGeneCopyNumbers())
+                .suspectGeneCopyNumbersWithLOH(suspectGeneCopyNumbersWithLOH)
                 .allSomaticGainsLosses(purple.allSomaticGainsLosses())
                 .reportableSomaticGainsLosses(purple.reportableSomaticGainsLosses())
+                .additionalSuspectSomaticGainsLosses(additionalSuspectSomaticGainsLosses)
                 .allGermlineDeletions(purple.allGermlineDeletions())
                 .reportableGermlineDeletions(purple.reportableGermlineDeletions())
                 .copyNumberPerChromosome(purple.copyNumberPerChromosome())

@@ -73,7 +73,7 @@ public class GermlineFindingsChapter implements ReportChapter {
         String titleDrivers = "Driver variants (" + report.purple().reportableGermlineVariants().size() + ")";
         document.add(GermlineVariantTable.build(titleDrivers, contentWidth(), report.purple().reportableGermlineVariants()));
 
-        List<ReportableVariant> nonDriverVariants = GermlineVariantSelector.selectNonDrivers(report.purple().allGermlineVariants());
+        List<ReportableVariant> nonDriverVariants = GermlineVariantSelector.selectInterestingUnreportedVariants(report.purple().allGermlineVariants());
         String titleNonDrivers = "Other potentially relevant variants (" + nonDriverVariants.size() + ")";
         document.add(GermlineVariantTable.build(titleNonDrivers, contentWidth(), nonDriverVariants));
     }

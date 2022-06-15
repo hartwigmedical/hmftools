@@ -23,7 +23,7 @@ public abstract class LinxInterpretedData {
     public abstract List<LinxFusion> reportableFusions();
 
     @NotNull
-    public abstract List<LinxFusion> potentiallyInterestingFusions();
+    public abstract List<LinxFusion> additionalSuspectFusions();
 
     @NotNull
     public abstract List<ReportableGeneDisruption> geneDisruptions();

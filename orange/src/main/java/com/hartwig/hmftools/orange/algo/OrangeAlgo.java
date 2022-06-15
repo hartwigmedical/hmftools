@@ -144,7 +144,8 @@ public class OrangeAlgo {
             isofoxInterpreted = IsofoxInterpreter.interpret(isofox, linx, driverGenes, knownFusionCache);
         }
 
-        PurpleInterpretedData purple = PurpleInterpreter.interpret(loadPurpleData(config));
+        ChordAnalysis chord = loadChordAnalysis(config);
+        PurpleInterpretedData purple = PurpleInterpreter.interpret(loadPurpleData(config), protect, driverGenes, chord);
         return ImmutableOrangeReport.builder()
                 .sampleId(config.tumorSampleId())
                 .reportDate(LocalDate.now())
@@ -160,7 +161,7 @@ public class OrangeAlgo {
                 .isofox(isofoxInterpreted)
                 .lilac(loadLilacData(config))
                 .virusInterpreter(loadVirusInterpreterData(config))
-                .chord(loadChordAnalysis(config))
+                .chord(chord)
                 .cuppa(loadCuppaData(config))
                 .peach(loadPeachData(config))
                 .protect(protect)

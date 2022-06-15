@@ -18,8 +18,31 @@ public final class CopyNumberSelector {
     }
 
     @NotNull
-    public static List<GainLoss> selectNonDriverGains(@NotNull List<GainLoss> unreportedGainsLosses) {
-        List<GainLoss> unreportedFullGains = unreportedGainsLosses.stream()
+    public static List<GainLoss> selectInterestingUnreportedGainsLosses(@NotNull List<GainLoss> allGainsLosses,
+            @NotNull List<GainLoss> reportableGainsLosses) {
+        List<GainLoss> unreportedGainLosses = selectUnreportedGainsLosses(allGainsLosses, reportableGainsLosses);
+
+        List<GainLoss> interestingUnreportedGainsLosses = Lists.newArrayList();
+        interestingUnreportedGainsLosses.addAll(selectInterestingGains(unreportedGainLosses));
+        interestingUnreportedGainsLosses.addAll(selectInterestingLosses(unreportedGainLosses, reportableGainsLosses));
+        return interestingUnreportedGainsLosses;
+    }
+
+    @NotNull
+    private static List<GainLoss> selectUnreportedGainsLosses(@NotNull List<GainLoss> allGainsLosses,
+            @NotNull List<GainLoss> reportableGainsLosses) {
+        List<GainLoss> unreportedGainsLosses = Lists.newArrayList();
+        for (GainLoss gainLoss : allGainsLosses) {
+            if (!reportableGainsLosses.contains(gainLoss)) {
+                unreportedGainsLosses.add(gainLoss);
+            }
+        }
+        return unreportedGainsLosses;
+    }
+
+    @NotNull
+    private static List<GainLoss> selectInterestingGains(@NotNull List<GainLoss> unreportedGainLosses) {
+        List<GainLoss> unreportedFullGains = unreportedGainLosses.stream()
                 .filter(gainLoss -> gainLoss.interpretation() == CopyNumberInterpretation.FULL_GAIN)
                 .collect(Collectors.toList());
 
@@ -39,8 +62,8 @@ public final class CopyNumberSelector {
     }
 
     @NotNull
-    public static List<GainLoss> selectNonDriverLosses(@NotNull List<GainLoss> unreportedGainsLosses,
-            @NotNull List<GainLoss> reportedGainLosses) {
+    private static List<GainLoss> selectInterestingLosses(@NotNull List<GainLoss> unreportedGainsLosses,
+            @NotNull List<GainLoss> reportableGainsLosses) {
         List<GainLoss> lossesNoAllosomes = Lists.newArrayList();
 
         List<GainLoss> unreportedLosses = unreportedGainsLosses.stream()
@@ -48,13 +71,13 @@ public final class CopyNumberSelector {
                         || gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS)
                 .collect(Collectors.toList());
 
-        List<GainLoss> reportedLosses = reportedGainLosses.stream()
+        List<GainLoss> reportableLosses = reportableGainsLosses.stream()
                 .filter(gainLoss -> gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS
                         || gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS)
                 .collect(Collectors.toList());
 
         for (GainLoss loss : unreportedLosses) {
-            if (!HumanChromosome.fromString(loss.chromosome()).isAllosome() && !locusPresent(reportedLosses,
+            if (!HumanChromosome.fromString(loss.chromosome()).isAllosome() && !locusPresent(reportableLosses,
                     loss.chromosome(),
                     loss.chromosomeBand())) {
                 lossesNoAllosomes.add(loss);
@@ -72,8 +95,7 @@ public final class CopyNumberSelector {
         return Lists.newArrayList(oneLossPerLocation.values().iterator());
     }
 
-    private static boolean locusPresent(@NotNull List<GainLoss> gainsLosses, @NotNull String chromosome,
-            @NotNull String chromosomeBand) {
+    private static boolean locusPresent(@NotNull List<GainLoss> gainsLosses, @NotNull String chromosome, @NotNull String chromosomeBand) {
         for (GainLoss gainLoss : gainsLosses) {
             if (gainLoss.chromosome().equals(chromosome) && gainLoss.chromosomeBand().equals(chromosomeBand)) {
                 return true;
