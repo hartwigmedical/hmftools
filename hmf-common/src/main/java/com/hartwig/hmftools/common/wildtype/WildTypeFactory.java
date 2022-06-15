@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.linx.ReportableGeneDisruption;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
@@ -23,88 +22,62 @@ public class WildTypeFactory {
     public static List<WildType> determineWildTypeGenes(@NotNull List<ReportableVariant> reportableGermlineVariant,
             @NotNull List<ReportableVariant> reportableSomaticVariant, @NotNull List<GainLoss> reportableSomaticGainsLosses,
             @NotNull List<LinxFusion> reportableFusions, @NotNull List<ReportableHomozygousDisruption> homozygousDisruptions,
-            @NotNull List<ReportableGeneDisruption> geneDisruptions, @NotNull List<DriverGene> driverGenes) {
+            @NotNull List<DriverGene> driverGenes) {
 
         List<WildType> wildTypeGenes = Lists.newArrayList();
-        boolean wildTypeSomaticVariant = false;
-        boolean wildTypeGermlineVariant = false;
-        boolean wildTypeSomaticGainLoss = false;
-        boolean wildTypeFusions = false;
-        boolean wildTypeHomozygousDisruption = false;
-        boolean wildTypeGeneDisruption = false;
-
-        List<Boolean> somaticVariantBoolean = Lists.newArrayList();
-        List<Boolean> somaticGermlineBoolean = Lists.newArrayList();
-        List<Boolean> CNVBoolean = Lists.newArrayList();
-        List<Boolean> FusionBooleanEnd = Lists.newArrayList();
-        List<Boolean> FusionBooleanStart = Lists.newArrayList();
-        List<Boolean> HomozygousDisruptionBoolean = Lists.newArrayList();
-        List<Boolean> GeneDisruptionBoolean = Lists.newArrayList();
 
         for (DriverGene driverGene : driverGenes) {
+            LOGGER.info("driverGene: " + driverGene);
+
+            boolean hasSomaticVariant = false;
+            boolean hasGermlineVariant = false;
+            boolean hasSomaticGainLoss = false;
+            boolean hasFusion = false;
+            boolean hasHomozygousDisruption = false;
 
             for (ReportableVariant somaticVariant : reportableSomaticVariant) {
-                LOGGER.info("driverGene: " + driverGene);
-                isWildType(driverGene.gene(), somaticVariant.gene(), somaticVariantBoolean);
-                wildTypeSomaticVariant = somaticVariantBoolean.contains(true);
-                LOGGER.info("wildTypeSomaticVariant: " + wildTypeSomaticVariant);
+                if (driverGene.gene().equals(somaticVariant.gene())) {
+                    hasSomaticVariant = true;
+                }
             }
+            LOGGER.info("hasSomaticVariant: " + hasSomaticVariant);
 
             for (ReportableVariant germlineVariant : reportableGermlineVariant) {
-                isWildType(driverGene.gene(), germlineVariant.gene(), somaticGermlineBoolean);
-                wildTypeGermlineVariant = somaticGermlineBoolean.contains(true);
-                LOGGER.info("wildTypeGermlineVariant: " + wildTypeGermlineVariant);
-
+                if (driverGene.gene().equals(germlineVariant.gene())) {
+                    hasGermlineVariant = true;
+                }
             }
+            LOGGER.info("hasGermlineVariant: " + hasGermlineVariant);
 
             for (GainLoss gainLoss : reportableSomaticGainsLosses) {
-                isWildType(driverGene.gene(), gainLoss.gene(), CNVBoolean);
-                wildTypeSomaticGainLoss = CNVBoolean.contains(true);
-                LOGGER.info("wildTypeSomaticGainLoss: " + wildTypeSomaticGainLoss);
-
+                if (driverGene.gene().equals(gainLoss.gene())) {
+                    hasSomaticGainLoss = true;
+                }
             }
+            LOGGER.info("hasSomaticGainLoss: " + hasSomaticGainLoss);
 
-            for (LinxFusion fusions : reportableFusions) {
-                isWildType(driverGene.gene(), fusions.geneStart(), FusionBooleanStart);
-                isWildType(driverGene.gene(), fusions.geneEnd(), FusionBooleanEnd);
-                LOGGER.info("FusionBooleanStart: " + FusionBooleanStart);
-                LOGGER.info("FusionBooleanEnd: " + FusionBooleanEnd);
+            for (LinxFusion fusion : reportableFusions) {
+                if (driverGene.gene().equals(fusion.geneStart())) {
+                    hasFusion = true;
+                }
 
-                wildTypeFusions =
-                        (!FusionBooleanStart.contains(true) && !FusionBooleanEnd.contains(true)) || (FusionBooleanStart.contains(true)
-                                && FusionBooleanEnd.contains(true));
-                LOGGER.info("wildTypeFusions: " + wildTypeFusions);
-
+                if (driverGene.gene().equals(fusion.geneEnd())) {
+                    hasFusion = true;
+                }
             }
+            LOGGER.info("hasFusion: " + hasFusion);
 
             for (ReportableHomozygousDisruption homozygousDisruption : homozygousDisruptions) {
-
-                isWildType(driverGene.gene(), homozygousDisruption.gene(), HomozygousDisruptionBoolean);
-                wildTypeHomozygousDisruption = HomozygousDisruptionBoolean.contains(true);
-                LOGGER.info("wildTypeHomozygousDisruption: " + wildTypeHomozygousDisruption);
-
+                if (driverGene.gene().equals(homozygousDisruption.gene())) {
+                    hasFusion = true;
+                }
             }
+            LOGGER.info("hasHomozygousDisruption: " + hasHomozygousDisruption);
 
-            for (ReportableGeneDisruption geneDisruption: geneDisruptions) {
-                isWildType(driverGene.gene(), geneDisruption.gene(), GeneDisruptionBoolean);
-                wildTypeGeneDisruption = GeneDisruptionBoolean.contains(true);
-            }
-
-            if (!wildTypeSomaticVariant && !wildTypeGermlineVariant && !wildTypeSomaticGainLoss && !wildTypeFusions
-                    && !wildTypeHomozygousDisruption && !wildTypeGeneDisruption) {
+            if (!hasSomaticVariant && !hasGermlineVariant && !hasSomaticGainLoss && !hasFusion && !hasHomozygousDisruption) {
                 wildTypeGenes.add(ImmutableWildType.builder().gene(driverGene.gene()).build());
             }
         }
         return wildTypeGenes;
-    }
-
-    public static void isWildType(@NotNull String driverGene, @NotNull String reportableGene, @NotNull List<Boolean> booleanList) {
-        LOGGER.info("driverGene: " + driverGene);
-        LOGGER.info("reportableGene: " + reportableGene);
-        if (driverGene.equals(reportableGene)) {
-            booleanList.add(true);
-        } else {
-            booleanList.add(false);
-        }
     }
 }
