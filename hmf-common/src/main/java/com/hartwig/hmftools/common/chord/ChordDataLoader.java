@@ -18,7 +18,7 @@ public final class ChordDataLoader {
     public static ChordAnalysis load(@NotNull String chordPredictionTxt) throws IOException {
         LOGGER.info("Loading CHORD data from {}", new File(chordPredictionTxt).getParent());
         ChordAnalysis chordAnalysis = ChordFileReader.read(chordPredictionTxt);
-        LOGGER.info(" HR Status: {} with type {}", chordAnalysis.hrStatus().display(), chordAnalysis.hrdType());
+        LOGGER.info(" HR Status: {} with type '{}'", chordAnalysis.hrStatus().display(), chordAnalysis.hrdType());
         return chordAnalysis;
     }
 }
