@@ -45,26 +45,27 @@ public final class LinxDataLoader {
         }
         LOGGER.info(" Loaded {} fusions (of which {} are reportable) from {}", allFusions.size(), reportableFusions.size(), linxFusionTsv);
 
-        List<LinxSvAnnotation> linxStructuralVariants = Lists.newArrayList();
+        List<LinxSvAnnotation> allStructuralVariants = Lists.newArrayList();
         if (linxStructuralVariantTsv != null) {
-            linxStructuralVariants = LinxSvAnnotation.read(linxStructuralVariantTsv);
-            LOGGER.info(" Loaded {} structural variants from {}", linxStructuralVariants.size(), linxStructuralVariantTsv);
+            allStructuralVariants = LinxSvAnnotation.read(linxStructuralVariantTsv);
+            LOGGER.info(" Loaded {} structural variants from {}", allStructuralVariants.size(), linxStructuralVariantTsv);
         }
 
-        List<LinxBreakend> linxBreakends =
+        List<LinxBreakend> allBreakends =
                 LinxBreakend.read(linxBreakendTsv).stream().filter(LinxBreakend::reportedDisruption).collect(Collectors.toList());
-        List<ReportableGeneDisruption> geneDisruptions = ReportableGeneDisruptionFactory.convert(linxBreakends, linxStructuralVariants);
-        LOGGER.debug(" Generated {} reportable disruptions based on {} breakends", geneDisruptions.size(), linxBreakends.size());
-        LOGGER.info(" Loaded {} reportable disruptions from {}", geneDisruptions.size(), linxBreakendTsv);
+        List<ReportableGeneDisruption> reportableGeneDisruptions =
+                ReportableGeneDisruptionFactory.convert(allBreakends, allStructuralVariants);
+        LOGGER.debug(" Generated {} reportable disruptions based on {} breakends", reportableGeneDisruptions.size(), allBreakends.size());
+        LOGGER.info(" Loaded {} reportable disruptions from {}", reportableGeneDisruptions.size(), linxBreakendTsv);
 
         List<ReportableHomozygousDisruption> homozygousDisruptions =
                 ReportableHomozygousDisruptionFactory.extractFromLinxDriverCatalogTsv(linxDriverCatalogTsv);
         LOGGER.info(" Loaded {} reportable homozygous disruptions from {}", homozygousDisruptions.size(), linxDriverCatalogTsv);
 
-        List<LinxDriver> drivers = Lists.newArrayList();
+        List<LinxDriver> allDrivers = Lists.newArrayList();
         if (linxDriverTsv != null) {
-            drivers = LinxDriver.read(linxDriverTsv);
-            LOGGER.info(" Loaded {} drivers from {}", drivers.size(), linxDriverTsv);
+            allDrivers = LinxDriver.read(linxDriverTsv);
+            LOGGER.info(" Loaded {} drivers from {}", allDrivers.size(), linxDriverTsv);
         }
 
         List<LinxGermlineSv> allGermlineDisruptions = Lists.newArrayList();
@@ -86,9 +87,10 @@ public final class LinxDataLoader {
         return ImmutableLinxData.builder()
                 .allFusions(allFusions)
                 .reportableFusions(reportableFusions)
-                .geneDisruptions(geneDisruptions)
+                .allBreakends(allBreakends)
+                .reportableGeneDisruptions(reportableGeneDisruptions)
                 .homozygousDisruptions(homozygousDisruptions)
-                .drivers(drivers)
+                .drivers(allDrivers)
                 .allGermlineDisruptions(allGermlineDisruptions)
                 .reportableGermlineDisruptions(reportableGermlineDisruptions)
                 .build();

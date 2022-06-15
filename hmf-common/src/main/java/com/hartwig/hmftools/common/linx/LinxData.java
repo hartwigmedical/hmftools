@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.linx;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
 import com.hartwig.hmftools.common.sv.linx.LinxDriver;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.sv.linx.LinxGermlineSv;
@@ -21,7 +22,10 @@ public interface LinxData {
     List<LinxFusion> reportableFusions();
 
     @NotNull
-    List<ReportableGeneDisruption> geneDisruptions();
+    List<LinxBreakend> allBreakends();
+
+    @NotNull
+    List<ReportableGeneDisruption> reportableGeneDisruptions();
 
     @NotNull
     List<ReportableHomozygousDisruption> homozygousDisruptions();

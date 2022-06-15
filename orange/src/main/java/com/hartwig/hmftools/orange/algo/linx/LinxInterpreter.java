@@ -30,7 +30,7 @@ public final class LinxInterpreter {
                 .allFusions(linx.allFusions())
                 .reportableFusions(linx.reportableFusions())
                 .additionalSuspectFusions(additionalSuspectFusions)
-                .geneDisruptions(linx.geneDisruptions())
+                .geneDisruptions(linx.reportableGeneDisruptions())
                 .homozygousDisruptions(linx.homozygousDisruptions())
                 .drivers(linx.drivers())
                 .allGermlineDisruptions(linx.allGermlineDisruptions())

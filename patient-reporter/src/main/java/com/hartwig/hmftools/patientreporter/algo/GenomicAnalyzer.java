@@ -104,7 +104,7 @@ public class GenomicAnalyzer {
                 .gainsAndLosses(purpleData.reportableSomaticGainsLosses())
                 .cnPerChromosome(purpleData.copyNumberPerChromosome())
                 .geneFusions(linxData.reportableFusions())
-                .geneDisruptions(linxData.geneDisruptions())
+                .geneDisruptions(linxData.reportableGeneDisruptions())
                 .homozygousDisruptions(linxData.homozygousDisruptions())
                 .reportableViruses(virusInterpreterData.reportableViruses())
                 .build();
