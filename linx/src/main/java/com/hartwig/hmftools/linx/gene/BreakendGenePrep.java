@@ -35,16 +35,16 @@ public final class BreakendGenePrep
     {
         int upstreamDistance = applyPromotorDistance ? PRE_GENE_PROMOTOR_DISTANCE : 0;
 
-        if (loadBreakendGenes)
+        if(loadBreakendGenes)
         {
             // only load transcript info for the genes covered
             final List<String> restrictedGeneIds = Lists.newArrayList();
 
-            for (final SvVarData var : svList)
+            for(final SvVarData var : svList)
             {
-                for (int be = SE_START; be <= SE_END; ++be)
+                for(int be = SE_START; be <= SE_END; ++be)
                 {
-                    if (be == SE_END && var.isSglBreakend())
+                    if(be == SE_END && var.isSglBreakend())
                     {
                         // special case of looking for mappings to locations containing genes so hotspot fusions can be found
                         for(final SglMapping mapping : var.getSglMappings())
@@ -67,14 +67,14 @@ public final class BreakendGenePrep
         }
 
         // associate breakends with transcripts
-        for (final SvVarData var : svList)
+        for(final SvVarData var : svList)
         {
-            for (int be = SE_START; be <= SE_END; ++be)
+            for(int be = SE_START; be <= SE_END; ++be)
             {
                 boolean isStart = isStart(be);
                 final List<BreakendGeneData> genesList = var.getGenesList(isStart);
 
-                if (be == SE_END && var.isSglBreakend())
+                if(be == SE_END && var.isSglBreakend())
                 {
                     // special case of looking for mappings to locations containing genes so hotspot fusions can be found
                     for(final SglMapping mapping : var.getSglMappings())
@@ -94,7 +94,7 @@ public final class BreakendGenePrep
                             ensemblDataCache, var.id(), isStart, var.chromosome(isStart), var.position(isStart), var.orientation(isStart),
                             upstreamDistance));
 
-                    for (BreakendGeneData gene : genesList)
+                    for(BreakendGeneData gene : genesList)
                     {
                         gene.setSvData(var.getSvData(), var.jcn());
                     }
@@ -116,7 +116,7 @@ public final class BreakendGenePrep
         {
             final List<TranscriptData> transcriptDataList = ensemblDataCache.getTranscriptDataMap().get(geneData.GeneId);
 
-            if (transcriptDataList == null || transcriptDataList.isEmpty())
+            if(transcriptDataList == null || transcriptDataList.isEmpty())
                 continue;
 
             BreakendGeneData currentGene = new BreakendGeneData(svId, isStart, geneData);
@@ -170,15 +170,17 @@ public final class BreakendGenePrep
         {
             final List<TranscriptData> transcriptDataList = ensemblDataCache.getTranscriptDataMap().get(altGeneData.GeneId);
 
-            if (transcriptDataList == null || transcriptDataList.isEmpty())
+            if(transcriptDataList == null || transcriptDataList.isEmpty())
                 continue;
 
             final TranscriptData trans = transcriptDataList.stream().filter(x -> x.IsCanonical).findFirst().orElse(null);
 
             BreakendGeneData geneAnnotation = new BreakendGeneData(svId, isStart, altGeneData);
 
-            byte downstreamOrient = altGeneData.Strand == POS_ORIENT ? NEG_ORIENT : POS_ORIENT;
-            geneAnnotation.setPositionalData(chromosome, position, downstreamOrient);
+            // not sure why the orientation of the transcript breakend ignores the SGL mapping in favour of the ref gene orientation
+            // byte downstreamOrient = altGeneData.Strand == POS_ORIENT ? NEG_ORIENT : POS_ORIENT;
+            // geneAnnotation.setPositionalData(chromosome, position, downstreamOrient);
+            geneAnnotation.setPositionalData(chromosome, position, orientation);
 
             if(trans != null)
             {
@@ -209,7 +211,7 @@ public final class BreakendGenePrep
         int transPhase = isUpstream ? transcript.Phase : transcript.Phase;
         int transRank = isUpstream ? transcript.ExonUpstream : transcript.ExonDownstream;
 
-        for (ExonData exonData : exonDataList)
+        for(ExonData exonData : exonDataList)
         {
             if(isUpstream == forwardStrand)
             {
@@ -350,11 +352,11 @@ public final class BreakendGenePrep
         }
         else
         {
-            for (int index = 0; index < exonList.size(); ++index)
+            for(int index = 0; index < exonList.size(); ++index)
             {
                 final ExonData exonData = exonList.get(index);
 
-                if (positionWithin(position, exonData.Start, exonData.End))
+                if(positionWithin(position, exonData.Start, exonData.End))
                 {
                     // falls within an exon
                     upExonRank = downExonRank = exonData.Rank;

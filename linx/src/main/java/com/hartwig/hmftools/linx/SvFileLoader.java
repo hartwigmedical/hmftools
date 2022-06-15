@@ -27,8 +27,6 @@ import org.apache.commons.cli.CommandLine;
 
 public final class SvFileLoader
 {
-    public static final String VCF_FILE = "sv_vcf";
-
     public static List<StructuralVariantData> loadSampleSvDataFromFile(
             final LinxConfig config, final String sampleId, final CommandLine cmd)
     {
@@ -107,20 +105,6 @@ public final class SvFileLoader
         }
 
         return svDataItems;
-    }
-
-    public static List<StructuralVariantData> loadSvDataFromSvFile(final String sampleId, final String svDataPath)
-    {
-        try
-        {
-            final String svDataFile = StructuralVariantFile.generateFilename(svDataPath, sampleId);
-            return StructuralVariantFile.read(svDataFile);
-        }
-        catch(IOException e)
-        {
-            LNX_LOGGER.error("failed to load SV data: {}", e.toString());
-            return Lists.newArrayList();
-        }
     }
 
     public static StructuralVariantData convertGermlineSvData(final StructuralVariant var, int svId)

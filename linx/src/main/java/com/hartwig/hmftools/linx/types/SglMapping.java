@@ -12,6 +12,8 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
+import htsjdk.samtools.CigarOperator;
+
 public class SglMapping
 {
     public final String Chromosome;
@@ -55,7 +57,11 @@ public class SglMapping
             return null;
 
         int position = Integer.parseInt(location[1]);
-        byte orientation = items[1].equals("+") ? POS_ORIENT : NEG_ORIENT;
+
+        byte strandSequence = items[1].equals("+") ? POS_ORIENT : NEG_ORIENT;
+        byte orientation = (strandSequence == breakendOrientation) ? NEG_ORIENT : POS_ORIENT;
+        // byte orientation = items[1].equals("+") ? POS_ORIENT : NEG_ORIENT;
+
         final String cigar = items[2];
 
         if(orientation != breakendOrientation)

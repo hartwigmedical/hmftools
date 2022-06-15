@@ -10,9 +10,6 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
-import static com.hartwig.hmftools.linx.SvFileLoader.VCF_FILE;
-import static com.hartwig.hmftools.linx.analysis.AnnotationExtension.DOUBLE_MINUTES;
 import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.hasDatabaseConfig;
 
@@ -74,6 +71,7 @@ public class LinxConfig
     // config options
     public static final String SAMPLE_DATA_DIR = "sample_data_dir";
     public static final String PURPLE_DATA_DIR = "purple_dir";
+    public static final String VCF_FILE = "sv_vcf";
     public static final String SAMPLE = "sample";
     public static final String UPLOAD_TO_DB = "upload_to_db"; // true by default when in single-sample mode, false for batch
 

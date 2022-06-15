@@ -850,6 +850,9 @@ public class FusionDisruptionAnalyser
             if(!newFusion.downstreamTrans().transName().equals(fusion.downstreamTrans().transName()))
                 continue;
 
+            if(newFusion.downstreamTrans().hasNegativePrevSpliceAcceptorDistance() != fusion.downstreamTrans().hasNegativePrevSpliceAcceptorDistance())
+                continue;
+
             return true;
         }
 

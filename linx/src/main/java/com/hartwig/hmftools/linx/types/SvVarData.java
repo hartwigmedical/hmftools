@@ -373,11 +373,6 @@ public class SvVarData
             return false;
     }
 
-    public SvBreakend getChainedFoldbackBreakend()
-    {
-        return mFoldbackBreakends[SE_START] != null ? mFoldbackBreakends[SE_START] : mFoldbackBreakends[SE_END];
-    }
-
     public void setFoldbackLink(boolean isStart, final SvBreakend link, int length, String linkInfo)
     {
         mFoldbackBreakends[seIndex(isStart)] = link;
@@ -395,19 +390,6 @@ public class SvVarData
                 mCluster.registerFoldback(this);
             }
         }
-    }
-
-    public void setFoldbackInfo(boolean isStart, final String info)
-    {
-        mFoldbackInfo[seIndex(isStart)] = info;
-    }
-
-    public SvVarData getChainedFoldbackSv()
-    {
-        if(!isChainedFoldback())
-            return this;
-
-        return mFoldbackBreakends[SE_START] != null ? mFoldbackBreakends[SE_START].getSV() : mFoldbackBreakends[SE_END].getSV();
     }
 
     public String typeStr()

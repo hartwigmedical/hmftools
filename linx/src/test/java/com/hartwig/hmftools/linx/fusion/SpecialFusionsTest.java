@@ -34,6 +34,7 @@ import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInf;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSgl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -344,7 +345,7 @@ public class SpecialFusionsTest
 
         SvVarData sgl1 = createSgl(varId++, CHR_1, 1150, POS_ORIENT);
 
-        final String altMapping = CHR_1 + ":" + String.valueOf(10150) + "|" + String.valueOf(NEG_ORIENT) + "|" + "10M" + "|19";
+        final String altMapping = CHR_1 + ":" + String.valueOf(10150) + "|" + "+" + "|" + "10M" + "|19";
         sgl1.getSglMappings().add(SglMapping.from(altMapping, POS_ORIENT));
 
         tester.AllVariants.add(sgl1);
@@ -484,7 +485,7 @@ public class SpecialFusionsTest
         SvVarData sgl = createSgl(varId++, CHR_1, 1150, POS_ORIENT);
         SvVarData inf = createInf(varId++, CHR_2, 100050, NEG_ORIENT);
 
-        final String altMapping = CHR_2 + ":" + String.valueOf(100000) + "|" + String.valueOf(NEG_ORIENT) + "|" + "10M" + "|19";
+        final String altMapping = CHR_2 + ":" + String.valueOf(100000) + "|" + "+" + "|" + "10M" + "|19";
         sgl.getSglMappings().add(SglMapping.from(altMapping, POS_ORIENT));
 
         SvVarData bnd = createBnd(varId++, CHR_1, 10020, NEG_ORIENT, CHR_2, 100200, POS_ORIENT);
@@ -512,7 +513,7 @@ public class SpecialFusionsTest
         assertEquals(bnd.id(), fusion.downstreamTrans().gene().id());
     }
 
-        @Test
+    @Test
     public void testKnownUnmappableFusions()
     {
         LinxTester tester = new LinxTester();
@@ -548,9 +549,12 @@ public class SpecialFusionsTest
 
         addTransExonData(geneTransCache, igGeneId, transDataList);
 
+        // first fusion goes from
+
         final String igRegionStr = String.format("IG_RANGE=%d;%s;%d;%d", POS_STRAND, CHR_4, 50, 2000);
 
         // set known fusion gene for the SGL breakend
+        // the 3' gene's alt mapping is about expanding its range beyond the Ensembl-defined one
         final String threeAltMapping = String.format("ALTS=ALT;1;20000;25000;ALT;GS;50000;60000");
 
         KnownFusionData kfData = new KnownFusionData(KNOWN_PAIR, GENE_NAME_1, GENE_NAME_3, "", "");
@@ -564,9 +568,10 @@ public class SpecialFusionsTest
 
         tester.FusionAnalyser.cacheSpecialFusionGenes();
 
+        // first test a fusion which uses the expanded 3' alt mapping to gene 3
         int varId = 1;
         SvVarData sgl1 = createSgl(varId++, CHR_1, 1150, POS_ORIENT);
-        sgl1.getSglMappings().add(new SglMapping(CHR_1, 21000, NEG_ORIENT, "", 1));
+        sgl1.getSglMappings().add(new SglMapping(CHR_1, 24000, POS_ORIENT, "", 1));
 
         tester.AllVariants.add(sgl1);
 
@@ -581,18 +586,17 @@ public class SpecialFusionsTest
         assertEquals(1, tester.FusionAnalyser.getFusions().size());
 
         GeneFusion fusion = tester.FusionAnalyser.getFusions().get(0);
+        assertNotNull(fusion);
         assertEquals(sgl1.id(), fusion.upstreamTrans().gene().id());
         assertEquals(sgl1.id(), fusion.downstreamTrans().gene().id());
         assertTrue(fusion.reportable());
 
         assertEquals(KNOWN_PAIR, fusion.knownType());
-        //assertEquals(KNOWN_PAIR_UNMAPPABLE_3, fusion.knownType());
 
         // try again but to an alternate mapping location
-
         tester.clearClustersAndSVs();
         sgl1 = createSgl(varId++, CHR_1, 1150, POS_ORIENT);
-        sgl1.getSglMappings().add(new SglMapping("GS", 55000, NEG_ORIENT, "", 1));
+        sgl1.getSglMappings().add(new SglMapping("GS", 55000, POS_ORIENT, "", 1));
 
         tester.AllVariants.add(sgl1);
 
@@ -612,12 +616,11 @@ public class SpecialFusionsTest
         assertTrue(fusion.reportable());
 
         assertEquals(KNOWN_PAIR, fusion.knownType());
-        // assertEquals(KNOWN_PAIR_UNMAPPABLE_3, fusion.knownType());
 
         // test again but using an IG region for the 5' gene
         tester.clearClustersAndSVs();
         sgl1 = createSgl(varId++, CHR_4, 1000, POS_ORIENT);
-        sgl1.getSglMappings().add(new SglMapping("GS", 55000, NEG_ORIENT, "", 1));
+        sgl1.getSglMappings().add(new SglMapping("GS", 55000, POS_ORIENT, "", 1));
 
         tester.AllVariants.add(sgl1);
 

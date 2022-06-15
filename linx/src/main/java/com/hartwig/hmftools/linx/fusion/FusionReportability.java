@@ -87,7 +87,7 @@ public class FusionReportability
         if(downTrans.bioType().equals(BIOTYPE_NONSENSE_MED_DECAY))
             return NMD;
 
-        if(downTrans.hasNegativePrevSpliceAcceptorDistance())
+        if(!fusion.isIG() && downTrans.hasNegativePrevSpliceAcceptorDistance())
             return NEG_SPLICE_ACC_DISTANCE;
 
         if(!permittedExonSkipping(fusion))

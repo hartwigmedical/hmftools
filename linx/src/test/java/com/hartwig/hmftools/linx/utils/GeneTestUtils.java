@@ -80,8 +80,6 @@ public class GeneTestUtils
 
     public static void addTestTranscripts(EnsemblDataCache geneTransCache)
     {
-        Integer codingStart = null;
-        Integer codingEnd = null;
         boolean canonical = true;
 
         List<TranscriptData> transDataList = Lists.newArrayList();
@@ -98,8 +96,6 @@ public class GeneTestUtils
 
         transDataList = Lists.newArrayList();
 
-        codingStart = GENE_START_2 + 250;
-        codingEnd = GENE_START_2 + 850;
         transData = createTransExons(
                 GENE_ID_2, TRANS_2, POS_STRAND, generateExonStarts(GENE_START_2, 5, EXON_LENGTH, 100),
                 EXON_LENGTH, GENE_START_2 + 250, GENE_START_2 + 850, canonical, BIOTYPE_PROTEIN_CODING);
