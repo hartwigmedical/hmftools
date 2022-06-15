@@ -5,7 +5,9 @@ import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
+import java.util.Set;
 
+import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
@@ -15,6 +17,8 @@ import com.hartwig.hmftools.common.linx.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.linx.ReportableGeneDisruption;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.common.purple.PurpleQC;
+import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.interpretation.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.common.purple.interpretation.GainLossTestFactory;
@@ -48,15 +52,19 @@ public class WildTypeFactoryTest {
         List<LinxFusion> reportableFusions = Lists.newArrayList();
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> geneDisruptions = Lists.newArrayList();
-        List<DriverGene> listDriverGenes =
-                createDriverMap(Lists.newArrayList("BRCA2"));
+        List<DriverGene> listDriverGenes = createDriverMap(Lists.newArrayList("BRCA2"));
+
+        Set<PurpleQCStatus> purpleQCStatusSet = Sets.newHashSet();
+        purpleQCStatusSet.add(PurpleQCStatus.PASS);
 
         List<WildTypeGene> wildTypes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
                 reportableSomaticVariant,
                 reportableSomaticGainsLosses,
                 reportableFusions,
-                homozygousDisruptions, geneDisruptions,
-                listDriverGenes);
+                homozygousDisruptions,
+                geneDisruptions,
+                listDriverGenes,
+                purpleQCStatusSet);
         assertEquals(0, wildTypes.size());
     }
 
@@ -78,15 +86,19 @@ public class WildTypeFactoryTest {
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> geneDisruptions = Lists.newArrayList();
 
-        List<DriverGene> listDriverGenes =
-                createDriverMap(Lists.newArrayList("BRCA1"));
+        List<DriverGene> listDriverGenes = createDriverMap(Lists.newArrayList("BRCA1"));
+
+        Set<PurpleQCStatus> purpleQCStatusSet = Sets.newHashSet();
+        purpleQCStatusSet.add(PurpleQCStatus.PASS);
 
         List<WildTypeGene> wildTypes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
                 reportableSomaticVariant,
                 reportableSomaticGainsLosses,
                 reportableFusions,
-                homozygousDisruptions, geneDisruptions,
-                listDriverGenes);
+                homozygousDisruptions,
+                geneDisruptions,
+                listDriverGenes,
+                purpleQCStatusSet);
         assertEquals(0, wildTypes.size());
     }
 
@@ -101,15 +113,19 @@ public class WildTypeFactoryTest {
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> geneDisruptions = Lists.newArrayList();
 
-        List<DriverGene> listDriverGenes =
-                createDriverMap(Lists.newArrayList("APC", "KRAS"));
+        List<DriverGene> listDriverGenes = createDriverMap(Lists.newArrayList("APC", "KRAS"));
+
+        Set<PurpleQCStatus> purpleQCStatusSet = Sets.newHashSet();
+        purpleQCStatusSet.add(PurpleQCStatus.PASS);
 
         List<WildTypeGene> wildTypes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
                 reportableSomaticVariant,
                 reportableSomaticGainsLosses,
                 reportableFusions,
-                homozygousDisruptions, geneDisruptions,
-                listDriverGenes);
+                homozygousDisruptions,
+                geneDisruptions,
+                listDriverGenes,
+                purpleQCStatusSet);
         assertEquals(0, wildTypes.size());
     }
 
@@ -123,15 +139,19 @@ public class WildTypeFactoryTest {
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> geneDisruptions = Lists.newArrayList();
 
-        List<DriverGene> listDriverGenes =
-                createDriverMap(Lists.newArrayList("BAG4"));
+        List<DriverGene> listDriverGenes = createDriverMap(Lists.newArrayList("BAG4"));
+
+        Set<PurpleQCStatus> purpleQCStatusSet = Sets.newHashSet();
+        purpleQCStatusSet.add(PurpleQCStatus.PASS);
 
         List<WildTypeGene> wildTypes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
                 reportableSomaticVariant,
                 reportableSomaticGainsLosses,
                 reportableFusions,
-                homozygousDisruptions, geneDisruptions,
-                listDriverGenes);
+                homozygousDisruptions,
+                geneDisruptions,
+                listDriverGenes,
+                purpleQCStatusSet);
         assertEquals(0, wildTypes.size());
     }
 
@@ -145,15 +165,19 @@ public class WildTypeFactoryTest {
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> geneDisruptions = Lists.newArrayList();
 
-        List<DriverGene> listDriverGenes =
-                createDriverMap(Lists.newArrayList("BAG4"));
+        List<DriverGene> listDriverGenes = createDriverMap(Lists.newArrayList("BAG4"));
+
+        Set<PurpleQCStatus> purpleQCStatusSet = Sets.newHashSet();
+        purpleQCStatusSet.add(PurpleQCStatus.PASS);
 
         List<WildTypeGene> wildTypes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
                 reportableSomaticVariant,
                 reportableSomaticGainsLosses,
                 reportableFusions,
-                homozygousDisruptions, geneDisruptions,
-                listDriverGenes);
+                homozygousDisruptions,
+                geneDisruptions,
+                listDriverGenes,
+                purpleQCStatusSet);
         assertEquals(0, wildTypes.size());
     }
 
@@ -167,15 +191,19 @@ public class WildTypeFactoryTest {
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList(homozygousDisruption);
         List<ReportableGeneDisruption> geneDisruptions = Lists.newArrayList();
 
-        List<DriverGene> listDriverGenes =
-                createDriverMap(Lists.newArrayList("NRAS"));
+        List<DriverGene> listDriverGenes = createDriverMap(Lists.newArrayList("NRAS"));
+
+        Set<PurpleQCStatus> purpleQCStatusSet = Sets.newHashSet();
+        purpleQCStatusSet.add(PurpleQCStatus.PASS);
 
         List<WildTypeGene> wildTypes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
                 reportableSomaticVariant,
                 reportableSomaticGainsLosses,
                 reportableFusions,
-                homozygousDisruptions, geneDisruptions,
-                listDriverGenes);
+                homozygousDisruptions,
+                geneDisruptions,
+                listDriverGenes,
+                purpleQCStatusSet);
         assertEquals(0, wildTypes.size());
     }
 
@@ -190,15 +218,19 @@ public class WildTypeFactoryTest {
         ReportableGeneDisruption geneDisruption = createDisruption("MYC");
         List<ReportableGeneDisruption> geneDisruptions = Lists.newArrayList(geneDisruption);
 
-        List<DriverGene> listDriverGenes =
-                createDriverMap(Lists.newArrayList("MYC"));
+        List<DriverGene> listDriverGenes = createDriverMap(Lists.newArrayList("MYC"));
+
+        Set<PurpleQCStatus> purpleQCStatusSet = Sets.newHashSet();
+        purpleQCStatusSet.add(PurpleQCStatus.PASS);
 
         List<WildTypeGene> wildTypes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
                 reportableSomaticVariant,
                 reportableSomaticGainsLosses,
                 reportableFusions,
-                homozygousDisruptions, geneDisruptions,
-                listDriverGenes);
+                homozygousDisruptions,
+                geneDisruptions,
+                listDriverGenes,
+                purpleQCStatusSet);
         assertEquals(0, wildTypes.size());
     }
 
@@ -241,13 +273,71 @@ public class WildTypeFactoryTest {
         List<DriverGene> listDriverGenes =
                 createDriverMap(Lists.newArrayList("BRCA1", "BRCA2", "APC", "KRAS", "BAG4", "FGFR1", "NRAS", "EGFR", "MYC"));
 
+        Set<PurpleQCStatus> purpleQCStatusSet = Sets.newHashSet();
+        purpleQCStatusSet.add(PurpleQCStatus.PASS);
+
         List<WildTypeGene> wildTypes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
                 reportableSomaticVariant,
                 reportableSomaticGainsLosses,
                 reportableFusions,
-                homozygousDisruptions, geneDisruptions,
-                listDriverGenes);
+                homozygousDisruptions,
+                geneDisruptions,
+                listDriverGenes,
+                purpleQCStatusSet);
         assertEquals(1, wildTypes.size());
+    }
+
+    @Test
+    public void canDetermineWildTypeFilterPurity() {
+
+        ReportableVariant variantGermline = ImmutableReportableVariant.builder()
+                .from(ReportableVariantTestFactory.create())
+                .gene("BRCA1")
+                .chromosome("1")
+                .position(56412)
+                .ref("A")
+                .alt("C")
+                .build();
+        List<ReportableVariant> reportableGermlineVariant = Lists.newArrayList(variantGermline);
+
+        ReportableVariant variantSomatic = ImmutableReportableVariant.builder()
+                .from(ReportableVariantTestFactory.create())
+                .gene("BRCA2")
+                .chromosome("1")
+                .position(56412)
+                .ref("A")
+                .alt("C")
+                .build();
+        List<ReportableVariant> reportableSomaticVariant = Lists.newArrayList(variantSomatic);
+
+        GainLoss reportableAmp = GainLossTestFactory.createGainLoss("APC", CopyNumberInterpretation.FULL_GAIN);
+        GainLoss reportableDel = GainLossTestFactory.createGainLoss("KRAS", CopyNumberInterpretation.FULL_LOSS);
+        List<GainLoss> reportableSomaticGainsLosses = Lists.newArrayList(reportableAmp, reportableDel);
+
+        LinxFusion reportedFusionMatch = create("BAG4", "FGFR1");
+        List<LinxFusion> reportableFusions = Lists.newArrayList(reportedFusionMatch);
+
+        ReportableHomozygousDisruption homozygousDisruption = create("NRAS");
+        List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList(homozygousDisruption);
+
+        ReportableGeneDisruption geneDisruption = createDisruption("MYC");
+        List<ReportableGeneDisruption> geneDisruptions = Lists.newArrayList(geneDisruption);
+
+        List<DriverGene> listDriverGenes =
+                createDriverMap(Lists.newArrayList("BRCA1", "BRCA2", "APC", "KRAS", "BAG4", "FGFR1", "NRAS", "EGFR", "MYC"));
+
+        Set<PurpleQCStatus> purpleQCStatusSet = Sets.newHashSet();
+        purpleQCStatusSet.add(PurpleQCStatus.WARN_LOW_PURITY);
+
+        List<WildTypeGene> wildTypes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
+                reportableSomaticVariant,
+                reportableSomaticGainsLosses,
+                reportableFusions,
+                homozygousDisruptions,
+                geneDisruptions,
+                listDriverGenes,
+                purpleQCStatusSet);
+        assertEquals(0, wildTypes.size());
     }
 
     @NotNull
@@ -309,7 +399,6 @@ public class WildTypeFactoryTest {
                 .clusterId(2)
                 .transcriptId(Strings.EMPTY);
     }
-
 
     @NotNull
     private static LinxFusion create(@NotNull String geneStart, @NotNull String geneEnd) {

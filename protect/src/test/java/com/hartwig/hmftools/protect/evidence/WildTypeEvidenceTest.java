@@ -5,7 +5,9 @@ import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
+import java.util.Set;
 
+import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
@@ -15,6 +17,7 @@ import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.linx.ReportableGeneDisruption;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.interpretation.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.common.purple.interpretation.GainLossTestFactory;
@@ -86,11 +89,16 @@ public class WildTypeEvidenceTest {
         WildTypeEvidence wildTypeEvidenceSomaticVariant =
                 new WildTypeEvidence(EvidenceTestFactory.create(), Lists.newArrayList(wildTypeSomaticVariant), listDriverGenes);
 
+        Set<PurpleQCStatus> purpleQCStatusSet = Sets.newHashSet();
+        purpleQCStatusSet.add(PurpleQCStatus.PASS);
+
         List<ProtectEvidence> evidencesWildTypeSoamticVariant = wildTypeEvidenceSomaticVariant.evidence(reportableGermlineVariant,
                 reportableSomaticVariant,
                 reportableSomaticGainsLosses,
                 reportableFusions,
-                homozygousDisruptions, geneDisruptions);
+                homozygousDisruptions,
+                geneDisruptions,
+                purpleQCStatusSet);
 
         assertEquals(evidencesWildTypeSoamticVariant.size(), 0);
 
@@ -109,7 +117,9 @@ public class WildTypeEvidenceTest {
                 reportableSomaticVariant,
                 reportableSomaticGainsLosses,
                 reportableFusions,
-                homozygousDisruptions, geneDisruptions);
+                homozygousDisruptions,
+                geneDisruptions,
+                purpleQCStatusSet);
         assertEquals(evidencesWildTypeGermlineVariant.size(), 0);
 
         //Test wild-type with CNV
@@ -127,7 +137,9 @@ public class WildTypeEvidenceTest {
                 reportableSomaticVariant,
                 reportableSomaticGainsLosses,
                 reportableFusions,
-                homozygousDisruptions, geneDisruptions);
+                homozygousDisruptions,
+                geneDisruptions,
+                purpleQCStatusSet);
         assertEquals(evidencesWildTypeCNV.size(), 0);
 
         //Test wild-type with fusion  5 prime
@@ -145,7 +157,9 @@ public class WildTypeEvidenceTest {
                 reportableSomaticVariant,
                 reportableSomaticGainsLosses,
                 reportableFusions,
-                homozygousDisruptions, geneDisruptions);
+                homozygousDisruptions,
+                geneDisruptions,
+                purpleQCStatusSet);
         assertEquals(evidencesWildTypeFusion5.size(), 0);
 
         //Test wild-type with fusion  3 prime
@@ -163,7 +177,9 @@ public class WildTypeEvidenceTest {
                 reportableSomaticVariant,
                 reportableSomaticGainsLosses,
                 reportableFusions,
-                homozygousDisruptions, geneDisruptions);
+                homozygousDisruptions,
+                geneDisruptions,
+                purpleQCStatusSet);
         assertEquals(evidencesWildTypeFusion3.size(), 0);
 
         //Test wild-type with homozygous disruption
@@ -182,7 +198,9 @@ public class WildTypeEvidenceTest {
                 reportableSomaticVariant,
                 reportableSomaticGainsLosses,
                 reportableFusions,
-                homozygousDisruptions, geneDisruptions);
+                homozygousDisruptions,
+                geneDisruptions,
+                purpleQCStatusSet);
         assertEquals(evidencesWildTypeHomozygousDisruption.size(), 0);
 
         //Test wild-type with gene disruption
@@ -196,12 +214,13 @@ public class WildTypeEvidenceTest {
         WildTypeEvidence wildTypeEvidenceGeneDisruption =
                 new WildTypeEvidence(EvidenceTestFactory.create(), Lists.newArrayList(wildTypeGeneDisruption), listDriverGenes);
 
-        List<ProtectEvidence> evidencesWildTypeGeneDisruption = wildTypeEvidenceGeneDisruption.evidence(
-                reportableGermlineVariant,
+        List<ProtectEvidence> evidencesWildTypeGeneDisruption = wildTypeEvidenceGeneDisruption.evidence(reportableGermlineVariant,
                 reportableSomaticVariant,
                 reportableSomaticGainsLosses,
                 reportableFusions,
-                homozygousDisruptions, geneDisruptions);
+                homozygousDisruptions,
+                geneDisruptions,
+                purpleQCStatusSet);
         assertEquals(evidencesWildTypeGeneDisruption.size(), 0);
 
         //Test calling wild type
@@ -212,13 +231,16 @@ public class WildTypeEvidenceTest {
                 .source(Knowledgebase.CKB)
                 .build();
 
-        WildTypeEvidence wildTypeEvidence = new WildTypeEvidence(EvidenceTestFactory.create(), Lists.newArrayList(wildType), listDriverGenes);
+        WildTypeEvidence wildTypeEvidence =
+                new WildTypeEvidence(EvidenceTestFactory.create(), Lists.newArrayList(wildType), listDriverGenes);
 
         List<ProtectEvidence> evidencesWildType = wildTypeEvidence.evidence(reportableGermlineVariant,
                 reportableSomaticVariant,
                 reportableSomaticGainsLosses,
                 reportableFusions,
-                homozygousDisruptions, geneDisruptions);
+                homozygousDisruptions,
+                geneDisruptions,
+                purpleQCStatusSet);
         assertEquals(evidencesWildType.size(), 1);
     }
 

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.protect.evidence;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -8,6 +9,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.linx.ReportableGeneDisruption;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
@@ -37,7 +39,7 @@ public class WildTypeEvidence {
     public List<ProtectEvidence> evidence(@NotNull List<ReportableVariant> reportableGermlineVariant,
             @NotNull List<ReportableVariant> reportableSomaticVariant, @NotNull List<GainLoss> reportableSomaticGainsLosses,
             @NotNull List<LinxFusion> reportableFusions, @NotNull List<ReportableHomozygousDisruption> homozygousDisruptions,
-            @NotNull List<ReportableGeneDisruption> geneDisruptions) {
+            @NotNull List<ReportableGeneDisruption> geneDisruptions, @NotNull Set<PurpleQCStatus> purpleQCStatus) {
         List<ProtectEvidence> evidences = Lists.newArrayList();
         List<WildTypeGene> wildTypeGenes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
                 reportableSomaticVariant,
@@ -45,7 +47,8 @@ public class WildTypeEvidence {
                 reportableFusions,
                 homozygousDisruptions,
                 geneDisruptions,
-                driverGenes);
+                driverGenes,
+                purpleQCStatus);
 
         for (ActionableGene actionable : actionableGenes) {
             for (WildTypeGene wildType : wildTypeGenes) {
