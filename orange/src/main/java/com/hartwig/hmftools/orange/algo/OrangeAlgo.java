@@ -31,7 +31,6 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.flagstat.Flagstat;
 import com.hartwig.hmftools.common.flagstat.FlagstatFile;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
-import com.hartwig.hmftools.common.isofox.IsofoxData;
 import com.hartwig.hmftools.common.isofox.IsofoxDataLoader;
 import com.hartwig.hmftools.common.lilac.LilacData;
 import com.hartwig.hmftools.common.lilac.LilacDataLoader;
@@ -134,30 +133,29 @@ public class OrangeAlgo {
 
     @NotNull
     public OrangeReport run(@NotNull OrangeConfig config) throws IOException {
+        Set<DoidNode> configuredPrimaryTumor = loadConfiguredPrimaryTumor(config);
+        String platinumVersion = determinePlatinumVersion(config);
+        OrangeSample refSample = loadSampleData(config, false);
+        OrangeSample tumorSample = loadSampleData(config, true);
+
         List<ProtectEvidence> protect = loadProtectData(config);
         LinxInterpretedData linx = LinxInterpreter.interpret(loadLinxData(config), protect, driverGenes);
 
-        IsofoxData isofox = loadIsofoxData(config);
-
-        IsofoxInterpretedData isofoxInterpreted = null;
-        if (isofox != null) {
-            isofoxInterpreted = IsofoxInterpreter.interpret(isofox, linx, driverGenes, knownFusionCache);
-        }
-
         ChordAnalysis chord = loadChordAnalysis(config);
         PurpleInterpretedData purple = PurpleInterpreter.interpret(loadPurpleData(config), protect, driverGenes, chord);
+
         return ImmutableOrangeReport.builder()
                 .sampleId(config.tumorSampleId())
                 .reportDate(LocalDate.now())
-                .configuredPrimaryTumor(loadConfiguredPrimaryTumor(config))
+                .configuredPrimaryTumor(configuredPrimaryTumor)
                 .refGenomeVersion(config.refGenomeVersion())
-                .platinumVersion(determinePlatinumVersion(config))
-                .refSample(loadSampleData(config, false))
-                .tumorSample(loadSampleData(config, true))
+                .platinumVersion(platinumVersion)
+                .refSample(refSample)
+                .tumorSample(tumorSample)
                 .germlineMVLHPerGene(loadGermlineMVLHPerGene(config))
                 .purple(purple)
                 .linx(linx)
-                .isofox(isofoxInterpreted)
+                .isofox(loadIsofoxData(config, linx))
                 .lilac(loadLilacData(config))
                 .virusInterpreter(loadVirusInterpreterData(config))
                 .chord(chord)
@@ -271,7 +269,7 @@ public class OrangeAlgo {
     }
 
     @Nullable
-    private IsofoxData loadIsofoxData(@NotNull OrangeConfig config) throws IOException {
+    private IsofoxInterpretedData loadIsofoxData(@NotNull OrangeConfig config, @NotNull LinxInterpretedData linx) throws IOException {
         OrangeRNAConfig rna = config.rnaConfig();
         if (rna == null) {
             LOGGER.info("Skipping ISOFOX data loading as RNA is not configured");
@@ -284,13 +282,13 @@ public class OrangeAlgo {
             return null;
         }
 
-        return IsofoxDataLoader.load(isofoxCancerType,
+        return IsofoxInterpreter.interpret(IsofoxDataLoader.load(isofoxCancerType,
                 rna.isofoxGeneDistributionCsv(),
                 rna.isofoxAltSjCohortCsv(),
                 rna.isofoxSummaryCsv(),
                 rna.isofoxGeneDataCsv(),
                 rna.isofoxFusionCsv(),
-                rna.isofoxAltSpliceJunctionCsv());
+                rna.isofoxAltSpliceJunctionCsv()), linx, driverGenes, knownFusionCache);
     }
 
     @NotNull
