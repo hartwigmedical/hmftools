@@ -33,8 +33,9 @@ public final class CopyNumberSelector {
         Set<String> ampDriverGenes = selectAmpDriverGenes(driverGenes);
         for (GeneCopyNumber geneCopyNumber : allGeneCopyNumbers) {
             if (ampDriverGenes.contains(geneCopyNumber.geneName())) {
-                double relativeCopyNumber = geneCopyNumber.minCopyNumber() / ploidy;
-                if (relativeCopyNumber > 2.5 && relativeCopyNumber < 3) {
+                double relativeMinCopyNumber = geneCopyNumber.minCopyNumber() / ploidy;
+                double relativeMaxCopyNumber = geneCopyNumber.maxCopyNumber() / ploidy;
+                if (relativeMinCopyNumber > 2.5 && relativeMaxCopyNumber < 3) {
                     nearReportableSomaticGains.add(toFullGain(geneCopyNumber));
                 }
             }
