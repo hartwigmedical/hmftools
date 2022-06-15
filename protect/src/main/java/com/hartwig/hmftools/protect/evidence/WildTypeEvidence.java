@@ -47,11 +47,12 @@ public class WildTypeEvidence {
                 reportableFusions,
                 homozygousDisruptions,
                 geneDisruptions,
-                driverGenes,
-                purpleQCStatus);
+                driverGenes);
+
+        List<WildTypeGene> wildTypeGenesFilter = WildTypeFactory.filterQCWildTypes(purpleQCStatus, wildTypeGenes);
 
         for (ActionableGene actionable : actionableGenes) {
-            for (WildTypeGene wildType : wildTypeGenes) {
+            for (WildTypeGene wildType : wildTypeGenesFilter) {
                 if (wildType.gene().equals(actionable.gene())) {
                     evidences.add(evidence(actionable));
                 }
