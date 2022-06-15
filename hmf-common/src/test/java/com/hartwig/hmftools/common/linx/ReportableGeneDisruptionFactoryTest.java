@@ -86,7 +86,7 @@ public class ReportableGeneDisruptionFactoryTest {
     }
 
     @NotNull
-    private static ImmutableLinxBreakend.Builder createTestDisruptionBuilder() {
+    public static ImmutableLinxBreakend.Builder createTestDisruptionBuilder() {
         return ImmutableLinxBreakend.builder()
                 .id(0)
                 .svId(0)

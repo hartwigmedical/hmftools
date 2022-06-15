@@ -176,7 +176,7 @@ public class ProtectAlgo {
                 purpleData.reportableSomaticGainsLosses(),
                 linxData.reportableFusions(),
                 linxData.homozygousDisruptions(),
-                linxData.geneDisruptions());
+                linxData.reportableGeneDisruptions());
         printExtraction("wild-type", wildTypeEvidence);
 
         List<ProtectEvidence> result = Lists.newArrayList();
