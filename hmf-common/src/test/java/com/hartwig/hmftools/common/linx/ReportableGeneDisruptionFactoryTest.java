@@ -31,10 +31,10 @@ public class ReportableGeneDisruptionFactoryTest {
                 .build();
 
         LinxSvAnnotation match = createTestAnnotationBuilder().svId(1).clusterId(2).build();
-        assertEquals(2, (int) ReportableGeneDisruptionFactory.determineClusterId(breakend, Lists.newArrayList(match)));
+        assertEquals(2, (int) ReportableGeneDisruptionFactory.determineClusterId(Lists.newArrayList(match), breakend));
 
         LinxSvAnnotation noMatch = createTestAnnotationBuilder().svId(2).clusterId(1).build();
-        assertNull(ReportableGeneDisruptionFactory.determineClusterId(breakend, Lists.newArrayList(noMatch)));
+        assertNull(ReportableGeneDisruptionFactory.determineClusterId(Lists.newArrayList(noMatch), breakend));
     }
 
     @Test
@@ -97,7 +97,7 @@ public class ReportableGeneDisruptionFactoryTest {
                 .geneOrientation(Strings.EMPTY)
                 .disruptive(true)
                 .reportedDisruption(true)
-                .undisruptedCopyNumber(0.1)
+                .undisruptedCopyNumber(0)
                 .regionType(Strings.EMPTY)
                 .codingContext(Strings.EMPTY)
                 .biotype(Strings.EMPTY)
@@ -113,7 +113,7 @@ public class ReportableGeneDisruptionFactoryTest {
                 .chrBand(Strings.EMPTY)
                 .exonUp(0)
                 .exonDown(0)
-                .junctionCopyNumber(0.1);
+                .junctionCopyNumber(0);
     }
 
     @NotNull

@@ -28,15 +28,17 @@ public final class GeneDisruptionTable {
         }
 
         Table table = Tables.createContent(width,
-                new float[] { 1, 1, 1, 1, 1, 1 },
+                new float[] { 1, 1, 1, 1, 1, 1, 1 },
                 new Cell[] { Cells.createHeader("Location"), Cells.createHeader("Gene"), Cells.createHeader("Range"),
-                        Cells.createHeader("Type"), Cells.createHeader("Junction CN"), Cells.createHeader("Undisrupted CN") });
+                        Cells.createHeader("Type"), Cells.createHeader("Cluster ID"), Cells.createHeader("Junction CN"),
+                        Cells.createHeader("Undisrupted CN") });
 
         for (ReportableGeneDisruption disruption : sort(disruptions)) {
             table.addCell(Cells.createContent(disruption.location()));
             table.addCell(Cells.createContent(disruption.gene()));
             table.addCell(Cells.createContent(disruption.range()));
             table.addCell(Cells.createContent(disruption.type()));
+            table.addCell(Cells.createContent(String.valueOf(disruption.clusterId())));
             table.addCell(Cells.createContent(SINGLE_DIGIT.format(disruption.junctionCopyNumber())));
             table.addCell(Cells.createContent(SINGLE_DIGIT.format(disruption.undisruptedCopyNumber())));
         }

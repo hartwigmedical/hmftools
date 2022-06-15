@@ -3,14 +3,13 @@ package com.hartwig.hmftools.common.linx;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
 import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -26,7 +25,8 @@ public final class ReportableGeneDisruptionFactory {
     }
 
     @NotNull
-    public static List<ReportableGeneDisruption> convert(@NotNull List<LinxBreakend> disruptions, @NotNull List<LinxSvAnnotation> linxSvs) {
+    public static List<ReportableGeneDisruption> convert(@NotNull List<LinxBreakend> disruptions,
+            @NotNull List<LinxSvAnnotation> structuralVariants) {
         List<ReportableGeneDisruption> reportableDisruptions = Lists.newArrayList();
         Map<SvAndGeneKey, Pair<LinxBreakend, LinxBreakend>> pairedMap = mapDisruptionsPerStructuralVariant(disruptions);
 
@@ -53,8 +53,7 @@ public final class ReportableGeneDisruptionFactory {
                         .junctionCopyNumber(primaryDisruptionLeft.junctionCopyNumber())
                         .undisruptedCopyNumber(Math.max(0, lowestUndisruptedCopyNumber))
                         .firstAffectedExon(primaryDisruptionLeft.exonUp())
-                        .svId(primaryDisruptionLeft.svId())
-                        .clusterId(determineClusterId(primaryDisruptionLeft, linxSvs))
+                        .clusterId(determineClusterId(structuralVariants, primaryDisruptionLeft))
                         .build());
             } else {
                 reportableDisruptions.add(ImmutableReportableGeneDisruption.builder()
@@ -67,8 +66,7 @@ public final class ReportableGeneDisruptionFactory {
                         .junctionCopyNumber(primaryDisruptionLeft.junctionCopyNumber())
                         .undisruptedCopyNumber(Math.max(0, primaryDisruptionLeft.undisruptedCopyNumber()))
                         .firstAffectedExon(primaryDisruptionLeft.exonUp())
-                        .svId(primaryDisruptionLeft.svId())
-                        .clusterId(determineClusterId(primaryDisruptionLeft, linxSvs))
+                        .clusterId(determineClusterId(structuralVariants, primaryDisruptionLeft))
                         .build());
             }
         }
@@ -77,12 +75,17 @@ public final class ReportableGeneDisruptionFactory {
 
     @VisibleForTesting
     @Nullable
-    static Integer determineClusterId(@NotNull LinxBreakend breakend, @NotNull List<LinxSvAnnotation> linxSvs) {
-        for (LinxSvAnnotation linxSv : linxSvs) {
-            if (linxSv.svId() == breakend.svId()) {
-                return linxSv.clusterId();
+    static Integer determineClusterId(@NotNull List<LinxSvAnnotation> structuralVariants, @NotNull LinxBreakend breakend) {
+        for (LinxSvAnnotation structuralVariant : structuralVariants) {
+            if (structuralVariant.svId() == breakend.svId()) {
+                return structuralVariant.clusterId();
             }
         }
+
+        if (!structuralVariants.isEmpty()) {
+            LOGGER.warn("Could not find cluster ID for breakend with svId {}", breakend.svId());
+        }
+
         return null;
     }
 

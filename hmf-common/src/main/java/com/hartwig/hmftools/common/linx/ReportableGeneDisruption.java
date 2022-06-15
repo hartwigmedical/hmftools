@@ -33,8 +33,6 @@ public abstract class ReportableGeneDisruption {
 
     public abstract int firstAffectedExon();
 
-    public abstract int svId();
-
     @Nullable
     public abstract Integer clusterId();
 }

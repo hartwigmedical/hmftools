@@ -16,7 +16,6 @@ import com.hartwig.hmftools.orange.report.tables.GeneDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.HomozygousDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.LossOfHeterozygosityTable;
 import com.hartwig.hmftools.orange.report.tables.SomaticVariantTable;
-import com.hartwig.hmftools.orange.report.tables.StructuralDriverTable;
 import com.hartwig.hmftools.orange.report.tables.ViralPresenceTable;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Images;
@@ -66,7 +65,6 @@ public class SomaticFindingsChapter implements ReportChapter {
         addHomozygousDisruptions(document);
         addGeneDisruptions(document);
         addLossOfHeterozygosity(document);
-        addStructuralDrivers(document);
         addStructuralDriverPlots(document);
     }
 
@@ -178,12 +176,7 @@ public class SomaticFindingsChapter implements ReportChapter {
                 "Potentially interesting LOH events in case of MSI or HRD (" + report.purple().suspectGeneCopyNumbersWithLOH().size() + ")";
         document.add(LossOfHeterozygosityTable.build(title, contentWidth(), report.purple().suspectGeneCopyNumbersWithLOH()));
     }
-
-    private void addStructuralDrivers(final Document document) {
-        String title = "Structural drivers (" + report.linx().drivers().size() + ")";
-        document.add(StructuralDriverTable.build(title, contentWidth(), report.linx().drivers()));
-    }
-
+    
     private void addStructuralDriverPlots(@NotNull Document document) {
         String title = "Structural driver plots (" + report.plots().linxDriverPlots().size() + ")";
         document.add(new Paragraph(title).addStyle(ReportResources.tableTitleStyle()));
