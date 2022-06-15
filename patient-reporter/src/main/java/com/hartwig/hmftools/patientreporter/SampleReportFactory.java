@@ -114,7 +114,7 @@ public final class SampleReportFactory {
                 .cohortId("DEFAULT")
                 .sampleContainsHospitalCenterId(false)
                 .reportGermline(true)
-                .reportGermlineFlag(true)
+                .reportGermlineFlag(false)
                 .reportConclusion(false)
                 .reportViral(true)
                 .reportPeach(true)
