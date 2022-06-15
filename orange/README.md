@@ -133,6 +133,7 @@ investigate potential causes for QC failure.
   - Unreported variants in splice regions of genes for which we report splice variants are added as potentially interesting variants.  
   - Unreported variants near hotspots are added as potentially interesting.
   - Unreported fusions of all oncogenes are added as potentially interesting fusions.
+  - Driver genes with near amplifications (2.5 < minRelCN < 3) are added as potentially interesting gains.
   - Average chromosome arm copy numbers are calculated and stored in ORANGE JSON:
      - New input: `purple_somatic_copy_number_tsv`
   - Gene disruptions are annotated with sv and cluster IDs

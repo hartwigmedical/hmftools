@@ -39,6 +39,13 @@ public final class PurpleInterpreter {
                 GermlineVariantSelector.selectInterestingUnreportedVariants(purple.allGermlineVariants());
         LOGGER.info(" Found an additional {} germline variants that are potentially interesting", additionalSuspectGermlineVariants.size());
 
+        List<GainLoss> nearReportableSomaticGains = CopyNumberSelector.selectNearReportableSomaticGains(purple.allSomaticGeneCopyNumbers(),
+                purple.ploidy(),
+                purple.reportableSomaticGainsLosses(),
+                driverGenes);
+        LOGGER.info(" Found an additional {} near-reportable somatic gains that are potentially interesting",
+                nearReportableSomaticGains.size());
+
         List<GainLoss> additionalSuspectSomaticGainsLosses =
                 CopyNumberSelector.selectInterestingUnreportedGainsLosses(purple.allSomaticGainsLosses(),
                         purple.reportableSomaticGainsLosses());
@@ -64,6 +71,7 @@ public final class PurpleInterpreter {
                 .suspectGeneCopyNumbersWithLOH(suspectGeneCopyNumbersWithLOH)
                 .allSomaticGainsLosses(purple.allSomaticGainsLosses())
                 .reportableSomaticGainsLosses(purple.reportableSomaticGainsLosses())
+                .nearReportableSomaticGains(nearReportableSomaticGains)
                 .additionalSuspectSomaticGainsLosses(additionalSuspectSomaticGainsLosses)
                 .allGermlineDeletions(purple.allGermlineDeletions())
                 .reportableGermlineDeletions(purple.reportableGermlineDeletions())

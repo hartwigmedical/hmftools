@@ -184,7 +184,7 @@ public final class PurpleDataLoader {
 
             if (geneDriver.driver() == DriverType.AMP || geneDriver.driver() == DriverType.PARTIAL_AMP
                     || geneDriver.driver() == DriverType.DEL) {
-                gainsLosses.add(toReportableGainLoss(geneDriver));
+                gainsLosses.add(toGainLoss(geneDriver));
             }
         }
         return gainsLosses;
@@ -220,7 +220,7 @@ public final class PurpleDataLoader {
     }
 
     @NotNull
-    private static GainLoss toReportableGainLoss(@NotNull DriverCatalog driver) {
+    private static GainLoss toGainLoss(@NotNull DriverCatalog driver) {
         return ImmutableGainLoss.builder()
                 .chromosome(driver.chromosome())
                 .chromosomeBand(driver.chromosomeBand())

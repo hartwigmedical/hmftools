@@ -54,6 +54,9 @@ public abstract class PurpleInterpretedData {
     public abstract List<GainLoss> reportableSomaticGainsLosses();
 
     @NotNull
+    public abstract List<GainLoss> nearReportableSomaticGains();
+
+    @NotNull
     public abstract List<GainLoss> additionalSuspectSomaticGainsLosses();
 
     @NotNull

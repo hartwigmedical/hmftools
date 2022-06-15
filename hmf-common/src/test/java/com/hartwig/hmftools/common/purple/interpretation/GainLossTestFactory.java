@@ -15,15 +15,19 @@ public final class GainLossTestFactory {
 
     @NotNull
     public static GainLoss createGainLoss(@NotNull String gene, @NotNull CopyNumberInterpretation interpretation) {
+        return builder().gene(gene).interpretation(interpretation).build();
+    }
+
+    @NotNull
+    public static ImmutableGainLoss.Builder builder() {
         return ImmutableGainLoss.builder()
                 .chromosome(Strings.EMPTY)
                 .chromosomeBand(Strings.EMPTY)
-                .gene(gene)
+                .gene(Strings.EMPTY)
                 .transcript(Strings.EMPTY)
                 .isCanonical(true)
-                .interpretation(interpretation)
-                .minCopies(1)
-                .maxCopies(1)
-                .build();
+                .interpretation(CopyNumberInterpretation.FULL_GAIN)
+                .minCopies(0)
+                .maxCopies(0);
     }
 }

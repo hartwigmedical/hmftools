@@ -3,6 +3,7 @@ package com.hartwig.hmftools.orange.report.chapters;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.interpretation.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
@@ -103,31 +104,44 @@ public class SomaticFindingsChapter implements ReportChapter {
                 report.purple().reportableSomaticGainsLosses(),
                 report.isofox()));
 
-        List<GainLoss> suspectGains = Lists.newArrayList();
-        List<GainLoss> suspectLosses = Lists.newArrayList();
-        for (GainLoss suspectGainLoss : report.purple().additionalSuspectSomaticGainsLosses()) {
-            switch (suspectGainLoss.interpretation()) {
-                case FULL_GAIN:
-                case PARTIAL_GAIN: {
-                    suspectGains.add(suspectGainLoss);
-                    break;
-                }
-                case FULL_LOSS:
-                case PARTIAL_LOSS: {
-                    suspectLosses.add(suspectGainLoss);
-                    break;
-                }
-                default: {
-                    throw new IllegalStateException("Unrecognized gain loss interpretation: " + suspectGainLoss.interpretation());
-                }
-            }
-        }
+        String titleNearDriverGains =
+                "Potentially interesting near-driver amps (" + report.purple().nearReportableSomaticGains().size() + ")";
+        document.add(GeneCopyNumberTable.build(titleNearDriverGains,
+                contentWidth(),
+                report.purple().nearReportableSomaticGains(),
+                report.isofox()));
 
+        List<GainLoss> suspectGains = selectGains(report.purple().additionalSuspectSomaticGainsLosses());
         String titleGains = "Other regions with amps (" + suspectGains.size() + ")";
         document.add(GeneCopyNumberTable.build(titleGains, contentWidth(), max10(suspectGains), report.isofox()));
 
+        List<GainLoss> suspectLosses = selectLosses(report.purple().additionalSuspectSomaticGainsLosses());
         String titleLosses = "Regions with deletions in genes in other autosomal regions (" + suspectLosses.size() + ")";
         document.add(GeneCopyNumberTable.build(titleLosses, contentWidth(), max10(suspectLosses), report.isofox()));
+    }
+
+    @NotNull
+    private static List<GainLoss> selectGains(@NotNull List<GainLoss> gainsLosses) {
+        List<GainLoss> gains = Lists.newArrayList();
+        for (GainLoss gainLoss : gainsLosses) {
+            if (gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_GAIN
+                    || gainLoss.interpretation() == CopyNumberInterpretation.FULL_GAIN) {
+                gains.add(gainLoss);
+            }
+        }
+        return gains;
+    }
+
+    @NotNull
+    private static List<GainLoss> selectLosses(@NotNull List<GainLoss> gainsLosses) {
+        List<GainLoss> losses = Lists.newArrayList();
+        for (GainLoss gainLoss : gainsLosses) {
+            if (gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS
+                    || gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS) {
+                losses.add(gainLoss);
+            }
+        }
+        return losses;
     }
 
     private void addFusions(@NotNull Document document) {
