@@ -2,15 +2,12 @@ package com.hartwig.hmftools.orange.report.chapters;
 
 import java.text.DecimalFormat;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
-import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.algo.purple.GermlineVariantSelector;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.tables.GermlineDeletionTable;
 import com.hartwig.hmftools.orange.report.tables.GermlineDisruptionTable;
@@ -73,9 +70,8 @@ public class GermlineFindingsChapter implements ReportChapter {
         String titleDrivers = "Driver variants (" + report.purple().reportableGermlineVariants().size() + ")";
         document.add(GermlineVariantTable.build(titleDrivers, contentWidth(), report.purple().reportableGermlineVariants()));
 
-        List<ReportableVariant> nonDriverVariants = GermlineVariantSelector.selectInterestingUnreportedVariants(report.purple().allGermlineVariants());
-        String titleNonDrivers = "Other potentially relevant variants (" + nonDriverVariants.size() + ")";
-        document.add(GermlineVariantTable.build(titleNonDrivers, contentWidth(), nonDriverVariants));
+        String titleNonDrivers = "Other potentially relevant variants (" + report.purple().additionalSuspectGermlineVariants().size() + ")";
+        document.add(GermlineVariantTable.build(titleNonDrivers, contentWidth(), report.purple().additionalSuspectGermlineVariants()));
     }
 
     private void addGermlineDeletions(@NotNull Document document) {

@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
-public final class GermlineVariantSelector {
+final class GermlineVariantSelector {
 
     private GermlineVariantSelector() {
     }

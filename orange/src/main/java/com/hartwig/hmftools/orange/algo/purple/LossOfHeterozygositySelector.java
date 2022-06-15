@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class LossOfHeterozygositySelector {
+final class LossOfHeterozygositySelector {
 
     static final Set<String> HRD_GENES = Sets.newHashSet();
     static final Set<String> MSI_GENES = Sets.newHashSet();
