@@ -75,7 +75,7 @@ public class WildTypeFactory {
 
             if (!hasSomaticVariant && !hasGermlineVariant && !hasSomaticGainLoss && !hasFusion && !hasHomozygousDisruption
                     && !hasGeneDisruption) {
-                wildTypeGenes.add(ImmutableWildType.builder().gene(driverGene.gene()).build());
+                wildTypeGenes.add(ImmutableWildTypeGene.builder().gene(driverGene.gene()).build());
             }
         }
         return wildTypeGenes;
