@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.Category.GERMLINE_DELETION;
 import static com.hartwig.hmftools.compar.Category.PURITY;
+import static com.hartwig.hmftools.compar.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.MismatchType.VALUE;
 
@@ -21,7 +22,6 @@ public class GermlineDeletionData implements ComparableItem
 {
     public final GermlineDeletion Deletion;
 
-    protected static final String FLD_QC_STATUS = "QcStatus";
     protected static final String FLD_GERMLINE_STATUS = "GermlineStatus";
     protected static final String FLD_TUMOR_STATUS = "TumorStatus";
     protected static final String FLD_GERMLINE_CN = "GermlineCopyNumber";
@@ -56,7 +56,7 @@ public class GermlineDeletionData implements ComparableItem
 
     @Override
     public boolean reportable() {
-        return true;
+        return Deletion.Reported;
     }
 
     @Override
@@ -73,7 +73,7 @@ public class GermlineDeletionData implements ComparableItem
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, FLD_QC_STATUS, Deletion.Reported, otherDeletion.Deletion.Reported);
+        checkDiff(diffs, FLD_REPORTED, Deletion.Reported, otherDeletion.Deletion.Reported);
         checkDiff(diffs, FLD_GERMLINE_STATUS, Deletion.NormalStatus.toString(), otherDeletion.Deletion.NormalStatus.toString());
         checkDiff(diffs, FLD_TUMOR_STATUS, Deletion.TumorStatus.toString(), otherDeletion.Deletion.TumorStatus.toString());
         checkDiff(diffs, FLD_GERMLINE_CN, Deletion.GermlineCopyNumber, otherDeletion.Deletion.GermlineCopyNumber, thresholds);

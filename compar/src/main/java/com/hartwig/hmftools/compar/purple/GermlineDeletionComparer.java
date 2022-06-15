@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.compar.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_GERMLINE_CN;
 import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_GERMLINE_STATUS;
-import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_QC_STATUS;
 import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_TUMOR_CN;
 import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_TUMOR_STATUS;
 
@@ -53,7 +52,7 @@ public class GermlineDeletionComparer implements ItemComparer
     public List<String> comparedFieldNames()
     {
         return Lists.newArrayList(
-                FLD_REPORTED, FLD_QC_STATUS, FLD_GERMLINE_STATUS, FLD_TUMOR_STATUS, FLD_GERMLINE_CN, FLD_TUMOR_CN);
+                FLD_REPORTED, FLD_GERMLINE_STATUS, FLD_TUMOR_STATUS, FLD_GERMLINE_CN, FLD_TUMOR_CN);
     }
 
     @Override

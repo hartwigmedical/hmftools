@@ -13,6 +13,7 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
+import com.hartwig.hmftools.common.pathogenic.PathogenicSummary;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
@@ -75,6 +76,8 @@ public final class GermlineVariantFactory
 
         final VariantImpact variantImpact = decorator.variantImpact();
 
+        final PathogenicSummary pathogenicSummary = decorator.pathogenicSummary();
+
         ImmutableGermlineVariantImpl.Builder builder = ImmutableGermlineVariantImpl.builder()
                 .qual(decorator.qual())
                 .type(decorator.type())
@@ -108,7 +111,10 @@ public final class GermlineVariantFactory
                 .otherReportedEffects(variantImpact.OtherReportableEffects)
                 .worstCodingEffect(variantImpact.WorstCodingEffect)
                 .genesAffected(variantImpact.GenesAffected)
-                .germlineStatus(GermlineStatus.valueOf(context.getAttributeAsString(PURPLE_GERMLINE_INFO, "UNKNOWN")));
+                .germlineStatus(GermlineStatus.valueOf(context.getAttributeAsString(PURPLE_GERMLINE_INFO, "UNKNOWN")))
+                .clinvarInfo(pathogenicSummary.clinvarInfo())
+                .pathogenic(pathogenicSummary.pathogenicity().isPathogenic())
+                .pathogenicity(pathogenicSummary.pathogenicity().toString());
 
         builder.genotypeStatus(genotypeStatus != null ? genotypeStatus : GenotypeStatus.UNKNOWN);
 
