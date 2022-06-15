@@ -81,15 +81,15 @@ public class RNAFindingsChapter implements ReportChapter {
 
     private void addExpressionTables(@NotNull Document document) {
         IsofoxInterpretedData isofox = report.isofox();
-        List<GeneCopyNumber> somaticGgneCopyNumbers = report.purple().allSomaticGeneCopyNumbers();
+        List<GeneCopyNumber> somaticGeneCopyNumbers = report.purple().allSomaticGeneCopyNumbers();
 
         List<GeneExpression> reportableHighExpression = isofox != null ? isofox.reportableHighExpression() : Lists.newArrayList();
         String titleHighExpression = "Genes with high expression (" + reportableHighExpression.size() + ")";
-        document.add(ExpressionTable.build(titleHighExpression, contentWidth(), reportableHighExpression, false, somaticGgneCopyNumbers));
+        document.add(ExpressionTable.build(titleHighExpression, contentWidth(), reportableHighExpression, false, somaticGeneCopyNumbers));
 
         List<GeneExpression> reportableLowExpression = isofox != null ? isofox.reportableLowExpression() : Lists.newArrayList();
         String titleLowExpression = "Genes with low expression (" + reportableLowExpression.size() + ")";
-        document.add(ExpressionTable.build(titleLowExpression, contentWidth(), reportableLowExpression, true, somaticGgneCopyNumbers));
+        document.add(ExpressionTable.build(titleLowExpression, contentWidth(), reportableLowExpression, true, somaticGeneCopyNumbers));
     }
 
     private void addRNAFusionTables(@NotNull Document document) {
