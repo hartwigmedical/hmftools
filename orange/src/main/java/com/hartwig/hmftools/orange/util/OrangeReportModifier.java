@@ -24,7 +24,6 @@ public final class OrangeReportModifier {
     @NotNull
     public static OrangeReport limitAllListsToMaxOne(@NotNull OrangeReport report) {
         return ImmutableOrangeReport.builder().from(report)
-                .driverGenes(max1(report.driverGenes()))
                 .germlineMVLHPerGene(limitGermlineMVLHToOne(report.germlineMVLHPerGene()))
                 .purple(limitPurpleDataToOne(report.purple()))
                 .linx(limitLinxDataToOne(report.linx()))

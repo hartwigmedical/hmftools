@@ -152,7 +152,6 @@ public class OrangeAlgo {
                 .configuredPrimaryTumor(loadConfiguredPrimaryTumor(config))
                 .refGenomeVersion(config.refGenomeVersion())
                 .platinumVersion(determinePlatinumVersion(config))
-                .driverGenes(driverGenes)
                 .refSample(loadSampleData(config, false))
                 .tumorSample(loadSampleData(config, true))
                 .germlineMVLHPerGene(loadGermlineMVLHPerGene(config))
