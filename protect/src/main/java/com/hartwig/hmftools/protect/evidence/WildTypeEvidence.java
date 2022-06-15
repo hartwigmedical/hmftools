@@ -1,11 +1,9 @@
 package com.hartwig.hmftools.protect.evidence;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.linx.ReportableGeneDisruption;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
@@ -13,7 +11,7 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
-import com.hartwig.hmftools.common.wildtype.WildType;
+import com.hartwig.hmftools.common.wildtype.WildTypeGene;
 import com.hartwig.hmftools.common.wildtype.WildTypeFactory;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
@@ -41,22 +39,16 @@ public class WildTypeEvidence {
             @NotNull List<LinxFusion> reportableFusions, @NotNull List<ReportableHomozygousDisruption> homozygousDisruptions,
             @NotNull List<ReportableGeneDisruption> geneDisruptions) {
         List<ProtectEvidence> evidences = Lists.newArrayList();
-        List<WildType> wildTypeGenes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
+        List<WildTypeGene> wildTypeGenes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
                 reportableSomaticVariant,
                 reportableSomaticGainsLosses,
                 reportableFusions,
                 homozygousDisruptions,
                 geneDisruptions,
                 driverGenes);
-        Map<String, WildType> wildTypeMap = Maps.newHashMap();
-
-        for (WildType wildType : wildTypeGenes) {
-            wildTypeMap.put(wildType.gene(), wildType);
-        }
 
         for (ActionableGene actionable : actionableGenes) {
-            WildType wildType = wildTypeMap.get(actionable.gene());
-            if (wildType != null) {
+            for (WildTypeGene wildType : wildTypeGenes) {
                 if (wildType.gene().equals(actionable.gene())) {
                     evidences.add(evidence(actionable));
                 }

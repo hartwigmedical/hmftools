@@ -14,14 +14,11 @@ import com.hartwig.hmftools.common.linx.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.common.linx.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.linx.ReportableGeneDisruption;
-import com.hartwig.hmftools.common.linx.ReportableGeneDisruptionFactory;
-import com.hartwig.hmftools.common.linx.ReportableGeneDisruptionFactoryTest;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.purple.interpretation.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.common.purple.interpretation.GainLossTestFactory;
 import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
-import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
@@ -54,7 +51,7 @@ public class WildTypeFactoryTest {
         List<DriverGene> listDriverGenes =
                 createDriverMap(Lists.newArrayList("BRCA2"));
 
-        List<WildType> wildTypes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
+        List<WildTypeGene> wildTypes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
                 reportableSomaticVariant,
                 reportableSomaticGainsLosses,
                 reportableFusions,
@@ -84,7 +81,7 @@ public class WildTypeFactoryTest {
         List<DriverGene> listDriverGenes =
                 createDriverMap(Lists.newArrayList("BRCA1"));
 
-        List<WildType> wildTypes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
+        List<WildTypeGene> wildTypes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
                 reportableSomaticVariant,
                 reportableSomaticGainsLosses,
                 reportableFusions,
@@ -107,7 +104,7 @@ public class WildTypeFactoryTest {
         List<DriverGene> listDriverGenes =
                 createDriverMap(Lists.newArrayList("APC", "KRAS"));
 
-        List<WildType> wildTypes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
+        List<WildTypeGene> wildTypes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
                 reportableSomaticVariant,
                 reportableSomaticGainsLosses,
                 reportableFusions,
@@ -129,7 +126,7 @@ public class WildTypeFactoryTest {
         List<DriverGene> listDriverGenes =
                 createDriverMap(Lists.newArrayList("BAG4"));
 
-        List<WildType> wildTypes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
+        List<WildTypeGene> wildTypes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
                 reportableSomaticVariant,
                 reportableSomaticGainsLosses,
                 reportableFusions,
@@ -151,7 +148,7 @@ public class WildTypeFactoryTest {
         List<DriverGene> listDriverGenes =
                 createDriverMap(Lists.newArrayList("BAG4"));
 
-        List<WildType> wildTypes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
+        List<WildTypeGene> wildTypes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
                 reportableSomaticVariant,
                 reportableSomaticGainsLosses,
                 reportableFusions,
@@ -173,7 +170,7 @@ public class WildTypeFactoryTest {
         List<DriverGene> listDriverGenes =
                 createDriverMap(Lists.newArrayList("NRAS"));
 
-        List<WildType> wildTypes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
+        List<WildTypeGene> wildTypes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
                 reportableSomaticVariant,
                 reportableSomaticGainsLosses,
                 reportableFusions,
@@ -196,7 +193,7 @@ public class WildTypeFactoryTest {
         List<DriverGene> listDriverGenes =
                 createDriverMap(Lists.newArrayList("MYC"));
 
-        List<WildType> wildTypes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
+        List<WildTypeGene> wildTypes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
                 reportableSomaticVariant,
                 reportableSomaticGainsLosses,
                 reportableFusions,
@@ -244,7 +241,7 @@ public class WildTypeFactoryTest {
         List<DriverGene> listDriverGenes =
                 createDriverMap(Lists.newArrayList("BRCA1", "BRCA2", "APC", "KRAS", "BAG4", "FGFR1", "NRAS", "EGFR", "MYC"));
 
-        List<WildType> wildTypes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
+        List<WildTypeGene> wildTypes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
                 reportableSomaticVariant,
                 reportableSomaticGainsLosses,
                 reportableFusions,
