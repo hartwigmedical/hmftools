@@ -25,48 +25,48 @@ public final class ReportableGeneDisruptionFactory {
     }
 
     @NotNull
-    public static List<ReportableGeneDisruption> convert(@NotNull List<LinxBreakend> disruptions,
+    public static List<ReportableGeneDisruption> convert(@NotNull List<LinxBreakend> breakends,
             @NotNull List<LinxSvAnnotation> structuralVariants) {
         List<ReportableGeneDisruption> reportableDisruptions = Lists.newArrayList();
-        Map<SvAndGeneKey, Pair<LinxBreakend, LinxBreakend>> pairedMap = mapDisruptionsPerStructuralVariant(disruptions);
+        Map<SvAndGeneKey, Pair<LinxBreakend, LinxBreakend>> pairedMap = mapBreakendsPerStructuralVariant(breakends);
 
-        for (Pair<LinxBreakend, LinxBreakend> pairedDisruption : pairedMap.values()) {
-            LinxBreakend primaryDisruptionLeft = pairedDisruption.getLeft();
-            LinxBreakend primaryDisruptionRight = pairedDisruption.getRight();
+        for (Pair<LinxBreakend, LinxBreakend> pairedBreakend : pairedMap.values()) {
+            LinxBreakend primaryBreakendLeft = pairedBreakend.getLeft();
+            LinxBreakend primaryBreakendRight = pairedBreakend.getRight();
 
-            if (primaryDisruptionRight != null) {
+            if (primaryBreakendRight != null) {
                 double lowestUndisruptedCopyNumber =
-                        Math.min(primaryDisruptionLeft.undisruptedCopyNumber(), primaryDisruptionRight.undisruptedCopyNumber());
+                        Math.min(primaryBreakendLeft.undisruptedCopyNumber(), primaryBreakendRight.undisruptedCopyNumber());
 
-                Double copyNumberLeft = primaryDisruptionLeft.junctionCopyNumber();
-                Double copyNumberRight = primaryDisruptionRight.junctionCopyNumber();
+                Double copyNumberLeft = primaryBreakendLeft.junctionCopyNumber();
+                Double copyNumberRight = primaryBreakendRight.junctionCopyNumber();
                 if (copyNumberLeft != null && copyNumberRight != null && !Doubles.equal(copyNumberLeft, copyNumberRight)) {
-                    LOGGER.warn("The disrupted copy number of a paired sv is not the same on {}", primaryDisruptionLeft.gene());
+                    LOGGER.warn("The disrupted copy number of a paired sv is not the same on {}", primaryBreakendLeft.gene());
                 }
                 reportableDisruptions.add(ImmutableReportableGeneDisruption.builder()
-                        .location(primaryDisruptionLeft.chromosome() + primaryDisruptionLeft.chrBand())
-                        .gene(primaryDisruptionLeft.gene())
-                        .transcriptId(primaryDisruptionLeft.transcriptId())
-                        .isCanonical(primaryDisruptionLeft.canonical())
-                        .type(primaryDisruptionLeft.type())
-                        .range(rangeField(pairedDisruption))
-                        .junctionCopyNumber(primaryDisruptionLeft.junctionCopyNumber())
+                        .location(primaryBreakendLeft.chromosome() + primaryBreakendLeft.chrBand())
+                        .gene(primaryBreakendLeft.gene())
+                        .transcriptId(primaryBreakendLeft.transcriptId())
+                        .isCanonical(primaryBreakendLeft.canonical())
+                        .type(primaryBreakendLeft.type())
+                        .range(rangeField(pairedBreakend))
+                        .junctionCopyNumber(primaryBreakendLeft.junctionCopyNumber())
                         .undisruptedCopyNumber(Math.max(0, lowestUndisruptedCopyNumber))
-                        .firstAffectedExon(primaryDisruptionLeft.exonUp())
-                        .clusterId(determineClusterId(structuralVariants, primaryDisruptionLeft))
+                        .firstAffectedExon(primaryBreakendLeft.exonUp())
+                        .clusterId(determineClusterId(structuralVariants, primaryBreakendLeft))
                         .build());
             } else {
                 reportableDisruptions.add(ImmutableReportableGeneDisruption.builder()
-                        .location(primaryDisruptionLeft.chromosome() + primaryDisruptionLeft.chrBand())
-                        .gene(primaryDisruptionLeft.gene())
-                        .transcriptId(primaryDisruptionLeft.transcriptId())
-                        .isCanonical(primaryDisruptionLeft.canonical())
-                        .type(primaryDisruptionLeft.type())
-                        .range(rangeField(pairedDisruption))
-                        .junctionCopyNumber(primaryDisruptionLeft.junctionCopyNumber())
-                        .undisruptedCopyNumber(Math.max(0, primaryDisruptionLeft.undisruptedCopyNumber()))
-                        .firstAffectedExon(primaryDisruptionLeft.exonUp())
-                        .clusterId(determineClusterId(structuralVariants, primaryDisruptionLeft))
+                        .location(primaryBreakendLeft.chromosome() + primaryBreakendLeft.chrBand())
+                        .gene(primaryBreakendLeft.gene())
+                        .transcriptId(primaryBreakendLeft.transcriptId())
+                        .isCanonical(primaryBreakendLeft.canonical())
+                        .type(primaryBreakendLeft.type())
+                        .range(rangeField(pairedBreakend))
+                        .junctionCopyNumber(primaryBreakendLeft.junctionCopyNumber())
+                        .undisruptedCopyNumber(Math.max(0, primaryBreakendLeft.undisruptedCopyNumber()))
+                        .firstAffectedExon(primaryBreakendLeft.exonUp())
+                        .clusterId(determineClusterId(structuralVariants, primaryBreakendLeft))
                         .build());
             }
         }
@@ -90,44 +90,44 @@ public final class ReportableGeneDisruptionFactory {
     }
 
     @NotNull
-    private static Map<SvAndGeneKey, Pair<LinxBreakend, LinxBreakend>> mapDisruptionsPerStructuralVariant(
-            @NotNull List<LinxBreakend> disruptions) {
-        Map<SvAndGeneKey, List<LinxBreakend>> disruptionsPerSvAndGene = Maps.newHashMap();
-        for (LinxBreakend disruption : disruptions) {
-            SvAndGeneKey key = new SvAndGeneKey(disruption.svId(), disruption.gene());
-            List<LinxBreakend> currentDisruptions = disruptionsPerSvAndGene.get(key);
-            if (currentDisruptions == null) {
-                currentDisruptions = Lists.newArrayList();
+    private static Map<SvAndGeneKey, Pair<LinxBreakend, LinxBreakend>> mapBreakendsPerStructuralVariant(
+            @NotNull List<LinxBreakend> breakends) {
+        Map<SvAndGeneKey, List<LinxBreakend>> breakendsPerSvAndGene = Maps.newHashMap();
+        for (LinxBreakend breakend : breakends) {
+            SvAndGeneKey key = new SvAndGeneKey(breakend.svId(), breakend.gene());
+            List<LinxBreakend> currentBreakends = breakendsPerSvAndGene.get(key);
+            if (currentBreakends == null) {
+                currentBreakends = Lists.newArrayList();
             }
-            currentDisruptions.add(disruption);
-            disruptionsPerSvAndGene.put(key, currentDisruptions);
+            currentBreakends.add(breakend);
+            breakendsPerSvAndGene.put(key, currentBreakends);
         }
 
-        return toPairedMap(disruptionsPerSvAndGene);
+        return toPairedMap(breakendsPerSvAndGene);
     }
 
     @NotNull
     private static Map<SvAndGeneKey, Pair<LinxBreakend, LinxBreakend>> toPairedMap(
-            @NotNull Map<SvAndGeneKey, List<LinxBreakend>> disruptionsPerVariant) {
+            @NotNull Map<SvAndGeneKey, List<LinxBreakend>> breakendsPerSvAndGene) {
         Map<SvAndGeneKey, Pair<LinxBreakend, LinxBreakend>> pairedMap = Maps.newHashMap();
 
-        for (Map.Entry<SvAndGeneKey, List<LinxBreakend>> entry : disruptionsPerVariant.entrySet()) {
-            List<LinxBreakend> disruptions = entry.getValue();
+        for (Map.Entry<SvAndGeneKey, List<LinxBreakend>> entry : breakendsPerSvAndGene.entrySet()) {
+            List<LinxBreakend> breakends = entry.getValue();
 
-            if (disruptions.size() != 1 && disruptions.size() != 2) {
-                LOGGER.warn("Found unusual number of disruptions on single event: {}", disruptions.size());
+            if (breakends.size() != 1 && breakends.size() != 2) {
+                LOGGER.warn("Found unusual number of breakends on single event: {}", breakends.size());
                 continue;
             }
 
             LinxBreakend left;
             LinxBreakend right;
-            if (disruptions.size() == 1) {
-                left = disruptions.get(0);
+            if (breakends.size() == 1) {
+                left = breakends.get(0);
                 right = null;
             } else {
-                boolean firstBeforeSecond = disruptions.get(0).exonUp() <= disruptions.get(1).exonUp();
-                left = firstBeforeSecond ? disruptions.get(0) : disruptions.get(1);
-                right = firstBeforeSecond ? disruptions.get(1) : disruptions.get(0);
+                boolean firstBeforeSecond = breakends.get(0).exonUp() <= breakends.get(1).exonUp();
+                left = firstBeforeSecond ? breakends.get(0) : breakends.get(1);
+                right = firstBeforeSecond ? breakends.get(1) : breakends.get(0);
             }
 
             pairedMap.put(entry.getKey(), Pair.of(left, right));
@@ -137,9 +137,9 @@ public final class ReportableGeneDisruptionFactory {
     }
 
     @NotNull
-    private static String rangeField(@NotNull Pair<LinxBreakend, LinxBreakend> pairedDisruption) {
-        LinxBreakend primary = pairedDisruption.getLeft();
-        LinxBreakend secondary = pairedDisruption.getRight();
+    private static String rangeField(@NotNull Pair<LinxBreakend, LinxBreakend> pairedBreakend) {
+        LinxBreakend primary = pairedBreakend.getLeft();
+        LinxBreakend secondary = pairedBreakend.getRight();
 
         if (secondary == null) {
             return exonDescription(primary.exonUp(), primary.exonDown()) + (isUpstream(primary) ? " Upstream" : " Downstream");
@@ -164,8 +164,8 @@ public final class ReportableGeneDisruptionFactory {
         return String.format("ERROR up=%d, down=%d", exonUp, exonDown);
     }
 
-    private static boolean isUpstream(@NotNull LinxBreakend disruption) {
-        return disruption.orientation() * disruption.strand() < 0;
+    private static boolean isUpstream(@NotNull LinxBreakend breakend) {
+        return breakend.orientation() * breakend.strand() < 0;
     }
 
     private static class SvAndGeneKey {

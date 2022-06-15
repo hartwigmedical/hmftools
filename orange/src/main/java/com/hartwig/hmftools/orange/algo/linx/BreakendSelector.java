@@ -14,6 +14,9 @@ import org.jetbrains.annotations.Nullable;
 
 final class BreakendSelector {
 
+    static final String DOWNSTREAM_ORIENTATION = "Downstream";
+    static final String UPSTREAM_ORIENTATION = "Upstream";
+
     private BreakendSelector() {
     }
 
@@ -35,24 +38,33 @@ final class BreakendSelector {
             @NotNull List<LinxFusion> reportableFusions, @NotNull LinxBreakend breakend) {
         int nextExon = breakend.nextSpliceExonRank();
 
-        KnownFusionData three = findByThreeGene(knownFusionCache.getDataByType(KnownFusionType.PROMISCUOUS_3), breakend.gene());
+        KnownFusionData three =
+                findByThreeGene(knownFusionCache.getDataByType(KnownFusionType.PROMISCUOUS_3), breakend.gene(), breakend.transcriptId());
         if (three != null) {
-            boolean hasReportedFusion = hasReportableThreeFusion(reportableFusions, breakend.gene(), nextExon);
-            int[] exonRange = three.threeGeneExonRange();
-            if (nextExon >= exonRange[0] && nextExon <= exonRange[1] && !hasReportedFusion) {
+            boolean hasReportableFusion = hasReportableThreeFusion(reportableFusions, breakend.gene(), nextExon);
+            boolean hasDownstreamOrientation = breakend.geneOrientation().equals(DOWNSTREAM_ORIENTATION);
+            boolean isWithinExonRange = isWithinExonRange(three.threeGeneExonRange(), nextExon);
+            if (isWithinExonRange && hasDownstreamOrientation && !hasReportableFusion) {
                 return true;
             }
         }
 
-        KnownFusionData five = findByThreeGene(knownFusionCache.getDataByType(KnownFusionType.PROMISCUOUS_5), breakend.gene());
+        KnownFusionData five =
+                findByFiveGene(knownFusionCache.getDataByType(KnownFusionType.PROMISCUOUS_5), breakend.gene(), breakend.transcriptId());
         if (five != null) {
-            boolean hasReportedFusion = hasReportableFiveFusion(reportableFusions, breakend.gene(), nextExon);
-            int[] exonRange = three.fiveGeneExonRange();
-            if (nextExon >= exonRange[0] && nextExon <= exonRange[1] && !hasReportedFusion) {
+            boolean hasReportableFusion = hasReportableFiveFusion(reportableFusions, breakend.gene(), nextExon);
+            boolean hasUpstreamOrientation = breakend.geneOrientation().equals(UPSTREAM_ORIENTATION);
+            boolean isWithinExonRange = isWithinExonRange(five.fiveGeneExonRange(), nextExon);
+
+            if (isWithinExonRange && hasUpstreamOrientation && !hasReportableFusion) {
                 return true;
             }
         }
         return false;
+    }
+
+    private static boolean isWithinExonRange(@NotNull int[] exonRange, int exon) {
+        return exon >= exonRange[0] && exon <= exonRange[1];
     }
 
     private static boolean hasReportableFiveFusion(@NotNull List<LinxFusion> reportableFusions, @NotNull String gene, int exon) {
@@ -74,9 +86,10 @@ final class BreakendSelector {
     }
 
     @Nullable
-    private static KnownFusionData findByFiveGene(@NotNull List<KnownFusionData> knownFusions, @NotNull String geneToFind) {
+    private static KnownFusionData findByFiveGene(@NotNull List<KnownFusionData> knownFusions, @NotNull String geneToFind,
+            @NotNull String transcriptToFind) {
         for (KnownFusionData knownFusion : knownFusions) {
-            if (knownFusion.FiveGene.equals(geneToFind)) {
+            if (knownFusion.FiveGene.equals(geneToFind) && knownFusion.specificExonsTransName().equals(transcriptToFind)) {
                 return knownFusion;
             }
         }
@@ -84,9 +97,10 @@ final class BreakendSelector {
     }
 
     @Nullable
-    private static KnownFusionData findByThreeGene(@NotNull List<KnownFusionData> knownFusions, @NotNull String geneToFind) {
+    private static KnownFusionData findByThreeGene(@NotNull List<KnownFusionData> knownFusions, @NotNull String geneToFind,
+            @NotNull String transcriptToFind) {
         for (KnownFusionData knownFusion : knownFusions) {
-            if (knownFusion.ThreeGene.equals(geneToFind)) {
+            if (knownFusion.ThreeGene.equals(geneToFind) && knownFusion.specificExonsTransName().equals(transcriptToFind)) {
                 return knownFusion;
             }
         }

@@ -92,7 +92,7 @@ public final class PurpleDataLoader {
             /// TODO Pass RNA sample once germline variants can be RNA-annotated.
             allGermlineVariants = new SomaticVariantFactory().fromVCFFile(tumorSample, referenceSample, germlineVariantVcf);
             reportableGermlineVariants = ReportableVariantFactory.toReportableGermlineVariants(allGermlineVariants, germlineDriverCatalog);
-            LOGGER.info(" Loaded {} germline variants of which {} are reportable from {}",
+            LOGGER.info(" Loaded {} germline variants (of which {} are reportable) from {}",
                     allGermlineVariants.size(),
                     reportableGermlineVariants.size(),
                     germlineVariantVcf);
@@ -106,7 +106,7 @@ public final class PurpleDataLoader {
             allGermlineDeletions = GermlineDeletion.read(purpleGermlineDeletionTsv);
             reportableGermlineDeletions = selectReportedDeletions(allGermlineDeletions);
 
-            LOGGER.info(" Loaded {} germline deletions of which {} are reportable from {}",
+            LOGGER.info(" Loaded {} germline deletions (of which {} are reportable) from {}",
                     allGermlineDeletions.size(),
                     reportableGermlineDeletions.size(),
                     purpleGermlineDeletionTsv);
@@ -116,7 +116,7 @@ public final class PurpleDataLoader {
                 SomaticVariantFactory.passOnlyInstance().fromVCFFile(tumorSample, referenceSample, rnaSample, somaticVariantVcf);
         List<ReportableVariant> reportableSomaticVariants =
                 ReportableVariantFactory.toReportableSomaticVariants(allSomaticVariants, somaticDriverCatalog);
-        LOGGER.info(" Loaded {} somatic variants of which {} are reportable from {}",
+        LOGGER.info(" Loaded {} somatic variants (of which {} are reportable) from {}",
                 allSomaticVariants.size(),
                 reportableSomaticVariants.size(),
                 somaticVariantVcf);
