@@ -23,7 +23,7 @@ public final class SampleReportFactory {
 
     @NotNull
     public static SampleReport fromLimsModel(@NotNull SampleMetadata sampleMetadata, @NotNull Lims lims,
-            @Nullable PatientPrimaryTumor patientPrimaryTumor) {
+            @Nullable PatientPrimaryTumor patientPrimaryTumor, boolean allowDefaultCohortConfig) {
         String refSampleBarcode = sampleMetadata.refSampleBarcode();
         String refSampleId = sampleMetadata.refSampleId();
         String tumorSampleBarcode = sampleMetadata.tumorSampleBarcode();
@@ -32,7 +32,10 @@ public final class SampleReportFactory {
         LocalDate arrivalDateRefSample = null;
 
         if (refSampleBarcode != null && refSampleId != null) {
-            lims.validateSampleBarcodeCombination(refSampleBarcode, refSampleId, tumorSampleBarcode, tumorSampleId);
+            if (!refSampleBarcode.equals(refSampleId) || !tumorSampleBarcode.equals(tumorSampleId)){
+                // Don't need to check for anonymised runs
+                lims.validateSampleBarcodeCombination(refSampleBarcode, refSampleId, tumorSampleBarcode, tumorSampleId);
+            }
 
             arrivalDateRefSample = lims.arrivalDate(refSampleBarcode, refSampleId);
             if (arrivalDateRefSample == null) {
@@ -49,8 +52,9 @@ public final class SampleReportFactory {
 
         LimsCohortConfig cohortConfig = lims.cohortConfig(tumorSampleBarcode);
         if (cohortConfig == null) {
-            if (tumorSampleId.startsWith("COLO")) {
-                cohortConfig = buildCOLOConfig();
+            if (allowDefaultCohortConfig) {
+                LOGGER.warn("Using DEFAULT cohort config for tumor sample (non-production only!): {}", tumorSampleId);
+                cohortConfig = buildDefaultCohortConfig();
             } else {
                 throw new IllegalStateException(
                         "Cohort not configured in LIMS for sample '" + tumorSampleId + "' with barcode " + tumorSampleBarcode);
@@ -105,12 +109,12 @@ public final class SampleReportFactory {
     }
 
     @NotNull
-    private static LimsCohortConfig buildCOLOConfig() {
+    private static LimsCohortConfig buildDefaultCohortConfig() {
         return ImmutableLimsCohortConfig.builder()
-                .cohortId("COLO")
+                .cohortId("DEFAULT")
                 .sampleContainsHospitalCenterId(false)
                 .reportGermline(true)
-                .reportGermlineFlag(true)
+                .reportGermlineFlag(false)
                 .reportConclusion(false)
                 .reportViral(true)
                 .reportPeach(true)

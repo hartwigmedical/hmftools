@@ -14,7 +14,6 @@ import java.util.Map;
 
 import com.google.gson.GsonBuilder;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
-import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -35,39 +34,63 @@ public class ReportingDb {
     }
 
     public void appendPanelReport(@NotNull PanelReport report, @NotNull String outputDirectory) throws IOException {
+        String sampleName = report.sampleReport().sampleNameForReport();
+        LimsCohortConfig cohort = report.sampleReport().cohort();
+        String tumorBarcode = report.sampleReport().tumorSampleBarcode();
 
-        if (shouldBeAddedToReportingDb(report.sampleReport())) {
-            String sampleId = report.sampleReport().tumorSampleId();
-            LimsCohortConfig cohort = report.sampleReport().cohort();
-            String tumorBarcode = report.sampleReport().tumorSampleBarcode();
+        String reportType = "oncopanel_result_report";
 
-            String reason = "oncopanel_result_report";
-
-            String reportType = reason;
-
-            if (report.isCorrectedReport()) {
-                if (report.isCorrectedReportExtern()) {
-                    reportType = reportType + "_corrected_external";
-                } else {
-                    reportType = reportType + "_corrected_internal";
-                }
+        if (report.isCorrectedReport()) {
+            if (report.isCorrectedReportExtern()) {
+                reportType = reportType + "_corrected_external";
+            } else {
+                reportType = reportType + "_corrected_internal";
             }
-
-            writeApiUpdateJson(outputDirectory, tumorBarcode, sampleId, cohort, reportType, report.reportDate(), NA_STRING, null, null);
-
         }
+
+        writeApiUpdateJson(outputDirectory, tumorBarcode, sampleName, cohort, reportType, report.reportDate(), NA_STRING, null, null);
     }
 
     public void appendPanelFailReport(@NotNull PanelFailReport report, @NotNull String outputDirectory) throws IOException {
+        String sampleName = report.sampleReport().sampleNameForReport();
+        LimsCohortConfig cohort = report.sampleReport().cohort();
+        String tumorBarcode = report.sampleReport().tumorSampleBarcode();
 
-        if (shouldBeAddedToReportingDb(report.sampleReport())) {
-            String sampleId = report.sampleReport().tumorSampleId();
-            LimsCohortConfig cohort = report.sampleReport().cohort();
-            String tumorBarcode = report.sampleReport().tumorSampleBarcode();
+        String reportType = report.panelFailReason().identifier();
 
-            String reason = report.panelFailReason().identifier();
+        if (report.isCorrectedReport()) {
+            if (report.isCorrectedReportExtern()) {
+                reportType = reportType + "_corrected_external";
+            } else {
+                reportType = reportType + "_corrected_internal";
+            }
+        }
 
-            String reportType = reason;
+        writeApiUpdateJson(outputDirectory, tumorBarcode, sampleName, cohort, reportType, report.reportDate(), NA_STRING, null, null);
+    }
+
+    public void appendAnalysedReport(@NotNull AnalysedPatientReport report, @NotNull String outputDirectory) throws IOException {
+        String sampleName = report.sampleReport().sampleNameForReport();
+        LimsCohortConfig cohort = report.sampleReport().cohort();
+
+        String tumorBarcode = report.sampleReport().tumorSampleBarcode();
+
+        GenomicAnalysis analysis = report.genomicAnalysis();
+
+        String purity = new DecimalFormat("0.00", DecimalFormatSymbols.getInstance(Locale.ENGLISH)).format(analysis.impliedPurity());
+        boolean hasReliableQuality = analysis.hasReliableQuality();
+        boolean hasReliablePurity = analysis.hasReliablePurity();
+
+        String reportType;
+        if (report.sampleReport().cohort().reportConclusion() && report.clinicalSummary().isEmpty()) {
+            LOGGER.warn("Skipping addition to reporting db, missing summary for sample '{}'!", sampleName);
+            reportType = "report_without_conclusion";
+        } else {
+            if (hasReliablePurity && analysis.impliedPurity() > ReportResources.PURITY_CUTOFF) {
+                reportType = "dna_analysis_report";
+            } else {
+                reportType = "dna_analysis_report_insufficient_tcp";
+            }
 
             if (report.isCorrectedReport()) {
                 if (report.isCorrectedReportExtern()) {
@@ -76,71 +99,22 @@ public class ReportingDb {
                     reportType = reportType + "_corrected_internal";
                 }
             }
-
-            writeApiUpdateJson(outputDirectory, tumorBarcode, sampleId, cohort, reportType, report.reportDate(), NA_STRING, null, null);
-
         }
+        writeApiUpdateJson(outputDirectory,
+                tumorBarcode,
+                sampleName,
+                cohort,
+                reportType,
+                report.reportDate(),
+                purity,
+                hasReliableQuality,
+                hasReliablePurity);
     }
 
-    public void appendAnalysedReport(@NotNull AnalysedPatientReport report, @NotNull String outputDirectory) throws IOException {
-        if (shouldBeAddedToReportingDb(report.sampleReport())) {
-            String sampleId = report.sampleReport().tumorSampleId();
-            LimsCohortConfig cohort = report.sampleReport().cohort();
-
-            String tumorBarcode = report.sampleReport().tumorSampleBarcode();
-
-            GenomicAnalysis analysis = report.genomicAnalysis();
-
-            String purity = new DecimalFormat("0.00", DecimalFormatSymbols.getInstance(Locale.ENGLISH)).format(analysis.impliedPurity());
-            boolean hasReliableQuality = analysis.hasReliableQuality();
-            boolean hasReliablePurity = analysis.hasReliablePurity();
-
-
-            if (report.sampleReport().cohort().reportConclusion() && report.clinicalSummary().isEmpty()) {
-                LOGGER.warn("Skipping addition to reporting db, missing summary for sample '{}'!", sampleId);
-                writeApiUpdateJson(outputDirectory,
-                        tumorBarcode,
-                        sampleId,
-                        cohort,
-                        "report_without_conclusion",
-                        report.reportDate(),
-                        purity,
-                        hasReliableQuality,
-                        hasReliablePurity);
-            } else {
-
-                String reportType;
-                if (hasReliablePurity && analysis.impliedPurity() > ReportResources.PURITY_CUTOFF) {
-                    reportType = "dna_analysis_report";
-                } else {
-                    reportType = "dna_analysis_report_insufficient_tcp";
-                }
-
-                if (report.isCorrectedReport()) {
-                    if (report.isCorrectedReportExtern()) {
-                        reportType = reportType + "_corrected_external";
-                    } else {
-                        reportType = reportType + "_corrected_internal";
-                    }
-                }
-
-                writeApiUpdateJson(outputDirectory,
-                        tumorBarcode,
-                        sampleId,
-                        cohort,
-                        reportType,
-                        report.reportDate(),
-                        purity,
-                        hasReliableQuality,
-                        hasReliablePurity);
-            }
-        }
-    }
-
-    private void writeApiUpdateJson(final String outputDirectory, final String tumorBarcode, final String sampleId,
+    private void writeApiUpdateJson(final String outputDirectory, final String tumorBarcode, final String sampleName,
             final LimsCohortConfig cohort, final String reportType, final String reportDate, final String purity,
             final Boolean hasReliableQuality, final Boolean hasReliablePurity) throws IOException {
-        File outputFile = new File(outputDirectory, format("%s_%s_%s_api-update.json", sampleId, tumorBarcode, reportType));
+        File outputFile = new File(outputDirectory, format("%s_%s_%s_api-update.json", sampleName, tumorBarcode, reportType));
         Map<String, Object> payload = new HashMap<>();
         payload.put("barcode", tumorBarcode);
         payload.put("report_type", reportType);
@@ -160,36 +134,21 @@ public class ReportingDb {
     }
 
     public void appendQCFailReport(@NotNull QCFailReport report, @NotNull String outputDirectory) throws IOException {
-        if (shouldBeAddedToReportingDb(report.sampleReport())) {
-            String sampleId = report.sampleReport().tumorSampleId();
-            LimsCohortConfig cohort = report.sampleReport().cohort();
-            String tumorBarcode = report.sampleReport().tumorSampleBarcode();
+        String sampleName = report.sampleReport().sampleNameForReport();
+        LimsCohortConfig cohort = report.sampleReport().cohort();
+        String tumorBarcode = report.sampleReport().tumorSampleBarcode();
 
-            String reportType = report.reason().identifier();
+        String reportType = report.reason().identifier();
 
-            if (report.isCorrectedReport()) {
-                if (report.isCorrectedReportExtern()) {
-                    reportType = reportType + "_corrected_external";
-                } else {
-                    reportType = reportType + "_corrected_internal";
-                }
+        if (report.isCorrectedReport()) {
+            if (report.isCorrectedReportExtern()) {
+                reportType = reportType + "_corrected_external";
+            } else {
+                reportType = reportType + "_corrected_internal";
             }
-
-            writeApiUpdateJson(outputDirectory, tumorBarcode, sampleId, cohort, reportType, report.reportDate(), NA_STRING, null, null);
-
         }
-    }
 
-    private static boolean shouldBeAddedToReportingDb(@NotNull SampleReport report) {
-        String sampleId = report.tumorSampleId();
-        if (sampleId.startsWith("COLO")) {
-            LOGGER.info("Sample '{}' filtered for reporting db because it appears to be belong to COLO test samples", sampleId);
-            return false;
-        } else if (report.cohort().cohortId().isEmpty()) {
-            LOGGER.info("Sample '{}' filtered for reporting db since it does not belong to a cohort and likely a test sample", sampleId);
-            return false;
-        }
-        return true;
+        writeApiUpdateJson(outputDirectory, tumorBarcode, sampleName, cohort, reportType, report.reportDate(), NA_STRING, null, null);
     }
 
     private static void appendToFile(@NotNull String reportingDbTsv, @NotNull String stringToAppend) throws IOException {

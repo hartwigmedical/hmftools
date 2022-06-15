@@ -94,7 +94,7 @@ public class SampleAndDisclaimerChapter implements ReportChapter {
 
     @NotNull
     private static Paragraph generateHMFSampleIDParagraph(@NotNull SampleReport sampleReport) {
-        return createContentParagraph("The HMF sample ID is: ", sampleReport.tumorSampleId());
+        return createContentParagraph("The HMF sample ID is: ", sampleReport.sampleNameForReport());
     }
 
     @NotNull

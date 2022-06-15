@@ -94,38 +94,18 @@ public class SomaticVariantFactory implements VariantContextFilter
             @NotNull final String tumor, @Nullable final String reference, @Nullable final String rna,
             @NotNull final String vcfFile, boolean useCheckReference, @NotNull Consumer<SomaticVariant> consumer) throws IOException
     {
-        fromVCFFile(tumor, reference, null, null, rna, vcfFile, useCheckReference, consumer);
-    }
-
-    public void fromVCFFile(
-            @NotNull final String tumor, @Nullable final String reference, @Nullable final String alternativeTumorId,
-            @Nullable final String alternativeReferenceId, @Nullable final String rna, @NotNull final String vcfFile, boolean useCheckReference,
-            @NotNull Consumer<SomaticVariant> consumer) throws IOException
-    {
         try(final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false))
         {
             final VCFHeader header = (VCFHeader) reader.getHeader();
 
-            String tumorIdInHeader;
-            String referenceIdInHeader;
-            if(sampleInFile(tumor, header))
+            if(!sampleInFile(tumor, header))
             {
-                tumorIdInHeader = tumor;
-                referenceIdInHeader = reference;
-            }
-            else if (alternativeTumorId != null && sampleInFile(alternativeTumorId, header))
-            {
-                tumorIdInHeader = alternativeTumorId;
-                referenceIdInHeader = alternativeReferenceId;
-            }
-            else
-            {
-                throw new IllegalArgumentException("Sample names " + tumor + " and " + alternativeTumorId + " not found in vcf file " + vcfFile);
+                throw new IllegalArgumentException("Sample " + tumor + " not found in vcf file " + vcfFile);
             }
 
-            if(useCheckReference && referenceIdInHeader != null && !sampleInFile(referenceIdInHeader, header))
+            if(useCheckReference && reference != null && !sampleInFile(reference, header))
             {
-                throw new IllegalArgumentException("Sample " + referenceIdInHeader + " not found in vcf file " + vcfFile);
+                throw new IllegalArgumentException("Sample " + reference + " not found in vcf file " + vcfFile);
             }
 
             if(rna != null && !sampleInFile(rna, header))
@@ -142,7 +122,7 @@ public class SomaticVariantFactory implements VariantContextFilter
             {
                 if(mFilter.test(variant))
                 {
-                    Optional<SomaticVariant> varOptional = createVariant(tumorIdInHeader, referenceIdInHeader, rna, variant);
+                    Optional<SomaticVariant> varOptional = createVariant(tumor, reference, rna, variant);
 
                     if(varOptional.isPresent())
                     {

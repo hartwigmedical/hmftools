@@ -18,8 +18,8 @@ public final class OutputFileUtil {
         LimsCohortConfig cohort = report.sampleReport().cohort();
 
         String filePrefix = cohort.requireHospitalId()
-                ? sampleReport.tumorSampleId() + "_" + sampleReport.hospitalPatientId().replace(" ", "_")
-                : sampleReport.tumorSampleId();
+                ? sampleReport.sampleNameForReport() + "_" + sampleReport.hospitalPatientId().replace(" ", "_")
+                : sampleReport.sampleNameForReport();
 
         String fileSuffix = report.isCorrectedReport() ? "_corrected.pdf" : ".pdf";
 
@@ -34,8 +34,8 @@ public final class OutputFileUtil {
         LimsCohortConfig cohort = report.sampleReport().cohort();
 
         String filePrefix = cohort.requireHospitalId()
-                ? sampleReport.tumorSampleId() + "_" + sampleReport.hospitalPatientId().replace(" ", "_")
-                : sampleReport.tumorSampleId();
+                ? sampleReport.sampleNameForReport() + "_" + sampleReport.hospitalPatientId().replace(" ", "_")
+                : sampleReport.sampleNameForReport();
 
         String fileSuffix = report.isCorrectedReport() ? "_corrected.pdf" : ".pdf";
 
@@ -47,7 +47,7 @@ public final class OutputFileUtil {
     @NotNull
     public static String generateOutputFileNameForJson(@NotNull PatientReport report) {
         String filePrefix =
-                report.sampleReport().tumorSampleId() + "_" + report.sampleReport().tumorSampleBarcode() + "_oncoact";
+                report.sampleReport().sampleNameForReport() + "_" + report.sampleReport().tumorSampleBarcode() + "_oncoact";
         String failPrefix = report instanceof QCFailReport ? "_failed" : Strings.EMPTY;
         String fileSuffix;
         if (report.isCorrectedReport()) {
@@ -65,7 +65,7 @@ public final class OutputFileUtil {
     @NotNull
     public static String generateOutputFileNameForJsonPanel(@NotNull com.hartwig.hmftools.patientreporter.PanelReport report) {
         String filePrefix =
-                report.sampleReport().tumorSampleId() + "_" + report.sampleReport().tumorSampleBarcode() + "_oncopanel";
+                report.sampleReport().sampleNameForReport() + "_" + report.sampleReport().tumorSampleBarcode() + "_oncopanel";
         String failPrefix = report instanceof QCFailReport ? "_failed" : Strings.EMPTY;
         String fileSuffix;
         if (report.isCorrectedReport()) {

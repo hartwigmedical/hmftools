@@ -295,6 +295,7 @@ public final class ExampleAnalysisTestFactory {
                 .refSampleBarcode("FR12123488")
                 .tumorSampleId(sample)
                 .tumorSampleBarcode("FR12345678")
+                .sampleNameForReport(sample)
                 .build();
 
         return ImmutableSampleReport.builder()
