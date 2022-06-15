@@ -55,23 +55,23 @@ public class WildTypeEvidence {
                 List<Boolean> HomozygousDisruptionBoolean = Lists.newArrayList();
 
                 for (ReportableVariant somaticVariant : reportableSomaticVariant) {
-                    determineWildTypes(driverGene.gene(), somaticVariant.gene(), somaticVariantBoolean);
+                    isWildType(driverGene.gene(), somaticVariant.gene(), somaticVariantBoolean);
                     wildTypeSomaticVariant = somaticVariantBoolean.contains(true);
                 }
 
                 for (ReportableVariant germlineVariant : reportableGermlineVariant) {
-                    determineWildTypes(driverGene.gene(), germlineVariant.gene(), somaticGermlineBoolean);
+                    isWildType(driverGene.gene(), germlineVariant.gene(), somaticGermlineBoolean);
                     wildTypeGermlineVariant = somaticGermlineBoolean.contains(true);
                 }
 
                 for (GainLoss gainLoss : reportableSomaticGainsLosses) {
-                    determineWildTypes(driverGene.gene(), gainLoss.gene(), CNVBoolean);
-                    wildTypeSomaticGainLoss = !CNVBoolean.contains(false);
+                    isWildType(driverGene.gene(), gainLoss.gene(), CNVBoolean);
+                    wildTypeSomaticGainLoss = CNVBoolean.contains(true);
                 }
 
                 for (LinxFusion fusions : reportableFusions) {
-                    determineWildTypes(driverGene.gene(), fusions.geneStart(), FusionBooleanStart);
-                    determineWildTypes(driverGene.gene(), fusions.geneEnd(), FusionBooleanEnd);
+                    isWildType(driverGene.gene(), fusions.geneStart(), FusionBooleanStart);
+                    isWildType(driverGene.gene(), fusions.geneEnd(), FusionBooleanEnd);
                     wildTypeFusions =
                             (!FusionBooleanStart.contains(true) && !FusionBooleanEnd.contains(true)) || (FusionBooleanStart.contains(true)
                                     && FusionBooleanEnd.contains(true));
@@ -79,7 +79,7 @@ public class WildTypeEvidence {
 
                 for (ReportableHomozygousDisruption homozygousDisruption : homozygousDisruptions) {
 
-                    determineWildTypes(driverGene.gene(), homozygousDisruption.gene(), HomozygousDisruptionBoolean);
+                    isWildType(driverGene.gene(), homozygousDisruption.gene(), HomozygousDisruptionBoolean);
                     wildTypeHomozygousDisruption = HomozygousDisruptionBoolean.contains(true);
                 }
 
@@ -92,7 +92,7 @@ public class WildTypeEvidence {
         return evidences;
     }
 
-    public void determineWildTypes(@NotNull String driverGene, @NotNull String reportableGene, @NotNull List<Boolean> booleanList) {
+    public void isWildType(@NotNull String driverGene, @NotNull String reportableGene, @NotNull List<Boolean> booleanList) {
         if (driverGene.equals(reportableGene)) {
             booleanList.add(false);
         } else {
