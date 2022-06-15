@@ -354,8 +354,8 @@ public class OrangeAlgo {
             String cancerType = evaluation.cancerType();
             Double cancerTypePercentile = evaluation.cancerTypePercentile();
             LOGGER.info(" Determined percentile '{}' for pan-cancer and '{}' for cancer type '{}'",
-                    PERCENTAGE.format(evaluation.panCancerPercentile() * 100),
-                    cancerTypePercentile != null ? PERCENTAGE.format(cancerTypePercentile * 100) : "NA",
+                    evaluation.panCancerPercentile(),
+                    cancerTypePercentile != null ? cancerTypePercentile : "NA",
                     cancerType != null ? cancerType : "NA");
             evaluations.put(type, evaluation);
         } else {

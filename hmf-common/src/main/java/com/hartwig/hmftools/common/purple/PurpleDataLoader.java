@@ -72,7 +72,7 @@ public final class PurpleDataLoader {
 
             allSomaticGainsLosses =
                     extractAllGainsLosses(purityContext.qc().status(), purityContext.bestFit().ploidy(), allSomaticGeneCopyNumbers);
-            LOGGER.info("  Extracted {} somatic gains and losses from {}", allSomaticGainsLosses.size(), purpleGeneCopyNumberTsv);
+            LOGGER.info("  Extracted {} somatic gains and losses from gene copy numbers", allSomaticGainsLosses.size());
         }
 
         List<CnPerChromosomeArmData> copyNumberPerChromosome = Lists.newArrayList();
