@@ -32,7 +32,6 @@ import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class WildTypeEvidenceTest {

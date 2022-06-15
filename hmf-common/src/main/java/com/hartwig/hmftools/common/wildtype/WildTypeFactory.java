@@ -10,12 +10,9 @@ import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class WildTypeFactory {
-    private static final Logger LOGGER = LogManager.getLogger(WildTypeFactory.class);
 
     public WildTypeFactory() {
     }
@@ -28,7 +25,6 @@ public class WildTypeFactory {
         List<WildTypeGene> wildTypeGenes = Lists.newArrayList();
 
         for (DriverGene driverGene : driverGenes) {
-            LOGGER.info("driverGene: " + driverGene);
 
             boolean hasSomaticVariant = false;
             boolean hasGermlineVariant = false;
@@ -42,21 +38,18 @@ public class WildTypeFactory {
                     hasSomaticVariant = true;
                 }
             }
-            LOGGER.info("hasSomaticVariant: " + hasSomaticVariant);
 
             for (ReportableVariant germlineVariant : reportableGermlineVariant) {
                 if (driverGene.gene().equals(germlineVariant.gene())) {
                     hasGermlineVariant = true;
                 }
             }
-            LOGGER.info("hasGermlineVariant: " + hasGermlineVariant);
 
             for (GainLoss gainLoss : reportableSomaticGainsLosses) {
                 if (driverGene.gene().equals(gainLoss.gene())) {
                     hasSomaticGainLoss = true;
                 }
             }
-            LOGGER.info("hasSomaticGainLoss: " + hasSomaticGainLoss);
 
             for (LinxFusion fusion : reportableFusions) {
                 if (driverGene.gene().equals(fusion.geneStart())) {
@@ -67,25 +60,18 @@ public class WildTypeFactory {
                     hasFusion = true;
                 }
             }
-            LOGGER.info("hasFusion: " + hasFusion);
 
             for (ReportableHomozygousDisruption homozygousDisruption : homozygousDisruptions) {
                 if (driverGene.gene().equals(homozygousDisruption.gene())) {
                     hasFusion = true;
                 }
             }
-            LOGGER.info("hasHomozygousDisruption: " + hasHomozygousDisruption);
 
             for (ReportableGeneDisruption geneDisruption : geneDisruptions) {
-                LOGGER.info(geneDisruption);
-                LOGGER.info(geneDisruption.gene());
-                LOGGER.info(geneDisruption.gene());
                 if (driverGene.gene().equals(geneDisruption.gene())) {
                     hasGeneDisruption = true;
                 }
             }
-            LOGGER.info("hasGeneDisruption: " + hasGeneDisruption);
-
 
             if (!hasSomaticVariant && !hasGermlineVariant && !hasSomaticGainLoss && !hasFusion && !hasHomozygousDisruption
                     && !hasGeneDisruption) {
