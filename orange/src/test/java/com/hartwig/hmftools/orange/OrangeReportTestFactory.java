@@ -40,11 +40,11 @@ import com.hartwig.hmftools.orange.algo.OrangeSample;
 import com.hartwig.hmftools.orange.algo.isofox.ImmutableIsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.ImmutableLinxInterpretedData;
+import com.hartwig.hmftools.orange.algo.linx.LinxInterpretationTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
-import com.hartwig.hmftools.orange.algo.linx.LinxInterpreterTestFactory;
 import com.hartwig.hmftools.orange.algo.purple.ImmutablePurpleInterpretedData;
+import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretationTestFactory;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
-import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreterTestFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -65,8 +65,8 @@ public final class OrangeReportTestFactory {
                 .refGenomeVersion(RefGenomeVersion.V37)
                 .refSample(createMinimalOrangeSample())
                 .tumorSample(createMinimalOrangeSample())
-                .purple(PurpleInterpreterTestFactory.createMinimalTestPurpleData())
-                .linx(LinxInterpreterTestFactory.createMinimalTestLinxData())
+                .purple(PurpleInterpretationTestFactory.createMinimalTestPurpleData())
+                .linx(LinxInterpretationTestFactory.createMinimalTestLinxData())
                 .lilac(ImmutableLilacData.builder().qc(Strings.EMPTY).build())
                 .virusInterpreter(ImmutableVirusInterpreterData.builder().build())
                 .chord(ChordTestFactory.createMinimalTestChordAnalysis())
@@ -114,7 +114,7 @@ public final class OrangeReportTestFactory {
     @NotNull
     private static PurpleInterpretedData createTestPurpleData() {
         return ImmutablePurpleInterpretedData.builder()
-                .from(PurpleInterpreterTestFactory.createMinimalTestPurpleData())
+                .from(PurpleInterpretationTestFactory.createMinimalTestPurpleData())
                 .addReportableSomaticVariants(ImmutableReportableVariant.builder()
                         .from(ReportableVariantTestFactory.create())
                         .gene("ARID1A")
@@ -138,7 +138,7 @@ public final class OrangeReportTestFactory {
     private static LinxInterpretedData createTestLinxData() {
         LinxFusion fusion = LinxTestFactory.createMinimalTestFusion();
         return ImmutableLinxInterpretedData.builder()
-                .from(LinxInterpreterTestFactory.createMinimalTestLinxData())
+                .from(LinxInterpretationTestFactory.createMinimalTestLinxData())
                 .addReportableFusions(fusion)
                 .addReportableFusions(fusion)
                 .addReportableFusions(fusion)

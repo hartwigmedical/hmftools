@@ -9,9 +9,9 @@ import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class PurpleInterpreterTestFactory {
+public final class PurpleInterpretationTestFactory {
 
-    private PurpleInterpreterTestFactory() {
+    private PurpleInterpretationTestFactory() {
     }
 
     @NotNull
