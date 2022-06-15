@@ -4,33 +4,43 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.primitives.Doubles;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.rna.GeneExpression;
+import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Expressions;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class ExpressionTable {
+
+    private static final Logger LOGGER = LogManager.getLogger(ExpressionTable.class);
 
     private ExpressionTable() {
     }
 
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<GeneExpression> expressions, boolean sortAscending) {
+    public static Table build(@NotNull String title, float width, @NotNull List<GeneExpression> expressions, boolean sortAscending,
+            @NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers) {
         if (expressions.isEmpty()) {
             return Tables.createEmpty(title, width);
         }
 
         Table table = Tables.createContent(width,
-                new float[] { 1, 1, 1, 1, 1, 1 },
-                new Cell[] { Cells.createHeader("Gene"), Cells.createHeader("TPM"), Cells.createHeader("Perc (Type)"),
-                        Cells.createHeader("FC (Type)"), Cells.createHeader("Perc (DB)"), Cells.createHeader("FC (DB)") });
+                new float[] { 1, 1, 1, 1, 1, 1, 1 },
+                new Cell[] { Cells.createHeader("Gene"), Cells.createHeader("Tumor CN"), Cells.createHeader("TPM"),
+                        Cells.createHeader("Perc (Type)"), Cells.createHeader("FC (Type)"), Cells.createHeader("Perc (DB)"),
+                        Cells.createHeader("FC (DB)") });
 
         for (GeneExpression expression : sort(expressions, sortAscending)) {
             table.addCell(Cells.createContent(expression.geneName()));
+            table.addCell(Cells.createContent(lookupTumorCN(allSomaticGeneCopyNumbers, expression.geneName())));
             table.addCell(Cells.createContent(Expressions.tpm(expression)));
             table.addCell(Cells.createContent(Expressions.percentileType(expression)));
             table.addCell(Cells.createContent(Expressions.foldChangeType(expression)));
@@ -39,6 +49,28 @@ public final class ExpressionTable {
         }
 
         return Tables.createWrapping(table, title);
+    }
+
+    @NotNull
+    private static String lookupTumorCN(@NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull String geneToFind) {
+        GeneCopyNumber geneCopyNumber = findByGene(geneCopyNumbers, geneToFind);
+        if (geneCopyNumber == null) {
+            LOGGER.warn("Could not find gene copy number for '{}'", geneToFind);
+            return ReportResources.NOT_AVAILABLE;
+        }
+
+        return String.valueOf(Math.round(Math.max(0, geneCopyNumber.minCopyNumber())));
+    }
+
+    @Nullable
+    private static GeneCopyNumber findByGene(@NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull String geneToFind) {
+        for (GeneCopyNumber geneCopyNumber : geneCopyNumbers) {
+            if (geneCopyNumber.geneName().equals(geneToFind)) {
+                return geneCopyNumber;
+            }
+        }
+
+        return null;
     }
 
     @NotNull

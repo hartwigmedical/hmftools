@@ -140,7 +140,8 @@ investigate potential causes for QC failure.
      - New input: `linx_structural_variant_tsv`
   - All potentially interesting sections are now also written to the JSON output
   - The structural variant driver table has been removed as all interesting events where duplicated with events in other sections
-  - Gene disruptions are annotated by their cluster ID to be able to determine whether multiple events happened in same cluster or not.  
+  - Gene disruptions are annotated by their cluster ID to be able to determine whether multiple events happened in same cluster or not.
+  - Expression entries in the RNA chapter are annotated with their tumor CN   
 - [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.9)
   - Proper support for RNA
     - Add (mandatory) `driver_gene_panel_tsv` and `known_fusion_file` inputs to support interpretation of isofox results
