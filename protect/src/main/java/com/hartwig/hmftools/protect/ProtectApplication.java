@@ -2,10 +2,8 @@ package com.hartwig.hmftools.protect;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidParents;
@@ -65,7 +63,7 @@ public class ProtectApplication {
         Set<String> patientTumorDoids = patientTumorDoids(config, doidParentModel);
         ActionableEvents actionableEvents = ActionableEventsLoader.readFromDir(config.serveActionabilityDir(), config.refGenomeVersion());
 
-        Map<String, DriverGene> driverGenes = readDriverGenesFromFile(config.driverGeneTsv());
+        List<DriverGene> driverGenes = readDriverGenesFromFile(config.driverGeneTsv());
 
         ProtectAlgo algo = ProtectAlgo.build(actionableEvents, patientTumorDoids, driverGenes);
         List<ProtectEvidence> evidences = algo.run(config);
@@ -76,16 +74,11 @@ public class ProtectApplication {
     }
 
     @NotNull
-    public static Map<String, DriverGene> readDriverGenesFromFile(@NotNull String driverGeneTsv) throws IOException {
+    public static List<DriverGene> readDriverGenesFromFile(@NotNull String driverGeneTsv) throws IOException {
         LOGGER.info(" Reading driver genes from {}", driverGeneTsv);
         List<DriverGene> driverGenes = DriverGeneFile.read(driverGeneTsv);
         LOGGER.info("  Read {} driver gene entries", driverGenes.size());
-
-        Map<String, DriverGene> driverGeneMap = Maps.newHashMap();
-        for (DriverGene gene: driverGenes) {
-            driverGeneMap.put(gene.gene(), gene);
-        }
-        return driverGeneMap;
+        return driverGenes;
     }
 
     @NotNull

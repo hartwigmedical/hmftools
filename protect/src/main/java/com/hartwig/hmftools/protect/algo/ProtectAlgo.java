@@ -2,7 +2,6 @@ package com.hartwig.hmftools.protect.algo;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -61,7 +60,7 @@ public class ProtectAlgo {
 
     @NotNull
     public static ProtectAlgo build(@NotNull ActionableEvents actionableEvents, @NotNull Set<String> patientTumorDoids,
-            @NotNull Map<String, DriverGene> driverGenes) {
+            @NotNull List<DriverGene> driverGenes) {
         PersonalizedEvidenceFactory personalizedEvidenceFactory = new PersonalizedEvidenceFactory(patientTumorDoids);
 
         VariantEvidence variantEvidenceFactory = new VariantEvidence(personalizedEvidenceFactory,
