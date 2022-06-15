@@ -10,11 +10,11 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.isofox.IsofoxData;
-import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.rna.GeneExpression;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
+import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,11 +27,11 @@ public final class IsofoxInterpreter {
     }
 
     @NotNull
-    public static IsofoxInterpretedData interpret(@NotNull IsofoxData isofox, @NotNull LinxData linx, @NotNull List<DriverGene> driverGenes,
-            @NotNull KnownFusionCache knownFusionCache) {
+    public static IsofoxInterpretedData interpret(@NotNull IsofoxData isofox, @NotNull LinxInterpretedData linx,
+            @NotNull List<DriverGene> driverGenes, @NotNull KnownFusionCache knownFusionCache) {
         List<LinxFusion> allFusions = Lists.newArrayList();
         allFusions.addAll(linx.reportableFusions());
-        allFusions.addAll(linx.unreportedFusions());
+        allFusions.addAll(linx.allFusions());
 
         return ImmutableIsofoxInterpretedData.builder()
                 .summary(isofox.summary())

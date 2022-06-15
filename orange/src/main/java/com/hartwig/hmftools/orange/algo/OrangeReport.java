@@ -8,15 +8,14 @@ import java.util.Set;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.cuppa.CuppaData;
 import com.hartwig.hmftools.common.doid.DoidNode;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.lilac.LilacData;
-import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
+import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
+import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
 
@@ -44,9 +43,6 @@ public abstract class OrangeReport {
     public abstract String platinumVersion();
 
     @NotNull
-    public abstract List<DriverGene> driverGenes();
-
-    @NotNull
     public abstract OrangeSample refSample();
 
     @NotNull
@@ -56,10 +52,10 @@ public abstract class OrangeReport {
     public abstract Map<String, Double> germlineMVLHPerGene();
 
     @NotNull
-    public abstract PurpleData purple();
+    public abstract PurpleInterpretedData purple();
 
     @NotNull
-    public abstract LinxData linx();
+    public abstract LinxInterpretedData linx();
 
     @Nullable
     public abstract IsofoxInterpretedData isofox();

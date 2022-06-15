@@ -39,10 +39,17 @@ public final class EventMatcherFactory {
         WildTypeMatcher wildTypeMatcher = new WildTypeMatcher(config.wildTypeKeyPhrases());
 
         FusionPairAndExonMatcher fusionPairAndExonMatcher = new FusionPairAndExonMatcher(config.fusionPairAndExonsPerGene());
-        AmplificationMatcher amplificationMatcher =
-                new AmplificationMatcher(config.amplificationKeywords(), config.amplificationKeyPhrases());
-        DeletionMatcher deletionMatcher =
-                new DeletionMatcher(config.deletionBlacklistKeyPhrases(), config.deletionKeywords(), config.deletionKeyPhrases());
+        AmplificationMatcher amplificationMatcher = new AmplificationMatcher(config.amplificationKeywords(),
+                config.amplificationKeyPhrases());
+        DeletionMatcher deletionMatcher = new DeletionMatcher(config.deletionBlacklistKeyPhrases(),
+                config.deletionKeywords(),
+                config.deletionKeyPhrases());
+
+        OverExpressionMatcher overExpressionMatcher = new OverExpressionMatcher(config.overExpressionKeywords(),
+                config.overExpressionKeyPhrases());
+        UnderExpressionMatcher underExpressionMatcher = new UnderExpressionMatcher(
+                config.underExpressionKeywords(),
+                config.underExpressionKeyPhrases());
 
         CharacteristicMatcher characteristicMatcher = new CharacteristicMatcher(allCharacteristicKeyPhrases(config));
         HlaMatcher hlaMatcher = new HlaMatcher(allHlaKeyPhrases(config));
@@ -61,7 +68,9 @@ public final class EventMatcherFactory {
         map.put(EventType.GENE_LEVEL, withFirstTierMatchers(firstTierEventMatchers, geneLevelMatcher));
         map.put(EventType.WILD_TYPE, withFirstTierMatchers(firstTierEventMatchers, wildTypeMatcher));
         map.put(EventType.AMPLIFICATION, withFirstTierMatchers(firstTierEventMatchers, amplificationMatcher));
+        map.put(EventType.OVER_EXPRESSION, withFirstTierMatchers(firstTierEventMatchers, overExpressionMatcher));
         map.put(EventType.DELETION, withFirstTierMatchers(firstTierEventMatchers, deletionMatcher));
+        map.put(EventType.UNDER_EXPRESSION, withFirstTierMatchers(firstTierEventMatchers, underExpressionMatcher));
         map.put(EventType.FUSION_PAIR, withFirstTierMatchers(firstTierEventMatchers, fusionPairMatcher));
         map.put(EventType.PROMISCUOUS_FUSION, withFirstTierMatchers(firstTierEventMatchers, promiscuousFusionMatcher));
         map.put(EventType.CHARACTERISTIC, withFirstTierMatchers(firstTierEventMatchers, characteristicMatcher));

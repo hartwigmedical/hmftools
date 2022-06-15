@@ -16,15 +16,17 @@ public final class GermlineVariantSelector {
     }
 
     @NotNull
-    public static List<ReportableVariant> selectNonDrivers(@NotNull List<SomaticVariant> unreportedVariants) {
+    public static List<ReportableVariant> selectInterestingUnreportedVariants(@NotNull List<SomaticVariant> allGermlineVariants) {
         List<ReportableVariant> filtered = Lists.newArrayList();
-        for (SomaticVariant variant : unreportedVariants) {
-            boolean isHotspot = variant.isHotspot();
+        for (SomaticVariant variant : allGermlineVariants) {
+            if (!variant.reported()) {
+                boolean isHotspot = variant.isHotspot();
 
-            // TODO: Add pathogenic variants that were not reported
-            // TODO: Add variants with conflicting evidence
-            if (isHotspot) {
-                filtered.add(toReportable(variant));
+                // TODO: Add pathogenic variants that were not reported
+                // TODO: Add variants with conflicting evidence
+                if (isHotspot) {
+                    filtered.add(toReportable(variant));
+                }
             }
         }
         return filtered;

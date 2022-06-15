@@ -15,7 +15,6 @@ import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
@@ -25,6 +24,7 @@ import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaInterpretation;
+import com.hartwig.hmftools.orange.algo.purple.PurpleCharacteristics;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
 import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
@@ -109,7 +109,7 @@ public class FrontPageChapter implements ReportChapter {
     @NotNull
     private String purpleQCString() {
         Set<String> purpleStatuses = Sets.newHashSet();
-        for (PurpleQCStatus status : report.purple().qc().status()) {
+        for (PurpleQCStatus status : report.purple().fit().qc().status()) {
             purpleStatuses.add(status.toString());
         }
         return concat(purpleStatuses);
@@ -136,11 +136,11 @@ public class FrontPageChapter implements ReportChapter {
         summary.addCell(Cells.createKey("Viral presence:"));
         summary.addCell(Cells.createValue(virusString()));
         summary.addCell(Cells.createKey("Whole genome duplicated:"));
-        summary.addCell(Cells.createValue(report.purple().wholeGenomeDuplication() ? "Yes" : "No"));
+        summary.addCell(Cells.createValue(report.purple().characteristics().wholeGenomeDuplication() ? "Yes" : "No"));
         summary.addCell(Cells.createKey("Microsatellite indels per Mb:"));
         summary.addCell(Cells.createValue(msiString()));
         summary.addCell(Cells.createKey("Tumor mutations per Mb:"));
-        summary.addCell(Cells.createValue(SINGLE_DIGIT.format(report.purple().tumorMutationalBurdenPerMb())));
+        summary.addCell(Cells.createValue(SINGLE_DIGIT.format(report.purple().characteristics().tumorMutationalBurdenPerMb())));
         summary.addCell(Cells.createKey("Tumor mutational load:"));
         summary.addCell(Cells.createValue(tmlString()));
         summary.addCell(Cells.createKey("HR deficiency score:"));
@@ -181,17 +181,17 @@ public class FrontPageChapter implements ReportChapter {
     @NotNull
     private String purityString() {
         return String.format("%s (%s-%s)",
-                PERCENTAGE.format(report.purple().purity() * 100),
-                PERCENTAGE.format(report.purple().minPurity() * 100),
-                PERCENTAGE.format(report.purple().maxPurity() * 100));
+                PERCENTAGE.format(report.purple().fit().purity() * 100),
+                PERCENTAGE.format(report.purple().fit().minPurity() * 100),
+                PERCENTAGE.format(report.purple().fit().maxPurity() * 100));
     }
 
     @NotNull
     private String ploidyString() {
         return String.format("%s (%s-%s)",
-                TWO_DIGITS.format(report.purple().ploidy()),
-                TWO_DIGITS.format(report.purple().minPloidy()),
-                TWO_DIGITS.format(report.purple().maxPloidy()));
+                TWO_DIGITS.format(report.purple().fit().ploidy()),
+                TWO_DIGITS.format(report.purple().fit().minPloidy()),
+                TWO_DIGITS.format(report.purple().fit().maxPloidy()));
     }
 
     @NotNull
@@ -290,14 +290,15 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private String msiString() {
-        PurpleData purple = report.purple();
-        return SINGLE_DIGIT.format(purple.microsatelliteIndelsPerMb()) + " (" + purple.microsatelliteStatus().display() + ")";
+        PurpleCharacteristics characteristics = report.purple().characteristics();
+        return SINGLE_DIGIT.format(characteristics.microsatelliteIndelsPerMb()) + " (" + characteristics.microsatelliteStatus().display()
+                + ")";
     }
 
     @NotNull
     private String tmlString() {
-        PurpleData purple = report.purple();
-        return purple.tumorMutationalLoad() + " (" + purple.tumorMutationalLoadStatus().display() + ")";
+        PurpleCharacteristics characteristics = report.purple().characteristics();
+        return characteristics.tumorMutationalLoad() + " (" + characteristics.tumorMutationalLoadStatus().display() + ")";
     }
 
     @NotNull
@@ -333,7 +334,7 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private String svTmbString() {
-        String svTmb = String.valueOf(report.purple().svTumorMutationalBurden());
+        String svTmb = String.valueOf(report.purple().characteristics().svTumorMutationalBurden());
 
         Evaluation evaluation = report.cohortEvaluations().get(PercentileType.SV_TMB);
         String addon = Strings.EMPTY;

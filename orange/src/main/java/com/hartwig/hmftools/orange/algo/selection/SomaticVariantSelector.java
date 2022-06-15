@@ -27,20 +27,24 @@ public final class SomaticVariantSelector {
     }
 
     @NotNull
-    public static List<ReportableVariant> selectNonDrivers(@NotNull List<SomaticVariant> unreportedVariants,
+    public static List<ReportableVariant> selectInterestingUnreportedVariants(@NotNull List<SomaticVariant> allVariants,
             @NotNull List<ReportableVariant> reportedSomaticVariants, @NotNull List<ProtectEvidence> evidences,
             @NotNull List<DriverGene> driverGenes) {
         List<ReportableVariant> filtered = Lists.newArrayList();
-        for (SomaticVariant variant : unreportedVariants) {
-            boolean isNearHotspot = variant.hotspot() == Hotspot.HOTSPOT || variant.hotspot() == Hotspot.NEAR_HOTSPOT;
-            boolean hasEvidence = EvidenceSelector.hasEvidence(evidences, variant.gene(), ProtectEventGenerator.variantEvent(variant));
-            boolean isExonicAndHasPhasedReportedVariant =
-                    !variant.gene().isEmpty() && hasReportedVariantWithPhase(reportedSomaticVariants, variant.topLocalPhaseSet());
-            boolean isCuppaRelevantVariant = isRelevantForCuppa(variant);
-            boolean isSynonymousButReportable = isSynonymousWithReportableWorstImpact(variant, driverGenes);
+        for (SomaticVariant variant : allVariants) {
+            if (!variant.reported()) {
+                boolean isNearHotspot = variant.hotspot() == Hotspot.HOTSPOT || variant.hotspot() == Hotspot.NEAR_HOTSPOT;
+                boolean hasEvidence = EvidenceSelector.hasEvidence(evidences, variant.gene(), ProtectEventGenerator.variantEvent(variant));
+                boolean isExonicAndHasPhasedReportedVariant =
+                        !variant.gene().isEmpty() && hasReportedVariantWithPhase(reportedSomaticVariants, variant.topLocalPhaseSet());
+                boolean isCuppaRelevantVariant = isRelevantForCuppa(variant);
+                boolean isSynonymousButReportable = isSynonymousWithReportableWorstImpact(variant, driverGenes);
+                boolean isUnreportedSpliceVariant = isUnreportedSpliceVariant(variant, driverGenes);
 
-            if (isNearHotspot || hasEvidence || isExonicAndHasPhasedReportedVariant || isCuppaRelevantVariant || isSynonymousButReportable) {
-                filtered.add(toReportable(variant));
+                if (isNearHotspot || hasEvidence || isExonicAndHasPhasedReportedVariant || isCuppaRelevantVariant
+                        || isSynonymousButReportable || isUnreportedSpliceVariant) {
+                    filtered.add(toReportable(variant));
+                }
             }
         }
         return filtered;
@@ -75,11 +79,21 @@ public final class SomaticVariantSelector {
             return false;
         }
 
-        CodingEffect effect = variant.worstCodingEffect();
-        boolean nonsenseOrFrameshift = effect == CodingEffect.NONSENSE_OR_FRAMESHIFT && driverGene.reportNonsenseAndFrameshift();
-        boolean splice = effect == CodingEffect.SPLICE && driverGene.reportSplice();
-        boolean missense = effect == CodingEffect.MISSENSE && driverGene.reportMissenseAndInframe();
+        CodingEffect worstEffect = variant.worstCodingEffect();
+        boolean nonsenseOrFrameshift = worstEffect == CodingEffect.NONSENSE_OR_FRAMESHIFT && driverGene.reportNonsenseAndFrameshift();
+        boolean splice = worstEffect == CodingEffect.SPLICE && driverGene.reportSplice();
+        boolean missense = worstEffect == CodingEffect.MISSENSE && driverGene.reportMissenseAndInframe();
         return nonsenseOrFrameshift || splice || missense;
+    }
+
+    private static boolean isUnreportedSpliceVariant(@NotNull SomaticVariant variant, @NotNull List<DriverGene> driverGenes) {
+        if (variant.spliceRegion()) {
+            DriverGene driverGene = findDriverGene(driverGenes, variant.gene());
+            if (driverGene != null) {
+                return driverGene.reportSplice();
+            }
+        }
+        return false;
     }
 
     @Nullable

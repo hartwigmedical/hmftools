@@ -73,7 +73,7 @@ public class GermlineFindingsChapter implements ReportChapter {
         String titleDrivers = "Driver variants (" + report.purple().reportableGermlineVariants().size() + ")";
         document.add(GermlineVariantTable.build(titleDrivers, contentWidth(), report.purple().reportableGermlineVariants()));
 
-        List<ReportableVariant> nonDriverVariants = GermlineVariantSelector.selectNonDrivers(report.purple().unreportedGermlineVariants());
+        List<ReportableVariant> nonDriverVariants = GermlineVariantSelector.selectInterestingUnreportedVariants(report.purple().allGermlineVariants());
         String titleNonDrivers = "Other potentially relevant variants (" + nonDriverVariants.size() + ")";
         document.add(GermlineVariantTable.build(titleNonDrivers, contentWidth(), nonDriverVariants));
     }
@@ -127,7 +127,7 @@ public class GermlineFindingsChapter implements ReportChapter {
     private void addGermlineCNAberrations(@NotNull Document document) {
         int count = 0;
         StringJoiner germlineAberrations = new StringJoiner(", ");
-        for (GermlineAberration aberration : report.purple().qc().germlineAberrations()) {
+        for (GermlineAberration aberration : report.purple().fit().qc().germlineAberrations()) {
             if (aberration != GermlineAberration.NONE) {
                 count++;
             }

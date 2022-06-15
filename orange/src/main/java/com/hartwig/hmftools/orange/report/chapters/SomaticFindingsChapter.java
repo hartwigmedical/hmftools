@@ -2,16 +2,11 @@ package com.hartwig.hmftools.orange.report.chapters;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
-import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.algo.selection.CopyNumberSelector;
-import com.hartwig.hmftools.orange.algo.selection.FusionSelector;
-import com.hartwig.hmftools.orange.algo.selection.LossOfHeterozygositySelector;
-import com.hartwig.hmftools.orange.algo.selection.SomaticVariantSelector;
 import com.hartwig.hmftools.orange.report.ReportConfig;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.tables.DNAFusionTable;
@@ -85,12 +80,8 @@ public class SomaticFindingsChapter implements ReportChapter {
         String titleDrivers = "Driver variants (" + reportableVariants.size() + ")";
         document.add(SomaticVariantTable.build(titleDrivers, contentWidth(), reportableVariants));
 
-        List<ReportableVariant> nonDriverVariants = SomaticVariantSelector.selectNonDrivers(report.purple().unreportedSomaticVariants(),
-                report.purple().reportableSomaticVariants(),
-                report.protect(),
-                report.driverGenes());
-        String titleNonDrivers = "Other potentially relevant variants (" + nonDriverVariants.size() + ")";
-        document.add(SomaticVariantTable.build(titleNonDrivers, contentWidth(), max10(nonDriverVariants)));
+        String titleNonDrivers = "Other potentially relevant variants (" + report.purple().additionalSuspectSomaticVariants().size() + ")";
+        document.add(SomaticVariantTable.build(titleNonDrivers, contentWidth(), max10(report.purple().additionalSuspectSomaticVariants())));
     }
 
     private void addKataegisPlot(@NotNull Document document) {
@@ -112,23 +103,42 @@ public class SomaticFindingsChapter implements ReportChapter {
                 report.purple().reportableSomaticGainsLosses(),
                 report.isofox()));
 
-        List<GainLoss> gains = CopyNumberSelector.selectNonDriverGains(report.purple().unreportedSomaticGainsLosses());
-        String titleGains = "Other regions with amps (" + gains.size() + ")";
-        document.add(GeneCopyNumberTable.build(titleGains, contentWidth(), max10(gains), report.isofox()));
+        List<GainLoss> suspectGains = Lists.newArrayList();
+        List<GainLoss> suspectLosses = Lists.newArrayList();
+        for (GainLoss suspectGainLoss : report.purple().additionalSuspectSomaticGainsLosses()) {
+            switch (suspectGainLoss.interpretation()) {
+                case FULL_GAIN:
+                case PARTIAL_GAIN: {
+                    suspectGains.add(suspectGainLoss);
+                    break;
+                }
+                case FULL_LOSS:
+                case PARTIAL_LOSS: {
+                    suspectLosses.add(suspectGainLoss);
+                    break;
+                }
+                default: {
+                    throw new IllegalStateException("Unrecognized gain loss interpretation: " + suspectGainLoss.interpretation());
+                }
+            }
+        }
 
-        List<GainLoss> losses = CopyNumberSelector.selectNonDriverLosses(report.purple().unreportedSomaticGainsLosses(),
-                report.purple().reportableSomaticGainsLosses());
-        String titleLosses = "Regions with deletions in genes in other autosomal regions (" + losses.size() + ")";
-        document.add(GeneCopyNumberTable.build(titleLosses, contentWidth(), max10(losses), report.isofox()));
+        String titleGains = "Other regions with amps (" + suspectGains.size() + ")";
+        document.add(GeneCopyNumberTable.build(titleGains, contentWidth(), max10(suspectGains), report.isofox()));
+
+        String titleLosses = "Regions with deletions in genes in other autosomal regions (" + suspectLosses.size() + ")";
+        document.add(GeneCopyNumberTable.build(titleLosses, contentWidth(), max10(suspectLosses), report.isofox()));
     }
 
     private void addFusions(@NotNull Document document) {
         String titleDrivers = "Driver fusions (" + report.linx().reportableFusions().size() + ")";
         document.add(DNAFusionTable.build(titleDrivers, contentWidth(), report.linx().reportableFusions(), report.isofox()));
 
-        List<LinxFusion> nonDriverFusions = FusionSelector.selectNonDriverFusions(report.linx().unreportedFusions(), report.protect());
-        String titleNonDrivers = "Other potentially interesting fusions (" + nonDriverFusions.size() + ")";
-        document.add(DNAFusionTable.build(titleNonDrivers, contentWidth(), max10(nonDriverFusions), report.isofox()));
+        String titleNonDrivers = "Other potentially interesting fusions (" + report.linx().additionalSuspectFusions().size() + ")";
+        document.add(DNAFusionTable.build(titleNonDrivers,
+                contentWidth(),
+                max10(report.linx().additionalSuspectFusions()),
+                report.isofox()));
     }
 
     private void addViralPresence(@NotNull Document document) {
@@ -150,12 +160,9 @@ public class SomaticFindingsChapter implements ReportChapter {
     }
 
     private void addLossOfHeterozygosity(@NotNull Document document) {
-        List<GeneCopyNumber> reportableLOHGenes =
-                LossOfHeterozygositySelector.selectHRDOrMSIGenesWithLOH(report.purple().allGeneCopyNumbers(),
-                        report.purple().microsatelliteStatus(),
-                        report.chord().hrStatus());
-        String title = "Potentially interesting LOH events in case of MSI or HRD (" + reportableLOHGenes.size() + ")";
-        document.add(LossOfHeterozygosityTable.build(title, contentWidth(), reportableLOHGenes));
+        String title =
+                "Potentially interesting LOH events in case of MSI or HRD (" + report.purple().suspectGeneCopyNumbersWithLOH().size() + ")";
+        document.add(LossOfHeterozygosityTable.build(title, contentWidth(), report.purple().suspectGeneCopyNumbersWithLOH()));
     }
 
     private void addStructuralDrivers(final Document document) {

@@ -64,7 +64,7 @@ public class ProtectEventGeneratorTest {
 
     @Test
     public void canGenerateEventForFusion() {
-        LinxFusion fusion = LinxTestFactory.testBuilder().geneStart("start").geneEnd("end").build();
+        LinxFusion fusion = LinxTestFactory.builder().geneStart("start").geneEnd("end").build();
         assertEquals("start - end fusion", ProtectEventGenerator.fusionEvent(fusion));
     }
 }

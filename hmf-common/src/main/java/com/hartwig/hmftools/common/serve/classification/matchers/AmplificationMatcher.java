@@ -11,6 +11,7 @@ class AmplificationMatcher implements EventMatcher {
     @NotNull
     private final Set<String> amplificationKeyPhrases;
 
+
     AmplificationMatcher(@NotNull final Set<String> amplificationKeywords, @NotNull final Set<String> amplificationKeyPhrases) {
         this.amplificationKeywords = amplificationKeywords;
         this.amplificationKeyPhrases = amplificationKeyPhrases;
@@ -18,9 +19,9 @@ class AmplificationMatcher implements EventMatcher {
 
     @Override
     public boolean matches(@NotNull String gene, @NotNull String event) {
-        String[] words = event.split(" ");
+        String[] wordsAmp = event.split(" ");
         for (String keyword : amplificationKeywords) {
-            for (String word : words) {
+            for (String word : wordsAmp) {
                 if (word.equals(keyword)) {
                     return true;
                 }

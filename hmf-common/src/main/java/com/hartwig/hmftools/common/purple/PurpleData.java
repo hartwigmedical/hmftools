@@ -59,31 +59,31 @@ public interface PurpleData {
     int svTumorMutationalBurden();
 
     @NotNull
+    List<SomaticVariant> allSomaticVariants();
+
+    @NotNull
     List<ReportableVariant> reportableSomaticVariants();
 
     @NotNull
-    List<SomaticVariant> unreportedSomaticVariants();
+    List<SomaticVariant> allGermlineVariants();
 
     @NotNull
     List<ReportableVariant> reportableGermlineVariants();
 
     @NotNull
-    List<SomaticVariant> unreportedGermlineVariants();
+    List<GeneCopyNumber> allSomaticGeneCopyNumbers();
+
+    @NotNull
+    List<GainLoss> allSomaticGainsLosses();
 
     @NotNull
     List<GainLoss> reportableSomaticGainsLosses();
 
     @NotNull
-    List<GainLoss> unreportedSomaticGainsLosses();
+    List<GermlineDeletion> allGermlineDeletions();
 
     @NotNull
     List<GermlineDeletion> reportableGermlineDeletions();
-
-    @NotNull
-    List<GermlineDeletion> unreportedGermlineDeletions();
-
-    @NotNull
-    List<GeneCopyNumber> allGeneCopyNumbers();
 
     @NotNull
     List<CnPerChromosomeArmData> copyNumberPerChromosome();
