@@ -53,6 +53,7 @@ public class WildTypeEvidence {
         for (WildType wildType : wildTypeGenes) {
             wildTypeMap.put(wildType.gene(), wildType);
         }
+
         for (ActionableGene actionable : actionableGenes) {
             WildType wildType = wildTypeMap.get(actionable.gene());
             if (wildType != null) {

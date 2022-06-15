@@ -291,11 +291,15 @@ public class WildTypeFactoryTest {
     }
 
     @NotNull
-    private static ReportableGeneDisruption createDisruption(@NotNull String gene) {
+    public static ReportableGeneDisruption createDisruption(@NotNull String gene) {
         return createTestReportableGeneDisruptionBuilder().gene(gene).isCanonical(true).build();
     }
 
-    @NotNull
+    @Override
+    public boolean equals(final Object obj) {
+        return super.equals(obj);
+    }
+
     private static ImmutableReportableGeneDisruption.Builder createTestReportableGeneDisruptionBuilder() {
         return ImmutableReportableGeneDisruption.builder()
                 .location(Strings.EMPTY)
