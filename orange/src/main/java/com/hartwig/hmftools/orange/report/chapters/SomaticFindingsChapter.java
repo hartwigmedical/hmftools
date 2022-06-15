@@ -167,8 +167,8 @@ public class SomaticFindingsChapter implements ReportChapter {
     }
 
     private void addGeneDisruptions(@NotNull Document document) {
-        String title = "Gene disruptions (" + report.linx().geneDisruptions().size() + ")";
-        document.add(GeneDisruptionTable.build(title, contentWidth(), report.linx().geneDisruptions()));
+        String title = "Gene disruptions (" + report.linx().reportableGeneDisruptions().size() + ")";
+        document.add(GeneDisruptionTable.build(title, contentWidth(), report.linx().reportableGeneDisruptions()));
     }
 
     private void addLossOfHeterozygosity(@NotNull Document document) {
@@ -176,7 +176,7 @@ public class SomaticFindingsChapter implements ReportChapter {
                 "Potentially interesting LOH events in case of MSI or HRD (" + report.purple().suspectGeneCopyNumbersWithLOH().size() + ")";
         document.add(LossOfHeterozygosityTable.build(title, contentWidth(), report.purple().suspectGeneCopyNumbersWithLOH()));
     }
-    
+
     private void addStructuralDriverPlots(@NotNull Document document) {
         String title = "Structural driver plots (" + report.plots().linxDriverPlots().size() + ")";
         document.add(new Paragraph(title).addStyle(ReportResources.tableTitleStyle()));

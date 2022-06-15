@@ -10,7 +10,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.algo.selection.GermlineVariantSelector;
+import com.hartwig.hmftools.orange.algo.purple.GermlineVariantSelector;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.tables.GermlineDeletionTable;
 import com.hartwig.hmftools.orange.report.tables.GermlineDisruptionTable;

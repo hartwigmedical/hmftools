@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.algo.selection;
+package com.hartwig.hmftools.orange.algo.linx;
 
 import java.util.List;
 
@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.sv.linx.FusionPhasedType;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
+import com.hartwig.hmftools.orange.algo.protect.EvidenceSelector;
 
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;

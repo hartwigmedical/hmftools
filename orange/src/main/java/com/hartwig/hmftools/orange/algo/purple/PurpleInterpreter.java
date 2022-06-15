@@ -9,10 +9,6 @@ import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
-import com.hartwig.hmftools.orange.algo.selection.CopyNumberSelector;
-import com.hartwig.hmftools.orange.algo.selection.GermlineVariantSelector;
-import com.hartwig.hmftools.orange.algo.selection.LossOfHeterozygositySelector;
-import com.hartwig.hmftools.orange.algo.selection.SomaticVariantSelector;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

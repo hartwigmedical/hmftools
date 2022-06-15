@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.linx.ReportableGeneDisruption;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
-import com.hartwig.hmftools.common.sv.linx.LinxDriver;
+import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.sv.linx.LinxGermlineSv;
 
@@ -26,13 +26,16 @@ public abstract class LinxInterpretedData {
     public abstract List<LinxFusion> additionalSuspectFusions();
 
     @NotNull
-    public abstract List<ReportableGeneDisruption> geneDisruptions();
+    public abstract List<LinxBreakend> allBreakends();
+
+    @NotNull
+    public abstract List<ReportableGeneDisruption> reportableGeneDisruptions();
+
+    @NotNull
+    public abstract List<LinxBreakend> additionalSuspectBreakends();
 
     @NotNull
     public abstract List<ReportableHomozygousDisruption> homozygousDisruptions();
-
-    @NotNull
-    public abstract List<LinxDriver> drivers();
 
     @NotNull
     public abstract List<LinxGermlineSv> allGermlineDisruptions();

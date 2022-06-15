@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.algo.selection;
+package com.hartwig.hmftools.orange.algo.protect;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

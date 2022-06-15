@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.algo.selection;
+package com.hartwig.hmftools.orange.algo.purple;
 
 import java.util.List;
 import java.util.Set;

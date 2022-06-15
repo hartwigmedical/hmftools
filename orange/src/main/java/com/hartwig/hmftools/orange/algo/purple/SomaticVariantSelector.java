@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.algo.selection;
+package com.hartwig.hmftools.orange.algo.purple;
 
 import java.util.List;
 import java.util.Set;
@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
 import com.hartwig.hmftools.common.variant.ReportableVariantSource;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.orange.algo.protect.EvidenceSelector;
 
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;

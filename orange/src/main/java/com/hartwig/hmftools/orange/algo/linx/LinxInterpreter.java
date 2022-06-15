@@ -6,7 +6,6 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
-import com.hartwig.hmftools.orange.algo.selection.FusionSelector;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,9 +29,9 @@ public final class LinxInterpreter {
                 .allFusions(linx.allFusions())
                 .reportableFusions(linx.reportableFusions())
                 .additionalSuspectFusions(additionalSuspectFusions)
-                .geneDisruptions(linx.reportableGeneDisruptions())
+                .allBreakends(linx.allBreakends())
+                .reportableGeneDisruptions(linx.reportableGeneDisruptions())
                 .homozygousDisruptions(linx.homozygousDisruptions())
-                .drivers(linx.drivers())
                 .allGermlineDisruptions(linx.allGermlineDisruptions())
                 .reportableGermlineDisruptions(linx.reportableGermlineDisruptions())
                 .build();

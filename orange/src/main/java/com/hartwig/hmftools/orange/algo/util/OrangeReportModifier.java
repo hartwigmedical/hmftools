@@ -23,7 +23,8 @@ public final class OrangeReportModifier {
 
     @NotNull
     public static OrangeReport limitAllListsToMaxOne(@NotNull OrangeReport report) {
-        return ImmutableOrangeReport.builder().from(report)
+        return ImmutableOrangeReport.builder()
+                .from(report)
                 .germlineMVLHPerGene(limitGermlineMVLHToOne(report.germlineMVLHPerGene()))
                 .purple(limitPurpleDataToOne(report.purple()))
                 .linx(limitLinxDataToOne(report.linx()))
@@ -44,14 +45,20 @@ public final class OrangeReportModifier {
 
     @NotNull
     private static PurpleInterpretedData limitPurpleDataToOne(@NotNull PurpleInterpretedData purple) {
-        return ImmutablePurpleInterpretedData.builder().from(purple)
+        return ImmutablePurpleInterpretedData.builder()
+                .from(purple)
                 .allSomaticVariants(max1(purple.allSomaticVariants()))
                 .reportableSomaticVariants(max1(purple.reportableSomaticVariants()))
+                .additionalSuspectSomaticVariants(max1(purple.additionalSuspectSomaticVariants()))
                 .allGermlineVariants(max1(purple.allGermlineVariants()))
                 .reportableGermlineVariants(max1(purple.reportableGermlineVariants()))
+                .additionalSuspectGermlineVariants(max1(purple.additionalSuspectGermlineVariants()))
                 .allSomaticGeneCopyNumbers(max1(purple.allSomaticGeneCopyNumbers()))
+                .suspectGeneCopyNumbersWithLOH(max1(purple.suspectGeneCopyNumbersWithLOH()))
                 .allSomaticGainsLosses(max1(purple.allSomaticGainsLosses()))
                 .reportableSomaticGainsLosses(max1(purple.reportableSomaticGainsLosses()))
+                .nearReportableSomaticGains(max1(purple.nearReportableSomaticGains()))
+                .additionalSuspectSomaticGainsLosses(max1(purple.additionalSuspectSomaticGainsLosses()))
                 .allGermlineDeletions(max1(purple.allGermlineDeletions()))
                 .reportableGermlineDeletions(max1(purple.reportableGermlineDeletions()))
                 .copyNumberPerChromosome(max1(purple.copyNumberPerChromosome()))
@@ -60,11 +67,15 @@ public final class OrangeReportModifier {
 
     @NotNull
     private static LinxInterpretedData limitLinxDataToOne(@NotNull LinxInterpretedData linx) {
-        return ImmutableLinxInterpretedData.builder().allFusions(max1(linx.allFusions()))
+        return ImmutableLinxInterpretedData.builder()
+                .from(linx)
+                .allFusions(max1(linx.allFusions()))
                 .reportableFusions(max1(linx.reportableFusions()))
-                .geneDisruptions(max1(linx.geneDisruptions()))
+                .additionalSuspectFusions(max1(linx.additionalSuspectFusions()))
+                .allBreakends(max1(linx.allBreakends()))
+                .reportableGeneDisruptions(max1(linx.reportableGeneDisruptions()))
+                .additionalSuspectBreakends(max1(linx.additionalSuspectBreakends()))
                 .homozygousDisruptions(max1(linx.homozygousDisruptions()))
-                .drivers(max1(linx.drivers()))
                 .allGermlineDisruptions(max1(linx.allGermlineDisruptions()))
                 .reportableGermlineDisruptions(max1(linx.reportableGermlineDisruptions()))
                 .build();
@@ -72,7 +83,8 @@ public final class OrangeReportModifier {
 
     @NotNull
     private static IsofoxInterpretedData limitIsofoxDataToOne(@NotNull IsofoxInterpretedData isofox) {
-        return ImmutableIsofoxInterpretedData.builder().from(isofox)
+        return ImmutableIsofoxInterpretedData.builder()
+                .from(isofox)
                 .allGeneExpressions(max1(isofox.allGeneExpressions()))
                 .reportableHighExpression(max1(isofox.reportableHighExpression()))
                 .reportableLowExpression(max1(isofox.reportableLowExpression()))

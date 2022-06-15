@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.algo.selection;
+package com.hartwig.hmftools.orange.algo.purple;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
