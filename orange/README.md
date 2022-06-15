@@ -136,11 +136,10 @@ investigate potential causes for QC failure.
   - Driver genes with near amplifications (2.5 < minRelCN < 3) are added as potentially interesting gains.
   - Average chromosome arm copy numbers are calculated and stored in ORANGE JSON:
      - New input: `purple_somatic_copy_number_tsv`
-  - Gene disruptions are annotated with sv and cluster IDs
+  - Gene disruptions are annotated by their cluster ID to be able to determine whether multiple events happened in same cluster or not.
      - New input: `linx_structural_variant_tsv`
   - All potentially interesting sections are now also written to the JSON output
   - The structural variant driver table has been removed as all interesting events where duplicated with events in other sections
-  - Gene disruptions are annotated by their cluster ID to be able to determine whether multiple events happened in same cluster or not.
   - Expression entries in the RNA chapter are annotated with their tumor CN   
 - [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.9)
   - Proper support for RNA
