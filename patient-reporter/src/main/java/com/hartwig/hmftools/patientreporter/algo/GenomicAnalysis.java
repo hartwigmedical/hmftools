@@ -5,8 +5,8 @@ import java.util.Map;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.common.linx.ReportableGeneDisruption;
-import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.common.linx.GeneDisruption;
+import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
@@ -78,10 +78,10 @@ public abstract class GenomicAnalysis {
     public abstract List<LinxFusion> geneFusions();
 
     @NotNull
-    public abstract List<ReportableGeneDisruption> geneDisruptions();
+    public abstract List<GeneDisruption> geneDisruptions();
 
     @NotNull
-    public abstract List<ReportableHomozygousDisruption> homozygousDisruptions();
+    public abstract List<HomozygousDisruption> homozygousDisruptions();
 
     @NotNull
     public abstract List<AnnotatedVirus> reportableViruses();

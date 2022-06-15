@@ -12,10 +12,10 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
-import com.hartwig.hmftools.common.linx.ImmutableReportableHomozygousDisruption;
+import com.hartwig.hmftools.common.linx.ImmutableHomozygousDisruption;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
-import com.hartwig.hmftools.common.linx.ReportableGeneDisruption;
-import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.common.linx.GeneDisruption;
+import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.interpretation.CopyNumberInterpretation;
@@ -69,11 +69,11 @@ public class WildTypeEvidenceTest {
         LinxFusion reportedFusionMatch = create("BAG4", "FGFR1");
         List<LinxFusion> reportableFusions = Lists.newArrayList(reportedFusionMatch);
 
-        ReportableHomozygousDisruption homozygousDisruption = create("NRAS");
-        List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList(homozygousDisruption);
+        HomozygousDisruption homozygousDisruption = create("NRAS");
+        List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList(homozygousDisruption);
 
-        ReportableGeneDisruption geneDisruption = WildTypeFactoryTest.createDisruption("MYC");
-        List<ReportableGeneDisruption> geneDisruptions = Lists.newArrayList(geneDisruption);
+        GeneDisruption geneDisruption = WildTypeFactoryTest.createDisruption("MYC");
+        List<GeneDisruption> geneDisruptions = Lists.newArrayList(geneDisruption);
 
         List<DriverGene> listDriverGenes =
                 createDriverMap(Lists.newArrayList("BRCA1", "BRCA2", "APC", "KRAS", "BAG4", "FGFR1", "NRAS", "EGFR", "MYC"));
@@ -271,8 +271,8 @@ public class WildTypeEvidenceTest {
     }
 
     @NotNull
-    private static ReportableHomozygousDisruption create(@NotNull String gene) {
-        return ImmutableReportableHomozygousDisruption.builder()
+    private static HomozygousDisruption create(@NotNull String gene) {
+        return ImmutableHomozygousDisruption.builder()
                 .chromosome(Strings.EMPTY)
                 .chromosomeBand(Strings.EMPTY)
                 .gene(gene)

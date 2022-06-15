@@ -12,12 +12,11 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
-import com.hartwig.hmftools.common.linx.ImmutableReportableGeneDisruption;
-import com.hartwig.hmftools.common.linx.ImmutableReportableHomozygousDisruption;
+import com.hartwig.hmftools.common.linx.GeneDisruption;
+import com.hartwig.hmftools.common.linx.HomozygousDisruption;
+import com.hartwig.hmftools.common.linx.ImmutableGeneDisruption;
+import com.hartwig.hmftools.common.linx.ImmutableHomozygousDisruption;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
-import com.hartwig.hmftools.common.linx.ReportableGeneDisruption;
-import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
-import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.interpretation.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
@@ -50,8 +49,8 @@ public class WildTypeFactoryTest {
 
         List<GainLoss> reportableSomaticGainsLosses = Lists.newArrayList();
         List<LinxFusion> reportableFusions = Lists.newArrayList();
-        List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
-        List<ReportableGeneDisruption> geneDisruptions = Lists.newArrayList();
+        List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
+        List<GeneDisruption> geneDisruptions = Lists.newArrayList();
         List<DriverGene> listDriverGenes = createDriverMap(Lists.newArrayList("BRCA2"));
 
         List<WildTypeGene> wildTypes = WildTypeFactory.determineWildTypeGenes(reportableGermlineVariant,
@@ -79,8 +78,8 @@ public class WildTypeFactoryTest {
         List<ReportableVariant> reportableSomaticVariant = Lists.newArrayList();
         List<GainLoss> reportableSomaticGainsLosses = Lists.newArrayList();
         List<LinxFusion> reportableFusions = Lists.newArrayList();
-        List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
-        List<ReportableGeneDisruption> geneDisruptions = Lists.newArrayList();
+        List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
+        List<GeneDisruption> geneDisruptions = Lists.newArrayList();
 
         List<DriverGene> listDriverGenes = createDriverMap(Lists.newArrayList("BRCA1"));
 
@@ -102,8 +101,8 @@ public class WildTypeFactoryTest {
         GainLoss reportableDel = GainLossTestFactory.createGainLoss("APC", CopyNumberInterpretation.FULL_LOSS);
         List<GainLoss> reportableSomaticGainsLosses = Lists.newArrayList(reportableAmp, reportableDel);
         List<LinxFusion> reportableFusions = Lists.newArrayList();
-        List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
-        List<ReportableGeneDisruption> geneDisruptions = Lists.newArrayList();
+        List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
+        List<GeneDisruption> geneDisruptions = Lists.newArrayList();
 
         List<DriverGene> listDriverGenes = createDriverMap(Lists.newArrayList("APC", "KRAS"));
 
@@ -124,8 +123,8 @@ public class WildTypeFactoryTest {
         List<GainLoss> reportableSomaticGainsLosses = Lists.newArrayList();
         LinxFusion reportedFusionMatch = create("BAG4", "EGFR");
         List<LinxFusion> reportableFusions = Lists.newArrayList(reportedFusionMatch);
-        List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
-        List<ReportableGeneDisruption> geneDisruptions = Lists.newArrayList();
+        List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
+        List<GeneDisruption> geneDisruptions = Lists.newArrayList();
 
         List<DriverGene> listDriverGenes = createDriverMap(Lists.newArrayList("BAG4"));
 
@@ -146,8 +145,8 @@ public class WildTypeFactoryTest {
         List<GainLoss> reportableSomaticGainsLosses = Lists.newArrayList();
         LinxFusion reportedFusionMatch = create("EGFR", "BAG4");
         List<LinxFusion> reportableFusions = Lists.newArrayList(reportedFusionMatch);
-        List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
-        List<ReportableGeneDisruption> geneDisruptions = Lists.newArrayList();
+        List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
+        List<GeneDisruption> geneDisruptions = Lists.newArrayList();
 
         List<DriverGene> listDriverGenes = createDriverMap(Lists.newArrayList("BAG4"));
 
@@ -167,9 +166,9 @@ public class WildTypeFactoryTest {
         List<ReportableVariant> reportableSomaticVariant = Lists.newArrayList();
         List<GainLoss> reportableSomaticGainsLosses = Lists.newArrayList();
         List<LinxFusion> reportableFusions = Lists.newArrayList();
-        ReportableHomozygousDisruption homozygousDisruption = create("NRAS");
-        List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList(homozygousDisruption);
-        List<ReportableGeneDisruption> geneDisruptions = Lists.newArrayList();
+        HomozygousDisruption homozygousDisruption = create("NRAS");
+        List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList(homozygousDisruption);
+        List<GeneDisruption> geneDisruptions = Lists.newArrayList();
 
         List<DriverGene> listDriverGenes = createDriverMap(Lists.newArrayList("NRAS"));
 
@@ -189,10 +188,10 @@ public class WildTypeFactoryTest {
         List<ReportableVariant> reportableSomaticVariant = Lists.newArrayList();
         List<GainLoss> reportableSomaticGainsLosses = Lists.newArrayList();
         List<LinxFusion> reportableFusions = Lists.newArrayList();
-        List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
+        List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
 
-        ReportableGeneDisruption geneDisruption = createDisruption("MYC");
-        List<ReportableGeneDisruption> geneDisruptions = Lists.newArrayList(geneDisruption);
+        GeneDisruption geneDisruption = createDisruption("MYC");
+        List<GeneDisruption> geneDisruptions = Lists.newArrayList(geneDisruption);
 
         List<DriverGene> listDriverGenes = createDriverMap(Lists.newArrayList("MYC"));
 
@@ -236,11 +235,11 @@ public class WildTypeFactoryTest {
         LinxFusion reportedFusionMatch = create("BAG4", "FGFR1");
         List<LinxFusion> reportableFusions = Lists.newArrayList(reportedFusionMatch);
 
-        ReportableHomozygousDisruption homozygousDisruption = create("NRAS");
-        List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList(homozygousDisruption);
+        HomozygousDisruption homozygousDisruption = create("NRAS");
+        List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList(homozygousDisruption);
 
-        ReportableGeneDisruption geneDisruption = createDisruption("MYC");
-        List<ReportableGeneDisruption> geneDisruptions = Lists.newArrayList(geneDisruption);
+        GeneDisruption geneDisruption = createDisruption("MYC");
+        List<GeneDisruption> geneDisruptions = Lists.newArrayList(geneDisruption);
 
         List<DriverGene> listDriverGenes =
                 createDriverMap(Lists.newArrayList("BRCA1", "BRCA2", "APC", "KRAS", "BAG4", "FGFR1", "NRAS", "EGFR", "MYC"));
@@ -284,11 +283,11 @@ public class WildTypeFactoryTest {
         LinxFusion reportedFusionMatch = create("BAG4", "FGFR1");
         List<LinxFusion> reportableFusions = Lists.newArrayList(reportedFusionMatch);
 
-        ReportableHomozygousDisruption homozygousDisruption = create("NRAS");
-        List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList(homozygousDisruption);
+        HomozygousDisruption homozygousDisruption = create("NRAS");
+        List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList(homozygousDisruption);
 
-        ReportableGeneDisruption geneDisruption = createDisruption("MYC");
-        List<ReportableGeneDisruption> geneDisruptions = Lists.newArrayList(geneDisruption);
+        GeneDisruption geneDisruption = createDisruption("MYC");
+        List<GeneDisruption> geneDisruptions = Lists.newArrayList(geneDisruption);
 
         List<DriverGene> listDriverGenes =
                 createDriverMap(Lists.newArrayList("BRCA1", "BRCA2", "APC", "KRAS", "BAG4", "FGFR1", "NRAS", "EGFR", "MYC"));
@@ -346,8 +345,8 @@ public class WildTypeFactoryTest {
     }
 
     @NotNull
-    private static ReportableHomozygousDisruption create(@NotNull String gene) {
-        return ImmutableReportableHomozygousDisruption.builder()
+    private static HomozygousDisruption create(@NotNull String gene) {
+        return ImmutableHomozygousDisruption.builder()
                 .chromosome(Strings.EMPTY)
                 .chromosomeBand(Strings.EMPTY)
                 .gene(gene)
@@ -357,7 +356,7 @@ public class WildTypeFactoryTest {
     }
 
     @NotNull
-    public static ReportableGeneDisruption createDisruption(@NotNull String gene) {
+    public static GeneDisruption createDisruption(@NotNull String gene) {
         return createTestReportableGeneDisruptionBuilder().gene(gene).isCanonical(true).build();
     }
 
@@ -366,8 +365,8 @@ public class WildTypeFactoryTest {
         return super.equals(obj);
     }
 
-    private static ImmutableReportableGeneDisruption.Builder createTestReportableGeneDisruptionBuilder() {
-        return ImmutableReportableGeneDisruption.builder()
+    private static ImmutableGeneDisruption.Builder createTestReportableGeneDisruptionBuilder() {
+        return ImmutableGeneDisruption.builder()
                 .location(Strings.EMPTY)
                 .gene(Strings.EMPTY)
                 .range(Strings.EMPTY)

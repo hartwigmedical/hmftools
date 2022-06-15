@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
@@ -30,16 +30,16 @@ public class DisruptionEvidence {
     }
 
     @NotNull
-    public List<ProtectEvidence> evidence(@NotNull List<ReportableHomozygousDisruption> reportables) {
+    public List<ProtectEvidence> evidence(@NotNull List<HomozygousDisruption> reportables) {
         List<ProtectEvidence> result = Lists.newArrayList();
-        for (ReportableHomozygousDisruption reportable : reportables) {
+        for (HomozygousDisruption reportable : reportables) {
             result.addAll(evidence(reportable));
         }
         return result;
     }
 
     @NotNull
-    private List<ProtectEvidence> evidence(@NotNull ReportableHomozygousDisruption reportable) {
+    private List<ProtectEvidence> evidence(@NotNull HomozygousDisruption reportable) {
         List<ProtectEvidence> result = Lists.newArrayList();
         for (ActionableGene actionable : actionableGenes) {
             if (actionable.gene().equals(reportable.gene())) {

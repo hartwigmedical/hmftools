@@ -12,27 +12,27 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class ReportableHomozygousDisruptionFactory {
+public final class HomozygousDisruptionFactory {
 
-    private static final Logger LOGGER = LogManager.getLogger(ReportableHomozygousDisruptionFactory.class);
+    private static final Logger LOGGER = LogManager.getLogger(HomozygousDisruptionFactory.class);
 
-    private ReportableHomozygousDisruptionFactory() {
+    private HomozygousDisruptionFactory() {
     }
 
     @NotNull
-    public static List<ReportableHomozygousDisruption> extractFromLinxDriverCatalogTsv(@NotNull String linxDriverCatalogTsv)
+    public static List<HomozygousDisruption> extractFromLinxDriverCatalogTsv(@NotNull String linxDriverCatalogTsv)
             throws IOException {
         List<DriverCatalog> linxDriversCatalog = DriverCatalogFile.read(linxDriverCatalogTsv);
         LOGGER.debug(" Loaded {} linx driver catalog records from {}", linxDriversCatalog.size(), linxDriverCatalogTsv);
 
-        List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = extractHomozygousDisruptions(linxDriversCatalog);
-        LOGGER.debug("  Extracted {} homozygous disruptions from linx drivers", reportableHomozygousDisruptions.size());
-        return reportableHomozygousDisruptions;
+        List<HomozygousDisruption> homozygousDisruptions = extractHomozygousDisruptions(linxDriversCatalog);
+        LOGGER.debug("  Extracted {} homozygous disruptions from linx drivers", homozygousDisruptions.size());
+        return homozygousDisruptions;
     }
 
     @NotNull
-    private static List<ReportableHomozygousDisruption> extractHomozygousDisruptions(@NotNull List<DriverCatalog> driverCatalog) {
-        List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
+    private static List<HomozygousDisruption> extractHomozygousDisruptions(@NotNull List<DriverCatalog> driverCatalog) {
+        List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
 
         for (DriverCatalog driver : driverCatalog) {
             if (driver.driver() == DriverType.HOM_DUP_DISRUPTION || driver.driver() == DriverType.HOM_DEL_DISRUPTION) {
@@ -44,8 +44,8 @@ public final class ReportableHomozygousDisruptionFactory {
     }
 
     @NotNull
-    private static ReportableHomozygousDisruption create(@NotNull DriverCatalog driverCatalog) {
-        return ImmutableReportableHomozygousDisruption.builder()
+    private static HomozygousDisruption create(@NotNull DriverCatalog driverCatalog) {
+        return ImmutableHomozygousDisruption.builder()
                 .chromosome(driverCatalog.chromosome())
                 .chromosomeBand(driverCatalog.chromosomeBand())
                 .gene(driverCatalog.gene())

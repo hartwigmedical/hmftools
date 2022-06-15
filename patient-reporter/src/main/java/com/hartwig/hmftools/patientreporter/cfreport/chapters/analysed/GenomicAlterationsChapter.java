@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.linx.ReportableGeneDisruption;
-import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.common.linx.GeneDisruption;
+import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
@@ -251,7 +251,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createHomozygousDisruptionsTable(@NotNull List<ReportableHomozygousDisruption> homozygousDisruptions) {
+    private static Table createHomozygousDisruptionsTable(@NotNull List<HomozygousDisruption> homozygousDisruptions) {
         String title = "Tumor specific homozygous disruptions";
         String subtitle = "Complete loss of wild type allele";
         if (homozygousDisruptions.isEmpty()) {
@@ -262,7 +262,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                 new Cell[] { TableUtil.createHeaderCell("Chromosome"), TableUtil.createHeaderCell("Region"),
                         TableUtil.createHeaderCell("Gene"), });
 
-        for (ReportableHomozygousDisruption homozygousDisruption : HomozygousDisruptions.sort(homozygousDisruptions)) {
+        for (HomozygousDisruption homozygousDisruption : HomozygousDisruptions.sort(homozygousDisruptions)) {
             contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.chromosome()));
             contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.chromosomeBand()));
             contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.gene()));
@@ -307,7 +307,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createDisruptionsTable(@NotNull List<ReportableGeneDisruption> disruptions, boolean hasReliablePurity) {
+    private static Table createDisruptionsTable(@NotNull List<GeneDisruption> disruptions, boolean hasReliablePurity) {
         String title = "Tumor specific gene disruptions";
         if (disruptions.isEmpty()) {
             return TableUtil.createNoneReportTable(title, null);
@@ -321,7 +321,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                         TableUtil.createHeaderCell("Disrupted copies").setTextAlignment(TextAlignment.CENTER),
                         TableUtil.createHeaderCell("Undisrupted copies").setTextAlignment(TextAlignment.CENTER) });
 
-        for (ReportableGeneDisruption disruption : GeneDisruptions.sort(disruptions)) {
+        for (GeneDisruption disruption : GeneDisruptions.sort(disruptions)) {
             contentTable.addCell(TableUtil.createContentCell(disruption.location()));
             contentTable.addCell(TableUtil.createContentCell(disruption.gene()));
             contentTable.addCell(TableUtil.createContentCell(disruption.range()));

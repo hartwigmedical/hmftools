@@ -110,12 +110,12 @@ public class SomaticFindingsChapter implements ReportChapter {
                 report.isofox()));
 
         List<GainLoss> suspectGains = selectGains(report.purple().additionalSuspectSomaticGainsLosses());
-        String titleGains = "Other regions with amps (" + suspectGains.size() + ")";
-        document.add(GeneCopyNumberTable.build(titleGains, contentWidth(), max10(suspectGains), report.isofox()));
+        String titleSuspectGains = "Other regions with amps (" + suspectGains.size() + ")";
+        document.add(GeneCopyNumberTable.build(titleSuspectGains, contentWidth(), max10(suspectGains), report.isofox()));
 
         List<GainLoss> suspectLosses = selectLosses(report.purple().additionalSuspectSomaticGainsLosses());
-        String titleLosses = "Regions with deletions in genes in other autosomal regions (" + suspectLosses.size() + ")";
-        document.add(GeneCopyNumberTable.build(titleLosses, contentWidth(), max10(suspectLosses), report.isofox()));
+        String titleSuspectLosses = "Regions with deletions in genes in other autosomal regions (" + suspectLosses.size() + ")";
+        document.add(GeneCopyNumberTable.build(titleSuspectLosses, contentWidth(), max10(suspectLosses), report.isofox()));
     }
 
     @NotNull
@@ -167,8 +167,12 @@ public class SomaticFindingsChapter implements ReportChapter {
     }
 
     private void addGeneDisruptions(@NotNull Document document) {
-        String title = "Gene disruptions (" + report.linx().reportableGeneDisruptions().size() + ")";
-        document.add(GeneDisruptionTable.build(title, contentWidth(), report.linx().reportableGeneDisruptions()));
+        String titleDriver = "Driver gene disruptions (" + report.linx().reportableGeneDisruptions().size() + ")";
+        document.add(GeneDisruptionTable.build(titleDriver, contentWidth(), report.linx().reportableGeneDisruptions()));
+
+        String titleNonDrivers =
+                "Other potentially interesting gene disruptions (" + report.linx().additionalSuspectDisruptions().size() + ")";
+        document.add(GeneDisruptionTable.build(titleNonDrivers, contentWidth(), report.linx().additionalSuspectDisruptions()));
     }
 
     private void addLossOfHeterozygosity(@NotNull Document document) {

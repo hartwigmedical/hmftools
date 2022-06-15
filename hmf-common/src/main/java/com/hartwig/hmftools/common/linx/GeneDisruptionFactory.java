@@ -17,17 +17,17 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class ReportableGeneDisruptionFactory {
+public final class GeneDisruptionFactory {
 
-    private static final Logger LOGGER = LogManager.getLogger(ReportableGeneDisruptionFactory.class);
+    private static final Logger LOGGER = LogManager.getLogger(GeneDisruptionFactory.class);
 
-    private ReportableGeneDisruptionFactory() {
+    private GeneDisruptionFactory() {
     }
 
     @NotNull
-    public static List<ReportableGeneDisruption> convert(@NotNull List<LinxBreakend> breakends,
+    public static List<GeneDisruption> convert(@NotNull List<LinxBreakend> breakends,
             @NotNull List<LinxSvAnnotation> structuralVariants) {
-        List<ReportableGeneDisruption> reportableDisruptions = Lists.newArrayList();
+        List<GeneDisruption> reportableDisruptions = Lists.newArrayList();
         Map<SvAndGeneKey, Pair<LinxBreakend, LinxBreakend>> pairedMap = mapBreakendsPerStructuralVariant(breakends);
 
         for (Pair<LinxBreakend, LinxBreakend> pairedBreakend : pairedMap.values()) {
@@ -43,7 +43,7 @@ public final class ReportableGeneDisruptionFactory {
                 if (copyNumberLeft != null && copyNumberRight != null && !Doubles.equal(copyNumberLeft, copyNumberRight)) {
                     LOGGER.warn("The disrupted copy number of a paired sv is not the same on {}", primaryBreakendLeft.gene());
                 }
-                reportableDisruptions.add(ImmutableReportableGeneDisruption.builder()
+                reportableDisruptions.add(ImmutableGeneDisruption.builder()
                         .location(primaryBreakendLeft.chromosome() + primaryBreakendLeft.chrBand())
                         .gene(primaryBreakendLeft.gene())
                         .transcriptId(primaryBreakendLeft.transcriptId())
@@ -56,7 +56,7 @@ public final class ReportableGeneDisruptionFactory {
                         .clusterId(determineClusterId(structuralVariants, primaryBreakendLeft))
                         .build());
             } else {
-                reportableDisruptions.add(ImmutableReportableGeneDisruption.builder()
+                reportableDisruptions.add(ImmutableGeneDisruption.builder()
                         .location(primaryBreakendLeft.chromosome() + primaryBreakendLeft.chrBand())
                         .gene(primaryBreakendLeft.gene())
                         .transcriptId(primaryBreakendLeft.transcriptId())

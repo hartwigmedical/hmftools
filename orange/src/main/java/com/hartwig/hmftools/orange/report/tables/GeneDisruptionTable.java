@@ -4,7 +4,7 @@ import java.text.DecimalFormat;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.linx.ReportableGeneDisruption;
+import com.hartwig.hmftools.common.linx.GeneDisruption;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Chromosomes;
 import com.hartwig.hmftools.orange.report.util.Cells;
@@ -22,7 +22,7 @@ public final class GeneDisruptionTable {
     }
 
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<ReportableGeneDisruption> disruptions) {
+    public static Table build(@NotNull String title, float width, @NotNull List<GeneDisruption> disruptions) {
         if (disruptions.isEmpty()) {
             return Tables.createEmpty(title, width);
         }
@@ -33,7 +33,7 @@ public final class GeneDisruptionTable {
                         Cells.createHeader("Type"), Cells.createHeader("Cluster ID"), Cells.createHeader("Junction CN"),
                         Cells.createHeader("Undisrupted CN") });
 
-        for (ReportableGeneDisruption disruption : sort(disruptions)) {
+        for (GeneDisruption disruption : sort(disruptions)) {
             table.addCell(Cells.createContent(disruption.location()));
             table.addCell(Cells.createContent(disruption.gene()));
             table.addCell(Cells.createContent(disruption.range()));
@@ -47,7 +47,7 @@ public final class GeneDisruptionTable {
     }
 
     @NotNull
-    public static List<ReportableGeneDisruption> sort(@NotNull List<ReportableGeneDisruption> disruptions) {
+    public static List<GeneDisruption> sort(@NotNull List<GeneDisruption> disruptions) {
         return disruptions.stream().sorted((disruption1, disruption2) -> {
             String locationAndGene1 = Chromosomes.zeroPrefixed(disruption1.location()) + disruption1.gene();
             String locationAndGene2 = Chromosomes.zeroPrefixed(disruption2.location()) + disruption2.gene();

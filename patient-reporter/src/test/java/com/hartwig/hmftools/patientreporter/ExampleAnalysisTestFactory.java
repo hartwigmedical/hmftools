@@ -23,10 +23,10 @@ import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
-import com.hartwig.hmftools.common.linx.ImmutableReportableGeneDisruption;
-import com.hartwig.hmftools.common.linx.ImmutableReportableHomozygousDisruption;
-import com.hartwig.hmftools.common.linx.ReportableGeneDisruption;
-import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.common.linx.GeneDisruption;
+import com.hartwig.hmftools.common.linx.HomozygousDisruption;
+import com.hartwig.hmftools.common.linx.ImmutableGeneDisruption;
+import com.hartwig.hmftools.common.linx.ImmutableHomozygousDisruption;
 import com.hartwig.hmftools.common.peach.ImmutablePeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
@@ -104,8 +104,8 @@ public final class ExampleAnalysisTestFactory {
         Map<ReportableVariant, Boolean> notifyGermlineStatusPerVariant = notifyAllGermlineVariants(reportableVariants);
         List<GainLoss> gainsAndLosses = createCOLO829GainsLosses();
         List<LinxFusion> fusions = Lists.newArrayList();
-        List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
-        List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
+        List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
+        List<GeneDisruption> disruptions = createCOLO829Disruptions();
         List<AnnotatedVirus> viruses = Lists.newArrayList();
         List<PeachGenotype> peachGenotypes = createTestPeachGenotypes();
 
@@ -197,7 +197,7 @@ public final class ExampleAnalysisTestFactory {
 
         List<LinxFusion> fusions = createTestFusions();
         List<AnnotatedVirus> viruses = createTestAnnotatedViruses();
-        List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
+        List<HomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
 
         GenomicAnalysis analysis = ImmutableGenomicAnalysis.builder()
                 .from(coloReport.genomicAnalysis())
@@ -1165,8 +1165,8 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static List<ReportableGeneDisruption> createCOLO829Disruptions() {
-        ReportableGeneDisruption disruption1 = ImmutableReportableGeneDisruption.builder()
+    private static List<GeneDisruption> createCOLO829Disruptions() {
+        GeneDisruption disruption1 = ImmutableGeneDisruption.builder()
                 .location("10q23.31")
                 .gene("PTEN")
                 .range("Intron 5 -> Intron 6")
@@ -1183,8 +1183,8 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static List<ReportableHomozygousDisruption> createTestHomozygousDisruptions() {
-        return Lists.newArrayList(ImmutableReportableHomozygousDisruption.builder()
+    private static List<HomozygousDisruption> createTestHomozygousDisruptions() {
+        return Lists.newArrayList(ImmutableHomozygousDisruption.builder()
                 .chromosome("8")
                 .chromosomeBand("p22")
                 .gene("SGCZ")

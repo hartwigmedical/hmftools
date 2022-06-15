@@ -5,8 +5,8 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.linx.ReportableGeneDisruption;
-import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.common.linx.GeneDisruption;
+import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
@@ -30,8 +30,8 @@ public class WildTypeFactory {
 
     public static List<WildTypeGene> determineWildTypeGenes(@NotNull List<ReportableVariant> reportableGermlineVariant,
             @NotNull List<ReportableVariant> reportableSomaticVariant, @NotNull List<GainLoss> reportableSomaticGainsLosses,
-            @NotNull List<LinxFusion> reportableFusions, @NotNull List<ReportableHomozygousDisruption> homozygousDisruptions,
-            @NotNull List<ReportableGeneDisruption> geneDisruptions, @NotNull List<DriverGene> driverGenes) {
+            @NotNull List<LinxFusion> reportableFusions, @NotNull List<HomozygousDisruption> homozygousDisruptions,
+            @NotNull List<GeneDisruption> geneDisruptions, @NotNull List<DriverGene> driverGenes) {
 
         List<WildTypeGene> wildTypeGenes = Lists.newArrayList();
 
@@ -72,13 +72,13 @@ public class WildTypeFactory {
                 }
             }
 
-            for (ReportableHomozygousDisruption homozygousDisruption : homozygousDisruptions) {
+            for (HomozygousDisruption homozygousDisruption : homozygousDisruptions) {
                 if (driverGene.gene().equals(homozygousDisruption.gene())) {
                     hasFusion = true;
                 }
             }
 
-            for (ReportableGeneDisruption geneDisruption : geneDisruptions) {
+            for (GeneDisruption geneDisruption : geneDisruptions) {
                 if (driverGene.gene().equals(geneDisruption.gene())) {
                     hasGeneDisruption = true;
                 }

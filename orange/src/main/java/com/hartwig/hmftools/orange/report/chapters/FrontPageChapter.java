@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.cuppa.CuppaData;
 import com.hartwig.hmftools.common.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.common.doid.DoidNode;
-import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
@@ -251,7 +251,7 @@ public class FrontPageChapter implements ReportChapter {
         }
 
         Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
-        for (ReportableHomozygousDisruption disruption : report.linx().homozygousDisruptions()) {
+        for (HomozygousDisruption disruption : report.linx().homozygousDisruptions()) {
             genes.add(disruption.gene());
         }
         return report.linx().homozygousDisruptions().size() + " (" + concat(genes) + ")";

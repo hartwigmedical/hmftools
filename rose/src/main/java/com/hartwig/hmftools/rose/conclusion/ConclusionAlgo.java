@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
 import com.hartwig.hmftools.common.purple.interpretation.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
@@ -69,7 +69,7 @@ public class ConclusionAlgo {
                 ReportableVariantFactory.mergeVariantLists(reportableGermlineVariants, reportableSomaticVariants);
         List<GainLoss> reportableGainLosses = roseData.purple().reportableSomaticGainsLosses();
         List<LinxFusion> reportableFusions = roseData.linx().reportableFusions();
-        List<ReportableHomozygousDisruption> homozygousDisruptions = roseData.linx().homozygousDisruptions();
+        List<HomozygousDisruption> homozygousDisruptions = roseData.linx().homozygousDisruptions();
         List<AnnotatedVirus> reportableViruses = roseData.virusInterpreter().reportableViruses();
 
         genertateTumorLocationConclusion(conclusion, roseData.patientPrimaryTumors(), roseData.patientId());
@@ -316,10 +316,10 @@ public class ConclusionAlgo {
     }
 
     public static void generateHomozygousDisruptionConclusion(@NotNull Map<Integer, String> conclusion,
-            @NotNull List<ReportableHomozygousDisruption> homozygousDisruptions,
+            @NotNull List<HomozygousDisruption> homozygousDisruptions,
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap, @NotNull Set<String> oncogenic,
             @NotNull Set<String> actionable) {
-        for (ReportableHomozygousDisruption homozygousDisruption : homozygousDisruptions) {
+        for (HomozygousDisruption homozygousDisruption : homozygousDisruptions) {
             oncogenic.add("homozygousDisruption");
 
             ActionabilityKey keyHomozygousDisruption =
