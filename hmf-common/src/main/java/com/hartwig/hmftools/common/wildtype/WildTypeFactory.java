@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.linx.ReportableGeneDisruption;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
@@ -22,7 +23,7 @@ public class WildTypeFactory {
     public static List<WildType> determineWildTypeGenes(@NotNull List<ReportableVariant> reportableGermlineVariant,
             @NotNull List<ReportableVariant> reportableSomaticVariant, @NotNull List<GainLoss> reportableSomaticGainsLosses,
             @NotNull List<LinxFusion> reportableFusions, @NotNull List<ReportableHomozygousDisruption> homozygousDisruptions,
-            @NotNull List<DriverGene> driverGenes) {
+            @NotNull List<ReportableGeneDisruption> geneDisruptions, @NotNull List<DriverGene> driverGenes) {
 
         List<WildType> wildTypeGenes = Lists.newArrayList();
         boolean wildTypeSomaticVariant = false;
@@ -30,6 +31,7 @@ public class WildTypeFactory {
         boolean wildTypeSomaticGainLoss = false;
         boolean wildTypeFusions = false;
         boolean wildTypeHomozygousDisruption = false;
+        boolean wildTypeGeneDisruption = false;
 
         List<Boolean> somaticVariantBoolean = Lists.newArrayList();
         List<Boolean> somaticGermlineBoolean = Lists.newArrayList();
@@ -37,6 +39,7 @@ public class WildTypeFactory {
         List<Boolean> FusionBooleanEnd = Lists.newArrayList();
         List<Boolean> FusionBooleanStart = Lists.newArrayList();
         List<Boolean> HomozygousDisruptionBoolean = Lists.newArrayList();
+        List<Boolean> GeneDisruptionBoolean = Lists.newArrayList();
 
         for (DriverGene driverGene : driverGenes) {
 
@@ -82,8 +85,13 @@ public class WildTypeFactory {
 
             }
 
+            for (ReportableGeneDisruption geneDisruption: geneDisruptions) {
+                isWildType(driverGene.gene(), geneDisruption.gene(), GeneDisruptionBoolean);
+                wildTypeGeneDisruption = GeneDisruptionBoolean.contains(true);
+            }
+
             if (!wildTypeSomaticVariant && !wildTypeGermlineVariant && !wildTypeSomaticGainLoss && !wildTypeFusions
-                    && !wildTypeHomozygousDisruption) {
+                    && !wildTypeHomozygousDisruption && !wildTypeGeneDisruption) {
                 wildTypeGenes.add(ImmutableWildType.builder().gene(driverGene.gene()).build());
             }
         }
@@ -91,7 +99,7 @@ public class WildTypeFactory {
     }
 
     public static void isWildType(@NotNull String driverGene, @NotNull String reportableGene, @NotNull List<Boolean> booleanList) {
-        LOGGER.info("driverGene: " + driverGene );
+        LOGGER.info("driverGene: " + driverGene);
         LOGGER.info("reportableGene: " + reportableGene);
         if (driverGene.equals(reportableGene)) {
             booleanList.add(true);
