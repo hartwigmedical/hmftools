@@ -136,7 +136,8 @@ investigate potential causes for QC failure.
   - Average chromosome arm copy numbers are calculated and stored in ORANGE JSON:
      - New input: `purple_somatic_copy_number_tsv`
   - Gene disruptions are annotated with sv and cluster IDs
-     - New input: `linx_structural_variant_tsv` 
+     - New input: `linx_structural_variant_tsv`
+  - All potentially interesting sections are now also written to the JSON output 
 - [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.9)
   - Proper support for RNA
     - Add (mandatory) `driver_gene_panel_tsv` and `known_fusion_file` inputs to support interpretation of isofox results
