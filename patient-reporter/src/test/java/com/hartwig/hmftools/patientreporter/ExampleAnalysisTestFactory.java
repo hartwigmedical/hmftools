@@ -1174,7 +1174,6 @@ public final class ExampleAnalysisTestFactory {
                 .junctionCopyNumber(2.0076)
                 .undisruptedCopyNumber(0.0)
                 .firstAffectedExon(5)
-                .svId(121)
                 .clusterId(67)
                 .transcriptId("ENST00000371953")
                 .isCanonical(true)

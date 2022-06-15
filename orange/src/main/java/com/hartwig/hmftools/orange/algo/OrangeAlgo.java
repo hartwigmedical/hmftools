@@ -139,7 +139,7 @@ public class OrangeAlgo {
         OrangeSample tumorSample = loadSampleData(config, true);
 
         List<ProtectEvidence> protect = loadProtectData(config);
-        LinxInterpretedData linx = LinxInterpreter.interpret(loadLinxData(config), protect, driverGenes);
+        LinxInterpretedData linx = LinxInterpreter.interpret(loadLinxData(config), protect, driverGenes, knownFusionCache);
 
         ChordAnalysis chord = loadChordAnalysis(config);
         PurpleInterpretedData purple = PurpleInterpreter.interpret(loadPurpleData(config), protect, driverGenes, chord);

@@ -3,8 +3,10 @@ package com.hartwig.hmftools.orange.algo.linx;
 import java.util.List;
 
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 
 import org.apache.logging.log4j.LogManager;
@@ -20,10 +22,14 @@ public final class LinxInterpreter {
 
     @NotNull
     public static LinxInterpretedData interpret(@NotNull LinxData linx, @NotNull List<ProtectEvidence> evidences,
-            @NotNull List<DriverGene> driverGenes) {
+            @NotNull List<DriverGene> driverGenes, @NotNull KnownFusionCache knownFusionCache) {
         List<LinxFusion> additionalSuspectFusions =
                 FusionSelector.selectInterestingUnreportedFusions(linx.allFusions(), evidences, driverGenes);
         LOGGER.info(" Found an additional {} suspect fusions that are potentially interesting", additionalSuspectFusions.size());
+
+        List<LinxBreakend> additionalSuspectBreakends = BreakendSelector.selectInterestingUnreportedBreakends(linx.allBreakends(),
+                linx.reportableFusions(), knownFusionCache);
+        LOGGER.info(" Found an additional {} suspect breakends that are potentially interesting", additionalSuspectBreakends.size());
 
         return ImmutableLinxInterpretedData.builder()
                 .allFusions(linx.allFusions())
@@ -31,6 +37,7 @@ public final class LinxInterpreter {
                 .additionalSuspectFusions(additionalSuspectFusions)
                 .allBreakends(linx.allBreakends())
                 .reportableGeneDisruptions(linx.reportableGeneDisruptions())
+                .additionalSuspectBreakends(additionalSuspectBreakends)
                 .homozygousDisruptions(linx.homozygousDisruptions())
                 .allGermlineDisruptions(linx.allGermlineDisruptions())
                 .reportableGermlineDisruptions(linx.reportableGermlineDisruptions())

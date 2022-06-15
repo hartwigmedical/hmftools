@@ -15,8 +15,8 @@ final class BreakendSelector {
     }
 
     @NotNull
-    public List<LinxBreakend> selectInterestingUnreportedBreakends(@NotNull List<LinxBreakend> allBreakends,
-            @NotNull List<LinxFusion> reportedFusions, @NotNull KnownFusionCache knownFusionCache) {
+    public static List<LinxBreakend> selectInterestingUnreportedBreakends(@NotNull List<LinxBreakend> allBreakends,
+            @NotNull List<LinxFusion> reportableFusions, @NotNull KnownFusionCache knownFusionCache) {
         List<LinxBreakend> interestingUnreportedBreakends = Lists.newArrayList();
         for (LinxBreakend breakend : allBreakends) {
             if (!breakend.reportedDisruption() && breakend.disruptive()) {
@@ -31,6 +31,7 @@ final class BreakendSelector {
     }
 
     private static boolean isBreakInPromiscuousExonRange(@NotNull KnownFusionCache knownFusionCache, @NotNull LinxBreakend breakend) {
+//        knownFusionCache.getDataByType(KnownFusionType.PROMISCUOUS_3)
         return false;
     }
 }

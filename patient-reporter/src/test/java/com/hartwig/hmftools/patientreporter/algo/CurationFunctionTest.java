@@ -300,7 +300,6 @@ public class CurationFunctionTest {
                 .junctionCopyNumber(2.012)
                 .undisruptedCopyNumber(0.0)
                 .firstAffectedExon(5)
-                .svId(1)
                 .clusterId(2)
                 .transcriptId(Strings.EMPTY);
     }
