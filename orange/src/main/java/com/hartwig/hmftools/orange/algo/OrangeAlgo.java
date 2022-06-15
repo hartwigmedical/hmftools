@@ -52,7 +52,10 @@ import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.OrangeRNAConfig;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
+import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
+import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
+import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableObservation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSample;
@@ -131,8 +134,8 @@ public class OrangeAlgo {
 
     @NotNull
     public OrangeReport run(@NotNull OrangeConfig config) throws IOException {
-        PurpleData purple = loadPurpleData(config);
-        LinxData linx = loadLinxData(config);
+        List<ProtectEvidence> protect = loadProtectData(config);
+        LinxInterpretedData linx = LinxInterpreter.interpret(loadLinxData(config), protect, driverGenes);
 
         IsofoxData isofox = loadIsofoxData(config);
 
@@ -141,8 +144,7 @@ public class OrangeAlgo {
             isofoxInterpreted = IsofoxInterpreter.interpret(isofox, linx, driverGenes, knownFusionCache);
         }
 
-        List<ProtectEvidence> protect = loadProtectData(config);
-
+        PurpleInterpretedData purple = PurpleInterpreter.interpret(loadPurpleData(config));
         return ImmutableOrangeReport.builder()
                 .sampleId(config.tumorSampleId())
                 .reportDate(LocalDate.now())
@@ -154,7 +156,7 @@ public class OrangeAlgo {
                 .tumorSample(loadSampleData(config, true))
                 .germlineMVLHPerGene(loadGermlineMVLHPerGene(config))
                 .purple(purple)
-                .linx(LinxInterpreter.interpret(linx, protect, driverGenes))
+                .linx(linx)
                 .isofox(isofoxInterpreted)
                 .lilac(loadLilacData(config))
                 .virusInterpreter(loadVirusInterpreterData(config))
@@ -338,11 +340,14 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    private Map<PercentileType, Evaluation> evaluateCohortPercentiles(@NotNull OrangeConfig config, @NotNull PurpleData purple) {
+    private Map<PercentileType, Evaluation> evaluateCohortPercentiles(@NotNull OrangeConfig config, @NotNull PurpleInterpretedData purple) {
         PercentileType type = PercentileType.SV_TMB;
 
-        Observation svTmbObservation =
-                ImmutableObservation.builder().sample(createSample(config)).type(type).value(purple.svTumorMutationalBurden()).build();
+        Observation svTmbObservation = ImmutableObservation.builder()
+                .sample(createSample(config))
+                .type(type)
+                .value(purple.characteristics().svTumorMutationalBurden())
+                .build();
 
         LOGGER.info("Determining SV TMB percentile for value {}", svTmbObservation.value());
         Map<PercentileType, Evaluation> evaluations = Maps.newHashMap();

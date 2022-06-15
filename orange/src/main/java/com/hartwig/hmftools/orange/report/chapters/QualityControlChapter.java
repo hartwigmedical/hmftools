@@ -69,11 +69,11 @@ public class QualityControlChapter implements ReportChapter {
 
         table.addCell(Cells.createContent(purpleQCString()));
         table.addCell(Cells.createContent(report.refGenomeVersion().toString()));
-        table.addCell(Cells.createContent(report.purple().fittedPurityMethod().toString()));
-        table.addCell(Cells.createContent(String.valueOf(report.purple().qc().amberMeanDepth())));
-        table.addCell(Cells.createContent(PERCENTAGE_FORMAT.format(report.purple().qc().contamination() * 100)));
-        table.addCell(Cells.createContent(String.valueOf(report.purple().qc().unsupportedCopyNumberSegments())));
-        table.addCell(Cells.createContent(String.valueOf(report.purple().qc().deletedGenes())));
+        table.addCell(Cells.createContent(report.purple().fit().fittedPurityMethod().toString()));
+        table.addCell(Cells.createContent(String.valueOf(report.purple().fit().qc().amberMeanDepth())));
+        table.addCell(Cells.createContent(PERCENTAGE_FORMAT.format(report.purple().fit().qc().contamination() * 100)));
+        table.addCell(Cells.createContent(String.valueOf(report.purple().fit().qc().unsupportedCopyNumberSegments())));
+        table.addCell(Cells.createContent(String.valueOf(report.purple().fit().qc().deletedGenes())));
 
         document.add(Tables.createWrapping(table));
     }
@@ -81,7 +81,7 @@ public class QualityControlChapter implements ReportChapter {
     @NotNull
     private String purpleQCString() {
         StringJoiner joiner = new StringJoiner(", ");
-        for (PurpleQCStatus status : report.purple().qc().status()) {
+        for (PurpleQCStatus status : report.purple().fit().qc().status()) {
             joiner.add(status.toString());
         }
         return joiner.toString();

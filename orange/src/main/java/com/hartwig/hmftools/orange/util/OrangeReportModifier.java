@@ -5,14 +5,14 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.purple.ImmutablePurpleData;
-import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.isofox.ImmutableIsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.ImmutableLinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
+import com.hartwig.hmftools.orange.algo.purple.ImmutablePurpleInterpretedData;
+import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -44,17 +44,17 @@ public final class OrangeReportModifier {
     }
 
     @NotNull
-    private static PurpleData limitPurpleDataToOne(@NotNull PurpleData purple) {
-        return ImmutablePurpleData.builder().from(purple)
+    private static PurpleInterpretedData limitPurpleDataToOne(@NotNull PurpleInterpretedData purple) {
+        return ImmutablePurpleInterpretedData.builder().from(purple)
+                .allSomaticVariants(max1(purple.allSomaticVariants()))
                 .reportableSomaticVariants(max1(purple.reportableSomaticVariants()))
-                .unreportedSomaticVariants(max1(purple.unreportedSomaticVariants()))
+                .allGermlineVariants(max1(purple.allGermlineVariants()))
                 .reportableGermlineVariants(max1(purple.reportableGermlineVariants()))
-                .unreportedGermlineVariants(max1(purple.unreportedGermlineVariants()))
+                .allSomaticGeneCopyNumbers(max1(purple.allSomaticGeneCopyNumbers()))
+                .allSomaticGainsLosses(max1(purple.allSomaticGainsLosses()))
                 .reportableSomaticGainsLosses(max1(purple.reportableSomaticGainsLosses()))
-                .unreportedSomaticGainsLosses(max1(purple.unreportedSomaticGainsLosses()))
+                .allGermlineDeletions(max1(purple.allGermlineDeletions()))
                 .reportableGermlineDeletions(max1(purple.reportableGermlineDeletions()))
-                .unreportedGermlineDeletions(max1(purple.unreportedGermlineDeletions()))
-                .allGeneCopyNumbers(max1(purple.allGeneCopyNumbers()))
                 .copyNumberPerChromosome(max1(purple.copyNumberPerChromosome()))
                 .build();
     }

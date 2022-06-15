@@ -83,7 +83,7 @@ public class SomaticFindingsChapter implements ReportChapter {
         String titleDrivers = "Driver variants (" + reportableVariants.size() + ")";
         document.add(SomaticVariantTable.build(titleDrivers, contentWidth(), reportableVariants));
 
-        List<ReportableVariant> nonDriverVariants = SomaticVariantSelector.selectNonDrivers(report.purple().unreportedSomaticVariants(),
+        List<ReportableVariant> nonDriverVariants = SomaticVariantSelector.selectNonDrivers(report.purple().allSomaticVariants(),
                 report.purple().reportableSomaticVariants(),
                 report.protect(),
                 report.driverGenes());
@@ -110,11 +110,11 @@ public class SomaticFindingsChapter implements ReportChapter {
                 report.purple().reportableSomaticGainsLosses(),
                 report.isofox()));
 
-        List<GainLoss> gains = CopyNumberSelector.selectNonDriverGains(report.purple().unreportedSomaticGainsLosses());
+        List<GainLoss> gains = CopyNumberSelector.selectNonDriverGains(report.purple().allSomaticGainsLosses());
         String titleGains = "Other regions with amps (" + gains.size() + ")";
         document.add(GeneCopyNumberTable.build(titleGains, contentWidth(), max10(gains), report.isofox()));
 
-        List<GainLoss> losses = CopyNumberSelector.selectNonDriverLosses(report.purple().unreportedSomaticGainsLosses(),
+        List<GainLoss> losses = CopyNumberSelector.selectNonDriverLosses(report.purple().allSomaticGainsLosses(),
                 report.purple().reportableSomaticGainsLosses());
         String titleLosses = "Regions with deletions in genes in other autosomal regions (" + losses.size() + ")";
         document.add(GeneCopyNumberTable.build(titleLosses, contentWidth(), max10(losses), report.isofox()));
@@ -151,8 +151,8 @@ public class SomaticFindingsChapter implements ReportChapter {
 
     private void addLossOfHeterozygosity(@NotNull Document document) {
         List<GeneCopyNumber> reportableLOHGenes =
-                LossOfHeterozygositySelector.selectHRDOrMSIGenesWithLOH(report.purple().allGeneCopyNumbers(),
-                        report.purple().microsatelliteStatus(),
+                LossOfHeterozygositySelector.selectHRDOrMSIGenesWithLOH(report.purple().allSomaticGeneCopyNumbers(),
+                        report.purple().characteristics().microsatelliteStatus(),
                         report.chord().hrStatus());
         String title = "Potentially interesting LOH events in case of MSI or HRD (" + reportableLOHGenes.size() + ")";
         document.add(LossOfHeterozygosityTable.build(title, contentWidth(), reportableLOHGenes));
