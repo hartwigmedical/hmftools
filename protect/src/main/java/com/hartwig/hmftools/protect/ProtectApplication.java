@@ -65,7 +65,7 @@ public class ProtectApplication {
 
         List<DriverGene> driverGenes = readDriverGenesFromFile(config.driverGeneTsv());
 
-        ProtectAlgo algo = ProtectAlgo.build(actionableEvents, patientTumorDoids, driverGenes);
+        ProtectAlgo algo = ProtectAlgo.build(actionableEvents, patientTumorDoids, driverGenes, doidParentModel);
         List<ProtectEvidence> evidences = algo.run(config);
 
         String filename = ProtectEvidenceFile.generateFilename(config.outputDir(), config.tumorSampleId());

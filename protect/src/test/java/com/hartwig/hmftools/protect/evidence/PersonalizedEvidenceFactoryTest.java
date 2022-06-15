@@ -63,16 +63,16 @@ public class PersonalizedEvidenceFactoryTest {
     public void canDetermineBlacklistedEvidence() {
         PersonalizedEvidenceFactory factoryBlacklisted = EvidenceTestFactory.create("10283");
         ActionableHotspot hotspotBlacklisted = create("Cancer", "162", "Prostate", "10283");
-        assertTrue(factoryBlacklisted.determineBlacklistedEvidence(hotspotBlacklisted.blacklistCancerTypes(), "treatment"));
+        assertTrue(factoryBlacklisted.isBlacklisted(hotspotBlacklisted.blacklistCancerTypes(), "treatment"));
 
         PersonalizedEvidenceFactory factoryNotMatchWithBlacklisted = EvidenceTestFactory.create("0060081");
         ActionableHotspot hotspotNotMatchWithBlacklisted = create("Cancer", "162", "Prostate", "10283");
-        assertFalse(factoryNotMatchWithBlacklisted.determineBlacklistedEvidence(hotspotNotMatchWithBlacklisted.blacklistCancerTypes(),
+        assertFalse(factoryNotMatchWithBlacklisted.isBlacklisted(hotspotNotMatchWithBlacklisted.blacklistCancerTypes(),
                 "treatment"));
 
         PersonalizedEvidenceFactory factoryNotBlacklisted = EvidenceTestFactory.create("10383");
         ActionableHotspot hotspotNotBlacklisted = create("Cancer", "162");
-        assertFalse(factoryNotBlacklisted.determineBlacklistedEvidence(hotspotNotBlacklisted.blacklistCancerTypes(), "treatment"));
+        assertFalse(factoryNotBlacklisted.isBlacklisted(hotspotNotBlacklisted.blacklistCancerTypes(), "treatment"));
     }
 
     @Test
