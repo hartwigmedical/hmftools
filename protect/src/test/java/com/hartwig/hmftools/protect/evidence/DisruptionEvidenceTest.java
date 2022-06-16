@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.linx.ImmutableReportableHomozygousDisruption;
-import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.common.linx.HomozygousDisruption;
+import com.hartwig.hmftools.common.linx.ImmutableHomozygousDisruption;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.common.protect.ProtectSource;
@@ -51,9 +51,9 @@ public class DisruptionEvidenceTest {
         DisruptionEvidence disruptionEvidence =
                 new DisruptionEvidence(EvidenceTestFactory.create(), Lists.newArrayList(amp, inactivation, deletion));
 
-        ReportableHomozygousDisruption matchAmp = create(geneAmp);
-        ReportableHomozygousDisruption matchInact = create(geneInact);
-        ReportableHomozygousDisruption nonMatch = create("other gene");
+        HomozygousDisruption matchAmp = create(geneAmp);
+        HomozygousDisruption matchInact = create(geneInact);
+        HomozygousDisruption nonMatch = create("other gene");
 
         List<ProtectEvidence> evidences = disruptionEvidence.evidence(Lists.newArrayList(matchAmp, matchInact, nonMatch));
 
@@ -68,8 +68,8 @@ public class DisruptionEvidenceTest {
     }
 
     @NotNull
-    private static ReportableHomozygousDisruption create(@NotNull String gene) {
-        return ImmutableReportableHomozygousDisruption.builder()
+    private static HomozygousDisruption create(@NotNull String gene) {
+        return ImmutableHomozygousDisruption.builder()
                 .chromosome(Strings.EMPTY)
                 .chromosomeBand(Strings.EMPTY)
                 .gene(gene)

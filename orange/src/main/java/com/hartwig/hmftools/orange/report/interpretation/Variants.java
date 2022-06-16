@@ -35,10 +35,10 @@ public final class Variants {
     public static List<ReportableVariant> dedup(@NotNull List<ReportableVariant> variants) {
         List<ReportableVariant> filtered = Lists.newArrayList();
         for (ReportableVariant variant : variants) {
-            if (!(PHASED_EFFECTS.contains(variant.canonicalEffect()) && hasSameEffectWithHigherVCN(variants, variant))) {
-                filtered.add(variant);
-            } else {
+            if (PHASED_EFFECTS.contains(variant.canonicalEffect()) && hasSameEffectWithHigherVCN(variants, variant)) {
                 LOGGER.debug("Dedup'ing variant '{}'", variant);
+            } else {
+                filtered.add(variant);
             }
         }
         return filtered;
@@ -65,7 +65,7 @@ public final class Variants {
 
         boolean matchesMinAlleleCopyNumber = Doubles.equal(variantToMatch.alleleCopyNumber(), minAlleleCopyNumber);
         boolean matchesBestHgvsCodingImpact = variantToMatch.canonicalHgvsCodingImpact().equals(uniqueHgvsCodingImpact);
-        return (!(matchesMinAlleleCopyNumber && matchesBestHgvsCodingImpact));
+        return !(matchesMinAlleleCopyNumber && matchesBestHgvsCodingImpact);
     }
 
     @NotNull
@@ -147,19 +147,19 @@ public final class Variants {
 
     @NotNull
     public static String rnaDepthField(@NotNull ReportableVariant variant) {
-        Integer alleleReadCount = variant.rnaAlleleReadCount();
-        Integer totalReadCount = variant.rnaTotalReadCount();
+        Integer rnaAlleleReadCount = variant.rnaAlleleReadCount();
+        Integer rnaTotalReadCount = variant.rnaTotalReadCount();
 
-        if (alleleReadCount == null || totalReadCount == null) {
+        if (rnaAlleleReadCount == null || rnaTotalReadCount == null) {
             return ReportResources.NOT_AVAILABLE;
         }
 
         String vafAddon = Strings.EMPTY;
-        if (totalReadCount > 0) {
-            double vaf = alleleReadCount / (double) totalReadCount;
+        if (rnaTotalReadCount > 0) {
+            double vaf = rnaAlleleReadCount / (double) rnaTotalReadCount;
             vafAddon = " (" + PERCENTAGE_FORMAT.format(vaf * 100) + ")";
         }
 
-        return alleleReadCount + "/" + totalReadCount + vafAddon;
+        return rnaAlleleReadCount + "/" + rnaTotalReadCount + vafAddon;
     }
 }

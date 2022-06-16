@@ -34,13 +34,15 @@ public class PanelReporter {
     @NotNull
     public PanelReport run(@NotNull SampleMetadata sampleMetadata, @Nullable String comments, boolean correctedReport,
             boolean correctedReportExtern, @NotNull String expectedPipelineVersion, boolean overridePipelineVersion,
-            @Nullable String pipelineVersionFile, boolean requirePipelineVersionFile, @NotNull String panelVCFname) throws IOException {
+            @Nullable String pipelineVersionFile, boolean requirePipelineVersionFile, @NotNull String panelVCFname,
+            boolean allowDefaultCohortConfig) throws IOException {
 
         String patientId = reportData.limsModel().patientId(sampleMetadata.tumorSampleBarcode());
 
         PatientPrimaryTumor patientPrimaryTumor =
                 PatientPrimaryTumorFunctions.findPrimaryTumorForPatient(reportData.patientPrimaryTumors(), patientId);
-        SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientPrimaryTumor);
+        SampleReport sampleReport =
+                SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientPrimaryTumor, allowDefaultCohortConfig);
 
         String pipelineVersion = null;
         if (requirePipelineVersionFile) {

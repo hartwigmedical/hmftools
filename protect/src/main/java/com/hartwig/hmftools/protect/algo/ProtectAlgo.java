@@ -2,14 +2,15 @@ package com.hartwig.hmftools.protect.algo;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordDataLoader;
+import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.lilac.LilacData;
 import com.hartwig.hmftools.common.lilac.LilacDataLoader;
 import com.hartwig.hmftools.common.linx.LinxData;
@@ -61,8 +62,9 @@ public class ProtectAlgo {
 
     @NotNull
     public static ProtectAlgo build(@NotNull ActionableEvents actionableEvents, @NotNull Set<String> patientTumorDoids,
-            @NotNull Map<String, DriverGene> driverGenes) {
-        PersonalizedEvidenceFactory personalizedEvidenceFactory = new PersonalizedEvidenceFactory(patientTumorDoids);
+            @NotNull List<DriverGene> driverGenes, @NotNull final KnownFusionCache fusionCache,
+            @NotNull final DoidParents doidParentModel) {
+        PersonalizedEvidenceFactory personalizedEvidenceFactory = new PersonalizedEvidenceFactory(patientTumorDoids, doidParentModel);
 
         VariantEvidence variantEvidenceFactory = new VariantEvidence(personalizedEvidenceFactory,
                 actionableEvents.hotspots(),
@@ -71,7 +73,7 @@ public class ProtectAlgo {
         CopyNumberEvidence copyNumberEvidenceFactory = new CopyNumberEvidence(personalizedEvidenceFactory, actionableEvents.genes());
         DisruptionEvidence disruptionEvidenceFactory = new DisruptionEvidence(personalizedEvidenceFactory, actionableEvents.genes());
         FusionEvidence fusionEvidenceFactory =
-                new FusionEvidence(personalizedEvidenceFactory, actionableEvents.genes(), actionableEvents.fusions());
+                new FusionEvidence(personalizedEvidenceFactory, actionableEvents.genes(), actionableEvents.fusions(), fusionCache);
         PurpleSignatureEvidence purpleSignatureEvidenceFactory =
                 new PurpleSignatureEvidence(personalizedEvidenceFactory, actionableEvents.characteristics());
         VirusEvidence virusEvidenceFactory = new VirusEvidence(personalizedEvidenceFactory, actionableEvents.characteristics());
@@ -155,10 +157,10 @@ public class ProtectAlgo {
         LOGGER.info("Evidence extraction started");
         List<ProtectEvidence> variantEvidence = variantEvidenceFactory.evidence(purpleData.reportableGermlineVariants(),
                 purpleData.reportableSomaticVariants(),
-                purpleData.unreportedSomaticVariants());
+                purpleData.allSomaticVariants());
         printExtraction("somatic and germline variants", variantEvidence);
         List<ProtectEvidence> copyNumberEvidence =
-                copyNumberEvidenceFactory.evidence(purpleData.reportableSomaticGainsLosses(), purpleData.unreportedSomaticGainsLosses());
+                copyNumberEvidenceFactory.evidence(purpleData.reportableSomaticGainsLosses(), purpleData.allSomaticGainsLosses());
         printExtraction("amplifications and deletions", copyNumberEvidence);
         List<ProtectEvidence> disruptionEvidence = disruptionEvidenceFactory.evidence(linxData.homozygousDisruptions());
         printExtraction("homozygous disruptions", disruptionEvidence);
@@ -176,7 +178,9 @@ public class ProtectAlgo {
                 purpleData.reportableSomaticVariants(),
                 purpleData.reportableSomaticGainsLosses(),
                 linxData.reportableFusions(),
-                linxData.homozygousDisruptions());
+                linxData.homozygousDisruptions(),
+                linxData.reportableGeneDisruptions(),
+                purpleData.qc().status());
         printExtraction("wild-type", wildTypeEvidence);
 
         List<ProtectEvidence> result = Lists.newArrayList();

@@ -160,11 +160,11 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
     private static Paragraph generateHMFAndPathologySampleIDParagraph(@NotNull SampleReport sampleReport) {
         if (sampleReport.hospitalPathologySampleId() != null && sampleReport.cohort().requireHospitalPAId()) {
             return createContentParagraphTwice("The HMF sample ID is: ",
-                    sampleReport.tumorSampleId(),
+                    sampleReport.sampleNameForReport(),
                     " and the pathology tissue ID is: ",
                     sampleReport.hospitalPathologySampleId());
         } else {
-            return createContentParagraph("The HMF sample ID is: ", sampleReport.tumorSampleId());
+            return createContentParagraph("The HMF sample ID is: ", sampleReport.sampleNameForReport());
         }
     }
 

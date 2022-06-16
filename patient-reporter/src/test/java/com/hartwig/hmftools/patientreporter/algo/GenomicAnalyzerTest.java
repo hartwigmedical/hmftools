@@ -36,8 +36,8 @@ public class GenomicAnalyzerTest {
         GenomicAnalyzer analyzer = new GenomicAnalyzer(testReportData.germlineReportingModel());
 
         PatientReporterConfig config = PatientReporterTestFactory.createTestReporterConfig();
-
-        assertNotNull(analyzer.run("sample", "fakeSampleBarcode", "reference", "fakeReferenceBarcode", config, LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION));
+        
+        assertNotNull(analyzer.run("sample", "reference", config, LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION));
     }
 
     @Test

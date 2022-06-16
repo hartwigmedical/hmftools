@@ -429,6 +429,7 @@ public class CFReportWriterTest {
                 .refSampleBarcode("FR12123488")
                 .tumorSampleId(sampleId)
                 .tumorSampleBarcode("FR12345678")
+                .sampleNameForReport(sampleId)
                 .build();
     }
 

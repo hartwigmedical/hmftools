@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.data;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.linx.ReportableGeneDisruption;
+import com.hartwig.hmftools.common.linx.GeneDisruption;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -13,7 +13,7 @@ public final class GeneDisruptions {
     }
 
     @NotNull
-    public static List<ReportableGeneDisruption> sort(@NotNull List<ReportableGeneDisruption> disruptions) {
+    public static List<GeneDisruption> sort(@NotNull List<GeneDisruption> disruptions) {
         return disruptions.stream().sorted((disruption1, disruption2) -> {
             String locationAndGene1 = GeneUtil.zeroPrefixed(disruption1.location()) + disruption1.gene();
             String locationAndGene2 = GeneUtil.zeroPrefixed(disruption2.location()) + disruption2.gene();

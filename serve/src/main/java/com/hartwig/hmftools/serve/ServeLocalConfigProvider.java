@@ -38,6 +38,7 @@ public final class ServeLocalConfigProvider {
             builder.viccJson("/data/resources/crunch/serve/vicc/all.json");
             builder.ckbDir("/data/resources/custom/ckb/latest");
             builder.ckbFilterTsv("/data/resources/crunch/serve/curation/ckb_filters.tsv");
+            builder.ckbDrugCurationTsv("/data/resources/crunch/serve/curation/ckb_drugs_class_curation.tsv");
             builder.iClusionTrialTsv("/data/resources/crunch/serve/iclusion/iclusion_trials_prod.tsv");
             builder.iClusionFilterTsv("/data/resources/crunch/serve/curation/iclusion_filters.tsv");
             builder.actinTrialTsv("/data/resources/crunch/serve/actin/actin_knowledgebase.tsv");
@@ -61,6 +62,7 @@ public final class ServeLocalConfigProvider {
             builder.viccJson(baseDir + "serve/static_sources/vicc/all.json");
             builder.ckbDir(baseDir + "serve/ckb");
             builder.ckbFilterTsv(baseDir + "serve/curation/ckb_filters.tsv");
+            builder.ckbDrugCurationTsv(baseDir + "serve/curation/ckb_drugs_class_curation.tsv");
             builder.iClusionTrialTsv(baseDir + "serve/iclusion/iclusion_trials_prod.tsv");
             builder.iClusionFilterTsv(baseDir + "serve/actin/iclusion_filter.tsv");
             builder.actinTrialTsv(baseDir + "serve/actin/actin_knowledgebase.tsv");

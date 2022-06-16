@@ -8,10 +8,10 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.linx.ImmutableReportableGeneDisruption;
-import com.hartwig.hmftools.common.linx.ImmutableReportableHomozygousDisruption;
-import com.hartwig.hmftools.common.linx.ReportableGeneDisruption;
-import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.common.linx.GeneDisruption;
+import com.hartwig.hmftools.common.linx.HomozygousDisruption;
+import com.hartwig.hmftools.common.linx.ImmutableGeneDisruption;
+import com.hartwig.hmftools.common.linx.ImmutableHomozygousDisruption;
 import com.hartwig.hmftools.common.protect.ImmutableProtectSource;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
@@ -146,8 +146,8 @@ public class CurationFunctionTest {
 
     @Test
     public void canCurateGeneDisruptions() {
-        List<ReportableGeneDisruption> disruptions = geneDisruption();
-        List<ReportableGeneDisruption> curated = CurationFunction.curateGeneDisruptions(disruptions);
+        List<GeneDisruption> disruptions = geneDisruption();
+        List<GeneDisruption> curated = CurationFunction.curateGeneDisruptions(disruptions);
 
         assertEquals(curated.size(), 3);
         assertEquals(findByGeneGDisruption(curated, "NRAS", true), "NRAS");
@@ -156,8 +156,8 @@ public class CurationFunctionTest {
     }
 
     @NotNull
-    private static String findByGeneGDisruption(List<ReportableGeneDisruption> curate, @NotNull String gene, boolean isCanonical) {
-        for (ReportableGeneDisruption disruption : curate) {
+    private static String findByGeneGDisruption(List<GeneDisruption> curate, @NotNull String gene, boolean isCanonical) {
+        for (GeneDisruption disruption : curate) {
             if (disruption.gene().equals(gene) && disruption.isCanonical() == isCanonical) {
                 return disruption.gene();
             }
@@ -167,8 +167,8 @@ public class CurationFunctionTest {
 
     @Test
     public void canCurateHomozygousDisruptions() {
-        List<ReportableHomozygousDisruption> homozygousDisruptions = homozygousDisruptions();
-        List<ReportableHomozygousDisruption> curated = CurationFunction.curateHomozygousDisruptions(homozygousDisruptions);
+        List<HomozygousDisruption> homozygousDisruptions = homozygousDisruptions();
+        List<HomozygousDisruption> curated = CurationFunction.curateHomozygousDisruptions(homozygousDisruptions);
 
         assertEquals(curated.size(), 3);
         assertEquals(findByGeneHomozygousDisruption(curated, "NRAS", true), "NRAS");
@@ -177,9 +177,9 @@ public class CurationFunctionTest {
     }
 
     @NotNull
-    private static String findByGeneHomozygousDisruption(List<ReportableHomozygousDisruption> curate, @NotNull String gene,
+    private static String findByGeneHomozygousDisruption(List<HomozygousDisruption> curate, @NotNull String gene,
             boolean isCanonical) {
-        for (ReportableHomozygousDisruption disruption : curate) {
+        for (HomozygousDisruption disruption : curate) {
             if (disruption.gene().equals(gene) && disruption.isCanonical() == isCanonical) {
                 return disruption.gene();
             }
@@ -283,16 +283,16 @@ public class CurationFunctionTest {
     }
 
     @NotNull
-    public List<ReportableGeneDisruption> geneDisruption() {
-        ReportableGeneDisruption disruption1 = createTestReportableGeneDisruptionBuilder().gene("NRAS").isCanonical(true).build();
-        ReportableGeneDisruption disruption2 = createTestReportableGeneDisruptionBuilder().gene("CDKN2A").isCanonical(true).build();
-        ReportableGeneDisruption disruption3 = createTestReportableGeneDisruptionBuilder().gene("CDKN2A").isCanonical(false).build();
+    public List<GeneDisruption> geneDisruption() {
+        GeneDisruption disruption1 = createTestReportableGeneDisruptionBuilder().gene("NRAS").isCanonical(true).build();
+        GeneDisruption disruption2 = createTestReportableGeneDisruptionBuilder().gene("CDKN2A").isCanonical(true).build();
+        GeneDisruption disruption3 = createTestReportableGeneDisruptionBuilder().gene("CDKN2A").isCanonical(false).build();
         return Lists.newArrayList(disruption1, disruption2, disruption3);
     }
 
     @NotNull
-    private static ImmutableReportableGeneDisruption.Builder createTestReportableGeneDisruptionBuilder() {
-        return ImmutableReportableGeneDisruption.builder()
+    private static ImmutableGeneDisruption.Builder createTestReportableGeneDisruptionBuilder() {
+        return ImmutableGeneDisruption.builder()
                 .location(Strings.EMPTY)
                 .gene(Strings.EMPTY)
                 .range(Strings.EMPTY)
@@ -300,25 +300,24 @@ public class CurationFunctionTest {
                 .junctionCopyNumber(2.012)
                 .undisruptedCopyNumber(0.0)
                 .firstAffectedExon(5)
-                .svId(1)
                 .clusterId(2)
                 .transcriptId(Strings.EMPTY);
     }
 
     @NotNull
-    private static List<ReportableHomozygousDisruption> homozygousDisruptions() {
-        ReportableHomozygousDisruption homozygousDisruption1 =
+    private static List<HomozygousDisruption> homozygousDisruptions() {
+        HomozygousDisruption homozygousDisruption1 =
                 createTestReportableHomozygousDisruptionBuilder().gene("NRAS").isCanonical(true).build();
-        ReportableHomozygousDisruption homozygousDisruption2 =
+        HomozygousDisruption homozygousDisruption2 =
                 createTestReportableHomozygousDisruptionBuilder().gene("CDKN2A").isCanonical(true).build();
-        ReportableHomozygousDisruption homozygousDisruption3 =
+        HomozygousDisruption homozygousDisruption3 =
                 createTestReportableHomozygousDisruptionBuilder().gene("CDKN2A").isCanonical(false).build();
         return Lists.newArrayList(homozygousDisruption1, homozygousDisruption2, homozygousDisruption3);
     }
 
     @NotNull
-    private static ImmutableReportableHomozygousDisruption.Builder createTestReportableHomozygousDisruptionBuilder() {
-        return ImmutableReportableHomozygousDisruption.builder()
+    private static ImmutableHomozygousDisruption.Builder createTestReportableHomozygousDisruptionBuilder() {
+        return ImmutableHomozygousDisruption.builder()
                 .chromosome(Strings.EMPTY)
                 .chromosomeBand(Strings.EMPTY)
                 .gene(Strings.EMPTY)

@@ -56,7 +56,7 @@ public final class SidePanel {
         int sideTextIndex = -1;
         Canvas cv = new Canvas(canvas, page.getDocument(), page.getPageSize());
 
-        cv.add(createSidePanelDiv(++sideTextIndex, "HMF sample id", sampleReport.tumorSampleId()));
+        cv.add(createSidePanelDiv(++sideTextIndex, "HMF sample id", sampleReport.sampleNameForReport()));
         cv.add(createSidePanelDiv(++sideTextIndex, "Report date", reportDate));
 
         LimsCohortConfig cohort = sampleReport.cohort();

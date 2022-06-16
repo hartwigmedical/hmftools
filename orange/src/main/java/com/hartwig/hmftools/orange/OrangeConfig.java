@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.orange;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
@@ -34,6 +36,7 @@ public interface OrangeConfig {
     String TUMOR_SAMPLE_ID = "tumor_sample_id";
     String REFERENCE_SAMPLE_ID = "reference_sample_id";
     String PRIMARY_TUMOR_DOIDS = "primary_tumor_doids";
+    String EXPERIMENT_DATE = "experiment_date";
     String REF_GENOME_VERSION = "ref_genome_version";
     String OUTPUT_DIRECTORY = "output_dir";
 
@@ -93,6 +96,7 @@ public interface OrangeConfig {
         options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which ORANGE will run.");
         options.addOption(REFERENCE_SAMPLE_ID, true, "(Optional) The reference sample of the tumor sample for which ORANGE will run.");
         options.addOption(PRIMARY_TUMOR_DOIDS, true, "A semicolon-separated list of DOIDs representing the primary tumor of patient.");
+        options.addOption(EXPERIMENT_DATE, true, "Optional, if provided represents the experiment date in YYMMDD format ");
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version used in analysis (37 or 38)");
         options.addOption(OUTPUT_DIRECTORY, true, "Path to where the ORANGE output data will be written to.");
 
@@ -163,6 +167,9 @@ public interface OrangeConfig {
 
     @NotNull
     Set<String> primaryTumorDoids();
+
+    @NotNull
+    LocalDate experimentDate();
 
     @NotNull
     RefGenomeVersion refGenomeVersion();
@@ -317,12 +324,20 @@ public interface OrangeConfig {
             LOGGER.debug("Ref sample configured as {}", refSampleId);
         }
 
+        LocalDate experimentDate;
+        if (cmd.hasOption(EXPERIMENT_DATE)) {
+            experimentDate = LocalDate.parse(cmd.getOptionValue(EXPERIMENT_DATE), DateTimeFormatter.ofPattern("YYMMDD"));
+        } else {
+            experimentDate = LocalDate.now();
+        }
+
         return ImmutableOrangeConfig.builder()
                 .tumorSampleId(Config.nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
                 .referenceSampleId(refSampleId)
                 .rnaConfig(OrangeRNAConfig.createConfig(cmd))
                 .reportConfig(report)
                 .primaryTumorDoids(toStringSet(Config.nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
+                .experimentDate(experimentDate)
                 .refGenomeVersion(RefGenomeVersion.from(Config.nonOptionalValue(cmd, REF_GENOME_VERSION)))
                 .outputDir(Config.outputDir(cmd, OUTPUT_DIRECTORY))
                 .doidJsonFile(Config.nonOptionalFile(cmd, DOID_JSON))

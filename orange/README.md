@@ -128,15 +128,32 @@ investigate potential causes for QC failure.
 
 ### Version History and Download Links
 - Upcoming
-  - Variants with a phased inframe canonical effect are dedup'ed prior to reporting.
-  - Unreported variants with canonical synonymous impact but reportable worst impact are added as potentially interesting variants.
-  - Unreported variants in splice regions of genes for which we report splice variants are added as potentially interesting variants.  
-  - Unreported variants near hotspots are added as potentially interesting.
-  - Unreported fusions of all oncogenes are added as potentially interesting fusions.
-  - Average chromosome arm copy numbers are calculated and stored in ORANGE JSON:
-     - New input: `purple_somatic_copy_number_tsv`
-  - Gene disruptions are annotated with sv and cluster IDs
-     - New input: `linx_structural_variant_tsv` 
+  - Classify each driver gene as wild-type in case:
+    1. Purple fit is reliable
+    1. No reportable events have been found in the gene. 
+  - Various additions and improvements to selection of potentially interesting events:
+    - Unreported variants with canonical synonymous impact but reportable worst impact are added as potentially interesting variants.
+    - Unreported variants in splice regions of genes for which we report splice variants are added as potentially interesting variants.  
+    - Unreported variants near hotspots are added as potentially interesting.
+    - Unreported fusions of all oncogenes are added as potentially interesting fusions.
+    - Driver genes that are nearly amplified (2.5 < minRelCN < 3) are added as potentially interesting gains.
+    - Non-driver amplifications and losses are preferentially selected for being suspicious in case they have associated evidence.
+    - Non-driver losses that have associated evidence but also a reported loss in the same band are retained as suspicious loss.
+    - Breakends that are disruptive inside a pathogenic exon range of a promiscuous fusion gene but did not lead to fusions are added as potentially interesting disruptions.
+  - Various new annotations of existing tables: 
+    - Gene disruptions are annotated by their cluster ID to be able to determine whether multiple events happened in same event.
+        - New input: `linx_structural_variant_tsv`
+    - Expression entries in the RNA chapter are annotated with their tumor CN
+  - Clinical evidence is now grouped by event rather than treatment.  
+  - Various minor and technical improvements:
+    - Add optional parameter `experiment_date` which, when provided in YYMMDD format, sets the experiment date. If param is not provided, the current date is used (as before).
+    - Variants with identical phased inframe canonical effect are dedup'ed prior to reporting.
+    - Treatment counts on the front page are retrieved from general evidence only and no longer include trials.
+    - Average chromosome arm copy numbers are calculated and stored in ORANGE JSON:
+        - New input: `purple_somatic_copy_number_tsv`
+    - All potentially interesting sections are now also written to the JSON output.
+    - The structural variant driver table has been removed as all interesting events where duplicated with events in other sections
+    - Add optional parameter `limit_json_output`, which if set limits the size of the JSON output to facilitate manual inspection of JSON datamodel.
 - [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.9)
   - Proper support for RNA
     - Add (mandatory) `driver_gene_panel_tsv` and `known_fusion_file` inputs to support interpretation of isofox results

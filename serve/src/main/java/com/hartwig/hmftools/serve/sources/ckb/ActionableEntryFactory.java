@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.serve.sources.ckb;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -17,6 +18,7 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.cancertype.CancerType;
 import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
+import com.hartwig.hmftools.serve.curation.DrugClasses;
 import com.hartwig.hmftools.serve.treatment.ImmutableTreatment;
 
 import org.apache.logging.log4j.LogManager;
@@ -64,7 +66,8 @@ class ActionableEntryFactory {
     }
 
     @NotNull
-    public static Set<ActionableEntry> toActionableEntries(@NotNull CkbEntry entry, @NotNull String sourceEvent) {
+    public static Set<ActionableEntry> toActionableEntries(@NotNull CkbEntry entry, @NotNull String sourceEvent,
+            @NotNull Map<String, DrugClasses> drugClassesCurations) {
         Set<ActionableEntry> actionableEntries = Sets.newHashSet();
         Set<String> drugClasses = Sets.newHashSet();
         for (Evidence evidence : evidencesWithUsableType(entry.evidences())) {
@@ -74,7 +77,20 @@ class ActionableEntryFactory {
 
             for (RelevantTreatmentApproaches relevantTreatmentApproaches : evidence.relevantTreatmentApproaches()) {
                 DrugClass drugClass = relevantTreatmentApproaches.drugClass();
-                drugClasses.add(drugClass == null ? Strings.EMPTY: drugClass.drugClass());
+
+                if (drugClass == null) {
+                    drugClasses.add(Strings.EMPTY);
+                } else {
+                    DrugClasses drugClassesMap = drugClassesCurations.get(drugClass.drugClass());
+                    if (drugClassesMap != null) {
+                        if (drugClass.drugClass().equals(drugClassesMap.curatedDrugClass())) {
+                            drugClasses.add(drugClassesMap.curatedDrugClass());
+                        } else {
+                            LOGGER.warn("Drug class '{}' isn't curated", drugClass.drugClass());
+                            drugClasses.add(Strings.EMPTY);
+                        }
+                    }
+                }
             }
 
             if (level != null && direction != null && doid != null) {
@@ -118,8 +134,7 @@ class ActionableEntryFactory {
                         .evidenceUrls(evidenceUrls)
                         .build());
             }
-        }
-        return actionableEntries;
+        } return actionableEntries;
     }
 
     @NotNull

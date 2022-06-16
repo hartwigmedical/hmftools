@@ -80,6 +80,8 @@ public interface PatientReporterConfig {
     String CORRECTED_REPORT_EXTERN = "corrected_report_extern";
     String LOG_DEBUG = "log_debug";
     String ONLY_CREATE_PDF = "only_create_pdf";
+    String SAMPLE_NAME_FOR_REPORT = "sample_name_for_report";
+    String ALLOW_DEFAULT_COHORT_CONFIG = "allow_default_cohort_config";
 
     // parameters for pipeline version
     String REQUIRE_PIPELINE_VERSION_FILE = "require_pipeline_version_file";
@@ -140,6 +142,8 @@ public interface PatientReporterConfig {
 
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
         options.addOption(ONLY_CREATE_PDF, false, "If provided, just the PDF will be generated and no additional data will be updated.");
+        options.addOption(SAMPLE_NAME_FOR_REPORT, true, String.format("Sample name used for printing on the report and for report file name. By default use value of %s.", TUMOR_SAMPLE_ID));
+        options.addOption(ALLOW_DEFAULT_COHORT_CONFIG, false, "If provided, use a default cohort config if for this sample no cohort is configured in LIMS.");
 
         options.addOption(REQUIRE_PIPELINE_VERSION_FILE, false, "Boolean for determine pipeline version file is requierde");
         options.addOption(PIPELINE_VERSION_FILE, true, "Path towards the pipeline version (optional)");
@@ -263,6 +267,11 @@ public interface PatientReporterConfig {
     boolean isCorrectedReportExtern();
 
     boolean onlyCreatePDF();
+
+    @Nullable
+    String sampleNameForReport();
+
+    boolean allowDefaultCohortConfig();
 
     boolean requirePipelineVersionFile();
 
@@ -395,6 +404,8 @@ public interface PatientReporterConfig {
                 .isCorrectedReport(cmd.hasOption(CORRECTED_REPORT))
                 .isCorrectedReportExtern(cmd.hasOption(CORRECTED_REPORT_EXTERN))
                 .onlyCreatePDF(cmd.hasOption(ONLY_CREATE_PDF))
+                .sampleNameForReport(cmd.getOptionValue(SAMPLE_NAME_FOR_REPORT))
+                .allowDefaultCohortConfig(cmd.hasOption(ALLOW_DEFAULT_COHORT_CONFIG))
                 .requirePipelineVersionFile(requirePipelineVersion)
                 .pipelineVersionFile(pipelineVersion)
                 .expectedPipelineVersion(cmd.getOptionValue(EXPECTED_PIPELINE_VERSION))

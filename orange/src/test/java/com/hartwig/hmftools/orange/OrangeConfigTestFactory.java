@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange;
 
+import java.time.LocalDate;
+
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
@@ -78,6 +80,7 @@ public final class OrangeConfigTestFactory {
                 .rnaConfig(null)
                 .reportConfig(reportConfig)
                 .addPrimaryTumorDoids(MELANOMA_DOID)
+                .experimentDate(LocalDate.now())
                 .refGenomeVersion(RefGenomeVersion.V37)
                 .outputDir(Strings.EMPTY)
                 .doidJsonFile(DOID_JSON)

@@ -45,10 +45,8 @@ public class GenomicAnalyzer {
     }
 
     @NotNull
-    public GenomicAnalysis run(@NotNull String tumorSampleId, @NotNull String tumorSampleBarcode, @Nullable String referenceSampleId,
-            @Nullable String referenceSampleBarcode, @NotNull PatientReporterConfig config,
+    public GenomicAnalysis run(@NotNull String tumorSampleId, @Nullable String referenceSampleId, @NotNull PatientReporterConfig config,
             @NotNull LimsGermlineReportingLevel germlineReportingLevel) throws IOException {
-        // TODO Handle alternate sampleIds differently (see also email from David Koetsier, 16th of May 2022.
         PurpleData purpleData = PurpleDataLoader.load(tumorSampleId,
                 referenceSampleId,
                 null,
@@ -106,7 +104,7 @@ public class GenomicAnalyzer {
                 .gainsAndLosses(purpleData.reportableSomaticGainsLosses())
                 .cnPerChromosome(purpleData.copyNumberPerChromosome())
                 .geneFusions(linxData.reportableFusions())
-                .geneDisruptions(linxData.geneDisruptions())
+                .geneDisruptions(linxData.reportableGeneDisruptions())
                 .homozygousDisruptions(linxData.homozygousDisruptions())
                 .reportableViruses(virusInterpreterData.reportableViruses())
                 .build();

@@ -35,6 +35,7 @@ public interface ServeConfig {
     String USE_CKB = "use_ckb";
     String CKB_DIR = "ckb_dir";
     String CKB_FILTER_TSV = "ckb_filter_tsv";
+    String CKB_DRUG_CURATION_TSV = "ckb_drug_curation_tsv";
     String USE_ACTIN = "use_actin";
     String ACTIN_TRIAL_TSV = "actin_trial_tsv";
     String ACTIN_FILTER_TSV = "actin_filter_tsv";
@@ -80,6 +81,7 @@ public interface ServeConfig {
         options.addOption(USE_CKB, false, "If provided, CKB FLEX will be used as a source in SERVE");
         options.addOption(CKB_DIR, true, "Path to the CKB FLEX json input dir");
         options.addOption(CKB_FILTER_TSV, true, "Path to the CKB filter tsv");
+        options.addOption(CKB_DRUG_CURATION_TSV, true, "Path to the CKB drug curation tsv");
         options.addOption(USE_ACTIN, false, "If provided, ACTIN will be used as a source in SERVE");
         options.addOption(ACTIN_TRIAL_TSV, true, "Path to the ACTIN input trial tsv");
         options.addOption(ACTIN_FILTER_TSV, true, "Path to the ACTIN filter tsv");
@@ -134,6 +136,9 @@ public interface ServeConfig {
 
     @NotNull
     String ckbFilterTsv();
+
+    @NotNull
+    String ckbDrugCurationTsv();
 
     boolean useActin();
 
@@ -221,6 +226,7 @@ public interface ServeConfig {
                 .useCkb(useCkb)
                 .ckbDir(useCkb ? nonOptionalDir(cmd, CKB_DIR) : NOT_APPLICABLE)
                 .ckbFilterTsv(useCkb ? nonOptionalFile(cmd, CKB_FILTER_TSV) : NOT_APPLICABLE)
+                .ckbDrugCurationTsv(useCkb ? nonOptionalFile(cmd, CKB_DRUG_CURATION_TSV) : NOT_APPLICABLE)
                 .useActin(useActin)
                 .actinTrialTsv(useActin ? nonOptionalFile(cmd, ACTIN_TRIAL_TSV) : NOT_APPLICABLE)
                 .actinFilterTsv(useActin ? nonOptionalFile(cmd, ACTIN_FILTER_TSV) : NOT_APPLICABLE)

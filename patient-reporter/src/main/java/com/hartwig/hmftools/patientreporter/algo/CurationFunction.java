@@ -5,10 +5,10 @@ import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.linx.ImmutableReportableGeneDisruption;
-import com.hartwig.hmftools.common.linx.ImmutableReportableHomozygousDisruption;
-import com.hartwig.hmftools.common.linx.ReportableGeneDisruption;
-import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.common.linx.HomozygousDisruption;
+import com.hartwig.hmftools.common.linx.ImmutableGeneDisruption;
+import com.hartwig.hmftools.common.linx.ImmutableHomozygousDisruption;
+import com.hartwig.hmftools.common.linx.GeneDisruption;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
@@ -130,13 +130,13 @@ public final class CurationFunction {
 
     @NotNull
     @VisibleForTesting
-    static List<ReportableGeneDisruption> curateGeneDisruptions(@NotNull List<ReportableGeneDisruption> geneDisruptions) {
-        List<ReportableGeneDisruption> curateGeneDisruptions = Lists.newArrayList();
-        for (ReportableGeneDisruption disruption : geneDisruptions) {
+    static List<GeneDisruption> curateGeneDisruptions(@NotNull List<GeneDisruption> geneDisruptions) {
+        List<GeneDisruption> curateGeneDisruptions = Lists.newArrayList();
+        for (GeneDisruption disruption : geneDisruptions) {
             if (disruption.gene().equals(GENE_CDKN2A) && disruption.isCanonical()) {
-                curateGeneDisruptions.add(ImmutableReportableGeneDisruption.builder().from(disruption).gene(GENE_CDKN2A_CANONICAL).build());
+                curateGeneDisruptions.add(ImmutableGeneDisruption.builder().from(disruption).gene(GENE_CDKN2A_CANONICAL).build());
             } else if (disruption.gene().equals(GENE_CDKN2A) && !disruption.isCanonical()) {
-                curateGeneDisruptions.add(ImmutableReportableGeneDisruption.builder()
+                curateGeneDisruptions.add(ImmutableGeneDisruption.builder()
                         .from(disruption)
                         .gene(GENE_CDKN2A_NON_CANONICAL)
                         .build());
@@ -149,17 +149,17 @@ public final class CurationFunction {
 
     @NotNull
     @VisibleForTesting
-    static List<ReportableHomozygousDisruption> curateHomozygousDisruptions(
-            @NotNull List<ReportableHomozygousDisruption> reportableHomozygousDisruptions) {
-        List<ReportableHomozygousDisruption> curateHomozygousDisruptions = Lists.newArrayList();
-        for (ReportableHomozygousDisruption homozygousDisruption : reportableHomozygousDisruptions) {
+    static List<HomozygousDisruption> curateHomozygousDisruptions(
+            @NotNull List<HomozygousDisruption> homozygousDisruptions) {
+        List<HomozygousDisruption> curateHomozygousDisruptions = Lists.newArrayList();
+        for (HomozygousDisruption homozygousDisruption : homozygousDisruptions) {
             if (homozygousDisruption.gene().equals(GENE_CDKN2A) && homozygousDisruption.isCanonical()) {
-                curateHomozygousDisruptions.add(ImmutableReportableHomozygousDisruption.builder()
+                curateHomozygousDisruptions.add(ImmutableHomozygousDisruption.builder()
                         .from(homozygousDisruption)
                         .gene(GENE_CDKN2A_CANONICAL)
                         .build());
             } else if (homozygousDisruption.gene().equals(GENE_CDKN2A) && !homozygousDisruption.isCanonical()) {
-                curateHomozygousDisruptions.add(ImmutableReportableHomozygousDisruption.builder()
+                curateHomozygousDisruptions.add(ImmutableHomozygousDisruption.builder()
                         .from(homozygousDisruption)
                         .gene(GENE_CDKN2A_NON_CANONICAL)
                         .build());

@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.linx;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
 import com.hartwig.hmftools.common.sv.linx.LinxDriver;
@@ -45,26 +44,31 @@ public final class LinxDataLoader {
         }
         LOGGER.info(" Loaded {} fusions (of which {} are reportable) from {}", allFusions.size(), reportableFusions.size(), linxFusionTsv);
 
-        List<LinxSvAnnotation> linxStructuralVariants = Lists.newArrayList();
+        List<LinxSvAnnotation> allStructuralVariants = Lists.newArrayList();
         if (linxStructuralVariantTsv != null) {
-            linxStructuralVariants = LinxSvAnnotation.read(linxStructuralVariantTsv);
-            LOGGER.info(" Loaded {} structural variants from {}", linxStructuralVariants.size(), linxStructuralVariantTsv);
+            allStructuralVariants = LinxSvAnnotation.read(linxStructuralVariantTsv);
+            LOGGER.info(" Loaded {} structural variants from {}", allStructuralVariants.size(), linxStructuralVariantTsv);
         }
 
-        List<LinxBreakend> linxBreakends =
-                LinxBreakend.read(linxBreakendTsv).stream().filter(LinxBreakend::reportedDisruption).collect(Collectors.toList());
-        List<ReportableGeneDisruption> geneDisruptions = ReportableGeneDisruptionFactory.convert(linxBreakends, linxStructuralVariants);
-        LOGGER.debug(" Generated {} reportable disruptions based on {} breakends", geneDisruptions.size(), linxBreakends.size());
-        LOGGER.info(" Loaded {} reportable disruptions from {}", geneDisruptions.size(), linxBreakendTsv);
+        List<LinxBreakend> allBreakends = LinxBreakend.read(linxBreakendTsv);
+        List<GeneDisruption> reportableGeneDisruptions =
+                GeneDisruptionFactory.convert(selectReportable(allBreakends), allStructuralVariants);
+        LOGGER.debug(" Generated {} reportable disruptions based on {} reportable breakends",
+                reportableGeneDisruptions.size(),
+                allBreakends.size());
+        LOGGER.info(" Loaded {} breakends (of which {} are reportable) from {}",
+                allBreakends.size(),
+                reportableGeneDisruptions.size(),
+                linxBreakendTsv);
 
-        List<ReportableHomozygousDisruption> homozygousDisruptions =
-                ReportableHomozygousDisruptionFactory.extractFromLinxDriverCatalogTsv(linxDriverCatalogTsv);
+        List<HomozygousDisruption> homozygousDisruptions =
+                HomozygousDisruptionFactory.extractFromLinxDriverCatalogTsv(linxDriverCatalogTsv);
         LOGGER.info(" Loaded {} reportable homozygous disruptions from {}", homozygousDisruptions.size(), linxDriverCatalogTsv);
 
-        List<LinxDriver> drivers = Lists.newArrayList();
+        List<LinxDriver> allDrivers = Lists.newArrayList();
         if (linxDriverTsv != null) {
-            drivers = LinxDriver.read(linxDriverTsv);
-            LOGGER.info(" Loaded {} drivers from {}", drivers.size(), linxDriverTsv);
+            allDrivers = LinxDriver.read(linxDriverTsv);
+            LOGGER.info(" Loaded {} drivers from {}", allDrivers.size(), linxDriverTsv);
         }
 
         List<LinxGermlineSv> allGermlineDisruptions = Lists.newArrayList();
@@ -84,13 +88,26 @@ public final class LinxDataLoader {
         }
 
         return ImmutableLinxData.builder()
+                .allStructuralVariants(allStructuralVariants)
                 .allFusions(allFusions)
                 .reportableFusions(reportableFusions)
-                .geneDisruptions(geneDisruptions)
+                .allBreakends(allBreakends)
+                .reportableGeneDisruptions(reportableGeneDisruptions)
                 .homozygousDisruptions(homozygousDisruptions)
-                .drivers(drivers)
+                .drivers(allDrivers)
                 .allGermlineDisruptions(allGermlineDisruptions)
                 .reportableGermlineDisruptions(reportableGermlineDisruptions)
                 .build();
+    }
+
+    @NotNull
+    private static List<LinxBreakend> selectReportable(@NotNull List<LinxBreakend> breakends) {
+        List<LinxBreakend> reportableBreakends = Lists.newArrayList();
+        for (LinxBreakend breakend : breakends) {
+            if (breakend.reportedDisruption()) {
+                reportableBreakends.add(breakend);
+            }
+        }
+        return reportableBreakends;
     }
 }

@@ -2,20 +2,20 @@ package com.hartwig.hmftools.protect;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
 import com.hartwig.hmftools.protect.algo.ProtectAlgo;
 import com.hartwig.hmftools.serve.actionability.ActionableEvents;
 import com.hartwig.hmftools.serve.actionability.ActionableEventsLoader;
+import com.hartwig.hmftools.serve.refgenome.RefGenomeManagerFactory;
 
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -65,9 +65,11 @@ public class ProtectApplication {
         Set<String> patientTumorDoids = patientTumorDoids(config, doidParentModel);
         ActionableEvents actionableEvents = ActionableEventsLoader.readFromDir(config.serveActionabilityDir(), config.refGenomeVersion());
 
-        Map<String, DriverGene> driverGenes = readDriverGenesFromFile(config.driverGeneTsv());
+        List<DriverGene> driverGenes = readDriverGenesFromFile(config.driverGeneTsv());
 
-        ProtectAlgo algo = ProtectAlgo.build(actionableEvents, patientTumorDoids, driverGenes);
+        KnownFusionCache fusionCache = RefGenomeManagerFactory.buildKnownFusionCacheFromFile(config.knownFusionFile());
+
+        ProtectAlgo algo = ProtectAlgo.build(actionableEvents, patientTumorDoids, driverGenes, fusionCache, doidParentModel);
         List<ProtectEvidence> evidences = algo.run(config);
 
         String filename = ProtectEvidenceFile.generateFilename(config.outputDir(), config.tumorSampleId());
@@ -76,16 +78,11 @@ public class ProtectApplication {
     }
 
     @NotNull
-    public static Map<String, DriverGene> readDriverGenesFromFile(@NotNull String driverGeneTsv) throws IOException {
+    public static List<DriverGene> readDriverGenesFromFile(@NotNull String driverGeneTsv) throws IOException {
         LOGGER.info(" Reading driver genes from {}", driverGeneTsv);
         List<DriverGene> driverGenes = DriverGeneFile.read(driverGeneTsv);
         LOGGER.info("  Read {} driver gene entries", driverGenes.size());
-
-        Map<String, DriverGene> driverGeneMap = Maps.newHashMap();
-        for (DriverGene gene: driverGenes) {
-            driverGeneMap.put(gene.gene(), gene);
-        }
-        return driverGeneMap;
+        return driverGenes;
     }
 
     @NotNull

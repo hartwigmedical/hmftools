@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.linx;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.sv.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.sv.linx.FusionPhasedType;
+import com.hartwig.hmftools.common.sv.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 
@@ -16,11 +17,11 @@ public final class LinxTestFactory {
 
     @NotNull
     public static LinxFusion createMinimalTestFusion() {
-        return builder().build();
+        return fusionBuilder().build();
     }
 
     @NotNull
-    public static ImmutableLinxFusion.Builder builder() {
+    public static ImmutableLinxFusion.Builder fusionBuilder() {
         return ImmutableLinxFusion.builder()
                 .fivePrimeBreakendId(0)
                 .threePrimeBreakendId(0)
@@ -44,6 +45,37 @@ public final class LinxTestFactory {
                 .geneEnd(Strings.EMPTY)
                 .geneContextEnd(Strings.EMPTY)
                 .geneTranscriptEnd(Strings.EMPTY)
+                .junctionCopyNumber(0D);
+    }
+
+    @NotNull
+    public static ImmutableLinxBreakend.Builder breakendBuilder() {
+        return ImmutableLinxBreakend.builder()
+                .id(0)
+                .svId(0)
+                .isStart(true)
+                .gene(Strings.EMPTY)
+                .transcriptId(Strings.EMPTY)
+                .canonical(true)
+                .geneOrientation(Strings.EMPTY)
+                .disruptive(false)
+                .reportedDisruption(false)
+                .undisruptedCopyNumber(0D)
+                .regionType(Strings.EMPTY)
+                .codingContext(Strings.EMPTY)
+                .biotype(Strings.EMPTY)
+                .exonicBasePhase(0)
+                .nextSpliceExonRank(0)
+                .nextSpliceExonPhase(0)
+                .nextSpliceDistance(0)
+                .totalExonCount(0)
+                .type(Strings.EMPTY)
+                .chromosome(Strings.EMPTY)
+                .orientation(0)
+                .strand(0)
+                .chrBand(Strings.EMPTY)
+                .exonUp(0)
+                .exonDown(0)
                 .junctionCopyNumber(0D);
     }
 }

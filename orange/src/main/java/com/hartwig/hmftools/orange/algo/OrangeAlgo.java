@@ -3,11 +3,7 @@ package com.hartwig.hmftools.orange.algo;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.time.LocalDate;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -31,7 +27,6 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.flagstat.Flagstat;
 import com.hartwig.hmftools.common.flagstat.FlagstatFile;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
-import com.hartwig.hmftools.common.isofox.IsofoxData;
 import com.hartwig.hmftools.common.isofox.IsofoxDataLoader;
 import com.hartwig.hmftools.common.lilac.LilacData;
 import com.hartwig.hmftools.common.lilac.LilacDataLoader;
@@ -48,11 +43,17 @@ import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleDataLoader;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
+import com.hartwig.hmftools.common.wildtype.WildTypeFactory;
+import com.hartwig.hmftools.common.wildtype.WildTypeGene;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.OrangeRNAConfig;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
+import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
+import com.hartwig.hmftools.orange.algo.protect.ProtectInterpreter;
+import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
+import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableObservation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSample;
@@ -75,8 +76,6 @@ import org.jetbrains.annotations.Nullable;
 public class OrangeAlgo {
 
     private static final Logger LOGGER = LogManager.getLogger(OrangeAlgo.class);
-
-    private static final DecimalFormat PERCENTAGE = new DecimalFormat("#'%'", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
 
     @NotNull
     private final DoidEntry doidEntry;
@@ -131,37 +130,47 @@ public class OrangeAlgo {
 
     @NotNull
     public OrangeReport run(@NotNull OrangeConfig config) throws IOException {
-        PurpleData purple = loadPurpleData(config);
-        LinxData linx = loadLinxData(config);
+        Set<DoidNode> configuredPrimaryTumor = loadConfiguredPrimaryTumor(config);
+        String platinumVersion = determinePlatinumVersion(config);
+        OrangeSample refSample = loadSampleData(config, false);
+        OrangeSample tumorSample = loadSampleData(config, true);
 
-        IsofoxData isofox = loadIsofoxData(config);
+        List<ProtectEvidence> allEvidences = loadProtectData(config);
 
-        IsofoxInterpretedData isofoxInterpreted = null;
-        if (isofox != null) {
-            isofoxInterpreted = IsofoxInterpreter.interpret(isofox, linx, driverGenes, knownFusionCache);
-        }
+        LinxInterpretedData linx = LinxInterpreter.interpret(loadLinxData(config), allEvidences, driverGenes, knownFusionCache);
 
-        List<ProtectEvidence> protect = loadProtectData(config);
+        ChordAnalysis chord = loadChordAnalysis(config);
+        PurpleInterpretedData purple = PurpleInterpreter.interpret(loadPurpleData(config), allEvidences, driverGenes, chord);
+
+        List<WildTypeGene> wildTypeGenes = WildTypeFactory.filterQCWildTypes(purple.fit().qc().status(),
+                WildTypeFactory.determineWildTypeGenes(purple.reportableGermlineVariants(),
+                        purple.reportableSomaticVariants(),
+                        purple.reportableSomaticGainsLosses(),
+                        linx.reportableFusions(),
+                        linx.homozygousDisruptions(),
+                        linx.reportableGeneDisruptions(),
+                        driverGenes));
+        LOGGER.info("Identified {} of {} driver genes to be wild-type", wildTypeGenes.size(), driverGenes.size());
 
         return ImmutableOrangeReport.builder()
                 .sampleId(config.tumorSampleId())
-                .reportDate(LocalDate.now())
-                .configuredPrimaryTumor(loadConfiguredPrimaryTumor(config))
+                .experimentDate(config.experimentDate())
+                .configuredPrimaryTumor(configuredPrimaryTumor)
                 .refGenomeVersion(config.refGenomeVersion())
-                .platinumVersion(determinePlatinumVersion(config))
-                .driverGenes(driverGenes)
-                .refSample(loadSampleData(config, false))
-                .tumorSample(loadSampleData(config, true))
+                .platinumVersion(platinumVersion)
+                .refSample(refSample)
+                .tumorSample(tumorSample)
                 .germlineMVLHPerGene(loadGermlineMVLHPerGene(config))
                 .purple(purple)
-                .linx(LinxInterpreter.interpret(linx, protect, driverGenes))
-                .isofox(isofoxInterpreted)
+                .linx(linx)
+                .wildTypeGenes(wildTypeGenes)
+                .isofox(loadIsofoxData(config, linx))
                 .lilac(loadLilacData(config))
                 .virusInterpreter(loadVirusInterpreterData(config))
-                .chord(loadChordAnalysis(config))
+                .chord(chord)
                 .cuppa(loadCuppaData(config))
                 .peach(loadPeachData(config))
-                .protect(protect)
+                .protect(ProtectInterpreter.interpret(allEvidences))
                 .cohortEvaluations(evaluateCohortPercentiles(config, purple))
                 .plots(buildPlots(config))
                 .build();
@@ -269,7 +278,7 @@ public class OrangeAlgo {
     }
 
     @Nullable
-    private IsofoxData loadIsofoxData(@NotNull OrangeConfig config) throws IOException {
+    private IsofoxInterpretedData loadIsofoxData(@NotNull OrangeConfig config, @NotNull LinxInterpretedData linx) throws IOException {
         OrangeRNAConfig rna = config.rnaConfig();
         if (rna == null) {
             LOGGER.info("Skipping ISOFOX data loading as RNA is not configured");
@@ -282,13 +291,13 @@ public class OrangeAlgo {
             return null;
         }
 
-        return IsofoxDataLoader.load(isofoxCancerType,
+        return IsofoxInterpreter.interpret(IsofoxDataLoader.load(isofoxCancerType,
                 rna.isofoxGeneDistributionCsv(),
                 rna.isofoxAltSjCohortCsv(),
                 rna.isofoxSummaryCsv(),
                 rna.isofoxGeneDataCsv(),
                 rna.isofoxFusionCsv(),
-                rna.isofoxAltSpliceJunctionCsv());
+                rna.isofoxAltSpliceJunctionCsv()), linx, driverGenes, knownFusionCache);
     }
 
     @NotNull
@@ -338,11 +347,14 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    private Map<PercentileType, Evaluation> evaluateCohortPercentiles(@NotNull OrangeConfig config, @NotNull PurpleData purple) {
+    private Map<PercentileType, Evaluation> evaluateCohortPercentiles(@NotNull OrangeConfig config, @NotNull PurpleInterpretedData purple) {
         PercentileType type = PercentileType.SV_TMB;
 
-        Observation svTmbObservation =
-                ImmutableObservation.builder().sample(createSample(config)).type(type).value(purple.svTumorMutationalBurden()).build();
+        Observation svTmbObservation = ImmutableObservation.builder()
+                .sample(createSample(config))
+                .type(type)
+                .value(purple.characteristics().svTumorMutationalBurden())
+                .build();
 
         LOGGER.info("Determining SV TMB percentile for value {}", svTmbObservation.value());
         Map<PercentileType, Evaluation> evaluations = Maps.newHashMap();
@@ -351,8 +363,8 @@ public class OrangeAlgo {
             String cancerType = evaluation.cancerType();
             Double cancerTypePercentile = evaluation.cancerTypePercentile();
             LOGGER.info(" Determined percentile '{}' for pan-cancer and '{}' for cancer type '{}'",
-                    PERCENTAGE.format(evaluation.panCancerPercentile() * 100),
-                    cancerTypePercentile != null ? PERCENTAGE.format(cancerTypePercentile * 100) : "NA",
+                    evaluation.panCancerPercentile(),
+                    cancerTypePercentile != null ? cancerTypePercentile : "NA",
                     cancerType != null ? cancerType : "NA");
             evaluations.put(type, evaluation);
         } else {

@@ -18,9 +18,6 @@ import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.metrics.WGSMetricsTestFactory;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectTestFactory;
-import com.hartwig.hmftools.common.purple.ImmutablePurpleData;
-import com.hartwig.hmftools.common.purple.PurpleData;
-import com.hartwig.hmftools.common.purple.PurpleTestFactory;
 import com.hartwig.hmftools.common.rna.GeneExpression;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
@@ -43,7 +40,13 @@ import com.hartwig.hmftools.orange.algo.OrangeSample;
 import com.hartwig.hmftools.orange.algo.isofox.ImmutableIsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.ImmutableLinxInterpretedData;
+import com.hartwig.hmftools.orange.algo.linx.LinxInterpretationTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
+import com.hartwig.hmftools.orange.algo.protect.ProtectInterpretationTestFactory;
+import com.hartwig.hmftools.orange.algo.protect.ProtectInterpretedData;
+import com.hartwig.hmftools.orange.algo.purple.ImmutablePurpleInterpretedData;
+import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretationTestFactory;
+import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -60,16 +63,17 @@ public final class OrangeReportTestFactory {
     public static OrangeReport createMinimalTestReport() {
         return ImmutableOrangeReport.builder()
                 .sampleId(TEST_SAMPLE)
-                .reportDate(LocalDate.of(2021, 11, 19))
+                .experimentDate(LocalDate.of(2021, 11, 19))
                 .refGenomeVersion(RefGenomeVersion.V37)
                 .refSample(createMinimalOrangeSample())
                 .tumorSample(createMinimalOrangeSample())
-                .purple(PurpleTestFactory.createMinimalTestPurpleData())
-                .linx(ImmutableLinxInterpretedData.builder().build())
+                .purple(PurpleInterpretationTestFactory.createMinimalTestPurpleData())
+                .linx(LinxInterpretationTestFactory.createMinimalTestLinxData())
                 .lilac(ImmutableLilacData.builder().qc(Strings.EMPTY).build())
                 .virusInterpreter(ImmutableVirusInterpreterData.builder().build())
                 .chord(ChordTestFactory.createMinimalTestChordAnalysis())
                 .cuppa(CuppaTestFactory.createMinimalCuppaData())
+                .protect(ProtectInterpretationTestFactory.createMinimalTestProtectData())
                 .plots(createMinimalOrangePlots())
                 .build();
     }
@@ -111,9 +115,9 @@ public final class OrangeReportTestFactory {
     }
 
     @NotNull
-    private static PurpleData createTestPurpleData() {
-        return ImmutablePurpleData.builder()
-                .from(PurpleTestFactory.createMinimalTestPurpleData())
+    private static PurpleInterpretedData createTestPurpleData() {
+        return ImmutablePurpleInterpretedData.builder()
+                .from(PurpleInterpretationTestFactory.createMinimalTestPurpleData())
                 .addReportableSomaticVariants(ImmutableReportableVariant.builder()
                         .from(ReportableVariantTestFactory.create())
                         .gene("ARID1A")
@@ -137,6 +141,7 @@ public final class OrangeReportTestFactory {
     private static LinxInterpretedData createTestLinxData() {
         LinxFusion fusion = LinxTestFactory.createMinimalTestFusion();
         return ImmutableLinxInterpretedData.builder()
+                .from(LinxInterpretationTestFactory.createMinimalTestLinxData())
                 .addReportableFusions(fusion)
                 .addReportableFusions(fusion)
                 .addReportableFusions(fusion)
@@ -256,17 +261,16 @@ public final class OrangeReportTestFactory {
     }
 
     @NotNull
-    private static List<ProtectEvidence> createTestProtectData() {
-        List<ProtectEvidence> evidences = Lists.newArrayList();
-
-        evidences.add(ProtectTestFactory.builder()
+    private static ProtectInterpretedData createTestProtectData() {
+        ProtectEvidence evidence = ProtectTestFactory.builder()
                 .gene("USH2A")
                 .transcript("123")
                 .isCanonical(true)
+                .reported(true)
                 .event("c.8558+420_8558+442delCCGATACGATGAAAGAAAAGAGC")
-                .build());
+                .build();
 
-        return evidences;
+        return ProtectInterpretationTestFactory.builder().addReportableEvidences(evidence).build();
     }
 
     @NotNull

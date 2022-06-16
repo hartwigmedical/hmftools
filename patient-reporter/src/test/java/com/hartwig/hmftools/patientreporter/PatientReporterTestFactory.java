@@ -102,6 +102,7 @@ public final class PatientReporterTestFactory {
                 .expectedPipelineVersion("5.28")
                 .overridePipelineVersion(false)
                 .refGenomeVersion(RefGenomeVersion.V37)
+                .allowDefaultCohortConfig(false)
                 .build();
     }
 

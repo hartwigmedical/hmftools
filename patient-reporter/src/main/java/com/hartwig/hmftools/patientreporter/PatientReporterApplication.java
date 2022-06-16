@@ -99,18 +99,7 @@ public class PatientReporterApplication {
 
     private void generateQCFail(@NotNull SampleMetadata sampleMetadata) throws IOException {
         QCFailReporter reporter = new QCFailReporter(buildBaseReportData(config), reportDate);
-        QCFailReport report = reporter.run(config.qcFailReason(),
-                sampleMetadata,
-                config.purplePurityTsv(),
-                config.purpleQcFile(),
-                config.comments(),
-                config.isCorrectedReport(),
-                config.isCorrectedReportExtern(),
-                config.expectedPipelineVersion(),
-                config.overridePipelineVersion(),
-                config.pipelineVersionFile(),
-                config.requirePipelineVersionFile(),
-                config.peachGenotypeTsv());
+        QCFailReport report = reporter.run(sampleMetadata, config);
         LOGGER.info("Cohort of this sample is: {}", report.sampleReport().cohort().cohortId());
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
@@ -134,17 +123,20 @@ public class PatientReporterApplication {
 
     @NotNull
     private static SampleMetadata buildSampleMetadata(@NotNull PatientReporterConfig config) {
+        String sampleNameForReport = config.sampleNameForReport();
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
                 .refSampleId(config.refSampleId())
                 .refSampleBarcode(config.refSampleBarcode())
                 .tumorSampleId(config.tumorSampleId())
                 .tumorSampleBarcode(config.tumorSampleBarcode())
+                .sampleNameForReport(sampleNameForReport != null ? sampleNameForReport : config.tumorSampleId())
                 .build();
 
         LOGGER.info("Printing sample meta data for {}", sampleMetadata.tumorSampleId());
         LOGGER.info(" Tumor sample barcode: {}", sampleMetadata.tumorSampleBarcode());
         LOGGER.info(" Ref sample: {}", sampleMetadata.refSampleId());
         LOGGER.info(" Ref sample barcode: {}", sampleMetadata.refSampleBarcode());
+        LOGGER.info(" Sample name for report: {}", sampleMetadata.sampleNameForReport());
 
         return sampleMetadata;
     }
