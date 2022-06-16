@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.ckb.classification.CkbClassificationConfig;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
@@ -33,7 +34,7 @@ public class CkbExtractorTest {
         ckbEntries.add(create("-", "MSI high", "MSI high", "sensitive", "Actionable"));
         ckbEntries.add(create("ALk", "EML4-ALK", "EML4-ALK Fusion", "sensitive", "Actionable"));
 
-        ExtractionResult result = extractor.extract(ckbEntries);
+        ExtractionResult result = extractor.extract(ckbEntries, Maps.newHashMap());
         assertEquals(1, result.knownHotspots().size());
         assertEquals(1, result.knownCopyNumbers().size());
         assertEquals(1, result.knownFusionPairs().size());
