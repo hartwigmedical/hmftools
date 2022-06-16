@@ -131,7 +131,7 @@ investigate potential causes for QC failure.
   - Classify each driver gene as wild-type in case:
     1. Purple fit is reliable
     1. No reportable events have been found in the gene. 
-  - Various additions to selection of potentially interesting events:
+  - Various additions and improvements to selection of potentially interesting events:
     - Unreported variants with canonical synonymous impact but reportable worst impact are added as potentially interesting variants.
     - Unreported variants in splice regions of genes for which we report splice variants are added as potentially interesting variants.  
     - Unreported variants near hotspots are added as potentially interesting.
@@ -140,16 +140,17 @@ investigate potential causes for QC failure.
     - Non-driver amplifications and losses are preferentially selected for being suspicious in case they have associated evidence.
     - Non-driver losses that have associated evidence but also a reported loss in the same band are retained as suspicious loss.
     - Breakends that are disruptive inside a pathogenic exon range of a promiscuous fusion gene but did not lead to fusions are added as potentially interesting disruptions.
-  - Various new annotations of existing results: 
-    - Gene disruptions are annotated by their cluster ID to be able to determine whether multiple events happened in same cluster or not.
+  - Various new annotations of existing tables: 
+    - Gene disruptions are annotated by their cluster ID to be able to determine whether multiple events happened in same event.
         - New input: `linx_structural_variant_tsv`
     - Expression entries in the RNA chapter are annotated with their tumor CN
-  - Clinical evidence is now grouped by event rather than treatment. 
+  - Clinical evidence is now grouped by event rather than treatment.  
   - Various minor and technical improvements:
     - Variants with identical phased inframe canonical effect are dedup'ed prior to reporting.
+    - Treatment counts on the front page are retrieved from general evidence only and no longer include trials.
     - Average chromosome arm copy numbers are calculated and stored in ORANGE JSON:
         - New input: `purple_somatic_copy_number_tsv`
-    - All potentially interesting sections are now also written to the JSON output
+    - All potentially interesting sections are now also written to the JSON output.
     - The structural variant driver table has been removed as all interesting events where duplicated with events in other sections
 - [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.9)
   - Proper support for RNA
