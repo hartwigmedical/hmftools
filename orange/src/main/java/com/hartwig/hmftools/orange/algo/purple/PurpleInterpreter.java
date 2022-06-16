@@ -44,7 +44,8 @@ public final class PurpleInterpreter {
 
         List<GainLoss> additionalSuspectSomaticGainsLosses =
                 CopyNumberSelector.selectInterestingUnreportedGainsLosses(purple.allSomaticGainsLosses(),
-                        purple.reportableSomaticGainsLosses());
+                        purple.reportableSomaticGainsLosses(),
+                        evidences);
         LOGGER.info(" Found an additional {} somatic gains/losses that are potentially interesting",
                 additionalSuspectSomaticGainsLosses.size());
 

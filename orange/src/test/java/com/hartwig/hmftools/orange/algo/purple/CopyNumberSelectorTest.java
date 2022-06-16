@@ -9,6 +9,9 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneTestFactory;
+import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.protect.ProtectTestFactory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberTestFactory;
 import com.hartwig.hmftools.common.purple.interpretation.CopyNumberInterpretation;
@@ -89,6 +92,22 @@ public class CopyNumberSelectorTest {
                 .minCopies(4)
                 .maxCopies(15)
                 .build();
+        GainLoss higherGainWithoutEvidence = GainLossTestFactory.builder()
+                .chromosome("chr3")
+                .chromosomeBand("band 1")
+                .gene("gene without evidence")
+                .interpretation(CopyNumberInterpretation.FULL_GAIN)
+                .minCopies(30)
+                .maxCopies(30)
+                .build();
+        GainLoss lowerGainWithEvidence = GainLossTestFactory.builder()
+                .chromosome("chr3")
+                .chromosomeBand("band 1")
+                .gene("gene with evidence")
+                .interpretation(CopyNumberInterpretation.FULL_GAIN)
+                .minCopies(20)
+                .maxCopies(20)
+                .build();
 
         GainLoss loss = GainLossTestFactory.builder()
                 .chromosome("chr2")
@@ -135,18 +154,27 @@ public class CopyNumberSelectorTest {
                 lowerGainSameBand,
                 lowestGainOtherBand,
                 partialGain,
+                higherGainWithoutEvidence,
+                lowerGainWithEvidence,
                 loss,
                 otherLoss,
                 reportableLossOtherBand,
                 lossAllosome,
                 reportableLossOtherBand);
 
-        List<GainLoss> interesting = CopyNumberSelector.selectInterestingUnreportedGainsLosses(allGainsLosses,
-                Lists.newArrayList(reportableLossOtherBand, reportableLossSameBand));
+        ProtectEvidence evidence = ProtectTestFactory.builder()
+                .gene(lowerGainWithEvidence.gene())
+                .event(ProtectEventGenerator.copyNumberEvent(lowerGainWithEvidence))
+                .build();
 
-        assertEquals(3, interesting.size());
+        List<GainLoss> interesting = CopyNumberSelector.selectInterestingUnreportedGainsLosses(allGainsLosses,
+                Lists.newArrayList(reportableLossOtherBand, reportableLossSameBand),
+                Lists.newArrayList(evidence));
+
+        assertEquals(4, interesting.size());
         assertTrue(interesting.contains(gain));
         assertTrue(interesting.contains(lowestGainOtherBand));
+        assertTrue(interesting.contains(lowerGainWithEvidence));
         assertTrue(interesting.contains(loss));
     }
 }

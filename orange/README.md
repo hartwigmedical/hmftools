@@ -137,6 +137,8 @@ investigate potential causes for QC failure.
     - Unreported variants near hotspots are added as potentially interesting.
     - Unreported fusions of all oncogenes are added as potentially interesting fusions.
     - Driver genes that are nearly amplified (2.5 < minRelCN < 3) are added as potentially interesting gains.
+    - Non-driver amplifications and losses are preferentially selected for being suspicious in case they have associated evidence.
+    - Non-driver losses that have associated evidence but also a reported loss in the same band are retained as suspicious loss.
     - Breakends that are disruptive inside a pathogenic exon range of a promiscuous fusion gene but did not lead to fusions are added as potentially interesting disruptions.
   - Various new annotations of existing results: 
     - Gene disruptions are annotated by their cluster ID to be able to determine whether multiple events happened in same cluster or not.
