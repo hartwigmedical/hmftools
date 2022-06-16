@@ -17,8 +17,7 @@ public class ComparTask implements Callable
 
     private final MismatchWriter mWriter;
 
-    public ComparTask(
-            int taskId, final ComparConfig config, final MismatchWriter writer)
+    public ComparTask(int taskId, final ComparConfig config, final MismatchWriter writer)
     {
         mTaskId = taskId;
         mConfig = config;
@@ -42,6 +41,7 @@ public class ComparTask implements Callable
             if(i > 0 && (i % 100) == 0)
             {
                 CMP_LOGGER.info("{}: processed {} samples", mTaskId, i);
+                System.gc();
             }
         }
 
