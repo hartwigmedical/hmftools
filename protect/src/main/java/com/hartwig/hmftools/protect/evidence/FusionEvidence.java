@@ -94,8 +94,7 @@ public class FusionEvidence {
             if (knownFusionCache.hasPromiscuousThreeGene(fusion.geneEnd())) {
                 return actionable.gene().equals(fusion.geneEnd());
             }
-        } else if (fusion.reportedType().equals(KnownFusionType.PROMISCUOUS_5.toString()) || fusion.reportedType()
-                .equals(KnownFusionType.IG_PROMISCUOUS.toString())) {
+        } else if (fusion.reportedType().equals(KnownFusionType.PROMISCUOUS_5.toString())) {
             // IG_PROMISCUOUS are only on 5 promiscuous side
             if (knownFusionCache.hasPromiscuousFiveGene(fusion.geneStart())) {
                 return actionable.gene().equals(fusion.geneStart());
@@ -106,8 +105,7 @@ public class FusionEvidence {
 
     private static boolean match(@NotNull LinxFusion fusion, @NotNull ActionableFusion actionable) {
         if (fusion.reportedType().equals(KnownFusionType.KNOWN_PAIR.toString()) || fusion.reportedType()
-                .equals(KnownFusionType.EXON_DEL_DUP.toString()) || fusion.reportedType()
-                .equals(KnownFusionType.IG_KNOWN_PAIR.toString())) {
+                .equals(KnownFusionType.EXON_DEL_DUP.toString())) {
 
             if (!actionable.geneDown().equals(fusion.geneEnd())) {
                 return false;
