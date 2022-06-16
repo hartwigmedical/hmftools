@@ -15,9 +15,9 @@ import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-final class FusionSelector {
+final class DNAFusionSelector {
 
-    private FusionSelector() {
+    private DNAFusionSelector() {
     }
 
     @NotNull

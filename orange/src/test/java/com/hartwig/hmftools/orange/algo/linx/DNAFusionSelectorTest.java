@@ -21,7 +21,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
-public class FusionSelectorTest {
+public class DNAFusionSelectorTest {
 
     @Test
     public void canSelectFusionsWithEvidence() {
@@ -32,7 +32,7 @@ public class FusionSelectorTest {
 
         ProtectEvidence evidence = ProtectTestFactory.builder().event(ProtectEventGenerator.fusionEvent(withEvidence)).build();
 
-        List<LinxFusion> fusions = FusionSelector.selectInterestingUnreportedFusions(Lists.newArrayList(withEvidence, noEvidence),
+        List<LinxFusion> fusions = DNAFusionSelector.selectInterestingUnreportedFusions(Lists.newArrayList(withEvidence, noEvidence),
                 Lists.newArrayList(evidence),
                 Lists.newArrayList());
 
@@ -54,7 +54,7 @@ public class FusionSelectorTest {
                 .build();
 
         List<LinxFusion> fusions =
-                FusionSelector.selectInterestingUnreportedFusions(Lists.newArrayList(withReportedType, withoutReportedType),
+                DNAFusionSelector.selectInterestingUnreportedFusions(Lists.newArrayList(withReportedType, withoutReportedType),
                         Lists.newArrayList(),
                         Lists.newArrayList());
 
@@ -104,7 +104,7 @@ public class FusionSelectorTest {
                 .geneEnd(tsg.gene())
                 .build();
 
-        List<LinxFusion> fusions = FusionSelector.selectInterestingUnreportedFusions(Lists.newArrayList(outOfFrameOnco,
+        List<LinxFusion> fusions = DNAFusionSelector.selectInterestingUnreportedFusions(Lists.newArrayList(outOfFrameOnco,
                 noDriver,
                 withFiveOncogene,
                 withThreeOncogene,

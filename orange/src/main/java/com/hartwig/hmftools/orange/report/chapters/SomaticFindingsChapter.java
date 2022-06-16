@@ -76,6 +76,7 @@ public class SomaticFindingsChapter implements ReportChapter {
             reportableVariants = ReportableVariantFactory.mergeVariantLists(report.purple().reportableSomaticVariants(),
                     report.purple().reportableGermlineVariants());
         }
+
         String titleDrivers = "Driver variants (" + reportableVariants.size() + ")";
         document.add(SomaticVariantTable.build(titleDrivers, contentWidth(), reportableVariants));
 

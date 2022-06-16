@@ -26,7 +26,7 @@ public final class LinxInterpreter {
     public static LinxInterpretedData interpret(@NotNull LinxData linx, @NotNull List<ProtectEvidence> evidences,
             @NotNull List<DriverGene> driverGenes, @NotNull KnownFusionCache knownFusionCache) {
         List<LinxFusion> additionalSuspectFusions =
-                FusionSelector.selectInterestingUnreportedFusions(linx.allFusions(), evidences, driverGenes);
+                DNAFusionSelector.selectInterestingUnreportedFusions(linx.allFusions(), evidences, driverGenes);
         LOGGER.info(" Found an additional {} suspect fusions that are potentially interesting", additionalSuspectFusions.size());
 
         List<LinxBreakend> additionalSuspectBreakends =

@@ -14,6 +14,11 @@ public final class IsofoxTestFactory {
     }
 
     @NotNull
+    public static IsofoxData createMinimalIsofoxTestData() {
+        return ImmutableIsofoxData.builder().summary(IsofoxTestFactory.rnaStatisticsBuilder().build()).build();
+    }
+    
+    @NotNull
     public static ImmutableRnaStatistics.Builder rnaStatisticsBuilder() {
         return ImmutableRnaStatistics.builder()
                 .totalFragments(0)
