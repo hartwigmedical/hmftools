@@ -21,6 +21,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.compar.Category;
@@ -88,13 +90,29 @@ public class SomaticVariantComparer implements ItemComparer
         final Map<String,List<SomaticVariantData>> refVariantsMap = buildVariantMap(allRefVariants);
         final Map<String,List<SomaticVariantData>> newVariantsMap = buildVariantMap(allNewVariants);
 
-        for(Map.Entry<String,List<SomaticVariantData>> chrEntry : refVariantsMap.entrySet())
-        {
-            List<SomaticVariantData> refVariants = chrEntry.getValue();
-            List<SomaticVariantData> newVariants = newVariantsMap.get(chrEntry.getKey());
+        final List<String> emptyDiffs = Lists.newArrayList();
 
-            if(newVariants == null)
+        for(HumanChromosome chromosome : HumanChromosome.values())
+        {
+            String chrStr = chromosome.toString();
+            List<SomaticVariantData> refVariants = refVariantsMap.get(chrStr);
+            List<SomaticVariantData> newVariants = newVariantsMap.get(chrStr);
+
+            if(newVariants == null && refVariants == null)
                 continue;
+
+            if(newVariants == null && refVariants != null)
+            {
+                refVariants.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
+                        .forEach(x -> mismatches.add(new Mismatch(x, null, REF_ONLY, emptyDiffs)));
+                continue;
+            }
+            else if(refVariants == null && newVariants != null)
+            {
+                newVariants.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
+                        .forEach(x -> mismatches.add(new Mismatch(null, x, NEW_ONLY, emptyDiffs)));
+                continue;
+            }
 
             int index1 = 0;
             while(index1 < refVariants.size())
@@ -137,8 +155,6 @@ public class SomaticVariantComparer implements ItemComparer
                     ++index1;
             }
 
-            List<String> emptyDiffs = Lists.newArrayList();
-
             refVariants.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
                     .forEach(x -> mismatches.add(new Mismatch(x, null, REF_ONLY, emptyDiffs)));
 
@@ -153,11 +169,12 @@ public class SomaticVariantComparer implements ItemComparer
 
         for(SomaticVariantData variant : variants)
         {
-            List<SomaticVariantData> chrVariants = chrVariantsMap.get(variant.Variant.chromosome());
+            String chromosome = RefGenomeFunctions.stripChrPrefix(variant.Variant.chromosome());
+            List<SomaticVariantData> chrVariants = chrVariantsMap.get(chromosome);
             if(chrVariants == null)
             {
                 chrVariants = Lists.newArrayList();
-                chrVariantsMap.put(variant.Variant.chromosome(), chrVariants);
+                chrVariantsMap.put(chromosome, chrVariants);
             }
 
             chrVariants.add(variant);
