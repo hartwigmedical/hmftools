@@ -142,6 +142,7 @@ investigate potential causes for QC failure.
     - Gene disruptions are annotated by their cluster ID to be able to determine whether multiple events happened in same cluster or not.
         - New input: `linx_structural_variant_tsv`
     - Expression entries in the RNA chapter are annotated with their tumor CN
+  - Clinical evidence is now grouped by event rather than treatment. 
   - Various minor and technical improvements:
     - Variants with identical phased inframe canonical effect are dedup'ed prior to reporting.
     - Average chromosome arm copy numbers are calculated and stored in ORANGE JSON:

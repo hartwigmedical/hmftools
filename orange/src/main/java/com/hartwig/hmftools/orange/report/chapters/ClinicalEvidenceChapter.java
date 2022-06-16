@@ -26,7 +26,6 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 
 import org.apache.commons.compress.utils.Lists;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -83,53 +82,56 @@ public class ClinicalEvidenceChapter implements ReportChapter {
 
     private void addTreatmentSection(@NotNull Document document, @NotNull String header, @NotNull List<ProtectEvidence> evidences,
             @NotNull List<ProtectEvidence> trials) {
-        Map<String, List<ProtectEvidence>> onLabelTreatments = buildTreatmentMap(evidences, true);
-        Map<String, List<ProtectEvidence>> offLabelTreatments = buildTreatmentMap(evidences, false);
+        Map<String, List<ProtectEvidence>> onLabelTreatments = buildEvidenceByEventMap(evidences, true);
+        Map<String, List<ProtectEvidence>> offLabelTreatments = buildEvidenceByEventMap(evidences, false);
         document.add(createTreatmentTable(header + " on-label evidence", onLabelTreatments));
         document.add(createTreatmentTable(header + " off-label evidence", offLabelTreatments));
 
-        Map<String, List<ProtectEvidence>> onLabelTrials = buildTreatmentMap(trials, true);
+        Map<String, List<ProtectEvidence>> onLabelTrials = buildEvidenceByEventMap(trials, true);
         document.add(createTreatmentTable(header + " trials", onLabelTrials));
     }
 
     @NotNull
-    private static Map<String, List<ProtectEvidence>> buildTreatmentMap(@NotNull List<ProtectEvidence> evidences, boolean requireOnLabel) {
-        Map<String, List<ProtectEvidence>> evidencePerTreatmentMap = Maps.newHashMap();
+    private static Map<String, List<ProtectEvidence>> buildEvidenceByEventMap(@NotNull List<ProtectEvidence> evidences,
+            boolean requireOnLabel) {
+        Map<String, List<ProtectEvidence>> evidencePerEventMap = Maps.newHashMap();
 
         for (ProtectEvidence evidence : evidences) {
             if (evidence.onLabel() == requireOnLabel) {
-                List<ProtectEvidence> treatmentEvidences = evidencePerTreatmentMap.get(evidence.treatment());
-                if (treatmentEvidences == null) {
-                    treatmentEvidences = Lists.newArrayList();
+                String event = evidence.gene() != null ? evidence.gene() + " " + evidence.event() : evidence.event();
+                if (event.contains("p.")) {
+                    event = AminoAcids.forceSingleLetterProteinAnnotation(event);
                 }
 
-                if (!hasHigherOrEqualEvidence(treatmentEvidences, evidence)) {
-                    treatmentEvidences.add(evidence);
+                List<ProtectEvidence> eventEvidences = evidencePerEventMap.get(event);
+                if (eventEvidences == null) {
+                    eventEvidences = Lists.newArrayList();
                 }
 
-                evidencePerTreatmentMap.put(evidence.treatment(), treatmentEvidences);
+                if (!containsEvidenceWithDisplay(eventEvidences, evidence)) {
+                    eventEvidences.add(evidence);
+                }
+
+                evidencePerEventMap.put(event, eventEvidences);
             }
         }
-        return evidencePerTreatmentMap;
+        return evidencePerEventMap;
     }
 
-    private static boolean hasHigherOrEqualEvidence(@NotNull List<ProtectEvidence> evidences, @NotNull ProtectEvidence evidenceToCheck) {
+    private static boolean containsEvidenceWithDisplay(@NotNull List<ProtectEvidence> evidences, @NotNull ProtectEvidence evidenceToMatch) {
         for (ProtectEvidence evidence : evidences) {
-            if (evidence.treatment().equals(evidenceToCheck.treatment()) && StringUtils.equals(evidence.gene(), evidenceToCheck.gene())
-                    && evidence.event().equals(evidenceToCheck.event())) {
-                if (!evidenceToCheck.level().isHigher(evidence.level())) {
-                    return true;
-                }
+            if (display(evidence).equals(display(evidenceToMatch))) {
+                return true;
             }
         }
         return false;
     }
 
     @NotNull
-    private Table createTreatmentTable(@NotNull String title, @NotNull Map<String, List<ProtectEvidence>> treatmentMap) {
+    private Table createTreatmentTable(@NotNull String title, @NotNull Map<String, List<ProtectEvidence>> treatmentByEventMap) {
         Table treatmentTable = Tables.createContent(contentWidth(),
                 new float[] { 1, 1, 1 },
-                new Cell[] { Cells.createHeader("Treatment"), Cells.createHeader("Responsive Evidence"),
+                new Cell[] { Cells.createHeader("Event"), Cells.createHeader("Responsive Evidence"),
                         Cells.createHeader("Resistance Evidence") });
 
         EvidenceLevel maxReportingLevel = reportConfig.maxEvidenceLevel();
@@ -137,7 +139,7 @@ public class ClinicalEvidenceChapter implements ReportChapter {
         boolean hasEvidence = false;
         for (EvidenceLevel level : EvidenceLevel.values()) {
             if (maxReportingLevel == null || !maxReportingLevel.isHigher(level)) {
-                if (addEvidenceWithMaxLevel(treatmentTable, treatmentMap, level)) {
+                if (addEvidenceWithMaxLevel(treatmentTable, treatmentByEventMap, level)) {
                     hasEvidence = true;
                 }
             }
@@ -150,14 +152,14 @@ public class ClinicalEvidenceChapter implements ReportChapter {
         }
     }
 
-    private boolean addEvidenceWithMaxLevel(@NotNull Table table, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
+    private boolean addEvidenceWithMaxLevel(@NotNull Table table, @NotNull Map<String, List<ProtectEvidence>> treatmentByEventMap,
             @NotNull EvidenceLevel allowedHighestLevel) {
-        Set<String> sortedTreatments = Sets.newTreeSet(treatmentMap.keySet());
+        Set<String> sortedEvents = Sets.newTreeSet(treatmentByEventMap.keySet());
         boolean hasEvidence = false;
-        for (String treatment : sortedTreatments) {
-            List<ProtectEvidence> evidences = treatmentMap.get(treatment);
+        for (String event : sortedEvents) {
+            List<ProtectEvidence> evidences = treatmentByEventMap.get(event);
             if (allowedHighestLevel == highestEvidence(evidences) && containsEvidenceForDisplay(evidences)) {
-                table.addCell(Cells.createContent(treatment));
+                table.addCell(Cells.createContent(event));
 
                 Table responsiveTable = Tables.createContent(contentWidth() / 3, new float[] { 1 }, new Cell[] {});
                 for (ProtectEvidence responsive : filterOnDirections(evidences, RESPONSIVE_DIRECTIONS)) {
@@ -210,10 +212,6 @@ public class ClinicalEvidenceChapter implements ReportChapter {
 
     @NotNull
     private static String display(@NotNull ProtectEvidence evidence) {
-        String event = evidence.gene() != null ? evidence.gene() + " " + evidence.event() : evidence.event();
-        if (event.contains("p.")) {
-            event = AminoAcids.forceSingleLetterProteinAnnotation(event);
-        }
         Set<String> sourceNames = Sets.newHashSet();
         for (ProtectSource source : evidence.sources()) {
             sourceNames.add(source.name().display());
@@ -223,7 +221,7 @@ public class ClinicalEvidenceChapter implements ReportChapter {
         for (String sourceName : sourceNames) {
             sources.add(sourceName);
         }
-        return event + " (" + evidence.level() + " - " + sources + ")";
+        return evidence.treatment() + " (" + evidence.level() + " - " + sources + ")";
     }
 
     @NotNull
