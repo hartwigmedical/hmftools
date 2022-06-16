@@ -146,6 +146,7 @@ investigate potential causes for QC failure.
     - Expression entries in the RNA chapter are annotated with their tumor CN
   - Clinical evidence is now grouped by event rather than treatment.  
   - Various minor and technical improvements:
+    - Add optional parameter `experiment_date` which, when provided in YYMMDD format, sets the experiment date. If param is not provided, the current date is used (as before).
     - Variants with identical phased inframe canonical effect are dedup'ed prior to reporting.
     - Treatment counts on the front page are retrieved from general evidence only and no longer include trials.
     - Average chromosome arm copy numbers are calculated and stored in ORANGE JSON:

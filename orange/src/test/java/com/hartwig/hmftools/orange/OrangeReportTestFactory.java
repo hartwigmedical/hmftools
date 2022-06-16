@@ -63,7 +63,7 @@ public final class OrangeReportTestFactory {
     public static OrangeReport createMinimalTestReport() {
         return ImmutableOrangeReport.builder()
                 .sampleId(TEST_SAMPLE)
-                .reportDate(LocalDate.of(2021, 11, 19))
+                .experimentDate(LocalDate.of(2021, 11, 19))
                 .refGenomeVersion(RefGenomeVersion.V37)
                 .refSample(createMinimalOrangeSample())
                 .tumorSample(createMinimalOrangeSample())

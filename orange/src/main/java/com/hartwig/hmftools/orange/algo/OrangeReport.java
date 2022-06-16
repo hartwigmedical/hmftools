@@ -32,7 +32,7 @@ public abstract class OrangeReport {
     public abstract String sampleId();
 
     @NotNull
-    public abstract LocalDate reportDate();
+    public abstract LocalDate experimentDate();
 
     @NotNull
     public abstract Set<DoidNode> configuredPrimaryTumor();
