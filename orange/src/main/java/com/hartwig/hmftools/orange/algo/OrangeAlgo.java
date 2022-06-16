@@ -150,7 +150,7 @@ public class OrangeAlgo {
                         linx.homozygousDisruptions(),
                         linx.reportableGeneDisruptions(),
                         driverGenes));
-        LOGGER.info(" Identified {} of {} driver genes to be wild-type", wildTypeGenes.size(), driverGenes.size());
+        LOGGER.info("Identified {} of {} driver genes to be wild-type", wildTypeGenes.size(), driverGenes.size());
 
         return ImmutableOrangeReport.builder()
                 .sampleId(config.tumorSampleId())
