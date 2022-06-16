@@ -47,7 +47,7 @@ public class FusionReportability
     public static ReportableReason determineReportability(final GeneFusion fusion)
     {
         // first check whether a fusion is known or not - a key requirement of it being potentially reportable
-        if (fusion.knownType() == NONE || fusion.knownType() == IG_PROMISCUOUS)
+        if(fusion.knownType() == NONE || fusion.knownType() == IG_PROMISCUOUS)
             return KNOWN_TYPE;
 
         final BreakendTransData upTrans = fusion.upstreamTrans();

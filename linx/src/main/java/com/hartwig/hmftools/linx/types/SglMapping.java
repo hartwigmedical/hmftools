@@ -60,12 +60,18 @@ public class SglMapping
 
         byte strandSequence = items[1].equals("+") ? POS_ORIENT : NEG_ORIENT;
         byte orientation = (strandSequence == breakendOrientation) ? NEG_ORIENT : POS_ORIENT;
-        // byte orientation = items[1].equals("+") ? POS_ORIENT : NEG_ORIENT;
 
         final String cigar = items[2];
 
+        if(orientation == POS_ORIENT)
+            position += calcCigarLength(cigar);
+
+        /*
+        byte orientation = items[1].equals("+") ? POS_ORIENT : NEG_ORIENT;
+
         if(orientation != breakendOrientation)
             position += calcCigarLength(cigar);
+        */
 
         int qualScore = !items[3].isEmpty() ? Integer.parseInt(items[3]) : 0;
 

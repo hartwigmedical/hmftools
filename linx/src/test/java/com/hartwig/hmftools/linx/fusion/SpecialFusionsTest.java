@@ -363,7 +363,7 @@ public class SpecialFusionsTest
         GeneFusion fusion = tester.FusionAnalyser.getFusions().get(0);
         assertEquals(sgl1.id(), fusion.upstreamTrans().gene().id());
         assertEquals(sgl1.id(), fusion.downstreamTrans().gene().id());
-        assertEquals(10150 + 10, fusion.downstreamTrans().gene().position());
+        assertEquals(10150, fusion.downstreamTrans().gene().position());
 
         tester.clearClustersAndSVs();
 
