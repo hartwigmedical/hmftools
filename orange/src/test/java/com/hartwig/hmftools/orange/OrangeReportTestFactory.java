@@ -42,6 +42,8 @@ import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.ImmutableLinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretationTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
+import com.hartwig.hmftools.orange.algo.protect.ProtectInterpretationTestFactory;
+import com.hartwig.hmftools.orange.algo.protect.ProtectInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.ImmutablePurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretationTestFactory;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
@@ -71,6 +73,7 @@ public final class OrangeReportTestFactory {
                 .virusInterpreter(ImmutableVirusInterpreterData.builder().build())
                 .chord(ChordTestFactory.createMinimalTestChordAnalysis())
                 .cuppa(CuppaTestFactory.createMinimalCuppaData())
+                .protect(ProtectInterpretationTestFactory.createMinimalTestProtectData())
                 .plots(createMinimalOrangePlots())
                 .build();
     }
@@ -258,17 +261,16 @@ public final class OrangeReportTestFactory {
     }
 
     @NotNull
-    private static List<ProtectEvidence> createTestProtectData() {
-        List<ProtectEvidence> evidences = Lists.newArrayList();
-
-        evidences.add(ProtectTestFactory.builder()
+    private static ProtectInterpretedData createTestProtectData() {
+        ProtectEvidence evidence = ProtectTestFactory.builder()
                 .gene("USH2A")
                 .transcript("123")
                 .isCanonical(true)
+                .reported(true)
                 .event("c.8558+420_8558+442delCCGATACGATGAAAGAAAAGAGC")
-                .build());
+                .build();
 
-        return evidences;
+        return ProtectInterpretationTestFactory.builder().addReportableEvidences(evidence).build();
     }
 
     @NotNull

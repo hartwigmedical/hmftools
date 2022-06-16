@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
@@ -13,7 +14,6 @@ import com.hartwig.hmftools.common.protect.ProtectSource;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.algo.protect.EvidenceSelector;
 import com.hartwig.hmftools.orange.report.ReportConfig;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
@@ -25,6 +25,8 @@ import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 
+import org.apache.commons.compress.utils.Lists;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -66,11 +68,12 @@ public class ClinicalEvidenceChapter implements ReportChapter {
             document.add(note(" * Treatments are reported up to a maximum evidence level of " + maxEvidenceLevelString + "."));
         }
 
-        List<ProtectEvidence> reported = EvidenceSelector.reported(report.protect());
-        addTreatmentSection(document, "Applicable", reported);
+        addTreatmentSection(document, "Applicable", report.protect().reportableEvidences(), report.protect().reportableTrials());
 
-        List<ProtectEvidence> unreported = EvidenceSelector.unreported(report.protect());
-        addTreatmentSection(document, "Other potentially interesting", unreported);
+        addTreatmentSection(document,
+                "Other potentially interesting",
+                report.protect().unreportedEvidences(),
+                report.protect().unreportedTrials());
     }
 
     @NotNull
@@ -78,16 +81,48 @@ public class ClinicalEvidenceChapter implements ReportChapter {
         return new Paragraph(message).addStyle(ReportResources.subTextStyle());
     }
 
-    private void addTreatmentSection(@NotNull Document document, @NotNull String header, @NotNull List<ProtectEvidence> evidences) {
-        List<ProtectEvidence> noTrials = EvidenceSelector.noTrials(evidences);
-        Map<String, List<ProtectEvidence>> onLabelTreatments = EvidenceSelector.buildTreatmentMap(noTrials, true);
-        Map<String, List<ProtectEvidence>> offLabelTreatments = EvidenceSelector.buildTreatmentMap(noTrials, false);
+    private void addTreatmentSection(@NotNull Document document, @NotNull String header, @NotNull List<ProtectEvidence> evidences,
+            @NotNull List<ProtectEvidence> trials) {
+        Map<String, List<ProtectEvidence>> onLabelTreatments = buildTreatmentMap(evidences, true);
+        Map<String, List<ProtectEvidence>> offLabelTreatments = buildTreatmentMap(evidences, false);
         document.add(createTreatmentTable(header + " on-label evidence", onLabelTreatments));
         document.add(createTreatmentTable(header + " off-label evidence", offLabelTreatments));
 
-        List<ProtectEvidence> trials = EvidenceSelector.trialsOnly(evidences);
-        Map<String, List<ProtectEvidence>> onLabelTrials = EvidenceSelector.buildTreatmentMap(trials, true);
+        Map<String, List<ProtectEvidence>> onLabelTrials = buildTreatmentMap(trials, true);
         document.add(createTreatmentTable(header + " trials", onLabelTrials));
+    }
+
+    @NotNull
+    private static Map<String, List<ProtectEvidence>> buildTreatmentMap(@NotNull List<ProtectEvidence> evidences, boolean requireOnLabel) {
+        Map<String, List<ProtectEvidence>> evidencePerTreatmentMap = Maps.newHashMap();
+
+        for (ProtectEvidence evidence : evidences) {
+            if (evidence.onLabel() == requireOnLabel) {
+                List<ProtectEvidence> treatmentEvidences = evidencePerTreatmentMap.get(evidence.treatment());
+                if (treatmentEvidences == null) {
+                    treatmentEvidences = Lists.newArrayList();
+                }
+
+                if (!hasHigherOrEqualEvidence(treatmentEvidences, evidence)) {
+                    treatmentEvidences.add(evidence);
+                }
+
+                evidencePerTreatmentMap.put(evidence.treatment(), treatmentEvidences);
+            }
+        }
+        return evidencePerTreatmentMap;
+    }
+
+    private static boolean hasHigherOrEqualEvidence(@NotNull List<ProtectEvidence> evidences, @NotNull ProtectEvidence evidenceToCheck) {
+        for (ProtectEvidence evidence : evidences) {
+            if (evidence.treatment().equals(evidenceToCheck.treatment()) && StringUtils.equals(evidence.gene(), evidenceToCheck.gene())
+                    && evidence.event().equals(evidenceToCheck.event())) {
+                if (!evidenceToCheck.level().isHigher(evidence.level())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @NotNull

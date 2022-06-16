@@ -9,7 +9,7 @@ import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.sv.linx.FusionPhasedType;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
-import com.hartwig.hmftools.orange.algo.protect.EvidenceSelector;
+import com.hartwig.hmftools.orange.algo.protect.EvidenceEvaluator;
 
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
@@ -26,7 +26,7 @@ final class FusionSelector {
         List<LinxFusion> filtered = Lists.newArrayList();
         for (LinxFusion fusion : allFusions) {
             if (!fusion.reported()) {
-                boolean hasEvidence = EvidenceSelector.hasEvidence(evidences, null, ProtectEventGenerator.fusionEvent(fusion));
+                boolean hasEvidence = EvidenceEvaluator.hasEvidence(evidences, null, ProtectEventGenerator.fusionEvent(fusion));
                 boolean hasReportedType = !fusion.reportedType().equals(KnownFusionType.NONE.toString());
                 boolean isFusionOfOncogene = isInframeFusionWithOncogene(fusion, driverGenes);
                 if (hasReportedType || hasEvidence || isFusionOfOncogene) {

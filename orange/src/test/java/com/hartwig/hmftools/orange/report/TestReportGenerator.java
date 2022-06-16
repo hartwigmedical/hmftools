@@ -102,7 +102,9 @@ public class TestReportGenerator {
                         .build())
                 .linx(ImmutableLinxInterpretedData.builder()
                         .from(report.linx())
+                        .allStructuralVariants(Lists.newArrayList())
                         .allFusions(Lists.newArrayList())
+                        .allBreakends(Lists.newArrayList())
                         .allGermlineDisruptions(Lists.newArrayList())
                         .build());
 

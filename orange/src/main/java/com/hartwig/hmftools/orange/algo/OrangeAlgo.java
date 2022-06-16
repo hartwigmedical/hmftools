@@ -52,6 +52,7 @@ import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
+import com.hartwig.hmftools.orange.algo.protect.ProtectInterpreter;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
@@ -135,11 +136,12 @@ public class OrangeAlgo {
         OrangeSample refSample = loadSampleData(config, false);
         OrangeSample tumorSample = loadSampleData(config, true);
 
-        List<ProtectEvidence> protect = loadProtectData(config);
-        LinxInterpretedData linx = LinxInterpreter.interpret(loadLinxData(config), protect, driverGenes, knownFusionCache);
+        List<ProtectEvidence> allEvidences = loadProtectData(config);
+
+        LinxInterpretedData linx = LinxInterpreter.interpret(loadLinxData(config), allEvidences, driverGenes, knownFusionCache);
 
         ChordAnalysis chord = loadChordAnalysis(config);
-        PurpleInterpretedData purple = PurpleInterpreter.interpret(loadPurpleData(config), protect, driverGenes, chord);
+        PurpleInterpretedData purple = PurpleInterpreter.interpret(loadPurpleData(config), allEvidences, driverGenes, chord);
 
         List<WildTypeGene> wildTypeGenes = WildTypeFactory.filterQCWildTypes(purple.fit().qc().status(),
                 WildTypeFactory.determineWildTypeGenes(purple.reportableGermlineVariants(),
@@ -169,7 +171,7 @@ public class OrangeAlgo {
                 .chord(chord)
                 .cuppa(loadCuppaData(config))
                 .peach(loadPeachData(config))
-                .protect(protect)
+                .protect(ProtectInterpreter.interpret(allEvidences))
                 .cohortEvaluations(evaluateCohortPercentiles(config, purple))
                 .plots(buildPlots(config))
                 .build();

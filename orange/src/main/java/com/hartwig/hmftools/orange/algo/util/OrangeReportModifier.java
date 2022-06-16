@@ -4,13 +4,14 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.isofox.ImmutableIsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.ImmutableLinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
+import com.hartwig.hmftools.orange.algo.protect.ImmutableProtectInterpretedData;
+import com.hartwig.hmftools.orange.algo.protect.ProtectInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.ImmutablePurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 
@@ -99,8 +100,14 @@ public final class OrangeReportModifier {
     }
 
     @NotNull
-    private static List<ProtectEvidence> limitProtectDataToOne(@NotNull List<ProtectEvidence> protect) {
-        return max1(protect);
+    private static ProtectInterpretedData limitProtectDataToOne(@NotNull ProtectInterpretedData protect) {
+        return ImmutableProtectInterpretedData.builder()
+                .from(protect)
+                .reportableEvidences(max1(protect.reportableEvidences()))
+                .reportableTrials(max1(protect.reportableTrials()))
+                .unreportedEvidences(max1(protect.unreportedEvidences()))
+                .unreportedTrials(max1(protect.unreportedTrials()))
+                .build();
     }
 
     @NotNull

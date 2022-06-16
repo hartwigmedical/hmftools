@@ -24,6 +24,7 @@ import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaInterpretation;
+import com.hartwig.hmftools.orange.algo.protect.ProtectInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleCharacteristics;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
@@ -365,10 +366,17 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     @NotNull
-    private static String treatmentString(@NotNull List<ProtectEvidence> evidences, boolean requireOnLabel) {
+    private static String treatmentString(@NotNull ProtectInterpretedData protect, boolean requireOnLabel) {
         Set<String> levels = Sets.newTreeSet(Comparator.naturalOrder());
         Set<String> treatments = Sets.newHashSet();
-        for (ProtectEvidence evidence : evidences) {
+        for (ProtectEvidence evidence : protect.reportableEvidences()) {
+            if (evidence.onLabel() == requireOnLabel) {
+                treatments.add(evidence.treatment());
+                levels.add(evidence.level().toString());
+            }
+        }
+
+        for (ProtectEvidence evidence : protect.unreportedEvidences()) {
             if (evidence.onLabel() == requireOnLabel) {
                 treatments.add(evidence.treatment());
                 levels.add(evidence.level().toString());

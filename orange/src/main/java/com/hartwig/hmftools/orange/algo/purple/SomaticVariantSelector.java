@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
 import com.hartwig.hmftools.common.variant.ReportableVariantSource;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.orange.algo.protect.EvidenceSelector;
+import com.hartwig.hmftools.orange.algo.protect.EvidenceEvaluator;
 
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
@@ -35,7 +35,7 @@ final class SomaticVariantSelector {
         for (SomaticVariant variant : allVariants) {
             if (!variant.reported()) {
                 boolean isNearHotspot = variant.hotspot() == Hotspot.HOTSPOT || variant.hotspot() == Hotspot.NEAR_HOTSPOT;
-                boolean hasEvidence = EvidenceSelector.hasEvidence(evidences, variant.gene(), ProtectEventGenerator.variantEvent(variant));
+                boolean hasEvidence = EvidenceEvaluator.hasEvidence(evidences, variant.gene(), ProtectEventGenerator.variantEvent(variant));
                 boolean isExonicAndHasPhasedReportedVariant =
                         !variant.gene().isEmpty() && hasReportedVariantWithPhase(reportedSomaticVariants, variant.topLocalPhaseSet());
                 boolean isCuppaRelevantVariant = isRelevantForCuppa(variant);

@@ -1,28 +1,45 @@
 package com.hartwig.hmftools.orange.algo.protect;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.protect.ProtectSource;
 import com.hartwig.hmftools.common.protect.ProtectTestFactory;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 
 import org.junit.Test;
 
 public class EvidenceSelectorTest {
 
     @Test
-    public void canSelectEventsWithEvidence() {
-        List<ProtectEvidence> evidences = Lists.newArrayList();
-        evidences.add(ProtectTestFactory.builder().gene("gene A").event("event A").build());
-        evidences.add(ProtectTestFactory.builder().gene(null).event("event B").build());
+    public void canInterpretProtectData() {
+        ProtectSource trialSource = ProtectTestFactory.createSource(EvidenceSelector.TRIAL_SOURCES.iterator().next());
+        ProtectSource evidenceSource = ProtectTestFactory.createSource(Knowledgebase.VICC_CGI);
 
-        assertTrue(EvidenceSelector.hasEvidence(evidences, "gene A", "event A"));
-        assertTrue(EvidenceSelector.hasEvidence(evidences, null, "event B"));
+        assert !EvidenceSelector.TRIAL_SOURCES.contains(evidenceSource.name());
 
-        assertFalse(EvidenceSelector.hasEvidence(evidences, "gene A", "event B"));
-        assertFalse(EvidenceSelector.hasEvidence(evidences, "gene B", "event B"));
+        ProtectEvidence reportableEvidence = ProtectTestFactory.builder().reported(true).addSources(evidenceSource).build();
+        ProtectEvidence reportableTrial = ProtectTestFactory.builder().reported(true).addSources(trialSource).build();
+        ProtectEvidence unreportedEvidence = ProtectTestFactory.builder().reported(false).addSources(evidenceSource).build();
+        ProtectEvidence unreportedTrial = ProtectTestFactory.builder().reported(false).addSources(trialSource).build();
+
+        List<ProtectEvidence> evidences = Lists.newArrayList(reportableEvidence, reportableTrial, unreportedEvidence, unreportedTrial);
+        ProtectInterpretedData protect = ProtectInterpreter.interpret(evidences);
+
+        assertEquals(1, protect.reportableEvidences().size());
+        assertTrue(protect.reportableEvidences().contains(reportableEvidence));
+
+        assertEquals(1, protect.reportableTrials().size());
+        assertTrue(protect.reportableTrials().contains(reportableTrial));
+
+        assertEquals(1, protect.unreportedEvidences().size());
+        assertTrue(protect.unreportedEvidences().contains(unreportedEvidence));
+
+        assertEquals(1, protect.unreportedTrials().size());
+        assertTrue(protect.unreportedTrials().contains(unreportedTrial));
     }
 }
