@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.protect.algo;
 
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
+
 import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
@@ -11,6 +13,8 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.doid.DoidEdge;
 import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.doid.DoidParentsTest;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
+import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.protect.ImmutableProtectConfig;
 import com.hartwig.hmftools.protect.ProtectApplication;
@@ -26,6 +30,7 @@ public class ProtectAlgoTest {
     private static final String DOID_JSON = Resources.getResource("doid/example_doid.json").getPath();
 
     private static final String DRIVER_GENE_TSV = Resources.getResource("drivercatalog/driver.gene.panel.tsv").getPath();
+    private static final String KNOWN_FUSION_FILE = Resources.getResource("known_fusion/known_fusion.csv").getPath();
 
     private static final String SERVE_DIR = Resources.getResource("serve").getPath();
 
@@ -57,6 +62,7 @@ public class ProtectAlgoTest {
                 .refGenomeVersion(RefGenomeVersion.V37)
                 .doidJsonFile(DOID_JSON)
                 .driverGeneTsv(DRIVER_GENE_TSV)
+                .knownFusionFile(KNOWN_FUSION_FILE)
                 .purplePurityTsv(PURPLE_PURITY_TSV)
                 .purpleQcFile(PURPLE_QC_FILE)
                 .purpleGeneCopyNumberTsv(PURPLE_GENE_COPY_NUMBER_TSV)
@@ -82,9 +88,13 @@ public class ProtectAlgoTest {
 
         DoidParents victim = DoidParents.fromEdges(edges);
 
+        KnownFusionCache knownFusionCache = new KnownFusionCache();
+        knownFusionCache.addData(new KnownFusionData(KNOWN_PAIR, "EML4", "ALK", "", ""));
+
         ProtectAlgo algo = ProtectAlgo.build(events,
                 Sets.newHashSet("162"),
                 ProtectApplication.readDriverGenesFromFile(config.driverGeneTsv()),
+                knownFusionCache,
                 victim);
 
         assertNotNull(algo.run(config));

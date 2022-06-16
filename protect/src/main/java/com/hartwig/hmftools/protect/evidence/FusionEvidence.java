@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
@@ -23,13 +25,17 @@ public class FusionEvidence {
     private final List<ActionableGene> actionablePromiscuous;
     @NotNull
     private final List<ActionableFusion> actionableFusions;
+    @NotNull
+    private final KnownFusionCache knownFusionCache;
 
     public FusionEvidence(@NotNull final PersonalizedEvidenceFactory personalizedEvidenceFactory,
-            @NotNull final List<ActionableGene> actionableGenes, @NotNull final List<ActionableFusion> actionableFusions) {
+            @NotNull final List<ActionableGene> actionableGenes, @NotNull final List<ActionableFusion> actionableFusions,
+            @NotNull final KnownFusionCache fusionCache) {
         this.personalizedEvidenceFactory = personalizedEvidenceFactory;
         this.actionablePromiscuous =
                 actionableGenes.stream().filter(x -> x.event().equals(GeneLevelEvent.FUSION)).collect(Collectors.toList());
         this.actionableFusions = actionableFusions;
+        this.knownFusionCache = fusionCache;
     }
 
     @NotNull
@@ -42,6 +48,7 @@ public class FusionEvidence {
         for (LinxFusion unreported : unreportedFusions) {
             evidences.addAll(evidence(unreported));
         }
+
         return evidences;
     }
 
@@ -72,40 +79,56 @@ public class FusionEvidence {
                 .build();
     }
 
-    private static boolean match(@NotNull LinxFusion fusion, @NotNull ActionableGene actionable) {
-        return actionable.gene().equals(fusion.geneStart()) || actionable.gene().equals(fusion.geneEnd());
+    private boolean match(@NotNull LinxFusion fusion, @NotNull ActionableGene actionable) {
+        if (fusion.reportedType().equals(KnownFusionType.PROMISCUOUS_3.name())) {
+            if (knownFusionCache.hasPromiscuousThreeGene(fusion.geneEnd())) {
+                return actionable.gene().equals(fusion.geneEnd());
+            }
+        } else if (fusion.reportedType().equals(KnownFusionType.PROMISCUOUS_5.toString()) || fusion.reportedType()
+                .equals(KnownFusionType.IG_PROMISCUOUS.toString())) {
+            // IG_PROMISCUOUS are only on 5 promiscuous side
+            if (knownFusionCache.hasPromiscuousFiveGene(fusion.geneStart())) {
+                return actionable.gene().equals(fusion.geneStart());
+            }
+        }
+        return false;
     }
 
     private static boolean match(@NotNull LinxFusion fusion, @NotNull ActionableFusion actionable) {
-        if (!actionable.geneDown().equals(fusion.geneEnd())) {
-            return false;
-        }
+        if (fusion.reportedType().equals(KnownFusionType.KNOWN_PAIR.toString()) || fusion.reportedType()
+                .equals(KnownFusionType.EXON_DEL_DUP.toString()) || fusion.reportedType()
+                .equals(KnownFusionType.IG_KNOWN_PAIR.toString())) {
 
-        if (!actionable.geneUp().equals(fusion.geneStart())) {
-            return false;
-        }
+            if (!actionable.geneDown().equals(fusion.geneEnd())) {
+                return false;
+            }
 
-        Integer actionableMinExonDown = actionable.minExonDown();
-        if (actionableMinExonDown != null && fusion.fusedExonDown() < actionableMinExonDown) {
-            return false;
-        }
+            if (!actionable.geneUp().equals(fusion.geneStart())) {
+                return false;
+            }
 
-        Integer actionableMaxExonDown = actionable.maxExonDown();
-        if (actionableMaxExonDown != null && fusion.fusedExonDown() > actionableMaxExonDown) {
-            return false;
-        }
+            Integer actionableMinExonDown = actionable.minExonDown();
+            if (actionableMinExonDown != null && fusion.fusedExonDown() < actionableMinExonDown) {
+                return false;
+            }
 
-        Integer actionableMinExonUp = actionable.minExonUp();
-        if (actionableMinExonUp != null && fusion.fusedExonUp() < actionableMinExonUp) {
-            return false;
-        }
+            Integer actionableMaxExonDown = actionable.maxExonDown();
+            if (actionableMaxExonDown != null && fusion.fusedExonDown() > actionableMaxExonDown) {
+                return false;
+            }
 
-        Integer actionableMaxExonUp = actionable.maxExonUp();
-        if (actionableMaxExonUp != null && fusion.fusedExonUp() > actionableMaxExonUp) {
-            return false;
-        }
+            Integer actionableMinExonUp = actionable.minExonUp();
+            if (actionableMinExonUp != null && fusion.fusedExonUp() < actionableMinExonUp) {
+                return false;
+            }
 
-        return true;
+            Integer actionableMaxExonUp = actionable.maxExonUp();
+            if (actionableMaxExonUp != null && fusion.fusedExonUp() > actionableMaxExonUp) {
+                return false;
+            }
+            return true;
+        }
+        return false;
     }
 
     @Nullable

@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordDataLoader;
 import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.lilac.LilacData;
 import com.hartwig.hmftools.common.lilac.LilacDataLoader;
 import com.hartwig.hmftools.common.linx.LinxData;
@@ -61,7 +62,8 @@ public class ProtectAlgo {
 
     @NotNull
     public static ProtectAlgo build(@NotNull ActionableEvents actionableEvents, @NotNull Set<String> patientTumorDoids,
-            @NotNull List<DriverGene> driverGenes, @NotNull final DoidParents doidParentModel) {
+            @NotNull List<DriverGene> driverGenes, @NotNull final KnownFusionCache fusionCache,
+            @NotNull final DoidParents doidParentModel) {
         PersonalizedEvidenceFactory personalizedEvidenceFactory = new PersonalizedEvidenceFactory(patientTumorDoids, doidParentModel);
 
         VariantEvidence variantEvidenceFactory = new VariantEvidence(personalizedEvidenceFactory,
@@ -71,7 +73,7 @@ public class ProtectAlgo {
         CopyNumberEvidence copyNumberEvidenceFactory = new CopyNumberEvidence(personalizedEvidenceFactory, actionableEvents.genes());
         DisruptionEvidence disruptionEvidenceFactory = new DisruptionEvidence(personalizedEvidenceFactory, actionableEvents.genes());
         FusionEvidence fusionEvidenceFactory =
-                new FusionEvidence(personalizedEvidenceFactory, actionableEvents.genes(), actionableEvents.fusions());
+                new FusionEvidence(personalizedEvidenceFactory, actionableEvents.genes(), actionableEvents.fusions(), fusionCache);
         PurpleSignatureEvidence purpleSignatureEvidenceFactory =
                 new PurpleSignatureEvidence(personalizedEvidenceFactory, actionableEvents.characteristics());
         VirusEvidence virusEvidenceFactory = new VirusEvidence(personalizedEvidenceFactory, actionableEvents.characteristics());

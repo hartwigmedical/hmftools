@@ -9,11 +9,13 @@ import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
 import com.hartwig.hmftools.protect.algo.ProtectAlgo;
 import com.hartwig.hmftools.serve.actionability.ActionableEvents;
 import com.hartwig.hmftools.serve.actionability.ActionableEventsLoader;
+import com.hartwig.hmftools.serve.refgenome.RefGenomeManagerFactory;
 
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -65,7 +67,9 @@ public class ProtectApplication {
 
         List<DriverGene> driverGenes = readDriverGenesFromFile(config.driverGeneTsv());
 
-        ProtectAlgo algo = ProtectAlgo.build(actionableEvents, patientTumorDoids, driverGenes, doidParentModel);
+        KnownFusionCache fusionCache = RefGenomeManagerFactory.buildKnownFusionCacheFromFile(config.knownFusionFile());
+
+        ProtectAlgo algo = ProtectAlgo.build(actionableEvents, patientTumorDoids, driverGenes, fusionCache, doidParentModel);
         List<ProtectEvidence> evidences = algo.run(config);
 
         String filename = ProtectEvidenceFile.generateFilename(config.outputDir(), config.tumorSampleId());
