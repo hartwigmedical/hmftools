@@ -32,8 +32,10 @@ public class FusionEvidence {
             @NotNull final List<ActionableGene> actionableGenes, @NotNull final List<ActionableFusion> actionableFusions,
             @NotNull final KnownFusionCache fusionCache) {
         this.personalizedEvidenceFactory = personalizedEvidenceFactory;
-        this.actionablePromiscuous =
-                actionableGenes.stream().filter(x -> x.event().equals(GeneLevelEvent.FUSION)).collect(Collectors.toList());
+        this.actionablePromiscuous = actionableGenes.stream()
+                .filter(x -> x.event().equals(GeneLevelEvent.FUSION) || x.event().equals(GeneLevelEvent.ACTIVATION) || x.event()
+                        .equals(GeneLevelEvent.ANY_MUTATION))
+                .collect(Collectors.toList());
         this.actionableFusions = actionableFusions;
         this.knownFusionCache = fusionCache;
     }
@@ -56,7 +58,11 @@ public class FusionEvidence {
     private List<ProtectEvidence> evidence(@NotNull LinxFusion fusion) {
         List<ProtectEvidence> evidences = Lists.newArrayList();
         for (ActionableGene promiscuous : actionablePromiscuous) {
-            if (match(fusion, promiscuous)) {
+            if (promiscuous.event().equals(GeneLevelEvent.FUSION) && match(fusion, promiscuous)) {
+                evidences.add(evidence(fusion, promiscuous));
+            }
+            if ((promiscuous.event().equals(GeneLevelEvent.ACTIVATION) || promiscuous.event().equals(GeneLevelEvent.ANY_MUTATION))
+                    && matchFusions(fusion, promiscuous)) {
                 evidences.add(evidence(fusion, promiscuous));
             }
         }
@@ -77,6 +83,10 @@ public class FusionEvidence {
                 .event(ProtectEventGenerator.fusionEvent(fusion))
                 .eventIsHighDriver(EvidenceDriverLikelihood.interpretFusion(fusion.likelihood()))
                 .build();
+    }
+
+    private boolean matchFusions(@NotNull LinxFusion fusion, @NotNull ActionableGene actionable) {
+        return actionable.gene().equals(fusion.geneStart()) || actionable.gene().equals(fusion.geneEnd());
     }
 
     private boolean match(@NotNull LinxFusion fusion, @NotNull ActionableGene actionable) {
