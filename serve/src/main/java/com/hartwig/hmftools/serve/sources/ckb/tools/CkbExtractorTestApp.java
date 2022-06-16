@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.ckb.classification.CkbClassificationConfig;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
@@ -53,7 +54,7 @@ public class CkbExtractorTestApp {
         CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(CkbClassificationConfig.build(), refGenomeResource);
 
         List<CkbEntry> entries = CkbReader.readAndCurate(config.ckbDir(), config.ckbFilterTsv());
-        ExtractionResult result = extractor.extract(entries);
+        ExtractionResult result = extractor.extract(entries, Maps.newHashMap());
 
         String eventsTsv = config.outputDir() + File.separator + "CkbEventClassification.tsv";
         CkbUtil.writeEventsToTsv(eventsTsv, entries);
