@@ -20,6 +20,7 @@ import com.hartwig.hmftools.compar.Mismatch;
 public class DriverData implements ComparableItem
 {
     public final DriverCatalog DriverCatalog;
+    private final String mKey;
 
     protected static final String FLD_LIKELIHOOD = "Likelihood";
     protected static final String FLD_LIKE_METHOD = "LikelihoodMethod";
@@ -27,6 +28,9 @@ public class DriverData implements ComparableItem
     public DriverData(final DriverCatalog driverCatalog)
     {
         DriverCatalog = driverCatalog;
+
+        String key = format("%s_%s", driverCatalog.driver(), driverCatalog.gene());
+        mKey = driverCatalog.isCanonical() ? key : key + "_" + driverCatalog.transcript();
     }
 
     @Override
@@ -35,7 +39,7 @@ public class DriverData implements ComparableItem
     @Override
     public String key()
     {
-        return format("%s_%s", DriverCatalog.driver(), DriverCatalog.gene());
+        return mKey;
     }
 
     @Override

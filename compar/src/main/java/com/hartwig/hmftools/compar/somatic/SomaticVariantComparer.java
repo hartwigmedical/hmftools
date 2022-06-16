@@ -22,8 +22,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
@@ -33,7 +31,6 @@ import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.MatchLevel;
 import com.hartwig.hmftools.compar.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.patientdb.dao.SomaticVariantDAO;
 
 import org.jooq.Record;
 import org.jooq.Result;
@@ -168,7 +165,7 @@ public class SomaticVariantComparer implements ItemComparer
 
         for(SomaticVariantData variant : variants)
         {
-            String chromosome = RefGenomeFunctions.stripChrPrefix(variant.Variant.chromosome());
+            String chromosome = RefGenomeFunctions.stripChrPrefix(variant.Chromosome);
             List<SomaticVariantData> chrVariants = chrVariantsMap.get(chromosome);
             if(chrVariants == null)
             {
@@ -208,17 +205,19 @@ public class SomaticVariantComparer implements ItemComparer
 
     private List<SomaticVariantData> loadVariants(final String sampleId, final DatabaseAccess dbAccess)
     {
-        Result<Record> result = dbAccess.context().select()
-                    .from(SOMATICVARIANT)
-                    .where(SOMATICVARIANT.FILTER.eq(PASS_FILTER))
-                    .and(SOMATICVARIANT.SAMPLEID.eq(sampleId))
-                    .fetch();
-
         final List<SomaticVariantData> variants = Lists.newArrayList();
-        for (Record record : result)
+
+        Result<Record> results = dbAccess.context()
+                .select()
+                .from(SOMATICVARIANT)
+                .where(SOMATICVARIANT.FILTER.eq(PASS_FILTER))
+                .and(SOMATICVARIANT.SAMPLEID.eq(sampleId))
+                .and(SOMATICVARIANT.GENE.isNotNull())
+                .fetch();
+
+        for(Record record : results)
         {
-            SomaticVariant variant = SomaticVariantDAO.buildFromRecord(record);
-            variants.add(new SomaticVariantData(variant));
+            variants.add(SomaticVariantData.fromRecord(record));
         }
 
         return variants;
@@ -239,8 +238,6 @@ public class SomaticVariantComparer implements ItemComparer
         CompoundFilter filter = new CompoundFilter(true);
         filter.add(new PassingVariantFilter());
 
-        SomaticVariantFactory variantFactory = new SomaticVariantFactory(filter);
-
         // use the Purple suffix if not specified
         String vcfFile = !fileSources.SomaticVcf.isEmpty() ?
                 fileSources.SomaticVcf : fileSources.Purple + sampleId + PURPLE_SOMATIC_VCF_SUFFIX;
@@ -251,15 +248,13 @@ public class SomaticVariantComparer implements ItemComparer
 
             for(VariantContext variantContext : reader.iterator())
             {
-                if(filter.test(variantContext))
-                {
-                    final SomaticVariant variant = variantFactory.createVariant(sampleId, variantContext).orElse(null);
+                if(!filter.test(variantContext))
+                    continue;
 
-                    if(variant == null)
-                        continue;
+                SomaticVariantData variant = SomaticVariantData.fromContext(variantContext);
 
-                    variants.add(new SomaticVariantData(variant));
-                }
+                if(!variant.Gene.isEmpty())
+                    variants.add(variant);
             }
 
             CMP_LOGGER.debug("sample({}) loaded {} somatic variants", sampleId, variants.size());

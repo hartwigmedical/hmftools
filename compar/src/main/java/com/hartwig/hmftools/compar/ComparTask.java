@@ -38,7 +38,7 @@ public class ComparTask implements Callable
 
             processSample(sampleId);
 
-            if(i > 0 && (i % 100) == 0)
+            if(i > 0 && (i % 25) == 0)
             {
                 CMP_LOGGER.info("{}: processed {} samples", mTaskId, i);
                 System.gc();
