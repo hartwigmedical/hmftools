@@ -37,6 +37,7 @@ import com.hartwig.hmftools.common.purple.interpretation.ImmutableGainLoss;
 import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.test.SomaticVariantTestFactory;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -183,12 +184,10 @@ public class ConclusionAlgoTest {
                 Sets.newHashSet(),
                 Sets.newHashSet());
         assertEquals(conclusion.size(), 3);
-        assertEquals(conclusion.get(0), "- CHEK2 (c.123A>C) CHEK2 not biallelic");
+        assertEquals(conclusion.get(0), "- CHEK2 (c.123A>C splice) CHEK2 not biallelic");
         assertEquals(conclusion.get(1), "- APC (p.Val600Arg) APC");
 
-        // TODO Revert after ORANGE v1.10 has been released.
-        // assertEquals(conclusion.get(2), "- BRCA2 (c.123A>C) BRCA2");
-        assertEquals(conclusion.get(2), "- BRCA2 (p.?) BRCA2");
+        assertEquals(conclusion.get(2), "- BRCA2 (c.123A>C splice) BRCA2");
         assertNull(conclusion.get(3));
     }
 
@@ -480,6 +479,7 @@ public class ConclusionAlgoTest {
                 .canonicalTranscript("transcript1")
                 .canonicalHgvsProteinImpact("p.Val600Arg")
                 .canonicalHgvsCodingImpact("c.123A>C")
+                .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .biallelic(true)
                 .build();
 
@@ -489,6 +489,7 @@ public class ConclusionAlgoTest {
                 .canonicalTranscript("transcript1")
                 .canonicalHgvsProteinImpact("p.?")
                 .canonicalHgvsCodingImpact("c.123A>C")
+                .canonicalCodingEffect(CodingEffect.SPLICE)
                 .biallelic(true)
                 .build();
 
@@ -498,6 +499,7 @@ public class ConclusionAlgoTest {
                 .canonicalTranscript("transcript1")
                 .canonicalHgvsProteinImpact("p.Val600Arg")
                 .canonicalHgvsCodingImpact("c.123A>C")
+                .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .biallelic(true)
                 .build();
 
@@ -516,6 +518,7 @@ public class ConclusionAlgoTest {
                 .canonicalTranscript("transcript1")
                 .canonicalHgvsProteinImpact("")
                 .canonicalHgvsCodingImpact("c.123A>C")
+                .canonicalCodingEffect(CodingEffect.SPLICE)
                 .biallelic(false)
                 .build();
 
