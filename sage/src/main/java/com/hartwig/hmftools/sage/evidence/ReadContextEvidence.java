@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
@@ -22,7 +24,6 @@ import com.hartwig.hmftools.sage.read.NumberEvents;
 
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 public class ReadContextEvidence
 {
@@ -37,12 +38,12 @@ public class ReadContextEvidence
     private QualityCalculator mQualityCalculator;
     private List<ReadContextCounter> mReadCounters; // has one per candidate
     private int mLastCandidateIndex;
+    private int mMaxDeleteLength;
 
     private VariantPhaser mVariantPhaser;
 
     public ReadContextEvidence(
-            final SageConfig config, final RefGenomeInterface refGenome,
-            final Map<String,QualityRecalibrationMap> qualityRecalibrationMap)
+            final SageConfig config, final RefGenomeInterface refGenome, final Map<String,QualityRecalibrationMap> qualityRecalibrationMap)
     {
         mSageConfig = config;
         mRefGenome = refGenome;
@@ -54,6 +55,7 @@ public class ReadContextEvidence
         mQualityCalculator = null;
         mReadCounters = null;
         mLastCandidateIndex = 0;
+        mMaxDeleteLength = 0;
         mVariantPhaser = null;
     }
 
@@ -66,12 +68,25 @@ public class ReadContextEvidence
         if(candidates.isEmpty())
             return mReadCounters;
 
+        if(mSageConfig.CoreSearch)
+        {
+            mMaxDeleteLength = candidates.stream()
+                    .filter(x -> x.variant().isIndel())
+                    .mapToInt(x -> max(x.variant().ref().length() - x.variant().alt().length(), 0)).max().orElse(0);
+
+            if(mMaxDeleteLength >= 5)
+                mReadCounters.forEach(x -> x.setMaxCandidateDeleteLength(mMaxDeleteLength));
+        }
+
+        if(mSageConfig.CountRealigned)
+            mReadCounters.forEach(x -> x.setCountRealigned());
+
         final Candidate firstCandidate = candidates.get(0);
         final Candidate lastCandidate = candidates.get(candidates.size() - 1);
 
         final ChrBaseRegion sliceRegion = new ChrBaseRegion(
                 firstCandidate.chromosome(),
-                Math.max(firstCandidate.position() - mTypicalReadLength, 1), lastCandidate.position() + mTypicalReadLength);
+                max(firstCandidate.position() - mTypicalReadLength, 1), lastCandidate.position() + mTypicalReadLength);
 
         mVariantPhaser = variantPhaser;
 
@@ -97,12 +112,14 @@ public class ReadContextEvidence
 
         if(record.getCigar().getFirstCigarElement().getOperator() == CigarOperator.S)
         {
-            readStart -= record.getCigar().getFirstCigarElement().getLength();
+            readStart -= record.getCigar().getFirstCigarElement().getLength();;
+            readStart -= mMaxDeleteLength; // account for deleted bases being the cause of the soft-clipping
         }
 
         if(record.getCigar().getLastCigarElement().getOperator() == CigarOperator.S)
         {
             readEnd += record.getCigar().getLastCigarElement().getLength();
+            readEnd += mMaxDeleteLength;
         }
 
         // first look back from the last-used index

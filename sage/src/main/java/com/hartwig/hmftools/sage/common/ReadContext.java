@@ -86,11 +86,6 @@ public class ReadContext
         return (int)Math.round(quality / baseLength);
     }
 
-    public boolean isCoreCovered(int otherReadIndex, byte[] otherBases)
-    {
-        return mReadBases.isCoreCovered(otherReadIndex, otherBases);
-    }
-
     public int readBasesPositionIndex() { return mReadBases.Index; }
     public int readBasesLeftFlankIndex() { return mReadBases.LeftFlankIndex; }
     public int readBasesRightFlankIndex() { return mReadBases.RightFlankIndex; }

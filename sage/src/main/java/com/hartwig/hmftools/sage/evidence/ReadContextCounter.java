@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.evidence;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.CORE_LOW_QUAL_MISMATCH_BASE_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_EVIDENCE_MAP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
@@ -12,6 +13,7 @@ import static com.hartwig.hmftools.sage.quality.QualityCalculator.jitterPenalty;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.quality.QualityConfig;
 import com.hartwig.hmftools.sage.SageConfig;
@@ -22,8 +24,6 @@ import com.hartwig.hmftools.sage.read.NumberEvents;
 import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
 import com.hartwig.hmftools.sage.common.VariantTier;
-
-import org.apache.commons.compress.utils.Lists;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -61,6 +61,8 @@ public class ReadContextCounter implements VariantHotspot
     private int mRawRefBaseQuality;
 
     private int mSoftClipInsertSupport;
+    private int mMaxCandidateDeleteLength;
+    private boolean mCountRealigned;
 
     private List<Integer> mLocalPhaseSets;
     private List<int[]> mLpsCounts;
@@ -107,6 +109,8 @@ public class ReadContextCounter implements VariantHotspot
         mRawAltBaseQuality = 0;
         mRawRefBaseQuality = 0;
         mSoftClipInsertSupport = 0;
+        mMaxCandidateDeleteLength = 0;
+        mCountRealigned = false;
 
         mLocalPhaseSets = null;
         mLpsCounts = null;
@@ -144,6 +148,10 @@ public class ReadContextCounter implements VariantHotspot
     public int tumorQuality()
     {
         int tumorQuality = mQualities[RC_FULL] + mQualities[RC_PARTIAL];
+
+        if(mCountRealigned)
+            tumorQuality += mQualities[RC_REALIGNED];
+
         return Math.max(0, tumorQuality - (int) mJitterPenalty);
     }
 
@@ -171,6 +179,8 @@ public class ReadContextCounter implements VariantHotspot
     public int rawAltBaseQuality() { return mRawAltBaseQuality; }
     public int rawRefBaseQuality() { return mRawRefBaseQuality; }
     public int softClipInsertSupport() { return mSoftClipInsertSupport; }
+    public void setMaxCandidateDeleteLength(int length) { mMaxCandidateDeleteLength = length; }
+    public void setCountRealigned() { mCountRealigned = true; }
 
     public void addLocalPhaseSet(int lps, int readCount, double allocCount)
     {
@@ -216,7 +226,21 @@ public class ReadContextCounter implements VariantHotspot
         if(!Tier.equals(VariantTier.HOTSPOT) && record.getMappingQuality() < DEFAULT_EVIDENCE_MAP_QUAL)
             return UNRELATED;
 
-        final RawContext rawContext = RawContext.create(mVariant, record);
+        RawContext rawContext = RawContext.create(mVariant, record);
+
+        if(rawContext.ReadIndex < 0)
+        {
+            if(rawContext.DepthSupport || rawContext.AltSupport || rawContext.RefSupport)
+            {
+                SG_LOGGER.error("rawContext missing readIndex but with support(depth={} ref={} alt={}",
+                        rawContext.DepthSupport, rawContext.AltSupport, rawContext.RefSupport);
+            }
+
+            rawContext = createRawContextFromCoreMatch(record);
+
+            if(rawContext.ReadIndex < 0)
+                return UNRELATED;
+        }
 
         if(rawContext.ReadIndexInSkipped)
             return UNRELATED;
@@ -233,13 +257,17 @@ public class ReadContextCounter implements VariantHotspot
         if(rawContext.ReadIndexInSoftClip && rawContext.AltSupport)
             ++mSoftClipInsertSupport;
 
-        if(readIndex < 0)
-            return UNRELATED;
-
-        boolean covered = mReadContext.isCoreCovered(readIndex, record.getReadBases());
+        boolean covered = mReadContext.indexedBases().isCoreCovered(readIndex, record.getReadBases().length);
 
         if(!covered)
+        {
+            SG_LOGGER.trace("var({}: {}->{}) readContext({}-{}-{}) no core coverage read(idx={} len={} id={})",
+                    mVariant.position(), mVariant.ref(), mVariant.alt(),
+                    mReadContext.indexedBases().LeftCoreIndex, mReadContext.indexedBases().Index,
+                    mReadContext.indexedBases().RightCoreIndex, readIndex, record.getReadBases().length, record.getReadName());
+
             return UNRELATED;
+        }
 
         final QualityConfig qualityConfig = sageConfig.Quality;
 
@@ -296,6 +324,11 @@ public class ReadContextCounter implements VariantHotspot
                 ++mCounts[RC_TOTAL];
                 mQualities[RC_TOTAL] += quality;
 
+                SG_LOGGER.trace("var({}: {}->{}) readContext({}-{}-{}) support({}) read(idx={} id={})",
+                        mVariant.position(), mVariant.ref(), mVariant.alt(),
+                        mReadContext.indexedBases().LeftCoreIndex, mReadContext.indexedBases().Index,
+                        mReadContext.indexedBases().RightCoreIndex, match, readIndex, record.getReadName());
+
                 countStrandedness(record);
                 checkImproperCount(record);
                 return SUPPORT;
@@ -350,6 +383,46 @@ public class ReadContextCounter implements VariantHotspot
         }
 
         return matchType;
+    }
+
+    private RawContext createRawContextFromCoreMatch(final SAMRecord record)
+    {
+        // check for an exact core match by which to centre the read
+        if(mMaxCandidateDeleteLength < 5)
+            return RawContext.INVALID_CONTEXT;
+
+        if(!record.getCigar().containsOperator(CigarOperator.S))
+            return RawContext.INVALID_CONTEXT;
+
+        int maxScLength = max(
+                record.getCigar().isLeftClipped() ? record.getCigar().getFirstCigarElement().getLength() : 0,
+                record.getCigar().isRightClipped() ? record.getCigar().getLastCigarElement().getLength() : 0);
+
+        if(maxScLength < 5)
+            return RawContext.INVALID_CONTEXT;
+
+        int coreIndex = record.getReadString().indexOf(mReadContext.coreString());
+        if(coreIndex < 1)
+            return RawContext.INVALID_CONTEXT;
+
+        // the start of the core must align with where it is in the ref genome
+        int variantRefPosition = mReadContext.indexedBases().Position;
+
+        int leftCoreOffset = mReadContext.indexedBases().Index - mReadContext.indexedBases().LeftCoreIndex;
+        int impliedReadIndex = coreIndex + leftCoreOffset;
+
+        int readLeftCorePosition = record.getReferencePositionAtReadPosition(coreIndex + 1);
+        int readDelAdjustedIndexPosition = readLeftCorePosition + mMaxCandidateDeleteLength + leftCoreOffset;
+        int readRefPosition = record.getReferencePositionAtReadPosition(impliedReadIndex); // this will be zero if it falls in the soft-clipping
+
+        if(variantRefPosition != readRefPosition && variantRefPosition != readDelAdjustedIndexPosition)
+            return RawContext.INVALID_CONTEXT;
+
+        int baseQuality = record.getBaseQualities()[impliedReadIndex];
+
+        return new RawContext(
+                impliedReadIndex, false, false, true,
+                true, false, true, baseQuality, 0);
     }
 
     private void countStrandedness(final SAMRecord record)

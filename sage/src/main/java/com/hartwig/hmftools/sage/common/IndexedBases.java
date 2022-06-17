@@ -117,7 +117,7 @@ public class IndexedBases
         return otherRefIndex- Index + RightCoreIndex;
     }
 
-    public boolean isCoreCovered(int otherReadIndex, byte[] otherBases)
+    public boolean isCoreCovered(int otherReadIndex, int otherBasesLength)
     {
         int otherLeftCentreIndex = otherLeftCoreIndex(otherReadIndex);
 
@@ -125,7 +125,7 @@ public class IndexedBases
             return false;
 
         int otherRightCentreIndex = otherRightCoreIndex(otherReadIndex);
-        return otherRightCentreIndex < otherBases.length;
+        return otherRightCentreIndex < otherBasesLength;
     }
 
     public ReadContextMatch matchAtPosition(final IndexedBases other)

@@ -53,9 +53,7 @@ public class RawContextCigarHandler implements CigarHandler
 
         int refPositionEnd = refPosition + element.getLength() - 1;
         if(refPositionEnd < mVariant.position())
-        {
-            throw new IllegalStateException("Variant is after record");
-        }
+            return;
 
         if(mIsInsert)
         {

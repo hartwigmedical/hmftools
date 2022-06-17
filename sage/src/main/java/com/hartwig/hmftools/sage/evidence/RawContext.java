@@ -17,7 +17,7 @@ public class RawContext
     public final int AltQuality;
     public final int RefQuality;
 
-    private static final RawContext DUMMY = new RawContext(
+    protected static final RawContext INVALID_CONTEXT = new RawContext(
             -1, false, false, false,
             false, false, false, 0, 0);
 
@@ -42,7 +42,7 @@ public class RawContext
         RawContextCigarHandler handler = new RawContextCigarHandler(variant);
         CigarTraversal.traverseCigar(record, handler);
         RawContext result = handler.result();
-        return result == null ? DUMMY : result;
+        return result == null ? INVALID_CONTEXT : result;
     }
 
     static RawContext inSoftClip(final int readIndex, final boolean altSupport, final int quality)
