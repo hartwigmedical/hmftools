@@ -68,7 +68,7 @@ public class BamQC
         fragmentsWithUnmatchedIndel.entrySet().forEach(x -> LL_LOGGER.warn(
                 "  UNMATCHED_INDEL - {} fragments excluded with unmatched indel {}", x.getValue(), x.getKey().toString()));
 
-        fragmentsWithUnmatchedPonIndel.entrySet().forEach(x -> LL_LOGGER.warn(
+        fragmentsWithUnmatchedPonIndel.entrySet().forEach(x -> LL_LOGGER.debug(
                 "  UNMATCHED_PON_INDEL - {} fragments excluded with unmatched PON indel {}", x.getValue(), x.getKey().toString()));
 
         return new BamQC(
