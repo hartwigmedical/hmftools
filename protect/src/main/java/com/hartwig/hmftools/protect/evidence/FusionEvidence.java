@@ -41,14 +41,16 @@ public class FusionEvidence {
     }
 
     @NotNull
-    public List<ProtectEvidence> evidence(@NotNull List<LinxFusion> reportableFusions, @NotNull List<LinxFusion> unreportedFusions) {
+    public List<ProtectEvidence> evidence(@NotNull List<LinxFusion> reportableFusions, @NotNull List<LinxFusion> allFusions) {
         List<ProtectEvidence> evidences = Lists.newArrayList();
         for (LinxFusion reportable : reportableFusions) {
             evidences.addAll(evidence(reportable));
         }
 
-        for (LinxFusion unreported : unreportedFusions) {
-            evidences.addAll(evidence(unreported));
+        for (LinxFusion allFusion : allFusions) {
+            if (!allFusion.reported()) {
+                evidences.addAll(evidence(allFusion));
+            }
         }
 
         return evidences;

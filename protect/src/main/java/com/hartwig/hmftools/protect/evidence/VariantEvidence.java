@@ -53,14 +53,16 @@ public class VariantEvidence {
 
     @NotNull
     public List<ProtectEvidence> evidence(@NotNull List<ReportableVariant> germline, @NotNull List<ReportableVariant> somatic,
-            @NotNull List<SomaticVariant> unreportedSomaticVariants) {
+            @NotNull List<SomaticVariant> allSomaticVariants) {
         List<ProtectEvidence> evidences = Lists.newArrayList();
         for (ReportableVariant reportableVariant : ReportableVariantFactory.mergeVariantLists(germline, somatic)) {
             evidences.addAll(evidence(reportableVariant));
         }
 
-        for (SomaticVariant unreportedVariant : unreportedSomaticVariants) {
-            evidences.addAll(evidence(unreportedVariant));
+        for (SomaticVariant allSomaticVariant : allSomaticVariants) {
+            if (!allSomaticVariant.reported()) {
+                evidences.addAll(evidence(allSomaticVariant));
+            }
         }
 
         return evidences;

@@ -31,14 +31,16 @@ public class CopyNumberEvidence {
     }
 
     @NotNull
-    public List<ProtectEvidence> evidence(@NotNull List<GainLoss> reportableGainsLosses, @NotNull List<GainLoss> unreportedGainsLosses) {
+    public List<ProtectEvidence> evidence(@NotNull List<GainLoss> reportableGainsLosses, @NotNull List<GainLoss> allGainsLosses) {
         List<ProtectEvidence> result = Lists.newArrayList();
         for (GainLoss reportableGainLoss : reportableGainsLosses) {
             result.addAll(evidence(reportableGainLoss, true));
         }
 
-        for (GainLoss unreportedGainLoss : unreportedGainsLosses) {
-            result.addAll(evidence(unreportedGainLoss, false));
+        for (GainLoss gainLoss : allGainsLosses) {
+            if (!reportableGainsLosses.contains(gainLoss)) {
+                result.addAll(evidence(gainLoss, false));
+            }
         }
 
         return result;
