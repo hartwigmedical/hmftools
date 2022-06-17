@@ -45,9 +45,14 @@ public final class ProtectEventGenerator {
     @NotNull
     @VisibleForTesting
     static String toVariantEvent(@NotNull String protein, @NotNull String coding, @NotNull String effect) {
-        if (!protein.isEmpty() && !protein.equals("p.?")) {
+        if (!protein.isEmpty()) {
             return protein;
         }
+
+        // TODO Consider re-enabling once ORANGE v1.10 has been released.
+//        if (!protein.isEmpty() && !protein.equals("p.?")) {
+//            return protein;
+//        }
 
         if (!coding.isEmpty()) {
             return coding;

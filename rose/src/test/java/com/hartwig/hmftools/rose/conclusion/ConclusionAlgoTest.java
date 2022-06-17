@@ -185,7 +185,10 @@ public class ConclusionAlgoTest {
         assertEquals(conclusion.size(), 3);
         assertEquals(conclusion.get(0), "- CHEK2 (c.123A>C) CHEK2 not biallelic");
         assertEquals(conclusion.get(1), "- APC (p.Val600Arg) APC");
-        assertEquals(conclusion.get(2), "- BRCA2 (c.123A>C) BRCA2");
+
+        // TODO Revert after ORANGE v1.10 has been released.
+        // assertEquals(conclusion.get(2), "- BRCA2 (c.123A>C) BRCA2");
+        assertEquals(conclusion.get(2), "- BRCA2 (p.?) BRCA2");
         assertNull(conclusion.get(3));
     }
 
