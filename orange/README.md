@@ -48,8 +48,7 @@ interesting and added to the report:
     1. Variants with synonymous impact on the canonical transcript of a reporting gene but with a reportable worst impact
     1. Variants in slice regions that are not reported in genes with splice variant reporting enabled. 
  - Other regions with amps, or with deletions in other autosomal regions:
-    1. Gains in genes for which we report amplifications with a relative minimum copy number between 2.5 and 3 times ploidy are considered 
-        potentially interesting near-amplifications.
+    1. Gains in genes for which we report amplifications with a relative minimum copy number between 2.5 and 3 times ploidy.
     1. Any chromosomal band location with at least one gene lost or fully amplified is considered potentially interesting.
     A maximum of 10 additional gains (sorted by minimum copy number) and 10 additional losses are reported as potentially interesting:
         - For a band with more than one gene amplified, genes are first picked based on having clinical evidence and alternatively the 
@@ -57,15 +56,15 @@ interesting and added to the report:
         - In case of a loss in a band with a reported loss, the additional loss is considered potentially interesting in case it is 
         associated with clinical evidence.
         - For a band with a loss that has no losses reported in this band already, an arbitrary gene is picked. 
- - Other potentially relevant fusions. A maximum of 10 additional fusions (randomly picked) are reported as potentially interesting:
-    1. Any fusion that is not reported and has a reported type other than NONE is considered potentially interesting. 
-    1. Any fusion with clinical evidence is considered potentially interesting.
-    1. Any fusion in a gene that is configured as an oncogene in the driver gene panel is considered potentially interesting. 
+ - Other potentially relevant fusions. A maximum of 10 additional fusions (picked arbitrarily) are reported as potentially interesting:
+    1. Any fusion that is not reported and has a reported type other than NONE. 
+    1. Any fusion with clinical evidence.
+    1. Any fusion in a gene that is configured as an oncogene in the driver gene panel. 
  - Other viral presence:
-    1. Any viral presence that is not otherwise reported is reported as potentially interesting.
+    1. Any viral presence that is not otherwise reported.
  - Potentially interesting gene disruptions:
     1. Any unreported but disruptive gene disruption that is disrupting an exon which lies within a promiscuous exon range based on 
-    the fusion knowledgebase is considered potentially interesting.
+    the fusion knowledgebase.
  - Potentially interesting LOH events:
     1. In case MSI is detected, LOH (if present) is shown for the following genes: MLH1, MSH2, MSH6, PMS2, EPCAM
     1. In case HRD (based on CHORD) is detected, LOH (if present) is shown for the following genes: BRCA1, BRCA2, RAD51C, PALB2
