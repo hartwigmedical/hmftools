@@ -38,10 +38,15 @@ public class ComparTask implements Callable
 
             processSample(sampleId);
 
-            if(i > 0 && (i % 25) == 0)
+            if(i > 0 && (i % 10) == 0)
+            {
+                // clean-up memory esp from somatic variant DB retrieval
+                System.gc();
+            }
+
+            if(i > 0 && (i % 50) == 0)
             {
                 CMP_LOGGER.info("{}: processed {} samples", mTaskId, i);
-                System.gc();
             }
         }
 

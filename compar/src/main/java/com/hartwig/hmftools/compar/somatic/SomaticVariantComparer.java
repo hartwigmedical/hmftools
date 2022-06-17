@@ -57,8 +57,6 @@ public class SomaticVariantComparer implements ItemComparer
     @Override
     public void processSample(final String sampleId, final List<Mismatch> mismatches)
     {
-        // CommonUtils.processSample(this, mConfig, sampleId, mismatches);
-
         // use a custom method optimised for large numbers of variants
         final MatchLevel matchLevel = mConfig.Categories.get(category());
 
