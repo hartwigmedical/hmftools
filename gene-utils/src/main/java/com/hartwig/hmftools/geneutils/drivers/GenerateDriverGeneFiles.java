@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 
 import java.io.File;
@@ -20,6 +21,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
@@ -126,39 +128,61 @@ public class GenerateDriverGeneFiles
 
         final Map<String,List<GeneData>> chrGeneDataMap = ensemblDataCache.getChrGeneDataMap();
 
-        List<GenomeRegion> panelRegionsWithUtr = Lists.newArrayList();
+        List<NamedBed> panelRegionsWithUtr = Lists.newArrayList();
         List<NamedBed> panelRegionsWithoutUtr = Lists.newArrayList();
 
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
             List<GeneData> geneDataList = chrGeneDataMap.get(refGenomeVersion.versionedChromosome(chromosome.toString()));
 
+            int previousRegionEnd = 0;
+            String previousGene = "";
+
             for(GeneData geneData : geneDataList)
             {
-                if(!driverGenes.stream().anyMatch(x -> x.gene().equals(geneData.GeneName)))
+                DriverGene driverGene = driverGenes.stream().filter(x -> x.gene().equals(geneData.GeneName)).findFirst().orElse(null);
+
+                if(driverGene == null)
+                    continue;
+
+                if(!driverGene.reportSomatic() && !driverGene.reportGermline())
                     continue;
 
                 TranscriptData transData = ensemblDataCache.getTranscriptData(geneData.GeneId, "");
 
-                panelRegionsWithUtr.addAll(getTranscriptRegions(geneData, transData, true));
+                List<GenomeRegion> regionsWithUtr = getTranscriptRegions(geneData, transData, true, previousRegionEnd);
+                List<GenomeRegion> regionsWithoutUtr = getTranscriptRegions(geneData, transData, false, previousRegionEnd);
 
-                List<GenomeRegion> regions = getTranscriptRegions(geneData, transData, false);
+                int minRegionStart = regionsWithUtr.stream().mapToInt(x -> x.start()).min().orElse(0);
 
-                regions.stream()
+                if(previousRegionEnd > 0 && previousRegionEnd >= minRegionStart)
+                {
+                    GU_LOGGER.warn("gene({}) regionStart({}) overlaps previous gene({}) regionEnd({})",
+                            geneData.GeneName, minRegionStart, previousGene, previousRegionEnd);
+                }
+
+                previousRegionEnd = regionsWithUtr.stream().mapToInt(x -> x.end()).max().orElse(0);
+                previousGene = geneData.GeneName;
+
+                regionsWithUtr.stream()
+                        .map(x -> ImmutableNamedBed.builder().from(x).name(geneData.GeneName).build())
+                        .forEach(x -> panelRegionsWithUtr.add(x));
+
+                regionsWithoutUtr.stream()
                         .map(x -> ImmutableNamedBed.builder().from(x).name(geneData.GeneName).build())
                         .forEach(x -> panelRegionsWithoutUtr.add(x));
             }
         }
 
         String codingWithUtr = formVersionFile(sageDir, "ActionableCodingPanel.bed.gz", refGenomeVersion);
-        String coverageWithoutUtr = formVersionFile(sageDir, "CoverageCodingPanel.bed.gz", refGenomeVersion);
-
-        GU_LOGGER.info("writing {} panel coverage regions file({})", refGenomeVersion, coverageWithoutUtr);
         GU_LOGGER.info("writing {} panel coding regions file({})", refGenomeVersion, codingWithUtr);
+
+        String coverageWithoutUtr = formVersionFile(sageDir, "CoverageCodingPanel.bed.gz", refGenomeVersion);
+        GU_LOGGER.info("writing {} panel coverage regions file({})", refGenomeVersion, coverageWithoutUtr);
 
         try
         {
-            NamedBedFile.writeUnnamedBedFile(codingWithUtr, panelRegionsWithUtr);
+            NamedBedFile.writeBedFile(codingWithUtr, panelRegionsWithUtr);
             NamedBedFile.writeBedFile(coverageWithoutUtr, panelRegionsWithoutUtr);
         }
         catch(IOException e)
@@ -169,10 +193,14 @@ public class GenerateDriverGeneFiles
 
     private static final int SPLICE_SIZE = 10;
 
-    private List<GenomeRegion> getTranscriptRegions(final GeneData geneData, final TranscriptData transData, boolean includeUTR)
+    private List<GenomeRegion> getTranscriptRegions(
+            final GeneData geneData, final TranscriptData transData, boolean includeUTR, int previousRegionEnd)
     {
         int startPosition = includeUTR || transData.nonCoding() ? transData.TransStart : transData.CodingStart;
         int endPosition = includeUTR || transData.nonCoding() ? transData.TransEnd : transData.CodingEnd;
+
+        // ensure regions from previous genes do no overlap
+        startPosition = max(previousRegionEnd + 1, startPosition);
 
         final List<GenomeRegion> regions = Lists.newArrayList();
 
@@ -182,7 +210,7 @@ public class GenerateDriverGeneFiles
             int exonStart = i == 0 ? exon.Start : exon.Start - SPLICE_SIZE;
             int exonEnd = i == transData.exons().size() - 1 ? exon.End : exon.End + SPLICE_SIZE;
 
-            if(startPosition < exonEnd && endPosition > exonStart)
+            if(positionsOverlap(startPosition, endPosition, exonStart, exonEnd))
             {
                 regions.add(GenomeRegions.create(geneData.Chromosome, max(startPosition, exonStart), min(endPosition, exonEnd)));
             }
