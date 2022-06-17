@@ -3,6 +3,8 @@ package com.hartwig.hmftools.orange;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.Locale;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
@@ -326,7 +328,7 @@ public interface OrangeConfig {
 
         LocalDate experimentDate;
         if (cmd.hasOption(EXPERIMENT_DATE)) {
-            experimentDate = LocalDate.parse(cmd.getOptionValue(EXPERIMENT_DATE), DateTimeFormatter.ofPattern("YYMMDD"));
+            experimentDate = interpretExperimentDateParam(cmd.getOptionValue(EXPERIMENT_DATE));
         } else {
             experimentDate = LocalDate.now();
         }
@@ -385,5 +387,20 @@ public interface OrangeConfig {
     @NotNull
     static Iterable<String> toStringSet(@NotNull String paramValue, @NotNull String separator) {
         return !paramValue.isEmpty() ? Sets.newHashSet(paramValue.split(separator)) : Sets.newHashSet();
+    }
+
+    @NotNull
+    private static LocalDate interpretExperimentDateParam(@NotNull String experimentDateString) {
+        String format = "yyMMdd";
+
+        LocalDate experimentDate;
+        try {
+            experimentDate = LocalDate.parse(experimentDateString, DateTimeFormatter.ofPattern(format, Locale.ENGLISH));
+            LOGGER.debug("Configured experiment date to {}", experimentDate);
+        } catch (DateTimeParseException exception) {
+            experimentDate = LocalDate.now();
+            LOGGER.warn("Could not parse configured experiment date '{}'. Expected format is '{}'", experimentDateString, format);
+        }
+        return experimentDate;
     }
 }
