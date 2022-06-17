@@ -34,7 +34,7 @@ public class FusionEvidence {
         this.personalizedEvidenceFactory = personalizedEvidenceFactory;
         this.actionablePromiscuous = actionableGenes.stream()
                 .filter(x -> x.event().equals(GeneLevelEvent.FUSION) || x.event().equals(GeneLevelEvent.ACTIVATION) || x.event()
-                        .equals(GeneLevelEvent.ANY_MUTATION))
+                        .equals(GeneLevelEvent.ANY_MUTATION) || x.event().equals(GeneLevelEvent.OVER_EXPRESSION))
                 .collect(Collectors.toList());
         this.actionableFusions = actionableFusions;
         this.knownFusionCache = fusionCache;
@@ -63,6 +63,10 @@ public class FusionEvidence {
             }
             if ((promiscuous.event().equals(GeneLevelEvent.ACTIVATION) || promiscuous.event().equals(GeneLevelEvent.ANY_MUTATION))
                     && match(fusion, promiscuous)) {
+                evidences.add(evidence(fusion, promiscuous));
+            }
+
+            if (promiscuous.event().equals(GeneLevelEvent.OVER_EXPRESSION) && match(fusion, promiscuous)) {
                 evidences.add(evidence(fusion, promiscuous));
             }
         }
@@ -94,6 +98,12 @@ public class FusionEvidence {
             if (knownFusionCache.hasPromiscuousFiveGene(fusion.geneStart())) {
                 return actionable.gene().equals(fusion.geneStart());
             }
+        } else if (fusion.reportedType().equals(KnownFusionType.IG_PROMISCUOUS.toString())) {
+            if (knownFusionCache.hasPromiscuousIgFusion(fusion.geneStart())) {
+                return actionable.gene().equals(fusion.geneStart());
+            } else if (knownFusionCache.hasPromiscuousIgFusion(fusion.geneEnd())) {
+                return actionable.gene().equals(fusion.geneEnd());
+            }
         } else if (fusion.reportedType().equals(KnownFusionType.NONE.toString())) {
             if (knownFusionCache.hasPromiscuousThreeGene(fusion.geneEnd())) {
                 return actionable.gene().equals(fusion.geneEnd());
@@ -108,8 +118,8 @@ public class FusionEvidence {
 
     private static boolean match(@NotNull LinxFusion fusion, @NotNull ActionableFusion actionable) {
         if (fusion.reportedType().equals(KnownFusionType.KNOWN_PAIR.toString()) || fusion.reportedType()
-                .equals(KnownFusionType.EXON_DEL_DUP.toString())) {
-
+                .equals(KnownFusionType.EXON_DEL_DUP.toString()) || fusion.reportedType()
+                .equals(KnownFusionType.IG_KNOWN_PAIR.toString())) {
             if (!actionable.geneDown().equals(fusion.geneEnd())) {
                 return false;
             }
