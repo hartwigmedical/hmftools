@@ -29,8 +29,8 @@ public class FlankCounts
 
     public static final List<Character> FLANK_AMINO_ACIDS = Lists.newArrayList();
 
-    public static final int FLANK_BASE_COUNT = 3;
-    public static final int TOTAL_FLANK_BASE_COUNT = FLANK_BASE_COUNT * 2;
+    public static final int FLANK_AA_COUNT = 3;
+    public static final int TOTAL_FLANK_AA_COUNT = FLANK_AA_COUNT * 2;
 
     public static final Map<Character,Integer> FLANK_AMINO_ACID_INDICES = Maps.newHashMap();
 
@@ -65,7 +65,7 @@ public class FlankCounts
 
     public FlankCounts()
     {
-        mBindCounts = new int[FLANK_AMINO_ACID_COUNT][TOTAL_FLANK_BASE_COUNT];
+        mBindCounts = new int[FLANK_AMINO_ACID_COUNT][TOTAL_FLANK_AA_COUNT];
         mTotalBinds = 0;
     }
 
@@ -158,12 +158,12 @@ public class FlankCounts
 
             writer.write("DataType,AminoAcid");
 
-            for(int i = FLANK_BASE_COUNT; i >= 1; --i)
+            for(int i = FLANK_AA_COUNT; i >= 1; --i)
             {
                 writer.write(String.format(",U%d", i));
             }
 
-            for(int i = 1; i <= FLANK_BASE_COUNT; ++i)
+            for(int i = 1; i <= FLANK_AA_COUNT; ++i)
             {
                 writer.write(String.format(",D%d", i));
             }
@@ -180,7 +180,7 @@ public class FlankCounts
 
                 writer.write(String.format("%s,%c", DATA_TYPE_BIND_COUNTS, aminoAcid));
 
-                for(int pos = 0; pos < TOTAL_FLANK_BASE_COUNT; ++pos)
+                for(int pos = 0; pos < TOTAL_FLANK_AA_COUNT; ++pos)
                 {
                     writer.write(String.format(",%d", mBindCounts[aa][pos]));
                 }

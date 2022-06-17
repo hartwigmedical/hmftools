@@ -19,7 +19,7 @@ import static com.hartwig.hmftools.neo.NeoCommon.THREADS;
 import static com.hartwig.hmftools.neo.bind.BindCommon.AMINO_ACID_21ST;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.ITEM_DELIM;
-import static com.hartwig.hmftools.neo.bind.FlankCounts.FLANK_BASE_COUNT;
+import static com.hartwig.hmftools.neo.bind.FlankCounts.FLANK_AA_COUNT;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -40,7 +40,6 @@ import com.hartwig.hmftools.neo.bind.BindCommon;
 import com.hartwig.hmftools.neo.bind.BindData;
 import com.hartwig.hmftools.neo.bind.BindScorer;
 import com.hartwig.hmftools.neo.bind.ScoreConfig;
-import com.hartwig.hmftools.neo.bind.TrainConfig;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -247,15 +246,15 @@ public class RankProteomePeptides
                             String upFlank = "";
                             String downFlank = "";
 
-                            int upFlankBases = min(startIndex, FLANK_BASE_COUNT);
+                            int upFlankLength = min(startIndex, FLANK_AA_COUNT);
 
-                            if(upFlankBases > 0)
-                                upFlank = transAminoAcids.AminoAcids.substring(startIndex - upFlankBases, startIndex);
+                            if(upFlankLength > 0)
+                                upFlank = transAminoAcids.AminoAcids.substring(startIndex - upFlankLength, startIndex);
 
-                            int downFlankBases = min(transAminoAcids.AminoAcids.length() - endIndex - 1, FLANK_BASE_COUNT);
+                            int downFlankLength = min(transAminoAcids.AminoAcids.length() - endIndex - 1, FLANK_AA_COUNT);
 
-                            if(downFlankBases > 0)
-                                downFlank = transAminoAcids.AminoAcids.substring(endIndex, endIndex + downFlankBases);
+                            if(downFlankLength > 0)
+                                downFlank = transAminoAcids.AminoAcids.substring(endIndex, endIndex + downFlankLength);
 
                             BindData bindData = new BindData(allele, aaPeptide, "", upFlank, downFlank);
 

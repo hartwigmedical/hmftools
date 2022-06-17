@@ -17,7 +17,7 @@ import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PATIENT_ID;
 import static com.hartwig.hmftools.neo.bind.BindCommon.ITEM_DELIM;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEPTIDE_LENGTHS;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.REQUIRED_PEPTIDE_LENGTHS;
-import static com.hartwig.hmftools.neo.bind.FlankCounts.FLANK_BASE_COUNT;
+import static com.hartwig.hmftools.neo.bind.FlankCounts.FLANK_AA_COUNT;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -154,11 +154,11 @@ public class GartnerDataPrep
                 String upFlank = "";
                 String downFlank = "";
 
-                int upFlankIndex = max(startIndex - FLANK_BASE_COUNT, 0);
+                int upFlankIndex = max(startIndex - FLANK_AA_COUNT, 0);
                 if(upFlankIndex < startIndex)
                     upFlank = mutationAAs.substring(upFlankIndex, startIndex);
 
-                int downFlankIndex = min(endIndex + FLANK_BASE_COUNT, mutationAAs.length() - 1);
+                int downFlankIndex = min(endIndex + FLANK_AA_COUNT, mutationAAs.length() - 1);
                 if(downFlankIndex > endIndex)
                     downFlank = mutationAAs.substring(endIndex, downFlankIndex);
 

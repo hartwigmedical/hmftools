@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.rna.RnaExpressionMatrix.INVALID_EXP;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
-import static com.hartwig.hmftools.neo.bind.FlankCounts.FLANK_BASE_COUNT;
+import static com.hartwig.hmftools.neo.bind.FlankCounts.FLANK_AA_COUNT;
 import static com.hartwig.hmftools.neo.cohort.DataLoader.loadAlleleCoverage;
 import static com.hartwig.hmftools.neo.cohort.DataLoader.loadNeoEpitopes;
 import static com.hartwig.hmftools.neo.cohort.DataLoader.loadRnaNeoData;
@@ -136,7 +136,7 @@ public class NeoScorerTask implements Callable
         NeoPredictionData neoPredData = new NeoPredictionData(neoData.Id);
 
         final List<PeptideData> peptides = EpitopeUtils.generatePeptides(
-                neoData.UpAminoAcids, neoData.NovelAminoAcids, neoData.DownAminoAcids, PEPTIDE_LENGTH_RANGE, FLANK_BASE_COUNT);
+                neoData.UpAminoAcids, neoData.NovelAminoAcids, neoData.DownAminoAcids, PEPTIDE_LENGTH_RANGE, FLANK_AA_COUNT);
 
         Set<String> uniqueAlleles = Sets.newHashSet();
 

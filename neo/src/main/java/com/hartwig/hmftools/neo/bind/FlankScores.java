@@ -17,7 +17,7 @@ import static com.hartwig.hmftools.neo.bind.FlankCounts.FLANK_AMINO_ACIDS;
 import static com.hartwig.hmftools.neo.bind.FlankCounts.START_AMINO_ACID_ID;
 import static com.hartwig.hmftools.neo.bind.FlankCounts.START_AMINO_ACID_FREQ;
 import static com.hartwig.hmftools.neo.bind.FlankCounts.STOP_AMINO_ACID_FREQ;
-import static com.hartwig.hmftools.neo.bind.FlankCounts.TOTAL_FLANK_BASE_COUNT;
+import static com.hartwig.hmftools.neo.bind.FlankCounts.TOTAL_FLANK_AA_COUNT;
 import static com.hartwig.hmftools.neo.bind.FlankCounts.UP_1;
 import static com.hartwig.hmftools.neo.bind.FlankCounts.flankAminoAcidIndex;
 
@@ -40,7 +40,7 @@ public class FlankScores
 
     public FlankScores()
     {
-        mPosWeights = new double[FLANK_AMINO_ACID_COUNT][TOTAL_FLANK_BASE_COUNT];
+        mPosWeights = new double[FLANK_AMINO_ACID_COUNT][TOTAL_FLANK_AA_COUNT];
         mHasData = false;
     }
 
@@ -125,7 +125,7 @@ public class FlankScores
     {
         AminoAcidFrequency aminoAcidFrequency = new AminoAcidFrequency();
 
-        for(int pos = 0; pos < TOTAL_FLANK_BASE_COUNT; ++pos)
+        for(int pos = 0; pos < TOTAL_FLANK_AA_COUNT; ++pos)
         {
             double posTotalCount = 0;
 
@@ -192,7 +192,7 @@ public class FlankScores
 
                 writer.write(String.format("%s,%c", DATA_TYPE_POS_WEIGHTS, aminoAcid));
 
-                for(int pos = 0; pos < TOTAL_FLANK_BASE_COUNT; ++pos)
+                for(int pos = 0; pos < TOTAL_FLANK_AA_COUNT; ++pos)
                 {
                     writer.write(String.format(",%.6f", mPosWeights[aa][pos]));
                 }

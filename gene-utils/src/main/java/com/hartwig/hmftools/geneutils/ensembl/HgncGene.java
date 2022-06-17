@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.geneutils.ensembl;
 
-class HgncGene
+public class HgncGene
 {
     public final String HgncId;
     public final String EnsemblGeneId;

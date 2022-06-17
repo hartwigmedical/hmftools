@@ -10,7 +10,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 
-public class HgncGenes
+public class  HgncGenes
 {
     private final Map<String,HgncGene> mDataByHgncId; // keyed by HGNC Id
     private final Map<String,HgncGene> mDataByGeneId;
