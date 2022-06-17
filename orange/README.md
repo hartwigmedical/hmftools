@@ -127,7 +127,7 @@ investigate potential causes for QC failure.
  - BQR plots from both reference and tumor sample from [SAGE](../sage)
 
 ### Version History and Download Links
-- Upcoming
+- [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.10)
   - Classify each driver gene as wild-type in case:
     1. Purple fit is reliable
     1. No reportable events have been found in the gene. 
