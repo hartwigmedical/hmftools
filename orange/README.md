@@ -32,28 +32,41 @@ Argument | Description
 ---|---
 disable_germline  | If set, disables the germline findings chapter and transforms germline variants to somatic variants.
 max_evidence_level | If set, filters evidence down to this level. For example, if "B" is passed as a parameter, only treatments with at least A or B level evidence are displayed in the clinical evidence chapter of the report. Do note that the front page always lists the count of all evidence present, regardless of this filter setting.
+experiment_date | Sets the experiment date to the specified date if set. Expected format is YYMMDD. If omitted, current date is used as experiment date.
+limit_json_output | If set, limits all lists in the JSON output to a single entry to make facilitate manual inspection of the JSON output.
+log_debug | If set, additional DEBUG logging is generated. 
 
 ### Somatic Findings 
 
 In addition to all somatic drivers (SNVs/Indels, copy numbers, structural variants and fusions) the following is considered potentially
 interesting and added to the report:
- - Other potentially relevant variants
-    1. Variants that are hotspots but not part of the reporting gene panel.
+ - Other potentially relevant variants:
+    1. Variants that are hotspots or near hotspots but not part of the reporting gene panel.
     1. Variants which have clinical evidence but are not part of the reporting gene panel.
     1. Exonic variants that are not reported but are phased with variants that are reported.
     1. Variants that are considered relevant for tumor type classification according to Cuppa.
+    1. Variants with synonymous impact on the canonical transcript of a reporting gene but with a reportable worst impact
+    1. Variants in slice regions that are not reported in genes with splice variant reporting enabled. 
  - Other regions with amps, or with deletions in other autosomal regions:
+    1. Gains in genes for which we report amplifications with a relative minimum copy number between 2.5 and 3 times ploidy are considered 
+        potentially interesting near-amplifications.
     1. Any chromosomal band location with at least one gene lost or fully amplified is considered potentially interesting.
-        - For a band with more than one gene amplified, the gene with the highest minimum copy number is picked.
-        - For a band with a loss that has no losses reported in this band already, a random gene is picked.
-    1. A maximum of 10 additional gains (sorted by minimum copy number) and 10 additional losses are reported as potentially interesting. 
- - Other potentially relevant fusions:
-    1. Any fusion that is not reported and has a reported type other than NONE is picked. 
-    1. Any fusion with clinical evidence is picked. 
-    1. A maximum of 10 additional fusions (randomly picked) are reported as potentially interesting.
- - Other viral presence
+    A maximum of 10 additional gains (sorted by minimum copy number) and 10 additional losses are reported as potentially interesting:
+        - For a band with more than one gene amplified, genes are first picked based on having clinical evidence and alternatively the 
+        gene with the highest minimum copy number is picked.
+        - In case of a loss in a band with a reported loss, the additional loss is considered potentially interesting in case it is 
+        associated with clinical evidence.
+        - For a band with a loss that has no losses reported in this band already, an arbitrary gene is picked. 
+ - Other potentially relevant fusions. A maximum of 10 additional fusions (randomly picked) are reported as potentially interesting:
+    1. Any fusion that is not reported and has a reported type other than NONE is considered potentially interesting. 
+    1. Any fusion with clinical evidence is considered potentially interesting.
+    1. Any fusion in a gene that is configured as an oncogene in the driver gene panel is considered potentially interesting. 
+ - Other viral presence:
     1. Any viral presence that is not otherwise reported is reported as potentially interesting.
- - Potentially interesting LOH events
+ - Potentially interesting gene disruptions:
+    1. Any unreported but disruptive gene disruption that is disrupting an exon which lies within a promiscuous exon range based on 
+    the fusion knowledgebase is considered potentially interesting.
+ - Potentially interesting LOH events:
     1. In case MSI is detected, LOH (if present) is shown for the following genes: MLH1, MSH2, MSH6, PMS2, EPCAM
     1. In case HRD (based on CHORD) is detected, LOH (if present) is shown for the following genes: BRCA1, BRCA2, RAD51C, PALB2
 
@@ -114,7 +127,7 @@ Do note that RNA features and cohort comparison thereof are only included if ORA
  The following algo is used to render clinical evidence in the ORANGE report based on [PROTECT](../protect) output:
   1. Evidence is split up based on applicable and "potentially interesting" based on PROTECT reported yes/no.
   1. Evidence is split between trials and non-trials which are further split up based on on/off label. 
-  1. Evidence is grouped by treatment and split up between responsive and resistance evidence.
+  1. Evidence is grouped by event and split up between responsive and resistance treatment evidence.
   1. Evidence is filtered based on the optional `max_reporting_level` configuration. 
 
 ### Quality Control
