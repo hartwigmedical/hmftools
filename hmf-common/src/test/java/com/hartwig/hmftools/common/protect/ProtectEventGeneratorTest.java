@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.common.purple.interpretation.GainLossTestFactory;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.test.SomaticVariantTestFactory;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantTestFactory;
@@ -20,11 +21,11 @@ public class ProtectEventGeneratorTest {
 
     @Test
     public void canTestToVariantEvent() {
-        assertEquals("p.Gly12Cys", ProtectEventGenerator.toVariantEvent("p.Gly12Cys", "c.123A>C", "missense_variant"));
-        assertEquals("c.123A>C", ProtectEventGenerator.toVariantEvent("p.?", "c.123A>C", "missense_variant"));
-        assertEquals("c.123A>C", ProtectEventGenerator.toVariantEvent("", "c.123A>C", "missense_variant"));
-        assertEquals("upstream", ProtectEventGenerator.toVariantEvent("", "", "upstream_gene_variant"));
-        assertEquals("missense_variant", ProtectEventGenerator.toVariantEvent("", "", "missense_variant"));
+        assertEquals("p.Gly12Cys", ProtectEventGenerator.toVariantEvent("p.Gly12Cys", "c.123A>C", "missense_variant", CodingEffect.MISSENSE));
+        assertEquals("c.123A>C splice", ProtectEventGenerator.toVariantEvent("p.?", "c.123A>C", "missense_variant", CodingEffect.SPLICE));
+        assertEquals("c.123A>C", ProtectEventGenerator.toVariantEvent("", "c.123A>C", "missense_variant", CodingEffect.MISSENSE));
+        assertEquals("upstream", ProtectEventGenerator.toVariantEvent("", "", "upstream_gene_variant", CodingEffect.SPLICE));
+        assertEquals("missense_variant", ProtectEventGenerator.toVariantEvent("", "", "missense_variant", CodingEffect.MISSENSE));
     }
 
     @Test

@@ -508,8 +508,6 @@ Sets with less than the read count threshold are dropped before merging and coll
 
 ## 7. De-duplication
 
-The multip
-
 De-duplication removes any duplicate candidate variants, which may represent the same underlying mutation in different ways.  SAGE removes the following 4 types of deduplication in the following order on PASS variants only:
 - **dedupMNV** - DEDUP any overlapping MNV in the same phase set. MNV may have 2 or 3 bases.  First any MNV which has 2 changed bases and overlaps with an MNV with 3 changed bases is filtered. If both have 2 changed bases then the least compact MNV is filtered.  If both have the same number of bases and changed bases then the lowest qual MNV is filtered.
 - **dedupMixedGermlineSomatic** -  Filter MNVs as DEDUP which can be explained by a germline filtered SNV and PASS, except when the MNV is in a coding region and impacts more than one base of the same codon impacted by the SNV. Any MNVs that have a germline component and all associated SNVs (including somatic) are given a shared MSG (mixed somatic germline) identifier.

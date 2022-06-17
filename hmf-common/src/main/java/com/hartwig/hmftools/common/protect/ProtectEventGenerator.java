@@ -4,8 +4,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.protect.variant.OtherEffectsInterpreter;
 import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.Variant;
+
+import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -32,25 +35,30 @@ public final class ProtectEventGenerator {
 
     @NotNull
     private static String canonicalVariantEvent(@NotNull Variant variant) {
-        return toVariantEvent(variant.canonicalHgvsProteinImpact(), variant.canonicalHgvsCodingImpact(), variant.canonicalEffect());
+        return toVariantEvent(variant.canonicalHgvsProteinImpact(),
+                variant.canonicalHgvsCodingImpact(),
+                variant.canonicalEffect(),
+                variant.canonicalCodingEffect());
     }
 
     @NotNull
     private static String nonCanonicalVariantEvent(@NotNull ReportableVariant variant) {
         return toVariantEvent(OtherEffectsInterpreter.hgvsProteinImpact(variant.otherReportedEffects()),
                 OtherEffectsInterpreter.hgvsCodingImpact(variant.otherReportedEffects()),
-                OtherEffectsInterpreter.effect(variant.otherReportedEffects()));
+                OtherEffectsInterpreter.effect(variant.otherReportedEffects()),
+                OtherEffectsInterpreter.codingEffect(variant.otherReportedEffects()));
     }
 
     @NotNull
     @VisibleForTesting
-    static String toVariantEvent(@NotNull String protein, @NotNull String coding, @NotNull String effect) {
+    static String toVariantEvent(@NotNull String protein, @NotNull String coding, @NotNull String effect,
+            @NotNull CodingEffect codingEffect) {
         if (!protein.isEmpty() && !protein.equals("p.?")) {
             return protein;
         }
 
         if (!coding.isEmpty()) {
-            return coding;
+            return codingEffect == SPLICE ? coding + " splice" : coding;
         }
 
         if (effect.equals(UPSTREAM_GENE_VARIANT)) {
