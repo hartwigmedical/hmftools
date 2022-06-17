@@ -83,5 +83,4 @@ public class SomaticVariant
         return String.format("pos(%s:%d) variant(%s: %s>%s) gene(%s) triNuc(%s)",
                 Chromosome, Position, Type, Ref, Alt, Gene, TrinucleotideContext);
     }
-
 }

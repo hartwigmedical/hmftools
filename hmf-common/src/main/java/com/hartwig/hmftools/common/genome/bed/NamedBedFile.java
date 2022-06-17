@@ -59,7 +59,6 @@ public final class NamedBedFile
                     writer.append(line);
                     writer.append("\n");
                 }
-
             }
         }
     }
