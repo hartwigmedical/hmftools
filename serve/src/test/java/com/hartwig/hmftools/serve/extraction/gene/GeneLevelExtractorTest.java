@@ -167,7 +167,7 @@ public class GeneLevelExtractorTest {
 
         assertNotNull(geneLevelEvent);
         assertEquals("STK11", geneLevelEvent.gene());
-        assertEquals(GeneLevelEvent.INACTIVATION, geneLevelEvent.event());
+        assertEquals(GeneLevelEvent.ANY_MUTATION, geneLevelEvent.event());
     }
 
     @Test
@@ -202,11 +202,11 @@ public class GeneLevelExtractorTest {
         assertEquals(ImmutableGeneLevelAnnotation.builder().gene("NOTCH1").event(GeneLevelEvent.INACTIVATION).build(),
                 geneLevelExtractor.extractGeneLevelEvent("NOTCH1", "inact mut"));
 
-        assertEquals(ImmutableGeneLevelAnnotation.builder().gene("MET").event(GeneLevelEvent.ACTIVATION).build(),
+        assertEquals(ImmutableGeneLevelAnnotation.builder().gene("MET").event(GeneLevelEvent.ANY_MUTATION).build(),
                 geneLevelExtractor.extractGeneLevelEvent("MET", "MUTATION"));
-        assertEquals(ImmutableGeneLevelAnnotation.builder().gene("NOTCH1").event(GeneLevelEvent.INACTIVATION).build(),
+        assertEquals(ImmutableGeneLevelAnnotation.builder().gene("NOTCH1").event(GeneLevelEvent.ANY_MUTATION).build(),
                 geneLevelExtractor.extractGeneLevelEvent("NOTCH1", "MUTATION"));
-        assertEquals(ImmutableGeneLevelAnnotation.builder().gene("NOTCH1").event(GeneLevelEvent.INACTIVATION).build(),
+        assertEquals(ImmutableGeneLevelAnnotation.builder().gene("NOTCH1").event(GeneLevelEvent.ANY_MUTATION).build(),
                 geneLevelExtractor.extractGeneLevelEvent("NOTCH1", "NOTCH1 "));
         assertNull(geneLevelExtractor.extractGeneLevelEvent("BRCA1", "BRCA1"));
         assertNull(geneLevelExtractor.extractGeneLevelEvent("KRAS", "not a gene level event"));
@@ -242,6 +242,7 @@ public class GeneLevelExtractorTest {
                 RefGenomeResourceTestFactory.buildTestResource37().knownFusionCache(),
                 Sets.newHashSet("positive", "activating mutation", "act mut"),
                 Sets.newHashSet("negative", "LOSS-OF-FUNCTION", "inact mut"),
+                Sets.newHashSet("mutant"),
                 annotation);
     }
 }

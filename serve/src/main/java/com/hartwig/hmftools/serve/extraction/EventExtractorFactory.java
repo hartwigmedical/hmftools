@@ -63,6 +63,7 @@ public final class EventExtractorFactory {
                         refGenomeResource.knownFusionCache(),
                         config.activatingGeneLevelKeyPhrases(),
                         config.inactivatingGeneLevelKeyPhrases(),
+                        config.genericGeneLevelKeyPhrases(),
                         driverInconsistencyMode),
                 new CopyNumberExtractor(exomeGeneChecker, refGenomeResource.driverGenes(), driverInconsistencyMode),
                 new FusionExtractor(fusionGeneChecker,

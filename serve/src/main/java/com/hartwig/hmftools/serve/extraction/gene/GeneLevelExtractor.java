@@ -32,12 +32,14 @@ public class GeneLevelExtractor {
     private final Set<String> activationKeyPhrases;
     @NotNull
     private final Set<String> inactivationKeyPhrases;
+    @NotNull
+    private final Set<String> genericKeyPhrases;
     private final DriverInconsistencyMode driverInconsistencyMode;
 
     public GeneLevelExtractor(@NotNull final GeneChecker exomeGeneChecker, @NotNull final GeneChecker fusionGeneChecker,
             @NotNull final List<DriverGene> driverGenes, @NotNull final KnownFusionCache knownFusionCache,
             @NotNull final Set<String> activationKeyPhrases, @NotNull final Set<String> inactivationKeyPhrases,
-            @NotNull DriverInconsistencyMode driverInconsistencyMode) {
+            @NotNull final Set<String> genericKeyPhrases, @NotNull DriverInconsistencyMode driverInconsistencyMode) {
         this.exomeGeneChecker = exomeGeneChecker;
         this.fusionGeneChecker = fusionGeneChecker;
         this.driverGenes = driverGenes;
@@ -45,6 +47,7 @@ public class GeneLevelExtractor {
         this.activationKeyPhrases = activationKeyPhrases;
         this.inactivationKeyPhrases = inactivationKeyPhrases;
         this.driverInconsistencyMode = driverInconsistencyMode;
+        this.genericKeyPhrases = genericKeyPhrases;
     }
 
     @Nullable
@@ -105,37 +108,32 @@ public class GeneLevelExtractor {
     @Nullable
     @VisibleForTesting
     GeneLevelAnnotation extractGeneLevelEvent(@NotNull String gene, @NotNull String event) {
-        int longestActivationMatchLength = -1;
+        GeneLevelEvent result = GeneLevelEvent.ANY_MUTATION;
         for (String keyPhrase : activationKeyPhrases) {
-            if (event.contains(keyPhrase) && keyPhrase.length() > longestActivationMatchLength) {
-                longestActivationMatchLength = keyPhrase.length();
+            if (event.contains(keyPhrase)) {
+                result = GeneLevelEvent.ACTIVATION;
             }
         }
 
-        int longestInactivatingMatchLength = -1;
         for (String keyPhrase : inactivationKeyPhrases) {
-            if (event.contains(keyPhrase) && keyPhrase.length() > longestInactivatingMatchLength) {
-                longestInactivatingMatchLength = keyPhrase.length();
+            if (event.contains(keyPhrase)) {
+                result = GeneLevelEvent.INACTIVATION;
+            }
+        }
+
+        for (String keyPhrase : genericKeyPhrases) {
+            if (event.contains(keyPhrase)) {
+                result = GeneLevelEvent.ANY_MUTATION;
             }
         }
 
         GeneLevelEvent driverBasedEvent = determineGeneLevelEventFromDriverGenes(driverGenes, gene);
-        // If we find both an activating and inactivating event, we assume the longest event is the most important.
-        // This is to support cases where an activating keyphrase is a substring of inactivating keyphrase (eg "act mut" vs "inact mut".
-        GeneLevelEvent result;
-        if (longestActivationMatchLength > 0 || longestInactivatingMatchLength > 0) {
-            result = longestActivationMatchLength >= longestInactivatingMatchLength
-                    ? GeneLevelEvent.ACTIVATION
-                    : GeneLevelEvent.INACTIVATION;
-        } else {
-            result = driverBasedEvent;
-        }
 
         if (driverInconsistencyMode.isActive()) {
             if (driverInconsistencyMode == DriverInconsistencyMode.WARN_ONLY) {
                 if (driverBasedEvent == GeneLevelEvent.ANY_MUTATION) {
                     LOGGER.warn("Gene level event on gene {} not present in driver catalog. {} will never be reported", gene, result);
-                } else if (result != driverBasedEvent) {
+                } else if (result != GeneLevelEvent.ANY_MUTATION && result != driverBasedEvent) {
                     LOGGER.warn(
                             "Gene level event mismatch in driver gene event for '{}'. Event suggests {} while driver catalog suggests {}",
                             gene,
@@ -148,7 +146,7 @@ public class GeneLevelExtractor {
                             result,
                             gene);
                     return null;
-                } else if (result != driverBasedEvent) {
+                } else if (result != GeneLevelEvent.ANY_MUTATION && result != driverBasedEvent) {
                     LOGGER.info(
                             "Gene level event filtered -- Mismatch in driver gene event for '{}'. Event suggests {} while driver catalog suggests {}",
                             gene,
