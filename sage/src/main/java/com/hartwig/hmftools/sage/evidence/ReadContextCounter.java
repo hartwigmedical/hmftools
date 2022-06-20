@@ -242,7 +242,7 @@ public class ReadContextCounter implements VariantHotspot
                 return UNRELATED;
         }
 
-        if(rawContext.ReadIndexInSkipped)
+            if(rawContext.ReadIndexInSkipped)
             return UNRELATED;
 
         int readIndex = rawContext.ReadIndex;
@@ -260,14 +260,7 @@ public class ReadContextCounter implements VariantHotspot
         boolean covered = mReadContext.indexedBases().isCoreCovered(readIndex, record.getReadBases().length);
 
         if(!covered)
-        {
-            SG_LOGGER.trace("var({}: {}->{}) readContext({}-{}-{}) no core coverage read(idx={} len={} id={})",
-                    mVariant.position(), mVariant.ref(), mVariant.alt(),
-                    mReadContext.indexedBases().LeftCoreIndex, mReadContext.indexedBases().Index,
-                    mReadContext.indexedBases().RightCoreIndex, readIndex, record.getReadBases().length, record.getReadName());
-
             return UNRELATED;
-        }
 
         final QualityConfig qualityConfig = sageConfig.Quality;
 
@@ -391,37 +384,52 @@ public class ReadContextCounter implements VariantHotspot
         if(mMaxCandidateDeleteLength < 5)
             return RawContext.INVALID_CONTEXT;
 
-        if(!record.getCigar().containsOperator(CigarOperator.S))
+        int scLenLeft = record.getCigar().isLeftClipped() ? record.getCigar().getFirstCigarElement().getLength() : 0;
+        int scLenRight = record.getCigar().isRightClipped() ? record.getCigar().getLastCigarElement().getLength() : 0;
+
+        if(max(scLenLeft, scLenRight) < 5)
             return RawContext.INVALID_CONTEXT;
 
-        int maxScLength = max(
-                record.getCigar().isLeftClipped() ? record.getCigar().getFirstCigarElement().getLength() : 0,
-                record.getCigar().isRightClipped() ? record.getCigar().getLastCigarElement().getLength() : 0);
-
-        if(maxScLength < 5)
+        final String variantCore = mReadContext.coreString();
+        int coreStartIndex = record.getReadString().indexOf(variantCore);
+        if(coreStartIndex < 1)
             return RawContext.INVALID_CONTEXT;
 
-        int coreIndex = record.getReadString().indexOf(mReadContext.coreString());
-        if(coreIndex < 1)
+        int coreEndIndex = coreStartIndex + variantCore.length() - 1;
+        boolean isValidRead = false;
+        int baseQuality = 0;
+
+        if(scLenLeft > scLenRight)
+        {
+            // the core match must span from the left soft-clipping into the matched bases
+            int readRightCorePosition = record.getReferencePositionAtReadPosition(coreEndIndex + 1);
+
+            if(readRightCorePosition > mVariant.position() && coreStartIndex < scLenLeft)
+            {
+                isValidRead = true;
+                baseQuality = record.getBaseQualities()[scLenLeft];
+            }
+        }
+        else
+        {
+            // the core match must span from the matched bases into the right soft-clipping
+            int readLeftCorePosition = record.getReferencePositionAtReadPosition(coreStartIndex + 1);
+            int postCoreIndexDiff = record.getReadBases().length - coreEndIndex;
+
+            if(readLeftCorePosition < mVariant.position() && postCoreIndexDiff < scLenRight)
+            {
+                isValidRead = true;
+                baseQuality = record.getBaseQualities()[record.getReadBases().length - scLenRight];
+            }
+        }
+
+        if(!isValidRead)
             return RawContext.INVALID_CONTEXT;
 
-        // the start of the core must align with where it is in the ref genome
-        int variantRefPosition = mReadContext.indexedBases().Position;
-
-        int leftCoreOffset = mReadContext.indexedBases().Index - mReadContext.indexedBases().LeftCoreIndex;
-        int impliedReadIndex = coreIndex + leftCoreOffset;
-
-        int readLeftCorePosition = record.getReferencePositionAtReadPosition(coreIndex + 1);
-        int readDelAdjustedIndexPosition = readLeftCorePosition + mMaxCandidateDeleteLength + leftCoreOffset;
-        int readRefPosition = record.getReferencePositionAtReadPosition(impliedReadIndex); // this will be zero if it falls in the soft-clipping
-
-        if(variantRefPosition != readRefPosition && variantRefPosition != readDelAdjustedIndexPosition)
-            return RawContext.INVALID_CONTEXT;
-
-        int baseQuality = record.getBaseQualities()[impliedReadIndex];
+        int readIndex = coreStartIndex + mReadContext.indexedBases().Index - mReadContext.indexedBases().LeftCoreIndex;
 
         return new RawContext(
-                impliedReadIndex, false, false, true,
+                readIndex, false, false, true,
                 true, false, true, baseQuality, 0);
     }
 

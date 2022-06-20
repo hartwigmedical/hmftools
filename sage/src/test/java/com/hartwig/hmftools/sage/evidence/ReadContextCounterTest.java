@@ -1,15 +1,28 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
+import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
+import static com.hartwig.hmftools.sage.common.TestUtils.createReadContext;
+import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
+import static com.hartwig.hmftools.sage.evidence.ReadContextCounter.RC_CORE;
+import static com.hartwig.hmftools.sage.evidence.ReadContextCounter.RC_FULL;
+import static com.hartwig.hmftools.sage.evidence.ReadContextCounter.RC_PARTIAL;
+
 import static org.junit.Assert.assertEquals;
 
 import static htsjdk.samtools.SAMUtils.phredToFastq;
 
 import java.util.Collections;
 
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.common.RegionTaskTester;
+import com.hartwig.hmftools.sage.common.SageVariant;
+import com.hartwig.hmftools.sage.pipeline.RegionTask;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.common.ReadContext;
@@ -20,6 +33,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
+import junit.framework.TestCase;
 
 public class ReadContextCounterTest
 {
@@ -170,32 +184,48 @@ public class ReadContextCounterTest
         assertEquals(1, victim.altSupport());
     }
 
-    public static ReadContext createReadContext(
-            int refPosition, int readIndex, int leftCentreIndex, int rightCentreIndex, String readBases, String microhomology)
+    @Test
+    public void testBasicVariants()
     {
-        int adjLeftCentreIndex = Math.max(leftCentreIndex, 0);
-        int adjRightCentreIndex = Math.min(rightCentreIndex, readBases.length() - 1);
-        boolean incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
+        ChrBaseRegion region = new ChrBaseRegion(CHR_1, 1, 200);
 
-        IndexedBases readBasesIndexed = new IndexedBases(refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, 0, readBases.getBytes());
+        RegionTaskTester tester = new RegionTaskTester();
 
-        return new ReadContext(refPosition, "", 0, microhomology, readBasesIndexed, incompleteCore);
-    }
+        RegionTask task = tester.createRegionTask(region);
 
-    public static SAMRecord buildSamRecord(final int alignmentStart, @NotNull final String cigar, @NotNull final String readString,
-            @NotNull final String qualities)
-    {
-        final SAMRecord record = new SAMRecord(null);
-        record.setAlignmentStart(alignmentStart);
-        record.setCigarString(cigar);
-        record.setReadString(readString);
-        record.setReadNegativeStrandFlag(false);
-        record.setBaseQualityString(qualities);
-        record.setMappingQuality(20);
-        record.setDuplicateReadFlag(false);
-        record.setReadUnmappedFlag(false);
-        record.setProperPairFlag(true);
-        record.setReadPairedFlag(true);
-        return record;
+        String refBases = "XTTCTGTAGGTTTCAGATGAAATTTTATTTCAGATTTACCAGCCACGGGAGCCCCTTCACTTCAGCAAATT"
+                + "TTCTGTAGGTTTCAGATGAAATTTTATTTCAGATTTACCAGCCACGGGAGCCCCTTCACTTCAGCAAATT";
+        tester.RefGenome.RefGenomeMap.put(CHR_1, refBases + generateRandomBases(1500));
+
+        // first a read that establishes the SNV
+        String readBases = refBases.substring(1, 51) + "T" + refBases.substring(52, 71);
+
+        SAMRecord read1 = createSamRecord("READ_01", CHR_1, 1, readBases, "70M");
+        tester.TumorSamSlicer.ReadRecords.add(read1);
+        tester.TumorSamSlicer.ReadRecords.add(read1);
+
+        // a read with a DEL before this variant
+        readBases = refBases.substring(1, 31)  + refBases.substring(41, 71);
+        SAMRecord read2 = createSamRecord("READ_02", CHR_1, 1, readBases, "30M10D30M");
+        tester.TumorSamSlicer.ReadRecords.add(read2);
+        tester.TumorSamSlicer.ReadRecords.add(read2);
+
+        // now a read with a DEL so the part of the read that supports the variant is in a soft-clipped section
+        readBases = refBases.substring(1, 31) + refBases.substring(41, 51)+ "T" + refBases.substring(52, 56);
+        SAMRecord read3 = createSamRecord("READ_03", CHR_1, 1, readBases, "30M15S");
+        tester.TumorSamSlicer.ReadRecords.add(read3);
+
+        readBases = refBases.substring(46, 51)+ "T" + refBases.substring(52, 92);
+        SAMRecord read4 = createSamRecord("READ_04", CHR_1, 62, readBases, "16S30M");
+        tester.TumorSamSlicer.ReadRecords.add(read4);
+
+        task.run();
+
+        TestCase.assertEquals(2, task.getVariants().size());
+        SageVariant var = task.getVariants().stream().filter(x -> x.position() == 51).findFirst().orElse(null);
+        TestCase.assertNotNull(var);
+        TestCase.assertEquals(2, var.tumorReadCounters().get(0).counts()[RC_FULL]);
+        TestCase.assertEquals(1, var.tumorReadCounters().get(0).counts()[RC_PARTIAL]);
+        TestCase.assertEquals(1, var.tumorReadCounters().get(0).counts()[RC_CORE]);
     }
 }

@@ -133,13 +133,6 @@ public class IndexedBases
         return getMatchType(other, other.length(),null, false, 0);
     }
 
-    /*
-    public ReadContextMatch matchAtPosition(final IndexedBases other, final byte[] otherBaseQuals)
-    {
-        return getMatchType(other, other.length(), otherBaseQuals, false, 0);
-    }
-    */
-
     public ReadContextMatch matchAtPosition(
             final IndexedBases other, final byte[] otherBaseQuals, boolean wildcardsInCore, int maxCoreMismatches)
     {

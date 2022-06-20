@@ -67,7 +67,6 @@ public class SageConfig
     public final List<ChrBaseRegion> SpecificRegions;
     public final boolean IncludeMT;
     public final boolean CountRealigned;
-    public final boolean CoreSearch;
     public final int RegionSliceSize;
     public final int MinMapQuality;
     public final int MaxReadDepth;
@@ -116,7 +115,6 @@ public class SageConfig
     private static final String VALIDATION_STRINGENCY = "validation_stringency";
     private static final String INCLUDE_MT = "include_mt";
     private static final String COUNT_REALIGNED = "count_realigned";
-    private static final String CORE_SEARCH = "core_search";
 
     private static final String SPECIFIC_CHROMOSOMES = "specific_chr";
     private static final String SPECIFIC_POSITIONS = "specific_positions";
@@ -223,7 +221,6 @@ public class SageConfig
         QualityRecalibration = new QualityRecalibrationConfig(cmd);
 
         CountRealigned = cmd.hasOption(COUNT_REALIGNED);
-        CoreSearch = cmd.hasOption(CORE_SEARCH);
 
         PanelOnly = containsFlag(cmd, PANEL_ONLY);
         LogLpsData = containsFlag(cmd, LOG_LPS_DATA);
@@ -368,7 +365,6 @@ public class SageConfig
         options.addOption(SPECIFIC_POSITIONS, true, "Run for specific positions(s) separated by ';', for debug purposes");
         options.addOption(INCLUDE_MT, false, "Call MT variants");
         options.addOption(COUNT_REALIGNED, false, "Count realigned reads towards tumor qual");
-        options.addOption(CORE_SEARCH, false, "Search code in read covered by soft-clips");
         options.addOption(SLICE_SIZE, true, "Slice size [" + DEFAULT_SLICE_SIZE + "]");
 
         options.addOption(MAX_READ_DEPTH, true, "Max depth to look for evidence [" + DEFAULT_MAX_READ_DEPTH + "]");
@@ -414,7 +410,6 @@ public class SageConfig
         MaxReadDepthPanel = DEFAULT_MAX_READ_DEPTH_PANEL;
         ReadContextFlankSize = DEFAULT_READ_CONTEXT_FLANK_SIZE;
         CountRealigned = false;
-        CoreSearch = false;
         RefGenomeFile = "refGenome";
         HighConfidenceBed = "highConf";
         CoverageBed = "coverage";

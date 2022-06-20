@@ -29,8 +29,7 @@ public class NumberEventsTest
                 refStart - 1, "AAAAGATTAGGGGGG".getBytes()))));
     }
 
-    @NotNull
-    public static SAMRecord buildSamRecord(final int alignmentStart, @NotNull final String cigar, @NotNull final String readString)
+    private static SAMRecord buildSamRecord(final int alignmentStart, @NotNull final String cigar, @NotNull final String readString)
     {
         final StringBuilder qualityString = new StringBuilder();
         for(int i = 0; i < readString.length(); i++)

@@ -14,6 +14,8 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
+import org.jetbrains.annotations.NotNull;
+
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordSetBuilder;
 
@@ -110,6 +112,18 @@ public class TestUtils
                 100, 1);
     }
 
+    public static ReadContext createReadContext(
+            int refPosition, int readIndex, int leftCentreIndex, int rightCentreIndex, String readBases, String microhomology)
+    {
+        int adjLeftCentreIndex = Math.max(leftCentreIndex, 0);
+        int adjRightCentreIndex = Math.min(rightCentreIndex, readBases.length() - 1);
+        boolean incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
+
+        IndexedBases readBasesIndexed = new IndexedBases(refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, 0, readBases.getBytes());
+
+        return new ReadContext(refPosition, "", 0, microhomology, readBasesIndexed, incompleteCore);
+    }
+
     public static SAMRecord createSamRecord(
             final String readId, final String chromosome, int readStart, final String readBases, final String cigar)
     {
@@ -137,5 +151,24 @@ public class TestUtils
 
         return record;
     }
+
+    public static SAMRecord buildSamRecord(
+            final int alignmentStart, @NotNull final String cigar, @NotNull final String readString,
+            @NotNull final String qualities)
+    {
+        final SAMRecord record = new SAMRecord(null);
+        record.setAlignmentStart(alignmentStart);
+        record.setCigarString(cigar);
+        record.setReadString(readString);
+        record.setReadNegativeStrandFlag(false);
+        record.setBaseQualityString(qualities);
+        record.setMappingQuality(20);
+        record.setDuplicateReadFlag(false);
+        record.setReadUnmappedFlag(false);
+        record.setProperPairFlag(true);
+        record.setReadPairedFlag(true);
+        return record;
+    }
+
 
 }

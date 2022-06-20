@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.sage.read;
 
+import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.read.ExpandedBasesFactory.MAX_SKIPPED_REFERENCE_REGIONS;
 
 import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.sage.common.IndexedBases;
-import com.hartwig.hmftools.sage.evidence.ReadContextCounterTest;
 
 import org.junit.Test;
 
@@ -13,8 +13,6 @@ import htsjdk.samtools.SAMRecord;
 
 public class ExpandedBasesTest
 {
-    // private final ExpandedBasesFactory factory = new ExpandedBasesFactory(2, 3);
-
     private final String SKIP_WILDCARDS;
 
     public ExpandedBasesTest()
@@ -34,7 +32,7 @@ public class ExpandedBasesTest
     {
         String cigar = "3S2M1I1D2M1S";
         String read = "SSSMMIMMS";
-        final SAMRecord samRecord = ReadContextCounterTest.buildSamRecord(100, cigar, read, read);
+        final SAMRecord samRecord = buildSamRecord(100, cigar, read, read);
 
         for(int i = 0; i < read.length(); i++)
         {
@@ -48,7 +46,7 @@ public class ExpandedBasesTest
     {
         String cigar = "2M1N2M";
         String read = "MMMM";
-        final SAMRecord samRecord = ReadContextCounterTest.buildSamRecord(100, cigar, read, read);
+        final SAMRecord samRecord = buildSamRecord(100, cigar, read, read);
 
         for(int i = 0; i < read.length(); i++)
         {
@@ -63,7 +61,7 @@ public class ExpandedBasesTest
         String cigar = "2M100N2M";
         String expectedRead = "MM" + SKIP_WILDCARDS + "MM";
         String read = expectedRead.replaceAll("\\.", "");
-        final SAMRecord samRecord = ReadContextCounterTest.buildSamRecord(100, cigar, read, read);
+        final SAMRecord samRecord = buildSamRecord(100, cigar, read, read);
 
         assertExpand(0, expectedRead, ExpandedBasesFactory.expand(100, 0, samRecord));
         assertExpand(1, expectedRead, ExpandedBasesFactory.expand(100, 1, samRecord));
@@ -77,7 +75,7 @@ public class ExpandedBasesTest
         String cigar = "2M2456N2M100N3M";
         String expectedRead = "MM" + SKIP_WILDCARDS + "MM" + SKIP_WILDCARDS + "MMM";
         String read = expectedRead.replaceAll("\\.", "");
-        final SAMRecord samRecord = ReadContextCounterTest.buildSamRecord(100, cigar, read, read);
+        final SAMRecord samRecord = buildSamRecord(100, cigar, read, read);
 
         assertExpand(0, expectedRead, ExpandedBasesFactory.expand(100, 0, samRecord));
         assertExpand(1, expectedRead, ExpandedBasesFactory.expand(100, 1, samRecord));
