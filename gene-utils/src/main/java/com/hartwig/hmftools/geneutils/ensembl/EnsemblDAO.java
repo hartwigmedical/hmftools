@@ -89,14 +89,7 @@ public class EnsemblDAO
         mGeneIdDataMap = Maps.newHashMap();
         mTranscriptIds = Sets.newHashSet();
 
-        if(cmd.hasOption(HGNC_GENE_DATA_FILE))
-        {
-            mHgncGenes = new HgncGenes(cmd.getOptionValue(HGNC_GENE_DATA_FILE));
-        }
-        else
-        {
-            mHgncGenes = null;
-        }
+        mHgncGenes = new HgncGenes(cmd.getOptionValue(HGNC_GENE_DATA_FILE));
 
         mReferenceTranscriptMap = Maps.newHashMap();
         mReferenceGeneDataById = Maps.newHashMap();
@@ -165,6 +158,7 @@ public class EnsemblDAO
 
             System.setProperty("org.jooq.no-logo", "true");
             System.setProperty("org.jooq.no-tips", "true");
+
             Connection conn = DriverManager.getConnection(jdbcUrl, userName, password);
             String catalog = conn.getCatalog();
 
