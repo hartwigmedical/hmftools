@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -75,6 +76,8 @@ public class BindScorer
         mExpressionLikelihood = expressionLikelihood;
         mRecognitionSimilarity = null;
     }
+
+    public Set<String> getScoringAlleles() { return mAlleleBindMatrices.keySet(); }
 
     public void run()
     {

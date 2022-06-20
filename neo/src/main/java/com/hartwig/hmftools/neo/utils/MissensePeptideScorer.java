@@ -3,6 +3,8 @@ package com.hartwig.hmftools.neo.utils;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
+import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
@@ -18,10 +20,12 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.FlankCounts.FLANK_AA_COUNT;
+import static com.hartwig.hmftools.neo.bind.ScoreConfig.SCORE_FILE_DIR;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -34,19 +38,23 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
-import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.neo.bind.BindData;
+import com.hartwig.hmftools.neo.bind.BindScorer;
+import com.hartwig.hmftools.neo.bind.ScoreConfig;
+import com.hartwig.hmftools.neo.cohort.NeoScorer;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
-public class MissensePeptideWriter
+public class MissensePeptideScorer
 {
     private final EnsemblDataCache mEnsemblDataCache;
     private final RefGenomeInterface mRefGenome;
@@ -56,12 +64,16 @@ public class MissensePeptideWriter
     private final int mFlankLength;
     private final Set<String> mUniqiuePeptides;
 
+    private final BindScorer mPeptideScorer;
+
+    private final List<PeptideData> mPeptideData;
+
     private BufferedWriter mWriter;
 
     private static final String GENE_ID_FILE = "gene_id_file";
     private static final String OUTPUT_FILE = "output_file";
 
-    public MissensePeptideWriter(final CommandLine cmd)
+    public MissensePeptideScorer(final CommandLine cmd)
     {
         mEnsemblDataCache = new EnsemblDataCache(cmd.getOptionValue(ENSEMBL_DATA_DIR), RefGenomeVersion.V37);
         mEnsemblDataCache.setRequiredData(true, false, false, true);
@@ -71,6 +83,9 @@ public class MissensePeptideWriter
         mPeptideLengths = new int[] { MIN_PEPTIDE_LENGTH, REF_PEPTIDE_LENGTH };
         mFlankLength = FLANK_AA_COUNT;
         mUniqiuePeptides = Sets.newHashSet();
+        mPeptideData = Lists.newArrayList();
+
+        mPeptideScorer = cmd.hasOption(SCORE_FILE_DIR) ? new BindScorer(new ScoreConfig(cmd)) : null;
 
         mWriter = initialiseWriter(cmd.getOptionValue(OUTPUT_FILE));
 
@@ -82,6 +97,12 @@ public class MissensePeptideWriter
         if(mGeneIds.isEmpty())
         {
             NE_LOGGER.error("no gene IDs specified");
+            System.exit(1);
+        }
+
+        if(mPeptideScorer != null && !mPeptideScorer.loadScoringData())
+        {
+            NE_LOGGER.error("bind scoring data load failed");
             System.exit(1);
         }
 
@@ -106,7 +127,18 @@ public class MissensePeptideWriter
                     continue;
 
                 mUniqiuePeptides.clear();
+                mPeptideData.clear();
+
                 processTranscript(geneData, transData);
+
+                if(mPeptideScorer != null)
+                {
+                    scorePeptides();
+                }
+                else
+                {
+                    mPeptideData.forEach(x -> writePeptideData(x, null));
+                }
             }
 
             ++geneCount;
@@ -123,6 +155,8 @@ public class MissensePeptideWriter
             return;
 
         boolean inCoding = false;
+
+        List<Integer> codingBasePositions = Lists.newArrayList();
 
         if(transData.Strand == POS_STRAND)
         {
@@ -156,10 +190,15 @@ public class MissensePeptideWriter
                     }
                 }
 
+                for(int pos = exonCodingStart; pos <= exonCodingEnd; ++pos)
+                {
+                    codingBasePositions.add(pos);
+                }
+
                 codingBases.append(mRefGenome.getBaseString(geneData.Chromosome, exonCodingStart, exonCodingEnd));
             }
 
-            produceMissensePeptides(geneData, transData, codingBases.toString());
+            produceMissensePeptides(geneData, transData, codingBases.toString(), codingBasePositions);
         }
         else
         {
@@ -193,20 +232,28 @@ public class MissensePeptideWriter
                 }
 
                 codingBases = mRefGenome.getBaseString(geneData.Chromosome, exonCodingStart, exonCodingEnd) + codingBases;
+
+                for(int pos = exonCodingEnd; pos >= exonCodingStart; --pos)
+                {
+                    codingBasePositions.add(pos);
+                }
             }
 
-            produceMissensePeptides(geneData, transData, Nucleotides.reverseStrandBases(codingBases));
+            produceMissensePeptides(geneData, transData, reverseStrandBases(codingBases), codingBasePositions);
         }
     }
 
     private void produceMissensePeptides(
-            final GeneData geneData, final TranscriptData transData, final String codingBases)
+            final GeneData geneData, final TranscriptData transData, final String codingBases, final List<Integer> codingBasePositions)
     {
         int codonCount = codingBases.length() / 3;
+
+        PeptideData peptideData = new PeptideData(geneData.GeneId, geneData.GeneName, transData.TransName);
 
         // create peptides for the specified length range and with flanks
         for(int codonIndex = mFlankLength; codonIndex < codonCount - mFlankLength; ++codonIndex)
         {
+            peptideData.CodonIndex = codonIndex + 1; // 1 based
             int codonStartBaseIndex = codonIndex * 3;
 
             // cycle through each missense variant
@@ -216,6 +263,7 @@ public class MissensePeptideWriter
             for(int codonBaseIndex = 0; codonBaseIndex <= 2; ++codonBaseIndex)
             {
                 char codonRefBase = refCodon.charAt(codonBaseIndex);
+                peptideData.Position = codingBasePositions.get(codonStartBaseIndex + codonBaseIndex);
 
                 for(char dnaBase : Nucleotides.DNA_BASES)
                 {
@@ -232,20 +280,23 @@ public class MissensePeptideWriter
                             altCodon += codingBases.charAt(codonIndex * 3 + i);
                     }
 
+                    peptideData.Context = geneData.Strand == POS_ORIENT ? refCodon : reverseStrandBases(refCodon);
+                    peptideData.RefBase = geneData.Strand == POS_ORIENT ? codonRefBase : swapDnaBase(codonRefBase);
+                    peptideData.AltBase = geneData.Strand == POS_ORIENT ? dnaBase : swapDnaBase(dnaBase);
+
                     String codonAltAminoAcid = AminoAcids.findAminoAcidForCodon(altCodon);
 
                     if(codonAltAminoAcid == null || codonRefAminoAcid.equals(codonAltAminoAcid))
                         continue;
 
-                    generatePeptides(geneData, transData, codingBases, codonIndex, codonAltAminoAcid, refCodon, altCodon);
+                    generatePeptides(peptideData, codingBases, codonIndex, codonAltAminoAcid);
                 }
             }
         }
     }
 
     private void generatePeptides(
-            final GeneData geneData, final TranscriptData transData, final String codingBases, int codonIndex, final String altAminoAcid,
-            final String refCodon, final String altCodon)
+            final PeptideData basePeptideData, final String codingBases, int codonIndex, final String altAminoAcid)
     {
         for(int pepLen = mPeptideLengths[0]; pepLen <= mPeptideLengths[1]; ++pepLen)
         {
@@ -254,7 +305,7 @@ public class MissensePeptideWriter
             int peptideCodonStartIndex = max(0, codonIndex - pepLen - mFlankLength + 1);
 
             NE_LOGGER.trace("gene({}) pepLen({}) codonIndex({}) codonRangeStart({})",
-                    geneData.GeneName, pepLen, codonIndex, peptideCodonStartIndex);
+                    basePeptideData.GeneName, pepLen, codonIndex, peptideCodonStartIndex);
 
             for(int pepStartCodonIndex = peptideCodonStartIndex; pepStartCodonIndex <= codonIndex - mFlankLength; ++pepStartCodonIndex)
             {
@@ -264,7 +315,7 @@ public class MissensePeptideWriter
                 if(peptideEndCodingBaseIndex >= codingBases.length())
                     break;
 
-                String peptide = "";
+                String peptidePlusFlanks = "";
 
                 for(int pepIndex = 0; pepIndex < pepPlusFlanksLen; ++pepIndex)
                 {
@@ -272,7 +323,7 @@ public class MissensePeptideWriter
 
                     if(codingBaseCodonIndex == codonIndex)
                     {
-                        peptide += altAminoAcid;
+                        peptidePlusFlanks += altAminoAcid;
                     }
                     else
                     {
@@ -282,26 +333,66 @@ public class MissensePeptideWriter
 
                         if(aminoAcid == null)
                         {
-                            peptide = "";
+                            peptidePlusFlanks = "";
                             break;
                         }
 
-                        peptide += aminoAcid;
+                        peptidePlusFlanks += aminoAcid;
                     }
                 }
 
-                if(peptide.isEmpty())
+                if(peptidePlusFlanks.isEmpty() || peptidePlusFlanks.length() < mFlankLength * 2 + 1)
                     continue;
 
-                NE_LOGGER.trace("gene({}) pepLen({}) codonIndex({}) codonRange({} -> {}) peptide({})",
-                        geneData.GeneName, pepLen, codonIndex, pepStartCodonIndex, pepStartCodonIndex + pepPlusFlanksLen - 1, peptide);
+                PeptideData peptideData = new PeptideData(basePeptideData.GeneId, basePeptideData.GeneName, basePeptideData.TransName);
+                peptideData.Position = basePeptideData.Position;
+                peptideData.CodonIndex = basePeptideData.CodonIndex;
+                peptideData.Context = basePeptideData.Context;
+                peptideData.RefBase = basePeptideData.RefBase;
+                peptideData.AltBase = basePeptideData.AltBase;
 
-                writePeptideData(geneData.GeneId, geneData.GeneName, transData.TransName, codonIndex, peptide, refCodon, altCodon);
+                peptideData.Peptide = peptidePlusFlanks.substring(mFlankLength, peptidePlusFlanks.length() - mFlankLength);
+
+                if(mUniqiuePeptides.contains(peptideData.Peptide))
+                    continue;
+
+                mUniqiuePeptides.add(peptideData.Peptide);
+
+                peptideData.UpFlank = peptidePlusFlanks.substring(0, mFlankLength);
+                peptideData.DownFlank = peptidePlusFlanks.substring(peptidePlusFlanks.length() - mFlankLength);
+
+                mPeptideData.add(peptideData);
             }
         }
     }
 
-    private static BufferedWriter initialiseWriter(final String outputFile)
+    private void scorePeptides()
+    {
+        if(mPeptideData.isEmpty())
+            return;
+
+        final Set<String> alleleSet = mPeptideScorer.getScoringAlleles();
+
+        // int alleleCount = 0;
+        for(String allele : alleleSet)
+        {
+            NE_LOGGER.debug("gene({}) allele({}) calculating binding scores for {} peptides",
+                    mPeptideData.get(0).GeneName, allele, mPeptideData.size());
+
+            for(PeptideData peptideData : mPeptideData)
+            {
+                BindData bindData = new BindData(allele, peptideData.Peptide, "", peptideData.UpFlank, peptideData.DownFlank);
+                mPeptideScorer.calcScoreData(bindData);
+
+                if(bindData.likelihoodRank() > 0.02)
+                    continue;
+
+                writePeptideData(peptideData, bindData);
+            }
+        }
+    }
+
+    private BufferedWriter initialiseWriter(final String outputFile)
     {
         NE_LOGGER.info("writing results to {}", outputFile);
 
@@ -309,7 +400,11 @@ public class MissensePeptideWriter
         {
             BufferedWriter writer = createBufferedWriter(outputFile, false);
 
-            writer.write("GeneId,GeneName,TransName,Peptide,UpFlank,DownFlank,CodonIndex,RefCodon,AltCodon");
+            writer.write("GeneId,GeneName,TransName,Position,CodonIndex,Context,Ref,Alt,Peptide,UpFlank,DownFlank");
+
+            if(mPeptideScorer != null)
+                writer.write(",Allele,Score,Rank,Likelihood,LikelihoodRank");
+
             writer.newLine();
             return writer;
         }
@@ -320,27 +415,28 @@ public class MissensePeptideWriter
         }
     }
 
-    private void writePeptideData(
-            final String geneId, final String geneName, final String transName, int codonIndex, final String peptidePlusFlanks,
-            final String refCodon, final String altCodon)
+    private void writePeptideData(final PeptideData peptideData, final BindData bindData)
     {
-        if(peptidePlusFlanks.length() < mFlankLength * 2 + 1)
-            return;
-
-        String peptide = peptidePlusFlanks.substring(mFlankLength, peptidePlusFlanks.length() - mFlankLength);
-
-        if(mUniqiuePeptides.contains(peptide))
-            return;
-
-        mUniqiuePeptides.add(peptide);
-
-        String upFlank = peptidePlusFlanks.substring(0, mFlankLength);
-        String downFlank = peptidePlusFlanks.substring(peptidePlusFlanks.length() - mFlankLength);
+        // NE_LOGGER.trace("gene({}) pepLen({}) codonIndex({}) codonRange({} -> {}) peptide({})",
+        //        peptideData.GeneName, peptideData.Peptide.length(), peptideData.CodonIndex, peptideData.Peptide);
 
         try
         {
-            mWriter.write(String.format("%s,%s,%s,%s,%s,%s,%d,%s,%s",
-                    geneId, geneName, transName, peptide, upFlank, downFlank, codonIndex, refCodon, altCodon));
+            mWriter.write(String.format("%s,%s,%s",
+                    peptideData.GeneId, peptideData.GeneName, peptideData.TransName));
+
+            mWriter.write(String.format(",%d,%d,%s,%c,%c",
+                    peptideData.Position, peptideData.CodonIndex, peptideData.Context, peptideData.RefBase, peptideData.AltBase));
+
+            mWriter.write(String.format(",%s,%s,%s",
+                    peptideData.Peptide, peptideData.UpFlank, peptideData.DownFlank));
+
+            if(bindData != null)
+            {
+                mWriter.write(String.format(",%s,%.4f,%.6f,%.6f,%.6f",
+                        bindData.Allele, bindData.score(), bindData.rankPercentile(), bindData.likelihood(), bindData.likelihoodRank()));
+            }
+
             mWriter.newLine();
         }
         catch(IOException e)
@@ -349,10 +445,35 @@ public class MissensePeptideWriter
         }
     }
 
+    private class PeptideData
+    {
+        public String GeneId;
+        public String GeneName;
+        public String TransName;
+
+        public int Position; // of the missense variant
+        public int CodonIndex;
+        public String Context;
+        public char RefBase;
+        public char AltBase;
+
+        public String Peptide;
+        public String UpFlank;
+        public String DownFlank;
+
+        public PeptideData(final String geneId, final String geneName, final String transName)
+        {
+            GeneId = geneId;
+            GeneName = geneName;
+            TransName = transName;
+        }
+    }
+
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = new Options();
         addEnsemblDir(options);
+        ScoreConfig.addCmdLineArgs(options);
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(GENE_ID_FILE, true, "Gene IDs file");
         options.addOption(OUTPUT_FILE, true, "Output filename");
@@ -363,8 +484,8 @@ public class MissensePeptideWriter
 
         setLogLevel(cmd);
 
-        MissensePeptideWriter missensePeptideWriter = new MissensePeptideWriter(cmd);
-        missensePeptideWriter.run();
+        MissensePeptideScorer missensePeptideScorer = new MissensePeptideScorer(cmd);
+        missensePeptideScorer.run();
     }
 
     @NotNull
