@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_IMPROPER_PAIR;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_JITTER;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_QUALITY;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.SC_INSERT_SUPPORT;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.STRAND_BIAS;
 
 import java.util.List;
@@ -98,9 +97,6 @@ public final class VariantContextFactory
                 .attribute(STRAND_BIAS, counter.strandBias())
                 .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, counter.vaf())
                 .alleles(NO_CALL);
-
-        if(counter.softClipInsertSupport() > 0)
-            builder.attribute(SC_INSERT_SUPPORT, counter.softClipInsertSupport());
 
         return builder.make();
     }

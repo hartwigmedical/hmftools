@@ -43,7 +43,6 @@ public class SageApplication implements AutoCloseable
     private final ReferenceData mRefData;
 
     private final PhaseSetCounter mPhaseSetCounter;
-
     private final VcfWriter mVcfWriter;
 
     private SageApplication(final CommandLine cmd)

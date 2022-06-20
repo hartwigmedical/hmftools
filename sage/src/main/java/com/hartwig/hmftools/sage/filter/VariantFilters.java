@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_RAW_ALT_BASE_QUAL;
+import static com.hartwig.hmftools.sage.SageConstants.LONG_GERMLINE_INSERT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.NORMAL_RAW_ALT_BQ_MAX;
 
 import java.util.EnumSet;
@@ -204,7 +205,11 @@ public class VariantFilters
         boolean chromosomeIsAllosome = HumanChromosome.contains(normal.chromosome())
                 && HumanChromosome.fromString(normal.chromosome()).isAllosome();
 
-        int minGermlineCoverage = chromosomeIsAllosome ? config.MinGermlineReadContextCoverageAllosome : config.MinGermlineReadContextCoverage;
+        boolean isLongInsert = normal.isIndel() && normal.alt().length() > LONG_GERMLINE_INSERT_LENGTH;
+
+        int minGermlineCoverage = chromosomeIsAllosome ?
+                (isLongInsert ? config.MinGermlineCoverageAllosomeLongInsert : config.MinGermlineCoverageAllosome)
+                : (isLongInsert ? config.MinGermlineCoverageLongInsert : config.MinGermlineCoverage);
 
         return normal.coverage() < minGermlineCoverage;
     }
@@ -227,9 +232,9 @@ public class VariantFilters
     private static boolean aboveMaxGermlineQual(
             final SoftFilterConfig config, final ReadContextCounter normal, final ReadContextCounter primaryTumor)
     {
-        // Paired Tests
-        double tumorQual = primaryTumor.rawAltBaseQuality();
-        double germlineQual = normal.rawAltBaseQuality();
+        boolean isLongInsert = primaryTumor.isIndel() && normal.alt().length() > LONG_GERMLINE_INSERT_LENGTH;
+        double tumorQual = isLongInsert ? primaryTumor.tumorQuality() : primaryTumor.rawAltBaseQuality();
+        double germlineQual = isLongInsert ? normal.tumorQuality() : normal.rawAltBaseQuality();
 
         return Doubles.positive(tumorQual) && Doubles.greaterThan(germlineQual / tumorQual, config.MaxGermlineRelativeQual);
     }

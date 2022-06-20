@@ -32,7 +32,7 @@ public class RawContextCigarHandler implements CigarHandler
     @Override
     public void handleLeftSoftClip(final SAMRecord record, final CigarElement element)
     {
-        if(mVariant.position() < record.getAlignmentStart())
+        if(mVariant.position() <= record.getAlignmentStart())
         {
             int readStartPos = record.getReadPositionAtReferencePosition(record.getAlignmentStart());
             int readIndex = readStartPos - 1 - record.getAlignmentStart()

@@ -363,10 +363,12 @@ public class RefContextConsumer implements Consumer<SAMRecord>
 
         final ReadContext readContext = mReadContextFactory.createInsertContext(altRead.Alt, refPosition, readIndex, record, refBases);
 
+        /*
         SG_LOGGER.trace("soft-clipped insert({}:{} {}>{}) indexes({}-{}-{}) read({}) softClip(len={} index={} on {})",
                 record.getContig(), refPosition, altRead.Ref, altRead.Alt,
                 readContext.indexedBases().LeftCoreIndex, readContext.indexedBases().Index, readContext.indexedBases().RightCoreIndex,
                 record.getReadName(), scLength, scReadIndex, onLeft ? "left" : "right");
+        */
 
         boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.MinMapQuality;
 

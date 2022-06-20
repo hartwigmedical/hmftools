@@ -242,7 +242,7 @@ public class ReadContextCounter implements VariantHotspot
                 return UNRELATED;
         }
 
-            if(rawContext.ReadIndexInSkipped)
+        if(rawContext.ReadIndexInSkipped)
             return UNRELATED;
 
         int readIndex = rawContext.ReadIndex;

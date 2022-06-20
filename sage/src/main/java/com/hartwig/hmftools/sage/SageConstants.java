@@ -30,6 +30,7 @@ public class SageConstants
     public static final int SC_INSERT_MIN_LENGTH = 5;
 
     public static final int NORMAL_RAW_ALT_BQ_MAX = 25;
+    public static final int LONG_GERMLINE_INSERT_LENGTH = 10;
 
     public static final int DEFAULT_EVIDENCE_MAP_QUAL = 1;
     
@@ -45,16 +46,20 @@ public class SageConstants
     public static final int HOTSPOT_MIN_RAW_ALT_BASE_QUAL = 150;
 
     public static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(70, 0.005,
-            0, 0, 0.1, 0.5);
+            0, 0, 0, 0,
+            0.1, 0.5);
 
     public static final SoftFilterConfig DEFAULT_PANEL_FILTER = new SoftFilterConfig(100, 0.02  ,
-            0, 0, 0.04, 0.04);
+            0, 0, 0, 0,
+            0.04, 0.04);
 
     public static final SoftFilterConfig DEFAULT_HIGH_CONFIDENCE_FILTER = new SoftFilterConfig(160, 0.025,
-            10, 6, 0.04, 0.04);
+            10, 15, 6, 9,
+            0.04, 0.04);
 
     public static final SoftFilterConfig DEFAULT_LOW_CONFIDENCE_FILTER = new SoftFilterConfig(240, 0.025,
-            10, 6, 0.04, 0.04);
+            10, 15, 6, 9,
+            0.04, 0.04);
 
 
     public static final String ITEM_DELIM = ";";

@@ -125,7 +125,12 @@ public class ReferenceData
 
             if(!mConfig.PanelBed.isEmpty())
             {
-                PanelWithHotspots.putAll(loadBedFile(mConfig.PanelBed));
+                Map<Chromosome,List<BaseRegion>> panelBed = loadBedFile(mConfig.PanelBed);
+
+                if(panelBed == null)
+                    return false;
+
+                PanelWithHotspots.putAll(panelBed);
                 SG_LOGGER.info("read {} panel entries from bed file: {}",
                         PanelWithHotspots.values().stream().mapToInt(x -> x.size()).sum(), mConfig.PanelBed);
             }
@@ -134,7 +139,12 @@ public class ReferenceData
 
             if(!mConfig.HighConfidenceBed.isEmpty())
             {
-                HighConfidence.putAll(loadBedFile(mConfig.HighConfidenceBed));
+                Map<Chromosome,List<BaseRegion>> hcPanelBed = loadBedFile(mConfig.HighConfidenceBed);
+
+                if(hcPanelBed == null)
+                    return false;
+
+                HighConfidence.putAll(hcPanelBed);
                 SG_LOGGER.info("read {} high-confidence entries from bed file: {}",
                         HighConfidence.values().stream().mapToInt(x -> x.size()).sum(), mConfig.HighConfidenceBed);
             }
@@ -273,6 +283,7 @@ public class ReferenceData
         catch(IOException e)
         {
             SG_LOGGER.error("failed to load panel BED file({}): {}", bedFile, e.toString());
+            return null;
         }
 
         return panel;

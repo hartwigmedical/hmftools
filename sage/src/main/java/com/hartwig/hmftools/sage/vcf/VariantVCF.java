@@ -67,9 +67,6 @@ public class VariantVCF implements AutoCloseable
     private static final String READ_CONTEXT_AF_DESCRIPTION =
             "Allelic frequency calculated from read context counts as (Full + Partial + Core + Realigned + Alt) / Coverage";
 
-    public static final String SC_INSERT_SUPPORT = "SC_INS_COUNT";
-    private static final String SC_INSERT_SUPPORT_DESCRIPTION = "Soft-clip insert support";
-
     public static final String READ_CONTEXT_IMPROPER_PAIR = "RC_IPC";
     private static final String READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION = "Read context improper pair count";
 
@@ -165,7 +162,7 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_ALLELIC_BASE_QUALITY, 2, VCFHeaderLineType.Integer, "Raw allelic base quality"));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_DEPTH, 1, VCFHeaderLineType.Integer, "Raw read depth"));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, 7, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESCRIPTION));
-        header.addMetaDataLine(new VCFFormatHeaderLine(SC_INSERT_SUPPORT, 1, VCFHeaderLineType.Integer, SC_INSERT_SUPPORT_DESCRIPTION));
+        // header.addMetaDataLine(new VCFFormatHeaderLine(SC_INSERT_SUPPORT, 1, VCFHeaderLineType.Integer, SC_INSERT_SUPPORT_DESCRIPTION));
         header.addMetaDataLine(new VCFFormatHeaderLine(
                 READ_CONTEXT_IMPROPER_PAIR, 1, VCFHeaderLineType.Integer, READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION));
         header.addMetaDataLine(new VCFFormatHeaderLine(

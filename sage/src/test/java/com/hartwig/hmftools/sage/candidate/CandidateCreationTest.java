@@ -112,6 +112,5 @@ public class CandidateCreationTest
 
         Assert.assertNotNull(var);
         assertEquals(12, var.tumorReadCounters().get(0).softClipInsertSupport());
-        // assertTrue(var.isPassing());
     }
 }

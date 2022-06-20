@@ -16,8 +16,10 @@ public class SoftFilterConfig
 {
     public final int MinTumorQual;
     public final double MinTumorVaf;
-    public final int MinGermlineReadContextCoverage;
-    public final int MinGermlineReadContextCoverageAllosome;
+    public final int MinGermlineCoverage;
+    public final int MinGermlineCoverageLongInsert;
+    public final int MinGermlineCoverageAllosome;
+    public final int MinGermlineCoverageAllosomeLongInsert;
     public final double MaxGermlineVaf;
     public final double MaxGermlineRelativeQual;
 
@@ -26,11 +28,19 @@ public class SoftFilterConfig
         MinTumorQual = getConfigValue(cmd, prefix + "_" + MIN_TUMOR_QUAL.configName(), defaultValue.MinTumorQual);
         MinTumorVaf = getConfigValue(cmd, prefix + "_" + MIN_TUMOR_VAF.configName(), defaultValue.MinTumorVaf);
 
-        MinGermlineReadContextCoverage = getConfigValue(
-                cmd, prefix + "_" + MIN_GERMLINE_DEPTH.configName(), defaultValue.MinGermlineReadContextCoverage);
+        MinGermlineCoverage = getConfigValue(
+                cmd, prefix + "_" + MIN_GERMLINE_DEPTH.configName(), defaultValue.MinGermlineCoverage);
 
-        MinGermlineReadContextCoverageAllosome =
-                getConfigValue(cmd, prefix + "_" + MIN_GERMLINE_DEPTH_ALLOSOME.configName(), defaultValue.MinGermlineReadContextCoverageAllosome);
+        MinGermlineCoverageLongInsert = getConfigValue(
+                cmd, prefix + "_" + MIN_GERMLINE_DEPTH.configName(), defaultValue.MinGermlineCoverageLongInsert);
+
+        MinGermlineCoverageAllosome =
+                getConfigValue(cmd, prefix + "_" + MIN_GERMLINE_DEPTH_ALLOSOME.configName(),
+                        defaultValue.MinGermlineCoverageAllosome);
+
+        MinGermlineCoverageAllosomeLongInsert =
+                getConfigValue(cmd, prefix + "_" + MIN_GERMLINE_DEPTH_ALLOSOME.configName(),
+                        defaultValue.MinGermlineCoverageAllosomeLongInsert);
 
         MaxGermlineVaf = getConfigValue(cmd, prefix + "_" + MAX_GERMLINE_VAF.configName(), defaultValue.MaxGermlineVaf);
 
@@ -39,13 +49,16 @@ public class SoftFilterConfig
     }
 
     public SoftFilterConfig(
-            final int minTumorQual, final double minTumorVaf, final int minGermlineReadContextCoverage,
-            final int minGermlineReadContextCoverageAllosome, final double maxGermlineVaf, final double maxGermlineRelativeQual)
+            final int minTumorQual, final double minTumorVaf, final int minGermlineCoverage, final int minGermlineCoverageLongInsert,
+            final int minGermlineCoverageAllosome, final int minGermlineCoverageAllosomeLongInsert,
+            final double maxGermlineVaf, final double maxGermlineRelativeQual)
     {
         MinTumorQual = minTumorQual;
         MinTumorVaf = minTumorVaf;
-        MinGermlineReadContextCoverage = minGermlineReadContextCoverage;
-        MinGermlineReadContextCoverageAllosome = minGermlineReadContextCoverageAllosome;
+        MinGermlineCoverage = minGermlineCoverage;
+        MinGermlineCoverageLongInsert = minGermlineCoverageLongInsert;
+        MinGermlineCoverageAllosome = minGermlineCoverageAllosome;
+        MinGermlineCoverageAllosomeLongInsert = minGermlineCoverageAllosomeLongInsert;
         MaxGermlineVaf = maxGermlineVaf;
         MaxGermlineRelativeQual = maxGermlineRelativeQual;
     }
@@ -60,10 +73,10 @@ public class SoftFilterConfig
         options.addOption(prefix + "_" + MIN_TUMOR_VAF.configName(), true, "Minimum " + prefix + " tumor VAF [" + defaultValue.MinTumorVaf + "]");
         options.addOption(
                 prefix + "_" + MIN_GERMLINE_DEPTH.configName(), true,
-                "Minimum " + prefix + " germline depth [" + defaultValue.MinGermlineReadContextCoverage + "]");
+                "Minimum " + prefix + " germline depth [" + defaultValue.MinGermlineCoverage + "]");
         options.addOption(
                 prefix + "_" + MIN_GERMLINE_DEPTH_ALLOSOME.configName(), true,
-                "Minimum " + prefix + " germline depth [" + defaultValue.MinGermlineReadContextCoverageAllosome + "]");
+                "Minimum " + prefix + " germline depth [" + defaultValue.MinGermlineCoverageAllosome + "]");
 
         options.addOption(
                 prefix + "_" + MAX_GERMLINE_VAF.configName(), true, "Maximum " + prefix + " germline VAF [" + defaultValue.MaxGermlineVaf + "]");
