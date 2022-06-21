@@ -132,6 +132,60 @@ CREATE TABLE actionableHla
     PRIMARY KEY (id)
 );
 
+DROP TABLE IF EXISTS knownCodons;
+CREATE TABLE knownCodons
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    gene varchar(50) NOT NULL,
+    transcript varchar(50) NOT NULL,
+    chromosome varchar(50) NOT NULL,
+    start varchar(50) NOT NULL,
+    end varchar(50) NOT NULL,
+    mutationType varchar(50) NOT NULL,
+    codonRank varchar(50) NOT NULL,
+    sources varchar(50) NOT NULL,
+    PRIMARY KEY (id)
+);
+
+DROP TABLE IF EXISTS knownExons;
+CREATE TABLE knownExons
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    gene varchar(50) NOT NULL,
+    transcript varchar(50) NOT NULL,
+    chromosome varchar(50) NOT NULL,
+    start varchar(50) NOT NULL,
+    end varchar(50) NOT NULL,
+    mutationType varchar(50) NOT NULL,
+    exonRank varchar(50) NOT NULL,
+    sources varchar(50) NOT NULL,
+    PRIMARY KEY (id)
+);
+
+DROP TABLE IF EXISTS knownCopyNumbers;
+CREATE TABLE knownCopyNumbers
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    gene varchar(50) NOT NULL,
+    type varchar(50) NOT NULL,
+    sources varchar(50) NOT NULL,
+    PRIMARY KEY (id)
+);
+
+DROP TABLE IF EXISTS knownFusionPairs;
+CREATE TABLE knownFusionPairs
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    geneUp varchar(50) NOT NULL,
+    minExonUp varchar(50) NOT NULL,
+    maxExonUp varchar(50) NOT NULL,
+    geneDown varchar(50) NOT NULL,
+    minExonDown varchar(50) NOT NULL,
+    maxExonDown varchar(50) NOT NULL,
+    sources varchar(50) NOT NULL,
+    PRIMARY KEY (id)
+);
+
 DROP TABLE IF EXISTS iclusionStudy;
 CREATE TABLE iclusionStudy
 (   id int NOT NULL AUTO_INCREMENT,

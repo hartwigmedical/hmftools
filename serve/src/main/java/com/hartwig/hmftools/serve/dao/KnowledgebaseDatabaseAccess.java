@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.hartwig.hmftools.serve.actionability.ActionableEvents;
+import com.hartwig.hmftools.serve.extraction.KnownEvents;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
 
 import org.apache.commons.cli.CommandLine;
@@ -101,8 +102,8 @@ public class KnowledgebaseDatabaseAccess {
         options.addOption(Option.builder(DB_URL).desc("Database url").hasArg(true).required(isRequired).build());
     }
 
-    public void writeKnowledgebaseDAO(@NotNull ActionableEvents actionableEvents) {
-        knowledgebaseDAO.write(actionableEvents);
+    public void writeKnowledgebaseDAO(@NotNull ActionableEvents actionableEvents, KnownEvents knownEvents) {
+        knowledgebaseDAO.write(actionableEvents, knownEvents);
     }
 
     public void writeIclusionDAO(@NotNull List<IclusionTrial> trials) {

@@ -9,6 +9,8 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import com.hartwig.hmftools.serve.actionability.ActionableEvents;
 import com.hartwig.hmftools.serve.actionability.ActionableEventsLoader;
+import com.hartwig.hmftools.serve.extraction.KnownEvents;
+import com.hartwig.hmftools.serve.extraction.KnownEventsLoader;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
@@ -33,10 +35,11 @@ public class LoadServeDatabase {
         RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(RefGenomeVersion.REF_GENOME_VERSION);
 
         ActionableEvents actionableEvents = ActionableEventsLoader.readFromDir(serveActionabilityDir, refGenomeVersion);
+        KnownEvents knownEvents = KnownEventsLoader.readFromDir(serveActionabilityDir, refGenomeVersion);
 
         KnowledgebaseDatabaseAccess dbWriter = KnowledgebaseDatabaseAccess.databaseAccess(cmd);
 
-        dbWriter.writeKnowledgebaseDAO(actionableEvents);
+        dbWriter.writeKnowledgebaseDAO(actionableEvents, knownEvents);
         LOGGER.info("Written serve output to database");
     }
 

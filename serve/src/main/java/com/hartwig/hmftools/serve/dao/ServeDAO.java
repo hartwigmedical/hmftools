@@ -3,6 +3,7 @@ package com.hartwig.hmftools.serve.dao;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Iterables;
 import com.hartwig.hmftools.serve.actionability.ActionableEvents;
@@ -12,6 +13,12 @@ import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLA;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
+import com.hartwig.hmftools.serve.database.tables.Knownfusionpairs;
+import com.hartwig.hmftools.serve.extraction.KnownEvents;
+import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
+import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
+import com.hartwig.hmftools.serve.extraction.exon.KnownExon;
+import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 
 import static com.hartwig.hmftools.serve.database.tables.Actionablehotspots.ACTIONABLEHOTSPOTS;
 import static com.hartwig.hmftools.serve.database.tables.Actionableranges.ACTIONABLERANGES;
@@ -19,6 +26,10 @@ import static com.hartwig.hmftools.serve.database.tables.Actionablegenes.ACTIONA
 import static com.hartwig.hmftools.serve.database.tables.Actionablefusions.ACTIONABLEFUSIONS;
 import static com.hartwig.hmftools.serve.database.tables.Actionablecharacteristics.ACTIONABLECHARACTERISTICS;
 import static com.hartwig.hmftools.serve.database.tables.Actionablehla.ACTIONABLEHLA;
+import static com.hartwig.hmftools.serve.database.tables.Knowncodons.KNOWNCODONS;
+import static com.hartwig.hmftools.serve.database.tables.Knownexons.KNOWNEXONS;
+import static com.hartwig.hmftools.serve.database.tables.Knowncopynumbers.KNOWNCOPYNUMBERS;
+import static com.hartwig.hmftools.serve.database.tables.Knownfusionpairs.KNOWNFUSIONPAIRS;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -28,6 +39,9 @@ import org.jooq.InsertValuesStep15;
 import org.jooq.InsertValuesStep16;
 import org.jooq.InsertValuesStep18;
 import org.jooq.InsertValuesStep20;
+import org.jooq.InsertValuesStep4;
+import org.jooq.InsertValuesStep7;
+import org.jooq.InsertValuesStep9;
 
 public class ServeDAO {
 
@@ -38,7 +52,7 @@ public class ServeDAO {
         this.context = context;
     }
 
-    void write(@NotNull ActionableEvents actionableEvents) {
+    void write(@NotNull ActionableEvents actionableEvents, KnownEvents knownEvents) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         List<ActionableHotspot> actionableHotspots = actionableEvents.hotspots();
@@ -178,6 +192,63 @@ public class ServeDAO {
             batch.forEach(entry -> addRecordHlas(timestamp, inserter, entry));
             inserter.execute();
         }
+
+        Set<KnownCodon> knownCodons = knownEvents.knownCodons();
+        for (List<KnownCodon> batch : Iterables.partition(knownCodons, Utils.DB_BATCH_INSERT_SIZE)) {
+            InsertValuesStep9 inserter = context.insertInto(KNOWNCODONS,
+                    KNOWNCODONS.MODIFIED,
+                    KNOWNCODONS.GENE,
+                    KNOWNCODONS.TRANSCRIPT,
+                    KNOWNCODONS.CHROMOSOME,
+                    KNOWNCODONS.START,
+                    KNOWNCODONS.END,
+                    KNOWNCODONS.MUTATIONTYPE,
+                    KNOWNCODONS.CODONRANK,
+                    KNOWNCODONS.SOURCES);
+            batch.forEach(entry -> addRecordKnownCodons(timestamp, inserter, entry));
+            inserter.execute();
+        }
+
+        Set<KnownExon> knownExons = knownEvents.knownExons();
+        for (List<KnownExon> batch : Iterables.partition(knownExons, Utils.DB_BATCH_INSERT_SIZE)) {
+            InsertValuesStep9 inserter = context.insertInto(KNOWNEXONS,
+                    KNOWNEXONS.MODIFIED,
+                    KNOWNEXONS.GENE,
+                    KNOWNEXONS.TRANSCRIPT,
+                    KNOWNEXONS.CHROMOSOME,
+                    KNOWNEXONS.START,
+                    KNOWNEXONS.END,
+                    KNOWNEXONS.MUTATIONTYPE,
+                    KNOWNEXONS.EXONRANK,
+                    KNOWNEXONS.SOURCES);
+            batch.forEach(entry -> addRecordKnownExons(timestamp, inserter, entry));
+            inserter.execute();
+        }
+
+        Set<KnownFusionPair> knownFusionPairs = knownEvents.knownFusionPairs();
+        for (List<KnownFusionPair> batch : Iterables.partition(knownFusionPairs, Utils.DB_BATCH_INSERT_SIZE)) {
+            InsertValuesStep7 inserter = context.insertInto(KNOWNFUSIONPAIRS,
+                    KNOWNFUSIONPAIRS.MODIFIED,
+                    KNOWNFUSIONPAIRS.GENEUP,
+                    KNOWNFUSIONPAIRS.MINEXONUP,
+                    KNOWNFUSIONPAIRS.MAXEXONUP,
+                    KNOWNFUSIONPAIRS.GENEDOWN,
+                    KNOWNFUSIONPAIRS.MINEXONDOWN,
+                    KNOWNFUSIONPAIRS.MAXEXONDOWN);
+            batch.forEach(entry -> addRecordKnownFusionPairs(timestamp, inserter, entry));
+            inserter.execute();
+        }
+
+        Set<KnownCopyNumber> knownCopyNumbers = knownEvents.knownCopyNumbers();
+        for (List<KnownCopyNumber> batch : Iterables.partition(knownCopyNumbers, Utils.DB_BATCH_INSERT_SIZE)) {
+            InsertValuesStep4 inserter = context.insertInto(KNOWNCOPYNUMBERS,
+                    KNOWNCOPYNUMBERS.MODIFIED,
+                    KNOWNCOPYNUMBERS.GENE,
+                    KNOWNCOPYNUMBERS.TYPE,
+                    KNOWNCOPYNUMBERS.SOURCES);
+            batch.forEach(entry -> addRecordKnownCopyNumbers(timestamp, inserter, entry));
+            inserter.execute();
+        }
     }
 
     private static void addRecordHotspots(@NotNull Timestamp timestamp, @NotNull InsertValuesStep16 inserter,
@@ -298,5 +369,47 @@ public class ServeDAO {
                 actionableHLA.level(),
                 actionableHLA.direction(),
                 actionableHLA.evidenceUrls());
+    }
+
+    private static void addRecordKnownCodons(@NotNull Timestamp timestamp, @NotNull InsertValuesStep9 inserter,
+            @NotNull KnownCodon knownCodon) {
+        inserter.values(timestamp,
+                knownCodon.annotation().gene(),
+                knownCodon.annotation().transcript(),
+                knownCodon.annotation().chromosome(),
+                knownCodon.annotation().start(),
+                knownCodon.annotation().end(),
+                knownCodon.annotation().mutationType(),
+                knownCodon.annotation().rank(),
+                knownCodon.sources());
+    }
+
+    private static void addRecordKnownExons(@NotNull Timestamp timestamp, @NotNull InsertValuesStep9 inserter,
+            @NotNull KnownExon knownExon) {
+        inserter.values(timestamp,
+                knownExon.annotation().gene(),
+                knownExon.annotation().transcript(),
+                knownExon.annotation().chromosome(),
+                knownExon.annotation().start(),
+                knownExon.annotation().end(),
+                knownExon.annotation().mutationType(),
+                knownExon.annotation().rank(),
+                knownExon.sources());
+    }
+
+    private static void addRecordKnownFusionPairs(@NotNull Timestamp timestamp, @NotNull InsertValuesStep7 inserter,
+            @NotNull KnownFusionPair knownFusionPairs) {
+        inserter.values(timestamp,
+                knownFusionPairs.geneUp(),
+                knownFusionPairs.minExonUp(),
+                knownFusionPairs.maxExonUp(),
+                knownFusionPairs.geneDown(),
+                knownFusionPairs.minExonDown(),
+                knownFusionPairs.maxExonDown());
+    }
+
+    private static void addRecordKnownCopyNumbers(@NotNull Timestamp timestamp, @NotNull InsertValuesStep4 inserter,
+            @NotNull KnownCopyNumber knownCopyNumber) {
+        inserter.values(timestamp, knownCopyNumber.gene(), knownCopyNumber.type(), knownCopyNumber.sources());
     }
 }
