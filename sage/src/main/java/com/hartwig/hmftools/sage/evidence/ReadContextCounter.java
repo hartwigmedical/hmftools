@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.CORE_LOW_QUAL_MISMATCH_BASE_LENGTH;
@@ -212,9 +214,13 @@ public class ReadContextCounter implements VariantHotspot
 
     public String toString()
     {
-        return String.format("id(%d) var(%s:%d %s>%s) core(%s) counts(f=%d p=%d c=%d)",
-                mId, mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt(),
-                mReadContext.toString(), mCounts[RC_FULL], mCounts[RC_PARTIAL], mCounts[RC_CORE]);
+        return format("id(%d) var(%s) core(%s) counts(f=%d p=%d c=%d)",
+                mId, varString(), mReadContext.toString(), mCounts[RC_FULL], mCounts[RC_PARTIAL], mCounts[RC_CORE]);
+    }
+
+    private String varString()
+    {
+        return format("%s:%d %s>%s", mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt());
     }
 
     public ReadMatchType processRead(
@@ -317,10 +323,11 @@ public class ReadContextCounter implements VariantHotspot
                 ++mCounts[RC_TOTAL];
                 mQualities[RC_TOTAL] += quality;
 
-                SG_LOGGER.trace("var({}: {}->{}) readContext({}-{}-{}) support({}) read(idx={} id={})",
-                        mVariant.position(), mVariant.ref(), mVariant.alt(),
-                        mReadContext.indexedBases().LeftCoreIndex, mReadContext.indexedBases().Index,
+                /*
+                SG_LOGGER.trace("var({}) readContext({}-{}-{}) support({}) read(idx={} id={})",
+                        varString(), mReadContext.indexedBases().LeftCoreIndex, mReadContext.indexedBases().Index,
                         mReadContext.indexedBases().RightCoreIndex, match, readIndex, record.getReadName());
+                */
 
                 countStrandedness(record);
                 checkImproperCount(record);
@@ -328,8 +335,28 @@ public class ReadContextCounter implements VariantHotspot
             }
         }
 
-        final RealignedContext realignment = realignmentContext(readIndex, record);
-        RealignedType realignedType = realignment != null ? realignment.Type : RealignedType.NONE;
+        RealignedType realignedType = RealignedType.NONE;
+        int maxRealignDistance = getMaxRealignmentDistance(record);
+
+        int coreFlankMatchIndex = -1; // record.getReadString().indexOf(mReadContext.toString());
+
+        if(coreFlankMatchIndex >= 0)
+        {
+            int readIndexOffset = abs(readIndex - coreFlankMatchIndex);
+
+            if(readIndexOffset <= maxRealignDistance)
+                realignedType = RealignedType.EXACT;
+        }
+
+        RealignedContext realignment = null;
+
+        if(realignedType != RealignedType.EXACT)
+        {
+            realignment = Realigned.realignedAroundIndex(mReadContext, readIndex, record.getReadBases(), maxRealignDistance);
+
+            if(realignment != null)
+                realignedType = realignment.Type;
+        }
 
         if(realignedType == RealignedType.EXACT)
         {
@@ -441,7 +468,7 @@ public class ReadContextCounter implements VariantHotspot
             mReverseStrand++;
     }
 
-    private RealignedContext realignmentContext(int readIndex, SAMRecord record)
+    private int getMaxRealignmentDistance(final SAMRecord record)
     {
         int index = mReadContext.readBasesPositionIndex();
         int leftIndex = mReadContext.readBasesLeftCentreIndex();
@@ -452,10 +479,7 @@ public class ReadContextCounter implements VariantHotspot
 
         int indelLength = indelLength(record);
 
-        return Realigned.realignedAroundIndex(mReadContext,
-                readIndex,
-                record.getReadBases(),
-                Math.max(indelLength + Math.max(leftOffset, rightOffset), Realigned.MAX_REPEAT_SIZE));
+        return Math.max(indelLength + Math.max(leftOffset, rightOffset), Realigned.MAX_REPEAT_SIZE) + 1;
     }
 
     private int qualityJitterPenalty() { return (int) mJitterPenalty; }
