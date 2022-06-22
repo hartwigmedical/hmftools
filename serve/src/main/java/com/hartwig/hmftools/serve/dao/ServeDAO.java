@@ -43,6 +43,7 @@ import org.jooq.InsertValuesStep18;
 import org.jooq.InsertValuesStep20;
 import org.jooq.InsertValuesStep4;
 import org.jooq.InsertValuesStep7;
+import org.jooq.InsertValuesStep8;
 import org.jooq.InsertValuesStep9;
 
 public class ServeDAO {
@@ -245,14 +246,15 @@ public class ServeDAO {
 
         Set<KnownFusionPair> knownFusionPairs = knownEvents.knownFusionPairs();
         for (List<KnownFusionPair> batch : Iterables.partition(knownFusionPairs, Utils.DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep7 inserter = context.insertInto(KNOWNFUSIONPAIRS,
+            InsertValuesStep8 inserter = context.insertInto(KNOWNFUSIONPAIRS,
                     KNOWNFUSIONPAIRS.MODIFIED,
                     KNOWNFUSIONPAIRS.GENEUP,
                     KNOWNFUSIONPAIRS.MINEXONUP,
                     KNOWNFUSIONPAIRS.MAXEXONUP,
                     KNOWNFUSIONPAIRS.GENEDOWN,
                     KNOWNFUSIONPAIRS.MINEXONDOWN,
-                    KNOWNFUSIONPAIRS.MAXEXONDOWN);
+                    KNOWNFUSIONPAIRS.MAXEXONDOWN,
+                    KNOWNFUSIONPAIRS.SOURCES);
             batch.forEach(entry -> addRecordKnownFusionPairs(timestamp, inserter, entry));
             inserter.execute();
         }
@@ -428,7 +430,7 @@ public class ServeDAO {
                 knownExon.sources());
     }
 
-    private static void addRecordKnownFusionPairs(@NotNull Timestamp timestamp, @NotNull InsertValuesStep7 inserter,
+    private static void addRecordKnownFusionPairs(@NotNull Timestamp timestamp, @NotNull InsertValuesStep8 inserter,
             @NotNull KnownFusionPair knownFusionPairs) {
         inserter.values(timestamp,
                 knownFusionPairs.geneUp(),
@@ -436,7 +438,8 @@ public class ServeDAO {
                 knownFusionPairs.maxExonUp(),
                 knownFusionPairs.geneDown(),
                 knownFusionPairs.minExonDown(),
-                knownFusionPairs.maxExonDown());
+                knownFusionPairs.maxExonDown(),
+                knownFusionPairs.sources());
     }
 
     private static void addRecordKnownCopyNumbers(@NotNull Timestamp timestamp, @NotNull InsertValuesStep4 inserter,
