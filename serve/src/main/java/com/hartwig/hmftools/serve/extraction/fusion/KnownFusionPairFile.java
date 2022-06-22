@@ -1,14 +1,20 @@
 package com.hartwig.hmftools.serve.extraction.fusion;
 
+import static com.hartwig.hmftools.serve.actionability.util.ActionableFileFunctions.FIELD_DELIMITER;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.StringJoiner;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberType;
+import com.hartwig.hmftools.serve.extraction.copynumber.ImmutableKnownCopyNumber;
+import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -25,6 +31,38 @@ public final class KnownFusionPairFile {
     @NotNull
     public static String knownFusionPairTsvPath(@NotNull String outputDir, @NotNull RefGenomeVersion refGenomeVersion) {
         return refGenomeVersion.addVersionToFilePath(outputDir + File.separator + KNOWN_FUSION_PAIR_TSV);
+    }
+
+    @NotNull
+    public static List<KnownFusionPair> read(@NotNull String file) throws IOException {
+        List<String> lines = Files.readAllLines(new File(file).toPath());
+
+        return fromLines(lines.subList(1, lines.size()));
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static List<KnownFusionPair> fromLines(@NotNull List<String> lines) {
+        List<KnownFusionPair> fusionPairs = Lists.newArrayList();
+        for (String line : lines) {
+            fusionPairs.add(fromLine(line));
+        }
+        return fusionPairs;
+    }
+
+    @NotNull
+    private static KnownFusionPair fromLine(@NotNull String line) {
+        String[] values = line.split(FIELD_DELIMITER);
+
+        return ImmutableKnownFusionPair.builder()
+                .geneUp(values[0])
+                .minExonUp(Integer.valueOf(values[1]))
+                .maxExonUp(Integer.valueOf(values[2]))
+                .geneDown(values[3])
+                .minExonDown(Integer.valueOf(values[4]))
+                .maxExonDown(Integer.valueOf(values[5]))
+                .sources(Knowledgebase.fromCommaSeparatedSourceString(values[6]))
+                .build();
     }
 
     public static void write(@NotNull String fusionPairTsv, @NotNull Iterable<KnownFusionPair> fusionPairs) throws IOException {
