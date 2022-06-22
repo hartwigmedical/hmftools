@@ -32,8 +32,7 @@ public class LoadServeDatabase {
         CommandLine cmd = new DefaultParser().parse(options, args);
 
         String serveActionabilityDir = nonOptionalDir(cmd, SERVE_ACTIONABILITY_DIRECTORY);
-        RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(RefGenomeVersion.REF_GENOME_VERSION);
-
+        RefGenomeVersion refGenomeVersion = (RefGenomeVersion.from(nonOptionalValue(cmd, RefGenomeVersion.REF_GENOME_VERSION)));
         ActionableEvents actionableEvents = ActionableEventsLoader.readFromDir(serveActionabilityDir, refGenomeVersion);
         KnownEvents knownEvents = KnownEventsLoader.readFromDir(serveActionabilityDir, refGenomeVersion);
 
