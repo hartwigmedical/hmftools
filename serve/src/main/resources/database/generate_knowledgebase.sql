@@ -205,8 +205,8 @@ DROP TABLE IF EXISTS iclusionStudy;
 CREATE TABLE iclusionStudy
 (   id int NOT NULL AUTO_INCREMENT,
     idDB varchar(50) NOT NULL,
-    acronym varchar(50) NOT NULL,
-    title varchar(50) NOT NULL,
+    acronym varchar(100) NOT NULL,
+    title varchar(500) NOT NULL,
     eudra varchar(50) NOT NULL,
     nct varchar(50) NOT NULL,
     ipn varchar(50) NOT NULL,
@@ -247,10 +247,10 @@ CREATE TABLE actin
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     trial varchar(50) NOT NULL,
-    cohort varchar(50) NOT NULL,
+    cohort varchar(50),
     rule varchar(50) NOT NULL,
-    gene varchar(50) NOT NULL,
-    mutation varchar(50) NOT NULL,
+    gene varchar(50),
+    mutation varchar(50),
     isUsedAsInclusion varchar(50) NOT NULL,
     PRIMARY KEY (id)
 );
