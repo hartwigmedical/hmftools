@@ -36,7 +36,7 @@ public class KnownEventsLoader {
     @NotNull
     public static KnownEvents readFromDir(@NotNull String actionabilityDir, @NotNull RefGenomeVersion refGenomeVersion)
             throws IOException {
-        LOGGER.info("Loading SERVE actionability files from {} using ref genome version '{}'", actionabilityDir, refGenomeVersion);
+        LOGGER.info("Loading SERVE known files from {} using ref genome version '{}'", actionabilityDir, refGenomeVersion);
 
         String knownHotspotTsv = KnownHotspotFile.knownHotspotVcfPath(actionabilityDir, refGenomeVersion);
         List<KnownHotspot> hotspots = KnownHotspotFile.read(knownHotspotTsv);

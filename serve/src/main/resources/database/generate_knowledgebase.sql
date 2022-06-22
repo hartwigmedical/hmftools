@@ -10,15 +10,15 @@ CREATE TABLE actionableHotspots
     alt varchar(100) NOT NULL,
     source varchar(50) NOT NULL,
     sourceEvent varchar(50) NOT NULL,
-    sourceUrls varchar(2000) NOT NULL,
+    sourceUrls varchar(2000),
     treatment varchar(500) NOT NULL,
-    drugClasses varchar(500) NOT NULL,
+    drugClasses varchar(500),
     applicableCancerType varchar(100) NOT NULL,
     applicableDoid varchar(50) NOT NULL,
-    blacklistCancerTypes varchar(500) NOT NULL,
+    blacklistCancerTypes varchar(500),
     level varchar(50) NOT NULL,
     direction varchar(50) NOT NULL,
-    evidenceUrls varchar(1000) NOT NULL,
+    evidenceUrls varchar(1000),
     PRIMARY KEY (id)
 );
 
@@ -36,15 +36,15 @@ CREATE TABLE actionableRanges
     rank varchar(50) NOT NULL,
     source varchar(50) NOT NULL,
     sourceEvent varchar(50) NOT NULL,
-    sourceUrls varchar(2000) NOT NULL,
+    sourceUrls varchar(2000),
     treatment varchar(500) NOT NULL,
-    drugClasses varchar(500) NOT NULL,
+    drugClasses varchar(500),
     applicableCancerType varchar(100) NOT NULL,
     applicableDoid varchar(50) NOT NULL,
-    blacklistCancerTypes varchar(500) NOT NULL,
+    blacklistCancerTypes varchar(500),
     level varchar(50) NOT NULL,
     direction varchar(50) NOT NULL,
-    evidenceUrls varchar(1000) NOT NULL,
+    evidenceUrls varchar(1000),
     PRIMARY KEY (id)
 );
 
@@ -56,15 +56,15 @@ CREATE TABLE actionableGenes
     event varchar(50) NOT NULL,
     source varchar(50) NOT NULL,
     sourceEvent varchar(50) NOT NULL,
-    sourceUrls varchar(2000) NOT NULL,
+    sourceUrls varchar(2000),
     treatment varchar(500) NOT NULL,
-    drugClasses varchar(500) NOT NULL,
+    drugClasses varchar(500),
     applicableCancerType varchar(100) NOT NULL,
     applicableDoid varchar(50) NOT NULL,
-    blacklistCancerTypes varchar(500) NOT NULL,
+    blacklistCancerTypes varchar(500),
     level varchar(50) NOT NULL,
     direction varchar(50) NOT NULL,
-    evidenceUrls varchar(1000) NOT NULL,
+    evidenceUrls varchar(1000),
     PRIMARY KEY (id)
 );
 
@@ -80,15 +80,15 @@ CREATE TABLE actionableFusions
     maxExonDown int,
     source varchar(50) NOT NULL,
     sourceEvent varchar(50) NOT NULL,
-    sourceUrls varchar(2000) NOT NULL,
+    sourceUrls varchar(2000),
     treatment varchar(500) NOT NULL,
-    drugClasses varchar(500) NOT NULL,
+    drugClasses varchar(500),
     applicableCancerType varchar(100) NOT NULL,
     applicableDoid varchar(50) NOT NULL,
-    blacklistCancerTypes varchar(500) NOT NULL,
+    blacklistCancerTypes varchar(500),
     level varchar(50) NOT NULL,
     direction varchar(50) NOT NULL,
-    evidenceUrls varchar(1000) NOT NULL,
+    evidenceUrls varchar(1000),
     PRIMARY KEY (id)
 );
 
@@ -101,15 +101,15 @@ CREATE TABLE actionableCharacteristics
     cutOff int,
     source varchar(50) NOT NULL,
     sourceEvent varchar(50) NOT NULL,
-    sourceUrls varchar(2000) NOT NULL,
+    sourceUrls varchar(2000),
     treatment varchar(500) NOT NULL,
-    drugClasses varchar(500) NOT NULL,
+    drugClasses varchar(500),
     applicableCancerType varchar(100) NOT NULL,
     applicableDoid varchar(50) NOT NULL,
-    blacklistCancerTypes varchar(500) NOT NULL,
+    blacklistCancerTypes varchar(500),
     level varchar(50) NOT NULL,
     direction varchar(50) NOT NULL,
-    evidenceUrls varchar(1000) NOT NULL,
+    evidenceUrls varchar(1000),
     PRIMARY KEY (id)
 );
 
@@ -120,15 +120,15 @@ CREATE TABLE actionableHla
     HLAType varchar(50) NOT NULL,
     source varchar(50) NOT NULL,
     sourceEvent varchar(50) NOT NULL,
-    sourceUrls varchar(2000) NOT NULL,
+    sourceUrls varchar(2000),
     treatment varchar(500) NOT NULL,
-    drugClasses varchar(500) NOT NULL,
+    drugClasses varchar(500),
     applicableCancerType varchar(100) NOT NULL,
     applicableDoid varchar(50) NOT NULL,
-    blacklistCancerTypes varchar(500) NOT NULL,
+    blacklistCancerTypes varchar(500),
     level varchar(50) NOT NULL,
     direction varchar(50) NOT NULL,
-    evidenceUrls varchar(1000) NOT NULL,
+    evidenceUrls varchar(1000),
     PRIMARY KEY (id)
 );
 

@@ -13,6 +13,8 @@ import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLA;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
+import com.hartwig.hmftools.serve.actionability.util.ActionableFileFunctions;
+import com.hartwig.hmftools.serve.cancertype.CancerTypeFactory;
 import com.hartwig.hmftools.serve.extraction.KnownEvents;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
@@ -280,15 +282,23 @@ public class ServeDAO {
                 actionableHotspot.alt(),
                 actionableHotspot.source(),
                 actionableHotspot.sourceEvent(),
-                actionableHotspot.sourceUrls(),
+                ActionableFileFunctions.urlsToString(actionableHotspot.sourceUrls()).isEmpty()
+                        ? null
+                        : ActionableFileFunctions.urlsToString(actionableHotspot.sourceUrls()),
                 actionableHotspot.treatment().treament(),
-                actionableHotspot.treatment().drugClasses(),
+                ActionableFileFunctions.drugClassesToString(actionableHotspot.treatment().drugClasses()).isEmpty()
+                        ? null
+                        : ActionableFileFunctions.drugClassesToString(actionableHotspot.treatment().drugClasses()),
                 actionableHotspot.applicableCancerType().name(),
                 actionableHotspot.applicableCancerType().doid(),
-                actionableHotspot.blacklistCancerTypes(),
+                CancerTypeFactory.toString(actionableHotspot.blacklistCancerTypes()).isEmpty()
+                        ? null
+                        : CancerTypeFactory.toString(actionableHotspot.blacklistCancerTypes()),
                 actionableHotspot.level(),
                 actionableHotspot.direction(),
-                actionableHotspot.evidenceUrls());
+                ActionableFileFunctions.urlsToString(actionableHotspot.evidenceUrls()).isEmpty()
+                        ? null
+                        : ActionableFileFunctions.urlsToString(actionableHotspot.evidenceUrls()));
     }
 
     private static void addRecordRanges(@NotNull Timestamp timestamp, @NotNull InsertValuesStep20 inserter,
@@ -304,15 +314,23 @@ public class ServeDAO {
                 actionableRange.rank(),
                 actionableRange.source(),
                 actionableRange.sourceEvent(),
-                actionableRange.sourceUrls(),
+                ActionableFileFunctions.urlsToString(actionableRange.sourceUrls()).isEmpty()
+                        ? null
+                        : ActionableFileFunctions.urlsToString(actionableRange.sourceUrls()),
                 actionableRange.treatment().treament(),
-                actionableRange.treatment().drugClasses(),
+                ActionableFileFunctions.drugClassesToString(actionableRange.treatment().drugClasses()).isEmpty()
+                        ? null
+                        : ActionableFileFunctions.drugClassesToString(actionableRange.treatment().drugClasses()),
                 actionableRange.applicableCancerType().name(),
                 actionableRange.applicableCancerType().doid(),
-                actionableRange.blacklistCancerTypes(),
+                CancerTypeFactory.toString(actionableRange.blacklistCancerTypes()).isEmpty()
+                        ? null
+                        : CancerTypeFactory.toString(actionableRange.blacklistCancerTypes()),
                 actionableRange.level(),
                 actionableRange.direction(),
-                actionableRange.evidenceUrls());
+                ActionableFileFunctions.urlsToString(actionableRange.evidenceUrls()).isEmpty()
+                        ? null
+                        : ActionableFileFunctions.urlsToString(actionableRange.evidenceUrls()));
     }
 
     private static void addRecordGenes(@NotNull Timestamp timestamp, @NotNull InsertValuesStep14 inserter,
@@ -322,15 +340,23 @@ public class ServeDAO {
                 actionableGene.event(),
                 actionableGene.source(),
                 actionableGene.sourceEvent(),
-                actionableGene.sourceUrls(),
+                ActionableFileFunctions.urlsToString(actionableGene.sourceUrls()).isEmpty()
+                        ? null
+                        : ActionableFileFunctions.urlsToString(actionableGene.sourceUrls()),
                 actionableGene.treatment().treament(),
-                actionableGene.treatment().drugClasses(),
+                ActionableFileFunctions.drugClassesToString(actionableGene.treatment().drugClasses()).isEmpty()
+                        ? null
+                        : ActionableFileFunctions.drugClassesToString(actionableGene.treatment().drugClasses()),
                 actionableGene.applicableCancerType().name(),
                 actionableGene.applicableCancerType().doid(),
-                actionableGene.blacklistCancerTypes(),
+                CancerTypeFactory.toString(actionableGene.blacklistCancerTypes()).isEmpty()
+                        ? null
+                        : CancerTypeFactory.toString(actionableGene.blacklistCancerTypes()),
                 actionableGene.level(),
                 actionableGene.direction(),
-                actionableGene.evidenceUrls());
+                ActionableFileFunctions.urlsToString(actionableGene.evidenceUrls()).isEmpty()
+                        ? null
+                        : ActionableFileFunctions.urlsToString(actionableGene.evidenceUrls()));
     }
 
     private static void addRecordFusions(@NotNull Timestamp timestamp, @NotNull InsertValuesStep18 inserter,
@@ -344,15 +370,23 @@ public class ServeDAO {
                 actionableFusion.maxExonDown(),
                 actionableFusion.source(),
                 actionableFusion.sourceEvent(),
-                actionableFusion.sourceUrls(),
+                ActionableFileFunctions.urlsToString(actionableFusion.sourceUrls()).isEmpty()
+                        ? null
+                        : ActionableFileFunctions.urlsToString(actionableFusion.sourceUrls()),
                 actionableFusion.treatment().treament(),
-                actionableFusion.treatment().drugClasses(),
+                ActionableFileFunctions.drugClassesToString(actionableFusion.treatment().drugClasses()).isEmpty()
+                        ? null
+                        : ActionableFileFunctions.drugClassesToString(actionableFusion.treatment().drugClasses()),
                 actionableFusion.applicableCancerType().name(),
                 actionableFusion.applicableCancerType().doid(),
-                actionableFusion.blacklistCancerTypes(),
+                CancerTypeFactory.toString(actionableFusion.blacklistCancerTypes()).isEmpty()
+                        ? null
+                        : CancerTypeFactory.toString(actionableFusion.blacklistCancerTypes()),
                 actionableFusion.level(),
                 actionableFusion.direction(),
-                actionableFusion.evidenceUrls());
+                ActionableFileFunctions.urlsToString(actionableFusion.evidenceUrls()).isEmpty()
+                        ? null
+                        : ActionableFileFunctions.urlsToString(actionableFusion.evidenceUrls()));
     }
 
     private static void addRecordCharacteristics(@NotNull Timestamp timestamp, @NotNull InsertValuesStep15 inserter,
@@ -363,15 +397,23 @@ public class ServeDAO {
                 actionableCharacteristic.cutoff(),
                 actionableCharacteristic.source(),
                 actionableCharacteristic.sourceEvent(),
-                actionableCharacteristic.sourceUrls(),
+                ActionableFileFunctions.urlsToString(actionableCharacteristic.sourceUrls()).isEmpty()
+                        ? null
+                        : ActionableFileFunctions.urlsToString(actionableCharacteristic.sourceUrls()),
                 actionableCharacteristic.treatment().treament(),
-                actionableCharacteristic.treatment().drugClasses(),
+                ActionableFileFunctions.drugClassesToString(actionableCharacteristic.treatment().drugClasses()).isEmpty()
+                        ? null
+                        : ActionableFileFunctions.drugClassesToString(actionableCharacteristic.treatment().drugClasses()),
                 actionableCharacteristic.applicableCancerType().name(),
                 actionableCharacteristic.applicableCancerType().doid(),
-                actionableCharacteristic.blacklistCancerTypes(),
+                CancerTypeFactory.toString(actionableCharacteristic.blacklistCancerTypes()).isEmpty()
+                        ? null
+                        : CancerTypeFactory.toString(actionableCharacteristic.blacklistCancerTypes()),
                 actionableCharacteristic.level(),
                 actionableCharacteristic.direction(),
-                actionableCharacteristic.evidenceUrls());
+                ActionableFileFunctions.urlsToString(actionableCharacteristic.evidenceUrls()).isEmpty()
+                        ? null
+                        : ActionableFileFunctions.urlsToString(actionableCharacteristic.evidenceUrls()));
     }
 
     private static void addRecordHlas(@NotNull Timestamp timestamp, @NotNull InsertValuesStep13 inserter,
@@ -380,15 +422,23 @@ public class ServeDAO {
                 actionableHLA.hlaType(),
                 actionableHLA.source(),
                 actionableHLA.sourceEvent(),
-                actionableHLA.sourceUrls(),
+                ActionableFileFunctions.urlsToString(actionableHLA.sourceUrls()).isEmpty()
+                        ? null
+                        : ActionableFileFunctions.urlsToString(actionableHLA.sourceUrls()),
                 actionableHLA.treatment().treament(),
-                actionableHLA.treatment().drugClasses(),
+                ActionableFileFunctions.drugClassesToString(actionableHLA.treatment().drugClasses()).isEmpty()
+                        ? null
+                        : ActionableFileFunctions.drugClassesToString(actionableHLA.treatment().drugClasses()),
                 actionableHLA.applicableCancerType().name(),
                 actionableHLA.applicableCancerType().doid(),
-                actionableHLA.blacklistCancerTypes(),
+                CancerTypeFactory.toString(actionableHLA.blacklistCancerTypes()).isEmpty()
+                        ? null
+                        : CancerTypeFactory.toString(actionableHLA.blacklistCancerTypes()),
                 actionableHLA.level(),
                 actionableHLA.direction(),
-                actionableHLA.evidenceUrls());
+                ActionableFileFunctions.urlsToString(actionableHLA.evidenceUrls()).isEmpty()
+                        ? null
+                        : ActionableFileFunctions.urlsToString(actionableHLA.evidenceUrls()));
     }
 
     private static void addRecordKnownHotspots(@NotNull Timestamp timestamp, @NotNull InsertValuesStep9 inserter,

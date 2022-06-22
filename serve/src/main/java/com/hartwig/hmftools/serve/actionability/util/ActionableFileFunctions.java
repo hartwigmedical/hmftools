@@ -131,7 +131,7 @@ public final class ActionableFileFunctions {
     }
 
     @NotNull
-    private static String urlsToString(@NotNull Set<String> urls) {
+    public static String urlsToString(@NotNull Set<String> urls) {
         StringJoiner joiner = new StringJoiner(URL_DELIMITER);
         for (String url : urls) {
             joiner.add(url);
@@ -145,7 +145,7 @@ public final class ActionableFileFunctions {
     }
 
     @NotNull
-    private static String drugClassesToString(@NotNull Set<String> drugClasses) {
+    public static String drugClassesToString(@NotNull Set<String> drugClasses) {
         StringJoiner joiner = new StringJoiner(URL_DELIMITER);
         for (String url : drugClasses) {
             joiner.add(url);
