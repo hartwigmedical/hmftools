@@ -2,6 +2,9 @@ package com.hartwig.hmftools.gripss;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.UNTEMPLATED_SEQUENCE_REPEAT_CLASS;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.UNTEMPLATED_SEQUENCE_REPEAT_TYPE;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ALT_PATH;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_EVENT_TYPE;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_HOTSPOT;
@@ -26,6 +29,7 @@ import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.FilterType;
 import com.hartwig.hmftools.gripss.links.LinkRescue;
 import com.hartwig.hmftools.gripss.links.LinkStore;
+import com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotation;
 
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.variant.variantcontext.Genotype;
@@ -114,6 +118,16 @@ public class VcfWriter
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(
                 VT_RESCUE_INFO, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "Partner breakend rescue"));
 
+        newHeader.addMetaDataLine(new VCFInfoHeaderLine(
+                UNTEMPLATED_SEQUENCE_REPEAT_CLASS, 1, VCFHeaderLineType.String, "Inserted sequence repeatmasker repeat class"));
+
+        newHeader.addMetaDataLine(new VCFInfoHeaderLine(
+                UNTEMPLATED_SEQUENCE_REPEAT_TYPE, 1, VCFHeaderLineType.String, "Inserted sequence repeatmasker repeat type"));
+
+        newHeader.addMetaDataLine(new VCFInfoHeaderLine(
+                UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE, 1, VCFHeaderLineType.Float,
+                "Portion of inserted sequence whose alignment overlaps the repeatmasker repeat"));
+
         writer.writeHeader(newHeader);
     }
 
@@ -158,6 +172,8 @@ public class VcfWriter
             final Breakend breakend, final Map<SvData,List<FilterType>> svFiltersMap,
             final String localLinks, final String remoteLinks, final String altPathStr, String rescueInfo)
     {
+        final SvData sv = breakend.sv();
+
         List<Genotype> genotypes = Lists.newArrayList(breakend.Context.getGenotype(mGenotypeIds.TumorOrdinal));
 
         if(mGenotypeIds.hasReference())
@@ -182,10 +198,21 @@ public class VcfWriter
         else
             builder.attribute(VT_REMOTE_LINKED_BY, "");
 
-        if(breakend.sv().ponCount() > 0)
+        if(sv.ponCount() > 0)
             builder.attribute(VT_PON_COUNT, breakend.sv().ponCount());
 
-        final SvData sv = breakend.sv();
+        if(sv.getRmAnnotation() != null)
+        {
+            final RepeatMaskAnnotation rmAnnotation = sv.getRmAnnotation();
+
+            // remove any previously set
+            builder.rmAttribute(UNTEMPLATED_SEQUENCE_REPEAT_CLASS);
+            builder.rmAttribute(UNTEMPLATED_SEQUENCE_REPEAT_TYPE);
+            builder.rmAttribute(UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE);
+            builder.attribute(UNTEMPLATED_SEQUENCE_REPEAT_CLASS, rmAnnotation.RmData.ClassType);
+            builder.attribute(UNTEMPLATED_SEQUENCE_REPEAT_TYPE, rmAnnotation.RmData.Repeat);
+            builder.attribute(UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE, rmAnnotation.Coverage);
+        }
 
         List<FilterType> svFilters;
 

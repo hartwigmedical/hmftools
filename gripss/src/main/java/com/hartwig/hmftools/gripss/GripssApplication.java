@@ -2,11 +2,13 @@ package com.hartwig.hmftools.gripss;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.UNTEMPLATED_SEQUENCE_ALIGNMENTS;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
+import static com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotations.REPEAT_MASK_FILE;
 
 import java.io.IOException;
 import java.util.List;
@@ -31,6 +33,8 @@ import com.hartwig.hmftools.gripss.links.AssemblyLinks;
 import com.hartwig.hmftools.gripss.links.DsbLinkFinder;
 import com.hartwig.hmftools.gripss.links.LinkRescue;
 import com.hartwig.hmftools.gripss.links.LinkStore;
+import com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotation;
+import com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotations;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -56,6 +60,7 @@ public class GripssApplication
     private final SoftFilters mSoftFilters;
     private final RefGenomeInterface mRefGenome;
     private BreakendRealigner mRealigner;
+    private final RepeatMaskAnnotations mRepeatMaskAnnotations;
 
     private int mProcessedVariants;
     private final SvDataCache mSvDataCache;
@@ -80,6 +85,13 @@ public class GripssApplication
         mProcessedVariants = 0;
         mSvDataCache = new SvDataCache();
         mFilterCache = new FilterCache();
+        mRepeatMaskAnnotations = new RepeatMaskAnnotations();
+
+        if(cmd.hasOption(REPEAT_MASK_FILE))
+        {
+            if(!mRepeatMaskAnnotations.load(cmd.getOptionValue(REPEAT_MASK_FILE), mConfig.RefGenVersion))
+                System.exit(1);
+        }
     }
 
     public static GripssApplication fromCommandArgs(final CommandLine cmd)
@@ -263,6 +275,36 @@ public class GripssApplication
 
         mFilterCache.updateFilters(rescuedBreakends, Sets.newHashSet());
 
+        if(mRepeatMaskAnnotations.hasData())
+        {
+            int annotated = 0;
+            for(List<Breakend> chrBreakendList : mSvDataCache.getBreakendMap().values())
+            {
+                for(Breakend breakend : chrBreakendList)
+                {
+                    if(!breakend.IsStart)
+                        continue;
+
+                    if(breakend.sv().insertSequence().isEmpty())
+                        continue;
+
+                    final String alignments = breakend.Context.getAttributeAsString(UNTEMPLATED_SEQUENCE_ALIGNMENTS, "");
+                    if(alignments.isEmpty())
+                        continue;
+
+                    RepeatMaskAnnotation rmAnnotation = mRepeatMaskAnnotations.annotate(breakend.sv().insertSequence(), alignments);
+
+                    if(rmAnnotation != null)
+                    {
+                        breakend.sv().setRepeatMaskAnnotation(rmAnnotation);
+                        ++annotated;
+                    }
+                }
+            }
+
+            GR_LOGGER.debug("marked {} repeat mask annotations", annotated);
+        }
+
         LinkStore combinedLinks = LinkStore.from(combinedTransitiveAssemblyLinks, dsbLinkStore);
 
         Map<Breakend,String> idPathMap = AlternatePathFinder.createPathMap(alternatePaths);
@@ -314,13 +356,6 @@ public class GripssApplication
             return;
 
         mSvDataCache.addSvData(svData);
-    }
-
-    // testing methods only
-    public void clearState()
-    {
-        mProcessedVariants = 0;
-        mVariantBuilder.clearState();
     }
 
     public static void main(@NotNull final String[] args) throws ParseException

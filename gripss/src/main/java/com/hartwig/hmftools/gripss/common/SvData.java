@@ -20,6 +20,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.gripss.filters.FilterType;
+import com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotation;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -37,6 +38,7 @@ public class SvData
     private final boolean mImprecise;
     private boolean mIsShortLocal;
     private int mPonCount;
+    private RepeatMaskAnnotation mRmAnnotation;
 
     public SvData(final StructuralVariant sv, final GenotypeIds genotypeIds)
     {
@@ -72,6 +74,7 @@ public class SvData
         mImprecise = sv.imprecise();
         mInsertSequence = sv.insertSequence();
         mPonCount = 0;
+        mRmAnnotation = null;
     }
 
     public void onPositionsUpdated()
@@ -110,6 +113,9 @@ public class SvData
 
     public int ponCount() { return mPonCount; }
     public void setPonCount(int count) { mPonCount = count; }
+
+    public RepeatMaskAnnotation getRmAnnotation() { return mRmAnnotation; }
+    public void setRepeatMaskAnnotation(final RepeatMaskAnnotation annotation) { mRmAnnotation = annotation; }
 
     public boolean hasReference() { return mReferenceOrdinal >= 0; }
 
