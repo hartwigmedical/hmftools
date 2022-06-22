@@ -56,11 +56,11 @@ public final class KnownFusionPairFile {
 
         return ImmutableKnownFusionPair.builder()
                 .geneUp(values[0])
-                .minExonUp(Integer.valueOf(values[1]))
-                .maxExonUp(Integer.valueOf(values[2]))
+                .minExonUp(values[1].isEmpty() ? null: Integer.valueOf(values[1]))
+                .maxExonUp(values[2].isEmpty() ? null: Integer.valueOf(values[2]))
                 .geneDown(values[3])
-                .minExonDown(Integer.valueOf(values[4]))
-                .maxExonDown(Integer.valueOf(values[5]))
+                .minExonDown(values[4].isEmpty() ? null: Integer.valueOf(values[4]))
+                .maxExonDown(values[5].isEmpty() ? null: Integer.valueOf(values[5]))
                 .sources(Knowledgebase.fromCommaSeparatedSourceString(values[6]))
                 .build();
     }

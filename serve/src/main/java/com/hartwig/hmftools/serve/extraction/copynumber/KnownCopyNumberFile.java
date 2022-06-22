@@ -55,7 +55,7 @@ public final class KnownCopyNumberFile {
 
         return ImmutableKnownCopyNumber.builder()
                 .gene(values[0])
-                .type(CopyNumberType.valueOf(values[1]))
+                .type(CopyNumberType.valueOf(values[1].toUpperCase()))
                 .sources(Knowledgebase.fromCommaSeparatedSourceString(values[2]))
                 .build();
     }

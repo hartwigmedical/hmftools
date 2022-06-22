@@ -16,6 +16,8 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
+import com.hartwig.hmftools.common.variant.impact.VariantImpact;
+import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.serve.extraction.util.KeyFormatter;
 import com.hartwig.hmftools.serve.extraction.util.VCFWriterFactory;
 
@@ -53,7 +55,7 @@ public final class KnownHotspotFile {
                 new VCFCodec(),
                 false);) {
             for (VariantContext hotspot : reader.iterator()) {
-
+                VariantImpact impact = VariantImpactSerialiser.fromVariantContext(hotspot);
                 StringJoiner joiner = new StringJoiner("|");
                 Object input = hotspot.getAttribute(VCFWriterFactory.INPUT_FIELD);
                 if (input != null) {
@@ -74,9 +76,12 @@ public final class KnownHotspotFile {
                 //TODO: add info
                 result.add(ImmutableKnownHotspot.builder()
                         .chromosome(hotspot.getContig())
+                        .gene(impact.CanonicalGeneName)
+                        .proteinAnnotation(impact.CanonicalHgvsProtein)
                         .position(hotspot.getStart())
                         .ref(hotspot.getAlleles().get(0).getBaseString())
-                        .alt(hotspot.getAlleles().get(0).getBaseString()).build());
+                        .alt(hotspot.getAlleles().get(0).getBaseString())
+                        .build());
             }
         }
 
