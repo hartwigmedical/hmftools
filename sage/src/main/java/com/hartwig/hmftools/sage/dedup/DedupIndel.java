@@ -120,7 +120,7 @@ public final class DedupIndel
         }
         else
         {
-            if(first.totalQuality() > second.totalQuality())
+            if(first.totalQuality() >= second.totalQuality())
                 second.filters().add(DEDUP_INDEL_FILTER);
             else
                 first.filters().add(DEDUP_INDEL_FILTER);

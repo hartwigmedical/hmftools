@@ -75,9 +75,6 @@ public class ReadContextEvidence
         if(mMaxDeleteLength >= 5)
             mReadCounters.forEach(x -> x.setMaxCandidateDeleteLength(mMaxDeleteLength));
 
-        if(mSageConfig.CountRealigned)
-            mReadCounters.forEach(x -> x.setCountRealigned());
-
         final Candidate firstCandidate = candidates.get(0);
         final Candidate lastCandidate = candidates.get(candidates.size() - 1);
 

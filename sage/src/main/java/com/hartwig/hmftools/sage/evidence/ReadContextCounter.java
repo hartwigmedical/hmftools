@@ -64,7 +64,6 @@ public class ReadContextCounter implements VariantHotspot
 
     private int mSoftClipInsertSupport;
     private int mMaxCandidateDeleteLength;
-    private boolean mCountRealigned;
 
     private List<Integer> mLocalPhaseSets;
     private List<int[]> mLpsCounts;
@@ -112,7 +111,6 @@ public class ReadContextCounter implements VariantHotspot
         mRawRefBaseQuality = 0;
         mSoftClipInsertSupport = 0;
         mMaxCandidateDeleteLength = 0;
-        mCountRealigned = false;
 
         mLocalPhaseSets = null;
         mLpsCounts = null;
@@ -149,11 +147,7 @@ public class ReadContextCounter implements VariantHotspot
 
     public int tumorQuality()
     {
-        int tumorQuality = mQualities[RC_FULL] + mQualities[RC_PARTIAL];
-
-        if(mCountRealigned)
-            tumorQuality += mQualities[RC_REALIGNED];
-
+        int tumorQuality = mQualities[RC_FULL] + mQualities[RC_PARTIAL] + mQualities[RC_REALIGNED];
         return Math.max(0, tumorQuality - (int) mJitterPenalty);
     }
 
@@ -182,30 +176,6 @@ public class ReadContextCounter implements VariantHotspot
     public int rawRefBaseQuality() { return mRawRefBaseQuality; }
     public int softClipInsertSupport() { return mSoftClipInsertSupport; }
     public void setMaxCandidateDeleteLength(int length) { mMaxCandidateDeleteLength = length; }
-    public void setCountRealigned() { mCountRealigned = true; }
-
-    public void addLocalPhaseSet(int lps, int readCount, double allocCount)
-    {
-        if(mLocalPhaseSets == null)
-        {
-            mLocalPhaseSets = Lists.newArrayList();
-            mLpsCounts = Lists.newArrayList();
-        }
-
-        // add in order of highest counts
-        int index = 0;
-        while(index < mLpsCounts.size())
-        {
-            final int[] existingCounts = mLpsCounts.get(index);
-            if(readCount + allocCount > existingCounts[0] + existingCounts[0])
-                break;
-
-            ++index;
-        }
-
-        mLocalPhaseSets.add(index, lps);
-        mLpsCounts.add(index, new int[] { readCount, (int)allocCount } );
-    }
 
     public List<Integer> localPhaseSets() { return mLocalPhaseSets; }
     public List<int[]> lpsCounts() { return mLpsCounts; }
@@ -458,6 +428,29 @@ public class ReadContextCounter implements VariantHotspot
         return new RawContext(
                 readIndex, false, false, true,
                 true, false, true, baseQuality, 0);
+    }
+
+    public void addLocalPhaseSet(int lps, int readCount, double allocCount)
+    {
+        if(mLocalPhaseSets == null)
+        {
+            mLocalPhaseSets = Lists.newArrayList();
+            mLpsCounts = Lists.newArrayList();
+        }
+
+        // add in order of highest counts
+        int index = 0;
+        while(index < mLpsCounts.size())
+        {
+            final int[] existingCounts = mLpsCounts.get(index);
+            if(readCount + allocCount > existingCounts[0] + existingCounts[0])
+                break;
+
+            ++index;
+        }
+
+        mLocalPhaseSets.add(index, lps);
+        mLpsCounts.add(index, new int[] { readCount, (int)allocCount } );
     }
 
     private void countStrandedness(final SAMRecord record)

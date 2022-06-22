@@ -42,7 +42,7 @@ public class QualityConfig
     private static final int DEFAULT_READ_EDGE_FIXED_PENALTY = 0;
     private static final int DEFAULT_MAP_QUAL_FIXED_PENALTY = 15;
     private static final int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
-    private static final int DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 8;
+    private static final int DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 7;
 
     public QualityConfig(final CommandLine cmd)
     {
