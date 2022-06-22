@@ -86,6 +86,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
@@ -734,26 +735,37 @@ public class LilacApplication
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = LilacConfig.createOptions();
-        final CommandLine cmd = createCommandLine(args, options);
 
-        setLogLevel(cmd);
-
-        LilacApplication lilac = new LilacApplication(new LilacConfig(cmd));
-
-        long startTime = System.currentTimeMillis();
-
-        if(lilac.run())
+        try
         {
-            lilac.writeFileOutputs();
+            final CommandLine cmd = createCommandLine(args, options);
 
-            if(DatabaseAccess.hasDatabaseConfig(cmd))
-                lilac.writeDatabaseResults(cmd);
+            setLogLevel(cmd);
+
+            LilacApplication lilac = new LilacApplication(new LilacConfig(cmd));
+
+            long startTime = System.currentTimeMillis();
+
+            if(lilac.run())
+            {
+                lilac.writeFileOutputs();
+
+                if(DatabaseAccess.hasDatabaseConfig(cmd))
+                    lilac.writeDatabaseResults(cmd);
+            }
+
+            long endTime = System.currentTimeMillis();
+            double runTime = (endTime - startTime) / 1000.0;
+
+            LL_LOGGER.info("Lilac complete, run time({}s)", String.format("%.2f", runTime));
         }
-
-        long endTime = System.currentTimeMillis();
-        double runTime = (endTime - startTime) / 1000.0;
-
-        LL_LOGGER.info("Lilac complete, run time({}s)", String.format("%.2f", runTime));
+        catch(ParseException e)
+        {
+            LL_LOGGER.warn(e);
+            final HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("LilacApplication", options);
+            System.exit(1);
+        }
     }
 
     @NotNull

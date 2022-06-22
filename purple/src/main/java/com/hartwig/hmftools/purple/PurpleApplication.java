@@ -643,7 +643,8 @@ public class PurpleApplication
         {
             PurpleApplication purpleApplication = new PurpleApplication(options, args);
             purpleApplication.run();
-        } catch(ParseException e)
+        }
+        catch(ParseException e)
         {
             PPL_LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();

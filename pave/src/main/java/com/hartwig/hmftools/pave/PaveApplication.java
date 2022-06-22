@@ -36,6 +36,7 @@ import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
@@ -389,12 +390,23 @@ public class PaveApplication
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = PaveConfig.createOptions();
-        final CommandLine cmd = createCommandLine(args, options);
 
-        setLogLevel(cmd);
+        try
+        {
+            final CommandLine cmd = createCommandLine(args, options);
 
-        PaveApplication paveApplication = new PaveApplication(cmd);
-        paveApplication.run();
+            setLogLevel(cmd);
+
+            PaveApplication paveApplication = new PaveApplication(cmd);
+            paveApplication.run();
+        }
+        catch(ParseException e)
+        {
+            PV_LOGGER.warn(e);
+            final HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("PaveApplication", options);
+            System.exit(1);
+        }
     }
 
     @NotNull

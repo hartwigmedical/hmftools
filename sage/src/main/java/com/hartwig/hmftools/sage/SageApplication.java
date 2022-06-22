@@ -153,7 +153,7 @@ public class SageApplication implements AutoCloseable
         mVcfWriter.close();
     }
 
-    public static void main(final String... args) throws IOException, InterruptedException, ExecutionException
+    public static void main(final String... args) throws IOException
     {
         final Options options = SageConfig.createSageOptions();
 

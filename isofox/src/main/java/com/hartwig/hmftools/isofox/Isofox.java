@@ -59,6 +59,7 @@ import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
@@ -469,32 +470,43 @@ public class Isofox
         ISF_LOGGER.info("Isofox version: {}", version.version());
 
         final Options options = createCmdLineOptions();
-        final CommandLine cmd = createCommandLine(args, options);
 
-        setLogLevel(cmd);
-
-        if(!validConfigPaths(cmd))
+        try
         {
-            ISF_LOGGER.error("invalid input files or paths, exiting");
-            return;
+            final CommandLine cmd = createCommandLine(args, options);
+
+            setLogLevel(cmd);
+
+            if(!validConfigPaths(cmd))
+            {
+                ISF_LOGGER.error("invalid input files or paths, exiting");
+                return;
+            }
+
+            IsofoxConfig config = new IsofoxConfig(cmd);
+
+            if(!config.isValid())
+            {
+                ISF_LOGGER.error("missing config options, exiting");
+                return;
+            }
+
+            Isofox isofox = new Isofox(config, cmd);
+            if(!isofox.runAnalysis())
+            {
+                ISF_LOGGER.info("Isofox RNA analysis failed");
+                return;
+            }
+
+            ISF_LOGGER.info("Isofox analysis complete");
         }
-
-        IsofoxConfig config = new IsofoxConfig(cmd);
-
-        if(!config.isValid())
+        catch(ParseException e)
         {
-            ISF_LOGGER.error("missing config options, exiting");
-            return;
+            ISF_LOGGER.warn(e);
+            final HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("Isofox", options);
+            System.exit(1);
         }
-
-        Isofox isofox = new Isofox(config, cmd);
-        if(!isofox.runAnalysis())
-        {
-            ISF_LOGGER.info("Isofox RNA analysis failed");
-            return;
-        }
-
-        ISF_LOGGER.info("Isofox analysis complete");
     }
 
     @NotNull

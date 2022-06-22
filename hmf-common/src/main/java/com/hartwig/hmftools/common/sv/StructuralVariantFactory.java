@@ -64,11 +64,13 @@ public class StructuralVariantFactory
     private static final String REFERENCE_BREAKEND_READ_COVERAGE = "REF";
     private static final String REFERENCE_BREAKEND_READPAIR_COVERAGE = "REFPAIR";
     private static final String EVENT = "EVENT";
-    private static final String UNTEMPLATED_SEQUENCE_ALIGNMENTS = "BEALN";
-    private static final String UNTEMPLATED_SEQUENCE_REPEAT_CLASS = "INSRMRC";
-    private static final String UNTEMPLATED_SEQUENCE_REPEAT_TYPE = "INSRMRT";
-    private static final String UNTEMPLATED_SEQUENCE_REPEAT_ORIENTATION = "INSRMRO";
-    private static final String UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE = "INSRMP";
+
+    public static final String UNTEMPLATED_SEQUENCE_ALIGNMENTS = "BEALN";
+    public static final String UNTEMPLATED_SEQUENCE_REPEAT_CLASS = "INSRMRC";
+    public static final String UNTEMPLATED_SEQUENCE_REPEAT_TYPE = "INSRMRT";
+    public static final String UNTEMPLATED_SEQUENCE_REPEAT_ORIENTATION = "INSRMRO";
+    public static final String UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE = "INSRMP";
+
     private static final String ANCHOR_SUPPORT_CIGAR = "SC";
 
     // set by Purple

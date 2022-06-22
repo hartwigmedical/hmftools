@@ -30,6 +30,7 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
@@ -38,15 +39,10 @@ public class LinxApplication
 {
     private static final String FILTER_QC_PASS = "filter_qc_pass";
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public LinxApplication(final CommandLine cmd)
     {
         final VersionInfo version = new VersionInfo("linx.version");
         LNX_LOGGER.info("LINX version: {}", version.version());
-
-        final Options options = createBasicOptions();
-        final CommandLine cmd = createCommandLine(args, options);
-
-        setLogLevel(cmd);
 
         if(!LinxConfig.validConfig(cmd))
         {
@@ -265,6 +261,28 @@ public class LinxApplication
             return sampleIds;
 
         return dbAccess.readStructuralVariantSampleList("");
+    }
+
+    public static void main(@NotNull final String[] args)
+    {
+        final Options options = createBasicOptions();
+
+        try
+        {
+            final CommandLine cmd = createCommandLine(args, options);
+
+            setLogLevel(cmd);
+
+            new LinxApplication(cmd);
+        }
+        catch(ParseException e)
+        {
+            LNX_LOGGER.warn(e);
+            final HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("LinxApplication", options);
+            System.exit(1);
+        }
+
     }
 
     private static Options createBasicOptions()

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.analyser;
 
+import static com.hartwig.hmftools.common.samtools.CigarTraversal.calcCigarLength;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
@@ -12,7 +13,6 @@ import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.POLY_A_M
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.POLY_T_MOTIF;
 import static com.hartwig.hmftools.linx.annotators.LineElementType.KNOWN;
 import static com.hartwig.hmftools.linx.annotators.LineElementType.SUSPECT;
-import static com.hartwig.hmftools.linx.types.SglMapping.calcCigarLength;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInf;

@@ -29,8 +29,8 @@ public class ConfigUtils
 
     public static void addLoggingOptions(final Options options)
     {
-        options.addOption(LOG_DEBUG, false, "Log verbose");
-        options.addOption(LOG_LEVEL, true, "Specify log level");
+        options.addOption(LOG_DEBUG, false, "Log at DEBUG level");
+        options.addOption(LOG_LEVEL, true, "Specify log level: ERROR, WARN, INFO, DEBUG or TRACE");
     }
 
     public static void setLogLevel(final CommandLine cmd)

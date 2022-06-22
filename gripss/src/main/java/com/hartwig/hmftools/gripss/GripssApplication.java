@@ -39,6 +39,7 @@ import com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotations;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
@@ -363,14 +364,24 @@ public class GripssApplication
         final Options options = new Options();
         GripssConfig.addCommandLineOptions(options);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        try
+        {
+            final CommandLine cmd = createCommandLine(args, options);
 
-        setLogLevel(cmd);
+            setLogLevel(cmd);
 
-        GripssApplication gripss = GripssApplication.fromCommandArgs(cmd);
-        gripss.run();
+            GripssApplication gripss = GripssApplication.fromCommandArgs(cmd);
+            gripss.run();
 
-        GR_LOGGER.info("Gripss run complete");
+            GR_LOGGER.info("Gripss run complete");
+        }
+        catch(ParseException e)
+        {
+            GR_LOGGER.warn(e);
+            final HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("GripssApplication", options);
+            System.exit(1);
+        }
     }
 
     @NotNull

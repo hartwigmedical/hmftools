@@ -32,6 +32,7 @@ import com.hartwig.hmftools.cup.svs.SvClassifier;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
@@ -183,17 +184,28 @@ public class CupAnalyser
     public static void main(@NotNull final String[] args) throws ParseException
     {
         Options options = new Options();
+
         CuppaConfig.addCmdLineArgs(options);
 
-        final CommandLine cmd = createCommandLine(args, options);
-
-        if(cmd.hasOption(LOG_DEBUG))
+        try
         {
-            Configurator.setRootLevel(Level.DEBUG);
-        }
+            final CommandLine cmd = createCommandLine(args, options);
 
-        CupAnalyser cupAnalyser = new CupAnalyser(cmd);
-        cupAnalyser.run();
+            if(cmd.hasOption(LOG_DEBUG))
+            {
+                Configurator.setRootLevel(Level.DEBUG);
+            }
+
+            CupAnalyser cupAnalyser = new CupAnalyser(cmd);
+            cupAnalyser.run();
+        }
+        catch(ParseException e)
+        {
+            CUP_LOGGER.warn(e);
+            final HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("CupAnalyser", options);
+            System.exit(1);
+        }
     }
 
     @NotNull
