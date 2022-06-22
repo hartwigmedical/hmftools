@@ -163,7 +163,9 @@ public class Mappability
                 {
                     mHasValidData = false;
                     mFileReader = null;
-                    return;
+
+                    PV_LOGGER.error("invalid mappability entry({})", line);
+                    System.exit(1);
                 }
 
                 String chromosome = values[0];
