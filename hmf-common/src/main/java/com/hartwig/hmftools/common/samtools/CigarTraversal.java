@@ -64,4 +64,35 @@ public final class CigarTraversal
             }
         }
     }
+
+    public static int calcCigarLength(final String cigarStr)
+    {
+        int index = 0;
+        int baseLength = 0;
+        String basesStr = "";
+        while(index < cigarStr.length())
+        {
+            char c = cigarStr.charAt(index);
+            boolean isAddItem = (c == 'D' || c == 'M');
+            boolean isIgnoreItem = (c == 'I' || c == 'N' || c == 'S' || c == 'H' || c == 'P' || c == '=' || c == 'X');
+
+            if(isAddItem)
+            {
+                try { baseLength += Integer.parseInt(basesStr); } catch (Exception e) {}
+                basesStr = "";
+            }
+            else if(isIgnoreItem)
+            {
+                basesStr = "";
+            }
+            else
+            {
+                basesStr += c;
+            }
+
+            ++index;
+        }
+
+        return baseLength;
+    }
 }

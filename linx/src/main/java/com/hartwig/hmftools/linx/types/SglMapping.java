@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.types;
 
-import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.chromosomeRank;
+import static com.hartwig.hmftools.common.samtools.CigarTraversal.calcCigarLength;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.isPossibleLink;
@@ -8,11 +8,7 @@ import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_TEMPLATED_INSERT
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.sv.StructuralVariantType;
-
-import htsjdk.samtools.CigarOperator;
 
 public class SglMapping
 {
@@ -76,37 +72,6 @@ public class SglMapping
         int qualScore = !items[3].isEmpty() ? Integer.parseInt(items[3]) : 0;
 
         return new SglMapping(chromosome, position, orientation, cigar, qualScore);
-    }
-
-    public static int calcCigarLength(final String cigarStr)
-    {
-        int index = 0;
-        int baseLength = 0;
-        String basesStr = "";
-        while(index < cigarStr.length())
-        {
-            char c = cigarStr.charAt(index);
-            boolean isAddItem = (c == 'D' || c == 'M');
-            boolean isIgnoreItem = (c == 'I' || c == 'N' || c == 'S' || c == 'H' || c == 'P' || c == '=' || c == 'X');
-
-            if(isAddItem)
-            {
-                try { baseLength += Integer.parseInt(basesStr); } catch (Exception e) {}
-                basesStr = "";
-            }
-            else if(isIgnoreItem)
-            {
-                basesStr = "";
-            }
-            else
-            {
-                basesStr += c;
-            }
-
-            ++index;
-        }
-
-        return baseLength;
     }
 
     public static void convertFromInsertSequenceAlignments(
