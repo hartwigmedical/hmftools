@@ -39,8 +39,8 @@ public class KnownEventsLoader {
         LOGGER.info("Loading SERVE actionability files from {} using ref genome version '{}'", actionabilityDir, refGenomeVersion);
 
         String knownHotspotTsv = KnownHotspotFile.knownHotspotVcfPath(actionabilityDir, refGenomeVersion);
-       // List<KnownHotspot> hotspots = KnownHotspotFile.read(knownHotspotTsv);
-      //  LOGGER.info(" Loaded {} knonw hotspots from {}", hotspots.size(), knownHotspotTsv);
+        List<KnownHotspot> hotspots = KnownHotspotFile.read(knownHotspotTsv);
+        LOGGER.info(" Loaded {} knonw hotspots from {}", hotspots.size(), knownHotspotTsv);
 
         String knownCodonTsv = KnownCodonFile.knownCodonTsvPath(actionabilityDir, refGenomeVersion);
         List<KnownCodon> knownCodons = KnownCodonFile.read(knownCodonTsv);
@@ -59,7 +59,7 @@ public class KnownEventsLoader {
         LOGGER.info(" Loaded {} known fusions from {}", knownFusionPairs.size(), knownFusionTsv);
 
         return ImmutableKnownEvents.builder()
-                .knownHotspots(Lists.newArrayList())
+                .knownHotspots(hotspots)
                 .knownCodons(knownCodons)
                 .knownExons(knownExons)
                 .knownCopyNumbers(knownCopyNumbers)

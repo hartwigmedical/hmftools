@@ -132,6 +132,21 @@ CREATE TABLE actionableHla
     PRIMARY KEY (id)
 );
 
+DROP TABLE IF EXISTS knownHotspots;
+CREATE TABLE knownHotspots
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    chromosome varchar(50) NOT NULL,
+    position varchar(50) NOT NULL,
+    ref varchar(50) NOT NULL,
+    alt varchar(50) NOT NULL,
+    inputGene varchar(50) NOT NULL,
+    inputTranscript varchar(50) NOT NULL,
+    inputProteinAnnotation varchar(50) NOT NULL,
+    inputSource varchar(50) NOT NULL,
+    PRIMARY KEY (id)
+);
+
 DROP TABLE IF EXISTS knownCodons;
 CREATE TABLE knownCodons
 (   id int NOT NULL AUTO_INCREMENT,

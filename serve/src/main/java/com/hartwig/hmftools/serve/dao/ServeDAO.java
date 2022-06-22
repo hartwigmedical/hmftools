@@ -13,12 +13,12 @@ import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLA;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
-import com.hartwig.hmftools.serve.database.tables.Knownfusionpairs;
 import com.hartwig.hmftools.serve.extraction.KnownEvents;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.exon.KnownExon;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
+import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
 
 import static com.hartwig.hmftools.serve.database.tables.Actionablehotspots.ACTIONABLEHOTSPOTS;
 import static com.hartwig.hmftools.serve.database.tables.Actionableranges.ACTIONABLERANGES;
@@ -26,11 +26,13 @@ import static com.hartwig.hmftools.serve.database.tables.Actionablegenes.ACTIONA
 import static com.hartwig.hmftools.serve.database.tables.Actionablefusions.ACTIONABLEFUSIONS;
 import static com.hartwig.hmftools.serve.database.tables.Actionablecharacteristics.ACTIONABLECHARACTERISTICS;
 import static com.hartwig.hmftools.serve.database.tables.Actionablehla.ACTIONABLEHLA;
+import static com.hartwig.hmftools.serve.database.tables.Knownhotspots.KNOWNHOTSPOTS;
 import static com.hartwig.hmftools.serve.database.tables.Knowncodons.KNOWNCODONS;
 import static com.hartwig.hmftools.serve.database.tables.Knownexons.KNOWNEXONS;
 import static com.hartwig.hmftools.serve.database.tables.Knowncopynumbers.KNOWNCOPYNUMBERS;
 import static com.hartwig.hmftools.serve.database.tables.Knownfusionpairs.KNOWNFUSIONPAIRS;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep13;
@@ -190,6 +192,22 @@ public class ServeDAO {
                     ACTIONABLEHLA.DIRECTION,
                     ACTIONABLEHLA.EVIDENCEURLS);
             batch.forEach(entry -> addRecordHlas(timestamp, inserter, entry));
+            inserter.execute();
+        }
+
+        Set<KnownHotspot> knownHotspots = knownEvents.knownHotspots();
+        for (List<KnownHotspot> batch : Iterables.partition(knownHotspots, Utils.DB_BATCH_INSERT_SIZE)) {
+            InsertValuesStep9 inserter = context.insertInto(KNOWNHOTSPOTS,
+                    KNOWNHOTSPOTS.MODIFIED,
+                    KNOWNHOTSPOTS.CHROMOSOME,
+                    KNOWNHOTSPOTS.POSITION,
+                    KNOWNHOTSPOTS.REF,
+                    KNOWNHOTSPOTS.ALT,
+                    KNOWNHOTSPOTS.INPUTGENE,
+                    KNOWNHOTSPOTS.INPUTTRANSCRIPT,
+                    KNOWNHOTSPOTS.INPUTPROTEINANNOTATION,
+                    KNOWNHOTSPOTS.INPUTSOURCE);
+            batch.forEach(entry -> addRecordKnownHotspots(timestamp, inserter, entry));
             inserter.execute();
         }
 
@@ -369,6 +387,19 @@ public class ServeDAO {
                 actionableHLA.level(),
                 actionableHLA.direction(),
                 actionableHLA.evidenceUrls());
+    }
+
+    private static void addRecordKnownHotspots(@NotNull Timestamp timestamp, @NotNull InsertValuesStep9 inserter,
+            @NotNull KnownHotspot knownHotspot) {
+        inserter.values(timestamp,
+                knownHotspot.chromosome(),
+                knownHotspot.position(),
+                knownHotspot.ref(),
+                knownHotspot.alt(),
+                Strings.EMPTY,
+                Strings.EMPTY,
+                Strings.EMPTY,
+                Strings.EMPTY);
     }
 
     private static void addRecordKnownCodons(@NotNull Timestamp timestamp, @NotNull InsertValuesStep9 inserter,
