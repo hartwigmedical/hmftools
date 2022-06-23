@@ -25,6 +25,8 @@ iclusion_password | Required: Provided by iClusion.
 iclusion_trial_tsv | Required: The path to where the trials are going to be written to.
 
 ## Version History and Download Links
+- (Upcoming)
+  - Support to write output to db
 - [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/iclusion-importer-v1.5)
   - Version built on java11 JDK
 - [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/iclusion-importer-v1.4)
