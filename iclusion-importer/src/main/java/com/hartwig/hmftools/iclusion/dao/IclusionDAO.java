@@ -12,10 +12,13 @@ import static com.hartwig.hmftools.iclusion.database.tables.Studytumorlocations.
 import static com.hartwig.hmftools.iclusion.database.tables.Studyblacklistedtumorlocations.STUDYBLACKLISTEDTUMORLOCATIONS;
 import static com.hartwig.hmftools.iclusion.database.tables.Studymutationconditions.STUDYMUTATIONCONDITIONS;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 
 public class IclusionDAO {
+    private static final Logger LOGGER = LogManager.getLogger(IclusionDAO.class);
 
     @NotNull
     private final DSLContext context;
@@ -24,7 +27,18 @@ public class IclusionDAO {
         this.context = context;
     }
 
+    public void deleteAll() {
+        LOGGER.info("Deleting all data from iclusion database");
+        // Note that deletions should go from branch to root
+        context.deleteFrom(STUDYMUTATIONCONDITIONS).execute();
+        context.deleteFrom(STUDYBLACKLISTEDTUMORLOCATIONS).execute();
+        context.deleteFrom(STUDYTUMORLOCATIONS).execute();
+        context.deleteFrom(STUDY).execute();
+    }
+
     void write(@NotNull List<IclusionTrial> trials) {
+
+        deleteAll();
 
         for (IclusionTrial trial : trials) {
             int id = context.insertInto(STUDY, STUDY.IDDB, STUDY.ACRONYM, STUDY.TITLE, STUDY.EUDRA, STUDY.NCT, STUDY.IPN, STUDY.CCMO)
