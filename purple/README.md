@@ -682,50 +682,64 @@ Note that additional restrictions apply on amplification and deletion drivers fo
 
 PURPLE generates a number of tab separated output files as described in the following sections.
 
-#### Purity File 
+#### Purity Files 
 
 The purity file `TUMOR.purple.purity.tsv` contains a single row with a summary of the purity fit:
 
-Column  | Example Value | Description
----|---|---
-Version | 2.25 | Version of PURPLE
-Purity  | 0.98 | Purity of tumor in the sample
-NormFactor | 0.64 | Internal factor to convert tumor ratio to copy number.
-Ploidy | 3.10 | Average ploidy of the tumor sample after adjusting for purity
-SomaticDeviation | 0.00 | Penalty from somatic variants with implied variant copy numbers that are inconsistent with the minor and major allele copy number 
-Score | 0.68 | Score of fit (lower is better)
-Diploid Proportion | 0.02 | Proportion of copy number regions that have 1 (+- 0.2) minor and major allele
-PolyclonalProportion | 0.09 | Proportion of copy number regions that are more than 0.25 from a whole copy number
-WholeGenomeDuplication | true | True if more than 10 autosomes have major allele copy number > 1.5
-[Gender](#1-sex-determination) | MALE | One of `MALE` or `FEMALE`
-RunMode  | TUMOR_GERMLINE, TUMOR or GERMLIME | Set based on whether a tumor and/or reference sample were supplied
-Targeted | True/False | True if Purple was run with target-region files
-MinPurity | 0.95 | Minimum purity with score within 10% of best
-MaxPurity | 1.00 | Maximum purity with score within 10% of best
-MinPloidy | 3.08 | Minimum ploidy with score within 10% of best 
-MaxPloidy | 3.13 | Maximum ploidy with score within 10% of best
-msIndelsPerMb | 0.1186 | Microsatellite indels per mega base
-msStatus | MSS | Microsatellite status. One of `MSI`, `MSS` or `UNKNOWN` if somatic variants not supplied
-tmbPerMb | 13.6352 | Tumor mutational burden (#passing variants per Mb) per mega base
-tmbStatus | HIGH | Tumor mutational burden status. One of `HIGH`, `LOW` or `UNKNOWN` if somatic variants not supplied.  High = > 10 pass variants per Mb
-tml | 182 | Tumor mutational load (# of missense variants in sample)
-tmlStatus | HIGH | Tumor mutational load status. One of `HIGH`, `LOW` or `UNKNOWN` if somatic variants not supplied
-germlineAberration | NONE | Any germline chromosomal aberrations detected.  Can be one or more of: {KLINEFELTER,TRISOMY_X,TRISOMY_21,TRISOMY_13,TRISOMY_18,TRISOMY_15,XYY,MOSAIC_X}
-fitMethod | NORMAL | One of `NORMAL`, `HIGHLY_DIPLOID`, `SOMATIC` or `NO_TUMOR`
-qcStatus | PASS | Either PASS or one or more warning or fail status.  Warnings include 'WARN_DELETED_GENES', 'WARN_HIGH_COPY_NUMBER_NOISE', 'FAIL_CONTAMINATION', FAIL_NO_TUMOR, 'WARN_GENDER_MISMATCH' or 'WARN_LOW_PURITY
-copyNumberSegments | 462 | Total number of copy number segments in sample
-unsupportedCopyNumberSegments | 256 | Count of copy number segments with no SV support on either side.  A high number is an indicator of poor sample quality
-svTmb | 168 | Total number of non inferred, non single passing structural variants detected in sample
-contamination | 0.003 | rate of contamination in tumor sample as determined by Amber.
+Column  | Description
+---|---
+purity  | Purity of tumor in the sample
+normFactor | Internal factor to convert tumor ratio to copy number.
+score |  Score of fit (lower is better)
+diploidProportion | Proportion of copy number regions that have 1 (+- 0.2) minor and major allele
+ploidy | Average ploidy of the tumor sample after adjusting for purity
+[gender](#1-sex-determination) | One of `MALE` or `FEMALE`
+status | Either PASS or one or more warning or fail status.  Warnings include 'WARN_DELETED_GENES', 'WARN_HIGH_COPY_NUMBER_NOISE', 'FAIL_CONTAMINATION', FAIL_NO_TUMOR, 'WARN_GENDER_MISMATCH' or 'WARN_LOW_PURITY
+polyclonalProportion | Proportion of copy number regions that are more than 0.25 from a whole copy number
+minPurity | Minimum purity with score within 10% of best
+maxPurity | Maximum purity with score within 10% of best
+minPloidy | Minimum ploidy with score within 10% of best 
+maxPloidy | Maximum ploidy with score within 10% of best
+minDiploidProportion | Min estimation for diploid proportion
+maxDiploidProportion | Min estimation for diploid proportion
+version | Version of PURPLE
+somaticPenalty | Penalty from somatic variants with implied variant copy numbers that are inconsistent with the minor and major allele copy number 
+wholeGenomeDuplication | True if more than 10 autosomes have major allele copy number > 1.5
+msIndelsPerMb | Microsatellite indels per mega base
+msStatus | Microsatellite status. One of `MSI`, `MSS` or `UNKNOWN` if somatic variants not supplied
+tml | Tumor mutational load (# of missense variants in sample)
+tmlStatus | Tumor mutational load status. One of `HIGH`, `LOW` or `UNKNOWN` if somatic variants not supplied
+tmbPerMb | Tumor mutational burden (#passing variants per Mb) per mega base
+tmbStatus | Tumor mutational burden status. One of `HIGH`, `LOW` or `UNKNOWN` if somatic variants not supplied.  High = > 10 pass variants per Mb
+svTumorMutationalBurden | Total number of non inferred, non single passing structural variants detected in sample
+runMode  | TUMOR_GERMLINE, TUMOR or GERMLIME, set based on whether a tumor and/or reference sample were supplied
+targeted | True if Purple was run with target-region files
 
+The purity QC `TUMOR.purple.purity.qc` contains the following status values:
 
+Column  | Description
+---|---
+QCStatus | As per 'status' as described above
+Method | One of `NORMAL`, `HIGHLY_DIPLOID`, `SOMATIC` or `NO_TUMOR`
+CopyNumberSegments | Total number of copy number segments in sample
+UnsupportedCopyNumberSegments | Count of copy number segments with no SV support on either side.  A high number is an indicator of poor sample quality
+Purity | As described above
+AmberGender | Gender from Amber data
+CobaltGender | Gender from Cobalt data
+DeletedGenes | Number of genes with copy number < 0.5
+Contamination | Rate of contamination in tumor sample as determined by Amber.
+GermlineAberration | Any germline chromosomal aberrations detected, one or more of: {KLINEFELTER,TRISOMY_X,TRISOMY_21,TRISOMY_13,TRISOMY_18,TRISOMY_15,XYY,MOSAIC_X}
+AmberMeanDepth | As calculated by Amber
+
+minDiploidProportion	maxDiploidProportion	version	somaticPenalty	
+wholeGenomeDuplication	msIndelsPerMb	msStatus	tml	tmlStatus	tmbPerMb	tmbStatus	svTumorMutationalBurden
 
 #### Purity Range File
 
 The purity range file `TUMOR.purple.purity.range.tsv` file summarises the best fit per purity sorted by score. 
 Descriptions of the fields are the same as above.
 
-Purity|NormFactor|Score|DiploidProportion|Ploidy|SomaticDeviation
+purity|normFactor|Score|diploidProportion|ploidy|somaticPenalty
 ---|---|---|---|---|---
 0.9800|0.6400|0.6867|0.0199|3.1076|0.0000
 0.9900|0.6400|0.6888|0.0199|3.0965|0.0000
@@ -735,50 +749,48 @@ Purity|NormFactor|Score|DiploidProportion|Ploidy|SomaticDeviation
 
 The copy number file `TUMOR.purple.cnv.somatic.tsv` contains the copy number profile of all (contiguous) segments of the tumor sample:
 
-Column  | Example Value | Description
----|---|---
-Chromosome  | 1 | Chromosome of copy number segment
-Start  | 1 | Start base of copy number segment
-End  | 87337011 | End base of copy number segment
-CopyNumber  | 2.8189 | Fitted absolute copy number of segment adjusted for purity and ploidy
-BafCount  | 4464 | Count of AMBER baf points covered by this segment
-ObservedBAF  | 0.7094 | Combined reference and tumor BAF in TUMOR sample **un**adjusted for purity and ploidy
-BAF  | 0.7124 | Tumor BAF after adjusted for purity and ploidy
-SegmentStartSupport  | TELOMERE |  The type of structural variant support for the copy number breakpoint at start of region.  Allowed values:  (`CENTROMERE`, `TELOMERE`,`INV`,`DEL`,`DUP`,`BND` - translocation, `SGL` - single breakend SV support, `NONE` - no SV support for CN breakpoint, `MULT` - multiple SV support at exact breakpoint)
-SegmentEndSupport  | BND | The type of structural variant support for the copy number breakpoint at end of region. Allowed values as per SegmentStartSupport.
-Method | BAF_WEIGHTED | Method used to determine the copy number of the region. Allowed values: (`BAF_WEIGHTED` - average of all depth windows for the region ,`STRUCTURAL_VARIANT` - inferred using junction copy number of flanking SVs ,`LONG_ARM` - inferred from the long arm,`GERMLINE_AMPLIFICATION` - inferred using special logic to handle regions of germline amplification)
-DepthWindowCount | 77277 | Count of COBALT windows covered by this segment
-GcContent | 0.4351 | Proportion of segment that is G or C
-MinStart | 1 | Minimum start location of this segment if there is any uncertainty.
-MaxStart | 1 | Maximum start location of this segment if there is any uncertainty.
-MinorAllelePloidy | 0.8165 | Copy number of minor allele adjusted for purity
-MajorAllelePloidy | 2.0076 | Copy number of major allele adjusted for purity
+Column  | Description
+---|---
+chromosome | Chromosome of copy number segment
+start | Start base of copy number segment
+end | End base of copy number segment
+copyNumber | Fitted absolute copy number of segment adjusted for purity and ploidy
+bafCount | Count of AMBER baf points covered by this segment
+observedBAF | Combined reference and tumor BAF in TUMOR sample **un**adjusted for purity and ploidy
+baf | Tumor BAF after adjusted for purity and ploidy
+segmentStartSupport | The type of structural variant support for the copy number breakpoint at start of region.  Allowed values:  (`CENTROMERE`, `TELOMERE`,`INV`,`DEL`,`DUP`,`BND` - translocation, `SGL` - single breakend SV support, `NONE` - no SV support for CN breakpoint, `MULT` - multiple SV support at exact breakpoint)
+segmentEndSupport | The type of structural variant support for the copy number breakpoint at end of region. Allowed values as per SegmentStartSupport.
+method | Method used to determine the copy number of the region. Allowed values: (`BAF_WEIGHTED` - average of all depth windows for the region ,`STRUCTURAL_VARIANT` - inferred using junction copy number of flanking SVs ,`LONG_ARM` - inferred from the long arm,`GERMLINE_AMPLIFICATION` - inferred using special logic to handle regions of germline amplification)
+depthWindowCount | Count of COBALT windows covered by this segment
+gcContent | Proportion of segment that is G or C
+minStart | Minimum start location of this segment if there is any uncertainty.
+maxStart | Maximum start location of this segment if there is any uncertainty.
+minorAlleleCopyNumber | Copy number of minor allele adjusted for purity
+majorAlleleCopyNumber | Copy number of major allele adjusted for purity
 
 #### Gene Copy Number File
 
 The gene copy number file `TUMOR.purple.cnv.gene.tsv` summarises copy number alterations of each gene in the HMF gene panel:
 
-Column  | Example Value | Description
----|---|---
-Chromosome  | 9 | Chromosome of gene
-Start  | 21968055 | Start location of gene transcript
-End  | 21974865 | End location of gene transcript
-Gene  | CDKN2A | Name of gene
-MinCopyNumber  | 2.0098 | Minimum copy number found in the gene exons
-MaxCopyNumber  | 2.0098 | Maximum copy number found in the gene exons
-SomaticRegions | 1 | Count of somatic copy number regions this gene spans
-GermlineHomDeletionRegions | 0 | Number of regions spanned by this gene that are homozygously deleted in the germline
-GermlineHetToHomDeletionRegions | 0 | Number of regions spanned by this gene that are both heterozygously deleted in the germline and homozygously deleted in the tumor
-TranscriptId | ENST00000498124 | Ensembl Transcript ID
-TranscriptVersion | 1 | Ensembl Transcript ID Version
-ChromosomeBand | p21.3 | Chromosome Band of the gene
-MinRegions | 1 | Number of somatic regions inside the gene that share the min copy number
-MinRegionStart | 1 | Start base of the copy number region overlapping the gene with the minimum copy number
-MinRegionEnd | 28031835 | End base of the copy number region overlapping the gene with the minimum copy number
-MinRegionStartSupport | TELOMERE | Start support of the copy number region overlapping the gene with the minimum copy number
-MinRegionEndSupport | INV | End support of the copy number region overlapping the gene with the minimum copy number
-MinRegionMethod | BAF_WEIGHTED | Method used to determine copy number of the copy number region overlapping the gene with the minimum copy number
-MinMinorAllelePloidy | 0 | Minimum allele copy number found over the gene exons - useful for identifying LOH events  
+Column  | Description
+---|---
+chromosome | Chromosome of gene
+start | Start location of gene transcript
+end | End location of gene transcript
+gene | Name of gene as per Ensembl and HGNC
+minCopyNumber | Minimum copy number found in the gene exons
+maxCopyNumber | Maximum copy number found in the gene exons
+somaticRegions | Count of somatic copy number regions this gene spans
+transcriptId | Ensembl transcript ID
+isCanonical | True/false
+chromosomeBand | Chromosome Band of the gene
+minRegions | Number of somatic regions inside the gene that share the min copy number
+minRegionStart | Start base of the copy number region overlapping the gene with the minimum copy number
+minRegionEnd | End base of the copy number region overlapping the gene with the minimum copy number
+minRegionStartSupport | Start support of the copy number region overlapping the gene with the minimum copy number
+minRegionEndSupport | End support of the copy number region overlapping the gene with the minimum copy number
+minRegionMethod | Method used to determine copy number of the copy number region overlapping the gene with the minimum copy number
+minMinorAlleleCopyNumber | Minimum allele copy number found over the gene exons - useful for identifying LOH events  
 
 #### Driver Catalog File
 
@@ -789,24 +801,25 @@ If a germline variant VCF is supplied then Purple will also produce a driver cat
 
 A detailed description of the driver catalog is available [here](./DriverCatalog.md).
 
-Column  | Example Value | Description
----|---|---
-Chromosome | 7 | Chromosome of gene
-ChromosomeBand | q34 | Chromosome band of driver
-Gene | BRAF | Name of gene
-Driver |  MUTATION | Driver type [AMP, DEL, MUTATION]
-Category | ONCO | Gene driver type [ONCO, TSG]
-LikelihoodMethod | DNDS | Method used to determine likelihood [AMP, DEL, BIALLELIC, DNDS, HOTSPOT, INFRAME]
-DriverLikelihood | 1 | Likelihood that gene is a driver 
-DndsLikelihood | 0.3902 | Raw dnds driver likelihood
-Missense | 0 | Number of missense variants in gene
-Nonsense | 0 | Number of nonsense variants in gene
-Splice | 0 | Number of splice variants in gene
-Inframe | 0 | Number of inframe variants in gene
-Frameshift | 0 | Number of frameshift variants in gene
-Biallelic | false | True if any variants in the gene are biallelic
-MinCopyNumber  | 2.0098 | Minimum copy number found in the gene exons
-MaxCopyNumber  | 2.0098 | Maximum copy number found in the gene exons
+Column | Description
+---|---
+chromosome | Chromosome of gene
+chromosomeBand | Chromosome band of driver
+gene | Name of gene
+transcriptId | Ensembl transcript ID
+isCanonical | True/false
+driver | Driver type [AMP, DEL, MUTATION]
+category | Gene driver type [ONCO, TSG]
+likelihoodMethod | Method used to determine likelihood [AMP, DEL, BIALLELIC, DNDS, HOTSPOT, INFRAME]
+driverLikelihood | Likelihood that gene is a driver 
+missense | Number of missense variants in gene
+nonsense | Number of nonsense variants in gene
+splice | Number of splice variants in gene
+inframe | Number of inframe variants in gene
+frameshift | Number of frameshift variants in gene
+biallelic | True if any variants in the gene are biallelic
+minCopyNumber | Minimum copy number found in the gene exons
+maxCopyNumber | Maximum copy number found in the gene exons
 
 ### VCF
 
