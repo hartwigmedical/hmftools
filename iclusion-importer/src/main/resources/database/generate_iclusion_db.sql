@@ -13,8 +13,8 @@ CREATE TABLE study
     PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS studyTumorLocations;
-CREATE TABLE studyTumorLocations
+DROP TABLE IF EXISTS tumorLocations;
+CREATE TABLE tumorLocations
 (   id int NOT NULL AUTO_INCREMENT,
     tumorLocationId int NOT NULL,
     tumorLocation varchar(50) NOT NULL,
@@ -22,8 +22,8 @@ CREATE TABLE studyTumorLocations
     PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS studyBlacklistedTumorLocations;
-CREATE TABLE studyBlacklistedTumorLocations
+DROP TABLE IF EXISTS blacklistedTumorLocations;
+CREATE TABLE blacklistedTumorLocations
 (   id int NOT NULL AUTO_INCREMENT,
     blacklistedTumorLocationId int NOT NULL,
     blacklistedTumorLocation varchar(50) NOT NULL,
@@ -31,8 +31,8 @@ CREATE TABLE studyBlacklistedTumorLocations
     PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS studyMutationConditions;
-CREATE TABLE studyMutationConditions
+DROP TABLE IF EXISTS mutationConditions;
+CREATE TABLE mutationConditions
 (   id int NOT NULL AUTO_INCREMENT,
     mutationConditionId int NOT NULL,
     gene varchar(50) NOT NULL,

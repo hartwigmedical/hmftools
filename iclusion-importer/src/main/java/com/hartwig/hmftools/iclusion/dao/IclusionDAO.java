@@ -8,9 +8,9 @@ import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTumorLocation;
 
 import static com.hartwig.hmftools.iclusion.database.tables.Study.STUDY;
-import static com.hartwig.hmftools.iclusion.database.tables.Studytumorlocations.STUDYTUMORLOCATIONS;
-import static com.hartwig.hmftools.iclusion.database.tables.Studyblacklistedtumorlocations.STUDYBLACKLISTEDTUMORLOCATIONS;
-import static com.hartwig.hmftools.iclusion.database.tables.Studymutationconditions.STUDYMUTATIONCONDITIONS;
+import static com.hartwig.hmftools.iclusion.database.tables.Tumorlocations.TUMORLOCATIONS;
+import static com.hartwig.hmftools.iclusion.database.tables.Blacklistedtumorlocations.BLACKLISTEDTUMORLOCATIONS;
+import static com.hartwig.hmftools.iclusion.database.tables.Mutationconditions.MUTATIONCONDITIONS;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,11 +28,11 @@ public class IclusionDAO {
     }
 
     public void deleteAll() {
-        LOGGER.info("Deleting all data from iclusion database");
+        LOGGER.info("Deleting all data from iClusion database");
         // Note that deletions should go from branch to root
-        context.deleteFrom(STUDYMUTATIONCONDITIONS).execute();
-        context.deleteFrom(STUDYBLACKLISTEDTUMORLOCATIONS).execute();
-        context.deleteFrom(STUDYTUMORLOCATIONS).execute();
+        context.deleteFrom(MUTATIONCONDITIONS).execute();
+        context.deleteFrom(BLACKLISTEDTUMORLOCATIONS).execute();
+        context.deleteFrom(TUMORLOCATIONS).execute();
         context.deleteFrom(STUDY).execute();
     }
 
@@ -48,25 +48,25 @@ public class IclusionDAO {
                     .getValue(STUDY.ID);
 
             for (IclusionTumorLocation tumorLocation : trial.tumorLocations()) {
-                context.insertInto(STUDYTUMORLOCATIONS, STUDYTUMORLOCATIONS.TUMORLOCATIONID, STUDYTUMORLOCATIONS.TUMORLOCATION)
+                context.insertInto(TUMORLOCATIONS, TUMORLOCATIONS.TUMORLOCATIONID, TUMORLOCATIONS.TUMORLOCATION)
                         .values(id, tumorLocation.primaryTumorLocation())
                         .execute();
             }
 
             for (IclusionTumorLocation blacklistedTumorLocation : trial.blacklistedTumorLocations()) {
-                context.insertInto(STUDYBLACKLISTEDTUMORLOCATIONS,
-                                STUDYBLACKLISTEDTUMORLOCATIONS.BLACKLISTEDTUMORLOCATIONID,
-                                STUDYBLACKLISTEDTUMORLOCATIONS.BLACKLISTEDTUMORLOCATION)
+                context.insertInto(BLACKLISTEDTUMORLOCATIONS,
+                                BLACKLISTEDTUMORLOCATIONS.BLACKLISTEDTUMORLOCATIONID,
+                                BLACKLISTEDTUMORLOCATIONS.BLACKLISTEDTUMORLOCATION)
                         .values(id, blacklistedTumorLocation.primaryTumorLocation())
                         .execute();
             }
 
             for (IclusionMutationCondition mutationCondition : trial.mutationConditions()) {
                 for (IclusionMutation mutation : mutationCondition.mutations()) {
-                    context.insertInto(STUDYMUTATIONCONDITIONS,
-                            STUDYMUTATIONCONDITIONS.MUTATIONCONDITIONID,
-                            STUDYMUTATIONCONDITIONS.GENE,
-                            STUDYMUTATIONCONDITIONS.MUTATION).values(id, mutation.gene(), mutation.name()).execute();
+                    context.insertInto(MUTATIONCONDITIONS,
+                            MUTATIONCONDITIONS.MUTATIONCONDITIONID,
+                            MUTATIONCONDITIONS.GENE,
+                            MUTATIONCONDITIONS.MUTATION).values(id, mutation.gene(), mutation.name()).execute();
                 }
             }
         }
