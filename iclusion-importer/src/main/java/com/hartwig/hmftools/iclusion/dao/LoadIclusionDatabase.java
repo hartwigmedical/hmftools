@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.dao;
+package com.hartwig.hmftools.iclusion.dao;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,7 +23,6 @@ public class LoadIclusionDatabase {
 
     private static final String ICLUSION_DB_TSV = "iclusion_db_tsv";
 
-
     public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
@@ -40,7 +39,7 @@ public class LoadIclusionDatabase {
         List<IclusionTrial> trials = IclusionTrialFile.read(iclusionDBTsv);
         LOGGER.info(" Read {} trials", trials.size());
 
-        KnowledgebaseDatabaseAccess dbWriter = KnowledgebaseDatabaseAccess.databaseAccess(cmd);
+        IclusionDatabaseAccess dbWriter = IclusionDatabaseAccess.databaseAccess(cmd);
 
         dbWriter.writeIclusionDAO(trials);
         LOGGER.info("Written iclusion db to database");
@@ -50,7 +49,7 @@ public class LoadIclusionDatabase {
         Options options = new Options();
         options.addOption(ICLUSION_DB_TSV, true, "Path towards the iClusion db tsv.");
 
-        KnowledgebaseDatabaseAccess.addDatabaseCmdLineArgs(options);
+        IclusionDatabaseAccess.addDatabaseCmdLineArgs(options);
         return options;
     }
 }

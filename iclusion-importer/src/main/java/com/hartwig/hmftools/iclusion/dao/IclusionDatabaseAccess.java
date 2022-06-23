@@ -1,15 +1,11 @@
-package com.hartwig.hmftools.serve.dao;
+package com.hartwig.hmftools.iclusion.dao;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 
-import com.hartwig.hmftools.iclusion.dao.IclusionDAO;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
-import com.hartwig.hmftools.serve.actionability.ActionableEvents;
-import com.hartwig.hmftools.serve.extraction.KnownEvents;
-import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
@@ -25,10 +21,10 @@ import org.jooq.conf.RenderMapping;
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
 
-public class KnowledgebaseDatabaseAccess {
+public class IclusionDatabaseAccess {
 
-    private static final Logger LOGGER = LogManager.getLogger(KnowledgebaseDatabaseAccess.class);
-    private static final String DEV_CATALOG = "knowledgebase_test";
+    private static final Logger LOGGER = LogManager.getLogger(IclusionDatabaseAccess.class);
+    private static final String DEV_CATALOG = "iclusion_test";
 
     public static final String DB_USER = "db_user";
     public static final String DB_PASS = "db_pass";
@@ -40,14 +36,12 @@ public class KnowledgebaseDatabaseAccess {
     private final Connection connection;
     @NotNull
     private final DSLContext context;
-
     @NotNull
-    private final ServeDAO knowledgebaseDAO;
+    private final IclusionDAO iclusionDAO;
 
-    @NotNull
-    private final ActinDAO actinDAO;
 
-    public KnowledgebaseDatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
+    public IclusionDatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws
+            SQLException {
         System.setProperty("org.jooq.no-logo", "true");
         System.setProperty("org.jooq.no-tips", "true");
 
@@ -56,8 +50,7 @@ public class KnowledgebaseDatabaseAccess {
         LOGGER.debug("Connecting to database '{}'", catalog);
         this.context = DSL.using(connection, SQLDialect.MYSQL, settings(catalog));
 
-        this.knowledgebaseDAO = new ServeDAO(context);
-        this.actinDAO = new ActinDAO(context);
+        this.iclusionDAO = new IclusionDAO(context);
     }
 
     @Nullable
@@ -71,12 +64,12 @@ public class KnowledgebaseDatabaseAccess {
     }
 
     @NotNull
-    public static KnowledgebaseDatabaseAccess databaseAccess(@NotNull CommandLine cmd) throws SQLException {
+    public static IclusionDatabaseAccess databaseAccess(@NotNull CommandLine cmd) throws SQLException {
         return databaseAccess(cmd, false);
     }
 
     @NotNull
-    public static KnowledgebaseDatabaseAccess databaseAccess(@NotNull CommandLine cmd, boolean applyDefaultArgs) throws SQLException {
+    public static IclusionDatabaseAccess databaseAccess(@NotNull CommandLine cmd, boolean applyDefaultArgs) throws SQLException {
         String userName = cmd.getOptionValue(DB_USER);
         String password = cmd.getOptionValue(DB_PASS);
         String databaseUrl = cmd.getOptionValue(DB_URL);
@@ -86,7 +79,7 @@ public class KnowledgebaseDatabaseAccess {
             jdbcUrl += DB_DEFAULT_ARGS;
         }
 
-        return new KnowledgebaseDatabaseAccess(userName, password, jdbcUrl);
+        return new IclusionDatabaseAccess(userName, password, jdbcUrl);
     }
 
     public static void addDatabaseCmdLineArgs(@NotNull Options options) {
@@ -98,12 +91,7 @@ public class KnowledgebaseDatabaseAccess {
         options.addOption(Option.builder(DB_PASS).desc("Database password").hasArg(true).required(isRequired).build());
         options.addOption(Option.builder(DB_URL).desc("Database url").hasArg(true).required(isRequired).build());
     }
-
-    public void writeKnowledgebaseDAO(@NotNull ActionableEvents actionableEvents, KnownEvents knownEvents) {
-        knowledgebaseDAO.write(actionableEvents, knownEvents);
-    }
-
-    public void writeActinDAO(@NotNull List<ActinEntry> trials) {
-        actinDAO.write(trials);
+    public void writeIclusionDAO(@NotNull List<IclusionTrial> trials) {
+        iclusionDAO.write(trials);
     }
 }
