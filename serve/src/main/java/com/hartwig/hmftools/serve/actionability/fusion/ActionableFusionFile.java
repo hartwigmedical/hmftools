@@ -74,7 +74,7 @@ public final class ActionableFusionFile {
                 .from(ActionableFileFunctions.fromLine(values, 6))
                 .geneUp(values[0])
                 .minExonUp(optionalInteger(values[1]))
-                .maxExonDown(optionalInteger(values[2]))
+                .maxExonUp(optionalInteger(values[2]))
                 .geneDown(values[3])
                 .minExonDown(optionalInteger(values[4]))
                 .maxExonDown(optionalInteger(values[5]))

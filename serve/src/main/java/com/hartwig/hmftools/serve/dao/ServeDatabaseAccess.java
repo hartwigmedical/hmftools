@@ -26,7 +26,7 @@ import org.jooq.impl.DSL;
 public class ServeDatabaseAccess {
 
     private static final Logger LOGGER = LogManager.getLogger(ServeDatabaseAccess.class);
-    private static final String DEV_CATALOG = "knowledgebase_test";
+    private static final String DEV_CATALOG = "serve_test";
 
     public static final String DB_USER = "db_user";
     public static final String DB_PASS = "db_pass";
@@ -40,7 +40,7 @@ public class ServeDatabaseAccess {
     private final DSLContext context;
 
     @NotNull
-    private final ServeDAO knowledgebaseDAO;
+    private final ServeDAO serveDAO;
 
     @NotNull
     private final ActinDAO actinDAO;
@@ -54,7 +54,7 @@ public class ServeDatabaseAccess {
         LOGGER.debug("Connecting to database '{}'", catalog);
         this.context = DSL.using(connection, SQLDialect.MYSQL, settings(catalog));
 
-        this.knowledgebaseDAO = new ServeDAO(context);
+        this.serveDAO = new ServeDAO(context);
         this.actinDAO = new ActinDAO(context);
     }
 
@@ -97,8 +97,8 @@ public class ServeDatabaseAccess {
         options.addOption(Option.builder(DB_URL).desc("Database url").hasArg(true).required(isRequired).build());
     }
 
-    public void writeKnowledgebaseDAO(@NotNull ActionableEvents actionableEvents, KnownEvents knownEvents) {
-        knowledgebaseDAO.write(actionableEvents, knownEvents);
+    public void writeServeDAO(@NotNull ActionableEvents actionableEvents, KnownEvents knownEvents) {
+        serveDAO.write(actionableEvents, knownEvents);
     }
 
     public void writeActinDAO(@NotNull List<ActinEntry> trials) {

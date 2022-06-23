@@ -38,8 +38,8 @@ public class LoadServeDatabase {
 
         ServeDatabaseAccess dbWriter = ServeDatabaseAccess.databaseAccess(cmd);
 
-        dbWriter.writeKnowledgebaseDAO(actionableEvents, knownEvents);
-        LOGGER.info("Written serve output to database");
+        dbWriter.writeServeDAO(actionableEvents, knownEvents);
+        LOGGER.info("Written SERVE output to database");
     }
 
     @NotNull
