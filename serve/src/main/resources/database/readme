@@ -1,7 +1,7 @@
 Run the following commands as root (admin) on mysql prior to building
 
-mysql> CREATE DATABASE knowledgebase_test;
+mysql> CREATE DATABASE serve_test;
 Query OK, 1 row affected (0.01 sec)
 
-mysql> GRANT ALL on knowledgebase_test.* TO 'build'@'localhost';
+mysql> GRANT ALL on serve_test.* TO 'build'@'localhost';
 Query OK, 0 rows affected (0.01 sec)

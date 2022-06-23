@@ -64,14 +64,14 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>Generate knowledgebase DB</id>
+                        <id>Generate serve DB</id>
                         <phase>generate-sources</phase>
                         <goals>
                             <goal>exec</goal>
                         </goals>
                         <configuration>
                             <workingDirectory>${basedir}/src/main/resources/database</workingDirectory>
-                            <executable>${basedir}/src/main/resources/database/regenerate_local_knowledgebase_db</executable>
+                            <executable>${basedir}/src/main/resources/database/regenerate_local_serve_db</executable>
                         </configuration>
                     </execution>
                 </executions>
@@ -130,7 +130,7 @@
                 <configuration>
                     <jdbc>
                         <driver>com.mysql.cj.jdbc.Driver</driver>
-                        <url>jdbc:mysql://localhost:3306/knowledgebase_test?useSSL=false&amp;serverTimezone=CET</url>
+                        <url>jdbc:mysql://localhost:3306/serve_test?useSSL=false&amp;serverTimezone=CET</url>
                         <user>build</user>
                         <password>build</password>
                     </jdbc>
@@ -138,7 +138,7 @@
                         <database>
                             <name>org.jooq.meta.mysql.MySQLDatabase</name>
                             <includes>.*</includes>
-                            <inputSchema>knowledgebase_test</inputSchema>
+                            <inputSchema>serve_test</inputSchema>
                         </database>
                         <target>
                             <packageName>com.hartwig.hmftools.serve.database</packageName>

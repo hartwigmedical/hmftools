@@ -34,6 +34,8 @@ import static com.hartwig.hmftools.serve.database.tables.Knownexons.KNOWNEXONS;
 import static com.hartwig.hmftools.serve.database.tables.Knowncopynumbers.KNOWNCOPYNUMBERS;
 import static com.hartwig.hmftools.serve.database.tables.Knownfusionpairs.KNOWNFUSIONPAIRS;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -44,11 +46,12 @@ import org.jooq.InsertValuesStep16;
 import org.jooq.InsertValuesStep18;
 import org.jooq.InsertValuesStep20;
 import org.jooq.InsertValuesStep4;
-import org.jooq.InsertValuesStep7;
 import org.jooq.InsertValuesStep8;
 import org.jooq.InsertValuesStep9;
 
 public class ServeDAO {
+
+    private static final Logger LOGGER = LogManager.getLogger(ServeDAO.class);
 
     @NotNull
     private final DSLContext context;
@@ -57,7 +60,25 @@ public class ServeDAO {
         this.context = context;
     }
 
+    public void deleteAll() {
+        LOGGER.info("Deleting all data from SERVE database");
+        context.deleteFrom(ACTIONABLEHOTSPOTS).execute();
+        context.deleteFrom(ACTIONABLERANGES).execute();
+        context.deleteFrom(ACTIONABLEGENES).execute();
+        context.deleteFrom(ACTIONABLEFUSIONS).execute();
+        context.deleteFrom(ACTIONABLECHARACTERISTICS).execute();
+        context.deleteFrom(ACTIONABLEHLA).execute();
+        context.deleteFrom(KNOWNHOTSPOTS).execute();
+        context.deleteFrom(KNOWNCODONS).execute();
+        context.deleteFrom(KNOWNEXONS).execute();
+        context.deleteFrom(KNOWNFUSIONPAIRS).execute();
+        context.deleteFrom(KNOWNCOPYNUMBERS).execute();
+    }
+
     void write(@NotNull ActionableEvents actionableEvents, KnownEvents knownEvents) {
+
+        deleteAll();
+
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         List<ActionableHotspot> actionableHotspots = actionableEvents.hotspots();

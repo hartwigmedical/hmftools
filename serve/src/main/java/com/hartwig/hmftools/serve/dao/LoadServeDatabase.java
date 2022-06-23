@@ -36,7 +36,7 @@ public class LoadServeDatabase {
         ActionableEvents actionableEvents = ActionableEventsLoader.readFromDir(serveActionabilityDir, refGenomeVersion);
         KnownEvents knownEvents = KnownEventsLoader.readFromDir(serveActionabilityDir, refGenomeVersion);
 
-        KnowledgebaseDatabaseAccess dbWriter = KnowledgebaseDatabaseAccess.databaseAccess(cmd);
+        ServeDatabaseAccess dbWriter = ServeDatabaseAccess.databaseAccess(cmd);
 
         dbWriter.writeKnowledgebaseDAO(actionableEvents, knownEvents);
         LOGGER.info("Written serve output to database");
@@ -48,7 +48,7 @@ public class LoadServeDatabase {
         options.addOption(SERVE_ACTIONABILITY_DIRECTORY, true, "Path towards the SERVE actionability directory.");
         options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version to use (either '37' or '38')");
 
-        KnowledgebaseDatabaseAccess.addDatabaseCmdLineArgs(options);
+        ServeDatabaseAccess.addDatabaseCmdLineArgs(options);
         return options;
     }
 

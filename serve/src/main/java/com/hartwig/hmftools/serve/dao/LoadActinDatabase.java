@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
-import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
-import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinFileReader;
 
@@ -41,7 +39,7 @@ public class LoadActinDatabase {
         List<ActinEntry> trials = ActinFileReader.read(actinDBTsv);
         LOGGER.info(" Read {} trials", trials.size());
 
-        KnowledgebaseDatabaseAccess dbWriter = KnowledgebaseDatabaseAccess.databaseAccess(cmd);
+        ServeDatabaseAccess dbWriter = ServeDatabaseAccess.databaseAccess(cmd);
 
         dbWriter.writeActinDAO(trials);
         LOGGER.info("Written ACTN db to database");
@@ -51,7 +49,7 @@ public class LoadActinDatabase {
         Options options = new Options();
         options.addOption(ACTIN_DB_TSV, true, "Path towards the ACTIN db tsv.");
 
-        KnowledgebaseDatabaseAccess.addDatabaseCmdLineArgs(options);
+        ServeDatabaseAccess.addDatabaseCmdLineArgs(options);
         return options;
     }
 }

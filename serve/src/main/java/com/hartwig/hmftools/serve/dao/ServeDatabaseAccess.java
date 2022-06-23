@@ -5,8 +5,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 
-import com.hartwig.hmftools.iclusion.dao.IclusionDAO;
-import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.hartwig.hmftools.serve.actionability.ActionableEvents;
 import com.hartwig.hmftools.serve.extraction.KnownEvents;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
@@ -25,9 +23,9 @@ import org.jooq.conf.RenderMapping;
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
 
-public class KnowledgebaseDatabaseAccess {
+public class ServeDatabaseAccess {
 
-    private static final Logger LOGGER = LogManager.getLogger(KnowledgebaseDatabaseAccess.class);
+    private static final Logger LOGGER = LogManager.getLogger(ServeDatabaseAccess.class);
     private static final String DEV_CATALOG = "knowledgebase_test";
 
     public static final String DB_USER = "db_user";
@@ -47,7 +45,7 @@ public class KnowledgebaseDatabaseAccess {
     @NotNull
     private final ActinDAO actinDAO;
 
-    public KnowledgebaseDatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
+    public ServeDatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         System.setProperty("org.jooq.no-logo", "true");
         System.setProperty("org.jooq.no-tips", "true");
 
@@ -71,12 +69,12 @@ public class KnowledgebaseDatabaseAccess {
     }
 
     @NotNull
-    public static KnowledgebaseDatabaseAccess databaseAccess(@NotNull CommandLine cmd) throws SQLException {
+    public static ServeDatabaseAccess databaseAccess(@NotNull CommandLine cmd) throws SQLException {
         return databaseAccess(cmd, false);
     }
 
     @NotNull
-    public static KnowledgebaseDatabaseAccess databaseAccess(@NotNull CommandLine cmd, boolean applyDefaultArgs) throws SQLException {
+    public static ServeDatabaseAccess databaseAccess(@NotNull CommandLine cmd, boolean applyDefaultArgs) throws SQLException {
         String userName = cmd.getOptionValue(DB_USER);
         String password = cmd.getOptionValue(DB_PASS);
         String databaseUrl = cmd.getOptionValue(DB_URL);
@@ -86,7 +84,7 @@ public class KnowledgebaseDatabaseAccess {
             jdbcUrl += DB_DEFAULT_ARGS;
         }
 
-        return new KnowledgebaseDatabaseAccess(userName, password, jdbcUrl);
+        return new ServeDatabaseAccess(userName, password, jdbcUrl);
     }
 
     public static void addDatabaseCmdLineArgs(@NotNull Options options) {
