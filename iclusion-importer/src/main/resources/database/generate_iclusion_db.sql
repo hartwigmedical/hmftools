@@ -6,10 +6,10 @@ CREATE TABLE study
     idDB varchar(50) NOT NULL,
     acronym varchar(100) NOT NULL,
     title varchar(500) NOT NULL,
-    eudra varchar(50) NOT NULL,
-    nct varchar(50) NOT NULL,
-    ipn varchar(50) NOT NULL,
-    ccmo varchar(50) NOT NULL,
+    eudra varchar(50),
+    nct varchar(50),
+    ipn varchar(50),
+    ccmo varchar(50),
     PRIMARY KEY (id)
 );
 

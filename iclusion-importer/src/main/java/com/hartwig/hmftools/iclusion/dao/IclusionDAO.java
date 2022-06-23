@@ -42,7 +42,13 @@ public class IclusionDAO {
 
         for (IclusionTrial trial : trials) {
             int id = context.insertInto(STUDY, STUDY.IDDB, STUDY.ACRONYM, STUDY.TITLE, STUDY.EUDRA, STUDY.NCT, STUDY.IPN, STUDY.CCMO)
-                    .values(trial.id(), trial.acronym(), trial.title(), trial.eudra(), trial.nct(), trial.ipn(), trial.ccmo())
+                    .values(trial.id(),
+                            trial.acronym(),
+                            trial.title(),
+                            trial.eudra().isEmpty() ? null : trial.eudra(),
+                            trial.nct().isEmpty() ? null : trial.nct(),
+                            trial.ipn().isEmpty() ? null : trial.ipn(),
+                            trial.ccmo().isEmpty() ? null :  trial.ccmo())
                     .returning(STUDY.ID)
                     .fetchOne()
                     .getValue(STUDY.ID);
