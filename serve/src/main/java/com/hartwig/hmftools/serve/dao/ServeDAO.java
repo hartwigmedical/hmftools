@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Iterables;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.serve.actionability.ActionableEvents;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
@@ -469,10 +470,10 @@ public class ServeDAO {
                 knownHotspot.position(),
                 knownHotspot.ref(),
                 knownHotspot.alt(),
-                Strings.EMPTY,
-                Strings.EMPTY,
-                Strings.EMPTY,
-                Strings.EMPTY);
+                knownHotspot.gene(),
+                knownHotspot.transcript(),
+                knownHotspot.proteinAnnotation(),
+                Knowledgebase.toCommaSeparatedSourceString(knownHotspot.sources()));
     }
 
     private static void addRecordKnownCodons(@NotNull Timestamp timestamp, @NotNull InsertValuesStep9 inserter,
@@ -485,7 +486,7 @@ public class ServeDAO {
                 knownCodon.annotation().end(),
                 knownCodon.annotation().mutationType(),
                 knownCodon.annotation().rank(),
-                knownCodon.sources());
+                Knowledgebase.toCommaSeparatedSourceString(knownCodon.sources()));
     }
 
     private static void addRecordKnownExons(@NotNull Timestamp timestamp, @NotNull InsertValuesStep9 inserter,
@@ -498,7 +499,7 @@ public class ServeDAO {
                 knownExon.annotation().end(),
                 knownExon.annotation().mutationType(),
                 knownExon.annotation().rank(),
-                knownExon.sources());
+                Knowledgebase.toCommaSeparatedSourceString(knownExon.sources()));
     }
 
     private static void addRecordKnownFusionPairs(@NotNull Timestamp timestamp, @NotNull InsertValuesStep8 inserter,
@@ -510,11 +511,14 @@ public class ServeDAO {
                 knownFusionPairs.geneDown(),
                 knownFusionPairs.minExonDown(),
                 knownFusionPairs.maxExonDown(),
-                knownFusionPairs.sources());
+                Knowledgebase.toCommaSeparatedSourceString(knownFusionPairs.sources()));
     }
 
     private static void addRecordKnownCopyNumbers(@NotNull Timestamp timestamp, @NotNull InsertValuesStep4 inserter,
             @NotNull KnownCopyNumber knownCopyNumber) {
-        inserter.values(timestamp, knownCopyNumber.gene(), knownCopyNumber.type(), knownCopyNumber.sources());
+        inserter.values(timestamp,
+                knownCopyNumber.gene(),
+                knownCopyNumber.type(),
+                Knowledgebase.toCommaSeparatedSourceString(knownCopyNumber.sources()));
     }
 }

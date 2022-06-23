@@ -55,32 +55,32 @@ public final class KnownHotspotFile {
                 new VCFCodec(),
                 false);) {
             for (VariantContext hotspot : reader.iterator()) {
-                VariantImpact impact = VariantImpactSerialiser.fromVariantContext(hotspot);
-                StringJoiner joiner = new StringJoiner("|");
-                Object input = hotspot.getAttribute(VCFWriterFactory.INPUT_FIELD);
-                if (input != null) {
-                    joiner.add(input.toString());
-                }
+
+                String[] inputParts = hotspot.getAttributeAsString(VCFWriterFactory.INPUT_FIELD, Strings.EMPTY).split("\\|");
+                String inputGene = inputParts[0];
+                String inputProteinAnnotation = inputParts[2];
+                String inputTranscript = inputParts[1].equals("null") ? null : inputParts[1];
 
                 List<String> sources = hotspot.getAttributeAsStringList(VCFWriterFactory.SOURCES_FIELD, Strings.EMPTY);
+                Set<Knowledgebase> knowledgebaseSet = Sets.newHashSet();
                 if (!sources.isEmpty()) {
-                    StringJoiner sourceJoiner = new StringJoiner(",");
+
                     for (String source : sources) {
-                        sourceJoiner.add(source);
+                        knowledgebaseSet = Knowledgebase.fromCommaSeparatedSourceString(source);
                     }
-                    joiner.add(sourceJoiner.toString());
                 } else {
                     LOGGER.warn("No sources found on {}", hotspot);
                 }
 
-                //TODO: add info
                 result.add(ImmutableKnownHotspot.builder()
                         .chromosome(hotspot.getContig())
-                        .gene(impact.CanonicalGeneName)
-                        .proteinAnnotation(impact.CanonicalHgvsProtein)
+                        .gene(inputGene)
+                        .transcript(inputTranscript)
+                        .proteinAnnotation(inputProteinAnnotation)
                         .position(hotspot.getStart())
                         .ref(hotspot.getAlleles().get(0).getBaseString())
                         .alt(hotspot.getAlleles().get(0).getBaseString())
+                        .sources(knowledgebaseSet)
                         .build());
             }
         }

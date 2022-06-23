@@ -141,7 +141,7 @@ CREATE TABLE knownHotspots
     ref varchar(50) NOT NULL,
     alt varchar(50) NOT NULL,
     inputGene varchar(50) NOT NULL,
-    inputTranscript varchar(50) NOT NULL,
+    inputTranscript varchar(50),
     inputProteinAnnotation varchar(50) NOT NULL,
     inputSource varchar(50) NOT NULL,
     PRIMARY KEY (id)
