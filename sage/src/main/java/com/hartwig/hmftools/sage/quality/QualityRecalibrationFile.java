@@ -91,11 +91,9 @@ public final class QualityRecalibrationFile
         catch(Exception e)
         {
             SG_LOGGER.error("failed to read BQR file({}) record index({}): {}", filename, counts.size(), e.toString());
+            return null;
         }
 
         return counts;
-
     }
-
-
 }

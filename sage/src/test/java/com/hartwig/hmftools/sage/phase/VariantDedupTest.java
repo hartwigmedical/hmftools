@@ -342,6 +342,68 @@ public class VariantDedupTest
     @Test
     public void testMultipleIndelDedup()
     {
+        // ref:  GATCGATCGA TCTCTCTCTC GATCGATCGA
+
+        // var1: GATCGATCGA AACTCTCTC TCTCTCTCTC
+        // var2: GATCGATCGA AACTC TCTCTCTCTC
+
+        // 0123456789  01  2  34  0123456789
+        String leftFlank = generateRandomBases(DEFAULT_READ_CONTEXT_FLANK_SIZE);
+        String alt1 = "CTCTC";
+        String alt2 = "C";
+        String altCore = "TCTCTCTCTCTCTC";
+        String rightFlank = leftFlank;
+
+        String readBases1 = leftFlank + altCore + rightFlank;
+        String readBases2 = leftFlank + altCore + rightFlank;
+        String readBases3 = leftFlank + altCore + rightFlank;
+        String readBases4 = leftFlank + altCore + rightFlank;
+
+        int leftCoreIndex = DEFAULT_READ_CONTEXT_FLANK_SIZE;
+        int index = leftCoreIndex + MIN_CORE_DISTANCE;
+        int rightCoreIndex = leftCoreIndex + altCore.length() - 1;
+
+        IndexedBases indexBases1 = new IndexedBases(
+                12, index, leftCoreIndex, rightCoreIndex, DEFAULT_READ_CONTEXT_FLANK_SIZE, readBases1.getBytes());
+
+        IndexedBases indexBases2 = new IndexedBases(
+                14, index + 2, leftCoreIndex, rightCoreIndex, DEFAULT_READ_CONTEXT_FLANK_SIZE, readBases2.getBytes());
+
+        IndexedBases indexBases3 = new IndexedBases(
+                16, index + 4, leftCoreIndex, rightCoreIndex, DEFAULT_READ_CONTEXT_FLANK_SIZE, readBases3.getBytes());
+
+        IndexedBases indexBases4 = new IndexedBases(
+                18, index + 6, leftCoreIndex, rightCoreIndex, DEFAULT_READ_CONTEXT_FLANK_SIZE, readBases4.getBytes());
+
+        SageVariant var1 = createVariant(12, "T", "TCT", indexBases1);
+        SageVariant var2 = createVariant(14, "T", "TCT", indexBases2);
+        SageVariant var3 = createVariant(16, "T", "TCT", indexBases2);
+        SageVariant var4 = createVariant(18, "T", "TCT", indexBases2);
+
+        // must be same LPS
+        addLocalPhaseSet(var1, 1, 1);
+        addLocalPhaseSet(var2, 1, 1);
+        addLocalPhaseSet(var3, 1, 1);
+        addLocalPhaseSet(var4, 1, 1);
+
+        setTumorQuality(var1, 5, 600);
+        setTumorQuality(var2, 5, 700);
+        setTumorQuality(var3, 5, 800);
+        setTumorQuality(var4, 5, 900);
+
+        List<SageVariant> variants = Lists.newArrayList(var1, var2, var3, var4);
+
+        dedupIndels(variants);
+
+        assertFalse(var1.isPassing());
+        assertFalse(var2.isPassing());
+        assertFalse(var3.isPassing());
+        assertTrue(var4.isPassing());
+    }
+
+    @Test
+    public void testMultipleIndelDedup2()
+    {
         ChrBaseRegion region = new ChrBaseRegion(CHR_1, 1, 150);
 
         RegionTaskTester tester = new RegionTaskTester();

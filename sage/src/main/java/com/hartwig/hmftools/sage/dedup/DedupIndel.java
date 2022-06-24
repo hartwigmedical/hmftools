@@ -57,9 +57,8 @@ public final class DedupIndel
                 ++nextIndex;
             }
 
-            index = nextIndex;
+            ++index;
         }
-
     }
 
     private static boolean validPair(final SageVariant first, final SageVariant second)
@@ -76,7 +75,7 @@ public final class DedupIndel
         return true;
     }
 
-    private static boolean dedupPair(final SageVariant first, final SageVariant second)
+    private static void dedupPair(final SageVariant first, final SageVariant second)
     {
         // calculate the read context and flank of each variant excluding the variant
         // if the CORE of one variant is fully explained by the CORE+FLANKS of the other,
@@ -105,7 +104,7 @@ public final class DedupIndel
         }
 
         if(!applyFilter)
-            return false;
+            return;
 
         int firstRcLength = first.readContext().indexedBases().length();
         int secondRcLength = second.readContext().indexedBases().length();
@@ -125,8 +124,6 @@ public final class DedupIndel
             else
                 first.filters().add(DEDUP_INDEL_FILTER);
         }
-
-        return false;
     }
 
     private static boolean deleteContainsVariant(final SageVariant del, final SageVariant variant)

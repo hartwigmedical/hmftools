@@ -24,6 +24,7 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePartition;
+import com.hartwig.hmftools.sage.quality.BaseQualityRecalibration;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
@@ -131,7 +132,13 @@ public class SageAppendApplication
 
         final SAMSequenceDictionary dictionary = dictionary();
 
-        final Map<String,QualityRecalibrationMap> recalibrationMap = buildQualityRecalibrationMap(mConfig, mRefGenome);
+        BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(mConfig, mRefGenome);
+        baseQualityRecalibration.produceRecalibrationMap();
+
+        if(!baseQualityRecalibration.isValid())
+            System.exit(1);
+
+        final Map<String,QualityRecalibrationMap> recalibrationMap = baseQualityRecalibration.getSampleRecalibrationMap();
 
         final ChromosomePartition chromosomePartition = new ChromosomePartition(mConfig, mRefGenome);
 

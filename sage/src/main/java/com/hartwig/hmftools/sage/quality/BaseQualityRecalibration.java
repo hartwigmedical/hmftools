@@ -33,6 +33,7 @@ public class BaseQualityRecalibration
     private final Map<String,QualityRecalibrationMap> mSampleRecalibrationMap;
     private final Queue<PartitionTask> mRegions;
     private final BaseQualityResults mResults;
+    private boolean mIsValid;
 
     public BaseQualityRecalibration(final SageConfig config, final IndexedFastaSequenceFile refGenome)
     {
@@ -42,7 +43,10 @@ public class BaseQualityRecalibration
         mSampleRecalibrationMap = Maps.newHashMap();
         mRegions = new ConcurrentLinkedQueue<>();
         mResults = new BaseQualityResults();
-     }
+        mIsValid = true;
+    }
+
+    public boolean isValid(){ return mIsValid; }
 
     public Map<String,QualityRecalibrationMap> getSampleRecalibrationMap() { return mSampleRecalibrationMap; }
 
@@ -75,6 +79,12 @@ public class BaseQualityRecalibration
                 String filename = entry.getValue();
 
                 final List<QualityRecalibrationRecord> counts = QualityRecalibrationFile.read(filename);
+
+                if(counts == null)
+                {
+                    mIsValid = false;
+                    return;
+                }
 
                 SG_LOGGER.info("loaded sample({}) {} base quality recalibration records from {}", sampleId, counts.size(), filename);
                 mSampleRecalibrationMap.put(sampleId, new QualityRecalibrationMap(counts));
