@@ -294,9 +294,10 @@ public class ReadContextCounter implements VariantHotspot
                 mQualities[RC_TOTAL] += quality;
 
                 /*
-                SG_LOGGER.trace("var({}) readContext({}-{}-{}) support({}) read(idx={} id={})",
+                SG_LOGGER.trace("var({}) readContext({}-{}-{}) support({}) read(idx={} posStart={} cigar={} id={}) readBases({})",
                         varString(), mReadContext.indexedBases().LeftCoreIndex, mReadContext.indexedBases().Index,
-                        mReadContext.indexedBases().RightCoreIndex, match, readIndex, record.getReadName());
+                        mReadContext.indexedBases().RightCoreIndex, match, readIndex, record.getAlignmentStart(), record.getCigarString(),
+                        record.getReadName(), record.getReadString());
                 */
 
                 countStrandedness(record);
@@ -413,7 +414,7 @@ public class ReadContextCounter implements VariantHotspot
             int readLeftCorePosition = record.getReferencePositionAtReadPosition(coreStartIndex + 1);
             int postCoreIndexDiff = record.getReadBases().length - coreEndIndex;
 
-            if(readLeftCorePosition < mVariant.position() && postCoreIndexDiff < scLenRight)
+            if(readLeftCorePosition > 0 && readLeftCorePosition < mVariant.position() && postCoreIndexDiff < scLenRight)
             {
                 isValidRead = true;
                 baseQuality = record.getBaseQualities()[record.getReadBases().length - scLenRight];
