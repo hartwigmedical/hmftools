@@ -1,26 +1,38 @@
 package com.hartwig.hmftools.gripss.rm;
 
-import static com.hartwig.hmftools.common.samtools.CigarTraversal.calcCigarLength;
+import static java.lang.Math.min;
+
+import static com.hartwig.hmftools.common.samtools.CigarUtils.calcCigarLength;
+
+import static htsjdk.samtools.CigarOperator.I;
+import static htsjdk.samtools.CigarOperator.M;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.samtools.CigarUtils;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 
 public class AlignmentData
 {
     public final String Chromosome;
     public final BaseRegion Region;
+    public final String CigarStr;
 
     private static final String INS_SEQ_MAPPING_DELIM = ",";
     private static final String INS_SEQ_MAPPING_DELIM_2 = ";";
     private static final String INS_SEQ_DATA_DELIM = "\\|";
 
-    public AlignmentData(final String chromosome, final BaseRegion region)
+    public AlignmentData(final String chromosome, final BaseRegion region, final String cigar)
     {
         Chromosome = chromosome;
         Region = region;
+        CigarStr = cigar;
     }
 
     public static AlignmentData fromAlignment(final String alignment)
@@ -49,7 +61,7 @@ public class AlignmentData
         final String cigar = values[2];
         int cigarLength = calcCigarLength(cigar);
 
-        return new AlignmentData(chromosome, new BaseRegion(position, position + cigarLength - 1));
+        return new AlignmentData(chromosome, new BaseRegion(position, position + cigarLength - 1), cigar);
     }
 
     public static List<AlignmentData> fromInsertSequenceAlignments(final String alignmentsStr)
@@ -78,4 +90,19 @@ public class AlignmentData
         return String.format("%s:%s", Chromosome, Region.toString());
     }
 
+    public String extractMatchedBases(final String insertSequence)
+    {
+        Cigar cigar = CigarUtils.cigarFromStr(CigarStr);
+
+        int matchStartPos = cigar.isLeftClipped() ? cigar.getFirstCigarElement().getLength() : 0;
+        int matchBases = cigar.getCigarElements().stream()
+                .filter(x -> x.getOperator() == M || x.getOperator() == I)
+                .mapToInt(x -> x.getLength()).sum();
+
+        int insSeqLength = insertSequence.length();
+        int startPos = min(matchStartPos, insSeqLength);
+        int endPos = min(matchStartPos + matchBases, insSeqLength);
+
+        return insertSequence.substring(startPos, endPos);
+    }
 }

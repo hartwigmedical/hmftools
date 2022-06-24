@@ -6,11 +6,11 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
+import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarFromStr;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.bam.BamRecordUtils.generateMappedCoords;
-import static com.hartwig.hmftools.isofox.common.CommonUtils.cigarFromStr;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentSupport.EXACT_MATCH;
 
 import java.util.List;

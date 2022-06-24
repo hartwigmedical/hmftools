@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox.fusion;
 
+import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarFromStr;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
@@ -78,7 +79,7 @@ public class SupplementaryJunctionData
         }
 
         suppJuncData.RemoteChromosome = suppData.Chromosome;
-        Cigar remoteCigar = CommonUtils.cigarFromStr(suppData.Cigar);
+        Cigar remoteCigar = cigarFromStr(suppData.Cigar);
         scSide = SoftClipSide.fromCigar(remoteCigar);
 
         if(scSide.isLeft())

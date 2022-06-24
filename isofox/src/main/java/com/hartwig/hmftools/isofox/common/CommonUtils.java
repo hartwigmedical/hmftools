@@ -248,31 +248,4 @@ public class CommonUtils
         final RefGenomeCoordinates coords = version == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
         return coords.length(chromosome);
     }
-
-    public static Cigar cigarFromStr(final String cigarStr)
-    {
-        List<CigarElement> cigarElements = org.apache.commons.compress.utils.Lists.newArrayList();
-
-        int index = 0;
-        String basesStr = "";
-        while(index < cigarStr.length())
-        {
-            char c = cigarStr.charAt(index);
-
-            try
-            {
-                CigarOperator operator = CigarOperator.valueOf(String.valueOf(c));
-                cigarElements.add(new CigarElement(Integer.parseInt(basesStr), operator));
-                basesStr = "";
-            }
-            catch (Exception e)
-            {
-                basesStr += c;
-            }
-            ++index;
-        }
-
-        return new Cigar(cigarElements);
-    }
-
 }
