@@ -15,8 +15,6 @@ import com.hartwig.hmftools.common.samtools.CigarUtils;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 import htsjdk.samtools.Cigar;
-import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
 
 public class AlignmentData
 {
