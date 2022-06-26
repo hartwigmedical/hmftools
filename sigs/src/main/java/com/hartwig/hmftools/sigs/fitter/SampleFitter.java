@@ -203,16 +203,21 @@ public class SampleFitter
 
             double sampleTotal = sumVector(sampleCounts);
 
-            if(sampleTotal == 0)
-                continue;
+            if(sampleTotal > 0)
+            {
+                lsqFit.initialise(mSignatures.getData(), sampleCounts);
+                lsqFit.solve();
 
-            lsqFit.initialise(mSignatures.getData(), sampleCounts);
-            lsqFit.solve();
+                final double[] sigAllocs = lsqFit.getContribs();
+                sampleContribs.setCol(i, sigAllocs);
 
-            final double[] sigAllocs = lsqFit.getContribs();
-            sampleContribs.setCol(i, sigAllocs);
-
-            processSampleResults(sampleId, sampleCounts, sampleTotal, sigAllocs);
+                processSampleResults(sampleId, sampleCounts, sampleTotal, sigAllocs);
+            }
+            else
+            {
+                List<SignatureAllocation> emptySigAllocations = Lists.newArrayList();
+                writeSampleSigResults(sampleId, emptySigAllocations);
+            }
 
             if(i > 0 && (i % 100) == 0)
             {
@@ -296,6 +301,11 @@ public class SampleFitter
                 .percent(round(residualsUnalloc/sampleTotal, PERC_ROUND))
                 .build());
 
+        writeSampleSigResults(sampleId, sigAllocations);
+    }
+
+    private void writeSampleSigResults(final String sampleId, final List<SignatureAllocation> sigAllocations)
+    {
         writeSigAllocations(sampleId, sigAllocations);
 
         if(mDbAccess != null && mUploadToDb)
