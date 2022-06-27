@@ -218,21 +218,6 @@ public class SomaticClassifier implements CuppaClassifier
                 mSampleSnvTotals.put(sampleId, snvTotal);
             }
 
-            if(!mConfig.SampleSnvCountsFile.equals(mConfig.RefSnvCountsFile))
-            {
-                for(Map.Entry<String, Integer> entry : mSampleSnv96CountsIndex.entrySet())
-                {
-                    String sampleId = entry.getKey();
-
-                    if(mSampleSnvTotals.containsKey(sampleId))
-                        continue;
-
-                    final double[] sampleCounts = mSampleSnv96Counts.getRow(entry.getValue());
-                    int snvTotal = (int) sumVector(sampleCounts);
-                    mSampleSnvTotals.put(sampleId, snvTotal);
-                }
-            }
-
             // apply any specified noise
             if(mConfig.NoiseAdjustments.makeNoiseAdjustment(SNV_96_PAIRWISE))
             {
@@ -319,6 +304,7 @@ public class SomaticClassifier implements CuppaClassifier
             }
             else
             {
+                /*
                 final String snvCountsFile = !mConfig.SampleSnvCountsFile.isEmpty() ?
                         mConfig.SampleSnvCountsFile : mConfig.SampleDataDir + sampleId + ".sig.snv_counts.csv";
 
@@ -327,11 +313,13 @@ public class SomaticClassifier implements CuppaClassifier
 
                 mSampleSnv96Counts = loadSampleCountsFromFile(snvCountsFile, mSampleSnv96CountsIndex);
                 mSampleGenPosCounts = loadSampleMatrixData(snvPosFreqFile, mSampleGenPosCountsIndex);
+                */
             }
 
             return mSampleSnv96Counts != null && mSampleGenPosCounts != null;
         }
 
+        /*
         if(!mConfig.SampleSnvCountsFile.isEmpty() && !mConfig.SampleSnvPosFreqFile.isEmpty())
         {
             if(mConfig.SampleSnvCountsFile.equals(mConfig.RefSnvCountsFile))
@@ -366,6 +354,7 @@ public class SomaticClassifier implements CuppaClassifier
 
             return mSampleSnv96Counts != null && mSampleGenPosCounts != null;
         }
+        */
 
         CUP_LOGGER.error("no sample SNV count source specified");
         return false;

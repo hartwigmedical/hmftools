@@ -3,12 +3,16 @@ package com.hartwig.hmftools.cup.svs;
 import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSvFile;
 import static com.hartwig.hmftools.cup.common.CategoryType.SV;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.CupConstants.UNDEFINED_PERC_MAX_MULTIPLE;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
+import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromCohortFile;
+import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromDatabase;
+import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromFile;
 import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadRefPercentileData;
 import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadSvDataFromCohortFile;
 import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadSvDataFromDatabase;
@@ -160,13 +164,58 @@ public class SvClassifier implements CuppaClassifier
         return new SampleResult(sample.Id, SV, LIKELIHOOD, dataType, String.valueOf(svValue), cancerPrevs);
     }
 
+    private boolean loadSvData()
+    {
+        if(mConfig.TestRefData)
+        {
+            if(!mConfig.RefSampleSvFile.isEmpty())
+            {
+                CUP_LOGGER.info("loading ref cohort SV data from file({})", mConfig.RefSampleSvFile);
+
+                if(!loadSvDataFromCohortFile(mConfig.RefSampleSvFile, mSampleSvData))
+                    return false;
+
+                CUP_LOGGER.info("loaded SV data for {} samples", mSampleSvData.size());
+                return true;
+            }
+            else
+            {
+                CUP_LOGGER.info("missing ref cohort SV data file");
+                return false;
+            }
+        }
+
+        if(mConfig.DbAccess != null)
+        {
+            CUP_LOGGER.info("loading sample SV data from database");
+
+            return loadSvDataFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleSvData);
+        }
+
+        // CUP_LOGGER.info("loading sample SV data from pipeline files");
+
+        for(SampleData sample : mSampleDataCache.SampleDataList)
+        {
+            final String purpleDataDir = mConfig.getPurpleDataDir(sample.Id);
+            final String svVcfFile = purpleSvFile(purpleDataDir, sample.Id);
+
+            final String linxDataDir = mConfig.getLinxDataDir(sample.Id);
+            final String clusterFile = LinxCluster.generateFilename(linxDataDir, sample.Id);
+
+            if(!loadSvDataFromFile(sample.Id, svVcfFile, clusterFile, mSampleSvData))
+                return false;
+        }
+
+        return true;
+    }
+
     private boolean loadCohortSvData()
     {
-        if(!mConfig.SampleSvFile.isEmpty() && !mConfig.SampleSvFile.contains(".vcf"))
+        if(!mConfig.RefSampleSvFile.isEmpty() && !mConfig.RefSampleSvFile.contains(".vcf"))
         {
-            CUP_LOGGER.info("loading cohort SV data from file({})", mConfig.SampleSvFile);
+            CUP_LOGGER.info("loading ref cohort SV data from file({})", mConfig.RefSampleSvFile);
 
-            if(!loadSvDataFromCohortFile(mConfig.SampleSvFile, mSampleSvData))
+            if(!loadSvDataFromCohortFile(mConfig.RefSampleSvFile, mSampleSvData))
                 return false;
 
             CUP_LOGGER.info("loaded SV data for {} samples", mSampleSvData.size());
@@ -177,10 +226,10 @@ public class SvClassifier implements CuppaClassifier
 
     private boolean loadSampleSvData(final String sampleId)
     {
-        if(mConfig.SampleDataDir.isEmpty() || mConfig.SampleSvFile.isEmpty() || !mConfig.SampleSvFile.contains(".vcf"))
+        if(mConfig.SampleDataDir.isEmpty() || mConfig.RefSampleSvFile.isEmpty() || !mConfig.RefSampleSvFile.contains(".vcf"))
             return false;
 
-        final String svVcfFile = formSamplePath(mConfig.SampleSvFile, sampleId);
+        final String svVcfFile = formSamplePath(mConfig.RefSampleSvFile, sampleId);
         final String sampleDataDir = formSamplePath(mConfig.SampleDataDir, sampleId);
 
         final String clusterFile = LinxCluster.generateFilename(sampleDataDir, sampleId);

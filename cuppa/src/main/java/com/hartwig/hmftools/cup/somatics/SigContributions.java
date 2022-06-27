@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_13;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_2;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.convertSignatureName;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.signatureDisplayName;
-import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC_SIG;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -102,10 +101,10 @@ public class SigContributions
 
     public boolean loadSigContributions(final Matrix snvCounts)
     {
-        if(!mConfig.SampleSigContribFile.isEmpty())
+        if(!mConfig.RefSampleSigContribFile.isEmpty())
         {
-            CUP_LOGGER.info("loading SNV sig contributions from file({})", mConfig.SampleSigContribFile);
-            return loadSigContribsFromCohortFile(mConfig.SampleSigContribFile, mSampleSigContributions);
+            CUP_LOGGER.info("loading ref cohort signature contributions from file({})", mConfig.RefSampleSigContribFile);
+            return loadSigContribsFromCohortFile(mConfig.RefSampleSigContribFile, mSampleSigContributions);
         }
         else if(mConfig.DbAccess != null)
         {

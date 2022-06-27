@@ -20,8 +20,6 @@ public class CuppaRefFiles
     public static final String REF_FILE_SNV_COUNTS = formatRefFilename("snv_counts");
     public static final String REF_FILE_CANCER_POS_FREQ_COUNTS = formatRefFilename("cancer_pos_freq_counts");
     public static final String REF_FILE_SAMPLE_POS_FREQ_COUNTS = formatRefFilename("sample_pos_freq_counts");
-    public static final String REF_FILE_CN_ADJUSTED_SAMPLE_POS_FREQ_COUNTS = formatRefFilename("sample_cn_adj_pos_freq");
-    public static final String REF_FILE_COPY_NUMBER_PROFILE = formatRefFilename("copy_number_profile");
     public static final String REF_FILE_FEATURE_PREV = formatRefFilename("feature_prev");
     public static final String REF_FILE_DRIVER_AVG = formatRefFilename("driver_avg");
     public static final String REF_FILE_TRAIT_PERC = formatRefFilename("sample_trait_percentiles");
@@ -37,10 +35,10 @@ public class CuppaRefFiles
     public static final String REF_FILE_NOISE_MEDIANS = formatRefFilename("noise_medians");
 
     // cohort files for building reference data
-    public static final String COHORT_REF_FILE_SV_DATA_FILE = formatRefFilename("cohort_sv_data");
-    public static final String COHORT_REF_FILE_TRAITS_DATA_FILE = formatRefFilename("cohort_traits_data");
-    public static final String COHORT_REF_FILE_SIG_DATA_FILE = formatRefFilename("cohort_signature_data");
-    public static final String COHORT_REF_FILE_FEATURE_DATA_FILE = formatRefFilename("cohort_feature_data");
+    public static final String COHORT_REF_SV_DATA_FILE = formatRefFilename("cohort_sv_data");
+    public static final String COHORT_REF_TRAITS_DATA_FILE = formatRefFilename("cohort_traits_data");
+    public static final String COHORT_REF_SIG_DATA_FILE = formatRefFilename("cohort_signature_data");
+    public static final String COHORT_REF_FEATURE_DATA_FILE = formatRefFilename("cohort_feature_data");
 
     public static final String purpleSomaticVcfFile(final String sampleDir, final String sampleId)
     {

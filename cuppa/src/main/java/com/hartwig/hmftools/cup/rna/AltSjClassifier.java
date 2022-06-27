@@ -32,6 +32,7 @@ import static com.hartwig.hmftools.cup.common.SampleData.RNA_READ_LENGTH_NONE;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
+import static com.hartwig.hmftools.cup.rna.GeneExpressionDataLoader.loadSampleGeneExpressionFile;
 import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.FLD_POS_END;
 import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.FLD_POS_START;
 import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.loadSampleAltSjMatrixData;
@@ -48,6 +49,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
+import com.hartwig.hmftools.common.rna.GeneExpressionFile;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.cup.common.CategoryType;
@@ -130,31 +132,44 @@ public class AltSjClassifier implements CuppaClassifier
         final List<String> ignoreFields = Lists.newArrayList(FLD_GENE_ID, FLD_CHROMOSOME, FLD_POS_START, FLD_POS_END);
         loadRefCancerFragCounts(ignoreFields);
 
-        // currently no option to load in a ref sample file and a different test sample file
-        if(!config.SampleAltSjFile.isEmpty()) //  && !config.SampleAltSjFile.equals(config.RefAltSjSampleFile)
+
+        if(mConfig.TestRefData)
         {
-            CUP_LOGGER.debug("loading sample alt-SJ matrix data file({})", config.SampleAltSjFile);
-
-            mSampleFragCounts = loadSampleAltSjMatrixData(config.SampleAltSjFile, mSampleIndexMap, mRefCancerTypeMatrix.Cols);
-
-            if(mSampleFragCounts ==  null)
+            if(!mConfig.RefAltSjSampleFile.isEmpty())
             {
-                mIsValid = false;
-                return;
+                mSampleFragCounts = loadSampleAltSjMatrixData(mConfig.RefAltSjSampleFile, mSampleIndexMap, mRefCancerTypeMatrix.Cols);
             }
-
-            if(mSampleFragCounts[0].length != mRefCancerTypeMatrix.Cols)
+            else
             {
-                // keeping in mind that for the sample matrix, the sites are in the columns, whereas for the cancer ref in the rows
-                CUP_LOGGER.error("alt-SJ matrix site definition mismatch: per-cancer({}) and per-sample({})",
-                        mRefCancerTypeMatrix.Cols, mSampleFragCounts[0].length);
-
+                CUP_LOGGER.info("missing ref cohort alt-SJ data file");
                 mIsValid = false;
             }
         }
         else
         {
-            mSampleFragCounts = new short[1][mRefCancerTypeMatrix.Cols];
+            for(SampleData sample : mSampleDataCache.SampleDataList)
+            {
+                final String isofoxDir = mConfig.getIsofoxDataDir(sample.Id);
+                final String filename = GeneExpressionFile.generateFilename(isofoxDir, sample.Id);
+                CUP_LOGGER.debug("loading sample alt-SJ data file({})", filename);
+
+                mSampleFragCounts = loadSampleAltSjMatrixData(filename, mSampleIndexMap, mRefCancerTypeMatrix.Cols);
+            }
+        }
+
+        if(mSampleFragCounts ==  null)
+        {
+            mIsValid = false;
+            return;
+        }
+
+        if(mSampleFragCounts[0].length != mRefCancerTypeMatrix.Cols)
+        {
+            // keeping in mind that for the sample matrix, the sites are in the columns, whereas for the cancer ref in the rows
+            CUP_LOGGER.error("alt-SJ matrix site definition mismatch: per-cancer({}) and per-sample({})",
+                    mRefCancerTypeMatrix.Cols, mSampleFragCounts[0].length);
+
+            mIsValid = false;
         }
 
         if(cmd.hasOption(LOG_CSS_VALUES))

@@ -354,20 +354,6 @@ public class RefAltSpliceJunctions implements RefClassifier
                 writer.newLine();
             }
 
-            /*
-            for(int i = 0; i < fragCountMatrix.Rows; ++i) // rows are the alt-SJ locations
-            {
-                writer.write(String.format("%s", asjLocations.get(i)));
-
-                for(int j = 0; j < fragCountMatrix.Cols; ++j)
-                {
-                    writer.write(String.format(",%.1f", matrixData[i][j]));
-                }
-
-                writer.newLine();
-            }
-            */
-
             closeBufferedWriter(writer);
         }
         catch(IOException e)

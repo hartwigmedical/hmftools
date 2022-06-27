@@ -11,11 +11,10 @@ import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaConfig.SUBSET_DELIM;
 import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_TRAITS_DATA_FILE;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_TRAITS_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENDER_RATES;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_RATES;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSvFile;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CupConstants.BREAST_MALE_GENDER_RATE;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_BREAST;
@@ -24,7 +23,6 @@ import static com.hartwig.hmftools.cup.common.CupConstants.isCandidateCancerType
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.GENDER_RATES;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.parseFileSet;
-import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadSvDataFromFile;
 import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.FLD_GENDER_FEMALE;
 import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.FLD_GENDER_MALE;
 import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.GENDER_FEMALE_INDEX;
@@ -45,7 +43,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
-import com.hartwig.hmftools.common.sv.linx.LinxCluster;
 import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
@@ -337,7 +334,7 @@ public class RefSampleTraits implements RefClassifier
         if(!mConfig.WriteCohortFiles)
             return;
 
-        final String filename = mConfig.OutputDir + COHORT_REF_FILE_TRAITS_DATA_FILE;
+        final String filename = mConfig.OutputDir + COHORT_REF_TRAITS_DATA_FILE;
         if(Files.exists(Paths.get(filename)))
         {
             CUP_LOGGER.warn("not over-writing cohort sample traits reference file({})", filename);

@@ -19,7 +19,7 @@ import com.hartwig.hmftools.common.utils.Matrix;
 public class SomaticSigs
 {
     private final List<String> mSignatureNames;
-    private final Matrix mSignatures;
+    private final Matrix mSignatures; // trinucleotide buckerts in rows, signatures in columns
     private final LeastSquaresFit mLeastSquaresFitter;
 
     public static final String SIG_NAME_2 = "Sig2";
@@ -81,7 +81,7 @@ public class SomaticSigs
         double sampleTotal = sumVector(sampleCounts);
 
         if(sampleTotal == 0)
-            return null;
+            return new double[mSignatureNames.size()];
 
         mLeastSquaresFitter.initialise(mSignatures.getData(), sampleCounts);
         mLeastSquaresFitter.solve();

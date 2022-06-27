@@ -1,16 +1,17 @@
 package com.hartwig.hmftools.cup;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_FEATURE_DATA_FILE;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SIG_DATA_FILE;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SV_DATA_FILE;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_TRAITS_DATA_FILE;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FEATURE_DATA_FILE;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_SIG_DATA_FILE;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_SV_DATA_FILE;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_TRAITS_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_ALT_SJ_CANCER;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_ALT_SJ_SAMPLE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CANCER_POS_FREQ_COUNTS;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_COPY_NUMBER_PROFILE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_DRIVER_AVG;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_FEATURE_PREV;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENDER_RATES;
@@ -25,26 +26,25 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SV_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_RATES;
 import static com.hartwig.hmftools.cup.common.CategoryType.ALL_CATEGORIES;
-import static com.hartwig.hmftools.cup.common.CategoryType.ALT_SJ;
 import static com.hartwig.hmftools.cup.common.CategoryType.COMBINED;
 import static com.hartwig.hmftools.cup.common.CategoryType.DNA_CATEGORIES;
-import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
-import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
 import static com.hartwig.hmftools.cup.common.CategoryType.RNA_CATEGORIES;
-import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
-import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
-import static com.hartwig.hmftools.cup.common.CategoryType.SV;
 import static com.hartwig.hmftools.cup.common.CategoryType.isDna;
 import static com.hartwig.hmftools.cup.common.CategoryType.isRna;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.ISOFOX_DIR;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.LINX_DIR;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.PURPLE_DIR;
+import static com.hartwig.hmftools.cup.ref.RefDataConfig.REF_COHORT_FEATURES_FILE;
+import static com.hartwig.hmftools.cup.ref.RefDataConfig.REF_COHORT_SAMPLE_TRAITS_FILE;
+import static com.hartwig.hmftools.cup.ref.RefDataConfig.REF_COHORT_SIG_CONTRIBS_FILE;
+import static com.hartwig.hmftools.cup.ref.RefDataConfig.REF_COHORT_SV_DATA_FILE;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.addPipelineDirectories;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.StringJoiner;
 
 import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.NoiseRefCache;
@@ -96,14 +96,12 @@ public class CuppaConfig
 
     // cohort files, formed during ref data building
     public final String SampleDataFile;
-    public final String SampleFeatureFile;
-    public final String SampleTraitsFile;
-    public final String SampleSnvCountsFile;
-    public final String SampleSnvPosFreqFile;
-    public final String SampleSigContribFile;
-    public final String SampleSvFile;
-    public final String SampleGeneExpFile;
-    public final String SampleAltSjFile;
+    public final String RefSampleFeatureFile;
+    public final String RefSampleTraitsFile;
+    public final String RefSampleSigContribFile;
+    public final String RefSampleSvFile;
+
+    public final boolean TestRefData;
 
     public final NoiseRefCache NoiseAdjustments;
     public final boolean NoSubtypeCollapse;
@@ -119,26 +117,32 @@ public class CuppaConfig
     public final String OutputFileId;
     public final int Threads;
 
+    private boolean mIsValid;
+
     // config strings
     public static final String CATEGORIES = "categories";
 
     public static final String SAMPLE_DATA_DIR = "sample_data_dir";
 
+    // either a single sample to be tested for a file containing the samples to be tested
     public static final String SPECIFIC_SAMPLE_DATA = "sample_data";
     public static final String SAMPLE_DATA_FILE = "sample_data_file";
+
+    /*
     private static final String SAMPLE_FEAT_FILE = "sample_feature_file";
     private static final String SAMPLE_TRAITS_FILE = "sample_traits_file";
     private static final String SAMPLE_SNV_COUNTS_FILE = "sample_snv_counts_file";
     private static final String SAMPLE_SNV_POS_FREQ_FILE = "sample_snv_pos_freq_file";
     private static final String SAMPLE_SIG_CONTRIB_FILE = "sample_sig_contrib_file";
-    private static final String SAMPLE_SOMATIC_VCF = "sample_somatic_vcf";
     private static final String SAMPLE_SV_FILE = "sample_sv_file";
     private static final String SAMPLE_GENE_EXP_FILE = "sample_gene_exp_file";
     private static final String SAMPLE_ALT_SJ_FILE = "sample_alt_sj_matrix_file";
+    */
 
     public static final String REF_DATA_DIR = "ref_data_dir";
-    public static final String USE_REF_SAMPLE_DATA = "use_ref_sample_data";
+    public static final String TEST_REF_SAMPLE_DATA = "test_ref_sample_data";
 
+    // reference data files
     public static final String REF_SAMPLE_DATA_FILE = "ref_sample_data_file";
     public static final String REF_SNV_COUNTS_FILE = "ref_snv_counts_file";
     public static final String REF_SNV_SAMPLE_POS_FREQ_FILE = "ref_sample_snv_pos_freq_file";
@@ -181,6 +185,8 @@ public class CuppaConfig
 
     public CuppaConfig(final CommandLine cmd)
     {
+        mIsValid = true;
+
         Categories = configCategories(cmd);
 
         CUP_LOGGER.info("running classifiers: {}", Categories.isEmpty() ? ALL_CATEGORIES : Categories.toString());
@@ -205,31 +211,77 @@ public class CuppaConfig
         RefAltSjCancerFile = getRefDataFile(cmd, REF_RNA_ALT_SJ_CANCER_FILE, REF_FILE_ALT_SJ_CANCER);
         RefAltSjSampleFile = getRefDataFile(cmd, REF_RNA_ALT_SJ_SAMPLE_FILE, REF_FILE_ALT_SJ_SAMPLE);
 
-        boolean useRefData = cmd.hasOption(USE_REF_SAMPLE_DATA);
-        SampleDataDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR, ""));
-        LinxDir = checkAddDirSeparator(cmd.getOptionValue(LINX_DIR, ""));
-        PurpleDir = checkAddDirSeparator(cmd.getOptionValue(PURPLE_DIR, ""));
-        IsofoxDir = checkAddDirSeparator(cmd.getOptionValue(ISOFOX_DIR, ""));
+        TestRefData = cmd.hasOption(TEST_REF_SAMPLE_DATA);
 
         // use cases for loading sample data:
         // 1. DB - sourced
         // 2. single sample - uses pipeline names for each type (eg Linx, Purple, Isofox)
         // 3. Cohort and Reference data files - if 'use_ref_sample_data' specified, then run Cuppa over ref & cohort files
-        // 4. Cohort files specified manually
-        // 5. Sample data not supplied for a given data type
+        // 4. Non-reference cohort files specified manually
+        // 5. Sample data not supplied for a given category
 
-        SampleDataFile = cmd.getOptionValue(SAMPLE_DATA_FILE, "");
+        if(TestRefData)
+        {
+            CUP_LOGGER.info("loading ref cohort data files to test");
 
-        // for cohort mode, then re-testing ref data, the cohort files are used here:
-        SampleTraitsFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_TRAITS_FILE, COHORT_REF_FILE_TRAITS_DATA_FILE, SAMPLE_TRAIT);
-        SampleFeatureFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_FEAT_FILE, COHORT_REF_FILE_FEATURE_DATA_FILE, FEATURE);
-        SampleSigContribFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_SIG_CONTRIB_FILE, COHORT_REF_FILE_SIG_DATA_FILE, SNV);
-        SampleSvFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_SV_FILE, COHORT_REF_FILE_SV_DATA_FILE, SV);
+            RefSampleTraitsFile = getRefDataFile(cmd, REF_COHORT_SAMPLE_TRAITS_FILE, COHORT_REF_SV_DATA_FILE);
+            RefSampleFeatureFile = getRefDataFile(cmd, REF_COHORT_FEATURES_FILE, COHORT_REF_FEATURE_DATA_FILE);
+            RefSampleSigContribFile = getRefDataFile(cmd, REF_COHORT_SIG_CONTRIBS_FILE, COHORT_REF_SIG_DATA_FILE);
+            RefSampleSvFile = getRefDataFile(cmd, REF_COHORT_SV_DATA_FILE, COHORT_REF_SV_DATA_FILE);
 
-        SampleSnvCountsFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_SNV_COUNTS_FILE, REF_FILE_SNV_COUNTS, SNV);
-        SampleSnvPosFreqFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_SNV_POS_FREQ_FILE, REF_FILE_SAMPLE_POS_FREQ_COUNTS, SNV);
-        SampleGeneExpFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_GENE_EXP_FILE, REF_FILE_GENE_EXP_SAMPLE, GENE_EXP);
-        SampleAltSjFile = getCohortSampleDataFile(cmd, useRefData, SAMPLE_ALT_SJ_FILE, REF_FILE_ALT_SJ_SAMPLE, ALT_SJ);
+            if(cmd.hasOption(SPECIFIC_SAMPLE_DATA))
+            {
+                CUP_LOGGER.info("testing single reference sample({})", cmd.getOptionValue(SPECIFIC_SAMPLE_DATA));
+            }
+
+            /*
+            RefSampleTraitsFile = getCohortSampleDataFile(cmd, testRefData, SAMPLE_TRAITS_FILE, COHORT_REF_FILE_TRAITS_DATA_FILE, SAMPLE_TRAIT);
+            SampleFeatureFile = getCohortSampleDataFile(cmd, testRefData, SAMPLE_FEAT_FILE, COHORT_REF_FILE_FEATURE_DATA_FILE, FEATURE);
+            SampleSigContribFile = getCohortSampleDataFile(cmd, testRefData, SAMPLE_SIG_CONTRIB_FILE, COHORT_REF_FILE_SIG_DATA_FILE, SNV);
+            SampleSvFile = getCohortSampleDataFile(cmd, testRefData, SAMPLE_SV_FILE, COHORT_REF_FILE_SV_DATA_FILE, SV);
+            SampleSnvCountsFile = getCohortSampleDataFile(cmd, testRefData, SAMPLE_SNV_COUNTS_FILE, REF_FILE_SNV_COUNTS, SNV);
+            SampleSnvPosFreqFile = getCohortSampleDataFile(cmd, testRefData, SAMPLE_SNV_POS_FREQ_FILE, REF_FILE_SAMPLE_POS_FREQ_COUNTS, SNV);
+            SampleGeneExpFile = getCohortSampleDataFile(cmd, testRefData, SAMPLE_GENE_EXP_FILE, REF_FILE_GENE_EXP_SAMPLE, GENE_EXP);
+            SampleAltSjFile = getCohortSampleDataFile(cmd, testRefData, SAMPLE_ALT_SJ_FILE, REF_FILE_ALT_SJ_SAMPLE, ALT_SJ);
+            */
+
+            SampleDataDir = "";
+            SampleDataFile = "";
+            LinxDir = "";
+            PurpleDir = "";
+            IsofoxDir = "";
+            DbAccess = null;
+        }
+        else
+        {
+            SampleDataDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR, ""));
+            SampleDataFile = cmd.getOptionValue(SAMPLE_DATA_FILE, "");
+
+            LinxDir = checkAddDirSeparator(cmd.getOptionValue(LINX_DIR, ""));
+            PurpleDir = checkAddDirSeparator(cmd.getOptionValue(PURPLE_DIR, ""));
+            IsofoxDir = checkAddDirSeparator(cmd.getOptionValue(ISOFOX_DIR, ""));
+
+            if(cmd.hasOption(SPECIFIC_SAMPLE_DATA))
+            {
+                CUP_LOGGER.info("testing single sample({})", cmd.getOptionValue(SPECIFIC_SAMPLE_DATA));
+            }
+            else if(cmd.hasOption(SAMPLE_DATA_DIR))
+            {
+                CUP_LOGGER.info("testing samples from file: {}", SampleDataFile);
+            }
+            else
+            {
+                CUP_LOGGER.error(format("missing {}, non-ref cohort {} or {} config", SPECIFIC_SAMPLE_DATA, SAMPLE_DATA_FILE, TEST_REF_SAMPLE_DATA));
+                mIsValid = false;
+            }
+
+            RefSampleTraitsFile = "";
+            RefSampleSigContribFile = "";
+            RefSampleFeatureFile = "";
+            RefSampleSvFile = "";
+
+            DbAccess = createDatabaseAccess(cmd);
+        }
 
         NoiseAdjustments = new NoiseRefCache(RefDataDir);
         NoiseAdjustments.loadNoiseAllocations(cmd.getOptionValue(NOISE_ALLOCATIONS));
@@ -243,8 +295,6 @@ public class CuppaConfig
         WriteSimilarities = cmd.hasOption(WRITE_SIMS);
         WriteCondensed = cmd.hasOption(WRITE_CONDENSED);
         WriteDetailedScores = cmd.hasOption(WRITE_DETAILED_SCORES);
-
-        DbAccess = createDatabaseAccess(cmd);
     }
 
     private String getRefDataFile(final CommandLine cmd, final String configStr, final String defaultFilename)
@@ -347,9 +397,13 @@ public class CuppaConfig
 
     public static void addCmdLineArgs(Options options)
     {
+        StringJoiner categories = new StringJoiner(",");
+        Arrays.stream(CategoryType.values()).filter(x -> x != COMBINED).forEach(x -> categories.add(x.toString()));
+
         options.addOption(
                 CATEGORIES, true,
-                "Categories to run analysis on, separated by ';' from: SNV, SV, SAMPLE_TRAIT, GENE_EXP and FEATURE");
+                format("Categories for analysis: %s, %s, %s or sub-group from [%s]",
+                        ALL_CATEGORIES, DNA_CATEGORIES, RNA_CATEGORIES, categories.toString()));
 
         options.addOption(SPECIFIC_SAMPLE_DATA, true, "Specific sample in form 'SampleId;CancerType;CancerSubtype' (last 2 optional)");
         options.addOption(SAMPLE_DATA_DIR, true, "Directory containing standard sample files from pipeline");
@@ -357,19 +411,13 @@ public class CuppaConfig
 
         options.addOption(SAMPLE_DATA_FILE, true, "Sample data file");
 
-        options.addOption(SAMPLE_SNV_COUNTS_FILE, true, "Sample SNV counts");
-        options.addOption(SAMPLE_SNV_POS_FREQ_FILE, true, "Sample SNV position frequence counts");
-        options.addOption(SAMPLE_SIG_CONTRIB_FILE, true, "Sample signature contributions");
-
-        options.addOption(SAMPLE_FEAT_FILE, true, "Cohort features file (drivers, fusions and viruses)");
-        options.addOption(SAMPLE_TRAITS_FILE, true, "Cohort sample traits file");
-        options.addOption(SAMPLE_SV_FILE, true, "Cohort SV data");
-        options.addOption(SAMPLE_GENE_EXP_FILE, true, "Cohort sample RNA gene expression TPMs");
-        options.addOption(SAMPLE_ALT_SJ_FILE, true, "Cohort sample RNA alt-SJ frag counts matrix file");
-        options.addOption(SAMPLE_SOMATIC_VCF, true, "Sample somatic VCF");
+        options.addOption(REF_COHORT_SIG_CONTRIBS_FILE, true, "Cohort ref sample signature contributions");
+        options.addOption(REF_COHORT_FEATURES_FILE, true, "Cohort ref features file (drivers, fusions and viruses)");
+        options.addOption(REF_COHORT_SAMPLE_TRAITS_FILE, true, "Cohort sample traits file");
+        options.addOption(REF_COHORT_SV_DATA_FILE, true, "Cohort SV data");
 
         options.addOption(REF_DATA_DIR, true, "Reference data directory");
-        options.addOption(USE_REF_SAMPLE_DATA, false, "In cohort-mode, run Cuppa using all ref sample data files");
+        options.addOption(TEST_REF_SAMPLE_DATA, false, "In cohort-mode, run Cuppa using all ref sample data files");
 
         options.addOption(REF_SAMPLE_DATA_FILE, true, "Reference sample data, default: " + REF_FILE_SAMPLE_DATA);
         options.addOption(REF_SNV_COUNTS_FILE, true, "Reference SNV sample counts, default: " + REF_FILE_SNV_COUNTS);
@@ -428,6 +476,8 @@ public class CuppaConfig
         RefAltSjCancerFile = "";
         RefAltSjSampleFile = "";
 
+        TestRefData = false;
+
         // sample data, if not sourced from the database
         SampleDataDir = "";
         LinxDir = "";
@@ -435,14 +485,10 @@ public class CuppaConfig
         IsofoxDir = "";
 
         SampleDataFile = "";
-        SampleFeatureFile = "";
-        SampleTraitsFile = "";
-        SampleSnvCountsFile = "";
-        SampleSnvPosFreqFile = "";
-        SampleSigContribFile = "";
-        SampleSvFile = "";
-        SampleGeneExpFile = "";
-        SampleAltSjFile = "";
+        RefSampleFeatureFile = "";
+        RefSampleTraitsFile = "";
+        RefSampleSigContribFile = "";
+        RefSampleSvFile = "";
 
         NoiseAdjustments = new NoiseRefCache(null);
         NoSubtypeCollapse = false;

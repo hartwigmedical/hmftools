@@ -274,17 +274,26 @@ public class FeatureClassifier implements CuppaClassifier
 
     private boolean loadSampleFeatures()
     {
-        if(!mConfig.SampleFeatureFile.isEmpty())
+        if(mConfig.TestRefData)
         {
-            CUP_LOGGER.info("loading sample features from file({})", mConfig.SampleFeatureFile);
+            if(!mConfig.RefSampleFeatureFile.isEmpty())
+            {
+                CUP_LOGGER.info("loading ref cohort features from file({})", mConfig.RefSampleFeatureFile);
 
-            if(!loadFeaturesFromCohortFile(mConfig.SampleFeatureFile, mSampleFeatures))
+                if(!loadFeaturesFromCohortFile(mConfig.RefSampleFeatureFile, mSampleFeatures))
+                    return false;
+
+                CUP_LOGGER.info("loaded features for {} samples", mSampleFeatures.size());
+                return true;
+            }
+            else
+            {
+                CUP_LOGGER.info("missing ref cohort features file");
                 return false;
-
-            CUP_LOGGER.info("loaded features for {} samples", mSampleFeatures.size());
-            return true;
+            }
         }
-        else if(mConfig.DbAccess != null)
+
+        if(mConfig.DbAccess != null)
         {
             CUP_LOGGER.info("loading sample features from database");
             return loadFeaturesFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleFeatures);

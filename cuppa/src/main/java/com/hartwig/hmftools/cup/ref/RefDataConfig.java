@@ -61,10 +61,10 @@ public class RefDataConfig
     // config strings
 
     // cohort files instead of extracting data from database
-    private static final String REF_COHORT_SAMPLE_TRAITS_FILE = "cohort_sample_traits_file";
-    private static final String REF_COHORT_SIG_CONTRIBS_FILE = "cohort_sig_contribs_file";
-    private static final String REF_COHORT_SV_DATA_FILE = "cohort_sv_data_file";
-    private static final String REF_COHORT_FEATURES_FILE = "cohort_features_file";
+    public static final String REF_COHORT_SAMPLE_TRAITS_FILE = "cohort_sample_traits_file";
+    public static final String REF_COHORT_SIG_CONTRIBS_FILE = "cohort_sig_contribs_file";
+    public static final String REF_COHORT_SV_DATA_FILE = "cohort_sv_data_file";
+    public static final String REF_COHORT_FEATURES_FILE = "cohort_features_file";
 
     private static final String REF_GENE_EXP_DATA_FILE = "ref_gene_exp_file";
     private static final String REF_ALT_SJ_DATA_FILE = "ref_alt_sj_file";

@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SIG_DATA_FILE;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_SIG_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CANCER_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SIG_PERC;
@@ -609,7 +609,7 @@ public class RefSomatics implements RefClassifier
         if(!mConfig.WriteCohortFiles)
             return;
 
-        final String filename = mConfig.OutputDir + COHORT_REF_FILE_SIG_DATA_FILE;
+        final String filename = mConfig.OutputDir + COHORT_REF_SIG_DATA_FILE;
         if(Files.exists(Paths.get(filename)))
         {
             CUP_LOGGER.warn("not over-writing cohort sig-contributions reference file({})", filename);

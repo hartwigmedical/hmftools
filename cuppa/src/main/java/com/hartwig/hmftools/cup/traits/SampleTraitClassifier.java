@@ -122,38 +122,48 @@ public class SampleTraitClassifier implements CuppaClassifier
 
     private boolean loadSampleTraitsData()
     {
-        if(!mConfig.SampleTraitsFile.isEmpty())
+        if(mConfig.TestRefData)
         {
-            CUP_LOGGER.info("loading cohort sample traits from file({})", mConfig.SampleTraitsFile);
+            if(!mConfig.RefSampleTraitsFile.isEmpty())
+            {
+                CUP_LOGGER.info("loading ref cohort traits from file({})", mConfig.RefSampleTraitsFile);
 
-            if(!loadTraitsFromCohortFile(mConfig.SampleTraitsFile, mSampleTraitsData))
-                return false;
+                if(!loadTraitsFromCohortFile(mConfig.RefSampleTraitsFile, mSampleTraitsData))
+                    return false;
 
-            CUP_LOGGER.info("loaded traits for {} samples", mSampleTraitsData.size());
-        }
-        else if(mConfig.DbAccess != null)
-        {
-            if(!loadTraitsFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleTraitsData))
+                CUP_LOGGER.info("loaded traits for {} samples", mSampleTraitsData.size());
+            }
+            else
+            {
+                CUP_LOGGER.error("missing ref cohort traits file");
                 return false;
+            }
         }
         else
         {
-            for(SampleData sample : mSampleDataCache.SampleDataList)
+            if(mConfig.DbAccess != null)
             {
-                String purpleDir = mConfig.getPurpleDataDir(sample.Id);
+                if(!loadTraitsFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleTraitsData))
+                    return false;
+            }
+            else
+            {
+                for(SampleData sample : mSampleDataCache.SampleDataList)
+                {
+                    String purpleDir = mConfig.getPurpleDataDir(sample.Id);
 
-                try
-                {
-                    final PurityContext purityContext = PurityContextFile.read(purpleDir, sample.Id);
-                    SampleTraitsData traitsData = SampleTraitsData.from(sample.Id, purityContext, 0);
-                    mSampleTraitsData.put(traitsData.SampleId, traitsData);
-                }
-                catch(Exception e)
-                {
-                    CUP_LOGGER.error("sample({}) sample traits - failed to load purity file from dir{}): {}",
-                            sample.Id, purpleDir, e.toString());
-                    mIsValid = false;
-                    break;
+                    try
+                    {
+                        final PurityContext purityContext = PurityContextFile.read(purpleDir, sample.Id);
+                        SampleTraitsData traitsData = SampleTraitsData.from(sample.Id, purityContext, 0);
+                        mSampleTraitsData.put(traitsData.SampleId, traitsData);
+                    }
+                    catch(Exception e)
+                    {
+                        CUP_LOGGER.error("sample({}) sample traits - failed to load purity file from dir{}): {}",
+                                sample.Id, purpleDir, e.toString());
+                        return false;
+                    }
                 }
             }
         }

@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SV_DATA_FILE;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_SV_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SV_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSvFile;
 import static com.hartwig.hmftools.cup.common.CategoryType.SV;
@@ -194,7 +194,7 @@ public class RefSvData implements RefClassifier
         if(!mConfig.WriteCohortFiles)
             return;
 
-        final String filename = mConfig.OutputDir + COHORT_REF_FILE_SV_DATA_FILE;
+        final String filename = mConfig.OutputDir + COHORT_REF_SV_DATA_FILE;
 
         if(Files.exists(Paths.get(filename)))
         {

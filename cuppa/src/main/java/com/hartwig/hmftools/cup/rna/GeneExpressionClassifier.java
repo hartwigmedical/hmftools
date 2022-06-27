@@ -100,9 +100,6 @@ public class GeneExpressionClassifier implements CuppaClassifier
 
         mIsValid = true;
 
-        if(mSampleDataCache.isMultiSample() && mConfig.SampleGeneExpFile.isEmpty())
-            return;
-
         if(mRunPairwiseCss && mConfig.RefGeneExpSampleFile.isEmpty())
             return;
 
@@ -144,7 +141,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
 
         buildCancerSampleCounts();
 
-        if(mConfig.SampleGeneExpFile.equals(mConfig.RefGeneExpSampleFile))
+        if(mConfig.TestRefData)
         {
             CUP_LOGGER.debug("re-using ref sample gene-expression matrix data for samples");
             mSampleGeneExpression = mRefSampleGeneExpression;
@@ -152,19 +149,14 @@ public class GeneExpressionClassifier implements CuppaClassifier
         }
         else
         {
-            if(mSampleDataCache.isSingleSample())
+            for(SampleData sample : mSampleDataCache.SampleDataList)
             {
-                final String sampleId = mSampleDataCache.SampleIds.get(0);
-                final String filename = GeneExpressionFile.generateFilename(mConfig.getIsofoxDataDir(sampleId), sampleId);
+                final String isofoxDir = mConfig.getIsofoxDataDir(sample.Id);
+                final String filename = GeneExpressionFile.generateFilename(isofoxDir, sample.Id);
                 CUP_LOGGER.debug("loading sample gene-expression data file({})", filename);
 
-                mSampleIndexMap.put(sampleId, 0);
+                mSampleIndexMap.put(sample.Id, 0);
                 mSampleGeneExpression = loadSampleGeneExpressionFile(filename, mGeneIdIndexMap);
-            }
-            else
-            {
-                CUP_LOGGER.debug("loading non-ref sample gene-expression matrix data file({})", mConfig.SampleGeneExpFile);
-                mSampleGeneExpression = loadSampleGeneExpressionMatrix(mConfig.SampleGeneExpFile, mGeneIdIndexMap, mSampleIndexMap);
             }
 
             if(mSampleGeneExpression == null)
