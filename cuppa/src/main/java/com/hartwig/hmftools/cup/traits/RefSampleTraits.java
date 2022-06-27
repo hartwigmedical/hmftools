@@ -281,7 +281,7 @@ public class RefSampleTraits implements RefClassifier
         }
 
         // cache for other components to use
-        mSampleDataCache.RefSampleTraitsData.put(traitsData.SampleId, traitsData);
+        mSampleDataCache.SampleTraitsData.put(traitsData.SampleId, traitsData);
 
         if(isKnownCancerType(cancerType))
         {

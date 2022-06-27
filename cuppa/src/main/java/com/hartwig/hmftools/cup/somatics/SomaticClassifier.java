@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
+import static com.hartwig.hmftools.common.sigs.SnvSigUtils.populateBucketMap;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
@@ -39,6 +40,7 @@ import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
 import static com.hartwig.hmftools.cup.somatics.GenomicPositions.convertSomaticVariantsToPosFrequencies;
+import static com.hartwig.hmftools.cup.somatics.GenomicPositions.extractPositionFrequencyCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSignaturePercentileData;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSampleCountsFromFile;
@@ -50,6 +52,7 @@ import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBE
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC_DESC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.applyMaxCssAdjustment;
 import static com.hartwig.hmftools.cup.somatics.TrinucleotideCounts.convertSomaticVariantsToSnvCounts;
+import static com.hartwig.hmftools.cup.somatics.TrinucleotideCounts.extractTrinucleotideCounts;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -98,7 +101,6 @@ public class SomaticClassifier implements CuppaClassifier
     private final SigContributions mSigContributions;
     private final PositionFrequencies mPosFrequencies;
 
-    private boolean mIsValid;
     private BufferedWriter mGenPosCohortCssWriter;
 
     private final boolean mIncludeAidApobecGenPos;
@@ -176,7 +178,6 @@ public class SomaticClassifier implements CuppaClassifier
             mWriteGenPosSims = false;
         }
 
-        mIsValid = true;
         mGenPosCohortCssWriter = null;
 
         mSigContributions = new SigContributions(mConfig, mSampleDataCache);
@@ -186,64 +187,7 @@ public class SomaticClassifier implements CuppaClassifier
 
         mPosFrequencies = new PositionFrequencies(posFreqBucketSize, GEN_POS_MAX_SAMPLE_COUNT);
 
-        if(mConfig.RefSnvCountsFile.isEmpty() && mConfig.RefSigContributionFile.isEmpty() && mConfig.RefSnvCancerPosFreqFile.isEmpty())
-            return;
-
-        loadRefSignaturePercentileData(
-                mConfig.RefSigContributionFile, mSigContributions.getRefCancerSigContribPercentiles(), mRefCancerSnvCountPercentiles);
-
-        mRefSampleSnv96Counts = loadSampleCountsFromFile(mConfig.RefSnvCountsFile, mRefSampleSnv96CountsIndex);
-
-        mRefCancerGenPosCounts = loadRefSampleCounts(mConfig.RefSnvCancerPosFreqFile, mRefGenPosCancerTypes, Lists.newArrayList());
-        mRefSampleGenPosCounts = loadSampleMatrixData(mConfig.RefSnvSamplePosFreqFile, mRefSampleGenPosCountsIndex);
-
-        if(mRefSampleSnv96Counts == null || mRefCancerGenPosCounts == null)
-        {
-            CUP_LOGGER.error("invalid somatic matrix data: SNV-96({}) GenPos({})",
-                    mRefSampleSnv96Counts != null, mRefCancerGenPosCounts != null);
-            mIsValid = false;
-        }
-
-        mIsValid &= loadSampleCounts();
-        mIsValid &= mSigContributions.loadSigContributions(mSampleSnv96Counts);
-
-        if(mIsValid)
-        {
-            // record SNV totals, prior to any noise adjustments
-            for(Map.Entry<String,Integer> entry : mRefSampleSnv96CountsIndex.entrySet())
-            {
-                String sampleId = entry.getKey();
-                final double[] sampleCounts = mRefSampleSnv96Counts.getRow(entry.getValue());
-                int snvTotal = (int) sumVector(sampleCounts);
-                mSampleSnvTotals.put(sampleId, snvTotal);
-            }
-
-            // apply any specified noise
-            if(mConfig.NoiseAdjustments.makeNoiseAdjustment(SNV_96_PAIRWISE))
-            {
-                final double[] noiseAdjustments = mConfig.NoiseAdjustments.getNoiseData(SNV_96_PAIRWISE);
-                int noiseAllocation = mConfig.NoiseAdjustments.getNoiseAllocation(SNV_96_PAIRWISE);
-
-                CUP_LOGGER.info("applying noise({}) to SNV-96 counts", noiseAllocation);
-
-                NoiseRefCache.applyNoise(mRefSampleSnv96Counts, noiseAdjustments, noiseAllocation);
-
-                if(mSampleSnv96Counts != mRefSampleSnv96Counts)
-                    NoiseRefCache.applyNoise(mSampleSnv96Counts, noiseAdjustments, noiseAllocation);
-            }
-
-            if(mRunPairwiseGenPos && mConfig.NoiseAdjustments.makeNoiseAdjustment(GENOMIC_POSITION_COHORT))
-            {
-                final double[] noiseAdjustments = mConfig.NoiseAdjustments.getNoiseData(GENOMIC_POSITION_COHORT);
-                int noiseAllocation = mConfig.NoiseAdjustments.getNoiseAllocation(GENOMIC_POSITION_COHORT);
-
-                CUP_LOGGER.debug("applying noise({}) to genomic position sample counts", noiseAllocation);
-
-                NoiseRefCache.applyNoise(mRefSampleGenPosCounts, noiseAdjustments, noiseAllocation);
-            }
-        }
-
-        if(cmd.hasOption(WRITE_GEN_POS_CSS) && !mRunPairwiseGenPos)
+        if(cmd != null && cmd.hasOption(WRITE_GEN_POS_CSS) && !mRunPairwiseGenPos)
         {
             initialiseOutputFiles();
         }
@@ -267,103 +211,191 @@ public class SomaticClassifier implements CuppaClassifier
     }
 
     public CategoryType categoryType() { return SNV; }
-    public boolean isValid() { return mIsValid; }
 
     public void close()
     {
         closeBufferedWriter(mGenPosCohortCssWriter);
     }
 
+    @Override
+    public boolean loadData()
+    {
+        // first load data
+        if(mConfig.RefSnvCountsFile.isEmpty() && mConfig.RefSigContributionFile.isEmpty() && mConfig.RefSnvCancerPosFreqFile.isEmpty())
+            return false;
+
+        if(!loadRefSignaturePercentileData(
+                mConfig.RefSigContributionFile, mSigContributions.getRefCancerSigContribPercentiles(), mRefCancerSnvCountPercentiles))
+        {
+            return false;
+        }
+
+        mRefSampleSnv96Counts = loadSampleCountsFromFile(mConfig.RefSnvCountsFile, mRefSampleSnv96CountsIndex);
+
+        mRefCancerGenPosCounts = loadRefSampleCounts(mConfig.RefSnvCancerPosFreqFile, mRefGenPosCancerTypes, Lists.newArrayList());
+        mRefSampleGenPosCounts = loadSampleMatrixData(mConfig.RefSnvSamplePosFreqFile, mRefSampleGenPosCountsIndex);
+
+        if(mRefSampleSnv96Counts == null || mRefCancerGenPosCounts == null)
+        {
+            CUP_LOGGER.error("invalid somatic matrix data: SNV-96({}) GenPos({})",
+                    mRefSampleSnv96Counts != null, mRefCancerGenPosCounts != null);
+            return false;
+        }
+
+        if(!mConfig.TestRefData)
+        {
+            if(!loadSampleCounts())
+                return false;
+        }
+        else
+        {
+            mSampleSnv96Counts = mRefSampleSnv96Counts;
+            mSampleSnv96CountsIndex.putAll(mRefSampleSnv96CountsIndex);
+            mSampleGenPosCounts = mRefSampleGenPosCounts;
+            mSampleGenPosCountsIndex.putAll(mRefSampleGenPosCountsIndex);
+        }
+
+        if(!mSigContributions.loadSigContributions(mSampleSnv96Counts))
+            return false;
+
+        // record SNV totals, prior to any noise adjustments
+        for(Map.Entry<String,Integer> entry : mRefSampleSnv96CountsIndex.entrySet())
+        {
+            String sampleId = entry.getKey();
+            final double[] sampleCounts = mRefSampleSnv96Counts.getRow(entry.getValue());
+            int snvTotal = (int) sumVector(sampleCounts);
+            mSampleSnvTotals.put(sampleId, snvTotal);
+        }
+
+        if(!mConfig.TestRefData)
+        {
+            for(Map.Entry<String, Integer> entry : mSampleSnv96CountsIndex.entrySet())
+            {
+                String sampleId = entry.getKey();
+
+                if(mSampleSnvTotals.containsKey(sampleId))
+                    continue;
+
+                final double[] sampleCounts = mSampleSnv96Counts.getRow(entry.getValue());
+                int snvTotal = (int) sumVector(sampleCounts);
+                mSampleSnvTotals.put(sampleId, snvTotal);
+            }
+        }
+
+        // apply any specified noise
+        if(mConfig.NoiseAdjustments.makeNoiseAdjustment(SNV_96_PAIRWISE))
+        {
+            final double[] noiseAdjustments = mConfig.NoiseAdjustments.getNoiseData(SNV_96_PAIRWISE);
+            int noiseAllocation = mConfig.NoiseAdjustments.getNoiseAllocation(SNV_96_PAIRWISE);
+
+            CUP_LOGGER.info("applying noise({}) to SNV-96 counts", noiseAllocation);
+
+            NoiseRefCache.applyNoise(mRefSampleSnv96Counts, noiseAdjustments, noiseAllocation);
+
+            if(!mConfig.TestRefData)
+                NoiseRefCache.applyNoise(mSampleSnv96Counts, noiseAdjustments, noiseAllocation);
+        }
+
+        if(mRunPairwiseGenPos && mConfig.NoiseAdjustments.makeNoiseAdjustment(GENOMIC_POSITION_COHORT))
+        {
+            //
+            final double[] noiseAdjustments = mConfig.NoiseAdjustments.getNoiseData(GENOMIC_POSITION_COHORT);
+            int noiseAllocation = mConfig.NoiseAdjustments.getNoiseAllocation(GENOMIC_POSITION_COHORT);
+
+            CUP_LOGGER.debug("applying noise({}) to genomic position sample counts", noiseAllocation);
+
+            NoiseRefCache.applyNoise(mRefSampleGenPosCounts, noiseAdjustments, noiseAllocation);
+        }
+
+        return true;
+    }
+
     private boolean loadSampleCounts()
     {
-        if(mSampleDataCache.isSingleSample())
+        int sampleCount = mSampleDataCache.SampleDataList.size();
+
+        final Map<String,Integer> triNucBucketNameMap = Maps.newHashMap();
+        populateBucketMap(triNucBucketNameMap);
+
+        mSampleSnv96Counts = new Matrix(sampleCount, triNucBucketNameMap.size());
+        mSampleGenPosCounts = new Matrix(sampleCount, mPosFrequencies.getBucketCount());
+
+        for(int i = 0; i < sampleCount; ++i)
         {
-            final String sampleId = mSampleDataCache.SampleIds.get(0);
+            final String sampleId = mSampleDataCache.SampleIds.get(i);
 
-            // load from VCF, database, sigs file or generic counts files
-            if(mConfig.DbAccess != null || !mConfig.PurpleDir.isEmpty())
+            List<SomaticVariant> somaticVariants = Lists.newArrayList();
+
+            // load from VCF or database
+            if(mConfig.DbAccess != null)
             {
-                List<SomaticVariant> somaticVariants = Lists.newArrayList();
-
-                if(mConfig.DbAccess != null)
-                {
-                    somaticVariants.addAll(loadSomaticVariants(sampleId, mConfig.DbAccess));
-                }
-                else
-                {
-                    String purpleDir = mConfig.getPurpleDataDir(sampleId);
-                    final String somaticVcfFile = purpleSomaticVcfFile(purpleDir, sampleId);
-                    somaticVariants.addAll(loadSomaticVariants(somaticVcfFile, Lists.newArrayList(SNP)));
-                }
-
-                mSampleSnv96Counts = convertSomaticVariantsToSnvCounts(sampleId, somaticVariants, mSampleSnv96CountsIndex);
-
-                AidApobecStatus aidApobecStatus = mIncludeAidApobecGenPos ? AidApobecStatus.ALL : AidApobecStatus.FALSE_ONLY;
-                mSampleGenPosCounts = convertSomaticVariantsToPosFrequencies(
-                        sampleId, somaticVariants, mSampleGenPosCountsIndex, mPosFrequencies, aidApobecStatus);
+                somaticVariants.addAll(loadSomaticVariants(sampleId, mConfig.DbAccess));
             }
             else
             {
-                /*
-                final String snvCountsFile = !mConfig.SampleSnvCountsFile.isEmpty() ?
-                        mConfig.SampleSnvCountsFile : mConfig.SampleDataDir + sampleId + ".sig.snv_counts.csv";
-
-                final String snvPosFreqFile = !mConfig.SampleSnvPosFreqFile.isEmpty() ?
-                        mConfig.SampleSnvPosFreqFile : mConfig.SampleDataDir + sampleId + ".sig.pos_freq_counts.csv";
-
-                mSampleSnv96Counts = loadSampleCountsFromFile(snvCountsFile, mSampleSnv96CountsIndex);
-                mSampleGenPosCounts = loadSampleMatrixData(snvPosFreqFile, mSampleGenPosCountsIndex);
-                */
+                String purpleDir = mConfig.getPurpleDataDir(sampleId);
+                final String somaticVcfFile = purpleSomaticVcfFile(purpleDir, sampleId);
+                somaticVariants.addAll(loadSomaticVariants(somaticVcfFile, Lists.newArrayList(SNP)));
             }
 
-            return mSampleSnv96Counts != null && mSampleGenPosCounts != null;
+            final double[] triNucCounts = extractTrinucleotideCounts(somaticVariants, triNucBucketNameMap);
+
+            mSampleSnv96CountsIndex.put(sampleId, i);
+            mSampleSnv96Counts.setRow(i, triNucCounts);
+
+            // mSampleSnv96Counts = convertSomaticVariantsToSnvCounts(sampleId, somaticVariants, mSampleSnv96CountsIndex);
+
+            AidApobecStatus aidApobecStatus = mIncludeAidApobecGenPos ? AidApobecStatus.ALL : AidApobecStatus.FALSE_ONLY;
+
+            mPosFrequencies.clear();
+            extractPositionFrequencyCounts(somaticVariants, mPosFrequencies, aidApobecStatus);
+
+            mSampleGenPosCounts.setRow(i, mPosFrequencies.getCounts());
+            mSampleGenPosCountsIndex.put(sampleId, i);
+
+            /* don't bother using these sig counts files, just regenerate on the fly
+            final String snvCountsFile = !mConfig.SampleSnvCountsFile.isEmpty() ?
+                    mConfig.SampleSnvCountsFile : mConfig.SampleDataDir + sampleId + ".sig.snv_counts.csv";
+
+            final String snvPosFreqFile = !mConfig.SampleSnvPosFreqFile.isEmpty() ?
+                    mConfig.SampleSnvPosFreqFile : mConfig.SampleDataDir + sampleId + ".sig.pos_freq_counts.csv";
+
+            mSampleSnv96Counts = loadSampleCountsFromFile(snvCountsFile, mSampleSnv96CountsIndex);
+            mSampleGenPosCounts = loadSampleMatrixData(snvPosFreqFile, mSampleGenPosCountsIndex);
+            */
         }
+
+        // no support for cohort matrix files for non-ref cohorts
 
         /*
         if(!mConfig.SampleSnvCountsFile.isEmpty() && !mConfig.SampleSnvPosFreqFile.isEmpty())
         {
-            if(mConfig.SampleSnvCountsFile.equals(mConfig.RefSnvCountsFile))
-            {
-                mSampleSnv96Counts = mRefSampleSnv96Counts;
-                mSampleSnv96CountsIndex.putAll(mRefSampleSnv96CountsIndex);
-            }
-            else
-            {
-                mSampleSnv96Counts = loadSampleCountsFromFile(mConfig.SampleSnvCountsFile, mSampleSnv96CountsIndex);
+            mSampleSnv96Counts = loadSampleCountsFromFile(mConfig.SampleSnvCountsFile, mSampleSnv96CountsIndex);
 
-                if(mSampleSnv96Counts == null)
-                {
-                    CUP_LOGGER.error("missing file: {}", mConfig.SampleSnvCountsFile);
-                }
+            if(mSampleSnv96Counts == null)
+            {
+                CUP_LOGGER.error("missing file: {}", mConfig.SampleSnvCountsFile);
             }
 
-            if(mConfig.SampleSnvPosFreqFile.equals(mConfig.RefSnvSamplePosFreqFile))
-            {
-                mSampleGenPosCounts = mRefSampleGenPosCounts;
-                mSampleGenPosCountsIndex.putAll(mRefSampleGenPosCountsIndex);
-            }
-            else
-            {
-                mSampleGenPosCounts = loadSampleMatrixData(mConfig.SampleSnvPosFreqFile, mSampleGenPosCountsIndex);
+            mSampleGenPosCounts = loadSampleMatrixData(mConfig.SampleSnvPosFreqFile, mSampleGenPosCountsIndex);
 
-                if(mSampleSnv96Counts == null)
-                {
-                    CUP_LOGGER.error("missing file: {}", mConfig.SampleSnvPosFreqFile);
-                }
+            if(mSampleSnv96Counts == null)
+            {
+                CUP_LOGGER.error("missing file: {}", mConfig.SampleSnvPosFreqFile);
             }
 
             return mSampleSnv96Counts != null && mSampleGenPosCounts != null;
         }
         */
 
-        CUP_LOGGER.error("no sample SNV count source specified");
-        return false;
+        return true;
     }
 
-    public void processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
+    @Override
+    public boolean processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
     {
-        if(!mIsValid || mRefSampleSnv96Counts == null)
-            return;
+        if(mRefSampleSnv96Counts == null)
+            return false;
 
         int snvTotal = mSampleSnvTotals.get(sample.Id);
 
@@ -403,6 +435,8 @@ public class SomaticClassifier implements CuppaClassifier
                 sample, cancerSampleCount, cancerTypeCount, mRefCancerSnvCountPercentiles, snvTotal, false);
 
         results.add(new SampleResult(sample.Id, SNV, LIKELIHOOD, DATA_TYPE_SNV_COUNT + "_HIGH", String.valueOf(snvTotal), cancerPrevsHigh));
+
+        return true;
     }
 
     private void addSnv96CssResults(

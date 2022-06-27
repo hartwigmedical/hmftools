@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cup;
 
-import static com.hartwig.hmftools.cup.CupAnalyser.allClassifiersValid;
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcCombinedClassifierScoreResult;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcCombinedFeatureResult;
@@ -50,7 +51,7 @@ public class SampleTask implements Callable
     }
 
     @Override
-    public Long call()
+    public Long call() throws Exception
     {
         run();
         return (long)0;
@@ -58,17 +59,19 @@ public class SampleTask implements Callable
 
     public List<SampleData> getSamples() { return mSamples; }
 
-    public void run()
+    public void run() throws Exception
     {
         int sampleCount = 0;
         for(SampleData sample : mSamples)
         {
             CUP_LOGGER.debug("sample({}) running CUP analysis", sample.Id);
 
-            processSample(sample);
-
-            if(!allClassifiersValid(mClassifiers))
-                break;
+            if(!processSample(sample))
+            {
+                // CUP_LOGGER.info("{}: exiting on error", mTaskId);
+                // return;
+                throw new Exception(format("task(%d) exiting on error", mTaskId));
+            }
 
             ++sampleCount;
 
@@ -81,14 +84,15 @@ public class SampleTask implements Callable
         CUP_LOGGER.info("{}: task complete", mTaskId);
     }
 
-    public void processSample(final SampleData sample)
+    public boolean processSample(final SampleData sample)
     {
         final List<SampleResult> allResults = Lists.newArrayList();
         final List<SampleSimilarity> similarities = Lists.newArrayList();
 
         for(CuppaClassifier classifier : mClassifiers)
         {
-            classifier.processSample(sample, allResults, similarities);
+            if(!classifier.processSample(sample, allResults, similarities))
+                return false;
         }
 
         // combine all features into a single classifier
@@ -164,6 +168,8 @@ public class SampleTask implements Callable
 
         mResultsWriter.writeSampleData(sample, allResults);
         mResultsWriter.writeSampleSimilarities(sample, similarities);
+
+        return true;
     }
 
     private void collapseCancerSubtypes(final List<SampleResult> results)

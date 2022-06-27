@@ -112,14 +112,19 @@ public class CupAnalyser
         if(mSampleDataCache.SampleIds.isEmpty())
         {
             CUP_LOGGER.error("no samples specified");
-            return;
+            System.exit(1);
         }
 
-        if(!allClassifiersValid(mClassifiers))
+        for(CuppaClassifier classifier : mClassifiers)
         {
-            System.exit(1);
-            return;
+            if(!classifier.loadData())
+            {
+                CUP_LOGGER.error("classifier({}) failed data loading", classifier.categoryType());
+                System.exit(1);
+            }
         }
+
+        boolean isValid = false;
 
         if(mSampleDataCache.SpecificSample != null)
         {
@@ -127,7 +132,9 @@ public class CupAnalyser
 
             CUP_LOGGER.info("sample({}) running CUP analysis", specificSample.Id);
             SampleTask sampleTask = new SampleTask(0, mConfig, mSampleDataCache, mClassifiers, mResultsWriter);
-            sampleTask.processSample(specificSample);
+
+            if(!sampleTask.processSample(specificSample))
+                System.exit(1);
         }
         else
         {
@@ -150,35 +157,15 @@ public class CupAnalyser
 
             List<Callable> callableTasks = sampleTasks.stream().collect(Collectors.toList());
 
-            TaskExecutor.executeTasks(callableTasks, mConfig.Threads);
+            if(!TaskExecutor.executeTasks(callableTasks, mConfig.Threads))
+                System.exit(1);
         }
 
         mResultsWriter.close();
 
         mClassifiers.forEach(x -> x.close());
 
-        if(!allClassifiersValid(mClassifiers))
-        {
-            CUP_LOGGER.info("CUP exiting with errors");
-            System.exit(1);
-        }
-
         CUP_LOGGER.info("CUP analysis complete");
-    }
-
-    public synchronized static boolean allClassifiersValid(final List<CuppaClassifier> classifiers)
-    {
-        boolean allInvalid = true;
-        for(CuppaClassifier classifier : classifiers)
-        {
-            if(!classifier.isValid())
-            {
-                allInvalid = false;
-                CUP_LOGGER.error("invalid classifier({})", classifier.categoryType());
-            }
-        }
-
-        return allInvalid;
     }
 
     public static void main(@NotNull final String[] args) throws ParseException

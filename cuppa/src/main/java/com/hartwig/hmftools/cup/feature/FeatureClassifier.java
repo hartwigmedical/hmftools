@@ -53,12 +53,14 @@ public class FeatureClassifier implements CuppaClassifier
     private final Map<String,List<SampleFeatureData>> mSampleFeatures; // keyed by sampleId
     private final Map<String,List<FeaturePrevData>> mCancerFeaturePrevalence; // keyed by cancer type
     private final SampleDataCache mSampleDataCache;
-    private boolean mIsValid;
 
     private final Map<String,FeaturePrevCounts> mFeaturePrevalenceTotals; // keyed by feature type-name
     private final Map<String,Double> mCancerFeatureAvg; // keyed by cancer type
 
     private final double mNonDriverZeroPrevAllocation;
+    private final boolean mSplitAmps;
+    private final boolean mRestrictAmpGenes;
+    private final double mMinAmpCnMultiple;
 
     public static final String NON_DRIVER_ZERO_PREV = "non_driver_zero_prev";
 
@@ -70,36 +72,13 @@ public class FeatureClassifier implements CuppaClassifier
         mFeaturePrevalenceTotals = Maps.newHashMap();
         mCancerFeatureAvg = Maps.newHashMap();
         mSampleDataCache = sampleDataCache;
-        mIsValid = true;
 
         mNonDriverZeroPrevAllocation = cmd != null && cmd.hasOption(NON_DRIVER_ZERO_PREV) ?
                 Double.parseDouble(cmd.getOptionValue(NON_DRIVER_ZERO_PREV)) : NON_DRIVER_ZERO_PREVALENCE_ALLOCATION;
 
-        if(config.RefFeaturePrevFile.isEmpty() && config.RefDriverAvgFile.isEmpty())
-            return;
-
-        mIsValid &= loadRefPrevalenceData(config.RefFeaturePrevFile, mFeaturePrevalenceTotals, mCancerFeaturePrevalence);
-        mIsValid &= loadRefCancerFeatureAvg(config.RefDriverAvgFile, mCancerFeatureAvg);
-        formFeaturePrevalenceTotals();
-
-        CUP_LOGGER.info("loaded ref data for {} features from file({})",
-                mFeaturePrevalenceTotals.size(), config.RefFeaturePrevFile);
-
-        mIsValid &= loadSampleFeatures();
-
-        boolean splitAmps = cmd == null || !cmd.hasOption(COMBINE_DRIVER_AMP);
-        double minAmpCnMultiple = cmd != null ? Double.parseDouble(cmd.getOptionValue(MIN_AMP_MULTIPLE, "0")) : 0;
-
-        if(splitAmps)
-        {
-            boolean restrictAmpGenes = cmd == null || cmd.hasOption(RESTRICT_DRIVER_AMP_GENES);
-            convertAndFilterDriverAmps(mSampleFeatures, restrictAmpGenes);
-
-            if(minAmpCnMultiple > 0)
-            {
-                filterDriverAmps(mSampleFeatures, mSampleDataCache.RefSampleTraitsData, minAmpCnMultiple);
-            }
-        }
+        mSplitAmps = cmd == null || !cmd.hasOption(COMBINE_DRIVER_AMP);
+        mMinAmpCnMultiple = cmd != null ? Double.parseDouble(cmd.getOptionValue(MIN_AMP_MULTIPLE, "0")) : 0;
+        mRestrictAmpGenes = cmd == null || cmd.hasOption(RESTRICT_DRIVER_AMP_GENES);
     }
 
     public static void addCmdLineArgs(Options options)
@@ -109,22 +88,56 @@ public class FeatureClassifier implements CuppaClassifier
     }
 
     public CategoryType categoryType() { return FEATURE; }
-    public boolean isValid() { return mIsValid; }
     public void close() {}
 
-    public void processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
+    @Override
+    public boolean loadData()
     {
-        if(!mIsValid || mFeaturePrevalenceTotals.isEmpty())
-            return;
+        if(mConfig.RefFeaturePrevFile.isEmpty() && mConfig.RefDriverAvgFile.isEmpty())
+            return false;
+
+        if(!loadRefPrevalenceData(mConfig.RefFeaturePrevFile, mFeaturePrevalenceTotals, mCancerFeaturePrevalence))
+            return false;
+
+        if(!loadRefCancerFeatureAvg(mConfig.RefDriverAvgFile, mCancerFeatureAvg))
+            return false;
+
+        formFeaturePrevalenceTotals();
+
+        CUP_LOGGER.info("loaded ref data for {} features from file({})",
+                mFeaturePrevalenceTotals.size(), mConfig.RefFeaturePrevFile);
+
+        if(!loadSampleFeatures())
+            return false;
+
+        if(mSplitAmps)
+        {
+            convertAndFilterDriverAmps(mSampleFeatures, mRestrictAmpGenes);
+
+            if(mMinAmpCnMultiple > 0)
+            {
+                filterDriverAmps(mSampleFeatures, mSampleDataCache.SampleTraitsData, mMinAmpCnMultiple);
+            }
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
+    {
+        if(mFeaturePrevalenceTotals.isEmpty())
+            return false;
 
         final List<SampleFeatureData> sampleFeatures = mSampleFeatures.get(sample.Id);
 
-        if(sampleFeatures == null || sampleFeatures.isEmpty())
-            return;
+        if(sampleFeatures == null || sampleFeatures.isEmpty()) // some samples legitimately have no features
+            return true;
 
         addDriverPrevalence(sample, sampleFeatures, results);
 
         calcCancerTypeProbability(sample, sampleFeatures, results);
+        return true;
     }
 
     private void addDriverPrevalence(final SampleData sample, final List<SampleFeatureData> sampleFeatures, final List<SampleResult> results)

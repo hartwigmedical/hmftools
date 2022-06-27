@@ -45,8 +45,6 @@ public class SvClassifier implements CuppaClassifier
 
     private final Map<SvDataType,Map<String,double[]>> mRefSvTypePercentiles;
 
-    private boolean mIsValid;
-
     public SvClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache)
     {
         mConfig = config;
@@ -54,17 +52,6 @@ public class SvClassifier implements CuppaClassifier
 
         mSampleSvData = Maps.newHashMap();
         mRefSvTypePercentiles = Maps.newHashMap();
-
-        mIsValid = true;
-
-        if(mConfig.RefSvPercFile.isEmpty())
-            return;
-
-        mIsValid &= loadRefPercentileData(mConfig.RefSvPercFile, mRefSvTypePercentiles);
-
-        CUP_LOGGER.info("loaded SV ref data from file({})", config.RefSvPercFile);
-
-        mIsValid &= loadCohortSvData();
     }
 
     private static boolean isReportableType(final SvDataType type)
@@ -73,42 +60,79 @@ public class SvClassifier implements CuppaClassifier
     }
 
     public CategoryType categoryType() { return SV; }
-    public boolean isValid() { return mIsValid; }
     public void close() {}
 
-    public void processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
+    @Override
+    public boolean loadData()
     {
-        if(!mIsValid || mRefSvTypePercentiles.isEmpty())
-            return;
+        if(mConfig.RefSvPercFile.isEmpty())
+            return false;
 
-        boolean loadDbData = false;
+        if(!loadRefPercentileData(mConfig.RefSvPercFile, mRefSvTypePercentiles))
+            return false;
+
+        CUP_LOGGER.info("loaded SV ref data from file({})", mConfig.RefSvPercFile);
+
+        return loadSvData();
+    }
+
+    private boolean loadSvData()
+    {
+        if(mConfig.TestRefData)
+        {
+            if(!mConfig.RefSampleSvFile.isEmpty())
+            {
+                CUP_LOGGER.info("loading ref cohort SV data from file({})", mConfig.RefSampleSvFile);
+
+                if(!loadSvDataFromCohortFile(mConfig.RefSampleSvFile, mSampleSvData))
+                    return false;
+
+                CUP_LOGGER.info("loaded SV data for {} samples", mSampleSvData.size());
+                return true;
+            }
+            else
+            {
+                CUP_LOGGER.info("missing ref cohort SV data file");
+                return false;
+            }
+        }
 
         if(mConfig.DbAccess != null)
         {
-            if(!loadSvDataFromDatabase(mConfig.DbAccess, Lists.newArrayList(sample.Id), mSampleSvData))
-            {
-                mIsValid = false;
-                return;
-            }
+            // CUP_LOGGER.info("loading sample SV data from database"); // log if multiple only?
 
-            loadDbData = true;
+            return loadSvDataFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleSvData);
         }
-        else if(mSampleSvData.isEmpty())
+
+        // CUP_LOGGER.info("loading sample SV data from pipeline files");
+
+        for(SampleData sample : mSampleDataCache.SampleDataList)
         {
-            if(!loadSampleSvData(sample.Id))
-            {
-                mIsValid = false;
-                return;
-            }
+            final String purpleDataDir = mConfig.getPurpleDataDir(sample.Id);
+            final String svVcfFile = purpleSvFile(purpleDataDir, sample.Id);
+
+            final String linxDataDir = mConfig.getLinxDataDir(sample.Id);
+            final String clusterFile = LinxCluster.generateFilename(linxDataDir, sample.Id);
+
+            if(!loadSvDataFromFile(sample.Id, svVcfFile, clusterFile, mSampleSvData))
+                return false;
         }
+
+        return true;
+    }
+
+    @Override
+    public boolean processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
+    {
+        if(mRefSvTypePercentiles.isEmpty())
+            return false;
 
         final SvData svData = mSampleSvData.get(sample.Id);
 
         if(svData == null)
         {
             CUP_LOGGER.error("sample({}) sv data not loaded", sample.Id);
-            mIsValid = false;
-            return;
+            return false;
         }
 
         for(Map.Entry<SvDataType, Map<String, double[]>> entry : mRefSvTypePercentiles.entrySet())
@@ -147,8 +171,7 @@ public class SvClassifier implements CuppaClassifier
         results.add(calcPrevalenceResult(sample, cancerTypeCount, cancerSampleCount, svData, SIMPLE_DUP_32B_200B, false));
         results.add(calcPrevalenceResult(sample, cancerTypeCount, cancerSampleCount, svData, MAX_COMPLEX_SIZE, false));
 
-        if(loadDbData)
-            mSampleSvData.clear();
+        return true;
     }
 
     private SampleResult calcPrevalenceResult(
@@ -164,75 +187,4 @@ public class SvClassifier implements CuppaClassifier
         return new SampleResult(sample.Id, SV, LIKELIHOOD, dataType, String.valueOf(svValue), cancerPrevs);
     }
 
-    private boolean loadSvData()
-    {
-        if(mConfig.TestRefData)
-        {
-            if(!mConfig.RefSampleSvFile.isEmpty())
-            {
-                CUP_LOGGER.info("loading ref cohort SV data from file({})", mConfig.RefSampleSvFile);
-
-                if(!loadSvDataFromCohortFile(mConfig.RefSampleSvFile, mSampleSvData))
-                    return false;
-
-                CUP_LOGGER.info("loaded SV data for {} samples", mSampleSvData.size());
-                return true;
-            }
-            else
-            {
-                CUP_LOGGER.info("missing ref cohort SV data file");
-                return false;
-            }
-        }
-
-        if(mConfig.DbAccess != null)
-        {
-            CUP_LOGGER.info("loading sample SV data from database");
-
-            return loadSvDataFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleSvData);
-        }
-
-        // CUP_LOGGER.info("loading sample SV data from pipeline files");
-
-        for(SampleData sample : mSampleDataCache.SampleDataList)
-        {
-            final String purpleDataDir = mConfig.getPurpleDataDir(sample.Id);
-            final String svVcfFile = purpleSvFile(purpleDataDir, sample.Id);
-
-            final String linxDataDir = mConfig.getLinxDataDir(sample.Id);
-            final String clusterFile = LinxCluster.generateFilename(linxDataDir, sample.Id);
-
-            if(!loadSvDataFromFile(sample.Id, svVcfFile, clusterFile, mSampleSvData))
-                return false;
-        }
-
-        return true;
-    }
-
-    private boolean loadCohortSvData()
-    {
-        if(!mConfig.RefSampleSvFile.isEmpty() && !mConfig.RefSampleSvFile.contains(".vcf"))
-        {
-            CUP_LOGGER.info("loading ref cohort SV data from file({})", mConfig.RefSampleSvFile);
-
-            if(!loadSvDataFromCohortFile(mConfig.RefSampleSvFile, mSampleSvData))
-                return false;
-
-            CUP_LOGGER.info("loaded SV data for {} samples", mSampleSvData.size());
-        }
-
-        return true;
-    }
-
-    private boolean loadSampleSvData(final String sampleId)
-    {
-        if(mConfig.SampleDataDir.isEmpty() || mConfig.RefSampleSvFile.isEmpty() || !mConfig.RefSampleSvFile.contains(".vcf"))
-            return false;
-
-        final String svVcfFile = formSamplePath(mConfig.RefSampleSvFile, sampleId);
-        final String sampleDataDir = formSamplePath(mConfig.SampleDataDir, sampleId);
-
-        final String clusterFile = LinxCluster.generateFilename(sampleDataDir, sampleId);
-        return loadSvDataFromFile(sampleId, svVcfFile, clusterFile, mSampleSvData);
-    }
 }

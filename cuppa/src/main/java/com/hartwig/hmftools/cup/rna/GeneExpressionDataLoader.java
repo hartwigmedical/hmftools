@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.cup.rna;
 
-import static java.lang.Math.log;
-
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
@@ -12,10 +10,8 @@ import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -99,7 +95,6 @@ public class GeneExpressionDataLoader
         return null;
     }
 
-
     public static boolean loadGeneIdIndices(final String filename, final Map<String,Integer> geneIdIndices)
     {
         try
@@ -170,61 +165,6 @@ public class GeneExpressionDataLoader
         }
 
         return sampleMatrix;
-    }
-
-    public static Matrix loadSampleGeneExpressionFile(final String filename, final Map<String,Integer> geneIdIndexMap)
-    {
-        if(!Files.exists(Paths.get(filename)))
-            return null;
-
-        try
-        {
-            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
-            String header = fileData.get(0);
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, ",");
-            fileData.remove(0);
-
-            Matrix matrix = new Matrix(1, geneIdIndexMap.size());
-
-            // GeneId,GeneName, etc AdjTPM
-
-            int geneIdCol = fieldsIndexMap.get("GeneId");
-            int adjTPM = fieldsIndexMap.get("AdjTPM");
-
-            int unknownGeneCount = 0;
-
-            for(String line : fileData)
-            {
-                final String[] items = line.split(DATA_DELIM, -1);
-
-                String geneId = items[geneIdCol];
-                double adjTpm = Double.parseDouble(items[adjTPM]);
-                Integer geneIdIndex = geneIdIndexMap.get(geneId);
-
-                if(geneIdIndex == null)
-                {
-                    CUP_LOGGER.trace("unknown geneId({}) in sample file({})", geneId, filename);
-                    ++unknownGeneCount;
-                    continue;
-                }
-
-                double logTpm = log(adjTpm + 1);
-
-                matrix.set(0, geneIdIndex, logTpm);
-            }
-
-            if(unknownGeneCount > 0)
-            {
-                CUP_LOGGER.warn("sample file({}) ignored {} unknown genes", filename, unknownGeneCount);
-            }
-
-            return matrix;
-        }
-        catch (IOException e)
-        {
-            CUP_LOGGER.error("failed to read RNA sample gene data file({}): {}", filename, e.toString());
-            return null;
-        }
     }
 
 }

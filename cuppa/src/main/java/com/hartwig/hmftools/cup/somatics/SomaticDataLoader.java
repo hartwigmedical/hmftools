@@ -86,7 +86,7 @@ public class SomaticDataLoader
             final String filename, final Map<String,Map<String,double[]>> refCancerSigContribs, final Map<String,double[]> refCancerSnvCounts)
     {
         if(filename.isEmpty())
-            return true;
+            return false;
 
         try
         {

@@ -1,12 +1,15 @@
 package com.hartwig.hmftools.cup.rna;
 
+import static java.lang.Math.log;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
 import static com.hartwig.hmftools.cup.common.ClassifierType.EXPRESSION_COHORT;
 import static com.hartwig.hmftools.cup.common.ClassifierType.EXPRESSION_PAIRWISE;
@@ -22,9 +25,11 @@ import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilari
 import static com.hartwig.hmftools.cup.rna.GeneExpressionDataLoader.GENE_EXP_IGNORE_FIELDS;
 import static com.hartwig.hmftools.cup.rna.GeneExpressionDataLoader.loadGeneExpressionMatrix;
 import static com.hartwig.hmftools.cup.rna.GeneExpressionDataLoader.loadGeneIdIndices;
-import static com.hartwig.hmftools.cup.rna.GeneExpressionDataLoader.loadSampleGeneExpressionFile;
-import static com.hartwig.hmftools.cup.rna.GeneExpressionDataLoader.loadSampleGeneExpressionMatrix;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -72,8 +77,6 @@ public class GeneExpressionClassifier implements CuppaClassifier
     private static final String CSS_EXPONENT = "gene_exp_css_exp";
     private static final String MATCH_READ_LENGTH = "gene_exp_match_read_length";
 
-    private boolean mIsValid;
-
     public GeneExpressionClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
         mConfig = config;
@@ -98,14 +101,35 @@ public class GeneExpressionClassifier implements CuppaClassifier
         mCssExponent = Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT, String.valueOf(GENE_EXP_DIFF_EXPONENT)));
         mMatchReadLength = cmd.hasOption(MATCH_READ_LENGTH);
 
-        mIsValid = true;
-
         if(mRunPairwiseCss && mConfig.RefGeneExpSampleFile.isEmpty())
             return;
 
         if(mRunCancerCss && mConfig.RefGeneExpCancerFile.isEmpty())
             return;
 
+    }
+
+    public static void addCmdLineArgs(Options options)
+    {
+        options.addOption(RNA_METHODS, true, "Types of RNA gene expression methods");
+        options.addOption(CSS_EXPONENT, true, "Gene expression CSS exponent");
+        options.addOption(MATCH_READ_LENGTH, false, "Gene expression pairwise only amongst matching read-length samples");
+    }
+
+    public CategoryType categoryType() { return GENE_EXP; }
+    public void close() {}
+
+    private String formCancerType(final SampleData sample)
+    {
+        if(mMatchReadLength)
+            return format("%s_%d", sample.cancerType(), sample.rnaReadLength());
+        else
+            return sample.cancerType();
+    }
+
+    @Override
+    public boolean loadData()
+    {
         final List<String> sampleNames = Lists.newArrayList();
         final List<String> geneNames = Lists.newArrayList();
         final List<String> geneIds = Lists.newArrayList();
@@ -113,15 +137,12 @@ public class GeneExpressionClassifier implements CuppaClassifier
         mRefSampleGeneExpression = loadGeneExpressionMatrix(
                 mConfig.RefGeneExpSampleFile, mRefSampleGeneExpIndexMap, sampleNames, geneIds, geneNames);
 
+        if(mRefSampleGeneExpression == null)
+            return false;
+
         for(int i = 0; i < geneIds.size(); ++i)
         {
             mGeneIdIndexMap.put(geneIds.get(i), i);
-        }
-
-        if(mRefSampleGeneExpression ==  null)
-        {
-            mIsValid = false;
-            return;
         }
 
         if(mRunCancerCss)
@@ -133,10 +154,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
             mRefCancerTypeGeneExpression = loadMatrixDataFile(mConfig.RefGeneExpCancerFile, mRefCancerTypes, GENE_EXP_IGNORE_FIELDS, true);
 
             if(mRefCancerTypeGeneExpression ==  null)
-            {
-                mIsValid = false;
-                return;
-            }
+                return false;
         }
 
         buildCancerSampleCounts();
@@ -149,20 +167,17 @@ public class GeneExpressionClassifier implements CuppaClassifier
         }
         else
         {
-            for(SampleData sample : mSampleDataCache.SampleDataList)
-            {
-                final String isofoxDir = mConfig.getIsofoxDataDir(sample.Id);
-                final String filename = GeneExpressionFile.generateFilename(isofoxDir, sample.Id);
-                CUP_LOGGER.debug("loading sample gene-expression data file({})", filename);
+            int sampleCount = mSampleDataCache.SampleDataList.size();
+            mSampleGeneExpression = new Matrix(sampleCount, mRefCancerTypeGeneExpression.Cols);
 
-                mSampleIndexMap.put(sample.Id, 0);
-                mSampleGeneExpression = loadSampleGeneExpressionFile(filename, mGeneIdIndexMap);
-            }
-
-            if(mSampleGeneExpression == null)
+            for(int i = 0; i < sampleCount; ++i)
             {
-                mIsValid = false;
-                return;
+                SampleData sample = mSampleDataCache.SampleDataList.get(i);
+
+                if(!loadSampleGeneExpression(sample.Id, mGeneIdIndexMap, i))
+                    return false;
+
+                mSampleIndexMap.put(sample.Id, i);
             }
         }
 
@@ -179,25 +194,8 @@ public class GeneExpressionClassifier implements CuppaClassifier
             if(mSampleGeneExpression != mRefSampleGeneExpression)
                 NoiseRefCache.applyNoise(mSampleGeneExpression, noiseAdjustments, noiseAllocation);
         }
-    }
 
-    public static void addCmdLineArgs(Options options)
-    {
-        options.addOption(RNA_METHODS, true, "Types of RNA gene expression methods");
-        options.addOption(CSS_EXPONENT, true, "Gene expression CSS exponent");
-        options.addOption(MATCH_READ_LENGTH, false, "Gene expression pairwise only amongst matching read-length samples");
-    }
-
-    public CategoryType categoryType() { return GENE_EXP; }
-    public boolean isValid() { return mIsValid; }
-    public void close() {}
-
-    private String formCancerType(final SampleData sample)
-    {
-        if(mMatchReadLength)
-            return format("%s_%d", sample.cancerType(), sample.rnaReadLength());
-        else
-            return sample.cancerType();
+        return true;
     }
 
     private void buildCancerSampleCounts()
@@ -225,20 +223,22 @@ public class GeneExpressionClassifier implements CuppaClassifier
         }
     }
 
-    public void processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
+
+    @Override
+    public boolean processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
     {
         if(mSampleIndexMap.isEmpty())
-            return;
+            return false;
 
         if(mSampleDataCache.isMultiSample() && !sample.hasRna())
-            return;
+            return true;
 
         Integer sampleCountsIndex = mSampleIndexMap.get(sample.Id);
 
         if(sampleCountsIndex == null)
         {
             CUP_LOGGER.warn("sample({}) gene expression matrix data not found", sample.Id);
-            return;
+            return false;
         }
 
         final double[] sampleGeneTPMs = mSampleGeneExpression.getRow(sampleCountsIndex);
@@ -248,6 +248,8 @@ public class GeneExpressionClassifier implements CuppaClassifier
 
         if(mRunPairwiseCss)
             addSampleCssResults(sample, sampleGeneTPMs, results, similarities);
+
+        return true;
     }
 
     private void addSampleCssResults(
@@ -360,4 +362,64 @@ public class GeneExpressionClassifier implements CuppaClassifier
         results.add(new SampleResult(
                 sample.Id, GENE_EXP, CLASSIFIER, EXPRESSION_COHORT.toString(), format("%.4g", totalCss), cancerCssTotals));
     }
+
+    private boolean loadSampleGeneExpression(final String sampleId, final Map<String,Integer> geneIdIndexMap, final int sampleIndex)
+    {
+        final String isofoxDir = mConfig.getIsofoxDataDir(sampleId);
+        final String filename = GeneExpressionFile.generateFilename(isofoxDir, sampleId);
+
+        CUP_LOGGER.debug("loading sample gene-expression data file({})", filename);
+
+        if(!Files.exists(Paths.get(filename)))
+            return false;
+
+        try
+        {
+            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
+            String header = fileData.get(0);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, ",");
+            fileData.remove(0);
+
+            // GeneId,GeneName, etc AdjTPM
+            double[][] matrixData = mSampleGeneExpression.getData();
+
+            int geneIdCol = fieldsIndexMap.get("GeneId");
+            int adjTPM = fieldsIndexMap.get("AdjTPM");
+
+            int unknownGeneCount = 0;
+
+            for(String line : fileData)
+            {
+                final String[] items = line.split(DATA_DELIM, -1);
+
+                String geneId = items[geneIdCol];
+                double adjTpm = Double.parseDouble(items[adjTPM]);
+                Integer geneIdIndex = geneIdIndexMap.get(geneId);
+
+                if(geneIdIndex == null)
+                {
+                    CUP_LOGGER.trace("unknown geneId({}) in sample file({})", geneId, filename);
+                    ++unknownGeneCount;
+                    continue;
+                }
+
+                double logTpm = log(adjTpm + 1);
+
+                matrixData[sampleIndex][geneIdIndex] = logTpm;
+            }
+
+            if(unknownGeneCount > 0)
+            {
+                CUP_LOGGER.warn("sample file({}) ignored {} unknown genes", filename, unknownGeneCount);
+            }
+
+            return true;
+        }
+        catch (IOException e)
+        {
+            CUP_LOGGER.error("failed to read RNA sample gene data file({}): {}", filename, e.toString());
+            return false;
+        }
+    }
+
 }

@@ -249,7 +249,47 @@ public class RefAltSpliceJunctions implements RefClassifier
         return sampleCounts;
     }
 
+    private void writeCancerAltSjMatrixData(
+            final Matrix fragCountMatrix, final List<String> cancerTypes, final List<String> asjLocations)
+    {
+        try
+        {
+            final String filename = mConfig.OutputDir + REF_FILE_ALT_SJ_CANCER;
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            writer.write(String.format("%s,%s,%s,%s", FLD_GENE_ID, FLD_CHROMOSOME, FLD_POS_START, FLD_POS_END));
+
+            for(final String header : cancerTypes)
+            {
+                writer.write(String.format(",%s", header));
+            }
+
+            writer.newLine();
+
+            final double[][] matrixData = fragCountMatrix.getData();
+
+            for(int b = 0; b < fragCountMatrix.Cols; ++b) // columns are the alt-SJ locations
+            {
+                writer.write(String.format("%s", asjLocations.get(b)));
+
+                for(int i = 0; i < fragCountMatrix.Rows; ++i)
+                {
+                    writer.write(String.format(",%.1f", matrixData[i][b]));
+                }
+
+                writer.newLine();
+            }
+
+            closeBufferedWriter(writer);
+        }
+        catch(IOException e)
+        {
+            CUP_LOGGER.error("failed to write ref RNA alt-SJ data: {}", e.toString());
+        }
+    }
+
     // may be used again if the number of sites shrinks considerably
+    /*
     public static Matrix loadSampleAltSjMatrixData(
             final String filename, final Map<String,Integer> sampleIndexMap, final List<String> asjLocations)
     {
@@ -322,43 +362,6 @@ public class RefAltSpliceJunctions implements RefClassifier
 
         return sampleMatrix;
     }
+    */
 
-    private void writeCancerAltSjMatrixData(
-            final Matrix fragCountMatrix, final List<String> cancerTypes, final List<String> asjLocations)
-    {
-        try
-        {
-            final String filename = mConfig.OutputDir + REF_FILE_ALT_SJ_CANCER;
-            BufferedWriter writer = createBufferedWriter(filename, false);
-
-            writer.write(String.format("%s,%s,%s,%s", FLD_GENE_ID, FLD_CHROMOSOME, FLD_POS_START, FLD_POS_END));
-
-            for(final String header : cancerTypes)
-            {
-                writer.write(String.format(",%s", header));
-            }
-
-            writer.newLine();
-
-            final double[][] matrixData = fragCountMatrix.getData();
-
-            for(int b = 0; b < fragCountMatrix.Cols; ++b) // columns are the alt-SJ locations
-            {
-                writer.write(String.format("%s", asjLocations.get(b)));
-
-                for(int i = 0; i < fragCountMatrix.Rows; ++i)
-                {
-                    writer.write(String.format(",%.1f", matrixData[i][b]));
-                }
-
-                writer.newLine();
-            }
-
-            closeBufferedWriter(writer);
-        }
-        catch(IOException e)
-        {
-            CUP_LOGGER.error("failed to write ref RNA alt-SJ data: {}", e.toString());
-        }
-    }
 }

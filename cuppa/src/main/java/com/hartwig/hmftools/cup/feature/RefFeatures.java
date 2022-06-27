@@ -102,7 +102,7 @@ public class RefFeatures implements RefClassifier
 
             if(mMinAmpCnMultiple > 0)
             {
-                filterDriverAmps(sampleFeaturesMap, mSampleDataCache.RefSampleTraitsData, mMinAmpCnMultiple);
+                filterDriverAmps(sampleFeaturesMap, mSampleDataCache.SampleTraitsData, mMinAmpCnMultiple);
             }
         }
 

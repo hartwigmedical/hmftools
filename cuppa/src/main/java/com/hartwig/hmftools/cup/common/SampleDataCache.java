@@ -29,7 +29,7 @@ public class SampleDataCache
     public final Map<String,String> RefSampleCancerTypeMap; // map of ref sample to cancer type
     public final List<SampleData> RefSampleDataList; // includes type 'Other' if in ref data
     public final Map<String,Integer> RefSampleRnaReadLength;
-    public final Map<String,SampleTraitsData> RefSampleTraitsData;
+    public final Map<String,SampleTraitsData> SampleTraitsData;
 
     public final Map<String,String> RefCancerMappings; // subtypes to parent types
 
@@ -44,7 +44,7 @@ public class SampleDataCache
         RefSampleCancerTypeMap = Maps.newHashMap();
         RefSampleDataList = Lists.newArrayList();
         RefSampleRnaReadLength = Maps.newHashMap();
-        RefSampleTraitsData = Maps.newHashMap();
+        SampleTraitsData = Maps.newHashMap();
         RefCancerMappings = Maps.newHashMap();
 
         SpecificSample = null;

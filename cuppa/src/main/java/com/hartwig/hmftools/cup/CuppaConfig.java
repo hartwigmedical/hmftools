@@ -224,7 +224,9 @@ public class CuppaConfig
         {
             CUP_LOGGER.info("loading ref cohort data files to test");
 
-            RefSampleTraitsFile = getRefDataFile(cmd, REF_COHORT_SAMPLE_TRAITS_FILE, COHORT_REF_SV_DATA_FILE);
+            SampleDataFile = RefSampleDataFile;
+
+            RefSampleTraitsFile = getRefDataFile(cmd, REF_COHORT_SAMPLE_TRAITS_FILE, COHORT_REF_TRAITS_DATA_FILE);
             RefSampleFeatureFile = getRefDataFile(cmd, REF_COHORT_FEATURES_FILE, COHORT_REF_FEATURE_DATA_FILE);
             RefSampleSigContribFile = getRefDataFile(cmd, REF_COHORT_SIG_CONTRIBS_FILE, COHORT_REF_SIG_DATA_FILE);
             RefSampleSvFile = getRefDataFile(cmd, REF_COHORT_SV_DATA_FILE, COHORT_REF_SV_DATA_FILE);
@@ -246,7 +248,6 @@ public class CuppaConfig
             */
 
             SampleDataDir = "";
-            SampleDataFile = "";
             LinxDir = "";
             PurpleDir = "";
             IsofoxDir = "";

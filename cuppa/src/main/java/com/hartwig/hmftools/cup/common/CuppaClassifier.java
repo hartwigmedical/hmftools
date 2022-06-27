@@ -6,9 +6,10 @@ public interface CuppaClassifier
 {
     CategoryType categoryType();
 
-    boolean isValid();
+    boolean loadData();
 
-    void processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities);
+    boolean processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities);
+
     void close();
 
 }
