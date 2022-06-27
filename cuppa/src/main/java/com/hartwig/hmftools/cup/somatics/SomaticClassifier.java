@@ -255,7 +255,7 @@ public class SomaticClassifier implements CuppaClassifier
             mSampleGenPosCountsIndex.putAll(mRefSampleGenPosCountsIndex);
         }
 
-        if(!mSigContributions.loadSigContributions(mSampleSnv96Counts))
+        if(!mSigContributions.loadSigContributions(mSampleSnv96Counts, mSampleSnv96CountsIndex))
             return false;
 
         // record SNV totals, prior to any noise adjustments

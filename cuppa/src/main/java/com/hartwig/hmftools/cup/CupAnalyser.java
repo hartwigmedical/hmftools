@@ -54,8 +54,6 @@ public class CupAnalyser
 
         mSampleDataCache = new SampleDataCache();
 
-        mResultsWriter = new ResultsWriter(mConfig, mSampleDataCache);
-
         mClassifiers = Lists.newArrayList();
 
         loadSampleData(cmd);
@@ -85,6 +83,8 @@ public class CupAnalyser
             mClassifiers.add(new AltSjClassifier(mConfig, mSampleDataCache, cmd));
 
         CUP_LOGGER.debug("{} classifiers loaded", mClassifiers.size());
+
+        mResultsWriter = new ResultsWriter(mConfig, mSampleDataCache);
     }
 
     private void loadSampleData(final CommandLine cmd)
@@ -123,8 +123,6 @@ public class CupAnalyser
                 System.exit(1);
             }
         }
-
-        boolean isValid = false;
 
         if(mSampleDataCache.SpecificSample != null)
         {

@@ -99,71 +99,78 @@ public class SigContributions
         }
     }
 
-    public boolean loadSigContributions(final Matrix snvCounts)
+    public boolean loadSigContributions(final Matrix snvCounts, final Map<String,Integer> sampleCountsIndex)
     {
         if(!mConfig.RefSampleSigContribFile.isEmpty())
         {
             CUP_LOGGER.info("loading ref cohort signature contributions from file({})", mConfig.RefSampleSigContribFile);
             return loadSigContribsFromCohortFile(mConfig.RefSampleSigContribFile, mSampleSigContributions);
         }
-        else if(mConfig.DbAccess != null)
+
+        if(mConfig.DbAccess != null)
         {
             CUP_LOGGER.info("loading SNV sig contributions from database");
             return loadSigContribsFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleSigContributions);
         }
 
-        if(mSampleDataCache.isMultiSample())
+        // otherwise perform a fit on each sample
+        if(!mSomaticSigs.hasValidData() || snvCounts == null)
         {
-            CUP_LOGGER.error("missing loading config for SNV sig contributions - requires database or cohort file");
+            CUP_LOGGER.error("invalid signature definitions or SNV counts for sample fit");
             return false;
         }
 
-        final String sampleId = mSampleDataCache.SampleIds.get(0);
-
-        // use sig-allocation file if exists
-        final String sigAllocFile = SignatureAllocationFile.generateFilename(mConfig.SampleDataDir, sampleId);
-
-        if(Files.exists(Paths.get(sigAllocFile)))
+        for(SampleData sample : mSampleDataCache.SampleDataList)
         {
-            try
-            {
-                final List<SignatureAllocation> sigAllocations = SignatureAllocationFile.read(sigAllocFile);
-                Map<String, Double> sigContribs = Maps.newHashMap();
-                for(final SignatureAllocation sigAllocation : sigAllocations)
-                {
-                    final String sigName = convertSignatureName(sigAllocation.signature());
-                    sigContribs.put(sigName, sigAllocation.allocation());
-                }
+            int sampleIndex = sampleCountsIndex.get(sample.Id);
 
-                mSampleSigContributions.put(sampleId, sigContribs);
-            }
-            catch (Exception e)
-            {
-                CUP_LOGGER.error("sample({}) failed to load sig allocations file({}): {}",
-                        sampleId, sigAllocFile, e.toString());
-                return false;
-            }
-        }
-        else if(mSomaticSigs.hasValidData() && snvCounts != null)
-        {
-            CUP_LOGGER.debug("sample({}) running SNV signatures", sampleId);
+            CUP_LOGGER.debug("sample({}) running SNV signatures", sample.Id);
 
-            final double[] sigAllocations = mSomaticSigs.fitSampleCounts(snvCounts.getRow(0));
+            final double[] counts = snvCounts.getRow(sampleIndex);
+            final double[] sigAllocations = mSomaticSigs.fitSampleCounts(counts);
 
             if(sigAllocations == null)
             {
-                CUP_LOGGER.error("sample({}) failed signature fit", sampleId);
+                CUP_LOGGER.error("sample({}) failed signature fit", sample.Id);
                 return false;
             }
 
             final Map<String, Double> sigContribs = Maps.newHashMap();
-            mSampleSigContributions.put(sampleId, sigContribs);
+            mSampleSigContributions.put(sample.Id, sigContribs);
 
             for(int i = 0; i < sigAllocations.length; ++i)
             {
                 final String sigName = mSomaticSigs.getSigName(i);
                 sigContribs.put(sigName, sigAllocations[i]);
             }
+
+
+            /*
+            // use sig-allocation file if exists
+            final String sigAllocFile = SignatureAllocationFile.generateFilename(mConfig.SampleDataDir, sampleId);
+
+            if(Files.exists(Paths.get(sigAllocFile)))
+            {
+                try
+                {
+                    final List<SignatureAllocation> sigAllocations = SignatureAllocationFile.read(sigAllocFile);
+                    Map<String, Double> sigContribs = Maps.newHashMap();
+                    for(final SignatureAllocation sigAllocation : sigAllocations)
+                    {
+                        final String sigName = convertSignatureName(sigAllocation.signature());
+                        sigContribs.put(sigName, sigAllocation.allocation());
+                    }
+
+                    mSampleSigContributions.put(sampleId, sigContribs);
+                }
+                catch (Exception e)
+                {
+                    CUP_LOGGER.error("sample({}) failed to load sig allocations file({}): {}",
+                            sampleId, sigAllocFile, e.toString());
+                    return false;
+                }
+            }
+             */
         }
 
         return true;

@@ -222,8 +222,6 @@ public class CuppaConfig
 
         if(TestRefData)
         {
-            CUP_LOGGER.info("loading ref cohort data files to test");
-
             SampleDataFile = RefSampleDataFile;
 
             RefSampleTraitsFile = getRefDataFile(cmd, REF_COHORT_SAMPLE_TRAITS_FILE, COHORT_REF_TRAITS_DATA_FILE);
@@ -235,17 +233,10 @@ public class CuppaConfig
             {
                 CUP_LOGGER.info("testing single reference sample({})", cmd.getOptionValue(SPECIFIC_SAMPLE_DATA));
             }
-
-            /*
-            RefSampleTraitsFile = getCohortSampleDataFile(cmd, testRefData, SAMPLE_TRAITS_FILE, COHORT_REF_FILE_TRAITS_DATA_FILE, SAMPLE_TRAIT);
-            SampleFeatureFile = getCohortSampleDataFile(cmd, testRefData, SAMPLE_FEAT_FILE, COHORT_REF_FILE_FEATURE_DATA_FILE, FEATURE);
-            SampleSigContribFile = getCohortSampleDataFile(cmd, testRefData, SAMPLE_SIG_CONTRIB_FILE, COHORT_REF_FILE_SIG_DATA_FILE, SNV);
-            SampleSvFile = getCohortSampleDataFile(cmd, testRefData, SAMPLE_SV_FILE, COHORT_REF_FILE_SV_DATA_FILE, SV);
-            SampleSnvCountsFile = getCohortSampleDataFile(cmd, testRefData, SAMPLE_SNV_COUNTS_FILE, REF_FILE_SNV_COUNTS, SNV);
-            SampleSnvPosFreqFile = getCohortSampleDataFile(cmd, testRefData, SAMPLE_SNV_POS_FREQ_FILE, REF_FILE_SAMPLE_POS_FREQ_COUNTS, SNV);
-            SampleGeneExpFile = getCohortSampleDataFile(cmd, testRefData, SAMPLE_GENE_EXP_FILE, REF_FILE_GENE_EXP_SAMPLE, GENE_EXP);
-            SampleAltSjFile = getCohortSampleDataFile(cmd, testRefData, SAMPLE_ALT_SJ_FILE, REF_FILE_ALT_SJ_SAMPLE, ALT_SJ);
-            */
+            else
+            {
+                CUP_LOGGER.info("testing all reference samples");
+            }
 
             SampleDataDir = "";
             LinxDir = "";
