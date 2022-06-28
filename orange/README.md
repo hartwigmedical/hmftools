@@ -46,7 +46,7 @@ interesting and added to the report:
     1. Exonic variants that are not reported but are phased with variants that are reported.
     1. Variants that are considered relevant for tumor type classification according to Cuppa.
     1. Variants with synonymous impact on the canonical transcript of a reporting gene but with a reportable worst impact
-    1. Variants in slice regions that are not reported in genes with splice variant reporting enabled. 
+    1. Variants in splice regions that are not reported in genes with splice variant reporting enabled. 
  - Other regions with amps, or with deletions in other autosomal regions:
     1. Gains in genes for which we report amplifications with a relative minimum copy number between 2.5 and 3 times ploidy.
     1. Any chromosomal band location with at least one gene lost or fully amplified is considered potentially interesting.
