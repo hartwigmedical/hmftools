@@ -191,5 +191,4 @@ public class GermlineGeneAnalyser
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
-    
 }

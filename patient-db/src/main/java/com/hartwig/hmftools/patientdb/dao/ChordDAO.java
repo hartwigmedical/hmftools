@@ -1,11 +1,15 @@
 package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CHORD;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PURITY;
 
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ChordStatus;
+import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
+import org.jooq.Record;
 
 class ChordDAO {
 
@@ -14,6 +18,24 @@ class ChordDAO {
 
     ChordDAO(@NotNull final DSLContext context) {
         this.context = context;
+    }
+
+    public ChordAnalysis readChord(final String sampleId)
+    {
+        Record result = context.select().from(CHORD).where(CHORD.SAMPLEID.eq(sampleId)).fetchOne();
+        if (result == null) {
+            return null;
+        }
+
+        return ImmutableChordAnalysis.builder()
+                .hrdValue(result.getValue(CHORD.HRD))
+                .BRCA1Value(result.getValue(CHORD.BRCA1))
+                .BRCA2Value(result.getValue(CHORD.BRCA2))
+                .hrStatus(ChordStatus.valueOf(result.getValue(CHORD.HRSTATUS)))
+                .hrdType(result.getValue(CHORD.HRDTYPE))
+                .remarksHrdType(result.getValue(CHORD.REMARKSHRDTYPE))
+                .remarksHrStatus(result.getValue(CHORD.REMARKSHRSTATUS))
+                .build();
     }
 
     void writeChord(@NotNull String sample, @NotNull ChordAnalysis chordAnalysis) {

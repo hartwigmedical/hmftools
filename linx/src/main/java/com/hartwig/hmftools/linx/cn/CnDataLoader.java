@@ -55,7 +55,7 @@ public class CnDataLoader
     public static final double MIN_LOH_CN = 0.5;
     public static final double TOTAL_CN_LOSS = 0.5;
 
-    public CnDataLoader(final String purpleDataPath, DatabaseAccess dbAccess)
+    public CnDataLoader(final String purpleDataPath, final DatabaseAccess dbAccess)
     {
         mPurpleDataPath = !purpleDataPath.isEmpty() ? checkAddDirSeparator(purpleDataPath) : "";
 

@@ -484,6 +484,8 @@ public class DatabaseAccess implements AutoCloseable {
         chordDAO.writeChord(sample, chordAnalysis);
     }
 
+    public ChordAnalysis readChord(final String sampleId) { return chordDAO.readChord(sampleId); }
+
     public void writeSnpCheck(@NotNull String sample, boolean isPass) {
         snpCheckDAO.write(sample, isPass);
     }

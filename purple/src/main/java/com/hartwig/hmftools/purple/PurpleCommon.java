@@ -5,7 +5,7 @@ import java.text.DecimalFormat;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class PurpleCommon
+public final class PurpleCommon
 {
     public static final Logger PPL_LOGGER = LogManager.getLogger(PurpleCommon.class);
 
