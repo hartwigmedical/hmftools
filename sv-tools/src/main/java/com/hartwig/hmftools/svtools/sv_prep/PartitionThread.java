@@ -1,0 +1,54 @@
+package com.hartwig.hmftools.svtools.sv_prep;
+
+import static com.hartwig.hmftools.svtools.sv_prep.SvCommon.SV_LOGGER;
+
+import java.util.NoSuchElementException;
+import java.util.Queue;
+
+public class PartitionThread extends Thread
+{
+    private final String mChromosome;
+    private final SvConfig mConfig;
+    private final ResultsWriter mWriter;
+    private final Queue<PartitionTask> mPartitions;
+
+    public PartitionThread(
+            final String chromosome, final SvConfig config, final Queue<PartitionTask> partitions, final ResultsWriter writer)
+    {
+        mChromosome = chromosome;
+        mConfig = config;
+        mWriter = writer;
+        mPartitions = partitions;
+
+        start();
+    }
+
+    public void run()
+    {
+        while(true)
+        {
+            try
+            {
+                PartitionTask partition = mPartitions.remove();
+
+                PartitionSlicer slicer = new PartitionSlicer(partition.TaskId, partition.Region, mConfig, mWriter);
+
+                if(partition.TaskId > 0 && (partition.TaskId % 100) == 0)
+                {
+                    SV_LOGGER.debug("chromosome({}) partitions processed({}) remaining({})",
+                            mChromosome, partition.TaskId, mPartitions.size());
+                }
+
+                slicer.run();
+            }
+            catch(NoSuchElementException e)
+            {
+                SV_LOGGER.trace("all tasks complete");
+                break;
+            }
+        }
+
+        // mSamSlicerFactory.close();
+    }
+
+}
