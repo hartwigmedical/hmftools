@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.svtools.sv_prep;
 
 import static com.hartwig.hmftools.svtools.sv_prep.SvCommon.SV_LOGGER;
+import static com.hartwig.hmftools.svtools.sv_prep.SvConstants.DOWN_SAMPLE_FRACTION;
+import static com.hartwig.hmftools.svtools.sv_prep.SvConstants.DOWN_SAMPLE_THRESHOLD;
 
 import java.io.File;
 import java.util.Map;
@@ -9,6 +11,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import htsjdk.samtools.SAMRecord;
@@ -30,16 +33,23 @@ public class PartitionSlicer
     private int mProcessedBucketIndex;
 
     private final PartitionStats mStats;
+    private final CombinedStats mCombinedStats;
 
     private final Map<String,ReadGroup> mReadGroups;
 
-    public PartitionSlicer(final int id, final ChrBaseRegion region, final SvConfig config, final ResultsWriter writer)
+    private final ReadRateTracker mReadRateTracker;
+    private boolean mRateLimitTriggered;
+    private final PerformanceCounter mPerCounter;
+
+    public PartitionSlicer(
+            final int id, final ChrBaseRegion region, final SvConfig config, final ResultsWriter writer, final CombinedStats combinedStats)
     {
         mId = id;
         mConfig = config;
         mReadFilters = config.ReadFilters;
         mWriter = writer;
         mRegion = region;
+        mCombinedStats = combinedStats;
 
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
@@ -50,14 +60,22 @@ public class PartitionSlicer
         mBuckets = new SvBucket[bucketCount];
         mProcessedBucketIndex = -1;
 
+        int rateSegmentLength = mConfig.PartitionSize / DOWN_SAMPLE_FRACTION;
+        int downsampleThreshold = DOWN_SAMPLE_THRESHOLD / DOWN_SAMPLE_FRACTION;
+        mReadRateTracker = new ReadRateTracker(rateSegmentLength, mRegion.start(), downsampleThreshold);
+        mRateLimitTriggered = false;
+
         mReadGroups = Maps.newHashMap();
 
         mStats = new PartitionStats();
+        mPerCounter = new PerformanceCounter("Total");
     }
 
     public void run()
     {
         SV_LOGGER.debug("processing region({})", mRegion);
+
+        mPerCounter.start();
 
         mBamSlicer.slice(mSamReader, Lists.newArrayList(mRegion), this::processSamRecord);
 
@@ -65,8 +83,44 @@ public class PartitionSlicer
 
         processBuckets(-1);
 
-        SV_LOGGER.debug("region({}) complete, stats({}) filters({}) incompleteGroups({})",
-                mRegion, mStats.toString(), ReadFilterType.filterCountsToString(mStats.ReadFilterCounts), mReadGroups.size());
+        mPerCounter.stop();
+
+        SV_LOGGER.debug("region({}) complete, stats({}) incompleteGroups({})",
+                mRegion, mStats.toString(), mReadGroups.size());
+
+        SV_LOGGER.debug("region({}) filters({})",
+                mRegion, ReadFilterType.filterCountsToString(mStats.ReadFilterCounts));
+
+        mCombinedStats.addPartitionStats(mStats);
+        mCombinedStats.addPerfCounters(mPerCounter);
+
+        if(mRateLimitTriggered)
+            System.gc();
+    }
+
+    private boolean checkReadRateLimits(int positionStart)
+    {
+        boolean wasLimited = mReadRateTracker.isRateLimited();
+        int lastSegementReadCount = mReadRateTracker.readCount();
+
+        boolean handleRead = mReadRateTracker.handleRead(positionStart);
+
+        if(wasLimited != mReadRateTracker.isRateLimited())
+        {
+            if(mReadRateTracker.isRateLimited())
+            {
+                SV_LOGGER.info("region({}) rate limited with read count({}) at position({})",
+                        mRegion, lastSegementReadCount, positionStart);
+                mRateLimitTriggered = true;
+            }
+            else
+            {
+                SV_LOGGER.info("region({}) rate limit cleared at position({}), last read count({})",
+                        mRegion, positionStart, lastSegementReadCount);
+            }
+        }
+
+        return handleRead;
     }
 
     private void processSamRecord(final SAMRecord record)
@@ -75,6 +129,9 @@ public class PartitionSlicer
             return;
 
         ++mStats.TotalReads;
+
+        if(!checkReadRateLimits(record.getAlignmentStart()))
+            return;
 
         int filters = mReadFilters.checkFilters(record);
 
@@ -173,6 +230,8 @@ public class PartitionSlicer
 
     private void processBucket(final SvBucket bucket)
     {
+        bucket.setJunctionPositions();
+
         if(bucket.junctionPositions().isEmpty())
         {
             ++mStats.EmptyBuckets;
@@ -181,20 +240,25 @@ public class PartitionSlicer
 
         ++mStats.Buckets;
 
-        bucket.setJunctionPositions();
         bucket.selectSupportingReads();
 
         mStats.JunctionCount += bucket.junctionPositions().size();
         mStats.JunctionFragmentCount += bucket.readGroups().size();
         mStats.SupportingReadCount += bucket.supportingReads().size();
-        mStats.InitialSupportingReadCount = bucket.initialSupportingReadCount();
+        mStats.InitialSupportingReadCount += bucket.initialSupportingReadCount();
 
         mWriter.writeBucketData(bucket, mId);
 
         if(mConfig.WriteTypes.contains(WriteType.READS))
         {
-            bucket.readGroups().forEach(x -> x.reads().forEach(y -> mWriter.writeReadData(y, "SV", mId, bucket.id())));
-            bucket.supportingReads().forEach(x -> mWriter.writeReadData(x, "SUPPORTING", mId, bucket.id()));
+            for(ReadGroup readGroup : bucket.readGroups())
+            {
+                boolean groupComplete = readGroup.isComplete();
+                readGroup.reads().forEach(x -> mWriter.writeReadData(x, mId, bucket.id(), "SV", groupComplete));
+            }
+
+            // group complete set false since reads are not grouped for now
+            bucket.supportingReads().forEach(x -> mWriter.writeReadData(x, mId, bucket.id(), "SUPPORTING", false));
         }
     }
 

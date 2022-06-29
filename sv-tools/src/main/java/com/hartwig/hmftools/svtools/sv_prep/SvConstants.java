@@ -6,6 +6,10 @@ public final class SvConstants
     public static final int DEFAULT_CHR_PARTITION_SIZE = 1000000;
     public static final int DEFAULT_BUCKET_SIZE = 1000;
 
+    public static final int DOWN_SAMPLE_FRACTION = 100; // split partition into segments
+    public static final int DOWN_SAMPLE_THRESHOLD = 30_000; // per partition
+    // public static final int DOWN_SAMPLE_THRESHOLD = 1_000_000; // per partition
+
     // read filtering
     public static final int MIN_ALIGNMENT_BASES = 50;
     public static final int MIN_MAP_QUALITY = 20;

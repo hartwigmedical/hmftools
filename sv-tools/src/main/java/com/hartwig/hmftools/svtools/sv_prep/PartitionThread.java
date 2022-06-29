@@ -10,14 +10,17 @@ public class PartitionThread extends Thread
     private final String mChromosome;
     private final SvConfig mConfig;
     private final ResultsWriter mWriter;
+    private final CombinedStats mCombinedStats;
     private final Queue<PartitionTask> mPartitions;
 
     public PartitionThread(
-            final String chromosome, final SvConfig config, final Queue<PartitionTask> partitions, final ResultsWriter writer)
+            final String chromosome, final SvConfig config, final Queue<PartitionTask> partitions, final ResultsWriter writer,
+            final CombinedStats combinedStats)
     {
         mChromosome = chromosome;
         mConfig = config;
         mWriter = writer;
+        mCombinedStats = combinedStats;
         mPartitions = partitions;
 
         start();
@@ -31,7 +34,7 @@ public class PartitionThread extends Thread
             {
                 PartitionTask partition = mPartitions.remove();
 
-                PartitionSlicer slicer = new PartitionSlicer(partition.TaskId, partition.Region, mConfig, mWriter);
+                PartitionSlicer slicer = new PartitionSlicer(partition.TaskId, partition.Region, mConfig, mWriter, mCombinedStats);
 
                 if(partition.TaskId > 0 && (partition.TaskId % 100) == 0)
                 {

@@ -13,8 +13,8 @@ public enum ReadFilterType
     MIN_MAP_QUAL(2, 1, "Min map quality"),
     INSERT_MAP_OVERLAP(4, 2,"Insert size vs aligned bases"),
     SOFT_CLIP_LENGTH(8, 3, "Soft-clip length"),
-    SOFT_CLIP_BASE_QUAL(16, 4,  "Soft-clip base qual"),
-    NO_SUPPORTING_READ(32, 5, "Read support");
+    SOFT_CLIP_BASE_QUAL(16, 4,  "Soft-clip base qual");
+    // NO_SUPPORTING_READ(32, 5, "Read support");
 
     private final int mFlag;
     private final int mIndex;

@@ -4,7 +4,7 @@ import static java.lang.String.format;
 
 public class PartitionStats
 {
-    public int TotalReads;
+    public long TotalReads;
     public int Buckets;
     public int EmptyBuckets;
     public int JunctionCount;
@@ -24,6 +24,17 @@ public class PartitionStats
         InitialSupportingReadCount = 0;
         SupportingReadCount = 0;
         ReadFilterCounts = new int[ReadFilterType.values().length];
+    }
+
+    public void add(final PartitionStats other)
+    {
+        TotalReads += other.TotalReads;
+        Buckets += other.Buckets;
+        EmptyBuckets += other.EmptyBuckets;
+        JunctionCount += other.JunctionCount;
+        JunctionFragmentCount += other.JunctionFragmentCount;
+        InitialSupportingReadCount += other.InitialSupportingReadCount;
+        SupportingReadCount += other.SupportingReadCount;
     }
 
     public String toString()

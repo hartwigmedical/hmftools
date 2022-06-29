@@ -53,6 +53,7 @@ public class SvPrep
 
             ChromosomeTask chromosomeTask = new ChromosomeTask(chromosomeStr, mConfig, mWriter);
             chromosomeTask.process();
+            System.gc();
         }
 
         mWriter.close();

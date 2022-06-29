@@ -78,7 +78,7 @@ public class ResultsWriter
             String filename = formFilename(READS);
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("PartitionIndex,BucketId,ReadId,ReadType,Chromosome,PosStart,PosEnd,Cigar");
+            writer.write("PartitionIndex,BucketId,ReadId,ReadType,GroupComplete,Chromosome,PosStart,PosEnd,Cigar");
             writer.write(",InsertSize,FragLength,MateChr,MatePosStart,FirstInPair,ReadReversed,SuppData");
 
             writer.newLine();
@@ -93,15 +93,17 @@ public class ResultsWriter
         return null;
     }
 
-    public synchronized void writeReadData(final ReadRecord read, final String readType, int partitionIndex, int bucketId)
+    public synchronized void writeReadData(
+            final ReadRecord read, int partitionIndex, int bucketId, final String readType, final boolean groupComplete)
     {
         if(mReadWriter == null)
             return;
 
         try
         {
-            mReadWriter.write(format("%d,%d,%s,%s,%s,%d,%d,%s",
-                    partitionIndex, bucketId, read.Id, readType, read.Chromosome, read.start(), read.end(), read.Cigar.toString()));
+            mReadWriter.write(format("%d,%d,%s,%s,%s,%s,%d,%d,%s",
+                    partitionIndex, bucketId, read.Id, readType, groupComplete,
+                    read.Chromosome, read.start(), read.end(), read.Cigar.toString()));
 
             SupplementaryReadData suppData = read.supplementaryAlignment();
 

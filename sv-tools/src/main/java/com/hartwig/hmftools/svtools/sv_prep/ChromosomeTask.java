@@ -22,11 +22,15 @@ public class ChromosomeTask implements AutoCloseable
     private final ResultsWriter mWriter;
     private final Queue<PartitionTask> mPartitions;
 
+    private final CombinedStats mCombinedStats;
+
     public ChromosomeTask(final String chromosome, final SvConfig config, final ResultsWriter writer)
     {
         mChromosome = chromosome;
         mConfig = config;
         mWriter = writer;
+
+        mCombinedStats = new CombinedStats();
 
         mPartitions = new ConcurrentLinkedQueue<>();
         List<ChrBaseRegion> partitions = partition(chromosome);
@@ -53,7 +57,7 @@ public class ChromosomeTask implements AutoCloseable
 
         for(int i = 0; i < min(mPartitions.size(), mConfig.Threads); ++i)
         {
-            workers.add(new PartitionThread(mChromosome, mConfig, mPartitions, mWriter));
+            workers.add(new PartitionThread(mChromosome, mConfig, mPartitions, mWriter, mCombinedStats));
         }
 
         for(Thread worker : workers)
@@ -69,10 +73,10 @@ public class ChromosomeTask implements AutoCloseable
             }
         }
 
-        /*
-        SV_LOGGER.debug("chromosome({}) {} regions complete, processed {} reads, writing {} variants",
-                mChromosome, regionCount, mRegionResults.totalReads(), mRegionResults.totalVariants());
+        SV_LOGGER.debug("chromosome({}) {} regions complete, stats: {}",
+                mChromosome, regionCount, mCombinedStats.ReadStats.toString());
 
+        /*
         if(mConfig.logPerfStats())
         {
             mRegionResults.logPerfCounters();
@@ -81,6 +85,11 @@ public class ChromosomeTask implements AutoCloseable
          */
 
         SV_LOGGER.info("chromosome({}) analysis complete", mChromosome);
+
+        if(SV_LOGGER.isDebugEnabled())
+        {
+            mCombinedStats.PerfCounter.logStats();
+        }
     }
 
     private List<ChrBaseRegion> partition(final String chromosome)
