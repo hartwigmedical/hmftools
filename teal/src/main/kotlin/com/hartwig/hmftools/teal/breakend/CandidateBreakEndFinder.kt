@@ -2,6 +2,7 @@ package com.hartwig.hmftools.teal.breakend
 
 import com.hartwig.hmftools.common.genome.chromosome.ContigComparator
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
+import com.hartwig.hmftools.common.samtools.CigarUtils
 import htsjdk.samtools.SAMRecord
 import com.hartwig.hmftools.common.samtools.SamRecordUtils
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion
@@ -121,8 +122,8 @@ class CandidateBreakEndFinder(
             return null
         }
         val readString = r.readString
-        val leftClip = SamRecordUtils.leftSoftClip(r)
-        val rightClip = SamRecordUtils.rightSoftClip(r)
+        val leftClip = CigarUtils.leftSoftClip(r)
+        val rightClip = CigarUtils.rightSoftClip(r)
 
         // now we work out if the clipped part is telomere
         val leftClipBases = readString.substring(0, leftClip)

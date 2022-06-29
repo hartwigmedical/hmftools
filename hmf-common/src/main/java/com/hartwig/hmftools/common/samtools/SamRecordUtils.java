@@ -1,5 +1,13 @@
 package com.hartwig.hmftools.common.samtools;
 
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+
+import static htsjdk.samtools.CigarOperator.D;
+
+import java.util.List;
+
+import com.google.common.collect.Lists;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -11,58 +19,6 @@ import htsjdk.samtools.SAMRecord;
 public final class SamRecordUtils
 {
     public static final int PHRED_OFFSET = 33;
-
-    public static int leftSoftClip(@NotNull final SAMRecord record)
-    {
-        Cigar cigar = record.getCigar();
-        if(cigar.numCigarElements() > 0)
-        {
-            CigarElement firstElement = cigar.getCigarElement(0);
-            if(firstElement.getOperator() == CigarOperator.S)
-            {
-                return firstElement.getLength();
-            }
-        }
-
-        return 0;
-    }
-
-    public static int rightSoftClip(@NotNull final SAMRecord record)
-    {
-        Cigar cigar = record.getCigar();
-        if(cigar.numCigarElements() > 0)
-        {
-            CigarElement lastElement = cigar.getCigarElement(cigar.numCigarElements() - 1);
-            if(lastElement.getOperator() == CigarOperator.S)
-            {
-                return lastElement.getLength();
-            }
-        }
-
-        return 0;
-    }
-
-    @Nullable
-    public static String leftSoftClipBases(@NotNull final SAMRecord record)
-    {
-        int leftClip = leftSoftClip(record);
-        if (leftClip == 0)
-        {
-            return null;
-        }
-        return record.getReadString().substring(0, leftClip);
-    }
-
-    @Nullable
-    public static String rightSoftClipBases(@NotNull final SAMRecord record)
-    {
-        int rightClip = rightSoftClip(record);
-        if (rightClip == 0)
-        {
-            return null;
-        }
-        return record.getReadString().substring(record.getReadString().length() - rightClip);
-    }
 
     public static int getBaseQuality(final char quality)
     {
@@ -87,4 +43,57 @@ public final class SamRecordUtils
         }
         return score / length;
     }
+
+    public static final List<int[]> generateMappedCoords(final Cigar cigar, int posStart)
+    {
+        final List<int[]> mappedCoords = Lists.newArrayList();
+
+        // first establish whether the read is split across 2 distant regions, and if so which it maps to
+        int posOffset = 0;
+        boolean continueRegion = false;
+
+        for(CigarElement element : cigar.getCigarElements())
+        {
+            if(element.getOperator() == CigarOperator.S)
+            {
+                // nothing to skip
+            }
+            else if(element.getOperator() == D)
+            {
+                posOffset += element.getLength();
+                continueRegion = true;
+            }
+            else if(element.getOperator() == CigarOperator.I)
+            {
+                // nothing to skip
+                continueRegion = true;
+            }
+            else if(element.getOperator() == CigarOperator.N)
+            {
+                posOffset += element.getLength();
+                continueRegion = false;
+            }
+            else if(element.getOperator() == CigarOperator.M)
+            {
+                int readStartPos = posStart + posOffset;
+                int readEndPos = readStartPos + element.getLength() - 1;
+
+                if(continueRegion && !mappedCoords.isEmpty())
+                {
+                    int[] lastRegion = mappedCoords.get(mappedCoords.size() - 1);
+                    lastRegion[SE_END] = readEndPos;
+                }
+                else
+                {
+                    mappedCoords.add(new int[] { readStartPos, readEndPos });
+                }
+
+                posOffset += element.getLength();
+                continueRegion = false;
+            }
+        }
+
+        return mappedCoords;
+    }
+
 }

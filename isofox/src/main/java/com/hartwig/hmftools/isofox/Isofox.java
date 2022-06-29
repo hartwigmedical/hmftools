@@ -515,6 +515,4 @@ public class Isofox
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
-
-
 }

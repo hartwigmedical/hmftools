@@ -3,6 +3,8 @@ package com.hartwig.hmftools.teal.breakend
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
+import com.hartwig.hmftools.common.samtools.CigarUtils
+import com.hartwig.hmftools.common.samtools.CigarUtils.*
 import com.hartwig.hmftools.common.samtools.SamRecordUtils
 import com.hartwig.hmftools.teal.ReadGroup
 import com.hartwig.hmftools.teal.TealUtils
@@ -171,12 +173,12 @@ class BreakEndSupportCounter(refGenomeVersion: RefGenomeVersion, telomereMatchTh
         if (breakEnd.isRightTelomeric() &&
             abs(alignedRead.alignmentEnd - breakEnd.position) <= SPLIT_POSITION_TOLERANCE)
         {
-            clipBases = SamRecordUtils.rightSoftClipBases(alignedRead)
+            clipBases = CigarUtils.rightSoftClipBases(alignedRead)
         }
         else if (!breakEnd.isRightTelomeric() &&
             abs(alignedRead.alignmentStart - breakEnd.position) <= SPLIT_POSITION_TOLERANCE)
         {
-            clipBases = SamRecordUtils.leftSoftClipBases(alignedRead)
+            clipBases = CigarUtils.leftSoftClipBases(alignedRead)
         }
 
         if (clipBases != null)
@@ -260,11 +262,11 @@ class BreakEndSupportCounter(refGenomeVersion: RefGenomeVersion, telomereMatchTh
             // check the split reads
             val clipBases = if (breakEnd.type.isRightTelomeric())
                 {
-                    SamRecordUtils.rightSoftClipBases(frag.alignedRead)
+                    rightSoftClipBases(frag.alignedRead)
                 }
                 else
                 {
-                    SamRecordUtils.leftSoftClipBases(frag.alignedRead)
+                    leftSoftClipBases(frag.alignedRead)
                 }
             if (clipBases != null)
             {
@@ -310,7 +312,7 @@ class BreakEndSupportCounter(refGenomeVersion: RefGenomeVersion, telomereMatchTh
             if (frag.alignedReadType == Fragment.AlignedReadType.SPLIT_READ_TELOMERIC || frag.alignedReadType == Fragment.AlignedReadType.SPLIT_READ_NOT_TELOMERIC)
             {
                 val splitRead = frag.alignedRead
-                val alignedLength = splitRead.readLength - SamRecordUtils.leftSoftClip(splitRead) - SamRecordUtils.rightSoftClip(splitRead)
+                val alignedLength = splitRead.readLength - leftSoftClip(splitRead) - rightSoftClip(splitRead)
                 breakEnd.longestSplitReadAlignLength = max(breakEnd.longestSplitReadAlignLength, alignedLength)
             }
         }

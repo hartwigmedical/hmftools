@@ -3,7 +3,7 @@ package com.hartwig.hmftools.isofox.common;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.bam.BamRecordUtils.generateMappedCoords;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.generateMappedCoords;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -34,9 +34,9 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.samtools.SoftClipSide;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarOperator;
@@ -167,6 +167,11 @@ public class ReadRecord
     }
 
     public boolean hasSuppAlignment() { return mSupplementaryAlignment != null; }
+
+    public static SoftClipSide softClipSide(final ReadRecord read)
+    {
+        return SoftClipSide.from(read.Cigar, read.isSoftClipped(SE_START), read.isSoftClipped(SE_END));
+    }
 
     public void setMapQuality(short mapQuality) { mMapQuality = mapQuality; }
     public short mapQuality() { return mMapQuality; }

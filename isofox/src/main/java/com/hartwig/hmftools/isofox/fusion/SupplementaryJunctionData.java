@@ -13,7 +13,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.isofox.common.CommonUtils;
+import com.hartwig.hmftools.common.samtools.SoftClipSide;
+import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 
 import htsjdk.samtools.Cigar;
@@ -63,7 +64,7 @@ public class SupplementaryJunctionData
             return null;
 
         // find the junction from this read's SC and same for the supp mapping data
-        SoftClipSide scSide = SoftClipSide.fromRead(read);
+        SoftClipSide scSide = ReadRecord.softClipSide(read);
 
         SupplementaryJunctionData suppJuncData = new SupplementaryJunctionData(read.Id);
 

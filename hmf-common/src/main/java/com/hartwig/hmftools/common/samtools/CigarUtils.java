@@ -2,9 +2,12 @@ package com.hartwig.hmftools.common.samtools;
 
 import java.util.List;
 
+import org.jetbrains.annotations.Nullable;
+
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.SAMRecord;
 
 public final class CigarUtils
 {
@@ -65,4 +68,33 @@ public final class CigarUtils
         return baseLength;
     }
 
+    public static int leftSoftClip(final SAMRecord record)
+    {
+        return record.getCigar().isLeftClipped() ? record.getCigar().getFirstCigarElement().getLength() : 0;
+    }
+
+    public static int rightSoftClip(final SAMRecord record)
+    {
+        return record.getCigar().isRightClipped() ? record.getCigar().getLastCigarElement().getLength() : 0;
+    }
+
+    @Nullable
+    public static String leftSoftClipBases(final SAMRecord record)
+    {
+        int leftClip = leftSoftClip(record);
+        if (leftClip == 0)
+            return null;
+
+        return record.getReadString().substring(0, leftClip);
+    }
+
+    @Nullable
+    public static String rightSoftClipBases(final SAMRecord record)
+    {
+        int rightClip = rightSoftClip(record);
+        if (rightClip == 0)
+            return null;
+
+        return record.getReadString().substring(record.getReadString().length() - rightClip);
+    }
 }
