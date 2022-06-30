@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svtools.sv_prep;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.stripChrPrefix;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
@@ -42,6 +44,9 @@ public class SvPrep
     {
         SV_LOGGER.info("sample({}) starting SV prep", mConfig.SampleId);
 
+        if(mConfig.CalcFragmentLength)
+            calcFragmentDistribution();
+
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
             String chromosomeStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
@@ -59,6 +64,17 @@ public class SvPrep
         mWriter.close();
 
         SV_LOGGER.info("SV prep complete");
+    }
+
+    private void calcFragmentDistribution()
+    {
+        FragmentSizeDistribution fragSizeDistribution = new FragmentSizeDistribution(mConfig);
+        fragSizeDistribution.run();
+
+        final int[] lengthRange = fragSizeDistribution.calcFragmentLengthRange();
+        int fragLengthFilterMin = max(mConfig.ReadLength, (int)(lengthRange[0] * 0.5));
+        int fragLengthFilterMax = (int)(lengthRange[1] * 1.5);
+        mConfig.ReadFilters.setFragmentLengthMin(fragLengthFilterMin, fragLengthFilterMax);
     }
 
     public static void main(@NotNull final String[] args) throws Exception

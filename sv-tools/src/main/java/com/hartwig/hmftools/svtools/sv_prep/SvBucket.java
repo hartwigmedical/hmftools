@@ -39,6 +39,11 @@ public class SvBucket
         mReadGroups.add(readGroup);
     }
 
+    public void addSupportingRead(final ReadRecord read)
+    {
+        mSupportingReads.add(read);
+    }
+
     public void setJunctionPositions()
     {
         for(ReadGroup readGroup : mReadGroups)
@@ -87,16 +92,31 @@ public class SvBucket
     {
         mInitialSupportingReadCount = mSupportingReads.size();
 
-        List<ReadRecord> unsupportingReads = Lists.newArrayList();
+        List<ReadRecord> removeReads = Lists.newArrayList();
+        int supplementaries = 0;
 
         for(ReadRecord read : mSupportingReads)
         {
             if(!readSupportsJunction(read))
-                unsupportingReads.add(read);
-
+            {
+                removeReads.add(read);
+            }
+            else
+            {
+                // check for a 4th supp in an existing group
+                ReadGroup readGroup = mReadGroups.stream().filter(x -> x.id().equals(read.Id)).findFirst().orElse(null);
+                if(readGroup != null)
+                {
+                    readGroup.addRead(read);
+                    removeReads.add(read);
+                    ++supplementaries;
+                }
+            }
         }
 
-        unsupportingReads.forEach(x -> mSupportingReads.remove(x));
+        mInitialSupportingReadCount -= supplementaries;
+
+        removeReads.forEach(x -> mSupportingReads.remove(x));
     }
 
     private boolean readSupportsJunction(final ReadRecord read)

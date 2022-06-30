@@ -11,10 +11,12 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS_DESC;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SUB_ITEM_DELIM;
 import static com.hartwig.hmftools.svtools.sv_prep.SvCommon.ITEM_DELIM;
 import static com.hartwig.hmftools.svtools.sv_prep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svtools.sv_prep.SvConstants.DEFAULT_BUCKET_SIZE;
 import static com.hartwig.hmftools.svtools.sv_prep.SvConstants.DEFAULT_CHR_PARTITION_SIZE;
+import static com.hartwig.hmftools.svtools.sv_prep.SvConstants.DEFAULT_READ_LENGTH;
 
 import java.util.Arrays;
 import java.util.List;
@@ -39,15 +41,17 @@ public class SvConfig
 
     public final ReadFilterConfig ReadFilters;
 
-    public final Set<String> SpecificChromosomes;
-    public final List<ChrBaseRegion> SpecificRegions;
+    public final int PartitionSize;
+    public final int BucketSize;
+    public final int ReadLength;
+    public final boolean CalcFragmentLength;
 
     public final String OutputDir;
     public final String OutputId;
 
-    public final int PartitionSize;
-    public final int BucketSize;
     public final int Threads;
+    public final Set<String> SpecificChromosomes;
+    public final List<ChrBaseRegion> SpecificRegions;
 
     public final Set<WriteType> WriteTypes;
 
@@ -61,6 +65,9 @@ public class SvConfig
     private static final String WRITE_TYPES = "write_types";
 
     private static final String THREADS = "threads";
+    private static final String READ_LENGTH = "read_length";
+    private static final String FRAG_LENGTH_RANGE = "fragment_length_range";
+    private static final String CALC_FRAG_LENGTH = "calc_fragment_length";
 
     public SvConfig(final CommandLine cmd)
     {
@@ -79,7 +86,17 @@ public class SvConfig
         PartitionSize = DEFAULT_CHR_PARTITION_SIZE;
         BucketSize = DEFAULT_BUCKET_SIZE;
 
+        ReadLength = Integer.parseInt(cmd.getOptionValue(READ_LENGTH, String.valueOf(DEFAULT_READ_LENGTH)));
+
         ReadFilters = new ReadFilterConfig();
+
+        CalcFragmentLength = cmd.hasOption(CALC_FRAG_LENGTH);
+
+        if(!CalcFragmentLength && cmd.hasOption(FRAG_LENGTH_RANGE))
+        {
+            String[] fragRange = cmd.getOptionValue(FRAG_LENGTH_RANGE).split(SUB_ITEM_DELIM, 2);
+            ReadFilters.setFragmentLengthMin(Integer.parseInt(fragRange[0]), Integer.parseInt(fragRange[1]));
+        }
 
         WriteTypes = Sets.newHashSet();
 
@@ -127,6 +144,9 @@ public class SvConfig
 
         options.addOption(SAMPLE, true, "Tumor sample ID");
         options.addOption(BAM_FILE, true, "RNA BAM file location");
+        options.addOption(READ_LENGTH, true, "Read length");
+        options.addOption(CALC_FRAG_LENGTH, false, "Calculate distribution for fragment length");
+        options.addOption(FRAG_LENGTH_RANGE, true, "Empirical fragment length range: Min:Max");
 
         // reference data
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);

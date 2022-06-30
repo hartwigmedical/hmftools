@@ -123,12 +123,25 @@ public class PartitionSlicer
         return handleRead;
     }
 
+    private static final String LOG_READ_ID = "";
+    // private static final String LOG_READ_ID = "A00624:8:HHKYHDSXX:2:1645:30870:9392";
+    private static final boolean LOG_READ_ONLY = true;
+
     private void processSamRecord(final SAMRecord record)
     {
         if(!mRegion.containsPosition(record.getAlignmentStart()))
             return;
 
         ++mStats.TotalReads;
+
+        if(record.getReadName().equals(LOG_READ_ID))
+        {
+            SV_LOGGER.debug("specific readId({})", record.getReadName());
+        }
+        else if(!LOG_READ_ID.isEmpty() && LOG_READ_ONLY)
+        {
+            return;
+        }
 
         if(!checkReadRateLimits(record.getAlignmentStart()))
             return;
@@ -153,28 +166,29 @@ public class PartitionSlicer
 
         if(readGroup == null)
         {
+            // cache the read waiting for its mate
             mReadGroups.put(read.Id, new ReadGroup(read));
             return;
         }
 
         readGroup.addRead(read);
 
-        boolean processGroup = readGroup.isComplete();
-
-        if(!processGroup)
+        if(readGroup.isComplete())
         {
-            // check if the supplement is also in this partition
-            SupplementaryReadData suppData = read.supplementaryAlignment();
-
-            if(suppData == null || !mRegion.containsPosition(suppData.Chromosome, suppData.Position))
-                processGroup = true;
+            processGroup(readGroup);
+            mReadGroups.remove(readGroup.id());
+            return;
         }
 
-        if(processGroup)
-            processGroup(readGroup);
+        // if either read has a supplementary in another partition then process this incomplete group now
+        SupplementaryReadData suppData = readGroup.reads().stream()
+                .filter(x -> x.hasSuppAlignment()).findFirst().map(x -> x.supplementaryAlignment()).orElse(null);
 
-        if(readGroup.isComplete())
+        if(suppData != null && !mRegion.containsPosition(suppData.Chromosome, suppData.Position))
+        {
+            processGroup(readGroup);
             mReadGroups.remove(readGroup.id());
+        }
     }
 
     private void processSingleRead(final ReadRecord read)
@@ -205,7 +219,7 @@ public class PartitionSlicer
 
         ReadRecord read = ReadRecord.from(record);
         SvBucket bucket = findBucket(read.start());
-        bucket.supportingReads().add(read);
+        bucket.addSupportingRead(read);
     }
 
     private void processBuckets(int currentReadPosition)
@@ -247,7 +261,13 @@ public class PartitionSlicer
         mStats.SupportingReadCount += bucket.supportingReads().size();
         mStats.InitialSupportingReadCount += bucket.initialSupportingReadCount();
 
-        mWriter.writeBucketData(bucket, mId);
+        if(mConfig.WriteTypes.contains(WriteType.BUCKET_STATS))
+        {
+            int bucketPosStart = mRegion.start() + bucket.id() * mConfig.BucketSize;
+            int bucketPosEnd = bucketPosStart + mConfig.BucketSize - 1;
+            ChrBaseRegion bucketRegion = new ChrBaseRegion(mRegion.Chromosome, bucketPosStart, bucketPosEnd);
+            mWriter.writeBucketData(bucket, mId, bucketRegion);
+        }
 
         if(mConfig.WriteTypes.contains(WriteType.READS))
         {

@@ -7,8 +7,7 @@ public final class SvConstants
     public static final int DEFAULT_BUCKET_SIZE = 1000;
 
     public static final int DOWN_SAMPLE_FRACTION = 100; // split partition into segments
-    public static final int DOWN_SAMPLE_THRESHOLD = 30_000; // per partition
-    // public static final int DOWN_SAMPLE_THRESHOLD = 1_000_000; // per partition
+    public static final int DOWN_SAMPLE_THRESHOLD = 1_000_000; // per partition
 
     // read filtering
     public static final int MIN_ALIGNMENT_BASES = 50;
@@ -22,6 +21,10 @@ public final class SvConstants
 
     public static final int DEFAULT_FRAG_LENGTH_MIN = 200;
     public static final int DEFAULT_FRAG_LENGTH_MAX = 1500;
+
+    public static final int FRAG_LENGTH_DIST_SAMPLE_SIZE = 10000;
+    public static final int MAX_FRAGMENT_LENGTH = 1000;
+    public static final int DEFAULT_READ_LENGTH = 151;
 
     // to confirm
     public static final short DEFAULT_SINGLE_MAP_QUALITY = 255;

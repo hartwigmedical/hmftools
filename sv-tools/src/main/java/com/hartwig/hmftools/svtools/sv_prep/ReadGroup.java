@@ -34,7 +34,7 @@ public class ReadGroup
         }
 
         mMinPositionStart = min(mMinPositionStart, read.start());
-        mIsComplete = mReads.size() == 3 || (mReads.size() == 2 && !mHasSupplementary);
+        mIsComplete = mReads.size() >= 3 || (mReads.size() == 2 && !mHasSupplementary);
     }
 
     public final String id() { return mReads.get(0).Id; }
