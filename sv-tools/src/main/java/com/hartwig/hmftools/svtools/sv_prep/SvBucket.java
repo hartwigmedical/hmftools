@@ -1,7 +1,11 @@
 package com.hartwig.hmftools.svtools.sv_prep;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.svtools.sv_prep.SvConstants.LOW_BASE_QUALITY;
+import static com.hartwig.hmftools.svtools.sv_prep.SvConstants.SUPPORTING_READ_DISTANCE;
 
 import java.util.List;
 
@@ -44,27 +48,45 @@ public class SvBucket
         mSupportingReads.add(read);
     }
 
-    public void setJunctionPositions()
+    public boolean filterJunctions(int minJunctionSupport)
     {
+        if(mReadGroups.isEmpty())
+            return false;
+
         for(ReadGroup readGroup : mReadGroups)
         {
             for(ReadRecord read : readGroup.reads())
             {
-                SoftClipSide scSide = SoftClipSide.fromCigar(read.Cigar);
+                SoftClipSide scSide = SoftClipSide.fromCigar(read.mCigar);
 
                 if(scSide != null)
                 {
                     if(scSide.isLeft())
-                        addOrUpdateJunction(read.start(), NEG_ORIENT);
+                        addOrUpdateJunction(read, NEG_ORIENT);
                     else
-                        addOrUpdateJunction(read.end(), POS_ORIENT);
+                        addOrUpdateJunction(read, POS_ORIENT);
                 }
             }
         }
+
+        selectSupportingReads();
+
+        int index = 0;
+        while(index < mJunctions.size())
+        {
+            if(mJunctions.get(index).totalSupport() < minJunctionSupport)
+                mJunctions.remove(index);
+            else
+                ++index;
+        }
+
+        return !mJunctions.isEmpty();
     }
 
-    private void addOrUpdateJunction(final int position, final byte orientation)
+    private void addOrUpdateJunction(final ReadRecord read, final byte orientation)
     {
+        int readPosition = orientation == NEG_ORIENT ? read.start() : read.end();
+
         int index = 0;
 
         // use a binary search if count exeeds some level, but with buckets < 1000 bases likely unnecessary
@@ -72,12 +94,14 @@ public class SvBucket
         {
             JunctionData junctionData = mJunctions.get(index);
 
-            if(junctionData.Position == position && junctionData.Orientation == orientation)
+            if(junctionData.Position == readPosition && junctionData.Orientation == orientation)
             {
-                ++junctionData.ExactSupport;
+                // should each read be tested for a match, and added?
+                // junctionData.Reads.add(read);
+                ++junctionData.ExactReads;
                 return;
             }
-            else if(junctionData.Position >= position)
+            else if(junctionData.Position >= readPosition)
             {
                 break;
             }
@@ -85,10 +109,11 @@ public class SvBucket
             ++index;
         }
 
-        mJunctions.add(index, new JunctionData(position, orientation));
+        JunctionData junctionData = new JunctionData(readPosition, orientation, read);
+        mJunctions.add(index, junctionData);
     }
 
-    public void selectSupportingReads()
+    private void selectSupportingReads()
     {
         mInitialSupportingReadCount = mSupportingReads.size();
 
@@ -121,27 +146,124 @@ public class SvBucket
 
     private boolean readSupportsJunction(final ReadRecord read)
     {
-        int leftSoftClipPosition = read.Cigar.isLeftClipped() ? read.start() : 0;
-        int rightSoftClipPosition = read.Cigar.isRightClipped() ? read.end() : 0;
-
         for(JunctionData junctionData : mJunctions)
         {
             // any length soft clipping at the same base
-            if(junctionData.Position == leftSoftClipPosition && junctionData.Orientation == NEG_ORIENT)
+            if(supportsJunction(read, junctionData))
             {
-                ++junctionData.CandidateSupport;
+                ++junctionData.SupportReads;
                 return true;
             }
-            else if(junctionData.Position == rightSoftClipPosition && junctionData.Orientation == POS_ORIENT)
-            {
-                ++junctionData.CandidateSupport;
-                return true;
-            }
-
-            // within 50 bases with exact sequence match in between the soft clip locations
-
         }
 
         return false;
+    }
+
+    public static boolean supportsJunction(final ReadRecord read, final JunctionData junctionData)
+    {
+        /*
+        eg if there is a candidate read with 101M50S at base 1000, how does a supporting read need to align and match?
+         In this case the soft clip is at 1050. Check all reads which have a soft clip on the same side within +/- 50 bases.
+        eg. you may find a read with soft clip at 1047 with 10S.
+        Check if the 10 bases match the last 3 M and first 7S of the original read allowing for low base qual mismatches.
+         If they do then that counts as an additional read even though it is much shorter soft clip and does not exactly match the base.
+         */
+
+        final ReadRecord juncRead = junctionData.InitialRead;
+
+        if(junctionData.Orientation == POS_ORIENT)
+        {
+            if(!read.cigar().isRightClipped())
+                return false;
+
+            int readRightPos = read.end();
+
+            if(readRightPos == junctionData.Position)
+                return true;
+
+            // within 50 bases with exact sequence match in between the soft clip locations
+            if(abs(readRightPos - junctionData.Position) > SUPPORTING_READ_DISTANCE)
+                return false;
+
+            int scLength = read.cigar().getLastCigarElement().getLength();
+            int readLength = read.readBases().length();
+            int readEndPosIndex = readLength - scLength - 1;
+
+            int juncReadLength = juncRead.readBases().length();
+            int juncReadScLength = juncRead.cigar().getLastCigarElement().getLength();
+            int juncReadEndPosIndex = juncReadLength - juncReadScLength - 1;
+            int endPosDiff = juncRead.end() - readRightPos;
+
+            int junctionReadOffset = juncReadEndPosIndex - readEndPosIndex - endPosDiff;
+
+            // test against all the read's right soft-clipped bases
+            for(int i = readLength - scLength; i < readLength; ++i)
+            {
+                char readBase = read.readBases().charAt(i);
+
+                int juncIndex = i + junctionReadOffset;
+                if(juncIndex < 0 || juncIndex >= juncReadLength)
+                    return false;
+
+                char juncReadBase = juncRead.readBases().charAt(juncIndex);
+
+                if(readBase == juncReadBase)
+                    continue;
+
+                if(read.baseQualities()[i] < LOW_BASE_QUALITY || juncRead.baseQualities()[juncIndex] < LOW_BASE_QUALITY)
+                    continue;
+
+                return false;
+            }
+        }
+        else
+        {
+            if(!read.cigar().isLeftClipped())
+                return false;
+
+            int readLeftPos = read.start();
+
+            if(readLeftPos == junctionData.Position)
+                return true;
+
+            // within 50 bases with exact sequence match in between the soft clip locations
+            if(abs(readLeftPos - junctionData.Position) > SUPPORTING_READ_DISTANCE)
+                return false;
+
+            // test for a base match for the read's soft-clipped bases, allow for low-qual matches
+
+            // read: SC length -> start position
+            // junc: SC length -> start position
+            // junc read index = sc length diff - position diff
+
+            int scLength = read.cigar().getFirstCigarElement().getLength();
+
+            int juncReadScLength = juncRead.cigar().getFirstCigarElement().getLength();
+            int posOffset = juncRead.start() - readLeftPos;
+            int softClipDiff = juncReadScLength - scLength;
+            int junctionReadOffset = softClipDiff - posOffset;
+            int juncReadLength = juncRead.readBases().length();
+
+            for(int i = 0; i < scLength; ++i)
+            {
+                char readBase = read.readBases().charAt(i);
+
+                int juncIndex = i + junctionReadOffset;
+                if(juncIndex < 0 || juncIndex >= juncReadLength)
+                    return false;
+
+                char juncReadBase = juncRead.readBases().charAt(juncIndex);
+
+                if(readBase == juncReadBase)
+                    continue;
+
+                if(read.baseQualities()[i] < LOW_BASE_QUALITY || juncRead.baseQualities()[juncIndex] < LOW_BASE_QUALITY)
+                    continue;
+
+                return false;
+            }
+        }
+
+        return true;
     }
 }

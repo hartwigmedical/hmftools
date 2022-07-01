@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.svtools.sv_prep.SvConstants.DEFAULT_READ_LENG
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -51,6 +52,7 @@ public class SvConfig
 
     public final int Threads;
     public final Set<String> SpecificChromosomes;
+    public final List<String> LogReadIds;
     public final List<ChrBaseRegion> SpecificRegions;
 
     public final Set<WriteType> WriteTypes;
@@ -62,6 +64,7 @@ public class SvConfig
     private static final String BAM_FILE = "bam_file";
 
     private static final String SPECIFIC_CHROMOSOMES = "specific_chr";
+    private static final String LOG_READ_IDS = "log_read_ids";
     private static final String WRITE_TYPES = "write_types";
 
     private static final String THREADS = "threads";
@@ -133,6 +136,9 @@ public class SvConfig
             }
         }
 
+        LogReadIds = cmd.hasOption(LOG_READ_IDS) ?
+                Arrays.stream(cmd.getOptionValue(LOG_READ_IDS).split(ITEM_DELIM, -1)).collect(Collectors.toList()) : Lists.newArrayList();
+
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "1"));
     }
 
@@ -155,6 +161,7 @@ public class SvConfig
         options.addOption(WRITE_TYPES, true, "Write types: " + WriteType.values().toString());
         options.addOption(SPECIFIC_CHROMOSOMES, true, "Specific chromosomes separated by ';'");
         options.addOption(SPECIFIC_REGIONS, true, SPECIFIC_REGIONS_DESC);
+        options.addOption(LOG_READ_IDS, true, "Log specific read IDs, separated by ';'");
         options.addOption(THREADS, true, "Thread count");
 
         return options;

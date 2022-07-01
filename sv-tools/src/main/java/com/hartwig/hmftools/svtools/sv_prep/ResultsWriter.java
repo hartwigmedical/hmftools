@@ -88,7 +88,7 @@ public class ResultsWriter
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write("PartitionIndex,BucketId,ReadId,ReadType,GroupComplete,Chromosome,PosStart,PosEnd,Cigar");
-            writer.write(",InsertSize,FragLength,MateChr,MatePosStart,FirstInPair,ReadReversed,SuppData");
+            writer.write(",FragLength,MateChr,MatePosStart,FirstInPair,ReadReversed,SuppData");
             writer.write(",MapQual,MultiMapped,Flags,Proper,Duplicate,Unmapped,MateUnmapped,Secondary,Supplementary");
 
             writer.newLine();
@@ -113,12 +113,12 @@ public class ResultsWriter
         {
             mReadWriter.write(format("%d,%d,%s,%s,%s,%s,%d,%d,%s",
                     partitionIndex, bucketId, read.Id, readType, groupComplete,
-                    read.Chromosome, read.start(), read.end(), read.Cigar.toString()));
+                    read.Chromosome, read.start(), read.end(), read.mCigar.toString()));
 
             SupplementaryReadData suppData = read.supplementaryAlignment();
 
-            mReadWriter.write(format(",%d,%d,%s,%d,%s,%s,%s",
-                    read.fragmentInsertSize(), 0, read.MateChromosome, read.MatePosStart, read.isFirstOfPair(), read.isReadReversed(),
+            mReadWriter.write(format(",%d,%s,%d,%s,%s,%s",
+                    read.fragmentInsertSize(), read.MateChromosome, read.MatePosStart, read.isFirstOfPair(), read.isReadReversed(),
                     suppData != null ? suppData.asCsv() : "N/A"));
 
             mReadWriter.write(format(",%d,%s,%d,%s,%s,%s,%s,%s,%s",
@@ -181,7 +181,7 @@ public class ResultsWriter
             {
                 JunctionData junctionData = bucket.junctionPositions().get(i);
                 juncDataSj.add(format("%d:%d:%d:%d",
-                        junctionData.Position, junctionData.Orientation, junctionData.ExactSupport, junctionData.CandidateSupport));
+                        junctionData.Position, junctionData.Orientation, junctionData.ExactReads, junctionData.SupportReads));
             }
 
             mBucketWriter.write(format("%s,%d,%d,%d,%d",

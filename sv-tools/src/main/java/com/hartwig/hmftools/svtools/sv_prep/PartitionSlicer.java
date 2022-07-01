@@ -3,6 +3,7 @@ package com.hartwig.hmftools.svtools.sv_prep;
 import static com.hartwig.hmftools.svtools.sv_prep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svtools.sv_prep.SvConstants.DOWN_SAMPLE_FRACTION;
 import static com.hartwig.hmftools.svtools.sv_prep.SvConstants.DOWN_SAMPLE_THRESHOLD;
+import static com.hartwig.hmftools.svtools.sv_prep.SvConstants.MAX_READS_PER_PARTITION;
 
 import java.io.File;
 import java.util.Map;
@@ -39,6 +40,7 @@ public class PartitionSlicer
 
     private final ReadRateTracker mReadRateTracker;
     private boolean mRateLimitTriggered;
+    private boolean mLogReadIds;
     private final PerformanceCounter mPerCounter;
 
     public PartitionSlicer(
@@ -69,6 +71,7 @@ public class PartitionSlicer
 
         mStats = new PartitionStats();
         mPerCounter = new PerformanceCounter("Total");
+        mLogReadIds = !mConfig.LogReadIds.isEmpty();
     }
 
     public void run()
@@ -98,34 +101,7 @@ public class PartitionSlicer
             System.gc();
     }
 
-    private boolean checkReadRateLimits(int positionStart)
-    {
-        boolean wasLimited = mReadRateTracker.isRateLimited();
-        int lastSegementReadCount = mReadRateTracker.readCount();
-
-        boolean handleRead = mReadRateTracker.handleRead(positionStart);
-
-        if(wasLimited != mReadRateTracker.isRateLimited())
-        {
-            if(mReadRateTracker.isRateLimited())
-            {
-                SV_LOGGER.info("region({}) rate limited with read count({}) at position({})",
-                        mRegion, lastSegementReadCount, positionStart);
-                mRateLimitTriggered = true;
-            }
-            else
-            {
-                SV_LOGGER.info("region({}) rate limit cleared at position({}), last read count({})",
-                        mRegion, positionStart, lastSegementReadCount);
-            }
-        }
-
-        return handleRead;
-    }
-
-    private static final String LOG_READ_ID = "";
-    // private static final String LOG_READ_ID = "A00624:8:HHKYHDSXX:2:1645:30870:9392";
-    private static final boolean LOG_READ_ONLY = true;
+    private static final boolean LOG_READ_ONLY = false;
 
     private void processSamRecord(final SAMRecord record)
     {
@@ -134,13 +110,19 @@ public class PartitionSlicer
 
         ++mStats.TotalReads;
 
-        if(record.getReadName().equals(LOG_READ_ID))
+        if(mStats.TotalReads > 10) // MAX_READS_PER_PARTITION
         {
-            SV_LOGGER.debug("specific readId({})", record.getReadName());
-        }
-        else if(!LOG_READ_ID.isEmpty() && LOG_READ_ONLY)
-        {
+            SV_LOGGER.warn("region({}) readCount({}) exceeds maximum, stopping slice", mRegion, mStats.TotalReads);
+            mBamSlicer.haltProcessing();
             return;
+        }
+
+        if(mLogReadIds) // debugging only
+        {
+            if(mConfig.LogReadIds.contains(record.getReadName()))
+                SV_LOGGER.debug("specific readId({})", record.getReadName());
+            else if(LOG_READ_ONLY)
+                return;
         }
 
         if(!checkReadRateLimits(record.getAlignmentStart()))
@@ -244,17 +226,13 @@ public class PartitionSlicer
 
     private void processBucket(final SvBucket bucket)
     {
-        bucket.setJunctionPositions();
-
-        if(bucket.junctionPositions().isEmpty())
+        if(!bucket.filterJunctions(mReadFilters.MinJunctionSupport))
         {
             ++mStats.EmptyBuckets;
             return;
         }
 
         ++mStats.Buckets;
-
-        bucket.selectSupportingReads();
 
         mStats.JunctionCount += bucket.junctionPositions().size();
         mStats.JunctionFragmentCount += bucket.readGroups().size();
@@ -301,5 +279,30 @@ public class PartitionSlicer
         }
 
         return mBuckets[bucket];
+    }
+
+    private boolean checkReadRateLimits(int positionStart)
+    {
+        boolean wasLimited = mReadRateTracker.isRateLimited();
+        int lastSegementReadCount = mReadRateTracker.readCount();
+
+        boolean handleRead = mReadRateTracker.handleRead(positionStart);
+
+        if(wasLimited != mReadRateTracker.isRateLimited())
+        {
+            if(mReadRateTracker.isRateLimited())
+            {
+                SV_LOGGER.info("region({}) rate limited with read count({}) at position({})",
+                        mRegion, lastSegementReadCount, positionStart);
+                mRateLimitTriggered = true;
+            }
+            else
+            {
+                SV_LOGGER.info("region({}) rate limit cleared at position({}), last read count({})",
+                        mRegion, positionStart, lastSegementReadCount);
+            }
+        }
+
+        return handleRead;
     }
 }
