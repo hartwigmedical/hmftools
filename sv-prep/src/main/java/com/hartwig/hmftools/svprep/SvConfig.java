@@ -8,14 +8,19 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_CHROMOSOMES;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_CHROMOSOMES_DESC;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS_DESC;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SUB_ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomesOrRegions;
 import static com.hartwig.hmftools.svprep.SvCommon.ITEM_DELIM;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_BUCKET_SIZE;
 import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_CHR_PARTITION_SIZE;
 import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_READ_LENGTH;
+import static com.hartwig.hmftools.svprep.WriteType.BUCKET_STATS;
 
 import java.util.Arrays;
 import java.util.List;
@@ -29,6 +34,7 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.util.Strings;
 
 public class SvConfig
@@ -48,13 +54,15 @@ public class SvConfig
 
     public final String OutputDir;
     public final String OutputId;
+    public final Set<WriteType> WriteTypes;
 
     public final int Threads;
-    public final Set<String> SpecificChromosomes;
-    public final List<String> LogReadIds;
-    public final List<ChrBaseRegion> SpecificRegions;
 
-    public final Set<WriteType> WriteTypes;
+    // debug
+    public final List<String> SpecificChromosomes;
+    public final List<String> LogReadIds;
+    public final int MaxPartitionReads;
+    public final List<ChrBaseRegion> SpecificRegions;
 
     private boolean mIsValid;
 
@@ -62,14 +70,15 @@ public class SvConfig
     public static final String SAMPLE = "sample";
     private static final String BAM_FILE = "bam_file";
 
-    public static final String SPECIFIC_CHROMOSOMES = "specific_chr";
-    private static final String LOG_READ_IDS = "log_read_ids";
     private static final String WRITE_TYPES = "write_types";
 
     private static final String THREADS = "threads";
     private static final String READ_LENGTH = "read_length";
     private static final String FRAG_LENGTH_RANGE = "fragment_length_range";
     private static final String CALC_FRAG_LENGTH = "calc_fragment_length";
+
+    private static final String LOG_READ_IDS = "log_read_ids";
+    private static final String MAX_PARTITION_READS = "max_partition_reads";
 
     public SvConfig(final CommandLine cmd)
     {
@@ -79,6 +88,9 @@ public class SvConfig
         BamFile = cmd.getOptionValue(BAM_FILE);
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
+
+        if(SampleId == null || BamFile == null || OutputDir == null)
+            mIsValid = false;
 
         RefGenomeFile = cmd.getOptionValue(REF_GENOME);
         // RefGenome = loadRefGenome(RefGenomeFile);
@@ -102,44 +114,36 @@ public class SvConfig
 
         WriteTypes = Sets.newHashSet();
 
-        String[] writeTypes = cmd.getOptionValue(WRITE_TYPES).split(ITEM_DELIM, -1);
-        Arrays.stream(writeTypes).forEach(x -> WriteTypes.add(WriteType.valueOf(x)));
+        if(cmd.hasOption(WRITE_TYPES))
+        {
+            String[] writeTypes = cmd.getOptionValue(WRITE_TYPES).split(ITEM_DELIM, -1);
+            Arrays.stream(writeTypes).forEach(x -> WriteTypes.add(WriteType.valueOf(x)));
+        }
+        else
+        {
+            WriteTypes.add(BUCKET_STATS);
+        }
 
-        SpecificChromosomes = Sets.newHashSet();
+        SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();
 
-        if(cmd.hasOption(SPECIFIC_REGIONS))
+        try
         {
-            try
-            {
-                SpecificRegions.addAll(ChrBaseRegion.loadSpecificRegions(cmd));
-
-                for(ChrBaseRegion region : SpecificRegions)
-                {
-                    SV_LOGGER.info("filtering for specific region: {}", region);
-                    SpecificChromosomes.add(region.Chromosome);
-                }
-            }
-            catch(Exception e)
-            {
-                SV_LOGGER.error("invalid specific regions: {}", cmd.getOptionValue(SPECIFIC_REGIONS));
-                mIsValid = false;
-            }
+            loadSpecificChromsomesOrRegions(cmd, SpecificChromosomes, SpecificRegions, SV_LOGGER);
         }
-        else if(cmd.hasOption(SPECIFIC_CHROMOSOMES))
+        catch(ParseException e)
         {
-            final String chromosomeList = cmd.getOptionValue(SPECIFIC_CHROMOSOMES, Strings.EMPTY);
-            if(!chromosomeList.isEmpty())
-            {
-                SpecificChromosomes.addAll(Lists.newArrayList(chromosomeList.split(ITEM_DELIM)));
-            }
+            mIsValid = false;
         }
 
         LogReadIds = cmd.hasOption(LOG_READ_IDS) ?
                 Arrays.stream(cmd.getOptionValue(LOG_READ_IDS).split(ITEM_DELIM, -1)).collect(Collectors.toList()) : Lists.newArrayList();
 
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "1"));
+        MaxPartitionReads = Integer.parseInt(cmd.getOptionValue(MAX_PARTITION_READS, "0"));
     }
+
+    public boolean isValid() { return mIsValid; }
 
     public String formFilename(final WriteType writeType)
     {
@@ -179,9 +183,9 @@ public class SvConfig
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version - accepts 37 (default) or 38");
 
         options.addOption(WRITE_TYPES, true, "Write types: " + WriteType.values().toString());
-        options.addOption(SPECIFIC_CHROMOSOMES, true, "Specific chromosomes separated by ';'");
-        options.addOption(SPECIFIC_REGIONS, true, SPECIFIC_REGIONS_DESC);
+        addSpecificChromosomesRegionsConfig(options);
         options.addOption(LOG_READ_IDS, true, "Log specific read IDs, separated by ';'");
+        options.addOption(MAX_PARTITION_READS, true, "Limit to stop processing reads in partition, for debug");
         options.addOption(THREADS, true, "Thread count");
 
         return options;

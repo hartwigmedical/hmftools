@@ -7,7 +7,6 @@ public final class SvConstants
     public static final int DEFAULT_BUCKET_SIZE = 1000;
     public static final int DOWN_SAMPLE_FRACTION = 20; // split partition into segments
     public static final int DOWN_SAMPLE_THRESHOLD = 1_500_000; // per partition
-    public static final int MAX_READS_PER_PARTITION = 5_000_000; // TEMP until final performance assessed
 
     // read filtering
     public static final int MIN_ALIGNMENT_BASES = 50;

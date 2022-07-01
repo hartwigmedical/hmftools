@@ -13,6 +13,9 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_CHROMOSOMES;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_CHROMOSOMES_DESC;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomes;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.svprep.SvCommon.DELIM;
@@ -20,7 +23,6 @@ import static com.hartwig.hmftools.svprep.SvCommon.ITEM_DELIM;
 import static com.hartwig.hmftools.svprep.SvCommon.SUB_ITEM_DELIM;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConfig.SAMPLE;
-import static com.hartwig.hmftools.svprep.SvConfig.SPECIFIC_CHROMOSOMES;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -28,9 +30,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
@@ -44,7 +44,6 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.compress.utils.Lists;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.tribble.AbstractFeatureReader;
@@ -60,7 +59,7 @@ public class VcfBucketCompare
     private final String mBucketsFilename;
     private final String mOutputDir;
     private final String mOutputId;
-    private final Set<String> mSpecificChromosomes;
+    private final List<String> mSpecificChromosomes;
 
     private final Map<String,List<BucketData>> mChrBuckets;
     private StructuralVariantFactory mSvFactory;
@@ -87,16 +86,7 @@ public class VcfBucketCompare
         mMatchedBreakends = 0;
         mVcfBreakends = 0;
 
-        mSpecificChromosomes = Sets.newHashSet();
-
-        if(cmd.hasOption(SPECIFIC_CHROMOSOMES))
-        {
-            final String chromosomeList = cmd.getOptionValue(SPECIFIC_CHROMOSOMES, Strings.EMPTY);
-            if(!chromosomeList.isEmpty())
-            {
-                mSpecificChromosomes.addAll(com.google.common.collect.Lists.newArrayList(chromosomeList.split(ITEM_DELIM)));
-            }
-        }
+        mSpecificChromosomes = loadSpecificChromsomes(cmd);
     }
 
     public void run()
@@ -368,7 +358,7 @@ public class VcfBucketCompare
         options.addOption(SAMPLE, true, "Name of the sample");
         options.addOption(VCF_FILE, true, "VCF File");
         options.addOption(BUCKET_FILE, true, "SV prep bucket file");
-        options.addOption(SPECIFIC_CHROMOSOMES, true, "Specific chromosomes separated by ';'");
+        options.addOption(SPECIFIC_CHROMOSOMES, true, SPECIFIC_CHROMOSOMES_DESC);
 
         addOutputOptions(options);
         addLoggingOptions(options);

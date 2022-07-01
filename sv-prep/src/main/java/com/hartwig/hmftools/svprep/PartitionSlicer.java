@@ -3,7 +3,6 @@ package com.hartwig.hmftools.svprep;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_FRACTION;
 import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_THRESHOLD;
-import static com.hartwig.hmftools.svprep.SvConstants.MAX_READS_PER_PARTITION;
 
 import java.io.File;
 import java.util.Map;
@@ -113,7 +112,7 @@ public class PartitionSlicer
 
         ++mStats.TotalReads;
 
-        if(mStats.TotalReads > MAX_READS_PER_PARTITION)
+        if(mConfig.MaxPartitionReads > 0 && mStats.TotalReads >= mConfig.MaxPartitionReads)
         {
             SV_LOGGER.warn("region({}) readCount({}) exceeds maximum, stopping slice", mRegion, mStats.TotalReads);
             mBamSlicer.haltProcessing();
