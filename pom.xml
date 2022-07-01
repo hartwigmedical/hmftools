@@ -24,6 +24,7 @@
         <module>gripss</module>
         <module>purple</module>
         <module>linx</module>
+        <module>sv-prep</module>
         <module>sv-tools</module>
         <module>virus-interpreter</module>
         <module>lilac</module>
@@ -82,6 +83,7 @@
         <sage.version>3.1</sage.version>
         <sigs.version>1.0</sigs.version>
         <serve.version>1.11</serve.version>
+        <sv-prep.version>1.0</sv-prep.version>
         <sv-tools.version>1.0</sv-tools.version>
         <teal.version>1.0.1</teal.version>
         <vicc-importer.version>1.2</vicc-importer.version>
