@@ -9,13 +9,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.ContigComparator;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.compress.utils.Lists;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
@@ -124,9 +126,21 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
 
     // config loading to filter on specific regions
     public static final String SPECIFIC_REGIONS = "specific_regions";
-    public static final String SPECIFIC_REGIONS_DESC = "Restrict to regions(s) separated by ';' in format Chr:PosStart:PosEnd";
+    public static final String SPECIFIC_REGIONS_DESC =
+            "Restrict to regions(s) separated by ';' in format Chr:PosStart:PosEnd or Chr:PosStart-PosEnd";
+
+    public static final String SPECIFIC_CHROMOSOMES = "specific_chr";
+    public static final String SPECIFIC_CHROMOSOMES_DESC = "Restrict to chromosome(s) separated by ';'";
+
     public static final String ITEM_DELIM = ";";
     public static final String SUB_ITEM_DELIM = ":";
+    public static final String POS_ITEM_DELIM = "-";
+
+    public static void addSpecificChromosomesRegionsConfig(final Options options)
+    {
+        options.addOption(SPECIFIC_CHROMOSOMES, true, SPECIFIC_CHROMOSOMES_DESC);
+        options.addOption(SPECIFIC_REGIONS, true, SPECIFIC_REGIONS_DESC);
+    }
 
     public static List<ChrBaseRegion> loadSpecificRegions(final CommandLine cmd) throws ParseException
     {
@@ -140,22 +154,65 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
         for(String regionStr : regionStrs)
         {
             final String[] items = regionStr.split(SUB_ITEM_DELIM);
-            if(items.length == 3)
-            {
-                ChrBaseRegion region = new ChrBaseRegion(items[0], Integer.parseInt(items[1]), Integer.parseInt(items[2]));
 
-                if(!region.isValid())
-                    throw new ParseException(String.format("invalid specific region: %s", region));
-
-                regions.add(region);
-            }
-            else
+            if(!(items.length == 3 || (items.length == 2 && items[1].contains(POS_ITEM_DELIM))))
             {
                 throw new ParseException(String.format("invalid specific region: %s", regionStr));
             }
+
+            String chromosome = items[0];
+            int posStart;
+            int posEnd;
+
+            if(items.length == 3)
+            {
+                posStart = Integer.parseInt(items[1]);
+                posEnd = Integer.parseInt(items[2]);
+            }
+            else
+            {
+                String[] positions = items[1].split(POS_ITEM_DELIM, 2);
+                posStart = Integer.parseInt(positions[0]);
+                posEnd = Integer.parseInt(positions[1]);
+            }
+
+            ChrBaseRegion region = new ChrBaseRegion(chromosome, posStart, posEnd);
+
+            if(!region.isValid())
+                throw new ParseException(String.format("invalid specific region: %s", region));
+
+            regions.add(region);
         }
 
         return regions;
+    }
+
+    public static List<String> loadSpecificChromsomes(final CommandLine cmd)
+    {
+        return cmd.hasOption(SPECIFIC_CHROMOSOMES) ?
+                Arrays.stream(cmd.getOptionValue(SPECIFIC_CHROMOSOMES).split(ITEM_DELIM)).collect(Collectors.toList()) : Lists.newArrayList();
+    }
+
+    public static void loadSpecificChromsomesOrRegions(
+            final CommandLine cmd, final List<String> chromosomes, final List<ChrBaseRegion> regions, final Logger logger) throws ParseException
+    {
+        if(cmd.hasOption(SPECIFIC_REGIONS))
+        {
+            regions.addAll(ChrBaseRegion.loadSpecificRegions(cmd));
+
+            for(ChrBaseRegion region : regions)
+            {
+                logger.info("filtering for specific region: {}", region);
+
+                if(!chromosomes.contains(region.Chromosome))
+                    chromosomes.add(region.Chromosome);
+            }
+        }
+        else if(cmd.hasOption(SPECIFIC_CHROMOSOMES))
+        {
+            logger.info("filtering for specific chromosomes: {}", cmd.getOptionValue(SPECIFIC_CHROMOSOMES));
+            chromosomes.addAll(loadSpecificChromsomes(cmd));
+        }
     }
 }
 

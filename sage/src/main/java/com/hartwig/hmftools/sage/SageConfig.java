@@ -11,6 +11,8 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS_DESC;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomesOrRegions;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH_PANEL;
@@ -39,6 +41,7 @@ import com.hartwig.hmftools.sage.quality.QualityRecalibrationConfig;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -62,7 +65,7 @@ public class SageConfig
     public final FilterConfig Filter;
     public final QualityConfig Quality;
     public final QualityRecalibrationConfig QualityRecalibration;
-    public final Set<String> SpecificChromosomes;
+    public final List<String> SpecificChromosomes;
     public final Set<Integer> SpecificPositions;
     public final List<ChrBaseRegion> SpecificRegions;
     public final boolean IncludeMT;
@@ -162,35 +165,17 @@ public class SageConfig
 
         IncludeMT = cmd.hasOption(INCLUDE_MT);
 
-        SpecificChromosomes = Sets.newHashSet();
         SpecificPositions = Sets.newHashSet();
+        SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();
 
-        if(cmd.hasOption(SPECIFIC_REGIONS))
+        try
         {
-            try
-            {
-                SpecificRegions.addAll(ChrBaseRegion.loadSpecificRegions(cmd));
-
-                for(ChrBaseRegion region : SpecificRegions)
-                {
-                    SG_LOGGER.info("filtering for specific region: {}", region);
-                    SpecificChromosomes.add(region.Chromosome);
-                }
-            }
-            catch(Exception e)
-            {
-                SG_LOGGER.error("invalid specific regions: {}", cmd.getOptionValue(SPECIFIC_REGIONS));
-                mIsValid = false;
-            }
+            loadSpecificChromsomesOrRegions(cmd, SpecificChromosomes, SpecificRegions, SG_LOGGER);
         }
-        else if(cmd.hasOption(SPECIFIC_CHROMOSOMES))
+        catch(ParseException e)
         {
-            final String chromosomeList = cmd.getOptionValue(SPECIFIC_CHROMOSOMES, Strings.EMPTY);
-            if(!chromosomeList.isEmpty())
-            {
-                SpecificChromosomes.addAll(Lists.newArrayList(chromosomeList.split(ITEM_DELIM)));
-            }
+            mIsValid = false;
         }
 
         if(cmd.hasOption(SPECIFIC_POSITIONS))
@@ -363,8 +348,7 @@ public class SageConfig
         options.addOption(REF_GENOME_VERSION, true, "Assembly, must be one of [37, 38]");
         options.addOption(OUTPUT_VCF, true, "Output vcf");
         options.addOption(MIN_MAP_QUALITY, true, "Min map quality to apply to non-hotspot variants [" + DEFAULT_MIN_MAP_QUALITY + "]");
-        options.addOption(SPECIFIC_CHROMOSOMES, true, "Run for subset of chromosomes, split by ';'");
-        options.addOption(SPECIFIC_REGIONS, true, SPECIFIC_REGIONS_DESC);
+        addSpecificChromosomesRegionsConfig(options);
         options.addOption(SPECIFIC_POSITIONS, true, "Run for specific positions(s) separated by ';', for debug purposes");
         options.addOption(INCLUDE_MT, false, "Call MT variants");
         options.addOption(SLICE_SIZE, true, "Slice size [" + DEFAULT_SLICE_SIZE + "]");
@@ -402,7 +386,7 @@ public class SageConfig
         Filter = new FilterConfig();
         Quality = new QualityConfig();
         QualityRecalibration = new QualityRecalibrationConfig();
-        SpecificChromosomes = Sets.newHashSet();
+        SpecificChromosomes = Lists.newArrayList();
         SpecificPositions = Sets.newHashSet();
         SpecificRegions = Lists.newArrayList();
         IncludeMT = false;

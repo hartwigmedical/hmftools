@@ -11,6 +11,9 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_CHROMOSOMES;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_CHROMOSOMES_DESC;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomes;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -46,8 +49,6 @@ public class GripssConfig
     private static final String REFERENCE = "reference";
     private static final String VCF_FILE = "vcf";
 
-    private static final String SPECIFIC_CHROMOSOMES = "specific_chr";
-
     public static final Logger GR_LOGGER = LogManager.getLogger(GripssApplication.class);
 
     public GripssConfig(final CommandLine cmd)
@@ -60,9 +61,7 @@ public class GripssConfig
         VcfFile = cmd.getOptionValue(VCF_FILE, "");
         RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
 
-        RestrictedChromosomes = cmd.hasOption(SPECIFIC_CHROMOSOMES) ?
-                Arrays.stream(cmd.getOptionValue(SPECIFIC_CHROMOSOMES, "")
-                .split(";")).collect(Collectors.toList()) : Lists.newArrayList();
+        RestrictedChromosomes = loadSpecificChromsomes(cmd);
     }
 
     public GripssConfig(
@@ -120,7 +119,7 @@ public class GripssConfig
         addLoggingOptions(options);
         addRefGenomeConfig(options);
 
-        options.addOption(SPECIFIC_CHROMOSOMES, true, "Optional set of chromosomes to restrict search to");
+        options.addOption(SPECIFIC_CHROMOSOMES, true, SPECIFIC_CHROMOSOMES_DESC);
 
         PonCache.addCmdLineArgs(options);
         HotspotCache.addCmdLineArgs(options);
