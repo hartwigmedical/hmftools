@@ -57,26 +57,6 @@ public class ResultsWriter
         closeBufferedWriter(mBucketWriter);
     }
 
-    private String formFilename(final WriteType writeType)
-    {
-        String filename = mConfig.OutputDir + mConfig.SampleId;
-
-        filename += ".sv_prep.";
-
-        if(mConfig.OutputId != null)
-            filename += mConfig.OutputId + ".";
-
-        switch(writeType)
-        {
-            case SV_BED: return filename + "bed";
-            case READS: return filename + "reads.csv";
-            case BUCKET_STATS: return filename + "buckets.csv";
-            case BAM: return filename + "bam";
-        }
-
-        return null;
-    }
-
     private BufferedWriter initialiseReadWriter()
     {
         if(!mConfig.WriteTypes.contains(READS))
@@ -84,7 +64,7 @@ public class ResultsWriter
 
         try
         {
-            String filename = formFilename(READS);
+            String filename = mConfig.formFilename(READS);
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write("PartitionIndex,BucketId,ReadId,ReadType,GroupComplete,Chromosome,PosStart,PosEnd,Cigar");
@@ -149,7 +129,7 @@ public class ResultsWriter
 
         try
         {
-            String filename = formFilename(BUCKET_STATS);
+            String filename = mConfig.formFilename(BUCKET_STATS);
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write("Chromosome,PosStart,PosEnd,PartitionIndex,BucketId");

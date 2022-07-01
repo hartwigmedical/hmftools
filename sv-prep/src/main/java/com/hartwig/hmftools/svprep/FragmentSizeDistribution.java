@@ -3,11 +3,16 @@ package com.hartwig.hmftools.svprep;
 import static java.lang.Math.abs;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.FRAG_LENGTH_DIST_SAMPLE_SIZE;
 import static com.hartwig.hmftools.svprep.SvConstants.MAX_FRAGMENT_LENGTH;
+import static com.hartwig.hmftools.svprep.WriteType.FRAGMENT_LENGTH_DIST;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
@@ -69,6 +74,9 @@ public class FragmentSizeDistribution
         final int[] lengthRange = calcFragmentLengthRange();
 
         SV_LOGGER.info("fragment size distribution complete: min({}) max({})", lengthRange[0], lengthRange[1]);
+
+        if(mConfig.WriteTypes.contains(FRAGMENT_LENGTH_DIST))
+            writeDistribution();
     }
 
     public final int[] calcFragmentLengthRange()
@@ -110,6 +118,31 @@ public class FragmentSizeDistribution
                 LengthFrequency newLengthData = new LengthFrequency(fragmentLength, otherLengthData.Frequency);
                 lengthFrequencies.add(index, newLengthData);
             }
+        }
+    }
+
+    private void writeDistribution()
+    {
+        try
+        {
+            final String outputFileName = mConfig.formFilename(FRAGMENT_LENGTH_DIST);
+
+            BufferedWriter writer = createBufferedWriter(outputFileName, false);
+
+            writer.write("FragmentLength,Count");
+            writer.newLine();
+
+            for(LengthFrequency lengthFrequency : mLengthFrequencies)
+            {
+                writer.write(String.format("%d,%d", lengthFrequency.Length, lengthFrequency.Frequency));
+                writer.newLine();
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            SV_LOGGER.error("failed to write fragment length file: {}", e.toString());
         }
     }
 

@@ -2,8 +2,10 @@ package com.hartwig.hmftools.svprep;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.svprep.SvConstants.JUNCTION_SUPPORT_CAP;
 import static com.hartwig.hmftools.svprep.SvConstants.LOW_BASE_QUALITY;
 import static com.hartwig.hmftools.svprep.SvConstants.SUPPORTING_READ_DISTANCE;
 
@@ -146,14 +148,117 @@ public class SvBucket
 
     private boolean readSupportsJunction(final ReadRecord read)
     {
-        for(JunctionData junctionData : mJunctions)
+        boolean supportsJunction = false;
+
+        if(mJunctions.size() < 20)
         {
-            // any length soft clipping at the same base
-            if(supportsJunction(read, junctionData))
+            for(JunctionData junctionData : mJunctions)
             {
-                ++junctionData.SupportReads;
-                return true;
+                // any length soft clipping at the same base
+                if(supportsJunction(read, junctionData))
+                {
+                    ++junctionData.SupportReads;
+                    supportsJunction = true;
+                }
             }
+
+            return supportsJunction;
+        }
+
+        int closeJunctionIndex = findJunctionIndex(read);
+
+        if(closeJunctionIndex < 0)
+            return false;
+
+        // check up and down from this location
+        for(int i = 0; i <= 1; ++i)
+        {
+            boolean searchUp = (i == 0);
+
+            int index = searchUp ? closeJunctionIndex + 1 : closeJunctionIndex - 1;
+
+            while(index >= 0 && index < mJunctions.size())
+            {
+                JunctionData junctionData = mJunctions.get(index);
+
+                if(!readWithinJunctionRange(read, junctionData))
+                    break;
+
+                if(junctionData.SupportReads < JUNCTION_SUPPORT_CAP) // TEMP to limit processing
+                {
+                    if(supportsJunction(read, junctionData))
+                    {
+                        ++junctionData.SupportReads;
+                        supportsJunction = true;
+                    }
+                }
+
+                if(searchUp)
+                    ++index;
+                else
+                    --index;
+            }
+        }
+
+        return supportsJunction;
+    }
+
+    private int findJunctionIndex(final ReadRecord read)
+    {
+        // binary search on junctions if the collection gets too large
+        int currentIndex = mJunctions.size() / 2;
+        int lowerIndex = 0;
+        int upperIndex = mJunctions.size() - 1;
+
+        while(true)
+        {
+            JunctionData junctionData = mJunctions.get(currentIndex);
+
+            if(readWithinJunctionRange(read, junctionData))
+                return currentIndex;
+
+            if(positionWithin(read.start(), read.end(), junctionData.Position))
+                return -1;
+
+            if(read.end() < junctionData.Position)
+            {
+                // search lower
+                if(lowerIndex + 1 == currentIndex)
+                    return currentIndex;
+
+                upperIndex = currentIndex;
+                currentIndex = (lowerIndex + upperIndex) / 2;
+            }
+            else if(read.start() > junctionData.Position)
+            {
+                // search higher
+                if(currentIndex + 1 == upperIndex)
+                    return currentIndex;
+
+                lowerIndex = currentIndex;
+                currentIndex = (lowerIndex + upperIndex) / 2;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        return -1;
+    }
+
+    private static boolean readWithinJunctionRange(final ReadRecord read, final JunctionData junctionData)
+    {
+        if(read.cigar().isRightClipped())
+        {
+            if(abs(read.end() - junctionData.Position) <= SUPPORTING_READ_DISTANCE)
+                return true;
+        }
+
+        if(read.cigar().isLeftClipped())
+        {
+            if(abs(read.start() - junctionData.Position) <= SUPPORTING_READ_DISTANCE)
+                return true;
         }
 
         return false;
@@ -168,7 +273,6 @@ public class SvBucket
         Check if the 10 bases match the last 3 M and first 7S of the original read allowing for low base qual mismatches.
          If they do then that counts as an additional read even though it is much shorter soft clip and does not exactly match the base.
          */
-
         final ReadRecord juncRead = junctionData.InitialRead;
 
         if(junctionData.Orientation == POS_ORIENT)

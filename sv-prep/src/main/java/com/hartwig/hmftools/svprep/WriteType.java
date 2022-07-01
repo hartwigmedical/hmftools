@@ -5,5 +5,6 @@ public enum WriteType
     BUCKET_STATS,
     SV_BED,
     READS,
-    BAM;
+    BAM,
+    FRAGMENT_LENGTH_DIST;
 }

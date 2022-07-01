@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.svprep.SvCommon.ITEM_DELIM;
 import static com.hartwig.hmftools.svprep.SvCommon.SUB_ITEM_DELIM;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConfig.SAMPLE;
+import static com.hartwig.hmftools.svprep.SvConfig.SPECIFIC_CHROMOSOMES;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -27,7 +28,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
@@ -41,6 +44,7 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.compress.utils.Lists;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.tribble.AbstractFeatureReader;
@@ -56,10 +60,12 @@ public class VcfBucketCompare
     private final String mBucketsFilename;
     private final String mOutputDir;
     private final String mOutputId;
+    private final Set<String> mSpecificChromosomes;
 
     private final Map<String,List<BucketData>> mChrBuckets;
     private StructuralVariantFactory mSvFactory;
 
+    private int mVcfBreakends;
     private int mMatchedBreakends;
     private final BufferedWriter mWriter;
 
@@ -77,7 +83,20 @@ public class VcfBucketCompare
         mChrBuckets = Maps.newHashMap();
         mSvFactory = new StructuralVariantFactory(new CompoundFilter(false));
         mWriter = initialiseWriter();
+
         mMatchedBreakends = 0;
+        mVcfBreakends = 0;
+
+        mSpecificChromosomes = Sets.newHashSet();
+
+        if(cmd.hasOption(SPECIFIC_CHROMOSOMES))
+        {
+            final String chromosomeList = cmd.getOptionValue(SPECIFIC_CHROMOSOMES, Strings.EMPTY);
+            if(!chromosomeList.isEmpty())
+            {
+                mSpecificChromosomes.addAll(com.google.common.collect.Lists.newArrayList(chromosomeList.split(ITEM_DELIM)));
+            }
+        }
     }
 
     public void run()
@@ -101,8 +120,6 @@ public class VcfBucketCompare
 
         // VCFHeader vcfHeader = (VCFHeader)reader.getHeader();
 
-        int vcfCount = 0;
-
         try
         {
             for(VariantContext variantContext : reader.iterator())
@@ -114,7 +131,6 @@ public class VcfBucketCompare
                 if(isSgl)
                 {
                     sv = createSingleBreakend(variantContext);
-                    ++vcfCount;
                 }
                 else
                 {
@@ -130,7 +146,6 @@ public class VcfBucketCompare
 
                     sv = mSvFactory.results().get(0);
                     mSvFactory.results().remove(0);
-                    vcfCount += 2;
                 }
 
                 processBreakend(sv, variantContext);
@@ -142,7 +157,7 @@ public class VcfBucketCompare
             System.exit(1);
         }
 
-        SV_LOGGER.info("compared {} breakends, matched({})", vcfCount, mMatchedBreakends);
+        SV_LOGGER.info("compared {} breakends, matched({})", mVcfBreakends, mMatchedBreakends);
 
         closeBufferedWriter(mWriter);
     }
@@ -155,6 +170,12 @@ public class VcfBucketCompare
                 continue;
 
             StructuralVariantLeg svLeg = se == SE_START ? sv.start() : sv.end();
+
+            if(!mSpecificChromosomes.isEmpty() && !mSpecificChromosomes.contains(svLeg.chromosome()))
+                continue;
+
+            ++mVcfBreakends;
+
             List<BucketData> buckets = mChrBuckets.get(svLeg.chromosome());
 
             if(buckets == null)
@@ -280,6 +301,8 @@ public class VcfBucketCompare
                 {
                     String[] items = junctionStr.split(SUB_ITEM_DELIM, 4);
                     JunctionData junctionData = new JunctionData(Integer.parseInt(items[0]), Byte.parseByte(items[1]), null);
+                    junctionData.ExactReads = Integer.parseInt(items[2]);
+                    junctionData.SupportReads = Integer.parseInt(items[3]);
                     bucket.Junctions.add(junctionData);
                 }
 
@@ -345,6 +368,7 @@ public class VcfBucketCompare
         options.addOption(SAMPLE, true, "Name of the sample");
         options.addOption(VCF_FILE, true, "VCF File");
         options.addOption(BUCKET_FILE, true, "SV prep bucket file");
+        options.addOption(SPECIFIC_CHROMOSOMES, true, "Specific chromosomes separated by ';'");
 
         addOutputOptions(options);
         addLoggingOptions(options);

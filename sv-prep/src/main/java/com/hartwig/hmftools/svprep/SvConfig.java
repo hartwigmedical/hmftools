@@ -62,7 +62,7 @@ public class SvConfig
     public static final String SAMPLE = "sample";
     private static final String BAM_FILE = "bam_file";
 
-    private static final String SPECIFIC_CHROMOSOMES = "specific_chr";
+    public static final String SPECIFIC_CHROMOSOMES = "specific_chr";
     private static final String LOG_READ_IDS = "log_read_ids";
     private static final String WRITE_TYPES = "write_types";
 
@@ -139,6 +139,27 @@ public class SvConfig
                 Arrays.stream(cmd.getOptionValue(LOG_READ_IDS).split(ITEM_DELIM, -1)).collect(Collectors.toList()) : Lists.newArrayList();
 
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "1"));
+    }
+
+    public String formFilename(final WriteType writeType)
+    {
+        String filename = OutputDir + SampleId;
+
+        filename += ".sv_prep.";
+
+        if(OutputId != null)
+            filename += OutputId + ".";
+
+        switch(writeType)
+        {
+            case SV_BED: return filename + "bed";
+            case READS: return filename + "reads.csv";
+            case BUCKET_STATS: return filename + "buckets.csv";
+            case BAM: return filename + "bam";
+            case FRAGMENT_LENGTH_DIST: return filename + "fragment_lengths";
+        }
+
+        return null;
     }
 
     public static Options createCmdLineOptions()

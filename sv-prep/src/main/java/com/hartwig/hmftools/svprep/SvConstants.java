@@ -20,6 +20,8 @@ public final class SvConstants
     public static final int MIN_INSERT_LENGTH_SUPPORT = 10;
     public static final int MIN_JUNCTION_SUPPORT = 2;
 
+    public static final int JUNCTION_SUPPORT_CAP = 20;
+
     // fragment length distribution and filtering
     public static final int FRAG_LENGTH_DIST_SAMPLE_SIZE = 10000;
     public static final int MAX_FRAGMENT_LENGTH = 1500;
