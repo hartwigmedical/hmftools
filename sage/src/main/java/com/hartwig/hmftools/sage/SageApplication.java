@@ -93,8 +93,6 @@ public class SageApplication implements AutoCloseable
 
         int maxTaskMemory = 0;
 
-        System.gc();
-
         final SAMSequenceDictionary dictionary = dictionary();
         for(final SAMSequenceRecord samSequenceRecord : dictionary.getSequences())
         {
