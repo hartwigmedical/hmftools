@@ -6,7 +6,7 @@ public class PartitionStats
 {
     public long TotalReads;
     public int Buckets;
-    public int EmptyBuckets;
+    public int FilteredBuckets;
     public int JunctionCount;
     public int JunctionFragmentCount;
     public int InitialSupportingReadCount;
@@ -18,7 +18,7 @@ public class PartitionStats
     {
         TotalReads = 0;
         Buckets = 0;
-        EmptyBuckets = 0;
+        FilteredBuckets = 0;
         JunctionCount = 0;
         JunctionFragmentCount = 0;
         InitialSupportingReadCount = 0;
@@ -30,7 +30,7 @@ public class PartitionStats
     {
         TotalReads += other.TotalReads;
         Buckets += other.Buckets;
-        EmptyBuckets += other.EmptyBuckets;
+        FilteredBuckets += other.FilteredBuckets;
         JunctionCount += other.JunctionCount;
         JunctionFragmentCount += other.JunctionFragmentCount;
         InitialSupportingReadCount += other.InitialSupportingReadCount;
@@ -39,8 +39,8 @@ public class PartitionStats
 
     public String toString()
     {
-        return format("reads(%s) buckets(%d empty=%d) junc(%d) juncFrags(%d) support(init=%d final=%d)",
-                TotalReads, Buckets, EmptyBuckets, JunctionCount, JunctionFragmentCount, InitialSupportingReadCount, SupportingReadCount);
+        return format("reads(%s) buckets(%d filtered=%d) junc(%d) juncFrags(%d) support(init=%d final=%d)",
+                TotalReads, Buckets, FilteredBuckets, JunctionCount, JunctionFragmentCount, InitialSupportingReadCount, SupportingReadCount);
     }
 
 }

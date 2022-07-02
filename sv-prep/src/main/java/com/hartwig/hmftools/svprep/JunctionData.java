@@ -3,6 +3,9 @@ package com.hartwig.hmftools.svprep;
 import static java.lang.String.format;
 
 import java.util.Comparator;
+import java.util.List;
+
+import com.google.common.collect.Lists;
 
 public class JunctionData
 {
@@ -11,9 +14,11 @@ public class JunctionData
 
     public final ReadRecord InitialRead;
     //public final List<ReadRecord> Reads; // matching the junction
+    public final List<RemoteJunction> RemoteJunctions;
 
-    public int ExactReads;
+    public int ExactFragments;
     public int SupportReads;
+    private boolean mHotspot;
 
     public JunctionData(final int position, final byte orientation, final ReadRecord read)
     {
@@ -21,15 +26,19 @@ public class JunctionData
         Orientation = orientation;
 
         // Reads = Lists.newArrayList();
+        RemoteJunctions = Lists.newArrayList();
         InitialRead = read;
 
-        ExactReads = 1;
+        ExactFragments = 0;
         SupportReads = 0;
+        mHotspot = false;
     }
 
-    public int totalSupport() { return ExactReads + SupportReads; }
+    public int totalSupport() { return ExactFragments + SupportReads; }
+    public boolean hotspot() { return mHotspot; }
+    public void markHotspot() { mHotspot = true; }
 
-    public String toString() { return format("loc(%d:%d) reads(exact=%d supp=%d)", Position, Orientation, ExactReads, SupportReads); }
+    public String toString() { return format("loc(%d:%d) frags(exact=%d supp=%d)", Position, Orientation, ExactFragments, SupportReads); }
 
     public static class JunctionDataSorter implements Comparator<JunctionData>
     {

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svprep;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.svprep.SvConstants.MULTI_MAP_QUALITY_THRESHOLD;
@@ -33,7 +35,7 @@ public class ReadRecord
 
     public static ReadRecord from(final SAMRecord record)
     {
-        final String readId = record.isSecondaryAlignment() ? String.format("%s_%s",
+        final String readId = record.isSecondaryAlignment() ? format("%s_%s",
                 record.getReadName(), record.getAttribute(SECONDARY_ATTRIBUTE)) : record.getReadName();
 
         ReadRecord read = new ReadRecord(
@@ -103,4 +105,9 @@ public class ReadRecord
 
     public int fragmentInsertSize() { return mFragmentInsertSize; }
 
+    public String toString()
+    {
+        return format("coords(%s:%d-%d) cigar(%s) mate(%s:%d) id(%s)",
+                Chromosome, start(), end(), mCigar.toString(), MateChromosome, MatePosStart, Id);
+    }
 }

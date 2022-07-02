@@ -29,8 +29,7 @@ public class PartitionSlicer
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
 
-    private final SvBucket[] mBuckets;
-    private int mProcessedBucketIndex;
+    private final PartitionBuckets mBuckets;
 
     private final PartitionStats mStats;
     private final CombinedStats mCombinedStats;
@@ -57,9 +56,7 @@ public class PartitionSlicer
 
         mBamSlicer = new BamSlicer(0, false, true, false);
 
-        int bucketCount = mConfig.PartitionSize / mConfig.BucketSize + 1;
-        mBuckets = new SvBucket[bucketCount];
-        mProcessedBucketIndex = -1;
+        mBuckets = new PartitionBuckets(mRegion, mConfig.PartitionSize, mConfig.BucketSize);
 
         int rateSegmentLength = mConfig.PartitionSize / DOWN_SAMPLE_FRACTION;
         int downsampleThreshold = DOWN_SAMPLE_THRESHOLD / DOWN_SAMPLE_FRACTION;
@@ -83,7 +80,7 @@ public class PartitionSlicer
 
         mReadGroups.values().forEach(x -> processGroup(x));
 
-        processBuckets(-1);
+        mBuckets.processBuckets(-1, this::processBucket);
 
         mPerCounter.stop();
 
@@ -177,13 +174,13 @@ public class PartitionSlicer
 
     private void processSingleRead(final ReadRecord read)
     {
-        SvBucket bucket = findBucket(read.start());
+        SvBucket bucket = mBuckets.findBucket(read.start());
         bucket.addReadGroup(new ReadGroup(read));
     }
 
     private void processGroup(final ReadGroup readGroup)
     {
-        SvBucket bucket = findBucket(readGroup.minStartPosition());
+        SvBucket bucket = mBuckets.findBucket(readGroup.minStartPosition());
         bucket.addReadGroup(readGroup);
     }
 
@@ -202,51 +199,38 @@ public class PartitionSlicer
             return;
 
         ReadRecord read = ReadRecord.from(record);
-        SvBucket bucket = findBucket(read.start());
+        SvBucket bucket = mBuckets.findBucket(read.start());
         bucket.addSupportingRead(read);
-    }
-
-    private void processBuckets(int currentReadPosition)
-    {
-        while(mProcessedBucketIndex < mBuckets.length - 1)
-        {
-            int nextBucketIndex = mProcessedBucketIndex + 1;
-            int bucketStartPos = nextBucketIndex * mConfig.BucketSize;
-
-            if(currentReadPosition > 0 && currentReadPosition < bucketStartPos - mConfig.BucketSize)
-                break;
-
-            mProcessedBucketIndex = nextBucketIndex;
-            SvBucket bucket = mBuckets[mProcessedBucketIndex];
-
-            if(bucket == null)
-                continue;
-
-            processBucket(bucket);
-        }
     }
 
     private void processBucket(final SvBucket bucket)
     {
-        if(!bucket.filterJunctions(mReadFilters.MinJunctionSupport))
+        bucket.createJunctions();
+
+        // apply basic filters
+        bucket.filterJunctions(mConfig.Hotspots, mReadFilters.MinJunctionSupport);
+
+        if(bucket.junctions().isEmpty())
         {
-            ++mStats.EmptyBuckets;
+            ++mStats.FilteredBuckets;
             return;
         }
 
         ++mStats.Buckets;
 
-        mStats.JunctionCount += bucket.junctionPositions().size();
-        mStats.JunctionFragmentCount += bucket.readGroups().size();
+        mStats.JunctionCount += bucket.junctions().size();
+        mStats.JunctionFragmentCount += bucket.readGroupCount();
         mStats.SupportingReadCount += bucket.supportingReads().size();
         mStats.InitialSupportingReadCount += bucket.initialSupportingReadCount();
 
         if(mConfig.WriteTypes.contains(WriteType.BUCKET_STATS))
         {
-            int bucketPosStart = mRegion.start() + bucket.id() * mConfig.BucketSize;
-            int bucketPosEnd = bucketPosStart + mConfig.BucketSize - 1;
-            ChrBaseRegion bucketRegion = new ChrBaseRegion(mRegion.Chromosome, bucketPosStart, bucketPosEnd);
-            mWriter.writeBucketData(bucket, mId, bucketRegion);
+            mWriter.writeBucketData(bucket, mId);
+        }
+
+        if(mConfig.WriteTypes.contains(WriteType.JUNCTIONS))
+        {
+            mWriter.writeJunctionData(bucket, mId);
         }
 
         if(mConfig.WriteTypes.contains(WriteType.READS))
@@ -260,27 +244,6 @@ public class PartitionSlicer
             // group complete set false since reads are not grouped for now
             bucket.supportingReads().forEach(x -> mWriter.writeReadData(x, mId, bucket.id(), "SUPPORTING", false));
         }
-    }
-
-    private SvBucket findBucket(int position)
-    {
-        int positionOffset = position - mRegion.start();
-
-        int bucket = positionOffset / mConfig.BucketSize;
-
-        if(bucket < 0 || bucket >= mBuckets.length)
-        {
-            SV_LOGGER.error("partition({}) invalid bucket index({}) from position({} offset={}) vs max({})",
-                    mRegion, bucket, position, positionOffset, mBuckets.length);
-            return null;
-        }
-
-        if(mBuckets[bucket] == null)
-        {
-            mBuckets[bucket] = new SvBucket(bucket);
-        }
-
-        return mBuckets[bucket];
     }
 
     private boolean checkReadRateLimits(int positionStart)

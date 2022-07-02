@@ -203,7 +203,7 @@ public class VcfBucketCompare
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
-            writer.write("VcfId,Chromosome,Position,Orientation,VcfFrags,MatchType,BucketJuncReads,BucketSupportReads");
+            writer.write("VcfId,Chromosome,Position,Orientation,VcfFrags,MatchType,BucketJuncFrags,BucketSupportReads");
             writer.newLine();
 
             return writer;
@@ -241,7 +241,7 @@ public class VcfBucketCompare
             }
             else
             {
-                mWriter.write(format(",%s,%d,%d", MatchType.JUNCTION, junctionData.ExactReads, junctionData.SupportReads));
+                mWriter.write(format(",%s,%d,%d", MatchType.JUNCTION, junctionData.ExactFragments, junctionData.SupportReads));
             }
 
             mWriter.newLine();
@@ -291,7 +291,7 @@ public class VcfBucketCompare
                 {
                     String[] items = junctionStr.split(SUB_ITEM_DELIM, 4);
                     JunctionData junctionData = new JunctionData(Integer.parseInt(items[0]), Byte.parseByte(items[1]), null);
-                    junctionData.ExactReads = Integer.parseInt(items[2]);
+                    junctionData.ExactFragments = Integer.parseInt(items[2]);
                     junctionData.SupportReads = Integer.parseInt(items[3]);
                     bucket.Junctions.add(junctionData);
                 }

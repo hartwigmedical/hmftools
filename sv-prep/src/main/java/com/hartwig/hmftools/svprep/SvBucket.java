@@ -5,88 +5,160 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.JUNCTION_SUPPORT_CAP;
 import static com.hartwig.hmftools.svprep.SvConstants.LOW_BASE_QUALITY;
+import static com.hartwig.hmftools.svprep.SvConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
 import static com.hartwig.hmftools.svprep.SvConstants.SUPPORTING_READ_DISTANCE;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.samtools.SoftClipSide;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 public class SvBucket
 {
+    private final ChrBaseRegion mRegion;
     private final int mId;
 
-    private final List<ReadGroup> mReadGroups;
+    private final Map<String,ReadGroup> mReadGroups; // keyed by readId to additional reads (often supps) can be added
     private final List<ReadRecord> mSupportingReads; // for now only store as read
 
     private final List<JunctionData> mJunctions;
     private int mInitialSupportingReadCount;
 
-    public SvBucket(final int id)
+    public SvBucket(final int id, final ChrBaseRegion region)
     {
+        mRegion = region;
         mId = id;
-        mReadGroups = Lists.newArrayList();
+        mReadGroups = Maps.newHashMap();
         mSupportingReads = Lists.newArrayList();
         mJunctions = Lists.newArrayList();
         mInitialSupportingReadCount = 0;
     }
 
     public int id() { return mId; }
+    public ChrBaseRegion region() { return mRegion; }
 
-    public List<ReadGroup> readGroups() { return mReadGroups; }
+    public int readGroupCount() { return mReadGroups.size(); }
+    public Collection<ReadGroup> readGroups() { return mReadGroups.values(); }
     public List<ReadRecord> supportingReads() { return mSupportingReads; }
-    public List<JunctionData> junctionPositions() { return mJunctions; }
+    public List<JunctionData> junctions() { return mJunctions; }
     public int initialSupportingReadCount() { return mInitialSupportingReadCount; }
 
     public void addReadGroup(final ReadGroup readGroup)
     {
-        mReadGroups.add(readGroup);
+        ReadGroup existingGroup = mReadGroups.get(readGroup.id());
+
+        if(existingGroup != null)
+        {
+            readGroup.reads().forEach(x -> existingGroup.addRead(x));
+            return;
+        }
+
+        mReadGroups.put(readGroup.id(), readGroup);
     }
 
     public void addSupportingRead(final ReadRecord read)
     {
-        mSupportingReads.add(read);
+        mSupportingReads.add(read); // may be reassigned to a read group when the bucket is processed
     }
 
-    public boolean filterJunctions(int minJunctionSupport)
+    public void createJunctions()
     {
+        // find junctions from the reads that passed the original filters,
+        // then find reads that support those junctions
+        // and finally filter for junctions with sufficient overall support
         if(mReadGroups.isEmpty())
-            return false;
+            return;
 
-        for(ReadGroup readGroup : mReadGroups)
+        for(ReadGroup readGroup : mReadGroups.values())
         {
+            JunctionData matchedJunction = null;
+            RemoteJunction remoteJunction = null;
+
             for(ReadRecord read : readGroup.reads())
             {
                 SoftClipSide scSide = SoftClipSide.fromCigar(read.mCigar);
 
-                if(scSide != null)
+                if(scSide == null)
                 {
-                    if(scSide.isLeft())
-                        addOrUpdateJunction(read, NEG_ORIENT);
-                    else
-                        addOrUpdateJunction(read, POS_ORIENT);
+                    if(read.supplementaryAlignment() != null)
+                        remoteJunction = RemoteJunction.fromSupplementaryData(read.supplementaryAlignment());
                 }
+
+                byte orientation = scSide.isLeft() ? NEG_ORIENT : POS_ORIENT;
+                int position = scSide.isLeft() ? read.start() : read.end();
+
+                if(!mRegion.containsPosition(position))
+                {
+                    remoteJunction = new RemoteJunction(mRegion.Chromosome, position, orientation);
+                    continue;
+                }
+
+                JunctionData junctionData = getOrCreateJunction(read, orientation);
+
+                if(matchedJunction == null)
+                {
+                    matchedJunction = junctionData;
+                }
+                else if(matchedJunction != junctionData)
+                {
+                    SV_LOGGER.debug("readGroup({}) has multiple junctions", readGroup.id());
+                }
+
+                ++junctionData.ExactFragments;
+            }
+
+            if(matchedJunction != null && remoteJunction != null)
+            {
+                final RemoteJunction newRemote = remoteJunction;
+                if(matchedJunction.RemoteJunctions.stream().noneMatch(x -> x.matches(newRemote)))
+                    matchedJunction.RemoteJunctions.add(remoteJunction);
             }
         }
 
         selectSupportingReads();
+    }
 
+    public void filterJunctions(final HotspotCache hotspotCache, int minSupport)
+    {
         int index = 0;
         while(index < mJunctions.size())
         {
-            if(mJunctions.get(index).totalSupport() < minJunctionSupport)
-                mJunctions.remove(index);
-            else
-                ++index;
-        }
+            JunctionData junctionData = mJunctions.get(index);
 
-        return !mJunctions.isEmpty();
+            if(junctionData.totalSupport() >= minSupport)
+            {
+                ++index;
+                continue;
+            }
+
+            // check for a hotspot match
+            boolean matchesHotspot = junctionData.RemoteJunctions.stream()
+                    .anyMatch(x -> hotspotCache.matchesHotspot(
+                            mRegion.Chromosome, x.Chromosome, junctionData.Position, x.Position, junctionData.Orientation, x.Orientation));
+
+            if(matchesHotspot && junctionData.totalSupport() >= MIN_HOTSPOT_JUNCTION_SUPPORT)
+            {
+                junctionData.markHotspot();
+                ++index;
+                continue;
+            }
+
+            mJunctions.remove(index);
+        }
     }
 
-    private void addOrUpdateJunction(final ReadRecord read, final byte orientation)
+    private JunctionData getOrCreateJunction(final ReadRecord read, final byte orientation)
     {
+        // junctions are stored in ascending order to make finding them more efficient, especially for supporting reads
         int readPosition = orientation == NEG_ORIENT ? read.start() : read.end();
 
         int index = 0;
@@ -98,10 +170,7 @@ public class SvBucket
 
             if(junctionData.Position == readPosition && junctionData.Orientation == orientation)
             {
-                // should each read be tested for a match, and added?
-                // junctionData.Reads.add(read);
-                ++junctionData.ExactReads;
-                return;
+                return junctionData;
             }
             else if(junctionData.Position >= readPosition)
             {
@@ -113,37 +182,35 @@ public class SvBucket
 
         JunctionData junctionData = new JunctionData(readPosition, orientation, read);
         mJunctions.add(index, junctionData);
+        return junctionData;
     }
 
     private void selectSupportingReads()
     {
-        mInitialSupportingReadCount = mSupportingReads.size();
-
-        List<ReadRecord> removeReads = Lists.newArrayList();
-        int supplementaries = 0;
-
-        for(ReadRecord read : mSupportingReads)
+        int index = 0;
+        while(index < mSupportingReads.size())
         {
+            ReadRecord read = mSupportingReads.get(index);
+            ReadGroup existingGroup = mReadGroups.get(read.Id);
+
+            if(existingGroup != null)
+            {
+                existingGroup.addRead(read);
+                mSupportingReads.remove(index);
+                continue;
+            }
+
+            ++mInitialSupportingReadCount;
+
             if(!readSupportsJunction(read))
             {
-                removeReads.add(read);
+                mSupportingReads.remove(index);
             }
             else
             {
-                // check for a 4th supp in an existing group
-                ReadGroup readGroup = mReadGroups.stream().filter(x -> x.id().equals(read.Id)).findFirst().orElse(null);
-                if(readGroup != null)
-                {
-                    readGroup.addRead(read);
-                    removeReads.add(read);
-                    ++supplementaries;
-                }
+                ++index;
             }
         }
-
-        mInitialSupportingReadCount -= supplementaries;
-
-        removeReads.forEach(x -> mSupportingReads.remove(x));
     }
 
     private boolean readSupportsJunction(final ReadRecord read)
