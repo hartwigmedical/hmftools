@@ -67,7 +67,7 @@ public class RNAFindingsChapter implements ReportChapter {
             table.addCell(Cells.createContent(report.isofox().summary().qcStatus()));
             table.addCell(Cells.createContent(String.valueOf(report.isofox().summary().totalFragments())));
 
-            double nonDuplicates = report.isofox().summary().totalFragments() - report.isofox().summary().duplicateFragments();
+            int nonDuplicates = report.isofox().summary().totalFragments() - report.isofox().summary().duplicateFragments();
             table.addCell(Cells.createContent(String.valueOf(nonDuplicates)));
 
             double duplicateRate = report.isofox().summary().duplicateFragments() / (double) report.isofox().summary().totalFragments();
