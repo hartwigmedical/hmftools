@@ -165,7 +165,7 @@ public class ResultsWriter
             {
                 JunctionData junctionData = bucket.junctions().get(i);
                 juncDataSj.add(format("%d:%d:%d:%d",
-                        junctionData.Position, junctionData.Orientation, junctionData.ExactFragments, junctionData.SupportReads));
+                        junctionData.Position, junctionData.Orientation, junctionData.exactFragmentCount(), junctionData.exactFragmentCount()));
             }
 
             mBucketWriter.write(format("%s,%d,%d,%d,%d",
@@ -219,7 +219,8 @@ public class ResultsWriter
             {
                 String junctionStr = format("%s,%d,%d,%d,%d,%d,%d,%d",
                         bucket.region().Chromosome, bucket.region().start(), bucket.region().end(), junctionData.Position,
-                        junctionData.Orientation, junctionData.ExactFragments, junctionData.SupportReads, junctionData.RemoteJunctions.size());
+                        junctionData.Orientation, junctionData.exactFragmentCount(), junctionData.supportingReadCount(),
+                        junctionData.RemoteJunctions.size());
 
                 if(!junctionData.RemoteJunctions.isEmpty())
                 {

@@ -13,11 +13,10 @@ public class JunctionData
     public final byte Orientation;
 
     public final ReadRecord InitialRead;
-    //public final List<ReadRecord> Reads; // matching the junction
+    public final List<ReadGroup> JunctionGroups; // with a read matching the junction
+    public final List<ReadRecord> SupportingReads;
     public final List<RemoteJunction> RemoteJunctions;
 
-    public int ExactFragments;
-    public int SupportReads;
     private boolean mHotspot;
 
     public JunctionData(final int position, final byte orientation, final ReadRecord read)
@@ -25,20 +24,24 @@ public class JunctionData
         Position = position;
         Orientation = orientation;
 
-        // Reads = Lists.newArrayList();
+        JunctionGroups = Lists.newArrayList();
+        SupportingReads = Lists.newArrayList();
         RemoteJunctions = Lists.newArrayList();
         InitialRead = read;
 
-        ExactFragments = 0;
-        SupportReads = 0;
         mHotspot = false;
     }
 
-    public int totalSupport() { return ExactFragments + SupportReads; }
+    public int exactFragmentCount() { return JunctionGroups.size(); }
+    public int supportingReadCount() { return SupportingReads.size(); }
+    public int totalSupport() { return exactFragmentCount() + supportingReadCount(); }
     public boolean hotspot() { return mHotspot; }
     public void markHotspot() { mHotspot = true; }
 
-    public String toString() { return format("loc(%d:%d) frags(exact=%d supp=%d)", Position, Orientation, ExactFragments, SupportReads); }
+    public String toString()
+    {
+        return format("loc(%d:%d) frags(exact=%d supp=%d)", Position, Orientation, exactFragmentCount(), supportingReadCount());
+    }
 
     public static class JunctionDataSorter implements Comparator<JunctionData>
     {

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svprep;
 
+import static java.lang.String.format;
+
 import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordSetBuilder;
@@ -9,6 +11,8 @@ public final class SvPrepTestUtils
     public static final String CHR_1 = "1";
     public static final int DEFAULT_MAP_QUAL = 60;
     public static final int DEFAULT_BASE_QUAL = 37;
+
+    public static String readIdStr(int readId) { return format("READ_%02d", readId); }
 
     public static int buildFlags(boolean firstInPair, boolean reversed, boolean duplicate, boolean supplementary, boolean secondary)
     {

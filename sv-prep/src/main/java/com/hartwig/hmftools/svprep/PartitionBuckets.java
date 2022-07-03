@@ -2,8 +2,12 @@ package com.hartwig.hmftools.svprep;
 
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import htsjdk.samtools.SAMRecord;
@@ -24,6 +28,11 @@ public class PartitionBuckets
         int bucketCount = partitionSize / mBucketSize + 1;
         mBuckets = new SvBucket[bucketCount];
         mProcessedBucketIndex = -1;
+    }
+
+    public int getBucketCount()
+    {
+        return (int)Arrays.stream(mBuckets).filter(x -> x != null).count();
     }
 
     public SvBucket findBucket(int position)
@@ -68,5 +77,45 @@ public class PartitionBuckets
 
             consumer.accept(bucket);
         }
+    }
+
+    public void transferToNext(final SvBucket bucket)
+    {
+        if(bucket.id() >= mBuckets.length - 1) // no transfer between partitions
+            return;
+
+        SvBucket nextBucket = null;
+
+        // work in descending order until the junctions fall in the previous bucket
+        while(!bucket.junctions().isEmpty())
+        {
+            int index = bucket.junctions().size() - 1;
+            JunctionData junctionData = bucket.junctions().get(index);
+
+            if(junctionData.Position <= bucket.region().end())
+                break;
+
+            if(nextBucket == null)
+                nextBucket = findBucket(junctionData.Position);
+
+            nextBucket.junctions().add(0, junctionData); // add to start since handling in descending position order
+            bucket.junctions().remove(index);
+        }
+
+        // take any left over support reads, which will straddle this upper bucket
+        if(!bucket.supportingReads().isEmpty())
+        {
+            if(nextBucket == null)
+                nextBucket = findBucket(bucket.region().end() + 1);
+
+            nextBucket.supportingReads().addAll(bucket.supportingReads());
+            bucket.supportingReads().clear();
+        }
+    }
+
+    @VisibleForTesting
+    public List<SvBucket> getBuckets()
+    {
+        return Arrays.stream(mBuckets).filter(x -> x != null).collect(Collectors.toList());
     }
 }

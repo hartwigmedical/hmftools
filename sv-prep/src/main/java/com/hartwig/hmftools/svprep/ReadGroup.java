@@ -49,6 +49,7 @@ public class ReadGroup
 
     public String toString()
     {
-        return String.format("%s reads(%d) complete(%s)", id(), mReads.size(), isComplete());
+        return String.format("%s reads(%d) minPos(%d) complete(%s)",
+                id(), mReads.size(), mMinPositionStart, isComplete());
     }
 }

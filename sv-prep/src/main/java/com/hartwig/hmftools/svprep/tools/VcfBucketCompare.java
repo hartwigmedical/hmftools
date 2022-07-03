@@ -31,19 +31,18 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-import com.hartwig.hmftools.svprep.JunctionData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.tribble.AbstractFeatureReader;
@@ -290,9 +289,9 @@ public class VcfBucketCompare
                 for(String junctionStr : junctions)
                 {
                     String[] items = junctionStr.split(SUB_ITEM_DELIM, 4);
-                    JunctionData junctionData = new JunctionData(Integer.parseInt(items[0]), Byte.parseByte(items[1]), null);
-                    junctionData.ExactFragments = Integer.parseInt(items[2]);
-                    junctionData.SupportReads = Integer.parseInt(items[3]);
+                    JunctionData junctionData = new JunctionData(
+                            Integer.parseInt(items[0]), Byte.parseByte(items[1]),
+                            Integer.parseInt(items[2]), Integer.parseInt(items[3]));
                     bucket.Junctions.add(junctionData);
                 }
 
@@ -350,7 +349,21 @@ public class VcfBucketCompare
         }
     }
 
+    private class JunctionData
+    {
+        public final int Position;
+        public final byte Orientation;
+        public final int ExactFragments;
+        public final int SupportReads;
 
+        public JunctionData(final int position, final byte orientation, final int exactFragments, final int supportReads)
+        {
+            Position = position;
+            Orientation = orientation;
+            ExactFragments = exactFragments;
+            SupportReads = supportReads;
+        }
+    }
 
     public static void main(@NotNull final String[] args) throws ParseException
     {

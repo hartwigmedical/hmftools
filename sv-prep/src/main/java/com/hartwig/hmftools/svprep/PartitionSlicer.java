@@ -206,6 +206,9 @@ public class PartitionSlicer
     private void processBucket(final SvBucket bucket)
     {
         bucket.createJunctions();
+        mBuckets.transferToNext(bucket);
+
+        // pass on any junctions and supporting reads that belong in the next bucket
 
         // apply basic filters
         bucket.filterJunctions(mConfig.Hotspots, mReadFilters.MinJunctionSupport);

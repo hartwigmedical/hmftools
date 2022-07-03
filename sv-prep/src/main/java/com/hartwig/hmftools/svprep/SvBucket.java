@@ -14,9 +14,7 @@ import static com.hartwig.hmftools.svprep.SvConstants.SUPPORTING_READ_DISTANCE;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.samtools.SoftClipSide;
@@ -70,63 +68,6 @@ public class SvBucket
         mSupportingReads.add(read); // may be reassigned to a read group when the bucket is processed
     }
 
-    public void createJunctions()
-    {
-        // find junctions from the reads that passed the original filters,
-        // then find reads that support those junctions
-        // and finally filter for junctions with sufficient overall support
-        if(mReadGroups.isEmpty())
-            return;
-
-        for(ReadGroup readGroup : mReadGroups.values())
-        {
-            JunctionData matchedJunction = null;
-            RemoteJunction remoteJunction = null;
-
-            for(ReadRecord read : readGroup.reads())
-            {
-                SoftClipSide scSide = SoftClipSide.fromCigar(read.mCigar);
-
-                if(scSide == null)
-                {
-                    if(read.supplementaryAlignment() != null)
-                        remoteJunction = RemoteJunction.fromSupplementaryData(read.supplementaryAlignment());
-                }
-
-                byte orientation = scSide.isLeft() ? NEG_ORIENT : POS_ORIENT;
-                int position = scSide.isLeft() ? read.start() : read.end();
-
-                if(!mRegion.containsPosition(position))
-                {
-                    remoteJunction = new RemoteJunction(mRegion.Chromosome, position, orientation);
-                    continue;
-                }
-
-                JunctionData junctionData = getOrCreateJunction(read, orientation);
-
-                if(matchedJunction == null)
-                {
-                    matchedJunction = junctionData;
-                }
-                else if(matchedJunction != junctionData)
-                {
-                    SV_LOGGER.debug("readGroup({}) has multiple junctions", readGroup.id());
-                }
-
-                ++junctionData.ExactFragments;
-            }
-
-            if(matchedJunction != null && remoteJunction != null)
-            {
-                final RemoteJunction newRemote = remoteJunction;
-                if(matchedJunction.RemoteJunctions.stream().noneMatch(x -> x.matches(newRemote)))
-                    matchedJunction.RemoteJunctions.add(remoteJunction);
-            }
-        }
-
-        selectSupportingReads();
-    }
-
     public void filterJunctions(final HotspotCache hotspotCache, int minSupport)
     {
         int index = 0;
@@ -154,6 +95,80 @@ public class SvBucket
 
             mJunctions.remove(index);
         }
+    }
+
+    public void createJunctions()
+    {
+        // find junctions from the reads that passed the original filters,
+        // then find reads that support those junctions
+        // and finally filter for junctions with sufficient overall support
+        if(mReadGroups.isEmpty())
+            return;
+
+        for(ReadGroup readGroup : mReadGroups.values())
+        {
+            JunctionData matchedJunction = null;
+            RemoteJunction remoteJunction = null;
+            ReadRecord remoteJunctionRead = null;
+
+            for(ReadRecord read : readGroup.reads())
+            {
+                if(read.supplementaryAlignment() != null)
+                    remoteJunction = RemoteJunction.fromSupplementaryData(read.supplementaryAlignment());
+
+                SoftClipSide scSide = SoftClipSide.fromCigar(read.mCigar);
+
+                if(scSide != null)
+                {
+                    byte orientation = scSide.isLeft() ? NEG_ORIENT : POS_ORIENT;
+                    int position = scSide.isLeft() ? read.start() : read.end();
+
+                    if(!mRegion.containsPosition(position))
+                    {
+                        // will only be cached if no junction is within this region
+                        remoteJunction = new RemoteJunction(mRegion.Chromosome, position, orientation);
+                        remoteJunctionRead = read;
+                    }
+                    else
+                    {
+                        JunctionData junctionData = getOrCreateJunction(read, orientation);
+
+                        if(matchedJunction == null)
+                        {
+                            matchedJunction = junctionData;
+                        }
+                        else if(matchedJunction != junctionData)
+                        {
+                            SV_LOGGER.debug("readGroup({}) has multiple junctions", readGroup.id());
+                        }
+                    }
+                }
+            }
+
+            if(matchedJunction == null)
+            {
+                if(remoteJunction != null && remoteJunction.Chromosome.equals(mRegion.Chromosome))
+                {
+                    // convert this junction in a latter bucket to a junction for this group
+                    matchedJunction = getOrCreateJunction(remoteJunctionRead, remoteJunction.Orientation);
+                    remoteJunction = null;
+                }
+            }
+
+            if(matchedJunction == null)
+                continue;
+
+            matchedJunction.JunctionGroups.add(readGroup);
+
+            if(remoteJunction != null)
+            {
+                final RemoteJunction newRemote = remoteJunction;
+                if(matchedJunction.RemoteJunctions.stream().noneMatch(x -> x.matches(newRemote)))
+                    matchedJunction.RemoteJunctions.add(remoteJunction);
+            }
+        }
+
+        selectSupportingReads();
     }
 
     private JunctionData getOrCreateJunction(final ReadRecord read, final byte orientation)
@@ -187,6 +202,7 @@ public class SvBucket
 
     private void selectSupportingReads()
     {
+        // attempt to assign reads which support a junction, otherwise discard to keep to move to next bucket
         int index = 0;
         while(index < mSupportingReads.size())
         {
@@ -204,12 +220,14 @@ public class SvBucket
 
             if(!readSupportsJunction(read))
             {
-                mSupportingReads.remove(index);
+                if(read.end() > mRegion.end())
+                {
+                    ++index; // will test support in the next bucket
+                    continue;
+                }
             }
-            else
-            {
-                ++index;
-            }
+
+            mSupportingReads.remove(index);
         }
     }
 
@@ -224,7 +242,7 @@ public class SvBucket
                 // any length soft clipping at the same base
                 if(supportsJunction(read, junctionData))
                 {
-                    ++junctionData.SupportReads;
+                    junctionData.SupportingReads.add(read);
                     supportsJunction = true;
                 }
             }
@@ -251,11 +269,11 @@ public class SvBucket
                 if(!readWithinJunctionRange(read, junctionData))
                     break;
 
-                if(junctionData.SupportReads < JUNCTION_SUPPORT_CAP) // TEMP to limit processing
+                if(junctionData.supportingReadCount() < JUNCTION_SUPPORT_CAP) // TEMP to limit processing
                 {
                     if(supportsJunction(read, junctionData))
                     {
-                        ++junctionData.SupportReads;
+                        junctionData.SupportingReads.add(read);
                         supportsJunction = true;
                     }
                 }
