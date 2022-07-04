@@ -54,5 +54,4 @@ public class JunctionData
             return 0;
         }
     }
-
 }

@@ -199,13 +199,15 @@ public class PartitionSlicer
             return;
 
         ReadRecord read = ReadRecord.from(record);
+        read.setFilters(filters);
+
         SvBucket bucket = mBuckets.findBucket(read.start());
         bucket.addSupportingRead(read);
     }
 
     private void processBucket(final SvBucket bucket)
     {
-        bucket.createJunctions();
+        bucket.assignJunctionReads();
         mBuckets.transferToNext(bucket);
 
         // pass on any junctions and supporting reads that belong in the next bucket

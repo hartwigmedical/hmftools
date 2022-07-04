@@ -29,6 +29,7 @@ public class ReadRecord
 
     private String mReadBases;
     private byte[] mBaseQualities;
+    private int mFilters;
 
     private static final String SUPPLEMENTARY_ATTRIBUTE = "SA";
     private static final String SECONDARY_ATTRIBUTE = "HI";
@@ -66,6 +67,7 @@ public class ReadRecord
         mFlags = flags;
         mFragmentInsertSize = insertSize;
         mSupplementaryAlignment = SupplementaryReadData.from(suppData);
+        mFilters = 0;
     }
 
     public int start() { return Positions[SE_START]; }
@@ -94,6 +96,9 @@ public class ReadRecord
 
     public String readBases() { return mReadBases; }
     public byte[] baseQualities() { return mBaseQualities; }
+
+    public void setFilters(int filters) { mFilters = filters; }
+    public int filters() { return mFilters; }
 
     public void clearBaseData()
     {

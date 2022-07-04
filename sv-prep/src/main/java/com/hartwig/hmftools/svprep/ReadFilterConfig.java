@@ -82,7 +82,7 @@ public class ReadFilterConfig
         if(record.getMappingQuality() < MinMapQuality)
             filters |= ReadFilterType.MIN_MAP_QUAL.flag();
 
-        int insertAlignmentOverlap = abs(record.getInferredInsertSize() - alignedBases);
+        int insertAlignmentOverlap = abs(abs(record.getInferredInsertSize()) - alignedBases);
 
         if(insertAlignmentOverlap < MinInsertAlignmentOverlap)
             filters |= ReadFilterType.INSERT_MAP_OVERLAP.flag();

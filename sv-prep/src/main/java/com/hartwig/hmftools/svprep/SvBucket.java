@@ -5,6 +5,7 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.svprep.ReadFilterType.INSERT_MAP_OVERLAP;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.JUNCTION_SUPPORT_CAP;
 import static com.hartwig.hmftools.svprep.SvConstants.LOW_BASE_QUALITY;
@@ -97,17 +98,44 @@ public class SvBucket
         }
     }
 
-    public void createJunctions()
+    public void assignJunctionReads()
     {
-        // find junctions from the reads that passed the original filters,
-        // then find reads that support those junctions
-        // and finally filter for junctions with sufficient overall support
-        if(mReadGroups.isEmpty())
-            return;
+        // first add any filtered reads to passing read groups
+        // attempt to assign reads which support a junction, otherwise discard to keep to move to next bucket
+        int index = 0;
+        while(index < mSupportingReads.size())
+        {
+            ReadRecord read = mSupportingReads.get(index);
+            ReadGroup existingGroup = mReadGroups.get(read.Id);
 
+            if(existingGroup != null)
+            {
+                existingGroup.addRead(read);
+                mSupportingReads.remove(index);
+            }
+            else
+            {
+                ++index;
+            }
+        }
+
+        // create junctions from the reads that passed the original filters
+        createJunctions();
+
+        // then find reads that support those junctions
+        assignSupportingReads();
+    }
+
+    private void createJunctions()
+    {
         for(ReadGroup readGroup : mReadGroups.values())
         {
+            // ignore any group with a short overlapping fragment, likely adapter
+            if(readGroup.reads().stream().anyMatch(x -> ReadFilterType.isSet(x.filters(), INSERT_MAP_OVERLAP)))
+                continue;
+
             JunctionData matchedJunction = null;
+            JunctionData secondJunction = null;
             RemoteJunction remoteJunction = null;
             ReadRecord remoteJunctionRead = null;
 
@@ -139,7 +167,8 @@ public class SvBucket
                         }
                         else if(matchedJunction != junctionData)
                         {
-                            SV_LOGGER.debug("readGroup({}) has multiple junctions", readGroup.id());
+                            secondJunction = junctionData;
+                            // SV_LOGGER.debug("readGroup({}) has multiple junctions", readGroup.id());
                         }
                     }
                 }
@@ -160,6 +189,9 @@ public class SvBucket
 
             matchedJunction.JunctionGroups.add(readGroup);
 
+            if(secondJunction != null)
+                secondJunction.JunctionGroups.add(readGroup);
+
             if(remoteJunction != null)
             {
                 final RemoteJunction newRemote = remoteJunction;
@@ -167,8 +199,6 @@ public class SvBucket
                     matchedJunction.RemoteJunctions.add(remoteJunction);
             }
         }
-
-        selectSupportingReads();
     }
 
     private JunctionData getOrCreateJunction(final ReadRecord read, final byte orientation)
@@ -200,23 +230,15 @@ public class SvBucket
         return junctionData;
     }
 
-    private void selectSupportingReads()
+    private void assignSupportingReads()
     {
         // attempt to assign reads which support a junction, otherwise discard to keep to move to next bucket
+        mInitialSupportingReadCount = mSupportingReads.size();
+
         int index = 0;
         while(index < mSupportingReads.size())
         {
             ReadRecord read = mSupportingReads.get(index);
-            ReadGroup existingGroup = mReadGroups.get(read.Id);
-
-            if(existingGroup != null)
-            {
-                existingGroup.addRead(read);
-                mSupportingReads.remove(index);
-                continue;
-            }
-
-            ++mInitialSupportingReadCount;
 
             if(!readSupportsJunction(read))
             {
