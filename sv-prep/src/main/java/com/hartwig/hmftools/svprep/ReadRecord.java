@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.svprep;
 
+import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -14,7 +15,6 @@ import htsjdk.samtools.SAMRecord;
 
 public class ReadRecord
 {
-    public final String Id;
     public final String Chromosome;
     public final int[] Positions;
 
@@ -22,54 +22,35 @@ public class ReadRecord
     public int MatePosStart;
     public short MapQuality;
 
-    public final Cigar mCigar;
-    private int mFlags;
+    private final SAMRecord mRecord;
     private int mFragmentInsertSize;
     private final SupplementaryReadData mSupplementaryAlignment;
 
-    private String mReadBases;
-    private byte[] mBaseQualities;
     private int mFilters;
 
     private static final String SUPPLEMENTARY_ATTRIBUTE = "SA";
     private static final String SECONDARY_ATTRIBUTE = "HI";
 
-    public static ReadRecord from(final SAMRecord record)
+    public static ReadRecord from(final SAMRecord record) { return new ReadRecord(record); }
+
+    public ReadRecord(final SAMRecord record)
     {
-        final String readId = record.isSecondaryAlignment() ? format("%s_%s",
-                record.getReadName(), record.getAttribute(SECONDARY_ATTRIBUTE)) : record.getReadName();
+        mRecord = record;
+        Chromosome = record.getReferenceName();
+        Positions = new int[] { record.getStart(), record.getEnd() };
+        MateChromosome = record.getMateReferenceName();
+        MatePosStart = record.getMateAlignmentStart();
 
-        ReadRecord read = new ReadRecord(
-                readId, record.getReferenceName(), record.getStart(), record.getEnd(),
-                record.getCigar(), record.getReadString(), record.getBaseQualities(), record.getInferredInsertSize(), record.getFlags(),
-                record.getMateReferenceName(), record.getMateAlignmentStart(), record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE),
-                (short)record.getMappingQuality());
+        //final String readId = record.isSecondaryAlignment() ? format("%s_%s",
+        //        record.getReadName(), record.getAttribute(SECONDARY_ATTRIBUTE)) : record.getReadName();
 
-        return read;
-    }
-
-    public ReadRecord(
-            final String id, final String chromosome, int posStart, int posEnd, final Cigar cigar, final String readBases,
-            final byte[] baseQualities,  int insertSize, int flags, final String mateChromosome, int matePosStart, final String suppData,
-            short mapQual)
-    {
-        Id = id;
-        Chromosome = chromosome;
-        Positions = new int[] { posStart, posEnd };
-        mReadBases = null;
-        mCigar = cigar;
-        MateChromosome = mateChromosome;
-        MatePosStart = matePosStart;
-        MapQuality = mapQual;
-
-        mReadBases = readBases;
-        mBaseQualities = baseQualities;
-        mFlags = flags;
-        mFragmentInsertSize = insertSize;
-        mSupplementaryAlignment = SupplementaryReadData.from(suppData);
+        mFragmentInsertSize = abs(record.getInferredInsertSize());
+        mSupplementaryAlignment = SupplementaryReadData.from(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
         mFilters = 0;
     }
 
+    public String id() { return mRecord.getReadName(); }
+    public final SAMRecord record() { return mRecord; }
     public int start() { return Positions[SE_START]; }
     public int end() { return Positions[SE_END]; }
 
@@ -82,37 +63,32 @@ public class ReadRecord
             return isReadReversed() ? (byte)-1 : 1;
     }
 
-    public int flags() { return mFlags; }
-    public Cigar cigar() { return mCigar; }
-    public boolean isReadReversed() { return (mFlags & SAMFlag.READ_REVERSE_STRAND.intValue()) != 0; }
-    public boolean isFirstOfPair() { return (mFlags & SAMFlag.FIRST_OF_PAIR.intValue()) != 0; }
-    public boolean isSupplementaryAlignment() { return (mFlags & SAMFlag.SUPPLEMENTARY_ALIGNMENT.intValue()) != 0; }
+    public int flags() { return mRecord.getFlags(); }
+    public Cigar cigar() { return mRecord.getCigar(); }
+    public boolean isReadReversed() { return ( mRecord.getFlags() & SAMFlag.READ_REVERSE_STRAND.intValue()) != 0; }
+    public boolean isFirstOfPair() { return (mRecord.getFlags() & SAMFlag.FIRST_OF_PAIR.intValue()) != 0; }
+    public boolean isSupplementaryAlignment() { return (mRecord.getFlags() & SAMFlag.SUPPLEMENTARY_ALIGNMENT.intValue()) != 0; }
 
-    public boolean isDuplicate() { return (mFlags & SAMFlag.DUPLICATE_READ.intValue()) != 0; }
-    public boolean hasFlag(final SAMFlag flag) { return (mFlags & flag.intValue()) != 0; }
+    public boolean isDuplicate() { return (mRecord.getFlags() & SAMFlag.DUPLICATE_READ.intValue()) != 0; }
+    public boolean hasFlag(final SAMFlag flag) { return (mRecord.getFlags() & flag.intValue()) != 0; }
 
     public SupplementaryReadData supplementaryAlignment() { return mSupplementaryAlignment; }
     public boolean hasSuppAlignment() { return mSupplementaryAlignment != null; }
 
-    public String readBases() { return mReadBases; }
-    public byte[] baseQualities() { return mBaseQualities; }
+    public String readBases() { return mRecord.getReadString(); }
+    public byte[] baseQualities() { return mRecord.getBaseQualities(); }
 
     public void setFilters(int filters) { mFilters = filters; }
     public int filters() { return mFilters; }
 
-    public void clearBaseData()
-    {
-        mReadBases = "";
-        mBaseQualities = null;
-    }
-
-    public boolean isMultiMapped() { return MapQuality <= MULTI_MAP_QUALITY_THRESHOLD; }
+    public short mapQuality() { return (short)mRecord.getMappingQuality(); }
+    public boolean isMultiMapped() { return mapQuality() <= MULTI_MAP_QUALITY_THRESHOLD; }
 
     public int fragmentInsertSize() { return mFragmentInsertSize; }
 
     public String toString()
     {
         return format("coords(%s:%d-%d) cigar(%s) mate(%s:%d) id(%s)",
-                Chromosome, start(), end(), mCigar.toString(), MateChromosome, MatePosStart, Id);
+                Chromosome, start(), end(), cigar().toString(), MateChromosome, MatePosStart, id());
     }
 }

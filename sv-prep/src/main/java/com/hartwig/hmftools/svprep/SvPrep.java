@@ -21,7 +21,6 @@ public class SvPrep
     private final SvConfig mConfig;
     private final ResultsWriter mWriter;
 
-
     public SvPrep(final CommandLine cmd)
     {
         mConfig = new SvConfig(cmd);

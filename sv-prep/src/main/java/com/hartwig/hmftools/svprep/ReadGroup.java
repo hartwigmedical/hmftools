@@ -37,7 +37,7 @@ public class ReadGroup
         mIsComplete = mReads.size() >= 3 || (mReads.size() == 2 && !mHasSupplementary);
     }
 
-    public final String id() { return mReads.get(0).Id; }
+    public final String id() { return mReads.get(0).id(); }
 
     public int size() { return mReads.size(); }
 

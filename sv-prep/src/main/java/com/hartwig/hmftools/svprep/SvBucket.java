@@ -106,7 +106,7 @@ public class SvBucket
         while(index < mSupportingReads.size())
         {
             ReadRecord read = mSupportingReads.get(index);
-            ReadGroup existingGroup = mReadGroups.get(read.Id);
+            ReadGroup existingGroup = mReadGroups.get(read.id());
 
             if(existingGroup != null)
             {
@@ -144,7 +144,7 @@ public class SvBucket
                 if(read.supplementaryAlignment() != null)
                     remoteJunction = RemoteJunction.fromSupplementaryData(read.supplementaryAlignment());
 
-                SoftClipSide scSide = SoftClipSide.fromCigar(read.mCigar);
+                SoftClipSide scSide = SoftClipSide.fromCigar(read.cigar());
 
                 if(scSide != null)
                 {

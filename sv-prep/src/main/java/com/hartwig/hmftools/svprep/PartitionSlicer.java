@@ -143,12 +143,12 @@ public class PartitionSlicer
             return;
         }
 
-        ReadGroup readGroup = mReadGroups.get(read.Id);
+        ReadGroup readGroup = mReadGroups.get(read.id());
 
         if(readGroup == null)
         {
             // cache the read waiting for its mate
-            mReadGroups.put(read.Id, new ReadGroup(read));
+            mReadGroups.put(read.id(), new ReadGroup(read));
             return;
         }
 
@@ -223,10 +223,14 @@ public class PartitionSlicer
 
         ++mStats.Buckets;
 
-        mStats.JunctionCount += bucket.junctions().size();
-        mStats.JunctionFragmentCount += bucket.readGroupCount();
-        mStats.SupportingReadCount += bucket.supportingReads().size();
         mStats.InitialSupportingReadCount += bucket.initialSupportingReadCount();
+
+        for(JunctionData junctionData : bucket.junctions())
+        {
+            ++mStats.JunctionCount;
+            mStats.JunctionFragmentCount += junctionData.exactFragmentCount();
+            mStats.SupportingReadCount += junctionData.supportingReadCount();
+        }
 
         if(mConfig.WriteTypes.contains(WriteType.BUCKET_STATS))
         {
@@ -235,7 +239,12 @@ public class PartitionSlicer
 
         if(mConfig.WriteTypes.contains(WriteType.JUNCTIONS))
         {
-            mWriter.writeJunctionData(bucket, mId);
+            mWriter.writeJunctionData(bucket);
+        }
+
+        if(mConfig.WriteTypes.contains(WriteType.BAM))
+        {
+            mWriter.writeBamRecords(bucket);
         }
 
         if(mConfig.WriteTypes.contains(WriteType.READS))

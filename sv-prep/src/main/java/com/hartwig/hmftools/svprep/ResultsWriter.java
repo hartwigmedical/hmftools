@@ -33,6 +33,7 @@ public class ResultsWriter
     private final BufferedWriter mBedWriter;
     private final BufferedWriter mBucketWriter;
     private final BufferedWriter mJunctionWriter;
+    private final BamWriter mBamWriter;
 
     public ResultsWriter(final SvConfig config)
     {
@@ -44,6 +45,7 @@ public class ResultsWriter
             mBedWriter = null;
             mReadWriter = null;
             mJunctionWriter = null;
+            mBamWriter = null;
             return;
         }
 
@@ -51,6 +53,7 @@ public class ResultsWriter
         mJunctionWriter = initialiseJunctionWriter();
         mBedWriter = initialiseBedWriter();
         mReadWriter = initialiseReadWriter();
+        mBamWriter = new BamWriter(config);
     }
 
     public void close()
@@ -59,6 +62,7 @@ public class ResultsWriter
         closeBufferedWriter(mBedWriter);
         closeBufferedWriter(mBucketWriter);
         closeBufferedWriter(mJunctionWriter);
+        mBamWriter.close();
     }
 
     private BufferedWriter initialiseReadWriter()
@@ -96,8 +100,8 @@ public class ResultsWriter
         try
         {
             mReadWriter.write(format("%d,%d,%s,%s,%s,%s,%d,%d,%s",
-                    partitionIndex, bucketId, read.Id, readType, groupComplete,
-                    read.Chromosome, read.start(), read.end(), read.mCigar.toString()));
+                    partitionIndex, bucketId, read.id(), readType, groupComplete,
+                    read.Chromosome, read.start(), read.end(), read.cigar().toString()));
 
             SupplementaryReadData suppData = read.supplementaryAlignment();
 
@@ -194,7 +198,7 @@ public class ResultsWriter
             String filename = mConfig.formFilename(JUNCTIONS);
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("Chromosome,BucketStart,BucketEnd,Position,Fragments,SupportingReads");
+            writer.write("Chromosome,BucketStart,BucketEnd,Position,Fragments,SupportingReads,InitialReadId");
             writer.write(",RemoteJunctionCount,RemoteChromosome,RemotePosition,RemoteOrientation");
             writer.newLine();
 
@@ -208,7 +212,7 @@ public class ResultsWriter
         return null;
     }
 
-    public synchronized void writeJunctionData(final SvBucket bucket, int partitionIndex)
+    public synchronized void writeJunctionData(final SvBucket bucket)
     {
         if(mJunctionWriter == null)
             return;
@@ -217,10 +221,10 @@ public class ResultsWriter
         {
             for(JunctionData junctionData : bucket.junctions())
             {
-                String junctionStr = format("%s,%d,%d,%d,%d,%d,%d,%d",
+                String junctionStr = format("%s,%d,%d,%d,%d,%d,%d,%s,%d",
                         bucket.region().Chromosome, bucket.region().start(), bucket.region().end(), junctionData.Position,
                         junctionData.Orientation, junctionData.exactFragmentCount(), junctionData.supportingReadCount(),
-                        junctionData.RemoteJunctions.size());
+                        junctionData.InitialRead.id(), junctionData.RemoteJunctions.size());
 
                 if(!junctionData.RemoteJunctions.isEmpty())
                 {
@@ -241,6 +245,18 @@ public class ResultsWriter
         catch(IOException e)
         {
             SV_LOGGER.error(" failed to write junction data: {}", e.toString());
+        }
+    }
+
+    public synchronized void writeBamRecords(final SvBucket bucket)
+    {
+        if(mBamWriter == null)
+            return;
+
+        for(JunctionData junctionData : bucket.junctions())
+        {
+            junctionData.JunctionGroups.forEach(x -> mBamWriter.writeRecords(x.reads()));
+            mBamWriter.writeRecords(junctionData.SupportingReads);
         }
     }
 }

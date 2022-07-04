@@ -73,7 +73,7 @@ public class ChromosomeTask implements AutoCloseable
             }
         }
 
-        SV_LOGGER.debug("chromosome({}) {} regions complete, stats: {}",
+        SV_LOGGER.info("chromosome({}) {} regions complete, stats: {}",
                 mChromosome, regionCount, mCombinedStats.ReadStats.toString());
 
         /*
@@ -84,7 +84,7 @@ public class ChromosomeTask implements AutoCloseable
         }
          */
 
-        SV_LOGGER.info("chromosome({}) analysis complete", mChromosome);
+        // SV_LOGGER.info("chromosome({}) analysis complete", mChromosome);
 
         if(SV_LOGGER.isDebugEnabled())
         {
