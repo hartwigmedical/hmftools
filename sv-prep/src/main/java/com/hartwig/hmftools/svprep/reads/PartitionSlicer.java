@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svprep;
+package com.hartwig.hmftools.svprep.reads;
 
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_FRACTION;
@@ -13,8 +13,11 @@ import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.svprep.CombinedStats;
+import com.hartwig.hmftools.svprep.ResultsWriter;
+import com.hartwig.hmftools.svprep.SvConfig;
+import com.hartwig.hmftools.svprep.WriteType;
 
-import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;

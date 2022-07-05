@@ -202,7 +202,7 @@ public class VcfBucketCompare
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
-            writer.write("VcfId,Type,Chromosome,Position,Orientation,MateChromosome,MatePosition,Qual,NormalFrags,TumorFrags");
+            writer.write("VcfId,Type,Chromosome,Position,Orientation,MateChromosome,MatePosition,Filter,Qual,NormalFrags,TumorFrags");
             writer.write(",MatchType,BucketJuncFrags,BucketSupportReads");
             writer.newLine();
 
@@ -233,8 +233,8 @@ public class VcfBucketCompare
                     sv.id(), sv.type(), svLeg.chromosome(), svLeg.position(), svLeg.orientation(),
                     otherLeg != null ? otherLeg.chromosome() : "", otherLeg != null ? otherLeg.position() : -1));
 
-            mWriter.write(format(",%.0f,%d,%d",
-                    sv.qualityScore(), svLeg.normalVariantFragmentCount(), svLeg.tumorVariantFragmentCount()));
+            mWriter.write(format(",%s,%.0f,%d,%d",
+                    sv.filter(), sv.qualityScore(), svLeg.normalVariantFragmentCount(), svLeg.tumorVariantFragmentCount()));
 
             if(bucketData == null)
             {

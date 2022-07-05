@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svprep;
+package com.hartwig.hmftools.svprep.reads;
 
 import static java.lang.Math.min;
 

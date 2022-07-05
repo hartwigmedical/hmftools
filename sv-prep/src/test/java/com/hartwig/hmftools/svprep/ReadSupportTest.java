@@ -3,12 +3,15 @@ package com.hartwig.hmftools.svprep;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.svprep.SvBucket.supportsJunction;
+import static com.hartwig.hmftools.svprep.reads.SvBucket.supportsJunction;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.CHR_1;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.createSamRecord;
 
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
+
+import com.hartwig.hmftools.svprep.reads.JunctionData;
+import com.hartwig.hmftools.svprep.reads.ReadRecord;
 
 import org.junit.Test;
 

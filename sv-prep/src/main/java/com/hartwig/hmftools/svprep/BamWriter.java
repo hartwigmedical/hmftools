@@ -5,6 +5,8 @@ import static com.hartwig.hmftools.svprep.WriteType.BAM;
 import java.io.File;
 import java.util.List;
 
+import com.hartwig.hmftools.svprep.reads.ReadRecord;
+
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SamReader;

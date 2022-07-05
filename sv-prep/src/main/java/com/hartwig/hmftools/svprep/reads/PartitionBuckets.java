@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svprep;
+package com.hartwig.hmftools.svprep.reads;
 
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 
@@ -9,8 +9,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-
-import htsjdk.samtools.SAMRecord;
+import com.hartwig.hmftools.svprep.reads.JunctionData;
+import com.hartwig.hmftools.svprep.reads.SvBucket;
 
 public class PartitionBuckets
 {

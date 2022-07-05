@@ -14,6 +14,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.svprep.reads.PartitionTask;
+import com.hartwig.hmftools.svprep.reads.PartitionThread;
 
 public class ChromosomeTask implements AutoCloseable
 {

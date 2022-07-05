@@ -1,9 +1,13 @@
-package com.hartwig.hmftools.svprep;
+package com.hartwig.hmftools.svprep.reads;
 
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 
 import java.util.NoSuchElementException;
 import java.util.Queue;
+
+import com.hartwig.hmftools.svprep.CombinedStats;
+import com.hartwig.hmftools.svprep.ResultsWriter;
+import com.hartwig.hmftools.svprep.SvConfig;
 
 public class PartitionThread extends Thread
 {

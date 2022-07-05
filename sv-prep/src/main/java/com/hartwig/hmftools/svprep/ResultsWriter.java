@@ -24,6 +24,10 @@ import java.util.Collections;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.hartwig.hmftools.svprep.reads.JunctionData;
+import com.hartwig.hmftools.svprep.reads.ReadRecord;
+import com.hartwig.hmftools.svprep.reads.RemoteJunction;
+import com.hartwig.hmftools.svprep.reads.SvBucket;
 
 public class ResultsWriter
 {

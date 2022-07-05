@@ -1,10 +1,9 @@
-package com.hartwig.hmftools.svprep;
+package com.hartwig.hmftools.svprep.reads;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.svprep.ReadRecord.maxDeleteLength;
-import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
+import static com.hartwig.hmftools.svprep.reads.ReadRecord.maxDeleteLength;
 import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MAX_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_ALIGNMENT_BASES;

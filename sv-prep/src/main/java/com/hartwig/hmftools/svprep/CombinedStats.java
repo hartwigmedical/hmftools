@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.svprep;
 
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.svprep.reads.PartitionStats;
 
 public class CombinedStats
 {

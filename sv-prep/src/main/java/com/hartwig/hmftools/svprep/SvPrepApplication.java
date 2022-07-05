@@ -16,12 +16,12 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-public class SvPrep
+public class SvPrepApplication
 {
     private final SvConfig mConfig;
     private final ResultsWriter mWriter;
 
-    public SvPrep(final CommandLine cmd)
+    public SvPrepApplication(final CommandLine cmd)
     {
         mConfig = new SvConfig(cmd);
         mWriter = new ResultsWriter(mConfig);
@@ -77,7 +77,7 @@ public class SvPrep
 
             setLogLevel(cmd);
 
-            SvPrep svPrep = new SvPrep(cmd);
+            SvPrepApplication svPrep = new SvPrepApplication(cmd);
             svPrep.run();
         }
         catch(ParseException e)
