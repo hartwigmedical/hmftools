@@ -11,9 +11,6 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HOTSPOT_FILTER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_LOW_CONFIDENCE_FILTER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_PANEL_FILTER;
 
-import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
-import com.hartwig.hmftools.sage.common.VariantTier;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
@@ -96,7 +93,7 @@ public class FilterConfig
                 "Hard minimum tumor raw alt support [" + DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT + "]");
         options.addOption(HARD_MIN_TUMOR_RAW_BASE_QUALITY, true,
                 "Hard minimum tumor raw base quality [" + DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY + "]");
-        options.addOption(REF_SAMPLE_COUNT, true, "Number of reference samples for applying turmor-reference filters (default=1)");
+        options.addOption(REF_SAMPLE_COUNT, true, "Number of reference samples for applying tumor-reference filters (default=1)");
 
         SoftFilterConfig.createOptions("hotspot", DEFAULT_HOTSPOT_FILTER).getOptions().forEach(options::addOption);
         SoftFilterConfig.createOptions("panel", DEFAULT_PANEL_FILTER).getOptions().forEach(options::addOption);

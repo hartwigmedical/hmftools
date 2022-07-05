@@ -61,8 +61,8 @@ Argument | Description
 ---|---
 tumor_bam | Sample's tumor BAM
 rna_bam | Sample's RNA BAM if available
-gene_copy_number_file | Sample gene copy number file from Purple
-somatic_variants_file | Sample's somatic variant VCF file, for annotation of HLA gene variants
+gene_copy_number | Sample gene copy number file from Purple
+somatic_vcf | Sample's somatic variant VCF file, for annotation of HLA gene variants
 
 ### Optional Arguments
 
