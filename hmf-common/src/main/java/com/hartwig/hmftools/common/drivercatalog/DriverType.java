@@ -11,7 +11,6 @@ public enum DriverType
     HOM_DEL_DISRUPTION,
     DISRUPTION,
     MUTATION,
-    GERMLINE, // to be deprecated, was previously just germline variants
     GERMLINE_MUTATION,
     GERMLINE_DELETION,
     GERMLINE_DISRUPTION;
@@ -28,18 +27,12 @@ public enum DriverType
 
     public static boolean isGermline(final DriverType type)
     {
-        return type == GERMLINE_DELETION || type == GERMLINE_DISRUPTION || type == GERMLINE_MUTATION || type == GERMLINE;
+        return type == GERMLINE_DELETION || type == GERMLINE_DISRUPTION || type == GERMLINE_MUTATION;
     }
 
     public static DriverType checkConvertType(final String driverTypeStr)
     {
-        // support old Purple and Linx names prior to splits for new germline types
-        if(driverTypeStr.equals("HOM_DISRUPTION"))
-            return HOM_DEL_DISRUPTION;
-
-        if(driverTypeStr.equals("GERMLINE"))
-            return GERMLINE_MUTATION;
-
+        // allow reading of old types for backwards compatibility
         return DriverType.valueOf(driverTypeStr);
     }
 
