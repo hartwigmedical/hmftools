@@ -5,6 +5,7 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.INSERT_MAP_OVERLAP;
 import static com.hartwig.hmftools.svprep.reads.ReadRecord.maxDeleteLength;
 import static com.hartwig.hmftools.svprep.SvConstants.JUNCTION_SUPPORT_CAP;
@@ -27,7 +28,7 @@ import com.hartwig.hmftools.svprep.HotspotCache;
 
 import htsjdk.samtools.CigarElement;
 
-public class SvBucket
+public class BucketData
 {
     private final ChrBaseRegion mRegion;
     private final int mId;
@@ -38,7 +39,7 @@ public class SvBucket
     private final List<JunctionData> mJunctions;
     private int mInitialSupportingReadCount;
 
-    public SvBucket(final int id, final ChrBaseRegion region)
+    public BucketData(final int id, final ChrBaseRegion region)
     {
         mRegion = region;
         mId = id;
@@ -51,7 +52,6 @@ public class SvBucket
     public int id() { return mId; }
     public ChrBaseRegion region() { return mRegion; }
 
-    public int readGroupCount() { return mReadGroups.size(); }
     public Collection<ReadGroup> readGroups() { return mReadGroups.values(); }
     public List<ReadRecord> supportingReads() { return mSupportingReads; }
     public List<JunctionData> junctions() { return mJunctions; }
@@ -141,14 +141,13 @@ public class SvBucket
             if(readGroup.reads().stream().anyMatch(x -> ReadFilterType.isSet(x.filters(), INSERT_MAP_OVERLAP)))
                 continue;
 
-            JunctionData matchedJunction = null;
-            JunctionData secondJunction = null;
+            List<JunctionData> junctions = Lists.newArrayList();
             RemoteJunction remoteJunction = null;
             ReadRecord remoteJunctionRead = null;
 
             for(ReadRecord read : readGroup.reads())
             {
-                if(read.supplementaryAlignment() != null)
+                if(read.hasSuppAlignment())
                     remoteJunction = RemoteJunction.fromSupplementaryData(read.supplementaryAlignment());
 
                 handleInternalDelete(readGroup, read, minDeleteLength);
@@ -171,40 +170,32 @@ public class SvBucket
                 {
                     JunctionData junctionData = getOrCreateJunction(read, orientation);
 
-                    if(matchedJunction == null)
-                    {
-                        matchedJunction = junctionData;
-                    }
-                    else if(matchedJunction != junctionData)
-                    {
-                        secondJunction = junctionData;
-                    }
+                    if(!junctions.contains(junctionData))
+                        junctions.add(junctionData);
                 }
             }
 
-            if(matchedJunction == null)
+            if(junctions.isEmpty() && remoteJunction != null && remoteJunction.Chromosome.equals(mRegion.Chromosome))
             {
-                if(remoteJunction != null && remoteJunction.Chromosome.equals(mRegion.Chromosome))
-                {
-                    // convert this junction in a latter bucket to a junction for this group
-                    matchedJunction = getOrCreateJunction(remoteJunctionRead, remoteJunction.Orientation);
-                    remoteJunction = null;
-                }
+                // convert this junction in a latter bucket to a junction for this group
+                junctions.add(getOrCreateJunction(remoteJunctionRead, remoteJunction.Orientation));
+                remoteJunction = null;
             }
 
-            if(matchedJunction == null)
+            if(junctions.isEmpty())
                 continue;
 
-            matchedJunction.JunctionGroups.add(readGroup);
-
-            if(secondJunction != null)
-                secondJunction.JunctionGroups.add(readGroup);
+            junctions.forEach(x -> x.JunctionGroups.add(readGroup));
 
             if(remoteJunction != null)
             {
                 final RemoteJunction newRemote = remoteJunction;
-                if(matchedJunction.RemoteJunctions.stream().noneMatch(x -> x.matches(newRemote)))
-                    matchedJunction.RemoteJunctions.add(remoteJunction);
+
+                for(JunctionData junctionData : junctions)
+                {
+                    if(junctionData.RemoteJunctions.stream().noneMatch(x -> x.matches(newRemote)))
+                        junctionData.RemoteJunctions.add(remoteJunction);
+                }
             }
         }
     }
@@ -260,7 +251,6 @@ public class SvBucket
     private JunctionData getOrCreateJunction(final ReadRecord read, final int junctionPosition, final byte orientation)
     {
         // junctions are stored in ascending order to make finding them more efficient, especially for supporting reads
-
         int index = 0;
 
         // use a binary search if count exeeds some level, but with buckets < 1000 bases likely unnecessary
@@ -268,11 +258,12 @@ public class SvBucket
         {
             JunctionData junctionData = mJunctions.get(index);
 
-            if(junctionData.Position == junctionPosition && junctionData.Orientation == orientation)
+            if(junctionData.Position == junctionPosition)
             {
-                return junctionData;
+                if(junctionData.Orientation == orientation)
+                    return junctionData;
             }
-            else if(junctionData.Position >= junctionPosition)
+            else if(junctionData.Position > junctionPosition)
             {
                 break;
             }

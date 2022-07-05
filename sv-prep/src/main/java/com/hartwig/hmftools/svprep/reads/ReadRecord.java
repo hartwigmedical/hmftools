@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.svprep.SvConstants.MULTI_MAP_QUALITY_THRESHOLD;
 
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 
 import htsjdk.samtools.Cigar;
@@ -74,7 +75,7 @@ public class ReadRecord
     public boolean hasFlag(final SAMFlag flag) { return (mRecord.getFlags() & flag.intValue()) != 0; }
 
     public SupplementaryReadData supplementaryAlignment() { return mSupplementaryAlignment; }
-    public boolean hasSuppAlignment() { return mSupplementaryAlignment != null; }
+    public boolean hasSuppAlignment() { return mSupplementaryAlignment != null && HumanChromosome.contains(mSupplementaryAlignment.Chromosome); }
 
     public String readBases() { return mRecord.getReadString(); }
     public byte[] baseQualities() { return mRecord.getBaseQualities(); }

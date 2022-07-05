@@ -27,7 +27,7 @@ import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.svprep.reads.JunctionData;
 import com.hartwig.hmftools.svprep.reads.ReadRecord;
 import com.hartwig.hmftools.svprep.reads.RemoteJunction;
-import com.hartwig.hmftools.svprep.reads.SvBucket;
+import com.hartwig.hmftools.svprep.reads.BucketData;
 
 public class ResultsWriter
 {
@@ -158,7 +158,7 @@ public class ResultsWriter
         return null;
     }
 
-    public synchronized void writeBucketData(final SvBucket bucket, int partitionIndex)
+    public synchronized void writeBucketData(final BucketData bucket, int partitionIndex)
     {
         if(mBucketWriter == null)
             return;
@@ -202,7 +202,7 @@ public class ResultsWriter
             String filename = mConfig.formFilename(JUNCTIONS);
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("Chromosome,BucketStart,BucketEnd,Position,Fragments,SupportingReads,InitialReadId");
+            writer.write("Chromosome,BucketStart,BucketEnd,Position,Orientation,Fragments,SupportingReads,Hotspot,InitialReadId");
             writer.write(",RemoteJunctionCount,RemoteChromosome,RemotePosition,RemoteOrientation");
             writer.newLine();
 
@@ -216,7 +216,7 @@ public class ResultsWriter
         return null;
     }
 
-    public synchronized void writeJunctionData(final SvBucket bucket)
+    public synchronized void writeJunctionData(final BucketData bucket)
     {
         if(mJunctionWriter == null)
             return;
@@ -225,10 +225,10 @@ public class ResultsWriter
         {
             for(JunctionData junctionData : bucket.junctions())
             {
-                String junctionStr = format("%s,%d,%d,%d,%d,%d,%d,%s,%d",
+                String junctionStr = format("%s,%d,%d,%d,%d,%d,%d,%s,%s,%d",
                         bucket.region().Chromosome, bucket.region().start(), bucket.region().end(), junctionData.Position,
                         junctionData.Orientation, junctionData.exactFragmentCount(), junctionData.supportingReadCount(),
-                        junctionData.InitialRead.id(), junctionData.RemoteJunctions.size());
+                        junctionData.hotspot(), junctionData.InitialRead.id(), junctionData.RemoteJunctions.size());
 
                 if(!junctionData.RemoteJunctions.isEmpty())
                 {
@@ -252,7 +252,7 @@ public class ResultsWriter
         }
     }
 
-    public synchronized void writeBamRecords(final SvBucket bucket)
+    public synchronized void writeBamRecords(final BucketData bucket)
     {
         if(mBamWriter == null)
             return;

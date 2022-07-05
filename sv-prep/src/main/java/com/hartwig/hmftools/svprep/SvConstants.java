@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svprep;
 
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+
 public final class SvConstants
 {
     // region processing
@@ -34,5 +36,9 @@ public final class SvConstants
 
     // to confirm
     public static short MULTI_MAP_QUALITY_THRESHOLD = 3; // multi-mapped fragments are given map quals of 3 or lower
+
+    // LINC00486 - has no genes surrounding it nor overlapping with it
+    public static final ChrBaseRegion EXCLUDED_REGION_1_REF_37 = new ChrBaseRegion("2", 33141260, 33141700);
+    public static final ChrBaseRegion EXCLUDED_REGION_1_REF_38 = new ChrBaseRegion("chr2", 32916190, 32916630);
 
 }

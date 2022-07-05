@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.reads.PartitionBuckets;
 import com.hartwig.hmftools.svprep.reads.ReadGroup;
 import com.hartwig.hmftools.svprep.reads.ReadRecord;
-import com.hartwig.hmftools.svprep.reads.SvBucket;
+import com.hartwig.hmftools.svprep.reads.BucketData;
 
 import org.junit.Test;
 
@@ -98,7 +98,7 @@ public class PartitionBucketsTest
         partitionBuckets.findBucket(readGroup1.minStartPosition()).addSupportingRead(suppRead4);
 
         assertEquals(2, partitionBuckets.getBucketCount());
-        SvBucket bucket1 = partitionBuckets.getBuckets().get(0);
+        BucketData bucket1 = partitionBuckets.getBuckets().get(0);
         bucket1.assignJunctionReads(MIN_SOFT_CLIP_LENGTH, MIN_DELETE_LENGTH);
         partitionBuckets.transferToNext(bucket1);
 
@@ -108,7 +108,7 @@ public class PartitionBucketsTest
 
         assertEquals(2, partitionBuckets.getBucketCount());
 
-        SvBucket bucket2 = partitionBuckets.getBuckets().get(1);
+        BucketData bucket2 = partitionBuckets.getBuckets().get(1);
         assertEquals(1, bucket2.supportingReads().size()); //  only one unassigned, transferred from the previous bucket
         bucket2.assignJunctionReads(MIN_SOFT_CLIP_LENGTH, MIN_DELETE_LENGTH);
 
@@ -130,7 +130,7 @@ public class PartitionBucketsTest
                 readIdStr(++readId), CHR_1, 10, REF_BASES.substring(0, 80), "20M10D50M"));
 
         ReadGroup readGroup1 = new ReadGroup(read1);
-        SvBucket bucket = partitionBuckets.findBucket(readGroup1.minStartPosition());
+        BucketData bucket = partitionBuckets.findBucket(readGroup1.minStartPosition());
         bucket.addReadGroup(readGroup1);
 
         // then a simple one

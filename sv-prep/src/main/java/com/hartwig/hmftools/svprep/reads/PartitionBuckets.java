@@ -9,15 +9,13 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-import com.hartwig.hmftools.svprep.reads.JunctionData;
-import com.hartwig.hmftools.svprep.reads.SvBucket;
 
 public class PartitionBuckets
 {
     private final ChrBaseRegion mRegion;
 
     private final int mBucketSize;
-    private final SvBucket[] mBuckets;
+    private final BucketData[] mBuckets;
     private int mProcessedBucketIndex;
 
     public PartitionBuckets(final ChrBaseRegion region, int partitionSize, int bucketSize)
@@ -26,7 +24,7 @@ public class PartitionBuckets
 
         mBucketSize = bucketSize;
         int bucketCount = partitionSize / mBucketSize + 1;
-        mBuckets = new SvBucket[bucketCount];
+        mBuckets = new BucketData[bucketCount];
         mProcessedBucketIndex = -1;
     }
 
@@ -35,7 +33,7 @@ public class PartitionBuckets
         return (int)Arrays.stream(mBuckets).filter(x -> x != null).count();
     }
 
-    public SvBucket findBucket(int position)
+    public BucketData findBucket(int position)
     {
         int positionOffset = position - mRegion.start();
 
@@ -53,13 +51,13 @@ public class PartitionBuckets
             int bucketPosStart = mRegion.start() + bucketId * mBucketSize;
             int bucketPosEnd = bucketPosStart + mBucketSize - 1;
             ChrBaseRegion bucketRegion = new ChrBaseRegion(mRegion.Chromosome, bucketPosStart, bucketPosEnd);
-            mBuckets[bucketId] = new SvBucket(bucketId, bucketRegion);
+            mBuckets[bucketId] = new BucketData(bucketId, bucketRegion);
         }
 
         return mBuckets[bucketId];
     }
 
-    public void processBuckets(int currentReadPosition, final Consumer<SvBucket> consumer)
+    public void processBuckets(int currentReadPosition, final Consumer<BucketData> consumer)
     {
         while(mProcessedBucketIndex < mBuckets.length - 1)
         {
@@ -70,7 +68,7 @@ public class PartitionBuckets
                 break;
 
             mProcessedBucketIndex = nextBucketIndex;
-            SvBucket bucket = mBuckets[mProcessedBucketIndex];
+            BucketData bucket = mBuckets[mProcessedBucketIndex];
 
             if(bucket == null)
                 continue;
@@ -79,12 +77,12 @@ public class PartitionBuckets
         }
     }
 
-    public void transferToNext(final SvBucket bucket)
+    public void transferToNext(final BucketData bucket)
     {
         if(bucket.id() >= mBuckets.length - 1) // no transfer between partitions
             return;
 
-        SvBucket nextBucket = null;
+        BucketData nextBucket = null;
 
         // work in descending order until the junctions fall in the previous bucket
         while(!bucket.junctions().isEmpty())
@@ -114,7 +112,7 @@ public class PartitionBuckets
     }
 
     @VisibleForTesting
-    public List<SvBucket> getBuckets()
+    public List<BucketData> getBuckets()
     {
         return Arrays.stream(mBuckets).filter(x -> x != null).collect(Collectors.toList());
     }

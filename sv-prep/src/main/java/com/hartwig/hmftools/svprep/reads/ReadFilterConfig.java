@@ -129,10 +129,8 @@ public class ReadFilterConfig
         if(insertLength >= MinInsertLengthSupport)
             return true;
 
-        /* this is to identify discordant fragments to support known junctions
-        if(record.getInferredInsertSize() > mFragmentLengthMax || record.getInferredInsertSize() < mFragmentLengthMin)
+        if(abs(record.getInferredInsertSize()) > mFragmentLengthMax) //  || record.getInferredInsertSize() < mFragmentLengthMin
             return true;
-        */
 
         return record.getCigar().isLeftClipped() || record.getCigar().isRightClipped();
     }

@@ -1,17 +1,23 @@
 package com.hartwig.hmftools.svprep.reads;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_FRACTION;
 import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_THRESHOLD;
+import static com.hartwig.hmftools.svprep.SvConstants.EXCLUDED_REGION_1_REF_37;
+import static com.hartwig.hmftools.svprep.SvConstants.EXCLUDED_REGION_1_REF_38;
 
 import java.io.File;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.CombinedStats;
 import com.hartwig.hmftools.svprep.ResultsWriter;
@@ -29,6 +35,7 @@ public class PartitionSlicer
     private final ChrBaseRegion mRegion;
     private final ResultsWriter mWriter;
     private final ReadFilterConfig mReadFilters;
+    private final ChrBaseRegion mFilterRegion;
 
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
@@ -66,6 +73,9 @@ public class PartitionSlicer
         int downsampleThreshold = DOWN_SAMPLE_THRESHOLD / DOWN_SAMPLE_FRACTION;
         mReadRateTracker = new ReadRateTracker(rateSegmentLength, mRegion.start(), downsampleThreshold);
         mRateLimitTriggered = false;
+
+        mFilterRegion = mConfig.RefGenVersion == V37 && region.overlaps(EXCLUDED_REGION_1_REF_37) ? EXCLUDED_REGION_1_REF_37
+                : (mConfig.RefGenVersion == V38 && region.overlaps(EXCLUDED_REGION_1_REF_38) ? EXCLUDED_REGION_1_REF_38 : null);
 
         mReadGroups = Maps.newHashMap();
 
@@ -108,10 +118,18 @@ public class PartitionSlicer
 
     private void processSamRecord(final SAMRecord record)
     {
-        if(!mRegion.containsPosition(record.getAlignmentStart()))
+        int readStart = record.getAlignmentStart();
+
+        if(!mRegion.containsPosition(readStart))
             return;
 
         ++mStats.TotalReads;
+
+        if(mFilterRegion != null)
+        {
+            if(mFilterRegion.containsPosition(readStart) || mFilterRegion.containsPosition(readStart + mConfig.ReadLength))
+                return;
+        }
 
         if(mConfig.MaxPartitionReads > 0 && mStats.TotalReads >= mConfig.MaxPartitionReads)
         {
@@ -128,7 +146,7 @@ public class PartitionSlicer
                 return;
         }
 
-        if(!checkReadRateLimits(record.getAlignmentStart()))
+        if(!checkReadRateLimits(readStart))
             return;
 
         int filters = mReadFilters.checkFilters(record);
@@ -178,13 +196,13 @@ public class PartitionSlicer
 
     private void processSingleRead(final ReadRecord read)
     {
-        SvBucket bucket = mBuckets.findBucket(read.start());
+        BucketData bucket = mBuckets.findBucket(read.start());
         bucket.addReadGroup(new ReadGroup(read));
     }
 
     private void processGroup(final ReadGroup readGroup)
     {
-        SvBucket bucket = mBuckets.findBucket(readGroup.minStartPosition());
+        BucketData bucket = mBuckets.findBucket(readGroup.minStartPosition());
         bucket.addReadGroup(readGroup);
     }
 
@@ -205,11 +223,11 @@ public class PartitionSlicer
         ReadRecord read = ReadRecord.from(record);
         read.setFilters(filters);
 
-        SvBucket bucket = mBuckets.findBucket(read.start());
+        BucketData bucket = mBuckets.findBucket(read.start());
         bucket.addSupportingRead(read);
     }
 
-    private void processBucket(final SvBucket bucket)
+    private void processBucket(final BucketData bucket)
     {
         // establish junction positions and any supporting read evidence
         bucket.assignJunctionReads(mReadFilters.MinSoftClipLength, mReadFilters.MinDeleteLength);
