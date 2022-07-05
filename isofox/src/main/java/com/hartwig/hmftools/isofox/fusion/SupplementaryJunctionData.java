@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
+import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.N;
 
@@ -90,7 +91,7 @@ public class SupplementaryJunctionData
         else
         {
             int skippedBases = remoteCigar.getCigarElements().stream()
-                    .filter(x -> x.getOperator() == N || x.getOperator() == M)
+                    .filter(x -> x.getOperator() == N || x.getOperator() == M || x.getOperator() == D)
                     .mapToInt(x -> x.getLength()).sum();
 
             suppJuncData.RemoteJunctionPos = suppData.Position + skippedBases - 1;

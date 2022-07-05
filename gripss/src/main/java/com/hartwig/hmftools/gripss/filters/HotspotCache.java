@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
-import static com.hartwig.hmftools.gripss.common.SvData.hasLength;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_HOMSEQ;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_A;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_T;
@@ -194,7 +193,6 @@ public class HotspotCache
 
     public static void addCmdLineArgs(Options options)
     {
-        options.addOption(KNOWN_HOTSPOT_FILE, true, "Optional: write all batch-run output files");
+        options.addOption(KNOWN_HOTSPOT_FILE, true, "Known fusion BED file");
     }
-
 }

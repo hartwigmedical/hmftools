@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.gripss.filters;
 
-import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 public class KnownHotspot
