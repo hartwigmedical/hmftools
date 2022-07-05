@@ -169,7 +169,7 @@ public class ResultsWriter
             {
                 JunctionData junctionData = bucket.junctions().get(i);
                 juncDataSj.add(format("%d:%d:%d:%d",
-                        junctionData.Position, junctionData.Orientation, junctionData.exactFragmentCount(), junctionData.exactFragmentCount()));
+                        junctionData.Position, junctionData.Orientation, junctionData.exactFragmentCount(), junctionData.supportingReadCount()));
             }
 
             mBucketWriter.write(format("%s,%d,%d,%d,%d",

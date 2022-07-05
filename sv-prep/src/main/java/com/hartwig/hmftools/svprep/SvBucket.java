@@ -6,11 +6,15 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.svprep.ReadFilterType.INSERT_MAP_OVERLAP;
+import static com.hartwig.hmftools.svprep.ReadRecord.maxDeleteLength;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.JUNCTION_SUPPORT_CAP;
 import static com.hartwig.hmftools.svprep.SvConstants.LOW_BASE_QUALITY;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
 import static com.hartwig.hmftools.svprep.SvConstants.SUPPORTING_READ_DISTANCE;
+
+import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.M;
 
 import java.util.Collection;
 import java.util.List;
@@ -20,6 +24,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.samtools.SoftClipSide;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+
+import htsjdk.samtools.CigarElement;
 
 public class SvBucket
 {
@@ -98,7 +104,7 @@ public class SvBucket
         }
     }
 
-    public void assignJunctionReads()
+    public void assignJunctionReads(int minSoftClipLength, int minDeleteLength)
     {
         // first add any filtered reads to passing read groups
         // attempt to assign reads which support a junction, otherwise discard to keep to move to next bucket
@@ -120,14 +126,15 @@ public class SvBucket
         }
 
         // create junctions from the reads that passed the original filters
-        createJunctions();
+        createJunctions(minSoftClipLength, minDeleteLength);
 
         // then find reads that support those junctions
         assignSupportingReads();
     }
 
-    private void createJunctions()
+    private void createJunctions(int minSoftClipLength, int minDeleteLength)
     {
+        // convert
         for(ReadGroup readGroup : mReadGroups.values())
         {
             // ignore any group with a short overlapping fragment, likely adapter
@@ -144,32 +151,33 @@ public class SvBucket
                 if(read.supplementaryAlignment() != null)
                     remoteJunction = RemoteJunction.fromSupplementaryData(read.supplementaryAlignment());
 
+                handleInternalDelete(readGroup, read, minDeleteLength);
+
                 SoftClipSide scSide = SoftClipSide.fromCigar(read.cigar());
 
-                if(scSide != null)
+                if(scSide == null || scSide.Length < minSoftClipLength)
+                    continue;
+
+                byte orientation = scSide.isLeft() ? NEG_ORIENT : POS_ORIENT;
+                int position = scSide.isLeft() ? read.start() : read.end();
+
+                if(!mRegion.containsPosition(position))
                 {
-                    byte orientation = scSide.isLeft() ? NEG_ORIENT : POS_ORIENT;
-                    int position = scSide.isLeft() ? read.start() : read.end();
+                    // will only be cached if no junction is within this region
+                    remoteJunction = new RemoteJunction(mRegion.Chromosome, position, orientation);
+                    remoteJunctionRead = read;
+                }
+                else
+                {
+                    JunctionData junctionData = getOrCreateJunction(read, orientation);
 
-                    if(!mRegion.containsPosition(position))
+                    if(matchedJunction == null)
                     {
-                        // will only be cached if no junction is within this region
-                        remoteJunction = new RemoteJunction(mRegion.Chromosome, position, orientation);
-                        remoteJunctionRead = read;
+                        matchedJunction = junctionData;
                     }
-                    else
+                    else if(matchedJunction != junctionData)
                     {
-                        JunctionData junctionData = getOrCreateJunction(read, orientation);
-
-                        if(matchedJunction == null)
-                        {
-                            matchedJunction = junctionData;
-                        }
-                        else if(matchedJunction != junctionData)
-                        {
-                            secondJunction = junctionData;
-                            // SV_LOGGER.debug("readGroup({}) has multiple junctions", readGroup.id());
-                        }
+                        secondJunction = junctionData;
                     }
                 }
             }
@@ -201,10 +209,57 @@ public class SvBucket
         }
     }
 
+    private void handleInternalDelete(final ReadGroup readGroup, final ReadRecord read, int minDeleteLength)
+    {
+        int maxDelete = maxDeleteLength(read.cigar());
+
+        if(maxDelete < minDeleteLength)
+            return;
+
+        // convert the location of the internal delete into a junction
+        int junctionStartPos = read.start() - 1;
+        int junctionEndPos = 0;
+        for(CigarElement element : read.cigar())
+        {
+            if(element.getOperator() == M)
+            {
+                junctionStartPos += element.getLength();
+            }
+            else if(element.getOperator() == D)
+            {
+                if(element.getLength() >= minDeleteLength)
+                {
+                    junctionEndPos = junctionStartPos + element.getLength() + 1;
+                    break;
+                }
+
+                junctionStartPos += element.getLength();
+            }
+            else
+            {
+                continue;
+            }
+        }
+
+        if(junctionEndPos <= junctionStartPos)
+            return;
+
+        JunctionData junctionStart = getOrCreateJunction(read, junctionStartPos, POS_ORIENT);
+        junctionStart.JunctionGroups.add(readGroup);
+
+        JunctionData junctionEnd = getOrCreateJunction(read, junctionEndPos, NEG_ORIENT);
+        junctionEnd.JunctionGroups.add(readGroup);
+    }
+
     private JunctionData getOrCreateJunction(final ReadRecord read, final byte orientation)
     {
+        int junctionPosition = orientation == NEG_ORIENT ? read.start() : read.end();
+        return getOrCreateJunction(read, junctionPosition, orientation);
+    }
+
+    private JunctionData getOrCreateJunction(final ReadRecord read, final int junctionPosition, final byte orientation)
+    {
         // junctions are stored in ascending order to make finding them more efficient, especially for supporting reads
-        int readPosition = orientation == NEG_ORIENT ? read.start() : read.end();
 
         int index = 0;
 
@@ -213,11 +268,11 @@ public class SvBucket
         {
             JunctionData junctionData = mJunctions.get(index);
 
-            if(junctionData.Position == readPosition && junctionData.Orientation == orientation)
+            if(junctionData.Position == junctionPosition && junctionData.Orientation == orientation)
             {
                 return junctionData;
             }
-            else if(junctionData.Position >= readPosition)
+            else if(junctionData.Position >= junctionPosition)
             {
                 break;
             }
@@ -225,7 +280,7 @@ public class SvBucket
             ++index;
         }
 
-        JunctionData junctionData = new JunctionData(readPosition, orientation, read);
+        JunctionData junctionData = new JunctionData(junctionPosition, orientation, read);
         mJunctions.add(index, junctionData);
         return junctionData;
     }

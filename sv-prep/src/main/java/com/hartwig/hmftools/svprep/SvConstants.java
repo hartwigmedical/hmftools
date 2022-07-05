@@ -19,6 +19,7 @@ public final class SvConstants
     public static final int MIN_INSERT_LENGTH_SUPPORT = 10;
     public static final int MIN_JUNCTION_SUPPORT = 3;
     public static final int MIN_HOTSPOT_JUNCTION_SUPPORT = 2;
+    public static final int MIN_DELETE_LENGTH = 32;
 
     public static final int JUNCTION_SUPPORT_CAP = 20;
 

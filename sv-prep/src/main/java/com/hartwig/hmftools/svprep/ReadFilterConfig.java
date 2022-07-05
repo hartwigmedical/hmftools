@@ -3,9 +3,12 @@ package com.hartwig.hmftools.svprep;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.svprep.ReadRecord.maxDeleteLength;
+import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MAX_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_ALIGNMENT_BASES;
+import static com.hartwig.hmftools.svprep.SvConstants.MIN_DELETE_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_INSERT_ALIGNMENT_OVERLAP;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_INSERT_LENGTH_SUPPORT;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_JUNCTION_SUPPORT;
@@ -26,6 +29,7 @@ public class ReadFilterConfig
     public final int MinAlignmentBases;
     public final int MinMapQuality;
     public final int MinInsertAlignmentOverlap;
+    public final int MinDeleteLength;
     public final int MinSoftClipLength;
     public final int MinSoftClipHighQual;
     public final double MinSoftClipHighQualPerc;
@@ -40,18 +44,19 @@ public class ReadFilterConfig
     public ReadFilterConfig()
     {
         this(MIN_ALIGNMENT_BASES, MIN_MAP_QUALITY, MIN_INSERT_ALIGNMENT_OVERLAP, MIN_SOFT_CLIP_LENGTH, MIN_SOFT_CLIP_MIN_BASE_QUAL,
-                MIN_SOFT_CLIP_HIGH_QUAL_PERC, MIN_SUPPORTING_READ_DISTANCE, MIN_JUNCTION_SUPPORT);
+                MIN_SOFT_CLIP_HIGH_QUAL_PERC, MIN_SUPPORTING_READ_DISTANCE, MIN_DELETE_LENGTH, MIN_JUNCTION_SUPPORT);
     }
 
     public ReadFilterConfig(
             final int minAlignmentBases, final int minMapQuality, final int minInsertAlignmentOverlap, final int minSoftClipLength,
             final int minSoftClipHighQual, final double minSoftClipHighQualPerc, final int minSupportingReadDistance,
-            final int minJunctionSupport)
+            final int minDeleteLength, final int minJunctionSupport)
     {
         MinAlignmentBases = minAlignmentBases;
         MinMapQuality = minMapQuality;
         MinInsertAlignmentOverlap = minInsertAlignmentOverlap;
         MinSoftClipLength = minSoftClipLength;
+        MinDeleteLength = minDeleteLength;
         MinSoftClipHighQual = minSoftClipHighQual;
         MinSoftClipHighQualPerc = minSoftClipHighQualPerc;
         MinSupportingReadDistance = minSupportingReadDistance;
@@ -90,7 +95,9 @@ public class ReadFilterConfig
         int scLeft = cigar.isLeftClipped() ? cigar.getFirstCigarElement().getLength() : 0;
         int scRight = cigar.isRightClipped() ? cigar.getLastCigarElement().getLength() : 0;
 
-        if(scLeft < MinSoftClipLength && scRight < MinSoftClipLength)
+        int maxDelete = maxDeleteLength(record.getCigar());
+
+        if(scLeft < MinSoftClipLength && scRight < MinSoftClipLength && maxDelete < MinDeleteLength)
             filters |= ReadFilterType.SOFT_CLIP_LENGTH.flag();
 
         // base qual in soft clip

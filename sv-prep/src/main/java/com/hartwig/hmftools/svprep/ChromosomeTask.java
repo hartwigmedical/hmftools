@@ -85,11 +85,7 @@ public class ChromosomeTask implements AutoCloseable
          */
 
         // SV_LOGGER.info("chromosome({}) analysis complete", mChromosome);
-
-        if(SV_LOGGER.isDebugEnabled())
-        {
-            mCombinedStats.PerfCounter.logStats();
-        }
+        mCombinedStats.PerfCounter.logStats();
     }
 
     private List<ChrBaseRegion> partition(final String chromosome)

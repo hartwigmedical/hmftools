@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -207,10 +208,11 @@ public class PartitionSlicer
 
     private void processBucket(final SvBucket bucket)
     {
-        bucket.assignJunctionReads();
-        mBuckets.transferToNext(bucket);
+        // establish junction positions and any supporting read evidence
+        bucket.assignJunctionReads(mReadFilters.MinSoftClipLength, mReadFilters.MinDeleteLength);
 
         // pass on any junctions and supporting reads that belong in the next bucket
+        mBuckets.transferToNext(bucket);
 
         // apply basic filters
         bucket.filterJunctions(mConfig.Hotspots, mReadFilters.MinJunctionSupport);

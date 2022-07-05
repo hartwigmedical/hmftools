@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.svprep.SvConstants.MULTI_MAP_QUALITY_THRESHOL
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 
 import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
 
@@ -90,5 +91,11 @@ public class ReadRecord
     {
         return format("coords(%s:%d-%d) cigar(%s) mate(%s:%d) id(%s)",
                 Chromosome, start(), end(), cigar().toString(), MateChromosome, MatePosStart, id());
+    }
+
+    public static int maxDeleteLength(final Cigar cigar)
+    {
+        return cigar.getCigarElements().stream()
+                .filter(x -> x.getOperator() == CigarOperator.D).mapToInt(x -> x.getLength()).max().orElse(0);
     }
 }
