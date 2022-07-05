@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.analyser;
 
-import static com.hartwig.hmftools.common.samtools.CigarTraversal.calcCigarLength;
+import static com.hartwig.hmftools.common.samtools.CigarUtils.calcCigarLength;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;

@@ -20,6 +20,9 @@ public final class SamRecordUtils
 {
     public static final int PHRED_OFFSET = 33;
 
+    public static final String SUPPLEMENTARY_ATTRIBUTE = "SA";
+    public static final String SECONDARY_ATTRIBUTE = "HI";
+
     public static int getBaseQuality(final char quality)
     {
         return quality - PHRED_OFFSET;

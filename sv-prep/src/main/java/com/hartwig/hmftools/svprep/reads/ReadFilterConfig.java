@@ -3,6 +3,7 @@ package com.hartwig.hmftools.svprep.reads;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.svprep.reads.ReadRecord.maxDeleteLength;
 import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MAX_FRAGMENT_LENGTH;
@@ -123,10 +124,15 @@ public class ReadFilterConfig
 
     public boolean isCandidateSupportingRead(final SAMRecord record)
     {
+        /*
         int insertLength = record.getCigar().getCigarElements().stream()
                 .filter(x -> x.getOperator() == CigarOperator.I).mapToInt(x -> x.getLength()).findFirst().orElse(0);
 
         if(insertLength >= MinInsertLengthSupport)
+            return true;
+        */
+
+        if(record.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
             return true;
 
         if(abs(record.getInferredInsertSize()) > mFragmentLengthMax) //  || record.getInferredInsertSize() < mFragmentLengthMin

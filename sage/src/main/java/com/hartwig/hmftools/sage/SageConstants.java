@@ -61,7 +61,5 @@ public class SageConstants
             10, 15, 6, 9,
             0.04, 0.04);
 
-
     public static final String ITEM_DELIM = ";";
-    public static final String SUB_ITEM_DELIM = ":";
 }

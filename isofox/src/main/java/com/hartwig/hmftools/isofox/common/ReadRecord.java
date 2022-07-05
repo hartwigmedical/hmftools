@@ -3,6 +3,7 @@ package com.hartwig.hmftools.isofox.common;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.generateMappedCoords;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
@@ -71,8 +72,6 @@ public class ReadRecord
     private byte[] mBaseQualities;
 
     private int[] mJunctionPositions; // chimeric junctions
-
-    private static final String SUPPLEMENTARY_ATTRIBUTE = "SA";
 
     private final Map<RegionReadData,RegionMatchType> mMappedRegions; // regions related to this read and their match type
     private final Map<Integer,TransMatchType> mTranscriptClassification;

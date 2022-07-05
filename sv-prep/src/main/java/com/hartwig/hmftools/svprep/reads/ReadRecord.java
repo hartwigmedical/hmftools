@@ -3,8 +3,11 @@ package com.hartwig.hmftools.svprep.reads;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.svprep.SvConstants.MULTI_MAP_QUALITY_THRESHOLD;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -29,9 +32,6 @@ public class ReadRecord
     private final SupplementaryReadData mSupplementaryAlignment;
 
     private int mFilters;
-
-    private static final String SUPPLEMENTARY_ATTRIBUTE = "SA";
-    private static final String SECONDARY_ATTRIBUTE = "HI";
 
     public static ReadRecord from(final SAMRecord record) { return new ReadRecord(record); }
 
@@ -60,9 +60,20 @@ public class ReadRecord
     {
         // first in pair has orientation of +1 if not reversed, and vice versa for the second in the pair
         if(isFirstOfPair())
-            return !isReadReversed() ? 1 : (byte)-1;
+            return !isReadReversed() ? POS_ORIENT : NEG_ORIENT;
         else
-            return isReadReversed() ? (byte)-1 : 1;
+            return isReadReversed() ? NEG_ORIENT : POS_ORIENT;
+    }
+
+    public byte mateOrientation()
+    {
+        // first in pair has orientation of +1 if not reversed, and vice versa for the second in the pair
+        boolean mateReversed = hasFlag(SAMFlag.MATE_REVERSE_STRAND);
+
+        if(!isFirstOfPair())
+            return !mateReversed ? POS_ORIENT : NEG_ORIENT;
+        else
+            return mateReversed ? NEG_ORIENT : POS_ORIENT;
     }
 
     public int flags() { return mRecord.getFlags(); }

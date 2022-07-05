@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.svprep.reads;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.subtractExact;
 
+import static com.hartwig.hmftools.common.samtools.SupplementaryReadData.SUPP_POS_STRAND;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -402,13 +404,15 @@ public class BucketData
 
     private static boolean readWithinJunctionRange(final ReadRecord read, final JunctionData junctionData)
     {
-        if(read.cigar().isRightClipped())
+        boolean rightClipped = read.cigar().isRightClipped();
+        boolean leftClipped = read.cigar().isLeftClipped();
+        if(rightClipped || !leftClipped)
         {
             if(abs(read.end() - junctionData.Position) <= SUPPORTING_READ_DISTANCE)
                 return true;
         }
 
-        if(read.cigar().isLeftClipped())
+        if(leftClipped || !rightClipped)
         {
             if(abs(read.start() - junctionData.Position) <= SUPPORTING_READ_DISTANCE)
                 return true;
@@ -417,8 +421,68 @@ public class BucketData
         return false;
     }
 
+    private static boolean hasDiscordantSupport(final ReadRecord read, final JunctionData junctionData)
+    {
+        // must have both positions leading up to but not past the junction and one of its remote junctions
+        if(junctionData.RemoteJunctions.isEmpty())
+            return false;
+
+        if(junctionData.Orientation == POS_ORIENT)
+        {
+            if(read.orientation() != POS_ORIENT || read.end() > junctionData.Position)
+                return false;
+        }
+        else
+        {
+            if(read.orientation() != NEG_ORIENT || read.start() < junctionData.Position)
+                return false;
+        }
+
+        int otherPosition;
+        String otherChromosome;
+        byte otherOrientation;
+
+        if(read.hasSuppAlignment())
+        {
+            otherChromosome = read.supplementaryAlignment().Chromosome;
+            otherPosition = read.supplementaryAlignment().Position;
+            otherOrientation = read.supplementaryAlignment().Strand == SUPP_POS_STRAND ? POS_ORIENT : NEG_ORIENT;
+        }
+        else
+        {
+            otherChromosome = read.MateChromosome;
+            otherOrientation = read.mateOrientation();
+            otherPosition = read.MatePosStart;
+        }
+
+        for(RemoteJunction remoteJunction : junctionData.RemoteJunctions)
+        {
+            if(!remoteJunction.Chromosome.equals(otherChromosome))
+                continue;
+
+            if(remoteJunction.Orientation != otherOrientation)
+                continue;
+
+            if(remoteJunction.Orientation == POS_ORIENT && otherPosition <= remoteJunction.Position)
+            {
+                ++remoteJunction.Support;
+                return true;
+            }
+            else if(remoteJunction.Orientation == NEG_ORIENT && otherPosition >= remoteJunction.Position)
+            {
+                ++remoteJunction.Support;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static boolean supportsJunction(final ReadRecord read, final JunctionData junctionData)
     {
+        if(!read.cigar().isLeftClipped() && !read.cigar().isRightClipped())
+            return hasDiscordantSupport(read, junctionData);
+
         /*
         eg if there is a candidate read with 101M50S at base 1000, how does a supporting read need to align and match?
          In this case the soft clip is at 1050. Check all reads which have a soft clip on the same side within +/- 50 bases.
