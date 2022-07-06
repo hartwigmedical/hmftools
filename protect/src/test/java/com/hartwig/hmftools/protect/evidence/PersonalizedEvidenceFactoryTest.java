@@ -98,7 +98,7 @@ public class PersonalizedEvidenceFactoryTest {
 
         ActionableGene overexpression = ImmutableActionableGene.builder()
                 .from(ServeTestFactory.createTestActionableGene())
-                .event(GeneLevelEvent.OVER_EXPRESSION)
+                .event(GeneLevelEvent.OVEREXPRESSION)
                 .build();
         assertEquals(ProtectEvidenceType.OVER_EXPRESSION, PersonalizedEvidenceFactory.determineEvidenceType(overexpression));
 

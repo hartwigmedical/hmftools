@@ -2,9 +2,9 @@ package com.hartwig.hmftools.serve.extraction.gene;
 
 public enum GeneLevelEvent {
     AMPLIFICATION,
-    OVER_EXPRESSION,
+    OVEREXPRESSION,
     DELETION,
-    UNDER_EXPRESSION,
+    UNDEREXPRESSION,
     ACTIVATION,
     INACTIVATION,
     ANY_MUTATION,

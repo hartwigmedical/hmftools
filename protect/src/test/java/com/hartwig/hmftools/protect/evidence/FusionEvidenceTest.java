@@ -13,13 +13,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
-import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
@@ -123,7 +121,7 @@ public class FusionEvidenceTest {
         ActionableGene ig_over = ImmutableActionableGene.builder()
                 .from(ServeTestFactory.createTestActionableGene())
                 .gene("IGK")
-                .event(GeneLevelEvent.OVER_EXPRESSION)
+                .event(GeneLevelEvent.OVEREXPRESSION)
                 .source(Knowledgebase.CKB)
                 .treatment(ImmutableTreatment.builder().treament("treatment12").drugClasses(Sets.newHashSet("drugClasses")).build())
                 .build();

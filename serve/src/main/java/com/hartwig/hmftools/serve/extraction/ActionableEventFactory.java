@@ -105,7 +105,7 @@ public final class ActionableEventFactory {
                 break;
             }
             case OVER_EXPRESSION: {
-                event = GeneLevelEvent.OVER_EXPRESSION;
+                event = GeneLevelEvent.OVEREXPRESSION;
                 break;
             }
             case DELETION: {
@@ -113,7 +113,7 @@ public final class ActionableEventFactory {
                 break;
             }
             case UNDER_EXPRESSION: {
-                event = GeneLevelEvent.UNDER_EXPRESSION;
+                event = GeneLevelEvent.UNDEREXPRESSION;
                 break;
             }
             default:
