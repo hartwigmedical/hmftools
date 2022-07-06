@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
@@ -27,6 +29,9 @@ public class HrdDetection
     private static final double MIN_LOH_CN = 0.5;
     private static final double MAX_COPY_NUM_DIFF = 0.5;
     private static final double MAX_COPY_NUM_DIFF_PERC = 0.15;
+
+    private static final List<String> LOH_SHORT_ARM_CHROMOSOMES = Lists.newArrayList("13", "14", "15", "21", "22");
+    private static final List<String> LOH_IGNORE_CHROMOSOMES = Lists.newArrayList("X", "Y");
 
     public HrdDetection()
     {
@@ -57,16 +62,41 @@ public class HrdDetection
         int lohCount = 0;
         boolean inLohSegment = false;
         int lohSegmentStart = 0;
+        boolean beforeCentromere = false;
 
-        for(PurpleCopyNumber copyNumber : copyNumbers)
+        for(int i = 0; i < copyNumbers.size(); ++i)
         {
-            double minAlleleCn = copyNumber.minorAlleleCopyNumber();
-            boolean isLohSegment = minAlleleCn < MIN_LOH_CN;
+            PurpleCopyNumber copyNumber = copyNumbers.get(i);
+
+            if(LOH_IGNORE_CHROMOSOMES.contains(RefGenomeFunctions.stripChrPrefix(copyNumber.chromosome())))
+                continue;
 
             if(copyNumber.segmentStartSupport() == SegmentSupport.TELOMERE)
             {
                 // reset at start of new chromosome
                 inLohSegment = false;
+                beforeCentromere = true;
+            }
+            else if(copyNumber.segmentStartSupport() == SegmentSupport.CENTROMERE)
+            {
+                beforeCentromere = false;
+            }
+
+            if(beforeCentromere && LOH_SHORT_ARM_CHROMOSOMES.contains(RefGenomeFunctions.stripChrPrefix(copyNumber.chromosome())))
+                continue;
+
+            PurpleCopyNumber nextCopyNumber = i < copyNumbers.size() - 1 ? copyNumbers.get(i + 1) : null;
+
+            double minAlleleCn = copyNumber.minorAlleleCopyNumber();
+            boolean isLohSegment = minAlleleCn < MIN_LOH_CN;
+
+            boolean isLohNextSegment = nextCopyNumber != null && nextCopyNumber.minorAlleleCopyNumber() < MIN_LOH_CN;
+
+
+            if(!inLohSegment && isLohSegment)
+            {
+                inLohSegment = true;
+                lohSegmentStart = copyNumber.start();
             }
 
             boolean endOfArm = copyNumber.segmentEndSupport() == SegmentSupport.TELOMERE
@@ -74,30 +104,25 @@ public class HrdDetection
 
             boolean checkLohEnd = false;
 
-            if(endOfArm)
+            if(inLohSegment)
             {
-                checkLohEnd = true;
-            }
-            else if(inLohSegment)
-            {
-                // ignore short fragment inserts
-                if(!isLohSegment && copyNumber.length() <= LOH_SHORT_INSERT_LENGTH)
-                    continue;
-
-                if(!isLohSegment)
+                if(endOfArm)
+                {
                     checkLohEnd = true;
+                }
+                else if(!isLohNextSegment)
+                {
+                    if(nextCopyNumber != null && nextCopyNumber.length() <= LOH_SHORT_INSERT_LENGTH)
+                        checkLohEnd = false;
+                    else
+                        checkLohEnd = true;
+                }
             }
 
-            if(!inLohSegment&& isLohSegment)
-            {
-                inLohSegment = true;
-                lohSegmentStart = copyNumber.start();
-            }
-
-            // consider an LOH completed at the centromere
             if(checkLohEnd)
             {
-                int endPosition = endOfArm ? copyNumber.end() : copyNumber.start();
+                // int endPosition = endOfArm ? copyNumber.end() : copyNumber.start();
+                int endPosition = copyNumber.end();
                 int segmentLength = endPosition - lohSegmentStart - 1;
 
                 if(segmentLength >= mLohMinLength)

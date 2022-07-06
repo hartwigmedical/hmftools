@@ -3,6 +3,7 @@ package com.hartwig.hmftools.purple.region;
 import static com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod.BAF_WEIGHTED;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.BND;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
+import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.DEL;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
 
 import static junit.framework.TestCase.assertEquals;
@@ -25,9 +26,22 @@ public class HrdDetectionTest
     @Test
     public void testLohSegments()
     {
+        int minLohLength = 20000;
+        HrdDetection hrdDetection = new HrdDetection(10000, 10000, minLohLength, 5);
+
         final List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
 
-        int minLohLength = 20000;
+        copyNumbers.add(makeCopyNumber(TELOMERE, DEL, 1, 10000, 2, 0.5));
+        copyNumbers.add(makeCopyNumber(DEL, DEL, 10001, 10500, 1, 1.0));
+        copyNumbers.add(makeCopyNumber(DEL, DEL, 10501, 50000, 2, 0.5));
+        copyNumbers.add(makeCopyNumber(DEL, CENTROMERE, 50001, 100000, 2, 0.5));
+        copyNumbers.add(makeCopyNumber(CENTROMERE, DEL, 100001, 110000, 2, 0.5));
+        copyNumbers.add(makeCopyNumber(DEL, DEL, 110001, 110500, 1, 1.0));
+        copyNumbers.add(makeCopyNumber(DEL, TELOMERE, 110501, 200000, 2, 0.5));
+
+        assertEquals(0, hrdDetection.calcLohSegments(copyNumbers));
+
+        copyNumbers.clear();
 
         copyNumbers.add(makeCopyNumber(TELOMERE, BND, 1, 10000, 2, 0.5));
 
@@ -46,7 +60,6 @@ public class HrdDetectionTest
         // ends
         copyNumbers.add(makeCopyNumber(BND, BND, 50001, 60000, 4, 0.75));
 
-        HrdDetection hrdDetection = new HrdDetection(10000, 10000, minLohLength, 5);
 
         assertEquals(1, hrdDetection.calcLohSegments(copyNumbers));
 
