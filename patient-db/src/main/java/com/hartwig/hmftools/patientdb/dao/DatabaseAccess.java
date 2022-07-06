@@ -46,7 +46,6 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
-import com.hartwig.hmftools.patientdb.bqr.BQREntry;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
 import com.hartwig.hmftools.patientdb.clinical.ecrf.EcrfModel;
@@ -102,8 +101,6 @@ public class DatabaseAccess implements AutoCloseable {
     @NotNull
     private final SnpCheckDAO snpCheckDAO;
     @NotNull
-    private final BQRDAO bqrDAO;
-    @NotNull
     private final SomaticVariantDAO somaticVariantDAO;
     @NotNull
     private final GermlineVariantDAO germlineVariantDAO;
@@ -157,7 +154,6 @@ public class DatabaseAccess implements AutoCloseable {
         this.metricDAO = new MetricDAO(context);
         this.flagstatDAO = new FlagstatDAO(context);
         this.snpCheckDAO = new SnpCheckDAO(context);
-        this.bqrDAO = new BQRDAO(context);
         this.somaticVariantDAO = new SomaticVariantDAO(context);
         this.germlineVariantDAO = new GermlineVariantDAO(context);
         this.amberDAO = new AmberDAO(context);
@@ -462,10 +458,6 @@ public class DatabaseAccess implements AutoCloseable {
 
     public void writeFlagstats(@NotNull String sample, @NotNull Flagstat refFlagstat, @NotNull Flagstat tumorFlagstat) {
         flagstatDAO.writeFlagstats(sample, refFlagstat, tumorFlagstat);
-    }
-
-    public void writeBQR(@NotNull String sample, @NotNull List<BQREntry> refEntries, @NotNull List<BQREntry> tumorEntries) {
-        bqrDAO.write(sample, refEntries, tumorEntries);
     }
 
     public void writePeach(@NotNull String sample, @NotNull List<PeachGenotype> peachGenotypes, @NotNull List<PeachCalls> peachCalls) {
