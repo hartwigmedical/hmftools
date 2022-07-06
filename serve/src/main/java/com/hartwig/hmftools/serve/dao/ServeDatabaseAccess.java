@@ -42,9 +42,6 @@ public class ServeDatabaseAccess {
     @NotNull
     private final ServeDAO serveDAO;
 
-    @NotNull
-    private final ActinDAO actinDAO;
-
     public ServeDatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         System.setProperty("org.jooq.no-logo", "true");
         System.setProperty("org.jooq.no-tips", "true");
@@ -55,7 +52,6 @@ public class ServeDatabaseAccess {
         this.context = DSL.using(connection, SQLDialect.MYSQL, settings(catalog));
 
         this.serveDAO = new ServeDAO(context);
-        this.actinDAO = new ActinDAO(context);
     }
 
     @Nullable
@@ -99,9 +95,5 @@ public class ServeDatabaseAccess {
 
     public void writeServeDAO(@NotNull ActionableEvents actionableEvents, KnownEvents knownEvents) {
         serveDAO.write(actionableEvents, knownEvents);
-    }
-
-    public void writeActinDAO(@NotNull List<ActinEntry> trials) {
-        actinDAO.write(trials);
     }
 }

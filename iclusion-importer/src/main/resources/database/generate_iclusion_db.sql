@@ -1,5 +1,9 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS tumorLocations;
+DROP TABLE IF EXISTS blacklistedTumorLocations;
+DROP TABLE IF EXISTS mutationConditions;
+
 DROP TABLE IF EXISTS study;
 CREATE TABLE study
 (   id int NOT NULL AUTO_INCREMENT,
@@ -13,8 +17,8 @@ CREATE TABLE study
     PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS tumorLocations;
-CREATE TABLE tumorLocations
+DROP TABLE IF EXISTS tumorLocation;
+CREATE TABLE tumorLocation
 (   id int NOT NULL AUTO_INCREMENT,
     tumorLocationId int NOT NULL,
     tumorLocation varchar(50) NOT NULL,
@@ -22,8 +26,8 @@ CREATE TABLE tumorLocations
     PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS blacklistedTumorLocations;
-CREATE TABLE blacklistedTumorLocations
+DROP TABLE IF EXISTS blacklistedTumorLocation;
+CREATE TABLE blacklistedTumorLocation
 (   id int NOT NULL AUTO_INCREMENT,
     blacklistedTumorLocationId int NOT NULL,
     blacklistedTumorLocation varchar(50) NOT NULL,
@@ -31,8 +35,8 @@ CREATE TABLE blacklistedTumorLocations
     PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS mutationConditions;
-CREATE TABLE mutationConditions
+DROP TABLE IF EXISTS mutationCondition;
+CREATE TABLE mutationCondition
 (   id int NOT NULL AUTO_INCREMENT,
     mutationConditionId int NOT NULL,
     gene varchar(50) NOT NULL,
