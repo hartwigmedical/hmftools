@@ -24,25 +24,7 @@ public class BQRDAO {
     void write(@NotNull String sample, @NotNull List<BQREntry> refEntries, @NotNull List<BQREntry> tumorEntries) {
         deleteBQRForSample(sample);
 
-        for (List<BQREntry> batch : Iterables.partition(refEntries, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep8 inserter = createInserter();
-            for (BQREntry entry : batch) {
-                addRecord(inserter, sample, "REF", entry);
-            }
-            inserter.execute();
-        }
-
-        for (List<BQREntry> batch : Iterables.partition(tumorEntries, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep8 inserter = createInserter();
-            for (BQREntry entry : batch) {
-                addRecord(inserter, sample, "TUMOR", entry);
-            }
-            inserter.execute();
-        }
-    }
-
-    private InsertValuesStep8 createInserter() {
-        return context.insertInto(BQR,
+        InsertValuesStep8 inserter = context.insertInto(BQR,
                 BQR.SAMPLEID,
                 BQR.SAMPLETYPE,
                 BQR.REF,
@@ -51,6 +33,16 @@ public class BQRDAO {
                 BQR.BQRCOUNT,
                 BQR.ORIGQUALITY,
                 BQR.RECALIBRATEDQUALITY);
+
+        for (List<BQREntry> batch : Iterables.partition(refEntries, DB_BATCH_INSERT_SIZE)) {
+            batch.forEach(entry -> addRecord(inserter, sample, "REF", entry));
+            inserter.execute();
+        }
+
+        for (List<BQREntry> batch : Iterables.partition(tumorEntries, DB_BATCH_INSERT_SIZE)) {
+            batch.forEach(entry -> addRecord(inserter, sample, "TUMOR", entry));
+            inserter.execute();
+        }
     }
 
     private static void addRecord(@NotNull InsertValuesStep8 inserter, @NotNull String sample, @NotNull String sampleType,
