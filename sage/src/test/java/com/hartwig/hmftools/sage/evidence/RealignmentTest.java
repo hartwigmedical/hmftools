@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.sage.evidence.ReadContextCounter.RC_FULL;
 import static com.hartwig.hmftools.sage.evidence.ReadContextCounter.RC_PARTIAL;
 import static com.hartwig.hmftools.sage.evidence.ReadContextCounter.RC_REALIGNED;
-import static com.hartwig.hmftools.sage.evidence.Realigned.realigned;
+import static com.hartwig.hmftools.sage.evidence.Realignment.realigned;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.NONE;
@@ -23,9 +23,8 @@ import com.hartwig.hmftools.sage.pipeline.RegionTask;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
-import junit.framework.TestCase;
 
-public class RealignedTest
+public class RealignmentTest
 {
     @Test
     public void testIndelRealignedLeft()

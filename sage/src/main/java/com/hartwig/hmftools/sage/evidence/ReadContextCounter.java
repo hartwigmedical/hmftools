@@ -11,6 +11,8 @@ import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
+import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
+import static com.hartwig.hmftools.sage.evidence.RealignedType.SHORTENED;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.jitterPenalty;
 
 import static htsjdk.samtools.CigarOperator.D;
@@ -315,6 +317,9 @@ public class ReadContextCounter implements VariantHotspot
 
         /*
         // log differences
+        int maxRealignDistance = getMaxRealignmentDistance(record);
+        RealignedContext oldRealignment = Realignment.realignedAroundIndex(mReadContext, readIndex, record.getReadBases(), maxRealignDistance);
+
         if((realignment.Type == EXACT) != (oldRealignment.Type == EXACT))
         {
             SG_LOGGER.info("var({}) realign diff: new({}) old({} m={} mi={}) readContext({}-{}-{}) read(idx={} posStart={} cigar={} id={}) readCxt({}) readBases({})",
@@ -337,11 +342,13 @@ public class ReadContextCounter implements VariantHotspot
 
         // switch back to the old method to test for jitter
         int maxRealignDistance = getMaxRealignmentDistance(record);
-        RealignedContext oldRealignment = Realigned.realignedAroundIndex(mReadContext, readIndex, record.getReadBases(), maxRealignDistance);
-        realignment = oldRealignment;
+        RealignedContext jitterRealign = Realignment.realignedAroundIndex(mReadContext, readIndex, record.getReadBases(), maxRealignDistance);
 
-        if(realignment.Type == RealignedType.NONE && rawContext.ReadIndexInSoftClip && !rawContext.AltSupport)
-            return UNRELATED;
+        if(rawContext.ReadIndexInSoftClip && !rawContext.AltSupport)
+        {
+            if(jitterRealign.Type != LENGTHENED && jitterRealign.Type != SHORTENED)
+                return UNRELATED;
+        }
 
         ReadMatchType matchType = UNRELATED;
 
@@ -361,17 +368,37 @@ public class ReadContextCounter implements VariantHotspot
             countStrandedness(record);
         }
 
-        // Jitter Penalty
-        switch(realignment.Type)
+        // add to jitter penalty as a function of the number of repeats found
+        if(jitterRealign.Type == LENGTHENED || jitterRealign.Type == SHORTENED)
         {
-            case LENGTHENED:
-                mJitterPenalty += jitterPenalty(qualityConfig, realignment.RepeatCount);
+            mJitterPenalty += jitterPenalty(qualityConfig, jitterRealign.RepeatCount);
+
+            if(jitterRealign.Type == LENGTHENED)
                 mLengthened++;
-                break;
-            case SHORTENED:
-                mJitterPenalty += jitterPenalty(qualityConfig, realignment.RepeatCount);
+            else
                 mShortened++;
-                break;
+
+            /*
+            int realignLeftReadIndex = calcLeftAlignmentIndex(record);
+            int realignRightReadIndex = calcRightAlignmentIndex(record);
+
+            // Variant,RealignType,CalcLeft,CalcRight,MatchLength,InitMatchLength,MatchIndex,InitMatchIndex,RepeatCount,RepeatLength,LeftCore,Index,RightCore,ReadIndex,Cigar,PosStart,PosEnd,ReadId
+
+            SG_LOGGER.debug("REALIGN: {},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
+                    varString(), jitterRealign.Type, realignLeftReadIndex, realignRightReadIndex, jitterRealign.MatchLength, jitterRealign.InitialMatchLength,
+                    jitterRealign.MatchReadIndex, jitterRealign.InitialReadIndex, jitterRealign.RepeatCount, jitterRealign.RepeatLength,
+                    mReadContext.indexedBases().LeftCoreIndex, mReadContext.indexedBases().Index,
+                    mReadContext.indexedBases().RightCoreIndex,  readIndex, record.getAlignmentStart(), record.getCigarString(),
+                    record.getReadName());
+
+            SG_LOGGER.debug("var({}) realign type({}) calc(left={} right={}) match({} init={}) index({} init={}) repeat(count={} len={}) "
+                            + "readContext({}-{}-{}) read(idx={} posStart={} cigar={} id={}) readCxt({}) readBases({})",
+                    varString(), jitterRealign.Type, jitterRealign.MatchLength, jitterRealign.InitialMatchLength,
+                    jitterRealign.MatchReadIndex, jitterRealign.InitialReadIndex, jitterRealign.RepeatCount, jitterRealign.RepeatLength,
+                    mReadContext.indexedBases().LeftCoreIndex, mReadContext.indexedBases().Index,
+                    mReadContext.indexedBases().RightCoreIndex,  readIndex, record.getAlignmentStart(), record.getCigarString(),
+                    record.getReadName(), mReadContext.indexedBases().fullString(), record.getReadString());
+            */
         }
 
         return matchType;
@@ -432,14 +459,29 @@ public class ReadContextCounter implements VariantHotspot
                 true, false, true, baseQuality, 0);
     }
 
-    private RealignedContext checkRealignment(final SAMRecord record, final int readIndex)
+    private int calcLeftAlignmentIndex(final SAMRecord record)
     {
-        // try left and right alignment in turn
-
         // Left alignment: Match full read context starting at base = pos - rc_index
         int leftCoreOffset = mReadContext.indexedBases().Index - mReadContext.indexedBases().LeftCoreIndex;
         int realignLeftCorePos = position() - leftCoreOffset;
         int realignLeftReadIndex = record.getReadPositionAtReferencePosition(realignLeftCorePos) - 1 + leftCoreOffset;
+        return realignLeftReadIndex;
+    }
+
+    private int calcRightAlignmentIndex(final SAMRecord record)
+    {
+        // Right alignment: Match full read context ending at base = pos + length[RC} - rc_index - 1 - length(alt) + length(ref)
+        int rightCoreOffset = mReadContext.indexedBases().RightCoreIndex - mReadContext.indexedBases().Index;
+        int realignRightPos = position() + rightCoreOffset - mVariant.alt().length() + mVariant.ref().length();
+        int realignRightReadIndex = record.getReadPositionAtReferencePosition(realignRightPos) - 1 - rightCoreOffset;
+        return realignRightReadIndex;
+    }
+
+    private RealignedContext checkRealignment(final SAMRecord record, final int readIndex)
+    {
+        // try left and right alignment in turn
+
+        int realignLeftReadIndex = calcLeftAlignmentIndex(record);
 
         if(realignLeftReadIndex != readIndex)
         {
@@ -449,13 +491,10 @@ public class ReadContextCounter implements VariantHotspot
                     readBases, record.getBaseQualities(), false, 0);
 
             if(match == ReadContextMatch.FULL || match == ReadContextMatch.PARTIAL)
-                return new RealignedContext(EXACT, 0, 0, 0, 0);
+                return new RealignedContext(EXACT, mReadContext.indexedBases().length(), realignLeftReadIndex);
         }
 
-        // Right alignment: Match full read context ending at base = pos + length[RC} - rc_index - 1 - length(alt) + length(ref)
-        int rightCoreOffset = mReadContext.indexedBases().RightCoreIndex - mReadContext.indexedBases().Index;
-        int realignRightPos = position() + rightCoreOffset - mVariant.alt().length() + mVariant.ref().length();
-        int realignRightReadIndex = record.getReadPositionAtReferencePosition(realignRightPos) - 1 - rightCoreOffset;
+        int realignRightReadIndex = calcRightAlignmentIndex(record);
 
         if(realignRightReadIndex != readIndex)
         {
@@ -465,7 +504,7 @@ public class ReadContextCounter implements VariantHotspot
                     readBases, record.getBaseQualities(), false, 0);
 
             if(match == ReadContextMatch.FULL || match == ReadContextMatch.PARTIAL)
-                return new RealignedContext(RealignedType.EXACT, 0, 0, 0, 0);
+                return new RealignedContext(RealignedType.EXACT, mReadContext.indexedBases().length(), realignRightReadIndex);
         }
 
         return RealignedContext.NONE;
@@ -514,7 +553,7 @@ public class ReadContextCounter implements VariantHotspot
         int indelLength = record.getCigar().getCigarElements().stream()
                 .filter(x -> x.getOperator() == I || x.getOperator() == D).mapToInt(x -> x.getLength()).sum();
 
-        return Math.max(indelLength + Math.max(leftOffset, rightOffset), Realigned.MAX_REPEAT_SIZE) + 1;
+        return Math.max(indelLength + Math.max(leftOffset, rightOffset), Realignment.MAX_REPEAT_SIZE) + 1;
     }
 
     private int qualityJitterPenalty() { return (int) mJitterPenalty; }

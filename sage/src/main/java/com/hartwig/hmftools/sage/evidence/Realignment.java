@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.sage.evidence.RealignedType.SHORTENED;
 import com.hartwig.hmftools.common.variant.repeat.RepeatContextFactory;
 import com.hartwig.hmftools.sage.common.ReadContext;
 
-public class Realigned
+public class Realignment
 {
     private static final int MIN_REPEAT_COUNT = 4;
     public static final int MAX_REPEAT_SIZE = 5;
@@ -66,7 +66,7 @@ public class Realigned
 
         if(matchingBases == exactLength)
         {
-            return new RealignedContext(EXACT, matchingBases, otherIndex, 0, 0);
+            return new RealignedContext(EXACT, matchingBases, otherIndex);
         }
 
         if(matchingBases < MIN_REPEAT_COUNT)
@@ -84,13 +84,15 @@ public class Realigned
         int matchingBasesShortened = matchingBasesFromLeft(baseNextIndex + repeatLength, baseEndIndex, bases, otherNextIndex, otherBases);
         if(matchingBasesShortened > 0 && matchingBases + matchingBasesShortened == exactLength - repeatLength)
         {
-            return new RealignedContext(SHORTENED, matchingBasesShortened, otherNextIndex, repeat.RepeatCount, repeatLength);
+            return new RealignedContext(
+                    SHORTENED, matchingBasesShortened, otherNextIndex, repeat.RepeatCount, repeatLength, otherIndex, matchingBases);
         }
 
         int matchingBasesLengthened = matchingBasesFromLeft(baseNextIndex - repeatLength, baseEndIndex, bases, otherNextIndex, otherBases);
         if(matchingBasesLengthened > 0 && matchingBases + matchingBasesLengthened == exactLength + repeatLength)
         {
-            return new RealignedContext(LENGTHENED, matchingBasesLengthened, otherNextIndex, repeat.RepeatCount + 1, repeatLength);
+            return new RealignedContext(
+                    LENGTHENED, matchingBasesLengthened, otherNextIndex, repeat.RepeatCount + 1, repeatLength, otherIndex, matchingBases);
         }
 
         return NONE;
