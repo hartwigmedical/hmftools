@@ -68,6 +68,7 @@ public class FusionEvidence {
                 evidences.add(evidence(fusion, promiscuous));
             }
 
+            //TODO: Discuss if we want this
             if (promiscuous.event().equals(GeneLevelEvent.OVEREXPRESSION) && match(fusion, promiscuous)) {
                 evidences.add(evidence(fusion, promiscuous));
             }
