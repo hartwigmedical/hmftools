@@ -105,6 +105,15 @@ public class GeneLevelExtractor {
         return null;
     }
 
+    static boolean geneInDriverGenes(@NotNull List<DriverGene> driverGenes, @NotNull String gene) {
+        for (DriverGene driverGene : driverGenes) {
+            if (driverGene.gene().equals(gene)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Nullable
     @VisibleForTesting
     GeneLevelAnnotation extractGeneLevelEvent(@NotNull String gene, @NotNull String event) {
@@ -131,9 +140,9 @@ public class GeneLevelExtractor {
 
         if (driverInconsistencyMode.isActive()) {
             if (driverInconsistencyMode == DriverInconsistencyMode.WARN_ONLY) {
-                if (driverBasedEvent == GeneLevelEvent.ANY_MUTATION) {
+                if (!geneInDriverGenes(driverGenes, gene)) {
                     LOGGER.warn("Gene level event on gene {} not present in driver catalog. {} will never be reported", gene, result);
-                } else if (result != GeneLevelEvent.ANY_MUTATION && result != driverBasedEvent) {
+                } else if (geneInDriverGenes(driverGenes, gene) && result != GeneLevelEvent.ANY_MUTATION && result != driverBasedEvent) {
                     LOGGER.warn(
                             "Gene level event mismatch in driver gene event for '{}'. Event suggests {} while driver catalog suggests {}",
                             gene,
@@ -141,14 +150,15 @@ public class GeneLevelExtractor {
                             driverBasedEvent);
                 }
             } else if (driverInconsistencyMode == DriverInconsistencyMode.FILTER) {
-                if (driverBasedEvent == GeneLevelEvent.ANY_MUTATION) {
+                if (!geneInDriverGenes(driverGenes, gene)) {
                     LOGGER.info("Gene level event filtered -- {} on {} is not included in driver catalog and won't ever be reported.",
                             result,
                             gene);
                     return null;
-                } else if (result != GeneLevelEvent.ANY_MUTATION && result != driverBasedEvent) {
+                } else if (geneInDriverGenes(driverGenes, gene) && result != GeneLevelEvent.ANY_MUTATION && result != driverBasedEvent) {
                     LOGGER.info(
-                            "Gene level event filtered -- Mismatch in driver gene event for '{}'. Event suggests {} while driver catalog suggests {}",
+                            "Gene level event filtered -- Mismatch in driver gene event for '{}'. "
+                                    + "Event suggests {} while driver catalog suggests {}",
                             gene,
                             result,
                             driverBasedEvent);
