@@ -15,8 +15,8 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
-import com.hartwig.hmftools.serve.curation.DrugClassKey;
-import com.hartwig.hmftools.serve.curation.DrugClasses;
+import com.hartwig.hmftools.serve.curation.RelevantTreatmentApproachKey;
+import com.hartwig.hmftools.serve.curation.RelevantTreatmentApproch;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
@@ -27,7 +27,7 @@ public class ActionableEntryFactoryTest {
     public void canCreateActionableEntries() {
         CkbEntry entryDeletion =
                 CkbTestFactory.createEntry("KRAS", "deletion", "KRAS deletion", "sensitive", "Emerging", "AB", "AB", "A", "DOID:162");
-        Map<DrugClassKey, DrugClasses> drugClassesMap = Maps.newHashMap();
+        Map<RelevantTreatmentApproachKey, RelevantTreatmentApproch> drugClassesMap = Maps.newHashMap();
         Set<ActionableEntry> entryDeletionSet =
                 ActionableEntryFactory.toActionableEntries(entryDeletion, "KRAS", drugClassesMap, "gene", entryDeletion.type());
         assertEquals(0, entryDeletionSet.size());

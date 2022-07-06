@@ -19,14 +19,12 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.cancertype.CancerType;
 import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
-import com.hartwig.hmftools.serve.curation.DrugClassKey;
-import com.hartwig.hmftools.serve.curation.DrugClasses;
-import com.hartwig.hmftools.serve.curation.ImmutableDrugClassKey;
+import com.hartwig.hmftools.serve.curation.RelevantTreatmentApproachKey;
+import com.hartwig.hmftools.serve.curation.RelevantTreatmentApproch;
 import com.hartwig.hmftools.serve.treatment.ImmutableTreatment;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -70,7 +68,8 @@ class ActionableEntryFactory {
 
     @NotNull
     public static Set<ActionableEntry> toActionableEntries(@NotNull CkbEntry entry, @NotNull String sourceEvent,
-            @NotNull Map<DrugClassKey, DrugClasses> drugClassesCurations, @NotNull String gene, @NotNull EventType eventType) {
+            @NotNull Map<RelevantTreatmentApproachKey, RelevantTreatmentApproch> drugClassesCurations, @NotNull String gene,
+            @NotNull EventType eventType) {
         Set<ActionableEntry> actionableEntries = Sets.newHashSet();
         Set<String> sourceRelevantTreatmentApproaches = Sets.newHashSet();
         Set<String> curatedRelevantTreatmentApproaches = Sets.newHashSet();
@@ -115,23 +114,23 @@ class ActionableEntryFactory {
                     if (relevantTreatmentApproachesInfo != null) {
 
                         sourceRelevantTreatmentApproaches.add(relevantTreatmentApproachesInfo.drugClass());
-                        DrugClasses drugClassesMap = drugClassesCurations.get(relevantTreatmentApproachesInfo.drugClass());
+                        RelevantTreatmentApproch relevantTreatmentApprachMap =
+                                drugClassesCurations.get(relevantTreatmentApproachesInfo.drugClass());
                         String interpretEventKnowledgebase = gene + " " + eventType.name();
-                        if (drugClassesMap != null) {
-                            if (drugClassesMap.drugClassKey().matchEvent().equals(interpretEventKnowledgebase)) {
-                                curatedRelevantTreatmentApproaches.add(drugClassesMap.curatedDrugClass());
+                        if (relevantTreatmentApprachMap != null) {
+                            if (relevantTreatmentApprachMap.treatmentApproachKey().matchEvent().equals(interpretEventKnowledgebase)) {
+                                curatedRelevantTreatmentApproaches.add(relevantTreatmentApprachMap.curatedtreatmentApproach());
                             } else {
                                 LOGGER.warn("The treatment '{}' with relevant treatment approach '{}' of event '{}' "
                                                 + "with level '{}' and direction '{}' isn't curated",
-                                        drugClassesMap.drugClassKey().treatment(),
-                                        drugClassesMap.drugClassKey().drugClass(),
-                                        drugClassesMap.drugClassKey().matchEvent(),
+                                        relevantTreatmentApprachMap.treatmentApproachKey().treatment(),
+                                        relevantTreatmentApprachMap.treatmentApproachKey().treatmentApproach(),
+                                        relevantTreatmentApprachMap.treatmentApproachKey().matchEvent(),
                                         level,
                                         direction);
                             }
                         } else {
-                            LOGGER.warn(
-                                    "The treatment '{}' of relevant treatment approach of event '{}' "
+                            LOGGER.warn("The treatment '{}' of relevant treatment approach of event '{}' "
                                             + "with level '{}' and direction '{}' is empty",
                                     treatment,
                                     interpretEventKnowledgebase,

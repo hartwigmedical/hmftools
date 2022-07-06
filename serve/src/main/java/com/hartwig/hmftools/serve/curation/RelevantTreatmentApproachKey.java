@@ -7,13 +7,13 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class DrugClassKey {
+public abstract class RelevantTreatmentApproachKey {
 
     @NotNull
     public abstract String treatment();
 
     @NotNull
-    public abstract String drugClass();
+    public abstract String treatmentApproach();
 
     @NotNull
     public abstract String matchEvent();
