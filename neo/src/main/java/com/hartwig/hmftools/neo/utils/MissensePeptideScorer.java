@@ -67,11 +67,13 @@ public class MissensePeptideScorer
     private final BindScorer mPeptideScorer;
 
     private final List<PeptideData> mPeptideData;
+    private final double mLikelihoodCutoff;
 
     private BufferedWriter mWriter;
 
     private static final String GENE_ID_FILE = "gene_id_file";
     private static final String OUTPUT_FILE = "output_file";
+    private static final String LIKELIHOOD_CUTOFF = "likelihood_cutoff";
 
     public MissensePeptideScorer(final CommandLine cmd)
     {
@@ -90,6 +92,7 @@ public class MissensePeptideScorer
         mWriter = initialiseWriter(cmd.getOptionValue(OUTPUT_FILE));
 
         mGeneIds = loadGeneIdsFile(cmd.getOptionValue(GENE_ID_FILE));
+        mLikelihoodCutoff = Double.parseDouble(cmd.getOptionValue(LIKELIHOOD_CUTOFF, "0.02"));
     }
 
     public void run()
@@ -116,6 +119,8 @@ public class MissensePeptideScorer
         for(String geneId : mGeneIds)
         {
             GeneData geneData = mEnsemblDataCache.getGeneDataById(geneId);
+
+            NE_LOGGER.debug("gene({}:{}) writing missense peptides", geneData.GeneId, geneData.GeneName);
             List<TranscriptData> transDataList = mEnsemblDataCache.getTranscripts(geneData.GeneId);
 
             if(transDataList == null)
@@ -373,7 +378,6 @@ public class MissensePeptideScorer
 
         final Set<String> alleleSet = mPeptideScorer.getScoringAlleles();
 
-        // int alleleCount = 0;
         for(String allele : alleleSet)
         {
             NE_LOGGER.debug("gene({}) allele({}) calculating binding scores for {} peptides",
@@ -384,7 +388,7 @@ public class MissensePeptideScorer
                 BindData bindData = new BindData(allele, peptideData.Peptide, "", peptideData.UpFlank, peptideData.DownFlank);
                 mPeptideScorer.calcScoreData(bindData);
 
-                if(bindData.likelihoodRank() > 0.02)
+                if(mLikelihoodCutoff > 0 && bindData.likelihoodRank() > mLikelihoodCutoff)
                     continue;
 
                 writePeptideData(peptideData, bindData);
@@ -478,6 +482,7 @@ public class MissensePeptideScorer
         options.addOption(GENE_ID_FILE, true, "Gene IDs file");
         options.addOption(OUTPUT_FILE, true, "Output filename");
         options.addOption(OUTPUT_DIR, true, "Output directory");
+        options.addOption(LIKELIHOOD_CUTOFF, true, "Likelihood cutoff to write an allele peptide result");
         addLoggingOptions(options);
 
         final CommandLine cmd = createCommandLine(args, options);
