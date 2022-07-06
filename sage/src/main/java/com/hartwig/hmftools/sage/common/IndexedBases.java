@@ -55,6 +55,8 @@ public class IndexedBases
         return Bases.length == 0 ? Strings.EMPTY : new String(Bases, LeftCoreIndex, coreLength());
     }
 
+    public String fullString() { return Bases.length == 0 ? Strings.EMPTY : new String(Bases, LeftFlankIndex, length()); }
+
     public String leftFlankString()
     {
         return Bases.length == 0 ? Strings.EMPTY : new String(Bases, LeftFlankIndex, leftFlankLength());
@@ -307,7 +309,7 @@ public class IndexedBases
             return "";
 
         return String.format("%s indices(%d-%d-%d-%d-%d)",
-                new String(Bases, LeftFlankIndex, length()), LeftFlankIndex, LeftCoreIndex, Index, RightCoreIndex, RightFlankIndex);
+                fullString(), LeftFlankIndex, LeftCoreIndex, Index, RightCoreIndex, RightFlankIndex);
     }
 
 }

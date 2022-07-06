@@ -55,22 +55,22 @@ These changes disable the germline filters (which is actually the tumor).
 
 ## Post Process
 
-- Filter for PASS
-- Re-arrange sample names to be reference first then tumor
-- Annotate with mappability
-- Annotate with clinvar
-- Annotate with blacklist bed file (BRCA2 locations)
-- Annotate with blacklist vcf file
-- Annotate with Pave (see https://github.com/hartwigmedical/hmftools/tree/master/pave)
-
+Run Pave (https://github.com/hartwigmedical/hmftools/tree/master/pave) with germline reference data and settings:
 
 ```
-/opt/tools/bcftools/1.9/bcftools filter -i 'FILTER=\"PASS\"' /data/output/tumor.sage.germline.vcf.gz -O z -o /data/output/tumor.sage.pass.vcf.gz
-/opt/tools/bcftools/1.9/bcftools view -s reference,tumor /data/output/tumor.sage.pass.vcf.gz -O z -o /data/output/tumor.sage.sort.vcf.gz
-/opt/tools/bcftools/1.9/bcftools annotate -a /opt/resources/mappability/37/out_150.mappability.37.bed.gz -h /opt/resources/mappability/mappability.hdr -c CHROM,FROM,TO,-,MAPPABILITY /data/output/tumor.sage.sort.vcf.gz -O z -o /data/output/tumor.mappability.annotated.vcf.gz
-/opt/tools/bcftools/1.9/bcftools annotate -a /opt/resources/sage/37/clinvar.37.vcf.gz -c INFO/CLNSIG,INFO/CLNSIGCONF /data/output/tumor.mappability.annotated.vcf.gz -O z -o /data/output/tumor.clinvar.vcf.gz
-/opt/tools/bcftools/1.9/bcftools annotate -a /opt/resources/sage/37/KnownBlacklist.germline.37.bed.gz -m BLACKLIST_BED -c CHROM,FROM,TO /data/output/tumor.clinvar.vcf.gz -O z -o /data/output/tumor.blacklist.regions.vcf.gz
-/opt/tools/bcftools/1.9/bcftools annotate -a /opt/resources/sage/37/KnownBlacklist.germline.37.vcf.gz -m BLACKLIST_VCF /data/output/tumor.blacklist.regions.vcf.gz -O z -o /data/output/tumor.blacklist.variants.vcf.gz
+java -jar pave.jar 
+  -sample SAMPLE_ID
+  -vcf_file /path_to_germline_vcf/
+  -ensembl_data_dir /path_to_ensembl_files/
+  -driver_gene_panel /ref_files/DriverGenePanel.37.tsv \
+  -ref_genome /path_to_ref_genome_fasta/
+  -ref_genome_version [V37 or V38] 
+  -mappability_bed /ref_files/mappability_150.37.bed.gz \
+  -clinvar_vcf /ref_files/clinvar.37.vcf.gz \
+  -blacklist_bed /ref_files/KnownBlacklist.germline.37.bed \
+  -blacklist_vcf /ref_files/KnownBlacklist.germline.37.vcf.gz \
+  -read_pass_only \
+  -output_dir /output_path/ 
 ```
 
 ## Known Issues
