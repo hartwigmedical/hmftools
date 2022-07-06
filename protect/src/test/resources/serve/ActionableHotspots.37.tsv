@@ -1,3 +1,3 @@
-chromosome	position	ref	alt	source	sourceEvent	sourceUrls	treatment	drugClasses	applicableCancerType	applicableDoid	blacklistCancerTypes	level	direction	evidenceUrl
-7	140453136	A	T	VICC_CGI	variant	http	Vemurafenib		Skin Melanoma	X		A	RESPONSIVE	http
-7	140453137	A	T	VICC_CGI	variant	http	Vemurafenib		Skin Melanoma	X		C	RESISTANT	http
+chromosome	position	ref	alt	source	sourceEvent	sourceUrls	treatment	sourceRelevantTreatmentApproaches	relevantTreatmentApproaches	applicableCancerType	applicableDoid	blacklistCancerTypes	level	direction	evidenceUrl
+7	140453136	A	T	VICC_CGI	variant	http	Vemurafenib			Skin Melanoma	X		A	RESPONSIVE	http
+7	140453137	A	T	VICC_CGI	variant	http	Vemurafenib			Skin Melanoma	X		C	RESISTANT	http

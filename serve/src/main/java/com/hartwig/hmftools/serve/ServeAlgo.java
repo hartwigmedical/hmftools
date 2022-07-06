@@ -16,6 +16,7 @@ import com.hartwig.hmftools.iclusion.classification.IclusionClassificationConfig
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.serve.curation.DrugClassFactory;
+import com.hartwig.hmftools.serve.curation.DrugClassKey;
 import com.hartwig.hmftools.serve.curation.DrugClasses;
 import com.hartwig.hmftools.serve.extraction.ExtractionFunctions;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
@@ -141,7 +142,7 @@ public class ServeAlgo {
         RefGenomeResource refGenomeResource = refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.CKB);
         CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(config, refGenomeResource);
 
-        Map<String, DrugClasses> drugClasses = DrugClassFactory.read(ckbDrugCurationTsv);
+        Map<DrugClassKey, DrugClasses> drugClasses = DrugClassFactory.read(ckbDrugCurationTsv);
 
         LOGGER.info("Running CKB knowledge extraction");
         return extractor.extract(ckbEntries, drugClasses);

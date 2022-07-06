@@ -67,8 +67,7 @@ public class PersonalizedEvidenceFactoryTest {
 
         PersonalizedEvidenceFactory factoryNotMatchWithBlacklisted = EvidenceTestFactory.create("0060081");
         ActionableHotspot hotspotNotMatchWithBlacklisted = create("Cancer", "162", "Prostate", "10283");
-        assertFalse(factoryNotMatchWithBlacklisted.isBlacklisted(hotspotNotMatchWithBlacklisted.blacklistCancerTypes(),
-                "treatment"));
+        assertFalse(factoryNotMatchWithBlacklisted.isBlacklisted(hotspotNotMatchWithBlacklisted.blacklistCancerTypes(), "treatment"));
 
         PersonalizedEvidenceFactory factoryNotBlacklisted = EvidenceTestFactory.create("10383");
         ActionableHotspot hotspotNotBlacklisted = create("Cancer", "162");
@@ -101,7 +100,6 @@ public class PersonalizedEvidenceFactoryTest {
                 .event(GeneLevelEvent.OVEREXPRESSION)
                 .build();
         assertEquals(ProtectEvidenceType.OVER_EXPRESSION, PersonalizedEvidenceFactory.determineEvidenceType(overexpression));
-
 
         assertEquals(ProtectEvidenceType.FUSION_PAIR,
                 PersonalizedEvidenceFactory.determineEvidenceType(ServeTestFactory.createTestActionableFusion()));
@@ -162,7 +160,11 @@ public class PersonalizedEvidenceFactoryTest {
         ActionableEvent event = ActionabilityTestUtil.create(Knowledgebase.CKB,
                 "amp",
                 Sets.newHashSet(),
-                ImmutableTreatment.builder().treament("treatment A").drugClasses(Sets.newHashSet("drugClasses")).build(),
+                ImmutableTreatment.builder()
+                        .treament("treatment A")
+                        .sourceRelevantTreatmentApproaches(Sets.newHashSet("drugClasses"))
+                        .relevantTreatmentApproaches(Sets.newHashSet("drugClasses"))
+                        .build(),
                 ImmutableCancerType.builder().name(cancerType).doid(doid).build(),
                 blacklist,
                 EvidenceLevel.A,

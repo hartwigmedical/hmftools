@@ -246,7 +246,11 @@ public final class ServeTestFactory {
         return ActionabilityTestUtil.create(source,
                 "source event",
                 Sets.newHashSet(),
-                ImmutableTreatment.builder().treament("treatment").drugClasses(Sets.newHashSet("drugClasses")).build(),
+                ImmutableTreatment.builder()
+                        .treament("treatment")
+                        .sourceRelevantTreatmentApproaches(Sets.newHashSet("drugClasses"))
+                        .relevantTreatmentApproaches(Sets.newHashSet("drugClasses"))
+                        .build(),
                 ImmutableCancerType.builder().name("applicable name").doid("applicable doid").build(),
                 Sets.newHashSet(ImmutableCancerType.builder().name("blacklist name").doid("blacklist doid").build()),
                 EvidenceLevel.A,

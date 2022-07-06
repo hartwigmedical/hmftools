@@ -16,7 +16,7 @@ public class DrugClassFactoryTest {
 
     @Test
     public void canReadCkbDrugClassCurationTsv() throws IOException {
-        Map<String, DrugClasses> drugClassesMap = DrugClassFactory.read(TEST_CKB_DRUGCLASS_CURATION_TSV);
+        Map<DrugClassKey, DrugClasses> drugClassesMap = DrugClassFactory.read(TEST_CKB_DRUGCLASS_CURATION_TSV);
         assertEquals(3, drugClassesMap.size());
     }
 }

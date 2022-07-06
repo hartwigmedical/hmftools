@@ -28,7 +28,8 @@ public class ActionableTrialFactory {
     static final String ORGAN_SYSTEM_CANCER_DOID = "0050686";
 
     static final CancerType LEUKEMIA_TYPE = ImmutableCancerType.builder().name("Leukemia").doid("1240").build();
-    static final CancerType REFRACTORY_HEMATOLOGIC_TYPE = ImmutableCancerType.builder().name("Refractory hematologic cancer").doid("712").build();
+    static final CancerType REFRACTORY_HEMATOLOGIC_TYPE =
+            ImmutableCancerType.builder().name("Refractory hematologic cancer").doid("712").build();
     static final CancerType BONE_MARROW_TYPE = ImmutableCancerType.builder().name("Bone marrow cancer").doid("4960").build();
 
     @NotNull
@@ -71,7 +72,11 @@ public class ActionableTrialFactory {
                 .source(Knowledgebase.ICLUSION)
                 .sourceEvent(sourceEvent)
                 .sourceUrls(Sets.newHashSet("https://trial-eye.com/hmf/" + trial.id()))
-                .treatment(ImmutableTreatment.builder().treament(trial.acronym()).drugClasses(Sets.newHashSet("study")).build())
+                .treatment(ImmutableTreatment.builder()
+                        .treament(trial.acronym())
+                        .sourceRelevantTreatmentApproaches(Sets.newHashSet())
+                        .relevantTreatmentApproaches(Sets.newHashSet("study"))
+                        .build())
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .evidenceUrls(Sets.newHashSet());

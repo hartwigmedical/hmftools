@@ -307,9 +307,9 @@ public class ServeDAO {
                         ? null
                         : ActionableFileFunctions.urlsToString(actionableHotspot.sourceUrls()),
                 actionableHotspot.treatment().treament(),
-                ActionableFileFunctions.drugClassesToString(actionableHotspot.treatment().drugClasses()).isEmpty()
+                ActionableFileFunctions.drugClassesToString(actionableHotspot.treatment().sourceRelevantTreatmentApproaches()).isEmpty()
                         ? null
-                        : ActionableFileFunctions.drugClassesToString(actionableHotspot.treatment().drugClasses()),
+                        : ActionableFileFunctions.drugClassesToString(actionableHotspot.treatment().sourceRelevantTreatmentApproaches()),
                 actionableHotspot.applicableCancerType().name(),
                 actionableHotspot.applicableCancerType().doid(),
                 CancerTypeFactory.toString(actionableHotspot.blacklistCancerTypes()).isEmpty()
@@ -339,9 +339,9 @@ public class ServeDAO {
                         ? null
                         : ActionableFileFunctions.urlsToString(actionableRange.sourceUrls()),
                 actionableRange.treatment().treament(),
-                ActionableFileFunctions.drugClassesToString(actionableRange.treatment().drugClasses()).isEmpty()
+                ActionableFileFunctions.drugClassesToString(actionableRange.treatment().sourceRelevantTreatmentApproaches()).isEmpty()
                         ? null
-                        : ActionableFileFunctions.drugClassesToString(actionableRange.treatment().drugClasses()),
+                        : ActionableFileFunctions.drugClassesToString(actionableRange.treatment().sourceRelevantTreatmentApproaches()),
                 actionableRange.applicableCancerType().name(),
                 actionableRange.applicableCancerType().doid(),
                 CancerTypeFactory.toString(actionableRange.blacklistCancerTypes()).isEmpty()
@@ -365,9 +365,9 @@ public class ServeDAO {
                         ? null
                         : ActionableFileFunctions.urlsToString(actionableGene.sourceUrls()),
                 actionableGene.treatment().treament(),
-                ActionableFileFunctions.drugClassesToString(actionableGene.treatment().drugClasses()).isEmpty()
+                ActionableFileFunctions.drugClassesToString(actionableGene.treatment().sourceRelevantTreatmentApproaches()).isEmpty()
                         ? null
-                        : ActionableFileFunctions.drugClassesToString(actionableGene.treatment().drugClasses()),
+                        : ActionableFileFunctions.drugClassesToString(actionableGene.treatment().sourceRelevantTreatmentApproaches()),
                 actionableGene.applicableCancerType().name(),
                 actionableGene.applicableCancerType().doid(),
                 CancerTypeFactory.toString(actionableGene.blacklistCancerTypes()).isEmpty()
@@ -395,9 +395,9 @@ public class ServeDAO {
                         ? null
                         : ActionableFileFunctions.urlsToString(actionableFusion.sourceUrls()),
                 actionableFusion.treatment().treament(),
-                ActionableFileFunctions.drugClassesToString(actionableFusion.treatment().drugClasses()).isEmpty()
+                ActionableFileFunctions.drugClassesToString(actionableFusion.treatment().sourceRelevantTreatmentApproaches()).isEmpty()
                         ? null
-                        : ActionableFileFunctions.drugClassesToString(actionableFusion.treatment().drugClasses()),
+                        : ActionableFileFunctions.drugClassesToString(actionableFusion.treatment().sourceRelevantTreatmentApproaches()),
                 actionableFusion.applicableCancerType().name(),
                 actionableFusion.applicableCancerType().doid(),
                 CancerTypeFactory.toString(actionableFusion.blacklistCancerTypes()).isEmpty()
@@ -422,9 +422,11 @@ public class ServeDAO {
                         ? null
                         : ActionableFileFunctions.urlsToString(actionableCharacteristic.sourceUrls()),
                 actionableCharacteristic.treatment().treament(),
-                ActionableFileFunctions.drugClassesToString(actionableCharacteristic.treatment().drugClasses()).isEmpty()
+                ActionableFileFunctions.drugClassesToString(actionableCharacteristic.treatment().sourceRelevantTreatmentApproaches())
+                        .isEmpty()
                         ? null
-                        : ActionableFileFunctions.drugClassesToString(actionableCharacteristic.treatment().drugClasses()),
+                        : ActionableFileFunctions.drugClassesToString(actionableCharacteristic.treatment()
+                                .sourceRelevantTreatmentApproaches()),
                 actionableCharacteristic.applicableCancerType().name(),
                 actionableCharacteristic.applicableCancerType().doid(),
                 CancerTypeFactory.toString(actionableCharacteristic.blacklistCancerTypes()).isEmpty()
@@ -447,9 +449,9 @@ public class ServeDAO {
                         ? null
                         : ActionableFileFunctions.urlsToString(actionableHLA.sourceUrls()),
                 actionableHLA.treatment().treament(),
-                ActionableFileFunctions.drugClassesToString(actionableHLA.treatment().drugClasses()).isEmpty()
+                ActionableFileFunctions.drugClassesToString(actionableHLA.treatment().sourceRelevantTreatmentApproaches()).isEmpty()
                         ? null
-                        : ActionableFileFunctions.drugClassesToString(actionableHLA.treatment().drugClasses()),
+                        : ActionableFileFunctions.drugClassesToString(actionableHLA.treatment().sourceRelevantTreatmentApproaches()),
                 actionableHLA.applicableCancerType().name(),
                 actionableHLA.applicableCancerType().doid(),
                 CancerTypeFactory.toString(actionableHLA.blacklistCancerTypes()).isEmpty()

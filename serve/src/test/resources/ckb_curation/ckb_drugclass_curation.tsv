@@ -1,4 +1,4 @@
-drugClass	curatedDrugClass
-A test	A
-B test	B
-C test	C
+treatment	drugClass	matchEvent	curatedDrugClass
+Trastuzumab	A test	BRAF amplification	A
+Trastuzumab	B test	BRAF amplification	B
+Trastuzumab	C test	BRAF amplification	C

@@ -15,19 +15,21 @@ public class DrugClassFactory {
     private static final String FIELD_DELIMITER = "\t";
 
     @NotNull
-    public static Map<String, DrugClasses> read(@NotNull String drugClassCurationTsv) throws IOException {
+    public static Map<DrugClassKey, DrugClasses> read(@NotNull String drugClassCurationTsv) throws IOException {
         List<String> lines = Files.readAllLines(new File(drugClassCurationTsv).toPath());
         // Skip header
         return fromLines(lines.subList(1, lines.size()));
     }
 
     @NotNull
-    private static Map<String, DrugClasses> fromLines(@NotNull List<String> lines) {
-        Map<String, DrugClasses> curatedEntries = Maps.newHashMap();
+    private static Map<DrugClassKey, DrugClasses> fromLines(@NotNull List<String> lines) {
+        Map<DrugClassKey, DrugClasses> curatedEntries = Maps.newHashMap();
 
         for (String line : lines) {
             String[] values = line.split(FIELD_DELIMITER);
-            curatedEntries.put(values[0], ImmutableDrugClasses.builder().drugClass(values[0]).curatedDrugClass(values[1]).build());
+            DrugClassKey drugClassKey =
+                    ImmutableDrugClassKey.builder().treatment(values[0]).drugClass(values[1]).matchEvent(values[2]).build();
+            curatedEntries.put(drugClassKey, ImmutableDrugClasses.builder().drugClassKey(drugClassKey).curatedDrugClass(values[3]).build());
         }
         return curatedEntries;
     }

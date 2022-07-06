@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class DrugClasses {
 
     @NotNull
-    public abstract String drugClass();
+    public abstract DrugClassKey drugClassKey();
 
     @NotNull
     public abstract String curatedDrugClass();
