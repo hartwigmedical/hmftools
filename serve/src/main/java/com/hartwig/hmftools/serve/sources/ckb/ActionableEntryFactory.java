@@ -16,14 +16,15 @@ import com.hartwig.hmftools.ckb.datamodel.treatmentapproaches.RelevantTreatmentA
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.cancertype.CancerType;
 import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
-import com.hartwig.hmftools.serve.curation.DrugClasses;
+import com.hartwig.hmftools.serve.curation.RelevantTreatmentApproachKey;
+import com.hartwig.hmftools.serve.curation.RelevantTreatmentApproch;
 import com.hartwig.hmftools.serve.treatment.ImmutableTreatment;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -67,31 +68,16 @@ class ActionableEntryFactory {
 
     @NotNull
     public static Set<ActionableEntry> toActionableEntries(@NotNull CkbEntry entry, @NotNull String sourceEvent,
-            @NotNull Map<String, DrugClasses> drugClassesCurations) {
+            @NotNull Map<RelevantTreatmentApproachKey, RelevantTreatmentApproch> drugClassesCurations, @NotNull String gene,
+            @NotNull EventType eventType) {
         Set<ActionableEntry> actionableEntries = Sets.newHashSet();
-        Set<String> drugClasses = Sets.newHashSet();
+        Set<String> sourceRelevantTreatmentApproaches = Sets.newHashSet();
+        Set<String> curatedRelevantTreatmentApproaches = Sets.newHashSet();
+
         for (Evidence evidence : evidencesWithUsableType(entry.evidences())) {
             EvidenceLevel level = resolveLevel(evidence.ampCapAscoEvidenceLevel());
             EvidenceDirection direction = resolveDirection(evidence.responseType());
             String doid = extractAndCurateDoid(evidence.indication().termId());
-
-            for (RelevantTreatmentApproaches relevantTreatmentApproaches : evidence.relevantTreatmentApproaches()) {
-                DrugClass drugClass = relevantTreatmentApproaches.drugClass();
-
-                if (drugClass == null) {
-                    drugClasses.add(Strings.EMPTY);
-                } else {
-                    DrugClasses drugClassesMap = drugClassesCurations.get(drugClass.drugClass());
-                    if (drugClassesMap != null) {
-                        if (drugClass.drugClass().equals(drugClassesMap.curatedDrugClass())) {
-                            drugClasses.add(drugClassesMap.curatedDrugClass());
-                        } else {
-                            LOGGER.warn("Drug class '{}' isn't curated", drugClass.drugClass());
-                            drugClasses.add(Strings.EMPTY);
-                        }
-                    }
-                }
-            }
 
             if (level != null && direction != null && doid != null) {
                 String treatment = evidence.therapy().therapyName();
@@ -122,11 +108,47 @@ class ActionableEntryFactory {
                     blacklistedCancerTypes.add(ImmutableCancerType.builder().name("Bone marrow cancer").doid("4960").build());
                 }
 
+                for (RelevantTreatmentApproaches relevantTreatmentApproaches : evidence.relevantTreatmentApproaches()) {
+                    DrugClass relevantTreatmentApproachesInfo = relevantTreatmentApproaches.drugClass();
+
+                    if (relevantTreatmentApproachesInfo != null) {
+
+                        sourceRelevantTreatmentApproaches.add(relevantTreatmentApproachesInfo.drugClass());
+                        RelevantTreatmentApproch relevantTreatmentApprachMap =
+                                drugClassesCurations.get(relevantTreatmentApproachesInfo.drugClass());
+                        String interpretEventKnowledgebase = gene + " " + eventType.name();
+                        if (relevantTreatmentApprachMap != null) {
+                            if (relevantTreatmentApprachMap.treatmentApproachKey().matchEvent().equals(interpretEventKnowledgebase)) {
+                                curatedRelevantTreatmentApproaches.add(relevantTreatmentApprachMap.curatedtreatmentApproach());
+                            } else {
+                                LOGGER.warn("The treatment '{}' with relevant treatment approach '{}' of event '{}' "
+                                                + "with level '{}' and direction '{}' isn't curated",
+                                        relevantTreatmentApprachMap.treatmentApproachKey().treatment(),
+                                        relevantTreatmentApprachMap.treatmentApproachKey().treatmentApproach(),
+                                        relevantTreatmentApprachMap.treatmentApproachKey().matchEvent(),
+                                        level,
+                                        direction);
+                            }
+                        } else {
+                            LOGGER.warn("The treatment '{}' of relevant treatment approach of event '{}' "
+                                            + "with level '{}' and direction '{}' is empty",
+                                    treatment,
+                                    interpretEventKnowledgebase,
+                                    level,
+                                    direction);
+                        }
+                    }
+                }
+
                 actionableEntries.add(ImmutableActionableEntry.builder()
                         .source(Knowledgebase.CKB)
                         .sourceEvent(sourceEvent)
                         .sourceUrls(sourceUrls)
-                        .treatment(ImmutableTreatment.builder().treament(treatment).drugClasses(drugClasses).build())
+                        .treatment(ImmutableTreatment.builder()
+                                .treament(treatment)
+                                .sourceRelevantTreatmentApproaches(sourceRelevantTreatmentApproaches)
+                                .relevantTreatmentApproaches(curatedRelevantTreatmentApproaches)
+                                .build())
                         .applicableCancerType(ImmutableCancerType.builder().name(cancerType).doid(doid).build())
                         .blacklistCancerTypes(blacklistedCancerTypes)
                         .level(level)
@@ -134,7 +156,8 @@ class ActionableEntryFactory {
                         .evidenceUrls(evidenceUrls)
                         .build());
             }
-        } return actionableEntries;
+        }
+        return actionableEntries;
     }
 
     @NotNull

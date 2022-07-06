@@ -23,21 +23,20 @@ import com.hartwig.hmftools.serve.extraction.exon.KnownExon;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
 
-import static com.hartwig.hmftools.serve.database.tables.Actionablehotspots.ACTIONABLEHOTSPOTS;
-import static com.hartwig.hmftools.serve.database.tables.Actionableranges.ACTIONABLERANGES;
-import static com.hartwig.hmftools.serve.database.tables.Actionablegenes.ACTIONABLEGENES;
-import static com.hartwig.hmftools.serve.database.tables.Actionablefusions.ACTIONABLEFUSIONS;
-import static com.hartwig.hmftools.serve.database.tables.Actionablecharacteristics.ACTIONABLECHARACTERISTICS;
+import static com.hartwig.hmftools.serve.database.tables.Actionablehotspot.ACTIONABLEHOTSPOT;
+import static com.hartwig.hmftools.serve.database.tables.Actionablerange.ACTIONABLERANGE;
+import static com.hartwig.hmftools.serve.database.tables.Actionablegene.ACTIONABLEGENE;
+import static com.hartwig.hmftools.serve.database.tables.Actionablefusion.ACTIONABLEFUSION;
+import static com.hartwig.hmftools.serve.database.tables.Actionablecharacteristic.ACTIONABLECHARACTERISTIC;
 import static com.hartwig.hmftools.serve.database.tables.Actionablehla.ACTIONABLEHLA;
-import static com.hartwig.hmftools.serve.database.tables.Knownhotspots.KNOWNHOTSPOTS;
-import static com.hartwig.hmftools.serve.database.tables.Knowncodons.KNOWNCODONS;
-import static com.hartwig.hmftools.serve.database.tables.Knownexons.KNOWNEXONS;
-import static com.hartwig.hmftools.serve.database.tables.Knowncopynumbers.KNOWNCOPYNUMBERS;
-import static com.hartwig.hmftools.serve.database.tables.Knownfusionpairs.KNOWNFUSIONPAIRS;
+import static com.hartwig.hmftools.serve.database.tables.Knownhotspot.KNOWNHOTSPOT;
+import static com.hartwig.hmftools.serve.database.tables.Knowncodon.KNOWNCODON;
+import static com.hartwig.hmftools.serve.database.tables.Knownexon.KNOWNEXON;
+import static com.hartwig.hmftools.serve.database.tables.Knowncopynumber.KNOWNCOPYNUMBER;
+import static com.hartwig.hmftools.serve.database.tables.Knownfusionpair.KNOWNFUSIONPAIR;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep13;
@@ -63,17 +62,17 @@ public class ServeDAO {
 
     public void deleteAll() {
         LOGGER.info("Deleting all data from SERVE database");
-        context.deleteFrom(ACTIONABLEHOTSPOTS).execute();
-        context.deleteFrom(ACTIONABLERANGES).execute();
-        context.deleteFrom(ACTIONABLEGENES).execute();
-        context.deleteFrom(ACTIONABLEFUSIONS).execute();
-        context.deleteFrom(ACTIONABLECHARACTERISTICS).execute();
+        context.deleteFrom(ACTIONABLEHOTSPOT).execute();
+        context.deleteFrom(ACTIONABLERANGE).execute();
+        context.deleteFrom(ACTIONABLEGENE).execute();
+        context.deleteFrom(ACTIONABLEFUSION).execute();
+        context.deleteFrom(ACTIONABLECHARACTERISTIC).execute();
         context.deleteFrom(ACTIONABLEHLA).execute();
-        context.deleteFrom(KNOWNHOTSPOTS).execute();
-        context.deleteFrom(KNOWNCODONS).execute();
-        context.deleteFrom(KNOWNEXONS).execute();
-        context.deleteFrom(KNOWNFUSIONPAIRS).execute();
-        context.deleteFrom(KNOWNCOPYNUMBERS).execute();
+        context.deleteFrom(KNOWNHOTSPOT).execute();
+        context.deleteFrom(KNOWNCODON).execute();
+        context.deleteFrom(KNOWNEXON).execute();
+        context.deleteFrom(KNOWNFUSIONPAIR).execute();
+        context.deleteFrom(KNOWNCOPYNUMBER).execute();
     }
 
     void write(@NotNull ActionableEvents actionableEvents, KnownEvents knownEvents) {
@@ -84,118 +83,118 @@ public class ServeDAO {
 
         List<ActionableHotspot> actionableHotspots = actionableEvents.hotspots();
         for (List<ActionableHotspot> batch : Iterables.partition(actionableHotspots, Utils.DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep16 inserter = context.insertInto(ACTIONABLEHOTSPOTS,
-                    ACTIONABLEHOTSPOTS.MODIFIED,
-                    ACTIONABLEHOTSPOTS.CHROMOSOME,
-                    ACTIONABLEHOTSPOTS.POSITION,
-                    ACTIONABLEHOTSPOTS.REF,
-                    ACTIONABLEHOTSPOTS.ALT,
-                    ACTIONABLEHOTSPOTS.SOURCE,
-                    ACTIONABLEHOTSPOTS.SOURCEEVENT,
-                    ACTIONABLEHOTSPOTS.SOURCEURLS,
-                    ACTIONABLEHOTSPOTS.TREATMENT,
-                    ACTIONABLEHOTSPOTS.DRUGCLASSES,
-                    ACTIONABLEHOTSPOTS.APPLICABLECANCERTYPE,
-                    ACTIONABLEHOTSPOTS.APPLICABLEDOID,
-                    ACTIONABLEHOTSPOTS.BLACKLISTCANCERTYPES,
-                    ACTIONABLEHOTSPOTS.LEVEL,
-                    ACTIONABLEHOTSPOTS.DIRECTION,
-                    ACTIONABLEHOTSPOTS.EVIDENCEURLS);
+            InsertValuesStep16 inserter = context.insertInto(ACTIONABLEHOTSPOT,
+                    ACTIONABLEHOTSPOT.MODIFIED,
+                    ACTIONABLEHOTSPOT.CHROMOSOME,
+                    ACTIONABLEHOTSPOT.POSITION,
+                    ACTIONABLEHOTSPOT.REF,
+                    ACTIONABLEHOTSPOT.ALT,
+                    ACTIONABLEHOTSPOT.SOURCE,
+                    ACTIONABLEHOTSPOT.SOURCEEVENT,
+                    ACTIONABLEHOTSPOT.SOURCEURLS,
+                    ACTIONABLEHOTSPOT.TREATMENT,
+                    ACTIONABLEHOTSPOT.DRUGCLASSES,
+                    ACTIONABLEHOTSPOT.APPLICABLECANCERTYPE,
+                    ACTIONABLEHOTSPOT.APPLICABLEDOID,
+                    ACTIONABLEHOTSPOT.BLACKLISTCANCERTYPES,
+                    ACTIONABLEHOTSPOT.LEVEL,
+                    ACTIONABLEHOTSPOT.DIRECTION,
+                    ACTIONABLEHOTSPOT.EVIDENCEURLS);
             batch.forEach(entry -> addRecordHotspots(timestamp, inserter, entry));
             inserter.execute();
         }
 
         List<ActionableRange> actionableRanges = actionableEvents.ranges();
         for (List<ActionableRange> batch : Iterables.partition(actionableRanges, Utils.DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep20 inserter = context.insertInto(ACTIONABLERANGES,
-                    ACTIONABLERANGES.MODIFIED,
-                    ACTIONABLERANGES.GENE,
-                    ACTIONABLERANGES.TRANSCRIPT,
-                    ACTIONABLERANGES.CHROMOSOME,
-                    ACTIONABLERANGES.START,
-                    ACTIONABLERANGES.END,
-                    ACTIONABLERANGES.MUTATIONTYPE,
-                    ACTIONABLERANGES.RANGETYPE,
-                    ACTIONABLERANGES.RANK,
-                    ACTIONABLERANGES.SOURCE,
-                    ACTIONABLERANGES.SOURCEEVENT,
-                    ACTIONABLERANGES.SOURCEURLS,
-                    ACTIONABLERANGES.TREATMENT,
-                    ACTIONABLERANGES.DRUGCLASSES,
-                    ACTIONABLERANGES.APPLICABLECANCERTYPE,
-                    ACTIONABLERANGES.APPLICABLEDOID,
-                    ACTIONABLERANGES.BLACKLISTCANCERTYPES,
-                    ACTIONABLERANGES.LEVEL,
-                    ACTIONABLERANGES.DIRECTION,
-                    ACTIONABLERANGES.EVIDENCEURLS);
+            InsertValuesStep20 inserter = context.insertInto(ACTIONABLERANGE,
+                    ACTIONABLERANGE.MODIFIED,
+                    ACTIONABLERANGE.GENE,
+                    ACTIONABLERANGE.TRANSCRIPT,
+                    ACTIONABLERANGE.CHROMOSOME,
+                    ACTIONABLERANGE.START,
+                    ACTIONABLERANGE.END,
+                    ACTIONABLERANGE.MUTATIONTYPE,
+                    ACTIONABLERANGE.RANGETYPE,
+                    ACTIONABLERANGE.RANK,
+                    ACTIONABLERANGE.SOURCE,
+                    ACTIONABLERANGE.SOURCEEVENT,
+                    ACTIONABLERANGE.SOURCEURLS,
+                    ACTIONABLERANGE.TREATMENT,
+                    ACTIONABLERANGE.DRUGCLASSES,
+                    ACTIONABLERANGE.APPLICABLECANCERTYPE,
+                    ACTIONABLERANGE.APPLICABLEDOID,
+                    ACTIONABLERANGE.BLACKLISTCANCERTYPES,
+                    ACTIONABLERANGE.LEVEL,
+                    ACTIONABLERANGE.DIRECTION,
+                    ACTIONABLERANGE.EVIDENCEURLS);
             batch.forEach(entry -> addRecordRanges(timestamp, inserter, entry));
             inserter.execute();
         }
 
         List<ActionableGene> actionableGenes = actionableEvents.genes();
         for (List<ActionableGene> batch : Iterables.partition(actionableGenes, Utils.DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep14 inserter = context.insertInto(ACTIONABLEGENES,
-                    ACTIONABLEGENES.MODIFIED,
-                    ACTIONABLEGENES.GENE,
-                    ACTIONABLEGENES.EVENT,
-                    ACTIONABLEGENES.SOURCE,
-                    ACTIONABLEGENES.SOURCEEVENT,
-                    ACTIONABLEGENES.SOURCEURLS,
-                    ACTIONABLEGENES.TREATMENT,
-                    ACTIONABLEGENES.DRUGCLASSES,
-                    ACTIONABLEGENES.APPLICABLECANCERTYPE,
-                    ACTIONABLEGENES.APPLICABLEDOID,
-                    ACTIONABLEGENES.BLACKLISTCANCERTYPES,
-                    ACTIONABLEGENES.LEVEL,
-                    ACTIONABLEGENES.DIRECTION,
-                    ACTIONABLEGENES.EVIDENCEURLS);
+            InsertValuesStep14 inserter = context.insertInto(ACTIONABLEGENE,
+                    ACTIONABLEGENE.MODIFIED,
+                    ACTIONABLEGENE.GENE,
+                    ACTIONABLEGENE.EVENT,
+                    ACTIONABLEGENE.SOURCE,
+                    ACTIONABLEGENE.SOURCEEVENT,
+                    ACTIONABLEGENE.SOURCEURLS,
+                    ACTIONABLEGENE.TREATMENT,
+                    ACTIONABLEGENE.DRUGCLASSES,
+                    ACTIONABLEGENE.APPLICABLECANCERTYPE,
+                    ACTIONABLEGENE.APPLICABLEDOID,
+                    ACTIONABLEGENE.BLACKLISTCANCERTYPES,
+                    ACTIONABLEGENE.LEVEL,
+                    ACTIONABLEGENE.DIRECTION,
+                    ACTIONABLEGENE.EVIDENCEURLS);
             batch.forEach(entry -> addRecordGenes(timestamp, inserter, entry));
             inserter.execute();
         }
 
         List<ActionableFusion> actionableFusions = actionableEvents.fusions();
         for (List<ActionableFusion> batch : Iterables.partition(actionableFusions, Utils.DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep18 inserter = context.insertInto(ACTIONABLEFUSIONS,
-                    ACTIONABLEFUSIONS.MODIFIED,
-                    ACTIONABLEFUSIONS.GENEUP,
-                    ACTIONABLEFUSIONS.MINEXONUP,
-                    ACTIONABLEFUSIONS.MAXEXONUP,
-                    ACTIONABLEFUSIONS.GENEDOWN,
-                    ACTIONABLEFUSIONS.MINEXONDOWN,
-                    ACTIONABLEFUSIONS.MAXEXONDOWN,
-                    ACTIONABLEFUSIONS.SOURCE,
-                    ACTIONABLEFUSIONS.SOURCEEVENT,
-                    ACTIONABLEFUSIONS.SOURCEURLS,
-                    ACTIONABLEFUSIONS.TREATMENT,
-                    ACTIONABLEFUSIONS.DRUGCLASSES,
-                    ACTIONABLEFUSIONS.APPLICABLECANCERTYPE,
-                    ACTIONABLEFUSIONS.APPLICABLEDOID,
-                    ACTIONABLEFUSIONS.BLACKLISTCANCERTYPES,
-                    ACTIONABLEFUSIONS.LEVEL,
-                    ACTIONABLEFUSIONS.DIRECTION,
-                    ACTIONABLEFUSIONS.EVIDENCEURLS);
+            InsertValuesStep18 inserter = context.insertInto(ACTIONABLEFUSION,
+                    ACTIONABLEFUSION.MODIFIED,
+                    ACTIONABLEFUSION.GENEUP,
+                    ACTIONABLEFUSION.MINEXONUP,
+                    ACTIONABLEFUSION.MAXEXONUP,
+                    ACTIONABLEFUSION.GENEDOWN,
+                    ACTIONABLEFUSION.MINEXONDOWN,
+                    ACTIONABLEFUSION.MAXEXONDOWN,
+                    ACTIONABLEFUSION.SOURCE,
+                    ACTIONABLEFUSION.SOURCEEVENT,
+                    ACTIONABLEFUSION.SOURCEURLS,
+                    ACTIONABLEFUSION.TREATMENT,
+                    ACTIONABLEFUSION.DRUGCLASSES,
+                    ACTIONABLEFUSION.APPLICABLECANCERTYPE,
+                    ACTIONABLEFUSION.APPLICABLEDOID,
+                    ACTIONABLEFUSION.BLACKLISTCANCERTYPES,
+                    ACTIONABLEFUSION.LEVEL,
+                    ACTIONABLEFUSION.DIRECTION,
+                    ACTIONABLEFUSION.EVIDENCEURLS);
             batch.forEach(entry -> addRecordFusions(timestamp, inserter, entry));
             inserter.execute();
         }
 
         List<ActionableCharacteristic> actionableCharacteristics = actionableEvents.characteristics();
         for (List<ActionableCharacteristic> batch : Iterables.partition(actionableCharacteristics, Utils.DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep15 inserter = context.insertInto(ACTIONABLECHARACTERISTICS,
-                    ACTIONABLECHARACTERISTICS.MODIFIED,
-                    ACTIONABLECHARACTERISTICS.NAME,
-                    ACTIONABLECHARACTERISTICS.COMPARATOR,
-                    ACTIONABLECHARACTERISTICS.CUTOFF,
-                    ACTIONABLECHARACTERISTICS.SOURCE,
-                    ACTIONABLECHARACTERISTICS.SOURCEEVENT,
-                    ACTIONABLECHARACTERISTICS.SOURCEURLS,
-                    ACTIONABLECHARACTERISTICS.TREATMENT,
-                    ACTIONABLECHARACTERISTICS.DRUGCLASSES,
-                    ACTIONABLECHARACTERISTICS.APPLICABLECANCERTYPE,
-                    ACTIONABLECHARACTERISTICS.APPLICABLEDOID,
-                    ACTIONABLECHARACTERISTICS.BLACKLISTCANCERTYPES,
-                    ACTIONABLECHARACTERISTICS.LEVEL,
-                    ACTIONABLECHARACTERISTICS.DIRECTION,
-                    ACTIONABLECHARACTERISTICS.EVIDENCEURLS);
+            InsertValuesStep15 inserter = context.insertInto(ACTIONABLECHARACTERISTIC,
+                    ACTIONABLECHARACTERISTIC.MODIFIED,
+                    ACTIONABLECHARACTERISTIC.NAME,
+                    ACTIONABLECHARACTERISTIC.COMPARATOR,
+                    ACTIONABLECHARACTERISTIC.CUTOFF,
+                    ACTIONABLECHARACTERISTIC.SOURCE,
+                    ACTIONABLECHARACTERISTIC.SOURCEEVENT,
+                    ACTIONABLECHARACTERISTIC.SOURCEURLS,
+                    ACTIONABLECHARACTERISTIC.TREATMENT,
+                    ACTIONABLECHARACTERISTIC.DRUGCLASSES,
+                    ACTIONABLECHARACTERISTIC.APPLICABLECANCERTYPE,
+                    ACTIONABLECHARACTERISTIC.APPLICABLEDOID,
+                    ACTIONABLECHARACTERISTIC.BLACKLISTCANCERTYPES,
+                    ACTIONABLECHARACTERISTIC.LEVEL,
+                    ACTIONABLECHARACTERISTIC.DIRECTION,
+                    ACTIONABLECHARACTERISTIC.EVIDENCEURLS);
             batch.forEach(entry -> addRecordCharacteristics(timestamp, inserter, entry));
             inserter.execute();
         }
@@ -222,74 +221,74 @@ public class ServeDAO {
 
         Set<KnownHotspot> knownHotspots = knownEvents.knownHotspots();
         for (List<KnownHotspot> batch : Iterables.partition(knownHotspots, Utils.DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep9 inserter = context.insertInto(KNOWNHOTSPOTS,
-                    KNOWNHOTSPOTS.MODIFIED,
-                    KNOWNHOTSPOTS.CHROMOSOME,
-                    KNOWNHOTSPOTS.POSITION,
-                    KNOWNHOTSPOTS.REF,
-                    KNOWNHOTSPOTS.ALT,
-                    KNOWNHOTSPOTS.INPUTGENE,
-                    KNOWNHOTSPOTS.INPUTTRANSCRIPT,
-                    KNOWNHOTSPOTS.INPUTPROTEINANNOTATION,
-                    KNOWNHOTSPOTS.INPUTSOURCE);
+            InsertValuesStep9 inserter = context.insertInto(KNOWNHOTSPOT,
+                    KNOWNHOTSPOT.MODIFIED,
+                    KNOWNHOTSPOT.CHROMOSOME,
+                    KNOWNHOTSPOT.POSITION,
+                    KNOWNHOTSPOT.REF,
+                    KNOWNHOTSPOT.ALT,
+                    KNOWNHOTSPOT.INPUTGENE,
+                    KNOWNHOTSPOT.INPUTTRANSCRIPT,
+                    KNOWNHOTSPOT.INPUTPROTEINANNOTATION,
+                    KNOWNHOTSPOT.INPUTSOURCE);
             batch.forEach(entry -> addRecordKnownHotspots(timestamp, inserter, entry));
             inserter.execute();
         }
 
         Set<KnownCodon> knownCodons = knownEvents.knownCodons();
         for (List<KnownCodon> batch : Iterables.partition(knownCodons, Utils.DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep9 inserter = context.insertInto(KNOWNCODONS,
-                    KNOWNCODONS.MODIFIED,
-                    KNOWNCODONS.GENE,
-                    KNOWNCODONS.TRANSCRIPT,
-                    KNOWNCODONS.CHROMOSOME,
-                    KNOWNCODONS.START,
-                    KNOWNCODONS.END,
-                    KNOWNCODONS.MUTATIONTYPE,
-                    KNOWNCODONS.CODONRANK,
-                    KNOWNCODONS.SOURCES);
+            InsertValuesStep9 inserter = context.insertInto(KNOWNCODON,
+                    KNOWNCODON.MODIFIED,
+                    KNOWNCODON.GENE,
+                    KNOWNCODON.TRANSCRIPT,
+                    KNOWNCODON.CHROMOSOME,
+                    KNOWNCODON.START,
+                    KNOWNCODON.END,
+                    KNOWNCODON.MUTATIONTYPE,
+                    KNOWNCODON.CODONRANK,
+                    KNOWNCODON.SOURCES);
             batch.forEach(entry -> addRecordKnownCodons(timestamp, inserter, entry));
             inserter.execute();
         }
 
         Set<KnownExon> knownExons = knownEvents.knownExons();
         for (List<KnownExon> batch : Iterables.partition(knownExons, Utils.DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep9 inserter = context.insertInto(KNOWNEXONS,
-                    KNOWNEXONS.MODIFIED,
-                    KNOWNEXONS.GENE,
-                    KNOWNEXONS.TRANSCRIPT,
-                    KNOWNEXONS.CHROMOSOME,
-                    KNOWNEXONS.START,
-                    KNOWNEXONS.END,
-                    KNOWNEXONS.MUTATIONTYPE,
-                    KNOWNEXONS.EXONRANK,
-                    KNOWNEXONS.SOURCES);
+            InsertValuesStep9 inserter = context.insertInto(KNOWNEXON,
+                    KNOWNEXON.MODIFIED,
+                    KNOWNEXON.GENE,
+                    KNOWNEXON.TRANSCRIPT,
+                    KNOWNEXON.CHROMOSOME,
+                    KNOWNEXON.START,
+                    KNOWNEXON.END,
+                    KNOWNEXON.MUTATIONTYPE,
+                    KNOWNEXON.EXONRANK,
+                    KNOWNEXON.SOURCES);
             batch.forEach(entry -> addRecordKnownExons(timestamp, inserter, entry));
             inserter.execute();
         }
 
         Set<KnownFusionPair> knownFusionPairs = knownEvents.knownFusionPairs();
         for (List<KnownFusionPair> batch : Iterables.partition(knownFusionPairs, Utils.DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep8 inserter = context.insertInto(KNOWNFUSIONPAIRS,
-                    KNOWNFUSIONPAIRS.MODIFIED,
-                    KNOWNFUSIONPAIRS.GENEUP,
-                    KNOWNFUSIONPAIRS.MINEXONUP,
-                    KNOWNFUSIONPAIRS.MAXEXONUP,
-                    KNOWNFUSIONPAIRS.GENEDOWN,
-                    KNOWNFUSIONPAIRS.MINEXONDOWN,
-                    KNOWNFUSIONPAIRS.MAXEXONDOWN,
-                    KNOWNFUSIONPAIRS.SOURCES);
+            InsertValuesStep8 inserter = context.insertInto(KNOWNFUSIONPAIR,
+                    KNOWNFUSIONPAIR.MODIFIED,
+                    KNOWNFUSIONPAIR.GENEUP,
+                    KNOWNFUSIONPAIR.MINEXONUP,
+                    KNOWNFUSIONPAIR.MAXEXONUP,
+                    KNOWNFUSIONPAIR.GENEDOWN,
+                    KNOWNFUSIONPAIR.MINEXONDOWN,
+                    KNOWNFUSIONPAIR.MAXEXONDOWN,
+                    KNOWNFUSIONPAIR.SOURCES);
             batch.forEach(entry -> addRecordKnownFusionPairs(timestamp, inserter, entry));
             inserter.execute();
         }
 
         Set<KnownCopyNumber> knownCopyNumbers = knownEvents.knownCopyNumbers();
         for (List<KnownCopyNumber> batch : Iterables.partition(knownCopyNumbers, Utils.DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep4 inserter = context.insertInto(KNOWNCOPYNUMBERS,
-                    KNOWNCOPYNUMBERS.MODIFIED,
-                    KNOWNCOPYNUMBERS.GENE,
-                    KNOWNCOPYNUMBERS.TYPE,
-                    KNOWNCOPYNUMBERS.SOURCES);
+            InsertValuesStep4 inserter = context.insertInto(KNOWNCOPYNUMBER,
+                    KNOWNCOPYNUMBER.MODIFIED,
+                    KNOWNCOPYNUMBER.GENE,
+                    KNOWNCOPYNUMBER.TYPE,
+                    KNOWNCOPYNUMBER.SOURCES);
             batch.forEach(entry -> addRecordKnownCopyNumbers(timestamp, inserter, entry));
             inserter.execute();
         }
@@ -308,9 +307,9 @@ public class ServeDAO {
                         ? null
                         : ActionableFileFunctions.urlsToString(actionableHotspot.sourceUrls()),
                 actionableHotspot.treatment().treament(),
-                ActionableFileFunctions.drugClassesToString(actionableHotspot.treatment().drugClasses()).isEmpty()
+                ActionableFileFunctions.drugClassesToString(actionableHotspot.treatment().sourceRelevantTreatmentApproaches()).isEmpty()
                         ? null
-                        : ActionableFileFunctions.drugClassesToString(actionableHotspot.treatment().drugClasses()),
+                        : ActionableFileFunctions.drugClassesToString(actionableHotspot.treatment().sourceRelevantTreatmentApproaches()),
                 actionableHotspot.applicableCancerType().name(),
                 actionableHotspot.applicableCancerType().doid(),
                 CancerTypeFactory.toString(actionableHotspot.blacklistCancerTypes()).isEmpty()
@@ -340,9 +339,9 @@ public class ServeDAO {
                         ? null
                         : ActionableFileFunctions.urlsToString(actionableRange.sourceUrls()),
                 actionableRange.treatment().treament(),
-                ActionableFileFunctions.drugClassesToString(actionableRange.treatment().drugClasses()).isEmpty()
+                ActionableFileFunctions.drugClassesToString(actionableRange.treatment().sourceRelevantTreatmentApproaches()).isEmpty()
                         ? null
-                        : ActionableFileFunctions.drugClassesToString(actionableRange.treatment().drugClasses()),
+                        : ActionableFileFunctions.drugClassesToString(actionableRange.treatment().sourceRelevantTreatmentApproaches()),
                 actionableRange.applicableCancerType().name(),
                 actionableRange.applicableCancerType().doid(),
                 CancerTypeFactory.toString(actionableRange.blacklistCancerTypes()).isEmpty()
@@ -366,9 +365,9 @@ public class ServeDAO {
                         ? null
                         : ActionableFileFunctions.urlsToString(actionableGene.sourceUrls()),
                 actionableGene.treatment().treament(),
-                ActionableFileFunctions.drugClassesToString(actionableGene.treatment().drugClasses()).isEmpty()
+                ActionableFileFunctions.drugClassesToString(actionableGene.treatment().sourceRelevantTreatmentApproaches()).isEmpty()
                         ? null
-                        : ActionableFileFunctions.drugClassesToString(actionableGene.treatment().drugClasses()),
+                        : ActionableFileFunctions.drugClassesToString(actionableGene.treatment().sourceRelevantTreatmentApproaches()),
                 actionableGene.applicableCancerType().name(),
                 actionableGene.applicableCancerType().doid(),
                 CancerTypeFactory.toString(actionableGene.blacklistCancerTypes()).isEmpty()
@@ -396,9 +395,9 @@ public class ServeDAO {
                         ? null
                         : ActionableFileFunctions.urlsToString(actionableFusion.sourceUrls()),
                 actionableFusion.treatment().treament(),
-                ActionableFileFunctions.drugClassesToString(actionableFusion.treatment().drugClasses()).isEmpty()
+                ActionableFileFunctions.drugClassesToString(actionableFusion.treatment().sourceRelevantTreatmentApproaches()).isEmpty()
                         ? null
-                        : ActionableFileFunctions.drugClassesToString(actionableFusion.treatment().drugClasses()),
+                        : ActionableFileFunctions.drugClassesToString(actionableFusion.treatment().sourceRelevantTreatmentApproaches()),
                 actionableFusion.applicableCancerType().name(),
                 actionableFusion.applicableCancerType().doid(),
                 CancerTypeFactory.toString(actionableFusion.blacklistCancerTypes()).isEmpty()
@@ -423,9 +422,11 @@ public class ServeDAO {
                         ? null
                         : ActionableFileFunctions.urlsToString(actionableCharacteristic.sourceUrls()),
                 actionableCharacteristic.treatment().treament(),
-                ActionableFileFunctions.drugClassesToString(actionableCharacteristic.treatment().drugClasses()).isEmpty()
+                ActionableFileFunctions.drugClassesToString(actionableCharacteristic.treatment().sourceRelevantTreatmentApproaches())
+                        .isEmpty()
                         ? null
-                        : ActionableFileFunctions.drugClassesToString(actionableCharacteristic.treatment().drugClasses()),
+                        : ActionableFileFunctions.drugClassesToString(actionableCharacteristic.treatment()
+                                .sourceRelevantTreatmentApproaches()),
                 actionableCharacteristic.applicableCancerType().name(),
                 actionableCharacteristic.applicableCancerType().doid(),
                 CancerTypeFactory.toString(actionableCharacteristic.blacklistCancerTypes()).isEmpty()
@@ -448,9 +449,9 @@ public class ServeDAO {
                         ? null
                         : ActionableFileFunctions.urlsToString(actionableHLA.sourceUrls()),
                 actionableHLA.treatment().treament(),
-                ActionableFileFunctions.drugClassesToString(actionableHLA.treatment().drugClasses()).isEmpty()
+                ActionableFileFunctions.drugClassesToString(actionableHLA.treatment().sourceRelevantTreatmentApproaches()).isEmpty()
                         ? null
-                        : ActionableFileFunctions.drugClassesToString(actionableHLA.treatment().drugClasses()),
+                        : ActionableFileFunctions.drugClassesToString(actionableHLA.treatment().sourceRelevantTreatmentApproaches()),
                 actionableHLA.applicableCancerType().name(),
                 actionableHLA.applicableCancerType().doid(),
                 CancerTypeFactory.toString(actionableHLA.blacklistCancerTypes()).isEmpty()

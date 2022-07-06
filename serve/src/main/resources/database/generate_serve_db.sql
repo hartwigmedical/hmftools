@@ -1,7 +1,18 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TABLE IF EXISTS actionableHotspots;
-CREATE TABLE actionableHotspots
+DROP TABLE IF EXISTS actionableRanges;
+DROP TABLE IF EXISTS actionableGenes;
+DROP TABLE IF EXISTS actionableFusions;
+DROP TABLE IF EXISTS actionableCharacteristics;
+DROP TABLE IF EXISTS knownHotspots;
+DROP TABLE IF EXISTS knownCodons;
+DROP TABLE IF EXISTS knownExons;
+DROP TABLE IF EXISTS knownCopyNumbers;
+DROP TABLE IF EXISTS knownFusionPair;
+
+DROP TABLE IF EXISTS actionableHotspot;
+CREATE TABLE actionableHotspot
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     chromosome varchar(50) NOT NULL,
@@ -22,8 +33,8 @@ CREATE TABLE actionableHotspots
     PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS actionableRanges;
-CREATE TABLE actionableRanges
+DROP TABLE IF EXISTS actionableRange;
+CREATE TABLE actionableRange
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     gene varchar(50) NOT NULL,
@@ -48,8 +59,8 @@ CREATE TABLE actionableRanges
     PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS actionableGenes;
-CREATE TABLE actionableGenes
+DROP TABLE IF EXISTS actionableGene;
+CREATE TABLE actionableGene
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     gene varchar(50) NOT NULL,
@@ -68,8 +79,8 @@ CREATE TABLE actionableGenes
     PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS actionableFusions;
-CREATE TABLE actionableFusions
+DROP TABLE IF EXISTS actionableFusion;
+CREATE TABLE actionableFusion
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     geneUp varchar(50) NOT NULL,
@@ -92,8 +103,8 @@ CREATE TABLE actionableFusions
     PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS actionableCharacteristics;
-CREATE TABLE actionableCharacteristics
+DROP TABLE IF EXISTS actionableCharacteristic;
+CREATE TABLE actionableCharacteristic
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     name varchar(50) NOT NULL,
@@ -132,8 +143,8 @@ CREATE TABLE actionableHla
     PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS knownHotspots;
-CREATE TABLE knownHotspots
+DROP TABLE IF EXISTS knownHotspot;
+CREATE TABLE knownHotspot
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     chromosome varchar(50) NOT NULL,
@@ -147,8 +158,8 @@ CREATE TABLE knownHotspots
     PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS knownCodons;
-CREATE TABLE knownCodons
+DROP TABLE IF EXISTS knownCodon;
+CREATE TABLE knownCodon
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     gene varchar(50) NOT NULL,
@@ -162,8 +173,8 @@ CREATE TABLE knownCodons
     PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS knownExons;
-CREATE TABLE knownExons
+DROP TABLE IF EXISTS knownExon;
+CREATE TABLE knownExon
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     gene varchar(50) NOT NULL,
@@ -177,8 +188,8 @@ CREATE TABLE knownExons
     PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS knownCopyNumbers;
-CREATE TABLE knownCopyNumbers
+DROP TABLE IF EXISTS knownCopyNumber;
+CREATE TABLE knownCopyNumber
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     gene varchar(50) NOT NULL,
@@ -187,8 +198,8 @@ CREATE TABLE knownCopyNumbers
     PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS knownFusionPairs;
-CREATE TABLE knownFusionPairs
+DROP TABLE IF EXISTS knownFusionPair;
+CREATE TABLE knownFusionPair
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     geneUp varchar(50) NOT NULL,
@@ -198,19 +209,6 @@ CREATE TABLE knownFusionPairs
     minExonDown varchar(50),
     maxExonDown varchar(50),
     sources varchar(50) NOT NULL,
-    PRIMARY KEY (id)
-);
-
-DROP TABLE IF EXISTS actin;
-CREATE TABLE actin
-(   id int NOT NULL AUTO_INCREMENT,
-    modified DATETIME NOT NULL,
-    trial varchar(50) NOT NULL,
-    cohort varchar(50),
-    rule varchar(50) NOT NULL,
-    gene varchar(50),
-    mutation varchar(50),
-    isUsedAsInclusion varchar(50) NOT NULL,
     PRIMARY KEY (id)
 );
 

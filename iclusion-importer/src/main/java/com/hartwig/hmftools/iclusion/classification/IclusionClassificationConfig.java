@@ -25,16 +25,16 @@ public final class IclusionClassificationConfig {
     private static final Set<String> AMPLIFICATION_KEYWORDS = amplificationKeywords();
     private static final Set<String> AMPLIFICATION_KEY_PHRASES = amplificationKeyPhrases();
 
-    private static final Set<String> OVER_EXPRESSION_KEYWORDS = overExpressionKeywords();
+    private static final Set<String> OVEREXPRESSION_KEYWORDS = overexpressionKeywords();
 
-    private static final Set<String> OVER_EXPRESSION_KEY_PHRASES = overExpressionKeyPhrases();
+    private static final Set<String> OVEREXPRESSION_KEY_PHRASES = overexpressionKeyPhrases();
     private static final Set<String> DELETION_BLACKLIST_KEY_PHRASES = deletionBlacklistKeyPhrases();
     private static final Set<String> DELETION_KEYWORDS = deletionKeywords();
     private static final Set<String> DELETION_KEY_PHRASES = deletionKeyPhrases();
 
-    private static final Set<String> UNDER_EXPRESSION_KEYWORDS = underExpressionKeywords();
+    private static final Set<String> UNDEREXPRESSION_KEYWORDS = underexpressionKeywords();
 
-    private static final Set<String> UNDER_EXPRESSION_KEY_PHRASES = underExpressionKeyPhrases();
+    private static final Set<String> UNDEREXPRESSION_KEY_PHRASES = underexpressionKeyPhrases();
     private static final Set<String> EXONIC_DEL_DUP_FUSION_KEY_PHRASES = exonicDelDupFusionKeyPhrases();
     private static final Set<String> EXONIC_DEL_DUP_FUSION_EVENTS = exonicDelDupFusionEvents();
     private static final Set<String> FUSION_PAIR_EVENTS_TO_SKIP = fusionPairEventsToSkip();
@@ -71,13 +71,13 @@ public final class IclusionClassificationConfig {
                 .wildTypeKeyPhrases(WILD_TYPE_KEY_PHRASES)
                 .amplificationKeywords(AMPLIFICATION_KEYWORDS)
                 .amplificationKeyPhrases(AMPLIFICATION_KEY_PHRASES)
-                .overExpressionKeywords(OVER_EXPRESSION_KEYWORDS)
-                .overExpressionKeyPhrases(OVER_EXPRESSION_KEY_PHRASES)
+                .overexpressionKeywords(OVEREXPRESSION_KEYWORDS)
+                .overexpressionKeyPhrases(OVEREXPRESSION_KEY_PHRASES)
                 .deletionBlacklistKeyPhrases(DELETION_BLACKLIST_KEY_PHRASES)
                 .deletionKeywords(DELETION_KEYWORDS)
                 .deletionKeyPhrases(DELETION_KEY_PHRASES)
-                .underExpressionKeywords(UNDER_EXPRESSION_KEYWORDS)
-                .underExpressionKeyPhrases(UNDER_EXPRESSION_KEY_PHRASES)
+                .underexpressionKeywords(UNDEREXPRESSION_KEYWORDS)
+                .underexpressionKeyPhrases(UNDEREXPRESSION_KEY_PHRASES)
                 .exonicDelDupFusionKeyPhrases(EXONIC_DEL_DUP_FUSION_KEY_PHRASES)
                 .exonicDelDupFusionEvents(EXONIC_DEL_DUP_FUSION_EVENTS)
                 .fusionPairEventsToSkip(FUSION_PAIR_EVENTS_TO_SKIP)
@@ -183,14 +183,14 @@ public final class IclusionClassificationConfig {
     }
 
     @NotNull
-    private static Set<String> overExpressionKeywords() {
+    private static Set<String> overexpressionKeywords() {
         Set<String> set = Sets.newHashSet();
         set.add("OVEREXPRESSION");
         return set;
     }
 
     @NotNull
-    private static Set<String> overExpressionKeyPhrases() {
+    private static Set<String> overexpressionKeyPhrases() {
         return Sets.newHashSet();
     }
 
@@ -215,14 +215,14 @@ public final class IclusionClassificationConfig {
     }
 
     @NotNull
-    private static Set<String> underExpressionKeywords() {
+    private static Set<String> underexpressionKeywords() {
         Set<String> set = Sets.newHashSet();
         set.add("NON-EXPRESSION");
         return set;
     }
 
     @NotNull
-    private static Set<String> underExpressionKeyPhrases() {
+    private static Set<String> underexpressionKeyPhrases() {
         return Sets.newHashSet();
     }
 

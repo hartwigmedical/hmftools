@@ -1,4 +1,4 @@
-geneUp	minExonUp	maxExonUp	geneDown	minExonDown	maxExonDown	source	sourceEvent	sourceUrls	treatment	drugClasses	applicableCancerType	applicableDoid	blacklistCancerTypes	level	direction	evidenceUrls
-EGFR	1	1	EGFR	8	8	VICC_CIVIC	fusion	http	Osimertinib		Lung Cancer	X		A	RESPONSIVE	http,http
-EML4			ALK			VICC_CIVIC	fusion	http	Crizotinib		Lung Cancer	X		A	RESPONSIVE	http,http
-PCM1			JAK2			VICC_CGI	fusion	http	Ruxolitinib		Leukemia	X		B	RESPONSIVE	http,http
+geneUp	minExonUp	maxExonUp	geneDown	minExonDown	maxExonDown	source	sourceEvent	sourceUrls	treatment	sourceRelevantTreatmentApproaches	relevantTreatmentApproaches	applicableCancerType	applicableDoid	blacklistCancerTypes	level	direction	evidenceUrls
+EGFR	1	1	EGFR	8	8	VICC_CIVIC	fusion	http	Osimertinib			Lung Cancer	X		A	RESPONSIVE	http,http
+EML4			ALK			VICC_CIVIC	fusion	http	Crizotinib			Lung Cancer	X		A	RESPONSIVE	http,http
+PCM1			JAK2			VICC_CGI	fusion	http	Ruxolitinib			Leukemia	X		B	RESPONSIVE	http,http

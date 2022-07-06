@@ -1,2 +1,2 @@
-HLAType	source	sourceEvent	sourceUrls	treatment	drugClasses	applicableCancerType	applicableDoid	blacklistCancerTypes	level	direction	evidenceUrls
-A*02	ICLUSION	A*02	http	Nivolumab		All cancer types	X	Hematologic cancer,2531	A	RESPONSIVE	http
+HLAType	source	sourceEvent	sourceUrls	treatment	sourceRelevantTreatmentApproaches	relevantTreatmentApproaches	applicableCancerType	applicableDoid	blacklistCancerTypes	level	direction	evidenceUrls
+A*02	ICLUSION	A*02	http	Nivolumab			All cancer types	X	Hematologic cancer,2531	A	RESPONSIVE	http

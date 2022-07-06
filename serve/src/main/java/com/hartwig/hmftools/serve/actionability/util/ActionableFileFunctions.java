@@ -31,7 +31,8 @@ public final class ActionableFileFunctions {
                 .add("sourceEvent")
                 .add("sourceUrls")
                 .add("treatment")
-                .add("drugClasses")
+                .add("sourceRelevantTreatmentApproaches")
+                .add("relevantTreatmentApproaches")
                 .add("applicableCancerType")
                 .add("applicableDoid")
                 .add("blacklistCancerTypes")
@@ -68,10 +69,14 @@ public final class ActionableFileFunctions {
             @NotNull
             @Override
             public Treatment treatment() {
-                int drugClassPosition = startingPosition + 4;
+                int sourceDrugClassPosition = startingPosition + 4;
+                int drugClassPosition = startingPosition + 5;
                 return ImmutableTreatment.builder()
                         .treament(values[startingPosition + 3])
-                        .drugClasses(values.length > drugClassPosition ? stringToDrugClasses(values[drugClassPosition]) : Sets.newHashSet())
+                        .sourceRelevantTreatmentApproaches(
+                                values.length > sourceDrugClassPosition ? stringToDrugClasses(values[sourceDrugClassPosition]) : Sets.newHashSet())
+                        .relevantTreatmentApproaches(
+                                values.length > drugClassPosition ? stringToDrugClasses(values[drugClassPosition]) : Sets.newHashSet())
                         .build();
 
             }
@@ -79,31 +84,31 @@ public final class ActionableFileFunctions {
             @NotNull
             @Override
             public CancerType applicableCancerType() {
-                return ImmutableCancerType.builder().name(values[startingPosition + 5]).doid(values[startingPosition + 6]).build();
+                return ImmutableCancerType.builder().name(values[startingPosition + 6]).doid(values[startingPosition + 7]).build();
             }
 
             @NotNull
             @Override
             public Set<CancerType> blacklistCancerTypes() {
-                return CancerTypeFactory.fromString(values[startingPosition + 7]);
+                return CancerTypeFactory.fromString(values[startingPosition + 8]);
             }
 
             @NotNull
             @Override
             public EvidenceLevel level() {
-                return EvidenceLevel.valueOf(values[startingPosition + 8]);
+                return EvidenceLevel.valueOf(values[startingPosition + 9]);
             }
 
             @NotNull
             @Override
             public EvidenceDirection direction() {
-                return EvidenceDirection.valueOf(values[startingPosition + 9]);
+                return EvidenceDirection.valueOf(values[startingPosition + 10]);
             }
 
             @NotNull
             @Override
             public Set<String> evidenceUrls() {
-                int urlPosition = startingPosition + 10;
+                int urlPosition = startingPosition + 11;
                 return values.length > urlPosition ? stringToUrls(values[urlPosition]) : Sets.newHashSet();
             }
         };
@@ -115,7 +120,8 @@ public final class ActionableFileFunctions {
                 .add(event.sourceEvent())
                 .add(urlsToString(event.sourceUrls()))
                 .add(event.treatment().treament())
-                .add(drugClassesToString(event.treatment().drugClasses()))
+                .add(drugClassesToString(event.treatment().sourceRelevantTreatmentApproaches()))
+                .add(drugClassesToString(event.treatment().relevantTreatmentApproaches()))
                 .add(event.applicableCancerType().name())
                 .add(event.applicableCancerType().doid())
                 .add(CancerTypeFactory.toString(event.blacklistCancerTypes()))

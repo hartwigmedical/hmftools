@@ -45,11 +45,11 @@ public final class EventMatcherFactory {
                 config.deletionKeywords(),
                 config.deletionKeyPhrases());
 
-        OverExpressionMatcher overExpressionMatcher = new OverExpressionMatcher(config.overExpressionKeywords(),
-                config.overExpressionKeyPhrases());
+        OverExpressionMatcher overExpressionMatcher = new OverExpressionMatcher(config.overexpressionKeywords(),
+                config.overexpressionKeyPhrases());
         UnderExpressionMatcher underExpressionMatcher = new UnderExpressionMatcher(
-                config.underExpressionKeywords(),
-                config.underExpressionKeyPhrases());
+                config.underexpressionKeywords(),
+                config.underexpressionKeyPhrases());
 
         CharacteristicMatcher characteristicMatcher = new CharacteristicMatcher(allCharacteristicKeyPhrases(config));
         HlaMatcher hlaMatcher = new HlaMatcher(allHlaKeyPhrases(config));
