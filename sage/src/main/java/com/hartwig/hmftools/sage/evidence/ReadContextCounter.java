@@ -12,11 +12,14 @@ import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
+import static com.hartwig.hmftools.sage.evidence.RealignedType.NONE;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.SHORTENED;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.jitterPenalty;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
+import static htsjdk.samtools.CigarOperator.M;
+import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
 
@@ -32,6 +35,7 @@ import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
 import com.hartwig.hmftools.sage.common.VariantTier;
 
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
@@ -298,13 +302,10 @@ public class ReadContextCounter implements VariantHotspot
                 mQualities[RC_TOTAL] += quality;
 
                 /*
-                if(mVariant.position() ==  10009063 || mVariant.position() == 10009098)
-                {
-                    SG_LOGGER.trace("var({}) readContext({}-{}-{}) support({}) read(idx={} posStart={} cigar={} id={}) readBases({})",
-                            varString(), mReadContext.indexedBases().LeftCoreIndex, mReadContext.indexedBases().Index,
-                            mReadContext.indexedBases().RightCoreIndex, match, readIndex, record.getAlignmentStart(), record.getCigarString(),
-                            record.getReadName(), record.getReadString());
-                }
+                SG_LOGGER.trace("var({}) readContext({}-{}-{}) support({}) read(idx={} posStart={} cigar={} id={}) readBases({})",
+                        varString(), mReadContext.indexedBases().LeftCoreIndex, mReadContext.indexedBases().Index,
+                        mReadContext.indexedBases().RightCoreIndex, match, readIndex, record.getAlignmentStart(), record.getCigarString(),
+                        record.getReadName(), record.getReadString());
                 */
 
                 countStrandedness(record);
@@ -313,14 +314,15 @@ public class ReadContextCounter implements VariantHotspot
             }
         }
 
-        RealignedContext realignment = checkRealignment(record, readIndex);
+        RealignedContext realignment = checkRealignment(record, readIndex, rawContext.ReadIndexInDelete);
+        int maxRealignDistance = getMaxRealignmentDistance(record);
+
 
         /*
         // log differences
-        int maxRealignDistance = getMaxRealignmentDistance(record);
         RealignedContext oldRealignment = Realignment.realignedAroundIndex(mReadContext, readIndex, record.getReadBases(), maxRealignDistance);
-
-        if((realignment.Type == EXACT) != (oldRealignment.Type == EXACT))
+        // if((realignment.Type == EXACT) != (oldRealignment.Type == EXACT))
+        if(realignment.Type == NONE && oldRealignment.Type == EXACT && rawContext.ReadIndexInDelete)
         {
             SG_LOGGER.info("var({}) realign diff: new({}) old({} m={} mi={}) readContext({}-{}-{}) read(idx={} posStart={} cigar={} id={}) readCxt({}) readBases({})",
                     varString(), realignment.Type, oldRealignment.Type, oldRealignment.MatchLength, oldRealignment.MatchReadIndex,
@@ -341,7 +343,6 @@ public class ReadContextCounter implements VariantHotspot
         }
 
         // switch back to the old method to test for jitter
-        int maxRealignDistance = getMaxRealignmentDistance(record);
         RealignedContext jitterRealign = Realignment.realignedAroundIndex(mReadContext, readIndex, record.getReadBases(), maxRealignDistance);
 
         if(rawContext.ReadIndexInSoftClip && !rawContext.AltSupport)
@@ -464,7 +465,45 @@ public class ReadContextCounter implements VariantHotspot
         // Left alignment: Match full read context starting at base = pos - rc_index
         int leftCoreOffset = mReadContext.indexedBases().Index - mReadContext.indexedBases().LeftCoreIndex;
         int realignLeftCorePos = position() - leftCoreOffset;
-        int realignLeftReadIndex = record.getReadPositionAtReferencePosition(realignLeftCorePos) - 1 + leftCoreOffset;
+        int realignLeftCoreIndex = record.getReadPositionAtReferencePosition(realignLeftCorePos);
+
+        if(realignLeftCoreIndex > 0)
+        {
+            int realignLeftReadIndex = realignLeftCoreIndex - 1 + leftCoreOffset;
+            return realignLeftReadIndex;
+        }
+
+        int deleteCount = (int)record.getCigar().getCigarElements().stream().filter(x -> x.getOperator() == D).count();
+        if(deleteCount == 0)
+            return -1;
+
+        int deleteStartPos = record.getAlignmentStart();
+        int deleteStartIndex = 0;
+        for(CigarElement element : record.getCigar())
+        {
+            if(element.getOperator() == S || element.getOperator() == I)
+                continue;
+
+            if(element.getOperator() == M)
+            {
+                deleteStartPos += element.getLength();
+                deleteStartIndex += element.getLength();
+            }
+            else if(element.getOperator() == D)
+            {
+                --deleteCount;
+
+                if(deleteCount == 0)
+                    break;
+
+                deleteStartPos += element.getLength();
+            }
+        }
+
+        --deleteStartPos;
+
+        int posDiff = realignLeftCorePos - deleteStartPos;
+        int realignLeftReadIndex = deleteStartIndex + posDiff - 1 + leftCoreOffset;
         return realignLeftReadIndex;
     }
 
@@ -473,17 +512,36 @@ public class ReadContextCounter implements VariantHotspot
         // Right alignment: Match full read context ending at base = pos + length[RC} - rc_index - 1 - length(alt) + length(ref)
         int rightCoreOffset = mReadContext.indexedBases().RightCoreIndex - mReadContext.indexedBases().Index;
         int realignRightPos = position() + rightCoreOffset - mVariant.alt().length() + mVariant.ref().length();
-        int realignRightReadIndex = record.getReadPositionAtReferencePosition(realignRightPos) - 1 - rightCoreOffset;
-        return realignRightReadIndex;
+        int realignRightCoreIndex = record.getReadPositionAtReferencePosition(realignRightPos);
+
+        if(realignRightCoreIndex > 0)
+        {
+            int realignRightReadIndex = realignRightCoreIndex - 1 - rightCoreOffset;
+            return realignRightReadIndex;
+        }
+
+        return -1;
     }
 
-    private RealignedContext checkRealignment(final SAMRecord record, final int readIndex)
+    private RealignedContext checkRealignment(final SAMRecord record, final int readIndex, boolean readIndexInDelete)
     {
-        // try left and right alignment in turn
+        /*
+        if(readIndexInDelete)
+        {
+            IndexedBases readBases = new IndexedBases(position(), readIndex, record.getReadBases());
 
+            ReadContextMatch match = mReadContext.indexedBases().matchAtPosition(
+                    readBases, record.getBaseQualities(), false, 0);
+
+            if(match == ReadContextMatch.FULL || match == ReadContextMatch.PARTIAL)
+                return new RealignedContext(EXACT, mReadContext.indexedBases().length(), readIndex);
+        }
+        */
+
+        // try left and right alignment in turn
         int realignLeftReadIndex = calcLeftAlignmentIndex(record);
 
-        if(realignLeftReadIndex != readIndex)
+        if(realignLeftReadIndex >= 0) //  && realignLeftReadIndex != readIndex
         {
             IndexedBases readBases = new IndexedBases(position(), realignLeftReadIndex, record.getReadBases());
 
@@ -496,8 +554,10 @@ public class ReadContextCounter implements VariantHotspot
 
         int realignRightReadIndex = calcRightAlignmentIndex(record);
 
-        if(realignRightReadIndex != readIndex)
+        if(realignRightReadIndex >= 0)
         {
+            // still need to test even if this index matches the original readIndex since if the readIndex was in a delete
+            // it will be have skipped above
             IndexedBases readBases = new IndexedBases(position(), realignRightReadIndex, record.getReadBases());
 
             ReadContextMatch match = mReadContext.indexedBases().matchAtPosition(

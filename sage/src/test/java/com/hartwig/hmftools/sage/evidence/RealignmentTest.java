@@ -119,8 +119,59 @@ public class RealignmentTest
         assertEquals(2, var1.tumorReadCounters().get(0).counts()[RC_PARTIAL]);
 
         assertEquals(2, var2.tumorReadCounters().get(0).counts()[RC_FULL]);
-        // assertEquals(2, var1.tumorReadCounters().get(0).counts()[RC_PARTIAL]);
-        // assertEquals(4, var2.tumorReadCounters().get(0).counts()[RC_REALIGNED]);
+        assertEquals(4, var2.tumorReadCounters().get(0).counts()[RC_REALIGNED]);
+    }
+
+    @Test
+    public void testRealignedCoreInDelete()
+    {
+        ChrBaseRegion region = new ChrBaseRegion(CHR_1, 1, 450);
+
+        RegionTaskTester tester = new RegionTaskTester();
+
+        RegionTask task = tester.createRegionTask(region);
+
+        String refBases = "TGGGGCCTCGCTTCTTCGAGCTGTCCCCCGGTGAGCTGGGCTTGTCATCCACTCTGCTGGTACCCCGCTCTCGTTCCCTCTCACGTTCCCGCTCCCTCTCTCGCTCCCTCTCCCTTTCT"
+                + "CGATCCCGCTCCCGGTCCCTATCCCGGTCTCGGTCCCGGTCCCGAGGGGCCTCTGCGCGGCAGGTGCTGCTGGTGCTGGTGCTGCTCGCTGGCGGGGACAAACCCATGTTTCGAAGGCC"
+                + "CTCCCGGGCCCGGGAAGTGGAGGCCAGGTCCTGGGGCGAGCGGCCAGGGTAGGGGATCCGGAT";
+
+        tester.RefGenome.RefGenomeMap.put(CHR_1, refBases + generateRandomBases(1500));
+
+        SAMRecord read0 = createSamRecord("READ_00", CHR_1, 4, // 22498
+                "GCCTCGCTTCTTCGAGCTGTCCCCCGGTGAGCTGGGCTTGTCATCCACTCTGCTGGTACCCCGCTCTCGTTCCCTCTCACGTTCCCGCTCCCTCTCTCGCTCCCTCTCCCT"
+                        + "TTCTCGATCCCGGTCTCGGTCCCGGTCCCGAGGGGCCTCT",
+                "117M18D34M");
+
+        tester.TumorSamSlicer.ReadRecords.add(read0);
+        tester.TumorSamSlicer.ReadRecords.add(read0);
+
+        SAMRecord read1 = createSamRecord("READ_01", CHR_1, 1, // 10473
+                "GGGGCCTCGCTTCTTCGAGCTGTCCCCCGGTGAGCTGGGCTTGTCATCCACTCTGCTGGTACCCCGCTCTCGTTCCCTCTCACGTTCCCGCTCCCTCTCTCGCTCCCTCTC"
+                        + "CCTTTCTCGATCCCGGTCTCGGTCCCGGTCCCG",
+                "144M");
+
+        tester.TumorSamSlicer.ReadRecords.add(read1);
+        tester.TumorSamSlicer.ReadRecords.add(read1);
+
+        // readBases(GGGGCTTGGGGCCTCGCTTCTTCGAGCTGTCCCCCGGTGAGCTGGGCTTGTCATCCACTCTGCTGGTACCCCGCTCTCGTTCCCTCTCACGTTCCCGCTCCCTCTCTCGCTCCCTCTCCCTTTCTCGATCCCGGTCTCGGTCCCGGTCCCG)
+        // 11:29:20.883 [TRACE] var(17:77769130 C>T) readContext(132-134-136) support(FULL) read(idx=136 posStart=77768994 cigar=151M
+        // id=A00260:46:HGWWNDSXX:4:2324:12310:10473)
+        // readBases(GGGGCTTGGGGCCTCGCTTCTTCGAGCTGTCCCCCGGTGAGCTGGGCTTGTCATCCACTCTGCTGGTACCCCGCTCTCGTTCCCTCTCACGTTCCCGCTCCCTCTCTCGCTCCCTCTCCCTTTCTCGATCCCGGTCTCGGTCCCGGTCCCG)
+
+        task.run();
+
+        SageVariant var1 = task.getVariants().stream().filter(x -> x.position() == 120).findFirst().orElse(null);
+        SageVariant var2 = task.getVariants().stream().filter(x -> x.position() == 127).findFirst().orElse(null);
+        SageVariant var3 = task.getVariants().stream().filter(x -> x.position() == 130).findFirst().orElse(null);
+        assertNotNull(var1);
+        assertNotNull(var2);
+        assertNotNull(var3);
+        assertEquals(4, var1.tumorReadCounters().get(0).counts()[RC_FULL]);
+
+        assertEquals(2, var2.tumorReadCounters().get(0).counts()[RC_FULL]);
+        assertEquals(2, var2.tumorReadCounters().get(0).counts()[RC_REALIGNED]);
+        assertEquals(2, var3.tumorReadCounters().get(0).counts()[RC_FULL]);
+        assertEquals(2, var3.tumorReadCounters().get(0).counts()[RC_REALIGNED]);
     }
 
     @Test
