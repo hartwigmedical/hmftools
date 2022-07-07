@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConfig.createCmdLineOptions;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -61,13 +62,13 @@ public class SvPrepApplication
         final int[] lengthRange = fragSizeDistribution.calcFragmentLengthRange();
         int fragLengthFilterMin = max(mConfig.ReadLength, (int)(lengthRange[0] * 0.5));
         int fragLengthFilterMax = (int)(lengthRange[1] * 1.5);
-        mConfig.ReadFilters.setFragmentLengthMin(fragLengthFilterMin, fragLengthFilterMax);
+        mConfig.ReadFiltering.config().setFragmentLengthMin(fragLengthFilterMin, fragLengthFilterMax);
     }
 
     public static void main(@NotNull final String[] args) throws Exception
     {
-        // final VersionInfo version = new VersionInfo("??.version");
-        // SV_LOGGER.info("?? version: {}", version.version());
+        final VersionInfo version = new VersionInfo("sv-prep.version");
+        SV_LOGGER.info("sv-prep version: {}", version.version());
 
         final Options options = createCmdLineOptions();
 
@@ -95,5 +96,4 @@ public class SvPrepApplication
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
-
 }

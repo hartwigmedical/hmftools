@@ -96,6 +96,7 @@ public class BamSvSlicer
             String currentChromosome = "";
             int lastPosition = -1;
             int lastStartPosition = -1;
+            int lastBamCount = 0;
 
             for(VariantContext variantContext : reader.iterator())
             {
@@ -106,12 +107,16 @@ public class BamSvSlicer
                 if(!chromosome.equals(currentChromosome))
                 {
                     if(lastPosition > 0)
+                    {
                         sliceRegion(currentChromosome, lastStartPosition, lastPosition);
+                        SV_LOGGER.debug("chromosome({}) SVs sliced, BAM records({})", chromosome, mBamRecords - lastBamCount);
+                    }
 
                     SV_LOGGER.debug("processing chromosome({})", chromosome);
                     lastPosition = -1;
                     lastStartPosition = -1;
                     currentChromosome = chromosome;
+                    lastBamCount = mBamRecords;
                 }
 
                 if(lastPosition > 0)
@@ -139,7 +144,7 @@ public class BamSvSlicer
             System.exit(1);
         }
 
-        SV_LOGGER.info("loaded {} SVs, sliced {} regions, wrote {} records", vcfCount, sliceCount, mBamRecords);
+        SV_LOGGER.info("BAM SV slice complete: SVs({}) slice regions({}) BAM records({})", vcfCount, sliceCount, mBamRecords);
 
         mWriter.close();
     }

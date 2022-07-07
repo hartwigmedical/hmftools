@@ -1,11 +1,8 @@
 package com.hartwig.hmftools.svprep.reads;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.max;
-
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
-import static com.hartwig.hmftools.svprep.reads.ReadRecord.maxDeleteLength;
 import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_READ_LENGTH;
+import static com.hartwig.hmftools.svprep.SvConstants.JUNCTION_SUPPORT_CAP;
+import static com.hartwig.hmftools.svprep.SvConstants.MAX_DISCORDANT_READ_DISTANCE;
 import static com.hartwig.hmftools.svprep.SvConstants.MAX_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_ALIGNMENT_BASES;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_DELETE_LENGTH;
@@ -18,14 +15,12 @@ import static com.hartwig.hmftools.svprep.SvConstants.MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_SOFT_CLIP_MIN_BASE_QUAL;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_SUPPORTING_READ_DISTANCE;
 
-import static htsjdk.samtools.CigarOperator.M;
-
-import htsjdk.samtools.Cigar;
-import htsjdk.samtools.CigarOperator;
-import htsjdk.samtools.SAMRecord;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 
 public class ReadFilterConfig
 {
+    // initial read filtering to identify junction candidates
     public final int MinAlignmentBases;
     public final int MinMapQuality;
     public final int MinInsertAlignmentOverlap;
@@ -33,24 +28,59 @@ public class ReadFilterConfig
     public final int MinSoftClipLength;
     public final int MinSoftClipHighQual;
     public final double MinSoftClipHighQualPerc;
+
+    // supporting read config
     public final int MinSupportingReadDistance;
     public final int MinInsertLengthSupport;
+    public final int MaxDiscordantFragmentDistance;
 
+    // final junction filtering
     public final int MinJunctionSupport;
+    public final int MaxJunctionSupportingReads;
 
     private int mFragmentLengthMin;
     private int mFragmentLengthMax;
 
-    public ReadFilterConfig()
+    private static final String CFG_MIN_ALIGN_BASES = "min_align_bases";
+    private static final String CFG_MAX_JUNCTION_SUPPORTING_READS = "max_junction_support_reads";
+    private static final String CFG_MIN_JUNCTION_FRAGS = "min_junction_frags";
+
+    public static ReadFilterConfig from(final CommandLine cmd)
     {
-        this(MIN_ALIGNMENT_BASES, MIN_MAP_QUALITY, MIN_INSERT_ALIGNMENT_OVERLAP, MIN_SOFT_CLIP_LENGTH, MIN_SOFT_CLIP_MIN_BASE_QUAL,
-                MIN_SOFT_CLIP_HIGH_QUAL_PERC, MIN_SUPPORTING_READ_DISTANCE, MIN_DELETE_LENGTH, MIN_JUNCTION_SUPPORT);
+        return new ReadFilterConfig(
+                configValue(cmd, CFG_MIN_ALIGN_BASES, MIN_ALIGNMENT_BASES),
+                MIN_MAP_QUALITY,
+                MIN_INSERT_ALIGNMENT_OVERLAP,
+                MIN_SOFT_CLIP_LENGTH,
+                MIN_SOFT_CLIP_MIN_BASE_QUAL,
+                MIN_SOFT_CLIP_HIGH_QUAL_PERC,
+                MIN_SUPPORTING_READ_DISTANCE,
+                MIN_DELETE_LENGTH,
+                configValue(cmd, CFG_MIN_JUNCTION_FRAGS, MIN_JUNCTION_SUPPORT),
+                configValue(cmd, CFG_MAX_JUNCTION_SUPPORTING_READS, JUNCTION_SUPPORT_CAP),
+                MAX_DISCORDANT_READ_DISTANCE);
+    }
+
+    private static int configValue(final CommandLine cmd, final String config, final int defaultValue)
+    {
+        return Integer.parseInt(cmd.getOptionValue(config, String.valueOf(defaultValue)));
+    }
+
+    public static void addCmdLineArgs(final Options options)
+    {
+        options.addOption(
+                CFG_MIN_ALIGN_BASES, true, "Junction fragment min aligned bases, default: " + MIN_ALIGNMENT_BASES);
+
+        options.addOption(CFG_MIN_JUNCTION_FRAGS, true, "Required fragments to keep a junction");
+
+        options.addOption(CFG_MAX_JUNCTION_SUPPORTING_READS, true, "Limit to supporting reads added to a junction");
     }
 
     public ReadFilterConfig(
             final int minAlignmentBases, final int minMapQuality, final int minInsertAlignmentOverlap, final int minSoftClipLength,
             final int minSoftClipHighQual, final double minSoftClipHighQualPerc, final int minSupportingReadDistance,
-            final int minDeleteLength, final int minJunctionSupport)
+            final int minDeleteLength, final int minJunctionSupport, final int maxJunctionSupportingReads,
+            final int maxDiscordantFragmentDistance)
     {
         MinAlignmentBases = minAlignmentBases;
         MinMapQuality = minMapQuality;
@@ -60,9 +90,11 @@ public class ReadFilterConfig
         MinSoftClipHighQual = minSoftClipHighQual;
         MinSoftClipHighQualPerc = minSoftClipHighQualPerc;
         MinSupportingReadDistance = minSupportingReadDistance;
+        MaxJunctionSupportingReads = maxJunctionSupportingReads;
 
         MinInsertLengthSupport = MIN_INSERT_LENGTH_SUPPORT;
         MinJunctionSupport = minJunctionSupport;
+        MaxDiscordantFragmentDistance = maxDiscordantFragmentDistance;
 
         mFragmentLengthMin = DEFAULT_READ_LENGTH;
         mFragmentLengthMax = MAX_FRAGMENT_LENGTH;
@@ -74,71 +106,5 @@ public class ReadFilterConfig
         mFragmentLengthMax = maxLength;
     }
 
-    public int checkFilters(final SAMRecord record)
-    {
-        int filters = 0;
-
-        final Cigar cigar = record.getCigar();
-        int alignedBases = cigar.getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
-
-        if(alignedBases < MinAlignmentBases)
-            filters |= ReadFilterType.MIN_ALIGN_MATCH.flag();
-
-        if(record.getMappingQuality() < MinMapQuality)
-            filters |= ReadFilterType.MIN_MAP_QUAL.flag();
-
-        int insertAlignmentOverlap = abs(abs(record.getInferredInsertSize()) - alignedBases);
-
-        if(insertAlignmentOverlap < MinInsertAlignmentOverlap)
-            filters |= ReadFilterType.INSERT_MAP_OVERLAP.flag();
-
-        int scLeft = cigar.isLeftClipped() ? cigar.getFirstCigarElement().getLength() : 0;
-        int scRight = cigar.isRightClipped() ? cigar.getLastCigarElement().getLength() : 0;
-
-        int maxDelete = maxDeleteLength(record.getCigar());
-
-        if(scLeft < MinSoftClipLength && scRight < MinSoftClipLength && maxDelete < MinDeleteLength)
-            filters |= ReadFilterType.SOFT_CLIP_LENGTH.flag();
-
-        // base qual in soft clip
-        if(scLeft > 0 || scRight > 0)
-        {
-            final byte[] baseQualities = record.getBaseQualities();
-            int scRangeStart = scLeft > scRight ? 0 : baseQualities.length - scRight;
-            int scRangeEnd = scLeft > scRight ? scLeft : baseQualities.length;
-            double scLength = max(scLeft, scRight);
-
-            int aboveQual = 0;
-            for(int i = scRangeStart; i < scRangeEnd; ++i)
-            {
-                if(baseQualities[i] >= MinSoftClipHighQual)
-                    ++aboveQual;
-            }
-
-            if(aboveQual / scLength < MinSoftClipHighQualPerc)
-                filters |= ReadFilterType.SOFT_CLIP_BASE_QUAL.flag();
-        }
-
-        return filters;
-    }
-
-    public boolean isCandidateSupportingRead(final SAMRecord record)
-    {
-        /*
-        int insertLength = record.getCigar().getCigarElements().stream()
-                .filter(x -> x.getOperator() == CigarOperator.I).mapToInt(x -> x.getLength()).findFirst().orElse(0);
-
-        if(insertLength >= MinInsertLengthSupport)
-            return true;
-        */
-
-        if(record.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
-            return true;
-
-        if(abs(record.getInferredInsertSize()) > mFragmentLengthMax) //  || record.getInferredInsertSize() < mFragmentLengthMin
-            return true;
-
-        return record.getCigar().isLeftClipped() || record.getCigar().isRightClipped();
-    }
-
+    public int fragmentLengthMax() { return mFragmentLengthMax; }
 }

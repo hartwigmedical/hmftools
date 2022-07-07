@@ -13,11 +13,9 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.CombinedStats;
 import com.hartwig.hmftools.svprep.ResultsWriter;
@@ -34,7 +32,7 @@ public class PartitionSlicer
     private final SvConfig mConfig;
     private final ChrBaseRegion mRegion;
     private final ResultsWriter mWriter;
-    private final ReadFilterConfig mReadFilters;
+    private final ReadFilters mReadFilters;
     private final ChrBaseRegion mFilterRegion;
 
     private final SamReader mSamReader;
@@ -57,7 +55,7 @@ public class PartitionSlicer
     {
         mId = id;
         mConfig = config;
-        mReadFilters = config.ReadFilters;
+        mReadFilters = config.ReadFiltering;
         mWriter = writer;
         mRegion = region;
         mCombinedStats = combinedStats;
@@ -230,13 +228,13 @@ public class PartitionSlicer
     private void processBucket(final BucketData bucket)
     {
         // establish junction positions and any supporting read evidence
-        bucket.assignJunctionReads(mReadFilters.MinSoftClipLength, mReadFilters.MinDeleteLength);
+        bucket.assignJunctionReads(mReadFilters.config());
 
         // pass on any junctions and supporting reads that belong in the next bucket
         mBuckets.transferToNext(bucket);
 
         // apply basic filters
-        bucket.filterJunctions(mConfig.Hotspots, mReadFilters.MinJunctionSupport);
+        bucket.filterJunctions(mConfig.Hotspots, mReadFilters.config());
 
         if(bucket.junctions().isEmpty())
         {

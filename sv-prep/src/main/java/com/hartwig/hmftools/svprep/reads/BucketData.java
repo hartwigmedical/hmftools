@@ -77,14 +77,14 @@ public class BucketData
         mSupportingReads.add(read); // may be reassigned to a read group when the bucket is processed
     }
 
-    public void filterJunctions(final HotspotCache hotspotCache, int minSupport)
+    public void filterJunctions(final HotspotCache hotspotCache, final ReadFilterConfig filterConfig)
     {
         int index = 0;
         while(index < mJunctions.size())
         {
             JunctionData junctionData = mJunctions.get(index);
 
-            if(junctionData.totalSupport() >= minSupport)
+            if(junctionData.totalSupport() >= filterConfig.MinJunctionSupport)
             {
                 ++index;
                 continue;
@@ -106,7 +106,7 @@ public class BucketData
         }
     }
 
-    public void assignJunctionReads(int minSoftClipLength, int minDeleteLength)
+    public void assignJunctionReads(final ReadFilterConfig filterConfig)
     {
         // first add any filtered reads to passing read groups
         // attempt to assign reads which support a junction, otherwise discard to keep to move to next bucket
@@ -128,13 +128,13 @@ public class BucketData
         }
 
         // create junctions from the reads that passed the original filters
-        createJunctions(minSoftClipLength, minDeleteLength);
+        createJunctions(filterConfig);
 
         // then find reads that support those junctions
-        assignSupportingReads();
+        assignSupportingReads(filterConfig);
     }
 
-    private void createJunctions(int minSoftClipLength, int minDeleteLength)
+    private void createJunctions(final ReadFilterConfig filterConfig)
     {
         // convert
         for(ReadGroup readGroup : mReadGroups.values())
@@ -152,11 +152,11 @@ public class BucketData
                 if(read.hasSuppAlignment())
                     remoteJunction = RemoteJunction.fromSupplementaryData(read.supplementaryAlignment());
 
-                handleInternalDelete(readGroup, read, minDeleteLength);
+                handleInternalDelete(readGroup, read, filterConfig.MinDeleteLength);
 
                 SoftClipSide scSide = SoftClipSide.fromCigar(read.cigar());
 
-                if(scSide == null || scSide.Length < minSoftClipLength)
+                if(scSide == null || scSide.Length < filterConfig.MinSoftClipLength)
                     continue;
 
                 byte orientation = scSide.isLeft() ? NEG_ORIENT : POS_ORIENT;
@@ -278,7 +278,7 @@ public class BucketData
         return junctionData;
     }
 
-    private void assignSupportingReads()
+    private void assignSupportingReads(final ReadFilterConfig filterConfig)
     {
         // attempt to assign reads which support a junction, otherwise discard to keep to move to next bucket
         mInitialSupportingReadCount = mSupportingReads.size();
@@ -288,7 +288,7 @@ public class BucketData
         {
             ReadRecord read = mSupportingReads.get(index);
 
-            if(!readSupportsJunction(read))
+            if(!readSupportsJunction(read, filterConfig))
             {
                 if(read.end() > mRegion.end())
                 {
@@ -301,7 +301,7 @@ public class BucketData
         }
     }
 
-    private boolean readSupportsJunction(final ReadRecord read)
+    private boolean readSupportsJunction(final ReadRecord read, final ReadFilterConfig filterConfig)
     {
         boolean supportsJunction = false;
 
@@ -310,7 +310,7 @@ public class BucketData
             for(JunctionData junctionData : mJunctions)
             {
                 // any length soft clipping at the same base
-                if(supportsJunction(read, junctionData))
+                if(supportsJunction(read, junctionData, filterConfig))
                 {
                     junctionData.SupportingReads.add(read);
                     supportsJunction = true;
@@ -339,9 +339,9 @@ public class BucketData
                 if(!readWithinJunctionRange(read, junctionData))
                     break;
 
-                if(junctionData.supportingReadCount() < JUNCTION_SUPPORT_CAP) // TEMP to limit processing
+                if(!reachedSupportingReadLimit(junctionData, filterConfig.MaxJunctionSupportingReads)) // to limit processing
                 {
-                    if(supportsJunction(read, junctionData))
+                    if(supportsJunction(read, junctionData, filterConfig))
                     {
                         junctionData.SupportingReads.add(read);
                         supportsJunction = true;
@@ -356,6 +356,11 @@ public class BucketData
         }
 
         return supportsJunction;
+    }
+
+    private static boolean reachedSupportingReadLimit(final JunctionData junctionData, int maxSupportingReads)
+    {
+        return maxSupportingReads > 0 && junctionData.supportingReadCount() >= maxSupportingReads;
     }
 
     private int findJunctionIndex(final ReadRecord read)
@@ -421,20 +426,23 @@ public class BucketData
         return false;
     }
 
-    private static boolean hasDiscordantSupport(final ReadRecord read, final JunctionData junctionData)
+    private static boolean hasDiscordantSupport(final ReadRecord read, final JunctionData junctionData, int maxDistance)
     {
         // must have both positions leading up to but not past the junction and one of its remote junctions
         if(junctionData.RemoteJunctions.isEmpty())
             return false;
 
+        if(junctionData.Orientation != read.orientation())
+            return false;
+
         if(junctionData.Orientation == POS_ORIENT)
         {
-            if(read.orientation() != POS_ORIENT || read.end() > junctionData.Position)
+            if(read.end() > junctionData.Position || abs(read.end() - junctionData.Position) > maxDistance)
                 return false;
         }
         else
         {
-            if(read.orientation() != NEG_ORIENT || read.start() < junctionData.Position)
+            if(read.start() < junctionData.Position || abs(read.end() - junctionData.Position) > maxDistance)
                 return false;
         }
 
@@ -463,6 +471,9 @@ public class BucketData
             if(remoteJunction.Orientation != otherOrientation)
                 continue;
 
+            if(abs(remoteJunction.Position - otherPosition) > maxDistance)
+                continue;
+
             if(remoteJunction.Orientation == POS_ORIENT && otherPosition <= remoteJunction.Position)
             {
                 ++remoteJunction.Support;
@@ -478,10 +489,10 @@ public class BucketData
         return false;
     }
 
-    public static boolean supportsJunction(final ReadRecord read, final JunctionData junctionData)
+    public static boolean supportsJunction(final ReadRecord read, final JunctionData junctionData, final ReadFilterConfig filterConfig)
     {
         if(!read.cigar().isLeftClipped() && !read.cigar().isRightClipped())
-            return hasDiscordantSupport(read, junctionData);
+            return hasDiscordantSupport(read, junctionData, filterConfig.MaxDiscordantFragmentDistance);
 
         /*
         eg if there is a candidate read with 101M50S at base 1000, how does a supporting read need to align and match?

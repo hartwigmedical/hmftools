@@ -28,6 +28,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.reads.ReadFilterConfig;
+import com.hartwig.hmftools.svprep.reads.ReadFilters;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -41,7 +42,7 @@ public class SvConfig
     // public final RefGenomeSource RefGenome;
     public final RefGenomeVersion RefGenVersion;
 
-    public final ReadFilterConfig ReadFilters;
+    public final ReadFilters ReadFiltering;
     public final HotspotCache Hotspots;
 
     public final int PartitionSize;
@@ -104,14 +105,14 @@ public class SvConfig
 
         ReadLength = Integer.parseInt(cmd.getOptionValue(READ_LENGTH, String.valueOf(DEFAULT_READ_LENGTH)));
 
-        ReadFilters = new ReadFilterConfig();
+        ReadFiltering = new ReadFilters(ReadFilterConfig.from(cmd));
 
         CalcFragmentLength = cmd.hasOption(CALC_FRAG_LENGTH);
 
         if(!CalcFragmentLength && cmd.hasOption(FRAG_LENGTH_RANGE))
         {
             String[] fragRange = cmd.getOptionValue(FRAG_LENGTH_RANGE).split(SUB_ITEM_DELIM, 2);
-            ReadFilters.setFragmentLengthMin(Integer.parseInt(fragRange[0]), Integer.parseInt(fragRange[1]));
+            ReadFiltering.config().setFragmentLengthMin(Integer.parseInt(fragRange[0]), Integer.parseInt(fragRange[1]));
         }
 
         WriteTypes = Sets.newHashSet();
@@ -188,6 +189,7 @@ public class SvConfig
         options.addOption(LOG_READ_IDS, true, "Log specific read IDs, separated by ';'");
         options.addOption(MAX_PARTITION_READS, true, "Limit to stop processing reads in partition, for debug");
         options.addOption(THREADS, true, "Thread count");
+        ReadFilterConfig.addCmdLineArgs(options);
 
         return options;
     }
