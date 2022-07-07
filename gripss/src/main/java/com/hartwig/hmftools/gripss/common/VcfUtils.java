@@ -4,6 +4,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.CIPOS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.HOTSPOT;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.IHOMPOS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.IMPRECISE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.LOCAL_LINKED_BY;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.MATE_ID;
@@ -61,7 +62,7 @@ public class VcfUtils
     public static final String VT_BEID = "BEID";
     public static final String VT_BEIDL = "BEIDL";
     public static final String VT_HOMSEQ = "HOMSEQ";
-    public static final String VT_IHOMPOS = "IHOMPOS";
+    public static final String VT_IHOMPOS = IHOMPOS;
 
     public static final String VT_PAR_ID = PAR_ID;
 

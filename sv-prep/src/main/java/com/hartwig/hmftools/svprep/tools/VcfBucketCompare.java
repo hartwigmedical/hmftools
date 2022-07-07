@@ -3,6 +3,7 @@ package com.hartwig.hmftools.svprep.tools;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.IHOMPOS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.createSingleBreakend;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
@@ -13,14 +14,13 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_CHROMOSOMES;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_CHROMOSOMES_DESC;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomes;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.svprep.SvCommon.DELIM;
-import static com.hartwig.hmftools.svprep.SvCommon.ITEM_DELIM;
-import static com.hartwig.hmftools.svprep.SvCommon.SUB_ITEM_DELIM;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConfig.SAMPLE;
 
@@ -28,15 +28,16 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -55,34 +56,36 @@ public class VcfBucketCompare
 {
     private final String mSampleId;
     private final String mVcfFilename;
-    private final String mBucketsFilename;
+    private final String mJunctionsFilename;
     private final String mOutputDir;
     private final String mOutputId;
     private final List<String> mSpecificChromosomes;
 
-    private final Map<String,List<BucketData>> mChrBuckets;
+    private final Map<String,List<JunctionData>> mChrJunctions;
+    private final Map<String,List<RemoteJunction>> mChrRemoteJunctions;
     private StructuralVariantFactory mSvFactory;
+    private final Map<MatchType,Integer> mMatchCounts;
 
     private int mVcfBreakends;
-    private int mMatchedBreakends;
     private final BufferedWriter mWriter;
 
     private static final String VCF_FILE = "vcf_file";
     private static final String BUCKET_FILE = "bucket_file";
+    private static final String JUNCTION_FILE = "junction_file";
 
     public VcfBucketCompare(final CommandLine cmd)
     {
         mSampleId = cmd.getOptionValue(SAMPLE);
         mVcfFilename = cmd.getOptionValue(VCF_FILE);
-        mBucketsFilename = cmd.getOptionValue(BUCKET_FILE);
+        mJunctionsFilename = cmd.getOptionValue(JUNCTION_FILE);
         mOutputDir = parseOutputDir(cmd);
         mOutputId = cmd.getOptionValue(OUTPUT_ID);
 
-        mChrBuckets = Maps.newHashMap();
+        mChrJunctions = Maps.newHashMap();
+        mChrRemoteJunctions = Maps.newHashMap();
+        mMatchCounts = Maps.newHashMap();
         mSvFactory = new StructuralVariantFactory(new CompoundFilter(false));
         mWriter = initialiseWriter();
-
-        mMatchedBreakends = 0;
         mVcfBreakends = 0;
 
         mSpecificChromosomes = loadSpecificChromsomes(cmd);
@@ -96,13 +99,13 @@ public class VcfBucketCompare
             System.exit(1);
         }
 
-        if(!loadBucketData(mBucketsFilename))
+        if(!loadJunctionData(mJunctionsFilename))
         {
-            SV_LOGGER.error("invalid bucket data file");
+            SV_LOGGER.error("invalid junctions data file");
             System.exit(1);
         }
 
-        SV_LOGGER.info("comparing bucket data to VCF({})", mVcfFilename);
+        SV_LOGGER.info("comparing junctions data to VCF({})", mVcfFilename);
 
         final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
                 mVcfFilename, new VCFCodec(), false);
@@ -146,10 +149,30 @@ public class VcfBucketCompare
             System.exit(1);
         }
 
-        SV_LOGGER.info("compared {} breakends, matched({})", mVcfBreakends, mMatchedBreakends);
+        StringJoiner matches = new StringJoiner(", ");
+        mMatchCounts.entrySet().forEach(x -> matches.add(format("%s=%d", x.getKey(), x.getValue())));
+        SV_LOGGER.info("compared {} breakends, matchCounts: {}", mVcfBreakends, matches.toString());
 
         closeBufferedWriter(mWriter);
     }
+
+    private enum MatchType
+    {
+        NONE,
+        SV,
+        JUNCTION,
+        NEAR_JUNCTION,
+        REMOTE;
+    }
+
+    private void addMatchType(MatchType matchType)
+    {
+        Integer count = mMatchCounts.get(matchType);
+        mMatchCounts.put(matchType, count != null ? count + 1 : 1);
+    }
+
+    private static int MAX_JUNCTION_DISTANCE = 1000;
+    private static int REMOTE_MATCH_BUFFER = 5;
 
     private void processBreakend(final StructuralVariant sv, final VariantContext variantContext)
     {
@@ -159,31 +182,90 @@ public class VcfBucketCompare
                 continue;
 
             StructuralVariantLeg svLeg = se == SE_START ? sv.start() : sv.end();
+            StructuralVariantLeg svOtherLeg = se == SE_START ? sv.end() : sv.start();
 
             if(!mSpecificChromosomes.isEmpty() && !mSpecificChromosomes.contains(svLeg.chromosome()))
                 continue;
 
             ++mVcfBreakends;
 
-            List<BucketData> buckets = mChrBuckets.get(svLeg.chromosome());
+            int[] homology = {0, 0};
 
-            if(buckets == null)
+            if(variantContext.hasAttribute(IHOMPOS))
             {
-                writeMatchData(sv, svLeg, null, null);
-                continue;
+                final List<Integer> ihompos = variantContext.getAttributeAsIntList(IHOMPOS, 0);
+                homology[0] = ihompos.get(0);
+                homology[1] = ihompos.get(1);
             }
 
-            BucketData bucketData = buckets.stream().filter(x -> x.Region.containsPosition(svLeg.position())).findFirst().orElse(null);
+            int svPosStart = svLeg.position() + homology[0];
+            int svPosEnd = svLeg.position() + homology[1];
 
-            if(bucketData == null)
+            List<JunctionData> junctions = mChrJunctions.get(svLeg.chromosome());
+
+            MatchType matchType = MatchType.NONE;
+            JunctionData nearestJunction = null;
+            RemoteJunction matchedRemoteJunction = null;
+            int nearestDistance = -1;
+
+            for(JunctionData junctionData : junctions)
             {
-                writeMatchData(sv, svLeg, null, null);
-                continue;
+                if(junctionData.matches(svPosStart, svPosEnd, svLeg.orientation()))
+                {
+                    matchType = MatchType.JUNCTION;
+                    nearestJunction = junctionData;
+
+                    // check for a remote match
+
+                    if(svOtherLeg != null)
+                    {
+                        matchedRemoteJunction = junctionData.findRemoteMatch(
+                                svOtherLeg.chromosome(), svOtherLeg.position(), svOtherLeg.orientation());
+                        matchType = MatchType.SV;
+                    }
+
+                    break;
+                }
+
+                if(junctionData.Orientation != svLeg.orientation())
+                    continue;
+
+                int posDiff = abs(svLeg.position() - junctionData.Position);
+                if(posDiff > MAX_JUNCTION_DISTANCE)
+                    continue;
+
+                if(nearestJunction == null || posDiff < nearestDistance)
+                {
+                    nearestJunction = junctionData;
+                    nearestDistance = posDiff;
+                    matchType = MatchType.NEAR_JUNCTION;
+                }
             }
 
-            JunctionData junctionData = bucketData.findBreakendMatch(svLeg.position(), svLeg.orientation());
-            writeMatchData(sv, svLeg, bucketData, junctionData);
-            ++mMatchedBreakends;
+            if((nearestJunction == null || matchType == MatchType.NEAR_JUNCTION) && svOtherLeg != null)
+            {
+                // check the remotes
+                List<RemoteJunction> remoteJunctions = mChrRemoteJunctions.get(svOtherLeg.chromosome());
+
+                if(remoteJunctions != null)
+                {
+                    RemoteJunction remoteJunction = remoteJunctions.stream()
+                            .filter(x -> x.matches(svOtherLeg.chromosome(), svOtherLeg.position(), svOtherLeg.orientation()))
+                            .findFirst().orElse(null);
+
+                    if(remoteJunction != null && remoteJunction.Junction.Chromosome.equals(svLeg.chromosome())
+                    && remoteJunction.Junction.matches(svPosStart, svPosEnd, svLeg.orientation()))
+                    {
+                        matchedRemoteJunction = remoteJunction;
+                        matchType = MatchType.REMOTE;
+                        nearestJunction = remoteJunction.Junction;
+                    }
+                }
+            }
+
+            writeMatchData(sv, svLeg, matchType, nearestJunction, matchedRemoteJunction);
+
+            addMatchType(matchType);
         }
     }
 
@@ -196,14 +278,15 @@ public class VcfBucketCompare
             if(mOutputId != null)
                 fileName += "." + mOutputId;
 
-            fileName += ".bucket_vcf_compare.csv";
+            fileName += ".junction_vcf_compare.csv";
 
             SV_LOGGER.info("writing comparison file: {}", fileName);
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
-            writer.write("VcfId,Type,Chromosome,Position,Orientation,MateChromosome,MatePosition,Filter,Qual,NormalFrags,TumorFrags");
-            writer.write(",MatchType,BucketJuncFrags,BucketSupportReads");
+            writer.write("VcfId,Type,Chromosome,Position,Orientation,InsSeqLength,MateChromosome,MatePosition");
+            writer.write(",Filter,Qual,NormalFrags,TumorFrags");
+            writer.write(",MatchType,JunctionPos,JunctionFrags,JunctionSupportReads");
             writer.newLine();
 
             return writer;
@@ -215,38 +298,28 @@ public class VcfBucketCompare
         }
     }
 
-    private enum MatchType
-    {
-        NONE,
-        BUCKET,
-        JUNCTION;
-    }
-
     private void writeMatchData(
-            final StructuralVariant sv, final StructuralVariantLeg svLeg, final BucketData bucketData, final JunctionData junctionData)
+            final StructuralVariant sv, final StructuralVariantLeg svLeg, MatchType matchType,
+            final JunctionData junctionData, final RemoteJunction remoteJunction)
     {
         try
         {
             final StructuralVariantLeg otherLeg = sv.type() != null ? (sv.start() == svLeg ? sv.end() : sv.start()) : null;
 
-            mWriter.write(format("%s,%s,%s,%d,%d,%s,%d",
-                    sv.id(), sv.type(), svLeg.chromosome(), svLeg.position(), svLeg.orientation(),
+            mWriter.write(format("%s,%s,%s,%d,%d,%d,%s,%d",
+                    sv.id(), sv.type(), svLeg.chromosome(), svLeg.position(), svLeg.orientation(), sv.insertSequence().length(),
                     otherLeg != null ? otherLeg.chromosome() : "", otherLeg != null ? otherLeg.position() : -1));
 
             mWriter.write(format(",%s,%.0f,%d,%d",
                     sv.filter(), sv.qualityScore(), svLeg.normalVariantFragmentCount(), svLeg.tumorVariantFragmentCount()));
 
-            if(bucketData == null)
+            if(junctionData == null)
             {
-                mWriter.write(format(",%s,0,0", MatchType.NONE));
-            }
-            else if(junctionData == null)
-            {
-                mWriter.write(format(",%s,0,0", MatchType.BUCKET));
+                mWriter.write(format(",%s,0,0,0", MatchType.NONE));
             }
             else
             {
-                mWriter.write(format(",%s,%d,%d", MatchType.JUNCTION, junctionData.ExactFragments, junctionData.SupportReads));
+                mWriter.write(format(",%s,%d,%d,%d", matchType, junctionData.Position, junctionData.ExactFragments, junctionData.SupportReads));
             }
 
             mWriter.newLine();
@@ -257,7 +330,7 @@ public class VcfBucketCompare
         }
     }
 
-    private boolean loadBucketData(final String filename)
+    private boolean loadJunctionData(final String filename)
     {
         try
         {
@@ -266,12 +339,20 @@ public class VcfBucketCompare
             String line = fileReader.readLine();
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, DELIM);
 
-            int chrIndex = fieldsIndexMap.get("Chromosome");
-            int posStartIndex = fieldsIndexMap.get("PosStart");
-            int posEndIndex = fieldsIndexMap.get("PosEnd");
-            int juncDataIndex = fieldsIndexMap.get("Junctions");
+            // Chromosome,BucketStart,BucketEnd,Position,Orientation,Fragments,SupportingReads,Hotspot,InitialReadId,RemoteJunctionCount,RemoteChromosome,RemotePosition,RemoteOrientation
+            // 1,118516001,118517000,118516222,-1,30,6,false,A00624:8:HHKYHDSXX:4:2243:4562:28494,2,1,118516186,1
 
-            int bucketCount = 0;
+            int chrIndex = fieldsIndexMap.get("Chromosome");
+            int posIndex = fieldsIndexMap.get("Position");
+            int orientIndex = fieldsIndexMap.get("Orientation");
+            int fragsIndex = fieldsIndexMap.get("Fragments");
+            int supportIndex = fieldsIndexMap.get("SupportingReads");
+            int remoteChrIndex = fieldsIndexMap.get("RemoteChromosome");
+            int remotePosIndex = fieldsIndexMap.get("RemotePosition");
+            int remoteOrientIndex = fieldsIndexMap.get("RemoteOrientation");
+
+            int junctionCount = 0;
+            JunctionData junctionData = null;
 
             while ((line = fileReader.readLine()) != null)
             {
@@ -279,97 +360,131 @@ public class VcfBucketCompare
 
                 String chromosome = values[chrIndex];
 
-                List<BucketData> buckets = mChrBuckets.get(chromosome);
+                List<JunctionData> junctions = mChrJunctions.get(chromosome);
 
-                if(buckets == null)
+                if(junctions == null)
                 {
-                    buckets = Lists.newArrayList();
-                    mChrBuckets.put(chromosome, buckets);
+                    junctions = Lists.newArrayList();
+                    mChrJunctions.put(chromosome, junctions);
                 }
 
-                BucketData bucket = new BucketData(new ChrBaseRegion(
-                        chromosome, Integer.parseInt(values[posStartIndex]), Integer.parseInt(values[posEndIndex])));
+                int position = Integer.parseInt(values[posIndex]);
+                byte orientation = Byte.parseByte(values[orientIndex]);
 
-                String[] junctions = values[juncDataIndex].split(ITEM_DELIM, -1);
-
-                for(String junctionStr : junctions)
+                if(junctionData == null || junctionData.Position != position || junctionData.Orientation != orientation)
                 {
-                    String[] items = junctionStr.split(SUB_ITEM_DELIM, 4);
-                    JunctionData junctionData = new JunctionData(
-                            Integer.parseInt(items[0]), Byte.parseByte(items[1]),
-                            Integer.parseInt(items[2]), Integer.parseInt(items[3]));
-                    bucket.Junctions.add(junctionData);
+                    junctionData = new JunctionData(
+                            chromosome, position, orientation, Integer.parseInt(values[fragsIndex]), Integer.parseInt(values[supportIndex]));
+                    junctions.add(junctionData);
+                    ++junctionCount;
                 }
 
-                buckets.add(bucket);
-                ++bucketCount;
+                String remoteChr = values[remoteChrIndex];
+
+                if(!remoteChr.isEmpty())
+                {
+                    RemoteJunction remoteJunction = new RemoteJunction(
+                            junctionData, remoteChr, Integer.parseInt(values[remotePosIndex]), Byte.parseByte(values[remoteOrientIndex]));
+
+                    junctionData.RemoteJunctions.add(remoteJunction);
+
+                    List<RemoteJunction> remoteJunctions = mChrRemoteJunctions.get(remoteChr);
+
+                    if(remoteJunctions == null)
+                    {
+                        remoteJunctions = Lists.newArrayList();
+                        mChrRemoteJunctions.put(remoteChr, remoteJunctions);
+                    }
+
+                    if(remoteJunctions.stream().noneMatch(x -> x.matches(remoteJunction)))
+                    {
+                        remoteJunctions.add(remoteJunction);
+                    }
+                }
             }
 
-            SV_LOGGER.debug("loaded {} bucket data records from file: {}", bucketCount, filename);
+            SV_LOGGER.debug("loaded {} junction data records from file: {}", junctionCount, filename);
         }
         catch(IOException exception)
         {
-            SV_LOGGER.error("failed to read bucket data file({})", filename, exception.toString());
+            SV_LOGGER.error("failed to read junction data file({})", filename, exception.toString());
             return false;
         }
 
         return true;
     }
 
-    private static final int MATCH_BUFFER = 5;
-
-    private class BucketData
-    {
-        public final ChrBaseRegion Region;
-
-        public final List<JunctionData> Junctions;
-
-        public BucketData(final ChrBaseRegion region)
-        {
-            Region = region;
-            Junctions = Lists.newArrayList();
-        }
-
-        public JunctionData findBreakendMatch(int position, byte orientation)
-        {
-            int minDiff = -1;
-            JunctionData topMatch = null;
-
-            for(JunctionData junctionData : Junctions)
-            {
-                if(junctionData.Orientation != orientation)
-                    continue;
-
-                int posDiff = abs(junctionData.Position - position);
-                if(posDiff > MATCH_BUFFER)
-                    continue;
-
-                if(topMatch == null || posDiff < minDiff)
-                {
-                    topMatch = junctionData;
-                    minDiff = posDiff;
-                }
-            }
-
-            return topMatch;
-        }
-    }
+    // Chromosome,BucketStart,BucketEnd,Position,Orientation,Fragments,SupportingReads,Hotspot,InitialReadId,RemoteJunctionCount,RemoteChromosome,RemotePosition,RemoteOrientation
+    //  1,118516001,118517000,118516222,-1,30,6,false,A00624:8:HHKYHDSXX:4:2243:4562:28494,2,1,118516186,1
 
     private class JunctionData
     {
+        public final String Chromosome;
         public final int Position;
         public final byte Orientation;
         public final int ExactFragments;
         public final int SupportReads;
+        public final List<RemoteJunction> RemoteJunctions;
 
-        public JunctionData(final int position, final byte orientation, final int exactFragments, final int supportReads)
+        public JunctionData(final String chromosome, final int position, final byte orientation, final int exactFragments, final int supportReads)
         {
+            Chromosome = chromosome;
             Position = position;
             Orientation = orientation;
             ExactFragments = exactFragments;
             SupportReads = supportReads;
+            RemoteJunctions = Lists.newArrayList();
         }
+
+        public boolean matches(int posStart, int posEnd, byte orientation)
+        {
+            return Orientation == orientation && positionWithin(Position, posStart, posEnd);
+        }
+
+        public RemoteJunction findRemoteMatch(final String chromosome, final int position, final byte orientation)
+        {
+            return RemoteJunctions.stream().filter(x -> x.matches(chromosome, position, orientation)).findFirst().orElse(null);
+        }
+
+        public String toString()
+        {
+            return format("%s:%d %d) frags(exact=%d supp=%d) remotes(%d)",
+                    Chromosome, Position, Orientation, ExactFragments, SupportReads, RemoteJunctions.size());
+        }
+
     }
+
+    public class RemoteJunction
+    {
+        public final JunctionData Junction;
+        public final String Chromosome;
+        public final int Position;
+        public final byte Orientation;
+        public int Support;
+
+        public RemoteJunction(final JunctionData junction, final String chromosome, final int position, final byte orientation)
+        {
+            Chromosome = chromosome;
+            Junction = junction;
+            Position = position;
+            Orientation = orientation;
+            Support = 0;
+        }
+
+        public boolean matches(final RemoteJunction other)
+        {
+            return Position == other.Position && Orientation == other.Orientation;
+        }
+
+        public boolean matches(final String chromosome, final int position, final byte orientation)
+        {
+            return Chromosome.equals(chromosome) && abs(Position - position) <= REMOTE_MATCH_BUFFER && Orientation == orientation;
+        }
+
+        public String toString() { return format("loc(%s:%d:%d) reads(%d) junction(%s)",
+                Chromosome, Position, Orientation, Support, Junction); }
+    }
+
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
@@ -377,6 +492,7 @@ public class VcfBucketCompare
         options.addOption(SAMPLE, true, "Name of the sample");
         options.addOption(VCF_FILE, true, "VCF File");
         options.addOption(BUCKET_FILE, true, "SV prep bucket file");
+        options.addOption(JUNCTION_FILE, true, "SV prep bucket file");
         options.addOption(SPECIFIC_CHROMOSOMES, true, SPECIFIC_CHROMOSOMES_DESC);
 
         addOutputOptions(options);

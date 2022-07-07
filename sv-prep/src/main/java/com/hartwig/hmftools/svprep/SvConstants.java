@@ -14,7 +14,7 @@ public final class SvConstants
     public static final int MIN_ALIGNMENT_BASES = 50;
     public static final int MIN_MAP_QUALITY = 20;
     public static final int MIN_INSERT_ALIGNMENT_OVERLAP = 5;
-    public static final int MIN_SOFT_CLIP_LENGTH = 30;
+    public static final int MIN_SOFT_CLIP_LENGTH = 20;
     public static final int MIN_SOFT_CLIP_MIN_BASE_QUAL = 25;
     public static final double MIN_SOFT_CLIP_HIGH_QUAL_PERC = 0.85;
     public static final int MIN_SUPPORTING_READ_DISTANCE = 50;
