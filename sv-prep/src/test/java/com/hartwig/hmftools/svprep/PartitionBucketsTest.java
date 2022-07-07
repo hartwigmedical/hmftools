@@ -1,9 +1,8 @@
 package com.hartwig.hmftools.svprep;
 
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
-import static com.hartwig.hmftools.svprep.SvConstants.MIN_DELETE_LENGTH;
-import static com.hartwig.hmftools.svprep.SvConstants.MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.CHR_1;
+import static com.hartwig.hmftools.svprep.SvPrepTestUtils.READ_FILTERS;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.createSamRecord;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.readIdStr;
 
@@ -99,7 +98,7 @@ public class PartitionBucketsTest
 
         assertEquals(2, partitionBuckets.getBucketCount());
         BucketData bucket1 = partitionBuckets.getBuckets().get(0);
-        bucket1.assignJunctionReads(MIN_SOFT_CLIP_LENGTH, MIN_DELETE_LENGTH);
+        bucket1.assignJunctionReads(READ_FILTERS);
         partitionBuckets.transferToNext(bucket1);
 
         assertEquals(2, bucket1.junctions().size());
@@ -110,7 +109,7 @@ public class PartitionBucketsTest
 
         BucketData bucket2 = partitionBuckets.getBuckets().get(1);
         assertEquals(1, bucket2.supportingReads().size()); //  only one unassigned, transferred from the previous bucket
-        bucket2.assignJunctionReads(MIN_SOFT_CLIP_LENGTH, MIN_DELETE_LENGTH);
+        bucket2.assignJunctionReads(READ_FILTERS);
 
         assertEquals(2, bucket2.junctions().size());
         assertEquals(1, bucket2.junctions().get(0).supportingReadCount());
@@ -149,7 +148,7 @@ public class PartitionBucketsTest
         ReadGroup readGroup3 = new ReadGroup(read3);
         bucket.addReadGroup(readGroup3);
 
-        bucket.assignJunctionReads(MIN_SOFT_CLIP_LENGTH, MIN_DELETE_LENGTH);
+        bucket.assignJunctionReads(READ_FILTERS);
 
         assertEquals(4, bucket.junctions().size());
         assertEquals(119, bucket.junctions().get(0).Position);

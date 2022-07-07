@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.svprep.tools;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.IHOMPOS;
@@ -28,7 +30,6 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -162,6 +163,7 @@ public class VcfBucketCompare
         SV,
         JUNCTION,
         NEAR_JUNCTION,
+        NEAR_AND_REMOTE,
         REMOTE;
     }
 
@@ -172,7 +174,7 @@ public class VcfBucketCompare
     }
 
     private static int MAX_JUNCTION_DISTANCE = 1000;
-    private static int REMOTE_MATCH_BUFFER = 5;
+    private static int JUNCTION_MATCH_BUFFER = 5;
 
     private void processBreakend(final StructuralVariant sv, final VariantContext variantContext)
     {
@@ -198,8 +200,8 @@ public class VcfBucketCompare
                 homology[1] = ihompos.get(1);
             }
 
-            int svPosStart = svLeg.position() + homology[0];
-            int svPosEnd = svLeg.position() + homology[1];
+            int svPosStart = svLeg.position() + min(-JUNCTION_MATCH_BUFFER, homology[0]);
+            int svPosEnd = svLeg.position() + max(homology[1], JUNCTION_MATCH_BUFFER);
 
             List<JunctionData> junctions = mChrJunctions.get(svLeg.chromosome());
 
@@ -216,7 +218,6 @@ public class VcfBucketCompare
                     nearestJunction = junctionData;
 
                     // check for a remote match
-
                     if(svOtherLeg != null)
                     {
                         matchedRemoteJunction = junctionData.findRemoteMatch(
@@ -253,12 +254,18 @@ public class VcfBucketCompare
                             .filter(x -> x.matches(svOtherLeg.chromosome(), svOtherLeg.position(), svOtherLeg.orientation()))
                             .findFirst().orElse(null);
 
-                    if(remoteJunction != null && remoteJunction.Junction.Chromosome.equals(svLeg.chromosome())
-                    && remoteJunction.Junction.matches(svPosStart, svPosEnd, svLeg.orientation()))
+                    if(remoteJunction != null)
                     {
                         matchedRemoteJunction = remoteJunction;
-                        matchType = MatchType.REMOTE;
-                        nearestJunction = remoteJunction.Junction;
+
+                        if(remoteJunction.Junction == nearestJunction)
+                        {
+                            matchType = MatchType.NEAR_AND_REMOTE;
+                        }
+                        else
+                        {
+                            matchType = MatchType.REMOTE;
+                        }
                     }
                 }
             }
@@ -478,7 +485,7 @@ public class VcfBucketCompare
 
         public boolean matches(final String chromosome, final int position, final byte orientation)
         {
-            return Chromosome.equals(chromosome) && abs(Position - position) <= REMOTE_MATCH_BUFFER && Orientation == orientation;
+            return Chromosome.equals(chromosome) && abs(Position - position) <= JUNCTION_MATCH_BUFFER && Orientation == orientation;
         }
 
         public String toString() { return format("loc(%s:%d:%d) reads(%d) junction(%s)",

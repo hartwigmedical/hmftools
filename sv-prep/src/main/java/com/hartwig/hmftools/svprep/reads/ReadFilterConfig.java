@@ -63,7 +63,7 @@ public class ReadFilterConfig
 
     private static int configValue(final CommandLine cmd, final String config, final int defaultValue)
     {
-        return Integer.parseInt(cmd.getOptionValue(config, String.valueOf(defaultValue)));
+        return cmd != null ? Integer.parseInt(cmd.getOptionValue(config, String.valueOf(defaultValue))) : defaultValue;
     }
 
     public static void addCmdLineArgs(final Options options)
