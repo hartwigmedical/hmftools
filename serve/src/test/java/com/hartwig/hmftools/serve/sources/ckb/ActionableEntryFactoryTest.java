@@ -18,6 +18,7 @@ import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 import com.hartwig.hmftools.serve.curation.RelevantTreatmentApproachKey;
 import com.hartwig.hmftools.serve.curation.RelevantTreatmentApproch;
 
+import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
@@ -28,8 +29,12 @@ public class ActionableEntryFactoryTest {
         CkbEntry entryDeletion =
                 CkbTestFactory.createEntry("KRAS", "deletion", "KRAS deletion", "sensitive", "Emerging", "AB", "AB", "A", "DOID:162");
         Map<RelevantTreatmentApproachKey, RelevantTreatmentApproch> drugClassesMap = Maps.newHashMap();
-        Set<ActionableEntry> entryDeletionSet =
-                ActionableEntryFactory.toActionableEntries(entryDeletion, "KRAS", drugClassesMap, "gene", entryDeletion.type());
+        Set<ActionableEntry> entryDeletionSet = ActionableEntryFactory.toActionableEntries(entryDeletion,
+                "KRAS",
+                drugClassesMap,
+                "gene",
+                entryDeletion.type(),
+                Lists.newArrayList());
         assertEquals(0, entryDeletionSet.size());
 
         CkbEntry entryCharacteristics =
@@ -38,7 +43,8 @@ public class ActionableEntryFactoryTest {
                 Strings.EMPTY,
                 drugClassesMap,
                 "-",
-                entryCharacteristics.type());
+                entryCharacteristics.type(),
+                Lists.newArrayList());
         assertEquals(1, entryCharacteristicsSet.size());
         ActionableEntry characteristics = entryCharacteristicsSet.iterator().next();
         assertEquals(Strings.EMPTY, characteristics.sourceEvent());
@@ -61,8 +67,12 @@ public class ActionableEntryFactoryTest {
                 "AB",
                 "A",
                 "DOID:163");
-        Set<ActionableEntry> entryAmplificationSet =
-                ActionableEntryFactory.toActionableEntries(entryAmplification, "KRAS", drugClassesMap, "KRAS", entryAmplification.type());
+        Set<ActionableEntry> entryAmplificationSet = ActionableEntryFactory.toActionableEntries(entryAmplification,
+                "KRAS",
+                drugClassesMap,
+                "KRAS",
+                entryAmplification.type(),
+                Lists.newArrayList());
         assertEquals(1, entryAmplificationSet.size());
         ActionableEntry amplification = entryAmplificationSet.iterator().next();
         assertEquals("KRAS", amplification.sourceEvent());
@@ -76,8 +86,12 @@ public class ActionableEntryFactoryTest {
 
         CkbEntry entryHotspot =
                 CkbTestFactory.createEntry("BRAF", "BRAF V600E", "BRAF V600E", "sensitive", "Actionable", "AB", "AB", "A", "DOID:162");
-        Set<ActionableEntry> entryHotspotSet =
-                ActionableEntryFactory.toActionableEntries(entryHotspot, "BRAF", drugClassesMap, "BRAF", entryHotspot.type());
+        Set<ActionableEntry> entryHotspotSet = ActionableEntryFactory.toActionableEntries(entryHotspot,
+                "BRAF",
+                drugClassesMap,
+                "BRAF",
+                entryHotspot.type(),
+                Lists.newArrayList());
         assertEquals(1, entryHotspotSet.size());
         ActionableEntry hotspot = entryHotspotSet.iterator().next();
         assertEquals("BRAF", hotspot.sourceEvent());

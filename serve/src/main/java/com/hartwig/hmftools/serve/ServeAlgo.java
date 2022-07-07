@@ -15,6 +15,8 @@ import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
 import com.hartwig.hmftools.iclusion.classification.IclusionClassificationConfig;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
+import com.hartwig.hmftools.serve.curation.FilterRelevantTreatmentApproachEntry;
+import com.hartwig.hmftools.serve.curation.FilterRelevantTreatmentApproachFilter;
 import com.hartwig.hmftools.serve.curation.RelevantTreatmentApproachKey;
 import com.hartwig.hmftools.serve.curation.RelevantTreatmentApproch;
 import com.hartwig.hmftools.serve.curation.RelevantTreatmentApproachFactory;
@@ -76,7 +78,10 @@ public class ServeAlgo {
         }
 
         if (config.useCkb()) {
-            extractions.add(extractCkbKnowledge(config.ckbDir(), config.ckbFilterTsv(), config.ckbDrugCurationTsv()));
+            extractions.add(extractCkbKnowledge(config.ckbDir(),
+                    config.ckbFilterTsv(),
+                    config.ckbDrugCurationTsv(),
+                    config.ckbDrugCurationFilterTsv()));
         }
 
         if (config.useActin()) {
@@ -122,7 +127,8 @@ public class ServeAlgo {
     }
 
     @NotNull
-    private ExtractionResult extractIclusionKnowledge(@NotNull String iClusionTrialTsv, @NotNull String iClusionFilterTsv) throws IOException {
+    private ExtractionResult extractIclusionKnowledge(@NotNull String iClusionTrialTsv, @NotNull String iClusionFilterTsv)
+            throws IOException {
         List<IclusionTrial> trials = IclusionReader.readAndCurate(iClusionTrialTsv, iClusionFilterTsv);
 
         EventClassifierConfig config = IclusionClassificationConfig.build();
@@ -134,8 +140,8 @@ public class ServeAlgo {
     }
 
     @NotNull
-    private ExtractionResult extractCkbKnowledge(@NotNull String ckbDir, @NotNull String ckbFilterTsv, @NotNull String ckbDrugCurationTsv)
-            throws IOException {
+    private ExtractionResult extractCkbKnowledge(@NotNull String ckbDir, @NotNull String ckbFilterTsv, @NotNull String ckbDrugCurationTsv,
+            @NotNull String ckbDrugCurationFilterTsv) throws IOException {
         List<CkbEntry> ckbEntries = CkbReader.readAndCurate(ckbDir, ckbFilterTsv);
 
         EventClassifierConfig config = CkbClassificationConfig.build();
@@ -143,9 +149,11 @@ public class ServeAlgo {
         CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(config, refGenomeResource);
 
         Map<RelevantTreatmentApproachKey, RelevantTreatmentApproch> drugClasses = RelevantTreatmentApproachFactory.read(ckbDrugCurationTsv);
+        List<FilterRelevantTreatmentApproachEntry> filterRelevantTreatmentApproachEntries =
+                FilterRelevantTreatmentApproachFilter.read(ckbDrugCurationFilterTsv);
 
         LOGGER.info("Running CKB knowledge extraction");
-        return extractor.extract(ckbEntries, drugClasses);
+        return extractor.extract(ckbEntries, drugClasses, filterRelevantTreatmentApproachEntries);
     }
 
     @NotNull

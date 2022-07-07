@@ -115,7 +115,7 @@ public class ServeDAO {
                     ACTIONABLERANGE.END,
                     ACTIONABLERANGE.MUTATIONTYPE,
                     ACTIONABLERANGE.RANGETYPE,
-                    ACTIONABLERANGE.RANK,
+                    ACTIONABLERANGE.RANGERANK,
                     ACTIONABLERANGE.SOURCE,
                     ACTIONABLERANGE.SOURCEEVENT,
                     ACTIONABLERANGE.SOURCEURLS,

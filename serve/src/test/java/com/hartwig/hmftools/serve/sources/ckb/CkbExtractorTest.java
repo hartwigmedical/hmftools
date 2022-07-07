@@ -34,7 +34,7 @@ public class CkbExtractorTest {
         ckbEntries.add(create("-", "MSI high", "MSI high", "sensitive", "Actionable"));
         ckbEntries.add(create("ALk", "EML4-ALK", "EML4-ALK Fusion", "sensitive", "Actionable"));
 
-        ExtractionResult result = extractor.extract(ckbEntries, Maps.newHashMap());
+        ExtractionResult result = extractor.extract(ckbEntries, Maps.newHashMap(), Lists.newArrayList());
         assertEquals(1, result.knownHotspots().size());
         assertEquals(1, result.knownCopyNumbers().size());
         assertEquals(1, result.knownFusionPairs().size());
