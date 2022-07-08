@@ -236,7 +236,8 @@ public class CFReportWriterTest {
                 .qcForNumber(QsFormNumber.FOR_209)
                 .limsCohortConfig(LimsCohortTestFactory.createCPCTCohortConfig())
                 .build();
-        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.PASS);
+        AnalysedPatientReport patientReport =
+                ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.WARN_LOW_PURITY);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
@@ -460,6 +461,7 @@ public class CFReportWriterTest {
                 .hospitalPathologySampleId("PA1")
                 .build();
     }
+
     private static void generateQCFailReport(@NotNull String sampleId, @NotNull String shallowSeqPurity, @Nullable String wgsPurityString,
             @NotNull QCFailReason reason, boolean correctedReport, boolean correctionReportExtern, @NotNull String comments,
             @NotNull LimsCohortConfig limsCohortConfig, @NotNull PurpleQCStatus purpleQCStatus) throws IOException {

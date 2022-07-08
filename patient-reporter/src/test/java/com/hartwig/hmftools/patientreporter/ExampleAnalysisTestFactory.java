@@ -63,6 +63,8 @@ import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableGenomicAnalysis;
+import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
+import com.hartwig.hmftools.patientreporter.cfreport.data.TumorPurity;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -94,6 +96,7 @@ public final class ExampleAnalysisTestFactory {
         double chordHrdValue = 0D;
         ChordStatus chordStatus = ChordStatus.HR_PROFICIENT;
         String reportDate = DataUtil.formatDate(LocalDate.now());
+        double impliedPurityPercentage = MathUtil.mapPercentage(config.impliedTumorPurity(), TumorPurity.RANGE_MIN, TumorPurity.RANGE_MAX);
 
         ReportData reportData = PatientReporterTestFactory.loadTestReportData();
 
@@ -119,6 +122,16 @@ public final class ExampleAnalysisTestFactory {
                 + " - high mutational burden (mutational load (ML) of 180, tumor mutation burden (TMB) of 13.6) that is "
                 + "potentially associated with an increased response rate to checkpoint inhibitor immunotherapy";
 
+        String summaryWithoutGermlineLowPurity = "Melanoma sample showing:\n"
+                + " - activating BRAF mutation that is associated with response to BRAF-inhibitors (in combination with a MEK-inhibitor)\n"
+                + " - complete inactivation of CDKN2A, indicating potential benefit of CDK4/6 inhibitors\n"
+                + " - complete inactivation/loss of PTEN likely resulting in an activation of the PI3K-AKT-mTOR pathway "
+                + "and indicating potential benefit of mTOR/PI3K inhibitors\n"
+                + " - high mutational burden (mutational load (ML) of 180, tumor mutation burden (TMB) of 13.6) that is "
+                + "potentially associated with an increased response rate to checkpoint inhibitor immunotherapy\n"
+                + "Due to the lower tumor purity (" + DataUtil.formatPercentage(impliedPurityPercentage) + ") potential (subclonal) "
+                + "DNA aberrations might not have been detected using this test. This result should therefore be considered with caution.";
+
         String summaryWithGermline = "Melanoma sample showing:\n"
                 + " - activating BRAF mutation that is associated with response to BRAF-inhibitors (in combination with a MEK-inhibitor)\n"
                 + " - complete inactivation of CDKN2A, indicating potential benefit of CDK4/6 inhibitors. The observed CDKN2A mutation is "
@@ -130,7 +143,15 @@ public final class ExampleAnalysisTestFactory {
 
         String clinicalSummary;
         if (config.includeSummary() && !config.reportGermline()) {
-            clinicalSummary = config.reportGermline() ? summaryWithGermline : summaryWithoutGermline;
+            if (config.reportGermline()) {
+                clinicalSummary = summaryWithGermline;
+            } else {
+                if (purpleQCStatus == PurpleQCStatus.FAIL_NO_TUMOR || purpleQCStatus == PurpleQCStatus.WARN_LOW_PURITY) {
+                    clinicalSummary = summaryWithoutGermlineLowPurity;
+                } else {
+                    clinicalSummary = summaryWithoutGermline;
+                }
+            }
         } else {
             clinicalSummary = Strings.EMPTY;
         }
