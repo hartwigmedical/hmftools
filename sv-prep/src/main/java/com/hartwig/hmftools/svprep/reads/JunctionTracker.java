@@ -1,25 +1,21 @@
 package com.hartwig.hmftools.svprep.reads;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.max;
-import static java.lang.Math.subtractExact;
 
 import static com.hartwig.hmftools.common.samtools.SupplementaryReadData.SUPP_POS_STRAND;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
-import static com.hartwig.hmftools.svprep.reads.ReadFilterType.INSERT_MAP_OVERLAP;
-import static com.hartwig.hmftools.svprep.reads.ReadRecord.maxDeleteLength;
-import static com.hartwig.hmftools.svprep.SvConstants.JUNCTION_SUPPORT_CAP;
 import static com.hartwig.hmftools.svprep.SvConstants.LOW_BASE_QUALITY;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
 import static com.hartwig.hmftools.svprep.SvConstants.SUPPORTING_READ_DISTANCE;
+import static com.hartwig.hmftools.svprep.reads.ReadFilterType.INSERT_MAP_OVERLAP;
+import static com.hartwig.hmftools.svprep.reads.ReadRecord.maxDeleteLength;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.M;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -31,111 +27,53 @@ import com.hartwig.hmftools.svprep.HotspotCache;
 
 import htsjdk.samtools.CigarElement;
 
-public class BucketData
+public class JunctionTracker
 {
     private final ChrBaseRegion mRegion;
-    private final int mId;
+    private final ReadFilterConfig mFilterConfig;
+    private final HotspotCache mHotspotCache;
 
-    private final Map<String,ReadGroup> mReadGroups; // keyed by readId to additional reads (often supps) can be added
-    private final List<ReadRecord> mSupportingReads; // for now only store as read
+    private final Map<String,ReadGroup> mReadGroups; // keyed by readId
+    private final List<JunctionData> mJunctions; // ordered by position
 
-    private final List<JunctionData> mJunctions;
-    private int mInitialSupportingReadCount;
-
-    public BucketData(final int id, final ChrBaseRegion region)
+    public JunctionTracker(final ChrBaseRegion region, final ReadFilterConfig config, final HotspotCache hotspotCache)
     {
         mRegion = region;
-        mId = id;
+        mFilterConfig = config;
+        mHotspotCache = hotspotCache;
+
         mReadGroups = Maps.newHashMap();
-        mSupportingReads = Lists.newArrayList();
         mJunctions = Lists.newArrayList();
-        mInitialSupportingReadCount = 0;
     }
 
-    public int id() { return mId; }
-    public ChrBaseRegion region() { return mRegion; }
-
-    public Collection<ReadGroup> readGroups() { return mReadGroups.values(); }
-    public List<ReadRecord> supportingReads() { return mSupportingReads; }
+    public Map<String,ReadGroup> readGroups() { return mReadGroups; }
     public List<JunctionData> junctions() { return mJunctions; }
-    public int initialSupportingReadCount() { return mInitialSupportingReadCount; }
 
-    public void addReadGroup(final ReadGroup readGroup)
+    public void clear()
     {
-        ReadGroup existingGroup = mReadGroups.get(readGroup.id());
+        mReadGroups.clear();
+        mJunctions.clear();
+    }
 
-        if(existingGroup != null)
+    public void processRead(final ReadRecord read)
+    {
+        ReadGroup readGroup = mReadGroups.get(read.id());
+
+        if(readGroup == null)
         {
-            readGroup.reads().forEach(x -> existingGroup.addRead(x));
-            return;
+            readGroup = new ReadGroup();
+            mReadGroups.put(read.id(), readGroup);
         }
 
-        mReadGroups.put(readGroup.id(), readGroup);
-    }
+        readGroup.addRead(read, mRegion);
 
-    public void addSupportingRead(final ReadRecord read)
-    {
-        mSupportingReads.add(read); // may be reassigned to a read group when the bucket is processed
-    }
-
-    public void filterJunctions(final HotspotCache hotspotCache, final ReadFilterConfig filterConfig)
-    {
-        int index = 0;
-        while(index < mJunctions.size())
+        if(readGroup.isComplete())
         {
-            JunctionData junctionData = mJunctions.get(index);
-
-            if(junctionData.totalSupport() >= filterConfig.MinJunctionSupport)
-            {
-                ++index;
-                continue;
-            }
-
-            // check for a hotspot match
-            boolean matchesHotspot = junctionData.RemoteJunctions.stream()
-                    .anyMatch(x -> hotspotCache.matchesHotspot(
-                            mRegion.Chromosome, x.Chromosome, junctionData.Position, x.Position, junctionData.Orientation, x.Orientation));
-
-            if(matchesHotspot && junctionData.totalSupport() >= MIN_HOTSPOT_JUNCTION_SUPPORT)
-            {
-                junctionData.markHotspot();
-                ++index;
-                continue;
-            }
-
-            mJunctions.remove(index);
+            //
         }
     }
 
-    public void assignJunctionReads(final ReadFilterConfig filterConfig)
-    {
-        // first add any filtered reads to passing read groups
-        // attempt to assign reads which support a junction, otherwise discard to keep to move to next bucket
-        int index = 0;
-        while(index < mSupportingReads.size())
-        {
-            ReadRecord read = mSupportingReads.get(index);
-            ReadGroup existingGroup = mReadGroups.get(read.id());
-
-            if(existingGroup != null)
-            {
-                existingGroup.addRead(read);
-                mSupportingReads.remove(index);
-            }
-            else
-            {
-                ++index;
-            }
-        }
-
-        // create junctions from the reads that passed the original filters
-        createJunctions(filterConfig);
-
-        // then find reads that support those junctions
-        assignSupportingReads(filterConfig);
-    }
-
-    private void createJunctions(final ReadFilterConfig filterConfig)
+    public void createJunctions()
     {
         // convert
         for(ReadGroup readGroup : mReadGroups.values())
@@ -144,70 +82,95 @@ public class BucketData
             if(readGroup.reads().stream().anyMatch(x -> ReadFilterType.isSet(x.filters(), INSERT_MAP_OVERLAP)))
                 continue;
 
-            List<JunctionData> junctions = Lists.newArrayList();
-            RemoteJunction remoteJunction = null;
-            ReadRecord remoteJunctionRead = null;
-
-            for(ReadRecord read : readGroup.reads())
+            if(readGroup.isIncomplete())
             {
-                if(read.hasSuppAlignment())
-                    remoteJunction = RemoteJunction.fromSupplementaryData(read.supplementaryAlignment());
-
-                handleInternalDelete(readGroup, read, filterConfig.MinDeleteLength);
-
-                SoftClipSide scSide = SoftClipSide.fromCigar(read.cigar());
-
-                if(scSide == null || scSide.Length < filterConfig.MinSoftClipLength)
-                    continue;
-
-                byte orientation = scSide.isLeft() ? NEG_ORIENT : POS_ORIENT;
-                int position = scSide.isLeft() ? read.start() : read.end();
-
-                if(!mRegion.containsPosition(position))
-                {
-                    // will only be cached if no junction is within this region
-                    remoteJunction = new RemoteJunction(mRegion.Chromosome, position, orientation);
-                    remoteJunctionRead = read;
-                }
-                else
-                {
-                    JunctionData junctionData = getOrCreateJunction(read, orientation);
-
-                    if(!junctions.contains(junctionData))
-                        junctions.add(junctionData);
-                }
+                // still assign but suggests something has been missed
+                SV_LOGGER.debug("readGroup({}) incomplete post partition slicing", readGroup);
+                // continue;
             }
 
-            if(junctions.isEmpty() && remoteJunction != null && remoteJunction.Chromosome.equals(mRegion.Chromosome))
+            if(readGroup.isJunctionFragment(true))
             {
-                // convert this junction in a latter bucket to a junction for this group
-                junctions.add(getOrCreateJunction(remoteJunctionRead, remoteJunction.Orientation));
-                remoteJunction = null;
+                createJunction(readGroup);
             }
+            else
+            {
+                for(ReadRecord read : readGroup.reads())
+                {
+                    // does nothing
+                    boolean supports = readSupportsJunction(read);
+                }
+            }
+        }
 
-            if(junctions.isEmpty())
+        // mReadGroups.clear();
+    }
+
+    private void createJunction(final ReadGroup readGroup)
+    {
+        List<JunctionData> junctions = Lists.newArrayList();
+        RemoteJunction remoteJunction = null;
+        ReadRecord remoteJunctionRead = null;
+
+        for(ReadRecord read : readGroup.reads())
+        {
+            if(read.hasSuppAlignment())
+                remoteJunction = RemoteJunction.fromSupplementaryData(read.supplementaryAlignment());
+
+            handleInternalDelete(readGroup, read);
+
+            SoftClipSide scSide = SoftClipSide.fromCigar(read.cigar());
+
+            if(scSide == null || scSide.Length < mFilterConfig.MinSoftClipLength)
                 continue;
 
-            junctions.forEach(x -> x.JunctionGroups.add(readGroup));
+            byte orientation = scSide.isLeft() ? NEG_ORIENT : POS_ORIENT;
+            int position = scSide.isLeft() ? read.start() : read.end();
 
-            if(remoteJunction != null)
+            if(!mRegion.containsPosition(position))
             {
-                final RemoteJunction newRemote = remoteJunction;
+                // will only be cached if no junction is within this region
+                remoteJunction = new RemoteJunction(mRegion.Chromosome, position, orientation);
+                remoteJunctionRead = read;
+            }
+            else
+            {
+                JunctionData junctionData = getOrCreateJunction(read, orientation);
 
-                for(JunctionData junctionData : junctions)
-                {
-                    if(junctionData.RemoteJunctions.stream().noneMatch(x -> x.matches(newRemote)))
-                        junctionData.RemoteJunctions.add(remoteJunction);
-                }
+                if(!junctions.contains(junctionData))
+                    junctions.add(junctionData);
+            }
+        }
+
+        if(junctions.isEmpty() && remoteJunction != null && remoteJunction.Chromosome.equals(mRegion.Chromosome))
+        {
+            // convert this junction in a latter bucket to a junction for this group
+            junctions.add(getOrCreateJunction(remoteJunctionRead, remoteJunction.Orientation));
+            remoteJunction = null;
+        }
+
+        if(junctions.isEmpty())
+            return;
+
+        junctions.forEach(x -> x.JunctionGroups.add(readGroup));
+
+        if(remoteJunction != null)
+        {
+            final RemoteJunction newRemote = remoteJunction;
+
+            for(JunctionData junctionData : junctions)
+            {
+                if(junctionData.RemoteJunctions.stream().noneMatch(x -> x.matches(newRemote)))
+                    junctionData.RemoteJunctions.add(remoteJunction);
             }
         }
     }
 
-    private void handleInternalDelete(final ReadGroup readGroup, final ReadRecord read, int minDeleteLength)
+    private void handleInternalDelete(final ReadGroup readGroup, final ReadRecord read)
     {
         int maxDelete = maxDeleteLength(read.cigar());
 
-        if(maxDelete < minDeleteLength)
+        if(maxDelete < mFilterConfig.MinDeleteLength)
             return;
 
         // convert the location of the internal delete into a junction
@@ -221,7 +184,7 @@ public class BucketData
             }
             else if(element.getOperator() == D)
             {
-                if(element.getLength() >= minDeleteLength)
+                if(element.getLength() >= mFilterConfig.MinDeleteLength)
                 {
                     junctionEndPos = junctionStartPos + element.getLength() + 1;
                     break;
@@ -256,7 +219,7 @@ public class BucketData
         // junctions are stored in ascending order to make finding them more efficient, especially for supporting reads
         int index = 0;
 
-        // use a binary search if count exeeds some level, but with buckets < 1000 bases likely unnecessary
+
         while(index < mJunctions.size())
         {
             JunctionData junctionData = mJunctions.get(index);
@@ -279,30 +242,7 @@ public class BucketData
         return junctionData;
     }
 
-    private void assignSupportingReads(final ReadFilterConfig filterConfig)
-    {
-        // attempt to assign reads which support a junction, otherwise discard to keep to move to next bucket
-        mInitialSupportingReadCount = mSupportingReads.size();
-
-        int index = 0;
-        while(index < mSupportingReads.size())
-        {
-            ReadRecord read = mSupportingReads.get(index);
-
-            if(!readSupportsJunction(read, filterConfig))
-            {
-                if(read.end() > mRegion.end())
-                {
-                    ++index; // will test support in the next bucket
-                    continue;
-                }
-            }
-
-            mSupportingReads.remove(index);
-        }
-    }
-
-    private boolean readSupportsJunction(final ReadRecord read, final ReadFilterConfig filterConfig)
+    private boolean readSupportsJunction(final ReadRecord read)
     {
         boolean supportsJunction = false;
 
@@ -311,7 +251,7 @@ public class BucketData
             for(JunctionData junctionData : mJunctions)
             {
                 // any length soft clipping at the same base
-                if(supportsJunction(read, junctionData, filterConfig))
+                if(supportsJunction(read, junctionData, mFilterConfig))
                 {
                     junctionData.SupportingReads.add(read);
                     supportsJunction = true;
@@ -340,9 +280,9 @@ public class BucketData
                 if(!readWithinJunctionRange(read, junctionData))
                     break;
 
-                if(!reachedSupportingReadLimit(junctionData, filterConfig.MaxJunctionSupportingReads)) // to limit processing
+                if(!reachedSupportingReadLimit(junctionData, mFilterConfig.MaxJunctionSupportingReads)) // to limit processing
                 {
-                    if(supportsJunction(read, junctionData, filterConfig))
+                    if(supportsJunction(read, junctionData, mFilterConfig))
                     {
                         junctionData.SupportingReads.add(read);
                         supportsJunction = true;
@@ -598,5 +538,35 @@ public class BucketData
         }
 
         return true;
+    }
+
+    public void filterJunctions()
+    {
+        // alternatively when processing then also just remove all processed junctions
+        int index = 0;
+        while(index < mJunctions.size())
+        {
+            JunctionData junctionData = mJunctions.get(index);
+
+            if(junctionData.totalSupport() >= mFilterConfig.MinJunctionSupport)
+            {
+                ++index;
+                continue;
+            }
+
+            // check for a hotspot match
+            boolean matchesHotspot = junctionData.RemoteJunctions.stream()
+                    .anyMatch(x -> mHotspotCache.matchesHotspot(
+                            mRegion.Chromosome, x.Chromosome, junctionData.Position, x.Position, junctionData.Orientation, x.Orientation));
+
+            if(matchesHotspot && junctionData.totalSupport() >= MIN_HOTSPOT_JUNCTION_SUPPORT)
+            {
+                junctionData.markHotspot();
+                ++index;
+                continue;
+            }
+
+            mJunctions.remove(index);
+        }
     }
 }

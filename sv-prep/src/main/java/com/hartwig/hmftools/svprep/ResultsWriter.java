@@ -21,10 +21,12 @@ import static htsjdk.samtools.SAMFlag.SUPPLEMENTARY_ALIGNMENT;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.svprep.reads.JunctionData;
+import com.hartwig.hmftools.svprep.reads.ReadFilterType;
 import com.hartwig.hmftools.svprep.reads.ReadRecord;
 import com.hartwig.hmftools.svprep.reads.RemoteJunction;
 import com.hartwig.hmftools.svprep.reads.BucketData;
@@ -79,7 +81,7 @@ public class ResultsWriter
             String filename = mConfig.formFilename(READS);
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("PartitionIndex,BucketId,ReadId,ReadType,GroupComplete,Chromosome,PosStart,PosEnd,Cigar");
+            writer.write("PartitionIndex,JunctionPosition,ReadId,ReadType,GroupComplete,Chromosome,PosStart,PosEnd,Cigar");
             writer.write(",FragLength,MateChr,MatePosStart,FirstInPair,ReadReversed,SuppData");
             writer.write(",MapQual,MultiMapped,Flags,Proper,Duplicate,Unmapped,MateUnmapped,Secondary,Supplementary");
 
@@ -96,7 +98,7 @@ public class ResultsWriter
     }
 
     public synchronized void writeReadData(
-            final ReadRecord read, int partitionIndex, int bucketId, final String readType, final boolean groupComplete)
+            final ReadRecord read, int partitionIndex, int junctionPosition, final String readType, final boolean groupComplete)
     {
         if(mReadWriter == null)
             return;
@@ -104,7 +106,7 @@ public class ResultsWriter
         try
         {
             mReadWriter.write(format("%d,%d,%s,%s,%s,%s,%d,%d,%s",
-                    partitionIndex, bucketId, read.id(), readType, groupComplete,
+                    partitionIndex, junctionPosition, read.id(), readType, groupComplete,
                     read.Chromosome, read.start(), read.end(), read.cigar().toString()));
 
             SupplementaryReadData suppData = read.supplementaryAlignment();
@@ -202,7 +204,7 @@ public class ResultsWriter
             String filename = mConfig.formFilename(JUNCTIONS);
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("Chromosome,BucketStart,BucketEnd,Position,Orientation,Fragments,SupportingReads,Hotspot,InitialReadId");
+            writer.write("Chromosome,BucketStart,BucketEnd,Position,Orientation,Fragments,SupportingReads,LowMapQualFrags,Hotspot,InitialReadId");
             writer.write(",RemoteJunctionCount,RemoteChromosome,RemotePosition,RemoteOrientation");
             writer.newLine();
 
@@ -216,18 +218,21 @@ public class ResultsWriter
         return null;
     }
 
-    public synchronized void writeJunctionData(final BucketData bucket)
+    public synchronized void writeJunctionData(final String chromosome, final List<JunctionData> junctions)
     {
         if(mJunctionWriter == null)
             return;
 
         try
         {
-            for(JunctionData junctionData : bucket.junctions())
+            for(JunctionData junctionData : junctions)
             {
-                String junctionStr = format("%s,%d,%d,%d,%d,%d,%d,%s,%s,%d",
-                        bucket.region().Chromosome, bucket.region().start(), bucket.region().end(), junctionData.Position,
-                        junctionData.Orientation, junctionData.exactFragmentCount(), junctionData.supportingReadCount(),
+                int lowMapQualFrags = (int) junctionData.JunctionGroups.stream()
+                        .filter(x -> x.reads().stream().anyMatch(y -> y.filters() == ReadFilterType.MIN_MAP_QUAL.flag())).count();
+
+                String junctionStr = format("%s,%d,%d,%d,%d,%d,%s,%s,%d",
+                        chromosome, junctionData.Position,
+                        junctionData.Orientation, junctionData.exactFragmentCount(), junctionData.supportingReadCount(), lowMapQualFrags,
                         junctionData.hotspot(), junctionData.InitialRead.id(), junctionData.RemoteJunctions.size());
 
                 if(!junctionData.RemoteJunctions.isEmpty())
@@ -236,13 +241,15 @@ public class ResultsWriter
                     {
                         mJunctionWriter.write(format("%s,%s,%d,%d",
                                 junctionStr, remoteJunction.Chromosome, remoteJunction.Position, remoteJunction.Orientation));
-                        mJunctionWriter.newLine();;
+                        mJunctionWriter.newLine();
+                        ;
                     }
                 }
                 else
                 {
                     mJunctionWriter.write(format("%s,,,", junctionStr));
-                    mJunctionWriter.newLine();;
+                    mJunctionWriter.newLine();
+                    ;
                 }
             }
         }

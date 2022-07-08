@@ -14,7 +14,6 @@ public enum ReadFilterType
     INSERT_MAP_OVERLAP(4, 2,"Insert size vs aligned bases"),
     SOFT_CLIP_LENGTH(8, 3, "Soft-clip length"),
     SOFT_CLIP_BASE_QUAL(16, 4,  "Soft-clip base qual");
-    // NO_SUPPORTING_READ(32, 5, "Read support");
 
     private final int mFlag;
     private final int mIndex;
@@ -33,10 +32,9 @@ public enum ReadFilterType
     }
     public int index() { return mIndex; }
 
-    public String label()
-    {
-        return name().toLowerCase().replace('_', ' ');
-    }
+    public boolean isSet(int flag) { return (mFlag & flag) != 0; }
+    public static boolean isSet(int flags, ReadFilterType flag) { return (flags & flag.flag()) != 0; }
+    public boolean isUnset(int flag) { return !isSet(flag); } // this.mFlags &= ~bit;
 
     public String description()
     {
@@ -57,25 +55,6 @@ public enum ReadFilterType
 
         return null;
     }
-
-    public static ReadFilterType findByName(String flag)
-    {
-        ReadFilterType[] allValues = values();
-
-        for(int type = 0; type < allValues.length; ++type)
-        {
-            ReadFilterType f = allValues[type];
-            if(f.name().equals(flag))
-                return f;
-        }
-
-        return null;
-    }
-
-    public boolean isSet(int flag) { return (mFlag & flag) != 0; }
-    public static boolean isSet(int flags, ReadFilterType flag) { return (flags & flag.flag()) != 0; }
-
-    public boolean isUnset(int flag) { return !isSet(flag); } // this.mFlags &= ~bit;
 
     public static Set<ReadFilterType> getFlags(int flag)
     {

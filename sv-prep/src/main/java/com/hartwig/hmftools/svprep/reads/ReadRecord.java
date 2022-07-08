@@ -101,8 +101,9 @@ public class ReadRecord
 
     public String toString()
     {
-        return format("coords(%s:%d-%d) cigar(%s) mate(%s:%d) id(%s)",
-                Chromosome, start(), end(), cigar().toString(), MateChromosome, MatePosStart, id());
+        return format("coords(%s:%d-%d) cigar(%s) mate(%s:%d) id(%s) flags(first=%s supp=%s reversed=%s)",
+                Chromosome, start(), end(), cigar().toString(), MateChromosome, MatePosStart, id(),
+                isFirstOfPair(), isSupplementaryAlignment(), isReadReversed());
     }
 
     public static int maxDeleteLength(final Cigar cigar)

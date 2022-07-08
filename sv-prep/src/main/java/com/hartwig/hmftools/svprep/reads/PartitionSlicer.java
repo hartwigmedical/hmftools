@@ -38,6 +38,7 @@ public class PartitionSlicer
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
 
+    private final JunctionTracker mJunctionTracker;
     private final PartitionBuckets mBuckets;
 
     private final PartitionStats mStats;
@@ -48,7 +49,11 @@ public class PartitionSlicer
     private final ReadRateTracker mReadRateTracker;
     private boolean mRateLimitTriggered;
     private boolean mLogReadIds;
-    private final PerformanceCounter mPerCounter;
+    private final PerformanceCounter[] mPerCounters;
+
+    private static final int PC_SLICE = 0;
+    private static final int PC_JUNCTIONS = 1;
+    private static final int PC_TOTAL = 2;
 
     public PartitionSlicer(
             final int id, final ChrBaseRegion region, final SvConfig config, final ResultsWriter writer, final CombinedStats combinedStats)
@@ -59,6 +64,8 @@ public class PartitionSlicer
         mWriter = writer;
         mRegion = region;
         mCombinedStats = combinedStats;
+
+        mJunctionTracker = new JunctionTracker(mRegion, mConfig.ReadFiltering.config(), mConfig.Hotspots);
 
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
@@ -78,7 +85,12 @@ public class PartitionSlicer
         mReadGroups = Maps.newHashMap();
 
         mStats = new PartitionStats();
-        mPerCounter = new PerformanceCounter("Total");
+
+        mPerCounters = new PerformanceCounter[PC_TOTAL+1];
+        mPerCounters[PC_SLICE] = new PerformanceCounter("Slice");
+        mPerCounters[PC_JUNCTIONS] = new PerformanceCounter("Junctions");
+        mPerCounters[PC_TOTAL] = new PerformanceCounter("Total");
+
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
     }
 
@@ -86,15 +98,28 @@ public class PartitionSlicer
     {
         SV_LOGGER.debug("processing region({})", mRegion);
 
-        mPerCounter.start();
+        mPerCounters[PC_TOTAL].start();
+
+        mPerCounters[PC_SLICE].start();
 
         mBamSlicer.slice(mSamReader, Lists.newArrayList(mRegion), this::processSamRecord);
 
+        mPerCounters[PC_SLICE].stop();
+
+        mPerCounters[PC_JUNCTIONS].start();
+
         mReadGroups.values().forEach(x -> processGroup(x));
+
+        mJunctionTracker.createJunctions();
+        mJunctionTracker.filterJunctions();
 
         mBuckets.processBuckets(-1, this::processBucket);
 
-        mPerCounter.stop();
+        mPerCounters[PC_JUNCTIONS].stop();
+
+        writeData();
+
+        mPerCounters[PC_TOTAL].stop();
 
         if(mStats.TotalReads == 0)
             return;
@@ -106,7 +131,7 @@ public class PartitionSlicer
                 mRegion, ReadFilterType.filterCountsToString(mStats.ReadFilterCounts));
 
         mCombinedStats.addPartitionStats(mStats);
-        mCombinedStats.addPerfCounters(mPerCounter);
+        mCombinedStats.addPerfCounters(mPerCounters);
 
         if(mRateLimitTriggered)
             System.gc();
@@ -151,11 +176,18 @@ public class PartitionSlicer
 
         if(filters != 0)
         {
-            processFilteredRead(record, filters);
-            return;
+            // allow low map quality through at this stage
+            if(filters != ReadFilterType.MIN_MAP_QUAL.flag())
+            {
+                processFilteredRead(record, filters);
+                return;
+            }
         }
 
         ReadRecord read = ReadRecord.from(record);
+        read.setFilters(filters);
+
+        mJunctionTracker.processRead(read);
 
         if(!mRegion.containsPosition(read.MateChromosome, read.MatePosStart))
         {
@@ -223,6 +255,39 @@ public class PartitionSlicer
 
         BucketData bucket = mBuckets.findBucket(read.start());
         bucket.addSupportingRead(read);
+
+        mJunctionTracker.processRead(read);
+    }
+
+    private void writeData()
+    {
+        if(mConfig.WriteTypes.contains(WriteType.JUNCTIONS))
+        {
+            mWriter.writeJunctionData(mRegion.Chromosome, mJunctionTracker.junctions());
+        }
+
+        for(JunctionData junctionData : mJunctionTracker.junctions())
+        {
+            ++mStats.JunctionCount;
+            mStats.JunctionFragmentCount += junctionData.exactFragmentCount();
+            mStats.SupportingReadCount += junctionData.supportingReadCount();
+
+            if(mConfig.WriteTypes.contains(WriteType.READS))
+            {
+                for(ReadGroup readGroup : junctionData.JunctionGroups)
+                {
+                    boolean groupComplete = readGroup.isComplete();
+                    readGroup.reads().forEach(x -> mWriter.writeReadData(x, mId, junctionData.Position, "SV", groupComplete));
+                }
+
+                junctionData.SupportingReads.forEach(x -> mWriter.writeReadData(x, mId, junctionData.Position, "SUPPORTING", false));
+            }
+        }
+
+        if(mConfig.WriteTypes.contains(WriteType.BAM))
+        {
+            // mWriter.writeBamRecords(bucket);
+        }
     }
 
     private void processBucket(final BucketData bucket)
@@ -260,7 +325,7 @@ public class PartitionSlicer
 
         if(mConfig.WriteTypes.contains(WriteType.JUNCTIONS))
         {
-            mWriter.writeJunctionData(bucket);
+            mWriter.writeJunctionData(mRegion.Chromosome, bucket.junctions());
         }
 
         if(mConfig.WriteTypes.contains(WriteType.BAM))

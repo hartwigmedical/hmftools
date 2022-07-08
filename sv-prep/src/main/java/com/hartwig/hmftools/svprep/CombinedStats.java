@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.svprep;
 
+import java.util.Arrays;
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.svprep.reads.PartitionStats;
 
@@ -7,12 +11,12 @@ public class CombinedStats
 {
     public final PartitionStats ReadStats;
 
-    public final PerformanceCounter PerfCounter;
+    public final List<PerformanceCounter> PerfCounters;
 
     public CombinedStats()
     {
         ReadStats = new PartitionStats();
-        PerfCounter = new PerformanceCounter("Total");
+        PerfCounters = Lists.newArrayList();
     }
 
     public synchronized void addPartitionStats(final PartitionStats stats)
@@ -20,8 +24,16 @@ public class CombinedStats
         ReadStats.add(stats);
     }
 
-    public synchronized void addPerfCounters(final PerformanceCounter perfCounter)
+    public synchronized void addPerfCounters(final PerformanceCounter[] perfCounters)
     {
-        PerfCounter.merge(perfCounter);
+        if(PerfCounters.isEmpty())
+        {
+            Arrays.stream(perfCounters).forEach(x -> PerfCounters.add(x));
+        }
+
+        for(int i = 0; i < PerfCounters.size(); ++i)
+        {
+            PerfCounters.get(i).merge(perfCounters[i]);
+        }
     }
 }
