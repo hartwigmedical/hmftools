@@ -75,11 +75,12 @@
         <neo.version>1.0</neo.version>
         <orange.version>1.10</orange.version>
         <paddle.version>1.0</paddle.version>
-        <patient-db.version>3.70</patient-db.version>
+        <patient-db.version>3.71</patient-db.version>
         <patient-reporter.version>7.25.1</patient-reporter.version>
         <pave.version>1.3</pave.version>
         <protect.version>2.2</protect.version>
         <purple.version>3.4.2</purple.version>
+        <rose.version>1.0</rose.version>
         <sage.version>3.1</sage.version>
         <sigs.version>1.0</sigs.version>
         <serve.version>1.11</serve.version>
@@ -88,7 +89,6 @@
         <teal.version>1.0.1</teal.version>
         <vicc-importer.version>1.2</vicc-importer.version>
         <virus-interpreter.version>1.2</virus-interpreter.version>
-        <rose.version>1.0</rose.version>
 
         <commons.cli.version>1.3.1</commons.cli.version>
         <immutables.version>2.5.5</immutables.version>
