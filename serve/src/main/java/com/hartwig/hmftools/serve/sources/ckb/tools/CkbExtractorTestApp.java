@@ -27,6 +27,7 @@ import com.hartwig.hmftools.serve.sources.ckb.CkbExtractor;
 import com.hartwig.hmftools.serve.sources.ckb.CkbExtractorFactory;
 import com.hartwig.hmftools.serve.sources.ckb.CkbReader;
 
+import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -54,7 +55,7 @@ public class CkbExtractorTestApp {
         CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(CkbClassificationConfig.build(), refGenomeResource);
 
         List<CkbEntry> entries = CkbReader.readAndCurate(config.ckbDir(), config.ckbFilterTsv());
-        ExtractionResult result = extractor.extract(entries, Maps.newHashMap());
+        ExtractionResult result = extractor.extract(entries, Maps.newHashMap(), Lists.newArrayList());
 
         String eventsTsv = config.outputDir() + File.separator + "CkbEventClassification.tsv";
         CkbUtil.writeEventsToTsv(eventsTsv, entries);

@@ -7,3 +7,8 @@
 ALTER TABLE germlineDeletion
     ADD COLUMN chromosomeBand VARCHAR(20) NOT NULL after chromosome;
 
+# Protect
+
+ALTER TABLE protect
+	CHANGE COLUMN sourceUrls sourceUrls varchar(2500),
+	CHANGE COLUMN evidenceUrls evidenceUrls varchar(2500);

@@ -44,7 +44,7 @@ CREATE TABLE actionableRange
     end int NOT NULL,
     mutationType varchar(50) NOT NULL,
     rangeType varchar(50) NOT NULL,
-    rank varchar(50) NOT NULL,
+    rangeRank varchar(50) NOT NULL,
     source varchar(50) NOT NULL,
     sourceEvent varchar(50) NOT NULL,
     sourceUrls varchar(2000),

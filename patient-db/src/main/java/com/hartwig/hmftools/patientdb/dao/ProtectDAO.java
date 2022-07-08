@@ -82,10 +82,10 @@ class ProtectDAO {
                     evidence.direction().toString(),
                     source.name().toString(),
                     source.sourceEvent(),
-                    sourceUrlJoiner.toString(),
+                    sourceUrlJoiner.toString().isEmpty() ? null : sourceUrlJoiner.toString(),
                     source.evidenceType().toString(),
                     source.rangeRank(),
-                    evidenceUrlJoiner.toString(),
+                    evidenceUrlJoiner.toString().isEmpty() ? null : evidenceUrlJoiner.toString(),
                     timestamp);
         }
     }

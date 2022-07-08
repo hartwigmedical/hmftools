@@ -45,7 +45,7 @@ Component | Description | Current Version
 [Protect](./protect/README.md) | Matching of molecular results to treatments and clinical trials | [2.2](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v2.2)
 [Rose](./rose/README.md) | Actionability of clinically relevant molecular findings | [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/rose-v1.0)
 [Virus Interpreter](./virus-interpreter/README.md) | Filtering, annotation and interpretation of virus breakend data | [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/virus-interpreter-v1.2)
-[Orange](./orange/README.md) | PDF summary report and JSON file of all WGS output | [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.9)
+[Orange](./orange/README.md) | PDF summary report and JSON file of all WGS output | [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.10)
 
 ## RNA Tools
 

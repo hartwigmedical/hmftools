@@ -23,6 +23,7 @@ import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLA;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
+import com.hartwig.hmftools.serve.curation.FilterRelevantTreatmentApproachEntry;
 import com.hartwig.hmftools.serve.curation.RelevantTreatmentApproachKey;
 import com.hartwig.hmftools.serve.curation.RelevantTreatmentApproch;
 import com.hartwig.hmftools.serve.extraction.ActionableEventFactory;
@@ -70,7 +71,9 @@ public class CkbExtractor {
     }
 
     @NotNull
-    public ExtractionResult extract(@NotNull List<CkbEntry> ckbEntries, @NotNull Map<RelevantTreatmentApproachKey, RelevantTreatmentApproch> drugClasses) {
+    public ExtractionResult extract(@NotNull List<CkbEntry> ckbEntries,
+            @NotNull Map<RelevantTreatmentApproachKey, RelevantTreatmentApproch> drugClasses,
+            @NotNull List<FilterRelevantTreatmentApproachEntry> filterRelevantTreatmentApproachEntries) {
         List<ExtractionResult> extractions = Lists.newArrayList();
 
         ProgressTracker tracker = new ProgressTracker("CKB", ckbEntries.size());
@@ -94,8 +97,12 @@ public class CkbExtractor {
                     sourceEvent = event;
                 }
 
-                Set<ActionableEntry> actionableEvents =
-                        ActionableEntryFactory.toActionableEntries(entry, sourceEvent, drugClasses, gene, entry.type());
+                Set<ActionableEntry> actionableEvents = ActionableEntryFactory.toActionableEntries(entry,
+                        sourceEvent,
+                        drugClasses,
+                        gene,
+                        entry.type(),
+                        filterRelevantTreatmentApproachEntries);
 
                 EventInterpretation interpretation = ImmutableEventInterpretation.builder()
                         .source(Knowledgebase.CKB)

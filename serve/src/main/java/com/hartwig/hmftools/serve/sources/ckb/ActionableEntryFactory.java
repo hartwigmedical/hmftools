@@ -19,6 +19,7 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.cancertype.CancerType;
 import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
+import com.hartwig.hmftools.serve.curation.FilterRelevantTreatmentApproachEntry;
 import com.hartwig.hmftools.serve.curation.RelevantTreatmentApproachKey;
 import com.hartwig.hmftools.serve.curation.RelevantTreatmentApproch;
 import com.hartwig.hmftools.serve.treatment.ImmutableTreatment;
@@ -69,7 +70,7 @@ class ActionableEntryFactory {
     @NotNull
     public static Set<ActionableEntry> toActionableEntries(@NotNull CkbEntry entry, @NotNull String sourceEvent,
             @NotNull Map<RelevantTreatmentApproachKey, RelevantTreatmentApproch> drugClassesCurations, @NotNull String gene,
-            @NotNull EventType eventType) {
+            @NotNull EventType eventType, @NotNull List<FilterRelevantTreatmentApproachEntry> filterRelevantTreatmentApproachEntries) {
         Set<ActionableEntry> actionableEntries = Sets.newHashSet();
         Set<String> sourceRelevantTreatmentApproaches = Sets.newHashSet();
         Set<String> curatedRelevantTreatmentApproaches = Sets.newHashSet();
@@ -117,25 +118,33 @@ class ActionableEntryFactory {
                         RelevantTreatmentApproch relevantTreatmentApprachMap =
                                 drugClassesCurations.get(relevantTreatmentApproachesInfo.drugClass());
                         String interpretEventKnowledgebase = gene + " " + eventType.name();
-                        if (relevantTreatmentApprachMap != null) {
-                            if (relevantTreatmentApprachMap.treatmentApproachKey().matchEvent().equals(interpretEventKnowledgebase)) {
-                                curatedRelevantTreatmentApproaches.add(relevantTreatmentApprachMap.curatedtreatmentApproach());
-                            } else {
-                                LOGGER.warn("The treatment '{}' with relevant treatment approach '{}' of event '{}' "
-                                                + "with level '{}' and direction '{}' isn't curated",
-                                        relevantTreatmentApprachMap.treatmentApproachKey().treatment(),
-                                        relevantTreatmentApprachMap.treatmentApproachKey().treatmentApproach(),
-                                        relevantTreatmentApprachMap.treatmentApproachKey().matchEvent(),
-                                        level,
-                                        direction);
+                        for (FilterRelevantTreatmentApproachEntry filter : filterRelevantTreatmentApproachEntries) {
+                            if (filter.treatment().equals(treatment) && filter.eventMatch().equals(interpretEventKnowledgebase)
+                                    && filter.level() == level && filter.direction() == direction) {
+
+                                if (relevantTreatmentApprachMap != null) {
+                                    if (relevantTreatmentApprachMap.treatmentApproachKey()
+                                            .matchEvent()
+                                            .equals(interpretEventKnowledgebase)) {
+                                        curatedRelevantTreatmentApproaches.add(relevantTreatmentApprachMap.curatedtreatmentApproach());
+                                    } else {
+                                        LOGGER.warn("The treatment '{}' with relevant treatment approach '{}' of event '{}' "
+                                                        + "with level '{}' and direction '{}' isn't curated",
+                                                relevantTreatmentApprachMap.treatmentApproachKey().treatment(),
+                                                relevantTreatmentApprachMap.treatmentApproachKey().treatmentApproach(),
+                                                relevantTreatmentApprachMap.treatmentApproachKey().matchEvent(),
+                                                level,
+                                                direction);
+                                    }
+                                } else {
+                                    LOGGER.warn("The treatment '{}' of relevant treatment approach of event '{}' "
+                                                    + "with level '{}' and direction '{}' is empty",
+                                            treatment,
+                                            interpretEventKnowledgebase,
+                                            level,
+                                            direction);
+                                }
                             }
-                        } else {
-                            LOGGER.warn("The treatment '{}' of relevant treatment approach of event '{}' "
-                                            + "with level '{}' and direction '{}' is empty",
-                                    treatment,
-                                    interpretEventKnowledgebase,
-                                    level,
-                                    direction);
                         }
                     }
                 }
