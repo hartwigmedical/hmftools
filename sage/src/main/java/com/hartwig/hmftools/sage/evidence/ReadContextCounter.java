@@ -1,11 +1,14 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.CORE_LOW_QUAL_MISMATCH_BASE_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_EVIDENCE_MAP_QUAL;
+import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_CONTEXT_MIN_SEARCH_BUFFER;
+import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_CONTEXT_MIN_SEARCH_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
@@ -314,9 +317,8 @@ public class ReadContextCounter implements VariantHotspot
             }
         }
 
-        RealignedContext realignment = checkRealignment(record, readIndex, rawContext.ReadIndexInDelete);
+        RealignedContext realignment = checkRealignment(record);
         int maxRealignDistance = getMaxRealignmentDistance(record);
-
 
         /*
         // log differences
@@ -523,21 +525,8 @@ public class ReadContextCounter implements VariantHotspot
         return -1;
     }
 
-    private RealignedContext checkRealignment(final SAMRecord record, final int readIndex, boolean readIndexInDelete)
+    private RealignedContext checkRealignment(final SAMRecord record)
     {
-        /*
-        if(readIndexInDelete)
-        {
-            IndexedBases readBases = new IndexedBases(position(), readIndex, record.getReadBases());
-
-            ReadContextMatch match = mReadContext.indexedBases().matchAtPosition(
-                    readBases, record.getBaseQualities(), false, 0);
-
-            if(match == ReadContextMatch.FULL || match == ReadContextMatch.PARTIAL)
-                return new RealignedContext(EXACT, mReadContext.indexedBases().length(), readIndex);
-        }
-        */
-
         // try left and right alignment in turn
         int realignLeftReadIndex = calcLeftAlignmentIndex(record);
 
@@ -565,6 +554,23 @@ public class ReadContextCounter implements VariantHotspot
 
             if(match == ReadContextMatch.FULL || match == ReadContextMatch.PARTIAL)
                 return new RealignedContext(RealignedType.EXACT, mReadContext.indexedBases().length(), realignRightReadIndex);
+        }
+
+        // try a simple string search and take it as exact if the matched index is within the expected range
+        String readContext = mReadContext.indexedBases().fullString();
+        if(readContext.length() >= REALIGN_READ_CONTEXT_MIN_SEARCH_LENGTH)
+        {
+            int matchedReadIndex = record.getReadString().indexOf(readContext);
+
+            if(matchedReadIndex >= 0)
+            {
+                int matchedIndex = matchedReadIndex + mReadContext.indexedBases().Index - mReadContext.indexedBases().LeftFlankIndex;
+                if(abs(matchedIndex - realignLeftReadIndex) <= REALIGN_READ_CONTEXT_MIN_SEARCH_BUFFER
+                || abs(matchedIndex - realignRightReadIndex) <= REALIGN_READ_CONTEXT_MIN_SEARCH_BUFFER)
+                {
+                    return new RealignedContext(RealignedType.EXACT, mReadContext.indexedBases().length(), matchedIndex);
+                }
+            }
         }
 
         return RealignedContext.NONE;
