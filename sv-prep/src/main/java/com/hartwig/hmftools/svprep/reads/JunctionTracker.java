@@ -66,11 +66,6 @@ public class JunctionTracker
         }
 
         readGroup.addRead(read, mRegion);
-
-        if(readGroup.isComplete())
-        {
-            //
-        }
     }
 
     public void createJunctions()
@@ -102,8 +97,6 @@ public class JunctionTracker
                 }
             }
         }
-
-        // mReadGroups.clear();
     }
 
     private void createJunction(final ReadGroup readGroup)

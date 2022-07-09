@@ -103,6 +103,13 @@ public class ReadGroup
         }
     }
 
+    public String groupStatus() { return mIsComplete ? "COMPLETE" : (mIsPartial ? "PARTIAL" : "INCOMPLETE"); }
+
+    public void merge(final ReadGroup other)
+    {
+        other.reads().forEach(x -> addRead(x));
+    }
+
     private static boolean supplementaryInRegion(final SupplementaryReadData suppData, final ChrBaseRegion region)
     {
         return suppData != null && region.containsPosition(suppData.Chromosome, suppData.Position);

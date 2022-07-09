@@ -2,6 +2,8 @@ package com.hartwig.hmftools.svprep.reads;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
+import static com.hartwig.hmftools.svprep.CombinedReadGroups.externalReadChrPartition;
+import static com.hartwig.hmftools.svprep.CombinedReadGroups.formChromosomePartition;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_FRACTION;
 import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_THRESHOLD;
@@ -9,6 +11,7 @@ import static com.hartwig.hmftools.svprep.SvConstants.EXCLUDED_REGION_1_REF_37;
 import static com.hartwig.hmftools.svprep.SvConstants.EXCLUDED_REGION_1_REF_38;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
@@ -17,6 +20,7 @@ import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.svprep.CombinedReadGroups;
 import com.hartwig.hmftools.svprep.CombinedStats;
 import com.hartwig.hmftools.svprep.ResultsWriter;
 import com.hartwig.hmftools.svprep.SvConfig;
@@ -31,6 +35,7 @@ public class PartitionSlicer
     private final int mId;
     private final SvConfig mConfig;
     private final ChrBaseRegion mRegion;
+    private final CombinedReadGroups mCombinedReadGroups;
     private final ResultsWriter mWriter;
     private final ReadFilters mReadFilters;
     private final ChrBaseRegion mFilterRegion;
@@ -56,11 +61,13 @@ public class PartitionSlicer
     private static final int PC_TOTAL = 2;
 
     public PartitionSlicer(
-            final int id, final ChrBaseRegion region, final SvConfig config, final ResultsWriter writer, final CombinedStats combinedStats)
+            final int id, final ChrBaseRegion region, final SvConfig config, final CombinedReadGroups combinedReadGroups,
+            final ResultsWriter writer, final CombinedStats combinedStats)
     {
         mId = id;
         mConfig = config;
         mReadFilters = config.ReadFiltering;
+        mCombinedReadGroups = combinedReadGroups;
         mWriter = writer;
         mRegion = region;
         mCombinedStats = combinedStats;
@@ -117,21 +124,21 @@ public class PartitionSlicer
 
         mPerCounters[PC_JUNCTIONS].stop();
 
-        writeData();
+        if(mStats.TotalReads > 0)
+        {
+            SV_LOGGER.debug("region({}) complete, stats({}) incompleteGroups({})",
+                    mRegion, mStats.toString(), mReadGroups.size());
+
+            SV_LOGGER.debug("region({}) filters({})",
+                    mRegion, ReadFilterType.filterCountsToString(mStats.ReadFilterCounts));
+
+            writeData();
+
+            mCombinedStats.addPartitionStats(mStats);
+            mCombinedStats.addPerfCounters(mPerCounters);
+        }
 
         mPerCounters[PC_TOTAL].stop();
-
-        if(mStats.TotalReads == 0)
-            return;
-
-        SV_LOGGER.debug("region({}) complete, stats({}) incompleteGroups({})",
-                mRegion, mStats.toString(), mReadGroups.size());
-
-        SV_LOGGER.debug("region({}) filters({})",
-                mRegion, ReadFilterType.filterCountsToString(mStats.ReadFilterCounts));
-
-        mCombinedStats.addPartitionStats(mStats);
-        mCombinedStats.addPerfCounters(mPerCounters);
 
         if(mRateLimitTriggered)
             System.gc();
@@ -261,6 +268,46 @@ public class PartitionSlicer
 
     private void writeData()
     {
+        if(mConfig.WriteTypes.contains(WriteType.BAM))
+        {
+            // the BAM file writes records by readId, so needs to combine all reads for a given fragment
+            Map<String,Map<String,ReadGroup>> partialGroupsMap = Maps.newHashMap();
+            List<ReadGroup> localCompleteGroups = Lists.newArrayList();
+
+            String chrPartition = formChromosomePartition(mRegion.Chromosome, mRegion.start(), mConfig.PartitionSize);
+
+            for(ReadGroup readGroup : mJunctionTracker.readGroups().values())
+            {
+                if(readGroup.isComplete())
+                {
+                    localCompleteGroups.add(readGroup);
+                }
+                else
+                {
+                    String remoteChrPartition = externalReadChrPartition(mRegion, mConfig.PartitionSize, readGroup.reads());
+
+                    Map<String,ReadGroup> groups = partialGroupsMap.get(remoteChrPartition);
+
+                    if(groups == null)
+                    {
+                        groups = Maps.newHashMap();
+                        partialGroupsMap.put(remoteChrPartition, groups);
+                    }
+
+                    groups.put(readGroup.id(), readGroup);
+                }
+            }
+
+            List<ReadGroup> remoteCompleteGroups = mCombinedReadGroups.addIncompleteReadGroup(chrPartition, partialGroupsMap);
+
+            SV_LOGGER.debug("region({}) readGroups({}) complete(local={} remote={}) partials({})",
+                    mRegion, mJunctionTracker.readGroups().values().size(), localCompleteGroups.size(), remoteCompleteGroups.size(),
+                    partialGroupsMap.size());
+
+            mWriter.writeBamRecords(localCompleteGroups);
+            mWriter.writeBamRecords(remoteCompleteGroups);
+        }
+
         if(mConfig.WriteTypes.contains(WriteType.JUNCTIONS))
         {
             mWriter.writeJunctionData(mRegion.Chromosome, mJunctionTracker.junctions());
@@ -276,17 +323,13 @@ public class PartitionSlicer
             {
                 for(ReadGroup readGroup : junctionData.JunctionGroups)
                 {
-                    boolean groupComplete = readGroup.isComplete();
-                    readGroup.reads().forEach(x -> mWriter.writeReadData(x, mId, junctionData.Position, "SV", groupComplete));
+                    String groupStatus = readGroup.groupStatus();
+                    readGroup.reads().forEach(x -> mWriter.writeReadData(x, mId, junctionData.Position, "SV", groupStatus));
                 }
 
-                junctionData.SupportingReads.forEach(x -> mWriter.writeReadData(x, mId, junctionData.Position, "SUPPORTING", false));
+                junctionData.SupportingReads.forEach(x -> mWriter.writeReadData(
+                        x, mId, junctionData.Position, "SUPPORTING", "UNKNOWN"));
             }
-        }
-
-        if(mConfig.WriteTypes.contains(WriteType.BAM))
-        {
-            // mWriter.writeBamRecords(bucket);
         }
     }
 
@@ -338,11 +381,11 @@ public class PartitionSlicer
             for(ReadGroup readGroup : bucket.readGroups())
             {
                 boolean groupComplete = readGroup.isComplete();
-                readGroup.reads().forEach(x -> mWriter.writeReadData(x, mId, bucket.id(), "SV", groupComplete));
+                readGroup.reads().forEach(x -> mWriter.writeReadData(x, mId, bucket.id(), "SV", readGroup.groupStatus()));
             }
 
             // group complete set false since reads are not grouped for now
-            bucket.supportingReads().forEach(x -> mWriter.writeReadData(x, mId, bucket.id(), "SUPPORTING", false));
+            bucket.supportingReads().forEach(x -> mWriter.writeReadData(x, mId, bucket.id(), "SUPPORTING", "UNKNOWN"));
         }
     }
 

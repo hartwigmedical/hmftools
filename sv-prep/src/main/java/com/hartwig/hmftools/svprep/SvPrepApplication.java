@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConfig.createCmdLineOptions;
+import static com.hartwig.hmftools.svprep.WriteType.BAM;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
@@ -21,11 +22,13 @@ public class SvPrepApplication
 {
     private final SvConfig mConfig;
     private final ResultsWriter mWriter;
+    private final CombinedReadGroups mCombinedReadGroups;
 
     public SvPrepApplication(final CommandLine cmd)
     {
         mConfig = new SvConfig(cmd);
         mWriter = new ResultsWriter(mConfig);
+        mCombinedReadGroups = new CombinedReadGroups();
     }
 
     public void run()
@@ -44,10 +47,13 @@ public class SvPrepApplication
 
             SV_LOGGER.info("processing chromosome({})", chromosomeStr);
 
-            ChromosomeTask chromosomeTask = new ChromosomeTask(chromosomeStr, mConfig, mWriter);
+            ChromosomeTask chromosomeTask = new ChromosomeTask(chromosomeStr, mConfig, mCombinedReadGroups, mWriter);
             chromosomeTask.process();
             System.gc();
         }
+
+        if(mConfig.WriteTypes.contains(BAM))
+            mCombinedReadGroups.writeRemainingReadGroups(mWriter);
 
         mWriter.close();
 

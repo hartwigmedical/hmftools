@@ -27,6 +27,7 @@ import java.util.StringJoiner;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.svprep.reads.JunctionData;
 import com.hartwig.hmftools.svprep.reads.ReadFilterType;
+import com.hartwig.hmftools.svprep.reads.ReadGroup;
 import com.hartwig.hmftools.svprep.reads.ReadRecord;
 import com.hartwig.hmftools.svprep.reads.RemoteJunction;
 import com.hartwig.hmftools.svprep.reads.BucketData;
@@ -81,7 +82,7 @@ public class ResultsWriter
             String filename = mConfig.formFilename(READS);
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("PartitionIndex,JunctionPosition,ReadId,ReadType,GroupComplete,Chromosome,PosStart,PosEnd,Cigar");
+            writer.write("PartitionIndex,JunctionPosition,ReadId,ReadType,GroupStatus,Chromosome,PosStart,PosEnd,Cigar");
             writer.write(",FragLength,MateChr,MatePosStart,FirstInPair,ReadReversed,SuppData");
             writer.write(",MapQual,MultiMapped,Flags,Proper,Duplicate,Unmapped,MateUnmapped,Secondary,Supplementary");
 
@@ -98,7 +99,7 @@ public class ResultsWriter
     }
 
     public synchronized void writeReadData(
-            final ReadRecord read, int partitionIndex, int junctionPosition, final String readType, final boolean groupComplete)
+            final ReadRecord read, int partitionIndex, int junctionPosition, final String readType, final String groupStatus)
     {
         if(mReadWriter == null)
             return;
@@ -106,7 +107,7 @@ public class ResultsWriter
         try
         {
             mReadWriter.write(format("%d,%d,%s,%s,%s,%s,%d,%d,%s",
-                    partitionIndex, junctionPosition, read.id(), readType, groupComplete,
+                    partitionIndex, junctionPosition, read.id(), readType, groupStatus,
                     read.Chromosome, read.start(), read.end(), read.cigar().toString()));
 
             SupplementaryReadData suppData = read.supplementaryAlignment();
@@ -125,72 +126,6 @@ public class ResultsWriter
         catch(IOException e)
         {
             SV_LOGGER.error(" failed to write read data: {}", e.toString());
-        }
-    }
-
-    private BufferedWriter initialiseBedWriter()
-    {
-        if(!mConfig.WriteTypes.contains(SV_BED))
-            return null;
-
-        return null;
-    }
-
-    private BufferedWriter initialiseBucketWriter()
-    {
-        if(!mConfig.WriteTypes.contains(BUCKET_STATS))
-            return null;
-
-        try
-        {
-            String filename = mConfig.formFilename(BUCKET_STATS);
-            BufferedWriter writer = createBufferedWriter(filename, false);
-
-            writer.write("Chromosome,PosStart,PosEnd,PartitionIndex,BucketId");
-            writer.write(",ReadGroups,CompleteGroups,JunctionCount,SupportingReads,InitSupportingReads,Junctions");
-            writer.newLine();
-
-            return writer;
-        }
-        catch(IOException e)
-        {
-            SV_LOGGER.error(" failed to create bucket writer: {}", e.toString());
-        }
-
-        return null;
-    }
-
-    public synchronized void writeBucketData(final BucketData bucket, int partitionIndex)
-    {
-        if(mBucketWriter == null)
-            return;
-
-        try
-        {
-            StringJoiner juncDataSj = new StringJoiner(ITEM_DELIM);
-
-            Collections.sort(bucket.junctions(), new JunctionData.JunctionDataSorter());
-
-            for(int i = 0; i < min(bucket.junctions().size(), 20); ++i)
-            {
-                JunctionData junctionData = bucket.junctions().get(i);
-                juncDataSj.add(format("%d:%d:%d:%d",
-                        junctionData.Position, junctionData.Orientation, junctionData.exactFragmentCount(), junctionData.supportingReadCount()));
-            }
-
-            mBucketWriter.write(format("%s,%d,%d,%d,%d",
-                    bucket.region().Chromosome, bucket.region().start(), bucket.region().end(), partitionIndex, bucket.id()));
-
-            long completeGroups = bucket.readGroups().stream().filter(x -> x.isComplete()).count();
-            mBucketWriter.write(format(",%d,%d,%d,%d,%d,%s",
-                    bucket.readGroups().size(), completeGroups, bucket.junctions().size(),
-                    bucket.supportingReads().size(), bucket.initialSupportingReadCount(), juncDataSj.toString()));
-
-            mBucketWriter.newLine();;
-        }
-        catch(IOException e)
-        {
-            SV_LOGGER.error(" failed to write bucket data: {}", e.toString());
         }
     }
 
@@ -261,13 +196,89 @@ public class ResultsWriter
 
     public synchronized void writeBamRecords(final BucketData bucket)
     {
-        if(mBamWriter == null)
-            return;
-
         for(JunctionData junctionData : bucket.junctions())
         {
             junctionData.JunctionGroups.forEach(x -> mBamWriter.writeRecords(x.reads()));
             mBamWriter.writeRecords(junctionData.SupportingReads);
+        }
+    }
+
+    public synchronized void writeBamRecords(final List<ReadGroup> readGroups)
+    {
+        readGroups.forEach(x -> writeBamRecords(x));
+    }
+
+    public synchronized void writeBamRecords(final ReadGroup readGroup)
+    {
+        if(mBamWriter == null)
+            return;
+
+        mBamWriter.writeRecords(readGroup.reads());
+    }
+
+    private BufferedWriter initialiseBedWriter()
+    {
+        if(!mConfig.WriteTypes.contains(SV_BED))
+            return null;
+
+        return null;
+    }
+
+    private BufferedWriter initialiseBucketWriter()
+    {
+        if(!mConfig.WriteTypes.contains(BUCKET_STATS))
+            return null;
+
+        try
+        {
+            String filename = mConfig.formFilename(BUCKET_STATS);
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            writer.write("Chromosome,PosStart,PosEnd,PartitionIndex,BucketId");
+            writer.write(",ReadGroups,CompleteGroups,JunctionCount,SupportingReads,InitSupportingReads,Junctions");
+            writer.newLine();
+
+            return writer;
+        }
+        catch(IOException e)
+        {
+            SV_LOGGER.error(" failed to create bucket writer: {}", e.toString());
+        }
+
+        return null;
+    }
+
+    public synchronized void writeBucketData(final BucketData bucket, int partitionIndex)
+    {
+        if(mBucketWriter == null)
+            return;
+
+        try
+        {
+            StringJoiner juncDataSj = new StringJoiner(ITEM_DELIM);
+
+            Collections.sort(bucket.junctions(), new JunctionData.JunctionDataSorter());
+
+            for(int i = 0; i < min(bucket.junctions().size(), 20); ++i)
+            {
+                JunctionData junctionData = bucket.junctions().get(i);
+                juncDataSj.add(format("%d:%d:%d:%d",
+                        junctionData.Position, junctionData.Orientation, junctionData.exactFragmentCount(), junctionData.supportingReadCount()));
+            }
+
+            mBucketWriter.write(format("%s,%d,%d,%d,%d",
+                    bucket.region().Chromosome, bucket.region().start(), bucket.region().end(), partitionIndex, bucket.id()));
+
+            long completeGroups = bucket.readGroups().stream().filter(x -> x.isComplete()).count();
+            mBucketWriter.write(format(",%d,%d,%d,%d,%d,%s",
+                    bucket.readGroups().size(), completeGroups, bucket.junctions().size(),
+                    bucket.supportingReads().size(), bucket.initialSupportingReadCount(), juncDataSj.toString()));
+
+            mBucketWriter.newLine();;
+        }
+        catch(IOException e)
+        {
+            SV_LOGGER.error(" failed to write bucket data: {}", e.toString());
         }
     }
 }

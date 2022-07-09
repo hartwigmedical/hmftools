@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 
+import com.hartwig.hmftools.svprep.CombinedReadGroups;
 import com.hartwig.hmftools.svprep.CombinedStats;
 import com.hartwig.hmftools.svprep.ResultsWriter;
 import com.hartwig.hmftools.svprep.SvConfig;
@@ -13,16 +14,18 @@ public class PartitionThread extends Thread
 {
     private final String mChromosome;
     private final SvConfig mConfig;
+    private final CombinedReadGroups mCombinedReadGroups;
     private final ResultsWriter mWriter;
     private final CombinedStats mCombinedStats;
     private final Queue<PartitionTask> mPartitions;
 
     public PartitionThread(
-            final String chromosome, final SvConfig config, final Queue<PartitionTask> partitions, final ResultsWriter writer,
-            final CombinedStats combinedStats)
+            final String chromosome, final SvConfig config, final Queue<PartitionTask> partitions,
+            final CombinedReadGroups combinedReadGroups, final ResultsWriter writer, final CombinedStats combinedStats)
     {
         mChromosome = chromosome;
         mConfig = config;
+        mCombinedReadGroups = combinedReadGroups;
         mWriter = writer;
         mCombinedStats = combinedStats;
         mPartitions = partitions;
@@ -38,7 +41,8 @@ public class PartitionThread extends Thread
             {
                 PartitionTask partition = mPartitions.remove();
 
-                PartitionSlicer slicer = new PartitionSlicer(partition.TaskId, partition.Region, mConfig, mWriter, mCombinedStats);
+                PartitionSlicer slicer = new PartitionSlicer(
+                        partition.TaskId, partition.Region, mConfig, mCombinedReadGroups, mWriter, mCombinedStats);
 
                 boolean logAndGc = partition.TaskId > 0 && (partition.TaskId % 10) == 0;
                 if(logAndGc)
