@@ -14,7 +14,7 @@ public class JunctionData
 
     public final ReadRecord InitialRead;
     public final List<ReadGroup> JunctionGroups; // with a read matching the junction
-    public final List<ReadRecord> SupportingReads;
+    public final List<ReadGroup> SupportingGroups;
     public final List<RemoteJunction> RemoteJunctions;
 
     private boolean mHotspot;
@@ -25,7 +25,7 @@ public class JunctionData
         Orientation = orientation;
 
         JunctionGroups = Lists.newArrayList();
-        SupportingReads = Lists.newArrayList();
+        SupportingGroups = Lists.newArrayList();
         RemoteJunctions = Lists.newArrayList();
         InitialRead = read;
 
@@ -33,7 +33,7 @@ public class JunctionData
     }
 
     public int exactFragmentCount() { return JunctionGroups.size(); }
-    public int supportingReadCount() { return SupportingReads.size(); }
+    public int supportingReadCount() { return SupportingGroups.size(); }
     public int totalSupport() { return exactFragmentCount() + supportingReadCount(); }
     public boolean hotspot() { return mHotspot; }
     public void markHotspot() { mHotspot = true; }

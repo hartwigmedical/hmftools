@@ -8,10 +8,8 @@ import static com.hartwig.hmftools.common.samtools.SupplementaryReadData.SUPP_PO
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.INSERT_MAP_OVERLAP;
 import static com.hartwig.hmftools.svprep.reads.ReadRecord.maxDeleteLength;
-import static com.hartwig.hmftools.svprep.SvConstants.JUNCTION_SUPPORT_CAP;
 import static com.hartwig.hmftools.svprep.SvConstants.LOW_BASE_QUALITY;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
 import static com.hartwig.hmftools.svprep.SvConstants.SUPPORTING_READ_DISTANCE;
@@ -313,7 +311,7 @@ public class BucketData
                 // any length soft clipping at the same base
                 if(supportsJunction(read, junctionData, filterConfig))
                 {
-                    junctionData.SupportingReads.add(read);
+                    junctionData.SupportingGroups.add(new ReadGroup(read));
                     supportsJunction = true;
                 }
             }
@@ -344,7 +342,7 @@ public class BucketData
                 {
                     if(supportsJunction(read, junctionData, filterConfig))
                     {
-                        junctionData.SupportingReads.add(read);
+                        junctionData.SupportingGroups.add(new ReadGroup(read));
                         supportsJunction = true;
                     }
                 }

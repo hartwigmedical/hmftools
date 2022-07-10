@@ -1,9 +1,13 @@
 package com.hartwig.hmftools.svprep;
 
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
+import static com.hartwig.hmftools.svprep.WriteType.BAM;
+import static com.hartwig.hmftools.svprep.WriteType.READS;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -23,15 +27,26 @@ public class CombinedReadGroups
         mPerfCounter = new PerformanceCounter("ReadMerge");
     }
 
+    public void logPerfStats()
+    {
+        mPerfCounter.logStats();
+    }
+
     public synchronized List<ReadGroup> addIncompleteReadGroup(
             final String chrPartition, final Map<String,Map<String,ReadGroup>> chrIncompleteGroups)
     {
+        List<ReadGroup> completeGroups = Lists.newArrayList();
+
+        if(chrIncompleteGroups.isEmpty())
+            return completeGroups;
+
         mPerfCounter.start();
 
         int initTotalIncomplete = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
         int initChrIncomplete = chrIncompleteGroups.values().stream().mapToInt(x -> x.size()).sum();
 
-        List<ReadGroup> completeGroups = Lists.newArrayList();
+        // incomplete groups are looked up by the new chromosome partition to check for matches, and any which aren't found and
+        // stored against the remote chromosome partition
 
         for(Map.Entry<String,Map<String, ReadGroup>> entry : chrIncompleteGroups.entrySet())
         {
@@ -51,14 +66,14 @@ public class CombinedReadGroups
 
                 chrPartitionGroups.putAll(newIncompleteGroups);
 
-                SV_LOGGER.debug("added chromosome partitions pair({} & {}) newGroups({})",
+                SV_LOGGER.trace("added chromosome partitions pair({} & {}) newGroups({})",
                         chrPartition, otherChrPartition, newIncompleteGroups.size());
             }
             else
             {
                 mergeReadMaps(existingGroups, completeGroups, newIncompleteGroups);
 
-                SV_LOGGER.debug("combined chromosome partitions pair({} & {}) existing({}) new({}) complete({})",
+                SV_LOGGER.trace("combined chromosome partitions pair({} & {}) existing({}) new({}) complete({})",
                         chrPartition, otherChrPartition, existingGroups.size(), newIncompleteGroups.size(), completeGroups.size());
             }
         }
@@ -73,22 +88,43 @@ public class CombinedReadGroups
         return completeGroups;
     }
 
-    public void writeRemainingReadGroups(final ResultsWriter writer)
+    public void writeRemainingReadGroups(final ResultsWriter writer, final Set<WriteType> writeTypes)
     {
-        int remainingGroups = 0;
+        if(!writeTypes.contains(BAM) && !writeTypes.contains(READS))
+            return;
+
+        Map<String,ReadGroup> readGroups = Maps.newHashMap();
+
         for(Map<String,ReadGroup> readGroupMaps : mIncompleteReadGroups.values())
         {
             for(ReadGroup readGroup : readGroupMaps.values())
             {
-                ++remainingGroups;
-                writer.writeBamRecords(readGroup);
+                ReadGroup existingGroup = readGroups.get(readGroup.id());
+
+                if(existingGroup != null)
+                {
+                    existingGroup.merge(readGroup);
+                    existingGroup.setGroupStatus(null);
+                }
+                else
+                {
+                    readGroups.put(readGroup.id(), readGroup);
+                }
             }
         }
 
-        if(remainingGroups > 0)
+        if(writeTypes.contains(BAM))
+            readGroups.values().forEach(x -> writer.writeBamRecords(x));
+
+        if(writeTypes.contains(READS))
+            writer.writeReadData(readGroups.values().stream().collect(Collectors.toList()));
+
+        if(!readGroups.isEmpty())
         {
-            SV_LOGGER.info("remaining partial groups({})", remainingGroups);
+            SV_LOGGER.info("remaining partial groups({})", readGroups.size());
         }
+
+        mPerfCounter.logStats();
     }
 
     private static final String CHR_PARTITION_DELIM = "_";
@@ -155,32 +191,4 @@ public class CombinedReadGroups
             }
         }
     }
-
-    /*
-    public static Map<String,Map<String,ReadGroup>> formPartialGroupsMap(
-            final ChrBaseRegion region, int partitionSize, final Map<String,ReadGroup> readGroupMap)
-    {
-        Map<String,Map<String,ReadGroup>> chrPartitionGroupsMap = Maps.newHashMap();
-
-        for(ReadGroup readGroup : readGroupMap.values())
-        {
-            if(readGroup.isComplete()) // should have been handled earlier
-                continue;
-
-            String chrPartition = externalReadChrPartition(region, partitionSize, readGroup.reads());
-
-            Map<String,ReadGroup> groups = chrPartitionGroupsMap.get(chrPartition);
-
-            if(groups == null)
-            {
-                groups = Maps.newHashMap();
-                chrPartitionGroupsMap.put(chrPartition, groups);
-            }
-
-            groups.put(readGroup.id(), readGroup);
-        }
-
-       return chrPartitionGroupsMap;
-    }
-    */
 }

@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.svprep.SvConstants.MULTI_MAP_QUALITY_THRESHOLD;
+import static com.hartwig.hmftools.svprep.reads.ReadType.NO_SUPPORT;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
@@ -32,6 +33,7 @@ public class ReadRecord
     private final SupplementaryReadData mSupplementaryAlignment;
 
     private int mFilters;
+    private ReadType mReadType;
 
     public static ReadRecord from(final SAMRecord record) { return new ReadRecord(record); }
 
@@ -49,6 +51,7 @@ public class ReadRecord
         mFragmentInsertSize = abs(record.getInferredInsertSize());
         mSupplementaryAlignment = SupplementaryReadData.from(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
         mFilters = 0;
+        mReadType = NO_SUPPORT;
     }
 
     public String id() { return mRecord.getReadName(); }
@@ -94,6 +97,9 @@ public class ReadRecord
     public void setFilters(int filters) { mFilters = filters; }
     public int filters() { return mFilters; }
 
+    public void setReadType(ReadType type) { mReadType = type; }
+    public ReadType readType() { return mReadType; }
+
     public short mapQuality() { return (short)mRecord.getMappingQuality(); }
     public boolean isMultiMapped() { return mapQuality() <= MULTI_MAP_QUALITY_THRESHOLD; }
 
@@ -101,9 +107,9 @@ public class ReadRecord
 
     public String toString()
     {
-        return format("coords(%s:%d-%d) cigar(%s) mate(%s:%d) id(%s) flags(first=%s supp=%s reversed=%s)",
+        return format("coords(%s:%d-%d) cigar(%s) mate(%s:%d) id(%s) flags(first=%s supp=%s reversed=%s) hasSupp(%s)",
                 Chromosome, start(), end(), cigar().toString(), MateChromosome, MatePosStart, id(),
-                isFirstOfPair(), isSupplementaryAlignment(), isReadReversed());
+                isFirstOfPair(), isSupplementaryAlignment(), isReadReversed(), mSupplementaryAlignment != null);
     }
 
     public static int maxDeleteLength(final Cigar cigar)

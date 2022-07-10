@@ -15,6 +15,7 @@ public final class SvPrepTestUtils
     public static final int DEFAULT_BASE_QUAL = 37;
 
     public static final ReadFilterConfig READ_FILTERS = ReadFilterConfig.from(null);
+    public static final HotspotCache HOTSPOT_CACHE = new HotspotCache(null);
 
     public static String readIdStr(int readId) { return format("READ_%02d", readId); }
 

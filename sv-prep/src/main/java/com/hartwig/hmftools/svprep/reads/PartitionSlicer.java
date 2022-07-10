@@ -9,6 +9,12 @@ import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_FRACTION;
 import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_THRESHOLD;
 import static com.hartwig.hmftools.svprep.SvConstants.EXCLUDED_REGION_1_REF_37;
 import static com.hartwig.hmftools.svprep.SvConstants.EXCLUDED_REGION_1_REF_38;
+import static com.hartwig.hmftools.svprep.WriteType.BAM;
+import static com.hartwig.hmftools.svprep.WriteType.READS;
+import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
+import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
+import static com.hartwig.hmftools.svprep.reads.ReadType.NO_SUPPORT;
+import static com.hartwig.hmftools.svprep.reads.ReadType.SUPPORT;
 
 import java.io.File;
 import java.util.List;
@@ -49,7 +55,7 @@ public class PartitionSlicer
     private final PartitionStats mStats;
     private final CombinedStats mCombinedStats;
 
-    private final Map<String,ReadGroup> mReadGroups;
+    // private final Map<String,ReadGroup> mReadGroups;
 
     private final ReadRateTracker mReadRateTracker;
     private boolean mRateLimitTriggered;
@@ -89,7 +95,7 @@ public class PartitionSlicer
         mFilterRegion = mConfig.RefGenVersion == V37 && region.overlaps(EXCLUDED_REGION_1_REF_37) ? EXCLUDED_REGION_1_REF_37
                 : (mConfig.RefGenVersion == V38 && region.overlaps(EXCLUDED_REGION_1_REF_38) ? EXCLUDED_REGION_1_REF_38 : null);
 
-        mReadGroups = Maps.newHashMap();
+        // mReadGroups = Maps.newHashMap();
 
         mStats = new PartitionStats();
 
@@ -113,32 +119,32 @@ public class PartitionSlicer
 
         mPerCounters[PC_SLICE].stop();
 
+        if(mStats.TotalReads == 0)
+        {
+            mPerCounters[PC_TOTAL].stop();
+            return;
+        }
+
         mPerCounters[PC_JUNCTIONS].start();
 
-        mReadGroups.values().forEach(x -> processGroup(x));
+        // mReadGroups.values().forEach(x -> processGroup(x));
 
         mJunctionTracker.createJunctions();
         mJunctionTracker.filterJunctions();
 
-        mBuckets.processBuckets(-1, this::processBucket);
+        // mBuckets.processBuckets(-1, this::processBucket);
 
         mPerCounters[PC_JUNCTIONS].stop();
 
-        if(mStats.TotalReads > 0)
-        {
-            SV_LOGGER.debug("region({}) complete, stats({}) incompleteGroups({})",
-                    mRegion, mStats.toString(), mReadGroups.size());
+        writeData();
 
-            SV_LOGGER.debug("region({}) filters({})",
-                    mRegion, ReadFilterType.filterCountsToString(mStats.ReadFilterCounts));
-
-            writeData();
-
-            mCombinedStats.addPartitionStats(mStats);
-            mCombinedStats.addPerfCounters(mPerCounters);
-        }
+        SV_LOGGER.debug("region({}) complete, stats({})", mRegion, mStats.toString());
+        SV_LOGGER.debug("region({}) filters({})", mRegion, ReadFilterType.filterCountsToString(mStats.ReadFilterCounts));
 
         mPerCounters[PC_TOTAL].stop();
+
+        mCombinedStats.addPartitionStats(mStats);
+        mCombinedStats.addPerfCounters(mPerCounters);
 
         if(mRateLimitTriggered)
             System.gc();
@@ -193,9 +199,11 @@ public class PartitionSlicer
 
         ReadRecord read = ReadRecord.from(record);
         read.setFilters(filters);
+        read.setReadType(JUNCTION);
 
         mJunctionTracker.processRead(read);
 
+        /*
         if(!mRegion.containsPosition(read.MateChromosome, read.MatePosStart))
         {
             processSingleRead(read);
@@ -229,18 +237,7 @@ public class PartitionSlicer
             processGroup(readGroup);
             mReadGroups.remove(readGroup.id());
         }
-    }
-
-    private void processSingleRead(final ReadRecord read)
-    {
-        BucketData bucket = mBuckets.findBucket(read.start());
-        bucket.addReadGroup(new ReadGroup(read));
-    }
-
-    private void processGroup(final ReadGroup readGroup)
-    {
-        BucketData bucket = mBuckets.findBucket(readGroup.minStartPosition());
-        bucket.addReadGroup(readGroup);
+        */
     }
 
     private void processFilteredRead(final SAMRecord record, final int filters)
@@ -254,58 +251,60 @@ public class PartitionSlicer
         }
 
         // check for any evidence of support for an SV
-        if(!mReadFilters.isCandidateSupportingRead(record))
+        boolean isSupportCandidate = mReadFilters.isCandidateSupportingRead(record);
+
+        if(!isSupportCandidate && !mConfig.WriteTypes.contains(BAM))
             return;
 
         ReadRecord read = ReadRecord.from(record);
         read.setFilters(filters);
 
-        BucketData bucket = mBuckets.findBucket(read.start());
-        bucket.addSupportingRead(read);
+        if(isSupportCandidate)
+            read.setReadType(CANDIDATE_SUPPORT);
+
+        if(isSupportCandidate)
+        {
+            BucketData bucket = mBuckets.findBucket(read.start());
+            bucket.addSupportingRead(read);
+        }
 
         mJunctionTracker.processRead(read);
     }
 
     private void writeData()
     {
-        if(mConfig.WriteTypes.contains(WriteType.BAM))
+        boolean reconcileReadGroups = mConfig.WriteTypes.contains(BAM) || mConfig.WriteTypes.contains(READS);
+
+        if(reconcileReadGroups)
         {
             // the BAM file writes records by readId, so needs to combine all reads for a given fragment
             Map<String,Map<String,ReadGroup>> partialGroupsMap = Maps.newHashMap();
-            List<ReadGroup> localCompleteGroups = Lists.newArrayList();
+            List<ReadGroup> localGroups = Lists.newArrayList();
 
             String chrPartition = formChromosomePartition(mRegion.Chromosome, mRegion.start(), mConfig.PartitionSize);
 
-            for(ReadGroup readGroup : mJunctionTracker.readGroups().values())
-            {
-                if(readGroup.isComplete())
-                {
-                    localCompleteGroups.add(readGroup);
-                }
-                else
-                {
-                    String remoteChrPartition = externalReadChrPartition(mRegion, mConfig.PartitionSize, readGroup.reads());
-
-                    Map<String,ReadGroup> groups = partialGroupsMap.get(remoteChrPartition);
-
-                    if(groups == null)
-                    {
-                        groups = Maps.newHashMap();
-                        partialGroupsMap.put(remoteChrPartition, groups);
-                    }
-
-                    groups.put(readGroup.id(), readGroup);
-                }
-            }
+            mJunctionTracker.junctionGroups().forEach(x -> assignReadGroup(x, chrPartition, partialGroupsMap, localGroups));
+            mJunctionTracker.supportingGroups().forEach(x -> assignReadGroup(x, chrPartition, partialGroupsMap, localGroups));
 
             List<ReadGroup> remoteCompleteGroups = mCombinedReadGroups.addIncompleteReadGroup(chrPartition, partialGroupsMap);
 
-            SV_LOGGER.debug("region({}) readGroups({}) complete(local={} remote={}) partials({})",
-                    mRegion, mJunctionTracker.readGroups().values().size(), localCompleteGroups.size(), remoteCompleteGroups.size(),
-                    partialGroupsMap.size());
+            int localIncomplete = (int)localGroups.stream().filter(x -> x.isIncomplete()).count();
 
-            mWriter.writeBamRecords(localCompleteGroups);
-            mWriter.writeBamRecords(remoteCompleteGroups);
+            SV_LOGGER.debug("region({}) readGroups({}) complete(local={} remote={}) partials({}) localIncomplete({})",
+                    mRegion, mJunctionTracker.junctionGroups().size() + mJunctionTracker.supportingGroups().size(),
+                    localGroups.size(), remoteCompleteGroups.size(), partialGroupsMap.size(), localIncomplete);
+
+            if( mConfig.WriteTypes.contains(BAM))
+            {
+                mWriter.writeBamRecords(localGroups);
+                mWriter.writeBamRecords(remoteCompleteGroups);
+            }
+
+            if(mConfig.WriteTypes.contains(READS))
+            {
+                mWriter.writeReadData(localGroups);
+                mWriter.writeReadData(remoteCompleteGroups);
+            }
         }
 
         if(mConfig.WriteTypes.contains(WriteType.JUNCTIONS))
@@ -318,19 +317,78 @@ public class PartitionSlicer
             ++mStats.JunctionCount;
             mStats.JunctionFragmentCount += junctionData.exactFragmentCount();
             mStats.SupportingReadCount += junctionData.supportingReadCount();
+        }
+    }
 
-            if(mConfig.WriteTypes.contains(WriteType.READS))
+    private void assignReadGroup(
+            final ReadGroup readGroup, final String chrPartition,
+            final Map<String,Map<String,ReadGroup>> partialGroupsMap,final List<ReadGroup> localGroups)
+    {
+        readGroup.setGroupStatus(mRegion);
+
+        if(readGroup.spansPartitions())
+        {
+            String remoteChrPartition = externalReadChrPartition(mRegion, mConfig.PartitionSize, readGroup.reads());
+
+            if(remoteChrPartition == null || remoteChrPartition.equals(chrPartition))
             {
-                for(ReadGroup readGroup : junctionData.JunctionGroups)
-                {
-                    String groupStatus = readGroup.groupStatus();
-                    readGroup.reads().forEach(x -> mWriter.writeReadData(x, mId, junctionData.Position, "SV", groupStatus));
-                }
+                // missing a read local to this partition
+                localGroups.add(readGroup);
+                return;
+            }
 
-                junctionData.SupportingReads.forEach(x -> mWriter.writeReadData(
-                        x, mId, junctionData.Position, "SUPPORTING", "UNKNOWN"));
+            Map<String,ReadGroup> groups = partialGroupsMap.get(remoteChrPartition);
+
+            if(groups == null)
+            {
+                groups = Maps.newHashMap();
+                partialGroupsMap.put(remoteChrPartition, groups);
+            }
+
+            groups.put(readGroup.id(), readGroup);
+        }
+        else
+        {
+            localGroups.add(readGroup);
+        }
+    }
+
+    private boolean checkReadRateLimits(int positionStart)
+    {
+        boolean wasLimited = mReadRateTracker.isRateLimited();
+        int lastSegementReadCount = mReadRateTracker.readCount();
+
+        boolean handleRead = mReadRateTracker.handleRead(positionStart);
+
+        if(wasLimited != mReadRateTracker.isRateLimited())
+        {
+            if(mReadRateTracker.isRateLimited())
+            {
+                SV_LOGGER.info("region({}) rate limited with read count({}) at position({})",
+                        mRegion, lastSegementReadCount, positionStart);
+                mRateLimitTriggered = true;
+            }
+            else
+            {
+                SV_LOGGER.info("region({}) rate limit cleared at position({}), last read count({})",
+                        mRegion, positionStart, lastSegementReadCount);
             }
         }
+
+        return handleRead;
+    }
+
+    /*
+    private void processSingleRead(final ReadRecord read)
+    {
+        BucketData bucket = mBuckets.findBucket(read.start());
+        bucket.addReadGroup(new ReadGroup(read));
+    }
+
+    private void processGroup(final ReadGroup readGroup)
+    {
+        BucketData bucket = mBuckets.findBucket(readGroup.minStartPosition());
+        bucket.addReadGroup(readGroup);
     }
 
     private void processBucket(final BucketData bucket)
@@ -366,51 +424,16 @@ public class PartitionSlicer
             mWriter.writeBucketData(bucket, mId);
         }
 
-        if(mConfig.WriteTypes.contains(WriteType.JUNCTIONS))
-        {
-            mWriter.writeJunctionData(mRegion.Chromosome, bucket.junctions());
-        }
-
-        if(mConfig.WriteTypes.contains(WriteType.BAM))
-        {
-            mWriter.writeBamRecords(bucket);
-        }
-
         if(mConfig.WriteTypes.contains(WriteType.READS))
         {
             for(ReadGroup readGroup : bucket.readGroups())
             {
-                boolean groupComplete = readGroup.isComplete();
-                readGroup.reads().forEach(x -> mWriter.writeReadData(x, mId, bucket.id(), "SV", readGroup.groupStatus()));
+                readGroup.reads().forEach(x -> mWriter.writeReadData(x, mId, bucket.id(), readGroup.groupStatus()));
             }
 
             // group complete set false since reads are not grouped for now
-            bucket.supportingReads().forEach(x -> mWriter.writeReadData(x, mId, bucket.id(), "SUPPORTING", "UNKNOWN"));
+            bucket.supportingReads().forEach(x -> mWriter.writeReadData(x, mId, bucket.id(), "UNKNOWN"));
         }
     }
-
-    private boolean checkReadRateLimits(int positionStart)
-    {
-        boolean wasLimited = mReadRateTracker.isRateLimited();
-        int lastSegementReadCount = mReadRateTracker.readCount();
-
-        boolean handleRead = mReadRateTracker.handleRead(positionStart);
-
-        if(wasLimited != mReadRateTracker.isRateLimited())
-        {
-            if(mReadRateTracker.isRateLimited())
-            {
-                SV_LOGGER.info("region({}) rate limited with read count({}) at position({})",
-                        mRegion, lastSegementReadCount, positionStart);
-                mRateLimitTriggered = true;
-            }
-            else
-            {
-                SV_LOGGER.info("region({}) rate limit cleared at position({}), last read count({})",
-                        mRegion, positionStart, lastSegementReadCount);
-            }
-        }
-
-        return handleRead;
-    }
+    */
 }

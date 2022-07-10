@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConfig.createCmdLineOptions;
 import static com.hartwig.hmftools.svprep.WriteType.BAM;
+import static com.hartwig.hmftools.svprep.WriteType.READS;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
@@ -52,8 +53,7 @@ public class SvPrepApplication
             System.gc();
         }
 
-        if(mConfig.WriteTypes.contains(BAM))
-            mCombinedReadGroups.writeRemainingReadGroups(mWriter);
+        mCombinedReadGroups.writeRemainingReadGroups(mWriter, mConfig.WriteTypes);
 
         mWriter.close();
 

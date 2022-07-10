@@ -2,8 +2,6 @@ package com.hartwig.hmftools.svprep.reads;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.svprep.reads.ReadFilterType.INSERT_MAP_OVERLAP;
-
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -14,150 +12,100 @@ public class ReadGroup
 {
     private final List<ReadRecord> mReads;
     private int mMinPositionStart;
-    private boolean mIsComplete;
-    private boolean mIsPartial; // all reads captured for a given region
 
-    private short mFirstInPairExpected;
-    private short mSecondInPairExpected;
-    private short mFirstInPairPresent;
-    private short mSecondInPairPresent;
-    private boolean mHasExternalReads;
+    private GroupStatus mStatus;
+    private boolean mSpansPartitions; // reads span a partition
 
-    public ReadGroup()
+    public ReadGroup(final ReadRecord read)
     {
         mReads = Lists.newArrayListWithCapacity(2);
-        mFirstInPairExpected = 0;
-        mSecondInPairExpected = 0;
-        mFirstInPairPresent = 0;
-        mSecondInPairPresent = 0;
-        mHasExternalReads = false;
+        mStatus = GroupStatus.UNSET;
+        mSpansPartitions = false;
+        addRead(read);
     }
 
     public final String id() { return mReads.get(0).id(); }
     public List<ReadRecord> reads() { return mReads; }
 
-    public boolean isComplete() { return mIsComplete; }
-    public boolean isPartial() { return mIsPartial; }
-    public boolean isIncomplete() { return mIsPartial; }
+    public boolean isComplete() { return mStatus == GroupStatus.COMPLETE; }
+    public boolean isPartial() { return mStatus == GroupStatus.PARTIAL; }
+    public boolean isIncomplete() { return mStatus == GroupStatus.INCOMPLETE; }
+    public boolean spansPartitions() { return mSpansPartitions; }
 
-    public boolean isJunctionFragment(boolean allowLowMapQual)
+    private enum GroupStatus
     {
-        return mReads.stream().anyMatch(x -> x.filters() == 0 || (allowLowMapQual && x.filters() == ReadFilterType.MIN_MAP_QUAL.flag()));
-    }
-
-    public void addRead(final ReadRecord read, final ChrBaseRegion region)
-    {
-        mReads.add(read);
-
-        if(read.isFirstOfPair())
-        {
-            // ++mFirstInPairExpected;
-            ++mFirstInPairPresent;
-
-            if(mFirstInPairExpected == 1)
-            {
-                // check whether the supplementary falls in the same region
-                if(read.hasSuppAlignment())
-                {
-                    if(supplementaryInRegion(read.supplementaryAlignment(), region))
-                        ++mFirstInPairExpected;
-                    else
-                        mHasExternalReads = true;
-                }
-            }
-
-            if(region.containsPosition(read.MateChromosome, read.MatePosStart))
-                ++mSecondInPairExpected;
-            else
-                mHasExternalReads = true;
-        }
-        else
-        {
-            ++mSecondInPairPresent;
-
-            if(mSecondInPairExpected == 1)
-            {
-                if(read.hasSuppAlignment())
-                {
-                    if(supplementaryInRegion(read.supplementaryAlignment(), region))
-                        ++mSecondInPairExpected;
-                }
-                else
-                {
-                    mHasExternalReads = true;
-                }
-            }
-
-            if(region.containsPosition(read.MateChromosome, read.MatePosStart))
-                ++mFirstInPairExpected;
-            else
-                mHasExternalReads = true;
-        }
-
-        if(mFirstInPairExpected == mFirstInPairPresent && mSecondInPairExpected == mSecondInPairPresent)
-        {
-            if(mHasExternalReads)
-                mIsPartial = true;
-            else
-                mIsComplete = true;
-        }
-    }
-
-    public String groupStatus() { return mIsComplete ? "COMPLETE" : (mIsPartial ? "PARTIAL" : "INCOMPLETE"); }
-
-    public void merge(final ReadGroup other)
-    {
-        other.reads().forEach(x -> addRead(x));
-    }
-
-    private static boolean supplementaryInRegion(final SupplementaryReadData suppData, final ChrBaseRegion region)
-    {
-        return suppData != null && region.containsPosition(suppData.Chromosome, suppData.Position);
-    }
-
-    public ReadGroup(final ReadRecord read)
-    {
-        mReads = Lists.newArrayListWithCapacity(2);
-        addRead(read);
+        UNSET,
+        INCOMPLETE,
+        PARTIAL, // has all reads for initial partial, others are remote
+        COMPLETE;
     }
 
     public void addRead(final ReadRecord read)
     {
         mReads.add(read);
-
-        if(mReads.size() == 1)
-        {
-            mMinPositionStart = read.start();
-            mIsComplete = false;
-            return;
-        }
-
-        mMinPositionStart = min(mMinPositionStart, read.start());
-        mIsComplete = isGroupComplete(mReads);
     }
 
-    public static boolean isGroupComplete(final List<ReadRecord> reads)
+    public String groupStatus() { return mStatus.toString(); }
+
+    public void merge(final ReadGroup other)
     {
+        other.reads().forEach(x -> addRead(x));
+        setGroupStatus(null);
+    }
+
+    public boolean isSimpleComplete()
+    {
+        // no supplementaries and both reads received
+        return mReads.size() == 2 && mReads.stream().allMatch(x -> !x.hasSuppAlignment() && !x.isSupplementaryAlignment());
+    }
+
+    public boolean allNoSupport() { return mReads.stream().allMatch(x -> x.readType() == ReadType.NO_SUPPORT); }
+
+    public void setGroupStatus(final ChrBaseRegion region)
+    {
+        // use the provided partition region to determine if any reads in other partitions are missing
         boolean firstHasSupp = false;
         boolean secondHasSupp = false;
-        int firstCount = 0;
-        int secondCount = 0;
 
-        for(ReadRecord read : reads)
+        for(ReadRecord read : mReads)
         {
             if(read.isFirstOfPair())
             {
-                ++firstCount;
-                firstHasSupp |= read.isSupplementaryAlignment() || read.supplementaryAlignment() != null;
+                if(read.hasSuppAlignment() || read.isSupplementaryAlignment())
+                    firstHasSupp = true;
             }
             else
             {
-                ++secondCount;
-                secondHasSupp |= read.isSupplementaryAlignment() || read.supplementaryAlignment() != null;
+                if(read.hasSuppAlignment() || read.isSupplementaryAlignment())
+                    secondHasSupp = true;
+            }
+
+            if(!mSpansPartitions && region != null)
+            {
+                if(read.hasSuppAlignment() && !supplementaryInRegion(read.supplementaryAlignment(), region))
+                    mSpansPartitions = true;
+                else if(!region.containsPosition(read.MateChromosome, read.MatePosStart))
+                    mSpansPartitions = true;
             }
         }
 
-        return ((!firstHasSupp && firstCount == 1) || firstCount == 2) && ((!secondHasSupp && secondCount == 1) || secondCount == 2);
+        if(mSpansPartitions && region != null)
+        {
+            mStatus = GroupStatus.PARTIAL;
+        }
+        else
+        {
+            int requiredCount = 2 + (firstHasSupp ? 1 : 0) + (secondHasSupp ? 1 : 0);
+            if(mReads.size() >= requiredCount)
+                mStatus = GroupStatus.COMPLETE;
+            else
+                mStatus = GroupStatus.INCOMPLETE;
+        }
+    }
+
+    private static boolean supplementaryInRegion(final SupplementaryReadData suppData, final ChrBaseRegion region)
+    {
+        return suppData != null && region.containsPosition(suppData.Chromosome, suppData.Position);
     }
 
     public int size() { return mReads.size(); }
@@ -166,7 +114,6 @@ public class ReadGroup
 
     public String toString()
     {
-        return String.format("%s reads(%d) state(%s)",
-                id(), mReads.size(), mIsComplete ? "complete" : (mIsPartial ? "partial" : "incomplete"));
+        return String.format("%s reads(%d) state(%s) hasExternal(%s)", id(), mReads.size(), mStatus, mSpansPartitions);
     }
 }
