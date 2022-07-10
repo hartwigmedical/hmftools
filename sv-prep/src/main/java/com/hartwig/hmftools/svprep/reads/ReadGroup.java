@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.svprep.reads;
 
-import static java.lang.Math.min;
-
 import java.util.List;
+import java.util.Set;
 
+import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
@@ -11,16 +11,17 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 public class ReadGroup
 {
     private final List<ReadRecord> mReads;
-    private int mMinPositionStart;
 
     private GroupStatus mStatus;
     private boolean mSpansPartitions; // reads span a partition
+    private Set<Integer> mJunctionPositions;
 
     public ReadGroup(final ReadRecord read)
     {
         mReads = Lists.newArrayListWithCapacity(2);
         mStatus = GroupStatus.UNSET;
         mSpansPartitions = false;
+        mJunctionPositions = null;
         addRead(read);
     }
 
@@ -28,9 +29,9 @@ public class ReadGroup
     public List<ReadRecord> reads() { return mReads; }
 
     public boolean isComplete() { return mStatus == GroupStatus.COMPLETE; }
-    public boolean isPartial() { return mStatus == GroupStatus.PARTIAL; }
     public boolean isIncomplete() { return mStatus == GroupStatus.INCOMPLETE; }
     public boolean spansPartitions() { return mSpansPartitions; }
+    public Set<Integer> junctionPositions() { return mJunctionPositions; }
 
     private enum GroupStatus
     {
@@ -43,6 +44,14 @@ public class ReadGroup
     public void addRead(final ReadRecord read)
     {
         mReads.add(read);
+    }
+
+    public void addJunctionPosition(int position)
+    {
+        if(mJunctionPositions == null)
+            mJunctionPositions = Sets.newHashSet();
+
+        mJunctionPositions.add(position);
     }
 
     public String groupStatus() { return mStatus.toString(); }
@@ -109,8 +118,6 @@ public class ReadGroup
     }
 
     public int size() { return mReads.size(); }
-
-    public int minStartPosition() { return mMinPositionStart; }
 
     public String toString()
     {

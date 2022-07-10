@@ -42,6 +42,7 @@ public class JunctionTracker
     private final List<JunctionData> mJunctions; // ordered by position
     private final List<ReadGroup> mJunctionGroups;
     private final List<ReadGroup> mSupportingGroups;
+    private int mInitialSupportingFrags;
 
     public JunctionTracker(final ChrBaseRegion region, final ReadFilterConfig config, final HotspotCache hotspotCache)
     {
@@ -53,11 +54,13 @@ public class JunctionTracker
         mJunctions = Lists.newArrayList();
         mJunctionGroups = Lists.newArrayList();
         mSupportingGroups = Lists.newArrayList();
+        mInitialSupportingFrags = 0;
     }
 
     public List<JunctionData> junctions() { return mJunctions; }
     public List<ReadGroup> junctionGroups() { return mJunctionGroups; }
     public List<ReadGroup> supportingGroups() { return mSupportingGroups; }
+    public int initialSupportingFrags() { return mInitialSupportingFrags; }
 
     public void processRead(final ReadRecord read)
     {
@@ -103,6 +106,8 @@ public class JunctionTracker
                 candidateSupportGroups.add(readGroup);
             }
         }
+
+        mInitialSupportingFrags = candidateSupportGroups.size();
 
         Set<JunctionData> supportedJunctions = Sets.newHashSet();
         for(ReadGroup readGroup : candidateSupportGroups)

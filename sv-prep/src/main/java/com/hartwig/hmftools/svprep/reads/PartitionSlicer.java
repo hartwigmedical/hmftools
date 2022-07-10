@@ -13,8 +13,6 @@ import static com.hartwig.hmftools.svprep.WriteType.BAM;
 import static com.hartwig.hmftools.svprep.WriteType.READS;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
-import static com.hartwig.hmftools.svprep.reads.ReadType.NO_SUPPORT;
-import static com.hartwig.hmftools.svprep.reads.ReadType.SUPPORT;
 
 import java.io.File;
 import java.util.List;
@@ -23,7 +21,6 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
-import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.CombinedReadGroups;
@@ -50,12 +47,9 @@ public class PartitionSlicer
     private final BamSlicer mBamSlicer;
 
     private final JunctionTracker mJunctionTracker;
-    private final PartitionBuckets mBuckets;
 
     private final PartitionStats mStats;
     private final CombinedStats mCombinedStats;
-
-    // private final Map<String,ReadGroup> mReadGroups;
 
     private final ReadRateTracker mReadRateTracker;
     private boolean mRateLimitTriggered;
@@ -85,8 +79,6 @@ public class PartitionSlicer
 
         mBamSlicer = new BamSlicer(0, false, true, false);
 
-        mBuckets = new PartitionBuckets(mRegion, mConfig.PartitionSize, mConfig.BucketSize);
-
         int rateSegmentLength = mConfig.PartitionSize / DOWN_SAMPLE_FRACTION;
         int downsampleThreshold = DOWN_SAMPLE_THRESHOLD / DOWN_SAMPLE_FRACTION;
         mReadRateTracker = new ReadRateTracker(rateSegmentLength, mRegion.start(), downsampleThreshold);
@@ -94,8 +86,6 @@ public class PartitionSlicer
 
         mFilterRegion = mConfig.RefGenVersion == V37 && region.overlaps(EXCLUDED_REGION_1_REF_37) ? EXCLUDED_REGION_1_REF_37
                 : (mConfig.RefGenVersion == V38 && region.overlaps(EXCLUDED_REGION_1_REF_38) ? EXCLUDED_REGION_1_REF_38 : null);
-
-        // mReadGroups = Maps.newHashMap();
 
         mStats = new PartitionStats();
 
@@ -127,12 +117,8 @@ public class PartitionSlicer
 
         mPerCounters[PC_JUNCTIONS].start();
 
-        // mReadGroups.values().forEach(x -> processGroup(x));
-
         mJunctionTracker.createJunctions();
         mJunctionTracker.filterJunctions();
-
-        // mBuckets.processBuckets(-1, this::processBucket);
 
         mPerCounters[PC_JUNCTIONS].stop();
 
@@ -146,7 +132,7 @@ public class PartitionSlicer
         mCombinedStats.addPartitionStats(mStats);
         mCombinedStats.addPerfCounters(mPerCounters);
 
-        if(mRateLimitTriggered)
+        if(mRateLimitTriggered || mStats.TotalReads > DOWN_SAMPLE_THRESHOLD / 10)
             System.gc();
     }
 
@@ -202,42 +188,6 @@ public class PartitionSlicer
         read.setReadType(JUNCTION);
 
         mJunctionTracker.processRead(read);
-
-        /*
-        if(!mRegion.containsPosition(read.MateChromosome, read.MatePosStart))
-        {
-            processSingleRead(read);
-            return;
-        }
-
-        ReadGroup readGroup = mReadGroups.get(read.id());
-
-        if(readGroup == null)
-        {
-            // cache the read waiting for its mate
-            mReadGroups.put(read.id(), new ReadGroup(read));
-            return;
-        }
-
-        readGroup.addRead(read);
-
-        if(readGroup.isComplete())
-        {
-            processGroup(readGroup);
-            mReadGroups.remove(readGroup.id());
-            return;
-        }
-
-        // if either read has a supplementary in another partition then process this incomplete group now
-        SupplementaryReadData suppData = readGroup.reads().stream()
-                .filter(x -> x.hasSuppAlignment()).findFirst().map(x -> x.supplementaryAlignment()).orElse(null);
-
-        if(suppData != null && !mRegion.containsPosition(suppData.Chromosome, suppData.Position))
-        {
-            processGroup(readGroup);
-            mReadGroups.remove(readGroup.id());
-        }
-        */
     }
 
     private void processFilteredRead(final SAMRecord record, final int filters)
@@ -261,12 +211,6 @@ public class PartitionSlicer
 
         if(isSupportCandidate)
             read.setReadType(CANDIDATE_SUPPORT);
-
-        if(isSupportCandidate)
-        {
-            BucketData bucket = mBuckets.findBucket(read.start());
-            bucket.addSupportingRead(read);
-        }
 
         mJunctionTracker.processRead(read);
     }
@@ -312,12 +256,10 @@ public class PartitionSlicer
             mWriter.writeJunctionData(mRegion.Chromosome, mJunctionTracker.junctions());
         }
 
-        for(JunctionData junctionData : mJunctionTracker.junctions())
-        {
-            ++mStats.JunctionCount;
-            mStats.JunctionFragmentCount += junctionData.exactFragmentCount();
-            mStats.SupportingReadCount += junctionData.supportingReadCount();
-        }
+        mStats.JunctionCount += mJunctionTracker.junctions().size();
+        mStats.JunctionFragmentCount += mJunctionTracker.junctionGroups().size();
+        mStats.SupportingFragmentCount += mJunctionTracker.supportingGroups().size();
+        mStats.InitialSupportingFragmentCount += mJunctionTracker.initialSupportingFrags();
     }
 
     private void assignReadGroup(
@@ -377,63 +319,4 @@ public class PartitionSlicer
 
         return handleRead;
     }
-
-    /*
-    private void processSingleRead(final ReadRecord read)
-    {
-        BucketData bucket = mBuckets.findBucket(read.start());
-        bucket.addReadGroup(new ReadGroup(read));
-    }
-
-    private void processGroup(final ReadGroup readGroup)
-    {
-        BucketData bucket = mBuckets.findBucket(readGroup.minStartPosition());
-        bucket.addReadGroup(readGroup);
-    }
-
-    private void processBucket(final BucketData bucket)
-    {
-        // establish junction positions and any supporting read evidence
-        bucket.assignJunctionReads(mReadFilters.config());
-
-        // pass on any junctions and supporting reads that belong in the next bucket
-        mBuckets.transferToNext(bucket);
-
-        // apply basic filters
-        bucket.filterJunctions(mConfig.Hotspots, mReadFilters.config());
-
-        if(bucket.junctions().isEmpty())
-        {
-            ++mStats.FilteredBuckets;
-            return;
-        }
-
-        ++mStats.Buckets;
-
-        mStats.InitialSupportingReadCount += bucket.initialSupportingReadCount();
-
-        for(JunctionData junctionData : bucket.junctions())
-        {
-            ++mStats.JunctionCount;
-            mStats.JunctionFragmentCount += junctionData.exactFragmentCount();
-            mStats.SupportingReadCount += junctionData.supportingReadCount();
-        }
-
-        if(mConfig.WriteTypes.contains(WriteType.BUCKET_STATS))
-        {
-            mWriter.writeBucketData(bucket, mId);
-        }
-
-        if(mConfig.WriteTypes.contains(WriteType.READS))
-        {
-            for(ReadGroup readGroup : bucket.readGroups())
-            {
-                readGroup.reads().forEach(x -> mWriter.writeReadData(x, mId, bucket.id(), readGroup.groupStatus()));
-            }
-
-            // group complete set false since reads are not grouped for now
-            bucket.supportingReads().forEach(x -> mWriter.writeReadData(x, mId, bucket.id(), "UNKNOWN"));
-        }
-    }
-    */
 }

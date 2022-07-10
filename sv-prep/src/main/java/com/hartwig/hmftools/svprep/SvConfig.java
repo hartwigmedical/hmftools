@@ -16,7 +16,6 @@ import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_BUCKET_SIZE;
 import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_CHR_PARTITION_SIZE;
 import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_READ_LENGTH;
-import static com.hartwig.hmftools.svprep.WriteType.BUCKET_STATS;
 
 import java.util.Arrays;
 import java.util.List;
@@ -124,7 +123,7 @@ public class SvConfig
         }
         else
         {
-            WriteTypes.add(BUCKET_STATS);
+            WriteTypes.add(WriteType.JUNCTIONS);
         }
 
         SpecificChromosomes = Lists.newArrayList();
@@ -161,7 +160,6 @@ public class SvConfig
         {
             case SV_BED: return filename + "bed";
             case READS: return filename + "reads.csv";
-            case BUCKET_STATS: return filename + "buckets.csv";
             case BAM: return filename + "bam";
             case JUNCTIONS: return filename + "junctions.csv";
             case FRAGMENT_LENGTH_DIST: return filename + "fragment_lengths";

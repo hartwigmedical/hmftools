@@ -13,10 +13,7 @@ import static junit.framework.TestCase.assertEquals;
 
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.reads.JunctionTracker;
-import com.hartwig.hmftools.svprep.reads.PartitionBuckets;
-import com.hartwig.hmftools.svprep.reads.ReadGroup;
 import com.hartwig.hmftools.svprep.reads.ReadRecord;
-import com.hartwig.hmftools.svprep.reads.BucketData;
 import com.hartwig.hmftools.svprep.reads.ReadType;
 
 import org.junit.Test;
