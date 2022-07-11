@@ -43,6 +43,7 @@ public class SvConfig
 
     public final ReadFilters ReadFiltering;
     public final HotspotCache Hotspots;
+    public final BlacklistLocations Blacklist;
 
     public final int PartitionSize;
     public final int BucketSize;
@@ -67,6 +68,7 @@ public class SvConfig
     public static final String SAMPLE = "sample";
     private static final String BAM_FILE = "bam_file";
     private static final String KNOWN_FUSION_BED = "known_fusion_bed";
+    private static final String BLACKLIST_BED = "blacklist_bed";
 
     private static final String WRITE_TYPES = "write_types";
 
@@ -98,6 +100,7 @@ public class SvConfig
         RefGenVersion = cmd.hasOption(REF_GENOME_VERSION) ? RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION)) : V37;
 
         Hotspots = new HotspotCache(cmd.getOptionValue(KNOWN_FUSION_BED));
+        Blacklist = new BlacklistLocations(cmd.getOptionValue(BLACKLIST_BED));
 
         PartitionSize = DEFAULT_CHR_PARTITION_SIZE;
         BucketSize = DEFAULT_BUCKET_SIZE;
@@ -179,6 +182,7 @@ public class SvConfig
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version - accepts 37 (default) or 38");
         options.addOption(KNOWN_FUSION_BED, true, "Known fusion hotspot BED file");
+        options.addOption(BLACKLIST_BED, true, "Blacklist regions BED file");
         options.addOption(READ_LENGTH, true, "Read length");
         options.addOption(CALC_FRAG_LENGTH, false, "Calculate distribution for fragment length");
         options.addOption(FRAG_LENGTH_RANGE, true, "Empirical fragment length range: Min:Max");

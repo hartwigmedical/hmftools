@@ -10,6 +10,8 @@ public class PartitionStats
     public int InitialSupportingFragmentCount;
     public int SupportingFragmentCount;
 
+
+
     public final int[] ReadFilterCounts;
 
     public PartitionStats()

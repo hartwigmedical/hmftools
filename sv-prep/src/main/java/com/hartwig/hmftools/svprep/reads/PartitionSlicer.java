@@ -72,7 +72,7 @@ public class PartitionSlicer
         mRegion = region;
         mCombinedStats = combinedStats;
 
-        mJunctionTracker = new JunctionTracker(mRegion, mConfig.ReadFiltering.config(), mConfig.Hotspots);
+        mJunctionTracker = new JunctionTracker(mRegion, mConfig.ReadFiltering.config(), mConfig.Hotspots, mConfig.Blacklist);
 
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
@@ -238,7 +238,7 @@ public class PartitionSlicer
                     mRegion, mJunctionTracker.junctionGroups().size() + mJunctionTracker.supportingGroups().size(),
                     localGroups.size(), remoteCompleteGroups.size(), partialGroupsMap.size(), localIncomplete);
 
-            if( mConfig.WriteTypes.contains(BAM))
+            if(mConfig.WriteTypes.contains(BAM))
             {
                 mWriter.writeBamRecords(localGroups);
                 mWriter.writeBamRecords(remoteCompleteGroups);

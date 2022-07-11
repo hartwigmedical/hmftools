@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.samtools.SupplementaryReadData.SUPP_POS_STRAND;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
@@ -29,7 +30,9 @@ import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.samtools.SoftClipSide;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.svprep.BlacklistLocations;
 import com.hartwig.hmftools.svprep.HotspotCache;
 
 import htsjdk.samtools.CigarElement;
@@ -39,18 +42,30 @@ public class JunctionTracker
     private final ChrBaseRegion mRegion;
     private final ReadFilterConfig mFilterConfig;
     private final HotspotCache mHotspotCache;
+    private final List<BaseRegion> mBlacklistRegions;
 
     private final Map<String,ReadGroup> mReadGroups; // keyed by readId
     private final List<JunctionData> mJunctions; // ordered by position
-    private final List<ReadGroup> mJunctionGroups;
-    private final List<ReadGroup> mSupportingGroups;
+    private final List<ReadGroup> mJunctionGroups; // groups used to form a junction
+    private final List<ReadGroup> mSupportingGroups; // groups supporing a junction
     private int mInitialSupportingFrags;
 
-    public JunctionTracker(final ChrBaseRegion region, final ReadFilterConfig config, final HotspotCache hotspotCache)
+    public JunctionTracker(
+            final ChrBaseRegion region, final ReadFilterConfig config, final HotspotCache hotspotCache, final BlacklistLocations blacklist)
     {
         mRegion = region;
         mFilterConfig = config;
         mHotspotCache = hotspotCache;
+
+        mBlacklistRegions = Lists.newArrayList();
+
+        List<BaseRegion> chrRegions = blacklist.getRegions(mRegion.Chromosome);
+
+        if(chrRegions != null)
+        {
+            chrRegions.stream().filter(x -> positionsOverlap(mRegion.start(), mRegion.end(), x.start(), x.end()))
+                    .forEach(x -> mBlacklistRegions.add(x));
+        }
 
         mReadGroups = Maps.newHashMap();
         mJunctions = Lists.newArrayList();
@@ -86,6 +101,9 @@ public class JunctionTracker
 
         for(ReadGroup readGroup : mReadGroups.values())
         {
+            if(overlapsBlacklist(readGroup)) // avoid creating any junction from a blacklist region
+                continue;
+
             // ignore any group with a short overlapping fragment, likely adapter
             if(readGroup.reads().stream().anyMatch(x -> ReadFilterType.isSet(x.filters(), INSERT_MAP_OVERLAP)))
                 continue;
@@ -125,6 +143,7 @@ public class JunctionTracker
             if(!supportedJunctions.isEmpty())
             {
                 supportedJunctions.forEach(x -> x.SupportingGroups.add(readGroup));
+                supportedJunctions.forEach(x -> readGroup.addJunctionPosition(x.Position));
                 mSupportingGroups.add(readGroup);
             }
         }
@@ -139,7 +158,6 @@ public class JunctionTracker
     {
         List<JunctionData> junctions = Lists.newArrayList();
         List<RemoteJunction> remoteJunctions = Lists.newArrayList();
-        // ReadRecord remoteJunctionRead = null;
 
         for(ReadRecord read : readGroup.reads())
         {
@@ -172,20 +190,12 @@ public class JunctionTracker
             }
         }
 
-        /*
-        if(junctions.isEmpty() && remoteJunction != null && remoteJunction.Chromosome.equals(mRegion.Chromosome))
-        {
-            // convert this junction in a latter bucket to a junction for this group
-            junctions.add(getOrCreateJunction(remoteJunctionRead, remoteJunction.Orientation));
-            remoteJunction = null;
-        }
-        */
-
         if(junctions.isEmpty())
             return;
 
         mJunctionGroups.add(readGroup);
         junctions.forEach(x -> x.JunctionGroups.add(readGroup));
+        junctions.forEach(x -> readGroup.addJunctionPosition(x.Position));
 
         if(!remoteJunctions.isEmpty())
         {
@@ -201,6 +211,17 @@ public class JunctionTracker
                 }
             }
         }
+    }
+
+    private boolean overlapsBlacklist(final ReadGroup readGroup)
+    {
+        for(BaseRegion region : mBlacklistRegions)
+        {
+            if(readGroup.reads().stream().anyMatch(x -> positionsOverlap(x.start(), x.end(), region.start(), region.end())))
+                return true;
+        }
+
+        return false;
     }
 
     private void handleInternalIndel(final ReadGroup readGroup, final ReadRecord read)
@@ -263,7 +284,6 @@ public class JunctionTracker
     {
         // junctions are stored in ascending order to make finding them more efficient, especially for supporting reads
         int index = 0;
-
 
         while(index < mJunctions.size())
         {

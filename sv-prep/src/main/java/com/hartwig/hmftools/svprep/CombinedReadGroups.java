@@ -80,7 +80,7 @@ public class CombinedReadGroups
 
         int newTotalIncomplete = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
 
-        SV_LOGGER.info("chromosomePartition({}) complete({}) partials chrPartition({}) total({} -> {})",
+        SV_LOGGER.debug("chromosomePartition({}) complete({}) partials chrPartition({}) total({} -> {})",
                 chrPartition, completeGroups.size(), initChrIncomplete, initTotalIncomplete, newTotalIncomplete);
 
         mPerfCounter.stop();
