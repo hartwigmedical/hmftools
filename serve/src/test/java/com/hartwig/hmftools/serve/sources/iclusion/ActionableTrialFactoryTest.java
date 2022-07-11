@@ -10,6 +10,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTumorLocation;
 import com.hartwig.hmftools.iclusion.datamodel.ImmutableIclusionTumorLocation;
+import com.hartwig.hmftools.serve.cancertype.CancerTypeConstants;
 import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 import com.hartwig.hmftools.serve.curation.DoidLookupTestFactory;
 
@@ -21,7 +22,7 @@ public class ActionableTrialFactoryTest {
     @Test
     public void canCreateMultipleActionableTrials() {
         String location1 = "loc1";
-        String loc1Doid1 = ActionableTrialFactory.CANCER_DOID;
+        String loc1Doid1 = CancerTypeConstants.CANCER_DOID;
         String loc1Doid2 = "loc1Doid2";
         String location2 = "loc2";
         String loc2Doid1 = "loc2Doid2";
@@ -42,10 +43,10 @@ public class ActionableTrialFactoryTest {
         assertEquals(treatment, actionableTrials.get(0).treatment().treament());
         assertEquals(location1, actionableTrials.get(0).applicableCancerType().name());
         assertEquals(loc1Doid1, actionableTrials.get(0).applicableCancerType().doid());
-        assertEquals(Sets.newHashSet(ActionableTrialFactory.REFRACTORY_HEMATOLOGIC_TYPE,
+        assertEquals(Sets.newHashSet(CancerTypeConstants.REFRACTORY_HEMATOLOGIC_TYPE,
                 ImmutableCancerType.builder().name(blacklistLocation1).doid(blacklistDoid1).build(),
-                ActionableTrialFactory.BONE_MARROW_TYPE,
-                ActionableTrialFactory.LEUKEMIA_TYPE), actionableTrials.get(0).blacklistCancerTypes());
+                CancerTypeConstants.BONE_MARROW_TYPE,
+                CancerTypeConstants.LEUKEMIA_TYPE), actionableTrials.get(0).blacklistCancerTypes());
 
         assertEquals(treatment, actionableTrials.get(1).treatment().treament());
         assertEquals(location1, actionableTrials.get(1).applicableCancerType().name());
@@ -82,7 +83,7 @@ public class ActionableTrialFactoryTest {
 
         IclusionTumorLocation location = ImmutableIclusionTumorLocation.builder()
                 .primaryTumorLocation("cancer")
-                .addDoids(ActionableTrialFactory.CANCER_DOID)
+                .addDoids(CancerTypeConstants.CANCER_DOID)
                 .addDoids("another doid")
                 .build();
 
@@ -91,17 +92,17 @@ public class ActionableTrialFactoryTest {
         assertEquals(2, actionableTrialsWithCancer.size());
         assertEquals("trial", actionableTrialsWithCancer.get(0).treatment().treament());
         assertEquals("cancer", actionableTrialsWithCancer.get(0).applicableCancerType().name());
-        assertEquals(ActionableTrialFactory.CANCER_DOID, actionableTrialsWithCancer.get(0).applicableCancerType().doid());
-        assertEquals(Sets.newHashSet(ActionableTrialFactory.REFRACTORY_HEMATOLOGIC_TYPE,
-                ActionableTrialFactory.BONE_MARROW_TYPE,
-                ActionableTrialFactory.LEUKEMIA_TYPE), actionableTrialsWithCancer.get(0).blacklistCancerTypes());
+        assertEquals(CancerTypeConstants.CANCER_DOID, actionableTrialsWithCancer.get(0).applicableCancerType().doid());
+        assertEquals(Sets.newHashSet(CancerTypeConstants.REFRACTORY_HEMATOLOGIC_TYPE,
+                CancerTypeConstants.BONE_MARROW_TYPE,
+                CancerTypeConstants.LEUKEMIA_TYPE), actionableTrialsWithCancer.get(0).blacklistCancerTypes());
     }
 
     @Test
     public void canCurateDoids() {
         assertEquals("0060463", ActionableTrialFactory.curateDoid("0060463"));
-        assertEquals("162", ActionableTrialFactory.curateDoid("0050686"));
-        assertEquals("0050686", ActionableTrialFactory.curateDoid("UNKNOWN"));
-        assertEquals("0050686", ActionableTrialFactory.curateDoid("MESH: D009382"));
+        assertEquals(CancerTypeConstants.CANCER_DOID, ActionableTrialFactory.curateDoid("0050686"));
+        assertEquals(CancerTypeConstants.ORGAN_SYSTEM_CANCER_DOID, ActionableTrialFactory.curateDoid("UNKNOWN"));
+        assertEquals(CancerTypeConstants.ORGAN_SYSTEM_CANCER_DOID, ActionableTrialFactory.curateDoid("MESH: D009382"));
     }
 }

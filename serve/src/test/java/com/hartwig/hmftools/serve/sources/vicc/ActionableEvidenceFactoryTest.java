@@ -11,7 +11,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
+import com.hartwig.hmftools.serve.cancertype.CancerTypeConstants;
 import com.hartwig.hmftools.serve.curation.DoidLookupTestFactory;
 import com.hartwig.hmftools.serve.sources.vicc.curation.DrugCurator;
 import com.hartwig.hmftools.serve.sources.vicc.curation.EvidenceLevelCurator;
@@ -31,7 +31,7 @@ public class ActionableEvidenceFactoryTest {
 
         Map<String, Set<String>> doidLookupMap = Maps.newHashMap();
         doidLookupMap.put(cancerTypeA, Sets.newHashSet("1"));
-        doidLookupMap.put(cancerTypeB, Sets.newHashSet("162"));
+        doidLookupMap.put(cancerTypeB, Sets.newHashSet(CancerTypeConstants.CANCER_DOID));
         ActionableEvidenceFactory factory =
                 new ActionableEvidenceFactory(DoidLookupTestFactory.test(doidLookupMap), new DrugCurator(), new EvidenceLevelCurator());
 
@@ -58,13 +58,13 @@ public class ActionableEvidenceFactoryTest {
         ActionableEvidence eventB = findByCancerType(evidences, cancerTypeB);
         assertEquals("Treatment", eventB.treatment().treament());
         assertEquals(cancerTypeB, eventB.applicableCancerType().name());
-        assertEquals("162", eventB.applicableCancerType().doid());
+        assertEquals(CancerTypeConstants.CANCER_DOID, eventB.applicableCancerType().doid());
         assertEquals(EvidenceLevel.A, eventB.level());
         assertEquals(EvidenceDirection.RESPONSIVE, eventB.direction());
         assertEquals(Sets.newHashSet("url"), eventB.evidenceUrls());
-        assertEquals(Sets.newHashSet(ImmutableCancerType.builder().name("Refractory hematologic cancer").doid("712").build(),
-                ImmutableCancerType.builder().name("Bone marrow cancer").doid("4960").build(),
-                ImmutableCancerType.builder().name("Leukemia").doid("1240").build()), eventB.blacklistCancerTypes());
+        assertEquals(Sets.newHashSet(CancerTypeConstants.REFRACTORY_HEMATOLOGIC_TYPE,
+                CancerTypeConstants.BONE_MARROW_TYPE,
+                CancerTypeConstants.LEUKEMIA_TYPE), eventB.blacklistCancerTypes());
         factory.evaluateCuration();
     }
 
@@ -134,7 +134,7 @@ public class ActionableEvidenceFactoryTest {
                 ViccTestFactory.testActionableAssociation("Treatment", "Cancer", "DOID:162", "A", "Responsive", "url"));
 
         Map<String, Set<String>> doidLookupMap = Maps.newHashMap();
-        doidLookupMap.put("Cancer", Sets.newHashSet("162"));
+        doidLookupMap.put("Cancer", Sets.newHashSet(CancerTypeConstants.CANCER_DOID));
         ActionableEvidenceFactory factory =
                 new ActionableEvidenceFactory(DoidLookupTestFactory.test(doidLookupMap), new DrugCurator(), new EvidenceLevelCurator());
 
