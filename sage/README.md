@@ -573,12 +573,14 @@ Variant calling Improvements
 - **BQR based on read position** - some library preparations have strong positional biases.  Adjusting for this would reduce FP.
 - **BQR at long palindromicsequences** - some library preparations frequently have errors in palindromic regions.  Adjusting for this would reduce FP.
 - **Germline filtering for very long core regions** - If the core is very long we may have insufficient coverage in the germline to filter.
+- **Low VAF FP in high depth regions for samples with high C>A DNA damage** - Some samples may have severe degradation of C>A in certain mutation contexts sometimes affecting greater than 1% of all fragments.  Whilst we do adjust against this with BQR, for very high depth regions we may still call FP mutations with very low VAF
 
 Phasing improvements
 - **Only first tumor sample is currently phased** - Reference and additional tumor samples are not utilised for phasing
 - **Fragment based phasing** - We can extend phasing even further by looking at the fragment level.   Fragments typically extend 400-600 bases.  This may be relevant in assessing ASE where coverage is low or for determining whether 2xTSG hits are on the same parental chromosome.   Again similar to point 1 we could search for fragments that cover both core regions and look for relative support for neither, both or one or the other variants. 
 - **Population based phasing** - we can extend germline phasing even further afield using population based phasing known as imputation with ranges of up to 100kb. This could potentially assist with phasing across exon boundaries and would allow more accurate purity and ploidy fitting.
 - **Phasing across exon boundaries with WTS data** - May be relevant for neo-epitope prediction or functional consequence.
+- **Confusion of low qual mismatches in long cores** - low qual mismatches in long cores are tolerated, but can mean that some incommpatible variants may appear phased
 
 # Version History and Download Links
 - [3.0](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.0)
