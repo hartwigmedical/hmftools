@@ -14,7 +14,7 @@ import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
+import com.hartwig.hmftools.serve.cancertype.CancerTypeConstants;
 import com.hartwig.hmftools.serve.curation.RelevantTreatmentApproachKey;
 import com.hartwig.hmftools.serve.curation.RelevantTreatmentApproch;
 
@@ -52,9 +52,9 @@ public class ActionableEntryFactoryTest {
         assertEquals("AB", characteristics.treatment().treament());
         assertEquals("AB", characteristics.applicableCancerType().name());
         assertEquals("162", characteristics.applicableCancerType().doid());
-        assertEquals(Sets.newHashSet(ImmutableCancerType.builder().name("Refractory hematologic cancer").doid("712").build(),
-                ImmutableCancerType.builder().name("Bone marrow cancer").doid("4960").build(),
-                ImmutableCancerType.builder().name("Leukemia").doid("1240").build()), characteristics.blacklistCancerTypes());
+        assertEquals(Sets.newHashSet(CancerTypeConstants.REFRACTORY_HEMATOLOGIC_TYPE,
+                CancerTypeConstants.BONE_MARROW_TYPE,
+                CancerTypeConstants.LEUKEMIA_TYPE), characteristics.blacklistCancerTypes());
         assertEquals(EvidenceLevel.A, characteristics.level());
         assertEquals(EvidenceDirection.RESPONSIVE, characteristics.direction());
 
@@ -99,9 +99,9 @@ public class ActionableEntryFactoryTest {
         assertEquals("AB", hotspot.treatment().treament());
         assertEquals("AB", hotspot.applicableCancerType().name());
         assertEquals("162", hotspot.applicableCancerType().doid());
-        assertEquals(Sets.newHashSet(ImmutableCancerType.builder().name("Refractory hematologic cancer").doid("712").build(),
-                ImmutableCancerType.builder().name("Bone marrow cancer").doid("4960").build(),
-                ImmutableCancerType.builder().name("Leukemia").doid("1240").build()), hotspot.blacklistCancerTypes());
+        assertEquals(Sets.newHashSet(CancerTypeConstants.REFRACTORY_HEMATOLOGIC_TYPE,
+                CancerTypeConstants.BONE_MARROW_TYPE,
+                CancerTypeConstants.LEUKEMIA_TYPE), hotspot.blacklistCancerTypes());
         assertEquals(EvidenceLevel.A, characteristics.level());
         assertEquals(EvidenceDirection.RESPONSIVE, characteristics.direction());
     }
@@ -112,9 +112,10 @@ public class ActionableEntryFactoryTest {
         assertNull(ActionableEntryFactory.extractAndCurateDoid("not a doid"));
 
         assertEquals("0060463", ActionableEntryFactory.extractAndCurateDoid("DOID:0060463"));
-        assertEquals("162", ActionableEntryFactory.extractAndCurateDoid("JAX:10000003"));
-        assertEquals("1749", ActionableEntryFactory.extractAndCurateDoid("JAX:10000009"));
-        assertEquals("299", ActionableEntryFactory.extractAndCurateDoid("JAX:10000008"));
+        assertEquals(CancerTypeConstants.CANCER_DOID, ActionableEntryFactory.extractAndCurateDoid("JAX:10000003"));
+        assertEquals(CancerTypeConstants.SQUAMOUD_CELL_CARCINOMA_OF_UNKNOWN_PRIMARY,
+                ActionableEntryFactory.extractAndCurateDoid("JAX:10000009"));
+        assertEquals(CancerTypeConstants.ADENOCARCINOMA_OF_UNKNOWN_PRIMARY, ActionableEntryFactory.extractAndCurateDoid("JAX:10000008"));
         assertNull(ActionableEntryFactory.extractAndCurateDoid("JAX:10000004"));
     }
 

@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.cancertype.CancerType;
+import com.hartwig.hmftools.serve.cancertype.CancerTypeConstants;
 import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.serve.sources.vicc.curation.DrugCurator;
@@ -38,10 +39,6 @@ class ActionableEvidenceFactory {
     private static final Logger LOGGER = LogManager.getLogger(ActionableEvidenceFactory.class);
 
     private static final String CANCER_TYPE_SEPARATOR = ";";
-    static final CancerType LEUKEMIA_TYPE = ImmutableCancerType.builder().name("Leukemia").doid("1240").build();
-    static final CancerType REFRACTORY_HEMATOLOGIC_TYPE =
-            ImmutableCancerType.builder().name("Refractory hematologic cancer").doid("712").build();
-    static final CancerType BONE_MARROW_TYPE = ImmutableCancerType.builder().name("Bone marrow cancer").doid("4960").build();
 
     private static final Set<String> RESPONSIVE_DIRECTIONS = Sets.newHashSet();
     private static final Set<String> RESISTANT_DIRECTIONS = Sets.newHashSet();
@@ -122,10 +119,10 @@ class ActionableEvidenceFactory {
                 String cancerType = cancerTypeEntry.getKey();
                 for (String doid : cancerTypeEntry.getValue()) {
                     Set<CancerType> blacklistedCancerTypes = Sets.newHashSet();
-                    if (doid.equals("162")) {
-                        blacklistedCancerTypes.add(LEUKEMIA_TYPE);
-                        blacklistedCancerTypes.add(REFRACTORY_HEMATOLOGIC_TYPE);
-                        blacklistedCancerTypes.add(BONE_MARROW_TYPE);
+                    if (doid.equals(CancerTypeConstants.CANCER_DOID)) {
+                        blacklistedCancerTypes.add(CancerTypeConstants.LEUKEMIA_TYPE);
+                        blacklistedCancerTypes.add(CancerTypeConstants.REFRACTORY_HEMATOLOGIC_TYPE);
+                        blacklistedCancerTypes.add(CancerTypeConstants.BONE_MARROW_TYPE);
                     }
 
                     for (List<String> drugList : drugLists) {

@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTumorLocation;
 import com.hartwig.hmftools.serve.cancertype.CancerType;
+import com.hartwig.hmftools.serve.cancertype.CancerTypeConstants;
 import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.serve.treatment.ImmutableTreatment;
@@ -23,14 +24,6 @@ import org.jetbrains.annotations.NotNull;
 public class ActionableTrialFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(ActionableTrialFactory.class);
-
-    static final String CANCER_DOID = "162";
-    static final String ORGAN_SYSTEM_CANCER_DOID = "0050686";
-
-    static final CancerType LEUKEMIA_TYPE = ImmutableCancerType.builder().name("Leukemia").doid("1240").build();
-    static final CancerType REFRACTORY_HEMATOLOGIC_TYPE =
-            ImmutableCancerType.builder().name("Refractory hematologic cancer").doid("712").build();
-    static final CancerType BONE_MARROW_TYPE = ImmutableCancerType.builder().name("Bone marrow cancer").doid("4960").build();
 
     @NotNull
     private final DoidLookup missingDoidLookup;
@@ -52,10 +45,10 @@ public class ActionableTrialFactory {
                 CancerType applicable = ImmutableCancerType.builder().name(tumorLocation.primaryTumorLocation()).doid(doidCurated).build();
 
                 Set<CancerType> finalBlacklistedCancerTypes = Sets.newHashSet(blacklistCancerTypes.iterator());
-                if (doidCurated.equals(CANCER_DOID)) {
-                    finalBlacklistedCancerTypes.add(LEUKEMIA_TYPE);
-                    finalBlacklistedCancerTypes.add(REFRACTORY_HEMATOLOGIC_TYPE);
-                    finalBlacklistedCancerTypes.add(BONE_MARROW_TYPE);
+                if (doidCurated.equals(CancerTypeConstants.CANCER_DOID)) {
+                    finalBlacklistedCancerTypes.add(CancerTypeConstants.LEUKEMIA_TYPE);
+                    finalBlacklistedCancerTypes.add(CancerTypeConstants.REFRACTORY_HEMATOLOGIC_TYPE);
+                    finalBlacklistedCancerTypes.add(CancerTypeConstants.BONE_MARROW_TYPE);
                 }
 
                 actionableTrials.add(actionableBuilder.applicableCancerType(applicable)
@@ -119,10 +112,10 @@ public class ActionableTrialFactory {
     @NotNull
     @VisibleForTesting
     static String curateDoid(@NotNull String doid) {
-        if (doid.equals("0050686")) {
-            return CANCER_DOID;
+        if (doid.equals(CancerTypeConstants.ORGAN_SYSTEM_CANCER_DOID)) {
+            return CancerTypeConstants.CANCER_DOID;
         } else if (doid.equals("MESH: D009382") || doid.equals("UNKNOWN")) {
-            return ORGAN_SYSTEM_CANCER_DOID;
+            return CancerTypeConstants.ORGAN_SYSTEM_CANCER_DOID;
         } else {
             return doid;
         }
