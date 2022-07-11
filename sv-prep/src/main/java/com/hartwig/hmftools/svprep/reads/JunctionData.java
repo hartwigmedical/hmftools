@@ -40,18 +40,7 @@ public class JunctionData
 
     public String toString()
     {
-        return format("loc(%d:%d) frags(exact=%d supp=%d)", Position, Orientation, exactFragmentCount(), supportingReadCount());
-    }
-
-    public static class JunctionDataSorter implements Comparator<JunctionData>
-    {
-        // sorts by support descending
-        public int compare(final JunctionData first, final JunctionData second)
-        {
-            if(first.totalSupport() != second.totalSupport())
-                return first.totalSupport() < second.totalSupport() ? 1 : -1;
-
-            return 0;
-        }
+        return format("loc(%d:%d) frags(exact=%d supp=%d) remotes(%d)",
+                Position, Orientation, exactFragmentCount(), supportingReadCount(), RemoteJunctions.size());
     }
 }

@@ -18,7 +18,7 @@ public final class SvConstants
     public static final int MIN_SOFT_CLIP_MIN_BASE_QUAL = 25;
     public static final double MIN_SOFT_CLIP_HIGH_QUAL_PERC = 0.85;
     public static final int MIN_INSERT_LENGTH_SUPPORT = 10;
-    public static final int MIN_DELETE_LENGTH = 32;
+    public static final int MIN_INDEL_LENGTH = 32;
     public static final int LOW_BASE_QUALITY = 20;
 
     // supporting reads

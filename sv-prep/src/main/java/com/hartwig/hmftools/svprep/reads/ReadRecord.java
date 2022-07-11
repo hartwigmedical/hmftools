@@ -112,9 +112,10 @@ public class ReadRecord
                 isFirstOfPair(), isSupplementaryAlignment(), isReadReversed(), mSupplementaryAlignment != null);
     }
 
-    public static int maxDeleteLength(final Cigar cigar)
+    public static int maxIndelLength(final Cigar cigar)
     {
         return cigar.getCigarElements().stream()
-                .filter(x -> x.getOperator() == CigarOperator.D).mapToInt(x -> x.getLength()).max().orElse(0);
+                .filter(x -> x.getOperator() == CigarOperator.D || x.getOperator() == CigarOperator.I)
+                .mapToInt(x -> x.getLength()).max().orElse(0);
     }
 }

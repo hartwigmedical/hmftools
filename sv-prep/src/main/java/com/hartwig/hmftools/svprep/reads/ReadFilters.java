@@ -4,9 +4,9 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
-import static com.hartwig.hmftools.svprep.reads.ReadRecord.maxDeleteLength;
 
 import static htsjdk.samtools.CigarOperator.M;
+import static htsjdk.samtools.SAMFlag.MATE_UNMAPPED;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.SAMRecord;
@@ -40,31 +40,34 @@ public class ReadFilters
         if(insertAlignmentOverlap < mConfig.MinInsertAlignmentOverlap)
             filters |= ReadFilterType.INSERT_MAP_OVERLAP.flag();
 
-        int scLeft = cigar.isLeftClipped() ? cigar.getFirstCigarElement().getLength() : 0;
-        int scRight = cigar.isRightClipped() ? cigar.getLastCigarElement().getLength() : 0;
+        int maxIndelLength = ReadRecord.maxIndelLength(record.getCigar());
 
-        int maxDelete = maxDeleteLength(record.getCigar());
-
-        if(scLeft < mConfig.MinSoftClipLength && scRight < mConfig.MinSoftClipLength && maxDelete < mConfig.MinDeleteLength)
-            filters |= ReadFilterType.SOFT_CLIP_LENGTH.flag();
-
-        // base qual in soft clip
-        if(scLeft > 0 || scRight > 0)
+        if(maxIndelLength < mConfig.MinIndelLength)
         {
-            final byte[] baseQualities = record.getBaseQualities();
-            int scRangeStart = scLeft > scRight ? 0 : baseQualities.length - scRight;
-            int scRangeEnd = scLeft > scRight ? scLeft : baseQualities.length;
-            double scLength = max(scLeft, scRight);
+            int scLeft = cigar.isLeftClipped() ? cigar.getFirstCigarElement().getLength() : 0;
+            int scRight = cigar.isRightClipped() ? cigar.getLastCigarElement().getLength() : 0;
 
-            int aboveQual = 0;
-            for(int i = scRangeStart; i < scRangeEnd; ++i)
+            if(scLeft < mConfig.MinSoftClipLength && scRight < mConfig.MinSoftClipLength)
+                filters |= ReadFilterType.SOFT_CLIP_LENGTH.flag();
+
+            // base qual in soft clip
+            if(scLeft > 0 || scRight > 0)
             {
-                if(baseQualities[i] >= mConfig.MinSoftClipHighQual)
-                    ++aboveQual;
-            }
+                final byte[] baseQualities = record.getBaseQualities();
+                int scRangeStart = scLeft > scRight ? 0 : baseQualities.length - scRight;
+                int scRangeEnd = scLeft > scRight ? scLeft : baseQualities.length;
+                double scLength = max(scLeft, scRight);
 
-            if(aboveQual / scLength < mConfig.MinSoftClipHighQualPerc)
-                filters |= ReadFilterType.SOFT_CLIP_BASE_QUAL.flag();
+                int aboveQual = 0;
+                for(int i = scRangeStart; i < scRangeEnd; ++i)
+                {
+                    if(baseQualities[i] >= mConfig.MinSoftClipHighQual)
+                        ++aboveQual;
+                }
+
+                if(aboveQual / scLength < mConfig.MinSoftClipHighQualPerc)
+                    filters |= ReadFilterType.SOFT_CLIP_BASE_QUAL.flag();
+            }
         }
 
         return filters;
@@ -72,20 +75,27 @@ public class ReadFilters
 
     public boolean isCandidateSupportingRead(final SAMRecord record)
     {
-        /*
-        int insertLength = record.getCigar().getCigarElements().stream()
-                .filter(x -> x.getOperator() == CigarOperator.I).mapToInt(x -> x.getLength()).findFirst().orElse(0);
-
-        if(insertLength >= MinInsertLengthSupport)
-            return true;
-        */
-
+        // any read with a supplementary
         if(record.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
             return true;
 
+        // or an fragment length beyond the observed distribution
         if(abs(record.getInferredInsertSize()) > mConfig.fragmentLengthMax()) //  || record.getInferredInsertSize() < mFragmentLengthMin
             return true;
 
+        // an unmapped mate
+        if(record.getMateUnmappedFlag())
+            return true;
+
+        // interchromosomal
+        if(!record.getContig().equals(record.getMateReferenceName()))
+            return true;
+
+        // inversion
+        if(record.getReadNegativeStrandFlag() == record.getMateNegativeStrandFlag())
+            return true;
+
+        // or with any amount of soft-clipping
         return record.getCigar().isLeftClipped() || record.getCigar().isRightClipped();
     }
 

@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.svprep.SvConstants.JUNCTION_SUPPORT_CAP;
 import static com.hartwig.hmftools.svprep.SvConstants.MAX_DISCORDANT_READ_DISTANCE;
 import static com.hartwig.hmftools.svprep.SvConstants.MAX_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_ALIGNMENT_BASES;
-import static com.hartwig.hmftools.svprep.SvConstants.MIN_DELETE_LENGTH;
+import static com.hartwig.hmftools.svprep.SvConstants.MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_INSERT_ALIGNMENT_OVERLAP;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_INSERT_LENGTH_SUPPORT;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_JUNCTION_SUPPORT;
@@ -24,7 +24,7 @@ public class ReadFilterConfig
     public final int MinAlignmentBases;
     public final int MinMapQuality;
     public final int MinInsertAlignmentOverlap;
-    public final int MinDeleteLength;
+    public final int MinIndelLength;
     public final int MinSoftClipLength;
     public final int MinSoftClipHighQual;
     public final double MinSoftClipHighQualPerc;
@@ -55,7 +55,7 @@ public class ReadFilterConfig
                 MIN_SOFT_CLIP_MIN_BASE_QUAL,
                 MIN_SOFT_CLIP_HIGH_QUAL_PERC,
                 MIN_SUPPORTING_READ_DISTANCE,
-                MIN_DELETE_LENGTH,
+                MIN_INDEL_LENGTH,
                 configValue(cmd, CFG_MIN_JUNCTION_FRAGS, MIN_JUNCTION_SUPPORT),
                 configValue(cmd, CFG_MAX_JUNCTION_SUPPORTING_READS, JUNCTION_SUPPORT_CAP),
                 MAX_DISCORDANT_READ_DISTANCE);
@@ -79,14 +79,14 @@ public class ReadFilterConfig
     public ReadFilterConfig(
             final int minAlignmentBases, final int minMapQuality, final int minInsertAlignmentOverlap, final int minSoftClipLength,
             final int minSoftClipHighQual, final double minSoftClipHighQualPerc, final int minSupportingReadDistance,
-            final int minDeleteLength, final int minJunctionSupport, final int maxJunctionSupportingReads,
+            final int minIndelLength, final int minJunctionSupport, final int maxJunctionSupportingReads,
             final int maxDiscordantFragmentDistance)
     {
         MinAlignmentBases = minAlignmentBases;
         MinMapQuality = minMapQuality;
         MinInsertAlignmentOverlap = minInsertAlignmentOverlap;
         MinSoftClipLength = minSoftClipLength;
-        MinDeleteLength = minDeleteLength;
+        MinIndelLength = minIndelLength;
         MinSoftClipHighQual = minSoftClipHighQual;
         MinSoftClipHighQualPerc = minSoftClipHighQualPerc;
         MinSupportingReadDistance = minSupportingReadDistance;

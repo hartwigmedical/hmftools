@@ -10,6 +10,8 @@ import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.N;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.samtools.SoftClipSide;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 
@@ -59,6 +61,12 @@ public class RemoteJunction
     public boolean matches(final String chromosome, final int position, final byte orientation)
     {
         return Chromosome.equals(chromosome) && Position == position && Orientation == orientation;
+    }
+
+    public static void addRemoteJunction(final List<RemoteJunction> remoteJunctions, final RemoteJunction remoteJunction)
+    {
+        if(remoteJunctions.stream().noneMatch(x -> x.matches(remoteJunction)))
+            remoteJunctions.add(remoteJunction);
     }
 
     public String toString() { return format("loc(%s:%d:%d) reads(%d)", Chromosome, Position, Orientation, Support); }

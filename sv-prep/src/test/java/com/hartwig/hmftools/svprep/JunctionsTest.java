@@ -18,14 +18,14 @@ import com.hartwig.hmftools.svprep.reads.ReadType;
 
 import org.junit.Test;
 
-public class PartitionBucketsTest
+public class JunctionsTest
 {
     private static final String REF_BASES = generateRandomBases(500);
 
     private final ChrBaseRegion mPartitionRegion;
     private final JunctionTracker mJunctionTracker;
 
-    public PartitionBucketsTest()
+    public JunctionsTest()
     {
         mPartitionRegion = new ChrBaseRegion(CHR_1, 1, 5000);
         mJunctionTracker = new JunctionTracker(mPartitionRegion, READ_FILTERS, HOTSPOT_CACHE);
@@ -38,9 +38,8 @@ public class PartitionBucketsTest
     }
 
     @Test
-    public void testBucketJunctions()
+    public void testBasicJunctions()
     {
-        // create junctions in the first and second buckets
         int readId = 0;
 
         ReadRecord read1 = ReadRecord.from(createSamRecord(
@@ -146,5 +145,39 @@ public class PartitionBucketsTest
 
         assertEquals(241, mJunctionTracker.junctions().get(2).Position);
         assertEquals(277, mJunctionTracker.junctions().get(3).Position);
+    }
+
+    @Test
+    public void testInternalInserts()
+    {
+        int readId = 0;
+
+        // first is too short
+        ReadRecord read1 = ReadRecord.from(createSamRecord(
+                readIdStr(++readId), CHR_1, 10, REF_BASES.substring(0, 70), "20M10I50M"));
+
+        addRead(read1, JUNCTION);
+
+        // then a simple one
+        ReadRecord read2 = ReadRecord.from(createSamRecord(
+                readIdStr(++readId), CHR_1, 100, REF_BASES.substring(0, 70), "20M40I50M"));
+
+        addRead(read2, JUNCTION);
+
+        // and a more complicated one
+
+        ReadRecord read3 = ReadRecord.from(createSamRecord(
+                readIdStr(++readId), CHR_1, 210, REF_BASES.substring(0, 100), "5S10M2D10M3I10M35I10M2S"));
+
+        addRead(read3, JUNCTION);
+
+        mJunctionTracker.createJunctions();
+
+        assertEquals(4, mJunctionTracker.junctions().size());
+        assertEquals(119, mJunctionTracker.junctions().get(0).Position);
+        assertEquals(120, mJunctionTracker.junctions().get(1).Position);
+
+        assertEquals(241, mJunctionTracker.junctions().get(2).Position);
+        assertEquals(242, mJunctionTracker.junctions().get(3).Position);
     }
 }

@@ -11,12 +11,14 @@ import static com.hartwig.hmftools.svprep.SvConstants.LOW_BASE_QUALITY;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
 import static com.hartwig.hmftools.svprep.SvConstants.SUPPORTING_READ_DISTANCE;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.INSERT_MAP_OVERLAP;
-import static com.hartwig.hmftools.svprep.reads.ReadRecord.maxDeleteLength;
+import static com.hartwig.hmftools.svprep.reads.ReadRecord.maxIndelLength;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
 import static com.hartwig.hmftools.svprep.reads.ReadType.NO_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.SUPPORT;
+import static com.hartwig.hmftools.svprep.reads.RemoteJunction.addRemoteJunction;
 
 import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
 
 import java.util.List;
@@ -136,15 +138,17 @@ public class JunctionTracker
     private void createJunction(final ReadGroup readGroup)
     {
         List<JunctionData> junctions = Lists.newArrayList();
-        RemoteJunction remoteJunction = null;
-        ReadRecord remoteJunctionRead = null;
+        List<RemoteJunction> remoteJunctions = Lists.newArrayList();
+        // ReadRecord remoteJunctionRead = null;
 
         for(ReadRecord read : readGroup.reads())
         {
             if(read.hasSuppAlignment())
-                remoteJunction = RemoteJunction.fromSupplementaryData(read.supplementaryAlignment());
+            {
+                addRemoteJunction(remoteJunctions, RemoteJunction.fromSupplementaryData(read.supplementaryAlignment()));
+            }
 
-            handleInternalDelete(readGroup, read);
+            handleInternalIndel(readGroup, read);
 
             SoftClipSide scSide = SoftClipSide.fromCigar(read.cigar());
 
@@ -157,8 +161,7 @@ public class JunctionTracker
             if(!mRegion.containsPosition(position))
             {
                 // will only be cached if no junction is within this region
-                remoteJunction = new RemoteJunction(mRegion.Chromosome, position, orientation);
-                remoteJunctionRead = read;
+                addRemoteJunction(remoteJunctions, new RemoteJunction(mRegion.Chromosome, position, orientation));
             }
             else
             {
@@ -169,12 +172,14 @@ public class JunctionTracker
             }
         }
 
+        /*
         if(junctions.isEmpty() && remoteJunction != null && remoteJunction.Chromosome.equals(mRegion.Chromosome))
         {
             // convert this junction in a latter bucket to a junction for this group
             junctions.add(getOrCreateJunction(remoteJunctionRead, remoteJunction.Orientation));
             remoteJunction = null;
         }
+        */
 
         if(junctions.isEmpty())
             return;
@@ -182,26 +187,30 @@ public class JunctionTracker
         mJunctionGroups.add(readGroup);
         junctions.forEach(x -> x.JunctionGroups.add(readGroup));
 
-        if(remoteJunction != null)
+        if(!remoteJunctions.isEmpty())
         {
-            final RemoteJunction newRemote = remoteJunction;
-
-            for(JunctionData junctionData : junctions)
+            for(RemoteJunction remoteJunction : remoteJunctions)
             {
-                if(junctionData.RemoteJunctions.stream().noneMatch(x -> x.matches(newRemote)))
-                    junctionData.RemoteJunctions.add(remoteJunction);
+                for(JunctionData junctionData : junctions)
+                {
+                    // ignore remotes (typically) supplementaries which point to junction in another read in this group
+                    if(remoteJunction.matches(mRegion.Chromosome, junctionData.Position, junctionData.Orientation))
+                        continue;
+
+                    addRemoteJunction(junctionData.RemoteJunctions, remoteJunction);
+                }
             }
         }
     }
 
-    private void handleInternalDelete(final ReadGroup readGroup, final ReadRecord read)
+    private void handleInternalIndel(final ReadGroup readGroup, final ReadRecord read)
     {
-        int maxDelete = maxDeleteLength(read.cigar());
+        int maxDelete = maxIndelLength(read.cigar());
 
-        if(maxDelete < mFilterConfig.MinDeleteLength)
+        if(maxDelete < mFilterConfig.MinIndelLength)
             return;
 
-        // convert the location of the internal delete into a junction
+        // convert the location of the internal delete or insert into a junction
         int junctionStartPos = read.start() - 1;
         int junctionEndPos = 0;
         for(CigarElement element : read.cigar())
@@ -212,13 +221,21 @@ public class JunctionTracker
             }
             else if(element.getOperator() == D)
             {
-                if(element.getLength() >= mFilterConfig.MinDeleteLength)
+                if(element.getLength() >= mFilterConfig.MinIndelLength)
                 {
                     junctionEndPos = junctionStartPos + element.getLength() + 1;
                     break;
                 }
 
                 junctionStartPos += element.getLength();
+            }
+            else if(element.getOperator() == I)
+            {
+                if(element.getLength() >= mFilterConfig.MinIndelLength)
+                {
+                    junctionEndPos = junctionStartPos + 1;
+                    break;
+                }
             }
             else
             {
