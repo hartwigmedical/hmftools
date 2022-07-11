@@ -580,6 +580,7 @@ Phasing improvements
 - **Fragment based phasing** - We can extend phasing even further by looking at the fragment level.   Fragments typically extend 400-600 bases.  This may be relevant in assessing ASE where coverage is low or for determining whether 2xTSG hits are on the same parental chromosome.   Again similar to point 1 we could search for fragments that cover both core regions and look for relative support for neither, both or one or the other variants. 
 - **Population based phasing** - we can extend germline phasing even further afield using population based phasing known as imputation with ranges of up to 100kb. This could potentially assist with phasing across exon boundaries and would allow more accurate purity and ploidy fitting.
 - **Phasing across exon boundaries with WTS data** - May be relevant for neo-epitope prediction or functional consequence.
+- **Confusion of low qual mismatches in long cores** - low qual mismatches in long cores are tolerated, but can mean that some incommpatible variants may appear phased
 
 # Version History and Download Links
 - [3.0](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.0)
