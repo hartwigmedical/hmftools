@@ -2,7 +2,6 @@ package com.hartwig.hmftools.svprep.reads;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
-import static com.hartwig.hmftools.svprep.CombinedReadGroups.externalReadChrPartition;
 import static com.hartwig.hmftools.svprep.CombinedReadGroups.formChromosomePartition;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_FRACTION;
@@ -109,12 +108,6 @@ public class PartitionSlicer
 
         mPerCounters[PC_SLICE].stop();
 
-        if(mStats.TotalReads == 0)
-        {
-            mPerCounters[PC_TOTAL].stop();
-            return;
-        }
-
         mPerCounters[PC_JUNCTIONS].start();
 
         mJunctionTracker.createJunctions();
@@ -124,8 +117,11 @@ public class PartitionSlicer
 
         writeData();
 
-        SV_LOGGER.debug("region({}) complete, stats({})", mRegion, mStats.toString());
-        SV_LOGGER.debug("region({}) filters({})", mRegion, ReadFilterType.filterCountsToString(mStats.ReadFilterCounts));
+        if(mStats.TotalReads > 0)
+        {
+            SV_LOGGER.debug("region({}) complete, stats({})", mRegion, mStats.toString());
+            SV_LOGGER.debug("region({}) filters({})", mRegion, ReadFilterType.filterCountsToString(mStats.ReadFilterCounts));
+        }
 
         mPerCounters[PC_TOTAL].stop();
 
@@ -217,37 +213,41 @@ public class PartitionSlicer
 
     private void writeData()
     {
-        boolean reconcileReadGroups = mConfig.WriteTypes.contains(BAM) || mConfig.WriteTypes.contains(READS);
+        boolean captureCompleteGroups = mConfig.WriteTypes.contains(BAM) || mConfig.WriteTypes.contains(READS);
 
-        if(reconcileReadGroups)
+        if(captureCompleteGroups)
         {
-            // the BAM file writes records by readId, so needs to combine all reads for a given fragment
-            Map<String,Map<String,ReadGroup>> partialGroupsMap = Maps.newHashMap();
-            List<ReadGroup> localGroups = Lists.newArrayList();
+            // read groups that span chromosomes or partitions need to be complete, so gather up their state to enable this
+            Map<String,Map<String,ReadGroupState>> partialGroupsMap = Maps.newHashMap();
 
             String chrPartition = formChromosomePartition(mRegion.Chromosome, mRegion.start(), mConfig.PartitionSize);
 
-            mJunctionTracker.junctionGroups().forEach(x -> assignReadGroup(x, chrPartition, partialGroupsMap, localGroups));
-            mJunctionTracker.supportingGroups().forEach(x -> assignReadGroup(x, chrPartition, partialGroupsMap, localGroups));
+            mJunctionTracker.junctionGroups().forEach(x -> assignReadGroup(x, chrPartition, partialGroupsMap));
+            mJunctionTracker.supportingGroups().forEach(x -> assignReadGroup(x, chrPartition, partialGroupsMap));
 
-            List<ReadGroup> remoteCompleteGroups = mCombinedReadGroups.addIncompleteReadGroup(chrPartition, partialGroupsMap);
+            int spanningGroups = partialGroupsMap.values().stream().mapToInt(x -> x.size()).sum();
+            int totalGroups = mJunctionTracker.junctionGroups().size() + mJunctionTracker.supportingGroups().size();
 
-            int localIncomplete = (int)localGroups.stream().filter(x -> x.isIncomplete()).count();
+            List<ReadGroupState> unmatchedGroups = mCombinedReadGroups.addIncompleteReadGroup(chrPartition, partialGroupsMap);
 
-            SV_LOGGER.debug("region({}) readGroups({}) complete(local={} remote={}) partials({}) localIncomplete({})",
-                    mRegion, mJunctionTracker.junctionGroups().size() + mJunctionTracker.supportingGroups().size(),
-                    localGroups.size(), remoteCompleteGroups.size(), partialGroupsMap.size(), localIncomplete);
+            if(unmatchedGroups.isEmpty() && totalGroups == 0)
+                return;
+
+            mStats.UnmatchedGroups += unmatchedGroups.size();
+
+            SV_LOGGER.debug("region({}) readGroups({}) complete(local={} spanning={}) unmatched({})",
+                    mRegion, totalGroups, totalGroups - spanningGroups, spanningGroups, unmatchedGroups.size());
 
             if(mConfig.WriteTypes.contains(BAM))
             {
-                mWriter.writeBamRecords(localGroups);
-                mWriter.writeBamRecords(remoteCompleteGroups);
+                mWriter.writeBamRecords(mJunctionTracker.junctionGroups());
+                mWriter.writeBamRecords(mJunctionTracker.supportingGroups());
             }
 
             if(mConfig.WriteTypes.contains(READS))
             {
-                mWriter.writeReadData(localGroups);
-                mWriter.writeReadData(remoteCompleteGroups);
+                mWriter.writeReadData(mJunctionTracker.junctionGroups());
+                mWriter.writeReadData(mJunctionTracker.supportingGroups());
             }
         }
 
@@ -263,35 +263,38 @@ public class PartitionSlicer
     }
 
     private void assignReadGroup(
-            final ReadGroup readGroup, final String chrPartition,
-            final Map<String,Map<String,ReadGroup>> partialGroupsMap,final List<ReadGroup> localGroups)
+            final ReadGroup readGroup, final String chrPartition, final Map<String,Map<String,ReadGroupState>> partialGroupsMap)
     {
-        readGroup.setGroupStatus(mRegion);
+        ReadGroupState groupState = readGroup.formGroupState(mRegion, chrPartition, mConfig.PartitionSize);
 
         if(readGroup.spansPartitions())
         {
-            String remoteChrPartition = externalReadChrPartition(mRegion, mConfig.PartitionSize, readGroup.reads());
-
+            ++mStats.SpanningGroups;
+            /*
             if(remoteChrPartition == null || remoteChrPartition.equals(chrPartition))
             {
                 // missing a read local to this partition
                 localGroups.add(readGroup);
                 return;
             }
+            */
 
-            Map<String,ReadGroup> groups = partialGroupsMap.get(remoteChrPartition);
+            Map<String,ReadGroupState> groups = partialGroupsMap.get(groupState.RemoteChrPartition);
 
             if(groups == null)
             {
                 groups = Maps.newHashMap();
-                partialGroupsMap.put(remoteChrPartition, groups);
+                partialGroupsMap.put(groupState.RemoteChrPartition, groups);
             }
 
-            groups.put(readGroup.id(), readGroup);
+            groups.put(readGroup.id(), groupState);
         }
         else
         {
-            localGroups.add(readGroup);
+            if(readGroup.isComplete())
+                ++mStats.LocalCompleteGroups;
+            else
+                ++mStats.LocalIncompleteGroups;
         }
     }
 

@@ -36,13 +36,13 @@ public class ReadFilterConfig
 
     // final junction filtering
     public final int MinJunctionSupport;
-    public final int MaxJunctionSupportingReads;
+    public final int JunctionFragmentCap;
 
     private int mFragmentLengthMin;
     private int mFragmentLengthMax;
 
     private static final String CFG_MIN_ALIGN_BASES = "min_align_bases";
-    private static final String CFG_MAX_JUNCTION_SUPPORTING_READS = "max_junction_support_reads";
+    private static final String CFG_JUNCTION_FRAGS_CAP = "junction_frags_cap";
     private static final String CFG_MIN_JUNCTION_FRAGS = "min_junction_frags";
 
     public static ReadFilterConfig from(final CommandLine cmd)
@@ -57,7 +57,7 @@ public class ReadFilterConfig
                 MIN_SUPPORTING_READ_DISTANCE,
                 MIN_INDEL_LENGTH,
                 configValue(cmd, CFG_MIN_JUNCTION_FRAGS, MIN_JUNCTION_SUPPORT),
-                configValue(cmd, CFG_MAX_JUNCTION_SUPPORTING_READS, JUNCTION_SUPPORT_CAP),
+                configValue(cmd, CFG_JUNCTION_FRAGS_CAP, JUNCTION_SUPPORT_CAP),
                 MAX_DISCORDANT_READ_DISTANCE);
     }
 
@@ -73,13 +73,13 @@ public class ReadFilterConfig
 
         options.addOption(CFG_MIN_JUNCTION_FRAGS, true, "Required fragments to keep a junction");
 
-        options.addOption(CFG_MAX_JUNCTION_SUPPORTING_READS, true, "Limit to supporting reads added to a junction");
+        options.addOption(CFG_JUNCTION_FRAGS_CAP, true, "Limit to supporting reads added to a junction");
     }
 
     public ReadFilterConfig(
             final int minAlignmentBases, final int minMapQuality, final int minInsertAlignmentOverlap, final int minSoftClipLength,
             final int minSoftClipHighQual, final double minSoftClipHighQualPerc, final int minSupportingReadDistance,
-            final int minIndelLength, final int minJunctionSupport, final int maxJunctionSupportingReads,
+            final int minIndelLength, final int minJunctionSupport, final int junctionFragmentCap,
             final int maxDiscordantFragmentDistance)
     {
         MinAlignmentBases = minAlignmentBases;
@@ -90,7 +90,7 @@ public class ReadFilterConfig
         MinSoftClipHighQual = minSoftClipHighQual;
         MinSoftClipHighQualPerc = minSoftClipHighQualPerc;
         MinSupportingReadDistance = minSupportingReadDistance;
-        MaxJunctionSupportingReads = maxJunctionSupportingReads;
+        JunctionFragmentCap = junctionFragmentCap;
 
         MinInsertLengthSupport = MIN_INSERT_LENGTH_SUPPORT;
         MinJunctionSupport = minJunctionSupport;

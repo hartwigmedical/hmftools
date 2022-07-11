@@ -2,7 +2,6 @@ package com.hartwig.hmftools.svprep.reads;
 
 import static java.lang.String.format;
 
-import java.util.Comparator;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -32,15 +31,27 @@ public class JunctionData
         mHotspot = false;
     }
 
-    public int exactFragmentCount() { return JunctionGroups.size(); }
-    public int supportingReadCount() { return SupportingGroups.size(); }
-    public int totalSupport() { return exactFragmentCount() + supportingReadCount(); }
+    public int junctionFragmentCount() { return JunctionGroups.size(); }
+    public int supportingFragmentCount() { return SupportingGroups.size(); }
+    public int totalSupport() { return junctionFragmentCount() + supportingFragmentCount(); }
     public boolean hotspot() { return mHotspot; }
     public void markHotspot() { mHotspot = true; }
 
+    public void addRemoteJunction(final RemoteJunction remoteJunction)
+    {
+        RemoteJunction matched = RemoteJunctions.stream().filter(x -> x.matches(remoteJunction)).findFirst().orElse(null);
+        if(matched != null)
+        {
+            ++matched.Fragments;
+            return;
+        }
+
+        RemoteJunctions.add(remoteJunction);
+    }
+
     public String toString()
     {
-        return format("loc(%d:%d) frags(exact=%d supp=%d) remotes(%d)",
-                Position, Orientation, exactFragmentCount(), supportingReadCount(), RemoteJunctions.size());
+        return format("loc(%d:%d) frags(junc=%d supp=%d) remotes(%d)",
+                Position, Orientation, junctionFragmentCount(), supportingFragmentCount(), RemoteJunctions.size());
     }
 }

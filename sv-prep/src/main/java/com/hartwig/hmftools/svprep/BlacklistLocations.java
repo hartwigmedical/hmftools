@@ -62,6 +62,12 @@ public class BlacklistLocations
 
                 final String[] values = line.split("\t", -1);
 
+                if(values.length < 3)
+                {
+                    SV_LOGGER.error("invalid blacklist entry: {}", line);
+                    return;
+                }
+
                 String chromosome = values[0];
                 int posStart = Integer.parseInt(values[1]);
                 int posEnd = Integer.parseInt(values[2]);

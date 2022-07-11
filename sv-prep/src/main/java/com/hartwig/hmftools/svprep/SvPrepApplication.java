@@ -29,7 +29,7 @@ public class SvPrepApplication
     {
         mConfig = new SvConfig(cmd);
         mWriter = new ResultsWriter(mConfig);
-        mCombinedReadGroups = new CombinedReadGroups();
+        mCombinedReadGroups = new CombinedReadGroups(mConfig);
     }
 
     public void run()

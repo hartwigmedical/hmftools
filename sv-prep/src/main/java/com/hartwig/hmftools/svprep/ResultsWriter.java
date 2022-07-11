@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.svprep;
 
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
@@ -12,14 +13,13 @@ import static com.hartwig.hmftools.svprep.WriteType.SV_BED;
 
 import static htsjdk.samtools.SAMFlag.MATE_UNMAPPED;
 import static htsjdk.samtools.SAMFlag.PROPER_PAIR;
-import static htsjdk.samtools.SAMFlag.READ_UNMAPPED;
 import static htsjdk.samtools.SAMFlag.SECONDARY_ALIGNMENT;
 import static htsjdk.samtools.SAMFlag.SUPPLEMENTARY_ALIGNMENT;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
@@ -149,8 +149,8 @@ public class ResultsWriter
             String filename = mConfig.formFilename(JUNCTIONS);
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("Chromosome,Position,Orientation,Fragments,SupportingReads,LowMapQualFrags,Hotspot,InitialReadId");
-            writer.write(",RemoteJunctionCount,RemoteChromosome,RemotePosition,RemoteOrientation");
+            writer.write("Chromosome,Position,Orientation,JunctionFragments,SupportingFragments,LowMapQualFrags,Hotspot,InitialReadId");
+            writer.write(",RemoteJunctionCount,RemoteJunctions");
             writer.newLine();
 
             return writer;
@@ -175,27 +175,31 @@ public class ResultsWriter
                 int lowMapQualFrags = (int) junctionData.JunctionGroups.stream()
                         .filter(x -> x.reads().stream().anyMatch(y -> y.filters() == ReadFilterType.MIN_MAP_QUAL.flag())).count();
 
-                String junctionStr = format("%s,%d,%d,%d,%d,%d,%s,%s,%d",
-                        chromosome, junctionData.Position,
-                        junctionData.Orientation, junctionData.exactFragmentCount(), junctionData.supportingReadCount(), lowMapQualFrags,
-                        junctionData.hotspot(), junctionData.InitialRead.id(), junctionData.RemoteJunctions.size());
+                mJunctionWriter.write(format("%s,%d,%d,%d,%d,%d,%s,%s",
+                        chromosome, junctionData.Position, junctionData.Orientation, junctionData.junctionFragmentCount(),
+                        junctionData.supportingFragmentCount(), lowMapQualFrags, junctionData.hotspot(), junctionData.InitialRead.id()));
+
+                // RemoteChromosome:RemotePosition:RemoteOrientation;Fragments then separated by ';'
+                String remoteJunctionsStr = "";
 
                 if(!junctionData.RemoteJunctions.isEmpty())
                 {
-                    for(RemoteJunction remoteJunction : junctionData.RemoteJunctions)
+                    Collections.sort(junctionData.RemoteJunctions, new RemoteJunction.RemoteJunctionSorter());
+
+                    StringJoiner sj = new StringJoiner(ITEM_DELIM);
+
+                    for(int i = 0; i < min(junctionData.RemoteJunctions.size(), 10); ++i)
                     {
-                        mJunctionWriter.write(format("%s,%s,%d,%d",
-                                junctionStr, remoteJunction.Chromosome, remoteJunction.Position, remoteJunction.Orientation));
-                        mJunctionWriter.newLine();
-                        ;
+                        RemoteJunction remoteJunction = junctionData.RemoteJunctions.get(i);
+                        sj.add(format("%s:%d:%d;%d",
+                                remoteJunction.Chromosome, remoteJunction.Position, remoteJunction.Orientation, remoteJunction.Fragments));
+                        // junctionData.RemoteJunctions.forEach(x -> sj.add(format("%s:%d:%d", x.Chromosome, x.Position, x.Orientation)));
                     }
+                    remoteJunctionsStr = sj.toString();
                 }
-                else
-                {
-                    mJunctionWriter.write(format("%s,,,", junctionStr));
-                    mJunctionWriter.newLine();
-                    ;
-                }
+
+                mJunctionWriter.write(format(",%d,%s", junctionData.RemoteJunctions.size(), remoteJunctionsStr));
+                mJunctionWriter.newLine();
             }
         }
         catch(IOException e)

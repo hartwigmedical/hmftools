@@ -109,10 +109,10 @@ public class JunctionsTest
         mJunctionTracker.createJunctions();
 
         assertEquals(4, mJunctionTracker.junctions().size());
-        assertEquals(1, mJunctionTracker.junctions().get(0).supportingReadCount());
-        assertEquals(1, mJunctionTracker.junctions().get(1).supportingReadCount());
-        assertEquals(1, mJunctionTracker.junctions().get(2).supportingReadCount());
-        assertEquals(1, mJunctionTracker.junctions().get(3).supportingReadCount());
+        assertEquals(1, mJunctionTracker.junctions().get(0).supportingFragmentCount());
+        assertEquals(1, mJunctionTracker.junctions().get(1).supportingFragmentCount());
+        assertEquals(1, mJunctionTracker.junctions().get(2).supportingFragmentCount());
+        assertEquals(1, mJunctionTracker.junctions().get(3).supportingFragmentCount());
     }
 
     @Test

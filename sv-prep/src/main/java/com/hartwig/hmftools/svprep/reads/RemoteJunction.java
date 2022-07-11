@@ -10,6 +10,7 @@ import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.N;
 
+import java.util.Comparator;
 import java.util.List;
 
 import com.hartwig.hmftools.common.samtools.SoftClipSide;
@@ -22,14 +23,14 @@ public class RemoteJunction
     public final String Chromosome;
     public final int Position;
     public final byte Orientation;
-    public int Support;
+    public int Fragments;
 
     public RemoteJunction(final String chromosome, final int position, final byte orientation)
     {
         Chromosome = chromosome;
         Position = position;
         Orientation = orientation;
-        Support = 0;
+        Fragments = 1;
     }
 
     public static RemoteJunction fromSupplementaryData(final SupplementaryReadData suppData)
@@ -69,5 +70,17 @@ public class RemoteJunction
             remoteJunctions.add(remoteJunction);
     }
 
-    public String toString() { return format("loc(%s:%d:%d) reads(%d)", Chromosome, Position, Orientation, Support); }
+    public String toString() { return format("loc(%s:%d:%d) reads(%d)", Chromosome, Position, Orientation, Fragments); }
+
+    public static class RemoteJunctionSorter implements Comparator<RemoteJunction>
+    {
+        // sorts by support descending
+        public int compare(final RemoteJunction first, final RemoteJunction second)
+        {
+            if(first.Fragments != second.Fragments)
+                return first.Fragments < second.Fragments ? 1 : -1;
+
+            return 0;
+        }
+    }
 }

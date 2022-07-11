@@ -23,6 +23,8 @@ import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChr
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.svprep.SvCommon.DELIM;
+import static com.hartwig.hmftools.svprep.SvCommon.ITEM_DELIM;
+import static com.hartwig.hmftools.svprep.SvCommon.SUB_ITEM_DELIM;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConfig.SAMPLE;
 
@@ -346,7 +348,8 @@ public class VcfBucketCompare
             String line = fileReader.readLine();
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, DELIM);
 
-            // Chromosome,BucketStart,BucketEnd,Position,Orientation,Fragments,SupportingReads,Hotspot,InitialReadId,RemoteJunctionCount,RemoteChromosome,RemotePosition,RemoteOrientation
+            // Chromosome,BucketStart,BucketEnd,Position,Orientation,Fragments,SupportingReads,Hotspot,InitialReadId,RemoteJunctionCount,RemoteJunctions
+            // RemoteChromosome,RemotePosition,RemoteOrientation
             // 1,118516001,118517000,118516222,-1,30,6,false,A00624:8:HHKYHDSXX:4:2243:4562:28494,2,1,118516186,1
 
             int chrIndex = fieldsIndexMap.get("Chromosome");
@@ -354,9 +357,7 @@ public class VcfBucketCompare
             int orientIndex = fieldsIndexMap.get("Orientation");
             int fragsIndex = fieldsIndexMap.get("Fragments");
             int supportIndex = fieldsIndexMap.get("SupportingReads");
-            int remoteChrIndex = fieldsIndexMap.get("RemoteChromosome");
-            int remotePosIndex = fieldsIndexMap.get("RemotePosition");
-            int remoteOrientIndex = fieldsIndexMap.get("RemoteOrientation");
+            int remoteJunctionsIndex = fieldsIndexMap.get("RemoteJunctions");
 
             int junctionCount = 0;
             JunctionData junctionData = null;
@@ -386,26 +387,34 @@ public class VcfBucketCompare
                     ++junctionCount;
                 }
 
-                String remoteChr = values[remoteChrIndex];
+                String remoteJunctionsStr = values[remoteJunctionsIndex];
 
-                if(!remoteChr.isEmpty())
+                if(!remoteJunctionsStr.isEmpty())
                 {
-                    RemoteJunction remoteJunction = new RemoteJunction(
-                            junctionData, remoteChr, Integer.parseInt(values[remotePosIndex]), Byte.parseByte(values[remoteOrientIndex]));
+                    String[] remoteJunctionsItems = remoteJunctionsStr.split(ITEM_DELIM, -1);
 
-                    junctionData.RemoteJunctions.add(remoteJunction);
-
-                    List<RemoteJunction> remoteJunctions = mChrRemoteJunctions.get(remoteChr);
-
-                    if(remoteJunctions == null)
+                    for(String remoteJunctionStr : remoteJunctionsItems)
                     {
-                        remoteJunctions = Lists.newArrayList();
-                        mChrRemoteJunctions.put(remoteChr, remoteJunctions);
-                    }
+                        String[] rjItems = remoteJunctionStr.split(SUB_ITEM_DELIM, 3);
+                        String remoteChr = rjItems[0];
 
-                    if(remoteJunctions.stream().noneMatch(x -> x.matches(remoteJunction)))
-                    {
-                        remoteJunctions.add(remoteJunction);
+                        RemoteJunction remoteJunction = new RemoteJunction(
+                                junctionData, remoteChr, Integer.parseInt(rjItems[1]), Byte.parseByte(rjItems[2]));
+
+                        junctionData.RemoteJunctions.add(remoteJunction);
+
+                        List<RemoteJunction> remoteJunctions = mChrRemoteJunctions.get(remoteChr);
+
+                        if(remoteJunctions == null)
+                        {
+                            remoteJunctions = Lists.newArrayList();
+                            mChrRemoteJunctions.put(remoteChr, remoteJunctions);
+                        }
+
+                        if(remoteJunctions.stream().noneMatch(x -> x.matches(remoteJunction)))
+                        {
+                            remoteJunctions.add(remoteJunction);
+                        }
                     }
                 }
             }

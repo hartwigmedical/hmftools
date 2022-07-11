@@ -9,8 +9,10 @@ public class PartitionStats
     public int JunctionFragmentCount;
     public int InitialSupportingFragmentCount;
     public int SupportingFragmentCount;
-
-
+    public int LocalCompleteGroups;
+    public int LocalIncompleteGroups;
+    public int SpanningGroups;
+    public int UnmatchedGroups;
 
     public final int[] ReadFilterCounts;
 
@@ -21,6 +23,11 @@ public class PartitionStats
         JunctionFragmentCount = 0;
         InitialSupportingFragmentCount = 0;
         SupportingFragmentCount = 0;
+        LocalCompleteGroups = 0;
+        LocalIncompleteGroups = 0;
+        SpanningGroups = 0;
+        UnmatchedGroups = 0;
+
         ReadFilterCounts = new int[ReadFilterType.values().length];
     }
 
@@ -31,12 +38,17 @@ public class PartitionStats
         JunctionFragmentCount += other.JunctionFragmentCount;
         InitialSupportingFragmentCount += other.InitialSupportingFragmentCount;
         SupportingFragmentCount += other.SupportingFragmentCount;
+        LocalCompleteGroups += other.LocalCompleteGroups;
+        LocalIncompleteGroups += other.LocalIncompleteGroups;
+        SpanningGroups += other.SpanningGroups;
+        UnmatchedGroups += other.UnmatchedGroups;
     }
 
     public String toString()
     {
-        return format("reads(%s) junc(%d) juncFrags(%d) supportFrags(init=%d final=%d)",
-                TotalReads, JunctionCount, JunctionFragmentCount, InitialSupportingFragmentCount, SupportingFragmentCount);
+        return format("reads(%s) junc(%d) juncFrags(%d) supportFrags(init=%d final=%d) groups(comp=%d incomp=%d span=%d unmatched=%d)",
+                TotalReads, JunctionCount, JunctionFragmentCount, InitialSupportingFragmentCount, SupportingFragmentCount,
+                LocalCompleteGroups, LocalIncompleteGroups, SpanningGroups, UnmatchedGroups);
     }
 
 }

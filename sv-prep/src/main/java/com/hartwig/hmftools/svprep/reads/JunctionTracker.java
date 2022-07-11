@@ -47,7 +47,7 @@ public class JunctionTracker
     private final Map<String,ReadGroup> mReadGroups; // keyed by readId
     private final List<JunctionData> mJunctions; // ordered by position
     private final List<ReadGroup> mJunctionGroups; // groups used to form a junction
-    private final List<ReadGroup> mSupportingGroups; // groups supporing a junction
+    private final List<ReadGroup> mSupportingGroups; // groups supporting a junction
     private int mInitialSupportingFrags;
 
     public JunctionTracker(
@@ -178,14 +178,13 @@ public class JunctionTracker
 
             if(!mRegion.containsPosition(position))
             {
-                // will only be cached if no junction is within this region
                 addRemoteJunction(remoteJunctions, new RemoteJunction(mRegion.Chromosome, position, orientation));
             }
             else
             {
                 JunctionData junctionData = getOrCreateJunction(read, orientation);
 
-                if(!junctions.contains(junctionData))
+                if(!reachedFragmentCap(junctionData.junctionFragmentCount()) && !junctions.contains(junctionData))
                     junctions.add(junctionData);
             }
         }
@@ -207,7 +206,7 @@ public class JunctionTracker
                     if(remoteJunction.matches(mRegion.Chromosome, junctionData.Position, junctionData.Orientation))
                         continue;
 
-                    addRemoteJunction(junctionData.RemoteJunctions, remoteJunction);
+                    junctionData.addRemoteJunction(remoteJunction);
                 }
             }
         }
@@ -268,9 +267,12 @@ public class JunctionTracker
             return;
 
         JunctionData junctionStart = getOrCreateJunction(read, junctionStartPos, POS_ORIENT);
-        junctionStart.JunctionGroups.add(readGroup);
-
         JunctionData junctionEnd = getOrCreateJunction(read, junctionEndPos, NEG_ORIENT);
+
+        if(reachedFragmentCap(junctionStart.junctionFragmentCount()) && reachedFragmentCap(junctionEnd.junctionFragmentCount()))
+            return;
+
+        junctionStart.JunctionGroups.add(readGroup);
         junctionEnd.JunctionGroups.add(readGroup);
     }
 
@@ -313,15 +315,7 @@ public class JunctionTracker
         {
             for(JunctionData junctionData : mJunctions)
             {
-                if(supportedJunctions.contains(junctionData))
-                    continue;
-
-                // any length soft clipping at the same base
-                if(supportsJunction(read, junctionData, mFilterConfig))
-                {
-                    read.setReadType(SUPPORT);
-                    supportedJunctions.add(junctionData);
-                }
+                checkJunctionSupport(read, junctionData, supportedJunctions);
             }
 
             return;
@@ -346,14 +340,7 @@ public class JunctionTracker
                 if(!readWithinJunctionRange(read, junctionData))
                     break;
 
-                if(!reachedSupportingReadLimit(junctionData, mFilterConfig.MaxJunctionSupportingReads)) // to limit processing
-                {
-                    if(!supportedJunctions.contains(junctionData) && supportsJunction(read, junctionData, mFilterConfig))
-                    {
-                        read.setReadType(SUPPORT);
-                        supportedJunctions.add(junctionData);
-                    }
-                }
+                checkJunctionSupport(read, junctionData, supportedJunctions);
 
                 if(searchUp)
                     ++index;
@@ -363,9 +350,24 @@ public class JunctionTracker
         }
     }
 
-    private static boolean reachedSupportingReadLimit(final JunctionData junctionData, int maxSupportingReads)
+    private void checkJunctionSupport(final ReadRecord read, final JunctionData junctionData, final Set<JunctionData> supportedJunctions)
     {
-        return maxSupportingReads > 0 && junctionData.supportingReadCount() >= maxSupportingReads;
+        if(reachedFragmentCap(junctionData.supportingFragmentCount())) // to limit processing
+            return;
+
+        if(supportedJunctions.contains(junctionData))
+            return;
+
+        if(supportsJunction(read, junctionData, mFilterConfig))
+        {
+            read.setReadType(SUPPORT);
+            supportedJunctions.add(junctionData);
+        }
+    }
+
+    private boolean reachedFragmentCap(final int fragments)
+    {
+        return mFilterConfig.JunctionFragmentCap > 0 && fragments >= mFilterConfig.JunctionFragmentCap;
     }
 
     private int findJunctionIndex(final ReadRecord read)
@@ -481,12 +483,12 @@ public class JunctionTracker
 
             if(remoteJunction.Orientation == POS_ORIENT && otherPosition <= remoteJunction.Position)
             {
-                ++remoteJunction.Support;
+                ++remoteJunction.Fragments;
                 return true;
             }
             else if(remoteJunction.Orientation == NEG_ORIENT && otherPosition >= remoteJunction.Position)
             {
-                ++remoteJunction.Support;
+                ++remoteJunction.Fragments;
                 return true;
             }
         }
