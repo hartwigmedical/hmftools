@@ -2,6 +2,7 @@ package com.hartwig.hmftools.serve.sources.ckb;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -109,14 +110,15 @@ public class ActionableEntryFactoryTest {
     @Test
     public void canExtractAndCurateDoid() {
         assertNull(ActionableEntryFactory.extractAndCurateDoid(null));
-        assertNull(ActionableEntryFactory.extractAndCurateDoid("not a doid"));
+        assertNull(ActionableEntryFactory.extractAndCurateDoid(new String[] { "jax", "not a doid" }));
 
-        assertEquals("0060463", ActionableEntryFactory.extractAndCurateDoid("DOID:0060463"));
-        assertEquals(CancerTypeConstants.CANCER_DOID, ActionableEntryFactory.extractAndCurateDoid("JAX:10000003"));
+        assertEquals("0060463", ActionableEntryFactory.extractAndCurateDoid(new String[] {"DOID", "0060463"}));
+        assertEquals(CancerTypeConstants.CANCER_DOID, ActionableEntryFactory.extractAndCurateDoid(new String[] {"JAX", "10000003"}));
         assertEquals(CancerTypeConstants.SQUAMOUD_CELL_CARCINOMA_OF_UNKNOWN_PRIMARY,
-                ActionableEntryFactory.extractAndCurateDoid("JAX:10000009"));
-        assertEquals(CancerTypeConstants.ADENOCARCINOMA_OF_UNKNOWN_PRIMARY, ActionableEntryFactory.extractAndCurateDoid("JAX:10000008"));
-        assertNull(ActionableEntryFactory.extractAndCurateDoid("JAX:10000004"));
+                ActionableEntryFactory.extractAndCurateDoid(new String[] {"JAX", "10000009"}));
+        assertEquals(CancerTypeConstants.ADENOCARCINOMA_OF_UNKNOWN_PRIMARY,
+                ActionableEntryFactory.extractAndCurateDoid(new String[] { "JAX", "10000008" }));
+        assertNull(ActionableEntryFactory.extractAndCurateDoid(new String[] { "JAX", "10000004" }));
     }
 
     @Test
@@ -124,8 +126,9 @@ public class ActionableEntryFactoryTest {
         assertNull(ActionableEntryFactory.extractSourceCancerTypeId(null));
         assertNull(ActionableEntryFactory.extractSourceCancerTypeId("not a doid"));
 
-        assertEquals("0060463", ActionableEntryFactory.extractSourceCancerTypeId("DOID:0060463"));
-        assertEquals("10000003", ActionableEntryFactory.extractSourceCancerTypeId("JAX:10000003"));
+        assertNotNull(ActionableEntryFactory.extractSourceCancerTypeId("DOID:0060463"));
+        assertEquals("0060463", ActionableEntryFactory.extractSourceCancerTypeId("DOID:0060463")[1]);
+        assertEquals("10000003", ActionableEntryFactory.extractSourceCancerTypeId("JAX:10000003")[1]);
     }
 
     @Test
