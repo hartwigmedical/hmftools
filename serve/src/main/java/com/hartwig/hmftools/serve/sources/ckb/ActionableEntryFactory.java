@@ -206,8 +206,6 @@ class ActionableEntryFactory {
         if (parts.length == 2) {
             String source = parts[0];
             if (source.equalsIgnoreCase("doid") || source.equalsIgnoreCase("jax")) {
-                LOGGER.info(parts[0]);
-                LOGGER.info(parts[1]);
                 return parts;
             } else {
                 LOGGER.warn("Unexpected length of doid string '{}'", doidString);
