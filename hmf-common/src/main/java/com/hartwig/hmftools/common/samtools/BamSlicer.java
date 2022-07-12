@@ -112,6 +112,12 @@ public class BamSlicer
                 .collect(Collectors.toList());
     }
 
+    public SAMRecord queryMate(final SamReader samReader, final SAMRecord record)
+    {
+        SAMRecord mateRecord = samReader.queryMate(record);
+        return mateRecord != null && passesFilters(mateRecord) ? mateRecord : null;
+    }
+
     private static QueryInterval[] createIntervals(final List<ChrBaseRegion> regions, final SAMFileHeader header)
     {
         final QueryInterval[] queryIntervals = new QueryInterval[regions.size()];

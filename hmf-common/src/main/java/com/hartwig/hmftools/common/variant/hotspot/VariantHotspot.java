@@ -29,13 +29,13 @@ public interface VariantHotspot extends GenomePosition {
         return ref().length() == alt().length() && ref().length() != 1;
     }
 
-    default boolean isIndel() {
-        return ref().length() != alt().length();
-    }
+    default boolean isIndel() { return ref().length() != alt().length(); }
+    default boolean isDelete() { return ref().length() > alt().length(); }
+    default boolean isInsert() { return alt().length() > ref().length(); }
 
     default int indelLength()
     {
-        if (ref().length() == alt().length())
+        if(ref().length() == alt().length())
             return 0;
 
         return alt().length() - ref().length();
