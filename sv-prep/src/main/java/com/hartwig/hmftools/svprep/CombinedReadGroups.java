@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svprep;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.WriteType.BAM;
 import static com.hartwig.hmftools.svprep.WriteType.READS;
@@ -23,6 +25,7 @@ public class CombinedReadGroups
     private int mMergedGroupCount;
     private int mUnmatchedGroupCount;
     private final Set<String> mProcessedPartitions;
+    private int mLastSnapshotCount;
 
     public CombinedReadGroups(final SvConfig config)
     {
@@ -31,12 +34,14 @@ public class CombinedReadGroups
         mProcessedPartitions = Sets.newHashSet();
         mMergedGroupCount = 0;
         mUnmatchedGroupCount = 0;
+        mLastSnapshotCount = 0;
         mPerfCounter = new PerformanceCounter("ReadMerge");
     }
 
     // public void logPerfStats() { mPerfCounter.logStats(); }
 
     private static final String CHR_PARTITION_DELIM = "_";
+    private static final int LOG_CACH_DIFF = 50000;
 
     public static String formChromosomePartition(final String chromosome, int position, int partitionSize)
     {
@@ -129,6 +134,12 @@ public class CombinedReadGroups
         }
 
         int newTotalIncomplete = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
+
+        if(abs(mLastSnapshotCount - newTotalIncomplete) > LOG_CACH_DIFF)
+        {
+            mLastSnapshotCount = newTotalIncomplete;
+            SV_LOGGER.info("completed partitions({}) incompleteCount({})", mProcessedPartitions.size(), newTotalIncomplete);
+        }
 
         SV_LOGGER.debug("chromosomePartition({}) merged({}) partials chrPartition({}) total({} -> {}) unmergedGroups({})",
                 chrPartition, totalMergedGroups, initChrIncomplete, initTotalIncomplete, newTotalIncomplete, unmatchedReadGroups.size());

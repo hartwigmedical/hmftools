@@ -91,8 +91,13 @@ public class JunctionTracker
 
         readGroup.addRead(read);
 
-        if(readGroup.isSimpleComplete() && readGroup.allNoSupport()) // purge irrelevant groups
-            mReadGroups.remove(readGroup);
+        if(readGroup.isSimpleComplete()) // purge irrelevant groups
+        {
+            if(readGroup.allNoSupport())
+                mReadGroups.remove(readGroup.id());
+            else if(groupInBlacklist(readGroup))
+                mReadGroups.remove(readGroup.id());
+        }
     }
 
     public void createJunctions()
@@ -101,9 +106,6 @@ public class JunctionTracker
 
         for(ReadGroup readGroup : mReadGroups.values())
         {
-            if(overlapsBlacklist(readGroup)) // avoid creating any junction from a blacklist region
-                continue;
-
             // ignore any group with a short overlapping fragment, likely adapter
             if(readGroup.reads().stream().anyMatch(x -> ReadFilterType.isSet(x.filters(), INSERT_MAP_OVERLAP)))
                 continue;
@@ -176,6 +178,9 @@ public class JunctionTracker
             byte orientation = scSide.isLeft() ? NEG_ORIENT : POS_ORIENT;
             int position = scSide.isLeft() ? read.start() : read.end();
 
+            if(positionInBlacklist(position))
+                continue;
+
             if(!mRegion.containsPosition(position))
             {
                 addRemoteJunction(remoteJunctions, new RemoteJunction(mRegion.Chromosome, position, orientation));
@@ -212,15 +217,21 @@ public class JunctionTracker
         }
     }
 
-    private boolean overlapsBlacklist(final ReadGroup readGroup)
+    private boolean groupInBlacklist(final ReadGroup readGroup)
     {
-        for(BaseRegion region : mBlacklistRegions)
+        // test whether every read is in a blacklist region
+        for(ReadRecord read : readGroup.reads())
         {
-            if(readGroup.reads().stream().anyMatch(x -> positionsOverlap(x.start(), x.end(), region.start(), region.end())))
-                return true;
+            if(mBlacklistRegions.stream().noneMatch(x -> positionsOverlap(x.start(), x.end(), read.start(), read.end())))
+                return false;
         }
 
-        return false;
+        return true;
+    }
+
+    private boolean positionInBlacklist(int junctionPosition)
+    {
+        return mBlacklistRegions.stream().anyMatch(x -> x.containsPosition(junctionPosition));
     }
 
     private void handleInternalIndel(final ReadGroup readGroup, final ReadRecord read)
@@ -264,6 +275,9 @@ public class JunctionTracker
         }
 
         if(junctionEndPos <= junctionStartPos)
+            return;
+
+        if(positionInBlacklist(junctionStartPos) || positionInBlacklist(junctionEndPos))
             return;
 
         JunctionData junctionStart = getOrCreateJunction(read, junctionStartPos, POS_ORIENT);

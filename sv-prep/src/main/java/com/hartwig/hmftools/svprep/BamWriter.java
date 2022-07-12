@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.svprep.reads.ReadRecord;
 
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
@@ -37,7 +38,10 @@ public class BamWriter
         SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile));
         mOutputBam = mConfig.formFilename(BAM);
 
-        return new SAMFileWriterFactory().makeBAMWriter(samReader.getFileHeader(), false, new File(mOutputBam));
+        SAMFileHeader fileHeader = samReader.getFileHeader().clone();
+        fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
+
+        return new SAMFileWriterFactory().makeBAMWriter(fileHeader, false, new File(mOutputBam));
     }
 
     public void writeRecords(final List<ReadRecord> reads)

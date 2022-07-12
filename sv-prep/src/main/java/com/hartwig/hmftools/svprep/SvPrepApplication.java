@@ -5,11 +5,14 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConfig.createCmdLineOptions;
-import static com.hartwig.hmftools.svprep.WriteType.BAM;
-import static com.hartwig.hmftools.svprep.WriteType.READS;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
+import com.hartwig.hmftools.svprep.reads.PartitionStats;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -39,6 +42,8 @@ public class SvPrepApplication
         if(mConfig.CalcFragmentLength)
             calcFragmentDistribution();
 
+        CombinedStats combinedStats = new CombinedStats();
+
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
             String chromosomeStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
@@ -50,12 +55,29 @@ public class SvPrepApplication
 
             ChromosomeTask chromosomeTask = new ChromosomeTask(chromosomeStr, mConfig, mCombinedReadGroups, mWriter);
             chromosomeTask.process();
+            combinedStats.addPartitionStats(chromosomeTask.combinedStats().ReadStats);
+
+            if(combinedStats.PerfCounters.isEmpty())
+            {
+                combinedStats.PerfCounters.addAll(chromosomeTask.combinedStats().PerfCounters);
+            }
+            else
+            {
+                for(int i = 0; i < chromosomeTask.combinedStats().PerfCounters.size(); ++i)
+                {
+                    combinedStats.PerfCounters.get(i).merge(chromosomeTask.combinedStats().PerfCounters.get((i)));
+                }
+            }
+
             System.gc();
         }
 
         mCombinedReadGroups.writeRemainingReadGroups(mWriter, mConfig.WriteTypes);
 
         mWriter.close();
+
+        SV_LOGGER.info("final stats: {}",combinedStats.ReadStats.toString());
+        combinedStats.PerfCounters.forEach(x -> x.logStats());
 
         SV_LOGGER.info("SV prep complete");
     }

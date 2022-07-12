@@ -53,8 +53,8 @@ public class PartitionThread extends Thread
 
                 slicer.run();
 
-                if(logAndGc)
-                    System.gc();
+                //if(logAndGc)
+                //    System.gc();
             }
             catch(NoSuchElementException e)
             {

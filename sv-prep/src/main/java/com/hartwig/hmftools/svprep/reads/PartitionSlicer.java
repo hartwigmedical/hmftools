@@ -134,7 +134,7 @@ public class PartitionSlicer
         mCombinedStats.addPartitionStats(mStats);
         mCombinedStats.addPerfCounters(mPerCounters);
 
-        if(mRateLimitTriggered || mStats.TotalReads > DOWN_SAMPLE_THRESHOLD / 10)
+        if(mRateLimitTriggered)
             System.gc();
     }
 
@@ -148,6 +148,9 @@ public class PartitionSlicer
             return;
 
         ++mStats.TotalReads;
+
+        if(mStats.TotalReads > 0 && (mStats.TotalReads % 1_000_000) == 0)
+            System.gc();
 
         if(mFilterRegion != null)
         {
@@ -239,7 +242,7 @@ public class PartitionSlicer
             if(unmatchedGroups.isEmpty() && totalGroups == 0)
                 return;
 
-            mStats.UnmatchedGroups += unmatchedGroups.size();
+            mStats.UnmatchedGroups = unmatchedGroups.size();
 
             SV_LOGGER.debug("region({}) readGroups({}) complete(local={} spanning={}) unmatched({})",
                     mRegion, totalGroups, totalGroups - spanningGroups, spanningGroups, unmatchedGroups.size());
@@ -306,7 +309,6 @@ public class PartitionSlicer
         mPerCounters[PC_UNMATCHED_SLICE].start();
 
         int matchedGroups = 0;
-        int slicedReads = 0;
 
         for(ReadGroupState readGroup : unmatchedGroups)
         {
@@ -314,7 +316,7 @@ public class PartitionSlicer
             GenomePosition slicePosition = GenomePositions.create(remoteChr, readGroup.RemotePosition);
             List<SAMRecord> records = mBamSlicer.slice(mSamReader, slicePosition);
 
-            slicedReads += records.size();
+            mStats.UnmatchedSliceReads += records.size();
 
             for(SAMRecord record : records)
             {
@@ -326,15 +328,14 @@ public class PartitionSlicer
             }
         }
 
-        SV_LOGGER.debug("region({}) unmatched groups matched reads({}) from sliced({})", mRegion, matchedGroups, slicedReads);
+        SV_LOGGER.debug("region({}) unmatched groups matched reads({}) from sliced({})",
+                mRegion, matchedGroups, mStats.UnmatchedSliceReads);
 
         mPerCounters[PC_UNMATCHED_SLICE].stop();
     }
 
     private void processUnmatchedRecord(final SAMRecord record, ReadGroupState readGroup)
     {
-        ++mStats.TotalReads;
-
         if(mLogReadIds) // debugging only
         {
             if(mConfig.LogReadIds.contains(record.getReadName()))
