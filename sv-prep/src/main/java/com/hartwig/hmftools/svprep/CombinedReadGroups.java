@@ -184,45 +184,11 @@ public class CombinedReadGroups
         if(!writeTypes.contains(BAM) && !writeTypes.contains(READS))
             return;
 
-        int remainingIncomplete = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
+        int remainingCached = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
 
-        SV_LOGGER.info("spanning partition groups: merged({}) unmatched({})",
-                mMergedGroupCount, remainingIncomplete);
-
-        /*
-        Map<String,ReadGroup> readGroups = Maps.newHashMap();
-
-        for(Map<String,ReadGroup> readGroupMaps : mIncompleteReadGroups.values())
-        {
-            for(ReadGroup readGroup : readGroupMaps.values())
-            {
-                ReadGroup existingGroup = readGroups.get(readGroup.id());
-
-                if(existingGroup != null)
-                {
-                    existingGroup.merge(readGroup);
-                    existingGroup.setGroupStatus(null);
-                }
-                else
-                {
-                    readGroups.put(readGroup.id(), readGroup);
-                }
-            }
-        }
-
-        if(writeTypes.contains(BAM))
-            readGroups.values().forEach(x -> writer.writeBamRecords(x));
-
-        if(writeTypes.contains(READS))
-            writer.writeReadData(readGroups.values().stream().collect(Collectors.toList()));
-
-        if(!readGroups.isEmpty())
-        {
-            SV_LOGGER.info("remaining partial groups({})", readGroups.size());
-        }
-         */
+        SV_LOGGER.info("spanning partition groups: merged({}) unmatched({}) cached({})",
+                mMergedGroupCount, mUnmatchedGroupCount, remainingCached);
 
         mPerfCounter.logStats();
     }
-
 }

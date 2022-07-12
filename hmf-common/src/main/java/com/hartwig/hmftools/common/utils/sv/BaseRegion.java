@@ -108,6 +108,5 @@ public class BaseRegion implements Cloneable, Comparable<BaseRegion>
     {
         return (innerStart <= innerEnd && innerStart >= outerStart && innerEnd <= outerEnd);
     }
-
 }
 

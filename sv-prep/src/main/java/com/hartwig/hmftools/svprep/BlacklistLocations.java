@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -43,6 +44,32 @@ public class BlacklistLocations
         regions.add(region);
     }
 
+    private void sortAndMerge()
+    {
+        for(List<BaseRegion> regions : mChrLocationsMap.values())
+        {
+            Collections.sort(regions);
+
+            // merge any adjacent regions
+            int index = 0;
+            while(index < regions.size() - 1)
+            {
+                BaseRegion region = regions.get(index);
+                BaseRegion nextRegion = regions.get(index + 1);
+
+                if(region.end() >= nextRegion.start() - 2)
+                {
+                    region.setEnd(nextRegion.end());
+                    regions.remove(index + 1);
+                }
+                else
+                {
+                    ++index;
+                }
+            }
+        }
+    }
+
     private void loadFile(final String filename)
     {
         if(filename == null)
@@ -69,7 +96,7 @@ public class BlacklistLocations
                 }
 
                 String chromosome = values[0];
-                int posStart = Integer.parseInt(values[1]);
+                int posStart = Integer.parseInt(values[1]) + 1;
                 int posEnd = Integer.parseInt(values[2]);
 
                 addRegion(chromosome, new BaseRegion(posStart, posEnd));
@@ -77,6 +104,8 @@ public class BlacklistLocations
             }
 
             SV_LOGGER.info("loaded {} blacklist locations from file", itemCount, filename);
+
+            sortAndMerge();
         }
         catch(IOException e)
         {
