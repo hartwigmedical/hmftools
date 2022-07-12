@@ -230,7 +230,7 @@ public class RepeatMaskAnnotations
                 }
 
                 // note BED start position adjustment
-                BaseRegion region = new BaseRegion(Integer.parseInt(values[5]), Integer.parseInt(values[6]));
+                BaseRegion region = new BaseRegion(Integer.parseInt(values[5]) + 1, Integer.parseInt(values[6]));
                 int id = Integer.parseInt(values[14]);
                 int swScore = Integer.parseInt(values[0]);
                 char orientation = values[8].charAt(0);

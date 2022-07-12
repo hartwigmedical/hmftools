@@ -145,8 +145,9 @@ public class HotspotCache
                 String chrStart = items[0];
                 String chrEnd = items[3];
 
-                ChrBaseRegion regionStart = new ChrBaseRegion(chrStart, Integer.parseInt(items[1]), Integer.parseInt(items[2]));
-                ChrBaseRegion regionEnd = new ChrBaseRegion(chrEnd, Integer.parseInt(items[4]), Integer.parseInt(items[5]));
+                // note BED file adjustment for start position
+                ChrBaseRegion regionStart = new ChrBaseRegion(chrStart, Integer.parseInt(items[1]) + 1, Integer.parseInt(items[2]));
+                ChrBaseRegion regionEnd = new ChrBaseRegion(chrEnd, Integer.parseInt(items[4]) + 1, Integer.parseInt(items[5]));
                 Byte orientStart = items[8].equals("+") ? POS_ORIENT : NEG_ORIENT;
                 Byte orientEnd = items[9].equals("+") ? POS_ORIENT : NEG_ORIENT;
                 String geneInfo = items[6];
