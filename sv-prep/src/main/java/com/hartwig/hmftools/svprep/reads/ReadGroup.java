@@ -50,7 +50,7 @@ public class ReadGroup
         mJunctionPositions.add(position);
     }
 
-    public String groupStatus() { return mStatus.toString(); }
+    public ReadGroupStatus groupStatus() { return mStatus; }
 
     public boolean isSimpleComplete()
     {

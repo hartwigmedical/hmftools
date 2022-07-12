@@ -2,6 +2,7 @@ package com.hartwig.hmftools.svprep.reads;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
+import static com.hartwig.hmftools.svprep.CombinedReadGroups.chromosomeFromChromosomePartition;
 import static com.hartwig.hmftools.svprep.CombinedReadGroups.formChromosomePartition;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_FRACTION;
@@ -12,6 +13,7 @@ import static com.hartwig.hmftools.svprep.WriteType.BAM;
 import static com.hartwig.hmftools.svprep.WriteType.READS;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
+import static com.hartwig.hmftools.svprep.reads.ReadType.UNMATCHED;
 
 import java.io.File;
 import java.util.List;
@@ -19,6 +21,8 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
@@ -57,7 +61,8 @@ public class PartitionSlicer
 
     private static final int PC_SLICE = 0;
     private static final int PC_JUNCTIONS = 1;
-    private static final int PC_TOTAL = 2;
+    private static final int PC_UNMATCHED_SLICE = 2;
+    private static final int PC_TOTAL = 3;
 
     public PartitionSlicer(
             final int id, final ChrBaseRegion region, final SvConfig config, final CombinedReadGroups combinedReadGroups,
@@ -91,6 +96,7 @@ public class PartitionSlicer
         mPerCounters = new PerformanceCounter[PC_TOTAL+1];
         mPerCounters[PC_SLICE] = new PerformanceCounter("Slice");
         mPerCounters[PC_JUNCTIONS] = new PerformanceCounter("Junctions");
+        mPerCounters[PC_UNMATCHED_SLICE] = new PerformanceCounter("UnmatchedSlice");
         mPerCounters[PC_TOTAL] = new PerformanceCounter("Total");
 
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
@@ -246,9 +252,12 @@ public class PartitionSlicer
 
             if(mConfig.WriteTypes.contains(READS))
             {
-                mWriter.writeReadData(mJunctionTracker.junctionGroups());
-                mWriter.writeReadData(mJunctionTracker.supportingGroups());
+                mWriter.writeReadGroup(mJunctionTracker.junctionGroups());
+                mWriter.writeReadGroup(mJunctionTracker.supportingGroups());
             }
+
+            if(!unmatchedGroups.isEmpty())
+                sliceUnmatchedReadGroups(unmatchedGroups);
         }
 
         if(mConfig.WriteTypes.contains(WriteType.JUNCTIONS))
@@ -270,14 +279,6 @@ public class PartitionSlicer
         if(readGroup.spansPartitions())
         {
             ++mStats.SpanningGroups;
-            /*
-            if(remoteChrPartition == null || remoteChrPartition.equals(chrPartition))
-            {
-                // missing a read local to this partition
-                localGroups.add(readGroup);
-                return;
-            }
-            */
 
             Map<String,ReadGroupState> groups = partialGroupsMap.get(groupState.RemoteChrPartition);
 
@@ -295,6 +296,63 @@ public class PartitionSlicer
                 ++mStats.LocalCompleteGroups;
             else
                 ++mStats.LocalIncompleteGroups;
+        }
+    }
+
+    private void sliceUnmatchedReadGroups(final List<ReadGroupState> unmatchedGroups)
+    {
+        SV_LOGGER.debug("region({}) slicing for {} unmatched read groups", mRegion, unmatchedGroups.size());
+
+        mPerCounters[PC_UNMATCHED_SLICE].start();
+
+        int matchedGroups = 0;
+        int slicedReads = 0;
+
+        for(ReadGroupState readGroup : unmatchedGroups)
+        {
+            String remoteChr = chromosomeFromChromosomePartition(readGroup.RemoteChrPartition);
+            GenomePosition slicePosition = GenomePositions.create(remoteChr, readGroup.RemotePosition);
+            List<SAMRecord> records = mBamSlicer.slice(mSamReader, slicePosition);
+
+            slicedReads += records.size();
+
+            for(SAMRecord record : records)
+            {
+                if(record.getReadName().equals(readGroup.ReadId))
+                {
+                    processUnmatchedRecord(record, readGroup);
+                    ++matchedGroups;
+                }
+            }
+        }
+
+        SV_LOGGER.debug("region({}) unmatched groups matched reads({}) from sliced({})", mRegion, matchedGroups, slicedReads);
+
+        mPerCounters[PC_UNMATCHED_SLICE].stop();
+    }
+
+    private void processUnmatchedRecord(final SAMRecord record, ReadGroupState readGroup)
+    {
+        ++mStats.TotalReads;
+
+        if(mLogReadIds) // debugging only
+        {
+            if(mConfig.LogReadIds.contains(record.getReadName()))
+                SV_LOGGER.debug("specific readId({})", record.getReadName());
+        }
+
+        if(mConfig.WriteTypes.contains(BAM))
+        {
+            mWriter.writeBamRecord(record);
+        }
+
+        if(mConfig.WriteTypes.contains(READS))
+        {
+            ReadRecord read = ReadRecord.from(record);
+            int filters = mReadFilters.checkFilters(record);
+            read.setFilters(filters);
+            read.setReadType(UNMATCHED);
+            mWriter.writeReadData(read, readGroup.ReadCount + 1, readGroup.Status, true, "");
         }
     }
 

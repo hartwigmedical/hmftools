@@ -44,6 +44,11 @@ public class CombinedReadGroups
         return chromosome + CHR_PARTITION_DELIM + partition;
     }
 
+    public static String chromosomeFromChromosomePartition(final String chrPartition)
+    {
+        return chrPartition.split(CHR_PARTITION_DELIM, 2)[0];
+    }
+
     public synchronized List<ReadGroupState> addIncompleteReadGroup(
             final String chrPartition, final Map<String,Map<String,ReadGroupState>> remoteChrIncompleteGroups)
     {
@@ -140,7 +145,7 @@ public class CombinedReadGroups
         if(mConfig.SpecificChromosomes.isEmpty())
             return false;
 
-        String chromosome = chrPartition.split(CHR_PARTITION_DELIM, 2)[0];
+        String chromosome = chromosomeFromChromosomePartition(chrPartition);
         return !mConfig.SpecificChromosomes.contains(chromosome);
     }
 

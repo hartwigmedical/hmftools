@@ -5,5 +5,6 @@ public enum ReadType
     NO_SUPPORT,
     CANDIDATE_SUPPORT,
     SUPPORT,
-    JUNCTION;
+    JUNCTION,
+    UNMATCHED;
 }

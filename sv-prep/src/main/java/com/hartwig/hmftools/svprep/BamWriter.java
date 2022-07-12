@@ -10,6 +10,7 @@ import com.hartwig.hmftools.svprep.reads.ReadRecord;
 
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
@@ -39,13 +40,22 @@ public class BamWriter
         return new SAMFileWriterFactory().makeBAMWriter(samReader.getFileHeader(), false, new File(mOutputBam));
     }
 
-    public synchronized void writeRecords(final List<ReadRecord> reads)
+    public void writeRecords(final List<ReadRecord> reads)
     {
         if(mWriter == null)
             return;
 
         mRecordWriteCount += reads.size();
         reads.forEach(x -> mWriter.addAlignment(x.record()));
+    }
+
+    public void writeRecord(final SAMRecord record)
+    {
+        if(mWriter == null)
+            return;
+
+        ++mRecordWriteCount;
+        mWriter.addAlignment(record);
     }
 
     public void close()

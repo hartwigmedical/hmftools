@@ -26,8 +26,11 @@ import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.svprep.reads.JunctionData;
 import com.hartwig.hmftools.svprep.reads.ReadFilterType;
 import com.hartwig.hmftools.svprep.reads.ReadGroup;
+import com.hartwig.hmftools.svprep.reads.ReadGroupStatus;
 import com.hartwig.hmftools.svprep.reads.ReadRecord;
 import com.hartwig.hmftools.svprep.reads.RemoteJunction;
+
+import htsjdk.samtools.SAMRecord;
 
 public class ResultsWriter
 {
@@ -91,47 +94,52 @@ public class ResultsWriter
         return null;
     }
 
-    public synchronized void writeReadData(final List<ReadGroup> readGroups)
+    public synchronized void writeReadGroup(final List<ReadGroup> readGroups)
+    {
+        for(ReadGroup readGroup : readGroups)
+        {
+            String junctionPosStr = "";
+
+            if(readGroup.junctionPositions() != null)
+            {
+                StringJoiner sjPos = new StringJoiner(ITEM_DELIM);
+                readGroup.junctionPositions().forEach(x -> sjPos.add(String.valueOf(x)));
+                junctionPosStr = sjPos.toString();
+            }
+
+            for(ReadRecord read : readGroup.reads())
+            {
+                writeReadData(read, readGroup.size(), readGroup.groupStatus(), readGroup.spansPartitions(), junctionPosStr);
+            }
+        }
+    }
+
+    public synchronized void writeReadData(
+            final ReadRecord read, int readCount, final ReadGroupStatus status, boolean spansPartitions, final String junctionPositions)
     {
         if(mReadWriter == null)
             return;
 
         try
         {
-            for(ReadGroup readGroup : readGroups)
-            {
-                String junctionPosStr = "";
+            mReadWriter.write(format("%s,%d,%s,%s", read.id(), readCount, status, spansPartitions));
 
-                if(readGroup.junctionPositions() != null)
-                {
-                    StringJoiner sjPos = new StringJoiner(ITEM_DELIM);
-                    readGroup.junctionPositions().forEach(x -> sjPos.add(String.valueOf(x)));
-                    junctionPosStr = sjPos.toString();
-                }
+            mReadWriter.write(format(",%s,%s,%d,%d,%s",
+                    read.readType(), read.Chromosome, read.start(), read.end(), read.cigar().toString()));
 
-                for(ReadRecord read : readGroup.reads())
-                {
-                    mReadWriter.write(format("%s,%d,%s,%s",
-                            read.id(), readGroup.size(), readGroup.groupStatus(), readGroup.spansPartitions()));
+            SupplementaryReadData suppData = read.supplementaryAlignment();
 
-                    mReadWriter.write(format(",%s,%s,%d,%d,%s",
-                            read.readType(), read.Chromosome, read.start(), read.end(), read.cigar().toString()));
+            mReadWriter.write(format(",%d,%s,%d,%d,%s,%s,%d",
+                    read.fragmentInsertSize(), read.MateChromosome, read.MatePosStart, read.MapQuality,
+                    read.isMultiMapped(), suppData != null ? suppData.asCsv() : "N/A", read.flags()));
 
-                    SupplementaryReadData suppData = read.supplementaryAlignment();
+            mReadWriter.write(format(",%s,%s,%s,%s,%s,%s,%s",
+                    read.isFirstOfPair(), read.isReadReversed(), read.hasFlag(PROPER_PAIR), read.isDuplicate(),
+                    read.hasFlag(MATE_UNMAPPED), read.hasFlag(SECONDARY_ALIGNMENT), read.hasFlag(SUPPLEMENTARY_ALIGNMENT)));
 
-                    mReadWriter.write(format(",%d,%s,%d,%d,%s,%s,%d",
-                            read.fragmentInsertSize(), read.MateChromosome, read.MatePosStart, read.MapQuality,
-                            read.isMultiMapped(), suppData != null ? suppData.asCsv() : "N/A", read.flags()));
+            mReadWriter.write(format(",%s", junctionPositions));
 
-                    mReadWriter.write(format(",%s,%s,%s,%s,%s,%s,%s",
-                            read.isFirstOfPair(), read.isReadReversed(), read.hasFlag(PROPER_PAIR), read.isDuplicate(),
-                            read.hasFlag(MATE_UNMAPPED), read.hasFlag(SECONDARY_ALIGNMENT), read.hasFlag(SUPPLEMENTARY_ALIGNMENT)));
-
-                    mReadWriter.write(format(",%s", junctionPosStr));
-
-                    mReadWriter.newLine();
-                }
-            }
+            mReadWriter.newLine();
         }
         catch(IOException e)
         {
@@ -219,6 +227,14 @@ public class ResultsWriter
             return;
 
         mBamWriter.writeRecords(readGroup.reads());
+    }
+
+    public synchronized void writeBamRecord(final SAMRecord record)
+    {
+        if(mBamWriter == null)
+            return;
+
+        mBamWriter.writeRecord(record);
     }
 
     private BufferedWriter initialiseBedWriter()
