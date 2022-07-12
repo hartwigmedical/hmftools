@@ -4,18 +4,19 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.CORE_LOW_QUAL_MISMATCH_BASE_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_EVIDENCE_MAP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_CONTEXT_MIN_SEARCH_BUFFER;
 import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_CONTEXT_MIN_SEARCH_LENGTH;
+import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
-import static com.hartwig.hmftools.sage.evidence.RealignedType.NONE;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.SHORTENED;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.jitterPenalty;
 
@@ -317,12 +318,12 @@ public class ReadContextCounter implements VariantHotspot
             }
         }
 
-        RealignedContext realignment = checkRealignment(record);
-        int maxRealignDistance = getMaxRealignmentDistance(record);
+        boolean canRealign = abs(mVariant.indelLength()) >= REALIGN_READ_MIN_INDEL_LENGTH || readHasIndelInCore(record);
+        RealignedContext realignment = canRealign ? checkRealignment(record) : RealignedContext.NONE;
 
         /*
         // log differences
-        RealignedContext oldRealignment = Realignment.realignedAroundIndex(mReadContext, readIndex, record.getReadBases(), maxRealignDistance);
+        RealignedContext oldRealignment = Realignment.realignedAroundIndex(mReadContext, readIndex, record.getReadBases(), getMaxRealignDistance(record));
         // if((realignment.Type == EXACT) != (oldRealignment.Type == EXACT))
         if(realignment.Type == NONE && oldRealignment.Type == EXACT && rawContext.ReadIndexInDelete)
         {
@@ -345,7 +346,8 @@ public class ReadContextCounter implements VariantHotspot
         }
 
         // switch back to the old method to test for jitter
-        RealignedContext jitterRealign = Realignment.realignedAroundIndex(mReadContext, readIndex, record.getReadBases(), maxRealignDistance);
+        RealignedContext jitterRealign = canRealign ? Realignment.realignedAroundIndex(
+                mReadContext, readIndex, record.getReadBases(), getMaxRealignDistance(record)) : RealignedContext.NONE;
 
         if(rawContext.ReadIndexInSoftClip && !rawContext.AltSupport)
         {
@@ -380,28 +382,6 @@ public class ReadContextCounter implements VariantHotspot
                 mLengthened++;
             else
                 mShortened++;
-
-            /*
-            int realignLeftReadIndex = calcLeftAlignmentIndex(record);
-            int realignRightReadIndex = calcRightAlignmentIndex(record);
-
-            // Variant,RealignType,CalcLeft,CalcRight,MatchLength,InitMatchLength,MatchIndex,InitMatchIndex,RepeatCount,RepeatLength,LeftCore,Index,RightCore,ReadIndex,Cigar,PosStart,PosEnd,ReadId
-
-            SG_LOGGER.debug("REALIGN: {},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
-                    varString(), jitterRealign.Type, realignLeftReadIndex, realignRightReadIndex, jitterRealign.MatchLength, jitterRealign.InitialMatchLength,
-                    jitterRealign.MatchReadIndex, jitterRealign.InitialReadIndex, jitterRealign.RepeatCount, jitterRealign.RepeatLength,
-                    mReadContext.indexedBases().LeftCoreIndex, mReadContext.indexedBases().Index,
-                    mReadContext.indexedBases().RightCoreIndex,  readIndex, record.getAlignmentStart(), record.getCigarString(),
-                    record.getReadName());
-
-            SG_LOGGER.debug("var({}) realign type({}) calc(left={} right={}) match({} init={}) index({} init={}) repeat(count={} len={}) "
-                            + "readContext({}-{}-{}) read(idx={} posStart={} cigar={} id={}) readCxt({}) readBases({})",
-                    varString(), jitterRealign.Type, jitterRealign.MatchLength, jitterRealign.InitialMatchLength,
-                    jitterRealign.MatchReadIndex, jitterRealign.InitialReadIndex, jitterRealign.RepeatCount, jitterRealign.RepeatLength,
-                    mReadContext.indexedBases().LeftCoreIndex, mReadContext.indexedBases().Index,
-                    mReadContext.indexedBases().RightCoreIndex,  readIndex, record.getAlignmentStart(), record.getCigarString(),
-                    record.getReadName(), mReadContext.indexedBases().fullString(), record.getReadString());
-            */
         }
 
         return matchType;
@@ -460,6 +440,41 @@ public class ReadContextCounter implements VariantHotspot
         return new RawContext(
                 readIndex, false, false, true,
                 true, false, true, baseQuality, 0);
+    }
+
+    private boolean readHasIndelInCore(final SAMRecord record)
+    {
+        if(!record.getCigar().containsOperator(D) && !record.getCigar().containsOperator(I))
+            return false;
+
+        int variantLeftCorePos = mVariant.position() - (mReadContext.indexedBases().Index - mReadContext.indexedBases().LeftCoreIndex);
+        int variantRightCorePos = mVariant.position() + (mReadContext.indexedBases().RightCoreIndex - mReadContext.indexedBases().Index);
+
+        int currentPos = record.getAlignmentStart() - 1;
+        int currentIndex = 0;
+
+        // eg 2S10M2D10M starting at 100: first non-SC element, in this case a delete, starts at 109
+        for(CigarElement element : record.getCigar())
+        {
+            if(element.getOperator() == S)
+                continue;
+
+            if(element.getOperator() == I || element.getOperator() == D)
+            {
+                int indelLowerPos = currentPos;
+                int indelUpperPos = indelLowerPos + (element.getOperator() == D ? element.getLength() : 1);
+
+                if(positionsOverlap(variantLeftCorePos, variantRightCorePos, indelLowerPos, indelUpperPos))
+                    return true;
+            }
+            else if(element.getOperator() == M)
+            {
+                currentPos += element.getLength();
+                currentIndex += element.getLength();
+            }
+        }
+
+        return false;
     }
 
     private int calcLeftAlignmentIndex(final SAMRecord record)
@@ -607,7 +622,7 @@ public class ReadContextCounter implements VariantHotspot
             mReverseStrand++;
     }
 
-    private int getMaxRealignmentDistance(final SAMRecord record)
+    private int getMaxRealignDistance(final SAMRecord record)
     {
         int index = mReadContext.readBasesPositionIndex();
         int leftIndex = mReadContext.readBasesLeftCentreIndex();

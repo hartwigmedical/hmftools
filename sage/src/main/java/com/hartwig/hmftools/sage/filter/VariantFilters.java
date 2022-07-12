@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPP
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_RAW_ALT_BASE_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.LONG_GERMLINE_INSERT_LENGTH;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_INDEL_GERMLINE_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.SageConstants.NORMAL_RAW_ALT_BQ_MAX;
 
 import java.util.EnumSet;
@@ -194,7 +195,7 @@ public class VariantFilters
         }
 
         // MNV Tests
-        if(aboveMaxMnvNormalAltSupport(tier, normal, mConfig.MnvFilter))
+        if(aboveMaxMnvIndelNormalAltSupport(tier, normal, mConfig.MnvFilter))
         {
             filters.add(SoftFilter.MAX_GERMLINE_ALT_SUPPORT.filterName());
         }
@@ -239,10 +240,19 @@ public class VariantFilters
         return Doubles.positive(tumorQual) && Doubles.greaterThan(germlineQual / tumorQual, config.MaxGermlineRelativeQual);
     }
 
-    private static boolean aboveMaxMnvNormalAltSupport(
-            final VariantTier tier, final ReadContextCounter normal, boolean applyMnvFilter)
+    private static boolean aboveMaxMnvIndelNormalAltSupport(final VariantTier tier, final ReadContextCounter normal, boolean applyMnvFilter)
     {
-        return tier != VariantTier.HOTSPOT && normal.variant().isMNV() && applyMnvFilter && normal.altSupport() != 0;
+        if(tier == VariantTier.HOTSPOT)
+            return false;
+
+        if((applyMnvFilter && normal.variant().isMNV()) || (normal.variant().isInsert() && normal.variant().indelLength() >= LONG_GERMLINE_INSERT_LENGTH))
+        {
+            double depth = (double)normal.depth();
+            double altSupportPerc = depth > 0 ? normal.altSupport() / depth : 0;
+            return altSupportPerc >= MAX_INDEL_GERMLINE_ALT_SUPPORT;
+        }
+
+        return false;
     }
 
     private static final EnumSet<VariantTier> PANEL_ONLY_TIERS = EnumSet.of(VariantTier.HOTSPOT, VariantTier.PANEL);
