@@ -346,8 +346,7 @@ public class ReadContextCounter implements VariantHotspot
         }
 
         // switch back to the old method to test for jitter
-        RealignedContext jitterRealign = canRealign ? Realignment.realignedAroundIndex(
-                mReadContext, readIndex, record.getReadBases(), getMaxRealignDistance(record)) : RealignedContext.NONE;
+        RealignedContext jitterRealign = Realignment.realignedAroundIndex(mReadContext, readIndex, record.getReadBases(), getMaxRealignDistance(record));
 
         if(rawContext.ReadIndexInSoftClip && !rawContext.AltSupport)
         {
