@@ -80,8 +80,8 @@ public class ResultsWriter
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write("ReadId,GroupCount,ExpectedCount,GroupStatus,HasExternal,ReadType,Chromosome,PosStart,PosEnd,Cigar");
-            writer.write(",FragLength,MateChr,MatePosStart,MapQual,MultiMapped,SuppData,Flags");
-            writer.write(",FirstInPair,ReadReversed,Proper,Duplicate,Unmapped,MateUnmapped,Secondary,Supplementary,JunctionPositions");
+            writer.write(",FragLength,MateChr,MatePosStart,MapQual,SuppData,Flags");
+            writer.write(",FirstInPair,ReadReversed,Proper,Unmapped,MateUnmapped,Supplementary,JunctionPositions");
 
             writer.newLine();
 
@@ -136,13 +136,13 @@ public class ResultsWriter
 
             SupplementaryReadData suppData = read.supplementaryAlignment();
 
-            mReadWriter.write(format(",%d,%s,%d,%d,%s,%s,%d",
+            mReadWriter.write(format(",%d,%s,%d,%d,%s,%d",
                     read.fragmentInsertSize(), read.MateChromosome, read.MatePosStart, read.MapQuality,
-                    read.isMultiMapped(), suppData != null ? suppData.asCsv() : "N/A", read.flags()));
+                    suppData != null ? suppData.asCsv() : "N/A", read.flags()));
 
-            mReadWriter.write(format(",%s,%s,%s,%s,%s,%s,%s,%s",
-                    read.isFirstOfPair(), read.isReadReversed(), read.hasFlag(PROPER_PAIR), read.isDuplicate(), read.hasFlag(READ_UNMAPPED),
-                    read.hasFlag(MATE_UNMAPPED), read.hasFlag(SECONDARY_ALIGNMENT), read.hasFlag(SUPPLEMENTARY_ALIGNMENT)));
+            mReadWriter.write(format(",%s,%s,%s,%s,%s,%s",
+                    read.isFirstOfPair(), read.isReadReversed(), read.hasFlag(PROPER_PAIR), read.hasFlag(READ_UNMAPPED),
+                    read.isMateUnmapped(), read.hasFlag(SUPPLEMENTARY_ALIGNMENT)));
 
             mReadWriter.write(format(",%s", junctionPositions));
 

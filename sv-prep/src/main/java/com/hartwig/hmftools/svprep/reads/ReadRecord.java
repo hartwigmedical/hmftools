@@ -43,8 +43,17 @@ public class ReadRecord
         mRecord = record;
         Chromosome = record.getReferenceName();
         Positions = new int[] { record.getStart(), record.getEnd() };
-        MateChromosome = record.getMateReferenceName();
-        MatePosStart = record.getMateAlignmentStart();
+
+        if(!record.getMateUnmappedFlag())
+        {
+            MateChromosome = record.getMateReferenceName();
+            MatePosStart = record.getMateAlignmentStart();
+        }
+        else
+        {
+            MateChromosome = "-1";
+            MatePosStart = 0;
+        }
 
         mFragmentInsertSize = abs(record.getInferredInsertSize());
         mSupplementaryAlignment = SupplementaryReadData.from(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
@@ -83,8 +92,8 @@ public class ReadRecord
     public boolean isReadReversed() { return ( mRecord.getFlags() & SAMFlag.READ_REVERSE_STRAND.intValue()) != 0; }
     public boolean isFirstOfPair() { return (mRecord.getFlags() & SAMFlag.FIRST_OF_PAIR.intValue()) != 0; }
     public boolean isSupplementaryAlignment() { return (mRecord.getFlags() & SAMFlag.SUPPLEMENTARY_ALIGNMENT.intValue()) != 0; }
+    public boolean isMateUnmapped() { return (mRecord.getFlags() & SAMFlag.MATE_UNMAPPED.intValue()) != 0; }
 
-    public boolean isDuplicate() { return (mRecord.getFlags() & SAMFlag.DUPLICATE_READ.intValue()) != 0; }
     public boolean hasFlag(final SAMFlag flag) { return (mRecord.getFlags() & flag.intValue()) != 0; }
 
     public SupplementaryReadData supplementaryAlignment() { return mSupplementaryAlignment; }

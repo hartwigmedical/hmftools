@@ -8,6 +8,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -22,6 +24,8 @@ public final class SamRecordUtils
 
     public static final String SUPPLEMENTARY_ATTRIBUTE = "SA";
     public static final String SECONDARY_ATTRIBUTE = "HI";
+
+    public static final Logger SAM_LOGGER = LogManager.getLogger(SamRecordUtils.class);
 
     public static int getBaseQuality(final char quality)
     {
