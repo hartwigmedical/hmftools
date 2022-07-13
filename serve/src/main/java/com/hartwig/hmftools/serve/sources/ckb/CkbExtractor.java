@@ -48,7 +48,7 @@ import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
-import com.hartwig.hmftools.serve.treatementapproach.curation.RelevantTreatmentAprroachCuration;
+import com.hartwig.hmftools.serve.treatementapproach.RelevantTreatmentAprroachCuration;
 import com.hartwig.hmftools.serve.util.ProgressTracker;
 
 import org.apache.logging.log4j.LogManager;

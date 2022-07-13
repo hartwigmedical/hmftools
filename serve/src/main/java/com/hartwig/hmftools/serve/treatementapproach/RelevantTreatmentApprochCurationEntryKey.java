@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.treatementapproach.curation;
+package com.hartwig.hmftools.serve.treatementapproach;
 
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;

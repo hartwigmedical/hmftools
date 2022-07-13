@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.treatementapproach.curation;
+package com.hartwig.hmftools.serve.treatementapproach;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

@@ -19,9 +19,9 @@ import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.cancertype.CancerType;
 import com.hartwig.hmftools.serve.cancertype.CancerTypeConstants;
 import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
-import com.hartwig.hmftools.serve.treatementapproach.curation.ImmutableRelevantTreatmentApprochCurationEntryKey;
-import com.hartwig.hmftools.serve.treatementapproach.curation.RelevantTreatmentApprochCurationEntryKey;
-import com.hartwig.hmftools.serve.treatementapproach.curation.RelevantTreatmentAprroachCuration;
+import com.hartwig.hmftools.serve.treatementapproach.ImmutableRelevantTreatmentApprochCurationEntryKey;
+import com.hartwig.hmftools.serve.treatementapproach.RelevantTreatmentApprochCurationEntryKey;
+import com.hartwig.hmftools.serve.treatementapproach.RelevantTreatmentAprroachCuration;
 import com.hartwig.hmftools.serve.treatment.ImmutableTreatment;
 
 import org.apache.logging.log4j.LogManager;

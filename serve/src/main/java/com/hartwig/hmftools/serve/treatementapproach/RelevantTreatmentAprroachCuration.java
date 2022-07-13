@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.treatementapproach.curation;
+package com.hartwig.hmftools.serve.treatementapproach;
 
 import java.util.List;
 import java.util.Set;
