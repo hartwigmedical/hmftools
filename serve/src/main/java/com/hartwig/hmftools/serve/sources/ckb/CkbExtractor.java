@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.serve.sources.ckb;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 
@@ -23,9 +22,6 @@ import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLA;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
-import com.hartwig.hmftools.serve.curation.FilterRelevantTreatmentApproachEntry;
-import com.hartwig.hmftools.serve.curation.RelevantTreatmentApproachKey;
-import com.hartwig.hmftools.serve.curation.RelevantTreatmentApproch;
 import com.hartwig.hmftools.serve.extraction.ActionableEventFactory;
 import com.hartwig.hmftools.serve.extraction.EventExtractor;
 import com.hartwig.hmftools.serve.extraction.EventExtractorOutput;
@@ -52,6 +48,7 @@ import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
+import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentAprroachCuration;
 import com.hartwig.hmftools.serve.util.ProgressTracker;
 
 import org.apache.logging.log4j.LogManager;
@@ -72,8 +69,7 @@ public class CkbExtractor {
 
     @NotNull
     public ExtractionResult extract(@NotNull List<CkbEntry> ckbEntries,
-            @NotNull Map<RelevantTreatmentApproachKey, RelevantTreatmentApproch> drugClasses,
-            @NotNull List<FilterRelevantTreatmentApproachEntry> filterRelevantTreatmentApproachEntries) {
+            @NotNull RelevantTreatmentAprroachCuration curator) {
         List<ExtractionResult> extractions = Lists.newArrayList();
 
         ProgressTracker tracker = new ProgressTracker("CKB", ckbEntries.size());
@@ -99,10 +95,9 @@ public class CkbExtractor {
 
                 Set<ActionableEntry> actionableEvents = ActionableEntryFactory.toActionableEntries(entry,
                         sourceEvent,
-                        drugClasses,
+                        curator,
                         gene,
-                        entry.type(),
-                        filterRelevantTreatmentApproachEntries);
+                        entry.type());
 
                 EventInterpretation interpretation = ImmutableEventInterpretation.builder()
                         .source(Knowledgebase.CKB)

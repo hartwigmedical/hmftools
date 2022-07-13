@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.curation;
+package com.hartwig.hmftools.serve.sources.ckb.treatementapproach;
 
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
@@ -10,15 +10,18 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class FilterRelevantTreatmentApproachEntry {
+public abstract class RelevantTreatmentApprochCurationEntryKey {
 
     @NotNull
     public abstract String treatment();
 
     @NotNull
-    public abstract String eventMatch();
+    public abstract String treatmentApproach();
 
-    @Nullable
+    @NotNull
+    public abstract String event();
+
+    @NotNull
     public abstract EvidenceLevel level();
 
     @NotNull

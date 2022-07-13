@@ -15,11 +15,7 @@ import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
 import com.hartwig.hmftools.iclusion.classification.IclusionClassificationConfig;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
-import com.hartwig.hmftools.serve.curation.FilterRelevantTreatmentApproachEntry;
-import com.hartwig.hmftools.serve.curation.FilterRelevantTreatmentApproachFilter;
-import com.hartwig.hmftools.serve.curation.RelevantTreatmentApproachKey;
-import com.hartwig.hmftools.serve.curation.RelevantTreatmentApproch;
-import com.hartwig.hmftools.serve.curation.RelevantTreatmentApproachFactory;
+import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentApproachCurationFile;
 import com.hartwig.hmftools.serve.extraction.ExtractionFunctions;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.refgenome.RefGenomeManager;
@@ -44,6 +40,7 @@ import com.hartwig.hmftools.serve.sources.iclusion.IclusionReader;
 import com.hartwig.hmftools.serve.sources.vicc.ViccExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.ViccExtractorFactory;
 import com.hartwig.hmftools.serve.sources.vicc.ViccReader;
+import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentAprroachCuration;
 import com.hartwig.hmftools.vicc.annotation.ViccClassificationConfig;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
@@ -78,10 +75,7 @@ public class ServeAlgo {
         }
 
         if (config.useCkb()) {
-            extractions.add(extractCkbKnowledge(config.ckbDir(),
-                    config.ckbFilterTsv(),
-                    config.ckbDrugCurationTsv(),
-                    config.ckbDrugCurationFilterTsv()));
+            extractions.add(extractCkbKnowledge(config.ckbDir(), config.ckbFilterTsv(), config.ckbDrugCurationTsv()));
         }
 
         if (config.useActin()) {
@@ -140,20 +134,21 @@ public class ServeAlgo {
     }
 
     @NotNull
-    private ExtractionResult extractCkbKnowledge(@NotNull String ckbDir, @NotNull String ckbFilterTsv, @NotNull String ckbDrugCurationTsv,
-            @NotNull String ckbDrugCurationFilterTsv) throws IOException {
+    private ExtractionResult extractCkbKnowledge(@NotNull String ckbDir, @NotNull String ckbFilterTsv, @NotNull String ckbDrugCurationTsv)
+            throws IOException {
         List<CkbEntry> ckbEntries = CkbReader.readAndCurate(ckbDir, ckbFilterTsv);
 
         EventClassifierConfig config = CkbClassificationConfig.build();
         RefGenomeResource refGenomeResource = refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.CKB);
         CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(config, refGenomeResource);
 
-        Map<RelevantTreatmentApproachKey, RelevantTreatmentApproch> drugClasses = RelevantTreatmentApproachFactory.read(ckbDrugCurationTsv);
-        List<FilterRelevantTreatmentApproachEntry> filterRelevantTreatmentApproachEntries =
-                FilterRelevantTreatmentApproachFilter.read(ckbDrugCurationFilterTsv);
+        RelevantTreatmentAprroachCuration curator =
+                new RelevantTreatmentAprroachCuration(RelevantTreatmentApproachCurationFile.read(ckbDrugCurationTsv));
+
+        curator.reportUnusedFilterEntries();
 
         LOGGER.info("Running CKB knowledge extraction");
-        return extractor.extract(ckbEntries, drugClasses, filterRelevantTreatmentApproachEntries);
+        return extractor.extract(ckbEntries, curator);
     }
 
     @NotNull

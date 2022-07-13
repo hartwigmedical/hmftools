@@ -6,18 +6,19 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.cancertype.CancerTypeConstants;
-import com.hartwig.hmftools.serve.curation.RelevantTreatmentApproachKey;
-import com.hartwig.hmftools.serve.curation.RelevantTreatmentApproch;
+import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentApproachCurationType;
+import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentApprochCurationEntry;
+import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentAprroachCuration;
+import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentAprroachCurationTest;
 
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.util.Strings;
@@ -27,25 +28,27 @@ public class ActionableEntryFactoryTest {
 
     @Test
     public void canCreateActionableEntries() {
+        List<RelevantTreatmentApprochCurationEntry> curationEntries = Lists.newArrayList();
+        curationEntries.add(RelevantTreatmentAprroachCurationTest.canGenerateCurationEntry(
+                RelevantTreatmentApproachCurationType.TREATMENT_APPROACH_CURATION,
+                "A",
+                "A",
+                "BRAF amplification",
+                EvidenceLevel.A,
+                EvidenceDirection.RESPONSIVE,
+                "AA"));
+        RelevantTreatmentAprroachCuration curator = new RelevantTreatmentAprroachCuration(curationEntries);
+
         CkbEntry entryDeletion =
                 CkbTestFactory.createEntry("KRAS", "deletion", "KRAS deletion", "sensitive", "Emerging", "AB", "AB", "A", "DOID:162");
-        Map<RelevantTreatmentApproachKey, RelevantTreatmentApproch> drugClassesMap = Maps.newHashMap();
-        Set<ActionableEntry> entryDeletionSet = ActionableEntryFactory.toActionableEntries(entryDeletion,
-                "KRAS",
-                drugClassesMap,
-                "gene",
-                entryDeletion.type(),
-                Lists.newArrayList());
+        Set<ActionableEntry> entryDeletionSet =
+                ActionableEntryFactory.toActionableEntries(entryDeletion, "KRAS", curator, "gene", entryDeletion.type());
         assertEquals(0, entryDeletionSet.size());
 
         CkbEntry entryCharacteristics =
                 CkbTestFactory.createEntry("-", "MSI neg", "MSI neg", "sensitive", "Actionable", "AB", "AB", "A", "DOID:162");
-        Set<ActionableEntry> entryCharacteristicsSet = ActionableEntryFactory.toActionableEntries(entryCharacteristics,
-                Strings.EMPTY,
-                drugClassesMap,
-                "-",
-                entryCharacteristics.type(),
-                Lists.newArrayList());
+        Set<ActionableEntry> entryCharacteristicsSet =
+                ActionableEntryFactory.toActionableEntries(entryCharacteristics, Strings.EMPTY, curator, "-", entryCharacteristics.type());
         assertEquals(1, entryCharacteristicsSet.size());
         ActionableEntry characteristics = entryCharacteristicsSet.iterator().next();
         assertEquals(Strings.EMPTY, characteristics.sourceEvent());
@@ -68,12 +71,8 @@ public class ActionableEntryFactoryTest {
                 "AB",
                 "A",
                 "DOID:163");
-        Set<ActionableEntry> entryAmplificationSet = ActionableEntryFactory.toActionableEntries(entryAmplification,
-                "KRAS",
-                drugClassesMap,
-                "KRAS",
-                entryAmplification.type(),
-                Lists.newArrayList());
+        Set<ActionableEntry> entryAmplificationSet =
+                ActionableEntryFactory.toActionableEntries(entryAmplification, "KRAS", curator, "KRAS", entryAmplification.type());
         assertEquals(1, entryAmplificationSet.size());
         ActionableEntry amplification = entryAmplificationSet.iterator().next();
         assertEquals("KRAS", amplification.sourceEvent());
@@ -87,12 +86,8 @@ public class ActionableEntryFactoryTest {
 
         CkbEntry entryHotspot =
                 CkbTestFactory.createEntry("BRAF", "BRAF V600E", "BRAF V600E", "sensitive", "Actionable", "AB", "AB", "A", "DOID:162");
-        Set<ActionableEntry> entryHotspotSet = ActionableEntryFactory.toActionableEntries(entryHotspot,
-                "BRAF",
-                drugClassesMap,
-                "BRAF",
-                entryHotspot.type(),
-                Lists.newArrayList());
+        Set<ActionableEntry> entryHotspotSet =
+                ActionableEntryFactory.toActionableEntries(entryHotspot, "BRAF", curator, "BRAF", entryHotspot.type());
         assertEquals(1, entryHotspotSet.size());
         ActionableEntry hotspot = entryHotspotSet.iterator().next();
         assertEquals("BRAF", hotspot.sourceEvent());
@@ -112,10 +107,10 @@ public class ActionableEntryFactoryTest {
         assertNull(ActionableEntryFactory.extractAndCurateDoid(null));
         assertNull(ActionableEntryFactory.extractAndCurateDoid(new String[] { "jax", "not a doid" }));
 
-        assertEquals("0060463", ActionableEntryFactory.extractAndCurateDoid(new String[] {"DOID", "0060463"}));
-        assertEquals(CancerTypeConstants.CANCER_DOID, ActionableEntryFactory.extractAndCurateDoid(new String[] {"JAX", "10000003"}));
+        assertEquals("0060463", ActionableEntryFactory.extractAndCurateDoid(new String[] { "DOID", "0060463" }));
+        assertEquals(CancerTypeConstants.CANCER_DOID, ActionableEntryFactory.extractAndCurateDoid(new String[] { "JAX", "10000003" }));
         assertEquals(CancerTypeConstants.SQUAMOUD_CELL_CARCINOMA_OF_UNKNOWN_PRIMARY,
-                ActionableEntryFactory.extractAndCurateDoid(new String[] {"JAX", "10000009"}));
+                ActionableEntryFactory.extractAndCurateDoid(new String[] { "JAX", "10000009" }));
         assertEquals(CancerTypeConstants.ADENOCARCINOMA_OF_UNKNOWN_PRIMARY,
                 ActionableEntryFactory.extractAndCurateDoid(new String[] { "JAX", "10000008" }));
         assertNull(ActionableEntryFactory.extractAndCurateDoid(new String[] { "JAX", "10000004" }));
