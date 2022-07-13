@@ -7,10 +7,13 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class RelevantTreatmentApproch {
+public abstract class RelevantTreatmentApprochCurationEntry {
 
     @NotNull
-    public abstract RelevantTreatmentApproachKey treatmentApproachKey();
+    public abstract RelevantTreatmentApproachCurationType curationType();
+
+    @NotNull
+    public abstract RelevantTreatmentApprochCurationEntryKey curationKey();
 
     @NotNull
     public abstract String curatedtreatmentApproach();

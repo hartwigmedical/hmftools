@@ -6,7 +6,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.ckb.classification.CkbClassificationConfig;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
@@ -26,8 +25,9 @@ import com.hartwig.hmftools.serve.refgenome.RefGenomeResource;
 import com.hartwig.hmftools.serve.sources.ckb.CkbExtractor;
 import com.hartwig.hmftools.serve.sources.ckb.CkbExtractorFactory;
 import com.hartwig.hmftools.serve.sources.ckb.CkbReader;
+import com.hartwig.hmftools.serve.treatementapproach.curation.RelevantTreatmentApproachCurationFile;
+import com.hartwig.hmftools.serve.treatementapproach.curation.RelevantTreatmentAprroachCuration;
 
-import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -55,7 +55,9 @@ public class CkbExtractorTestApp {
         CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(CkbClassificationConfig.build(), refGenomeResource);
 
         List<CkbEntry> entries = CkbReader.readAndCurate(config.ckbDir(), config.ckbFilterTsv());
-        ExtractionResult result = extractor.extract(entries, Maps.newHashMap(), Lists.newArrayList());
+        RelevantTreatmentAprroachCuration curator =
+                new RelevantTreatmentAprroachCuration(RelevantTreatmentApproachCurationFile.read(config.ckbDrugCurationTsv()));
+        ExtractionResult result = extractor.extract(entries, curator);
 
         String eventsTsv = config.outputDir() + File.separator + "CkbEventClassification.tsv";
         CkbUtil.writeEventsToTsv(eventsTsv, entries);
