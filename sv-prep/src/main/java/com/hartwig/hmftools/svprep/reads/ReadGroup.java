@@ -118,6 +118,7 @@ public class ReadGroup
     }
 
     public boolean onlySupplementaries() { return mReads.stream().allMatch(x -> x.isSupplementaryAlignment()); }
+    public boolean hasUnmapped() { return mReads.stream().anyMatch(x -> x.isMateUnmapped()); }
 
     public void setPartitionCount(final ChrBaseRegion region, int partitionSize)
     {

@@ -114,8 +114,37 @@ public class BamSlicer
         }
 
         return mateRecords;
+    }
 
-        // return records.stream().map(x -> samReader.queryMate(x)).filter(x -> x != null && passesFilters(x)) .collect(Collectors.toList());
+    public SAMRecord findRead(
+            final SamReader samReader, final String readId, final String chromosome, int alignmentStart,
+            boolean firstInPair, boolean supplementary)
+    {
+        SAMRecordIterator iter = samReader.queryAlignmentStart(chromosome, alignmentStart);
+
+        SAMRecord mateRecord = null;
+        while(iter.hasNext())
+        {
+            SAMRecord nextRecord = iter.next();
+
+            if(firstInPair != nextRecord.getFirstOfPairFlag())
+                continue;
+
+            // must match supplementary status so as not to be confused with the mate of its supplementary pair
+            if(nextRecord.getSupplementaryAlignmentFlag() != supplementary)
+                continue;
+
+            if(nextRecord.getReadName().equals(readId))
+            {
+                mateRecord = nextRecord;
+                break;
+            }
+        }
+
+        iter.close();
+
+        return mateRecord != null && passesFilters(mateRecord) ? mateRecord : null;
+
     }
 
     public SAMRecord queryMate(final SamReader samReader, final SAMRecord record)

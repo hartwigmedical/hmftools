@@ -1,13 +1,11 @@
 package com.hartwig.hmftools.svprep.reads;
 
-import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 
 public class ExpectedRead
 {

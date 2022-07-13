@@ -69,7 +69,9 @@ public class CombinedReadGroups
 
     private String chrPartition(final String chromosome, int position) { return formChromosomePartition(chromosome, position, mPartitionSize); }
 
-    public synchronized void processSpanningReadGroups(final ChrBaseRegion partitionRegion, final Map<String,ReadGroup> spanningGroups)
+    public synchronized void processSpanningReadGroups(
+            final ChrBaseRegion partitionRegion, final Map<String,ReadGroup> spanningGroups,
+            final Map<String,List<ExpectedRead>> missedReadsMap)
     {
         String sourceChrPartition = chrPartition(partitionRegion.Chromosome, partitionRegion.start());
         mProcessedPartitions.add(sourceChrPartition);
@@ -108,7 +110,7 @@ public class CombinedReadGroups
         }
 
         // purge any expected reads which were already found
-        purgeUnmatchedReads(sourceChrPartition, addedReads);
+        purgeUnmatchedReads(sourceChrPartition, addedReads, missedReadsMap);
 
         setCacheCount();
     }
@@ -217,7 +219,8 @@ public class CombinedReadGroups
         return true;
     }
 
-    private void purgeUnmatchedReads(final String chrPartition, final Set<ExpectedRead> addedReads)
+    private void purgeUnmatchedReads(
+            final String chrPartition, final Set<ExpectedRead> addedReads, final Map<String,List<ExpectedRead>> missedReadsMap)
     {
         Map<String,Set<String>> sourcePartitionMap = mExpectedChrPartitionReadIds.get(chrPartition);
         if(sourcePartitionMap == null)
@@ -244,6 +247,18 @@ public class CombinedReadGroups
                 while(index < reads.size())
                 {
                     ExpectedRead read = reads.get(index);
+
+                    if(!read.found())
+                    {
+                        // collect missed reads to then query the BAM for them
+                        List<ExpectedRead> missedReads = missedReadsMap.get(readId);
+                        if(missedReads == null)
+                        {
+                            missedReads = Lists.newArrayList();
+                            missedReadsMap.put(readId, missedReads);
+                        }
+                        missedReads.add(read);
+                    }
 
                     if(!addedReads.contains(read)) // read.found() &&
                     {

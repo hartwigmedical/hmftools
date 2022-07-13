@@ -6,5 +6,6 @@ public enum ReadType
     CANDIDATE_SUPPORT,
     SUPPORT,
     JUNCTION,
+    RECOVERED,
     UNMATCHED;
 }

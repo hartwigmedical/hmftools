@@ -12,10 +12,12 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.svprep.reads.ExpectedRead;
 import com.hartwig.hmftools.svprep.reads.ReadGroup;
 import com.hartwig.hmftools.svprep.reads.ReadRecord;
 
@@ -49,7 +51,8 @@ public class CombineReadGroupsTest
     {
         int readId = 0;
 
-        Map<String, ReadGroup> spanningGroupsMap = Maps.newHashMap();
+        Map<String,ReadGroup> spanningGroupsMap = Maps.newHashMap();
+        Map<String,List<ExpectedRead>> missedReadsMap = Maps.newHashMap();
 
         // 2 reads, no supp, spanning different partitions
         ReadRecord read1 = ReadRecord.from(createSamRecord(
@@ -67,13 +70,14 @@ public class CombineReadGroupsTest
         assertEquals(2, rg2.partitionCount());
 
         spanningGroupsMap.put(rg1.id(), rg1);
-        mCombinedReadGroups.processSpanningReadGroups(REGION_1, spanningGroupsMap);
+        mCombinedReadGroups.processSpanningReadGroups(REGION_1, spanningGroupsMap, missedReadsMap);
         assertFalse(read1.written());
         assertEquals(2, getExpectedReadsCount(null));
 
         spanningGroupsMap.clear();
+        missedReadsMap.clear();
         spanningGroupsMap.put(rg2.id(), rg2);
-        mCombinedReadGroups.processSpanningReadGroups(REGION_2, spanningGroupsMap);
+        mCombinedReadGroups.processSpanningReadGroups(REGION_2, spanningGroupsMap, missedReadsMap);
         assertFalse(read2.written());
 
         assertEquals(0, getExpectedReadsCount(null));
@@ -106,16 +110,45 @@ public class CombineReadGroupsTest
         assertEquals(2, rg2.partitionCount());
 
         spanningGroupsMap.put(rg1.id(), rg1);
-        mCombinedReadGroups.processSpanningReadGroups(REGION_1, spanningGroupsMap);
+        mCombinedReadGroups.processSpanningReadGroups(REGION_1, spanningGroupsMap, missedReadsMap);
         assertFalse(read1.written());
         assertFalse(read2.written());
         assertEquals(2, getExpectedReadsCount(null));
 
         spanningGroupsMap.clear();
+        missedReadsMap.clear();
         spanningGroupsMap.put(rg2.id(), rg2);
-        mCombinedReadGroups.processSpanningReadGroups(REGION_2, spanningGroupsMap);
+        mCombinedReadGroups.processSpanningReadGroups(REGION_2, spanningGroupsMap, missedReadsMap);
         assertTrue(read3.written());
         assertTrue(read4.written());
+        assertTrue(missedReadsMap.isEmpty());
+
+        assertEquals(0, getExpectedReadsCount(null));
+
+        // now with the second partition getting the missed read from the first
+        mCombinedReadGroups.reset();
+
+        read1 = ReadRecord.from(createSamRecord(
+                readIdStr(++readId), CHR_1, 800, CHR_1, 10800, true, false, ""));
+
+        rg1 = new ReadGroup(read1);
+        rg1.setPartitionCount(REGION_1, PARTITION_SIZE);
+
+        assertEquals(2, rg1.partitionCount());
+
+        spanningGroupsMap.put(rg1.id(), rg1);
+        mCombinedReadGroups.processSpanningReadGroups(REGION_1, spanningGroupsMap, missedReadsMap);
+        assertFalse(read1.written());
+        assertEquals(2, getExpectedReadsCount(null));
+
+        // an empty partition
+        spanningGroupsMap.clear();
+        missedReadsMap.clear();
+        mCombinedReadGroups.processSpanningReadGroups(REGION_2, spanningGroupsMap, missedReadsMap);
+        assertEquals(1, missedReadsMap.size());
+        ExpectedRead missedRead = missedReadsMap.get(rg1.id()).get(0);
+        assertEquals(10800, missedRead.Position);
+        assertEquals(false, missedRead.found());
 
         assertEquals(0, getExpectedReadsCount(null));
     }
@@ -126,6 +159,7 @@ public class CombineReadGroupsTest
         int readId = 0;
 
         Map<String, ReadGroup> spanningGroupsMap = Maps.newHashMap();
+        Map<String,List<ExpectedRead>> missedReadsMap = Maps.newHashMap();
 
         // 2 reads, no supp, spanning different partitions
         ReadRecord read1 = ReadRecord.from(createSamRecord(
@@ -139,31 +173,10 @@ public class CombineReadGroupsTest
         rg1.setPartitionCount(REGION_1, PARTITION_SIZE);
         assertEquals(1, rg1.partitionCount()); // supplementaries aren't counted towards remote partitions
 
-        /*
-        spanningGroupsMap.put(rg1.id(), rg1);
-        mCombinedReadGroups.processSpanningReadGroups(REGION_1, spanningGroupsMap);
-        assertEquals(3, getExpectedReadsCount(null));
-
-        ReadRecord read3 = ReadRecord.from(createSamRecord(
-                readIdStr(readId), CHR_1, 10800, CHR_1, 800, false, true, "1;801;-;46S30M;255;0"));
-
-        ReadGroup rg2 = new ReadGroup(read3);
-        rg2.setPartitionCount(REGION_2, PARTITION_SIZE);
-        assertEquals(2, rg2.partitionCount());
-
-        spanningGroupsMap.clear();
-        spanningGroupsMap.put(rg2.id(), rg2);
-        mCombinedReadGroups.processSpanningReadGroups(REGION_2, spanningGroupsMap);
-        assertFalse(read1.written());
-        assertFalse(read2.written());
-        assertFalse(read3.written());
-
-        assertEquals(0, getExpectedReadsCount(null));
-        */
-
         // test a group spanning 3 partitions (though the supp is ignored)
         mCombinedReadGroups.reset();
         spanningGroupsMap.clear();
+        missedReadsMap.clear();
 
         read1 = ReadRecord.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 800, CHR_1, 10801, true, false, ""));
@@ -177,30 +190,14 @@ public class CombineReadGroupsTest
         assertEquals(2, rg1.partitionCount());
 
         spanningGroupsMap.put(rg1.id(), rg1);
-        mCombinedReadGroups.processSpanningReadGroups(REGION_1, spanningGroupsMap);
+        mCombinedReadGroups.processSpanningReadGroups(REGION_1, spanningGroupsMap, missedReadsMap);
         assertEquals(2, getExpectedReadsCount(null));
 
-        /*
-        ReadRecord read3 = ReadRecord.from(createSamRecord(
-                readIdStr(readId), CHR_1, 20800, CHR_1, 800, false, true, "1;10801;-;46S30M;255;0"));
-
-        rg2 = new ReadGroup(read3);
-        rg2.setPartitionCount(REGION_3, PARTITION_SIZE);
-        assertEquals(3, rg2.partitionCount());
-
+        // this partition misses the second read and so doesn't get its mate from the first partition either
         spanningGroupsMap.clear();
-        spanningGroupsMap.put(rg2.id(), rg2);
-        mCombinedReadGroups.processSpanningReadGroups(REGION_3, spanningGroupsMap);
-        assertFalse(read1.written());
-        assertFalse(read2.written());
-        assertFalse(read3.written());
-
-        assertEquals(1, getExpectedReadsCount(null));
-        */
-
-        // send partition misses the second read and so doesn't get its mate from the first partition either
-        spanningGroupsMap.clear();
-        mCombinedReadGroups.processSpanningReadGroups(REGION_2, spanningGroupsMap);
+        missedReadsMap.clear();
+        mCombinedReadGroups.processSpanningReadGroups(REGION_2, spanningGroupsMap, missedReadsMap);
         assertEquals(0, getExpectedReadsCount(null));
+        assertEquals(0, missedReadsMap.size());
     }
 }
