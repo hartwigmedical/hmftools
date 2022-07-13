@@ -137,8 +137,9 @@ public class CombineReadGroupsTest
         ReadGroup rg1 = new ReadGroup(read1);
         rg1.addRead(read2);
         rg1.setPartitionCount(REGION_1, PARTITION_SIZE);
-        assertEquals(2, rg1.partitionCount());
+        assertEquals(1, rg1.partitionCount()); // supplementaries aren't counted towards remote partitions
 
+        /*
         spanningGroupsMap.put(rg1.id(), rg1);
         mCombinedReadGroups.processSpanningReadGroups(REGION_1, spanningGroupsMap);
         assertEquals(3, getExpectedReadsCount(null));
@@ -158,8 +159,9 @@ public class CombineReadGroupsTest
         assertFalse(read3.written());
 
         assertEquals(0, getExpectedReadsCount(null));
+        */
 
-        // test a group spanning 3 partitions
+        // test a group spanning 3 partitions (though the supp is ignored)
         mCombinedReadGroups.reset();
         spanningGroupsMap.clear();
 
@@ -172,13 +174,14 @@ public class CombineReadGroupsTest
         rg1 = new ReadGroup(read1);
         rg1.addRead(read2);
         rg1.setPartitionCount(REGION_1, PARTITION_SIZE);
-        assertEquals(3, rg1.partitionCount());
+        assertEquals(2, rg1.partitionCount());
 
         spanningGroupsMap.put(rg1.id(), rg1);
         mCombinedReadGroups.processSpanningReadGroups(REGION_1, spanningGroupsMap);
-        assertEquals(3, getExpectedReadsCount(null));
+        assertEquals(2, getExpectedReadsCount(null));
 
-        read3 = ReadRecord.from(createSamRecord(
+        /*
+        ReadRecord read3 = ReadRecord.from(createSamRecord(
                 readIdStr(readId), CHR_1, 20800, CHR_1, 800, false, true, "1;10801;-;46S30M;255;0"));
 
         rg2 = new ReadGroup(read3);
@@ -193,7 +196,9 @@ public class CombineReadGroupsTest
         assertFalse(read3.written());
 
         assertEquals(1, getExpectedReadsCount(null));
+        */
 
+        // send partition misses the second read and so doesn't get its mate from the first partition either
         spanningGroupsMap.clear();
         mCombinedReadGroups.processSpanningReadGroups(REGION_2, spanningGroupsMap);
         assertEquals(0, getExpectedReadsCount(null));

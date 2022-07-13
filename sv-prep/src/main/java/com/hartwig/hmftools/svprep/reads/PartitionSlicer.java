@@ -2,7 +2,6 @@ package com.hartwig.hmftools.svprep.reads;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
-import static com.hartwig.hmftools.svprep.CombinedReadGroups.formChromosomePartition;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_FRACTION;
 import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_THRESHOLD;
@@ -13,18 +12,13 @@ import static com.hartwig.hmftools.svprep.WriteType.READS;
 import static com.hartwig.hmftools.svprep.reads.ReadGroup.MAX_GROUP_READ_COUNT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
-import static com.hartwig.hmftools.svprep.reads.ReadType.UNMATCHED;
 
 import java.io.File;
-import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
-import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
-import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.CombinedReadGroups;
@@ -62,7 +56,7 @@ public class PartitionSlicer
 
     private static final int PC_SLICE = 0;
     private static final int PC_JUNCTIONS = 1;
-    private static final int PC_UNMATCHED_SLICE = 2;
+    private static final int PC_MATE_SLICE = 2;
     private static final int PC_TOTAL = 3;
 
     public PartitionSlicer(
@@ -97,7 +91,7 @@ public class PartitionSlicer
         mPerCounters = new PerformanceCounter[PC_TOTAL+1];
         mPerCounters[PC_SLICE] = new PerformanceCounter("Slice");
         mPerCounters[PC_JUNCTIONS] = new PerformanceCounter("Junctions");
-        mPerCounters[PC_UNMATCHED_SLICE] = new PerformanceCounter("UnmatchedSlice");
+        mPerCounters[PC_MATE_SLICE] = new PerformanceCounter("UnmatchedSlice");
         mPerCounters[PC_TOTAL] = new PerformanceCounter("Total");
 
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
@@ -230,8 +224,12 @@ public class PartitionSlicer
             // read groups that span chromosomes or partitions need to be complete, so gather up their state to enable this
             Map<String,ReadGroup> spanningGroupsMap = Maps.newHashMap();
 
+            mPerCounters[PC_MATE_SLICE].start();
+
             mJunctionTracker.junctionGroups().forEach(x -> assignReadGroup(x, spanningGroupsMap));
             mJunctionTracker.supportingGroups().forEach(x -> assignReadGroup(x, spanningGroupsMap));
+
+            mPerCounters[PC_MATE_SLICE].stop();
 
             int spanningGroups = spanningGroupsMap.size();
             int totalGroups = mJunctionTracker.junctionGroups().size() + mJunctionTracker.supportingGroups().size();
@@ -279,8 +277,11 @@ public class PartitionSlicer
             ++mStats.SpanningGroups;
 
             // get any remote mates
-            findRemoteMateReads(readGroup);
+            // findRemoteMateReads(readGroup);
             readGroup.setGroupState();
+
+            // only register remote reads if they are not supplementaries - instead just let these be written locally and not reconciled
+
             partialGroupsMap.put(readGroup.id(), readGroup);
         }
         else
@@ -296,12 +297,13 @@ public class PartitionSlicer
 
     private void findRemoteMateReads(final ReadGroup readGroup)
     {
+        // find any missing mate reads, excluding supplementaries which are left to be handled individually
         int index = 0;
         while(index < readGroup.reads().size() && index < MAX_GROUP_READ_COUNT)
         {
             ReadRecord read = readGroup.reads().get(index);
 
-            if(!readGroup.hasReadMate(read))
+            if(!read.isSupplementaryAlignment() && !readGroup.hasReadMate(read))
             {
                 SAMRecord mateRecord = mBamSlicer.queryMate(mSamReader, read.record());
 
@@ -348,37 +350,6 @@ public class PartitionSlicer
 
     private void completeUnmatchedReadGroup(final ReadGroup readGroup)
     {
-        int index = 0;
-        boolean remoteFound = false;
-        while(index < readGroup.reads().size() && index < MAX_GROUP_READ_COUNT)
-        {
-            ReadRecord read = readGroup.reads().get(index);
-
-            if(!readGroup.hasReadMate(read))
-            {
-                SAMRecord mateRecord = mBamSlicer.queryMate(mSamReader, read.record());
-
-                if(mateRecord != null)
-                {
-                    if(!readGroup.hasReadRecord(mateRecord))
-                    {
-                        readGroup.addRead(ReadRecord.from(mateRecord));
-                        remoteFound = true;
-                    }
-                }
-            }
-
-            ++index;
-        }
-
-        if(remoteFound)
-        {
-            readGroup.setGroupState();
-
-            if(readGroup.isComplete())
-                return;
-        }
-
         // check the need to slice for remote supplementaries
         List<ReadRecord> newReads = Lists.newArrayList();
 

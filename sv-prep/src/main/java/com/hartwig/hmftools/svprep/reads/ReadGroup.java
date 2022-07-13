@@ -18,7 +18,7 @@ public class ReadGroup
     private final List<ReadRecord> mReads;
 
     private ReadGroupStatus mStatus;
-    private final Set<String> mRemotePartitions;
+    private final Set<String> mRemotePartitions; // given that supplementaries are no longer included, this is now 0 or 1 entries
     private int mExpectedReadCount;
     private Set<Integer> mJunctionPositions;
 
@@ -42,6 +42,7 @@ public class ReadGroup
 
     public boolean spansPartitions() { return !mRemotePartitions.isEmpty(); }
     public int partitionCount() { return mRemotePartitions.size() + 1; }
+    public int expectedReadCount() { return mExpectedReadCount; }
     public Set<String> remotePartitions() { return mRemotePartitions; }
 
     public Set<Integer> junctionPositions() { return mJunctionPositions; }
@@ -71,11 +72,28 @@ public class ReadGroup
 
     public void setGroupState()
     {
+        if(onlySupplementaries())
+        {
+            if(mReads.size() == 2)
+                mStatus = ReadGroupStatus.PAIRED;
+            else
+                mStatus = ReadGroupStatus.SUPPLEMENTARY;
+
+            mExpectedReadCount = mReads.size();
+            return;
+        }
+
         boolean firstHasSupp = false;
         boolean secondHasSupp = false;
+        boolean nonSuppPaired = false;
 
         for(ReadRecord read : mReads)
         {
+            if(!read.isSupplementaryAlignment() && !nonSuppPaired)
+            {
+                nonSuppPaired = hasReadMate(read);
+            }
+
             if(read.isFirstOfPair())
             {
                 if(read.hasSuppAlignment() || read.isSupplementaryAlignment())
@@ -88,18 +106,25 @@ public class ReadGroup
             }
         }
 
-        mExpectedReadCount = 2 + (firstHasSupp ? 1 : 0) + (secondHasSupp ? 1 : 0);
+        int suppCount = (firstHasSupp ? 1 : 0) + (secondHasSupp ? 1 : 0);
+        mExpectedReadCount = 2 + suppCount;
 
         if(mReads.size() >= mExpectedReadCount)
             mStatus = ReadGroupStatus.COMPLETE;
+        else if(nonSuppPaired)
+            mStatus = ReadGroupStatus.PAIRED;
         else
             mStatus = ReadGroupStatus.INCOMPLETE;
     }
 
+    public boolean onlySupplementaries() { return mReads.stream().allMatch(x -> x.isSupplementaryAlignment()); }
+
     public void setPartitionCount(final ChrBaseRegion region, int partitionSize)
     {
+        // only count non-supplementaries towards remote partitions
         for(ReadRecord read : mReads)
         {
+            /*
             if(read.hasSuppAlignment())
             {
                 SupplementaryReadData suppData = read.supplementaryAlignment();
@@ -109,6 +134,7 @@ public class ReadGroup
                     mRemotePartitions.add(formChromosomePartition(suppData.Chromosome, suppData.Position, partitionSize));
                 }
             }
+            */
 
             if(HumanChromosome.contains(read.MateChromosome) && !region.containsPosition(read.MateChromosome, read.MatePosStart))
             {
@@ -130,6 +156,9 @@ public class ReadGroup
                 continue;
 
             if(read.isFirstOfPair() == otherRead.isFirstOfPair())
+                continue;
+
+            if(read.isSupplementaryAlignment() != otherRead.isSupplementaryAlignment())
                 continue;
 
             if(read.MateChromosome.equals(otherRead.Chromosome) && read.MatePosStart == otherRead.start())

@@ -62,6 +62,7 @@ public class ExpectedRead
 
         for(ReadRecord read : readGroup.reads())
         {
+            /* no longer registered since no need to write these to file
             if(read.hasSuppAlignment())
             {
                 SupplementaryReadData suppData = read.supplementaryAlignment();
@@ -72,6 +73,7 @@ public class ExpectedRead
                             suppData.Chromosome, suppData.Position, read.isFirstOfPair(), true, false));
                 }
             }
+            */
 
             if(HumanChromosome.contains(read.MateChromosome) && !readGroup.hasReadMate(read))
             {

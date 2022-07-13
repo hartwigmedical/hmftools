@@ -3,7 +3,8 @@ package com.hartwig.hmftools.svprep.reads;
 public enum ReadGroupStatus
 {
     UNSET,
-    INCOMPLETE,
-    PARTIAL, // has all reads for initial partial, others are remote
-    COMPLETE;
+    INCOMPLETE, // missing a mate for a read (matching supplementary status)
+    PAIRED, // all non-supp reads have their mates
+    SUPPLEMENTARY, // all reads are supplementaries
+    COMPLETE; // has all reads
 }

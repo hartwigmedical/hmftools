@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.svprep.WriteType.SV_BED;
 
 import static htsjdk.samtools.SAMFlag.MATE_UNMAPPED;
 import static htsjdk.samtools.SAMFlag.PROPER_PAIR;
+import static htsjdk.samtools.SAMFlag.READ_UNMAPPED;
 import static htsjdk.samtools.SAMFlag.SECONDARY_ALIGNMENT;
 import static htsjdk.samtools.SAMFlag.SUPPLEMENTARY_ALIGNMENT;
 
@@ -78,9 +79,9 @@ public class ResultsWriter
             String filename = mConfig.formFilename(READS);
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("ReadId,GroupCount,GroupStatus,HasExternal,ReadType,Chromosome,PosStart,PosEnd,Cigar");
+            writer.write("ReadId,GroupCount,ExpectedCount,GroupStatus,HasExternal,ReadType,Chromosome,PosStart,PosEnd,Cigar");
             writer.write(",FragLength,MateChr,MatePosStart,MapQual,MultiMapped,SuppData,Flags");
-            writer.write(",FirstInPair,ReadReversed,Proper,Duplicate,MateUnmapped,Secondary,Supplementary,JunctionPositions");
+            writer.write(",FirstInPair,ReadReversed,Proper,Duplicate,Unmapped,MateUnmapped,Secondary,Supplementary,JunctionPositions");
 
             writer.newLine();
 
@@ -112,20 +113,23 @@ public class ResultsWriter
                 if(read.written())
                     continue;
 
-                writeReadData(read, readGroup.size(), readGroup.groupStatus(), readGroup.spansPartitions(), junctionPosStr);
+                writeReadData(
+                        read, readGroup.size(), readGroup.expectedReadCount(), readGroup.groupStatus(), readGroup.spansPartitions(),
+                        junctionPosStr);
             }
         }
     }
 
     public synchronized void writeReadData(
-            final ReadRecord read, int readCount, final ReadGroupStatus status, boolean spansPartitions, final String junctionPositions)
+            final ReadRecord read, int readCount, int expectedReadCount, final ReadGroupStatus status, boolean spansPartitions,
+            final String junctionPositions)
     {
         if(mReadWriter == null || read.written())
             return;
 
         try
         {
-            mReadWriter.write(format("%s,%d,%s,%s", read.id(), readCount, status, spansPartitions));
+            mReadWriter.write(format("%s,%d,%d,%s,%s", read.id(), readCount, expectedReadCount, status, spansPartitions));
 
             mReadWriter.write(format(",%s,%s,%d,%d,%s",
                     read.readType(), read.Chromosome, read.start(), read.end(), read.cigar().toString()));
@@ -136,8 +140,8 @@ public class ResultsWriter
                     read.fragmentInsertSize(), read.MateChromosome, read.MatePosStart, read.MapQuality,
                     read.isMultiMapped(), suppData != null ? suppData.asCsv() : "N/A", read.flags()));
 
-            mReadWriter.write(format(",%s,%s,%s,%s,%s,%s,%s",
-                    read.isFirstOfPair(), read.isReadReversed(), read.hasFlag(PROPER_PAIR), read.isDuplicate(),
+            mReadWriter.write(format(",%s,%s,%s,%s,%s,%s,%s,%s",
+                    read.isFirstOfPair(), read.isReadReversed(), read.hasFlag(PROPER_PAIR), read.isDuplicate(), read.hasFlag(READ_UNMAPPED),
                     read.hasFlag(MATE_UNMAPPED), read.hasFlag(SECONDARY_ALIGNMENT), read.hasFlag(SUPPLEMENTARY_ALIGNMENT)));
 
             mReadWriter.write(format(",%s", junctionPositions));

@@ -33,7 +33,11 @@ public class CombinedReadGroups
 
     private final PerformanceCounter mPerfCounter;
     private final Set<String> mProcessedPartitions;
+
     private int mLastSnapshotCount;
+    private int mMatchedGroups;
+
+    // logic to keep expected reads for a final search for them in the BAM has been disabled
 
     public CombinedReadGroups(final SvConfig config)
     {
@@ -43,6 +47,7 @@ public class CombinedReadGroups
         mExpectedChrPartitionReadIds = Maps.newHashMap();
         mProcessedPartitions = Sets.newHashSet();
         mLastSnapshotCount = 0;
+        mMatchedGroups = 0;
         mPerfCounter = new PerformanceCounter("ReadMerge");
     }
 
@@ -152,9 +157,6 @@ public class CombinedReadGroups
         // also make a link to this readId from the expected remote partition back to this read's partition
         for(String unprocessedPartition : unprocessedPartitions)
         {
-            if(readChrPartition.equals(unprocessedPartition))
-                continue;
-
             Map<String,Set<String>> sourcePartitionMap = mExpectedChrPartitionReadIds.get(unprocessedPartition);
             if(sourcePartitionMap == null)
             {
@@ -206,7 +208,10 @@ public class CombinedReadGroups
             existingGroupReads.remove(matchedRead);
 
             if(existingGroupReads.isEmpty())
+            {
                 readGroupReads.remove(readGroup.id());
+                ++mMatchedGroups;
+            }
         }
 
         return true;
@@ -240,7 +245,7 @@ public class CombinedReadGroups
                 {
                     ExpectedRead read = reads.get(index);
 
-                    if(read.found() && !addedReads.contains(read))
+                    if(!addedReads.contains(read)) // read.found() &&
                     {
                         read.registerMatch();
 
@@ -268,10 +273,10 @@ public class CombinedReadGroups
 
         if(abs(newCount - mLastSnapshotCount) > LOG_CACH_DIFF)
         {
-            mLastSnapshotCount = newCount;
+            SV_LOGGER.info("spanning partition processed({}) groups cached({} -> {}) matchedGroups({})",
+                    mProcessedPartitions.size(), mLastSnapshotCount, newCount, mMatchedGroups);
 
-            SV_LOGGER.info("spanning partition processed({}) groups cached({} -> {})",
-                    mProcessedPartitions.size(), mLastSnapshotCount, newCount);
+            mLastSnapshotCount = newCount;
         }
     }
 
@@ -310,7 +315,6 @@ public class CombinedReadGroups
                 missedSuppReadCount += unfoundReads.stream().filter(x -> x.IsSupplementary).count();
                 missedNonSuppReadCount += unfoundReads.stream().filter(x -> !x.IsSupplementary).count();
 
-
                 if(!foundReads.isEmpty())
                     foundReadGroups.put(entry.getKey(), foundReads);
 
@@ -321,9 +325,10 @@ public class CombinedReadGroups
 
         int partitions = mChrPartitionReadGroupReads.size();
         int totalCachedReads = foundReadCount + missedNonSuppReadCount + missedSuppReadCount;
+        int totalMissed = missedNonSuppReadCount + missedSuppReadCount;
 
-        SV_LOGGER.info("final spanning partition cache: partitions({}) readGroups({}) reads({} found={} nonSuppMissed={} suppMissed={})",
-                partitions, readGroups, totalCachedReads, foundReadCount, missedNonSuppReadCount, missedSuppReadCount);
+        SV_LOGGER.info("final spanning partition cache: partitions({}) readGroups({}) matched({}) reads({} found={} missed={})",
+                partitions, readGroups, mMatchedGroups, totalCachedReads, foundReadCount, totalMissed);
 
         mPerfCounter.logStats();
     }
@@ -335,17 +340,5 @@ public class CombinedReadGroups
     {
         mChrPartitionReadGroupReads.clear();
         mProcessedPartitions.clear();
-    }
-
-    private class ExpectedChrPartitionReads
-    {
-        public final String SourceChrPartition;
-        public final Set<String> ReadIds;
-
-        public ExpectedChrPartitionReads(final String sourceChrPartition)
-        {
-            SourceChrPartition = sourceChrPartition;
-            ReadIds = Sets.newHashSet();
-        }
     }
 }
