@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.treatementapproach;
+package com.hartwig.hmftools.serve.sources.ckb.treatementapproach;
 
 public enum RelevantTreatmentApproachCurationType {
     TREATMENT_APPROACH_CURATION_IGNORE,

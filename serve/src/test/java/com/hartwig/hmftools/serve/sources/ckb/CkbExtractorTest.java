@@ -14,10 +14,10 @@ import com.hartwig.hmftools.serve.extraction.codon.CodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableCodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 import com.hartwig.hmftools.serve.refgenome.RefGenomeResourceTestFactory;
-import com.hartwig.hmftools.serve.treatementapproach.RelevantTreatmentApproachCurationType;
-import com.hartwig.hmftools.serve.treatementapproach.RelevantTreatmentApprochCurationEntry;
-import com.hartwig.hmftools.serve.treatementapproach.RelevantTreatmentAprroachCuration;
-import com.hartwig.hmftools.serve.treatementapproach.RelevantTreatmentAprroachCurationTest;
+import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentApproachCurationType;
+import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentApprochCurationEntry;
+import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentAprroachCuration;
+import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentAprroachCurationTest;
 
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.treatementapproach;
+package com.hartwig.hmftools.serve.sources.ckb.treatementapproach;
 
 import java.util.List;
 import java.util.Set;

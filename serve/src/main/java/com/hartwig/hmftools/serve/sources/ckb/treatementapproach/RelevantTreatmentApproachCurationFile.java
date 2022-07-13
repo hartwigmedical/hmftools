@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.treatementapproach;
+package com.hartwig.hmftools.serve.sources.ckb.treatementapproach;
 
 import java.io.File;
 import java.io.IOException;
