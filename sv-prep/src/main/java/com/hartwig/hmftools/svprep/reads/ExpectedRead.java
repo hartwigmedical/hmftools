@@ -19,10 +19,8 @@ public class ExpectedRead
 
     private int mExpectedMatchCount;
     private int mMatchCount;
-    private boolean mAlreadyWritten;
 
-    public ExpectedRead(
-            final String chromosome, final int position, boolean firstInPair, boolean isSupplementary, boolean found)
+    public ExpectedRead(final String chromosome, final int position, boolean firstInPair, boolean isSupplementary, boolean found)
     {
         Chromosome = chromosome;
         Position = position;
@@ -31,15 +29,13 @@ public class ExpectedRead
         Found = found;
         mExpectedMatchCount = 1;
         mMatchCount = 0;
-        mAlreadyWritten = false;
     }
 
-    public boolean fullyMatched() { return mMatchCount == mExpectedMatchCount; }
+    public boolean fullyMatched() { return mMatchCount >= mExpectedMatchCount; }
     public void registerMatch() { ++mMatchCount; }
-    public void setExpectedMatchCount(int count) { mExpectedMatchCount = max(count, mExpectedMatchCount); }
 
-    public void setAlreadyWritten() { mAlreadyWritten = true; }
-    public boolean alreadyWritten() { return mAlreadyWritten; }
+    public int expectedMatchCount() { return mExpectedMatchCount; }
+    public void setExpectedMatchCount(int count) { mExpectedMatchCount = count; }
 
     public boolean matches(final ExpectedRead other)
     {
@@ -84,5 +80,4 @@ public class ExpectedRead
         expectedReads.forEach(x -> x.setExpectedMatchCount(readGroup.partitionCount() - 1));
         return expectedReads;
     }
-
 }

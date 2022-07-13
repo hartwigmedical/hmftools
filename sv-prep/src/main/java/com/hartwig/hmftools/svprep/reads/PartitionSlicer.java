@@ -230,17 +230,13 @@ public class PartitionSlicer
             // read groups that span chromosomes or partitions need to be complete, so gather up their state to enable this
             Map<String,ReadGroup> spanningGroupsMap = Maps.newHashMap();
 
-            // String chrPartition = formChromosomePartition(mRegion.Chromosome, mRegion.start(), mConfig.PartitionSize);
-
             mJunctionTracker.junctionGroups().forEach(x -> assignReadGroup(x, spanningGroupsMap));
             mJunctionTracker.supportingGroups().forEach(x -> assignReadGroup(x, spanningGroupsMap));
 
             int spanningGroups = spanningGroupsMap.size();
             int totalGroups = mJunctionTracker.junctionGroups().size() + mJunctionTracker.supportingGroups().size();
 
-            mCombinedReadGroups.processSpanningReadGroups(spanningGroupsMap);
-
-            // List<ReadGroupState> unmatchedGroups = mCombinedReadGroups.addIncompleteReadGroup(chrPartition, partialGroupsMap);
+            mCombinedReadGroups.processSpanningReadGroups(mRegion, spanningGroupsMap);
 
             if(totalGroups == 0)
                 return;

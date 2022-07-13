@@ -18,7 +18,7 @@ public class ReadGroup
     private final List<ReadRecord> mReads;
 
     private ReadGroupStatus mStatus;
-    private int mPartitionCount;
+    private final Set<String> mRemotePartitions;
     private int mExpectedReadCount;
     private Set<Integer> mJunctionPositions;
 
@@ -28,7 +28,7 @@ public class ReadGroup
     {
         mReads = Lists.newArrayListWithCapacity(2);
         mStatus = ReadGroupStatus.UNSET;
-        mPartitionCount = 0;
+        mRemotePartitions = Sets.newHashSet();
         mExpectedReadCount = 0;
         mJunctionPositions = null;
         addRead(read);
@@ -39,9 +39,11 @@ public class ReadGroup
 
     public boolean isComplete() { return mStatus == ReadGroupStatus.COMPLETE; }
     public boolean isIncomplete() { return mStatus == ReadGroupStatus.INCOMPLETE; }
-    public boolean spansPartitions() { return mPartitionCount > 1; }
-    public int partitionCount() { return mPartitionCount; }
-    public int expectedReadCount() { return mExpectedReadCount; }
+
+    public boolean spansPartitions() { return !mRemotePartitions.isEmpty(); }
+    public int partitionCount() { return mRemotePartitions.size() + 1; }
+    public Set<String> remotePartitions() { return mRemotePartitions; }
+
     public Set<Integer> junctionPositions() { return mJunctionPositions; }
 
     public void addRead(final ReadRecord read)
@@ -96,8 +98,6 @@ public class ReadGroup
 
     public void setPartitionCount(final ChrBaseRegion region, int partitionSize)
     {
-        Set<String> partitions = Sets.newHashSet();
-
         for(ReadRecord read : mReads)
         {
             if(read.hasSuppAlignment())
@@ -106,17 +106,15 @@ public class ReadGroup
 
                 if(!supplementaryInRegion(suppData, region))
                 {
-                    partitions.add(formChromosomePartition(suppData.Chromosome, suppData.Position, partitionSize));
+                    mRemotePartitions.add(formChromosomePartition(suppData.Chromosome, suppData.Position, partitionSize));
                 }
             }
 
             if(HumanChromosome.contains(read.MateChromosome) && !region.containsPosition(read.MateChromosome, read.MatePosStart))
             {
-                partitions.add(formChromosomePartition(read.MateChromosome, read.MatePosStart, partitionSize));
+                mRemotePartitions.add(formChromosomePartition(read.MateChromosome, read.MatePosStart, partitionSize));
             }
         }
-
-        mPartitionCount = 1 + partitions.size();
     }
 
     public boolean hasReadRecord(final SAMRecord record)
@@ -164,6 +162,6 @@ public class ReadGroup
 
     public String toString()
     {
-        return String.format("%s reads(%d) state(%s) partitions(%d)", id(), mReads.size(), mStatus, mPartitionCount);
+        return String.format("%s reads(%d) state(%s) partitions(%d)", id(), mReads.size(), mStatus, partitionCount());
     }
 }

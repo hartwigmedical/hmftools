@@ -5,7 +5,6 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.WriteType.BAM;
 import static com.hartwig.hmftools.svprep.WriteType.READS;
-import static com.hartwig.hmftools.svprep.reads.ExpectedRead.getExpectedReads;
 
 import java.util.List;
 import java.util.Map;
@@ -16,34 +15,28 @@ import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.reads.ExpectedRead;
 import com.hartwig.hmftools.svprep.reads.ReadGroup;
-import com.hartwig.hmftools.svprep.reads.ReadGroupState;
 import com.hartwig.hmftools.svprep.reads.ReadRecord;
-
-import org.apache.commons.math3.analysis.function.Exp;
 
 public class CombinedReadGroups
 {
     private final SvConfig mConfig;
-    private final Map<String,Map<String,ReadGroupState>> mIncompleteReadGroups; // keyed by chromosome-partition then readId
+    private final int mPartitionSize;
 
-    private final Map<String,Map<String,List<ExpectedRead>>> mChrReadGroupReads; // keyed by chromosome then readId
+    private final Map<String,Map<String,List<ExpectedRead>>> mChrPartitionReadGroupReads; // keyed by chromosome-partition then readId
 
     private final PerformanceCounter mPerfCounter;
-    private int mMatchedGroupCount;
-    private int mUnmatchedGroupCount;
     private final Set<String> mProcessedPartitions;
     private int mLastSnapshotCount;
 
     public CombinedReadGroups(final SvConfig config)
     {
         mConfig = config;
-        mIncompleteReadGroups = Maps.newHashMap();
-        mChrReadGroupReads = Maps.newHashMap();
+        mPartitionSize = config.PartitionSize;
+        mChrPartitionReadGroupReads = Maps.newHashMap();
         mProcessedPartitions = Sets.newHashSet();
-        mMatchedGroupCount = 0;
-        mUnmatchedGroupCount = 0;
         mLastSnapshotCount = 0;
         mPerfCounter = new PerformanceCounter("ReadMerge");
     }
@@ -64,8 +57,15 @@ public class CombinedReadGroups
         return chrPartition.split(CHR_PARTITION_DELIM, 2)[0];
     }
 
-    public synchronized void processSpanningReadGroups(final Map<String,ReadGroup> spanningGroups)
+    private String chrPartition(final String chromosome, int position) { return formChromosomePartition(chromosome, position, mPartitionSize); }
+
+    public synchronized void processSpanningReadGroups(final ChrBaseRegion partitionRegion, final Map<String,ReadGroup> spanningGroups)
     {
+        String sourceChrPartition = chrPartition(partitionRegion.Chromosome, partitionRegion.start());
+        mProcessedPartitions.add(sourceChrPartition);
+
+        Set<ExpectedRead> addedReads = Sets.newHashSet();
+
         // look for reads which have already been found (and therefore written)
         for(Map.Entry<String,ReadGroup> entry : spanningGroups.entrySet())
         {
@@ -73,7 +73,7 @@ public class CombinedReadGroups
 
             for(ReadRecord read : readGroup.reads())
             {
-                processNewRead(readGroup, read, null);
+                processNewRead(sourceChrPartition, readGroup, read, null, addedReads);
             }
 
             // also the expected reads
@@ -81,60 +81,156 @@ public class CombinedReadGroups
 
             for(ExpectedRead read : expectedReads)
             {
-                processNewRead(readGroup, null, read);
+                processNewRead(sourceChrPartition, readGroup, null, read, addedReads);
             }
+        }
+
+        // purge any expected reads which were already found
+        purgeUnmatchedReads(sourceChrPartition, addedReads);
+
+        setCacheCount();
+    }
+
+    private void processNewRead(
+            final String sourceChrPartition, final ReadGroup readGroup, final ReadRecord actualRead, final ExpectedRead expectedRead,
+            final Set<ExpectedRead> addedReads)
+    {
+        String readChromosome = actualRead != null ? actualRead.Chromosome : expectedRead.Chromosome;
+        int readPosition = actualRead != null ? actualRead.start() : expectedRead.Position;
+
+        if(ignoreChromosome(readChromosome))
+            return;
+
+        String readChrPartition = chrPartition(readChromosome, readPosition);
+        ExpectedRead read = expectedRead != null ? expectedRead : ExpectedRead.fromRead(actualRead);
+
+        if(findExistingRead(readChrPartition, readGroup, actualRead, read))
+            return;
+
+        // only store this read against partitions other than the one it came through with, and factor in remote partitions already processed
+        int unprocessedPartitions = 0;
+        for(String remotePartition : readGroup.remotePartitions())
+        {
+            String remoteChr = chromosomeFromChromosomePartition(remotePartition);
+
+            if(ignoreChromosome(remoteChr))
+                continue;
+
+            if(mProcessedPartitions.contains(remotePartition))
+                continue;
+
+            ++unprocessedPartitions;
+            Map<String,List<ExpectedRead>> partitionReadGroupReads = mChrPartitionReadGroupReads.get(remotePartition);
+
+            if(partitionReadGroupReads == null)
+            {
+                partitionReadGroupReads = Maps.newHashMap();
+                mChrPartitionReadGroupReads.put(readChrPartition, partitionReadGroupReads);
+            }
+
+            List<ExpectedRead> readGroupReads = partitionReadGroupReads.get(readGroup.id());
+
+            if(readGroupReads == null)
+            {
+                readGroupReads = Lists.newArrayList();
+                partitionReadGroupReads.put(readGroup.id(), readGroupReads);
+            }
+
+            // add this new read
+            read.setExpectedMatchCount(unprocessedPartitions);
+            readGroupReads.add(read);
+            addedReads.add(read);
         }
     }
 
-    private void processNewRead(final ReadGroup readGroup, final ReadRecord actualRead, final ExpectedRead expectedRead)
+    private boolean findExistingRead(
+            final String readChrPartition, final ReadGroup readGroup, final ReadRecord actualRead, final ExpectedRead read)
     {
-        String chromosome = actualRead != null ? actualRead.Chromosome : expectedRead.Chromosome;
-
-        if(ignoreChromosome(chromosome))
-            return;
-
-        ExpectedRead read = expectedRead != null ? expectedRead : ExpectedRead.fromRead(actualRead);
-
-        Map<String,List<ExpectedRead>> readGroupReads = mChrReadGroupReads.get(chromosome);
+        Map<String,List<ExpectedRead>> readGroupReads = mChrPartitionReadGroupReads.get(readChrPartition);
 
         if(readGroupReads == null)
-        {
-            readGroupReads = Maps.newHashMap();
-            mChrReadGroupReads.put(chromosome, readGroupReads);
-        }
+            return false;
 
         List<ExpectedRead> existingGroupReads = readGroupReads.get(readGroup.id());
 
         if(existingGroupReads == null)
+            return false;
+
+        ExpectedRead matchedRead = existingGroupReads.stream().filter(x -> x.matches(read)).findFirst().orElse(null);
+        if(matchedRead == null)
+            return false;
+
+        if(matchedRead.Found && actualRead != null)
+            actualRead.setWritten();
+
+        matchedRead.setExpectedMatchCount(readGroup.partitionCount() - 1);
+        matchedRead.registerMatch();
+
+        if(matchedRead.fullyMatched())
         {
-            existingGroupReads = Lists.newArrayList();
-            readGroupReads.put(readGroup.id(), existingGroupReads);
-            existingGroupReads.add(read);
+            existingGroupReads.remove(matchedRead);
+
+            if(existingGroupReads.isEmpty())
+                readGroupReads.remove(readGroup.id());
         }
-        else
+
+        return true;
+    }
+
+    private void purgeUnmatchedReads(final String chrPartition, final Set<ExpectedRead> addedReads)
+    {
+        Map<String,List<ExpectedRead>> readGroupReads = mChrPartitionReadGroupReads.get(chrPartition);
+
+        if(readGroupReads == null)
+            return;
+
+        Set<String> emptyGroups = Sets.newHashSet();
+        for(Map.Entry<String,List<ExpectedRead>> entry : readGroupReads.entrySet())
         {
-            ExpectedRead matchedRead = existingGroupReads.stream().filter(x -> x.matches(read)).findFirst().orElse(null);
-            if(matchedRead != null)
+            List<ExpectedRead> reads = entry.getValue();
+
+            int index = 0;
+            while(index < reads.size())
             {
-                if(matchedRead.Found && actualRead != null)
-                    actualRead.setWritten();
+                ExpectedRead read = reads.get(index);
 
-                matchedRead.setExpectedMatchCount(readGroup.partitionCount() - 1);
-                matchedRead.registerMatch();
-
-                if(matchedRead.fullyMatched())
+                if(read.Found && !addedReads.contains(read))
                 {
-                    existingGroupReads.remove(matchedRead);
+                    read.registerMatch();
 
-                    if(existingGroupReads.isEmpty())
-                        readGroupReads.remove(readGroup.id());
+                    if(read.fullyMatched())
+                    {
+                        reads.remove(index);
+                        continue;
+                    }
                 }
 
-                return;
+                ++index;
             }
 
-            // add this new read
-            existingGroupReads.add(read);
+            if(reads.isEmpty())
+                emptyGroups.add(entry.getKey());
+        }
+
+        emptyGroups.forEach(x -> readGroupReads.remove(x));
+
+        if(readGroupReads.isEmpty())
+        {
+            mChrPartitionReadGroupReads.remove(chrPartition);
+            return;
+        }
+    }
+
+    private void setCacheCount()
+    {
+        int newCount = mChrPartitionReadGroupReads.values().stream().mapToInt(x -> x.values().stream().mapToInt(y -> y.size()).sum()).sum();
+
+        if(abs(newCount - mLastSnapshotCount) > LOG_CACH_DIFF)
+        {
+            mLastSnapshotCount = newCount;
+
+            SV_LOGGER.info("spanning partition processed({}) groups cached({} -> {})",
+                    mProcessedPartitions.size(), mLastSnapshotCount, newCount);
         }
     }
 
@@ -147,145 +243,46 @@ public class CombinedReadGroups
         return !mConfig.SpecificChromosomes.contains(chromosome);
     }
 
-    /*
-    public synchronized void addIncompleteReadGroup(final String chrPartition, final Map<String,ReadGroupState> newIncompleteGroups)
-    {
-        // still need to process this partition even if empty, so pick up any other partitions waiting on it
-        mPerfCounter.start();
-
-        mProcessedPartitions.add(chrPartition);
-
-        int initTotalIncomplete = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
-        int initChrIncomplete = newIncompleteGroups.size();
-        int totalMergedGroups = 0;
-
-        // new groups look up by their own chr-partition, but store themselves against their remote chr-parition(s)
-
-        for(Map.Entry<String,ReadGroupState> entry : newIncompleteGroups.entrySet())
-        {
-            // String otherChrPartition = entry.getKey();
-            ReadGroupState groupState = entry.getValue();
-
-            for(String otherChrPartition : groupState.RemoteChromosomePartitions)
-            {
-                if(ignoreChromosome(otherChrPartition))
-                    continue;
-
-                if(mProcessedPartitions.contains(otherChrPartition))
-                    groupState.ProcessedChromosomePartitions.add(otherChrPartition);
-
-                // first looks to see if this chr-partition has been registered by other partition already
-                Map<String,ReadGroupState> existingGroups = mIncompleteReadGroups.get(otherChrPartition);
-
-                if(existingGroups != null)
-                {
-                    // if so it reconciles to two and checks the combined state
-                    int previousMerged = mMatchedGroupCount;
-
-                    List<ReadGroupState> unmatchedGroups = reconcileReadGroups(otherChrPartition, existingGroups, chrPartition, newIncompleteGroups);
-                    unmatchedReadGroups.addAll(unmatchedGroups);
-
-                    int mergedCount = mMatchedGroupCount - previousMerged;
-                    totalMergedGroups += mergedCount;
-
-                    SV_LOGGER.trace("combined chromosome partitions pair({} & {}) existing({}) new({}) merged({}) missed({})",
-                            chrPartition, otherChrPartition, existingGroups.size(), newIncompleteGroups.size(), mergedCount,
-                            unmatchedGroups.size());
-                }
-                else
-                {
-                    // remote partition has been processed but had no groups matching this new one
-                    unmatchedReadGroups.addAll(newIncompleteGroups.values());
-
-                    // otherwise the new chr-partition is cached against the one it come from
-                    Map<String,ReadGroupState> chrPartitionGroups = mIncompleteReadGroups.get(chrPartition);
-                    if(chrPartitionGroups == null)
-                    {
-                        chrPartitionGroups = Maps.newHashMap();
-                        mIncompleteReadGroups.put(chrPartition, chrPartitionGroups);
-                    }
-
-                    chrPartitionGroups.putAll(newIncompleteGroups);
-
-                    SV_LOGGER.trace("added chromosome partitions pair({} & {}) newGroups({})",
-                            chrPartition, otherChrPartition, newIncompleteGroups.size());
-                }
-            }
-        }
-
-        // now clear out any group waiting on this new partition
-        for(Map<String,ReadGroupState> groupStateMap : mIncompleteReadGroups.values())
-        {
-            List<ReadGroupState> unmatchedGroups = groupStateMap.values().stream()
-                    .filter(x -> x.RemoteChromosomePartitions.contains(chrPartition))
-                    .collect(Collectors.toList());
-
-            unmatchedGroups.forEach(x -> groupStateMap.remove(x.ReadId));
-        }
-
-        int newTotalIncomplete = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
-
-        if(abs(mLastSnapshotCount - newTotalIncomplete) > LOG_CACH_DIFF)
-        {
-            mLastSnapshotCount = newTotalIncomplete;
-            SV_LOGGER.info("completed partitions({}) incompleteCount({})", mProcessedPartitions.size(), newTotalIncomplete);
-        }
-
-        SV_LOGGER.debug("chromosomePartition({}) merged({}) partials chrPartition({}) total({} -> {}) unmergedGroups({})",
-                chrPartition, totalMergedGroups, initChrIncomplete, initTotalIncomplete, newTotalIncomplete, unmatchedReadGroups.size());
-
-        mPerfCounter.stop();
-
-        mUnmatchedGroupCount += unmatchedReadGroups.size();
-
-        return unmatchedReadGroups;
-    }
-
-    private List<ReadGroupState> reconcileReadGroups(
-            final String newChrPartition, final Map<String,ReadGroupState> existingGroups, final Map<String,ReadGroupState> newGroups)
-    {
-        // all new groups and existing groups relate to the same partition, so check for matches on read Id
-        // any unmatched groups where the pair of partitions match can then be purged since they will have no other chance to match
-        List<ReadGroupState> unmatchedGroups = Lists.newArrayList();
-
-        for(Map.Entry<String,ReadGroupState> entry : newGroups.entrySet())
-        {
-            // look for an existing incomplete group to add these reads to
-            final String readId = entry.getKey();
-            ReadGroupState existingGroupState = existingGroups.get(readId);
-
-            if(existingGroupState != null)
-            {
-                // existingReadGroup.merge(srcGroupState); // no need for this
-                ++mMatchedGroupCount;
-                existingGroups.remove(readId);
-            }
-            else
-            {
-                unmatchedGroups.add(entry.getValue());
-            }
-        }
-
-        List<ReadGroupState> existingUnmatchedGroups = existingGroups.values().stream()
-                .filter(x -> x.RemoteChrPartition.equals(newChrPartition))
-                .collect(Collectors.toList());
-
-        existingUnmatchedGroups.forEach(x -> existingGroups.remove(x.ReadId));
-        // unmatchedGroups.addAll(existingUnmatchedGroups);
-
-        return unmatchedGroups;
-    }
-    */
-
     public void writeRemainingReadGroups(final ResultsWriter writer, final Set<WriteType> writeTypes)
     {
         if(!writeTypes.contains(BAM) && !writeTypes.contains(READS))
             return;
 
-        int remainingCached = mIncompleteReadGroups.values().stream().mapToInt(x -> x.size()).sum();
+        int readGroups = 0;
+        int foundReadCount = 0;
+        int missedSuppReadCount = 0;
+        int missedNonSuppReadCount = 0;
 
-        SV_LOGGER.info("spanning partition groups: matched({}) unmatched({}) cached({})",
-                mMatchedGroupCount, mUnmatchedGroupCount, remainingCached);
+        Map<String,List<ExpectedRead>> foundReadGroups = Maps.newHashMap();
+        Map<String,List<ExpectedRead>> missedReadGroups = Maps.newHashMap();
+
+        for(Map<String,List<ExpectedRead>> readGroupReads : mChrPartitionReadGroupReads.values())
+        {
+            readGroups += readGroupReads.size();
+
+            for(Map.Entry<String,List<ExpectedRead>> entry : readGroupReads.entrySet())
+            {
+                List<ExpectedRead> foundReads = entry.getValue().stream().filter(x -> x.Found).collect(Collectors.toList());
+                List<ExpectedRead> unfoundReads = entry.getValue().stream().filter(x -> !x.Found).collect(Collectors.toList());
+
+                foundReadCount += foundReads.size();
+                missedSuppReadCount += unfoundReads.stream().filter(x -> x.IsSupplementary).count();
+                missedNonSuppReadCount += unfoundReads.stream().filter(x -> !x.IsSupplementary).count();
+
+
+                if(!foundReads.isEmpty())
+                    foundReadGroups.put(entry.getKey(), foundReads);
+
+                if(!unfoundReads.isEmpty())
+                    missedReadGroups.put(entry.getKey(), unfoundReads);
+            }
+        }
+
+        int partitions = mChrPartitionReadGroupReads.size();
+        int totalCachedReads = foundReadCount + missedNonSuppReadCount + missedSuppReadCount;
+
+        SV_LOGGER.info("final spanning partition cache: partitions({}) readGroups({}) reads({} found={} nonSuppMissed={} suppMissed={})",
+                partitions, readGroups, totalCachedReads, foundReadCount, missedNonSuppReadCount, missedSuppReadCount);
 
         mPerfCounter.logStats();
     }
