@@ -16,8 +16,8 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.cancertype.CancerTypeConstants;
-import com.hartwig.hmftools.serve.curation.RelevantTreatmentApproachKey;
-import com.hartwig.hmftools.serve.curation.RelevantTreatmentApproch;
+import com.hartwig.hmftools.serve.treatementapproach.curation.RelevantTreatmentApproachKey;
+import com.hartwig.hmftools.serve.treatementapproach.curation.RelevantTreatmentApproch;
 
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.util.Strings;

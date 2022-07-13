@@ -6,6 +6,9 @@ import java.io.IOException;
 import java.util.Map;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.serve.treatementapproach.curation.RelevantTreatmentApproachFactory;
+import com.hartwig.hmftools.serve.treatementapproach.curation.RelevantTreatmentApproachKey;
+import com.hartwig.hmftools.serve.treatementapproach.curation.RelevantTreatmentApproch;
 
 import org.junit.Test;
 

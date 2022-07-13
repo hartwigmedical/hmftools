@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.curation;
+package com.hartwig.hmftools.serve.treatementapproach.curation;
 
 import java.io.File;
 import java.io.IOException;

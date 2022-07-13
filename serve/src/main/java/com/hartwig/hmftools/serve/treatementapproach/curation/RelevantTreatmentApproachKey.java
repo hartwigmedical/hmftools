@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.curation;
+package com.hartwig.hmftools.serve.treatementapproach.curation;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -7,11 +7,15 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class RelevantTreatmentApproch {
+public abstract class RelevantTreatmentApproachKey {
 
     @NotNull
-    public abstract RelevantTreatmentApproachKey treatmentApproachKey();
+    public abstract String treatment();
 
     @NotNull
-    public abstract String curatedtreatmentApproach();
+    public abstract String treatmentApproach();
+
+    @NotNull
+    public abstract String matchEvent();
+
 }
