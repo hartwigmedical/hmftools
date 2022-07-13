@@ -6,7 +6,6 @@ public final class SvConstants
 {
     // region processing
     public static final int DEFAULT_CHR_PARTITION_SIZE = 1000000;
-    public static final int DEFAULT_BUCKET_SIZE = 1000;
     public static final int DOWN_SAMPLE_FRACTION = 20; // split partition into segments
     public static final int DOWN_SAMPLE_THRESHOLD = 1_500_000; // per partition
 

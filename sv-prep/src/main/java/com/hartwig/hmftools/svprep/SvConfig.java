@@ -13,9 +13,19 @@ import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChro
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomesOrRegions;
 import static com.hartwig.hmftools.svprep.SvCommon.ITEM_DELIM;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
-import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_BUCKET_SIZE;
 import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_CHR_PARTITION_SIZE;
 import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_READ_LENGTH;
+import static com.hartwig.hmftools.svprep.SvConstants.JUNCTION_SUPPORT_CAP;
+import static com.hartwig.hmftools.svprep.SvConstants.MAX_DISCORDANT_READ_DISTANCE;
+import static com.hartwig.hmftools.svprep.SvConstants.MIN_ALIGNMENT_BASES;
+import static com.hartwig.hmftools.svprep.SvConstants.MIN_INDEL_LENGTH;
+import static com.hartwig.hmftools.svprep.SvConstants.MIN_INSERT_ALIGNMENT_OVERLAP;
+import static com.hartwig.hmftools.svprep.SvConstants.MIN_JUNCTION_SUPPORT;
+import static com.hartwig.hmftools.svprep.SvConstants.MIN_MAP_QUALITY;
+import static com.hartwig.hmftools.svprep.SvConstants.MIN_SOFT_CLIP_HIGH_QUAL_PERC;
+import static com.hartwig.hmftools.svprep.SvConstants.MIN_SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.svprep.SvConstants.MIN_SOFT_CLIP_MIN_BASE_QUAL;
+import static com.hartwig.hmftools.svprep.SvConstants.MIN_SUPPORTING_READ_DISTANCE;
 
 import java.util.Arrays;
 import java.util.List;
@@ -38,7 +48,6 @@ public class SvConfig
     public final String SampleId;
     public final String BamFile;
     public final String RefGenomeFile;
-    // public final RefGenomeSource RefGenome;
     public final RefGenomeVersion RefGenVersion;
 
     public final ReadFilters ReadFiltering;
@@ -46,7 +55,6 @@ public class SvConfig
     public final BlacklistLocations Blacklist;
 
     public final int PartitionSize;
-    public final int BucketSize;
     public final int ReadLength;
     public final boolean CalcFragmentLength;
 
@@ -103,7 +111,6 @@ public class SvConfig
         Blacklist = new BlacklistLocations(cmd.getOptionValue(BLACKLIST_BED));
 
         PartitionSize = DEFAULT_CHR_PARTITION_SIZE;
-        BucketSize = DEFAULT_BUCKET_SIZE;
 
         ReadLength = Integer.parseInt(cmd.getOptionValue(READ_LENGTH, String.valueOf(DEFAULT_READ_LENGTH)));
 
@@ -169,6 +176,46 @@ public class SvConfig
         }
 
         return null;
+    }
+
+    public SvConfig(int partitionSize)
+    {
+        mIsValid = true;
+        SampleId = "TEST";
+        BamFile = null;
+        RefGenomeFile = "";
+        OutputDir = null;
+        OutputId = null;
+
+        RefGenVersion = V37;
+
+        Hotspots = new HotspotCache(null);
+        Blacklist = new BlacklistLocations(null);
+
+        PartitionSize = partitionSize;
+
+        ReadLength = DEFAULT_READ_LENGTH;
+
+        ReadFiltering = new ReadFilters(new ReadFilterConfig(
+                MIN_ALIGNMENT_BASES,
+                MIN_MAP_QUALITY,
+                MIN_INSERT_ALIGNMENT_OVERLAP,
+                MIN_SOFT_CLIP_LENGTH,
+                MIN_SOFT_CLIP_MIN_BASE_QUAL,
+                MIN_SOFT_CLIP_HIGH_QUAL_PERC,
+                MIN_SUPPORTING_READ_DISTANCE,
+                MIN_INDEL_LENGTH,
+                MIN_JUNCTION_SUPPORT,
+                JUNCTION_SUPPORT_CAP,
+                MAX_DISCORDANT_READ_DISTANCE));
+
+        CalcFragmentLength = false;
+        WriteTypes = Sets.newHashSet();
+        SpecificChromosomes = Lists.newArrayList();
+        SpecificRegions = Lists.newArrayList();
+        LogReadIds = Lists.newArrayList();
+        Threads = 1;
+        MaxPartitionReads = 0;
     }
 
     public static Options createCmdLineOptions()

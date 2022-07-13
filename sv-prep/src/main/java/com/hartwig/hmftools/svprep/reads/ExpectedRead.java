@@ -15,10 +15,10 @@ public class ExpectedRead
     public final int Position;
     public final boolean FirstInPair;
     public final boolean IsSupplementary;
-    public boolean Found;
 
     private int mExpectedMatchCount;
     private int mMatchCount;
+    private boolean mFound;
 
     public ExpectedRead(final String chromosome, final int position, boolean firstInPair, boolean isSupplementary, boolean found)
     {
@@ -26,13 +26,16 @@ public class ExpectedRead
         Position = position;
         FirstInPair = firstInPair;
         IsSupplementary = isSupplementary;
-        Found = found;
+        mFound = found;
         mExpectedMatchCount = 1;
         mMatchCount = 0;
     }
 
     public boolean fullyMatched() { return mMatchCount >= mExpectedMatchCount; }
     public void registerMatch() { ++mMatchCount; }
+
+    public boolean found() { return mFound; }
+    public void markFound() { mFound = true; }
 
     public int expectedMatchCount() { return mExpectedMatchCount; }
     public void setExpectedMatchCount(int count) { mExpectedMatchCount = count; }
@@ -45,7 +48,7 @@ public class ExpectedRead
     public String toString()
     {
         return format("%s:%d first(%s) supp(%s) found(%s) matched(%d/%d)",
-                Chromosome, Position, FirstInPair, IsSupplementary, Found, mMatchCount, mExpectedMatchCount);
+                Chromosome, Position, FirstInPair, IsSupplementary, mFound, mMatchCount, mExpectedMatchCount);
     }
 
     public static ExpectedRead fromRead(final ReadRecord read)

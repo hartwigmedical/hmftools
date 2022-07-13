@@ -281,7 +281,6 @@ public class PartitionSlicer
             // get any remote mates
             findRemoteMateReads(readGroup);
             readGroup.setGroupState();
-            // ReadGroupState groupState = ReadGroupState.formGroup(readGroup);
             partialGroupsMap.put(readGroup.id(), readGroup);
         }
         else

@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.beust.jcommander.internal.Sets;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
@@ -27,6 +28,9 @@ public class CombinedReadGroups
 
     private final Map<String,Map<String,List<ExpectedRead>>> mChrPartitionReadGroupReads; // keyed by chromosome-partition then readId
 
+    // a map of remote chr-partition to read partition to readIds
+    private final Map<String,Map<String,Set<String>>> mExpectedChrPartitionReadIds;
+
     private final PerformanceCounter mPerfCounter;
     private final Set<String> mProcessedPartitions;
     private int mLastSnapshotCount;
@@ -36,6 +40,7 @@ public class CombinedReadGroups
         mConfig = config;
         mPartitionSize = config.PartitionSize;
         mChrPartitionReadGroupReads = Maps.newHashMap();
+        mExpectedChrPartitionReadIds = Maps.newHashMap();
         mProcessedPartitions = Sets.newHashSet();
         mLastSnapshotCount = 0;
         mPerfCounter = new PerformanceCounter("ReadMerge");
@@ -52,7 +57,7 @@ public class CombinedReadGroups
         return chromosome + CHR_PARTITION_DELIM + partition;
     }
 
-    public static String chromosomeFromChromosomePartition(final String chrPartition)
+    private static String chrFromChrPartition(final String chrPartition)
     {
         return chrPartition.split(CHR_PARTITION_DELIM, 2)[0];
     }
@@ -71,9 +76,21 @@ public class CombinedReadGroups
         {
             ReadGroup readGroup = entry.getValue();
 
+            List<String> unprocessedPartitions = Lists.newArrayList();
+            for(String remotePartition : readGroup.remotePartitions())
+            {
+                if(mProcessedPartitions.contains(remotePartition))
+                    continue;
+
+                if(!mConfig.SpecificChromosomes.isEmpty() && ignoreChromosome(chrFromChrPartition(remotePartition)))
+                    continue;
+
+                unprocessedPartitions.add(remotePartition);
+            }
+
             for(ReadRecord read : readGroup.reads())
             {
-                processNewRead(sourceChrPartition, readGroup, read, null, addedReads);
+                processNewRead(unprocessedPartitions, readGroup, read, null, addedReads);
             }
 
             // also the expected reads
@@ -81,7 +98,7 @@ public class CombinedReadGroups
 
             for(ExpectedRead read : expectedReads)
             {
-                processNewRead(sourceChrPartition, readGroup, null, read, addedReads);
+                processNewRead(unprocessedPartitions, readGroup, null, read, addedReads);
             }
         }
 
@@ -92,8 +109,8 @@ public class CombinedReadGroups
     }
 
     private void processNewRead(
-            final String sourceChrPartition, final ReadGroup readGroup, final ReadRecord actualRead, final ExpectedRead expectedRead,
-            final Set<ExpectedRead> addedReads)
+            final List<String> unprocessedPartitions, final ReadGroup readGroup, final ReadRecord actualRead,
+            final ExpectedRead expectedRead, final Set<ExpectedRead> addedReads)
     {
         String readChromosome = actualRead != null ? actualRead.Chromosome : expectedRead.Chromosome;
         int readPosition = actualRead != null ? actualRead.start() : expectedRead.Position;
@@ -107,39 +124,52 @@ public class CombinedReadGroups
         if(findExistingRead(readChrPartition, readGroup, actualRead, read))
             return;
 
-        // only store this read against partitions other than the one it came through with, and factor in remote partitions already processed
-        int unprocessedPartitions = 0;
-        for(String remotePartition : readGroup.remotePartitions())
+        // only store this read if other remote partitions are expected and factor in remote partitions already processed
+        if(unprocessedPartitions.isEmpty())
+            return;
+
+        Map<String,List<ExpectedRead>> partitionReadGroupReads = mChrPartitionReadGroupReads.get(readChrPartition);
+
+        if(partitionReadGroupReads == null)
         {
-            String remoteChr = chromosomeFromChromosomePartition(remotePartition);
+            partitionReadGroupReads = Maps.newHashMap();
+            mChrPartitionReadGroupReads.put(readChrPartition, partitionReadGroupReads);
+        }
 
-            if(ignoreChromosome(remoteChr))
+        List<ExpectedRead> readGroupReads = partitionReadGroupReads.get(readGroup.id());
+
+        if(readGroupReads == null)
+        {
+            readGroupReads = Lists.newArrayList();
+            partitionReadGroupReads.put(readGroup.id(), readGroupReads);
+        }
+
+        // add this new read
+        read.setExpectedMatchCount(unprocessedPartitions.size());
+        readGroupReads.add(read);
+        addedReads.add(read);
+
+        // also make a link to this readId from the expected remote partition back to this read's partition
+        for(String unprocessedPartition : unprocessedPartitions)
+        {
+            if(readChrPartition.equals(unprocessedPartition))
                 continue;
 
-            if(mProcessedPartitions.contains(remotePartition))
-                continue;
-
-            ++unprocessedPartitions;
-            Map<String,List<ExpectedRead>> partitionReadGroupReads = mChrPartitionReadGroupReads.get(remotePartition);
-
-            if(partitionReadGroupReads == null)
+            Map<String,Set<String>> sourcePartitionMap = mExpectedChrPartitionReadIds.get(unprocessedPartition);
+            if(sourcePartitionMap == null)
             {
-                partitionReadGroupReads = Maps.newHashMap();
-                mChrPartitionReadGroupReads.put(readChrPartition, partitionReadGroupReads);
+                sourcePartitionMap = Maps.newHashMap();
+                mExpectedChrPartitionReadIds.put(unprocessedPartition, sourcePartitionMap);
             }
 
-            List<ExpectedRead> readGroupReads = partitionReadGroupReads.get(readGroup.id());
-
-            if(readGroupReads == null)
+            Set<String> readIds = sourcePartitionMap.get(readChrPartition);
+            if(readIds == null)
             {
-                readGroupReads = Lists.newArrayList();
-                partitionReadGroupReads.put(readGroup.id(), readGroupReads);
+                readIds = Sets.newHashSet();
+                sourcePartitionMap.put(readChrPartition, readIds);
             }
 
-            // add this new read
-            read.setExpectedMatchCount(unprocessedPartitions);
-            readGroupReads.add(read);
-            addedReads.add(read);
+            readIds.add(readGroup.id());
         }
     }
 
@@ -160,8 +190,13 @@ public class CombinedReadGroups
         if(matchedRead == null)
             return false;
 
-        if(matchedRead.Found && actualRead != null)
-            actualRead.setWritten();
+        if(actualRead != null)
+        {
+            if(matchedRead.found())
+                actualRead.setWritten();
+            else
+                matchedRead.markFound();
+        }
 
         matchedRead.setExpectedMatchCount(readGroup.partitionCount() - 1);
         matchedRead.registerMatch();
@@ -179,45 +214,51 @@ public class CombinedReadGroups
 
     private void purgeUnmatchedReads(final String chrPartition, final Set<ExpectedRead> addedReads)
     {
-        Map<String,List<ExpectedRead>> readGroupReads = mChrPartitionReadGroupReads.get(chrPartition);
-
-        if(readGroupReads == null)
+        Map<String,Set<String>> sourcePartitionMap = mExpectedChrPartitionReadIds.get(chrPartition);
+        if(sourcePartitionMap == null)
             return;
 
-        Set<String> emptyGroups = Sets.newHashSet();
-        for(Map.Entry<String,List<ExpectedRead>> entry : readGroupReads.entrySet())
+        mExpectedChrPartitionReadIds.remove(chrPartition); // no further value
+
+        for(Map.Entry<String,Set<String>> entry : sourcePartitionMap.entrySet())
         {
-            List<ExpectedRead> reads = entry.getValue();
+            String sourceChrPartition = entry.getKey();
+            Set<String> readIds = entry.getValue();
 
-            int index = 0;
-            while(index < reads.size())
+            Map<String,List<ExpectedRead>> readGroupReads = mChrPartitionReadGroupReads.get(sourceChrPartition);
+
+            Set<String> emptyGroups = Sets.newHashSet();
+
+            for(String readId : readIds)
             {
-                ExpectedRead read = reads.get(index);
+                List<ExpectedRead> reads = readGroupReads.get(readId);
+                if(reads == null)
+                    continue;
 
-                if(read.Found && !addedReads.contains(read))
+                int index = 0;
+                while(index < reads.size())
                 {
-                    read.registerMatch();
+                    ExpectedRead read = reads.get(index);
 
-                    if(read.fullyMatched())
+                    if(read.found() && !addedReads.contains(read))
                     {
-                        reads.remove(index);
-                        continue;
+                        read.registerMatch();
+
+                        if(read.fullyMatched())
+                        {
+                            reads.remove(index);
+                            continue;
+                        }
                     }
+
+                    ++index;
                 }
 
-                ++index;
+                if(reads.isEmpty())
+                    emptyGroups.add(readId);
             }
 
-            if(reads.isEmpty())
-                emptyGroups.add(entry.getKey());
-        }
-
-        emptyGroups.forEach(x -> readGroupReads.remove(x));
-
-        if(readGroupReads.isEmpty())
-        {
-            mChrPartitionReadGroupReads.remove(chrPartition);
-            return;
+            emptyGroups.forEach(x -> readGroupReads.remove(x));
         }
     }
 
@@ -239,7 +280,7 @@ public class CombinedReadGroups
         if(mConfig.SpecificChromosomes.isEmpty())
             return false;
 
-        String chromosome = chromosomeFromChromosomePartition(chrPartition);
+        String chromosome = chrFromChrPartition(chrPartition);
         return !mConfig.SpecificChromosomes.contains(chromosome);
     }
 
@@ -262,8 +303,8 @@ public class CombinedReadGroups
 
             for(Map.Entry<String,List<ExpectedRead>> entry : readGroupReads.entrySet())
             {
-                List<ExpectedRead> foundReads = entry.getValue().stream().filter(x -> x.Found).collect(Collectors.toList());
-                List<ExpectedRead> unfoundReads = entry.getValue().stream().filter(x -> !x.Found).collect(Collectors.toList());
+                List<ExpectedRead> foundReads = entry.getValue().stream().filter(x -> x.found()).collect(Collectors.toList());
+                List<ExpectedRead> unfoundReads = entry.getValue().stream().filter(x -> !x.found()).collect(Collectors.toList());
 
                 foundReadCount += foundReads.size();
                 missedSuppReadCount += unfoundReads.stream().filter(x -> x.IsSupplementary).count();
@@ -285,5 +326,26 @@ public class CombinedReadGroups
                 partitions, readGroups, totalCachedReads, foundReadCount, missedNonSuppReadCount, missedSuppReadCount);
 
         mPerfCounter.logStats();
+    }
+
+    @VisibleForTesting
+    public Map<String,Map<String,List<ExpectedRead>>> chrPartitionReadGroupsMap() { return mChrPartitionReadGroupReads; }
+
+    public void reset()
+    {
+        mChrPartitionReadGroupReads.clear();
+        mProcessedPartitions.clear();
+    }
+
+    private class ExpectedChrPartitionReads
+    {
+        public final String SourceChrPartition;
+        public final Set<String> ReadIds;
+
+        public ExpectedChrPartitionReads(final String sourceChrPartition)
+        {
+            SourceChrPartition = sourceChrPartition;
+            ReadIds = Sets.newHashSet();
+        }
     }
 }
