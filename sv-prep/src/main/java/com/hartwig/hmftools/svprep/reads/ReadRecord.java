@@ -34,6 +34,7 @@ public class ReadRecord
 
     private int mFilters;
     private ReadType mReadType;
+    private boolean mWritten;
 
     public static ReadRecord from(final SAMRecord record) { return new ReadRecord(record); }
 
@@ -45,13 +46,11 @@ public class ReadRecord
         MateChromosome = record.getMateReferenceName();
         MatePosStart = record.getMateAlignmentStart();
 
-        //final String readId = record.isSecondaryAlignment() ? format("%s_%s",
-        //        record.getReadName(), record.getAttribute(SECONDARY_ATTRIBUTE)) : record.getReadName();
-
         mFragmentInsertSize = abs(record.getInferredInsertSize());
         mSupplementaryAlignment = SupplementaryReadData.from(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
         mFilters = 0;
         mReadType = NO_SUPPORT;
+        mWritten = false;
     }
 
     public String id() { return mRecord.getReadName(); }
@@ -99,6 +98,9 @@ public class ReadRecord
 
     public void setReadType(ReadType type) { mReadType = type; }
     public ReadType readType() { return mReadType; }
+
+    public void setWritten() { mWritten = true; }
+    public boolean written() { return mWritten; }
 
     public short mapQuality() { return (short)mRecord.getMappingQuality(); }
     public boolean isMultiMapped() { return mapQuality() <= MULTI_MAP_QUALITY_THRESHOLD; }

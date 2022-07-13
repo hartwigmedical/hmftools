@@ -2,7 +2,6 @@ package com.hartwig.hmftools.svprep.reads;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
-import static com.hartwig.hmftools.svprep.CombinedReadGroups.chromosomeFromChromosomePartition;
 import static com.hartwig.hmftools.svprep.CombinedReadGroups.formChromosomePartition;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_FRACTION;
@@ -11,6 +10,7 @@ import static com.hartwig.hmftools.svprep.SvConstants.EXCLUDED_REGION_1_REF_37;
 import static com.hartwig.hmftools.svprep.SvConstants.EXCLUDED_REGION_1_REF_38;
 import static com.hartwig.hmftools.svprep.WriteType.BAM;
 import static com.hartwig.hmftools.svprep.WriteType.READS;
+import static com.hartwig.hmftools.svprep.reads.ReadGroup.MAX_GROUP_READ_COUNT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
 import static com.hartwig.hmftools.svprep.reads.ReadType.UNMATCHED;
@@ -24,6 +24,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
+import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.CombinedReadGroups;
@@ -227,25 +228,27 @@ public class PartitionSlicer
         if(captureCompleteGroups)
         {
             // read groups that span chromosomes or partitions need to be complete, so gather up their state to enable this
-            Map<String,Map<String,ReadGroupState>> partialGroupsMap = Maps.newHashMap();
+            Map<String,ReadGroup> spanningGroupsMap = Maps.newHashMap();
 
-            String chrPartition = formChromosomePartition(mRegion.Chromosome, mRegion.start(), mConfig.PartitionSize);
+            // String chrPartition = formChromosomePartition(mRegion.Chromosome, mRegion.start(), mConfig.PartitionSize);
 
-            mJunctionTracker.junctionGroups().forEach(x -> assignReadGroup(x, chrPartition, partialGroupsMap));
-            mJunctionTracker.supportingGroups().forEach(x -> assignReadGroup(x, chrPartition, partialGroupsMap));
+            mJunctionTracker.junctionGroups().forEach(x -> assignReadGroup(x, spanningGroupsMap));
+            mJunctionTracker.supportingGroups().forEach(x -> assignReadGroup(x, spanningGroupsMap));
 
-            int spanningGroups = partialGroupsMap.values().stream().mapToInt(x -> x.size()).sum();
+            int spanningGroups = spanningGroupsMap.size();
             int totalGroups = mJunctionTracker.junctionGroups().size() + mJunctionTracker.supportingGroups().size();
 
-            List<ReadGroupState> unmatchedGroups = mCombinedReadGroups.addIncompleteReadGroup(chrPartition, partialGroupsMap);
+            mCombinedReadGroups.processSpanningReadGroups(spanningGroupsMap);
 
-            if(unmatchedGroups.isEmpty() && totalGroups == 0)
+            // List<ReadGroupState> unmatchedGroups = mCombinedReadGroups.addIncompleteReadGroup(chrPartition, partialGroupsMap);
+
+            if(totalGroups == 0)
                 return;
 
-            mStats.UnmatchedGroups = unmatchedGroups.size();
+            int matchedReads = spanningGroupsMap.values().stream().mapToInt(x -> (int)x.reads().stream().filter(y -> y.written()).count()).sum();
 
-            SV_LOGGER.debug("region({}) readGroups({}) complete(local={} spanning={}) unmatched({})",
-                    mRegion, totalGroups, totalGroups - spanningGroups, spanningGroups, unmatchedGroups.size());
+            SV_LOGGER.debug("region({}) readGroups({}) complete(local={} spanning={}) matchedReads({})",
+                    mRegion, totalGroups, totalGroups - spanningGroups, spanningGroups, matchedReads);
 
             if(mConfig.WriteTypes.contains(BAM))
             {
@@ -258,9 +261,6 @@ public class PartitionSlicer
                 mWriter.writeReadGroup(mJunctionTracker.junctionGroups());
                 mWriter.writeReadGroup(mJunctionTracker.supportingGroups());
             }
-
-            if(!unmatchedGroups.isEmpty())
-                sliceUnmatchedReadGroups(unmatchedGroups);
         }
 
         if(mConfig.WriteTypes.contains(WriteType.JUNCTIONS))
@@ -274,27 +274,24 @@ public class PartitionSlicer
         mStats.InitialSupportingFragmentCount += mJunctionTracker.initialSupportingFrags();
     }
 
-    private void assignReadGroup(
-            final ReadGroup readGroup, final String chrPartition, final Map<String,Map<String,ReadGroupState>> partialGroupsMap)
+    private void assignReadGroup(final ReadGroup readGroup, Map<String,ReadGroup> partialGroupsMap)
     {
-        ReadGroupState groupState = readGroup.formGroupState(mRegion, chrPartition, mConfig.PartitionSize);
+        readGroup.setPartitionCount(mRegion, mConfig.PartitionSize);
 
         if(readGroup.spansPartitions())
         {
             ++mStats.SpanningGroups;
 
-            Map<String,ReadGroupState> groups = partialGroupsMap.get(groupState.RemoteChrPartition);
-
-            if(groups == null)
-            {
-                groups = Maps.newHashMap();
-                partialGroupsMap.put(groupState.RemoteChrPartition, groups);
-            }
-
-            groups.put(readGroup.id(), groupState);
+            // get any remote mates
+            findRemoteMateReads(readGroup);
+            readGroup.setGroupState();
+            // ReadGroupState groupState = ReadGroupState.formGroup(readGroup);
+            partialGroupsMap.put(readGroup.id(), readGroup);
         }
         else
         {
+            readGroup.setGroupState();
+
             if(readGroup.isComplete())
                 ++mStats.LocalCompleteGroups;
             else
@@ -302,60 +299,134 @@ public class PartitionSlicer
         }
     }
 
-    private void sliceUnmatchedReadGroups(final List<ReadGroupState> unmatchedGroups)
+    private void findRemoteMateReads(final ReadGroup readGroup)
     {
-        SV_LOGGER.debug("region({}) slicing for {} unmatched read groups", mRegion, unmatchedGroups.size());
+        int index = 0;
+        while(index < readGroup.reads().size() && index < MAX_GROUP_READ_COUNT)
+        {
+            ReadRecord read = readGroup.reads().get(index);
+
+            if(!readGroup.hasReadMate(read))
+            {
+                SAMRecord mateRecord = mBamSlicer.queryMate(mSamReader, read.record());
+
+                if(mateRecord != null && !readGroup.hasReadRecord(mateRecord))
+                {
+                    ReadRecord newRead = ReadRecord.from(mateRecord);
+                    readGroup.addRead(newRead);
+                }
+            }
+
+            ++index;
+        }
+    }
+
+    /*
+    private void completeUnmatchedReadGroups(final List<ReadGroupState> unmatchedGroups)
+    {
+        SV_LOGGER.debug("region({}) extract remote reads for {} unmatched read groups", mRegion, unmatchedGroups.size());
 
         mPerCounters[PC_UNMATCHED_SLICE].start();
 
-        int matchedGroups = 0;
+        int completeGroups = 0;
 
-        for(ReadGroupState readGroup : unmatchedGroups)
+        for(ReadGroupState readGroupState : unmatchedGroups)
         {
-            String remoteChr = chromosomeFromChromosomePartition(readGroup.RemoteChrPartition);
-            GenomePosition slicePosition = GenomePositions.create(remoteChr, readGroup.RemotePosition);
-            List<SAMRecord> records = mBamSlicer.slice(mSamReader, slicePosition);
+            ReadGroup readGroup = mJunctionTracker.getReadGroup(readGroupState.ReadId);
 
-            mStats.UnmatchedSliceReads += records.size();
-
-            for(SAMRecord record : records)
+            if(readGroup == null)
             {
-                if(record.getReadName().equals(readGroup.ReadId))
-                {
-                    processUnmatchedRecord(record, readGroup);
-                    ++matchedGroups;
-                }
+                SV_LOGGER.error("readGroup({}) missing, invalid state", readGroupState.ReadId);
+                continue;
             }
+
+            completeUnmatchedReadGroup(readGroup);
+
+            if(readGroup.isComplete())
+                ++completeGroups;
         }
 
-        SV_LOGGER.debug("region({}) unmatched groups matched reads({}) from sliced({})",
-                mRegion, matchedGroups, mStats.UnmatchedSliceReads);
+        SV_LOGGER.debug("region({}) unmatched groups({}) now complete({})", mRegion, unmatchedGroups.size(), completeGroups);
 
         mPerCounters[PC_UNMATCHED_SLICE].stop();
     }
 
-    private void processUnmatchedRecord(final SAMRecord record, ReadGroupState readGroup)
+    private void completeUnmatchedReadGroup(final ReadGroup readGroup)
     {
-        if(mLogReadIds) // debugging only
+        int index = 0;
+        boolean remoteFound = false;
+        while(index < readGroup.reads().size() && index < MAX_GROUP_READ_COUNT)
         {
-            if(mConfig.LogReadIds.contains(record.getReadName()))
-                SV_LOGGER.debug("specific readId({})", record.getReadName());
+            ReadRecord read = readGroup.reads().get(index);
+
+            if(!readGroup.hasReadMate(read))
+            {
+                SAMRecord mateRecord = mBamSlicer.queryMate(mSamReader, read.record());
+
+                if(mateRecord != null)
+                {
+                    if(!readGroup.hasReadRecord(mateRecord))
+                    {
+                        readGroup.addRead(ReadRecord.from(mateRecord));
+                        remoteFound = true;
+                    }
+                }
+            }
+
+            ++index;
         }
 
-        if(mConfig.WriteTypes.contains(BAM))
+        if(remoteFound)
         {
-            mWriter.writeBamRecord(record);
+            readGroup.setGroupState();
+
+            if(readGroup.isComplete())
+                return;
         }
 
-        if(mConfig.WriteTypes.contains(READS))
+        // check the need to slice for remote supplementaries
+        List<ReadRecord> newReads = Lists.newArrayList();
+
+        for(ReadRecord read : readGroup.reads())
         {
-            ReadRecord read = ReadRecord.from(record);
-            int filters = mReadFilters.checkFilters(record);
-            read.setFilters(filters);
-            read.setReadType(UNMATCHED);
-            mWriter.writeReadData(read, readGroup.ReadCount + 1, readGroup.Status, true, "");
+            if(read.hasSuppAlignment())
+            {
+                SupplementaryReadData suppData = read.supplementaryAlignment();
+
+                if(readGroup.reads().stream().anyMatch(x -> x.Chromosome.equals(suppData.Chromosome) && suppData.Position == read.start()))
+                    continue;
+
+                // slice for this supplementary
+                GenomePosition slicePosition = GenomePositions.create(suppData.Chromosome, suppData.Position);
+                List<SAMRecord> records = mBamSlicer.slice(mSamReader, slicePosition);
+
+                mStats.UnmatchedSliceReads += records.size();
+
+                for(SAMRecord record : records)
+                {
+                    if(record.getAlignmentStart() != suppData.Position)
+                        continue;
+
+                    if(!record.getReadName().equals(readGroup.id()) || !record.getCigarString().equals(suppData.Cigar))
+                        continue;
+
+                    ReadRecord newRead = ReadRecord.from(record);
+                    int filters = mReadFilters.checkFilters(record);
+                    newRead.setFilters(filters);
+                    newRead.setReadType(UNMATCHED);
+                    newReads.add(newRead);
+                    break;
+                }
+            }
+        }
+
+        if(!newReads.isEmpty())
+        {
+            newReads.forEach(x -> readGroup.addRead(x));
+            readGroup.setGroupState();
         }
     }
+    */
 
     private boolean checkReadRateLimits(int positionStart)
     {

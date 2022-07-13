@@ -109,6 +109,9 @@ public class ResultsWriter
 
             for(ReadRecord read : readGroup.reads())
             {
+                if(read.written())
+                    continue;
+
                 writeReadData(read, readGroup.size(), readGroup.groupStatus(), readGroup.spansPartitions(), junctionPosStr);
             }
         }
@@ -117,7 +120,7 @@ public class ResultsWriter
     public synchronized void writeReadData(
             final ReadRecord read, int readCount, final ReadGroupStatus status, boolean spansPartitions, final String junctionPositions)
     {
-        if(mReadWriter == null)
+        if(mReadWriter == null || read.written())
             return;
 
         try

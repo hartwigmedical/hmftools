@@ -50,7 +50,7 @@ public class BamWriter
             return;
 
         mRecordWriteCount += reads.size();
-        reads.forEach(x -> mWriter.addAlignment(x.record()));
+        reads.stream().filter(x -> !x.written()).forEach(x -> mWriter.addAlignment(x.record()));
     }
 
     public void writeRecord(final SAMRecord record)
