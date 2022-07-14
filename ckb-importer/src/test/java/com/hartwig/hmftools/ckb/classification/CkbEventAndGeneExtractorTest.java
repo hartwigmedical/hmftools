@@ -13,6 +13,8 @@ public class CkbEventAndGeneExtractorTest {
         assertEquals("gene", CkbEventAndGeneExtractor.extractGene(CkbTestFactory.createVariant("gene", "fullName", "variant", null)));
         assertEquals("NTRK2",
                 CkbEventAndGeneExtractor.extractGene(CkbTestFactory.createVariant("NTRK2", "NTRK2 fusion", "fusion", "fusion")));
+        assertEquals("EML4 - RET",
+                CkbEventAndGeneExtractor.extractGene(CkbTestFactory.createVariant("EML4", "EML4 - RET", "EML4 - RET", "fusion")));
 
         // We ignore NO_GENE case
         assertEquals(CkbConstants.NO_GENE,
