@@ -162,17 +162,6 @@ public class FusionEvidenceTest {
                         .relevantTreatmentApproaches(Sets.newHashSet("drugClasses"))
                         .build())
                 .build();
-        ActionableGene ig_over = ImmutableActionableGene.builder()
-                .from(ServeTestFactory.createTestActionableGene())
-                .gene("IGK")
-                .event(GeneLevelEvent.OVEREXPRESSION)
-                .source(Knowledgebase.CKB)
-                .treatment(ImmutableTreatment.builder()
-                        .treament("treatment12")
-                        .sourceRelevantTreatmentApproaches(Sets.newHashSet("drugClasses"))
-                        .relevantTreatmentApproaches(Sets.newHashSet("drugClasses"))
-                        .build())
-                .build();
 
         KnownFusionCache knownFusionCache = new KnownFusionCache();
         knownFusionCache.addData(new KnownFusionData(KNOWN_PAIR, "EML4", "ALK", "", ""));
@@ -194,7 +183,6 @@ public class FusionEvidenceTest {
                         activation,
                         any,
                         other,
-                        ig_over,
                         ig_fusion),
                 Lists.newArrayList(fusion, ig_pair),
                 knownFusionCache);
@@ -209,7 +197,6 @@ public class FusionEvidenceTest {
         LinxFusion reportedPromiscuousMatch = create("other gene", "CDK4", true, PROMISCUOUS_3.toString());
         LinxFusion reportedOtherMatch = create("other gene", "AB", false, NONE.toString());
         LinxFusion reportedIgPromiscuous = create("IGH", "other gene", false, IG_PROMISCUOUS.toString());
-        LinxFusion reportedIgPromiscuousOver = create("IGK", "other gene", false, IG_PROMISCUOUS.toString());
         LinxFusion reportedIgKnown = create("IGH", "BCL2", false, IG_KNOWN_PAIR.toString());
 
         List<ProtectEvidence> evidences = fusionEvidence.evidence(Lists.newArrayList(reportedFusionMatch,
@@ -220,9 +207,9 @@ public class FusionEvidenceTest {
                         reportedPromiscuousNonMatch,
                         reportedPromiscuousMatch,
                         reportedIgKnown),
-                Lists.newArrayList(unreportedPromiscuousMatch, reportedOtherMatch, reportedIgPromiscuous, reportedIgPromiscuousOver));
+                Lists.newArrayList(unreportedPromiscuousMatch, reportedOtherMatch, reportedIgPromiscuous));
 
-        assertEquals(10, evidences.size());
+        assertEquals(9, evidences.size());
 
         ProtectEvidence evidence1 = findByFusion(evidences, reportedFusionMatch);
         assertTrue(evidence1.reported());
@@ -274,11 +261,6 @@ public class FusionEvidenceTest {
         assertEquals(evidence9.sources().size(), 1);
         assertEquals(ProtectEvidenceType.PROMISCUOUS_FUSION,
                 findByKnowledgebase(evidence9, Knowledgebase.CKB, "treatment11").evidenceType());
-
-        ProtectEvidence evidence10 = findByFusion(evidences, reportedIgPromiscuousOver);
-        assertFalse(evidence10.reported());
-        assertEquals(evidence10.sources().size(), 1);
-        assertEquals(ProtectEvidenceType.OVER_EXPRESSION, findByKnowledgebase(evidence10, Knowledgebase.CKB, "treatment12").evidenceType());
     }
 
     @NotNull
