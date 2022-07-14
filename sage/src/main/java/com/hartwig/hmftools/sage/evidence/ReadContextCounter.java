@@ -321,20 +321,6 @@ public class ReadContextCounter implements VariantHotspot
         boolean canRealign = abs(mVariant.indelLength()) >= REALIGN_READ_MIN_INDEL_LENGTH || readHasIndelInCore(record);
         RealignedContext realignment = canRealign ? checkRealignment(record) : RealignedContext.NONE;
 
-        /*
-        // log differences
-        RealignedContext oldRealignment = Realignment.realignedAroundIndex(mReadContext, readIndex, record.getReadBases(), getMaxRealignDistance(record));
-        // if((realignment.Type == EXACT) != (oldRealignment.Type == EXACT))
-        if(realignment.Type == NONE && oldRealignment.Type == EXACT && rawContext.ReadIndexInDelete)
-        {
-            SG_LOGGER.info("var({}) realign diff: new({}) old({} m={} mi={}) readContext({}-{}-{}) read(idx={} posStart={} cigar={} id={}) readCxt({}) readBases({})",
-                    varString(), realignment.Type, oldRealignment.Type, oldRealignment.MatchLength, oldRealignment.MatchReadIndex,
-                    mReadContext.indexedBases().LeftCoreIndex, mReadContext.indexedBases().Index,
-                    mReadContext.indexedBases().RightCoreIndex,  readIndex, record.getAlignmentStart(), record.getCigarString(),
-                    record.getReadName(), mReadContext.indexedBases().fullString(), record.getReadString());
-        }
-        */
-
         if(realignment.Type == EXACT)
         {
             mCounts[RC_REALIGNED]++;
@@ -450,7 +436,6 @@ public class ReadContextCounter implements VariantHotspot
         int variantRightCorePos = mVariant.position() + (mReadContext.indexedBases().RightCoreIndex - mReadContext.indexedBases().Index);
 
         int currentPos = record.getAlignmentStart() - 1;
-        int currentIndex = 0;
 
         // eg 2S10M2D10M starting at 100: first non-SC element, in this case a delete, starts at 109
         for(CigarElement element : record.getCigar())
@@ -469,7 +454,6 @@ public class ReadContextCounter implements VariantHotspot
             else if(element.getOperator() == M)
             {
                 currentPos += element.getLength();
-                currentIndex += element.getLength();
             }
         }
 
