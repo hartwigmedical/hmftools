@@ -117,9 +117,11 @@ class ActionableEntryFactory {
                 }
 
                 for (RelevantTreatmentApproaches relevantTreatmentApproaches : evidence.relevantTreatmentApproaches()) {
+                    DrugClass relevantTreatmentApproachesInfo = relevantTreatmentApproaches.drugClass();
+
                     RelevantTreatmentApprochCurationEntryKey key = ImmutableRelevantTreatmentApprochCurationEntryKey.builder()
                             .treatment(treatment)
-                            .treatmentApproach(relevantTreatmentApproaches.drugClass().drugClass())
+                            .treatmentApproach(relevantTreatmentApproachesInfo != null ? relevantTreatmentApproachesInfo.drugClass() : null)
                             .event(gene + eventType.name())
                             .level(level)
                             .direction(direction)
@@ -127,7 +129,6 @@ class ActionableEntryFactory {
 
                     curatedRelevantTreatmentApproaches.add(curator.isMatch(key));
 
-                    DrugClass relevantTreatmentApproachesInfo = relevantTreatmentApproaches.drugClass();
                     if (relevantTreatmentApproachesInfo != null) {
                         sourceRelevantTreatmentApproaches.add(relevantTreatmentApproachesInfo.drugClass());
                     }
