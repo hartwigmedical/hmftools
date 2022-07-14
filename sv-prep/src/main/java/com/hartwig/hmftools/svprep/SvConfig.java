@@ -68,6 +68,7 @@ public class SvConfig
     public final List<String> SpecificChromosomes;
     public final List<String> LogReadIds;
     public final int MaxPartitionReads;
+    public final boolean ApplyDownsampling;
     public final List<ChrBaseRegion> SpecificRegions;
 
     private boolean mIsValid;
@@ -87,6 +88,7 @@ public class SvConfig
 
     private static final String LOG_READ_IDS = "log_read_ids";
     private static final String MAX_PARTITION_READS = "max_partition_reads";
+    private static final String APPLY_DOWNSAMPLING = "apply_downsampling";
 
     public SvConfig(final CommandLine cmd)
     {
@@ -153,6 +155,7 @@ public class SvConfig
 
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "1"));
         MaxPartitionReads = Integer.parseInt(cmd.getOptionValue(MAX_PARTITION_READS, "0"));
+        ApplyDownsampling = cmd.hasOption(APPLY_DOWNSAMPLING);
     }
 
     public boolean isValid() { return mIsValid; }
@@ -216,6 +219,7 @@ public class SvConfig
         LogReadIds = Lists.newArrayList();
         Threads = 1;
         MaxPartitionReads = 0;
+        ApplyDownsampling = false;
     }
 
     public static Options createCmdLineOptions()
@@ -237,6 +241,7 @@ public class SvConfig
         addSpecificChromosomesRegionsConfig(options);
         options.addOption(LOG_READ_IDS, true, "Log specific read IDs, separated by ';'");
         options.addOption(MAX_PARTITION_READS, true, "Limit to stop processing reads in partition, for debug");
+        options.addOption(APPLY_DOWNSAMPLING, false, "Apply downsampling of reads in high-depth regions");
         options.addOption(THREADS, true, "Thread count");
         ReadFilterConfig.addCmdLineArgs(options);
 

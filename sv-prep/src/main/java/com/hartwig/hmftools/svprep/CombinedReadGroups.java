@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.WriteType.BAM;
 import static com.hartwig.hmftools.svprep.WriteType.READS;
 
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,11 +20,6 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.reads.ExpectedRead;
 import com.hartwig.hmftools.svprep.reads.ReadGroup;
 import com.hartwig.hmftools.svprep.reads.ReadRecord;
-
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordIterator;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 
 public class CombinedReadGroups
 {
@@ -364,70 +358,7 @@ public class CombinedReadGroups
         SV_LOGGER.info("final spanning partition cache: readGroups({}) matched({}) reads({} found={} missed={})",
                 readGroups, mMatchedGroups, totalCachedReads, foundReadCount, totalMissed);
 
-        findUnmappedReads(writer);
-
         mPerfCounter.logStats();
-    }
-
-    private void findUnmappedReads(final ResultsWriter writer)
-    {
-        if(mUnmappedReadIds.isEmpty() || !mConfig.WriteTypes.contains(BAM))
-            return;
-
-        SV_LOGGER.info("finding {} unmapped reads", mUnmappedReadIds.size());
-
-        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile));
-
-        SAMRecordIterator iter = samReader.queryUnmapped();
-
-        int processed = 0;
-        int filtered = 0;
-        int found = 0;
-
-        while(iter.hasNext())
-        {
-            SAMRecord record = iter.next();
-
-            ++processed;
-
-            if((processed % 100000) == 0)
-            {
-                SV_LOGGER.info("processed {} unmapped reads, matched({})", processed, found);
-            }
-
-            /*
-            if(processed < 1000)
-            {
-                SV_LOGGER.debug("unmapped read({}) flags({})", record.getReadName(), record.getFlags());
-            }
-            */
-
-            if(mUnmappedReadIds.contains(record.getReadName()))
-            {
-                mUnmappedReadIds.remove(record.getReadName());
-
-                if(record.isSecondaryAlignment() || record.getDuplicateReadFlag())
-                {
-                    ++filtered;
-                    continue;
-                }
-
-                ++found;
-                writer.writeBamRecord(record);
-
-                /*
-                ReadRecord read = ReadRecord.from(record);
-                read.setReadType(UNMAPPED);
-                ReadGroup readGroup = new ReadGroup(read);
-                readGroup.setGroupState();
-                readGroups.add(readGroup);
-                */
-            }
-        }
-
-        iter.close();
-
-        SV_LOGGER.info("unmapped reads found({}) filtered({}) processed({})", found, filtered, processed);
     }
 
     @VisibleForTesting

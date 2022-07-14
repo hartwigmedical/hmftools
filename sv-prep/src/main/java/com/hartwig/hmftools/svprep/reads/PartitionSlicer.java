@@ -84,9 +84,17 @@ public class PartitionSlicer
         mBamSlicer = new BamSlicer(0, false, true, false);
         mBamSlicer.setKeepUnmapped();
 
-        int rateSegmentLength = mConfig.PartitionSize / DOWN_SAMPLE_FRACTION;
-        int downsampleThreshold = DOWN_SAMPLE_THRESHOLD / DOWN_SAMPLE_FRACTION;
-        mReadRateTracker = new ReadRateTracker(rateSegmentLength, mRegion.start(), downsampleThreshold);
+        if(mConfig.ApplyDownsampling)
+        {
+            int rateSegmentLength = mConfig.PartitionSize / DOWN_SAMPLE_FRACTION;
+            int downsampleThreshold = DOWN_SAMPLE_THRESHOLD / DOWN_SAMPLE_FRACTION;
+            mReadRateTracker = new ReadRateTracker(rateSegmentLength, mRegion.start(), downsampleThreshold);
+        }
+        else
+        {
+            mReadRateTracker = null;
+        }
+
         mRateLimitTriggered = false;
 
         mFilterRegion = mConfig.RefGenVersion == V37 && region.overlaps(EXCLUDED_REGION_1_REF_37) ? EXCLUDED_REGION_1_REF_37
@@ -229,19 +237,15 @@ public class PartitionSlicer
         {
             // read groups that span chromosomes or partitions need to be complete, so gather up their state to enable this
             Map<String,ReadGroup> spanningGroupsMap = Maps.newHashMap();
-            final Set<String> unmappedReadIds = Sets.newHashSet();
 
-            mJunctionTracker.junctionGroups().forEach(x -> assignReadGroup(x, spanningGroupsMap, unmappedReadIds));
-            mJunctionTracker.supportingGroups().forEach(x -> assignReadGroup(x, spanningGroupsMap, unmappedReadIds));
+            mJunctionTracker.junctionGroups().forEach(x -> assignReadGroup(x, spanningGroupsMap));
+            mJunctionTracker.supportingGroups().forEach(x -> assignReadGroup(x, spanningGroupsMap));
 
             int spanningGroups = spanningGroupsMap.size();
             int totalGroups = mJunctionTracker.junctionGroups().size() + mJunctionTracker.supportingGroups().size();
 
             final Map<String, List<ExpectedRead>> missedReadsMap = Maps.newHashMap();
             mCombinedReadGroups.processSpanningReadGroups(mRegion, spanningGroupsMap, missedReadsMap);
-
-            //if(!unmappedReadIds.isEmpty())
-            //    mCombinedReadGroups.addUnmappedReadIds(unmappedReadIds);
 
             mPerCounters[PC_MATE_SLICE].start();
             List<ReadGroup> recoveredReadGroups = findMissedReads(missedReadsMap);
@@ -281,7 +285,7 @@ public class PartitionSlicer
         mStats.InitialSupportingFragmentCount += mJunctionTracker.initialSupportingFrags();
     }
 
-    private void assignReadGroup(final ReadGroup readGroup, Map<String,ReadGroup> partialGroupsMap, final Set<String> unmappedReadIds)
+    private void assignReadGroup(final ReadGroup readGroup, Map<String,ReadGroup> partialGroupsMap)
     {
         readGroup.setPartitionCount(mRegion, mConfig.PartitionSize);
 
@@ -302,9 +306,6 @@ public class PartitionSlicer
             else
                 ++mStats.LocalIncompleteGroups;
         }
-
-        if(readGroup.hasUnmapped())
-            unmappedReadIds.add(readGroup.id());
     }
 
     private static final int MAX_MISSED_READ_DEPTH = 10000;
@@ -358,6 +359,9 @@ public class PartitionSlicer
 
     private boolean checkReadRateLimits(int positionStart)
     {
+        if(mReadRateTracker == null)
+            return true;
+
         boolean wasLimited = mReadRateTracker.isRateLimited();
         int lastSegementReadCount = mReadRateTracker.readCount();
 
