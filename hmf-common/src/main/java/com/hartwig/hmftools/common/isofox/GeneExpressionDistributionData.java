@@ -17,8 +17,8 @@ import com.hartwig.hmftools.common.rna.RnaCommon;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class GeneExpressionDistributionData {
-
+public class GeneExpressionDistributionData
+{
     private static final Logger LOGGER = LogManager.getLogger(GeneExpressionDistributionData.class);
 
     private final Map<String, Map<String, double[]>> mGenePercentiles; // by geneId and then cancer type
@@ -26,14 +26,16 @@ public class GeneExpressionDistributionData {
 
     public static final String PAN_CANCER = "ALL";
 
-    public GeneExpressionDistributionData(final String cohortFile) throws IOException {
+    public GeneExpressionDistributionData(final String cohortFile) throws IOException
+    {
         mGenePercentiles = Maps.newHashMap();
         mGeneMedians = Maps.newHashMap();
 
         loadCohortFile(cohortFile);
     }
 
-    private void loadCohortFile(final String filename) throws IOException {
+    private void loadCohortFile(final String filename) throws IOException
+    {
         final List<String> lines = Files.readAllLines(Paths.get(filename));
 
         final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), RnaCommon.DELIMITER);
@@ -48,14 +50,16 @@ public class GeneExpressionDistributionData {
         Map<String, double[]> percentilesMap = null;
         Map<String, Double> medianMap = null;
 
-        for (String line : lines) {
+        for(String line : lines)
+        {
             final String[] items = line.split(RnaCommon.DELIMITER, -1);
 
             final String geneId = items[geneIdIndex];
             final String cancerType = items[cancerIndex];
             final double median = Double.parseDouble(items[medianIndex]);
 
-            if (!currentGeneId.equals(geneId)) {
+            if(!currentGeneId.equals(geneId))
+            {
                 currentGeneId = geneId;
                 percentilesMap = Maps.newHashMap();
                 medianMap = Maps.newHashMap();
@@ -67,7 +71,8 @@ public class GeneExpressionDistributionData {
 
             double[] percentileData = new double[PERCENTILE_COUNT];
 
-            for (int i = percStartIndex; i < items.length; ++i) {
+            for(int i = percStartIndex; i < items.length; ++i)
+            {
                 double tpm = Double.parseDouble(items[i]);
                 percentileData[i - percStartIndex] = tpm;
             }
@@ -78,20 +83,24 @@ public class GeneExpressionDistributionData {
         LOGGER.info(" Loaded distribution for {} genes from {}", mGeneMedians.size(), filename);
     }
 
-    public double getTpmMedian(final String geneId, final String cancerType) {
+    public double getTpmMedian(final String geneId, final String cancerType)
+    {
         final Map<String, Double> medianMap = mGeneMedians.get(geneId);
 
-        if (medianMap == null || !medianMap.containsKey(cancerType)) {
+        if(medianMap == null || !medianMap.containsKey(cancerType))
+        {
             return -1;
         }
 
         return medianMap.get(cancerType);
     }
 
-    public double getTpmPercentile(final String geneId, final String cancerType, final double sampleTpm) {
+    public double getTpmPercentile(final String geneId, final String cancerType, final double sampleTpm)
+    {
         final Map<String, double[]> percentileMap = mGenePercentiles.get(geneId);
 
-        if (percentileMap == null || !percentileMap.containsKey(cancerType)) {
+        if(percentileMap == null || !percentileMap.containsKey(cancerType))
+        {
             return -1;
         }
 

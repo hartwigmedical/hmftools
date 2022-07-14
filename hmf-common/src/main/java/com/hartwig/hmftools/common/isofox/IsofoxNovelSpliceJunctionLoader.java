@@ -23,16 +23,11 @@ import com.hartwig.hmftools.common.rna.ImmutableNovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaCommon;
 
-import org.jetbrains.annotations.NotNull;
-
-public final class IsofoxNovelSpliceJunctionLoader {
-
-    private IsofoxNovelSpliceJunctionLoader() {
-    }
-
-    @NotNull
-    public static List<NovelSpliceJunction> load(@NotNull String isofoxAltSpliceJunctionCsv, @NotNull AltSjCohortData altSjCohortData)
-            throws IOException {
+public final class IsofoxNovelSpliceJunctionLoader
+{
+    public static List<NovelSpliceJunction> load(final String isofoxAltSpliceJunctionCsv, final AltSjCohortData altSjCohortData)
+            throws IOException
+    {
         List<NovelSpliceJunction> novelJunctions = Lists.newArrayList();
 
         BufferedReader fileReader = new BufferedReader(new FileReader(isofoxAltSpliceJunctionCsv));
@@ -40,7 +35,8 @@ public final class IsofoxNovelSpliceJunctionLoader {
         String line = fileReader.readLine();
         Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(line, RnaCommon.DELIMITER);
 
-        while ((line = fileReader.readLine()) != null) {
+        while((line = fileReader.readLine()) != null)
+        {
             String[] items = line.split(RnaCommon.DELIMITER, -1);
 
             int geneIdIndex = fieldsIndexMap.get(FLD_GENE_ID);

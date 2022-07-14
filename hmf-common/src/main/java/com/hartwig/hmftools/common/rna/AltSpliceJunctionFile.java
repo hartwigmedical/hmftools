@@ -151,10 +151,6 @@ public class AltSpliceJunctionFile
             int geneId, int geneName, int chr, int posStart, int posEnd, int type,
             int fragCount, int depthStart, int depthEnd, int regionStart, int regionEnd, int basesStart, int basesEnd, int transStart, int transEnd)
     {
-        // old format
-        // GeneId,GeneName,Chromosome,Strand,SjStart,SjEnd,FragCount,DepthStart,DepthEnd,Type,ContextStart,ContextEnd,
-        // NearestStartExon,NearestEndExon,BasesStart,BasesEnd,TransStart,TransEnd,InitialReadId
-
         return new AltSpliceJunctionFile(
                 items[geneId], items[geneName], items[chr], new int[] { Integer.parseInt(items[posStart]), Integer.parseInt(items[posEnd]) },
                 AltSpliceJunctionType.valueOf(items[type]),

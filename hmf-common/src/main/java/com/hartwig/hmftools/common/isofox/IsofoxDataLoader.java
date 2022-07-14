@@ -19,13 +19,10 @@ public final class IsofoxDataLoader {
 
     private static final Logger LOGGER = LogManager.getLogger(IsofoxDataLoader.class);
 
-    private IsofoxDataLoader() {
-    }
-
-    @NotNull
-    public static IsofoxData load(@NotNull String isofoxCancerType, @NotNull String isofoxGeneDistributionCsv,
-            @NotNull String isofoxAltSjCohortCsv, @NotNull String isofoxSummaryCsv, @NotNull String isofoxGeneDataCsv,
-            @NotNull String isofoxFusionCsv, @NotNull String isofoxAltSpliceJunctionCsv) throws IOException {
+    public static IsofoxData load(final String isofoxCancerType, final String isofoxGeneDistributionCsv,
+            final String isofoxAltSjCohortCsv, final String isofoxSummaryCsv, final String isofoxGeneDataCsv,
+            final String isofoxFusionCsv, final String isofoxAltSpliceJunctionCsv) throws IOException
+    {
         LOGGER.info("Loading ISOFOX data from {} using cancer type '{}'", new File(isofoxSummaryCsv).getParent(), isofoxCancerType);
 
         List<String> summaryLines = Files.readAllLines(Paths.get(isofoxSummaryCsv));

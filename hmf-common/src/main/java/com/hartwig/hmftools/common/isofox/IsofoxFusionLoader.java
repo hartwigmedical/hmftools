@@ -18,8 +18,8 @@ import com.hartwig.hmftools.common.rna.RnaFusion;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class IsofoxFusionLoader {
-
+public final class IsofoxFusionLoader
+{
     private static final String FLD_CHR = "Chr";
     private static final String FLD_POS = "Pos";
     private static final String FLD_ORIENT = "Orient";
@@ -31,17 +31,16 @@ public final class IsofoxFusionLoader {
     private static final String FLD_DISCORD_FRAGS = "DiscordantFrags";
     private static final String FLD_COHORT_COUNT = "CohortCount";
 
-    private IsofoxFusionLoader() {
-    }
-
     @NotNull
-    public static List<RnaFusion> load(@NotNull String isofoxFusionCsv) throws IOException {
+    public static List<RnaFusion> load(@NotNull String isofoxFusionCsv) throws IOException
+    {
         List<RnaFusion> fusions = Lists.newArrayList();
 
         List<String> lines = Files.readAllLines(Paths.get(isofoxFusionCsv));
         Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), RnaCommon.DELIMITER);
 
-        for (String line : lines.subList(1, lines.size())) {
+        for(String line : lines.subList(1, lines.size()))
+        {
             String[] items = line.split(RnaCommon.DELIMITER, -1);
 
             String fusionName = String.format("%s_%s",
@@ -74,7 +73,8 @@ public final class IsofoxFusionLoader {
     }
 
     @NotNull
-    private static String formStreamField(@NotNull String field, int stream) {
+    private static String formStreamField(@NotNull String field, int stream)
+    {
         return field + (stream == FS_UP ? "Up" : "Down");
     }
 }

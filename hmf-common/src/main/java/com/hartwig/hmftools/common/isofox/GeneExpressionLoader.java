@@ -17,26 +17,27 @@ import com.hartwig.hmftools.common.rna.RnaCommon;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class GeneExpressionLoader {
-
+public final class GeneExpressionLoader
+{
     private static final String FLD_TPM = "AdjTPM";
 
     private static final String FLD_SPLICED_FRAGS = "SplicedFragments";
     private static final String FLD_UNSPLICED_FRAGS = "UnsplicedFragments";
 
-    private GeneExpressionLoader() {
-    }
-
     @NotNull
-    public static List<GeneExpression> loadGeneExpression(@NotNull String isofoxGeneDataCsv, @NotNull GeneExpressionDistributionData cohortData,
-            @NotNull String cancerType) throws IOException {
+    public static List<GeneExpression> loadGeneExpression(
+            final String isofoxGeneDataCsv,
+            final GeneExpressionDistributionData cohortData,
+            final  String cancerType) throws IOException
+    {
         List<GeneExpression> geneExpressions = Lists.newArrayList();
 
         List<String> lines = Files.readAllLines(Paths.get(isofoxGeneDataCsv));
 
         Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), RnaCommon.DELIMITER);
 
-        for (String line : lines.subList(1, lines.size())) {
+        for(String line : lines.subList(1, lines.size()))
+        {
             final String[] items = line.split(RnaCommon.DELIMITER, -1);
 
             final String geneId = items[fieldsIndexMap.get(FLD_GENE_ID)];

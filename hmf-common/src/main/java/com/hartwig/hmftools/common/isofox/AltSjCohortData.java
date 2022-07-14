@@ -17,22 +17,25 @@ import com.hartwig.hmftools.common.rna.RnaCommon;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class AltSjCohortData {
-
+public class AltSjCohortData
+{
     private static final Logger LOGGER = LogManager.getLogger(AltSjCohortData.class);
 
     private final Map<String, Integer> mCohortFrequency = Maps.newHashMap();
 
-    public AltSjCohortData(final String cohortFile) throws IOException {
+    public AltSjCohortData(final String cohortFile) throws IOException
+    {
         loadAltSjCohortFile(cohortFile);
     }
 
-    public int getCohortFrequency(final String asjKey) {
+    public int getCohortFrequency(final String asjKey)
+    {
         Integer cohortFrequency = mCohortFrequency.get(asjKey);
         return cohortFrequency != null ? cohortFrequency : 1;
     }
 
-    private void loadAltSjCohortFile(final String cohortFile) throws IOException {
+    private void loadAltSjCohortFile(final String cohortFile) throws IOException
+    {
         BufferedReader fileReader = new BufferedReader(new FileReader(cohortFile));
 
         String line = fileReader.readLine();
@@ -43,7 +46,8 @@ public class AltSjCohortData {
         int posEndIndex = fieldsIndexMap.get(FLD_ALT_SJ_POS_END);
         int sampleCountIndex = fieldsIndexMap.get("SampleCount");
 
-        while ((line = fileReader.readLine()) != null) {
+        while((line = fileReader.readLine()) != null)
+        {
             String[] items = line.split(RnaCommon.DELIMITER, -1);
 
             int sampleCount = Integer.parseInt(items[sampleCountIndex]);
