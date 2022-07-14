@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.serve.sources.ckb.treatementapproach;
 
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
@@ -15,18 +15,19 @@ public class RelevantTreatmentAprroachCuration {
     private static final Logger LOGGER = LogManager.getLogger(RelevantTreatmentAprroachCuration.class);
 
     @NotNull
-    private final List<RelevantTreatmentApprochCurationEntry> curations;
+    private final Map<RelevantTreatmentApprochCurationEntryKey, RelevantTreatmentApprochCurationEntry> curations;
     @NotNull
     private final Set<RelevantTreatmentApprochCurationEntry> usedCurations = Sets.newHashSet();
 
-    public RelevantTreatmentAprroachCuration(@NotNull final List<RelevantTreatmentApprochCurationEntry> curations) {
+    public RelevantTreatmentAprroachCuration(
+            @NotNull final Map<RelevantTreatmentApprochCurationEntryKey, RelevantTreatmentApprochCurationEntry> curations) {
         this.curations = curations;
     }
 
     public void reportUnusedFilterEntries() {
         int unusedFilterEntryCount = 0;
-        for (RelevantTreatmentApprochCurationEntry entry : curations) {
-            if (!usedCurations.contains(entry.curationKey())) {
+        for (Map.Entry<RelevantTreatmentApprochCurationEntryKey, RelevantTreatmentApprochCurationEntry> entry : curations.entrySet()) {
+            if (!usedCurations.contains(entry.getValue().curationKey())) {
                 unusedFilterEntryCount++;
                 LOGGER.warn(" Curation entry '{}' hasn't been used for treatment Approch curation", entry);
             }
@@ -36,38 +37,36 @@ public class RelevantTreatmentAprroachCuration {
     }
 
     @NotNull
-    public String isMatch(
-            @NotNull RelevantTreatmentApprochCurationEntryKey key) {
-        for (RelevantTreatmentApprochCurationEntry curationEntry : curations) {
+    public String isMatch(@NotNull RelevantTreatmentApprochCurationEntryKey key) {
+
+        RelevantTreatmentApprochCurationEntry curationEntry = curations.get(key);
+
+        if (curationEntry == null) {
+            LOGGER.warn("The treatment '{}' with relevant treatment approach '{}' of event '{}' "
+                            + "with level '{}' and direction '{}' isn't curated because missing in curation resource",
+                    key.treatment(),
+                    key.treatmentApproach(),
+                    key.event(),
+                    key.level(),
+                    key.direction());
+            return Strings.EMPTY;
+        } else {
             switch (curationEntry.curationType()) {
                 case TREATMENT_APPROACH_CURATION_IGNORE: {
-                    if (curationEntry.curationKey() == key) {
-                        usedCurations.add(ImmutableRelevantTreatmentApprochCurationEntry.builder()
-                                .curationType(RelevantTreatmentApproachCurationType.TREATMENT_APPROACH_CURATION_IGNORE)
-                                .curationKey(key)
-                                .curatedtreatmentApproach(curationEntry.curatedtreatmentApproach())
-                                .build());
-                        return Strings.EMPTY;
-                    }
+                    usedCurations.add(ImmutableRelevantTreatmentApprochCurationEntry.builder()
+                            .curationType(RelevantTreatmentApproachCurationType.TREATMENT_APPROACH_CURATION_IGNORE)
+                            .curationKey(key)
+                            .curatedtreatmentApproach(curationEntry.curatedtreatmentApproach())
+                            .build());
+                    return curationEntry.curatedtreatmentApproach();
                 }
                 case TREATMENT_APPROACH_CURATION: {
-                    if (curationEntry.curationKey().equals(key)) {
-                        usedCurations.add(ImmutableRelevantTreatmentApprochCurationEntry.builder()
-                                .curationType(RelevantTreatmentApproachCurationType.TREATMENT_APPROACH_CURATION)
-                                .curationKey(key)
-                                .curatedtreatmentApproach(curationEntry.curatedtreatmentApproach())
-                                .build());
-                        return curationEntry.curatedtreatmentApproach();
-                    } else {
-                        LOGGER.warn("The treatment '{}' with relevant treatment approach '{}' of event '{}' "
-                                        + "with level '{}' and direction '{}' isn't curated",
-                                key.treatment(),
-                                key.treatmentApproach(),
-                                key.event(),
-                                key.level(),
-                                key.direction());
-                        return Strings.EMPTY;
-                    }
+                    usedCurations.add(ImmutableRelevantTreatmentApprochCurationEntry.builder()
+                            .curationType(RelevantTreatmentApproachCurationType.TREATMENT_APPROACH_CURATION)
+                            .curationKey(key)
+                            .curatedtreatmentApproach(curationEntry.curatedtreatmentApproach())
+                            .build());
+                    return curationEntry.curatedtreatmentApproach();
                 }
                 default: {
                     LOGGER.warn("Curation entry found with unrecognized type: {}", curationEntry);
@@ -75,6 +74,5 @@ public class RelevantTreatmentAprroachCuration {
                 }
             }
         }
-        return Strings.EMPTY;
     }
 }

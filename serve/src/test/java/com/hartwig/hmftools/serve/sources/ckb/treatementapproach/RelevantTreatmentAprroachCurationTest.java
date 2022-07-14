@@ -1,15 +1,11 @@
 package com.hartwig.hmftools.serve.sources.ckb.treatementapproach;
 
-import java.util.List;
+import java.util.Map;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentApproachCurationType;
-import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentApprochCurationEntry;
-import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentApprochCurationEntryKey;
-import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentAprroachCuration;
 
-import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -20,32 +16,35 @@ public class RelevantTreatmentAprroachCurationTest {
 
     @Test
     public void canTestMatchEntries() {
-        List<RelevantTreatmentApprochCurationEntry> curationEntries = Lists.newArrayList();
-        curationEntries.add(canGenerateCurationEntry(RelevantTreatmentApproachCurationType.TREATMENT_APPROACH_CURATION,
-                "A",
-                "A",
-                "BRAF amplification",
-                EvidenceLevel.A,
-                EvidenceDirection.RESPONSIVE,
-                "AA"));
+        Map<RelevantTreatmentApprochCurationEntryKey, RelevantTreatmentApprochCurationEntry> curationEntries = Maps.newHashMap();
+        curationEntries.put(canGenerateCurationKey("A", "A", "BRAF amplification", EvidenceLevel.A, EvidenceDirection.RESPONSIVE),
+                canGenerateCurationEntry(RelevantTreatmentApproachCurationType.TREATMENT_APPROACH_CURATION,
+                        "A",
+                        "A",
+                        "BRAF amplification",
+                        EvidenceLevel.A,
+                        EvidenceDirection.RESPONSIVE,
+                        "AA"));
 
-        curationEntries.add(canGenerateCurationEntry(RelevantTreatmentApproachCurationType.TREATMENT_APPROACH_CURATION,
-                "B",
-                "B",
-                "BRAF amplification",
-                EvidenceLevel.A,
-                EvidenceDirection.RESPONSIVE,
-                "BB"));
+        curationEntries.put(canGenerateCurationKey("B", "B", "BRAF amplification", EvidenceLevel.A, EvidenceDirection.RESPONSIVE),
+                canGenerateCurationEntry(RelevantTreatmentApproachCurationType.TREATMENT_APPROACH_CURATION,
+                        "B",
+                        "B",
+                        "BRAF amplification",
+                        EvidenceLevel.A,
+                        EvidenceDirection.RESPONSIVE,
+                        "BB"));
 
-        curationEntries.add(canGenerateCurationEntry(RelevantTreatmentApproachCurationType.TREATMENT_APPROACH_CURATION_IGNORE,
-                "C",
-                "C",
-                "BRAF amplification",
-                EvidenceLevel.A,
-                EvidenceDirection.RESPONSIVE, Strings.EMPTY));
+        curationEntries.put(canGenerateCurationKey("C", "C", "BRAF amplification", EvidenceLevel.A, EvidenceDirection.RESPONSIVE),
+                canGenerateCurationEntry(RelevantTreatmentApproachCurationType.TREATMENT_APPROACH_CURATION_IGNORE,
+                        "C",
+                        "C",
+                        "BRAF amplification",
+                        EvidenceLevel.A,
+                        EvidenceDirection.RESPONSIVE,
+                        Strings.EMPTY));
 
-        RelevantTreatmentAprroachCuration curator =
-                new RelevantTreatmentAprroachCuration(curationEntries);
+        RelevantTreatmentAprroachCuration curator = new RelevantTreatmentAprroachCuration(curationEntries);
 
         RelevantTreatmentApprochCurationEntryKey keyMatch1 = ImmutableRelevantTreatmentApprochCurationEntryKey.builder()
                 .treatment("A")
@@ -82,14 +81,20 @@ public class RelevantTreatmentAprroachCurationTest {
             @NotNull EvidenceDirection direction, @NotNull String curation) {
         return ImmutableRelevantTreatmentApprochCurationEntry.builder()
                 .curationType(type)
-                .curationKey(ImmutableRelevantTreatmentApprochCurationEntryKey.builder()
-                        .treatment(treatment)
-                        .treatmentApproach(treatmentApproach)
-                        .event(event)
-                        .level(level)
-                        .direction(direction)
-                        .build())
+                .curationKey(canGenerateCurationKey(treatment, treatmentApproach, event, level, direction))
                 .curatedtreatmentApproach(curation)
+                .build();
+    }
+
+    @NotNull
+    public static RelevantTreatmentApprochCurationEntryKey canGenerateCurationKey(@NotNull String treatment,
+            @NotNull String treatmentApproach, @NotNull String event, @NotNull EvidenceLevel level, @NotNull EvidenceDirection direction) {
+        return ImmutableRelevantTreatmentApprochCurationEntryKey.builder()
+                .treatment(treatment)
+                .treatmentApproach(treatmentApproach)
+                .event(event)
+                .level(level)
+                .direction(direction)
                 .build();
     }
 }
