@@ -27,7 +27,7 @@ public class BlacklistLocations
 
     public boolean inBlacklistLocation(final String chromosome, final int position)
     {
-        List<BaseRegion> regions = mChrLocationsMap.get(position);
+        List<BaseRegion> regions = mChrLocationsMap.get(chromosome);
         return regions != null ? regions.stream().anyMatch(x -> x.containsPosition(position)) : false;
     }
 

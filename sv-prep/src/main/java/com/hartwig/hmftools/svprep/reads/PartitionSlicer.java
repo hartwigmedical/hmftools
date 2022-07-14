@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svprep.reads;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
@@ -9,18 +11,14 @@ import static com.hartwig.hmftools.svprep.SvConstants.EXCLUDED_REGION_1_REF_37;
 import static com.hartwig.hmftools.svprep.SvConstants.EXCLUDED_REGION_1_REF_38;
 import static com.hartwig.hmftools.svprep.WriteType.BAM;
 import static com.hartwig.hmftools.svprep.WriteType.READS;
-import static com.hartwig.hmftools.svprep.reads.ReadGroup.MAX_GROUP_READ_COUNT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
-import static com.hartwig.hmftools.svprep.reads.ReadType.NO_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.RECOVERED;
 
 import java.io.File;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
@@ -309,6 +307,7 @@ public class PartitionSlicer
     }
 
     private static final int MAX_MISSED_READ_DEPTH = 10000;
+    private static final double NANOS_IN_SECOND = 1000000000;
 
     private List<ReadGroup> findMissedReads(final Map<String,List<ExpectedRead>> missedReadsMap)
     {
@@ -319,6 +318,11 @@ public class PartitionSlicer
 
         SV_LOGGER.debug("region({}) searching for {} missed reads", mRegion, missedReadsMap.size());
 
+        // ignore reads in blacklist locations
+        int skippedBlacklist = 0;
+
+        ChrBaseRegion filteredRegion = mConfig.RefGenVersion == V37 ? EXCLUDED_REGION_1_REF_37 : EXCLUDED_REGION_1_REF_38;
+
         for(Map.Entry<String,List<ExpectedRead>> entry : missedReadsMap.entrySet())
         {
             String readId = entry.getKey();
@@ -326,9 +330,27 @@ public class PartitionSlicer
 
             for(ExpectedRead missedRead : entry.getValue())
             {
+                if(filteredRegion.containsPosition(missedRead.Chromosome, missedRead.Position)
+                || mConfig.Blacklist.inBlacklistLocation(missedRead.Chromosome, missedRead.Position))
+                {
+                    ++skippedBlacklist;
+                    continue;
+                }
+
+                long startTime = System.nanoTime();
+
                 SAMRecord record = mBamSlicer.findRead(
                         mSamReader, readId, missedRead.Chromosome, missedRead.Position, missedRead.FirstInPair, missedRead.IsSupplementary,
                         MAX_MISSED_READ_DEPTH);
+
+                long endTime = System.nanoTime();
+
+                double sliceTime = (endTime - startTime) / NANOS_IN_SECOND;
+
+                if(sliceTime > 2)
+                {
+                    SV_LOGGER.debug("slice time({}) for missed read: {}", format("%.3f", sliceTime), missedRead);
+                }
 
                 if(record == null)
                     continue;
@@ -351,7 +373,8 @@ public class PartitionSlicer
 
         if(missedReadsMap.size() != readGroups.size())
         {
-            SV_LOGGER.debug("region({}) missed reads({}) recovered({})", mRegion, missedReadsMap.size(), readGroups.size());
+            SV_LOGGER.debug("region({}) missed reads({}) recovered({}) blacklisted({})",
+                    mRegion, missedReadsMap.size(), readGroups.size(), skippedBlacklist);
         }
 
         return readGroups;
