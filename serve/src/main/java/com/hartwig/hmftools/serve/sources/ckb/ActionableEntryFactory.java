@@ -122,7 +122,7 @@ class ActionableEntryFactory {
                     RelevantTreatmentApprochCurationEntryKey key = ImmutableRelevantTreatmentApprochCurationEntryKey.builder()
                             .treatment(treatment)
                             .treatmentApproach(relevantTreatmentApproachesInfo != null ? relevantTreatmentApproachesInfo.drugClass() : null)
-                            .event(gene + eventType.name())
+                            .event(gene + " " + eventType.name())
                             .level(level)
                             .direction(direction)
                             .build();
