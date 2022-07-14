@@ -1,12 +1,11 @@
 package com.hartwig.hmftools.common.protect;
 
 import static com.hartwig.hmftools.common.sv.linx.LinxCluster.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,7 +17,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.common.utils.FileWriterUtils;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -53,7 +51,7 @@ public final class ProtectEvidenceFile {
         List<ProtectEvidence> evidence = Lists.newArrayList();
         List<String> lines = Files.readAllLines(new File(file).toPath());
 
-        Map<String, Integer> fields = FileWriterUtils.createFieldsIndexMap(lines.get(0), DELIMITER);
+        Map<String, Integer> fields = createFieldsIndexMap(lines.get(0), DELIMITER);
         for (String line : lines.subList(1, lines.size())) {
             evidence.add(fromLine(fields, line));
         }
@@ -140,7 +138,7 @@ public final class ProtectEvidenceFile {
 
             StringJoiner urls = new StringJoiner(SUBFIELD_DELIMITER);
             StringJoiner evidenceUrls = new StringJoiner(SUBFIELD_DELIMITER);
-            sb.append(source.source().technicalDisplay()).append(SOURCE_SUBFIELD_ITEM_DELIMITER);
+            sb.append(source.source().toString()).append(SOURCE_SUBFIELD_ITEM_DELIMITER);
             sb.append(source.sourceEvent()).append(SOURCE_SUBFIELD_ITEM_DELIMITER);
             for (String sourceUrl : source.sourceUrls()) {
                 urls.add(sourceUrl);

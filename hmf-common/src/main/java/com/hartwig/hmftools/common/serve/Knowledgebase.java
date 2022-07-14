@@ -11,40 +11,36 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public enum Knowledgebase {
-    CKB(RefGenomeVersion.V38, "ckb", "CKB", EvidenceLevel.C, EvidenceLevel.B),
-    DOCM(RefGenomeVersion.V37, "docm", "DoCM", EvidenceLevel.A, EvidenceLevel.A),
-    HARTWIG_COHORT(RefGenomeVersion.V37, "hartwig_cohort", "HMF Cohort", EvidenceLevel.A, EvidenceLevel.A),
-    HARTWIG_CURATED(RefGenomeVersion.V37, "hartwig_curated", "HMF Curated", EvidenceLevel.A, EvidenceLevel.A),
-    ICLUSION(RefGenomeVersion.V37, "iclusion", "iClusion", EvidenceLevel.B, EvidenceLevel.B),
-    ACTIN(RefGenomeVersion.V37, "actin", "ACTIN", EvidenceLevel.A, EvidenceLevel.A),
-    VICC_CGI(RefGenomeVersion.V37, "vicc_cgi", "CGI", EvidenceLevel.B, EvidenceLevel.B),
-    VICC_CIVIC(RefGenomeVersion.V37, "vicc_civic", "CIViC", EvidenceLevel.B, EvidenceLevel.B),
-    VICC_JAX(RefGenomeVersion.V37, "vicc_jax", "CKB Core", EvidenceLevel.B, EvidenceLevel.B),
-    VICC_ONCOKB(RefGenomeVersion.V37, "vicc_oncokb", "OncoKB", EvidenceLevel.B, EvidenceLevel.B),
-    UNKNOWN(RefGenomeVersion.V37, "unknown", "Unkown", EvidenceLevel.D, EvidenceLevel.D);
+    CKB(RefGenomeVersion.V38, "CKB", EvidenceLevel.C, EvidenceLevel.B),
+    DOCM(RefGenomeVersion.V37, "DoCM", EvidenceLevel.A, EvidenceLevel.A),
+    HARTWIG_COHORT(RefGenomeVersion.V37, "HMF Cohort", EvidenceLevel.A, EvidenceLevel.A),
+    HARTWIG_CURATED(RefGenomeVersion.V37, "HMF Curated", EvidenceLevel.A, EvidenceLevel.A),
+    ICLUSION(RefGenomeVersion.V37, "iClusion", EvidenceLevel.B, EvidenceLevel.B),
+    ACTIN(RefGenomeVersion.V37, "ACTIN", EvidenceLevel.B, EvidenceLevel.B),
+    VICC_CGI(RefGenomeVersion.V37, "CGI", EvidenceLevel.B, EvidenceLevel.B),
+    VICC_CIVIC(RefGenomeVersion.V37, "CIViC", EvidenceLevel.B, EvidenceLevel.B),
+    VICC_JAX(RefGenomeVersion.V37, "CKB Core", EvidenceLevel.B, EvidenceLevel.B),
+    VICC_ONCOKB(RefGenomeVersion.V37, "OncoKB", EvidenceLevel.B, EvidenceLevel.B),
+    UNKNOWN(RefGenomeVersion.V37, "Unknown", EvidenceLevel.D, EvidenceLevel.D);
 
     private static final Logger LOGGER = LogManager.getLogger(Knowledgebase.class);
 
     @NotNull
     private final RefGenomeVersion refGenomeVersion;
     @NotNull
-    private final String technicalDisplay;
-    @NotNull
-    private final String reportDisplay;
+    private final String display;
     @NotNull
     private final EvidenceLevel maxCertainEvidenceReportingLevel;
     @NotNull
     private final EvidenceLevel maxPredictedEvidenceReportingLevel;
 
-    Knowledgebase(@NotNull final RefGenomeVersion refGenomeVersion, @NotNull final String technicalDisplay,
-            @NotNull final String reportDisplay, @NotNull final EvidenceLevel maxCertainEvidenceReportingLevel,
+    Knowledgebase(@NotNull final RefGenomeVersion refGenomeVersion, @NotNull final String display,
+            @NotNull final EvidenceLevel maxCertainEvidenceReportingLevel,
             @NotNull final EvidenceLevel maxPredictedEvidenceReportingLevel) {
         this.refGenomeVersion = refGenomeVersion;
-        this.technicalDisplay = technicalDisplay;
-        this.reportDisplay = reportDisplay;
+        this.display = display;
         this.maxCertainEvidenceReportingLevel = maxCertainEvidenceReportingLevel;
         this.maxPredictedEvidenceReportingLevel = maxPredictedEvidenceReportingLevel;
     }
@@ -55,13 +51,8 @@ public enum Knowledgebase {
     }
 
     @NotNull
-    public String technicalDisplay() {
-        return technicalDisplay;
-    }
-
-    @NotNull
-    public String reportDisplay() {
-        return reportDisplay;
+    public String display() {
+        return display;
     }
 
     @NotNull
@@ -75,15 +66,15 @@ public enum Knowledgebase {
     }
 
     @NotNull
-    public static Set<Knowledgebase> fromCommaSeparatedTechnicalDisplayString(@NotNull String knowledgebases) {
+    public static Set<Knowledgebase> fromCommaSeparatedSourceString(@NotNull String sources) {
         Set<Knowledgebase> consolidated = Sets.newHashSet();
 
-        for (String technicalDisplay : knowledgebases.split(",")) {
-            Knowledgebase knowledgebase = lookupKnowledgebase(technicalDisplay);
+        for (String source : sources.split(",")) {
+            Knowledgebase knowledgebase = lookupKnowledgebase(source);
             if (knowledgebase != Knowledgebase.UNKNOWN) {
                 consolidated.add(knowledgebase);
             } else {
-                LOGGER.warn("Could not resolve knowledgebase with display '{}'", knowledgebase);
+                LOGGER.warn("Could not resolve knowledgebase from source '{}'", source);
             }
         }
 
@@ -91,9 +82,9 @@ public enum Knowledgebase {
     }
 
     @NotNull
-    public static Knowledgebase lookupKnowledgebase(@NotNull String technicalDisplay) {
+    public static Knowledgebase lookupKnowledgebase(@NotNull String knowledgebaseToFind) {
         for (Knowledgebase knowledgebase : Knowledgebase.values()) {
-            if (knowledgebase.technicalDisplay().equals(technicalDisplay)) {
+            if (knowledgebase.toString().equals(knowledgebaseToFind)) {
                 return knowledgebase;
             }
         }
@@ -107,7 +98,7 @@ public enum Knowledgebase {
 
         StringJoiner joiner = new StringJoiner(",");
         for (Knowledgebase source : sorted) {
-            joiner.add(source.technicalDisplay());
+            joiner.add(source.toString());
         }
         return joiner.toString();
     }

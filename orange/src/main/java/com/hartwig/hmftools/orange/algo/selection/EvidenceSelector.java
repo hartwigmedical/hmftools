@@ -76,11 +76,9 @@ public final class EvidenceSelector {
     }
 
     private static boolean hasTrialSource(@NotNull Set<ProtectSource> sources) {
-        for (ProtectSource protectSource: sources) {
-            for (Knowledgebase trialSource : TRIAL_SOURCES) {
-                if (trialSource.technicalDisplay().contains(protectSource.source().technicalDisplay())) {
-                    return true;
-                }
+        for (ProtectSource protectSource : sources) {
+            if (TRIAL_SOURCES.contains(protectSource.source())) {
+                return true;
             }
         }
         return false;
