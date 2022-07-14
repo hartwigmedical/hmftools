@@ -78,7 +78,6 @@ public class JunctionTracker
     public List<ReadGroup> junctionGroups() { return mJunctionGroups; }
     public List<ReadGroup> supportingGroups() { return mSupportingGroups; }
     public int initialSupportingFrags() { return mInitialSupportingFrags; }
-    public ReadGroup getReadGroup(final String readId) { return mReadGroups.get(readId); }
 
     public void processRead(final ReadRecord read)
     {
@@ -164,6 +163,9 @@ public class JunctionTracker
 
         for(ReadRecord read : readGroup.reads())
         {
+            if(read.isUnmapped())
+                continue;
+
             if(read.hasSuppAlignment())
             {
                 addRemoteJunction(remoteJunctions, RemoteJunction.fromSupplementaryData(read.supplementaryAlignment()));

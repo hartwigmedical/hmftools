@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.WriteType.BAM;
 import static com.hartwig.hmftools.svprep.WriteType.READS;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,6 +22,11 @@ import com.hartwig.hmftools.svprep.reads.ExpectedRead;
 import com.hartwig.hmftools.svprep.reads.ReadGroup;
 import com.hartwig.hmftools.svprep.reads.ReadRecord;
 
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+
 public class CombinedReadGroups
 {
     private final SvConfig mConfig;
@@ -30,6 +36,8 @@ public class CombinedReadGroups
 
     // a map of remote chr-partition to read partition to readIds
     private final Map<String,Map<String,Set<String>>> mExpectedChrPartitionReadIds;
+
+    private final Set<String> mUnmappedReadIds;
 
     private final PerformanceCounter mPerfCounter;
     private final Set<String> mProcessedPartitions;
@@ -46,6 +54,7 @@ public class CombinedReadGroups
         mChrPartitionReadGroupReads = Maps.newHashMap();
         mExpectedChrPartitionReadIds = Maps.newHashMap();
         mProcessedPartitions = Sets.newHashSet();
+        mUnmappedReadIds = Sets.newHashSet();
         mLastSnapshotCount = 0;
         mMatchedGroups = 0;
         mPerfCounter = new PerformanceCounter("ReadMerge");
@@ -69,10 +78,17 @@ public class CombinedReadGroups
 
     private String chrPartition(final String chromosome, int position) { return formChromosomePartition(chromosome, position, mPartitionSize); }
 
+    public synchronized void addUnmappedReadIds(final Set<String> readIds)
+    {
+        mUnmappedReadIds.addAll(readIds);
+    }
+
     public synchronized void processSpanningReadGroups(
             final ChrBaseRegion partitionRegion, final Map<String,ReadGroup> spanningGroups,
             final Map<String,List<ExpectedRead>> missedReadsMap)
     {
+        mPerfCounter.start();
+
         String sourceChrPartition = chrPartition(partitionRegion.Chromosome, partitionRegion.start());
         mProcessedPartitions.add(sourceChrPartition);
 
@@ -113,6 +129,8 @@ public class CombinedReadGroups
         purgeUnmatchedReads(sourceChrPartition, addedReads, missedReadsMap);
 
         setCacheCount();
+
+        mPerfCounter.stop();
     }
 
     private void processNewRead(
@@ -288,8 +306,8 @@ public class CombinedReadGroups
 
         if(abs(newCount - mLastSnapshotCount) > LOG_CACH_DIFF)
         {
-            SV_LOGGER.info("spanning partition processed({}) groups cached({} -> {}) matchedGroups({})",
-                    mProcessedPartitions.size(), mLastSnapshotCount, newCount, mMatchedGroups);
+            SV_LOGGER.info("spanning partition processed({}) groups cached({} -> {}) matchedGroups({}) unmapped({})",
+                    mProcessedPartitions.size(), mLastSnapshotCount, newCount, mMatchedGroups, mUnmappedReadIds.size());
 
             mLastSnapshotCount = newCount;
         }
@@ -304,9 +322,9 @@ public class CombinedReadGroups
         return !mConfig.SpecificChromosomes.contains(chromosome);
     }
 
-    public void writeRemainingReadGroups(final ResultsWriter writer, final Set<WriteType> writeTypes)
+    public void writeRemainingReadGroups(final ResultsWriter writer)
     {
-        if(!writeTypes.contains(BAM) && !writeTypes.contains(READS))
+        if(!mConfig.WriteTypes.contains(BAM) && !mConfig.WriteTypes.contains(READS))
             return;
 
         int readGroups = 0;
@@ -314,8 +332,8 @@ public class CombinedReadGroups
         int missedSuppReadCount = 0;
         int missedNonSuppReadCount = 0;
 
-        Map<String,List<ExpectedRead>> foundReadGroups = Maps.newHashMap();
-        Map<String,List<ExpectedRead>> missedReadGroups = Maps.newHashMap();
+        // Map<String,List<ExpectedRead>> foundReadGroups = Maps.newHashMap();
+        // Map<String,List<ExpectedRead>> missedReadGroups = Maps.newHashMap();
 
         for(Map<String,List<ExpectedRead>> readGroupReads : mChrPartitionReadGroupReads.values())
         {
@@ -330,22 +348,86 @@ public class CombinedReadGroups
                 missedSuppReadCount += unfoundReads.stream().filter(x -> x.IsSupplementary).count();
                 missedNonSuppReadCount += unfoundReads.stream().filter(x -> !x.IsSupplementary).count();
 
+                /*
                 if(!foundReads.isEmpty())
                     foundReadGroups.put(entry.getKey(), foundReads);
 
                 if(!unfoundReads.isEmpty())
                     missedReadGroups.put(entry.getKey(), unfoundReads);
+                */
             }
         }
 
-        int partitions = mChrPartitionReadGroupReads.size();
         int totalCachedReads = foundReadCount + missedNonSuppReadCount + missedSuppReadCount;
         int totalMissed = missedNonSuppReadCount + missedSuppReadCount;
 
-        SV_LOGGER.info("final spanning partition cache: partitions({}) readGroups({}) matched({}) reads({} found={} missed={})",
-                partitions, readGroups, mMatchedGroups, totalCachedReads, foundReadCount, totalMissed);
+        SV_LOGGER.info("final spanning partition cache: readGroups({}) matched({}) reads({} found={} missed={})",
+                readGroups, mMatchedGroups, totalCachedReads, foundReadCount, totalMissed);
+
+        findUnmappedReads(writer);
 
         mPerfCounter.logStats();
+    }
+
+    private void findUnmappedReads(final ResultsWriter writer)
+    {
+        if(mUnmappedReadIds.isEmpty() || !mConfig.WriteTypes.contains(BAM))
+            return;
+
+        SV_LOGGER.info("finding {} unmapped reads", mUnmappedReadIds.size());
+
+        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile));
+
+        SAMRecordIterator iter = samReader.queryUnmapped();
+
+        int processed = 0;
+        int filtered = 0;
+        int found = 0;
+
+        while(iter.hasNext())
+        {
+            SAMRecord record = iter.next();
+
+            ++processed;
+
+            if((processed % 100000) == 0)
+            {
+                SV_LOGGER.info("processed {} unmapped reads, matched({})", processed, found);
+            }
+
+            /*
+            if(processed < 1000)
+            {
+                SV_LOGGER.debug("unmapped read({}) flags({})", record.getReadName(), record.getFlags());
+            }
+            */
+
+            if(mUnmappedReadIds.contains(record.getReadName()))
+            {
+                mUnmappedReadIds.remove(record.getReadName());
+
+                if(record.isSecondaryAlignment() || record.getDuplicateReadFlag())
+                {
+                    ++filtered;
+                    continue;
+                }
+
+                ++found;
+                writer.writeBamRecord(record);
+
+                /*
+                ReadRecord read = ReadRecord.from(record);
+                read.setReadType(UNMAPPED);
+                ReadGroup readGroup = new ReadGroup(read);
+                readGroup.setGroupState();
+                readGroups.add(readGroup);
+                */
+            }
+        }
+
+        iter.close();
+
+        SV_LOGGER.info("unmapped reads found({}) filtered({}) processed({})", found, filtered, processed);
     }
 
     @VisibleForTesting

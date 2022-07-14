@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SAM_LOGGER;
 
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
@@ -24,6 +23,8 @@ public class BamSlicer
     private final boolean mKeepDuplicates;
     private final boolean mKeepSupplementaries;
     private final boolean mKeepSecondaries;
+    private boolean mKeepUnmapped;
+
     private volatile boolean mConsumerHalt = false; // allow consumer to halt processing
 
     public BamSlicer(int minMappingQuality)
@@ -37,7 +38,10 @@ public class BamSlicer
         mKeepDuplicates = keepDuplicates;
         mKeepSupplementaries = keepSupplementaries;
         mKeepSecondaries = keepSecondaries;
+        mKeepUnmapped = false;
     }
+
+    public void setKeepUnmapped() { mKeepUnmapped = true; }
 
     public void haltProcessing() { mConsumerHalt = true; }
 
@@ -118,14 +122,20 @@ public class BamSlicer
 
     public SAMRecord findRead(
             final SamReader samReader, final String readId, final String chromosome, int alignmentStart,
-            boolean firstInPair, boolean supplementary)
+            boolean firstInPair, boolean supplementary, int maxReadDepth)
     {
         SAMRecordIterator iter = samReader.queryAlignmentStart(chromosome, alignmentStart);
 
+        int readCount = 0;
         SAMRecord mateRecord = null;
         while(iter.hasNext())
         {
             SAMRecord nextRecord = iter.next();
+
+            ++readCount;
+
+            if(maxReadDepth > 0 && readCount >= maxReadDepth)
+                break;
 
             if(firstInPair != nextRecord.getFirstOfPairFlag())
                 continue;
@@ -144,7 +154,6 @@ public class BamSlicer
         iter.close();
 
         return mateRecord != null && passesFilters(mateRecord) ? mateRecord : null;
-
     }
 
     public SAMRecord queryMate(final SamReader samReader, final SAMRecord record)
@@ -223,7 +232,10 @@ public class BamSlicer
 
     private boolean passesFilters(final SAMRecord record)
     {
-        if(record.getMappingQuality() < mMinMappingQuality || record.getReadUnmappedFlag())
+        if(record.getMappingQuality() < mMinMappingQuality)
+            return false;
+
+        if(record.getReadUnmappedFlag() && !mKeepUnmapped)
             return false;
 
         if(record.isSecondaryAlignment() && !mKeepSecondaries)

@@ -35,10 +35,13 @@ public class ReadFilters
         if(record.getMappingQuality() < mConfig.MinMapQuality)
             filters |= ReadFilterType.MIN_MAP_QUAL.flag();
 
-        int insertAlignmentOverlap = abs(abs(record.getInferredInsertSize()) - alignedBases);
+        if(!record.getMateUnmappedFlag() && !record.getReadUnmappedFlag())
+        {
+            int insertAlignmentOverlap = abs(abs(record.getInferredInsertSize()) - alignedBases);
 
-        if(insertAlignmentOverlap < mConfig.MinInsertAlignmentOverlap)
-            filters |= ReadFilterType.INSERT_MAP_OVERLAP.flag();
+            if(insertAlignmentOverlap < mConfig.MinInsertAlignmentOverlap)
+                filters |= ReadFilterType.INSERT_MAP_OVERLAP.flag();
+        }
 
         int maxIndelLength = ReadRecord.maxIndelLength(record.getCigar());
 
@@ -75,6 +78,9 @@ public class ReadFilters
 
     public boolean isCandidateSupportingRead(final SAMRecord record)
     {
+        if(record.getReadUnmappedFlag())
+            return false;
+
         // any read with a supplementary
         if(record.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
             return true;

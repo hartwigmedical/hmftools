@@ -41,8 +41,17 @@ public class ReadRecord
     public ReadRecord(final SAMRecord record)
     {
         mRecord = record;
-        Chromosome = record.getReferenceName();
-        Positions = new int[] { record.getStart(), record.getEnd() };
+
+        if(!record.getReadUnmappedFlag())
+        {
+            Chromosome = record.getReferenceName();
+            Positions = new int[] { record.getStart(), record.getEnd() };
+        }
+        else
+        {
+            Chromosome = "-1";
+            Positions = new int[] { 0, 0 };
+        }
 
         if(!record.getMateUnmappedFlag())
         {
@@ -92,6 +101,7 @@ public class ReadRecord
     public boolean isReadReversed() { return ( mRecord.getFlags() & SAMFlag.READ_REVERSE_STRAND.intValue()) != 0; }
     public boolean isFirstOfPair() { return (mRecord.getFlags() & SAMFlag.FIRST_OF_PAIR.intValue()) != 0; }
     public boolean isSupplementaryAlignment() { return (mRecord.getFlags() & SAMFlag.SUPPLEMENTARY_ALIGNMENT.intValue()) != 0; }
+    public boolean isUnmapped() { return (mRecord.getFlags() & SAMFlag.READ_UNMAPPED.intValue()) != 0; }
     public boolean isMateUnmapped() { return (mRecord.getFlags() & SAMFlag.MATE_UNMAPPED.intValue()) != 0; }
 
     public boolean hasFlag(final SAMFlag flag) { return (mRecord.getFlags() & flag.intValue()) != 0; }
@@ -112,7 +122,6 @@ public class ReadRecord
     public boolean written() { return mWritten; }
 
     public short mapQuality() { return (short)mRecord.getMappingQuality(); }
-    public boolean isMultiMapped() { return mapQuality() <= MULTI_MAP_QUALITY_THRESHOLD; }
 
     public int fragmentInsertSize() { return mFragmentInsertSize; }
 

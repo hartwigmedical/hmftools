@@ -125,6 +125,9 @@ public class ReadGroup
         // only count non-supplementaries towards remote partitions
         for(ReadRecord read : mReads)
         {
+            if(read.isUnmapped())
+                continue;
+
             /*
             if(read.hasSuppAlignment())
             {
@@ -142,11 +145,6 @@ public class ReadGroup
                 mRemotePartitions.add(formChromosomePartition(read.MateChromosome, read.MatePosStart, partitionSize));
             }
         }
-    }
-
-    public boolean hasReadRecord(final SAMRecord record)
-    {
-        return mReads.stream().anyMatch(x -> x.record().equals(record));
     }
 
     public boolean hasReadMate(final ReadRecord read)

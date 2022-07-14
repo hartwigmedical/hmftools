@@ -225,15 +225,13 @@ public class ResultsWriter
 
     public synchronized void writeBamRecords(final List<ReadGroup> readGroups)
     {
-        readGroups.forEach(x -> writeBamRecords(x));
-    }
-
-    public synchronized void writeBamRecords(final ReadGroup readGroup)
-    {
         if(mBamWriter == null)
             return;
 
-        mBamWriter.writeRecords(readGroup.reads());
+        for(ReadGroup readGroup : readGroups)
+        {
+            readGroup.reads().forEach(x -> mBamWriter.writeRecord(x.record()));
+        }
     }
 
     public synchronized void writeBamRecord(final SAMRecord record)
