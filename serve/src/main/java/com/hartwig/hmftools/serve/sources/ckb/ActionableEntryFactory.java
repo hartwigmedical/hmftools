@@ -119,20 +119,20 @@ class ActionableEntryFactory {
                 for (RelevantTreatmentApproaches relevantTreatmentApproaches : evidence.relevantTreatmentApproaches()) {
                     DrugClass relevantTreatmentApproachesInfo = relevantTreatmentApproaches.drugClass();
 
-                    RelevantTreatmentApprochCurationEntryKey key = ImmutableRelevantTreatmentApprochCurationEntryKey.builder()
-                            .treatment(treatment)
-                            .treatmentApproach(relevantTreatmentApproachesInfo != null ? relevantTreatmentApproachesInfo.drugClass() : null)
-                            .event(gene + " " + eventType.name())
-                            .level(level)
-                            .direction(direction)
-                            .build();
-
-                    curatedRelevantTreatmentApproaches.add(curator.isMatch(key));
-
                     if (relevantTreatmentApproachesInfo != null) {
                         sourceRelevantTreatmentApproaches.add(relevantTreatmentApproachesInfo.drugClass());
                     }
                 }
+
+                RelevantTreatmentApprochCurationEntryKey key = ImmutableRelevantTreatmentApprochCurationEntryKey.builder()
+                        .treatment(treatment)
+                        .treatmentApproach(String.join(",", sourceRelevantTreatmentApproaches))
+                        .event(gene + " " + eventType.name())
+                        .level(level)
+                        .direction(direction)
+                        .build();
+
+                curatedRelevantTreatmentApproaches.add(curator.isMatch(key));
 
                 actionableEntries.add(ImmutableActionableEntry.builder()
                         .source(Knowledgebase.CKB)
