@@ -2,6 +2,7 @@ package com.hartwig.hmftools.svprep.reads;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.samtools.SupplementaryReadData.SUPP_NEG_STRAND;
 import static com.hartwig.hmftools.common.samtools.SupplementaryReadData.SUPP_POS_STRAND;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
@@ -10,7 +11,6 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.LOW_BASE_QUALITY;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
-import static com.hartwig.hmftools.svprep.SvConstants.SUPPORTING_READ_DISTANCE;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.INSERT_MAP_OVERLAP;
 import static com.hartwig.hmftools.svprep.reads.ReadRecord.maxIndelLength;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
@@ -291,6 +291,10 @@ public class JunctionTracker
 
         junctionStart.JunctionGroups.add(readGroup);
         junctionEnd.JunctionGroups.add(readGroup);
+
+        mJunctionGroups.add(readGroup);
+        readGroup.addJunctionPosition(junctionStartPos);
+        readGroup.addJunctionPosition(junctionEndPos);
     }
 
     private JunctionData getOrCreateJunction(final ReadRecord read, final byte orientation)
@@ -342,6 +346,8 @@ public class JunctionTracker
 
         if(closeJunctionIndex < 0)
             return;
+
+        checkJunctionSupport(read, mJunctions.get(closeJunctionIndex), supportedJunctions);
 
         // check up and down from this location
         for(int i = 0; i <= 1; ++i)
@@ -431,19 +437,19 @@ public class JunctionTracker
         return -1;
     }
 
-    private static boolean readWithinJunctionRange(final ReadRecord read, final JunctionData junctionData)
+    private boolean readWithinJunctionRange(final ReadRecord read, final JunctionData junctionData)
     {
         boolean rightClipped = read.cigar().isRightClipped();
         boolean leftClipped = read.cigar().isLeftClipped();
         if(rightClipped || !leftClipped)
         {
-            if(abs(read.end() - junctionData.Position) <= SUPPORTING_READ_DISTANCE)
+            if(abs(read.end() - junctionData.Position) <= mFilterConfig.MaxDiscordantFragmentDistance)
                 return true;
         }
 
         if(leftClipped || !rightClipped)
         {
-            if(abs(read.start() - junctionData.Position) <= SUPPORTING_READ_DISTANCE)
+            if(abs(read.start() - junctionData.Position) <= mFilterConfig.MaxDiscordantFragmentDistance)
                 return true;
         }
 
@@ -452,10 +458,6 @@ public class JunctionTracker
 
     private static boolean hasDiscordantSupport(final ReadRecord read, final JunctionData junctionData, int maxDistance)
     {
-        // must have both positions leading up to but not past the junction and one of its remote junctions
-        if(junctionData.RemoteJunctions.isEmpty())
-            return false;
-
         if(junctionData.Orientation != read.orientation())
             return false;
 
@@ -470,6 +472,15 @@ public class JunctionTracker
                 return false;
         }
 
+        // no longer check for a remote matching from the mate or supplementary
+
+        return false;
+
+        /*
+        // must have both positions leading up to but not past the junction and one of its remote junctions
+        if(junctionData.RemoteJunctions.isEmpty())
+            return false;
+
         int otherPosition;
         String otherChromosome;
         byte otherOrientation;
@@ -478,7 +489,11 @@ public class JunctionTracker
         {
             otherChromosome = read.supplementaryAlignment().Chromosome;
             otherPosition = read.supplementaryAlignment().Position;
-            otherOrientation = read.supplementaryAlignment().Strand == SUPP_POS_STRAND ? POS_ORIENT : NEG_ORIENT;
+
+            if(read.orientation() == POS_ORIENT)
+                otherOrientation = read.supplementaryAlignment().Strand == SUPP_POS_STRAND ? NEG_ORIENT : POS_ORIENT;
+            else
+                otherOrientation = read.supplementaryAlignment().Strand == SUPP_NEG_STRAND ? POS_ORIENT : NEG_ORIENT;
         }
         else
         {
@@ -511,12 +526,16 @@ public class JunctionTracker
         }
 
         return false;
+        */
     }
 
     public static boolean supportsJunction(final ReadRecord read, final JunctionData junctionData, final ReadFilterConfig filterConfig)
     {
+        if(hasDiscordantSupport(read, junctionData, filterConfig.MaxDiscordantFragmentDistance))
+            return true;
+
         if(!read.cigar().isLeftClipped() && !read.cigar().isRightClipped())
-            return hasDiscordantSupport(read, junctionData, filterConfig.MaxDiscordantFragmentDistance);
+            return false;
 
         /*
         eg if there is a candidate read with 101M50S at base 1000, how does a supporting read need to align and match?
@@ -538,7 +557,7 @@ public class JunctionTracker
                 return true;
 
             // within 50 bases with exact sequence match in between the soft clip locations
-            if(abs(readRightPos - junctionData.Position) > SUPPORTING_READ_DISTANCE)
+            if(abs(readRightPos - junctionData.Position) > filterConfig.MinSupportingReadDistance)
                 return false;
 
             int scLength = read.cigar().getLastCigarElement().getLength();
@@ -583,7 +602,7 @@ public class JunctionTracker
                 return true;
 
             // within 50 bases with exact sequence match in between the soft clip locations
-            if(abs(readLeftPos - junctionData.Position) > SUPPORTING_READ_DISTANCE)
+            if(abs(readLeftPos - junctionData.Position) > filterConfig.MinSupportingReadDistance)
                 return false;
 
             // test for a base match for the read's soft-clipped bases, allow for low-qual matches

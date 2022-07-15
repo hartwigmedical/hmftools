@@ -23,7 +23,7 @@ public final class SvConstants
     // supporting reads
     public static final int JUNCTION_SUPPORT_CAP = 0; // no limit
     public static final int MIN_SUPPORTING_READ_DISTANCE = 50;
-    public static final int MAX_DISCORDANT_READ_DISTANCE = 800;
+    public static final int MAX_DISCORDANT_READ_DISTANCE = 1000;
 
     // final junction filtering
     public static final int SUPPORTING_READ_DISTANCE = 50;

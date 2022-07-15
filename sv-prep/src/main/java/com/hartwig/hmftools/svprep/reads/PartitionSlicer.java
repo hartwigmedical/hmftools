@@ -319,12 +319,11 @@ public class PartitionSlicer
         if(missedReadsMap.isEmpty())
             return readGroups;
 
-        SV_LOGGER.debug("region({}) searching for {} missed reads", mRegion, missedReadsMap.size());
+        int missedReadCount = missedReadsMap.values().stream().mapToInt(x -> x.size()).sum();
+        SV_LOGGER.debug("region({}) searching for {} missed reads", mRegion, missedReadCount);
 
         // ignore reads in blacklist locations
         int skippedBlacklist = 0;
-
-        ChrBaseRegion filteredRegion = mConfig.RefGenVersion == V37 ? EXCLUDED_REGION_1_REF_37 : EXCLUDED_REGION_1_REF_38;
 
         for(Map.Entry<String,List<ExpectedRead>> entry : missedReadsMap.entrySet())
         {
@@ -338,12 +337,11 @@ public class PartitionSlicer
                 if(inBlacklist)
                 {
                     ++skippedBlacklist;
-                    // continue;
+                    continue;
                 }
 
-                SAMRecord record = createFakeBamRecord(readId, missedRead);
+                // SAMRecord record = createFakeBamRecord(readId, missedRead);
 
-                /*
                 long startTime = System.nanoTime();
 
                 SAMRecord record = mBamSlicer.findRead(
@@ -358,7 +356,6 @@ public class PartitionSlicer
                 {
                     SV_LOGGER.debug("slice time({}) for missed read: {}", format("%.3f", sliceTime), missedRead);
                 }
-                */
 
                 if(record == null)
                     continue;

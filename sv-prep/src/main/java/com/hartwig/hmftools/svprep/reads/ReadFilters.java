@@ -94,7 +94,7 @@ public class ReadFilters
             return true;
 
         // interchromosomal
-        if(!record.getContig().equals(record.getMateReferenceName()))
+        if(!record.getReferenceName().equals(record.getMateReferenceName()))
             return true;
 
         // inversion
