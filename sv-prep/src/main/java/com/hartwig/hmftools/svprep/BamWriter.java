@@ -44,15 +44,6 @@ public class BamWriter
         return new SAMFileWriterFactory().makeBAMWriter(fileHeader, false, new File(mOutputBam));
     }
 
-    public void writeRecords(final List<ReadRecord> reads)
-    {
-        if(mWriter == null)
-            return;
-
-        mRecordWriteCount += reads.size();
-        reads.stream().filter(x -> !x.written()).forEach(x -> mWriter.addAlignment(x.record()));
-    }
-
     public void writeRecord(final SAMRecord record)
     {
         if(mWriter == null)

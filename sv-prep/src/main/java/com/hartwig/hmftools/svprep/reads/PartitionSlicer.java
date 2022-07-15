@@ -324,7 +324,7 @@ public class PartitionSlicer
             return readGroups;
 
         int missedReadCount = missedReadsMap.values().stream().mapToInt(x -> x.size()).sum();
-        SV_LOGGER.debug("region({}) searching for {} missed reads", mRegion, missedReadCount);
+        SV_LOGGER.trace("region({}) searching for {} missed reads", mRegion, missedReadCount);
 
         // ignore reads in blacklist locations
         int skippedBlacklist = 0;

@@ -113,12 +113,6 @@ public class JunctionTracker
             if(readGroup.reads().stream().allMatch(x -> x.readType() == NO_SUPPORT)) // ignore groups with only fully-filtered reads
                 continue;
 
-            if(readGroup.isIncomplete())
-            {
-                // still assign but suggests something has been missed
-                SV_LOGGER.debug("readGroup({}) incomplete post partition slicing", readGroup);
-            }
-
             if(isJunctionFragment(readGroup))
             {
                 createJunction(readGroup);

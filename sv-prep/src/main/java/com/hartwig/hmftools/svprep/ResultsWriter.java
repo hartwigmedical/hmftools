@@ -120,7 +120,7 @@ public class ResultsWriter
         }
     }
 
-    public synchronized void writeReadData(
+    private void writeReadData(
             final ReadRecord read, int readCount, int expectedReadCount, final ReadGroupStatus status, boolean spansPartitions,
             final String junctionPositions)
     {
@@ -230,16 +230,8 @@ public class ResultsWriter
 
         for(ReadGroup readGroup : readGroups)
         {
-            readGroup.reads().forEach(x -> mBamWriter.writeRecord(x.record()));
+            readGroup.reads().stream().filter(x -> !x.written()).forEach(x -> mBamWriter.writeRecord(x.record()));
         }
-    }
-
-    public synchronized void writeBamRecord(final SAMRecord record)
-    {
-        if(mBamWriter == null)
-            return;
-
-        mBamWriter.writeRecord(record);
     }
 
     private BufferedWriter initialiseBedWriter()
