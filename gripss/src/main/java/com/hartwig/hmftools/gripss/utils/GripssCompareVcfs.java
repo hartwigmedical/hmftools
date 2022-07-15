@@ -244,11 +244,15 @@ public class GripssCompareVcfs
 
                     if(origIsPass != newIsPass)
                     {
-                        writeDiffs(origSv, newSv, "FILTER_PASS", filtersStr(origFilterDiffs), filtersStr(newFilterDiffs));
+                        writeDiffs(
+                                origSv, newSv, "FILTER_PASS",
+                                filtersStr(origFilterDiffs, false), filtersStr(newFilterDiffs, false));
                     }
                     else
                     {
-                        writeDiffs(origSv, newSv, "FILTER_DIFF", filtersStr(origFilterDiffs), filtersStr(newFilterDiffs));
+                        writeDiffs(
+                                origSv, newSv, "FILTER_DIFF",
+                                filtersStr(origFilterDiffs, false), filtersStr(newFilterDiffs, false));
                     }
 
                     ++diffCount;
@@ -318,8 +322,11 @@ public class GripssCompareVcfs
         return null;
     }
 
-    private String filtersStr(final Set<String> filters)
+    private String filtersStr(final Set<String> filters, boolean setPassOnEmpty)
     {
+        if(setPassOnEmpty && filters.isEmpty())
+            return PASS;
+
         StringJoiner sj = new StringJoiner(";");
         filters.forEach(x -> sj.add(x));
         return sj.toString();
@@ -379,8 +386,8 @@ public class GripssCompareVcfs
 
             mWriter.write(String.format(",%.1f,%.1f,%s,%s",
                     origSv != null ? origSv.breakendStart().Qual : -1, newSv != null ? newSv.breakendStart().Qual : -1,
-                    origSv != null ? filtersStr(origSv.breakendStart().Context.getFilters()) : "",
-                    newSv != null ? filtersStr(newSv.breakendStart().Context.getFilters()) : ""));
+                    origSv != null ? filtersStr(origSv.breakendStart().Context.getFilters(), true) : "",
+                    newSv != null ? filtersStr(newSv.breakendStart().Context.getFilters(), true) : ""));
 
             mWriter.newLine();
         }
