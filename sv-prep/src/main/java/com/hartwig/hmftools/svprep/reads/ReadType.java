@@ -7,5 +7,6 @@ public enum ReadType
     SUPPORT,
     JUNCTION,
     RECOVERED,
+    BLACKLIST,
     UNMATCHED;
 }

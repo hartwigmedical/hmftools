@@ -137,7 +137,7 @@ public class ResultsWriter
             SupplementaryReadData suppData = read.supplementaryAlignment();
 
             mReadWriter.write(format(",%d,%s,%d,%d,%s,%d",
-                    read.fragmentInsertSize(), read.MateChromosome, read.MatePosStart, read.MapQuality,
+                    read.fragmentInsertSize(), read.MateChromosome, read.MatePosStart, read.mapQuality(),
                     suppData != null ? suppData.asCsv() : "N/A", read.flags()));
 
             mReadWriter.write(format(",%s,%s,%s,%s,%s,%s",

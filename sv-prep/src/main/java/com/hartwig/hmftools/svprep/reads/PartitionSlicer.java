@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.svprep.SvConstants.EXCLUDED_REGION_1_REF_37;
 import static com.hartwig.hmftools.svprep.SvConstants.EXCLUDED_REGION_1_REF_38;
 import static com.hartwig.hmftools.svprep.WriteType.BAM;
 import static com.hartwig.hmftools.svprep.WriteType.READS;
+import static com.hartwig.hmftools.svprep.reads.ReadType.BLACKLIST;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
 import static com.hartwig.hmftools.svprep.reads.ReadType.RECOVERED;
@@ -30,7 +31,9 @@ import com.hartwig.hmftools.svprep.ResultsWriter;
 import com.hartwig.hmftools.svprep.SvConfig;
 import com.hartwig.hmftools.svprep.WriteType;
 
+import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
@@ -330,13 +333,17 @@ public class PartitionSlicer
 
             for(ExpectedRead missedRead : entry.getValue())
             {
-                if(filteredRegion.containsPosition(missedRead.Chromosome, missedRead.Position)
-                || mConfig.Blacklist.inBlacklistLocation(missedRead.Chromosome, missedRead.Position))
+                boolean inBlacklist = mConfig.Blacklist.inBlacklistLocation(missedRead.Chromosome, missedRead.Position);
+
+                if(inBlacklist)
                 {
                     ++skippedBlacklist;
-                    continue;
+                    // continue;
                 }
 
+                SAMRecord record = createFakeBamRecord(readId, missedRead);
+
+                /*
                 long startTime = System.nanoTime();
 
                 SAMRecord record = mBamSlicer.findRead(
@@ -351,12 +358,13 @@ public class PartitionSlicer
                 {
                     SV_LOGGER.debug("slice time({}) for missed read: {}", format("%.3f", sliceTime), missedRead);
                 }
+                */
 
                 if(record == null)
                     continue;
 
                 ReadRecord read = ReadRecord.from(record);
-                read.setReadType(RECOVERED);
+                read.setReadType(inBlacklist ? BLACKLIST : RECOVERED);
 
                 if(readGroup == null)
                     readGroup = new ReadGroup(read);
@@ -378,6 +386,34 @@ public class PartitionSlicer
         }
 
         return readGroups;
+    }
+
+    private SAMRecord createFakeBamRecord(final String readId, final ExpectedRead missedRead)
+    {
+        SAMRecordSetBuilder recordBuilder = new SAMRecordSetBuilder();
+
+        recordBuilder.setUnmappedHasBasesAndQualities(false);
+
+        int contigIndex = mSamReader.getFileHeader().getSequenceIndex(missedRead.Chromosome);
+
+        SAMRecord record = recordBuilder.addFrag(
+                readId, contigIndex, missedRead.Position, false, false,
+                format("%dM", mConfig.ReadLength), "", 60, false);
+
+        record.setReadBases("ACGT".getBytes());
+        record.setReferenceName(missedRead.Chromosome);
+
+        int flags = 0;
+        flags |= SAMFlag.READ_PAIRED.intValue();
+        flags |= SAMFlag.PROPER_PAIR.intValue();
+
+        if(missedRead.FirstInPair)
+            flags |= SAMFlag.FIRST_OF_PAIR.intValue();
+        else
+            flags |= SAMFlag.SECOND_OF_PAIR.intValue();
+
+        record.setFlags(flags);
+        return record;
     }
 
     private boolean checkReadRateLimits(int positionStart)

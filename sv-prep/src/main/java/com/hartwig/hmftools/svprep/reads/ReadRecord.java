@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.svprep.SvConstants.MULTI_MAP_QUALITY_THRESHOLD;
 import static com.hartwig.hmftools.svprep.reads.ReadType.NO_SUPPORT;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -26,7 +25,6 @@ public class ReadRecord
 
     public String MateChromosome;
     public int MatePosStart;
-    public short MapQuality;
 
     private final SAMRecord mRecord;
     private int mFragmentInsertSize;
