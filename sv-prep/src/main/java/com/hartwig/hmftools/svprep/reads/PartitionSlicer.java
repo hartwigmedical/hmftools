@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.nanosToSeconds;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_FRACTION;
 import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_THRESHOLD;
@@ -19,7 +20,9 @@ import static com.hartwig.hmftools.svprep.reads.ReadType.RECOVERED;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
@@ -31,8 +34,10 @@ import com.hartwig.hmftools.svprep.ResultsWriter;
 import com.hartwig.hmftools.svprep.SvConfig;
 import com.hartwig.hmftools.svprep.WriteType;
 
+import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -309,8 +314,7 @@ public class PartitionSlicer
         }
     }
 
-    private static final int MAX_MISSED_READ_DEPTH = 10000;
-    private static final double NANOS_IN_SECOND = 1000000000;
+    private static final int MAX_MISSED_READ_DEPTH = 100000;
 
     private List<ReadGroup> findMissedReads(final Map<String,List<ExpectedRead>> missedReadsMap)
     {
@@ -325,10 +329,13 @@ public class PartitionSlicer
         // ignore reads in blacklist locations
         int skippedBlacklist = 0;
 
-        for(Map.Entry<String,List<ExpectedRead>> entry : missedReadsMap.entrySet())
+        // form 2 lists both order by missed read position
+        Map<Integer,List<ExpectedRead>> positionReads = Maps.newHashMap();
+        Map<Integer,List<String>> positionReadIds = Maps.newHashMap();
+
+        for(Map.Entry<String, List<ExpectedRead>> entry : missedReadsMap.entrySet())
         {
             String readId = entry.getKey();
-            ReadGroup readGroup = null;
 
             for(ExpectedRead missedRead : entry.getValue())
             {
@@ -340,41 +347,40 @@ public class PartitionSlicer
                     continue;
                 }
 
-                // SAMRecord record = createFakeBamRecord(readId, missedRead);
-
-                long startTime = System.nanoTime();
-
-                SAMRecord record = mBamSlicer.findRead(
-                        mSamReader, readId, missedRead.Chromosome, missedRead.Position, missedRead.FirstInPair, missedRead.IsSupplementary,
-                        MAX_MISSED_READ_DEPTH);
-
-                long endTime = System.nanoTime();
-
-                double sliceTime = (endTime - startTime) / NANOS_IN_SECOND;
-
-                if(sliceTime > 2)
+                List<ExpectedRead> posReads = positionReads.get(missedRead.Position);
+                if(posReads == null)
                 {
-                    SV_LOGGER.debug("slice time({}) for missed read: {}", format("%.3f", sliceTime), missedRead);
+                    positionReads.put(missedRead.Position, Lists.newArrayList(missedRead));
+                    positionReadIds.put(missedRead.Position, Lists.newArrayList(readId));
                 }
-
-                if(record == null)
-                    continue;
-
-                ReadRecord read = ReadRecord.from(record);
-                read.setReadType(inBlacklist ? BLACKLIST : RECOVERED);
-
-                if(readGroup == null)
-                    readGroup = new ReadGroup(read);
                 else
-                    readGroup.addRead(read);
-            }
-
-            if(readGroup != null)
-            {
-                readGroup.setGroupState();
-                readGroups.add(readGroup);
+                {
+                    posReads.add(missedRead);
+                    positionReadIds.get(missedRead.Position).add(readId);
+                }
             }
         }
+
+        for(Map.Entry<Integer,List<ExpectedRead>> entry : positionReads.entrySet())
+        {
+            int position = entry.getKey();
+            List<ExpectedRead> missedReads = entry.getValue();
+            List<String> missedReadIds = positionReadIds.get(position);
+
+            long startTime = System.nanoTime();
+
+            findMissedReads(readGroups, position, missedReads, missedReadIds);
+
+            double sliceTime = nanosToSeconds(startTime, System.nanoTime());
+
+            if(sliceTime > 2)
+            {
+                SV_LOGGER.debug("slice time({}) for {} missed reads, location({}:{})",
+                        format("%.3f", sliceTime), positionReads.size(), mRegion.Chromosome, position);
+            }
+        }
+
+        readGroups.forEach(x -> x.setGroupState());
 
         if(missedReadsMap.size() != readGroups.size())
         {
@@ -385,32 +391,47 @@ public class PartitionSlicer
         return readGroups;
     }
 
-    private SAMRecord createFakeBamRecord(final String readId, final ExpectedRead missedRead)
+    private void findMissedReads(
+            List<ReadGroup> readGroups, int position, final List<ExpectedRead> missedReads, final List<String> missedReadIds)
     {
-        SAMRecordSetBuilder recordBuilder = new SAMRecordSetBuilder();
+        final SAMRecordIterator iterator = mSamReader.queryAlignmentStart(mRegion.Chromosome, position);
 
-        recordBuilder.setUnmappedHasBasesAndQualities(false);
+        int readCount = 0;
+        while(iterator.hasNext())
+        {
+            final SAMRecord record = iterator.next();
+            ++readCount;
 
-        int contigIndex = mSamReader.getFileHeader().getSequenceIndex(missedRead.Chromosome);
+            if(readCount >= MAX_MISSED_READ_DEPTH)
+                break;
 
-        SAMRecord record = recordBuilder.addFrag(
-                readId, contigIndex, missedRead.Position, false, false,
-                format("%dM", mConfig.ReadLength), "", 60, false);
+            for(int i = 0; i < missedReads.size(); ++i)
+            {
+                if(missedReadIds.get(i).equals(record.getReadName()))
+                {
+                    ExpectedRead missedRead = missedReads.get(i);
 
-        record.setReadBases("ACGT".getBytes());
-        record.setReferenceName(missedRead.Chromosome);
+                    if(missedRead.FirstInPair != record.getFirstOfPairFlag())
+                        continue;
 
-        int flags = 0;
-        flags |= SAMFlag.READ_PAIRED.intValue();
-        flags |= SAMFlag.PROPER_PAIR.intValue();
+                    if(missedRead.IsSupplementary != record.getSupplementaryAlignmentFlag())
+                        continue;
 
-        if(missedRead.FirstInPair)
-            flags |= SAMFlag.FIRST_OF_PAIR.intValue();
-        else
-            flags |= SAMFlag.SECOND_OF_PAIR.intValue();
+                    ReadRecord read = ReadRecord.from(record);
+                    read.setReadType(RECOVERED);
+                    readGroups.add(new ReadGroup(read));
 
-        record.setFlags(flags);
-        return record;
+                    missedReads.remove(i);
+                    missedReadIds.remove(i);
+                    break;
+                }
+            }
+
+            if(missedReads.isEmpty())
+                break;
+        }
+
+        iterator.close();
     }
 
     private boolean checkReadRateLimits(int positionStart)

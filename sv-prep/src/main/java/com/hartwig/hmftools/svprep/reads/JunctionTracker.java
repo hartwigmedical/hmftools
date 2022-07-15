@@ -473,8 +473,7 @@ public class JunctionTracker
         }
 
         // no longer check for a remote matching from the mate or supplementary
-
-        return false;
+        return true;
 
         /*
         // must have both positions leading up to but not past the junction and one of its remote junctions

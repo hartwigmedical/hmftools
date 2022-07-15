@@ -84,16 +84,10 @@ public class ChromosomeTask implements AutoCloseable
         SV_LOGGER.info("chromosome({}) {} regions complete, stats: {}",
                 mChromosome, regionCount, mCombinedStats.ReadStats.toString());
 
-        /*
-        if(mConfig.logPerfStats())
+        if(mCombinedStats.ReadStats.TotalReads > 10000)
         {
-            mRegionResults.logPerfCounters();
-            SV_LOGGER.debug("chromosome({}) max memory({})", mChromosome, mRegionResults.maxMemoryUsage());
+            mCombinedStats.PerfCounters.forEach(x -> x.logStats());
         }
-         */
-
-        // SV_LOGGER.info("chromosome({}) analysis complete", mChromosome);
-        mCombinedStats.PerfCounters.forEach(x -> x.logStats());
     }
 
     private List<ChrBaseRegion> partition(final String chromosome)

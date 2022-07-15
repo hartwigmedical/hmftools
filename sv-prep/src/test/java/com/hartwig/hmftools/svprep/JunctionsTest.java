@@ -59,7 +59,7 @@ public class JunctionsTest
 
         addRead(suppRead1, CANDIDATE_SUPPORT);
 
-        // spanning read but with the junction still in the first bucket
+        // spanning read
         ReadRecord read3 = ReadRecord.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 950, REF_BASES.substring(0, 100), "30S70M"));
 
@@ -87,7 +87,6 @@ public class JunctionsTest
         ReadRecord suppRead3 = ReadRecord.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 990, REF_BASES.substring(0, 63), "60M3S"));
 
-        // partitionBuckets.findBucket(suppRead3.start()).addSupportingRead(suppRead3);
         addRead(suppRead3, CANDIDATE_SUPPORT);
 
         // and a junction in the next bucket but with a supporting read in the previous
@@ -111,8 +110,8 @@ public class JunctionsTest
         assertEquals(4, mJunctionTracker.junctions().size());
         assertEquals(1, mJunctionTracker.junctions().get(0).supportingFragmentCount());
         assertEquals(1, mJunctionTracker.junctions().get(1).supportingFragmentCount());
-        assertEquals(1, mJunctionTracker.junctions().get(2).supportingFragmentCount());
-        assertEquals(1, mJunctionTracker.junctions().get(3).supportingFragmentCount());
+        assertEquals(3, mJunctionTracker.junctions().get(2).supportingFragmentCount());
+        assertEquals(4, mJunctionTracker.junctions().get(3).supportingFragmentCount());
     }
 
     @Test

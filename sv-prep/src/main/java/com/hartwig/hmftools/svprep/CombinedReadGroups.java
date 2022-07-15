@@ -326,9 +326,6 @@ public class CombinedReadGroups
         int missedSuppReadCount = 0;
         int missedNonSuppReadCount = 0;
 
-        // Map<String,List<ExpectedRead>> foundReadGroups = Maps.newHashMap();
-        // Map<String,List<ExpectedRead>> missedReadGroups = Maps.newHashMap();
-
         for(Map<String,List<ExpectedRead>> readGroupReads : mChrPartitionReadGroupReads.values())
         {
             readGroups += readGroupReads.size();
@@ -341,24 +338,19 @@ public class CombinedReadGroups
                 foundReadCount += foundReads.size();
                 missedSuppReadCount += unfoundReads.stream().filter(x -> x.IsSupplementary).count();
                 missedNonSuppReadCount += unfoundReads.stream().filter(x -> !x.IsSupplementary).count();
-
-                /*
-                if(!foundReads.isEmpty())
-                    foundReadGroups.put(entry.getKey(), foundReads);
-
-                if(!unfoundReads.isEmpty())
-                    missedReadGroups.put(entry.getKey(), unfoundReads);
-                */
             }
         }
 
         int totalCachedReads = foundReadCount + missedNonSuppReadCount + missedSuppReadCount;
         int totalMissed = missedNonSuppReadCount + missedSuppReadCount;
 
-        SV_LOGGER.info("final spanning partition cache: readGroups({}) matched({}) reads({} found={} missed={})",
-                readGroups, mMatchedGroups, totalCachedReads, foundReadCount, totalMissed);
+        if(mProcessedPartitions.size() > 10 || totalMissed > 0)
+        {
+            SV_LOGGER.info("final spanning partition cache: readGroups({}) matched({}) reads({} found={} missed={})",
+                    readGroups, mMatchedGroups, totalCachedReads, foundReadCount, totalMissed);
 
-        mPerfCounter.logStats();
+            mPerfCounter.logStats();
+        }
     }
 
     @VisibleForTesting

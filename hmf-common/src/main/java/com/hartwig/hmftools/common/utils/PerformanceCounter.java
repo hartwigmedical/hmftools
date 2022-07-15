@@ -238,4 +238,8 @@ public class PerformanceCounter
         mMaxTime = max(mMaxTime, other.getMaxTime());
     }
 
+    public static double nanosToSeconds(long nanoStartTime, long nanosEndTime)
+    {
+        return (nanosEndTime - nanoStartTime) / NANOS_IN_SECOND;
+    }
 }

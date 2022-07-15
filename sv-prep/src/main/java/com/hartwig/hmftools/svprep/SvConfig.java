@@ -109,6 +109,9 @@ public class SvConfig
 
         RefGenVersion = cmd.hasOption(REF_GENOME_VERSION) ? RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION)) : V37;
 
+        SV_LOGGER.info("refGenome({}), bam({})", RefGenVersion, BamFile);
+        SV_LOGGER.info("output({})", OutputDir);
+
         Hotspots = new HotspotCache(cmd.getOptionValue(KNOWN_FUSION_BED));
         Blacklist = new BlacklistLocations(cmd.getOptionValue(BLACKLIST_BED));
 

@@ -3,9 +3,13 @@ package com.hartwig.hmftools.svprep;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.svprep.SvPrepTestUtils.DEFAULT_BASE_QUAL;
+import static com.hartwig.hmftools.svprep.SvPrepTestUtils.DEFAULT_MAP_QUAL;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.READ_FILTERS;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.CHR_1;
+import static com.hartwig.hmftools.svprep.SvPrepTestUtils.buildFlags;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.createSamRecord;
+import static com.hartwig.hmftools.svprep.SvPrepTestUtils.readIdStr;
 import static com.hartwig.hmftools.svprep.reads.JunctionTracker.supportsJunction;
 
 import static junit.framework.TestCase.assertFalse;
@@ -32,27 +36,28 @@ public class ReadSupportTest
             // 440       450       460       470       480       490       500       510
 
     @Test
-    public void testSupportingReads()
+    public void testCloseSupportingReads()
     {
+        int readId = 1;
         ReadRecord junctionRead = ReadRecord.from(createSamRecord(
-                "01", CHR_1, 230, REF_BASES.substring(0, 100), "30S70M"));
+                readIdStr(readId++), CHR_1, 230, REF_BASES.substring(0, 100), "30S70M"));
 
         JunctionData junctionData = new JunctionData(230, NEG_ORIENT, junctionRead);
 
         // exact position match
         ReadRecord supportRead = ReadRecord.from(createSamRecord(
-                "02", CHR_1, 230, REF_BASES.substring(29, 100), "1S70M"));
+                readIdStr(readId++), CHR_1, 230, REF_BASES.substring(29, 100), "1S70M"));
 
         assertTrue(supportsJunction(supportRead, junctionData, READ_FILTERS));
 
         // offset to an earlier base
         supportRead = ReadRecord.from(createSamRecord(
-                "02", CHR_1, 225, REF_BASES.substring(22, 100), "3S72M"));
+                readIdStr(readId++), CHR_1, 225, REF_BASES.substring(22, 100), "3S72M"));
 
         assertTrue(supportsJunction(supportRead, junctionData, READ_FILTERS));
 
         // offset to an later base
-        SAMRecord record = createSamRecord("02", CHR_1, 234, REF_BASES.substring(24, 100), "10S66M");
+        SAMRecord record = createSamRecord(readIdStr(readId++), CHR_1, 234, REF_BASES.substring(24, 100), "10S66M");
         supportRead = ReadRecord.from(record);
 
         assertTrue(supportsJunction(supportRead, junctionData, READ_FILTERS));
@@ -121,7 +126,64 @@ public class ReadSupportTest
         record.getBaseQualities()[62] = (byte)10;
         supportRead = ReadRecord.from(record);
         assertTrue(supportsJunction(supportRead, junctionData, READ_FILTERS));
+    }
 
+    @Test
+    public void testDistantSupportingReads()
+    {
+        int readId = 1;
+
+        // first negative orientation
+        ReadRecord junctionRead = ReadRecord.from(SvPrepTestUtils.createSamRecord(
+                readIdStr(readId++), CHR_1, 230, REF_BASES.substring(0, 100), "30S70M"));
+
+        JunctionData junctionData = new JunctionData(230, NEG_ORIENT, junctionRead);
+
+        // distant within range, correct orientation
+        ReadRecord supportRead = createRead(readIdStr(readId++), 500, false, true);
+        assertTrue(supportsJunction(supportRead, junctionData, READ_FILTERS));
+
+        // too far
+        supportRead = createRead(readIdStr(readId++), 1500, false, true);
+        assertFalse(supportsJunction(supportRead, junctionData, READ_FILTERS));
+
+        // wrong orientation
+        supportRead = createRead(readIdStr(readId++), 500, false, false);
+        assertFalse(supportsJunction(supportRead, junctionData, READ_FILTERS));
+
+        // wrong side of junction
+        supportRead = createRead(readIdStr(readId++), 220, false, true);
+        assertFalse(supportsJunction(supportRead, junctionData, READ_FILTERS));
+
+        // other junction side
+        junctionRead = ReadRecord.from(SvPrepTestUtils.createSamRecord(
+                readIdStr(readId++), CHR_1, 1500, REF_BASES.substring(0, 100), "70M30S"));
+
+        junctionData = new JunctionData(1500, POS_ORIENT, junctionRead);
+
+        supportRead = createRead(readIdStr(readId++), 1000, true, false);
+        assertTrue(supportsJunction(supportRead, junctionData, READ_FILTERS));
+
+        // too far
+        supportRead = createRead(readIdStr(readId++), 100, true, false);
+        assertFalse(supportsJunction(supportRead, junctionData, READ_FILTERS));
+
+        // wrong orientation
+        supportRead = createRead(readIdStr(readId++), 100, true, true);
+        assertFalse(supportsJunction(supportRead, junctionData, READ_FILTERS));
+
+        // wrong side of junction
+        supportRead = createRead(readIdStr(readId++), 1510, true, false);
+        assertFalse(supportsJunction(supportRead, junctionData, READ_FILTERS));
+    }
+
+    private static ReadRecord createRead(
+            final String readId, int readStart, boolean firstInPair, boolean reversed)
+    {
+        return ReadRecord.from(createSamRecord(
+                readId, CHR_1, readStart, "", "100M",
+                buildFlags(firstInPair, reversed, false, false, false),
+                DEFAULT_MAP_QUAL, DEFAULT_BASE_QUAL));
     }
 
 
