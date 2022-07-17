@@ -125,9 +125,9 @@ public class ReadRecord
 
     public String toString()
     {
-        return format("coords(%s:%d-%d) cigar(%s) mate(%s:%d) id(%s) flags(first=%s supp=%s reversed=%s) hasSupp(%s)",
+        return format("coords(%s:%d-%d) cigar(%s) mate(%s:%d) id(%s) flags(first=%s supp=%s reversed=%s) hasSupp(%s) type(%s)",
                 Chromosome, start(), end(), cigar().toString(), MateChromosome, MatePosStart, id(),
-                isFirstOfPair(), isSupplementaryAlignment(), isReadReversed(), mSupplementaryAlignment != null);
+                isFirstOfPair(), isSupplementaryAlignment(), isReadReversed(), mSupplementaryAlignment != null, mReadType);
     }
 
     public static int maxIndelLength(final Cigar cigar)

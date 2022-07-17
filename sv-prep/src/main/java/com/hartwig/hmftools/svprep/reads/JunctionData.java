@@ -33,7 +33,6 @@ public class JunctionData
 
     public int junctionFragmentCount() { return JunctionGroups.size(); }
     public int supportingFragmentCount() { return SupportingGroups.size(); }
-    public int totalSupport() { return junctionFragmentCount() + supportingFragmentCount(); }
     public boolean hotspot() { return mHotspot; }
     public void markHotspot() { mHotspot = true; }
 

@@ -68,6 +68,11 @@ public class ReadGroup
         return mReads.size() == 2 && mReads.stream().allMatch(x -> !x.hasSuppAlignment() && !x.isSupplementaryAlignment());
     }
 
+    public boolean hasTypeAndMapQual(final ReadType type, int minMapQual)
+    {
+        return mReads.stream().anyMatch(x -> x.readType() == type && x.mapQuality() >= minMapQual);
+    }
+
     public boolean allNoSupport() { return mReads.stream().allMatch(x -> x.readType() == ReadType.NO_SUPPORT); }
 
     public void setGroupState()

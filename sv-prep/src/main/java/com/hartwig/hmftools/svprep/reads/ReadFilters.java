@@ -78,6 +78,15 @@ public class ReadFilters
 
     public boolean isCandidateSupportingRead(final SAMRecord record)
     {
+        if(isChimericRead(record, mConfig))
+            return true;
+
+        // or with any amount of soft-clipping
+        return record.getCigar().isLeftClipped() || record.getCigar().isRightClipped();
+    }
+
+    public static boolean isChimericRead(final SAMRecord record, final ReadFilterConfig config)
+    {
         if(record.getReadUnmappedFlag())
             return false;
 
@@ -86,7 +95,7 @@ public class ReadFilters
             return true;
 
         // or an fragment length beyond the observed distribution
-        if(abs(record.getInferredInsertSize()) > mConfig.fragmentLengthMax()) //  || record.getInferredInsertSize() < mFragmentLengthMin
+        if(abs(record.getInferredInsertSize()) > config.fragmentLengthMax()) //  || record.getInferredInsertSize() < mFragmentLengthMin
             return true;
 
         // an unmapped mate
@@ -101,8 +110,6 @@ public class ReadFilters
         if(record.getReadNegativeStrandFlag() == record.getMateNegativeStrandFlag())
             return true;
 
-        // or with any amount of soft-clipping
-        return record.getCigar().isLeftClipped() || record.getCigar().isRightClipped();
+        return false;
     }
-
 }

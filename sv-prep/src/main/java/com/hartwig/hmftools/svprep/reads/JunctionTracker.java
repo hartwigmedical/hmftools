@@ -2,17 +2,17 @@ package com.hartwig.hmftools.svprep.reads;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.samtools.SupplementaryReadData.SUPP_NEG_STRAND;
-import static com.hartwig.hmftools.common.samtools.SupplementaryReadData.SUPP_POS_STRAND;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.LOW_BASE_QUALITY;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
+import static com.hartwig.hmftools.svprep.SvConstants.MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.INSERT_MAP_OVERLAP;
+import static com.hartwig.hmftools.svprep.reads.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.svprep.reads.ReadRecord.maxIndelLength;
+import static com.hartwig.hmftools.svprep.reads.ReadType.EXACT_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
 import static com.hartwig.hmftools.svprep.reads.ReadType.NO_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.SUPPORT;
@@ -375,7 +375,12 @@ public class JunctionTracker
         if(supportedJunctions.contains(junctionData))
             return;
 
-        if(supportsJunction(read, junctionData, mFilterConfig))
+        if(hasExactJunctionSupport(read, junctionData, mFilterConfig))
+        {
+            read.setReadType(EXACT_SUPPORT);
+            supportedJunctions.add(junctionData);
+        }
+        else if(hasDiscordantJunctionSupport(read, junctionData, mFilterConfig))
         {
             read.setReadType(SUPPORT);
             supportedJunctions.add(junctionData);
@@ -450,26 +455,49 @@ public class JunctionTracker
         return false;
     }
 
-    private static boolean hasDiscordantSupport(final ReadRecord read, final JunctionData junctionData, int maxDistance)
+    public static boolean hasDiscordantJunctionSupport(
+            final ReadRecord read, final JunctionData junctionData, final ReadFilterConfig filterConfig)
     {
+        // correct orientation
         if(junctionData.Orientation != read.orientation())
             return false;
 
+        // correct side of the junction
+        int junctionDistance = 0;
+
         if(junctionData.Orientation == POS_ORIENT)
         {
-            if(read.end() > junctionData.Position || abs(read.end() - junctionData.Position) > maxDistance)
+            if(read.end() > junctionData.Position)
                 return false;
+
+            junctionDistance = abs(read.end() - junctionData.Position);
         }
         else
         {
-            if(read.start() < junctionData.Position || abs(read.end() - junctionData.Position) > maxDistance)
+            if(read.start() < junctionData.Position || abs(read.end() - junctionData.Position) > filterConfig.MaxDiscordantFragmentDistance)
                 return false;
+
+            junctionDistance = abs(read.start() - junctionData.Position);
         }
 
-        // no longer check for a remote matching from the mate or supplementary
-        return true;
+        // any soft-clipping on the correct side if close to the junction
+        if(junctionDistance <= filterConfig.MinSupportingReadDistance)
+        {
+            if(junctionData.Orientation == POS_ORIENT && read.record().getCigar().isRightClipped())
+                return true;
 
-        /*
+            if(junctionData.Orientation == NEG_ORIENT && read.record().getCigar().isLeftClipped())
+                return true;
+        }
+
+        // otherwise can be distant if chimeric
+        if(junctionDistance <= filterConfig.MaxDiscordantFragmentDistance)
+            return isChimericRead(read.record(), filterConfig);
+
+        return false;
+
+        /* no longer check for a remote matching from the mate or supplementary
+
         // must have both positions leading up to but not past the junction and one of its remote junctions
         if(junctionData.RemoteJunctions.isEmpty())
             return false;
@@ -522,11 +550,9 @@ public class JunctionTracker
         */
     }
 
-    public static boolean supportsJunction(final ReadRecord read, final JunctionData junctionData, final ReadFilterConfig filterConfig)
+    public static boolean hasExactJunctionSupport(
+            final ReadRecord read, final JunctionData junctionData, final ReadFilterConfig filterConfig)
     {
-        if(hasDiscordantSupport(read, junctionData, filterConfig.MaxDiscordantFragmentDistance))
-            return true;
-
         if(!read.cigar().isLeftClipped() && !read.cigar().isRightClipped())
             return false;
 
@@ -643,25 +669,51 @@ public class JunctionTracker
         {
             JunctionData junctionData = mJunctions.get(index);
 
-            if(junctionData.totalSupport() >= mFilterConfig.MinJunctionSupport)
-            {
+            if(junctionHasSupport(junctionData))
                 ++index;
-                continue;
-            }
-
-            // check for a hotspot match
-            boolean matchesHotspot = junctionData.RemoteJunctions.stream()
-                    .anyMatch(x -> mHotspotCache.matchesHotspot(
-                            mRegion.Chromosome, x.Chromosome, junctionData.Position, x.Position, junctionData.Orientation, x.Orientation));
-
-            if(matchesHotspot && junctionData.totalSupport() >= MIN_HOTSPOT_JUNCTION_SUPPORT)
-            {
-                junctionData.markHotspot();
-                ++index;
-                continue;
-            }
-
-            mJunctions.remove(index);
+            else
+                mJunctions.remove(index);
         }
+    }
+
+    private boolean junctionHasSupport(final JunctionData junctionData)
+    {
+        // 1 junction read, 3 exact supporting reads altogether and 1 map-qual read
+        int junctionFrags = junctionData.JunctionGroups.size();
+
+        boolean hasPassingMapQualRead = junctionData.JunctionGroups.stream().anyMatch(x -> x.hasTypeAndMapQual(JUNCTION, MIN_MAP_QUALITY));
+
+        if(hasPassingMapQualRead && junctionFrags >= mFilterConfig.MinJunctionSupport)
+            return true;
+
+        // look in the exact matches for additional support
+        if(!hasPassingMapQualRead)
+        {
+            hasPassingMapQualRead = junctionData.SupportingGroups.stream().anyMatch(x -> x.hasTypeAndMapQual(EXACT_SUPPORT, MIN_MAP_QUALITY));
+        }
+
+        if(!hasPassingMapQualRead)
+            return false;
+
+        int exactSupportCount = (int) junctionData.SupportingGroups.stream()
+                .filter(x -> x.reads().stream().anyMatch(y -> y.readType() == EXACT_SUPPORT)).count();
+
+        if(junctionFrags + exactSupportCount >= mFilterConfig.MinJunctionSupport)
+            return true;
+
+        // check for a hotspot match
+        boolean matchesHotspot = junctionData.RemoteJunctions.stream()
+                .anyMatch(x -> mHotspotCache.matchesHotspot(
+                        mRegion.Chromosome, x.Chromosome, junctionData.Position, x.Position, junctionData.Orientation, x.Orientation));
+
+        if(matchesHotspot)
+        {
+            junctionData.markHotspot();
+
+            if(junctionFrags + exactSupportCount >= MIN_HOTSPOT_JUNCTION_SUPPORT)
+                return true;
+        }
+
+        return false;
     }
 }

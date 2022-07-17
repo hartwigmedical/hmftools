@@ -29,6 +29,7 @@ import com.hartwig.hmftools.svprep.reads.ReadFilterType;
 import com.hartwig.hmftools.svprep.reads.ReadGroup;
 import com.hartwig.hmftools.svprep.reads.ReadGroupStatus;
 import com.hartwig.hmftools.svprep.reads.ReadRecord;
+import com.hartwig.hmftools.svprep.reads.ReadType;
 import com.hartwig.hmftools.svprep.reads.RemoteJunction;
 
 import htsjdk.samtools.SAMRecord;
@@ -164,7 +165,7 @@ public class ResultsWriter
             String filename = mConfig.formFilename(JUNCTIONS);
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("Chromosome,Position,Orientation,JunctionFragments,SupportingFragments,LowMapQualFrags,Hotspot,InitialReadId");
+            writer.write("Chromosome,Position,Orientation,JunctionFrags,SupportFrags,DiscordantFrags,LowMapQualFrags,Hotspot,InitialReadId");
             writer.write(",RemoteJunctionCount,RemoteJunctions");
             writer.newLine();
 
@@ -187,12 +188,17 @@ public class ResultsWriter
         {
             for(JunctionData junctionData : junctions)
             {
-                int lowMapQualFrags = (int) junctionData.JunctionGroups.stream()
+                int lowMapQualFrags = (int)junctionData.JunctionGroups.stream()
                         .filter(x -> x.reads().stream().anyMatch(y -> y.filters() == ReadFilterType.MIN_MAP_QUAL.flag())).count();
 
-                mJunctionWriter.write(format("%s,%d,%d,%d,%d,%d,%s,%s",
+                int exactSupportFrags = (int)junctionData.SupportingGroups.stream()
+                        .filter(x -> x.reads().stream().anyMatch(y -> y.readType() == ReadType.EXACT_SUPPORT)).count();
+
+                int discordantFrags = junctionData.SupportingGroups.size() - exactSupportFrags;
+
+                mJunctionWriter.write(format("%s,%d,%d,%d,%d,%d,%d,%s,%s",
                         chromosome, junctionData.Position, junctionData.Orientation, junctionData.junctionFragmentCount(),
-                        junctionData.supportingFragmentCount(), lowMapQualFrags, junctionData.hotspot(), junctionData.InitialRead.id()));
+                        exactSupportFrags, discordantFrags, lowMapQualFrags, junctionData.hotspot(), junctionData.InitialRead.id()));
 
                 // RemoteChromosome:RemotePosition:RemoteOrientation;Fragments then separated by ';'
                 String remoteJunctionsStr = "";

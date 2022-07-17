@@ -35,10 +35,6 @@ public final class SvConstants
     public static final int MAX_FRAGMENT_LENGTH = 1500;
     public static final int DEFAULT_READ_LENGTH = 151;
 
-    // to confirm
-    public static short MULTI_MAP_QUALITY_THRESHOLD = 3; // multi-mapped fragments are given map quals of 3 or lower
-
     public static final ChrBaseRegion EXCLUDED_REGION_1_REF_37 = new ChrBaseRegion("2", 33141260, 33141700);
     public static final ChrBaseRegion EXCLUDED_REGION_1_REF_38 = new ChrBaseRegion("chr2", 32916190, 32916630);
-
 }
