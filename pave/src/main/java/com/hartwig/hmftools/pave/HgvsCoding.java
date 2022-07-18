@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
+import static com.hartwig.hmftools.common.gene.TranscriptCodingType.ENHANCER;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.NON_CODING;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_3P;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_5P;
@@ -52,7 +53,7 @@ public final class HgvsCoding
 
     public static String generate(final VariantData variant, final CodingContext codingContext)
     {
-        if(codingContext.RegionType == UPSTREAM) // undefined by the standard
+        if(codingContext.RegionType == UPSTREAM && codingContext.CodingType != ENHANCER) // undefined by the standard
             return "";
 
         StringBuilder sb = new StringBuilder();
@@ -88,7 +89,7 @@ public final class HgvsCoding
         if(codingContext.CodingEndsOnExonBoundary)
             return;
 
-        if(codingContext.CodingType == UTR_5P)
+        if(codingContext.CodingType == UTR_5P || codingContext.CodingType == ENHANCER)
             sb.append('-');
         else if(codingContext.CodingType == UTR_3P)
             sb.append('*');
@@ -327,14 +328,6 @@ public final class HgvsCoding
                 intronBaseEnd = nearestExon;
                 intronBaseStart = codingContext.RegionType == INTRONIC ? nearestExon - baseShift : nearestExon;
             }
-
-            /*
-            if(codingContext.Strand == NEG_STRAND && codingContext.CodingType == UTR_5P && codingContext.RegionType == EXONIC)
-            {
-                // may apply to both strands
-                codingBaseStart = codingBaseEnd + baseShift;
-            }
-            */
 
             addCodingBase(codingContext, codingBaseStart, sb, false);
 

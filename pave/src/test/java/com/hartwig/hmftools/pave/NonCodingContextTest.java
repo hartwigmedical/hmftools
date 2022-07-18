@@ -2,6 +2,7 @@ package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
+import static com.hartwig.hmftools.common.gene.TranscriptCodingType.ENHANCER;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.NON_CODING;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UNKNOWN;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_3P;
@@ -25,6 +26,7 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.THREE_PRI
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.UPSTREAM_GENE;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createSnv;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.generateAlt;
+import static com.hartwig.hmftools.pave.PaveConstants.PROMOTOR_UPSTREAM_GENE_IDS;
 
 import static junit.framework.TestCase.assertEquals;
 
@@ -304,6 +306,49 @@ public class NonCodingContextTest
         assertEquals(5, codingContext.ExonRank);
         assertEquals(11, codingContext.CodingBase);
         assertEquals(0, codingContext.NearestExonDistance);
+    }
+
+    @Test
+    public void testUpstreamPromotorVariant()
+    {
+        final MockRefGenome refGenome = new MockRefGenome();
+
+        final String refBases = generateRandomBases(800);
+
+        refGenome.RefGenomeMap.put(CHR_1, refBases);
+
+        int[] exonStarts = { 100, 200, 300, 400 };
+        Integer codingStart = Integer.valueOf(125);
+        Integer codingEnd = Integer.valueOf(425);
+
+        TranscriptData transData = createTransExons(
+                PROMOTOR_UPSTREAM_GENE_IDS.get(0), TRANS_ID_1, NEG_STRAND, exonStarts, 50, codingStart, codingEnd, true, "");
+
+        ImpactClassifier classifier = new ImpactClassifier(refGenome);
+
+        // upstream of coding end (start of transcript), within max coding distance range
+        int pos = 475;
+        VariantData var = createSnv(pos, refBases);
+
+        VariantTransImpact impact = classifier.classifyVariant(var, transData);
+        assertEquals(UPSTREAM_GENE, impact.topEffect());
+        assertEquals(ENHANCER, impact.codingContext().CodingType);
+        assertEquals(50, impact.codingContext().CodingBase);
+
+        HgvsCoding.generate(var, impact.codingContext());
+        assertEquals("c.-50G>C", impact.codingContext().Hgvs);
+
+        pos = 726;
+        var = createSnv(pos, refBases);
+
+        impact = classifier.classifyVariant(var, transData);
+        assertEquals(UPSTREAM_GENE, impact.topEffect());
+        assertEquals(UNKNOWN, impact.codingContext().CodingType);
+        assertEquals(0, impact.codingContext().CodingBase);
+
+        HgvsCoding.generate(var, impact.codingContext());
+        assertEquals("", impact.codingContext().Hgvs);
+
     }
 
     @Test

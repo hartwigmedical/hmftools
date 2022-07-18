@@ -6,7 +6,9 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.CODING;
+import static com.hartwig.hmftools.common.gene.TranscriptCodingType.ENHANCER;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.NON_CODING;
+import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UNKNOWN;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_3P;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_5P;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
@@ -17,6 +19,8 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.pave.PaveConstants.PROMOTOR_UPSTREAM_DISTANCE;
+import static com.hartwig.hmftools.pave.PaveConstants.PROMOTOR_UPSTREAM_GENE_IDS;
 import static com.hartwig.hmftools.pave.ProteinUtils.getOpenCodonBases;
 
 import com.hartwig.hmftools.common.gene.ExonData;
@@ -31,7 +35,7 @@ public final class CodingUtils
         setCodingContext(variant, transData, cc);
 
         // set pre-coding exonic bases separately since doesn't fit with way exons are iterated through
-        if(cc.CodingType == UTR_5P || cc.CodingType == UTR_3P)
+        if(cc.CodingType == UTR_5P || cc.CodingType == UTR_3P || cc.CodingType == ENHANCER)
             setUtrCodingExonicDistance(variant, transData, cc);
 
         if(variant.isDeletion() && cc.RegionType == EXONIC)
@@ -89,6 +93,10 @@ public final class CodingUtils
         if(variant.altBasesBelow(transData.TransStart) || variant.altBasesAbove(transData.TransEnd))
         {
             cc.RegionType = UPSTREAM;
+
+            if(PROMOTOR_UPSTREAM_GENE_IDS.contains(transData.GeneId))
+                cc.CodingType = ENHANCER;
+
             return;
         }
 
@@ -388,16 +396,16 @@ public final class CodingUtils
     public static void setUtrCodingExonicDistance(final VariantData variant, final TranscriptData transData, final CodingContext cc)
     {
         // for positions in the UTR, determine the exonic distance between the position and the start or end of the coding region
-        // 5'UTR position +ve strand transcript,distance from position to coding start
+        // 5'UTR position +ve strand transcript, distance from position to coding start
         // 3'UTR position +ve strand, distance from coding end to position
         // 5'UTR position -ve strand, distance from coding end to position
         // 3'UTR position -ve strand, distance from positon to coding start
         boolean posStrand = transData.posStrand();
-        boolean posBeforeCodingStart = (posStrand == (cc.CodingType == UTR_5P));
+        boolean posBeforeCodingStart = (posStrand == (cc.CodingType == UTR_5P || cc.CodingType == ENHANCER));
 
         int codingStart = transData.CodingStart;
         int codingEnd = transData.CodingEnd;
-        int position = posStrand ? variant.Position : variant.EndPosition; // which ought to be used?
+        int position = posStrand ? variant.Position : variant.EndPosition;
         int totalCodingBases = 0;
         boolean codingStartsEndsOnExonBoundary = false;
 
@@ -459,6 +467,22 @@ public final class CodingUtils
                 cc.CodingBase = 1; // since zero-based
             else
                 cc.CodingBase = totalCodingBases;
+        }
+
+        if(cc.CodingType == ENHANCER)
+        {
+            // include the distance from the transcript start to the position
+            if(posStrand)
+                cc.CodingBase += transData.TransStart - position;
+            else
+                cc.CodingBase += position - transData.TransEnd;
+
+            // exclude this type if too far upstream
+            if(cc.CodingBase > PROMOTOR_UPSTREAM_DISTANCE)
+            {
+                cc.CodingBase = 0;
+                cc.CodingType = UNKNOWN;
+            }
         }
     }
 }
