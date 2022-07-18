@@ -3,7 +3,9 @@ package com.hartwig.hmftools.serve.sources.ckb;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
+import java.util.Map;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.ckb.classification.CkbClassificationConfig;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
@@ -16,6 +18,7 @@ import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 import com.hartwig.hmftools.serve.refgenome.RefGenomeResourceTestFactory;
 import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentApproachCurationType;
 import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentApprochCurationEntry;
+import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentApprochCurationEntryKey;
 import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentAprroachCuration;
 import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentAprroachCurationTest;
 
@@ -30,17 +33,20 @@ public class CkbExtractorTest {
         EventClassifierConfig config = CkbClassificationConfig.build();
         CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(config, RefGenomeResourceTestFactory.buildTestResource37());
 
-        List<RelevantTreatmentApprochCurationEntry> curationEntries = Lists.newArrayList();
-        curationEntries.add(RelevantTreatmentAprroachCurationTest.canGenerateCurationEntry(
-                RelevantTreatmentApproachCurationType.TREATMENT_APPROACH_CURATION,
-                "A",
-                "A",
-                "BRAF amplification",
-                EvidenceLevel.A,
-                EvidenceDirection.RESPONSIVE,
-                "AA"));
-        RelevantTreatmentAprroachCuration curator =
-                new RelevantTreatmentAprroachCuration(curationEntries);
+        Map<RelevantTreatmentApprochCurationEntryKey, RelevantTreatmentApprochCurationEntry> curationEntries = Maps.newHashMap();
+        curationEntries.put(RelevantTreatmentAprroachCurationTest.canGenerateCurationKey("A",
+                        "A",
+                        "BRAF amplification",
+                        EvidenceLevel.A,
+                        EvidenceDirection.RESPONSIVE),
+                RelevantTreatmentAprroachCurationTest.canGenerateCurationEntry(RelevantTreatmentApproachCurationType.TREATMENT_APPROACH_CURATION,
+                        "A",
+                        "A",
+                        "BRAF amplification",
+                        EvidenceLevel.A,
+                        EvidenceDirection.RESPONSIVE,
+                        "AA"));
+        RelevantTreatmentAprroachCuration curator = new RelevantTreatmentAprroachCuration(curationEntries);
 
         List<CkbEntry> ckbEntries = Lists.newArrayList();
         ckbEntries.add(create("KIT", "amp", "KIT amp", "sensitive", "Actionable"));

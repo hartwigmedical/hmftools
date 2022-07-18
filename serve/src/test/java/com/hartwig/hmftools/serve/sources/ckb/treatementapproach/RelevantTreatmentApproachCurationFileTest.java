@@ -3,7 +3,7 @@ package com.hartwig.hmftools.serve.sources.ckb.treatementapproach;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Map;
 
 import com.google.common.io.Resources;
 
@@ -16,8 +16,8 @@ public class RelevantTreatmentApproachCurationFileTest {
 
     @Test
     public void canReadCkbDrugClassCurationTsv() throws IOException {
-        List<RelevantTreatmentApprochCurationEntry> treatmentApproachList =
+        Map<RelevantTreatmentApprochCurationEntryKey, RelevantTreatmentApprochCurationEntry> treatmentApproachMap =
                 RelevantTreatmentApproachCurationFile.read(TEST_CKB_DRUGCLASS_CURATION_TSV);
-        assertEquals(4, treatmentApproachList.size());
+        assertEquals(4, treatmentApproachMap.size());
     }
 }

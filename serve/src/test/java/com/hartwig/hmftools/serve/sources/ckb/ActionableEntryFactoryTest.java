@@ -7,8 +7,10 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
@@ -17,6 +19,7 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.cancertype.CancerTypeConstants;
 import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentApproachCurationType;
 import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentApprochCurationEntry;
+import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentApprochCurationEntryKey;
 import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentAprroachCuration;
 import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentAprroachCurationTest;
 
@@ -28,15 +31,19 @@ public class ActionableEntryFactoryTest {
 
     @Test
     public void canCreateActionableEntries() {
-        List<RelevantTreatmentApprochCurationEntry> curationEntries = Lists.newArrayList();
-        curationEntries.add(RelevantTreatmentAprroachCurationTest.canGenerateCurationEntry(
-                RelevantTreatmentApproachCurationType.TREATMENT_APPROACH_CURATION,
-                "A",
-                "A",
-                "BRAF amplification",
-                EvidenceLevel.A,
-                EvidenceDirection.RESPONSIVE,
-                "AA"));
+        Map<RelevantTreatmentApprochCurationEntryKey, RelevantTreatmentApprochCurationEntry> curationEntries = Maps.newHashMap();
+        curationEntries.put(RelevantTreatmentAprroachCurationTest.canGenerateCurationKey("A",
+                        "A",
+                        "BRAF amplification",
+                        EvidenceLevel.A,
+                        EvidenceDirection.RESPONSIVE),
+                RelevantTreatmentAprroachCurationTest.canGenerateCurationEntry(RelevantTreatmentApproachCurationType.TREATMENT_APPROACH_CURATION,
+                        "A",
+                        "A",
+                        "BRAF amplification",
+                        EvidenceLevel.A,
+                        EvidenceDirection.RESPONSIVE,
+                        "AA"));
         RelevantTreatmentAprroachCuration curator = new RelevantTreatmentAprroachCuration(curationEntries);
 
         CkbEntry entryDeletion =

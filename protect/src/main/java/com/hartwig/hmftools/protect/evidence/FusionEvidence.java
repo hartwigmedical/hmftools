@@ -34,7 +34,7 @@ public class FusionEvidence {
         this.personalizedEvidenceFactory = personalizedEvidenceFactory;
         this.actionablePromiscuous = actionableGenes.stream()
                 .filter(x -> x.event().equals(GeneLevelEvent.FUSION) || x.event().equals(GeneLevelEvent.ACTIVATION) || x.event()
-                        .equals(GeneLevelEvent.ANY_MUTATION) || x.event().equals(GeneLevelEvent.OVEREXPRESSION))
+                        .equals(GeneLevelEvent.ANY_MUTATION))
                 .collect(Collectors.toList());
         this.actionableFusions = actionableFusions;
         this.knownFusionCache = fusionCache;
@@ -65,11 +65,6 @@ public class FusionEvidence {
             }
             if ((promiscuous.event().equals(GeneLevelEvent.ACTIVATION) || promiscuous.event().equals(GeneLevelEvent.ANY_MUTATION))
                     && match(fusion, promiscuous)) {
-                evidences.add(evidence(fusion, promiscuous));
-            }
-
-            //TODO: Discuss if we want this
-            if (promiscuous.event().equals(GeneLevelEvent.OVEREXPRESSION) && match(fusion, promiscuous)) {
                 evidences.add(evidence(fusion, promiscuous));
             }
         }
