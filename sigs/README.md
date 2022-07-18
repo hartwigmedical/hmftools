@@ -57,3 +57,7 @@ java -jar sigs.jar \
    -upload_to_db \
    -output_dir /output_dir/ \
 ```
+
+# Version History and Download Links
+- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/sigs-v1.0)
+- [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/sigs-v1.1)
