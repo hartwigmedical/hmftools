@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage;
 
-import static java.lang.Math.round;
+import com.hartwig.hmftools.common.utils.MemoryCalcs;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -11,17 +11,12 @@ public class SageCommon
 
     public static final Logger SG_LOGGER = LogManager.getLogger(SageCommon.class);
 
-    private static final long MEGABYTE = 1024L * 1024L;
-
     public static int calcMemoryUsage(boolean runGc)
     {
-        Runtime runtime = Runtime.getRuntime();
-
         if(runGc)
-            runtime.gc();
+            System.gc();
 
-        long memory = runtime.totalMemory() - runtime.freeMemory();
-        return round(memory / MEGABYTE);
+        return MemoryCalcs.calcMemoryUsage();
     }
 
     public static void logMemoryUsage(final SageConfig config, final String stage, int memory)
