@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_GERMLINE_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SOMATIC_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_VCF_SUFFIX;
@@ -10,6 +12,7 @@ import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.MemoryCalcs.calcMemoryUsage;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_URL;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.hasDatabaseConfig;
@@ -171,6 +174,8 @@ public class PurpleApplication
 
     public void run()
     {
+        long startTimeMs = System.currentTimeMillis();
+
         try
         {
             processSample(mConfig.ReferenceId, mConfig.TumorId);
@@ -180,7 +185,8 @@ public class PurpleApplication
             mExecutorService.shutdown();
         }
 
-        PPL_LOGGER.info("Purple complete");
+        long timeTakenMs = System.currentTimeMillis() - startTimeMs;
+        PPL_LOGGER.info("Purple complete, runTime({})", format("%.1fs", timeTakenMs/1000.0));
     }
 
     private SampleData loadSampleData(final String referenceId, final String tumorId, final SampleDataFiles sampleDataFiles) throws Exception
@@ -231,6 +237,8 @@ public class PurpleApplication
 
                 if(sampleData == null)
                     System.exit(1);
+
+                PPL_LOGGER.debug("post-data-loading memory({}mb)", calcMemoryUsage());
 
                 performFit(referenceId, tumorSample, sampleDataFiles, sampleData);
             }
@@ -339,6 +347,8 @@ public class PurpleApplication
 
             geneCopyNumbers.addAll(GeneCopyNumberFactory.geneCopyNumbers(mReferenceData.GeneTransCache, copyNumbers));
 
+            PPL_LOGGER.debug("post-fit memory({}mb)", calcMemoryUsage());
+
             final List<PeakModel> somaticPeaks = Lists.newArrayList();
 
             PPL_LOGGER.info("modelling somatic peaks");
@@ -359,6 +369,8 @@ public class PurpleApplication
             somaticStream = new SomaticStream(mConfig, mReferenceData, somaticCache, somaticPeaks);
 
             somaticStream.processAndWrite(purityAdjuster, copyNumbers, enrichedObservedRegions);
+
+            PPL_LOGGER.debug("post-enrichment memory({}mb)", calcMemoryUsage());
 
             sampleData.SvCache.write(purityAdjuster, copyNumbers, mConfig.tumorOnlyMode());
 

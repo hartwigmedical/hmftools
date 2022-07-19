@@ -2,6 +2,7 @@ package com.hartwig.hmftools.purple;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.CIPOS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SVTYPE;
 
 import java.io.File;
@@ -166,8 +167,6 @@ public class StructuralVariantCache
                     refEnricher.accept(variant);
                 }
 
-                // enriched(purityAdjuster, copyNumbers).forEach(refEnricher);
-
                 refEnricher.flush();
             }
         }
@@ -255,7 +254,7 @@ public class StructuralVariantCache
     {
         return (int) mVariants.segmentationVariants()
                 .stream()
-                .filter(x -> x.filter() == null || Objects.equals(x.filter(), "PASS"))
+                .filter(x -> x.filter() == null || Objects.equals(x.filter(), PASS))
                 .filter(x -> !x.type().equals(StructuralVariantType.INF))
                 .filter(x -> !x.type().equals(StructuralVariantType.SGL))
                 .count();

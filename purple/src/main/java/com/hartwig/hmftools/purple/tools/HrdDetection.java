@@ -289,8 +289,9 @@ public class HrdDetection
                     {
                         if(!copyNumbersEqual(segmentCn, previousSegmentCn))
                         {
-                            PPL_LOGGER.trace(format("chr(%s) segment break: previous(cn=%.2f) current(len=%d cn=%.2f)",
-                                    copyNumber.chromosome(), previousSegmentCn, segmentLength, segmentCn));
+                            PPL_LOGGER.trace(format("chr(%s) segment break: previous(cn=%.2f) current segment(%d-%d len=%d cn=%.2f)",
+                                    copyNumber.chromosome(), previousSegmentCn,
+                                    copyNumber.start(), copyNumber.end(),segmentLength, segmentCn));
 
                             ++segmentBreaks;
                         }

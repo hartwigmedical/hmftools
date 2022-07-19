@@ -159,7 +159,8 @@ public class SomaticStream
 
             boolean tumorOnly = mConfig.tumorOnlyMode();
 
-            int flushCount = 10000;
+            int flushCount = 100000;
+            int gcCount = 250000;
             int varCount = 0;
 
             for(SomaticVariant variant : mSomaticVariants.variants())
@@ -173,6 +174,9 @@ public class SomaticStream
                 if(varCount > 0 && (varCount % flushCount) == 0)
                 {
                     PPL_LOGGER.debug("enriched {} somatic variants", varCount);
+
+                    if((varCount % gcCount) == 0)
+                        System.gc();
                 }
             }
 

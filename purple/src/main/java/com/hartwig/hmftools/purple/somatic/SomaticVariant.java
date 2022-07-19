@@ -14,7 +14,6 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public class SomaticVariant implements GenomePosition
 {
-    private final VariantContext mOriginalContext;
     private VariantContext mContext;
 
     private final String mChromosome;
@@ -24,10 +23,11 @@ public class SomaticVariant implements GenomePosition
 
     public SomaticVariant(final VariantContext context, final String sampleId)
     {
-        mOriginalContext = context;
-        setContext(context);
-        mChromosome = mOriginalContext.getContig();
-        mPosition = mOriginalContext.getStart();
+        mContext = context;
+        mDecorator = new VariantContextDecorator(mContext);
+
+        mChromosome = mContext.getContig();
+        mPosition = mContext.getStart();
         mTumorAllelicDepth = sampleId != null ? mDecorator.allelicDepth(sampleId) :  null;
     }
 

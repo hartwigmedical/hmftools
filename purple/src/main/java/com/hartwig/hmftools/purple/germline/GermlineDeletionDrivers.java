@@ -221,7 +221,7 @@ public class GermlineDeletionDrivers
             if(overlappedExons.isEmpty())
                 continue;
 
-            PPL_LOGGER.debug("region({}: {}-{}) overlaps gene({}) exons({})",
+            PPL_LOGGER.trace("region({}: {}-{}) overlaps gene({}) exons({})",
                     region.chromosome(), region.start(), region.end(), geneData.GeneName, overlappedExons.size());
 
             // take the first if more than one overlapping gene
