@@ -15,7 +15,6 @@ Component | Description | Current Version
 [Cobalt](./cobalt/README.md) | Determines the read depth ratios for Purple's copy number fit | [1.13](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.13)
 [Cuppa](./cuppa/README.md) | Tissue of origin prediction from WGS/WTS | [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.6)
 [Gripss](./gripss/README.md) | SV filtering | [2.1](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v2.1) 
-[Gripss](./gripss/README.md) | SV filtering | [2.1](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v2.1) 
 [Lilac](./lilac/README.md) | HLA typing | [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.2)
 [Linx](./linx/README.md) | SV annotation, clustering & chaining, fusion and disruption calling | [1.19](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.19)
 [Pave](./pave/README.md) | Point mutation annotation and gene impact | [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/pave-v1.2)
