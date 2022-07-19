@@ -339,7 +339,8 @@ public class PartitionSlicer
 
             for(ExpectedRead missedRead : entry.getValue())
             {
-                boolean inBlacklist = mConfig.Blacklist.inBlacklistLocation(missedRead.Chromosome, missedRead.Position);
+                boolean inBlacklist = mConfig.Blacklist.inBlacklistLocation(
+                        missedRead.Chromosome, missedRead.Position, missedRead.Position + mConfig.ReadLength);
 
                 if(inBlacklist)
                 {
@@ -376,7 +377,7 @@ public class PartitionSlicer
             if(sliceTime > 2)
             {
                 SV_LOGGER.debug("slice time({}) for {} missed reads, location({}:{})",
-                        format("%.3f", sliceTime), positionReads.size(), mRegion.Chromosome, position);
+                        format("%.3f", sliceTime), missedReadIds.size(), mRegion.Chromosome, position);
             }
         }
 

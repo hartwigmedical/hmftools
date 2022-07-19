@@ -147,6 +147,13 @@ public class CombinedReadGroups
         if(unprocessedPartitions.isEmpty())
             return;
 
+        // don't store reads which fall in blacklist regions
+        if(expectedRead != null && mConfig.Blacklist.inBlacklistLocation(
+                expectedRead.Chromosome, expectedRead.Position, expectedRead.Position + mConfig.ReadLength))
+        {
+            return;
+        }
+
         Map<String,List<ExpectedRead>> partitionReadGroupReads = mChrPartitionReadGroupReads.get(readChrPartition);
 
         if(partitionReadGroupReads == null)

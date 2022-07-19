@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.svprep;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 
 import java.io.BufferedReader;
@@ -25,10 +26,10 @@ public class BlacklistLocations
 
     public List<BaseRegion> getRegions(final String chromosome) { return mChrLocationsMap.get(chromosome); }
 
-    public boolean inBlacklistLocation(final String chromosome, final int position)
+    public boolean inBlacklistLocation(final String chromosome, final int posStart, int posEnd)
     {
         List<BaseRegion> regions = mChrLocationsMap.get(chromosome);
-        return regions != null ? regions.stream().anyMatch(x -> x.containsPosition(position)) : false;
+        return regions != null ? regions.stream().anyMatch(x -> positionsOverlap(x.start(), x.end(), posStart, posEnd)) : false;
     }
 
     public void addRegion(final String chromosome, final BaseRegion region)
