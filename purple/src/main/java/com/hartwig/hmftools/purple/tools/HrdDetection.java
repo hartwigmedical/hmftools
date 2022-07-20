@@ -4,14 +4,20 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 public class HrdDetection
 {
@@ -23,6 +29,8 @@ public class HrdDetection
     private static final int DEFAULT_SEGMENT_IMBALANCE_LENGTH = 11_000_000;
     private static final int DEFAULT_LOH_MIN_LENGTH = 15_000_000;
     private static final int DEFAULT_SEGMENT_BREAK_LENGTH = 10_000_000;
+    private static final int DEFAULT_SEGMENT_BREAK_MIN_LENGTH = 100_000;
+    private static final int DEFAULT_SEGMENT_BREAK_COMBINE_LENGTH = 3_000_000;
     private static final double DEFAULT_PLOIDY_FACTOR = 15.5;
 
     private static final int LOH_SHORT_INSERT_LENGTH = 1000;
@@ -262,65 +270,220 @@ public class HrdDetection
         double previousSegmentCn = 0;
         boolean hasPreviousSegment = false;
 
+        // covert to a simpler and modifiable form, and merge small segments
+        Map<String,List<CopyNumberSegment>> cnSegmentsMap = Maps.newHashMap();
+
+        CopyNumberSegment currentSegment = null;
+        List<CopyNumberSegment> currentSegments = null;
+
+        // first create segments if the length exceeds the minimum 100K length
         for(PurpleCopyNumber copyNumber : copyNumbers)
         {
-            boolean startNewSegment = false;
+            if(currentSegment == null || !currentSegment.chromosome().equals(copyNumber.chromosome()))
+            {
+                currentSegments = Lists.newArrayList();
+                String chromosome = RefGenomeFunctions.stripChrPrefix(copyNumber.chromosome());
+                cnSegmentsMap.put(chromosome, currentSegments);
 
-            if(copyNumber.segmentStartSupport() == SegmentSupport.TELOMERE
-            || copyNumber.segmentStartSupport() == SegmentSupport.CENTROMERE)
-            {
-                startNewSegment = true;
-            }
-            else if(copyNumber.segmentEndSupport() == SegmentSupport.CENTROMERE
-            || copyNumber.segmentEndSupport() == SegmentSupport.TELOMERE)
-            {
-                // don't compare the reigons straddling the centromere or onto the next chromosome
-                cnBaseTotal = 0;
+                currentSegment = new CopyNumberSegment(copyNumber);
+                currentSegments.add(currentSegment);
             }
             else
             {
-                int previousSegmentEnd = copyNumber.start() - 1;
-                int segmentLength = previousSegmentEnd - segmentStart;
-
-                if(segmentLength >= mSegmentBreakLength)
+                if(copyNumber.end() - currentSegment.start() < DEFAULT_SEGMENT_BREAK_MIN_LENGTH
+                || copyNumber.length() < DEFAULT_SEGMENT_BREAK_MIN_LENGTH)
                 {
-                    double segmentCn = cnBaseTotal / segmentLength;
-                    if(hasPreviousSegment)
-                    {
-                        if(!copyNumbersEqual(segmentCn, previousSegmentCn))
-                        {
-                            PPL_LOGGER.trace(format("chr(%s) segment break: previous(cn=%.2f) current segment(%d-%d len=%d cn=%.2f)",
-                                    copyNumber.chromosome(), previousSegmentCn,
-                                    copyNumber.start(), copyNumber.end(),segmentLength, segmentCn));
+                    // extend the current segment
+                    currentSegment.setEnd(copyNumber.end());
+                }
+                else
+                {
+                    currentSegment = new CopyNumberSegment(copyNumber);
+                    currentSegments.add(currentSegment);
+                }
+            }
+        }
 
-                            ++segmentBreaks;
+        for(List<CopyNumberSegment> cnSegments : cnSegmentsMap.values())
+        {
+            // next merge segments with small CN transitions
+            int index = 0;
+            while(index < cnSegments.size() - 1)
+            {
+                CopyNumberSegment segment = cnSegments.get(index);
+                CopyNumberSegment nextSegment = cnSegments.get(index + 1);
+
+                if(!copyNumbersEqual(segment.CopyNumber, nextSegment.CopyNumber))
+                {
+                    ++index;
+                    continue;
+                }
+
+                // merge and average these segments
+                mergeSegments(segment, nextSegment);
+                cnSegments.remove(index + 1);
+
+                // stay with current
+            }
+        }
+
+        // now iteratively merge regions less than 3MB if the surrounding regions have no net change
+        for(List<CopyNumberSegment> cnSegments : cnSegmentsMap.values())
+        {
+            while(cnSegments.size() > 1)
+            {
+                CopyNumberSegment lowerSegment = null;
+                CopyNumberSegment upperSegment = null;
+                CopyNumberSegment shortedSegment = null;
+
+                for(int i = 0; i < cnSegments.size(); ++i)
+                {
+                    CopyNumberSegment segment = cnSegments.get(i);
+
+                    if(segment.length() > DEFAULT_SEGMENT_BREAK_COMBINE_LENGTH)
+                        continue;
+
+                    CopyNumberSegment prevSegment = i > 0 ? cnSegments.get(i - 1) : null;
+                    CopyNumberSegment nextSegment = i < cnSegments.size() - 1 ? cnSegments.get(i + 1) : null;
+
+                    if(shortedSegment == null || shortedSegment.length() > segment.length())
+                    {
+                        shortedSegment = segment;
+                        lowerSegment = prevSegment;
+                        upperSegment = nextSegment;
+                    }
+                }
+
+                if(shortedSegment == null) // no segments to merge
+                    break;
+
+                cnSegments.remove(shortedSegment);
+
+                // if the 2 surrounding regions are within CN threshold then merge, else assign the removed region equally amongst the surrounding regions
+                if(upperSegment != null && lowerSegment != null)
+                {
+                    if(copyNumbersEqual(upperSegment.CopyNumber, lowerSegment.CopyNumber))
+                    {
+                        mergeSegments(lowerSegment, upperSegment);
+                        cnSegments.remove(upperSegment);
+                    }
+                    else
+                    {
+                        lowerSegment.setEnd(shortedSegment.end());
+                    }
+                }
+                else if(lowerSegment != null)
+                {
+                    lowerSegment.setEnd(shortedSegment.end());
+                    lowerSegment.Segments[SE_END] = shortedSegment.segmentSupportEnd();
+                }
+                else if(upperSegment != null)
+                {
+                    upperSegment.setStart(shortedSegment.start());
+                    upperSegment.Segments[SE_START] = shortedSegment.segmentSupportStart();
+                }
+            }
+        }
+
+        if(PPL_LOGGER.isTraceEnabled())
+        {
+            PPL_LOGGER.trace("all segments:");
+
+            for(HumanChromosome chromosome : HumanChromosome.values())
+            {
+                List<CopyNumberSegment> cnSegments = cnSegmentsMap.get(chromosome.toString());
+
+                if(cnSegments == null)
+                    continue;
+
+                for(CopyNumberSegment segment : cnSegments)
+                {
+                    PPL_LOGGER.trace(format("segment: %s", segment));
+                }
+            }
+
+            PPL_LOGGER.trace("end all segments");
+        }
+
+        // now count up the breaks
+        for(HumanChromosome chromosome : HumanChromosome.values())
+        {
+            List<CopyNumberSegment> cnSegments = cnSegmentsMap.get(chromosome.toString());
+
+            if(cnSegments == null)
+                continue;
+
+            for(CopyNumberSegment segment : cnSegments)
+            {
+                boolean startNewSegment = false;
+
+                if(segment.segmentSupportStart() == SegmentSupport.TELOMERE || segment.segmentSupportStart() == SegmentSupport.CENTROMERE)
+                {
+                    startNewSegment = true;
+                }
+                else if(segment.segmentSupportEnd() == SegmentSupport.CENTROMERE || segment.segmentSupportEnd() == SegmentSupport.TELOMERE)
+                {
+                    // don't compare the regions straddling the centromere or onto the next chromosome
+                    cnBaseTotal = 0;
+                }
+                else
+                {
+                    int previousSegmentEnd = segment.start() - 1;
+                    int segmentLength = previousSegmentEnd - segmentStart;
+
+                    if(segmentLength >= mSegmentBreakLength)
+                    {
+                        double segmentCn = cnBaseTotal / segmentLength;
+                        if(hasPreviousSegment)
+                        {
+                            if(!copyNumbersEqual(segmentCn, previousSegmentCn))
+                            {
+                                PPL_LOGGER.trace(format("chr(%s) segment break: previous(cn=%.2f) current segment: %s",
+                                        segment.chromosome(), previousSegmentCn, segment.toString()));
+
+                                ++segmentBreaks;
+                            }
                         }
+
+                        startNewSegment = true;
+                        previousSegmentCn = segmentCn;
                     }
 
-                    startNewSegment = true;
-                    previousSegmentCn = segmentCn;
+                    if(cnBaseTotal > 0)
+                    {
+                        previousSegmentCn = cnBaseTotal / segmentLength;
+                    }
                 }
 
-                if(cnBaseTotal > 0)
+                if(startNewSegment)
                 {
-                    previousSegmentCn = cnBaseTotal / segmentLength;
+                    segmentStart = segment.start();
+                    cnBaseTotal = 0;
+                    hasPreviousSegment = true;
                 }
+
+                cnBaseTotal += segment.length() * segment.CopyNumber;
             }
-
-            if(startNewSegment)
-            {
-                segmentStart = copyNumber.start();
-                cnBaseTotal = 0;
-                hasPreviousSegment = true;
-            }
-
-            cnBaseTotal += copyNumber.length() * copyNumber.averageTumorCopyNumber();
-
         }
 
         double adjustedSegmentBreaks = segmentBreaks - mPloidyModifier * ploidy;
 
+        // PPL_LOGGER.debug(format("segmentBreaks(%d) adjusted(%.1f) ploidy(%.1f)", segmentBreaks, adjustedSegmentBreaks, ploidy));
+
         return adjustedSegmentBreaks;
+    }
+
+    private static void mergeSegments(final CopyNumberSegment lower, final CopyNumberSegment upper)
+    {
+        if(lower.start() > upper.start())
+            return;
+
+        long combinedLength = lower.length() + upper.length();
+        double totalCopyNumber = lower.length() * lower.CopyNumber + upper.length() * upper.CopyNumber;
+        double averageCopyNumber = totalCopyNumber / combinedLength;
+        lower.setEnd(upper.end());
+        lower.Segments[SE_END] = upper.segmentSupportEnd();
+        lower.CopyNumber = averageCopyNumber;
     }
 
     private static boolean copyNumbersEqual(double cn1, double cn2)
@@ -332,6 +495,39 @@ public class HrdDetection
             return false;
 
         return true;
+    }
+
+    private class CopyNumberSegment
+    {
+        public final ChrBaseRegion Region;
+        public double CopyNumber;
+        public final SegmentSupport[] Segments;
+
+        public CopyNumberSegment(final PurpleCopyNumber copyNumber)
+        {
+            Region = new ChrBaseRegion(copyNumber.chromosome(), copyNumber.start(), copyNumber.end());
+            CopyNumber = copyNumber.averageTumorCopyNumber();
+            Segments = new SegmentSupport[] { copyNumber.segmentStartSupport(), copyNumber.segmentEndSupport() };
+        }
+
+        public String chromosome() { return Region.Chromosome; }
+
+        public int start() { return Region.start(); }
+        public void setStart(int pos) { Region.setStart(pos); }
+
+        public int end() { return Region.end(); }
+        public void setEnd(int pos) { Region.setEnd(pos); }
+
+        public int length() { return Region.baseLength(); }
+
+        public SegmentSupport segmentSupportStart() { return Segments[SE_START]; }
+        public SegmentSupport segmentSupportEnd() { return Segments[SE_END]; }
+
+        public String toString()
+        {
+            return format("region(%s) segs(%s-%s) copyNumber(%.1f) length(%d)",
+                Region.toString(), Segments[SE_START], Segments[SE_END], CopyNumber, length());
+        }
     }
 
 }
