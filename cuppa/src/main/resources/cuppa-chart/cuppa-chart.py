@@ -3,6 +3,7 @@
 try:
     # import relevant packages ##
     import pandas as pd
+    import traceback
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
@@ -16,6 +17,7 @@ try:
     import main.create_chart as create_chart
 except:
     print('[ERROR] Dependencies of CUPPA-chart not existing. Please check your environment. CUPPA-chart can not run.')
+    print(traceback.format_exc())
     exit(1)
 
 

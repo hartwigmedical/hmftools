@@ -8,6 +8,7 @@ from math import pi
 import seaborn as sns
 import sys
 import os
+import traceback
 
 ## set figure settings ##
 SMALL_SIZE = 11
@@ -146,6 +147,7 @@ def add_barcharts(df_bars, df_spider, fig, gs):
         return fig, gs
     except:
         print('[ERROR] the barcharts could not be added to the chart. No output files generated. CUPPA-chart will end.')
+        print(traceback.format_exc())
         sys.exit(1)
 
 
