@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.geneutils.drivers;
 
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -7,6 +9,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
 import com.hartwig.hmftools.common.pathogenic.Pathogenicity;
 
@@ -29,18 +32,23 @@ public final class GermlineHotspotVCF
 {
     private static final String WHITELIST_FLAG = "WHITELIST";
 
-    public static void write(final String inputFile, final String outputFile, final List<String> genes) throws IOException
+    public static void write(
+            final RefGenomeVersion refGenomeVersion, final String inputFile, final String outputFile, final List<String> genes) throws IOException
     {
         // READ
         final VCFFileReader reader = new VCFFileReader(new File(inputFile), false);
         final VCFHeader readerHeader = reader.getFileHeader();
         final String assembly = readerHeader.getMetaDataLine("reference").getValue();
-        if(!assembly.equals("GRCh37") && !assembly.equals("GRCh38"))
+
+        if((refGenomeVersion == RefGenomeVersion.V37 && !assembly.equals("GRCh37"))
+        || (refGenomeVersion == RefGenomeVersion.V38 && !assembly.equals("GRCh38")))
         {
+            GU_LOGGER.error("clinvar file({}) has incorrect ref genome version({}) vs required({})",
+                    inputFile, assembly, refGenomeVersion);
+
             throw new IllegalArgumentException();
         }
 
-        final String contigPrefix = assembly.equals("GRCh38") ? "chr" : Strings.EMPTY;
         final List<VariantContext> variants = Lists.newArrayList();
 
         for(VariantContext context : reader)
@@ -59,10 +67,10 @@ public final class GermlineHotspotVCF
             if(!variantGenes.isEmpty() && isPathogenicOrLikelyPathogenic(pathogenicity) && context.getAlleles().size() == 2)
             {
                 final String clinSigConf = PathogenicSummaryFactory.clnSigConf(context);
-                VariantContextBuilder builder = new VariantContextBuilder("clinvar",
-                        contigPrefix + context.getContig(),
-                        context.getStart(),
-                        context.getEnd(),
+                String chromosome = refGenomeVersion.versionedChromosome(context.getContig());
+
+                VariantContextBuilder builder = new VariantContextBuilder(
+                        "clinvar", chromosome, context.getStart(), context.getEnd(),
                         context.getAlleles()).attribute("GENEINFO", geneInfo)
                         .attribute(PathogenicSummaryFactory.CLNSIG, PathogenicSummaryFactory.clnSig(context));
 

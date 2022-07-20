@@ -255,7 +255,7 @@ public class GenerateDriverGeneFiles
 
         try
         {
-            GermlineHotspotVCF.write(clinvarFile, germlineHotspotFile, germlineHotspotGenes);
+            GermlineHotspotVCF.write(refGenomeVersion, clinvarFile, germlineHotspotFile, germlineHotspotGenes);
         }
         catch(IOException e)
         {
