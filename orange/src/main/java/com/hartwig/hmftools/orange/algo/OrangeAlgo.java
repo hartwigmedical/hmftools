@@ -318,7 +318,7 @@ public class OrangeAlgo {
     @NotNull
     private static CuppaData loadCuppaData(@NotNull OrangeConfig config) throws IOException {
         LOGGER.info("Loading CUPPA from {}", new File(config.cuppaResultCsv()).getParent());
-        List<CuppaEntry> cuppaEntries = CuppaDataFile.read(config.cuppaResultCsv());
+        List<CuppaEntry> cuppaEntries = CuppaDataFile.readEntries(config.cuppaResultCsv());
         LOGGER.info(" Loaded {} entries from {}", cuppaEntries.size(), config.cuppaResultCsv());
 
         CuppaData cuppaData = CuppaFactory.create(cuppaEntries);

@@ -5,13 +5,13 @@ import static java.lang.Math.min;
 import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
-import static com.hartwig.hmftools.cup.common.CategoryType.COMBINED;
-import static com.hartwig.hmftools.cup.common.ClassifierType.FEATURE;
-import static com.hartwig.hmftools.cup.common.ClassifierType.applyMinScore;
+import static com.hartwig.hmftools.common.cuppa.CategoryType.COMBINED;
+import static com.hartwig.hmftools.common.cuppa.ClassifierType.FEATURE;
+import static com.hartwig.hmftools.common.cuppa.ClassifierType.applyMinScore;
 import static com.hartwig.hmftools.cup.common.CupConstants.FEATURE_DAMPEN_FACTOR;
 import static com.hartwig.hmftools.cup.common.CupConstants.MIN_CLASSIFIER_SCORE;
-import static com.hartwig.hmftools.cup.common.ResultType.CLASSIFIER;
-import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
+import static com.hartwig.hmftools.common.cuppa.ResultType.CLASSIFIER;
+import static com.hartwig.hmftools.common.cuppa.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 
 import java.util.List;
@@ -20,6 +20,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.cuppa.CategoryType;
+import com.hartwig.hmftools.common.cuppa.ClassifierType;
 
 public class CupCalcs
 {

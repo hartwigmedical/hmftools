@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_TRAITS_DATA_FILE
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENDER_RATES;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_RATES;
-import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
+import static com.hartwig.hmftools.common.cuppa.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CupConstants.BREAST_MALE_GENDER_RATE;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_BREAST;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_BREAST_TRIPLE_NEGATIVE;
@@ -43,7 +43,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
-import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;

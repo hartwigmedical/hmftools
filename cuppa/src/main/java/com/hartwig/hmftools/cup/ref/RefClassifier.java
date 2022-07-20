@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.cup.ref;
 
-import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.common.cuppa.CategoryType;
 
 public interface RefClassifier
 {

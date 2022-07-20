@@ -4,25 +4,20 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
+import static com.hartwig.hmftools.common.cuppa.CategoryType.SNV;
 import static com.hartwig.hmftools.cup.common.CupConstants.UNDEFINED_SIG_PERC_MAX_MULTIPLE;
-import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
+import static com.hartwig.hmftools.common.cuppa.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSigContribsFromCohortFile;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSigContribsFromDatabase;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_13;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_2;
-import static com.hartwig.hmftools.cup.somatics.SomaticSigs.convertSignatureName;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.signatureDisplayName;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.sigs.SignatureAllocation;
-import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.cup.common.SampleData;

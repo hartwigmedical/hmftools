@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cup.common;
+package com.hartwig.hmftools.common.cuppa;
 
 public enum CategoryType
 {
@@ -9,10 +9,6 @@ public enum CategoryType
     GENE_EXP,
     ALT_SJ,
     COMBINED;
-
-    public static final String ALL_CATEGORIES = "ALL";
-    public static final String DNA_CATEGORIES = "DNA";
-    public static final String RNA_CATEGORIES = "RNA";
 
     public static boolean isDna(final CategoryType type)
     {

@@ -20,7 +20,7 @@ public class CuppaFactoryTest {
 
     @Test
     public void canInterpretFromTestFile() throws IOException {
-        List<CuppaEntry> entries = CuppaDataFile.read(CUPPA_DATA_CSV);
+        List<CuppaEntry> entries = CuppaDataFile.readEntries(CUPPA_DATA_CSV);
 
         CuppaData cuppa = CuppaFactory.create(entries);
 

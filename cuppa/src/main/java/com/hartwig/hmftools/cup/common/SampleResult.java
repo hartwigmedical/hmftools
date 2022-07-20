@@ -2,19 +2,25 @@ package com.hartwig.hmftools.cup.common;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.FLD_CATEGORY;
+import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.FLD_DATA_TYPE;
+import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.FLD_REF_CANCER_TYPE;
+import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.FLD_REF_VALUE;
+import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.FLD_RESULT_TYPE;
+import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.FLD_VALUE;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
-import static com.hartwig.hmftools.cup.common.CategoryType.ALT_SJ;
-import static com.hartwig.hmftools.cup.common.CategoryType.COMBINED;
-import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
-import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
-import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
-import static com.hartwig.hmftools.cup.common.ClassifierType.ALT_SJ_COHORT;
-import static com.hartwig.hmftools.cup.common.ClassifierType.EXPRESSION_PAIRWISE;
-import static com.hartwig.hmftools.cup.common.ClassifierType.GENDER;
-import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_COHORT;
-import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE;
+import static com.hartwig.hmftools.common.cuppa.CategoryType.ALT_SJ;
+import static com.hartwig.hmftools.common.cuppa.CategoryType.COMBINED;
+import static com.hartwig.hmftools.common.cuppa.CategoryType.FEATURE;
+import static com.hartwig.hmftools.common.cuppa.CategoryType.GENE_EXP;
+import static com.hartwig.hmftools.common.cuppa.CategoryType.SNV;
+import static com.hartwig.hmftools.common.cuppa.ClassifierType.ALT_SJ_COHORT;
+import static com.hartwig.hmftools.common.cuppa.ClassifierType.EXPRESSION_PAIRWISE;
+import static com.hartwig.hmftools.common.cuppa.ClassifierType.GENDER;
+import static com.hartwig.hmftools.common.cuppa.ClassifierType.GENOMIC_POSITION_COHORT;
+import static com.hartwig.hmftools.common.cuppa.ClassifierType.SNV_96_PAIRWISE;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -26,6 +32,10 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.cuppa.CategoryType;
+import com.hartwig.hmftools.common.cuppa.ClassifierType;
+import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
+import com.hartwig.hmftools.common.cuppa.ResultType;
 
 public class SampleResult
 {
@@ -58,30 +68,9 @@ public class SampleResult
         return false;
     }
 
-    public static String detailedHeader()
+    public CuppaDataFile toCuppaData()
     {
-        StringJoiner sj = new StringJoiner(DATA_DELIM);
-        sj.add("SampleId");
-        sj.add("Category");
-        sj.add("ResultType");
-        sj.add("DataType");
-        sj.add("Value");
-        sj.add("RefCancerType");
-        sj.add("RefValue");
-        return sj.toString();
-    }
-
-    public void writeDetailed(final BufferedWriter writer) throws IOException
-    {
-        final String sampleStr = format("%s,%s,%s,%s,%s",
-                SampleId, Category, Result, DataType, Value);
-
-        for(Map.Entry<String,Double> cancerValues : CancerTypeValues.entrySet())
-        {
-            writer.write(format("%s,%s,%.3g",
-                    sampleStr, cancerValues.getKey(), cancerValues.getValue()));
-            writer.newLine();
-        }
+        return new CuppaDataFile(Category, Result, DataType, Value, CancerTypeValues);
     }
 
     public String toString()
@@ -102,12 +91,12 @@ public class SampleResult
             final Map<String,Integer> fieldsMap  = createFieldsIndexMap(line, DATA_DELIM);
 
             int sampleIdIndex = fieldsMap.get("SampleId");
-            int categoryIndex = fieldsMap.get("Category");
-            int resultTypeIndex = fieldsMap.get("ResultType");
-            int dataTypeIndex = fieldsMap.get("DataType");
-            int valueIndex = fieldsMap.get("Value");
-            int refCancerTypeIndex = fieldsMap.get("RefCancerType");
-            int refValueIndex = fieldsMap.get("RefValue");
+            int categoryIndex = fieldsMap.get(FLD_CATEGORY);
+            int resultTypeIndex = fieldsMap.get(FLD_RESULT_TYPE);
+            int dataTypeIndex = fieldsMap.get(FLD_DATA_TYPE);
+            int valueIndex = fieldsMap.get(FLD_VALUE);
+            int refCancerTypeIndex = fieldsMap.get(FLD_REF_CANCER_TYPE);
+            int refValueIndex = fieldsMap.get(FLD_REF_VALUE);
 
             String currentSampleId = "";
             List<SampleResult> sampleResults = null;
@@ -129,7 +118,7 @@ public class SampleResult
 
                 CategoryType category;
 
-                if(categoryStr.equals("CLASSIFIER"))
+                if(categoryStr.equals("CLASSIFIER")) // support for pre-1.7
                 {
                     resultType = ResultType.CLASSIFIER;
 
@@ -185,7 +174,7 @@ public class SampleResult
                 currentResult.CancerTypeValues.put(refCancerType, refValue);
             }
 
-            CUP_LOGGER.info("loaded {} Cuppa results from samples from file({})", allSampleResults.size(), filename);
+            CUP_LOGGER.info("loaded {} Cuppa results for samples from file({})", allSampleResults.size(), filename);
         }
         catch (IOException e)
         {

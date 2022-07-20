@@ -12,7 +12,7 @@ import static com.hartwig.hmftools.cup.common.CupConstants.DATA_TYPE_DNA_COMBINE
 import static com.hartwig.hmftools.cup.common.CupConstants.DATA_TYPE_RNA_COMBINED;
 import static com.hartwig.hmftools.cup.common.CupConstants.DNA_DAMPEN_FACTOR;
 import static com.hartwig.hmftools.cup.common.CupConstants.RNA_DAMPEN_FACTOR;
-import static com.hartwig.hmftools.cup.common.ResultType.CLASSIFIER;
+import static com.hartwig.hmftools.common.cuppa.ResultType.CLASSIFIER;
 
 import java.util.List;
 import java.util.Map;
@@ -21,7 +21,7 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;

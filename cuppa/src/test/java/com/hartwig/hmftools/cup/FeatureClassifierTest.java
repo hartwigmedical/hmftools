@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.cup.CuppaUtilsTest.TEST_CT_003;
 import static com.hartwig.hmftools.cup.CuppaUtilsTest.TEST_SAMPLE_001;
 import static com.hartwig.hmftools.cup.CuppaUtilsTest.TEST_SAMPLE_002;
 import static com.hartwig.hmftools.cup.CuppaUtilsTest.TEST_SAMPLE_003;
-import static com.hartwig.hmftools.cup.common.ClassifierType.FEATURE;
+import static com.hartwig.hmftools.common.cuppa.ClassifierType.FEATURE;
 import static com.hartwig.hmftools.cup.feature.FeatureType.AMP;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
 import static com.hartwig.hmftools.cup.feature.FeatureType.FUSION;

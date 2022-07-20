@@ -2,6 +2,8 @@ package com.hartwig.hmftools.cup.common;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.cuppa.CategoryType;
+
 public interface CuppaClassifier
 {
     CategoryType categoryType();

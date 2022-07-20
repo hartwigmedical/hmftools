@@ -5,12 +5,12 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.cup.CuppaConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.SPECIFIC_SAMPLE_DATA;
-import static com.hartwig.hmftools.cup.common.CategoryType.ALT_SJ;
-import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
-import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
-import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
-import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
-import static com.hartwig.hmftools.cup.common.CategoryType.SV;
+import static com.hartwig.hmftools.common.cuppa.CategoryType.ALT_SJ;
+import static com.hartwig.hmftools.common.cuppa.CategoryType.FEATURE;
+import static com.hartwig.hmftools.common.cuppa.CategoryType.GENE_EXP;
+import static com.hartwig.hmftools.common.cuppa.CategoryType.SAMPLE_TRAIT;
+import static com.hartwig.hmftools.common.cuppa.CategoryType.SNV;
+import static com.hartwig.hmftools.common.cuppa.CategoryType.SV;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
-import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;

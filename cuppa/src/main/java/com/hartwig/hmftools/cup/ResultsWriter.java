@@ -5,18 +5,18 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.common.CategoryType.COMBINED;
-import static com.hartwig.hmftools.cup.common.CategoryType.isDna;
-import static com.hartwig.hmftools.cup.common.CategoryType.isRna;
-import static com.hartwig.hmftools.cup.common.ClassifierType.ALT_SJ_COHORT;
-import static com.hartwig.hmftools.cup.common.ClassifierType.EXPRESSION_PAIRWISE;
-import static com.hartwig.hmftools.cup.common.ClassifierType.FEATURE;
-import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_COHORT;
-import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE;
+import static com.hartwig.hmftools.common.cuppa.CategoryType.COMBINED;
+import static com.hartwig.hmftools.common.cuppa.CategoryType.isDna;
+import static com.hartwig.hmftools.common.cuppa.CategoryType.isRna;
+import static com.hartwig.hmftools.common.cuppa.ClassifierType.ALT_SJ_COHORT;
+import static com.hartwig.hmftools.common.cuppa.ClassifierType.EXPRESSION_PAIRWISE;
+import static com.hartwig.hmftools.common.cuppa.ClassifierType.FEATURE;
+import static com.hartwig.hmftools.common.cuppa.ClassifierType.GENOMIC_POSITION_COHORT;
+import static com.hartwig.hmftools.common.cuppa.ClassifierType.SNV_96_PAIRWISE;
 import static com.hartwig.hmftools.cup.common.CupConstants.DATA_TYPE_COMBINED;
 import static com.hartwig.hmftools.cup.common.CupConstants.DATA_TYPE_DNA_COMBINED;
 import static com.hartwig.hmftools.cup.common.CupConstants.DATA_TYPE_RNA_COMBINED;
-import static com.hartwig.hmftools.cup.common.ResultType.CLASSIFIER;
+import static com.hartwig.hmftools.common.cuppa.ResultType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.utils.CompareUtils.getRankedCancerTypes;
 import static com.hartwig.hmftools.cup.utils.CompareUtils.topRefResult;
 
@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
@@ -59,13 +60,19 @@ public class ResultsWriter
 
         try
         {
-            final String detailedFilename = mSampleDataCache.isSingleSample() ?
+            boolean isSingleSample = mSampleDataCache.isSingleSample();
+
+            final String detailedFilename = isSingleSample ?
                     mConfig.OutputDir + mSampleDataCache.SpecificSample.Id + ".cup.data.csv"
                     : mConfig.formOutputFilename("SAMPLE_DATA");
 
             mDetailedWriter = createBufferedWriter(detailedFilename, false);
 
-            mDetailedWriter.write(SampleResult.detailedHeader());
+            if(!isSingleSample)
+                mDetailedWriter.write("SampleId,");
+
+            mDetailedWriter.write(CuppaDataFile.header());
+            // mDetailedWriter.write(SampleResult.detailedHeader());
 
             mDetailedWriter.newLine();
 
@@ -114,6 +121,8 @@ public class ResultsWriter
         if(results.isEmpty() || mDetailedWriter == null)
             return;
 
+        boolean isSingleSample = mSampleDataCache.isSingleSample();
+
         try
         {
             for(SampleResult result : results)
@@ -121,7 +130,10 @@ public class ResultsWriter
                 if(!mConfig.WriteDetailedScores && result.Result != CLASSIFIER)
                     continue;
 
-                result.writeDetailed(mDetailedWriter);
+                CuppaDataFile cuppaData = result.toCuppaData();
+
+                cuppaData.write(mDetailedWriter, isSingleSample ? null : sample.Id);
+                // result.writeDetailed(mDetailedWriter);
             }
 
             writeCondensedSampleResults(sample, results);

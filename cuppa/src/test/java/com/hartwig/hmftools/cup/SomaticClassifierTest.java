@@ -5,8 +5,8 @@ import static com.hartwig.hmftools.cup.CuppaUtilsTest.TEST_CT_002;
 import static com.hartwig.hmftools.cup.CuppaUtilsTest.TEST_SAMPLE_001;
 import static com.hartwig.hmftools.cup.CuppaUtilsTest.TEST_SAMPLE_002;
 import static com.hartwig.hmftools.cup.CuppaUtilsTest.TEST_SAMPLE_003;
-import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_COHORT;
-import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE;
+import static com.hartwig.hmftools.common.cuppa.ClassifierType.GENOMIC_POSITION_COHORT;
+import static com.hartwig.hmftools.common.cuppa.ClassifierType.SNV_96_PAIRWISE;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;

@@ -25,12 +25,9 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SNV_SIGNATURES;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SV_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_RATES;
-import static com.hartwig.hmftools.cup.common.CategoryType.ALL_CATEGORIES;
-import static com.hartwig.hmftools.cup.common.CategoryType.COMBINED;
-import static com.hartwig.hmftools.cup.common.CategoryType.DNA_CATEGORIES;
-import static com.hartwig.hmftools.cup.common.CategoryType.RNA_CATEGORIES;
-import static com.hartwig.hmftools.cup.common.CategoryType.isDna;
-import static com.hartwig.hmftools.cup.common.CategoryType.isRna;
+import static com.hartwig.hmftools.common.cuppa.CategoryType.COMBINED;
+import static com.hartwig.hmftools.common.cuppa.CategoryType.isDna;
+import static com.hartwig.hmftools.common.cuppa.CategoryType.isRna;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.ISOFOX_DIR;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.LINX_DIR;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.PURPLE_DIR;
@@ -46,7 +43,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.cup.common.NoiseRefCache;
 import com.hartwig.hmftools.cup.feature.FeatureClassifier;
 import com.hartwig.hmftools.cup.rna.AltSjClassifier;
@@ -121,6 +118,10 @@ public class CuppaConfig
 
     // config strings
     public static final String CATEGORIES = "categories";
+
+    public static final String ALL_CATEGORIES = "ALL";
+    public static final String DNA_CATEGORIES = "DNA";
+    public static final String RNA_CATEGORIES = "RNA";
 
     public static final String SAMPLE_DATA_DIR = "sample_data_dir";
 

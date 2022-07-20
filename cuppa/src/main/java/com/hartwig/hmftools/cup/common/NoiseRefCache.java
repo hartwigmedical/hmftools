@@ -7,9 +7,9 @@ import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaConfig.SUBSET_DELIM;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_NOISE_MEDIANS;
-import static com.hartwig.hmftools.cup.common.ClassifierType.ALT_SJ_COHORT;
-import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_COHORT;
-import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE;
+import static com.hartwig.hmftools.common.cuppa.ClassifierType.ALT_SJ_COHORT;
+import static com.hartwig.hmftools.common.cuppa.ClassifierType.GENOMIC_POSITION_COHORT;
+import static com.hartwig.hmftools.common.cuppa.ClassifierType.SNV_96_PAIRWISE;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -21,6 +21,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.cuppa.ClassifierType;
 import com.hartwig.hmftools.common.utils.Matrix;
 
 public class NoiseRefCache

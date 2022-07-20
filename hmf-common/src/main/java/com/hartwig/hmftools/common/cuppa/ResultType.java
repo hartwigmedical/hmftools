@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cup.common;
+package com.hartwig.hmftools.common.cuppa;
 
 public enum ResultType
 {
