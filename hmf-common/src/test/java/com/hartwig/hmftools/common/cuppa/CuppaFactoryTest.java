@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.cuppa;
 
+import static com.hartwig.hmftools.common.cuppa.CategoryType.COMBINED;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -12,14 +14,15 @@ import com.google.common.io.Resources;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class CuppaFactoryTest {
-
+public class CuppaFactoryTest
+{
     private static final String CUPPA_DATA_CSV = Resources.getResource("cuppa/sample.cup.data.csv").getPath();
 
     private static final double EPSILON = 1.0E-10;
 
     @Test
-    public void canInterpretFromTestFile() throws IOException {
+    public void canInterpretFromTestFile() throws IOException
+    {
         List<CuppaEntry> entries = CuppaDataFile.readEntries(CUPPA_DATA_CSV);
 
         CuppaData cuppa = CuppaFactory.create(entries);
@@ -36,10 +39,11 @@ public class CuppaFactoryTest {
     }
 
     @Test
-    public void respectOrderingOfCombinedDataTypes() {
-        CuppaEntry rna = combined().dataType(CuppaFactory.RNA_COMBINED_DATATYPE).refCancerType("rna").build();
-        CuppaEntry dna = combined().dataType(CuppaFactory.DNA_COMBINED_DATATYPE).refCancerType("dna").build();
-        CuppaEntry overall = combined().dataType(CuppaFactory.OVERALL_COMBINED_DATATYPE).refCancerType("overall").build();
+    public void respectOrderingOfCombinedDataTypes()
+    {
+        CuppaEntry rna = combined().dataType(DataTypes.DATA_TYPE_RNA_COMBINED).refCancerType("rna").build();
+        CuppaEntry dna = combined().dataType(DataTypes.DATA_TYPE_DNA_COMBINED).refCancerType("dna").build();
+        CuppaEntry overall = combined().dataType(DataTypes.DATA_TYPE_COMBINED).refCancerType("overall").build();
 
         CuppaData fromRna = CuppaFactory.create(Lists.newArrayList(rna));
         assertEquals("rna", fromRna.predictions().get(0).cancerType());
@@ -52,12 +56,18 @@ public class CuppaFactoryTest {
     }
 
     @Test
-    public void doNotCrashOnMissingEntries() {
+    public void doNotCrashOnMissingEntries()
+    {
         assertNotNull(CuppaFactory.create(Lists.newArrayList()));
     }
 
     @NotNull
-    private static ImmutableCuppaEntry.Builder combined() {
-        return CuppaTestFactory.builder().category(CuppaFactory.COMBINED_CATEGORY);
+    private static ImmutableCuppaEntry.Builder combined()
+    {
+        return ImmutableCuppaEntry.builder()
+                .category(COMBINED)
+                .resultType(ResultType.CLASSIFIER)
+                .value("")
+                .refValue(0);
     }
 }

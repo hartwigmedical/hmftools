@@ -9,10 +9,10 @@ import org.jetbrains.annotations.Nullable;
 public abstract class CuppaEntry {
 
     @NotNull
-    public abstract String category();
+    public abstract CategoryType category();
 
     @NotNull
-    public abstract String resultType();
+    public abstract ResultType resultType();
 
     @NotNull
     public abstract String dataType();

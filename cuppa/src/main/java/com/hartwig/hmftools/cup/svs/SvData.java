@@ -2,10 +2,12 @@ package com.hartwig.hmftools.cup.svs;
 
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaConfig.FLD_SAMPLE_ID;
-import static com.hartwig.hmftools.cup.svs.SvDataType.typeIndex;
+import static com.hartwig.hmftools.common.cuppa.SvDataType.typeIndex;
 
 import java.util.Map;
 import java.util.StringJoiner;
+
+import com.hartwig.hmftools.common.cuppa.SvDataType;
 
 public class SvData
 {

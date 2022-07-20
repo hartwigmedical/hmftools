@@ -123,28 +123,27 @@ public class CuppaDataFile {
     }
 
     @NotNull
-    public static List<CuppaEntry> readEntries(@NotNull String cuppaDataCsv) throws IOException {
-        List<CuppaEntry> cuppaData = Lists.newArrayList();
-        List<String> lines = Files.readAllLines(new File(cuppaDataCsv).toPath());
+    public static List<CuppaEntry> readEntries(final String filename) throws IOException
+    {
+        List<CuppaEntry> entries = Lists.newArrayList();
 
-        // Skip header
-        for (String line : lines.subList(1, lines.size())) {
-            cuppaData.add(fromLine(line));
+        List<CuppaDataFile> cuppaData = read(filename);
+
+        for(CuppaDataFile result : cuppaData)
+        {
+            for(Map.Entry<String,Double> entry : result.CancerTypeValues.entrySet())
+            {
+                entries.add(ImmutableCuppaEntry.builder()
+                        .category(result.Category)
+                        .resultType(result.Result)
+                        .dataType(result.DataType)
+                        .value(result.Value)
+                        .refCancerType(entry.getKey())
+                        .refValue(entry.getValue())
+                        .build());
+            }
         }
-        return cuppaData;
-    }
 
-    @NotNull
-    private static CuppaEntry fromLine(@NotNull String line) {
-        String[] values = line.split(DELIMITER);
-
-        return ImmutableCuppaEntry.builder()
-                .category(values[1])
-                .resultType(values[2])
-                .dataType(values[3])
-                .value(values[4])
-                .refCancerType(values[5])
-                .refValue(Double.parseDouble(values[6]))
-                .build();
+        return entries;
     }
 }

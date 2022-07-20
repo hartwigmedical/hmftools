@@ -66,10 +66,6 @@ public class CupConstants
     // common data types
     public static final String DATA_TYPE_SNV_COUNT = "SNV_COUNT";
 
-    public static final String DATA_TYPE_DNA_COMBINED = "DNA_COMBINED";
-    public static final String DATA_TYPE_RNA_COMBINED = "RNA_COMBINED";
-    public static final String DATA_TYPE_COMBINED = "COMBINED";
-
     public static boolean isCandidateCancerType(final Gender gender, final String cancerType)
     {
         if(gender == null)

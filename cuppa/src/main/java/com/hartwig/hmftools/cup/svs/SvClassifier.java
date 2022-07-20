@@ -13,15 +13,16 @@ import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadRefPercentileData;
 import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadSvDataFromCohortFile;
 import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadSvDataFromDatabase;
 import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadSvDataFromFile;
-import static com.hartwig.hmftools.cup.svs.SvDataType.LINE;
-import static com.hartwig.hmftools.cup.svs.SvDataType.MAX_COMPLEX_SIZE;
-import static com.hartwig.hmftools.cup.svs.SvDataType.SIMPLE_DUP_32B_200B;
-import static com.hartwig.hmftools.cup.svs.SvDataType.TELOMERIC_SGL;
+import static com.hartwig.hmftools.common.cuppa.SvDataType.LINE;
+import static com.hartwig.hmftools.common.cuppa.SvDataType.MAX_COMPLEX_SIZE;
+import static com.hartwig.hmftools.common.cuppa.SvDataType.SIMPLE_DUP_32B_200B;
+import static com.hartwig.hmftools.common.cuppa.SvDataType.TELOMERIC_SGL;
 
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.cuppa.SvDataType;
 import com.hartwig.hmftools.common.sv.linx.LinxCluster;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.common.cuppa.CategoryType;

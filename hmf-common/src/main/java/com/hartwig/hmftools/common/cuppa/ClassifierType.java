@@ -1,9 +1,5 @@
 package com.hartwig.hmftools.common.cuppa;
 
-import static com.hartwig.hmftools.common.cuppa.CategoryType.ALT_SJ;
-import static com.hartwig.hmftools.common.cuppa.CategoryType.GENE_EXP;
-import static com.hartwig.hmftools.common.cuppa.CategoryType.SNV;
-
 public enum ClassifierType
 {
     SNV_96_PAIRWISE,

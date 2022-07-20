@@ -2,6 +2,9 @@ package com.hartwig.hmftools.cup;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.cuppa.DataTypes.DATA_TYPE_COMBINED;
+import static com.hartwig.hmftools.common.cuppa.DataTypes.DATA_TYPE_DNA_COMBINED;
+import static com.hartwig.hmftools.common.cuppa.DataTypes.DATA_TYPE_RNA_COMBINED;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
@@ -13,9 +16,6 @@ import static com.hartwig.hmftools.common.cuppa.ClassifierType.EXPRESSION_PAIRWI
 import static com.hartwig.hmftools.common.cuppa.ClassifierType.FEATURE;
 import static com.hartwig.hmftools.common.cuppa.ClassifierType.GENOMIC_POSITION_COHORT;
 import static com.hartwig.hmftools.common.cuppa.ClassifierType.SNV_96_PAIRWISE;
-import static com.hartwig.hmftools.cup.common.CupConstants.DATA_TYPE_COMBINED;
-import static com.hartwig.hmftools.cup.common.CupConstants.DATA_TYPE_DNA_COMBINED;
-import static com.hartwig.hmftools.cup.common.CupConstants.DATA_TYPE_RNA_COMBINED;
 import static com.hartwig.hmftools.common.cuppa.ResultType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.utils.CompareUtils.getRankedCancerTypes;
 import static com.hartwig.hmftools.cup.utils.CompareUtils.topRefResult;
@@ -122,18 +122,18 @@ public class ResultsWriter
             return;
 
         boolean isSingleSample = mSampleDataCache.isSingleSample();
+        boolean writeDetailedScores = mConfig.WriteDetailedScores || isSingleSample;
 
         try
         {
             for(SampleResult result : results)
             {
-                if(!mConfig.WriteDetailedScores && result.Result != CLASSIFIER)
+                if(!writeDetailedScores && result.Result != CLASSIFIER)
                     continue;
 
                 CuppaDataFile cuppaData = result.toCuppaData();
 
                 cuppaData.write(mDetailedWriter, isSingleSample ? null : sample.Id);
-                // result.writeDetailed(mDetailedWriter);
             }
 
             writeCondensedSampleResults(sample, results);

@@ -9,12 +9,12 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
-import static com.hartwig.hmftools.cup.svs.SvDataType.LINE;
-import static com.hartwig.hmftools.cup.svs.SvDataType.MAX_COMPLEX_SIZE;
-import static com.hartwig.hmftools.cup.svs.SvDataType.SIMPLE_DEL_20KB_1MB;
-import static com.hartwig.hmftools.cup.svs.SvDataType.SIMPLE_DUP_100KB_5MB;
-import static com.hartwig.hmftools.cup.svs.SvDataType.SIMPLE_DUP_32B_200B;
-import static com.hartwig.hmftools.cup.svs.SvDataType.TELOMERIC_SGL;
+import static com.hartwig.hmftools.common.cuppa.SvDataType.LINE;
+import static com.hartwig.hmftools.common.cuppa.SvDataType.MAX_COMPLEX_SIZE;
+import static com.hartwig.hmftools.common.cuppa.SvDataType.SIMPLE_DEL_20KB_1MB;
+import static com.hartwig.hmftools.common.cuppa.SvDataType.SIMPLE_DUP_100KB_5MB;
+import static com.hartwig.hmftools.common.cuppa.SvDataType.SIMPLE_DUP_32B_200B;
+import static com.hartwig.hmftools.common.cuppa.SvDataType.TELOMERIC_SGL;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.cuppa.SvDataType;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariantFactory;
