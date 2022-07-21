@@ -219,4 +219,16 @@ CREATE TABLE knownFusionPair
     PRIMARY KEY (id)
 );
 
+DROP TABLE IF EXISTS eventInterpretation;
+CREATE TABLE eventInterpretation
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    source varchar(100) NOT NULL,
+    sourceEvent varchar(250),
+    interpretedGene varchar(100),
+    interpretedEvent varchar(250) NOT NULL,
+    interpretedEventType varchar(100),
+    PRIMARY KEY (id)
+);
+
 SET FOREIGN_KEY_CHECKS = 1;

@@ -7,7 +7,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.serve.actionability.ActionableEvents;
 import com.hartwig.hmftools.serve.extraction.KnownEvents;
-import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
+import com.hartwig.hmftools.serve.extraction.events.EventInterpretation;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
@@ -42,7 +42,8 @@ public class ServeDatabaseAccess {
     @NotNull
     private final ServeDAO serveDAO;
 
-    public ServeDatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
+    public ServeDatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url)
+            throws SQLException {
         System.setProperty("org.jooq.no-logo", "true");
         System.setProperty("org.jooq.no-tips", "true");
 
@@ -93,7 +94,8 @@ public class ServeDatabaseAccess {
         options.addOption(Option.builder(DB_URL).desc("Database url").hasArg(true).required(isRequired).build());
     }
 
-    public void writeServeDAO(@NotNull ActionableEvents actionableEvents, KnownEvents knownEvents) {
-        serveDAO.write(actionableEvents, knownEvents);
+    public void writeServeDAO(@NotNull ActionableEvents actionableEvents, KnownEvents knownEvents,
+            List<EventInterpretation> eventInterpretations) {
+        serveDAO.write(actionableEvents, knownEvents, eventInterpretations);
     }
 }

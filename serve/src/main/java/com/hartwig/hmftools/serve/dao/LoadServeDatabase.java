@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.sql.SQLException;
+import java.util.List;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
@@ -11,6 +12,8 @@ import com.hartwig.hmftools.serve.actionability.ActionableEvents;
 import com.hartwig.hmftools.serve.actionability.ActionableEventsLoader;
 import com.hartwig.hmftools.serve.extraction.KnownEvents;
 import com.hartwig.hmftools.serve.extraction.KnownEventsLoader;
+import com.hartwig.hmftools.serve.extraction.events.EventInterpretation;
+import com.hartwig.hmftools.serve.extraction.events.EventInterpretationFile;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
@@ -26,7 +29,6 @@ public class LoadServeDatabase {
 
     private static final String SERVE_ACTIONABILITY_DIRECTORY = "serve_actionability_dir";
 
-
     public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
@@ -35,10 +37,11 @@ public class LoadServeDatabase {
         RefGenomeVersion refGenomeVersion = (RefGenomeVersion.from(nonOptionalValue(cmd, RefGenomeVersion.REF_GENOME_VERSION)));
         ActionableEvents actionableEvents = ActionableEventsLoader.readFromDir(serveActionabilityDir, refGenomeVersion);
         KnownEvents knownEvents = KnownEventsLoader.readFromDir(serveActionabilityDir, refGenomeVersion);
-
+        List<EventInterpretation> eventInterpretation =
+                EventInterpretationFile.read(EventInterpretationFile.eventInterpretationTsv(serveActionabilityDir));
         ServeDatabaseAccess dbWriter = ServeDatabaseAccess.databaseAccess(cmd);
 
-        dbWriter.writeServeDAO(actionableEvents, knownEvents);
+        dbWriter.writeServeDAO(actionableEvents, knownEvents, eventInterpretation);
         LOGGER.info("Written SERVE output to database");
     }
 
