@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_VAF_SKIP
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_RAW_ALT_BASE_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.LONG_GERMLINE_INSERT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_INDEL_GERMLINE_ALT_SUPPORT;
+import static com.hartwig.hmftools.sage.SageConstants.MIN_AVG_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.NORMAL_RAW_ALT_BQ_MAX;
 
 import java.util.EnumSet;
@@ -152,6 +153,11 @@ public class VariantFilters
         {
             filters.add(SoftFilter.STRAND_BIAS.filterName());
         }
+
+        if(belowMinAverageBaseQuality(primaryTumor))
+        {
+            filters.add(SoftFilter.MIN_AVG_BASE_QUALITY.filterName());
+        }
     }
 
     private boolean skipMinTumorQualTest(final VariantTier tier, final ReadContextCounter primaryTumor)
@@ -171,6 +177,11 @@ public class VariantFilters
     private static boolean belowMinTumorVaf(final SoftFilterConfig config, final ReadContextCounter primaryTumor)
     {
         return Doubles.lessThan(primaryTumor.vaf(), config.MinTumorVaf);
+    }
+
+    private boolean belowMinAverageBaseQuality(final ReadContextCounter primaryTumor)
+    {
+        return Doubles.lessThan(primaryTumor.averageAltBaseQuality(), MIN_AVG_BASE_QUALITY);
     }
 
     // normal and paired tumor-normal tests

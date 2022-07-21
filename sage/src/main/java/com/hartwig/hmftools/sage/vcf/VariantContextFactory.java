@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.vcf;
 
 import static com.hartwig.hmftools.common.sage.SageMetaData.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.VariantHeader.PASS;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.LOCAL_PHASE_SET_READ_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.MIXED_SOMATIC_GERMLINE;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_ALLELIC_BASE_QUALITY;
@@ -95,6 +96,7 @@ public final class VariantContextFactory
                 .attribute(RAW_ALLELIC_BASE_QUALITY, new int[] { counter.rawRefBaseQuality(), counter.rawAltBaseQuality() })
                 .attribute(RAW_DEPTH, counter.rawDepth())
                 .attribute(STRAND_BIAS, counter.strandBias())
+                .attribute(AVG_BASE_QUAL, (int)counter.averageAltBaseQuality())
                 .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, counter.vaf())
                 .alleles(NO_CALL);
 

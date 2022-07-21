@@ -48,9 +48,9 @@ public class QualityCalculator
     }
 
     public double calculateQualityScore(
-            final ReadContextCounter readContextCounter, int readBaseIndex, final SAMRecord record, double numberOfEvents)
+            final ReadContextCounter readContextCounter, int readBaseIndex, final SAMRecord record, double numberOfEvents,
+            double baseQuality)
     {
-        double baseQuality = baseQuality(readContextCounter, readBaseIndex, record);
         int distanceFromReadEdge = readDistanceFromEdge(readContextCounter, readBaseIndex, record);
 
         int mapQuality = record.getMappingQuality();
@@ -61,7 +61,7 @@ public class QualityCalculator
         return Math.max(0, Math.min(modifiedMapQuality, modifiedBaseQuality));
     }
 
-    private double baseQuality(final ReadContextCounter readContextCounter, int readBaseIndex, SAMRecord record)
+    public double baseQuality(final ReadContextCounter readContextCounter, int readBaseIndex, final SAMRecord record)
     {
         return !readContextCounter.variant().isIndel()
                 ? baseQuality(readContextCounter, readBaseIndex, record, readContextCounter.variant().ref().length())

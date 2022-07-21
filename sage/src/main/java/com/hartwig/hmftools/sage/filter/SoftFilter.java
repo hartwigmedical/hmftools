@@ -13,6 +13,7 @@ public enum SoftFilter
     MAX_GERMLINE_VAF("maxGermlineVAF", "max_germline_vaf", false, true),
     MAX_GERMLINE_REL_RAW_BASE_QUAL("maxGermlineRelRawBaseQual", "max_germline_rel_raw_base_qual", false, true),
     MAX_GERMLINE_ALT_SUPPORT("maxGermlineAltSupport", "max_germline_alt_support", false, true),
+    MIN_AVG_BASE_QUALITY("minAvgBaseQual", "", true, false),
     STRAND_BIAS("strandBias", "", true, false);
 
     private static final Set<String> TUMOR_FILTERS = Sets.newHashSet();

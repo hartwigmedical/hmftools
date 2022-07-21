@@ -77,6 +77,9 @@ public class VariantVCF implements AutoCloseable
     public static final String STRAND_BIAS = "SB";
     public static final String STRAND_BIAS_DESC = "Strand bias - percentage of first-in-pair reads";
 
+    public static final String AVG_BASE_QUAL = "ABQ";
+    public static final String AVG_BASE_QUAL_DESC = "Average calculated base quality";
+
     public static final String MIXED_SOMATIC_GERMLINE = "MSG";
     public static final String MIXED_SOMATIC_GERMLINE_DESCRIPTION = "Mixed Somatic and Germline variants";
 
@@ -169,6 +172,7 @@ public class VariantVCF implements AutoCloseable
                 READ_CONTEXT_QUALITY, 7, VCFHeaderLineType.Integer, READ_CONTEXT_QUALITY_DESCRIPTION));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(STRAND_BIAS, 1, VCFHeaderLineType.Float, STRAND_BIAS_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_BASE_QUAL_DESC));
 
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_EVENTS, 1, VCFHeaderLineType.Integer, READ_CONTEXT_EVENTS_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT, 1, VCFHeaderLineType.String, "Read context core"));
@@ -190,6 +194,7 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_MIXED_GERMLINE_SOMATIC_FILTER, "Variant duplicate mixed somatic/germline"));
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_MATCH, "Variant duplicate with different read contexts"));
 
+        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_AVG_BASE_QUALITY.filterName(), "Variant average base quality below limit"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.STRAND_BIAS.filterName(), "Variant exceeds strand bias limit"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_TUMOR_QUAL.filterName(), "Insufficient tumor quality"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_TUMOR_VAF.filterName(), "Insufficient tumor VAF"));

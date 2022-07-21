@@ -73,6 +73,7 @@ public class ReadContextCounter implements VariantHotspot
     private int mRawRefSupport;
     private int mRawAltBaseQuality;
     private int mRawRefBaseQuality;
+    private double mSupportAltBaseQualityTotal;
 
     private int mSoftClipInsertSupport;
     private int mMaxCandidateDeleteLength;
@@ -121,6 +122,7 @@ public class ReadContextCounter implements VariantHotspot
         mRawRefSupport = 0;
         mRawAltBaseQuality = 0;
         mRawRefBaseQuality = 0;
+        mSupportAltBaseQualityTotal = 0;
         mSoftClipInsertSupport = 0;
         mMaxCandidateDeleteLength = 0;
 
@@ -186,6 +188,14 @@ public class ReadContextCounter implements VariantHotspot
     public int rawRefSupport() { return mRawRefSupport; }
     public int rawAltBaseQuality() { return mRawAltBaseQuality; }
     public int rawRefBaseQuality() { return mRawRefBaseQuality; }
+
+    public double averageAltBaseQuality()
+    {
+        // excludes realigned
+        int supportCount = mCounts[RC_FULL] + mCounts[RC_PARTIAL] + mCounts[RC_CORE];
+        return supportCount > 0 ? mSupportAltBaseQualityTotal / (double)supportCount : 0;
+    }
+
     public int softClipInsertSupport() { return mSoftClipInsertSupport; }
     public void setMaxCandidateDeleteLength(int length) { mMaxCandidateDeleteLength = length; }
 
@@ -265,7 +275,8 @@ public class ReadContextCounter implements VariantHotspot
 
         adjustedNumOfEvents = max(mMinNumberOfEvents, adjustedNumOfEvents);
 
-        double quality = qualityCalc.calculateQualityScore(this, readIndex, record, adjustedNumOfEvents);
+        double baseQuality = qualityCalc.baseQuality(this, readIndex, record);
+        double quality = qualityCalc.calculateQualityScore(this, readIndex, record, adjustedNumOfEvents, baseQuality);
 
         // Check if FULL, PARTIAL, OR CORE
         if(!baseDeleted)
@@ -304,6 +315,7 @@ public class ReadContextCounter implements VariantHotspot
 
                 ++mCounts[RC_TOTAL];
                 mQualities[RC_TOTAL] += quality;
+                mSupportAltBaseQualityTotal += baseQuality;
 
                 /*
                 SG_LOGGER.trace("var({}) readContext({}-{}-{}) support({}) read(idx={} posStart={} cigar={} id={}) readBases({})",
