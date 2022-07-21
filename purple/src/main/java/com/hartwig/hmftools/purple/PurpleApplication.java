@@ -454,7 +454,7 @@ public class PurpleApplication
                 mDbAccess.writeGermlineDeletions(tumorSample, germlineDeletions);
         }
 
-        if(!mConfig.runGermline() && (mConfig.Charting.Enabled || mConfig.Charting.CircosBinary.isPresent()))
+        if(!mConfig.germlineMode() && (mConfig.Charting.Enabled || mConfig.Charting.CircosBinary.isPresent()))
         {
             PPL_LOGGER.info("generating charts");
 
