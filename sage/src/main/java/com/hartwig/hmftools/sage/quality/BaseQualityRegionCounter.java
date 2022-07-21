@@ -84,7 +84,7 @@ public class BaseQualityRegionCounter implements CigarHandler
             mIndexedBases = null;
         }
 
-        if(mBaseQualityData == null)
+        if(mBaseQualityData == null || mBaseQualityData.length != region.baseLength())
         {
             int regionPositionCount = region.baseLength();
             mBaseQualityData = new BaseQualityData[regionPositionCount];

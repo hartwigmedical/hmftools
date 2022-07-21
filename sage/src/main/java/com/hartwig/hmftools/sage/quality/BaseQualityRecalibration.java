@@ -141,6 +141,7 @@ public class BaseQualityRecalibration
             {
                 SG_LOGGER.error("task execution error: {}", e.toString());
                 e.printStackTrace();
+                System.exit(1);
             }
         }
 

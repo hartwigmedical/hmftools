@@ -126,6 +126,7 @@ public class ChromosomePipeline implements AutoCloseable
             {
                 SG_LOGGER.error("task execution error: {}", e.toString());
                 e.printStackTrace();
+                System.exit(1);
             }
         }
 
