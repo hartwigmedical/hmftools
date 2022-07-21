@@ -44,7 +44,7 @@ public class PurpleSignatureEvidenceTest {
                 .from(ServeTestFactory.createTestActionableCharacteristic())
                 .name(TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE)
                 .comparator(TumorCharacteristicsComparator.EQUAL_OR_GREATER)
-                .cutoff(4D)
+                .maxCutoff(4D)
                 .build();
 
         PurpleSignatureEvidence purpleSignatureEvidence = new PurpleSignatureEvidence(EvidenceTestFactory.create(),
@@ -71,7 +71,7 @@ public class PurpleSignatureEvidenceTest {
                 .from(ServeTestFactory.createTestActionableCharacteristic())
                 .name(TumorCharacteristicAnnotation.MICROSATELLITE_STABLE)
                 .comparator(TumorCharacteristicsComparator.LOWER)
-                .cutoff(4D)
+                .maxCutoff(4D)
                 .build();
 
         PurpleSignatureEvidence purpleSignatureEvidence = new PurpleSignatureEvidence(EvidenceTestFactory.create(),
@@ -98,7 +98,7 @@ public class PurpleSignatureEvidenceTest {
                 .from(ServeTestFactory.createTestActionableCharacteristic())
                 .name(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD)
                 .comparator(TumorCharacteristicsComparator.GREATER)
-                .cutoff(100D)
+                .maxCutoff(100D)
                 .build();
 
         PurpleSignatureEvidence purpleSignatureEvidence = new PurpleSignatureEvidence(EvidenceTestFactory.create(),
@@ -125,7 +125,7 @@ public class PurpleSignatureEvidenceTest {
                 .from(ServeTestFactory.createTestActionableCharacteristic())
                 .name(TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_LOAD)
                 .comparator(TumorCharacteristicsComparator.EQUAL_OR_LOWER)
-                .cutoff(100D)
+                .maxCutoff(100D)
                 .build();
 
         PurpleSignatureEvidence purpleSignatureEvidence = new PurpleSignatureEvidence(EvidenceTestFactory.create(),
@@ -152,7 +152,7 @@ public class PurpleSignatureEvidenceTest {
                 .from(ServeTestFactory.createTestActionableCharacteristic())
                 .name(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_BURDEN)
                 .comparator(TumorCharacteristicsComparator.EQUAL_OR_GREATER)
-                .cutoff(12D)
+                .maxCutoff(12D)
                 .build();
 
         PurpleSignatureEvidence purpleSignatureEvidence = new PurpleSignatureEvidence(EvidenceTestFactory.create(),
@@ -179,7 +179,7 @@ public class PurpleSignatureEvidenceTest {
                 .from(ServeTestFactory.createTestActionableCharacteristic())
                 .name(TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_BURDEN)
                 .comparator(TumorCharacteristicsComparator.LOWER)
-                .cutoff(8D)
+                .maxCutoff(8D)
                 .build();
 
         PurpleSignatureEvidence purpleSignatureEvidence = new PurpleSignatureEvidence(EvidenceTestFactory.create(),

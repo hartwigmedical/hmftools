@@ -1,3 +1,3 @@
-name	comparator	cutoff	source	sourceEvent	sourceUrls	treatment	sourceRelevantTreatmentApproaches	relevantTreatmentApproaches	applicableCancerType	applicableDoid	blacklistCancerTypes	level	direction	evidenceUrls
-MICROSATELLITE_UNSTABLE	EQUAL_OR_GREATER	4	VICC_CIVIC	msi	http	Nivolumab			All cancer types	X	Hematologic cancer,2531	A	RESPONSIVE	http,http
-MICROSATELLITE_UNSTABLE	EQUAL_OR_GREATER	4	VICC_CGI	msi	http	Nivolumab			All cancer types	X	Hematologic cancer,2531	A	RESPONSIVE	http,http
+name	comparator	mincutoff	maxcutoff	source	sourceEvent	sourceUrls	treatment	sourceRelevantTreatmentApproaches	relevantTreatmentApproaches	applicableCancerType	applicableDoid	blacklistCancerTypes	level	direction	evidenceUrls
+MICROSATELLITE_UNSTABLE	EQUAL_OR_GREATER		4	VICC_CIVIC	msi	http	Nivolumab			All cancer types	X	Hematologic cancer,2531	A	RESPONSIVE	http,http
+MICROSATELLITE_UNSTABLE	EQUAL_OR_GREATER		4	VICC_CGI	msi	http	Nivolumab			All cancer types	X	Hematologic cancer,2531	A	RESPONSIVE	http,http

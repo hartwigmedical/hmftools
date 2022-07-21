@@ -183,11 +183,12 @@ public class ServeDAO {
 
         List<ActionableCharacteristic> actionableCharacteristics = actionableEvents.characteristics();
         for (List<ActionableCharacteristic> batch : Iterables.partition(actionableCharacteristics, Utils.DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep16 inserter = context.insertInto(ACTIONABLECHARACTERISTIC,
+            InsertValuesStep17 inserter = context.insertInto(ACTIONABLECHARACTERISTIC,
                     ACTIONABLECHARACTERISTIC.MODIFIED,
                     ACTIONABLECHARACTERISTIC.NAME,
                     ACTIONABLECHARACTERISTIC.COMPARATOR,
-                    ACTIONABLECHARACTERISTIC.CUTOFF,
+                    ACTIONABLECHARACTERISTIC.MINCUTOFF,
+                    ACTIONABLECHARACTERISTIC.MAXCUTOFF,
                     ACTIONABLECHARACTERISTIC.SOURCE,
                     ACTIONABLECHARACTERISTIC.SOURCEEVENT,
                     ACTIONABLECHARACTERISTIC.SOURCEURLS,
@@ -428,12 +429,13 @@ public class ServeDAO {
                         : ActionableFileFunctions.urlsToString(actionableFusion.evidenceUrls()));
     }
 
-    private static void addRecordCharacteristics(@NotNull Timestamp timestamp, @NotNull InsertValuesStep16 inserter,
+    private static void addRecordCharacteristics(@NotNull Timestamp timestamp, @NotNull InsertValuesStep17 inserter,
             @NotNull ActionableCharacteristic actionableCharacteristic) {
         inserter.values(timestamp,
                 actionableCharacteristic.name(),
                 actionableCharacteristic.comparator(),
-                actionableCharacteristic.cutoff(),
+                actionableCharacteristic.minCutoff(),
+                actionableCharacteristic.maxCutoff(),
                 actionableCharacteristic.source(),
                 actionableCharacteristic.sourceEvent(),
                 ActionableFileFunctions.urlsToString(actionableCharacteristic.sourceUrls()).isEmpty()

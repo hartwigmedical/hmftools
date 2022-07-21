@@ -50,7 +50,8 @@ public final class ActionableCharacteristicFile {
     private static String header() {
         return new StringJoiner(FIELD_DELIMITER).add("name")
                 .add("comparator")
-                .add("cutoff")
+                .add("minCutoff")
+                .add("maxCutoff")
                 .add(ActionableFileFunctions.header())
                 .toString();
     }
@@ -70,10 +71,11 @@ public final class ActionableCharacteristicFile {
         String[] values = line.split(FIELD_DELIMITER);
 
         return ImmutableActionableCharacteristic.builder()
-                .from(ActionableFileFunctions.fromLine(values, 3))
+                .from(ActionableFileFunctions.fromLine(values, 4))
                 .name(TumorCharacteristicAnnotation.valueOf(values[0]))
                 .comparator(!values[1].equals(Strings.EMPTY) ? TumorCharacteristicsComparator.valueOf(values[1]) : null)
-                .cutoff(!values[2].equals(Strings.EMPTY) ? Double.valueOf(values[2]) : null)
+                .minCutoff(!values[2].equals(Strings.EMPTY) ? Double.valueOf(values[2]) : null)
+                .maxCutoff(!values[3].equals(Strings.EMPTY) ? Double.valueOf(values[3]) : null)
                 .build();
     }
 
@@ -100,7 +102,8 @@ public final class ActionableCharacteristicFile {
     private static String toLine(@NotNull ActionableCharacteristic characteristic) {
         return new StringJoiner(FIELD_DELIMITER).add(characteristic.name().toString())
                 .add(characteristic.comparator() != null ? characteristic.comparator().toString() : Strings.EMPTY)
-                .add(characteristic.cutoff() != null ? Double.toString(characteristic.cutoff()) : Strings.EMPTY)
+                .add(characteristic.minCutoff() != null ? Double.toString(characteristic.minCutoff()) : Strings.EMPTY)
+                .add(characteristic.maxCutoff() != null ? Double.toString(characteristic.maxCutoff()) : Strings.EMPTY)
                 .add(ActionableFileFunctions.toLine(characteristic))
                 .toString();
     }
