@@ -53,6 +53,7 @@ public class PaveApplication
     private final VariantImpactBuilder mImpactBuilder;
     private final GeneDataCache mGeneDataCache;
     private final GnomadAnnotation mGnomadAnnotation;
+    private final GnomadExomeAnnotation mGnomadExomeAnnotation;
 
     private final PonAnnotation mPon;
     private final PonAnnotation mPonArtefacts;
@@ -72,6 +73,7 @@ public class PaveApplication
                 cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION), false, true);
 
         mGnomadAnnotation = new GnomadAnnotation(cmd);
+        mGnomadExomeAnnotation = new GnomadExomeAnnotation(cmd);
 
         mPon = new PonAnnotation(cmd.getOptionValue(PON_FILE), true);
         mPon.loadFilters(cmd.getOptionValue(PON_FILTERS));
@@ -242,6 +244,7 @@ public class PaveApplication
     private void ponAnnotateAndFilter(final VariantData variant)
     {
         mGnomadAnnotation.annotateVariant(variant);
+        mGnomadExomeAnnotation.annotateVariant(variant);
         mMappability.annotateVariant(variant);
         mClinvar.annotateVariant(variant);
         mBlacklistings.annotateVariant(variant);

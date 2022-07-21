@@ -79,6 +79,7 @@ public class VariantData
     public int mPonSampleCount;
     public int mPonMaxReadCount;
     private Double mGnomadFrequency;
+    private Double mGnomadExomeFrequency;
 
     public static final int NO_LOCAL_PHASE_SET = -1;
 
@@ -157,6 +158,7 @@ public class VariantData
         mPonSampleCount = 0;
         mPonMaxReadCount = 0;
         mGnomadFrequency = null;
+        mGnomadExomeFrequency = null;
     }
 
     public static VariantData fromContext(final VariantContext variantContext)
@@ -348,6 +350,9 @@ public class VariantData
 
     public Double gnomadFrequency() { return mGnomadFrequency; }
     public void setGnomadFrequency(Double frequency) { mGnomadFrequency = frequency; }
+
+    public Double gnomadExomeFrequency() { return mGnomadExomeFrequency; }
+    public void setGnomadExomeFrequency(Double frequency) { mGnomadExomeFrequency = frequency; }
 
     public String toString()
     {

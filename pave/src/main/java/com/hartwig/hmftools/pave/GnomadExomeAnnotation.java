@@ -31,25 +31,22 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class GnomadAnnotation
+public class GnomadExomeAnnotation
 {
     private final Map<String,Map<Integer,List<GnomadVariant>>> mFrequencies;
     private final RefGenomeVersion mRefGenomeVersion;
-    private final boolean mLoadChromosomeOnDemand;
     private final Map<String,String> mChromosomeFiles;
     private final double mPonFilterThreshold;
 
-    public static final String GNOMAD_FREQUENCY_FILE = "gnomad_freq_file";
-    public static final String GNOMAD_FREQUENCY_DIR = "gnomad_freq_dir";
-    private static final String GNOMAD_LOAD_CHR_ON_DEMAND = "gnomad_load_chr_on_demand";
-    private static final String GNOMAD_PON_FILTER = "gnomad_pon_filter";
+    private static final String GNOMAD_FREQUENCY_DIR = "gnomad_exome_freq_dir";
+    private static final String GNOMAD_PON_FILTER = "gnomad_exome_pon_filter";
 
-    public static final String GNOMAD_FREQ = "GND_FREQ";
-    public static final String PON_GNOMAD_FILTER = "PONGnomad";
+    public static final String GNOMAD_EXOME_FREQ = "GND_EXOME_FREQ";
+    public static final String PON_GNOMAD_EXOME_FILTER = "PONGnomadExome";
 
     private static final double DEFAULT_PON_FILTER_THRESHOLD = 0.00015;
 
-    public GnomadAnnotation(final CommandLine cmd)
+    public GnomadExomeAnnotation(final CommandLine cmd)
     {
         mFrequencies = Maps.newHashMap();
         mChromosomeFiles = Maps.newHashMap();
@@ -57,13 +54,8 @@ public class GnomadAnnotation
         if(cmd != null)
         {
             mRefGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
-            mLoadChromosomeOnDemand = cmd.hasOption(GNOMAD_LOAD_CHR_ON_DEMAND);
 
-            if(cmd.hasOption(GNOMAD_FREQUENCY_FILE))
-            {
-                loadFrequency(cmd.getOptionValue(GNOMAD_FREQUENCY_FILE), null);
-            }
-            else if(cmd.hasOption(GNOMAD_FREQUENCY_DIR))
+            if(cmd.hasOption(GNOMAD_FREQUENCY_DIR))
             {
                 String gnomadDir = cmd.getOptionValue(GNOMAD_FREQUENCY_DIR);
                 loadAllFrequencyFiles(gnomadDir);
@@ -74,7 +66,6 @@ public class GnomadAnnotation
         else
         {
             mRefGenomeVersion = V37;
-            mLoadChromosomeOnDemand = false;
             mPonFilterThreshold = 0;
         }
     }
@@ -90,7 +81,7 @@ public class GnomadAnnotation
             variant.setGnomadFrequency(gnomadFreq);
 
             if(exceedsPonThreshold(gnomadFreq))
-                variant.addFilter(PON_GNOMAD_FILTER);
+                variant.addFilter(PON_GNOMAD_EXOME_FILTER);
         }
     }
 
@@ -142,9 +133,6 @@ public class GnomadAnnotation
 
     private void checkLoadChromosome(final String chromosome)
     {
-        if(!mLoadChromosomeOnDemand)
-            return;
-
         if(mFrequencies.containsKey(chromosome))
             return;
 
@@ -188,14 +176,7 @@ public class GnomadAnnotation
                     continue;
                 }
 
-                if(mLoadChromosomeOnDemand)
-                {
-                    mChromosomeFiles.put(chrStr, chrFile);
-                }
-                else
-                {
-                    loadFrequency(chrFile, chrStr);
-                }
+                mChromosomeFiles.put(chrStr, chrFile);
             }
         }
         catch(IOException e)
@@ -272,18 +253,16 @@ public class GnomadAnnotation
 
     public static void addCmdLineArgs(Options options)
     {
-        options.addOption(GNOMAD_FREQUENCY_FILE, true, "Gnomad frequency file");
         options.addOption(GNOMAD_FREQUENCY_DIR, true, "Gnomad frequency directory");
-        options.addOption(GNOMAD_LOAD_CHR_ON_DEMAND, false, "Gnomad load frequency files by chromosome on demand");
         options.addOption(GNOMAD_PON_FILTER, true, "Gnomad PON frequency filter (default: 0.00015)");
     }
 
     public static void addHeader(final VCFHeader header)
     {
         header.addMetaDataLine(new VCFInfoHeaderLine(
-                GNOMAD_FREQ, 1, VCFHeaderLineType.Float, "Gnomad variant frequency"));
+                GNOMAD_EXOME_FREQ, 1, VCFHeaderLineType.Float, "Gnomad exome variant frequency"));
 
-        header.addMetaDataLine(new VCFFilterHeaderLine(PON_GNOMAD_FILTER, "Filter Gnoamd PON"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(PON_GNOMAD_EXOME_FILTER, "Filter Gnoamd Exome PON"));
     }
 
     private class GnomadVariant

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.pave.GnomadAnnotation.GNOMAD_FREQ;
+import static com.hartwig.hmftools.pave.GnomadExomeAnnotation.GNOMAD_EXOME_FREQ;
 import static com.hartwig.hmftools.pave.PonAnnotation.PON_COUNT;
 import static com.hartwig.hmftools.pave.PonAnnotation.PON_MAX;
 
@@ -57,6 +58,7 @@ public class VcfWriter
         if(hasGnomadFrequency)
         {
             GnomadAnnotation.addHeader(newHeader);
+            GnomadExomeAnnotation.addHeader(newHeader);
         }
 
         if(hasMappability)
@@ -120,6 +122,9 @@ public class VcfWriter
 
         if(variant.gnomadFrequency() != null && !newContext.getCommonInfo().hasAttribute(GNOMAD_FREQ))
             newContext.getCommonInfo().putAttribute(GNOMAD_FREQ, variant.gnomadFrequency());
+
+        if(variant.gnomadExomeFrequency() != null && !newContext.getCommonInfo().hasAttribute(GNOMAD_EXOME_FREQ))
+            newContext.getCommonInfo().putAttribute(GNOMAD_EXOME_FREQ, variant.gnomadExomeFrequency());
 
         if((variant.ponSampleCount() > 0 || variant.ponMaxReadCount() > 0) && !newContext.getCommonInfo().hasAttribute(PON_COUNT))
         {
