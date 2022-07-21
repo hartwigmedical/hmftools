@@ -10,6 +10,8 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.common.serve.classification.EventType;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -23,6 +25,36 @@ public final class EventInterpretationFile {
     @NotNull
     public static String eventInterpretationTsv(@NotNull String serveActionabilityDir) {
         return serveActionabilityDir + File.separator + EVENT_INTERPRETATION_TSV;
+    }
+
+    @NotNull
+    public static List<EventInterpretation> read(@NotNull String file) throws IOException {
+        List<String> lines = Files.readAllLines(new File(file).toPath());
+
+        return fromLines(lines.subList(1, lines.size()));
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static List<EventInterpretation> fromLines(@NotNull List<String> lines) {
+        List<EventInterpretation> eventInterpretations = Lists.newArrayList();
+        for (String line : lines) {
+            eventInterpretations.add(fromLine(line));
+        }
+        return eventInterpretations;
+    }
+
+    @NotNull
+    private static EventInterpretation fromLine(@NotNull String line) {
+        String[] values = line.split(FIELD_DELIMITER);
+
+        return ImmutableEventInterpretation.builder()
+                .source(Knowledgebase.lookupKnowledgebase(values[0]))
+                .sourceEvent(values[1])
+                .interpretedGene(values[2])
+                .interpretedEvent(values[3])
+                .interpretedEventType(EventType.valueOf(values[4]))
+                .build();
     }
 
     public static void write(@NotNull String eventInterpretationTsv, @NotNull Iterable<EventInterpretation> eventInterpretations)

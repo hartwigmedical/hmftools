@@ -38,7 +38,7 @@ public class ChordEvidenceTest {
                 .from(ServeTestFactory.createTestActionableCharacteristic())
                 .name(TumorCharacteristicAnnotation.HOMOLOGOUS_RECOMBINATION_DEFICIENT)
                 .comparator(TumorCharacteristicsComparator.GREATER)
-                .cutoff(0.8)
+                .maxCutoff(0.8)
                 .build();
 
         ChordEvidence chordEvidence =

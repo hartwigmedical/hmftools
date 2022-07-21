@@ -113,7 +113,8 @@ CREATE TABLE actionableCharacteristic
     modified DATETIME NOT NULL,
     name varchar(50) NOT NULL,
     comparator varchar(50),
-    cutOff int,
+    minCutOff int,
+    maxCutOff int,
     source varchar(50) NOT NULL,
     sourceEvent varchar(50) NOT NULL,
     sourceUrls varchar(2000),
@@ -215,6 +216,18 @@ CREATE TABLE knownFusionPair
     minExonDown varchar(50),
     maxExonDown varchar(50),
     sources varchar(50) NOT NULL,
+    PRIMARY KEY (id)
+);
+
+DROP TABLE IF EXISTS eventInterpretation;
+CREATE TABLE eventInterpretation
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    source varchar(100) NOT NULL,
+    sourceEvent varchar(250),
+    interpretedGene varchar(100),
+    interpretedEvent varchar(250) NOT NULL,
+    interpretedEventType varchar(100),
     PRIMARY KEY (id)
 );
 

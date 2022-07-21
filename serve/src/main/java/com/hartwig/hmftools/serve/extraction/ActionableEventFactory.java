@@ -149,7 +149,8 @@ public final class ActionableEventFactory {
                 .from(actionableEvent)
                 .name(characteristic.name())
                 .comparator(characteristic.comparator())
-                .cutoff(characteristic.cutoff())
+                .minCutoff(characteristic.minCutoff())
+                .maxCutoff(characteristic.maxCutoff())
                 .build();
     }
 

@@ -18,7 +18,7 @@ public class CharacteristicsFunctionsTest {
         ActionableCharacteristic withoutCutoff = ImmutableActionableCharacteristic.builder()
                 .from(ServeTestFactory.createTestActionableCharacteristic())
                 .comparator(null)
-                .cutoff(null)
+                .maxCutoff(null)
                 .build();
 
         assertFalse(CharacteristicsFunctions.hasExplicitCutoff(withoutCutoff));
@@ -26,7 +26,7 @@ public class CharacteristicsFunctionsTest {
         ActionableCharacteristic withCutoff = ImmutableActionableCharacteristic.builder()
                 .from(ServeTestFactory.createTestActionableCharacteristic())
                 .comparator(TumorCharacteristicsComparator.GREATER)
-                .cutoff(4D)
+                .maxCutoff(4D)
                 .build();
 
         assertTrue(CharacteristicsFunctions.hasExplicitCutoff(withCutoff));
@@ -60,7 +60,7 @@ public class CharacteristicsFunctionsTest {
         return ImmutableActionableCharacteristic.builder()
                 .from(ServeTestFactory.createTestActionableCharacteristic())
                 .comparator(comparator)
-                .cutoff(cutoff)
+                .maxCutoff(cutoff)
                 .build();
     }
 

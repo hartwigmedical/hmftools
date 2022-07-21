@@ -58,8 +58,14 @@ public class TumorCharacteristicExtractor {
             }
 
             TumorCharacteristicsComparator comparator = determineComparator(event);
-            Double interpretedCutoff = determineCutoff(comparator, event);
-            return ImmutableTumorCharacteristic.builder().name(characteristic).comparator(comparator).cutoff(interpretedCutoff).build();
+            Double interpretedMinCutoff = determineMinCutoff(comparator, event);
+            Double interpretedMaxCutoff = determineMaxCutoff(comparator, event);
+            return ImmutableTumorCharacteristic.builder()
+                    .name(characteristic)
+                    .comparator(comparator)
+                    .minCutoff(interpretedMinCutoff)
+                    .maxCutoff(interpretedMaxCutoff)
+                    .build();
         }
         return null;
     }
@@ -110,7 +116,17 @@ public class TumorCharacteristicExtractor {
     }
 
     @Nullable
-    private static Double determineCutoff(@Nullable TumorCharacteristicsComparator comparator, @NotNull String event) {
+    private static Double determineMinCutoff(@Nullable TumorCharacteristicsComparator comparator, @NotNull String event) {
+        if (comparator == null || comparator != TumorCharacteristicsComparator.BETWEEN) {
+            return null;
+        }
+
+        int start = event.indexOf(comparator.keyPhrase()) + comparator.keyPhrase().length() - 1;
+        return Double.parseDouble(event.substring(start).trim());
+    }
+
+    @Nullable
+    private static Double determineMaxCutoff(@Nullable TumorCharacteristicsComparator comparator, @NotNull String event) {
         if (comparator == null) {
             return null;
         }
