@@ -3,7 +3,6 @@ package com.hartwig.hmftools.sage.append;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.sage.SageApplication.createCommandLine;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.quality.BaseQualityRecalibration.buildQualityRecalibrationMap;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,7 +12,6 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ThreadFactory;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;

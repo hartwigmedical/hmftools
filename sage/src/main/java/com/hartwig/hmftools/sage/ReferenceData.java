@@ -54,11 +54,11 @@ public class ReferenceData
         PanelWithHotspots = Maps.newHashMap();
         Hotspots = ArrayListMultimap.create();
         HighConfidence = Maps.newHashMap();
+        ChromosomeTranscripts = Maps.newHashMap();
 
         RefGenome = loadRefGenome(config.RefGenomeFile);
 
         GeneDataCache = new EnsemblDataCache(cmd, config.RefGenVersion);
-        ChromosomeTranscripts = Maps.newHashMap();
         loadGeneData();
 
         HlaCommon.populateGeneData(GeneDataCache.getChrGeneDataMap().get(hlaChromosome(config.RefGenVersion)));
@@ -248,7 +248,7 @@ public class ReferenceData
         return panel;
     }
 
-    private static Map<Chromosome,List<BaseRegion>> loadBedFile(final String bedFile)
+    public static Map<Chromosome,List<BaseRegion>> loadBedFile(final String bedFile)
     {
         final Map<Chromosome,List<BaseRegion>> panel = Maps.newHashMap();
 

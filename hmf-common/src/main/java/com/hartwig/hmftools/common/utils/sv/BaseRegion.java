@@ -40,6 +40,12 @@ public class BaseRegion implements Cloneable, Comparable<BaseRegion>
         return positionsOverlap(Positions[SE_START], Positions[SE_END], other.Positions[SE_START], other.Positions[SE_END]);
     }
 
+    public boolean overlaps(final ChrBaseRegion other)
+    {
+        // assumes chromosome check is not relevant
+        return positionsOverlap(Positions[SE_START], Positions[SE_END], other.Positions[SE_START], other.Positions[SE_END]);
+    }
+
     public boolean containsPosition(int position) { return positionWithin(position, start(), end()); }
 
     public boolean matches(final BaseRegion other)

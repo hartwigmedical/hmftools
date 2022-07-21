@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.quality;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.sage.ReferenceData.loadBedFile;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.quality.QualityRecalibrationFile.generateBqrFilename;
 
@@ -16,9 +17,12 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.r.RExecutor;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.sage.ReferenceData;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.PartitionTask;
 
@@ -27,8 +31,8 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class BaseQualityRecalibration
 {
-    private final IndexedFastaSequenceFile mRefGenome;
     private final SageConfig mConfig;
+    private final IndexedFastaSequenceFile mRefGenome;
 
     private final Map<String,QualityRecalibrationMap> mSampleRecalibrationMap;
     private final Queue<PartitionTask> mRegions;
@@ -37,8 +41,8 @@ public class BaseQualityRecalibration
 
     public BaseQualityRecalibration(final SageConfig config, final IndexedFastaSequenceFile refGenome)
     {
-        mRefGenome = refGenome;
         mConfig = config;
+        mRefGenome = refGenome;
 
         mSampleRecalibrationMap = Maps.newHashMap();
         mRegions = new ConcurrentLinkedQueue<>();
@@ -205,6 +209,9 @@ public class BaseQualityRecalibration
         List<PartitionTask> regionTasks = Lists.newArrayList();
         int taskId = 1;
 
+        // form regions from 2MB per chromosome and additionally include the coding panel
+        Map<Chromosome,List<BaseRegion>> panelBed = !mConfig.PanelBed.isEmpty() ? loadBedFile(mConfig.PanelBed) : null;
+
         for(final SAMSequenceRecord sequenceRecord : mRefGenome.getSequenceDictionary().getSequences())
         {
             final String chromosome = sequenceRecord.getSequenceName();
@@ -215,15 +222,36 @@ public class BaseQualityRecalibration
             if(!HumanChromosome.contains(chromosome) || !HumanChromosome.fromString(chromosome).isAutosome())
                 continue;
 
+            List<PartitionTask> chrRegionTasks = Lists.newArrayList();
+
             int start = sequenceRecord.getSequenceLength() - END_BUFFER - mConfig.QualityRecalibration.SampleSize;
             int end = sequenceRecord.getSequenceLength() - (END_BUFFER + 1);
 
             while(start < end)
             {
-                regionTasks.add(new PartitionTask(new ChrBaseRegion(chromosome, start, start + REGION_SIZE - 1), taskId++));
+                chrRegionTasks.add(new PartitionTask(new ChrBaseRegion(chromosome, start, start + REGION_SIZE - 1), taskId++));
                 start += REGION_SIZE;
             }
+
+            if(panelBed != null && panelBed.containsKey(HumanChromosome.fromString(chromosome)))
+            {
+                List<BaseRegion> panelRegions = panelBed.get(HumanChromosome.fromString(chromosome));
+
+                List<PartitionTask> panelRegionTasks = Lists.newArrayList();
+                for(BaseRegion panelRegion : panelRegions)
+                {
+                    if(chrRegionTasks.stream().anyMatch(x -> panelRegion.overlaps(x.Partition)))
+                        continue;
+
+                    panelRegionTasks.add(new PartitionTask(new ChrBaseRegion(chromosome, panelRegion.start(), panelRegion.end()), taskId++));
+                }
+
+                chrRegionTasks.addAll(panelRegionTasks);
+            }
+
+            regionTasks.addAll(chrRegionTasks);
         }
+
         return regionTasks;
     }
 

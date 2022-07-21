@@ -42,15 +42,18 @@ public class BaseQualityData
     public void setHasIndel() { mHasIndel = true; }
     public boolean hasIndel() { return mHasIndel; }
 
-    public Map<BaseQualityKey,Integer> formKeyCounts(int maxAltCount)
+    public Map<BaseQualityKey,Integer> formKeyCounts(int maxAltCount, double maxAltPerc)
     {
         Map<BaseQualityKey,Integer> keyCounts = Maps.newHashMap();
 
         // exclude any alt with too much support (regardless of quality)
         Map<Byte,Integer> altCounts = Maps.newHashMap();
 
+        int totalCount = 0;
         for(AltQualityCount aqCount : mAltQualityCounts)
         {
+            totalCount += aqCount.Count;
+
             if(aqCount.Alt == Ref)
                 continue;
 
@@ -60,8 +63,13 @@ public class BaseQualityData
 
         for(AltQualityCount aqCount : mAltQualityCounts)
         {
-            if(altCounts.containsKey(aqCount.Alt) && altCounts.get(aqCount.Alt) > maxAltCount)
-                continue;
+            if(altCounts.containsKey(aqCount.Alt))
+            {
+                int altCount = altCounts.get(aqCount.Alt);
+                double altVaf = altCount / (double)totalCount;
+                if(altVaf > maxAltPerc && altCount > maxAltCount)
+                    continue;
+            }
 
             keyCounts.put(new BaseQualityKey(Ref, aqCount.Alt, TrinucleotideContext, aqCount.Quality), aqCount.Count);
         }

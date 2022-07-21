@@ -7,13 +7,11 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageCommon.calcMemoryUsage;
 import static com.hartwig.hmftools.sage.SageCommon.logMemoryUsage;
 import static com.hartwig.hmftools.sage.coverage.GeneCoverage.populateCoverageBuckets;
-import static com.hartwig.hmftools.sage.quality.BaseQualityRecalibration.buildQualityRecalibrationMap;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
