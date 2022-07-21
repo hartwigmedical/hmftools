@@ -95,14 +95,15 @@ public class BaseQualityRegionCounter implements CigarHandler
             {
                 mBaseQualityData[i] = null;
             }
-
-            mKeyCountsMap.clear();
-            mQualityCounts.clear();
-            mReadCounter = 0;
-            mPurgeIndex = 0;
-            mMaxIndex = 0;
-            mPerfCounter.reset();
         }
+
+        mKeyCountsMap.clear();
+        mQualityCounts.clear();
+        mReadCounter = 0;
+        mPurgeIndex = 0;
+        mMaxIndex = 0;
+
+        mPerfCounter.reset();
     }
 
     public Collection<QualityCounter> getQualityCounts() { return mQualityCounts; }
