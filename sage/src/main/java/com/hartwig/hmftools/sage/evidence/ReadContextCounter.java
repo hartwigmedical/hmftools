@@ -275,8 +275,7 @@ public class ReadContextCounter implements VariantHotspot
 
         adjustedNumOfEvents = max(mMinNumberOfEvents, adjustedNumOfEvents);
 
-        double baseQuality = qualityCalc.baseQuality(this, readIndex, record);
-        double quality = qualityCalc.calculateQualityScore(this, readIndex, record, adjustedNumOfEvents, baseQuality);
+        double quality = qualityCalc.calculateQualityScore(this, readIndex, record, adjustedNumOfEvents);
 
         // Check if FULL, PARTIAL, OR CORE
         if(!baseDeleted)
@@ -315,7 +314,9 @@ public class ReadContextCounter implements VariantHotspot
 
                 ++mCounts[RC_TOTAL];
                 mQualities[RC_TOTAL] += quality;
-                mSupportAltBaseQualityTotal += baseQuality;
+
+                double rawBaseQuality = qualityCalc.rawBaseQuality(this, readIndex, record);
+                mSupportAltBaseQualityTotal += rawBaseQuality;
 
                 /*
                 SG_LOGGER.trace("var({}) readContext({}-{}-{}) support({}) read(idx={} posStart={} cigar={} id={}) readBases({})",

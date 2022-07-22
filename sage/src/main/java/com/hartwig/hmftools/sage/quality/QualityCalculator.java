@@ -48,10 +48,10 @@ public class QualityCalculator
     }
 
     public double calculateQualityScore(
-            final ReadContextCounter readContextCounter, int readBaseIndex, final SAMRecord record, double numberOfEvents,
-            double baseQuality)
+            final ReadContextCounter readContextCounter, int readBaseIndex, final SAMRecord record, double numberOfEvents)
     {
         int distanceFromReadEdge = readDistanceFromEdge(readContextCounter, readBaseIndex, record);
+        double baseQuality = baseQuality(readContextCounter, readBaseIndex, record);
 
         int mapQuality = record.getMappingQuality();
         boolean properPairFlag = record.getReadPairedFlag() && record.getProperPairFlag();
@@ -66,6 +66,23 @@ public class QualityCalculator
         return !readContextCounter.variant().isIndel()
                 ? baseQuality(readContextCounter, readBaseIndex, record, readContextCounter.variant().ref().length())
                 : readContextCounter.readContext().avgCentreQuality(readBaseIndex, record);
+    }
+
+    public static double rawBaseQuality(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
+    {
+        if(readContextCounter.variant().isIndel())
+            return readContextCounter.readContext().avgCentreQuality(readIndex, record);
+
+        int varLength = readContextCounter.variant().ref().length();
+
+        double baseQualTotal = 0;
+
+        for(int i = readIndex; i < readIndex + varLength; ++i)
+        {
+            baseQualTotal += record.getBaseQualities()[i];
+        }
+
+        return baseQualTotal / varLength;
     }
 
     private double baseQuality(final ReadContextCounter readContextCounter, int startReadIndex, final SAMRecord record, int length)
