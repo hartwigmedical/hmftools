@@ -186,6 +186,4 @@ public class ReadSupportTest
                 buildFlags(firstInPair, reversed, false, false, false),
                 DEFAULT_MAP_QUAL, DEFAULT_BASE_QUAL));
     }
-
-
 }

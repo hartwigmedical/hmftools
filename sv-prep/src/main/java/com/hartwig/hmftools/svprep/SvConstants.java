@@ -17,8 +17,13 @@ public final class SvConstants
     public static final int MIN_SOFT_CLIP_MIN_BASE_QUAL = 25;
     public static final double MIN_SOFT_CLIP_HIGH_QUAL_PERC = 0.85;
     public static final int MIN_INSERT_LENGTH_SUPPORT = 10;
-    public static final int MIN_INDEL_LENGTH = 32;
+    public static final int MIN_INDEL_LENGTH = 20;
     public static final int LOW_BASE_QUALITY = 20;
+
+    public static final int REPEAT_BREAK_SC_CHECK_LENGTH = 6;
+    public static final int REPEAT_BREAK_MATCH_CHECK_LENGTH = 9;
+    public static final int REPEAT_BREAK_MIN_MAP_QUAL = 40;
+    public static final int REPEAT_BREAK_MIN_SC_LENGTH = 50;
 
     // supporting reads
     public static final int JUNCTION_SUPPORT_CAP = 0; // no limit

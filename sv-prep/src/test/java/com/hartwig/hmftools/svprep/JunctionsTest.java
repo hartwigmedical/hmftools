@@ -7,10 +7,12 @@ import static com.hartwig.hmftools.svprep.SvPrepTestUtils.HOTSPOT_CACHE;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.READ_FILTERS;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.createSamRecord;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.readIdStr;
+import static com.hartwig.hmftools.svprep.reads.ReadFilters.isRepetitiveSectionBreak;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
 
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
@@ -212,5 +214,42 @@ public class JunctionsTest
         junctionTracker.createJunctions();
 
         assertTrue(junctionTracker.junctions().isEmpty());
+    }
+
+    @Test
+    public void testRepetitiveBreaks()
+    {
+        String bases = generateRandomBases(30);
+
+        assertFalse(isRepetitiveSectionBreak(bases.getBytes(), true, 10));
+        assertFalse(isRepetitiveSectionBreak(bases.getBytes(), false, 10));
+
+        bases = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+
+        assertTrue(isRepetitiveSectionBreak(bases.getBytes(), true, 10));
+        assertTrue(isRepetitiveSectionBreak(bases.getBytes(), false, 10));
+
+        // 2-base repeats
+        bases = "ATATATATATATATATATATATATATATAT";
+
+        assertTrue(isRepetitiveSectionBreak(bases.getBytes(), true, 10));
+        assertTrue(isRepetitiveSectionBreak(bases.getBytes(), false, 10));
+
+        // 1 error
+        bases = "ATATATAGATATATATATATAGATATATAT";
+
+        assertFalse(isRepetitiveSectionBreak(bases.getBytes(), true, 10));
+        assertFalse(isRepetitiveSectionBreak(bases.getBytes(), false, 10));
+
+        // 3-base repeats
+        bases = "ATCATCATCATCATCATCATCATCATCATCATC";
+
+        assertTrue(isRepetitiveSectionBreak(bases.getBytes(), true, 10));
+        assertTrue(isRepetitiveSectionBreak(bases.getBytes(), false, 10));
+
+        bases = "ATCATCATGATCATCATCATCATCGTCATCATC";
+
+        assertFalse(isRepetitiveSectionBreak(bases.getBytes(), true, 10));
+        assertFalse(isRepetitiveSectionBreak(bases.getBytes(), false, 10));
     }
 }

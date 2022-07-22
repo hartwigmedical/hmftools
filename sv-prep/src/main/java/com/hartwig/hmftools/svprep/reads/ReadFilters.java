@@ -2,10 +2,16 @@ package com.hartwig.hmftools.svprep.reads;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.svprep.SvConstants.REPEAT_BREAK_MATCH_CHECK_LENGTH;
+import static com.hartwig.hmftools.svprep.SvConstants.REPEAT_BREAK_MIN_MAP_QUAL;
+import static com.hartwig.hmftools.svprep.SvConstants.REPEAT_BREAK_MIN_SC_LENGTH;
+import static com.hartwig.hmftools.svprep.SvConstants.REPEAT_BREAK_SC_CHECK_LENGTH;
 
 import static htsjdk.samtools.CigarOperator.M;
+import static htsjdk.samtools.CigarOperator.binaryToEnum;
 import static htsjdk.samtools.SAMFlag.MATE_UNMAPPED;
 
 import htsjdk.samtools.Cigar;
@@ -59,7 +65,8 @@ public class ReadFilters
                 final byte[] baseQualities = record.getBaseQualities();
                 int scRangeStart = scLeft > scRight ? 0 : baseQualities.length - scRight;
                 int scRangeEnd = scLeft > scRight ? scLeft : baseQualities.length;
-                double scLength = max(scLeft, scRight);
+                boolean useLeftClip = scLeft > scRight;
+                int scLength = useLeftClip ? scLeft : scRight;
 
                 int aboveQual = 0;
                 for(int i = scRangeStart; i < scRangeEnd; ++i)
@@ -70,6 +77,15 @@ public class ReadFilters
 
                 if(aboveQual / scLength < mConfig.MinSoftClipHighQualPerc)
                     filters |= ReadFilterType.SOFT_CLIP_BASE_QUAL.flag();
+
+                if(!ReadFilterType.isSet(filters, ReadFilterType.SOFT_CLIP_LENGTH))
+                {
+                    if((record.getMappingQuality() < REPEAT_BREAK_MIN_MAP_QUAL || scLength < REPEAT_BREAK_MIN_SC_LENGTH)
+                    && isRepetitiveSectionBreak(record.getReadBases(), useLeftClip, scLength))
+                    {
+                        filters |= ReadFilterType.BREAK_IN_REPEAT.flag();
+                    }
+                }
             }
         }
 
@@ -111,5 +127,73 @@ public class ReadFilters
             return true;
 
         return false;
+    }
+
+    public static boolean isRepetitiveSectionBreak(final byte[] readBases, boolean leftClipped, int scLength)
+    {
+        int readLength = readBases.length;
+
+        int startIndex;
+
+        if(leftClipped)
+        {
+            // 0-9 sc bases, length = 10, checked range is 4-9 and 10-17
+            startIndex = max(scLength - REPEAT_BREAK_SC_CHECK_LENGTH, 0);
+        }
+        else
+        {
+            // 91-100 sc bases, length = 10, checked range 83-90 and 91-96
+            startIndex = max(readLength - scLength - REPEAT_BREAK_MATCH_CHECK_LENGTH, 0);
+        }
+
+        int endIndex = min(startIndex + REPEAT_BREAK_SC_CHECK_LENGTH + REPEAT_BREAK_MATCH_CHECK_LENGTH, readLength);
+
+        if(endIndex - startIndex < REPEAT_BREAK_SC_CHECK_LENGTH + REPEAT_BREAK_MATCH_CHECK_LENGTH)
+            return false;
+
+        byte firstBase = readBases[startIndex];
+
+        boolean allMatch = true;
+
+        for(int i = startIndex + 1; i < endIndex; ++i)
+        {
+            if(readBases[i] != firstBase)
+            {
+                allMatch = false;
+                break;
+            }
+        }
+
+        if(allMatch)
+            return true;
+
+        byte secondBase = readBases[startIndex + 1];
+        allMatch = true;
+
+        for(int i = startIndex + 2; i < endIndex - 1; i += 2)
+        {
+            if(readBases[i] != firstBase || readBases[i + 1] != secondBase)
+            {
+                allMatch = false;
+                break;
+            }
+        }
+
+        if(allMatch)
+            return true;
+
+        byte thirdBase = readBases[startIndex + 2];
+        allMatch = true;
+
+        for(int i = startIndex + 3; i < endIndex - 2; i += 3)
+        {
+            if(readBases[i] != firstBase || readBases[i + 1] != secondBase || readBases[i + 2] != thirdBase)
+            {
+                allMatch = false;
+                break;
+            }
+        }
+
+        return allMatch;
     }
 }
