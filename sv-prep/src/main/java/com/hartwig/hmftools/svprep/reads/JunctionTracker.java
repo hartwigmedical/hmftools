@@ -100,6 +100,11 @@ public class JunctionTracker
         }
     }
 
+    public void addExistingJunctions(final List<JunctionData> existingJunctions)
+    {
+        mJunctions.addAll(existingJunctions);
+    }
+
     public void createJunctions()
     {
         List<ReadGroup> candidateSupportGroups = Lists.newArrayList();
@@ -495,59 +500,6 @@ public class JunctionTracker
             return isChimericRead(read.record(), filterConfig);
 
         return false;
-
-        /* no longer check for a remote matching from the mate or supplementary
-
-        // must have both positions leading up to but not past the junction and one of its remote junctions
-        if(junctionData.RemoteJunctions.isEmpty())
-            return false;
-
-        int otherPosition;
-        String otherChromosome;
-        byte otherOrientation;
-
-        if(read.hasSuppAlignment())
-        {
-            otherChromosome = read.supplementaryAlignment().Chromosome;
-            otherPosition = read.supplementaryAlignment().Position;
-
-            if(read.orientation() == POS_ORIENT)
-                otherOrientation = read.supplementaryAlignment().Strand == SUPP_POS_STRAND ? NEG_ORIENT : POS_ORIENT;
-            else
-                otherOrientation = read.supplementaryAlignment().Strand == SUPP_NEG_STRAND ? POS_ORIENT : NEG_ORIENT;
-        }
-        else
-        {
-            otherChromosome = read.MateChromosome;
-            otherOrientation = read.mateOrientation();
-            otherPosition = read.MatePosStart;
-        }
-
-        for(RemoteJunction remoteJunction : junctionData.RemoteJunctions)
-        {
-            if(!remoteJunction.Chromosome.equals(otherChromosome))
-                continue;
-
-            if(remoteJunction.Orientation != otherOrientation)
-                continue;
-
-            if(abs(remoteJunction.Position - otherPosition) > maxDistance)
-                continue;
-
-            if(remoteJunction.Orientation == POS_ORIENT && otherPosition <= remoteJunction.Position)
-            {
-                ++remoteJunction.Fragments;
-                return true;
-            }
-            else if(remoteJunction.Orientation == NEG_ORIENT && otherPosition >= remoteJunction.Position)
-            {
-                ++remoteJunction.Fragments;
-                return true;
-            }
-        }
-
-        return false;
-        */
     }
 
     public static boolean hasExactJunctionSupport(
@@ -574,6 +526,9 @@ public class JunctionTracker
 
             if(readRightPos == junctionData.Position)
                 return true;
+
+            if(juncRead == null)
+                return false;
 
             // within 50 bases with exact sequence match in between the soft clip locations
             if(abs(readRightPos - junctionData.Position) > filterConfig.MinSupportingReadDistance)
@@ -619,6 +574,9 @@ public class JunctionTracker
 
             if(readLeftPos == junctionData.Position)
                 return true;
+
+            if(juncRead == null)
+                return false;
 
             // within 50 bases with exact sequence match in between the soft clip locations
             if(abs(readLeftPos - junctionData.Position) > filterConfig.MinSupportingReadDistance)
@@ -678,6 +636,10 @@ public class JunctionTracker
 
     private boolean junctionHasSupport(final JunctionData junctionData)
     {
+        // first deal with junctions loaded from another sample - keep these if they've found any possible support
+        if(junctionData.isExisting())
+            return !junctionData.JunctionGroups.isEmpty() || !junctionData.SupportingGroups.isEmpty();
+
         // 1 junction read, 3 exact supporting reads altogether and 1 map-qual read
         int junctionFrags = junctionData.JunctionGroups.size();
 

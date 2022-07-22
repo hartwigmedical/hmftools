@@ -55,7 +55,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.vcf.VCFCodec;
 
-public class VcfBucketCompare
+public class VcfJunctionCompare
 {
     private final String mSampleId;
     private final String mVcfFilename;
@@ -76,7 +76,7 @@ public class VcfBucketCompare
     private static final String BUCKET_FILE = "bucket_file";
     private static final String JUNCTION_FILE = "junction_file";
 
-    public VcfBucketCompare(final CommandLine cmd)
+    public VcfJunctionCompare(final CommandLine cmd)
     {
         mSampleId = cmd.getOptionValue(SAMPLE);
         mVcfFilename = cmd.getOptionValue(VCF_FILE);
@@ -518,8 +518,8 @@ public class VcfBucketCompare
 
         setLogLevel(cmd);
 
-        VcfBucketCompare vcfBucketCompare = new VcfBucketCompare(cmd);
-        vcfBucketCompare.run();
+        VcfJunctionCompare vcfJunctionCompare = new VcfJunctionCompare(cmd);
+        vcfJunctionCompare.run();
 
         SV_LOGGER.info("SV prep buckets vs VCF complete");
     }

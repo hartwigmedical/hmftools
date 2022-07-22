@@ -198,7 +198,8 @@ public class ResultsWriter
 
                 mJunctionWriter.write(format("%s,%d,%d,%d,%d,%d,%d,%s,%s",
                         chromosome, junctionData.Position, junctionData.Orientation, junctionData.junctionFragmentCount(),
-                        exactSupportFrags, discordantFrags, lowMapQualFrags, junctionData.hotspot(), junctionData.InitialRead.id()));
+                        exactSupportFrags, discordantFrags, lowMapQualFrags, junctionData.hotspot(),
+                        junctionData.InitialRead != null ? junctionData.InitialRead.id() : "EXISTING"));
 
                 // RemoteChromosome:RemotePosition:RemoteOrientation;Fragments then separated by ';'
                 String remoteJunctionsStr = "";

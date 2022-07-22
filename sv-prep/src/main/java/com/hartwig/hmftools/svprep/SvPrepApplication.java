@@ -7,13 +7,8 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConfig.createCmdLineOptions;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
-import com.hartwig.hmftools.svprep.reads.PartitionStats;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -28,12 +23,14 @@ public class SvPrepApplication
     private final SvConfig mConfig;
     private final ResultsWriter mWriter;
     private final CombinedReadGroups mCombinedReadGroups;
+    private final ExistingJunctionCache mExistingJunctionCache;
 
     public SvPrepApplication(final CommandLine cmd)
     {
         mConfig = new SvConfig(cmd);
         mWriter = new ResultsWriter(mConfig);
         mCombinedReadGroups = new CombinedReadGroups(mConfig);
+        mExistingJunctionCache = new ExistingJunctionCache();
     }
 
     public void run()
@@ -44,6 +41,8 @@ public class SvPrepApplication
 
         if(mConfig.CalcFragmentLength)
             calcFragmentDistribution();
+
+        mExistingJunctionCache.loadJunctions(mConfig.ExistingJunctionFile);
 
         CombinedStats combinedStats = new CombinedStats();
 
@@ -56,7 +55,7 @@ public class SvPrepApplication
 
             SV_LOGGER.info("processing chromosome({})", chromosomeStr);
 
-            ChromosomeTask chromosomeTask = new ChromosomeTask(chromosomeStr, mConfig, mCombinedReadGroups, mWriter);
+            ChromosomeTask chromosomeTask = new ChromosomeTask(chromosomeStr, mConfig, mCombinedReadGroups, mExistingJunctionCache, mWriter);
             chromosomeTask.process();
             combinedStats.addPartitionStats(chromosomeTask.combinedStats().ReadStats);
 

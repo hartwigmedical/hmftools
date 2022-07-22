@@ -24,17 +24,20 @@ public class ChromosomeTask implements AutoCloseable
     private final String mChromosome;
     private final SvConfig mConfig;
     private final CombinedReadGroups mCombinedReadGroups;
+    private final ExistingJunctionCache mExistingJunctionCache;
     private final ResultsWriter mWriter;
     private final Queue<PartitionTask> mPartitions;
 
     private final CombinedStats mCombinedStats;
 
     public ChromosomeTask(
-            final String chromosome, final SvConfig config, final CombinedReadGroups combinedReadGroups, final ResultsWriter writer)
+            final String chromosome, final SvConfig config, final CombinedReadGroups combinedReadGroups,
+            final ExistingJunctionCache existingJunctionCache, final ResultsWriter writer)
     {
         mChromosome = chromosome;
         mConfig = config;
         mCombinedReadGroups = combinedReadGroups;
+        mExistingJunctionCache = existingJunctionCache;
         mWriter = writer;
 
         mCombinedStats = new CombinedStats();
@@ -65,7 +68,7 @@ public class ChromosomeTask implements AutoCloseable
 
         for(int i = 0; i < min(mPartitions.size(), mConfig.Threads); ++i)
         {
-            workers.add(new PartitionThread(mChromosome, mConfig, mPartitions, mCombinedReadGroups, mWriter, mCombinedStats));
+            workers.add(new PartitionThread(mChromosome, mConfig, mPartitions, mCombinedReadGroups, mExistingJunctionCache, mWriter, mCombinedStats));
         }
 
         for(Thread worker : workers)

@@ -235,7 +235,7 @@ public class JunctionsTest
         assertTrue(isRepetitiveSectionBreak(bases.getBytes(), true, 10));
         assertTrue(isRepetitiveSectionBreak(bases.getBytes(), false, 10));
 
-        // 1 error
+        // with an error
         bases = "ATATATAGATATATATATATAGATATATAT";
 
         assertFalse(isRepetitiveSectionBreak(bases.getBytes(), true, 10));
@@ -247,6 +247,7 @@ public class JunctionsTest
         assertTrue(isRepetitiveSectionBreak(bases.getBytes(), true, 10));
         assertTrue(isRepetitiveSectionBreak(bases.getBytes(), false, 10));
 
+        // with an error
         bases = "ATCATCATGATCATCATCATCATCGTCATCATC";
 
         assertFalse(isRepetitiveSectionBreak(bases.getBytes(), true, 10));

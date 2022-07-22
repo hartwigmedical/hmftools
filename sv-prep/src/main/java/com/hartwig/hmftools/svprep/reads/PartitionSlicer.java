@@ -30,6 +30,7 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.CombinedReadGroups;
 import com.hartwig.hmftools.svprep.CombinedStats;
+import com.hartwig.hmftools.svprep.ExistingJunctionCache;
 import com.hartwig.hmftools.svprep.ResultsWriter;
 import com.hartwig.hmftools.svprep.SvConfig;
 import com.hartwig.hmftools.svprep.WriteType;
@@ -72,7 +73,7 @@ public class PartitionSlicer
 
     public PartitionSlicer(
             final int id, final ChrBaseRegion region, final SvConfig config, final CombinedReadGroups combinedReadGroups,
-            final ResultsWriter writer, final CombinedStats combinedStats)
+            final ExistingJunctionCache existingJunctionCache, final ResultsWriter writer, final CombinedStats combinedStats)
     {
         mId = id;
         mConfig = config;
@@ -83,6 +84,8 @@ public class PartitionSlicer
         mCombinedStats = combinedStats;
 
         mJunctionTracker = new JunctionTracker(mRegion, mConfig.ReadFiltering.config(), mConfig.Hotspots, mConfig.Blacklist);
+
+        mJunctionTracker.addExistingJunctions(existingJunctionCache.getRegionJunctions(mRegion));
 
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;

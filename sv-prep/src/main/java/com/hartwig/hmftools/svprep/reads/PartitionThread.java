@@ -7,6 +7,7 @@ import java.util.Queue;
 
 import com.hartwig.hmftools.svprep.CombinedReadGroups;
 import com.hartwig.hmftools.svprep.CombinedStats;
+import com.hartwig.hmftools.svprep.ExistingJunctionCache;
 import com.hartwig.hmftools.svprep.ResultsWriter;
 import com.hartwig.hmftools.svprep.SvConfig;
 
@@ -17,15 +18,19 @@ public class PartitionThread extends Thread
     private final CombinedReadGroups mCombinedReadGroups;
     private final ResultsWriter mWriter;
     private final CombinedStats mCombinedStats;
+    private final ExistingJunctionCache mExistingJunctionCache;
+
     private final Queue<PartitionTask> mPartitions;
 
     public PartitionThread(
             final String chromosome, final SvConfig config, final Queue<PartitionTask> partitions,
-            final CombinedReadGroups combinedReadGroups, final ResultsWriter writer, final CombinedStats combinedStats)
+            final CombinedReadGroups combinedReadGroups, final ExistingJunctionCache existingJunctionCache,
+            final ResultsWriter writer, final CombinedStats combinedStats)
     {
         mChromosome = chromosome;
         mConfig = config;
         mCombinedReadGroups = combinedReadGroups;
+        mExistingJunctionCache = existingJunctionCache;
         mWriter = writer;
         mCombinedStats = combinedStats;
         mPartitions = partitions;
@@ -42,7 +47,7 @@ public class PartitionThread extends Thread
                 PartitionTask partition = mPartitions.remove();
 
                 PartitionSlicer slicer = new PartitionSlicer(
-                        partition.TaskId, partition.Region, mConfig, mCombinedReadGroups, mWriter, mCombinedStats);
+                        partition.TaskId, partition.Region, mConfig, mCombinedReadGroups, mExistingJunctionCache, mWriter, mCombinedStats);
 
                 boolean logAndGc = partition.TaskId > 0 && (partition.TaskId % 10) == 0;
                 if(logAndGc)

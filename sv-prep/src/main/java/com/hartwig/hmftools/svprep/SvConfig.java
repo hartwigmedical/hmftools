@@ -53,6 +53,7 @@ public class SvConfig
     public final ReadFilters ReadFiltering;
     public final HotspotCache Hotspots;
     public final BlacklistLocations Blacklist;
+    public final String ExistingJunctionFile;
 
     public final int PartitionSize;
     public final int ReadLength;
@@ -78,6 +79,7 @@ public class SvConfig
     private static final String BAM_FILE = "bam_file";
     private static final String KNOWN_FUSION_BED = "known_fusion_bed";
     private static final String BLACKLIST_BED = "blacklist_bed";
+    private static final String EXISTING_JUNCTION_FILE = "existing_junction_file";
 
     private static final String WRITE_TYPES = "write_types";
 
@@ -114,6 +116,7 @@ public class SvConfig
 
         Hotspots = new HotspotCache(cmd.getOptionValue(KNOWN_FUSION_BED));
         Blacklist = new BlacklistLocations(cmd.getOptionValue(BLACKLIST_BED));
+        ExistingJunctionFile = cmd.getOptionValue(EXISTING_JUNCTION_FILE);
 
         PartitionSize = DEFAULT_CHR_PARTITION_SIZE;
 
@@ -197,6 +200,7 @@ public class SvConfig
 
         Hotspots = new HotspotCache(null);
         Blacklist = new BlacklistLocations(null);
+        ExistingJunctionFile = null;
 
         PartitionSize = partitionSize;
 
@@ -237,6 +241,7 @@ public class SvConfig
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version - accepts 37 (default) or 38");
         options.addOption(KNOWN_FUSION_BED, true, "Known fusion hotspot BED file");
         options.addOption(BLACKLIST_BED, true, "Blacklist regions BED file");
+        options.addOption(EXISTING_JUNCTION_FILE, true, "Load existing junction file to find supporting reads");
         options.addOption(READ_LENGTH, true, "Read length");
         options.addOption(CALC_FRAG_LENGTH, false, "Calculate distribution for fragment length");
         options.addOption(FRAG_LENGTH_RANGE, true, "Empirical fragment length range: Min:Max");

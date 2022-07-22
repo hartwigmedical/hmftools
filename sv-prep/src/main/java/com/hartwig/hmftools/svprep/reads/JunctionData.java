@@ -31,6 +31,8 @@ public class JunctionData
         mHotspot = false;
     }
 
+    public boolean isExisting() { return InitialRead == null; }
+
     public int junctionFragmentCount() { return JunctionGroups.size(); }
     public int supportingFragmentCount() { return SupportingGroups.size(); }
     public boolean hotspot() { return mHotspot; }
