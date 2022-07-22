@@ -163,7 +163,7 @@ public class GnomadCacheCombiner
                 }
             }
 
-            PV_LOGGER.info("loaded {} Gnomad frequency records from file({}), matched({})", itemCount, filename1, matchedCount);
+            PV_LOGGER.info("loaded {} Gnomad frequency records from file({}), matched({})", itemCount, filename2, matchedCount);
 
             String outputFile = mOutputDir + chrFilename;
             BufferedWriter writer = createBufferedWriter(outputFile, false);
