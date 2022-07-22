@@ -102,7 +102,6 @@ public class PaveConfig
         options.addOption(WRITE_PASS_ONLY, false, "Only annotate passing variants");
 
         GnomadAnnotation.addCmdLineArgs(options);
-        GnomadExomeAnnotation.addCmdLineArgs(options);
         Mappability.addCmdLineArgs(options);
         ClinvarAnnotation.addCmdLineArgs(options);
         Blacklistings.addCmdLineArgs(options);
