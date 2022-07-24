@@ -24,7 +24,7 @@ public class ExistingJunctionCache
         mChrJunctions = Maps.newHashMap();
     }
 
-    public List<JunctionData> getRegionJunctions(final ChrBaseRegion region)
+    public synchronized List<JunctionData> getRegionJunctions(final ChrBaseRegion region)
     {
         List<JunctionData> regionJunctions = Lists.newArrayList();
 

@@ -21,6 +21,7 @@ public class ReadGroup
     private final Set<String> mRemotePartitions; // given that supplementaries are no longer included, this is now 0 or 1 entries
     private int mExpectedReadCount;
     private Set<Integer> mJunctionPositions;
+    private boolean mIsRemoteExpected;
 
     public static int MAX_GROUP_READ_COUNT = 4;
 
@@ -31,6 +32,7 @@ public class ReadGroup
         mRemotePartitions = Sets.newHashSet();
         mExpectedReadCount = 0;
         mJunctionPositions = null;
+        mIsRemoteExpected = false;
         addRead(read);
     }
 
@@ -40,7 +42,7 @@ public class ReadGroup
     public boolean isComplete() { return mStatus == ReadGroupStatus.COMPLETE; }
     public boolean isIncomplete() { return mStatus == ReadGroupStatus.INCOMPLETE; }
 
-    public boolean spansPartitions() { return !mRemotePartitions.isEmpty(); }
+    public boolean spansPartitions() { return !mRemotePartitions.isEmpty() || mIsRemoteExpected; }
     public int partitionCount() { return mRemotePartitions.size() + 1; }
     public int expectedReadCount() { return mExpectedReadCount; }
     public Set<String> remotePartitions() { return mRemotePartitions; }
@@ -61,6 +63,9 @@ public class ReadGroup
     }
 
     public ReadGroupStatus groupStatus() { return mStatus; }
+
+    public boolean isRemoteExpected() { return mIsRemoteExpected; }
+    public void markRemoteExpected() { mIsRemoteExpected = true; }
 
     public boolean isSimpleComplete()
     {

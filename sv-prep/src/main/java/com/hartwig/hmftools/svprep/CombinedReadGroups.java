@@ -26,6 +26,16 @@ public class CombinedReadGroups
     private final SvConfig mConfig;
     private final int mPartitionSize;
 
+    // a cache of read groups found from each chr-partition to help retrieve complete fragments (ie expected reads within a group)
+    // when a new chr-partition completes, the following steps are done:
+    // - record that the chr-partition has been processed (in mProcessedPartitions)
+    // - search for any expected reads (ie mates from other read groups) in mChrPartitionReadGroupReads
+    // - if a read is matched, make note of it has already been written (to BAM) or record that it has been for future matches
+    // - remove any group once all reads have been matched/found
+    // - for newly registered expected reads (ie in future chr-partitions), store the in mChrPartitionReadGroupReads
+    // - also make a link of other (ie a 3rd) future chr-partitions back to the new chr-partition to speed up checking
+    // - purge any unmatched groups from this chr-partition if they weren't matched
+
     private final Map<String,Map<String,List<ExpectedRead>>> mChrPartitionReadGroupReads; // keyed by chromosome-partition then readId
 
     // a map of remote chr-partition to read partition to readIds
@@ -38,8 +48,6 @@ public class CombinedReadGroups
 
     private int mLastSnapshotCount;
     private int mMatchedGroups;
-
-    // logic to keep expected reads for a final search for them in the BAM has been disabled
 
     public CombinedReadGroups(final SvConfig config)
     {
@@ -72,9 +80,17 @@ public class CombinedReadGroups
 
     private String chrPartition(final String chromosome, int position) { return formChromosomePartition(chromosome, position, mPartitionSize); }
 
-    public synchronized void addUnmappedReadIds(final Set<String> readIds)
+    public synchronized Set<String> getExpectedReadIds(final ChrBaseRegion partitionRegion)
     {
-        mUnmappedReadIds.addAll(readIds);
+        Set<String> expectedReadIds = Sets.newHashSet();
+
+        String chrPartition = chrPartition(partitionRegion.Chromosome, partitionRegion.start());
+        Map<String,Set<String>> sourcePartitionMap = mExpectedChrPartitionReadIds.get(chrPartition);
+        if(sourcePartitionMap == null)
+            return expectedReadIds;
+
+        sourcePartitionMap.values().forEach(x -> expectedReadIds.addAll(x));
+        return expectedReadIds;
     }
 
     public synchronized void processSpanningReadGroups(
@@ -143,7 +159,8 @@ public class CombinedReadGroups
         if(findExistingRead(readChrPartition, readGroup, actualRead, read))
             return;
 
-        // only store this read if other remote partitions are expected and factor in remote partitions already processed
+        // only store this read if other remote partitions within this same read group are expected
+        // and factor in remote partitions already processed
         if(unprocessedPartitions.isEmpty())
             return;
 
@@ -175,7 +192,7 @@ public class CombinedReadGroups
         readGroupReads.add(read);
         addedReads.add(read);
 
-        // also make a link to this readId from the expected remote partition back to this read's partition
+        // also make a link to this readId from each other expected remote partition back to this read's partition
         for(String unprocessedPartition : unprocessedPartitions)
         {
             Map<String,Set<String>> sourcePartitionMap = mExpectedChrPartitionReadIds.get(unprocessedPartition);
@@ -279,7 +296,7 @@ public class CombinedReadGroups
                         missedReads.add(read);
                     }
 
-                    if(!addedReads.contains(read)) // read.found() &&
+                    if(!addedReads.contains(read))
                     {
                         read.registerMatch();
 
@@ -325,7 +342,7 @@ public class CombinedReadGroups
 
     public void writeRemainingReadGroups(final ResultsWriter writer)
     {
-        if(!mConfig.WriteTypes.contains(BAM) && !mConfig.WriteTypes.contains(READS))
+        if(!mConfig.writeReads())
             return;
 
         int readGroups = 0;

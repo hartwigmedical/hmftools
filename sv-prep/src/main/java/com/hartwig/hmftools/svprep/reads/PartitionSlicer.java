@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.svprep.WriteType.BAM;
 import static com.hartwig.hmftools.svprep.WriteType.READS;
 import static com.hartwig.hmftools.svprep.reads.ReadType.BLACKLIST;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
+import static com.hartwig.hmftools.svprep.reads.ReadType.EXPECTED;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
 import static com.hartwig.hmftools.svprep.reads.ReadType.RECOVERED;
 
@@ -134,6 +135,8 @@ public class PartitionSlicer
 
         mPerCounters[PC_JUNCTIONS].start();
 
+        mJunctionTracker.setExpectedReads(mCombinedReadGroups.getExpectedReadIds(mRegion));
+
         mJunctionTracker.createJunctions();
         mJunctionTracker.filterJunctions();
 
@@ -226,7 +229,7 @@ public class PartitionSlicer
         // check for any evidence of support for an SV
         boolean isSupportCandidate = mReadFilters.isCandidateSupportingRead(record);
 
-        if(!isSupportCandidate && !mConfig.WriteTypes.contains(BAM))
+        if(!isSupportCandidate && !mConfig.writeReads())
             return;
 
         ReadRecord read = ReadRecord.from(record);
@@ -240,7 +243,7 @@ public class PartitionSlicer
 
     private void writeData()
     {
-        boolean captureCompleteGroups = mConfig.WriteTypes.contains(BAM) || mConfig.WriteTypes.contains(READS);
+        boolean captureCompleteGroups = mConfig.writeReads();
 
         if(captureCompleteGroups)
         {
@@ -250,8 +253,12 @@ public class PartitionSlicer
             mJunctionTracker.junctionGroups().forEach(x -> assignReadGroup(x, spanningGroupsMap));
             mJunctionTracker.supportingGroups().forEach(x -> assignReadGroup(x, spanningGroupsMap));
 
+            List<ReadGroup> expectedGroups = mJunctionTracker.expectedGroups();
+            expectedGroups.forEach(x -> assignReadGroup(x, spanningGroupsMap));
+            expectedGroups.forEach(x -> x.reads().forEach(y -> y.setReadType(EXPECTED)));
+
             int spanningGroups = spanningGroupsMap.size();
-            int totalGroups = mJunctionTracker.junctionGroups().size() + mJunctionTracker.supportingGroups().size();
+            int totalGroups = mJunctionTracker.junctionGroups().size() + mJunctionTracker.supportingGroups().size() + expectedGroups.size();
 
             final Map<String, List<ExpectedRead>> missedReadsMap = Maps.newHashMap();
             mCombinedReadGroups.processSpanningReadGroups(mRegion, spanningGroupsMap, missedReadsMap);
@@ -265,13 +272,14 @@ public class PartitionSlicer
 
             int matchedReads = spanningGroupsMap.values().stream().mapToInt(x -> (int)x.reads().stream().filter(y -> y.written()).count()).sum();
 
-            SV_LOGGER.debug("region({}) readGroups({}) complete(local={} spanning={}) matchedReads({})",
-                    mRegion, totalGroups, totalGroups - spanningGroups, spanningGroups, matchedReads);
+            SV_LOGGER.debug("region({}) readGroups({}) complete(local={} spanning={}) expectedNotFound({}) matchedReads({})",
+                    mRegion, totalGroups, totalGroups - spanningGroups, spanningGroups, expectedGroups.size(), matchedReads);
 
             if(mConfig.WriteTypes.contains(BAM))
             {
                 mWriter.writeBamRecords(mJunctionTracker.junctionGroups());
                 mWriter.writeBamRecords(mJunctionTracker.supportingGroups());
+                mWriter.writeBamRecords(expectedGroups);
                 mWriter.writeBamRecords(recoveredReadGroups);
             }
 
@@ -279,6 +287,7 @@ public class PartitionSlicer
             {
                 mWriter.writeReadGroup(mJunctionTracker.junctionGroups());
                 mWriter.writeReadGroup(mJunctionTracker.supportingGroups());
+                mWriter.writeReadGroup(expectedGroups);
                 mWriter.writeReadGroup(recoveredReadGroups);
             }
         }
@@ -370,6 +379,7 @@ public class PartitionSlicer
             int position = entry.getKey();
             List<ExpectedRead> missedReads = entry.getValue();
             List<String> missedReadIds = positionReadIds.get(position);
+            int posMissedReadCount = missedReadIds.size();
 
             long startTime = System.nanoTime();
 
@@ -380,7 +390,7 @@ public class PartitionSlicer
             if(sliceTime > 2)
             {
                 SV_LOGGER.debug("slice time({}) for {} missed reads, location({}:{})",
-                        format("%.3f", sliceTime), missedReadIds.size(), mRegion.Chromosome, position);
+                        format("%.3f", sliceTime), posMissedReadCount, mRegion.Chromosome, position);
             }
         }
 

@@ -25,6 +25,7 @@ import static htsjdk.samtools.CigarOperator.M;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
@@ -45,6 +46,8 @@ public class JunctionTracker
     private final List<BaseRegion> mBlacklistRegions;
 
     private final Map<String,ReadGroup> mReadGroups; // keyed by readId
+    private final Set<String> mExpectedReadIds; // as indicated by another partition
+
     private final List<JunctionData> mJunctions; // ordered by position
     private final List<ReadGroup> mJunctionGroups; // groups used to form a junction
     private final List<ReadGroup> mSupportingGroups; // groups supporting a junction
@@ -68,6 +71,7 @@ public class JunctionTracker
         }
 
         mReadGroups = Maps.newHashMap();
+        mExpectedReadIds = Sets.newHashSet();
         mJunctions = Lists.newArrayList();
         mJunctionGroups = Lists.newArrayList();
         mSupportingGroups = Lists.newArrayList();
@@ -77,6 +81,15 @@ public class JunctionTracker
     public List<JunctionData> junctions() { return mJunctions; }
     public List<ReadGroup> junctionGroups() { return mJunctionGroups; }
     public List<ReadGroup> supportingGroups() { return mSupportingGroups; }
+
+    public List<ReadGroup> expectedGroups()
+    {
+        // groups not required by a junction but expected from other partitions
+        return mReadGroups.values().stream()
+                .filter(x -> x.isRemoteExpected() && x.junctionPositions() == null)
+                .collect(Collectors.toList());
+    }
+
     public int initialSupportingFrags() { return mInitialSupportingFrags; }
 
     public void processRead(final ReadRecord read)
@@ -104,6 +117,7 @@ public class JunctionTracker
     {
         mJunctions.addAll(existingJunctions);
     }
+    public void setExpectedReads(final Set<String> expectedReads) { mExpectedReadIds.addAll(expectedReads); }
 
     public void createJunctions()
     {
@@ -111,6 +125,12 @@ public class JunctionTracker
 
         for(ReadGroup readGroup : mReadGroups.values())
         {
+            if(mExpectedReadIds.contains(readGroup.id()))
+            {
+                readGroup.markRemoteExpected();
+                mExpectedReadIds.remove(readGroup.id());
+            }
+
             // ignore any group with a short overlapping fragment, likely adapter
             if(readGroup.reads().stream().anyMatch(x -> ReadFilterType.isSet(x.filters(), INSERT_MAP_OVERLAP)))
                 continue;

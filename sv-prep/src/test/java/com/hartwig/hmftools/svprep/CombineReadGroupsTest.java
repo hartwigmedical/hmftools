@@ -73,6 +73,7 @@ public class CombineReadGroupsTest
         mCombinedReadGroups.processSpanningReadGroups(REGION_1, spanningGroupsMap, missedReadsMap);
         assertFalse(read1.written());
         assertEquals(2, getExpectedReadsCount(null));
+        assertEquals(1, mCombinedReadGroups.getExpectedReadIds(REGION_2).size());
 
         spanningGroupsMap.clear();
         missedReadsMap.clear();
@@ -144,6 +145,7 @@ public class CombineReadGroupsTest
         // an empty partition
         spanningGroupsMap.clear();
         missedReadsMap.clear();
+        assertEquals(1, mCombinedReadGroups.getExpectedReadIds(REGION_2).size());
         mCombinedReadGroups.processSpanningReadGroups(REGION_2, spanningGroupsMap, missedReadsMap);
         assertEquals(1, missedReadsMap.size());
         ExpectedRead missedRead = missedReadsMap.get(rg1.id()).get(0);

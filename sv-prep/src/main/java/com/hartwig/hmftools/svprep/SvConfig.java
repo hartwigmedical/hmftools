@@ -26,6 +26,8 @@ import static com.hartwig.hmftools.svprep.SvConstants.MIN_SOFT_CLIP_HIGH_QUAL_PE
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_SOFT_CLIP_MIN_BASE_QUAL;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_SUPPORTING_READ_DISTANCE;
+import static com.hartwig.hmftools.svprep.WriteType.BAM;
+import static com.hartwig.hmftools.svprep.WriteType.READS;
 
 import java.util.Arrays;
 import java.util.List;
@@ -186,6 +188,8 @@ public class SvConfig
 
         return null;
     }
+
+    public boolean writeReads() { return WriteTypes.contains(BAM) || WriteTypes.contains(READS); }
 
     public SvConfig(int partitionSize)
     {
