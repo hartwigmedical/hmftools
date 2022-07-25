@@ -1,15 +1,19 @@
 package com.hartwig.hmftools.svprep;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.svprep.SvCommon.ITEM_DELIM;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.WriteType.JUNCTIONS;
 import static com.hartwig.hmftools.svprep.WriteType.READS;
 import static com.hartwig.hmftools.svprep.WriteType.SV_BED;
+import static com.hartwig.hmftools.svprep.reads.ReadFilterType.MIN_MAP_QUAL;
+import static com.hartwig.hmftools.svprep.reads.ReadRecord.hasPolyATSoftClip;
 
 import static htsjdk.samtools.SAMFlag.MATE_UNMAPPED;
 import static htsjdk.samtools.SAMFlag.PROPER_PAIR;
@@ -165,8 +169,8 @@ public class ResultsWriter
             String filename = mConfig.formFilename(JUNCTIONS);
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("Chromosome,Position,Orientation,JunctionFrags,SupportFrags,DiscordantFrags,LowMapQualFrags,Hotspot,InitialReadId");
-            writer.write(",RemoteJunctionCount,RemoteJunctions");
+            writer.write("Chromosome,Position,Orientation,JunctionFrags,SupportFrags,DiscordantFrags,LowMapQualFrags,MaxQual");
+            writer.write(",MaxSoftClip,BaseDepth,HasPolyAT,Indel,Hotspot,InitialReadId,RemoteJunctionCount,RemoteJunctions");
             writer.newLine();
 
             return writer;
@@ -188,17 +192,64 @@ public class ResultsWriter
         {
             for(JunctionData junctionData : junctions)
             {
-                int lowMapQualFrags = (int)junctionData.JunctionGroups.stream()
-                        .filter(x -> x.reads().stream().anyMatch(y -> y.filters() == ReadFilterType.MIN_MAP_QUAL.flag())).count();
+                int maxMapQual = 0;
+                int lowMapQualFrags = 0;
+                int maxSoftClip = 0;
+                boolean hasPloyAT = false;
+                boolean expectLeftClipped = junctionData.Orientation == NEG_ORIENT;
 
-                int exactSupportFrags = (int)junctionData.SupportingGroups.stream()
-                        .filter(x -> x.reads().stream().anyMatch(y -> y.readType() == ReadType.EXACT_SUPPORT)).count();
+                for(ReadGroup readGroup : junctionData.JunctionGroups)
+                {
+                    for(ReadRecord read : readGroup.reads())
+                    {
+                        if(read.readType() == ReadType.JUNCTION)
+                        {
+                            if(ReadFilterType.isSet(read.filters(), MIN_MAP_QUAL))
+                                ++lowMapQualFrags;
 
-                int discordantFrags = junctionData.SupportingGroups.size() - exactSupportFrags;
+                            maxMapQual = max(maxMapQual, read.mapQuality());
 
-                mJunctionWriter.write(format("%s,%d,%d,%d,%d,%d,%d,%s,%s",
+                            if(!hasPloyAT)
+                                hasPloyAT = hasPolyATSoftClip(read, expectLeftClipped);
+
+                            if(!junctionData.internalIndel()
+                            && ((expectLeftClipped && read.cigar().isLeftClipped()) || (!expectLeftClipped && read.cigar().isRightClipped())))
+                            {
+                                int scLength = expectLeftClipped ?
+                                        read.cigar().getFirstCigarElement().getLength() : read.cigar().getLastCigarElement().getLength();
+                                maxSoftClip = max(maxSoftClip, scLength);
+                            }
+                        }
+                    }
+                }
+
+                int exactSupportFrags = 0;
+                int discordantFrags = 0;
+                for(ReadGroup readGroup : junctionData.SupportingGroups)
+                {
+                    for(ReadRecord read : readGroup.reads())
+                    {
+                        if(read.readType() == ReadType.EXACT_SUPPORT)
+                        {
+                            ++exactSupportFrags;
+                            maxMapQual = max(maxMapQual, read.mapQuality());
+
+                            if(ReadFilterType.isSet(read.filters(), MIN_MAP_QUAL))
+                                ++lowMapQualFrags;
+                        }
+                        else
+                        {
+                            ++discordantFrags;
+                        }
+                    }
+                }
+
+                mJunctionWriter.write(format("%s,%d,%d,%d,%d,%d,%d,%d",
                         chromosome, junctionData.Position, junctionData.Orientation, junctionData.junctionFragmentCount(),
-                        exactSupportFrags, discordantFrags, lowMapQualFrags, junctionData.hotspot(),
+                        exactSupportFrags, discordantFrags, lowMapQualFrags, maxMapQual));
+
+                mJunctionWriter.write(format(",%d,%d,%s,%s,%s,%s",
+                        maxSoftClip, junctionData.depth(), hasPloyAT, junctionData.internalIndel(), junctionData.hotspot(),
                         junctionData.InitialRead != null ? junctionData.InitialRead.id() : "EXISTING"));
 
                 // RemoteChromosome:RemotePosition:RemoteOrientation;Fragments then separated by ';'

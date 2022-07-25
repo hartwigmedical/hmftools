@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.svprep.SvPrepTestUtils.READ_FILTERS;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.createSamRecord;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.readIdStr;
 import static com.hartwig.hmftools.svprep.reads.ReadFilters.isRepetitiveSectionBreak;
+import static com.hartwig.hmftools.svprep.reads.ReadRecord.hasPolyATSoftClip;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
 
@@ -33,7 +34,7 @@ public class JunctionsTest
     public JunctionsTest()
     {
         mPartitionRegion = new ChrBaseRegion(CHR_1, 1, 5000);
-        mJunctionTracker = new JunctionTracker(mPartitionRegion, READ_FILTERS, HOTSPOT_CACHE, BLACKLIST_LOCATIONS);
+        mJunctionTracker = new JunctionTracker(mPartitionRegion, new SvConfig(1000), HOTSPOT_CACHE, BLACKLIST_LOCATIONS);
     }
 
     private void addRead(final ReadRecord read, final ReadType readType)
@@ -99,7 +100,7 @@ public class JunctionsTest
                 readIdStr(readId), CHR_1, 1010, REF_BASES.substring(0, 50), "50M"));
 
         addRead(read7, JUNCTION);
-        addRead(read7, JUNCTION);
+        addRead(read8, JUNCTION);
 
         ReadRecord suppRead4 = ReadRecord.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 990, REF_BASES.substring(0, 73), "70M3S"));
@@ -190,7 +191,7 @@ public class JunctionsTest
     {
         BLACKLIST_LOCATIONS.addRegion(CHR_1, new BaseRegion(500, 1500));
 
-        JunctionTracker junctionTracker = new JunctionTracker(mPartitionRegion, READ_FILTERS, HOTSPOT_CACHE, BLACKLIST_LOCATIONS);
+        JunctionTracker junctionTracker = new JunctionTracker(mPartitionRegion, new SvConfig(1000), HOTSPOT_CACHE, BLACKLIST_LOCATIONS);
 
         int readId = 0;
 
@@ -252,5 +253,22 @@ public class JunctionsTest
 
         assertFalse(isRepetitiveSectionBreak(bases.getBytes(), true, 10));
         assertFalse(isRepetitiveSectionBreak(bases.getBytes(), false, 10));
+    }
+
+    @Test
+    public void testPolyATReads()
+    {
+        String aRepeat = "AAAAAAAAAA";
+        String tRepeat = "TTTTTTTTTT";
+        String bases = aRepeat + generateRandomBases(30) + tRepeat;
+
+        ReadRecord read = ReadRecord.from(createSamRecord("01",  CHR_1, 100, bases, "10S30M10S"));
+        assertTrue(hasPolyATSoftClip(read, true));
+        assertTrue(hasPolyATSoftClip(read, false));
+
+        bases = aRepeat + "C" + aRepeat + generateRandomBases(30) + tRepeat + "G" + tRepeat;
+        read = ReadRecord.from(createSamRecord("01",  CHR_1, 100, bases, "21S30M21S"));
+        assertFalse(hasPolyATSoftClip(read, true));
+        assertFalse(hasPolyATSoftClip(read, false));
     }
 }

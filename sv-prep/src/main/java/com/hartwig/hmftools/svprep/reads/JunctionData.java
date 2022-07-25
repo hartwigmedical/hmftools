@@ -16,7 +16,9 @@ public class JunctionData
     public final List<ReadGroup> SupportingGroups;
     public final List<RemoteJunction> RemoteJunctions;
 
+    private boolean mInternalIndel;
     private boolean mHotspot;
+    private int mDepth;
 
     public JunctionData(final int position, final byte orientation, final ReadRecord read)
     {
@@ -29,14 +31,23 @@ public class JunctionData
         InitialRead = read;
 
         mHotspot = false;
+        mInternalIndel = false;
+        mDepth = 0;
     }
 
     public boolean isExisting() { return InitialRead == null; }
 
     public int junctionFragmentCount() { return JunctionGroups.size(); }
     public int supportingFragmentCount() { return SupportingGroups.size(); }
+
     public boolean hotspot() { return mHotspot; }
     public void markHotspot() { mHotspot = true; }
+
+    public boolean internalIndel() { return mInternalIndel; }
+    public void markInternalIndel() { mInternalIndel = true; }
+
+    public void setDepth(int depth) { mDepth = depth; }
+    public int depth() { return mDepth; }
 
     public void addRemoteJunction(final RemoteJunction remoteJunction)
     {

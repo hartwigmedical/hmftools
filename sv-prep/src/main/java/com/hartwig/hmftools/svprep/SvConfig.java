@@ -72,6 +72,7 @@ public class SvConfig
     public final List<String> LogReadIds;
     public final int MaxPartitionReads;
     public final boolean ApplyDownsampling;
+    public final boolean CaptureDepth;
     public final List<ChrBaseRegion> SpecificRegions;
 
     private boolean mIsValid;
@@ -93,6 +94,7 @@ public class SvConfig
     private static final String LOG_READ_IDS = "log_read_ids";
     private static final String MAX_PARTITION_READS = "max_partition_reads";
     private static final String APPLY_DOWNSAMPLING = "apply_downsampling";
+    private static final String CAPTURE_DEPTH = "capture_depth";
 
     public SvConfig(final CommandLine cmd)
     {
@@ -163,6 +165,7 @@ public class SvConfig
 
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "1"));
         MaxPartitionReads = Integer.parseInt(cmd.getOptionValue(MAX_PARTITION_READS, "0"));
+        CaptureDepth = cmd.hasOption(CAPTURE_DEPTH);
         ApplyDownsampling = cmd.hasOption(APPLY_DOWNSAMPLING);
     }
 
@@ -224,6 +227,7 @@ public class SvConfig
                 MAX_DISCORDANT_READ_DISTANCE));
 
         CalcFragmentLength = false;
+        CaptureDepth = false;
         WriteTypes = Sets.newHashSet();
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();
@@ -253,6 +257,7 @@ public class SvConfig
         addSpecificChromosomesRegionsConfig(options);
         options.addOption(LOG_READ_IDS, true, "Log specific read IDs, separated by ';'");
         options.addOption(MAX_PARTITION_READS, true, "Limit to stop processing reads in partition, for debug");
+        options.addOption(CAPTURE_DEPTH, false, "Capture depth for junctions");
         options.addOption(APPLY_DOWNSAMPLING, false, "Apply downsampling of reads in high-depth regions");
         options.addOption(THREADS, true, "Thread count");
         ReadFilterConfig.addCmdLineArgs(options);

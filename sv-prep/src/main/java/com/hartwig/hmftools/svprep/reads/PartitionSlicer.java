@@ -84,7 +84,7 @@ public class PartitionSlicer
         mRegion = region;
         mCombinedStats = combinedStats;
 
-        mJunctionTracker = new JunctionTracker(mRegion, mConfig.ReadFiltering.config(), mConfig.Hotspots, mConfig.Blacklist);
+        mJunctionTracker = new JunctionTracker(mRegion, mConfig, mConfig.Hotspots, mConfig.Blacklist);
 
         mJunctionTracker.addExistingJunctions(existingJunctionCache.getRegionJunctions(mRegion));
 

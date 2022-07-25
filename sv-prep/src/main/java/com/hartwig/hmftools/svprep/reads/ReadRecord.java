@@ -136,4 +136,42 @@ public class ReadRecord
                 .filter(x -> x.getOperator() == CigarOperator.D || x.getOperator() == CigarOperator.I)
                 .mapToInt(x -> x.getLength()).max().orElse(0);
     }
+
+    public static boolean hasPolyATSoftClip(final ReadRecord read, final boolean isClippedLeft)
+    {
+        int scLength = isClippedLeft ? read.cigar().getFirstCigarElement().getLength() : read.cigar().getLastCigarElement().getLength();
+        int readLength = read.record().getReadBases().length;
+
+        int scStart = isClippedLeft ? 0 : readLength - scLength;
+        int scEnd = isClippedLeft ? scLength : readLength;
+
+        char firstBase = (char)read.record().getReadBases()[scStart];
+        boolean allAs = false;
+        boolean allTs = false;
+
+        if(firstBase == 'A')
+            allAs = true;
+        else if(firstBase == 'T')
+            allTs = true;
+        else
+            return false;
+
+        for(int i = scStart + 1; i < scEnd; ++i)
+        {
+            char base = (char)read.record().getReadBases()[i];
+
+            if(allAs)
+            {
+                if(base != 'A')
+                    return false;
+            }
+            else
+            {
+                if(base != 'T')
+                    return false;
+            }
+        }
+
+        return true;
+    }
 }

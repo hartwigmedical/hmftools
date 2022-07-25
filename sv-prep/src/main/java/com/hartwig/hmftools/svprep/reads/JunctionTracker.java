@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.svprep.reads;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
@@ -35,6 +37,7 @@ import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.BlacklistLocations;
 import com.hartwig.hmftools.svprep.HotspotCache;
+import com.hartwig.hmftools.svprep.SvConfig;
 
 import htsjdk.samtools.CigarElement;
 
@@ -52,12 +55,13 @@ public class JunctionTracker
     private final List<ReadGroup> mJunctionGroups; // groups used to form a junction
     private final List<ReadGroup> mSupportingGroups; // groups supporting a junction
     private int mInitialSupportingFrags;
+    private final int[] mBaseDepth;
 
     public JunctionTracker(
-            final ChrBaseRegion region, final ReadFilterConfig config, final HotspotCache hotspotCache, final BlacklistLocations blacklist)
+            final ChrBaseRegion region, final SvConfig config, final HotspotCache hotspotCache, final BlacklistLocations blacklist)
     {
         mRegion = region;
-        mFilterConfig = config;
+        mFilterConfig = config.ReadFiltering.config();
         mHotspotCache = hotspotCache;
 
         mBlacklistRegions = Lists.newArrayList();
@@ -76,6 +80,8 @@ public class JunctionTracker
         mJunctionGroups = Lists.newArrayList();
         mSupportingGroups = Lists.newArrayList();
         mInitialSupportingFrags = 0;
+
+        mBaseDepth = config.CaptureDepth ? new int[mRegion.baseLength()] : null;
     }
 
     public List<JunctionData> junctions() { return mJunctions; }
@@ -107,9 +113,14 @@ public class JunctionTracker
         if(readGroup.isSimpleComplete()) // purge irrelevant groups
         {
             if(readGroup.allNoSupport())
+            {
+                captureDepth(readGroup);
                 mReadGroups.remove(readGroup.id());
+            }
             else if(groupInBlacklist(readGroup))
+            {
                 mReadGroups.remove(readGroup.id());
+            }
         }
     }
 
@@ -119,12 +130,35 @@ public class JunctionTracker
     }
     public void setExpectedReads(final Set<String> expectedReads) { mExpectedReadIds.addAll(expectedReads); }
 
+    private void captureDepth(final ReadGroup readGroup)
+    {
+        if(mBaseDepth == null)
+            return;
+
+        int readsPosMin = readGroup.reads().stream().mapToInt(x -> x.start()).min().orElse(0);
+        int readsPosMax = readGroup.reads().stream().mapToInt(x -> x.end()).max().orElse(0);
+        int baseStart = max(readsPosMin - mRegion.start(), 0);
+        int baseEnd = min(readsPosMax - mRegion.start(), mBaseDepth.length - 1);
+        for(int i = baseStart; i <= baseEnd; ++i)
+        {
+            ++mBaseDepth[i];
+        }
+    }
+
+    private int getBaseDepth(int position)
+    {
+        int baseIndex = position - mRegion.start();
+        return baseIndex >= 0 && baseIndex < mBaseDepth.length ? mBaseDepth[baseIndex] : 0;
+    }
+
     public void createJunctions()
     {
         List<ReadGroup> candidateSupportGroups = Lists.newArrayList();
 
         for(ReadGroup readGroup : mReadGroups.values())
         {
+            captureDepth(readGroup);
+
             if(mExpectedReadIds.contains(readGroup.id()))
             {
                 readGroup.markRemoteExpected();
@@ -168,6 +202,11 @@ public class JunctionTracker
                 mSupportingGroups.add(readGroup);
             }
         }
+
+        if(mBaseDepth != null)
+        {
+            mJunctions.forEach(x -> x.setDepth(getBaseDepth(x.Position)));
+        }
     }
 
     private boolean isJunctionFragment(final ReadGroup readGroup)
@@ -191,6 +230,9 @@ public class JunctionTracker
             }
 
             handleInternalIndel(readGroup, read);
+
+            if(read.readType() != JUNCTION)
+                continue;
 
             SoftClipSide scSide = SoftClipSide.fromCigar(read.cigar());
 
@@ -304,6 +346,9 @@ public class JunctionTracker
 
         JunctionData junctionStart = getOrCreateJunction(read, junctionStartPos, POS_ORIENT);
         JunctionData junctionEnd = getOrCreateJunction(read, junctionEndPos, NEG_ORIENT);
+
+        junctionStart.markInternalIndel();
+        junctionEnd.markInternalIndel();
 
         if(reachedFragmentCap(junctionStart.junctionFragmentCount()) && reachedFragmentCap(junctionEnd.junctionFragmentCount()))
             return;
