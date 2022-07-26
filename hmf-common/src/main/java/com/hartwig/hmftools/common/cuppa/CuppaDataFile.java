@@ -7,10 +7,8 @@ import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsInde
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -18,10 +16,8 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import org.jetbrains.annotations.NotNull;
-
-public class CuppaDataFile {
-
+public class CuppaDataFile
+{
     public final CategoryType Category;
     public final ResultType Result;
     public final String DataType;
@@ -120,30 +116,5 @@ public class CuppaDataFile {
         }
 
         return results;
-    }
-
-    @NotNull
-    public static List<CuppaEntry> readEntries(final String filename) throws IOException
-    {
-        List<CuppaEntry> entries = Lists.newArrayList();
-
-        List<CuppaDataFile> cuppaData = read(filename);
-
-        for(CuppaDataFile result : cuppaData)
-        {
-            for(Map.Entry<String,Double> entry : result.CancerTypeValues.entrySet())
-            {
-                entries.add(ImmutableCuppaEntry.builder()
-                        .category(result.Category)
-                        .resultType(result.Result)
-                        .dataType(result.DataType)
-                        .value(result.Value)
-                        .refCancerType(entry.getKey())
-                        .refValue(entry.getValue())
-                        .build());
-            }
-        }
-
-        return entries;
     }
 }
