@@ -31,7 +31,6 @@ public final class SvConstants
     public static final int MAX_DISCORDANT_READ_DISTANCE = 1000;
 
     // final junction filtering
-    public static final int SUPPORTING_READ_DISTANCE = 50;
     public static final int MIN_HOTSPOT_JUNCTION_SUPPORT = 2;
     public static final int MIN_JUNCTION_SUPPORT = 3;
 
