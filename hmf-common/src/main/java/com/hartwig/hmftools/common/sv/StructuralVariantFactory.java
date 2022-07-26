@@ -120,8 +120,6 @@ public class StructuralVariantFactory
             final StructuralVariantType type = type(context);
             if(type.equals(BND))
             {
-                // final boolean isSingleBreakend = SINGLE_BREAKEND_REGEX.matcher(context.getAlternateAllele(0).getDisplayString()).matches();
-
                 if(isSingleBreakend(context))
                 {
                     mCompleteVariants.add(createSingleBreakend(context));

@@ -355,8 +355,8 @@ public class VcfJunctionCompare
             int chrIndex = fieldsIndexMap.get("Chromosome");
             int posIndex = fieldsIndexMap.get("Position");
             int orientIndex = fieldsIndexMap.get("Orientation");
-            int fragsIndex = fieldsIndexMap.get("Fragments");
-            int supportIndex = fieldsIndexMap.get("SupportingReads");
+            int fragsIndex = fieldsIndexMap.get("JunctionFrags");
+            int supportIndex = fieldsIndexMap.get("SupportFrags");
             int remoteJunctionsIndex = fieldsIndexMap.get("RemoteJunctions");
 
             int junctionCount = 0;
