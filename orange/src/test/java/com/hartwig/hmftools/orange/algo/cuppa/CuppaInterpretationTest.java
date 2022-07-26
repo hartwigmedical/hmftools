@@ -6,11 +6,6 @@ import static org.junit.Assert.assertNull;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.cuppa.CuppaData;
-import com.hartwig.hmftools.common.cuppa.CuppaPrediction;
-import com.hartwig.hmftools.common.cuppa.CuppaTestFactory;
-import com.hartwig.hmftools.common.cuppa.ImmutableCuppaData;
-import com.hartwig.hmftools.common.cuppa.ImmutableCuppaPrediction;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -43,5 +38,4 @@ public class CuppaInterpretationTest {
     private static CuppaPrediction create(@NotNull String cancerType, double likelihood) {
         return ImmutableCuppaPrediction.builder().cancerType(cancerType).likelihood(likelihood).build();
     }
-
 }

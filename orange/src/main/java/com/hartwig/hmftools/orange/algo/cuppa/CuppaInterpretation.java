@@ -3,9 +3,6 @@ package com.hartwig.hmftools.orange.algo.cuppa;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.cuppa.CuppaData;
-import com.hartwig.hmftools.common.cuppa.CuppaPrediction;
-import com.hartwig.hmftools.common.cuppa.CuppaPredictionComparator;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

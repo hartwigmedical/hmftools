@@ -15,7 +15,7 @@ public class CuppaDataFileTest {
 
     @Test
     public void canLoadTestFile() throws IOException {
-        List<CuppaEntry> entries = CuppaDataFile.readEntries(CUPPA_DATA_CSV);
+        List<CuppaDataFile> entries = CuppaDataFile.read(CUPPA_DATA_CSV);
         assertEquals(29, entries.size());
     }
 }

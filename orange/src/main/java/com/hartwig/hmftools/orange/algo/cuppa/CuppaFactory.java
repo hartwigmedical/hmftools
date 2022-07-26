@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.cuppa;
+package com.hartwig.hmftools.orange.algo.cuppa;
 
 import static com.hartwig.hmftools.common.cuppa.CategoryType.COMBINED;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.SV;
@@ -13,23 +13,22 @@ import static com.hartwig.hmftools.common.cuppa.SvDataType.TELOMERIC_SGL;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.cuppa.CuppaEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class CuppaFactory
-{
+public final class CuppaFactory {
+
     private static final Logger LOGGER = LogManager.getLogger(CuppaFactory.class);
 
-    private CuppaFactory()
-    {
+    private CuppaFactory() {
     }
 
     @NotNull
-    public static CuppaData create(@NotNull List<CuppaEntry> entries)
-    {
+    public static CuppaData create(@NotNull List<CuppaEntry> entries) {
         return ImmutableCuppaData.builder()
                 .predictions(extractPredictions(entries))
                 .simpleDups32To200B(safeInt(entries, SIMPLE_DUP_32B_200B.toString()))
@@ -39,25 +38,18 @@ public final class CuppaFactory
                 .build();
     }
 
-    private static List<CuppaPrediction> extractPredictions(final List<CuppaEntry> entries)
-    {
+    private static List<CuppaPrediction> extractPredictions(final List<CuppaEntry> entries) {
         String bestCombinedType = determineBestCombinedDataType(entries);
-        if(bestCombinedType == null)
-        {
+        if (bestCombinedType == null) {
             LOGGER.warn("Could not find a valid combined data type amongst cuppa entries");
             return Lists.newArrayList();
         }
 
         List<CuppaPrediction> predictions = Lists.newArrayList();
 
-        for(CuppaEntry entry : entries)
-        {
-            if(entry.dataType().equals(bestCombinedType))
-            {
-                predictions.add(ImmutableCuppaPrediction.builder()
-                        .cancerType(entry.refCancerType())
-                        .likelihood(entry.refValue())
-                        .build());
+        for (CuppaEntry entry : entries) {
+            if (entry.dataType().equals(bestCombinedType)) {
+                predictions.add(ImmutableCuppaPrediction.builder().cancerType(entry.refCancerType()).likelihood(entry.refValue()).build());
             }
         }
 
@@ -66,72 +58,50 @@ public final class CuppaFactory
         return predictions;
     }
 
-    private static String determineBestCombinedDataType(final List<CuppaEntry> entries)
-    {
+    private static String determineBestCombinedDataType(final List<CuppaEntry> entries) {
         boolean hasDnaCombinedType = false;
         boolean hasRnaCombinedType = false;
         boolean hasOverallCombinedType = false;
 
-        for(CuppaEntry entry : entries)
-        {
-            if(entry.category().equals(COMBINED))
-            {
-                if(entry.dataType().equals(DATA_TYPE_COMBINED))
-                {
+        for (CuppaEntry entry : entries) {
+            if (entry.category().equals(COMBINED)) {
+                if (entry.dataType().equals(DATA_TYPE_COMBINED)) {
                     hasOverallCombinedType = true;
-                }
-                else if(entry.dataType().equals(DATA_TYPE_DNA_COMBINED))
-                {
+                } else if (entry.dataType().equals(DATA_TYPE_DNA_COMBINED)) {
                     hasDnaCombinedType = true;
-                }
-                else if(entry.dataType().equals(DATA_TYPE_RNA_COMBINED))
-                {
+                } else if (entry.dataType().equals(DATA_TYPE_RNA_COMBINED)) {
                     hasRnaCombinedType = true;
-                }
-                else
-                {
+                } else {
                     LOGGER.warn("Unrecognized combined data type: {}", entry.dataType());
                 }
             }
         }
 
-        if(hasOverallCombinedType)
-        {
+        if (hasOverallCombinedType) {
             return DATA_TYPE_COMBINED;
-        }
-        else if(hasDnaCombinedType)
-        {
+        } else if (hasDnaCombinedType) {
             return DATA_TYPE_DNA_COMBINED;
-        }
-        else if(hasRnaCombinedType)
-        {
+        } else if (hasRnaCombinedType) {
             return DATA_TYPE_RNA_COMBINED;
         }
 
         return null;
     }
 
-    private static int safeInt(final List<CuppaEntry> entries, final String dataType)
-    {
+    private static int safeInt(final List<CuppaEntry> entries, final String dataType) {
         CuppaEntry entry = findSvEntry(entries, dataType);
-        if(entry != null)
-        {
+        if (entry != null) {
             return (int) Math.round(Double.parseDouble(entry.value()));
-        }
-        else
-        {
+        } else {
             // -1 is a magic value that can never exist in reality.
             return -1;
         }
     }
 
     @Nullable
-    private static CuppaEntry findSvEntry(final List<CuppaEntry> entries, final String dataType)
-    {
-        for(CuppaEntry entry : entries)
-        {
-            if(entry.category() == SV && entry.dataType().equals(dataType))
-            {
+    private static CuppaEntry findSvEntry(final List<CuppaEntry> entries, final String dataType) {
+        for (CuppaEntry entry : entries) {
+            if (entry.category() == SV && entry.dataType().equals(dataType)) {
                 return entry;
             }
         }

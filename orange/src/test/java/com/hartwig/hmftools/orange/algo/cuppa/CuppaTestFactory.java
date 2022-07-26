@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.cuppa;
+package com.hartwig.hmftools.orange.algo.cuppa;
 
 import java.util.List;
 
@@ -8,11 +8,11 @@ import org.jetbrains.annotations.NotNull;
 
 public final class CuppaTestFactory {
 
-    private CuppaTestFactory() { }
+    private CuppaTestFactory() {
+    }
 
     @NotNull
-    public static CuppaData createMinimalCuppaData()
-    {
+    public static CuppaData createMinimalCuppaData() {
         // Some downstream algo's expect at least one prediction, so that is considered "minimal"
         List<CuppaPrediction> predictions = Lists.newArrayList();
         predictions.add(ImmutableCuppaPrediction.builder().cancerType("cancer").likelihood(1D).build());
