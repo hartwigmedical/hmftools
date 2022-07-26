@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.gripss;
 
+import static com.hartwig.hmftools.common.sv.LineElements.POLY_A_HOMOLOGY;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.GripssTestApp.TEST_REF_ID;
@@ -21,7 +22,6 @@ import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SB;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SR;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_VF;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_G_REGIONS_V37;
-import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_A_HOMOLOGY;
 import static com.hartwig.hmftools.gripss.filters.FilterType.DISCORDANT_PAIR_SUPPORT;
 import static com.hartwig.hmftools.gripss.filters.FilterType.IMPRECISE;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MAX_HOM_LENGTH_SHORT_INV;

@@ -37,6 +37,18 @@ public enum ReadFilterType
     public static boolean isSet(int flags, ReadFilterType flag) { return (flags & flag.flag()) != 0; }
     public boolean isUnset(int flag) { return !isSet(flag); } // this.mFlags &= ~bit;
 
+    public static int set(int flags, ReadFilterType flag)
+    {
+        flags |= flag.flag();
+        return flags;
+    }
+
+    public static int unset(int flags, ReadFilterType flag)
+    {
+        flags &= ~flag.flag();
+        return flags;
+    }
+
     public String description()
     {
         return mDescription;

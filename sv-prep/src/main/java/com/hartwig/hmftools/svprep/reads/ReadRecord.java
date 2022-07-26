@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
@@ -137,41 +138,19 @@ public class ReadRecord
                 .mapToInt(x -> x.getLength()).max().orElse(0);
     }
 
-    public static boolean hasPolyATSoftClip(final ReadRecord read, final boolean isClippedLeft)
+    public static String getSoftClippedBases(final SAMRecord record, final boolean isClippedLeft)
     {
-        int scLength = isClippedLeft ? read.cigar().getFirstCigarElement().getLength() : read.cigar().getLastCigarElement().getLength();
-        int readLength = read.record().getReadBases().length;
-
+        int scLength = isClippedLeft ? record.getCigar().getFirstCigarElement().getLength() : record.getCigar().getLastCigarElement().getLength();
+        int readLength = record.getReadBases().length;
         int scStart = isClippedLeft ? 0 : readLength - scLength;
         int scEnd = isClippedLeft ? scLength : readLength;
+        return record.getReadString().substring(scStart, scEnd);
+    }
 
-        char firstBase = (char)read.record().getReadBases()[scStart];
-        boolean allAs = false;
-        boolean allTs = false;
-
-        if(firstBase == 'A')
-            allAs = true;
-        else if(firstBase == 'T')
-            allTs = true;
-        else
-            return false;
-
-        for(int i = scStart + 1; i < scEnd; ++i)
-        {
-            char base = (char)read.record().getReadBases()[i];
-
-            if(allAs)
-            {
-                if(base != 'A')
-                    return false;
-            }
-            else
-            {
-                if(base != 'T')
-                    return false;
-            }
-        }
-
-        return true;
+    public static boolean hasPolyATSoftClip(final ReadRecord read, final boolean isClippedLeft)
+    {
+        byte orientation = isClippedLeft ? NEG_ORIENT : POS_ORIENT;
+        String scBases = getSoftClippedBases(read.record(), isClippedLeft);
+        return isMobileLineElement(orientation, scBases);
     }
 }

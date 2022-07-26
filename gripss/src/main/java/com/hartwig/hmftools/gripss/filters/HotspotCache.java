@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.gripss.filters;
 
+import static com.hartwig.hmftools.common.sv.LineElements.POLY_A_HOMOLOGY;
+import static com.hartwig.hmftools.common.sv.LineElements.POLY_T_HOMOLOGY;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_HOMSEQ;
-import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_A;
-import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_T;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -92,7 +92,7 @@ public class HotspotCache
     private static boolean isPolyATSequence(final VariantContext variant)
     {
         final String homology = variant.getAttributeAsString(VT_HOMSEQ, "");
-        return homology.contains(POLY_A) || homology.contains(POLY_T);
+        return homology.contains(POLY_A_HOMOLOGY) || homology.contains(POLY_T_HOMOLOGY);
     }
 
     private boolean matchesHotspot(final String chrStart, final String chrEnd, int posStart, int posEnd, byte orientStart, byte orientEnd)

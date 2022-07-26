@@ -39,16 +39,12 @@ public class FilterConstants
     public static final int SHORT_CALLING_SIZE = 1000;
     public static final int HOM_INV_LENGTH = 40;
 
-    public static final int LINE_POLY_AT_TEST_LEN = 18;
-    public static final int LINE_POLY_AT_REQ = 16;
     public static final int SGL_INS_SEQ_MIN_LENGTH = 16;
     public static final double SGL_MIN_STRAND_BIAS = 0.05;
     public static final double SGL_MAX_STRAND_BIAS = 0.95;
 
     public static final String POLY_G_INSERT = "GGGGGGGGGGGGGGGG";
     public static final String POLY_C_INSERT = "CCCCCCCCCCCCCCCC";
-    public static final String POLY_A_HOMOLOGY = "AAAAAAA";
-    public static final String POLY_T_HOMOLOGY = "TTTTTTT";
 
     public static final int DEFAULT_HARD_MIN_TUMOR_QUAL = 100;
     public static final int DEFAULT_HARD_MAX_NORMAL_ABSOLUTE_SUPPORT = 3;
@@ -64,9 +60,6 @@ public class FilterConstants
     public static final int DEFAULT_MAX_HOM_LENGTH_SHORT_INV = 6;
     public static final int DEFAULT_MIN_LENGTH = 32;
     public static final int DEFAULT_PON_DISTANCE = 3;
-
-    public static final String POLY_A = "AAAAAAA";
-    public static final String POLY_T = "TTTTTTT";
 
     public static final List<ChrBaseRegion> POLY_G_REGIONS_V37 = Lists.newArrayList();
     public static final List<ChrBaseRegion> POLY_G_REGIONS_V38 = Lists.newArrayList();

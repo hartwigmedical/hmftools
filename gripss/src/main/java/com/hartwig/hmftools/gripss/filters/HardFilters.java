@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.gripss.filters;
 
+import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.parseRefAlt;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BQ;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_QUAL;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_VF;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.isMobileLineElement;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.sglFragmentCount;
 
 import com.hartwig.hmftools.gripss.common.VariantAltInsertCoords;

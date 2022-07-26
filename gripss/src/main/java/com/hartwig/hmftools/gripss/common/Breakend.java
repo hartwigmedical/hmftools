@@ -1,17 +1,12 @@
 package com.hartwig.hmftools.gripss.common;
 
-import static java.lang.Math.max;
-
+import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BQ;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IHOMPOS;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.getGenotypeAttributeAsInt;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.isMobileLineElement;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.sglFragmentCount;
 import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.parseRefAlt;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIPOS;

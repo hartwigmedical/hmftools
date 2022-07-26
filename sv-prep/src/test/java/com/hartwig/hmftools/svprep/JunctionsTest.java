@@ -258,16 +258,18 @@ public class JunctionsTest
     @Test
     public void testPolyATReads()
     {
-        String aRepeat = "AAAAAAAAAA";
-        String tRepeat = "TTTTTTTTTT";
+        String aRepeat = "AAAAAAAAAACAAAAAAA";
+        String tRepeat = "TTTTTGTTTTTTTTTTTT";
         String bases = aRepeat + generateRandomBases(30) + tRepeat;
 
-        ReadRecord read = ReadRecord.from(createSamRecord("01",  CHR_1, 100, bases, "10S30M10S"));
+        ReadRecord read = ReadRecord.from(createSamRecord("01",  CHR_1, 100, bases, "18S30M18S"));
         assertTrue(hasPolyATSoftClip(read, true));
         assertTrue(hasPolyATSoftClip(read, false));
 
-        bases = aRepeat + "C" + aRepeat + generateRandomBases(30) + tRepeat + "G" + tRepeat;
-        read = ReadRecord.from(createSamRecord("01",  CHR_1, 100, bases, "21S30M21S"));
+        aRepeat = "AAAAACGAAACAAAAAAA";
+        tRepeat = "TTTTTGTTTTTAGTTTTT";
+        bases = aRepeat + generateRandomBases(30) + tRepeat;
+        read = ReadRecord.from(createSamRecord("01",  CHR_1, 100, bases, "18S30M18S"));
         assertFalse(hasPolyATSoftClip(read, true));
         assertFalse(hasPolyATSoftClip(read, false));
     }

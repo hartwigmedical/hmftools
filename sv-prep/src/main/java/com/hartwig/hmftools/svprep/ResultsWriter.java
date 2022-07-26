@@ -170,7 +170,7 @@ public class ResultsWriter
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write("Chromosome,Position,Orientation,JunctionFrags,SupportFrags,DiscordantFrags,LowMapQualFrags,MaxQual");
-            writer.write(",MaxSoftClip,BaseDepth,HasPolyAT,Indel,Hotspot,InitialReadId,RemoteJunctionCount,RemoteJunctions");
+            writer.write(",MaxSoftClip,BaseDepth,HasPolyAT,Indel,Hotspot,SoftClipBases,InitialReadId,RemoteJunctionCount,RemoteJunctions");
             writer.newLine();
 
             return writer;
@@ -195,6 +195,7 @@ public class ResultsWriter
                 int maxMapQual = 0;
                 int lowMapQualFrags = 0;
                 int maxSoftClip = 0;
+                String softClipBases = "";
                 boolean hasPloyAT = false;
                 boolean expectLeftClipped = junctionData.Orientation == NEG_ORIENT;
 
@@ -202,22 +203,34 @@ public class ResultsWriter
                 {
                     for(ReadRecord read : readGroup.reads())
                     {
-                        if(read.readType() == ReadType.JUNCTION)
+                        if(read.readType() != ReadType.JUNCTION)
+                            continue;
+
+                        // check the read supports this junction (it can only support another junction)
+                        boolean supportsJuncction =
+                                (expectLeftClipped && read.start() == junctionData.Position && read.cigar().isLeftClipped())
+                                || (!expectLeftClipped && read.end() == junctionData.Position && read.cigar().isRightClipped());
+
+                        if(!supportsJuncction)
+                            continue;
+
+                        if(ReadFilterType.isSet(read.filters(), MIN_MAP_QUAL))
+                            ++lowMapQualFrags;
+
+                        maxMapQual = max(maxMapQual, read.mapQuality());
+
+                        if(!junctionData.internalIndel())
                         {
-                            if(ReadFilterType.isSet(read.filters(), MIN_MAP_QUAL))
-                                ++lowMapQualFrags;
-
-                            maxMapQual = max(maxMapQual, read.mapQuality());
-
                             if(!hasPloyAT)
                                 hasPloyAT = hasPolyATSoftClip(read, expectLeftClipped);
 
-                            if(!junctionData.internalIndel()
-                            && ((expectLeftClipped && read.cigar().isLeftClipped()) || (!expectLeftClipped && read.cigar().isRightClipped())))
+                            int scLength = expectLeftClipped ?
+                                    read.cigar().getFirstCigarElement().getLength() : read.cigar().getLastCigarElement().getLength();
+
+                            if(scLength > maxSoftClip)
                             {
-                                int scLength = expectLeftClipped ?
-                                        read.cigar().getFirstCigarElement().getLength() : read.cigar().getLastCigarElement().getLength();
-                                maxSoftClip = max(maxSoftClip, scLength);
+                                maxSoftClip = scLength;
+                                softClipBases = ReadRecord.getSoftClippedBases(read.record(), expectLeftClipped);
                             }
                         }
                     }
@@ -248,9 +261,9 @@ public class ResultsWriter
                         chromosome, junctionData.Position, junctionData.Orientation, junctionData.junctionFragmentCount(),
                         exactSupportFrags, discordantFrags, lowMapQualFrags, maxMapQual));
 
-                mJunctionWriter.write(format(",%d,%d,%s,%s,%s,%s",
+                mJunctionWriter.write(format(",%d,%d,%s,%s,%s,%s,%s",
                         maxSoftClip, junctionData.depth(), hasPloyAT, junctionData.internalIndel(), junctionData.hotspot(),
-                        junctionData.InitialRead != null ? junctionData.InitialRead.id() : "EXISTING"));
+                        softClipBases, junctionData.InitialRead != null ? junctionData.InitialRead.id() : "EXISTING"));
 
                 // RemoteChromosome:RemotePosition:RemoteOrientation;Fragments then separated by ';'
                 String remoteJunctionsStr = "";

@@ -5,10 +5,21 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.svprep.SvConstants.MIN_LINE_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.REPEAT_BREAK_MATCH_CHECK_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.REPEAT_BREAK_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.svprep.SvConstants.REPEAT_BREAK_MIN_SC_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.REPEAT_BREAK_SC_CHECK_LENGTH;
+import static com.hartwig.hmftools.svprep.reads.ReadFilterType.BREAK_IN_REPEAT;
+import static com.hartwig.hmftools.svprep.reads.ReadFilterType.INSERT_MAP_OVERLAP;
+import static com.hartwig.hmftools.svprep.reads.ReadFilterType.MIN_ALIGN_MATCH;
+import static com.hartwig.hmftools.svprep.reads.ReadFilterType.MIN_MAP_QUAL;
+import static com.hartwig.hmftools.svprep.reads.ReadFilterType.SOFT_CLIP_BASE_QUAL;
+import static com.hartwig.hmftools.svprep.reads.ReadFilterType.SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.svprep.reads.ReadRecord.getSoftClippedBases;
 
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.binaryToEnum;
@@ -36,28 +47,29 @@ public class ReadFilters
         int alignedBases = cigar.getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
 
         if(alignedBases < mConfig.MinAlignmentBases)
-            filters |= ReadFilterType.MIN_ALIGN_MATCH.flag();
+            filters = ReadFilterType.set(filters, MIN_ALIGN_MATCH);
 
         if(record.getMappingQuality() < mConfig.MinMapQuality)
-            filters |= ReadFilterType.MIN_MAP_QUAL.flag();
+            filters = ReadFilterType.set(filters, MIN_MAP_QUAL);
 
         if(!record.getMateUnmappedFlag() && !record.getReadUnmappedFlag())
         {
             int insertAlignmentOverlap = abs(abs(record.getInferredInsertSize()) - alignedBases);
 
             if(insertAlignmentOverlap < mConfig.MinInsertAlignmentOverlap)
-                filters |= ReadFilterType.INSERT_MAP_OVERLAP.flag();
+                filters = ReadFilterType.set(filters, INSERT_MAP_OVERLAP);
         }
 
         int maxIndelLength = ReadRecord.maxIndelLength(record.getCigar());
 
         if(maxIndelLength < mConfig.MinIndelLength)
         {
+            // check length and quality of soft-clipped bases if not an INDEL
             int scLeft = cigar.isLeftClipped() ? cigar.getFirstCigarElement().getLength() : 0;
             int scRight = cigar.isRightClipped() ? cigar.getLastCigarElement().getLength() : 0;
 
             if(scLeft < mConfig.MinSoftClipLength && scRight < mConfig.MinSoftClipLength)
-                filters |= ReadFilterType.SOFT_CLIP_LENGTH.flag();
+                filters = ReadFilterType.set(filters, SOFT_CLIP_LENGTH);
 
             // base qual in soft clip
             if(scLeft > 0 || scRight > 0)
@@ -76,14 +88,25 @@ public class ReadFilters
                 }
 
                 if(aboveQual / scLength < mConfig.MinSoftClipHighQualPerc)
-                    filters |= ReadFilterType.SOFT_CLIP_BASE_QUAL.flag();
+                    filters = ReadFilterType.set(filters, SOFT_CLIP_BASE_QUAL);
 
-                if(!ReadFilterType.isSet(filters, ReadFilterType.SOFT_CLIP_LENGTH))
+                if(!ReadFilterType.isSet(filters, SOFT_CLIP_LENGTH))
                 {
                     if((record.getMappingQuality() < REPEAT_BREAK_MIN_MAP_QUAL || scLength < REPEAT_BREAK_MIN_SC_LENGTH)
                     && isRepetitiveSectionBreak(record.getReadBases(), useLeftClip, scLength))
                     {
-                        filters |= ReadFilterType.BREAK_IN_REPEAT.flag();
+                        filters = ReadFilterType.set(filters, BREAK_IN_REPEAT);
+                    }
+                }
+                else if(scLength >= MIN_LINE_SOFT_CLIP_LENGTH)
+                {
+                    // make an exception if the soft-clip sequence meets the LINE criteria
+                    byte orientation = useLeftClip ? NEG_ORIENT : POS_ORIENT;
+                    String scBases = getSoftClippedBases(record, useLeftClip);
+
+                    if(isMobileLineElement(orientation, scBases) && !isRepetitiveSectionBreak(record.getReadBases(), useLeftClip, scLength))
+                    {
+                        filters = ReadFilterType.unset(filters, SOFT_CLIP_LENGTH);
                     }
                 }
             }

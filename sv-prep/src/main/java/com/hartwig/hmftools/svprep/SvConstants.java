@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.svprep;
 
+import com.hartwig.hmftools.common.sv.LineElements;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 public final class SvConstants
@@ -13,7 +14,8 @@ public final class SvConstants
     public static final int MIN_ALIGNMENT_BASES = 50;
     public static final int MIN_MAP_QUALITY = 20;
     public static final int MIN_INSERT_ALIGNMENT_OVERLAP = 5;
-    public static final int MIN_SOFT_CLIP_LENGTH = 20;
+    public static final int MIN_SOFT_CLIP_LENGTH = 30;
+    public static final int MIN_LINE_SOFT_CLIP_LENGTH = LineElements.LINE_POLY_AT_TEST_LEN;
     public static final int MIN_SOFT_CLIP_MIN_BASE_QUAL = 25;
     public static final double MIN_SOFT_CLIP_HIGH_QUAL_PERC = 0.85;
     public static final int MIN_INSERT_LENGTH_SUPPORT = 10;
