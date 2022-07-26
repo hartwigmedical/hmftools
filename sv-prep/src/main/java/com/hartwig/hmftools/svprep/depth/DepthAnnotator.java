@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.svprep.depth;
 
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
@@ -10,6 +8,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificRegions;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConfig.SAMPLE;
 
@@ -24,6 +24,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -44,6 +45,8 @@ public class DepthAnnotator
     private final String mBamFile;
     private final String mRefGenome;
     private final RefGenomeVersion mRefGenomeVersion;
+    private final List<ChrBaseRegion> mSpecificRegions;
+
     private final int mThreads;
 
     private final Map<String, List<VariantContext>> mChrVariantMap;
@@ -61,6 +64,17 @@ public class DepthAnnotator
         mRefGenome = cmd.getOptionValue(REF_GENOME);
         mRefGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));;
         mThreads = Integer.parseInt(cmd.getOptionValue(THREADS, "1"));
+
+        mSpecificRegions = Lists.newArrayList();
+
+        try
+        {
+            mSpecificRegions.addAll(loadSpecificRegions(cmd));
+        }
+        catch(ParseException e)
+        {
+            SV_LOGGER.error("failed to load specific regions");
+        }
 
         mChrVariantMap = Maps.newHashMap();
     }
@@ -86,6 +100,10 @@ public class DepthAnnotator
             for(VariantContext variantContext : reader.iterator())
             {
                 ++vcfCount;
+
+                if(excludeVariant(variantContext))
+                    continue;
+
                 String chromosome = variantContext.getContig();
 
                 if(!chromosome.equals(currentChromosome))
@@ -117,7 +135,7 @@ public class DepthAnnotator
             if(variantsList == null)
                 continue;
 
-            DepthTask depthTask = new DepthTask(mRefGenome, mBamFile);
+            DepthTask depthTask = new DepthTask(chromosome.toString(), mRefGenome, mBamFile);
             depthTask.variants().addAll(variantsList);
             depthTasks.add(depthTask);
         }
@@ -130,6 +148,15 @@ public class DepthAnnotator
         // write output VCF
     }
 
+    private boolean excludeVariant(final VariantContext variant)
+    {
+        if(mSpecificRegions.isEmpty())
+            return false;
+
+        return mSpecificRegions.stream().noneMatch(x -> x.containsPosition(variant.getContig(), variant.getStart()));
+    }
+
+
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = new Options();
@@ -139,7 +166,9 @@ public class DepthAnnotator
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
         options.addOption(BAM_FILE, true, "BAM file to slice for depth");
+        options.addOption(THREADS, true, "Multi-thread count");
 
+        addSpecificChromosomesRegionsConfig(options);
         addOutputOptions(options);
         addLoggingOptions(options);
 

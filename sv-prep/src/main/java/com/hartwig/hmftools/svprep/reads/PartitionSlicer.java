@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.svprep.SvConstants.EXCLUDED_REGION_1_REF_37;
 import static com.hartwig.hmftools.svprep.SvConstants.EXCLUDED_REGION_1_REF_38;
 import static com.hartwig.hmftools.svprep.WriteType.BAM;
 import static com.hartwig.hmftools.svprep.WriteType.READS;
-import static com.hartwig.hmftools.svprep.reads.ReadType.BLACKLIST;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.EXPECTED;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
@@ -21,9 +20,7 @@ import static com.hartwig.hmftools.svprep.reads.ReadType.RECOVERED;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
@@ -36,11 +33,8 @@ import com.hartwig.hmftools.svprep.ResultsWriter;
 import com.hartwig.hmftools.svprep.SvConfig;
 import com.hartwig.hmftools.svprep.WriteType;
 
-import htsjdk.samtools.QueryInterval;
-import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
-import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
@@ -339,7 +333,7 @@ public class PartitionSlicer
         SV_LOGGER.trace("region({}) searching for {} missed reads", mRegion, missedReadCount);
 
         // ignore reads in blacklist locations
-        int skippedBlacklist = 0;
+        int blacklistCount = 0;
 
         // form 2 lists both order by missed read position
         Map<Integer,List<ExpectedRead>> positionReads = Maps.newHashMap();
@@ -351,13 +345,21 @@ public class PartitionSlicer
 
             for(ExpectedRead missedRead : entry.getValue())
             {
+                if(mFilterRegion != null)
+                {
+                    if(mFilterRegion.containsPosition(missedRead.Position) || mFilterRegion.containsPosition(missedRead.Position + mConfig.ReadLength))
+                        continue;
+                }
+
                 boolean inBlacklist = mConfig.Blacklist.inBlacklistLocation(
                         missedRead.Chromosome, missedRead.Position, missedRead.Position + mConfig.ReadLength);
 
                 if(inBlacklist)
                 {
-                    ++skippedBlacklist;
-                    continue;
+                    ++blacklistCount;
+
+                    if(!mConfig.RetrieveBlacklistMates)
+                        continue;
                 }
 
                 List<ExpectedRead> posReads = positionReads.get(missedRead.Position);
@@ -398,8 +400,8 @@ public class PartitionSlicer
 
         if(missedReadsMap.size() != readGroups.size())
         {
-            SV_LOGGER.debug("region({}) missed reads({}) recovered({}) blacklisted({})",
-                    mRegion, missedReadsMap.size(), readGroups.size(), skippedBlacklist);
+            SV_LOGGER.debug("region({}) missed reads({}) recovered({}) in-blacklist({})",
+                    mRegion, missedReadsMap.size(), readGroups.size(), blacklistCount);
         }
 
         return readGroups;

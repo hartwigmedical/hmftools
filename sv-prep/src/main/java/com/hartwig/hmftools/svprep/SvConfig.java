@@ -73,6 +73,7 @@ public class SvConfig
     public final int MaxPartitionReads;
     public final boolean ApplyDownsampling;
     public final boolean CaptureDepth;
+    public final boolean RetrieveBlacklistMates;
     public final List<ChrBaseRegion> SpecificRegions;
 
     private boolean mIsValid;
@@ -167,6 +168,7 @@ public class SvConfig
         MaxPartitionReads = Integer.parseInt(cmd.getOptionValue(MAX_PARTITION_READS, "0"));
         CaptureDepth = cmd.hasOption(CAPTURE_DEPTH);
         ApplyDownsampling = cmd.hasOption(APPLY_DOWNSAMPLING);
+        RetrieveBlacklistMates = false;
     }
 
     public boolean isValid() { return mIsValid; }
@@ -235,6 +237,7 @@ public class SvConfig
         Threads = 1;
         MaxPartitionReads = 0;
         ApplyDownsampling = false;
+        RetrieveBlacklistMates = false;
     }
 
     public static Options createCmdLineOptions()

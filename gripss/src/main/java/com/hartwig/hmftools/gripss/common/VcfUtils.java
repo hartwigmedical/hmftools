@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.IMPRECISE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.LOCAL_LINKED_BY;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PAR_ID;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PON_COUNT;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READPAIR_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READ_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REMOTE_LINKED_BY;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.TAF;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
@@ -39,7 +41,8 @@ public class VcfUtils
     public static final String VT_BVF = "BVF";
     public static final String VT_RP = "RP";
     public static final String VT_IC = "IC";
-    public static final String VT_REF = "REF";
+    public static final String VT_REF = REFERENCE_BREAKEND_READ_COVERAGE;
+    public static final String VT_REFPAIR = REFERENCE_BREAKEND_READPAIR_COVERAGE;
     public static final String VT_BUM = "BUM";
     public static final String VT_ASRP = "ASRP";
     public static final String VT_ASSR = "ASSR";
@@ -61,7 +64,6 @@ public class VcfUtils
     public static final String VT_EVENT = "EVENT";
     public static final String VT_SB = "SB";
     public static final String VT_BSC = "BSC";
-    public static final String VT_REFPAIR = "REFPAIR";
     public static final String VT_CIPOS = CIPOS;
     public static final String VT_CIRPOS = "CIRPOS";
     public static final String VT_IMPRECISE = IMPRECISE;

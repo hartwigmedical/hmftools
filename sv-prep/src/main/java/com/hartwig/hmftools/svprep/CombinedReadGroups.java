@@ -165,7 +165,7 @@ public class CombinedReadGroups
             return;
 
         // don't store reads which fall in blacklist regions
-        if(expectedRead != null && mConfig.Blacklist.inBlacklistLocation(
+        if(!mConfig.RetrieveBlacklistMates && expectedRead != null && mConfig.Blacklist.inBlacklistLocation(
                 expectedRead.Chromosome, expectedRead.Position, expectedRead.Position + mConfig.ReadLength))
         {
             return;

@@ -242,6 +242,7 @@ public class JunctionTracker
             byte orientation = scSide.isLeft() ? NEG_ORIENT : POS_ORIENT;
             int position = scSide.isLeft() ? read.start() : read.end();
 
+            // junctions cannot fall in blacklist regions
             if(positionInBlacklist(position))
                 continue;
 
@@ -284,13 +285,12 @@ public class JunctionTracker
     private boolean groupInBlacklist(final ReadGroup readGroup)
     {
         // test whether every read is in a blacklist region
-        for(ReadRecord read : readGroup.reads())
-        {
-            if(mBlacklistRegions.stream().noneMatch(x -> positionsOverlap(x.start(), x.end(), read.start(), read.end())))
-                return false;
-        }
+        return readGroup.reads().stream().allMatch(x -> readInBlacklist(x));
+    }
 
-        return true;
+    private boolean readInBlacklist(final ReadRecord read)
+    {
+        return mBlacklistRegions.stream().anyMatch(x -> positionsOverlap(x.start(), x.end(), read.start(), read.end()));
     }
 
     private boolean positionInBlacklist(int junctionPosition)
@@ -443,6 +443,10 @@ public class JunctionTracker
             return;
 
         if(supportedJunctions.contains(junctionData))
+            return;
+
+        // supporting reads cannot fall in blacklist regions
+        if(readInBlacklist(read))
             return;
 
         if(hasExactJunctionSupport(read, junctionData, mFilterConfig))
