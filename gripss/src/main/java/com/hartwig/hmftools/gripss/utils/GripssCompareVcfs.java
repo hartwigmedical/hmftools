@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.gripss.utils;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.LOCAL_LINKED_BY;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PON_FILTER_PON;
@@ -259,6 +262,17 @@ public class GripssCompareVcfs
                     continue;
                 }
 
+                // check qual
+                int origQual = (int)origSv.contextStart().getPhredScaledQual();
+                int newQual = (int)newSv.contextStart().getPhredScaledQual();
+
+                if(hasValidDiff(origQual, newQual))
+                {
+                    writeDiffs(origSv, newSv, "QUAL", String.valueOf(origQual), String.valueOf(newQual));
+                    ++diffCount;
+                    continue;
+                }
+
                 // check local and remote linked by for assembled links
                 boolean origHasStartAssembled = origStart.Context.getAttributeAsString(LOCAL_LINKED_BY, "").contains("asm");
                 boolean newHasStartAssembled = newStart.Context.getAttributeAsString(LOCAL_LINKED_BY, "").contains("asm");
@@ -290,6 +304,16 @@ public class GripssCompareVcfs
         }
 
         GR_LOGGER.info("diffTotal({})", diffCount);
+    }
+
+    private static final int MAX_DIFF = 20;
+    private static final double MAX_DIFF_PERC = 0.2;
+
+    private static boolean hasValidDiff(int value1, int value2)
+    {
+        int diff = abs(value1 - value2);
+        double diffPerc = diff / (double)max(value1, value2);
+        return diff > MAX_DIFF && diffPerc > MAX_DIFF_PERC;
     }
 
     private SvData findOriginalSv(final SvData newSv)

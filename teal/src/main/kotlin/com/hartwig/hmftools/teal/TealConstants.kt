@@ -27,9 +27,6 @@ object TealConstants
     )
     val TELOMERE_HEXAMERS_REV: Array<String> = TELOMERE_HEXAMERS.map({ obj: String -> SequenceUtil.reverseComplement(obj) }).toTypedArray()
 
-    val LINC_00486_V37 = ChrBaseRegion("2", 33141260, 33141700)
-    val LINC_00486_V38 = ChrBaseRegion("chr2", 32916190, 32916630)
-
     val CANONICAL_TELOMERE_SEQUENCES = arrayOf(
         CANONICAL_TELOMERE_SEQ.repeat(DEFAULT_MIN_TELE_SEQ_COUNT),
         CANONICAL_TELOMERE_SEQ_REV.repeat(DEFAULT_MIN_TELE_SEQ_COUNT))

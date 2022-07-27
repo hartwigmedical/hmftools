@@ -2,14 +2,11 @@ package com.hartwig.hmftools.svprep.reads;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
+import static com.hartwig.hmftools.common.sv.ExcludedRegions.getPolyGRegion;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.nanosToSeconds;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_FRACTION;
 import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_THRESHOLD;
-import static com.hartwig.hmftools.svprep.SvConstants.EXCLUDED_REGION_1_REF_37;
-import static com.hartwig.hmftools.svprep.SvConstants.EXCLUDED_REGION_1_REF_38;
 import static com.hartwig.hmftools.svprep.WriteType.BAM;
 import static com.hartwig.hmftools.svprep.WriteType.READS;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
@@ -101,8 +98,8 @@ public class PartitionSlicer
 
         mRateLimitTriggered = false;
 
-        mFilterRegion = mConfig.RefGenVersion == V37 && region.overlaps(EXCLUDED_REGION_1_REF_37) ? EXCLUDED_REGION_1_REF_37
-                : (mConfig.RefGenVersion == V38 && region.overlaps(EXCLUDED_REGION_1_REF_38) ? EXCLUDED_REGION_1_REF_38 : null);
+        ChrBaseRegion excludedRegion = getPolyGRegion(mConfig.RefGenVersion);
+        mFilterRegion = region.overlaps(excludedRegion) ? excludedRegion : null;
 
         mStats = new PartitionStats();
 

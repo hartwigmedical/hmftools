@@ -5,6 +5,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.samtools.CigarUtils
 import htsjdk.samtools.SAMRecord
 import com.hartwig.hmftools.common.samtools.SamRecordUtils
+import com.hartwig.hmftools.common.sv.ExcludedRegions
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion
 import com.hartwig.hmftools.teal.ReadGroup
 import com.hartwig.hmftools.teal.TealUtils
@@ -295,19 +296,7 @@ class CandidateBreakEndFinder(
         // where 1 end maps in the POLY-G region of LINC00486 (v38: chr2:32,916,190-32,916,630; v37: 2:33,141,260-33,141,700).
         fun isInExcludedBaseRegion(config: BreakEndParams, chromosome: String?, startPos: Int, endPos: Int): Boolean
         {
-            var linc00486: ChrBaseRegion? = null
-            when (config.refGenomeVersion)
-            {
-                RefGenomeVersion.V37 ->
-                {
-                    linc00486 = TealConstants.LINC_00486_V37
-                }
-                RefGenomeVersion.V38 ->
-                {
-                    linc00486 = TealConstants.LINC_00486_V38
-                }
-                else -> {}
-            }
+            var linc00486: ChrBaseRegion? = ExcludedRegions.getPolyGRegion(config.refGenomeVersion)
 
             if (linc00486 != null &&
                 (linc00486.containsPosition(startPos) || linc00486.containsPosition(endPos)) &&

@@ -117,7 +117,6 @@ public class SageConfig
     private static final String VALIDATION_STRINGENCY = "validation_stringency";
     private static final String INCLUDE_MT = "include_mt";
 
-    private static final String SPECIFIC_CHROMOSOMES = "specific_chr";
     private static final String SPECIFIC_POSITIONS = "specific_positions";
     private static final String LOG_LPS_DATA = "log_lps_data";
     private static final String PERF_WARN_TIME = "perf_warn_time";

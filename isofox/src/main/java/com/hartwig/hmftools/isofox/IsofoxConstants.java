@@ -25,10 +25,6 @@ public class IsofoxConstants
 
     public static final double MAX_GENE_PERC_CONTRIBUTION = 0.01;
 
-    // LINC00486 - has no genes surrounding it nor overlapping with it
-    public static final ChrBaseRegion EXCLUDED_REGION_1_REF_37 = new ChrBaseRegion("2", 33141260, 33141700);
-    public static final ChrBaseRegion EXCLUDED_REGION_1_REF_38 = new ChrBaseRegion("chr2", 32916190, 32916630);
-
     public static void populateEnrichedGeneIds(final List<String> geneIds, final RefGenomeVersion version)
     {
         if(version == RefGenomeVersion.V38)

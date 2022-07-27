@@ -73,8 +73,6 @@ public class DepthTask implements Callable
     {
         SV_LOGGER.info("chr({}) processing {} variants", mChromosome, mVariantsList.size());
 
-
-
         int processed = 0;
         for(VariantContext variant : mVariantsList)
         {
@@ -150,7 +148,7 @@ public class DepthTask implements Callable
     {
         int diff = abs(value1 - value2);
         double diffPerc = diff / (double)max(value1, value2);
-        return diffPerc > ABS_DIFF_PERC || diff > ABS_DIFF_MAX;
+        return diffPerc > ABS_DIFF_PERC && diff > ABS_DIFF_MAX;
     }
 
     private static int getGenotypeAttributeAsInt(final Genotype genotype, final String attribute, int defaultVaue)
@@ -266,7 +264,6 @@ public class DepthTask implements Callable
         }
 
         public String id() { return Reads.get(0).getReadName(); }
-
         public String toString() { return format("id(%s) reads(%d)", id(), Reads.size()); }
     }
 }

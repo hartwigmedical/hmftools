@@ -2,6 +2,7 @@ package com.hartwig.hmftools.gripss.filters;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.sv.ExcludedRegions.getPolyGRegions;
 
 import java.util.List;
 
@@ -61,20 +62,6 @@ public class FilterConstants
     public static final int DEFAULT_MIN_LENGTH = 32;
     public static final int DEFAULT_PON_DISTANCE = 3;
 
-    public static final List<ChrBaseRegion> POLY_G_REGIONS_V37 = Lists.newArrayList();
-    public static final List<ChrBaseRegion> POLY_G_REGIONS_V38 = Lists.newArrayList();
-
-    static
-    {
-        POLY_G_REGIONS_V37.add(new ChrBaseRegion("2", 33141260, 33141700));
-        POLY_G_REGIONS_V37.add(new ChrBaseRegion("4", 41218427, 41218467));
-        POLY_G_REGIONS_V37.add(new ChrBaseRegion("17", 42646418, 42646458));
-
-        POLY_G_REGIONS_V38.add(new ChrBaseRegion("chr2", 32916190, 32916630));
-        POLY_G_REGIONS_V38.add(new ChrBaseRegion("chr4", 41216410, 41216450));
-        POLY_G_REGIONS_V38.add(new ChrBaseRegion("chr17", 44569050, 44569090));
-    }
-
     public static final ChrBaseRegion PMS2_V37 = new ChrBaseRegion("7", 6002870, 6058756); // has 10K buffer
     public static final ChrBaseRegion PMS2_V38 = new ChrBaseRegion("chr7", 5960925, 6019106);
 
@@ -118,7 +105,7 @@ public class FilterConstants
                 Integer.parseInt(cmd.getOptionValue(MAX_HOM_LENGTH_SHORT_INV_CFG, String.valueOf(DEFAULT_MAX_HOM_LENGTH_SHORT_INV))),
                 Integer.parseInt(cmd.getOptionValue(MIN_LENGTH_CFG, String.valueOf(DEFAULT_MIN_LENGTH))),
                 Integer.parseInt(cmd.getOptionValue(PON_DISTANCE, String.valueOf(DEFAULT_PON_DISTANCE))),
-                refGenVersion == V37 ? POLY_G_REGIONS_V37 : POLY_G_REGIONS_V38, refGenVersion == V37 ? PMS2_V37 : PMS2_V38,
+                getPolyGRegions(refGenVersion), refGenVersion == V37 ? PMS2_V37 : PMS2_V38,
                 cmd.hasOption(FILTER_SGLS));
     }
 

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox.common;
 
+import static com.hartwig.hmftools.common.sv.ExcludedRegions.getPolyGRegion;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadGeneIdsFile;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS_DESC;
@@ -8,10 +9,7 @@ import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChr
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_ID_FILE;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_BUFFER;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.EXCLUDED_REGION_1_REF_37;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.EXCLUDED_REGION_1_REF_38;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.SUB_ITEM_DELIM;
 
 import java.util.Arrays;
 import java.util.List;
@@ -59,7 +57,7 @@ public class GeneRegionFilters
         ImmuneGeneRegions = Lists.newArrayList();
 
         mRefGenomeVersion = refGenomeVersion;
-        ExcludedRegion = refGenomeVersion.is37() ? EXCLUDED_REGION_1_REF_37 : EXCLUDED_REGION_1_REF_38;
+        ExcludedRegion = getPolyGRegion(refGenomeVersion);
     }
 
     public static void addCommandLineOptions(final Options options)

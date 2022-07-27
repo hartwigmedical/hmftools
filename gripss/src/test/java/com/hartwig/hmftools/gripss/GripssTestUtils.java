@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.gripss;
 
+import static com.hartwig.hmftools.common.sv.ExcludedRegions.POLY_G_REGIONS_V37;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -50,7 +51,6 @@ import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_MIN_TU
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_MIN_TUMOR_AF_SGL;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_PON_DISTANCE;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_SOFT_MAX_NORMAL_RELATIVE_SUPPORT;
-import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_G_REGIONS_V37;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.PMS2_V37;
 
 import java.util.List;

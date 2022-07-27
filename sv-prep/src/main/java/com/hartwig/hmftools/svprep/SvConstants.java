@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.svprep;
 
 import com.hartwig.hmftools.common.sv.LineElements;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 public final class SvConstants
 {
@@ -40,7 +39,4 @@ public final class SvConstants
     public static final int FRAG_LENGTH_DIST_SAMPLE_SIZE = 10000;
     public static final int MAX_FRAGMENT_LENGTH = 1500;
     public static final int DEFAULT_READ_LENGTH = 151;
-
-    public static final ChrBaseRegion EXCLUDED_REGION_1_REF_37 = new ChrBaseRegion("2", 33141260, 33141700);
-    public static final ChrBaseRegion EXCLUDED_REGION_1_REF_38 = new ChrBaseRegion("chr2", 32916190, 32916630);
 }

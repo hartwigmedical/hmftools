@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.gripss;
 
+import static com.hartwig.hmftools.common.sv.ExcludedRegions.getPolyGRegion;
 import static com.hartwig.hmftools.common.sv.LineElements.POLY_A_HOMOLOGY;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -21,7 +22,6 @@ import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_RP;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SB;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SR;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_VF;
-import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_G_REGIONS_V37;
 import static com.hartwig.hmftools.gripss.filters.FilterType.DISCORDANT_PAIR_SUPPORT;
 import static com.hartwig.hmftools.gripss.filters.FilterType.IMPRECISE;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MAX_HOM_LENGTH_SHORT_INV;
@@ -46,6 +46,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
@@ -249,9 +251,10 @@ public class SoftFiltersTest
         resetOverrides(commonOverrides, refOverrides, tumorOverrides);
 
         // MAX_POLY_G_LENGTH
+        ChrBaseRegion excludedRegion = getPolyGRegion(RefGenomeVersion.V37);
         sv = createSv(
-                mIdGenerator.nextEventId(), POLY_G_REGIONS_V37.get(0).Chromosome, POLY_G_REGIONS_V37.get(0).Chromosome,
-                POLY_G_REGIONS_V37.get(0).start() + 1, POLY_G_REGIONS_V37.get(0).end() - 1, POS_ORIENT, NEG_ORIENT,
+                mIdGenerator.nextEventId(), excludedRegion.Chromosome, excludedRegion.Chromosome,
+                excludedRegion.start() + 1, excludedRegion.end() - 1, POS_ORIENT, NEG_ORIENT,
                 "", mGenotypeIds, commonOverrides, refOverrides, tumorOverrides);
 
         applyFilters(sv);
