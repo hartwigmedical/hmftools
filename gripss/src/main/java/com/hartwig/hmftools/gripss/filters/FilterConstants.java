@@ -44,9 +44,6 @@ public class FilterConstants
     public static final double SGL_MIN_STRAND_BIAS = 0.05;
     public static final double SGL_MAX_STRAND_BIAS = 0.95;
 
-    public static final String POLY_G_INSERT = "GGGGGGGGGGGGGGGG";
-    public static final String POLY_C_INSERT = "CCCCCCCCCCCCCCCC";
-
     public static final int DEFAULT_HARD_MIN_TUMOR_QUAL = 100;
     public static final int DEFAULT_HARD_MAX_NORMAL_ABSOLUTE_SUPPORT = 3;
     public static final double DEFAULT_HARD_MAX_NORMAL_RELATIVE_SUPPORT = 0.08;

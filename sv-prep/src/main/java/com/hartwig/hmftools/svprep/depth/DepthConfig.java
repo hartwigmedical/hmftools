@@ -75,5 +75,4 @@ public class DepthConfig
         options.addOption(THREADS, true, "Multi-thread count");
         addSpecificChromosomesRegionsConfig(options);
     }
-
 }

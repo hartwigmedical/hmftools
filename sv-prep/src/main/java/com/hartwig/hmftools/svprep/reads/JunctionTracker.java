@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.svprep.SvConstants.LOW_BASE_QUALITY;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.INSERT_MAP_OVERLAP;
+import static com.hartwig.hmftools.svprep.reads.ReadFilterType.POLY_G_SC;
 import static com.hartwig.hmftools.svprep.reads.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.svprep.reads.ReadRecord.maxIndelLength;
 import static com.hartwig.hmftools.svprep.reads.ReadType.EXACT_SUPPORT;
@@ -170,6 +171,10 @@ public class JunctionTracker
                 continue;
 
             if(readGroup.reads().stream().allMatch(x -> x.readType() == NO_SUPPORT)) // ignore groups with only fully-filtered reads
+                continue;
+
+            // ignore any group with a poly-G insert (note that
+            if(readGroup.reads().stream().anyMatch(x -> ReadFilterType.isSet(x.filters(), POLY_G_SC)))
                 continue;
 
             if(isJunctionFragment(readGroup))

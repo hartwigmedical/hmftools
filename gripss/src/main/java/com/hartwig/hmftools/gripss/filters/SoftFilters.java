@@ -2,6 +2,8 @@ package com.hartwig.hmftools.gripss.filters;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.sv.ExcludedRegions.POLY_C_INSERT;
+import static com.hartwig.hmftools.common.sv.ExcludedRegions.POLY_G_INSERT;
 import static com.hartwig.hmftools.common.sv.LineElements.POLY_A_HOMOLOGY;
 import static com.hartwig.hmftools.common.sv.LineElements.POLY_T_HOMOLOGY;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
@@ -13,8 +15,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REF;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_RP;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.HOM_INV_LENGTH;
-import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_C_INSERT;
-import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_G_INSERT;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.SGL_INS_SEQ_MIN_LENGTH;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.SGL_MAX_STRAND_BIAS;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.SGL_MIN_STRAND_BIAS;

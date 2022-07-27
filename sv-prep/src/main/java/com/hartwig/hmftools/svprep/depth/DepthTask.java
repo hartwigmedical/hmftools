@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.sv.ExcludedRegions.getPolyGRegions;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.IHOMPOS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READPAIR_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READ_COVERAGE;
@@ -19,6 +20,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -46,6 +48,8 @@ public class DepthTask implements Callable
 
     private final Map<String,SamReadGroup> mReadGroups;
 
+    private final List<ChrBaseRegion> mExcludedRegions;
+
     public DepthTask(final String chromosome, final DepthConfig config, final Map<String,Integer> sampleVcfGenotypeIds)
     {
         mConfig = config;
@@ -64,6 +68,9 @@ public class DepthTask implements Callable
         {
             mSamReaders.add(SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenome)).open(new File(bamFile)));
         }
+
+        mExcludedRegions = getPolyGRegions(mConfig.RefGenVersion).stream()
+                .filter(x -> x.Chromosome.equals(chromosome)).collect(Collectors.toList());
     }
 
     public List<VariantContext> variants() { return mVariantsList; }
@@ -121,6 +128,13 @@ public class DepthTask implements Callable
             SamReader samReader = mSamReaders.get(i);
 
             mReadGroups.clear();
+
+            if(mExcludedRegions.stream().anyMatch(x -> x.containsPosition(variantPosition)))
+            {
+                // decide how to populate
+                SV_LOGGER.info("sample({}) var({}:{}) skipped in excluded region", sampleId, variant.getContig(), variantPosition);
+                continue;
+            }
 
             mBamSlicer.slice(samReader, Lists.newArrayList(region), this::processSamRecord);
 

@@ -10,7 +10,7 @@ public final class ExcludedRegions
 {
     public static final String POLY_G_INSERT = "GGGGGGGGGGGGGGGG";
     public static final String POLY_C_INSERT = "CCCCCCCCCCCCCCCC";
-
+    public static final int POLY_G_LENGTH = POLY_G_INSERT.length();
 
     // regions of high-depth due to issues in the ref-genome or sequencing
 

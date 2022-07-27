@@ -5,6 +5,9 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.sv.ExcludedRegions.POLY_C_INSERT;
+import static com.hartwig.hmftools.common.sv.ExcludedRegions.POLY_G_INSERT;
+import static com.hartwig.hmftools.common.sv.ExcludedRegions.POLY_G_LENGTH;
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -17,6 +20,7 @@ import static com.hartwig.hmftools.svprep.reads.ReadFilterType.BREAK_IN_REPEAT;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.INSERT_MAP_OVERLAP;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.MIN_ALIGN_MATCH;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.MIN_MAP_QUAL;
+import static com.hartwig.hmftools.svprep.reads.ReadFilterType.POLY_G_SC;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.SOFT_CLIP_BASE_QUAL;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.svprep.reads.ReadRecord.getSoftClippedBases;
@@ -41,6 +45,9 @@ public class ReadFilters
 
     public int checkFilters(final SAMRecord record)
     {
+        // check each filter type that would prevent a read being used to establish a junction
+        // NOTE: must check all filters (ie no early) exits since the state of some are subsequently used (eg map-qual & poly-G)
+
         int filters = 0;
 
         final Cigar cigar = record.getCigar();
@@ -90,7 +97,14 @@ public class ReadFilters
                 if(aboveQual / scLength < mConfig.MinSoftClipHighQualPerc)
                     filters = ReadFilterType.set(filters, SOFT_CLIP_BASE_QUAL);
 
-                if(!ReadFilterType.isSet(filters, SOFT_CLIP_LENGTH))
+                String scBases = getSoftClippedBases(record, useLeftClip);
+
+                // check for poly G/C inserts, then a break in a repetitive section, then poly A/T mobile line insertion
+                if(scLength >= POLY_G_LENGTH && (scBases.contains(POLY_G_INSERT) || scBases.contains(POLY_C_INSERT)))
+                {
+                    filters = ReadFilterType.set(filters, POLY_G_SC);
+                }
+                else if(!ReadFilterType.isSet(filters, SOFT_CLIP_LENGTH))
                 {
                     if((record.getMappingQuality() < REPEAT_BREAK_MIN_MAP_QUAL || scLength < REPEAT_BREAK_MIN_SC_LENGTH)
                     && isRepetitiveSectionBreak(record.getReadBases(), useLeftClip, scLength))
@@ -102,9 +116,9 @@ public class ReadFilters
                 {
                     // make an exception if the soft-clip sequence meets the LINE criteria
                     byte orientation = useLeftClip ? NEG_ORIENT : POS_ORIENT;
-                    String scBases = getSoftClippedBases(record, useLeftClip);
 
-                    if(isMobileLineElement(orientation, scBases) && !isRepetitiveSectionBreak(record.getReadBases(), useLeftClip, scLength))
+                    if(isMobileLineElement(orientation, scBases)
+                    && !isRepetitiveSectionBreak(record.getReadBases(), useLeftClip, scLength))
                     {
                         filters = ReadFilterType.unset(filters, SOFT_CLIP_LENGTH);
                     }
@@ -115,8 +129,12 @@ public class ReadFilters
         return filters;
     }
 
-    public boolean isCandidateSupportingRead(final SAMRecord record)
+    public boolean isCandidateSupportingRead(final SAMRecord record, final int filters)
     {
+        // exclude poly-G inserts
+        if(ReadFilterType.isSet(filters, POLY_G_SC))
+            return false;
+
         if(isChimericRead(record, mConfig))
             return true;
 

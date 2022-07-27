@@ -218,7 +218,7 @@ public class PartitionSlicer
         }
 
         // check for any evidence of support for an SV
-        boolean isSupportCandidate = mReadFilters.isCandidateSupportingRead(record);
+        boolean isSupportCandidate = mReadFilters.isCandidateSupportingRead(record, filters);
 
         if(!isSupportCandidate && !mConfig.writeReads())
             return;

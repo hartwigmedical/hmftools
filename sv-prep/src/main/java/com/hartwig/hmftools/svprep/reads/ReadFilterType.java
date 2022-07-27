@@ -14,7 +14,8 @@ public enum ReadFilterType
     INSERT_MAP_OVERLAP(4, 2,"Insert size vs aligned bases"),
     SOFT_CLIP_LENGTH(8, 3, "Soft-clip length"),
     SOFT_CLIP_BASE_QUAL(16, 4,  "Soft-clip base qual"),
-    BREAK_IN_REPEAT(32, 5,  "Repeat break");
+    BREAK_IN_REPEAT(32, 5,  "Repeat break"),
+    POLY_G_SC(64, 6,  "Poly-G");
 
     private final int mFlag;
     private final int mIndex;

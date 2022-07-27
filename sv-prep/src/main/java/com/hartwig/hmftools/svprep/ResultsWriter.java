@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.svprep.WriteType.JUNCTIONS;
 import static com.hartwig.hmftools.svprep.WriteType.READS;
 import static com.hartwig.hmftools.svprep.WriteType.SV_BED;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.MIN_MAP_QUAL;
+import static com.hartwig.hmftools.svprep.reads.ReadFilterType.POLY_G_SC;
 import static com.hartwig.hmftools.svprep.reads.ReadRecord.hasPolyATSoftClip;
 
 import static htsjdk.samtools.SAMFlag.MATE_UNMAPPED;
@@ -301,7 +302,10 @@ public class ResultsWriter
 
         for(ReadGroup readGroup : readGroups)
         {
-            readGroup.reads().stream().filter(x -> !x.written()).forEach(x -> mBamWriter.writeRecord(x.record()));
+            readGroup.reads().stream()
+                    .filter(x -> !x.written())
+                    .filter(x -> !ReadFilterType.isSet(x.filters(), POLY_G_SC)) // avoid writing any poly-G read
+                    .forEach(x -> mBamWriter.writeRecord(x.record()));
         }
     }
 
