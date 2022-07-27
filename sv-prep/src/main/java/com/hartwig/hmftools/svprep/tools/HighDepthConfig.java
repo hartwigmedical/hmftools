@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svprep.depth;
+package com.hartwig.hmftools.svprep.tools;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
@@ -72,6 +72,4 @@ public class HighDepthConfig
         options.addOption(THREADS, true, "Multi-thread count");
         addSpecificChromosomesRegionsConfig(options);
     }
-
-
 }

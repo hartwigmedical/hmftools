@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svprep.depth;
+package com.hartwig.hmftools.svprep.tools;
 
 import static java.lang.String.format;
 

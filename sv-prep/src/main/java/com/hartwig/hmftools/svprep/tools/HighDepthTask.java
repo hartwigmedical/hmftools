@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svprep.depth;
+package com.hartwig.hmftools.svprep.tools;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -6,7 +6,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.stripChrPrefix;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
-import static com.hartwig.hmftools.svprep.depth.HighDepthFinder.writeHighDepthRegions;
+import static com.hartwig.hmftools.svprep.tools.HighDepthFinder.writeHighDepthRegions;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -33,9 +33,10 @@ public class HighDepthTask implements Callable
     private final BamSlicer mBamSlicer;
     private final int[] mBaseDepth;
 
+    private ChrBaseRegion mCurrentPartition;
     private final PerformanceCounter mPerfCounter;
     private int mRecordCounter;
-    private ChrBaseRegion mCurrentPartition;
+    private int mHighDepthRegionCounter;
 
     public HighDepthTask(final String chromosome, final HighDepthConfig config, final BufferedWriter writer)
     {
@@ -46,11 +47,12 @@ public class HighDepthTask implements Callable
         mBamSlicer = new BamSlicer(0, false, true, false);
 
         mSamReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenome)).open(new File(mConfig.BamFile));
-        mPerfCounter = new PerformanceCounter("Slice");
-        mRecordCounter = 0;
-
         mBaseDepth = new int[mConfig.PartitionSize];
         mCurrentPartition = null;
+
+        mPerfCounter = new PerformanceCounter("Slice");
+        mRecordCounter = 0;
+        mHighDepthRegionCounter = 0;
     }
 
     @Override
@@ -90,10 +92,12 @@ public class HighDepthTask implements Callable
             if((processed % 100) == 0)
             {
                 SV_LOGGER.info("chr({}) processed {} partitions", mChromosome, processed);
+                System.gc();
             }
         }
 
-        SV_LOGGER.info("chr({}) processing {} partitions", mChromosome, partitions.size());
+        SV_LOGGER.info("chr({}) processing complete, totalReads({}) highDepthRegions({})",
+                mChromosome, mRecordCounter, mHighDepthRegionCounter);
         mPerfCounter.logStats();
 
         return (long)0;
@@ -115,8 +119,6 @@ public class HighDepthTask implements Callable
         findHighDepthRegions();
 
         mPerfCounter.stop();
-
-        System.gc();
     }
 
     private void processSamRecord(final SAMRecord record)
@@ -176,6 +178,9 @@ public class HighDepthTask implements Callable
         }
 
         if(!highDepthRegions.isEmpty())
+        {
             writeHighDepthRegions(mWriter, highDepthRegions);
+            mHighDepthRegionCounter += highDepthRegions.size();
+        }
     }
 }
