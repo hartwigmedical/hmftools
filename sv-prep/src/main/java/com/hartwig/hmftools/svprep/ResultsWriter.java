@@ -87,7 +87,7 @@ public class ResultsWriter
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write("ReadId,GroupCount,ExpectedCount,GroupStatus,HasExternal,ReadType,Chromosome,PosStart,PosEnd,Cigar");
-            writer.write(",FragLength,MateChr,MatePosStart,MapQual,SuppData,Flags");
+            writer.write(",FragLength,MateChr,MatePosStart,MapQual,SuppData,Flags,Filters");
             writer.write(",FirstInPair,ReadReversed,Proper,Unmapped,MateUnmapped,Supplementary,JunctionPositions");
 
             writer.newLine();
@@ -143,9 +143,9 @@ public class ResultsWriter
 
             SupplementaryReadData suppData = read.supplementaryAlignment();
 
-            mReadWriter.write(format(",%d,%s,%d,%d,%s,%d",
+            mReadWriter.write(format(",%d,%s,%d,%d,%s,%d,%d",
                     read.fragmentInsertSize(), read.MateChromosome, read.MatePosStart, read.mapQuality(),
-                    suppData != null ? suppData.asCsv() : "N/A", read.flags()));
+                    suppData != null ? suppData.asCsv() : "N/A", read.flags(), read.filters()));
 
             mReadWriter.write(format(",%s,%s,%s,%s,%s,%s",
                     read.isFirstOfPair(), read.isReadReversed(), read.hasFlag(PROPER_PAIR), read.hasFlag(READ_UNMAPPED),
@@ -307,12 +307,25 @@ public class ResultsWriter
 
         for(ReadGroup readGroup : readGroups)
         {
-            readGroup.reads().stream()
-                    .filter(x -> !x.written())
-                    .filter(x -> !ReadFilterType.isSet(x.filters(), POLY_G_SC))
-                    .filter(x -> !ReadFilterType.isSet(x.filters(), SOFT_CLIP_LOW_BASE_QUAL))
-                    .forEach(x -> mBamWriter.writeRecord(x.record()));
+            readGroup.reads().stream().filter(x -> !filterBamRecord(x)).forEach(x -> mBamWriter.writeRecord(x.record()));
         }
+    }
+
+    private boolean filterBamRecord(final ReadRecord read)
+    {
+        if(read.written())
+            return true;
+
+        if(ReadFilterType.isSet(read.filters(), POLY_G_SC))
+            return true;
+
+        if(ReadFilterType.isSet(read.filters(), SOFT_CLIP_LOW_BASE_QUAL))
+        {
+            if(read.readType() != ReadType.JUNCTION && read.readType() != ReadType.EXACT_SUPPORT)
+                return true;
+        }
+
+        return false;
     }
 
     private BufferedWriter initialiseBedWriter()

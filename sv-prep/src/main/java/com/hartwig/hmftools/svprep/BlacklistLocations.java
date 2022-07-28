@@ -85,7 +85,7 @@ public class BlacklistLocations
 
             while((line = fileReader.readLine()) != null)
             {
-                if(line.contains("chromosome") && line.contains("regionType"))
+                if(line.contains("Chromosome"))
                     continue;
 
                 final String[] values = line.split("\t", -1);
