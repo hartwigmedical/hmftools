@@ -37,7 +37,8 @@ public class HighDepthConfig
     private static final String PARTITION_SIZE = "partition_size";
     private static final String HIGH_DEPTH_THRESHOLD = "high_depth_threshold";
 
-    private static final int DEFAULT_HIGH_DEPTH_THRESHOLD = 200;
+    public static final int DEFAULT_HIGH_DEPTH_THRESHOLD = 200;
+    public static final int HIGH_DEPTH_REGION_MAX_GAP = 100;
 
     public HighDepthConfig(final CommandLine cmd)
     {

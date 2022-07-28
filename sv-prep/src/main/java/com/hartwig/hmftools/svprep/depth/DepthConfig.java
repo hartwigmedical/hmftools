@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificRegions;
+import static com.hartwig.hmftools.svprep.SvCommon.DELIM;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 
 import java.util.Arrays;
@@ -38,15 +39,13 @@ public class DepthConfig
     private static final String BAM_FILES = "bam_files";
     private static final String THREADS = "threads";
 
-    private static final String ITEM_DELIM = ",";
-
     public DepthConfig(final CommandLine cmd)
     {
         InputVcf = cmd.getOptionValue(INPUT_VCF);
         OutputVcf = cmd.getOptionValue(OUTPUT_VCF);
 
-        Samples = Arrays.stream(cmd.getOptionValue(SAMPLES).split(ITEM_DELIM, -1)).collect(Collectors.toList());
-        BamFiles = Arrays.stream(cmd.getOptionValue(BAM_FILES).split(ITEM_DELIM, -1)).collect(Collectors.toList());
+        Samples = Arrays.stream(cmd.getOptionValue(SAMPLES).split(DELIM, -1)).collect(Collectors.toList());
+        BamFiles = Arrays.stream(cmd.getOptionValue(BAM_FILES).split(DELIM, -1)).collect(Collectors.toList());
 
         RefGenome = cmd.getOptionValue(REF_GENOME);
         RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));;

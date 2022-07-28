@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.stripChrPrefix;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
+import static com.hartwig.hmftools.svprep.tools.HighDepthConfig.HIGH_DEPTH_REGION_MAX_GAP;
 import static com.hartwig.hmftools.svprep.tools.HighDepthFinder.writeHighDepthRegions;
 
 import java.io.BufferedWriter;
@@ -136,8 +137,6 @@ public class HighDepthTask implements Callable
         }
     }
 
-    private static final int MAX_GAP = 100;
-
     private void findHighDepthRegions()
     {
         List<HighDepthRegion> highDepthRegions = Lists.newArrayList();
@@ -154,14 +153,15 @@ public class HighDepthTask implements Callable
                 if(currentRegion == null)
                 {
                     currentRegion = new HighDepthRegion(new ChrBaseRegion(mChromosome, position, position));
-                    currentRegion.Depth = baseDepth;
+                    currentRegion.DepthMin = baseDepth;
+                    currentRegion.DepthMax = baseDepth;
                     highDepthRegions.add(currentRegion);
                 }
                 else
                 {
                     // extend the region
                     currentRegion.Region.setEnd(position);
-                    currentRegion.Depth = max(currentRegion.Depth, baseDepth);
+                    currentRegion.DepthMax = max(currentRegion.DepthMax, baseDepth);
                 }
             }
             else
@@ -169,7 +169,7 @@ public class HighDepthTask implements Callable
                 if(currentRegion == null)
                     continue;
 
-                if(position - currentRegion.Region.end() < MAX_GAP) // continue checking but don't extend the region
+                if(position - currentRegion.Region.end() < HIGH_DEPTH_REGION_MAX_GAP) // continue checking but don't extend the region
                     continue;
 
                 // end this region
