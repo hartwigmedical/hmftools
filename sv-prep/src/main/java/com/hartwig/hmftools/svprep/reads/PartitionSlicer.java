@@ -128,7 +128,7 @@ public class PartitionSlicer
 
         mJunctionTracker.setExpectedReads(mCombinedReadGroups.getExpectedReadIds(mRegion));
 
-        mJunctionTracker.createJunctions();
+        mJunctionTracker.assignFragments();
         mJunctionTracker.filterJunctions();
 
         mPerCounters[PC_JUNCTIONS].stop();
@@ -138,7 +138,6 @@ public class PartitionSlicer
         if(mStats.TotalReads > 0)
         {
             SV_LOGGER.debug("region({}) complete, stats({})", mRegion, mStats.toString());
-            SV_LOGGER.debug("region({}) filters({})", mRegion, ReadFilterType.filterCountsToString(mStats.ReadFilterCounts));
         }
 
         mPerCounters[PC_TOTAL].stop();
@@ -190,21 +189,18 @@ public class PartitionSlicer
 
         int filters = mReadFilters.checkFilters(record);
 
-        if(filters != 0)
+        if(filters == 0 || filters == ReadFilterType.MIN_MAP_QUAL.flag()) // allow reads only filtered by low map quality through
         {
-            // allow low map quality through at this stage
-            if(filters != ReadFilterType.MIN_MAP_QUAL.flag())
-            {
-                processFilteredRead(record, filters);
-                return;
-            }
+            ReadRecord read = ReadRecord.from(record);
+            read.setFilters(filters);
+            read.setReadType(JUNCTION);
+
+            mJunctionTracker.processRead(read);
         }
-
-        ReadRecord read = ReadRecord.from(record);
-        read.setFilters(filters);
-        read.setReadType(JUNCTION);
-
-        mJunctionTracker.processRead(read);
+        else
+        {
+            processFilteredRead(record, filters);
+        }
     }
 
     private void processFilteredRead(final SAMRecord record, final int filters)

@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.reads.PartitionStats;
 import com.hartwig.hmftools.svprep.reads.PartitionTask;
 import com.hartwig.hmftools.svprep.reads.PartitionThread;
+import com.hartwig.hmftools.svprep.reads.ReadFilterType;
 
 public class ChromosomeTask implements AutoCloseable
 {
@@ -86,6 +87,9 @@ public class ChromosomeTask implements AutoCloseable
 
         SV_LOGGER.info("chromosome({}) {} regions complete, stats: {}",
                 mChromosome, regionCount, mCombinedStats.ReadStats.toString());
+
+        SV_LOGGER.debug("chromosome({}) filters({})",
+                mChromosome, ReadFilterType.filterCountsToString(mCombinedStats.ReadStats.ReadFilterCounts));
 
         if(mCombinedStats.ReadStats.TotalReads > 10000)
         {

@@ -39,6 +39,11 @@ public class PartitionStats
         LocalCompleteGroups += other.LocalCompleteGroups;
         LocalIncompleteGroups += other.LocalIncompleteGroups;
         SpanningGroups += other.SpanningGroups;
+
+        for(int i = 0; i < ReadFilterCounts.length; ++i)
+        {
+            ReadFilterCounts[i] += other.ReadFilterCounts[i];
+        }
     }
 
     public String toString()

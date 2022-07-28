@@ -11,6 +11,8 @@ import static com.hartwig.hmftools.common.sv.ExcludedRegions.POLY_G_LENGTH;
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.svprep.SvConstants.MAX_SOFT_CLIP_LOW_QUAL_COUNT;
+import static com.hartwig.hmftools.svprep.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_LINE_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.REPEAT_BREAK_MATCH_CHECK_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.REPEAT_BREAK_MIN_MAP_QUAL;
@@ -23,6 +25,7 @@ import static com.hartwig.hmftools.svprep.reads.ReadFilterType.MIN_MAP_QUAL;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.POLY_G_SC;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.SOFT_CLIP_BASE_QUAL;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.svprep.reads.ReadFilterType.SOFT_CLIP_LOW_BASE_QUAL;
 import static com.hartwig.hmftools.svprep.reads.ReadRecord.getSoftClippedBases;
 
 import static htsjdk.samtools.CigarOperator.M;
@@ -67,61 +70,67 @@ public class ReadFilters
                 filters = ReadFilterType.set(filters, INSERT_MAP_OVERLAP);
         }
 
+        // check length and quality of soft-clipped bases if not an INDEL
+        int scLeft = cigar.isLeftClipped() ? cigar.getFirstCigarElement().getLength() : 0;
+        int scRight = cigar.isRightClipped() ? cigar.getLastCigarElement().getLength() : 0;
+
+        // a read with an indel junction does not need to meet the min soft-clip length condition, but other SC inserts are checked
         int maxIndelLength = ReadRecord.maxIndelLength(record.getCigar());
 
-        if(maxIndelLength < mConfig.MinIndelLength)
+        if(maxIndelLength < mConfig.MinIndelLength && scLeft < mConfig.MinSoftClipLength && scRight < mConfig.MinSoftClipLength)
+            filters = ReadFilterType.set(filters, SOFT_CLIP_LENGTH);
+
+        // base qual in soft clip
+        if(scLeft > 0 || scRight > 0)
         {
-            // check length and quality of soft-clipped bases if not an INDEL
-            int scLeft = cigar.isLeftClipped() ? cigar.getFirstCigarElement().getLength() : 0;
-            int scRight = cigar.isRightClipped() ? cigar.getLastCigarElement().getLength() : 0;
+            final byte[] baseQualities = record.getBaseQualities();
+            int scRangeStart = scLeft > scRight ? 0 : baseQualities.length - scRight;
+            int scRangeEnd = scLeft > scRight ? scLeft : baseQualities.length;
+            boolean useLeftClip = scLeft > scRight;
+            int scLength = useLeftClip ? scLeft : scRight;
 
-            if(scLeft < mConfig.MinSoftClipLength && scRight < mConfig.MinSoftClipLength)
-                filters = ReadFilterType.set(filters, SOFT_CLIP_LENGTH);
-
-            // base qual in soft clip
-            if(scLeft > 0 || scRight > 0)
+            int aboveQual = 0;
+            for(int i = scRangeStart; i < scRangeEnd; ++i)
             {
-                final byte[] baseQualities = record.getBaseQualities();
-                int scRangeStart = scLeft > scRight ? 0 : baseQualities.length - scRight;
-                int scRangeEnd = scLeft > scRight ? scLeft : baseQualities.length;
-                boolean useLeftClip = scLeft > scRight;
-                int scLength = useLeftClip ? scLeft : scRight;
+                if(baseQualities[i] >= mConfig.MinSoftClipHighQual)
+                    ++aboveQual;
+            }
 
-                int aboveQual = 0;
-                for(int i = scRangeStart; i < scRangeEnd; ++i)
+            if(aboveQual / (double)scLength < mConfig.MinSoftClipHighQualPerc)
+            {
+                filters = ReadFilterType.set(filters, SOFT_CLIP_BASE_QUAL);
+
+                // additional check to exclude a read from any use
+                int lowQualCount = scLength - aboveQual;
+
+                if(lowQualCount >= MAX_SOFT_CLIP_LOW_QUAL_COUNT)
+                    filters = ReadFilterType.set(filters, SOFT_CLIP_LOW_BASE_QUAL);
+            }
+
+            String scBases = getSoftClippedBases(record, useLeftClip);
+
+            // check for poly G/C inserts, then a break in a repetitive section, then poly A/T mobile line insertion
+            if(scLength >= POLY_G_LENGTH && (scBases.contains(POLY_G_INSERT) || scBases.contains(POLY_C_INSERT)))
+            {
+                filters = ReadFilterType.set(filters, POLY_G_SC);
+            }
+            else if(!ReadFilterType.isSet(filters, SOFT_CLIP_LENGTH))
+            {
+                if((record.getMappingQuality() < REPEAT_BREAK_MIN_MAP_QUAL || scLength < REPEAT_BREAK_MIN_SC_LENGTH)
+                && isRepetitiveSectionBreak(record.getReadBases(), useLeftClip, scLength))
                 {
-                    if(baseQualities[i] >= mConfig.MinSoftClipHighQual)
-                        ++aboveQual;
+                    filters = ReadFilterType.set(filters, BREAK_IN_REPEAT);
                 }
+            }
+            else if(scLength >= MIN_LINE_SOFT_CLIP_LENGTH)
+            {
+                // make an exception if the soft-clip sequence meets the LINE criteria
+                byte orientation = useLeftClip ? NEG_ORIENT : POS_ORIENT;
 
-                if(aboveQual / scLength < mConfig.MinSoftClipHighQualPerc)
-                    filters = ReadFilterType.set(filters, SOFT_CLIP_BASE_QUAL);
-
-                String scBases = getSoftClippedBases(record, useLeftClip);
-
-                // check for poly G/C inserts, then a break in a repetitive section, then poly A/T mobile line insertion
-                if(scLength >= POLY_G_LENGTH && (scBases.contains(POLY_G_INSERT) || scBases.contains(POLY_C_INSERT)))
+                if(isMobileLineElement(orientation, scBases)
+                && !isRepetitiveSectionBreak(record.getReadBases(), useLeftClip, scLength))
                 {
-                    filters = ReadFilterType.set(filters, POLY_G_SC);
-                }
-                else if(!ReadFilterType.isSet(filters, SOFT_CLIP_LENGTH))
-                {
-                    if((record.getMappingQuality() < REPEAT_BREAK_MIN_MAP_QUAL || scLength < REPEAT_BREAK_MIN_SC_LENGTH)
-                    && isRepetitiveSectionBreak(record.getReadBases(), useLeftClip, scLength))
-                    {
-                        filters = ReadFilterType.set(filters, BREAK_IN_REPEAT);
-                    }
-                }
-                else if(scLength >= MIN_LINE_SOFT_CLIP_LENGTH)
-                {
-                    // make an exception if the soft-clip sequence meets the LINE criteria
-                    byte orientation = useLeftClip ? NEG_ORIENT : POS_ORIENT;
-
-                    if(isMobileLineElement(orientation, scBases)
-                    && !isRepetitiveSectionBreak(record.getReadBases(), useLeftClip, scLength))
-                    {
-                        filters = ReadFilterType.unset(filters, SOFT_CLIP_LENGTH);
-                    }
+                    filters = ReadFilterType.unset(filters, SOFT_CLIP_LENGTH);
                 }
             }
         }
@@ -138,8 +147,9 @@ public class ReadFilters
         if(isChimericRead(record, mConfig))
             return true;
 
-        // or with any amount of soft-clipping
-        return record.getCigar().isLeftClipped() || record.getCigar().isRightClipped();
+        // or with any amount of soft-clipping or a long INDEL
+        return record.getCigar().isLeftClipped() || record.getCigar().isRightClipped()
+                || ReadRecord.maxIndelLength(record.getCigar()) >= MIN_INDEL_SUPPORT_LENGTH;
     }
 
     public static boolean isChimericRead(final SAMRecord record, final ReadFilterConfig config)

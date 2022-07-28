@@ -6,15 +6,22 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.svprep.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.svprep.reads.ReadType.NO_SUPPORT;
+
+import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.I;
+import static htsjdk.samtools.CigarOperator.M;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 
 import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
@@ -152,5 +159,51 @@ public class ReadRecord
         byte orientation = isClippedLeft ? NEG_ORIENT : POS_ORIENT;
         String scBases = getSoftClippedBases(read.record(), isClippedLeft);
         return isMobileLineElement(orientation, scBases);
+    }
+
+    public static int[] findIndelCoords(final ReadRecord read, int minIndelLength)
+    {
+        int maxIndelLength = maxIndelLength(read.cigar());
+
+        if(maxIndelLength < minIndelLength)
+            return null;
+
+        // find the location of the internal delete or insert
+        int indelStartPos = read.start() - 1;
+        int indelEndPos = 0;
+        for(CigarElement element : read.cigar())
+        {
+            if(element.getOperator() == M)
+            {
+                indelStartPos += element.getLength();
+            }
+            else if(element.getOperator() == D)
+            {
+                if(element.getLength() == maxIndelLength)
+                {
+                    indelEndPos = indelStartPos + element.getLength() + 1;
+                    break;
+                }
+
+                indelStartPos += element.getLength();
+            }
+            else if(element.getOperator() == I)
+            {
+                if(element.getLength() == maxIndelLength)
+                {
+                    indelEndPos = indelStartPos + 1;
+                    break;
+                }
+            }
+            else
+            {
+                continue;
+            }
+        }
+
+        if(indelEndPos <= indelStartPos)
+            return null;
+
+        return new int[] { indelStartPos, indelEndPos };
     }
 }

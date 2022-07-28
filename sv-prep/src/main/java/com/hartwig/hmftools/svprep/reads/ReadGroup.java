@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.svprep.reads;
 
 import static com.hartwig.hmftools.svprep.CombinedReadGroups.formChromosomePartition;
+import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
 
 import java.util.List;
 import java.util.Set;
@@ -38,9 +39,9 @@ public class ReadGroup
 
     public final String id() { return mReads.get(0).id(); }
     public List<ReadRecord> reads() { return mReads; }
+    public int size() { return mReads.size(); }
 
     public boolean isComplete() { return mStatus == ReadGroupStatus.COMPLETE; }
-    public boolean isIncomplete() { return mStatus == ReadGroupStatus.INCOMPLETE; }
 
     public boolean spansPartitions() { return !mRemotePartitions.isEmpty() || mIsRemoteExpected; }
     public int partitionCount() { return mRemotePartitions.size() + 1; }
@@ -79,6 +80,11 @@ public class ReadGroup
     }
 
     public boolean allNoSupport() { return mReads.stream().allMatch(x -> x.readType() == ReadType.NO_SUPPORT); }
+
+    public boolean isJunctionFragment()
+    {
+        return mReads.stream().anyMatch(x -> x.readType() == JUNCTION);
+    }
 
     public void setGroupState()
     {
@@ -128,7 +134,6 @@ public class ReadGroup
     }
 
     public boolean onlySupplementaries() { return mReads.stream().allMatch(x -> x.isSupplementaryAlignment()); }
-    public boolean hasUnmapped() { return mReads.stream().anyMatch(x -> x.isMateUnmapped()); }
 
     public void setPartitionCount(final ChrBaseRegion region, int partitionSize)
     {
@@ -177,6 +182,11 @@ public class ReadGroup
         return false;
     }
 
+    public String toString()
+    {
+        return String.format("%s reads(%d) state(%s) partitions(%d)", id(), mReads.size(), mStatus, partitionCount());
+    }
+
     public boolean hasSupplementaryMatch(final SupplementaryReadData suppData)
     {
         for(ReadRecord read : mReads)
@@ -194,12 +204,5 @@ public class ReadGroup
     private static boolean supplementaryInRegion(final SupplementaryReadData suppData, final ChrBaseRegion region)
     {
         return suppData != null && region.containsPosition(suppData.Chromosome, suppData.Position);
-    }
-
-    public int size() { return mReads.size(); }
-
-    public String toString()
-    {
-        return String.format("%s reads(%d) state(%s) partitions(%d)", id(), mReads.size(), mStatus, partitionCount());
     }
 }

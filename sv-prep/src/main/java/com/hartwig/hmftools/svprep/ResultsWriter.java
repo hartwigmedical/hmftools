@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.svprep.WriteType.READS;
 import static com.hartwig.hmftools.svprep.WriteType.SV_BED;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.MIN_MAP_QUAL;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.POLY_G_SC;
+import static com.hartwig.hmftools.svprep.reads.ReadFilterType.SOFT_CLIP_LOW_BASE_QUAL;
 import static com.hartwig.hmftools.svprep.reads.ReadRecord.hasPolyATSoftClip;
 
 import static htsjdk.samtools.SAMFlag.MATE_UNMAPPED;
@@ -300,11 +301,16 @@ public class ResultsWriter
         if(mBamWriter == null)
             return;
 
+        // note additional filters for a read to be written to the BAM
+        // - excessive low qual soft-clip bases
+        // - above the poly-G(C) threshold
+
         for(ReadGroup readGroup : readGroups)
         {
             readGroup.reads().stream()
                     .filter(x -> !x.written())
-                    .filter(x -> !ReadFilterType.isSet(x.filters(), POLY_G_SC)) // avoid writing any poly-G read
+                    .filter(x -> !ReadFilterType.isSet(x.filters(), POLY_G_SC))
+                    .filter(x -> !ReadFilterType.isSet(x.filters(), SOFT_CLIP_LOW_BASE_QUAL))
                     .forEach(x -> mBamWriter.writeRecord(x.record()));
         }
     }
