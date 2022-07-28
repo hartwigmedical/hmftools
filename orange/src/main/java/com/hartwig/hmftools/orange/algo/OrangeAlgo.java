@@ -13,11 +13,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordDataLoader;
-import com.hartwig.hmftools.common.cuppa.CuppaData;
 import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
-import com.hartwig.hmftools.common.cuppa.CuppaEntry;
-import com.hartwig.hmftools.common.cuppa.CuppaFactory;
-import com.hartwig.hmftools.common.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.common.doid.DoidNode;
@@ -47,6 +43,9 @@ import com.hartwig.hmftools.common.wildtype.WildTypeFactory;
 import com.hartwig.hmftools.common.wildtype.WildTypeGene;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.OrangeRNAConfig;
+import com.hartwig.hmftools.orange.algo.cuppa.CuppaData;
+import com.hartwig.hmftools.orange.algo.cuppa.CuppaDataFactory;
+import com.hartwig.hmftools.orange.algo.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
@@ -318,10 +317,10 @@ public class OrangeAlgo {
     @NotNull
     private static CuppaData loadCuppaData(@NotNull OrangeConfig config) throws IOException {
         LOGGER.info("Loading CUPPA from {}", new File(config.cuppaResultCsv()).getParent());
-        List<CuppaEntry> cuppaEntries = CuppaDataFile.readEntries(config.cuppaResultCsv());
+        List<CuppaDataFile> cuppaEntries = CuppaDataFile.read(config.cuppaResultCsv());
         LOGGER.info(" Loaded {} entries from {}", cuppaEntries.size(), config.cuppaResultCsv());
 
-        CuppaData cuppaData = CuppaFactory.create(cuppaEntries);
+        CuppaData cuppaData = CuppaDataFactory.create(cuppaEntries);
         CuppaPrediction best = cuppaData.predictions().get(0);
         LOGGER.info(" Predicted cancer type '{}' with likelihood {}", best.cancerType(), best.likelihood());
 

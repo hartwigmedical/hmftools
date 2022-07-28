@@ -124,9 +124,12 @@ class ActionableEntryFactory {
                     }
                 }
 
+                String treatmentApprochString = String.join(",", sourceRelevantTreatmentApproaches);
                 RelevantTreatmentApprochCurationEntryKey key = ImmutableRelevantTreatmentApprochCurationEntryKey.builder()
                         .treatment(treatment)
-                        .treatmentApproach(String.join(",", sourceRelevantTreatmentApproaches))
+                        .treatmentApproach(treatmentApprochString.isEmpty()
+                                ? treatmentApprochString
+                                : treatmentApprochString.substring(0, treatmentApprochString.length() - 1))
                         .event(gene + " " + eventType.name())
                         .level(level)
                         .direction(direction)
