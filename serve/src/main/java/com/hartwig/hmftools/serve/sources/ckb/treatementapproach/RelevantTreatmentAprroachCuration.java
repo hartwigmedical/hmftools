@@ -27,6 +27,7 @@ public class RelevantTreatmentAprroachCuration {
     public void reportUnusedFilterEntries() {
         int unusedFilterEntryCount = 0;
         for (Map.Entry<RelevantTreatmentApprochCurationEntryKey, RelevantTreatmentApprochCurationEntry> entry : curations.entrySet()) {
+            LOGGER.debug("entry debug: " + entry);
             if (!usedCurations.contains(entry.getValue().curationKey())) {
                 unusedFilterEntryCount++;
                 LOGGER.warn(" Curation entry '{}' hasn't been used for treatment Approch curation", entry);
@@ -38,7 +39,6 @@ public class RelevantTreatmentAprroachCuration {
 
     @NotNull
     public String isMatch(@NotNull RelevantTreatmentApprochCurationEntryKey key) {
-
         RelevantTreatmentApprochCurationEntry curationEntry = curations.get(key);
 
         if (curationEntry == null) {
@@ -52,13 +52,21 @@ public class RelevantTreatmentAprroachCuration {
             return Strings.EMPTY;
         } else {
             switch (curationEntry.curationType()) {
-                case TREATMENT_APPROACH_CURATION_IGNORE: {
+                case EVENT_TREATMENT_APPROACH_CURATION_IGNORE: {
                     usedCurations.add(ImmutableRelevantTreatmentApprochCurationEntry.builder()
-                            .curationType(RelevantTreatmentApproachCurationType.TREATMENT_APPROACH_CURATION_IGNORE)
+                            .curationType(RelevantTreatmentApproachCurationType.EVENT_TREATMENT_APPROACH_CURATION_IGNORE)
                             .curationKey(key)
                             .curatedtreatmentApproach(curationEntry.curatedtreatmentApproach())
                             .build());
-                    return curationEntry.curatedtreatmentApproach();
+                    return curationEntry.curatedtreatmentApproach() == null ? Strings.EMPTY : curationEntry.curatedtreatmentApproach();
+                }
+                case DIRECTION_TREATMENT_APPROACH_CURATION_IGNORE: {
+                    usedCurations.add(ImmutableRelevantTreatmentApprochCurationEntry.builder()
+                            .curationType(RelevantTreatmentApproachCurationType.DIRECTION_TREATMENT_APPROACH_CURATION_IGNORE)
+                            .curationKey(key)
+                            .curatedtreatmentApproach(curationEntry.curatedtreatmentApproach())
+                            .build());
+                    return curationEntry.curatedtreatmentApproach() == null ? Strings.EMPTY : curationEntry.curatedtreatmentApproach();
                 }
                 case TREATMENT_APPROACH_CURATION: {
                     usedCurations.add(ImmutableRelevantTreatmentApprochCurationEntry.builder()
@@ -66,7 +74,7 @@ public class RelevantTreatmentAprroachCuration {
                             .curationKey(key)
                             .curatedtreatmentApproach(curationEntry.curatedtreatmentApproach())
                             .build());
-                    return curationEntry.curatedtreatmentApproach();
+                    return curationEntry.curatedtreatmentApproach() == null ? Strings.EMPTY : curationEntry.curatedtreatmentApproach();
                 }
                 default: {
                     LOGGER.warn("Curation entry found with unrecognized type: {}", curationEntry);

@@ -15,6 +15,6 @@ public abstract class RelevantTreatmentApprochCurationEntry {
     @NotNull
     public abstract RelevantTreatmentApprochCurationEntryKey curationKey();
 
-    @NotNull
+    @Nullable
     public abstract String curatedtreatmentApproach();
 }

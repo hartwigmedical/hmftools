@@ -26,6 +26,7 @@ import com.hartwig.hmftools.serve.treatment.ImmutableTreatment;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -125,12 +126,21 @@ class ActionableEntryFactory {
                 }
 
                 String treatmentApprochString = String.join(",", sourceRelevantTreatmentApproaches);
+                String treatmentApprochInterpret = Strings.EMPTY;
+                if (sourceRelevantTreatmentApproaches.isEmpty()) {
+                    treatmentApprochInterpret = null;
+                } else if (treatmentApprochString.substring(treatmentApprochString.length()-1).equals(",")) {
+                    treatmentApprochInterpret = treatmentApprochString.substring(0, treatmentApprochString.length() - 1);
+                } else {
+                    treatmentApprochInterpret = treatmentApprochString;
+                }
+
+                LOGGER.info(treatmentApprochInterpret);
+
                 RelevantTreatmentApprochCurationEntryKey key = ImmutableRelevantTreatmentApprochCurationEntryKey.builder()
                         .treatment(treatment)
-                        .treatmentApproach(treatmentApprochString.isEmpty()
-                                ? treatmentApprochString
-                                : treatmentApprochString.substring(0, treatmentApprochString.length() - 1))
-                        .event(gene + " " + eventType.name())
+                        .treatmentApproach(treatmentApprochInterpret)
+                        .event(gene + " " + eventType)
                         .level(level)
                         .direction(direction)
                         .build();
