@@ -31,6 +31,7 @@ public class DepthConfig
     public final String RefGenome;
     public final RefGenomeVersion RefGenVersion;
     public final List<ChrBaseRegion> SpecificRegions;
+    public final boolean WriteGridssRefValues;
     public final int Threads;
 
     private static final String INPUT_VCF = "input_vcf";
@@ -38,6 +39,7 @@ public class DepthConfig
     private static final String SAMPLES = "samples";
     private static final String BAM_FILES = "bam_files";
     private static final String THREADS = "threads";
+    private static final String WRITE_GRIDSS_REF = "write_gridss_ref";
 
     public DepthConfig(final CommandLine cmd)
     {
@@ -50,6 +52,7 @@ public class DepthConfig
         RefGenome = cmd.getOptionValue(REF_GENOME);
         RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));;
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "1"));
+        WriteGridssRefValues = cmd.hasOption(WRITE_GRIDSS_REF);
 
         SpecificRegions = Lists.newArrayList();
 
@@ -71,6 +74,7 @@ public class DepthConfig
         options.addOption(OUTPUT_VCF, true, "Output VCF File");
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
+        options.addOption(WRITE_GRIDSS_REF, false, "Write Gridss REF and REFPAIR values to extra tags");
         options.addOption(THREADS, true, "Multi-thread count");
         addSpecificChromosomesRegionsConfig(options);
     }

@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 
 import org.apache.commons.cli.CommandLine;
@@ -26,8 +27,13 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.writer.VariantContextWriter;
+import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFCodec;
+import htsjdk.variant.vcf.VCFFormatHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class DepthAnnotator
 {
@@ -60,7 +66,9 @@ public class DepthAnnotator
         final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
                 mConfig.InputVcf, new VCFCodec(), false);
 
-        if(!establishGenotypeIds((VCFHeader)reader.getHeader()))
+        VCFHeader vcfHeader = (VCFHeader)reader.getHeader();
+
+        if(!establishGenotypeIds(vcfHeader))
         {
             System.exit(1);
         }
@@ -111,16 +119,68 @@ public class DepthAnnotator
                 continue;
 
             DepthTask depthTask = new DepthTask(chromosome.toString(), mConfig, mSampleVcfGenotypeIds);
-            depthTask.variants().addAll(variantsList);
+            depthTask.addVariants(variantsList);
             depthTasks.add(depthTask);
         }
 
         final List<Callable> callableList = depthTasks.stream().collect(Collectors.toList());
         TaskExecutor.executeTasks(callableList, mConfig.Threads);
 
+        // write output VCF
+        writeVcf(vcfHeader, depthTasks);
+
         SV_LOGGER.info("depth annotation complete");
 
-        // write output VCF
+        PerformanceCounter perfCounter = depthTasks.get(0).getPerfCounter();
+        for(int i = 1; i < depthTasks.size(); ++i)
+        {
+            perfCounter.merge(depthTasks.get(i).getPerfCounter());
+        }
+
+        perfCounter.logStats();
+    }
+
+    public static final String VCF_TAG_REF_GRIDSS = "REF_GRIDSS";
+    public static final String VCF_TAG_REFPAIR_GRIDSS = "REFPAIR_GRIDSS";
+
+    private void writeVcf(final VCFHeader header, final List<DepthTask> depthTasks)
+    {
+        SV_LOGGER.info("writing VCF: {}", mConfig.OutputVcf);
+
+        // VCFHeader newHeader = new VCFHeader(header);
+        // newHeader.addMetaDataLine(new VCFHeaderLine("PaveVersion", paveVersion));
+
+        header.addMetaDataLine(new VCFFormatHeaderLine(
+                VCF_TAG_REF_GRIDSS, 1, VCFHeaderLineType.Integer, "GRIDSS REF value"));
+
+        header.addMetaDataLine(new VCFFormatHeaderLine(
+                VCF_TAG_REFPAIR_GRIDSS, 1, VCFHeaderLineType.Integer, "GRIDSS REFPAIR value"));
+
+        header.addMetaDataLine(new VCFInfoHeaderLine(
+                VCF_TAG_REF_GRIDSS, 1, VCFHeaderLineType.Integer, "GRIDSS REF value"));
+
+        header.addMetaDataLine(new VCFInfoHeaderLine(
+                VCF_TAG_REFPAIR_GRIDSS, 1, VCFHeaderLineType.Integer, "GRIDSS REFPAIR value"));
+
+        VariantContextWriter writer = new VariantContextWriterBuilder()
+                .setReferenceDictionary(header.getSequenceDictionary())
+                .setOutputFile(mConfig.OutputVcf)
+                .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
+                .build();
+
+        writer.writeHeader(header);
+
+        for(HumanChromosome chromosome : HumanChromosome.values())
+        {
+            DepthTask depthTask = depthTasks.stream().filter(x -> x.chromosome().equals(chromosome.toString())).findFirst().orElse(null);
+
+            if(depthTask == null)
+                continue;
+
+            depthTask.newVariants().forEach(x -> writer.add(x));
+        }
+
+        writer.close();
     }
 
     private boolean establishGenotypeIds(final VCFHeader header)

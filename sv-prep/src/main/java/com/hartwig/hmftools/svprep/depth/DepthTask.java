@@ -15,6 +15,8 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.MAX_FRAGMENT_LENGTH;
+import static com.hartwig.hmftools.svprep.depth.DepthAnnotator.VCF_TAG_REFPAIR_GRIDSS;
+import static com.hartwig.hmftools.svprep.depth.DepthAnnotator.VCF_TAG_REF_GRIDSS;
 
 import java.io.File;
 import java.util.List;
@@ -25,6 +27,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.logging.log4j.Level;
@@ -34,12 +37,14 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 public class DepthTask implements Callable
 {
     private final DepthConfig mConfig;
     private final Map<String,Integer> mSampleVcfGenotypeIds;
     private final List<VariantContext> mVariantsList;
+    private final List<VariantContext> mNewVariantsList;
     private final String mChromosome;
     private int mBamRecords;
 
@@ -49,6 +54,7 @@ public class DepthTask implements Callable
     private final Map<String,SamReadGroup> mReadGroups;
 
     private final List<ChrBaseRegion> mExcludedRegions;
+    private final PerformanceCounter mPerfCounter;
 
     public DepthTask(final String chromosome, final DepthConfig config, final Map<String,Integer> sampleVcfGenotypeIds)
     {
@@ -57,6 +63,7 @@ public class DepthTask implements Callable
         mSampleVcfGenotypeIds = sampleVcfGenotypeIds;
 
         mVariantsList = Lists.newArrayList();
+        mNewVariantsList = Lists.newArrayList();
         mBamRecords = 0;
 
         mBamSlicer = new BamSlicer(0, false, true, false);
@@ -71,9 +78,14 @@ public class DepthTask implements Callable
 
         mExcludedRegions = getPolyGRegions(mConfig.RefGenVersion).stream()
                 .filter(x -> x.Chromosome.equals(chromosome)).collect(Collectors.toList());
+
+        mPerfCounter = new PerformanceCounter("Slice");
     }
 
-    public List<VariantContext> variants() { return mVariantsList; }
+    public String chromosome() { return mChromosome; }
+    public void addVariants(final List<VariantContext> variants) { mVariantsList.addAll(variants); }
+    public List<VariantContext> newVariants() { return mNewVariantsList; }
+    public PerformanceCounter getPerfCounter() { return mPerfCounter; }
 
     @Override
     public Long call()
@@ -100,6 +112,8 @@ public class DepthTask implements Callable
 
     private void retrieveDepth(final VariantContext variant)
     {
+        mPerfCounter.start();
+
         // retrieve the depth to set these 2 values in the VCF:
         // REF = reads aligned directly over the breakend (excluding reads that would support the junction)
         // REFPAIR = fragments with 1 read aligned to the left and 1 read aligned to the right of the breakend with proper orientation and
@@ -122,6 +136,13 @@ public class DepthTask implements Callable
         int varPosStart = variantPosition + homology[0];
         int varPosEnd = variantPosition + homology[1];
 
+        VariantContext newVariant = new VariantContextBuilder(variant)
+                .genotypes(variant.getGenotypes())
+                .filters(variant.getFilters())
+                .make();
+
+        RefSupportCounts totalCounts = new RefSupportCounts();
+
         for(int i = 0; i < mConfig.Samples.size(); ++i)
         {
             String sampleId = mConfig.Samples.get(i);
@@ -139,9 +160,15 @@ public class DepthTask implements Callable
             mBamSlicer.slice(samReader, Lists.newArrayList(region), this::processSamRecord);
 
             RefSupportCounts sampleCounts = calculateSupport(variantPosition, varPosStart, varPosEnd, variantOrientation);
+            totalCounts.RefSupport += sampleCounts.RefSupport;
+            totalCounts.RefPairSupport += sampleCounts.RefPairSupport;
 
             int vcfSampleIndex = mSampleVcfGenotypeIds.get(sampleId);
-            Genotype genotype = variant.getGenotype(vcfSampleIndex);
+            Genotype genotype = newVariant.getGenotype(vcfSampleIndex);
+
+            setRefDepthValue(genotype, sampleCounts.RefSupport, REFERENCE_BREAKEND_READ_COVERAGE, VCF_TAG_REF_GRIDSS);
+            setRefDepthValue(genotype, sampleCounts.RefPairSupport, REFERENCE_BREAKEND_READPAIR_COVERAGE, VCF_TAG_REFPAIR_GRIDSS);
+
             int vcfRef = getGenotypeAttributeAsInt(genotype, REFERENCE_BREAKEND_READ_COVERAGE, 0);
             int vcfRefPair = getGenotypeAttributeAsInt(genotype, REFERENCE_BREAKEND_READPAIR_COVERAGE, 0);
 
@@ -153,6 +180,46 @@ public class DepthTask implements Callable
                     sampleId, variant.getContig(), variantPosition, hasDiffs ? "has diffs" : "equal",
                     vcfRef, sampleCounts.RefSupport, vcfRefPair, sampleCounts.RefPairSupport);
         }
+
+        setRefDepthValue(newVariant, totalCounts.RefSupport, REFERENCE_BREAKEND_READ_COVERAGE, VCF_TAG_REF_GRIDSS);
+        setRefDepthValue(newVariant, totalCounts.RefPairSupport, REFERENCE_BREAKEND_READPAIR_COVERAGE, VCF_TAG_REFPAIR_GRIDSS);
+
+        mNewVariantsList.add(newVariant);
+
+        mPerfCounter.stop();
+
+        if(mPerfCounter.getLastTime() > 2)
+        {
+            SV_LOGGER.warn("var({}:{}) high depth retrieval time({}",
+                    variant.getContig(), variantPosition, format("%.3f", mPerfCounter.getLastTime()));
+        }
+    }
+
+    private void setRefDepthValue(final Genotype genotype, int refCount, final String vcfTag, final String oldValueTag)
+    {
+        if(genotype.hasExtendedAttribute(vcfTag))
+        {
+            int oldValue = getGenotypeAttributeAsInt(genotype, vcfTag, 0);
+
+            if(mConfig.WriteGridssRefValues)
+                genotype.getExtendedAttributes().put(oldValueTag, oldValue);
+        }
+
+        genotype.getExtendedAttributes().put(vcfTag, refCount);
+    }
+
+    private void setRefDepthValue(final VariantContext variant, int refCount, final String vcfTag, final String oldValueTag)
+    {
+        if(variant.hasAttribute(vcfTag))
+        {
+            int oldValue = variant.getAttributeAsInt(vcfTag, 0);
+            variant.getCommonInfo().removeAttribute(vcfTag);
+
+            if(mConfig.WriteGridssRefValues)
+                variant.getCommonInfo().putAttribute(oldValueTag, oldValue);
+        }
+
+        variant.getCommonInfo().putAttribute(vcfTag, refCount);
     }
 
     private static final int ABS_DIFF_MAX = 5;

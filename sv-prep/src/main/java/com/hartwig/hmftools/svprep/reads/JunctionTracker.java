@@ -502,17 +502,11 @@ public class JunctionTracker
 
     private boolean readWithinJunctionRange(final ReadRecord read, final JunctionData junctionData)
     {
-        if(read.cigar().isRightClipped())
-        {
-            if(abs(read.end() - junctionData.Position) <= mFilterConfig.MaxDiscordantFragmentDistance)
-                return true;
-        }
+        if(abs(read.end() - junctionData.Position) <= mFilterConfig.MaxDiscordantFragmentDistance)
+            return true;
 
-        if(read.cigar().isLeftClipped())
-        {
-            if(abs(read.start() - junctionData.Position) <= mFilterConfig.MaxDiscordantFragmentDistance)
-                return true;
-        }
+        if(abs(read.start() - junctionData.Position) <= mFilterConfig.MaxDiscordantFragmentDistance)
+            return true;
 
         return false;
     }
