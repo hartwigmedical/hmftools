@@ -59,8 +59,8 @@ public class StructuralVariantFactory
     private static final String BPI_AF = "BPI_AF";
     private static final String SOMATIC_SCORE = "SOMATICSCORE"; // only applicable for Manta and will be removed when fully on GRIDSS
     public static final String IHOMPOS = "IHOMPOS";
-    private static final String VARIANT_FRAGMENT_BREAKPOINT_COVERAGE = "VF";
-    private static final String VARIANT_FRAGMENT_BREAKEND_COVERAGE = "BVF";
+    public static final String VARIANT_FRAGMENT_BREAKPOINT_COVERAGE = "VF";
+    public static final String VARIANT_FRAGMENT_BREAKEND_COVERAGE = "BVF";
     public static final String REFERENCE_BREAKEND_READ_COVERAGE = "REF";
     public static final String REFERENCE_BREAKEND_READPAIR_COVERAGE = "REFPAIR";
     private static final String EVENT = "EVENT";

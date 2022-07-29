@@ -13,6 +13,8 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READ_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REMOTE_LINKED_BY;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.TAF;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKEND_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKPOINT_COVERAGE;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 
 import java.util.List;
@@ -37,8 +39,8 @@ public class VcfUtils
 
     // read counts
     public static final String VT_SR = "SR";
-    public static final String VT_VF = "VF";
-    public static final String VT_BVF = "BVF";
+    public static final String VT_VF = VARIANT_FRAGMENT_BREAKPOINT_COVERAGE;
+    public static final String VT_BVF = VARIANT_FRAGMENT_BREAKEND_COVERAGE;
     public static final String VT_RP = "RP";
     public static final String VT_IC = "IC";
     public static final String VT_REF = REFERENCE_BREAKEND_READ_COVERAGE;

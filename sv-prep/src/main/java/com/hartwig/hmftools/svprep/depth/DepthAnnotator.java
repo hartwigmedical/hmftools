@@ -107,6 +107,12 @@ public class DepthAnnotator
 
         SV_LOGGER.info("loaded {} variants from vcf({})", vcfCount, mConfig.InputVcf);
 
+        if(mChrVariantMap.isEmpty())
+        {
+            SV_LOGGER.warn("all variants filtered from vcf({})", vcfCount, mConfig.InputVcf);
+            return;
+        }
+
         List<DepthTask> depthTasks = Lists.newArrayList();
 
         for(HumanChromosome chromosome : HumanChromosome.values())

@@ -39,6 +39,6 @@ public final class SvConstants
 
     // fragment length distribution and filtering
     public static final int FRAG_LENGTH_DIST_SAMPLE_SIZE = 10000;
-    public static final int MAX_FRAGMENT_LENGTH = 1500;
+    public static final int MAX_FRAGMENT_LENGTH = 1100;
     public static final int DEFAULT_READ_LENGTH = 151;
 }

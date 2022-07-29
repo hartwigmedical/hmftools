@@ -2,12 +2,16 @@ package com.hartwig.hmftools.svprep.depth;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.ExcludedRegions.getPolyGRegions;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.CIPOS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.IHOMPOS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READPAIR_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READ_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKEND_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKPOINT_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.isSingleBreakend;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
@@ -17,6 +21,7 @@ import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.MAX_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.svprep.depth.DepthAnnotator.VCF_TAG_REFPAIR_GRIDSS;
 import static com.hartwig.hmftools.svprep.depth.DepthAnnotator.VCF_TAG_REF_GRIDSS;
+import static com.hartwig.hmftools.svprep.depth.DepthConfig.MAX_GAP;
 
 import java.io.File;
 import java.util.List;
@@ -93,10 +98,40 @@ public class DepthTask implements Callable
         SV_LOGGER.info("chr({}) processing {} variants", mChromosome, mVariantsList.size());
 
         int processed = 0;
-        for(VariantContext variant : mVariantsList)
+        int index = 0;
+        while(index < mVariantsList.size())
         {
-            retrieveDepth(variant);
-            ++processed;
+            VariantContext variant = mVariantsList.get(index);
+            int posStart = variant.getStart();
+
+            if(inExcludedRegion(posStart))
+            {
+                ++index;
+                continue;
+            }
+
+            List<VariantContext> variants = Lists.newArrayList(variant);
+
+            int posEnd = posStart;
+            int nextIndex = index + 1;
+            while(nextIndex < mVariantsList.size())
+            {
+                VariantContext nextVariant = mVariantsList.get(nextIndex);
+                if(nextVariant.getStart() - posEnd > MAX_GAP)
+                    break;
+
+                if(inExcludedRegion(nextVariant.getStart()))
+                    break;
+
+                posEnd = nextVariant.getStart();
+                variants.add(nextVariant);
+                ++nextIndex;
+            }
+
+            retrieveDepth(variants, posStart, posEnd);
+            index += variants.size();
+
+            processed += variants.size();
 
             if((processed % 1000) == 0)
             {
@@ -105,12 +140,18 @@ public class DepthTask implements Callable
         }
 
         SV_LOGGER.info("chr({}) complete for {} variants, total reads({})", mChromosome, processed, mBamRecords);
+        mReadGroups.clear();
         System.gc();
 
         return (long)0;
     }
 
-    private void retrieveDepth(final VariantContext variant)
+    private boolean inExcludedRegion(int position)
+    {
+        return mExcludedRegions.stream().anyMatch(x -> x.containsPosition(position));
+    }
+
+    private void retrieveDepth(final List<VariantContext> variants, int posStart, int posEnd)
     {
         mPerfCounter.start();
 
@@ -118,30 +159,26 @@ public class DepthTask implements Callable
         // REF = reads aligned directly over the breakend (excluding reads that would support the junction)
         // REFPAIR = fragments with 1 read aligned to the left and 1 read aligned to the right of the breakend with proper orientation and
         // FragmentSize < max size from distribution
-        int variantPosition = variant.getStart();
-        byte variantOrientation = getOrientation(variant);
 
         ChrBaseRegion region = new ChrBaseRegion(
-                variant.getContig(), variantPosition - MAX_FRAGMENT_LENGTH, variantPosition + MAX_FRAGMENT_LENGTH);
+                mChromosome, posStart - MAX_FRAGMENT_LENGTH, posEnd + MAX_FRAGMENT_LENGTH);
 
-        final int[] homology = {0, 0};
+        List<RefSupportCounts> sampleTotalCounts = Lists.newArrayList();
+        List<VariantContext> newVariants = Lists.newArrayList();
 
-        if(variant.hasAttribute(IHOMPOS))
+        for(VariantContext variant : variants)
         {
-            final List<Integer> ihompos = variant.getAttributeAsIntList(IHOMPOS, 0);
-            homology[0] = ihompos.get(0);
-            homology[1] = ihompos.get(1);
+            VariantContext newVariant = new VariantContextBuilder(variant)
+                    .genotypes(variant.getGenotypes())
+                    .filters(variant.getFilters())
+                    .make();
+
+            newVariants.add(newVariant);
+
+            sampleTotalCounts.add(new RefSupportCounts());
         }
 
-        int varPosStart = variantPosition + homology[0];
-        int varPosEnd = variantPosition + homology[1];
-
-        VariantContext newVariant = new VariantContextBuilder(variant)
-                .genotypes(variant.getGenotypes())
-                .filters(variant.getFilters())
-                .make();
-
-        RefSupportCounts totalCounts = new RefSupportCounts();
+        int readGroupTotal = 0;
 
         for(int i = 0; i < mConfig.Samples.size(); ++i)
         {
@@ -150,25 +187,69 @@ public class DepthTask implements Callable
 
             mReadGroups.clear();
 
-            if(mExcludedRegions.stream().anyMatch(x -> x.containsPosition(variantPosition)))
-            {
-                // decide how to populate
-                SV_LOGGER.info("sample({}) var({}:{}) skipped in excluded region", sampleId, variant.getContig(), variantPosition);
-                continue;
-            }
-
             mBamSlicer.slice(samReader, Lists.newArrayList(region), this::processSamRecord);
 
-            RefSupportCounts sampleCounts = calculateSupport(variantPosition, varPosStart, varPosEnd, variantOrientation);
-            totalCounts.RefSupport += sampleCounts.RefSupport;
-            totalCounts.RefPairSupport += sampleCounts.RefPairSupport;
+            readGroupTotal += mReadGroups.size();
 
-            int vcfSampleIndex = mSampleVcfGenotypeIds.get(sampleId);
-            Genotype genotype = newVariant.getGenotype(vcfSampleIndex);
+            for(int j = 0; j < variants.size(); ++j)
+            {
+                VariantContext variant = variants.get(j);
+                RefSupportCounts totalCounts = sampleTotalCounts.get(j);
+                VariantContext newVariant = newVariants.get(j);
 
-            setRefDepthValue(genotype, sampleCounts.RefSupport, REFERENCE_BREAKEND_READ_COVERAGE, VCF_TAG_REF_GRIDSS);
-            setRefDepthValue(genotype, sampleCounts.RefPairSupport, REFERENCE_BREAKEND_READPAIR_COVERAGE, VCF_TAG_REFPAIR_GRIDSS);
+                calculateVariantSupport(variant, newVariant, sampleId, totalCounts);
+            }
+        }
 
+        for(int j = 0; j < variants.size(); ++j)
+        {
+            RefSupportCounts totalCounts = sampleTotalCounts.get(j);
+            VariantContext newVariant = newVariants.get(j);
+
+            setRefDepthValue(newVariant, totalCounts.RefSupport, REFERENCE_BREAKEND_READ_COVERAGE, VCF_TAG_REF_GRIDSS);
+            setRefDepthValue(newVariant, totalCounts.RefPairSupport, REFERENCE_BREAKEND_READPAIR_COVERAGE, VCF_TAG_REFPAIR_GRIDSS);
+
+            mNewVariantsList.add(newVariant);
+        }
+
+        mPerfCounter.stop();
+
+        if(mPerfCounter.getLastTime() > 2)
+        {
+            SV_LOGGER.warn("variants({}) chr({}) span({}-{}) high depth retrieval time({}) totalFrags({})",
+                    variants.size(), mChromosome, posStart, posEnd, format("%.3f", mPerfCounter.getLastTime()), readGroupTotal);
+        }
+    }
+
+    private void calculateVariantSupport(
+            final VariantContext variant, final VariantContext newVariant, final String sampleId, final RefSupportCounts totalCounts)
+    {
+        int variantPosition = variant.getStart();
+        byte variantOrientation = getOrientation(variant);
+
+        final int[] homology = {0, 0};
+
+        if(variant.hasAttribute(CIPOS))
+        {
+            final List<Integer> ihompos = variant.getAttributeAsIntList(CIPOS, 0);
+            homology[0] = ihompos.get(0);
+            homology[1] = ihompos.get(1);
+        }
+
+        int varPosStart = variantPosition + homology[0];
+        int varPosEnd = variantPosition + homology[1];
+
+        int variantFragCount = max(
+                variant.getAttributeAsInt(VARIANT_FRAGMENT_BREAKPOINT_COVERAGE, 0),
+                variant.getAttributeAsInt(VARIANT_FRAGMENT_BREAKEND_COVERAGE, 0));
+
+        RefSupportCounts sampleCounts = calculateSupport(variantPosition, varPosStart, varPosEnd, variantOrientation, variantFragCount);
+
+        int vcfSampleIndex = mSampleVcfGenotypeIds.get(sampleId);
+        Genotype genotype = newVariant.getGenotype(vcfSampleIndex);
+
+        if(mConfig.LogDiffs || SV_LOGGER.isTraceEnabled())
+        {
             int vcfRef = getGenotypeAttributeAsInt(genotype, REFERENCE_BREAKEND_READ_COVERAGE, 0);
             int vcfRefPair = getGenotypeAttributeAsInt(genotype, REFERENCE_BREAKEND_READPAIR_COVERAGE, 0);
 
@@ -181,18 +262,11 @@ public class DepthTask implements Callable
                     vcfRef, sampleCounts.RefSupport, vcfRefPair, sampleCounts.RefPairSupport);
         }
 
-        setRefDepthValue(newVariant, totalCounts.RefSupport, REFERENCE_BREAKEND_READ_COVERAGE, VCF_TAG_REF_GRIDSS);
-        setRefDepthValue(newVariant, totalCounts.RefPairSupport, REFERENCE_BREAKEND_READPAIR_COVERAGE, VCF_TAG_REFPAIR_GRIDSS);
+        totalCounts.RefSupport += sampleCounts.RefSupport;
+        totalCounts.RefPairSupport += sampleCounts.RefPairSupport;
 
-        mNewVariantsList.add(newVariant);
-
-        mPerfCounter.stop();
-
-        if(mPerfCounter.getLastTime() > 2)
-        {
-            SV_LOGGER.warn("var({}:{}) high depth retrieval time({}",
-                    variant.getContig(), variantPosition, format("%.3f", mPerfCounter.getLastTime()));
-        }
+        setRefDepthValue(genotype, sampleCounts.RefSupport, REFERENCE_BREAKEND_READ_COVERAGE, VCF_TAG_REF_GRIDSS);
+        setRefDepthValue(genotype, sampleCounts.RefPairSupport, REFERENCE_BREAKEND_READPAIR_COVERAGE, VCF_TAG_REFPAIR_GRIDSS);
     }
 
     private void setRefDepthValue(final Genotype genotype, int refCount, final String vcfTag, final String oldValueTag)
@@ -222,7 +296,7 @@ public class DepthTask implements Callable
         variant.getCommonInfo().putAttribute(vcfTag, refCount);
     }
 
-    private static final int ABS_DIFF_MAX = 5;
+    private static final int ABS_DIFF_MAX = 3;
     private static final double ABS_DIFF_PERC = 0.1;
 
     private boolean hasDiff(int value1, int value2)
@@ -273,62 +347,87 @@ public class DepthTask implements Callable
         public int RefPairSupport = 0;
 
         public RefSupportCounts() {}
+
+        public int total() { return RefSupport + RefPairSupport; }
     }
 
-    private RefSupportCounts calculateSupport(int variantPosition, int varPosStart, int varPosEnd, byte variantOrientation)
+    private RefSupportCounts calculateSupport(int variantPosition, int varPosMin, int varPosMax, byte variantOrientation, int varFrags)
     {
         RefSupportCounts counts = new RefSupportCounts();
+
+        int refFragsCap = mConfig.VafCap > 0 ? (int)(varFrags / mConfig.VafCap) : 0;
 
         for(SamReadGroup readGroup : mReadGroups.values())
         {
             boolean readSupportsRef = false;
             boolean hasLowerPosRead = false;
             boolean hasUpperPosRead = false;
+            int strandCount = 0;
             boolean matchesJunction = false;
-
-            boolean isValidSpanningPair = readGroup.Reads.size() == 2
-                    && abs(readGroup.Reads.get(0).getInferredInsertSize()) < MAX_FRAGMENT_LENGTH
-                    && readGroup.Reads.get(0).getReadNegativeStrandFlag() != readGroup.Reads.get(1).getReadNegativeStrandFlag();
+            int readGroupPosMin = 0;
+            int readGroupPosMax = 0;
 
             for(SAMRecord record : readGroup.Reads)
             {
                 int readStart = record.getAlignmentStart();
                 int readEnd = record.getAlignmentEnd();
 
-                if((variantOrientation == NEG_ORIENT && positionWithin(readStart, varPosStart, varPosEnd))
-                || (variantOrientation == POS_ORIENT && positionWithin(readEnd, varPosStart, varPosEnd))) // exact SC match
+                readGroupPosMin = readGroupPosMin == 0 ? readStart : min(readStart, readGroupPosMin);
+                readGroupPosMax = max(readEnd, readGroupPosMax);
+
+                // check for an exact SC match
+                if((variantOrientation == NEG_ORIENT && positionWithin(readStart, varPosMin, varPosMax) && record.getCigar().isLeftClipped())
+                || (variantOrientation == POS_ORIENT && positionWithin(readEnd, varPosMin, varPosMax)) && record.getCigar().isRightClipped())
                 {
                     SV_LOGGER.trace("var({}) pos({}-{}) read({}-{}) id({}) at junction",
-                            variantPosition, varPosStart, varPosEnd, readStart, readEnd, record.getReadName());
+                            variantPosition, varPosMin, varPosMax, readStart, readEnd, record.getReadName());
                     matchesJunction = true;
                     break;
                 }
 
                 byte orientation = !record.getReadNegativeStrandFlag() ? POS_ORIENT : NEG_ORIENT;
 
-                if(orientation == POS_ORIENT && readEnd < varPosStart)
+                if(orientation == POS_ORIENT && readEnd <= max(variantPosition, varPosMax) && !hasLowerPosRead
+                && abs(record.getInferredInsertSize()) < MAX_FRAGMENT_LENGTH)
                 {
                     hasLowerPosRead = true;
+                    strandCount += record.getReadNegativeStrandFlag() ? -1 : 1;
                 }
-                else if(orientation == NEG_ORIENT && readStart > varPosEnd)
+                else if(orientation == NEG_ORIENT && readStart >= min(variantPosition, varPosMin) && !hasUpperPosRead
+                && abs(record.getInferredInsertSize()) < MAX_FRAGMENT_LENGTH)
                 {
                     hasUpperPosRead = true;
+                    strandCount += record.getReadNegativeStrandFlag() ? -1 : 1;
                 }
 
-                if(positionsOverlap(varPosStart, varPosEnd, readStart, readEnd))
+                if(positionsOverlap(varPosMin, varPosMax, readStart, readEnd))
                 {
-                    SV_LOGGER.trace("var({}) pos({}-{}) read({}-{}) id({}) supports",
-                            variantPosition, varPosStart, varPosEnd, readStart, readEnd, record.getReadName());
+                    SV_LOGGER.trace("var({}) pos({}-{}) read({}-{}) id({}) has ref support",
+                            variantPosition, varPosMin, varPosMax, readStart, readEnd, record.getReadName());
                     readSupportsRef = true;
                 }
             }
 
-            if(!matchesJunction)
+            if(matchesJunction)
+                continue;
+
+            if(readSupportsRef)
             {
-                if(readSupportsRef)
-                    ++counts.RefSupport;
-                else if(isValidSpanningPair && hasLowerPosRead && hasUpperPosRead)
-                    ++counts.RefPairSupport;
+                ++counts.RefSupport;
+            }
+            else if(hasLowerPosRead && hasUpperPosRead && strandCount == 0)
+            {
+                ++counts.RefPairSupport;
+
+                SV_LOGGER.trace("var({}) pos({}-{}) fragment(id={} {}-{}) has ref-pair support",
+                        variantPosition, varPosMin, varPosMax, readGroup.id(), readGroupPosMin, readGroupPosMax);
+            }
+
+            if(refFragsCap > 0 && counts.total() > refFragsCap)
+            {
+                SV_LOGGER.debug("var({}:{}) varFrags({}) ref limit({}) reached with support(ref={} pair={})",
+                        mChromosome, variantPosition, varFrags, refFragsCap, counts.RefSupport, counts.RefPairSupport);
+                break;
             }
         }
 
