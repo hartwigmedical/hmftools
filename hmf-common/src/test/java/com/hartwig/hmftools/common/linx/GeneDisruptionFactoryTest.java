@@ -23,14 +23,7 @@ public class GeneDisruptionFactoryTest {
 
     @Test
     public void canDetermineClusterId() {
-        LinxBreakend breakend = LinxTestFactory.breakendBuilder()
-                .svId(1)
-                .gene("ROPN1B")
-                .chromosome("3")
-                .chrBand("p12")
-                .type("INV")
-                .junctionCopyNumber(1.12)
-                .build();
+        LinxBreakend breakend = LinxTestFactory.breakendBuilder().svId(1).build();
 
         LinxSvAnnotation match = createTestAnnotationBuilder().svId(1).clusterId(2).build();
         assertEquals(2, (int) GeneDisruptionFactory.determineClusterId(Lists.newArrayList(match), breakend));
@@ -44,18 +37,16 @@ public class GeneDisruptionFactoryTest {
         ImmutableLinxBreakend.Builder pairedBreakendBuilder = LinxTestFactory.breakendBuilder()
                 .svId(1)
                 .gene("ROPN1B")
+                .transcriptId("ENST1")
                 .chromosome("3")
                 .chrBand("p12")
                 .type("INV")
                 .junctionCopyNumber(1.12);
-        List<LinxSvAnnotation> structuralVariants =
-                Lists.newArrayList(createTestAnnotationBuilder().svId(1).clusterId(2).geneStart("ROPN1B").geneEnd("ROPN1B").build());
-
         List<LinxBreakend> pairedBreakends =
                 Lists.newArrayList(pairedBreakendBuilder.exonUp(3).exonDown(4).undisruptedCopyNumber(4.3).build(),
                         pairedBreakendBuilder.exonUp(8).exonDown(9).undisruptedCopyNumber(2.1).build());
 
-        List<GeneDisruption> geneDisruptions = GeneDisruptionFactory.convert(pairedBreakends, structuralVariants);
+        List<GeneDisruption> geneDisruptions = GeneDisruptionFactory.convert(pairedBreakends, Lists.newArrayList());
 
         assertEquals(1, geneDisruptions.size());
 
@@ -63,6 +54,7 @@ public class GeneDisruptionFactoryTest {
         assertEquals("INV", disruption.type());
         assertEquals("3p12", disruption.location());
         assertEquals("ROPN1B", disruption.gene());
+        assertEquals("ENST1", disruption.transcriptId());
         assertEquals("Intron 3 -> Intron 8", disruption.range());
         assertEquals(3, disruption.firstAffectedExon());
         assertEquals(2.1, disruption.undisruptedCopyNumber(), EPSILON);
@@ -73,16 +65,13 @@ public class GeneDisruptionFactoryTest {
     }
 
     @Test
-    public void doesNotPairBreakendsOnDifferentGenes() {
+    public void doesNotPairBreakendsOnDifferentTranscripts() {
         ImmutableLinxBreakend.Builder pairedBreakendBuilder = LinxTestFactory.breakendBuilder().svId(1);
-        List<LinxSvAnnotation> structuralVariants =
-                Lists.newArrayList(createTestAnnotationBuilder().svId(1).clusterId(2).geneStart("ROPN1B").geneEnd("ROPN1B").build());
-        List<LinxBreakend> pairedDisruptions =
-                Lists.newArrayList(pairedBreakendBuilder.gene("ROPN1B").svId(1).junctionCopyNumber(1.0).undisruptedCopyNumber(1.0).build(),
-                        pairedBreakendBuilder.gene("SETD2").svId(1).junctionCopyNumber(1.0).undisruptedCopyNumber(2.3).build(),
-                        pairedBreakendBuilder.gene("SETD2").svId(1).junctionCopyNumber(1.0).undisruptedCopyNumber(1.7).build());
+        List<LinxBreakend> pairedDisruptions = Lists.newArrayList(pairedBreakendBuilder.transcriptId("ENST 1").svId(1).build(),
+                pairedBreakendBuilder.transcriptId("ENST 2").svId(1).build(),
+                pairedBreakendBuilder.transcriptId("ENST 2").svId(1).build());
 
-        List<GeneDisruption> disruptions = GeneDisruptionFactory.convert(pairedDisruptions, structuralVariants);
+        List<GeneDisruption> disruptions = GeneDisruptionFactory.convert(pairedDisruptions, Lists.newArrayList());
 
         assertEquals(2, disruptions.size());
     }

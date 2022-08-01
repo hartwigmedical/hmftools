@@ -141,6 +141,7 @@ investigate potential causes for QC failure.
 ### Version History and Download Links
 - Upcoming
   - Improve formatting of non-duplicate fragments in RNA findings
+  - Fix bug with displaying gene disruptions in case of one SVs causing more than 1 disruption across multiple transcripts of the same gene.
 - [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.10)
   - Classify each driver gene as wild-type in case:
     1. Purple fit is reliable

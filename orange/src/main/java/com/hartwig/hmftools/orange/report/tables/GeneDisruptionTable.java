@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.linx.GeneDisruption;
+import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Chromosomes;
 import com.hartwig.hmftools.orange.report.util.Cells;
@@ -12,6 +13,7 @@ import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class GeneDisruptionTable {
@@ -35,7 +37,7 @@ public final class GeneDisruptionTable {
 
         for (GeneDisruption disruption : sort(disruptions)) {
             table.addCell(Cells.createContent(disruption.location()));
-            table.addCell(Cells.createContent(disruption.gene()));
+            table.addCell(Cells.createContent(displayGene(disruption)));
             table.addCell(Cells.createContent(disruption.range()));
             table.addCell(Cells.createContent(disruption.type()));
             table.addCell(Cells.createContent(String.valueOf(disruption.clusterId())));
@@ -58,5 +60,14 @@ public final class GeneDisruptionTable {
                 return locationAndGene1.compareTo(locationAndGene2);
             }
         }).collect(Collectors.toList());
+    }
+
+    @NotNull
+    private static String displayGene(@NotNull GeneDisruption disruption) {
+        String addon = Strings.EMPTY;
+        if (!disruption.isCanonical()) {
+            addon = " (alt)";
+        }
+        return disruption.gene() + addon;
     }
 }
