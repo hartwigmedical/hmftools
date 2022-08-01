@@ -57,8 +57,7 @@ public class SvVisualiser implements AutoCloseable
 
     public static void main(String[] args)
     {
-        final Options options = SvVisualiserConfig.createOptions();
-        SampleData.addCmdLineOptions(options);
+        final Options options = VisualiserConfig.createOptions();
         CircosConfig.addOptions(options);
 
         try(final SvVisualiser application = new SvVisualiser(options, args))
@@ -80,7 +79,7 @@ public class SvVisualiser implements AutoCloseable
         }
     }
 
-    private final SvVisualiserConfig mConfig;
+    private final VisualiserConfig mConfig;
     private final SampleData mSampleData;
     private final CircosConfig mCircosConfig;
     private final ExecutorService mExecutorService;
@@ -94,8 +93,8 @@ public class SvVisualiser implements AutoCloseable
         VIS_LOGGER.info("Loading data");
 
         mCircosConfig = new CircosConfig(cmd);
-        mConfig = new SvVisualiserConfig(cmd);
-        mSampleData = new SampleData(cmd);
+        mConfig = new VisualiserConfig(cmd);
+        mSampleData = new SampleData(mConfig);
         mExecutorService = Executors.newFixedThreadPool(mConfig.Threads);
 
         mCallableImages = Lists.newArrayList();
@@ -120,17 +119,16 @@ public class SvVisualiser implements AutoCloseable
                 submitCluster(Lists.newArrayList(clusterId), true);
             }
         }
-
-        else if(!mSampleData.Clusters.isEmpty() || !mSampleData.Chromosomes.isEmpty())
+        else if(!mConfig.Clusters.isEmpty() || !mConfig.Chromosomes.isEmpty())
         {
-            if(!mSampleData.Clusters.isEmpty())
+            if(!mConfig.Clusters.isEmpty())
             {
-                submitCluster(mSampleData.Clusters, false);
+                submitCluster(mConfig.Clusters, false);
             }
 
-            if(!mSampleData.Chromosomes.isEmpty())
+            if(!mConfig.Chromosomes.isEmpty())
             {
-                submitChromosome(mSampleData.Chromosomes);
+                submitChromosome(mConfig.Chromosomes);
             }
         }
         else
@@ -176,7 +174,7 @@ public class SvVisualiser implements AutoCloseable
         final Predicate<VisSvData> chromosomePredicate = x -> chromosomes.contains(x.ChrStart) || chromosomes.contains(x.ChrEnd);
         final Predicate<VisSvData> combinedPredicate = chromosomePredicate.and(linePredicate);
 
-        final String sample = mSampleData.Sample + ".chr" + chromosomesStr + (mConfig.Debug ? ".debug" : "");
+        final String sample = mConfig.Sample + ".chr" + chromosomesStr + (mConfig.Debug ? ".debug" : "");
 
         final Set<Integer> clusterIds = mSampleData.SvData
                 .stream()
@@ -196,7 +194,7 @@ public class SvVisualiser implements AutoCloseable
 
         for(String chromosome : chromosomes)
         {
-            chromosomeSegments.add(VisSegments.entireChromosome(mSampleData.Sample, chromosome, mConfig.RefGenomeCoords));
+            chromosomeSegments.add(VisSegments.entireChromosome(mConfig.Sample, chromosome, mConfig.RefGenomeCoords));
         }
 
         final Set<String> chromosomesOfInterest = Sets.newHashSet(chromosomes);
@@ -249,14 +247,14 @@ public class SvVisualiser implements AutoCloseable
             return;
         }
 
-        String fileId = mSampleData.Sample;
+        String fileId = mConfig.Sample;
 
-        if(!mSampleData.Genes.isEmpty() && mConfig.RestrictClusterByGene)
+        if(!mConfig.Genes.isEmpty() && mConfig.RestrictClusterByGene)
         {
             StringJoiner genesSj = new StringJoiner("-");
-            mSampleData.Genes.forEach(x -> genesSj.add(x));
+            mConfig.Genes.forEach(x -> genesSj.add(x));
 
-            fileId += mSampleData.Genes.size() > 1 ? ".genes-" : ".gene-";
+            fileId += mConfig.Genes.size() > 1 ? ".genes-" : ".gene-";
             fileId += genesSj.toString();
         }
         else
@@ -264,7 +262,7 @@ public class SvVisualiser implements AutoCloseable
             fileId += clusterIds.size() > 1 ? ".clusters-" : ".cluster-";
             fileId += clusterIdsStr;
 
-            if(mSampleData.Clusters.size() == 1)
+            if(mConfig.Clusters.size() == 1)
             {
                 final String resolvedTypeString = clusterLinks.get(0).ClusterResolvedType.toString();
                 fileId += "." + resolvedTypeString;
