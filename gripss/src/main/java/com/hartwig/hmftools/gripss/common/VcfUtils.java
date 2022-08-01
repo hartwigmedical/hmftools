@@ -105,6 +105,12 @@ public class VcfUtils
             }
         }
 
+        if(referenceOrdinal < 0 && tumorOrdinal == 1)
+        {
+            referenceOrdinal = 0;
+            vcfRefefenceId = vcfSampleNames.get(0);
+        }
+
         if(tumorOrdinal < 0 || (!referenceId.isEmpty() && referenceOrdinal < 0))
         {
             GR_LOGGER.error("missing sample names in VCF: {}", vcfSampleNames);

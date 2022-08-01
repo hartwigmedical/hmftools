@@ -2,6 +2,7 @@ package com.hartwig.hmftools.gripss.utils;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.LOCAL_LINKED_BY;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
@@ -15,9 +16,29 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 import static com.hartwig.hmftools.gripss.GripssConfig.SAMPLE;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_AS;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ASRP;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BASRP;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BASSR;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BQ;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BSC;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BVF;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CAS;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IC;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_QUAL;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_RAS;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REF;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REFPAIR;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_RP;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SB;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SR;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_VF;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.getGenotypeAttributeAsDouble;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -27,6 +48,7 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.gripss.VariantBuilder;
@@ -41,7 +63,6 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.tribble.AbstractFeatureReader;
@@ -67,11 +88,18 @@ public class GripssCompareVcfs
 
     private final boolean mIgnorePonDiff;
     private final boolean mKeyByCoords; // instead of assuming VCF Ids match
+    private final boolean mWriteAllDiffs; // instead of assuming VCF Ids match
+
+    private final List<VcfCompareField> mVcfCheckFields;
 
     private static final String ORIGINAL_VCF = "original_vcf";
     private static final String NEW_VCF = "new_vcf";
     private static final String IGNORE_PON_DIFF = "ignore_pon_diff";
     private static final String KEY_BY_COORDS = "key_by_coords";
+    private static final String WRITE_ALL_DIFFS = "write_all_diffs";
+
+    private static final int DEFAULT_MAX_DIFF = 20;
+    private static final double DEFAULT_MAX_DIFF_PERC = 0.2;
 
     public GripssCompareVcfs(final CommandLine cmd)
     {
@@ -88,6 +116,34 @@ public class GripssCompareVcfs
 
         mIgnorePonDiff = cmd.hasOption(IGNORE_PON_DIFF);
         mKeyByCoords = cmd.hasOption(KEY_BY_COORDS);
+        mWriteAllDiffs = cmd.hasOption(WRITE_ALL_DIFFS);
+
+        mVcfCheckFields = Lists.newArrayList();
+
+        mVcfCheckFields.add(new VcfCompareField(VT_REF, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(VT_REFPAIR, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(VT_SB, GenotypeScope.COMBINED, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(VT_SR, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(VT_IC, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+
+        // SV only
+        mVcfCheckFields.add(new VcfCompareField(VT_QUAL, GenotypeScope.BOTH, VariantTypeScope.SV, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(VT_VF, GenotypeScope.BOTH, VariantTypeScope.SV, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(VT_RP, GenotypeScope.BOTH, VariantTypeScope.SV, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(VT_ASRP, GenotypeScope.BOTH, VariantTypeScope.SV, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+
+        // assembly
+        mVcfCheckFields.add(new VcfCompareField(VT_AS, GenotypeScope.COMBINED, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(VT_CAS, GenotypeScope.COMBINED, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(VT_RAS, GenotypeScope.COMBINED, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+
+        // SGL only
+        mVcfCheckFields.add(new VcfCompareField(VT_BVF, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(VT_BQ, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(VT_BAQ, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(VT_BSC, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(VT_BASRP, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(VT_BASSR, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
 
         mWriter = initialiseWriter();
     }
@@ -161,7 +217,7 @@ public class GripssCompareVcfs
         if(sv.isSgl())
             return sv.chromosomeStart();
         else
-            return String.format("%s_%s", sv.chromosomeStart(), sv.chromosomeEnd());
+            return format("%s_%s", sv.chromosomeStart(), sv.chromosomeEnd());
     }
 
     private void compareVariants(final String newVcfFile)
@@ -262,15 +318,23 @@ public class GripssCompareVcfs
                     continue;
                 }
 
+                /*
                 // check qual
                 int origQual = (int)origSv.contextStart().getPhredScaledQual();
                 int newQual = (int)newSv.contextStart().getPhredScaledQual();
 
-                if(hasValidDiff(origQual, newQual))
+                if(hasDiff(origQual, newQual))
                 {
                     writeDiffs(origSv, newSv, "QUAL", String.valueOf(origQual), String.valueOf(newQual));
                     ++diffCount;
                     continue;
+                }
+                */
+
+                // check specified VCF tags
+                for(VcfCompareField compareField : mVcfCheckFields)
+                {
+                    checkVcfFieldDiff(origSv, newSv, compareField);
                 }
 
                 // check local and remote linked by for assembled links
@@ -283,8 +347,8 @@ public class GripssCompareVcfs
                 {
                     writeDiffs(
                             origSv, newSv, "ASSEMBLY",
-                            String.format("%s_%s", origHasStartAssembled, origHasEndAssembled),
-                            String.format("%s_%s", newHasStartAssembled, newHasEndAssembled));
+                            format("%s_%s", origHasStartAssembled, origHasEndAssembled),
+                            format("%s_%s", newHasStartAssembled, newHasEndAssembled));
                     ++diffCount;
                     continue;
                 }
@@ -306,14 +370,75 @@ public class GripssCompareVcfs
         GR_LOGGER.info("diffTotal({})", diffCount);
     }
 
-    private static final int MAX_DIFF = 20;
-    private static final double MAX_DIFF_PERC = 0.2;
-
-    private static boolean hasValidDiff(int value1, int value2)
+    private boolean checkVcfFieldDiff(final SvData origSv, final SvData newSv, final VcfCompareField compareField)
     {
-        int diff = abs(value1 - value2);
+        boolean hasDiff = false;
+
+        if(compareField.TypeScope == VariantTypeScope.SV && origSv.isSgl())
+            return false;
+        if(compareField.TypeScope == VariantTypeScope.SGL && !origSv.isSgl())
+            return false;
+
+        if(compareField.Scope == GenotypeScope.COMBINED)
+        {
+            double origValue = origSv.contextStart().getAttributeAsDouble(compareField.VcfTag, 0);
+            double newValue = newSv.contextStart().getAttributeAsDouble(compareField.VcfTag, 0);
+
+            if(hasDiff(origValue, newValue, compareField.DiffAbs, compareField.DiffPerc))
+            {
+                hasDiff = true;
+                writeDiffs(origSv, newSv, compareField.VcfTag, String.valueOf(origValue), String.valueOf(newValue));
+            }
+        }
+        else
+        {
+            for(int se = SE_START; se <= SE_END; ++se)
+            {
+                if(se == SE_END && origSv.isSgl())
+                    continue;
+
+                Breakend origBreakend = origSv.breakends()[se];
+                Breakend newBreakend = newSv.breakends()[se];
+
+                if(compareField.Scope == GenotypeScope.NORMAL || compareField.Scope == GenotypeScope.BOTH)
+                {
+                    double origValue = getGenotypeAttributeAsDouble(origBreakend.RefGenotype, compareField.VcfTag, 0);
+                    double newValue = getGenotypeAttributeAsDouble(newBreakend.RefGenotype, compareField.VcfTag, 0);
+
+                    if(hasDiff(origValue, newValue, compareField.DiffAbs, compareField.DiffPerc))
+                    {
+                        hasDiff = true;
+                        writeDiffs(origSv, newSv, format("REF_%s", compareField.VcfTag), String.valueOf(origValue), String.valueOf(newValue));
+                    }
+                }
+
+                if(compareField.Scope == GenotypeScope.TUMOR || compareField.Scope == GenotypeScope.BOTH)
+                {
+                    double origValue = getGenotypeAttributeAsDouble(origBreakend.TumorGenotype, compareField.VcfTag, 0);
+                    double newValue = getGenotypeAttributeAsDouble(newBreakend.TumorGenotype, compareField.VcfTag, 0);
+
+                    if(hasDiff(origValue, newValue, compareField.DiffAbs, compareField.DiffPerc))
+                    {
+                        hasDiff = true;
+                        writeDiffs(origSv, newSv, format("TUMOR_%s", compareField.VcfTag), String.valueOf(origValue), String.valueOf(newValue));
+                    }
+                }
+            }
+        }
+
+        return hasDiff;
+    }
+
+    private static boolean hasDiff(double value1, double value2)
+    {
+        return hasDiff(value1, value2, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC);
+    }
+
+    private static boolean hasDiff(double value1, double value2, double maxDiff, double maxDiffPerc)
+    {
+        double diff = abs(value1 - value2);
         double diffPerc = diff / (double)max(value1, value2);
-        return diff > MAX_DIFF && diffPerc > MAX_DIFF_PERC;
+        return diff > maxDiff && diffPerc > maxDiffPerc;
     }
 
     private SvData findOriginalSv(final SvData newSv)
@@ -397,18 +522,18 @@ public class GripssCompareVcfs
 
             if(mKeyByCoords)
             {
-                mWriter.write(String.format("%s,%s",
+                mWriter.write(format("%s,%s",
                         origSv != null ? origSv.id() : "", newSv != null ? newSv.id() : ""));
             }
             else
             {
-                mWriter.write(String.format("%s", origSv != null ? origSv.id() : newSv.id()));
+                mWriter.write(format("%s", origSv != null ? origSv.id() : newSv.id()));
             }
 
-            mWriter.write(String.format(",%s,%s,%s,%s,%s",
+            mWriter.write(format(",%s,%s,%s,%s,%s",
                     coords, type, diffType, origValue, newValue));
 
-            mWriter.write(String.format(",%.1f,%.1f,%s,%s",
+            mWriter.write(format(",%.1f,%.1f,%s,%s",
                     origSv != null ? origSv.breakendStart().Qual : -1, newSv != null ? newSv.breakendStart().Qual : -1,
                     origSv != null ? filtersStr(origSv.breakendStart().Context.getFilters(), true) : "",
                     newSv != null ? filtersStr(newSv.breakendStart().Context.getFilters(), true) : ""));
@@ -425,12 +550,46 @@ public class GripssCompareVcfs
     {
         if(sv.isSgl())
         {
-            return String.format("%s:%d:%d", sv.chromosomeStart(), sv.posStart(), sv.orientStart());
+            return format("%s:%d:%d", sv.chromosomeStart(), sv.posStart(), sv.orientStart());
         }
         else
         {
-            return String.format("%s:%d:%d-%s:%d:%d",
+            return format("%s:%d:%d-%s:%d:%d",
                     sv.chromosomeStart(), sv.posStart(), sv.orientStart(), sv.chromosomeEnd(), sv.posEnd(), sv.orientEnd());
+        }
+    }
+
+    private enum GenotypeScope
+    {
+        NORMAL,
+        TUMOR,
+        BOTH,
+        COMBINED;
+    }
+
+    private enum VariantTypeScope
+    {
+        SV,
+        SGL,
+        BOTH;
+    }
+
+    private class VcfCompareField
+    {
+        public final String VcfTag;
+        public final GenotypeScope Scope;
+        public final double DiffAbs;
+        public final double DiffPerc;
+        public final VariantTypeScope TypeScope;
+
+        public VcfCompareField(
+                final String vcfTag, final GenotypeScope scope, final VariantTypeScope typeScope, final double diffAbs, final double diffPerc)
+        {
+            VcfTag = vcfTag;
+            Scope = scope;
+            TypeScope = typeScope;
+            DiffAbs = diffAbs;
+            DiffPerc = diffPerc;
         }
     }
 
@@ -442,6 +601,7 @@ public class GripssCompareVcfs
         options.addOption(NEW_VCF, true, "Path to the GRIDSS structural variant VCF file");
         options.addOption(IGNORE_PON_DIFF, false, "Ignore diffs if just PON filter");
         options.addOption(KEY_BY_COORDS, false, "Match SVs on coords rather than VcfId");
+        options.addOption(WRITE_ALL_DIFFS, false, "Write all VCF field diffs, not just the first");
 
         addOutputOptions(options);
         addLoggingOptions(options);

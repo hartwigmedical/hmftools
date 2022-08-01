@@ -47,7 +47,7 @@ public class DepthConfig
     private static final String VAF_CAP = "vaf_cap";
 
     protected static final int MAX_GAP = 500;
-    protected static final double DEFAULT_VAF_CAP = 0.005;
+    protected static final double DEFAULT_VAF_CAP = 0.001;
 
     public DepthConfig(final CommandLine cmd)
     {
