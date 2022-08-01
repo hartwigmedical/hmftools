@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.sv.linx;
 
-import static java.util.stream.Collectors.toList;
-
 import static com.hartwig.hmftools.common.sv.linx.LinxCluster.DELIMITER;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
@@ -28,14 +26,12 @@ public abstract class LinxDriver
     private static final String CATALOG_EXTENSION = ".linx.driver.catalog.tsv";
     private static final String GERMLINE_CATALOG_EXTENSION = ".linx.germline.driver.catalog.tsv";
 
-    @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateFilename(final String basePath, final String sample)
     {
         return basePath + File.separator + sample + FILE_EXTENSION;
     }
 
-    @NotNull
-    public static String generateCatalogFilename(@NotNull final String basePath, @NotNull final String sample, boolean isSomatic)
+    public static String generateCatalogFilename(final String basePath, final String sample, boolean isSomatic)
     {
         if(isSomatic)
             return basePath + File.separator + sample + CATALOG_EXTENSION;
@@ -43,13 +39,12 @@ public abstract class LinxDriver
             return basePath + File.separator + sample + GERMLINE_CATALOG_EXTENSION;
     }
 
-    @NotNull
     public static List<LinxDriver> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<LinxDriver> clusters) throws IOException
+    public static void write(final String filename, List<LinxDriver> clusters) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(clusters));
     }
@@ -93,7 +88,7 @@ public abstract class LinxDriver
                 .toString();
     }
 
-    private static String toString(@NotNull final LinxDriver driver)
+    private static String toString(final LinxDriver driver)
     {
         return new StringJoiner(LinxCluster.DELIMITER)
                 .add(String.valueOf(driver.clusterId()))

@@ -77,9 +77,9 @@ public class LoadLinxData {
     {
         LOGGER.info("sample({}) loading Linx somatic data", sampleId);
 
-        final String svAnnotationFile = LinxSvAnnotation.generateFilename(linxDir, sampleId);
-        final String svClusterFile = LinxCluster.generateFilename(linxDir, sampleId);
-        final String svLinkFile = LinxLink.generateFilename(linxDir, sampleId);
+        final String svAnnotationFile = LinxSvAnnotation.generateFilename(linxDir, sampleId, false);
+        final String svClusterFile = LinxCluster.generateFilename(linxDir, sampleId, false);
+        final String svLinkFile = LinxLink.generateFilename(linxDir, sampleId, false);
         final String svBreakendFile = LinxBreakend.generateFilename(linxDir, sampleId);
         final String svFusionFile = LinxFusion.generateFilename(linxDir, sampleId);
         final String svDriverFile = LinxDriver.generateFilename(linxDir, sampleId);

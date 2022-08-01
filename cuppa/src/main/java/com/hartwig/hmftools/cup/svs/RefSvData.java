@@ -89,7 +89,7 @@ public class RefSvData implements RefClassifier
 
                 final String svVcfFile = purpleSvFile(mConfig.PurpleDir, sample.Id);
                 final String linxDataDir = formSamplePath(mConfig.LinxDir, sample.Id);
-                final String clusterFile = LinxCluster.generateFilename(linxDataDir, sample.Id);
+                final String clusterFile = LinxCluster.generateFilename(linxDataDir, sample.Id, false);
 
                 if(!loadSvDataFromFile(sample.Id, svVcfFile, clusterFile, sampleSvData))
                     break;

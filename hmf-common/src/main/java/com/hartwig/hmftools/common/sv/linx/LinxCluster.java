@@ -29,26 +29,29 @@ public abstract class LinxCluster
     public static final String DELIMITER = "\t";
 
     private static final String FILE_EXTENSION = ".linx.clusters.tsv";
+    private static final String GERMLINE_FILE_EXTENSION = ".linx.germline.clusters.tsv";
 
-    @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateFilename(final String basePath, final String sample)
     {
-        return basePath + File.separator + sample + FILE_EXTENSION;
+        return generateFilename(basePath, sample, false);
     }
 
-    @NotNull
+    public static String generateFilename(final String basePath, final String sample, boolean isGermline)
+    {
+        return basePath + File.separator + sample + (isGermline ? GERMLINE_FILE_EXTENSION : FILE_EXTENSION);
+    }
+
     public static List<LinxCluster> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<LinxCluster> clusters) throws IOException
+    public static void write(final String filename, List<LinxCluster> clusters) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(clusters));
     }
 
-    @NotNull
-    static List<String> toLines(@NotNull final List<LinxCluster> clusters)
+    static List<String> toLines(final List<LinxCluster> clusters)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -56,18 +59,12 @@ public abstract class LinxCluster
         return lines;
     }
 
-    @NotNull
-    static List<LinxCluster> fromLines(@NotNull List<String> lines)
+    static List<LinxCluster> fromLines(final List<String> lines)
     {
         final String header = lines.get(0);
         lines.remove(0);
 
         final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header,DELIMITER);
-
-        if(header.contains("subClonal"))
-        {
-            return lines.stream().map(x -> fromString_v1_10(x, fieldsIndexMap)).collect(toList());
-        }
 
         List<LinxCluster> clusters = Lists.newArrayList();
 
@@ -88,7 +85,6 @@ public abstract class LinxCluster
         return clusters;
     }
 
-    @NotNull
     private static String header()
     {
         return new StringJoiner(DELIMITER)
@@ -101,8 +97,7 @@ public abstract class LinxCluster
                 .toString();
     }
 
-    @NotNull
-    private static String toString(@NotNull final LinxCluster cluster)
+    private static String toString(final LinxCluster cluster)
     {
         return new StringJoiner(DELIMITER)
                 .add(String.valueOf(cluster.clusterId()))
@@ -113,20 +108,4 @@ public abstract class LinxCluster
                 .add(String.valueOf(cluster.clusterDesc()))
                 .toString();
     }
-
-    @NotNull
-    private static LinxCluster fromString_v1_10(@NotNull final String clusterData, final Map<String,Integer> fieldIndexMap)
-    {
-        String[] values = clusterData.split(DELIMITER);
-
-        return ImmutableLinxCluster.builder()
-                .clusterId(Integer.parseInt(values[fieldIndexMap.get("clusterId")]))
-                .category(values[fieldIndexMap.get("resolvedType")])
-                .synthetic(Boolean.parseBoolean(values[fieldIndexMap.get("synthetic")]))
-                .resolvedType(values[fieldIndexMap.get("subType")])
-                .clusterCount(Integer.parseInt(values[fieldIndexMap.get("clusterCount")]))
-                .clusterDesc(values[fieldIndexMap.get("clusterDesc")])
-                .build();
-    }
-
 }

@@ -42,28 +42,31 @@ public abstract class LinxSvAnnotation
     public abstract int localTICountEnd();
 
     private static final String FILE_EXTENSION = ".linx.svs.tsv";
+    private static final String GERMLINE_FILE_EXTENSION = ".linx.germline.svs.tsv";
 
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.0000");
 
-    @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateFilename(final String basePath, final String sample)
     {
-        return basePath + File.separator + sample + FILE_EXTENSION;
+        return generateFilename(basePath, sample, false);
     }
 
-    @NotNull
+    public static String generateFilename(final String basePath, final String sample, boolean isGermline)
+    {
+        return basePath + File.separator + sample + (isGermline ? GERMLINE_FILE_EXTENSION : FILE_EXTENSION);
+    }
+
     public static List<LinxSvAnnotation> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<LinxSvAnnotation> svDataList) throws IOException
+    public static void write(final String filename, List<LinxSvAnnotation> svDataList) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(svDataList));
     }
 
-    @NotNull
-    private static List<String> toLines(@NotNull final List<LinxSvAnnotation> svDataList)
+    private static List<String> toLines(final List<LinxSvAnnotation> svDataList)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -71,8 +74,7 @@ public abstract class LinxSvAnnotation
         return lines;
     }
 
-    @NotNull
-    private static List<LinxSvAnnotation> fromLines(@NotNull List<String> lines)
+    private static List<LinxSvAnnotation> fromLines(final List<String> lines)
     {
         String header = lines.get(0);
         Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
@@ -109,7 +111,6 @@ public abstract class LinxSvAnnotation
         return annotations;
     }
 
-    @NotNull
     private static String header()
     {
         return new StringJoiner(DELIMITER)
@@ -135,8 +136,7 @@ public abstract class LinxSvAnnotation
                 .toString();
     }
 
-    @NotNull
-    private static String toString(@NotNull final LinxSvAnnotation svData) 
+    private static String toString(final LinxSvAnnotation svData)
     {
         return new StringJoiner(DELIMITER)
                 .add(String.valueOf(svData.vcfId()))

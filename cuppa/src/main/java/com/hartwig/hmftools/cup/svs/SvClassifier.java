@@ -108,7 +108,7 @@ public class SvClassifier implements CuppaClassifier
             final String svVcfFile = purpleSvFile(purpleDataDir, sample.Id);
 
             final String linxDataDir = mConfig.getLinxDataDir(sample.Id);
-            final String clusterFile = LinxCluster.generateFilename(linxDataDir, sample.Id);
+            final String clusterFile = LinxCluster.generateFilename(linxDataDir, sample.Id, false);
 
             if(!loadSvDataFromFile(sample.Id, svVcfFile, clusterFile, mSampleSvData))
                 return false;

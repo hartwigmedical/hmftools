@@ -47,25 +47,22 @@ public abstract class LinxFusion
 
     private static final String FILE_EXTENSION = ".linx.fusion.tsv";
 
-    @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateFilename(final String basePath, final String sample)
     {
         return basePath + File.separator + sample + FILE_EXTENSION;
     }
 
-    @NotNull
     public static List<LinxFusion> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<LinxFusion> fusions) throws IOException
+    public static void write(final String filename, List<LinxFusion> fusions) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(fusions));
     }
 
-    @NotNull
-    private static List<String> toLines(@NotNull final List<LinxFusion> fusions)
+    private static List<String> toLines(final List<LinxFusion> fusions)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -73,8 +70,7 @@ public abstract class LinxFusion
         return lines;
     }
 
-    @NotNull
-    private static List<LinxFusion> fromLines(@NotNull List<String> lines)
+    private static List<LinxFusion> fromLines(final List<String> lines)
     {
         final String header = lines.get(0);
         lines.remove(0);
@@ -118,7 +114,6 @@ public abstract class LinxFusion
 
     }
 
-    @NotNull
     private static String header()
     {
         return new StringJoiner(LinxCluster.DELIMITER)
@@ -148,8 +143,7 @@ public abstract class LinxFusion
                 .toString();
     }
 
-    @NotNull
-    private static String toString(@NotNull final LinxFusion fusion)
+    private static String toString(final LinxFusion fusion)
     {
         return new StringJoiner(LinxCluster.DELIMITER)
                 .add(String.valueOf(fusion.fivePrimeBreakendId()))
@@ -178,7 +172,7 @@ public abstract class LinxFusion
                 .toString();
     }
 
-    public static String context(@NotNull TranscriptRegionType regionType, int fusedExon)
+    public static String context(final TranscriptRegionType regionType, int fusedExon)
     {
         switch (regionType)
         {

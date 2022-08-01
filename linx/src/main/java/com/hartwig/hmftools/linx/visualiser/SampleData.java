@@ -161,8 +161,11 @@ public class SampleData
 
         if(loadSvData)
         {
-            final String svAnnotationsFile = LinxSvAnnotation.generateFilename(mSampleDataDir, Sample);
-            List<LinxSvAnnotation> svAnnotations = LinxSvAnnotation.read(svAnnotationsFile);
+            final String svAnnotationsFile = LinxSvAnnotation.generateFilename(mSampleDataDir, Sample, false);
+            final String svAnnotationsFileGermline = LinxSvAnnotation.generateFilename(mSampleDataDir, Sample, true);
+
+            List<LinxSvAnnotation> svAnnotations = Files.exists(Paths.get(svAnnotationsFile)) ?
+                    LinxSvAnnotation.read(svAnnotationsFile) : LinxSvAnnotation.read(svAnnotationsFileGermline);
 
             if(!SpecificRegions.isEmpty())
             {

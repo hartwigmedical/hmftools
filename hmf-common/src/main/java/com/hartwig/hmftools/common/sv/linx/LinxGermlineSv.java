@@ -89,19 +89,17 @@ public final class LinxGermlineSv
 
     private static final String EXTENSION = ".linx.germline.disruption.tsv";
 
-    @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateFilename(final String basePath, final String sample)
     {
         return basePath + File.separator + sample + EXTENSION;
     }
 
-    @NotNull
-    public static List<LinxGermlineSv> read(@NotNull final String fileName) throws IOException
+    public static List<LinxGermlineSv> read(final String fileName) throws IOException
     {
         return fromLines(Files.readAllLines(new File(fileName).toPath()));
     }
 
-    public static void write(@NotNull final String fileName, @NotNull List<LinxGermlineSv> deletions) throws IOException
+    public static void write(final String fileName, List<LinxGermlineSv> deletions) throws IOException
     {
         Files.write(new File(fileName).toPath(), toLines(deletions));
     }

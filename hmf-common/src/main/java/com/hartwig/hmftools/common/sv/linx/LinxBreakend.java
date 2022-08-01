@@ -49,25 +49,22 @@ public abstract class LinxBreakend
 
     private static final String FILE_EXTENSION = ".linx.breakend.tsv";
 
-    @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateFilename(final String basePath, final String sample)
     {
         return basePath + File.separator + sample + FILE_EXTENSION;
     }
 
-    @NotNull
     public static List<LinxBreakend> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<LinxBreakend> breakends) throws IOException
+    public static void write(final String filename, List<LinxBreakend> breakends) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(breakends));
     }
 
-    @NotNull
-    private static List<String> toLines(@NotNull final List<LinxBreakend> breakends)
+    private static List<String> toLines(final List<LinxBreakend> breakends)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -75,8 +72,7 @@ public abstract class LinxBreakend
         return lines;
     }
 
-    @NotNull
-    private static List<LinxBreakend> fromLines(@NotNull List<String> lines)
+    private static List<LinxBreakend> fromLines(final List<String> lines)
     {
         String header = lines.get(0);
         Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
@@ -121,7 +117,6 @@ public abstract class LinxBreakend
         return breakends;
     }
 
-    @NotNull
     private static String header()
     {
         return new StringJoiner(DELIMITER)
@@ -154,8 +149,7 @@ public abstract class LinxBreakend
                 .toString();
     }
 
-    @NotNull
-    private static String toString(@NotNull final LinxBreakend breakend)
+    private static String toString(final LinxBreakend breakend)
     {
         return new StringJoiner(DELIMITER)
                 .add(String.valueOf(breakend.id()))

@@ -37,26 +37,29 @@ public abstract class LinxLink
     public abstract boolean ecDna();
 
     private static final String FILE_EXTENSION = ".linx.links.tsv";
+    private static final String GERMLINE_FILE_EXTENSION = ".linx.germline.links.tsv";
 
-    @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateFilename(final String basePath, final String sample)
     {
-        return basePath + File.separator + sample + FILE_EXTENSION;
+        return generateFilename(basePath, sample, false);
     }
 
-    @NotNull
+    public static String generateFilename(final String basePath, final String sample, boolean isGermline)
+    {
+        return basePath + File.separator + sample + (isGermline ? GERMLINE_FILE_EXTENSION : FILE_EXTENSION);
+    }
+
     public static List<LinxLink> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<LinxLink> svDataList) throws IOException
+    public static void write(final String filename, List<LinxLink> svDataList) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(svDataList));
     }
 
-    @NotNull
-    private static List<String> toLines(@NotNull final List<LinxLink> svDataList)
+    private static List<String> toLines(final List<LinxLink> svDataList)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -64,8 +67,7 @@ public abstract class LinxLink
         return lines;
     }
 
-    @NotNull
-    private static List<LinxLink> fromLines(@NotNull List<String> lines)
+    private static List<LinxLink> fromLines(final List<String> lines)
     {
         String header = lines.get(0);
         Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
@@ -128,7 +130,7 @@ public abstract class LinxLink
     }
 
     @NotNull
-    private static String toString(@NotNull final LinxLink svData)
+    private static String toString(final LinxLink svData)
     {
         return new StringJoiner(DELIMITER)
                 .add(String.valueOf(svData.clusterId()))

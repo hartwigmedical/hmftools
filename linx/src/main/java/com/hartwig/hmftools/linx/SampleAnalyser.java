@@ -376,9 +376,9 @@ public class SampleAnalyser implements Callable
             try
             {
                 // write per-sample DB-style output
-                LinxSvAnnotation.write(LinxSvAnnotation.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), linxSvData);
-                LinxCluster.write(LinxCluster.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), clusterData);
-                LinxLink.write(LinxLink.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), linksData);
+                LinxSvAnnotation.write(LinxSvAnnotation.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), linxSvData);
+                LinxCluster.write(LinxCluster.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), clusterData);
+                LinxLink.write(LinxLink.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), linksData);
 
                 if(!mConfig.IsGermline)
                 {

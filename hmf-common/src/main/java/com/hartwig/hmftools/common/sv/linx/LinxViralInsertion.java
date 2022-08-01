@@ -29,25 +29,22 @@ public class LinxViralInsertion
 
     private static final String FILE_EXTENSION = ".linx.viral_inserts.tsv";
 
-    @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateFilename(final String basePath, final String sample)
     {
         return basePath + File.separator + sample + FILE_EXTENSION;
     }
 
-    @NotNull
     public static List<LinxViralInsertion> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<LinxViralInsertion> inserts) throws IOException
+    public static void write(final String filename, List<LinxViralInsertion> inserts) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(inserts));
     }
 
-    @NotNull
-    private static List<String> toLines(@NotNull final List<LinxViralInsertion> viruses)
+    private static List<String> toLines(final List<LinxViralInsertion> viruses)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -55,13 +52,11 @@ public class LinxViralInsertion
         return lines;
     }
 
-    @NotNull
-    private static List<LinxViralInsertion> fromLines(@NotNull List<String> lines)
+    private static List<LinxViralInsertion> fromLines(List<String> lines)
     {
         return lines.stream().filter(x -> !x.startsWith("SampleId")).map(LinxViralInsertion::fromString).collect(toList());
     }
 
-    @NotNull
     private static String header()
     {
         return new StringJoiner(LinxCluster.DELIMITER)
@@ -72,8 +67,7 @@ public class LinxViralInsertion
                 .toString();
     }
 
-    @NotNull
-    private static String toString(@NotNull final LinxViralInsertion virus)
+    private static String toString(final LinxViralInsertion virus)
     {
         return new StringJoiner(LinxCluster.DELIMITER)
                 .add(String.valueOf(virus.SampleId))
@@ -83,8 +77,7 @@ public class LinxViralInsertion
                 .toString();
     }
 
-    @NotNull
-    private static LinxViralInsertion fromString(@NotNull final String virus)
+    private static LinxViralInsertion fromString(final String virus)
     {
         String[] values = virus.split(LinxCluster.DELIMITER);
 
