@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.purple.PurpleCommon.formatPurity;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.NO_TUMOR_BAF_TOTAL;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.NO_TUMOR_DEPTH_RATIO_MAX;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.NO_TUMOR_DEPTH_RATIO_MIN;
+import static com.hartwig.hmftools.purple.config.SomaticFitConfig.MIN_TOTAL_SOMATIC_VAR_ALLELE_READ_COUNT;
+import static com.hartwig.hmftools.purple.config.SomaticFitConfig.MIN_TOTAL_SV_FRAGMENT_COUNT;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -138,14 +140,14 @@ public class BestFitFactory
         setSvSummary(structuralVariants);
         setSomaticSummary(somatics);
 
-        if(mSomaticHotspotCount > 0 || mAlleleReadCountTotal >= mConfig.SomaticFitting.minTotalSomaticVariantAlleleReadCount())
+        if(mSomaticHotspotCount > 0 || mAlleleReadCountTotal >= MIN_TOTAL_SOMATIC_VAR_ALLELE_READ_COUNT)
         {
             PPL_LOGGER.info("Tumor evidence: somaticHotspotCount({}) alleleReadCountTotal({})",
                     mSomaticHotspotCount, mAlleleReadCountTotal);
             return true;
         }
 
-        if(mSvHotspotCount > 0 || mSvFragmentReadCount >= mConfig.SomaticFitting.minTotalSvFragmentCount())
+        if(mSvHotspotCount > 0 || mSvFragmentReadCount >= MIN_TOTAL_SV_FRAGMENT_COUNT)
         {
             PPL_LOGGER.info("tumor evidence: svHotspotCount({}) svFragmentReadCount({})",
                     mSvHotspotCount, mSvFragmentReadCount);

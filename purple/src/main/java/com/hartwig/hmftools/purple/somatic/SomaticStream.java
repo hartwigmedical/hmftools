@@ -151,7 +151,7 @@ public class SomaticStream
                     .build();
 
             final SomaticVariantEnrichment enricher = new SomaticVariantEnrichment(
-                    !isPaveAnnotated, mConfig.SomaticFitting.clonalityBinWidth(), mConfig.Version,
+                    !isPaveAnnotated, mConfig.Version,
                     mConfig.ReferenceId, mConfig.TumorId, mReferenceData, purityAdjuster, copyNumbers, fittedRegions, mPeakModel);
 
             final VCFHeader header = enricher.populateHeader(readHeader);

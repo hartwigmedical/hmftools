@@ -28,29 +28,17 @@ public class SomaticFitConfig
     public static final double SOMATIC_PENALTY_WEIGHT_DEFAULT = 1;
     public static final double HIGHLY_DIPLOID_PERCENTAGE_DEFAULT = 0.97;
 
+    public static final double CLONALITY_BIN_WIDTH = 0.05;
+    public static final double CLONALITY_MAX_PLOIDY = 10;
+    public static final int MIN_TOTAL_SV_FRAGMENT_COUNT = 1000;
+    public static final int MIN_TOTAL_SOMATIC_VAR_ALLELE_READ_COUNT = 2000;
+
     public int MinTotalVariants;
     public int MinPeakVariants;
     public double MinSomaticPurity;
     public double MinSomaticPuritySpread;
     public double SomaticPenaltyWeight;
     public double HighlyDiploidPercentage;
-
-    public int minTotalSomaticVariantAlleleReadCount()
-    {
-        return 5000;
-    }
-    public int minTotalSvFragmentCount()
-    {
-        return 1000;
-    }
-    public double clonalityMaxPloidy()
-    {
-        return 10;
-    }
-    public double clonalityBinWidth()
-    {
-        return 0.05;
-    }
 
     public SomaticFitConfig(final CommandLine cmd)
     {

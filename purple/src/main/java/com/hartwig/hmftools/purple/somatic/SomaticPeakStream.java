@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static com.hartwig.hmftools.purple.config.SomaticFitConfig.CLONALITY_BIN_WIDTH;
+import static com.hartwig.hmftools.purple.config.SomaticFitConfig.CLONALITY_MAX_PLOIDY;
 
 import java.util.List;
 
@@ -35,7 +37,7 @@ public class SomaticPeakStream
             if(!variant.isPass())
                 continue;
 
-            if(variant.copyNumber() >= mSomaticFitConfig.clonalityMaxPloidy())
+            if(variant.copyNumber() >= CLONALITY_MAX_PLOIDY)
                 continue;
 
             if(!HumanChromosome.contains(variant.chromosome()) || !HumanChromosome.fromString(variant.chromosome()).isAutosome())
@@ -52,7 +54,6 @@ public class SomaticPeakStream
             }
         }
 
-        return new PeakModelFactory(
-                mSomaticFitConfig.clonalityMaxPloidy(), mSomaticFitConfig.clonalityBinWidth()).model(weightedPloidies);
+        return new PeakModelFactory(CLONALITY_MAX_PLOIDY, CLONALITY_BIN_WIDTH).model(weightedPloidies);
     }
 }

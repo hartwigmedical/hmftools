@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.somatic;
 
+import static com.hartwig.hmftools.purple.config.SomaticFitConfig.CLONALITY_BIN_WIDTH;
+
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -24,14 +26,14 @@ public class SomaticVariantEnrichment
     private final SomaticGenotypeEnrichment mGenotypeEnrichment;
 
     public SomaticVariantEnrichment(
-            boolean snpEffEnrichmentEnabled, double clonalityBinWidth, final String purpleVersion,
+            boolean snpEffEnrichmentEnabled, final String purpleVersion,
             final String referenceId, final String tumorSample, final ReferenceData refData,
             final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers, final List<ObservedRegion> fittedRegions,
             final List<PeakModel> peakModel)
     {
         mGenotypeEnrichment = new SomaticGenotypeEnrichment(referenceId, tumorSample);
 
-        mSubclonalLikelihoodEnrichment = new SubclonalLikelihoodEnrichment(clonalityBinWidth, peakModel);
+        mSubclonalLikelihoodEnrichment = new SubclonalLikelihoodEnrichment(CLONALITY_BIN_WIDTH, peakModel);
 
         mPurityEnrichment = new SomaticPurityEnrichment(purpleVersion, tumorSample, purityAdjuster, copyNumbers, fittedRegions);
 
