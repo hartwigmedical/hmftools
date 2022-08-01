@@ -51,12 +51,11 @@ public class BestFitFactory
     private static final double PERCENT_RANGE = 0.1;
     private static final double ABS_RANGE = 0.0005;
 
-    @NotNull
     private final BestFit mBestFit;
 
     public BestFitFactory(
             final PurpleConfig config, int minReadCount, int maxReadCount,
-            @NotNull final List<FittedPurity> allCandidates, final List<SomaticVariant> somatics,
+            final List<FittedPurity> allCandidates, final List<SomaticVariant> somatics,
             final List<StructuralVariant> structuralVariants, final List<ObservedRegion> observedRegions)
     {
         mConfig = config;
@@ -76,7 +75,6 @@ public class BestFitFactory
         mBestFit = determineBestFit(allCandidates, somatics, structuralVariants, observedRegions);
     }
 
-    @NotNull
     public BestFit bestFit() { return mBestFit; }
 
     private BestFit determineBestFit(
@@ -180,12 +178,12 @@ public class BestFitFactory
                 lowestPurity);
     }
 
-    private boolean isHighlyDiploid(@NotNull final FittedPurityScore score)
+    private boolean isHighlyDiploid(final FittedPurityScore score)
     {
         return Doubles.greaterOrEqual(score.maxDiploidProportion(), mConfig.SomaticFitting.HighlyDiploidPercentage);
     }
 
-    private static List<FittedPurity> inRangeOfLowest(double lowestScore, @NotNull final List<FittedPurity> purities)
+    private static List<FittedPurity> inRangeOfLowest(double lowestScore, final List<FittedPurity> purities)
     {
         return purities.stream().filter(inRangeOfLowest(lowestScore)).collect(toList());
     }
@@ -200,7 +198,7 @@ public class BestFitFactory
         };
     }
 
-    private void setSvSummary(@NotNull final List<StructuralVariant> variants)
+    private void setSvSummary(final List<StructuralVariant> variants)
     {
         for(StructuralVariant variant : variants)
         {
@@ -222,17 +220,20 @@ public class BestFitFactory
     {
         for(SomaticVariant variant : somatics)
         {
-            if(!variant.isPass() || variant.type() != VariantType.SNP)
+            if(!variant.isPass())
                 continue;
 
             if(variant.isHotspot())
                 mSomaticHotspotCount++;
 
-            mAlleleReadCountTotal += variant.alleleReadCount();
-
-            if(variant.totalReadCount() >= mMinReadCount && variant.totalReadCount() <= mMaxReadCount)
+            if(variant.type() == VariantType.SNP)
             {
-                mVariantsInReadCountRange.add(variant);
+                mAlleleReadCountTotal += variant.alleleReadCount();
+
+                if(variant.totalReadCount() >= mMinReadCount && variant.totalReadCount() <= mMaxReadCount)
+                {
+                    mVariantsInReadCountRange.add(variant);
+                }
             }
         }
     }
