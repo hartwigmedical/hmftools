@@ -28,6 +28,8 @@ import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
 import com.hartwig.hmftools.serve.sources.ckb.CkbExtractor;
 import com.hartwig.hmftools.serve.sources.ckb.CkbExtractorFactory;
 import com.hartwig.hmftools.serve.sources.ckb.CkbReader;
+import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentApprochCurationEntry;
+import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentApprochCurationEntryKey;
 import com.hartwig.hmftools.serve.sources.docm.DocmEntry;
 import com.hartwig.hmftools.serve.sources.docm.DocmExtractor;
 import com.hartwig.hmftools.serve.sources.docm.DocmReader;
@@ -142,10 +144,9 @@ public class ServeAlgo {
         RefGenomeResource refGenomeResource = refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.CKB);
         CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(config, refGenomeResource);
 
-        RelevantTreatmentAprroachCuration curator =
-                new RelevantTreatmentAprroachCuration(RelevantTreatmentApproachCurationFile.read(ckbDrugCurationTsv));
+        Map<RelevantTreatmentApprochCurationEntryKey, RelevantTreatmentApprochCurationEntry> treatmentApproachMap = RelevantTreatmentApproachCurationFile.read(ckbDrugCurationTsv);
 
-        curator.reportUnusedFilterEntries();
+        RelevantTreatmentAprroachCuration curator = new RelevantTreatmentAprroachCuration(treatmentApproachMap);
 
         LOGGER.info("Running CKB knowledge extraction");
         return extractor.extract(ckbEntries, curator);

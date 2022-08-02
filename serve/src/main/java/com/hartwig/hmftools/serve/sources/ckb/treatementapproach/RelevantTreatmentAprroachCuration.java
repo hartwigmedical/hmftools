@@ -52,13 +52,17 @@ public class RelevantTreatmentAprroachCuration {
             return Strings.EMPTY;
         } else {
             switch (curationEntry.curationType()) {
-                case EVENT_TREATMENT_APPROACH_CURATION_IGNORE:
+                case EVENT_TREATMENT_APPROACH_CURATION_IGNORE: {
+                    usedCurations.add(key);
+                    return Strings.EMPTY;
+                }
                 case DIRECTION_TREATMENT_APPROACH_CURATION_IGNORE: {
-                    usedCurations.add(ImmutableRelevantTreatmentApprochCurationEntryKey.builder().from(key).build());
+
+                    usedCurations.add(key);
                     return Strings.EMPTY;
                 }
                 case TREATMENT_APPROACH_CURATION: {
-                    usedCurations.add(ImmutableRelevantTreatmentApprochCurationEntryKey.builder().from(key).build());
+                    usedCurations.add(key);
                     return curationEntry.curatedtreatmentApproach() == null ? Strings.EMPTY : curationEntry.curatedtreatmentApproach();
                 }
                 default: {

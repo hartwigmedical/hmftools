@@ -113,6 +113,8 @@ public class CkbExtractor {
             tracker.update();
         }
 
+        curator.reportUnusedFilterEntries();
+
         return ExtractionFunctions.merge(extractions);
     }
 
