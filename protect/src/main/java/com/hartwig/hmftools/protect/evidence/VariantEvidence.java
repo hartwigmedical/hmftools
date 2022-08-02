@@ -91,7 +91,7 @@ public class VariantEvidence {
 
         for (ActionableRange range : ranges) {
             if (rangeMatch(variant, range)) {
-                evidences.add(evidence(variant, range, mayReport));
+                evidences.add(evidence(variant, range, mayReport && driverInterpretation == DriverInterpretation.HIGH));
             }
         }
 

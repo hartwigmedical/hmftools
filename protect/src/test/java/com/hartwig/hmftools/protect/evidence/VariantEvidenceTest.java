@@ -2,6 +2,7 @@ package com.hartwig.hmftools.protect.evidence;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -99,15 +100,14 @@ public class VariantEvidenceTest {
 
     @Test
     public void canDetermineVariantEvidenceForRanges() {
-        String gene = "gene";
         String chromosome = "1";
         int start = 5;
         int end = 15;
         MutationTypeFilter mutationTypeFilter = MutationTypeFilter.MISSENSE;
 
-        ActionableRange range = ImmutableActionableRange.builder()
+        ActionableRange rangeHigh = ImmutableActionableRange.builder()
                 .from(ServeTestFactory.createTestActionableRange())
-                .gene(gene)
+                .gene("geneHigh")
                 .chromosome(chromosome)
                 .start(start)
                 .end(end)
@@ -115,24 +115,63 @@ public class VariantEvidenceTest {
                 .source(Knowledgebase.CKB)
                 .build();
 
-        VariantEvidence variantEvidence =
-                new VariantEvidence(EvidenceTestFactory.create(), Lists.newArrayList(), Lists.newArrayList(range), Lists.newArrayList());
+        ActionableRange rangeMedium = ImmutableActionableRange.builder()
+                .from(ServeTestFactory.createTestActionableRange())
+                .gene("geneMedium")
+                .chromosome(chromosome)
+                .start(start)
+                .end(end)
+                .mutationType(mutationTypeFilter)
+                .source(Knowledgebase.CKB)
+                .build();
 
-        ReportableVariant variantMatch = ImmutableReportableVariant.builder()
+        ActionableRange rangeLow = ImmutableActionableRange.builder()
+                .from(ServeTestFactory.createTestActionableRange())
+                .gene("geneLow")
+                .chromosome(chromosome)
+                .start(start)
+                .end(end)
+                .mutationType(mutationTypeFilter)
+                .source(Knowledgebase.CKB)
+                .build();
+
+        VariantEvidence variantEvidence = new VariantEvidence(EvidenceTestFactory.create(),
+                Lists.newArrayList(),
+                Lists.newArrayList(rangeHigh, rangeMedium, rangeLow),
+                Lists.newArrayList());
+
+        ReportableVariant variantMatchHigh = ImmutableReportableVariant.builder()
                 .from(ReportableVariantTestFactory.create())
-                .gene(gene)
+                .gene("geneHigh")
                 .chromosome(chromosome)
                 .position(start + 1)
-                .gene(gene)
                 .canonicalHgvsCodingImpact("match")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
+                .driverLikelihood(0.9)
+                .build();
+        ReportableVariant variantMatchMedium = ImmutableReportableVariant.builder()
+                .from(ReportableVariantTestFactory.create())
+                .gene("geneMedium")
+                .chromosome(chromosome)
+                .position(start + 1)
+                .canonicalHgvsCodingImpact("match")
+                .canonicalCodingEffect(CodingEffect.MISSENSE)
+                .driverLikelihood(0.5)
+                .build();
+        ReportableVariant variantMatchLow = ImmutableReportableVariant.builder()
+                .from(ReportableVariantTestFactory.create())
+                .gene("geneLow")
+                .chromosome(chromosome)
+                .position(start + 1)
+                .canonicalHgvsCodingImpact("match")
+                .canonicalCodingEffect(CodingEffect.MISSENSE)
+                .driverLikelihood(0.1)
                 .build();
         ReportableVariant variantOutsideRange = ImmutableReportableVariant.builder()
                 .from(ReportableVariantTestFactory.create())
-                .gene(gene)
+                .gene("gene")
                 .chromosome(chromosome)
                 .position(start - 1)
-                .gene(gene)
                 .canonicalHgvsCodingImpact("outside range")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .build();
@@ -146,24 +185,40 @@ public class VariantEvidenceTest {
                 .build();
         ReportableVariant variantWrongMutationType = ImmutableReportableVariant.builder()
                 .from(ReportableVariantTestFactory.create())
-                .gene(gene)
+                .gene("gene")
                 .chromosome(chromosome)
                 .position(start + 1)
                 .canonicalHgvsCodingImpact("wrong mutation type")
                 .canonicalCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
                 .build();
 
-        List<ReportableVariant> reportable =
-                Lists.newArrayList(variantMatch, variantOutsideRange, variantWrongGene, variantWrongMutationType);
+        List<ReportableVariant> reportable = Lists.newArrayList(variantMatchHigh,
+                variantMatchMedium,
+                variantMatchLow,
+                variantOutsideRange,
+                variantWrongGene,
+                variantWrongMutationType);
         List<ProtectEvidence> evidences = variantEvidence.evidence(reportable, Lists.newArrayList(), Lists.newArrayList());
 
-        assertEquals(1, evidences.size());
+        assertEquals(3, evidences.size());
 
-        ProtectEvidence evidence = findByGene(evidences, gene);
-        assertTrue(evidence.reported());
-        assertEquals("match", evidence.event());
-        assertEquals(evidence.sources().size(), 1);
-        assertEquals(ProtectEvidenceType.EXON_MUTATION, evidence.sources().iterator().next().evidenceType());
+        ProtectEvidence evidenceHigh = findByGene(evidences, "geneHigh");
+        assertTrue(evidenceHigh.reported());
+        assertEquals("match", evidenceHigh.event());
+        assertEquals(evidenceHigh.sources().size(), 1);
+        assertEquals(ProtectEvidenceType.EXON_MUTATION, evidenceHigh.sources().iterator().next().evidenceType());
+
+        ProtectEvidence evidenceMedium = findByGene(evidences, "geneMedium");
+        assertFalse(evidenceMedium.reported());
+        assertEquals("match", evidenceMedium.event());
+        assertEquals(evidenceMedium.sources().size(), 1);
+        assertEquals(ProtectEvidenceType.EXON_MUTATION, evidenceMedium.sources().iterator().next().evidenceType());
+
+        ProtectEvidence evidenceLow = findByGene(evidences, "geneLow");
+        assertFalse(evidenceLow.reported());
+        assertEquals("match", evidenceLow.event());
+        assertEquals(evidenceLow.sources().size(), 1);
+        assertEquals(ProtectEvidenceType.EXON_MUTATION, evidenceLow.sources().iterator().next().evidenceType());
     }
 
     @Test
