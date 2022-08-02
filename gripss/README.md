@@ -3,8 +3,6 @@
 GRIPSS applies a set of filtering and post processing steps on GRIDSS paired tumor-normal output to produce a high confidence set of somatic SV for a tumor sample.
 GRIPSS processes the GRIDSS output and produces a somatic vcf.
 
-Repeat masker annotations must be included in the GRIDSS output before running GRIPSS. Details on how to include these are available on the GRIDSS readme [here](https://github.com/PapenfussLab/gridss#how-do-i-do-repeatmasker-annotation-of-breakend-sequences). 
-
 ## Usage
 
 ```
@@ -158,6 +156,17 @@ Any breakend that is linked to a PASS breakend (by one of the 3 above rules) and
 To improve detection of mobile element insertions, we also rescue pairs of breakends or breakjunctions which are linked by ‘DSB’ and NOT PON filtered, with combined qual > 500 and with at least one of the breakends having the characteristic poly-A insert sequence tail of a mobile element insertion. We define a poly-A tail as 16 of the last 18 bases of the insert sequence are A. At the insertion site, negative oriented breakends must have poly-A tails at the end of the insert sequence and positive oriented breakends must have poly-T at the start of the insert sequence (if inserted on the reverse strand).
 
 Note that for DSB and hotspot rescue, neither the rescued variant nor the rescuing variant is permitted to be a DEL, INS or DUP < 10kb in length.  
+
+### E. Repeat masker annotation
+
+Each variant with a BEALN (insert sequence alignment) is annotated with 4 additional fields from the entry with the most overlapping sequence from the repeat masker hg19.fa.out.gz file  which covers at least 10% and 20 bases of the alignment:
+
+* INSRMP= Portion of inserted sequence whose alignment overlaps the repeatmasker repeat. 1.0 indicates the inserted sequence entirely mapping to the repeat
+* INSRMRC=Inserted sequence repeatmasker repeat class  [matching repeat]
+* INSRMRO=Inserted sequence repeatmasker repeat orientation
+* INSRMRT=Inserted sequence repeatmasker repeat type [repeat class/family]
+
+Note in the special case where more than 90% of the candidate alignment bases are  A or T then this is just reported as a simple_repeat A(n) or T(n) regardless of the repeatmasker annotation.
 
 ## Counting Conventions in GRIPSS
 - **Fragment support** - the count of supporting fragments for breakpoints is set to VF field from GRIDSS and for single breakends is set to BVF (with an exception that if a single breakend has BSC=BASRP=BASSR=0 then read support is set to 0).   The fragment support is used in the various support filters as described above
