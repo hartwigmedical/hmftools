@@ -50,7 +50,6 @@ public class RelevantTreatmentAprroachCurationTest {
                 .treatment("Olutasidenib")
                 .treatmentApproach(Strings.EMPTY)
                 .event("IDH1 GENE_LEVEL")
-                .level(EvidenceLevel.C)
                 .direction(EvidenceDirection.PREDICTED_RESPONSIVE)
                 .build();
 
@@ -58,7 +57,6 @@ public class RelevantTreatmentAprroachCurationTest {
                 .treatment("C")
                 .treatmentApproach("C")
                 .event("BRAF amplification")
-                .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .build();
 
@@ -66,7 +64,6 @@ public class RelevantTreatmentAprroachCurationTest {
                 .treatment("D")
                 .treatmentApproach("D")
                 .event("BRAF amplification")
-                .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .build();
 
@@ -93,7 +90,6 @@ public class RelevantTreatmentAprroachCurationTest {
                 .treatment(treatment)
                 .treatmentApproach(treatmentApproach)
                 .event(event)
-                .level(level)
                 .direction(direction)
                 .build();
     }

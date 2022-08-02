@@ -72,8 +72,6 @@ class ActionableEntryFactory {
     public static Set<ActionableEntry> toActionableEntries(@NotNull CkbEntry entry, @NotNull String sourceEvent,
             @NotNull RelevantTreatmentAprroachCuration curator, @NotNull String gene, @NotNull EventType eventType) {
         Set<ActionableEntry> actionableEntries = Sets.newHashSet();
-        Set<String> sourceRelevantTreatmentApproaches = Sets.newHashSet();
-        Set<String> curatedRelevantTreatmentApproaches = Sets.newHashSet();
 
         for (Evidence evidence : evidencesWithUsableType(entry.evidences())) {
             EvidenceLevel level = resolveLevel(evidence.ampCapAscoEvidenceLevel());
@@ -117,6 +115,8 @@ class ActionableEntryFactory {
                     blacklistedCancerTypes.add(CancerTypeConstants.BONE_MARROW_TYPE);
                 }
 
+                Set<String> sourceRelevantTreatmentApproaches = Sets.newHashSet();
+                Set<String> curatedRelevantTreatmentApproaches = Sets.newHashSet();
                 for (RelevantTreatmentApproaches relevantTreatmentApproaches : evidence.relevantTreatmentApproaches()) {
                     DrugClass relevantTreatmentApproachesInfo = relevantTreatmentApproaches.drugClass();
 
@@ -129,19 +129,17 @@ class ActionableEntryFactory {
                 String treatmentApprochInterpret = Strings.EMPTY;
                 if (sourceRelevantTreatmentApproaches.isEmpty()) {
                     treatmentApprochInterpret = null;
-                } else if (treatmentApprochString.substring(treatmentApprochString.length()-1).equals(",")) {
+                } else if (treatmentApprochString.substring(treatmentApprochString.length() - 1).equals(",")) {
                     treatmentApprochInterpret = treatmentApprochString.substring(0, treatmentApprochString.length() - 1);
                 } else {
                     treatmentApprochInterpret = treatmentApprochString;
                 }
 
-                LOGGER.info(treatmentApprochInterpret);
-
                 RelevantTreatmentApprochCurationEntryKey key = ImmutableRelevantTreatmentApprochCurationEntryKey.builder()
                         .treatment(treatment)
-                        .treatmentApproach(treatmentApprochInterpret)
+                        .treatmentApproach(
+                                treatmentApprochInterpret == null || treatmentApprochInterpret.isEmpty() ? null : treatmentApprochInterpret)
                         .event(gene + " " + eventType)
-                        .level(level)
                         .direction(direction)
                         .build();
 

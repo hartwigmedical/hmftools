@@ -22,8 +22,5 @@ public abstract class RelevantTreatmentApprochCurationEntryKey {
     public abstract String event();
 
     @NotNull
-    public abstract EvidenceLevel level();
-
-    @NotNull
     public abstract EvidenceDirection direction();
 }

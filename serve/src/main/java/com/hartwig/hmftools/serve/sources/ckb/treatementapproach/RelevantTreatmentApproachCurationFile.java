@@ -34,17 +34,16 @@ public class RelevantTreatmentApproachCurationFile {
 
             RelevantTreatmentApprochCurationEntryKey entryKey = ImmutableRelevantTreatmentApprochCurationEntryKey.builder()
                     .treatment(values[1])
-                    .treatmentApproach(values[2].equals(Strings.EMPTY) ? null : values[2])
+                    .treatmentApproach(values[2].isEmpty() ? null : values[2])
                     .event(values[3])
-                    .level(EvidenceLevel.valueOf(values[4]))
-                    .direction(EvidenceDirection.valueOf(values[5]))
+                    .direction(EvidenceDirection.valueOf(values[4]))
                     .build();
 
             mapEntry.put(entryKey,
                     ImmutableRelevantTreatmentApprochCurationEntry.builder()
                             .curationType(RelevantTreatmentApproachCurationType.valueOf(values[0]))
                             .curationKey(entryKey)
-                            .curatedtreatmentApproach(values.length == 7 ? values[6] : null)
+                            .curatedtreatmentApproach(values.length == 6 ? values[5] : null)
                             .build());
         }
         return mapEntry;
