@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svprep.depth;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
@@ -62,6 +64,8 @@ public class DepthAnnotator
             SV_LOGGER.error("inconsistent samples and BAM files");
             System.exit(1);
         }
+
+        long startTimeMs = System.currentTimeMillis();
 
         final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
                 mConfig.InputVcf, new VCFCodec(), false);
@@ -135,7 +139,9 @@ public class DepthAnnotator
         // write output VCF
         writeVcf(vcfHeader, depthTasks);
 
-        SV_LOGGER.info("depth annotation complete");
+        double timeTakeMins = (System.currentTimeMillis() - startTimeMs) / 60000.0;
+
+        SV_LOGGER.info("SvPrep depth annotation complete, mins({})", format("%.3f", timeTakeMins));
 
         PerformanceCounter perfCounter = depthTasks.get(0).getPerfCounter();
         for(int i = 1; i < depthTasks.size(); ++i)

@@ -87,7 +87,7 @@ public class SvPrepApplication
             combinedStats.PerfCounters.forEach(x -> x.logStats());
         }
 
-        SV_LOGGER.info("SV Prep complete, mins({})", format("%.3f", timeTakeMins));
+        SV_LOGGER.info("SvPrep complete, mins({})", format("%.3f", timeTakeMins));
     }
 
     private void calcFragmentDistribution()
