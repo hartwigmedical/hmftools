@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.serve.sources.ckb.treatementapproach;
 
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
-import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

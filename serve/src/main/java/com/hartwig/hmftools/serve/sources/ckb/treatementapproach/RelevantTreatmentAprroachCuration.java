@@ -26,14 +26,13 @@ public class RelevantTreatmentAprroachCuration {
 
     public void reportUnusedFilterEntries() {
         int unusedFilterEntryCount = 0;
-        LOGGER.info(usedCurations);
+
         for (RelevantTreatmentApprochCurationEntryKey entrySet : curations.keySet()) {
             LOGGER.debug("entry debug: " + entrySet);
             if (!usedCurations.contains(entrySet)) {
                 unusedFilterEntryCount++;
                 LOGGER.warn(" Curation entry '{}' hasn't been used for treatment Approch curation", entrySet);
             }
-
         }
 
         LOGGER.debug(" Found {} unused filter entries during treatment Approch curation", unusedFilterEntryCount);
@@ -53,13 +52,10 @@ public class RelevantTreatmentAprroachCuration {
             return Strings.EMPTY;
         } else {
             switch (curationEntry.curationType()) {
-                case EVENT_TREATMENT_APPROACH_CURATION_IGNORE: {
-                    usedCurations.add(ImmutableRelevantTreatmentApprochCurationEntryKey.builder().from(key).build());
-                    return curationEntry.curatedtreatmentApproach() == null ? Strings.EMPTY : curationEntry.curatedtreatmentApproach();
-                }
+                case EVENT_TREATMENT_APPROACH_CURATION_IGNORE:
                 case DIRECTION_TREATMENT_APPROACH_CURATION_IGNORE: {
                     usedCurations.add(ImmutableRelevantTreatmentApprochCurationEntryKey.builder().from(key).build());
-                    return curationEntry.curatedtreatmentApproach() == null ? Strings.EMPTY : curationEntry.curatedtreatmentApproach();
+                    return Strings.EMPTY;
                 }
                 case TREATMENT_APPROACH_CURATION: {
                     usedCurations.add(ImmutableRelevantTreatmentApprochCurationEntryKey.builder().from(key).build());
