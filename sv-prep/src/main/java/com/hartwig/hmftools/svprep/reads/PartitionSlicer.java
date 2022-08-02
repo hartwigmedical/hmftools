@@ -231,21 +231,21 @@ public class PartitionSlicer
     private void writeData()
     {
         boolean captureCompleteGroups = mConfig.writeReads();
+        List<ReadGroup> junctionGroups = mJunctionTracker.formUniqueJunctionGroups();
 
         if(captureCompleteGroups)
         {
             // read groups that span chromosomes or partitions need to be complete, so gather up their state to enable this
             Map<String,ReadGroup> spanningGroupsMap = Maps.newHashMap();
 
-            mJunctionTracker.junctionGroups().forEach(x -> assignReadGroup(x, spanningGroupsMap));
-            mJunctionTracker.supportingGroups().forEach(x -> assignReadGroup(x, spanningGroupsMap));
+            junctionGroups.forEach(x -> assignReadGroup(x, spanningGroupsMap));
 
             List<ReadGroup> expectedGroups = mJunctionTracker.expectedGroups();
             expectedGroups.forEach(x -> assignReadGroup(x, spanningGroupsMap));
             expectedGroups.forEach(x -> x.reads().forEach(y -> y.setReadType(EXPECTED)));
 
             int spanningGroups = spanningGroupsMap.size();
-            int totalGroups = mJunctionTracker.junctionGroups().size() + mJunctionTracker.supportingGroups().size() + expectedGroups.size();
+            int totalGroups = junctionGroups.size() + expectedGroups.size();
 
             final Map<String,List<ExpectedRead>> missedReadsMap = Maps.newHashMap();
             mCombinedReadGroups.processSpanningReadGroups(mRegion, spanningGroupsMap, missedReadsMap);
@@ -264,16 +264,14 @@ public class PartitionSlicer
 
             if(mConfig.WriteTypes.contains(BAM))
             {
-                mWriter.writeBamRecords(mJunctionTracker.junctionGroups());
-                mWriter.writeBamRecords(mJunctionTracker.supportingGroups());
+                mWriter.writeBamRecords(junctionGroups);
                 mWriter.writeBamRecords(expectedGroups);
                 mWriter.writeBamRecords(recoveredReadGroups);
             }
 
             if(mConfig.WriteTypes.contains(READS))
             {
-                mWriter.writeReadGroup(mJunctionTracker.junctionGroups());
-                mWriter.writeReadGroup(mJunctionTracker.supportingGroups());
+                mWriter.writeReadGroup(junctionGroups);
                 mWriter.writeReadGroup(expectedGroups);
                 mWriter.writeReadGroup(recoveredReadGroups);
             }
@@ -285,8 +283,9 @@ public class PartitionSlicer
         }
 
         mStats.JunctionCount += mJunctionTracker.junctions().size();
-        mStats.JunctionFragmentCount += mJunctionTracker.junctionGroups().size();
-        mStats.SupportingFragmentCount += mJunctionTracker.supportingGroups().size();
+        int junctionFragments = (int)junctionGroups.stream().filter(x -> x.isJunctionFragment()).count();
+        mStats.JunctionFragmentCount += junctionFragments;
+        mStats.SupportingFragmentCount += junctionGroups.size() - junctionFragments;
         mStats.InitialSupportingFragmentCount += mJunctionTracker.initialSupportingFrags();
     }
 

@@ -32,7 +32,6 @@ import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.samtools.SoftClipSide;
-import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.BlacklistLocations;
@@ -50,8 +49,6 @@ public class JunctionTracker
     private final Set<String> mExpectedReadIds; // as indicated by another partition
 
     private final List<JunctionData> mJunctions; // ordered by position
-    private final List<ReadGroup> mJunctionGroups; // groups used to form a junction
-    private final List<ReadGroup> mSupportingGroups; // groups supporting a junction
 
     private int mInitialSupportingFrags;
     private final int[] mBaseDepth;
@@ -76,16 +73,42 @@ public class JunctionTracker
         mReadGroups = Maps.newHashMap();
         mExpectedReadIds = Sets.newHashSet();
         mJunctions = Lists.newArrayList();
-        mJunctionGroups = Lists.newArrayList();
-        mSupportingGroups = Lists.newArrayList();
         mInitialSupportingFrags = 0;
 
         mBaseDepth = config.CaptureDepth ? new int[mRegion.baseLength()] : null;
     }
 
     public List<JunctionData> junctions() { return mJunctions; }
-    public List<ReadGroup> junctionGroups() { return mJunctionGroups; }
-    public List<ReadGroup> supportingGroups() { return mSupportingGroups; }
+
+    public List<ReadGroup> formUniqueJunctionGroups()
+    {
+        // fragments can be added to more than one junction, so now collect up the unique ones
+        List<ReadGroup> junctionGroups = Lists.newArrayList();
+        Set<String> readIds = Sets.newHashSet();
+
+        for(JunctionData junction : mJunctions)
+        {
+            for(ReadGroup readGroup : junction.JunctionGroups)
+            {
+                if(readIds.contains(readGroup.id()))
+                    continue;
+
+                readIds.add(readGroup.id());
+                junctionGroups.add(readGroup);
+            }
+
+            for(ReadGroup readGroup : junction.SupportingGroups)
+            {
+                if(readIds.contains(readGroup.id()))
+                    continue;
+
+                readIds.add(readGroup.id());
+                junctionGroups.add(readGroup);
+            }
+        }
+
+        return junctionGroups;
+    }
 
     public List<ReadGroup> expectedGroups()
     {
@@ -185,7 +208,6 @@ public class JunctionTracker
             {
                 supportedJunctions.forEach(x -> x.SupportingGroups.add(readGroup));
                 supportedJunctions.forEach(x -> readGroup.addJunctionPosition(x.Position));
-                mSupportingGroups.add(readGroup);
             }
         }
 
@@ -246,7 +268,6 @@ public class JunctionTracker
         if(junctions.isEmpty())
             return;
 
-        mJunctionGroups.add(readGroup);
         junctions.forEach(x -> x.JunctionGroups.add(readGroup));
         junctions.forEach(x -> readGroup.addJunctionPosition(x.Position));
 
@@ -301,8 +322,6 @@ public class JunctionTracker
         junctionEnd.markInternalIndel();
         junctionEnd.JunctionGroups.add(readGroup);
         readGroup.addJunctionPosition(indelCoords[SE_END]);
-
-        mJunctionGroups.add(readGroup);
     }
 
     private void checkIndelSupport(final ReadRecord read, final Set<JunctionData> supportedJunctions)
