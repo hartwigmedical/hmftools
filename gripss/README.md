@@ -168,6 +168,9 @@ Each variant with a BEALN (insert sequence alignment) is annotated with 4 additi
 
 Note in the special case where more than 90% of the candidate alignment bases are  A or T then this is just reported as a simple_repeat A(n) or T(n) regardless of the repeatmasker annotation.
 
+The INSRMRC and INSRMRT are used in various clustering rules downstream in LINX.   This functionality replaces fully the previous repeat masker post process for GRIDSS.  
+
+
 ## Counting Conventions in GRIPSS
 - **Fragment support** - the count of supporting fragments for breakpoints is set to VF field from GRIDSS and for single breakends is set to BVF (with an exception that if a single breakend has BSC=BASRP=BASSR=0 then read support is set to 0).   The fragment support is used in the various support filters as described above
 - **Qual score** - for breakpoints the qual is set to the qual.   For breakends the BAQ field (ie sum of qual for assembled reads supporting the breakend) is used for the qual except where the insert sequence has a poly-A tail in which case the BQ (qual of all reads supporting the breakend) is used.
