@@ -3,6 +3,8 @@ package com.hartwig.hmftools.svprep.reads;
 import static com.hartwig.hmftools.svprep.CombinedReadGroups.formChromosomePartition;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
 
+import static htsjdk.samtools.SAMFlag.SUPPLEMENTARY_ALIGNMENT;
+
 import java.util.List;
 import java.util.Set;
 
@@ -12,6 +14,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
+import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
 
 public class ReadGroup
@@ -23,6 +26,7 @@ public class ReadGroup
     private int mExpectedReadCount;
     private Set<Integer> mJunctionPositions;
     private boolean mIsRemoteExpected;
+    private boolean mHasRemoteNonSupplementaries;
 
     public static int MAX_GROUP_READ_COUNT = 4;
 
@@ -34,6 +38,7 @@ public class ReadGroup
         mExpectedReadCount = 0;
         mJunctionPositions = null;
         mIsRemoteExpected = false;
+        mHasRemoteNonSupplementaries = false;
         addRead(read);
     }
 
@@ -68,6 +73,9 @@ public class ReadGroup
     public boolean isRemoteExpected() { return mIsRemoteExpected; }
     public void markRemoteExpected() { mIsRemoteExpected = true; }
 
+    public boolean hasRemoteNonSupplementaries() { return mHasRemoteNonSupplementaries; }
+    public void markHasRemoteNonSupplementaries() { mHasRemoteNonSupplementaries = true; }
+
     public boolean isSimpleComplete()
     {
         // no supplementaries and both reads received
@@ -85,6 +93,8 @@ public class ReadGroup
     {
         return mReads.stream().anyMatch(x -> x.readType() == JUNCTION);
     }
+
+    // public boolean hasDuplicates() { return mReads.stream().anyMatch(x -> x.hasFlag(SAMFlag.DUPLICATE_READ)); }
 
     public void setGroupState()
     {
@@ -137,13 +147,11 @@ public class ReadGroup
 
     public void setPartitionCount(final ChrBaseRegion region, int partitionSize)
     {
-        // only count non-supplementaries towards remote partitions
         for(ReadRecord read : mReads)
         {
             if(read.isUnmapped())
                 continue;
 
-            /*
             if(read.hasSuppAlignment())
             {
                 SupplementaryReadData suppData = read.supplementaryAlignment();
@@ -153,7 +161,6 @@ public class ReadGroup
                     mRemotePartitions.add(formChromosomePartition(suppData.Chromosome, suppData.Position, partitionSize));
                 }
             }
-            */
 
             if(HumanChromosome.contains(read.MateChromosome) && !region.containsPosition(read.MateChromosome, read.MatePosStart))
             {

@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 
 public class ExpectedRead
 {
@@ -18,6 +19,8 @@ public class ExpectedRead
     private int mMatchCount;
     private boolean mFound;
 
+    private ReadRecord mCachedRead;
+
     public ExpectedRead(final String chromosome, final int position, boolean firstInPair, boolean isSupplementary, boolean found)
     {
         Chromosome = chromosome;
@@ -27,6 +30,7 @@ public class ExpectedRead
         mFound = found;
         mExpectedMatchCount = 1;
         mMatchCount = 0;
+        mCachedRead = null;
     }
 
     public boolean fullyMatched() { return mMatchCount >= mExpectedMatchCount; }
@@ -38,9 +42,14 @@ public class ExpectedRead
     public int expectedMatchCount() { return mExpectedMatchCount; }
     public void setExpectedMatchCount(int count) { mExpectedMatchCount = count; }
 
+    public void setCachedRead(final ReadRecord read) { mCachedRead = read; }
+    public boolean hasCachedRead() { return mCachedRead != null; }
+    public ReadRecord getCachedRead() { return mCachedRead; }
+
     public boolean matches(final ExpectedRead other)
     {
-        return Chromosome.equals(other.Chromosome) && Position == other.Position && FirstInPair == other.FirstInPair;
+        return Chromosome.equals(other.Chromosome) && Position == other.Position && FirstInPair == other.FirstInPair
+                && IsSupplementary == other.IsSupplementary;
     }
 
     public String toString()
@@ -51,7 +60,7 @@ public class ExpectedRead
 
     public static ExpectedRead fromRead(final ReadRecord read)
     {
-        return new ExpectedRead(read.Chromosome, read.start(), read.isFirstOfPair(), false, true);
+        return new ExpectedRead(read.Chromosome, read.start(), read.isFirstOfPair(), read.isSupplementaryAlignment(), true);
     }
 
     public static List<ExpectedRead> getExpectedReads(final ReadGroup readGroup)
@@ -60,7 +69,6 @@ public class ExpectedRead
 
         for(ReadRecord read : readGroup.reads())
         {
-            /* no longer registered since no need to write these to file
             if(read.hasSuppAlignment())
             {
                 SupplementaryReadData suppData = read.supplementaryAlignment();
@@ -68,10 +76,9 @@ public class ExpectedRead
                 if(!readGroup.hasSupplementaryMatch(suppData))
                 {
                     expectedReads.add(new ExpectedRead(
-                            suppData.Chromosome, suppData.Position, read.isFirstOfPair(), true, false));
+                            suppData.Chromosome, suppData.Position, read.isFirstOfPair(), !read.isSupplementaryAlignment(), false));
                 }
             }
-            */
 
             if(HumanChromosome.contains(read.MateChromosome) && !readGroup.hasReadMate(read))
             {

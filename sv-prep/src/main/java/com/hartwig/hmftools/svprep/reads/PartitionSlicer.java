@@ -247,7 +247,7 @@ public class PartitionSlicer
             int spanningGroups = spanningGroupsMap.size();
             int totalGroups = mJunctionTracker.junctionGroups().size() + mJunctionTracker.supportingGroups().size() + expectedGroups.size();
 
-            final Map<String, List<ExpectedRead>> missedReadsMap = Maps.newHashMap();
+            final Map<String,List<ExpectedRead>> missedReadsMap = Maps.newHashMap();
             mCombinedReadGroups.processSpanningReadGroups(mRegion, spanningGroupsMap, missedReadsMap);
 
             mPerCounters[PC_MATE_SLICE].start();
@@ -294,9 +294,8 @@ public class PartitionSlicer
     {
         readGroup.setPartitionCount(mRegion, mConfig.PartitionSize);
 
-        if(readGroup.spansPartitions() && !readGroup.onlySupplementaries())
+        if(readGroup.spansPartitions())
         {
-            // only register remote reads if they are not supplementaries - instead just let these be written locally and not reconciled
             ++mStats.SpanningGroups;
 
             readGroup.setGroupState();

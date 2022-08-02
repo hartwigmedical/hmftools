@@ -3,8 +3,6 @@ package com.hartwig.hmftools.svprep;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
-import static com.hartwig.hmftools.svprep.WriteType.BAM;
-import static com.hartwig.hmftools.svprep.WriteType.READS;
 
 import java.util.List;
 import java.util.Map;
@@ -159,6 +157,11 @@ public class CombinedReadGroups
         if(findExistingRead(readChrPartition, readGroup, actualRead, read))
             return;
 
+        // supplementaries logic:
+        // an expected supplementary read, if matched, will collect its actual read that was cached
+        // an actual supplementary read, if matched, is marked as belonging to a read group with non-supplementaries
+        // an actual supplementary read, if not matched, caches its actual read with the stored expected read
+
         // only store this read if other remote partitions within this same read group are expected
         // and factor in remote partitions already processed
         if(unprocessedPartitions.isEmpty())
@@ -191,6 +194,12 @@ public class CombinedReadGroups
         read.setExpectedMatchCount(unprocessedPartitions.size());
         readGroupReads.add(read);
         addedReads.add(read);
+
+        // cache its actual read if its a supp-only group, in case it's a duplicate
+        if(actualRead != null && readGroup.onlySupplementaries())
+        {
+            read.setCachedRead(actualRead);
+        }
 
         // also make a link to this readId from each other expected remote partition back to this read's partition
         for(String unprocessedPartition : unprocessedPartitions)
@@ -236,6 +245,18 @@ public class CombinedReadGroups
                 actualRead.setWritten();
             else
                 matchedRead.markFound();
+
+            if(readGroup.onlySupplementaries())
+                readGroup.markHasRemoteNonSupplementaries();
+        }
+        else
+        {
+            // pick up supplementaries which were waiting for their group
+            if(matchedRead.hasCachedRead())
+            {
+                readGroup.addRead(matchedRead.getCachedRead());
+                readGroup.setGroupState();
+            }
         }
 
         matchedRead.setExpectedMatchCount(readGroup.partitionCount() - 1);
@@ -286,7 +307,7 @@ public class CombinedReadGroups
 
                     if(!read.found())
                     {
-                        // collect missed reads to then query the BAM for them
+                        // collect missed reads to then query the BAM for them back in the partition slicer
                         List<ExpectedRead> missedReads = missedReadsMap.get(readId);
                         if(missedReads == null)
                         {

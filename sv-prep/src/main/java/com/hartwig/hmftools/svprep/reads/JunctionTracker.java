@@ -4,7 +4,6 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -18,16 +17,11 @@ import static com.hartwig.hmftools.svprep.reads.ReadFilterType.INSERT_MAP_OVERLA
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.POLY_G_SC;
 import static com.hartwig.hmftools.svprep.reads.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.svprep.reads.ReadRecord.findIndelCoords;
-import static com.hartwig.hmftools.svprep.reads.ReadRecord.maxIndelLength;
 import static com.hartwig.hmftools.svprep.reads.ReadType.EXACT_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
 import static com.hartwig.hmftools.svprep.reads.ReadType.NO_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.RemoteJunction.addRemoteJunction;
-
-import static htsjdk.samtools.CigarOperator.D;
-import static htsjdk.samtools.CigarOperator.I;
-import static htsjdk.samtools.CigarOperator.M;
 
 import java.util.List;
 import java.util.Map;
@@ -38,13 +32,12 @@ import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.samtools.SoftClipSide;
+import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.BlacklistLocations;
 import com.hartwig.hmftools.svprep.HotspotCache;
 import com.hartwig.hmftools.svprep.SvConfig;
-
-import htsjdk.samtools.CigarElement;
 
 public class JunctionTracker
 {
@@ -59,6 +52,7 @@ public class JunctionTracker
     private final List<JunctionData> mJunctions; // ordered by position
     private final List<ReadGroup> mJunctionGroups; // groups used to form a junction
     private final List<ReadGroup> mSupportingGroups; // groups supporting a junction
+
     private int mInitialSupportingFrags;
     private final int[] mBaseDepth;
 

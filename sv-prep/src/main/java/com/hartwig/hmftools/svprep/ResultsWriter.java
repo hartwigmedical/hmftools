@@ -106,6 +106,9 @@ public class ResultsWriter
     {
         for(ReadGroup readGroup : readGroups)
         {
+            if(readGroup.onlySupplementaries() && !readGroup.hasRemoteNonSupplementaries())
+                continue;
+
             String junctionPosStr = "";
 
             if(readGroup.junctionPositions() != null)
@@ -304,9 +307,13 @@ public class ResultsWriter
         // note additional filters for a read to be written to the BAM
         // - excessive low qual soft-clip bases
         // - above the poly-G(C) threshold
+        // - cannot be a group of only supplementaries (in case the group is an unmarked duplicate)
 
         for(ReadGroup readGroup : readGroups)
         {
+            if(readGroup.onlySupplementaries() && !readGroup.hasRemoteNonSupplementaries())
+                continue;
+
             readGroup.reads().stream().filter(x -> !filterBamRecord(x)).forEach(x -> mBamWriter.writeRecord(x.record()));
         }
     }
