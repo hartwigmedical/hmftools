@@ -469,7 +469,7 @@ Note that a segment is diploid only if both the major and minor allele are betwe
 
 If any of the candidate solutions are highly diploid (>= 0.97), PURPLE checks first for the presence of TUMOR.  If NONE of the following criteria are satisfied, then PURPLE sets qcStatus = FAIL_NO_TUMOR, fitMethod=NO_TUMOR and sets purity to min_purity value [0.08]:
 - Tumor has one or more HOTSPOT SV or point mutation
-- SNV sum(allele read count) > 5000
+- SNV sum(allele read count) > 2000
 - SV sum(startTumorVariantFragmentSupport) > 1000 (excluding SGL breakends)
 - Tumor has 3000 BAF points in germline DIPLOID regions regions with tumor ratio < 0.8 OR > 1.2 (ie. evidence of at least some aneuploidy)
 
