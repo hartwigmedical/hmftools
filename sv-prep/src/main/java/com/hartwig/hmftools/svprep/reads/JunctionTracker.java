@@ -9,10 +9,13 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.LOW_BASE_QUALITY;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_MAP_QUALITY;
+import static com.hartwig.hmftools.svprep.reads.DiscordantGroups.formDiscordantJunctions;
+import static com.hartwig.hmftools.svprep.reads.DiscordantGroups.isDiscordantGroup;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.INSERT_MAP_OVERLAP;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.POLY_G_SC;
 import static com.hartwig.hmftools.svprep.reads.ReadFilters.isChimericRead;
@@ -189,6 +192,7 @@ public class JunctionTracker
 
         mInitialSupportingFrags = candidateSupportGroups.size();
 
+        List<ReadGroup> nonJunctionGroups = Lists.newArrayList();
         Set<JunctionData> supportedJunctions = Sets.newHashSet();
         for(ReadGroup readGroup : candidateSupportGroups)
         {
@@ -209,7 +213,22 @@ public class JunctionTracker
                 supportedJunctions.forEach(x -> x.SupportingGroups.add(readGroup));
                 supportedJunctions.forEach(x -> readGroup.addJunctionPosition(x.Position));
             }
+            else if(!groupInBlacklist(readGroup) && isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMax()))
+            {
+                nonJunctionGroups.add(readGroup);
+            }
         }
+
+        if(nonJunctionGroups.size() > 1000)
+        {
+            SV_LOGGER.info("region({}) checking discordant groups from {} read groups", mRegion, nonJunctionGroups.size());
+        }
+
+        List<JunctionData> discordantJunctions = formDiscordantJunctions(nonJunctionGroups);
+        discordantJunctions.forEach(x -> addJunction(x));
+
+        // no obvious need to re-check support at these junctions since all proximate facing read groups have already been tested
+        // and allocated to these groups
 
         if(mBaseDepth != null)
         {
@@ -395,6 +414,30 @@ public class JunctionTracker
         JunctionData junctionData = new JunctionData(junctionPosition, orientation, read);
         mJunctions.add(index, junctionData);
         return junctionData;
+    }
+
+    private void addJunction(final JunctionData newJunction)
+    {
+        int index = 0;
+
+        while(index < mJunctions.size())
+        {
+            JunctionData junctionData = mJunctions.get(index);
+
+            if(junctionData.Position == newJunction.Position)
+            {
+                if(junctionData.Orientation == newJunction.Orientation)
+                    return;
+            }
+            else if(junctionData.Position > newJunction.Position)
+            {
+                break;
+            }
+
+            ++index;
+        }
+
+        mJunctions.add(index, newJunction);
     }
 
     private void checkJunctionSupport(final ReadRecord read, final Set<JunctionData> supportedJunctions)
@@ -703,6 +746,9 @@ public class JunctionTracker
         // first deal with junctions loaded from another sample - keep these if they've found any possible support
         if(junctionData.isExisting())
             return !junctionData.JunctionGroups.isEmpty() || !junctionData.SupportingGroups.isEmpty();
+
+        if(junctionData.discordantGroup())
+            return true;
 
         // 1 junction read, 3 exact supporting reads altogether and 1 map-qual read
         int junctionFrags = junctionData.JunctionGroups.size();

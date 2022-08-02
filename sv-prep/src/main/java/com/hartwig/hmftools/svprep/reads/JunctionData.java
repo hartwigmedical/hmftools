@@ -17,6 +17,7 @@ public class JunctionData
     public final List<RemoteJunction> RemoteJunctions;
 
     private boolean mInternalIndel;
+    private boolean mDiscordantGroup;
     private boolean mHotspot;
     private int mDepth;
 
@@ -32,6 +33,7 @@ public class JunctionData
 
         mHotspot = false;
         mInternalIndel = false;
+        mDiscordantGroup = false;
         mDepth = 0;
     }
 
@@ -45,6 +47,9 @@ public class JunctionData
 
     public boolean internalIndel() { return mInternalIndel; }
     public void markInternalIndel() { mInternalIndel = true; }
+
+    public boolean discordantGroup() { return mDiscordantGroup; }
+    public void markDiscordantGroup() { mDiscordantGroup = true; }
 
     public void setDepth(int depth) { mDepth = depth; }
     public int depth() { return mDepth; }

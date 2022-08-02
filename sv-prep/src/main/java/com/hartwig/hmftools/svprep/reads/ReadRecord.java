@@ -44,6 +44,8 @@ public class ReadRecord
 
     public static ReadRecord from(final SAMRecord record) { return new ReadRecord(record); }
 
+    public static final String UNMAPPED_CHR = "-1";
+
     public ReadRecord(final SAMRecord record)
     {
         mRecord = record;
@@ -55,7 +57,7 @@ public class ReadRecord
         }
         else
         {
-            Chromosome = "-1";
+            Chromosome = UNMAPPED_CHR;
             Positions = new int[] { 0, 0 };
         }
 
@@ -66,7 +68,7 @@ public class ReadRecord
         }
         else
         {
-            MateChromosome = "-1";
+            MateChromosome = UNMAPPED_CHR;
             MatePosStart = 0;
         }
 
