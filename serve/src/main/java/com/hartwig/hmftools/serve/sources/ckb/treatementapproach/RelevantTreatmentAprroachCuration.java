@@ -26,9 +26,9 @@ public class RelevantTreatmentAprroachCuration {
 
     public void reportUnusedFilterEntries() {
         int unusedFilterEntryCount = 0;
+        LOGGER.info(usedCurations);
         for (RelevantTreatmentApprochCurationEntryKey entrySet : curations.keySet()) {
             LOGGER.debug("entry debug: " + entrySet);
-
             if (!usedCurations.contains(entrySet)) {
                 unusedFilterEntryCount++;
                 LOGGER.warn(" Curation entry '{}' hasn't been used for treatment Approch curation", entrySet);
