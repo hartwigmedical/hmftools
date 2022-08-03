@@ -9,9 +9,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
-import com.hartwig.hmftools.common.protect.ImmutableProtectSource;
+import com.hartwig.hmftools.common.protect.ImmutableKnowledgebaseSource;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
+import com.hartwig.hmftools.common.protect.EvidenceType;
 import com.hartwig.hmftools.common.protect.ProtectTestFactory;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
@@ -75,11 +75,11 @@ public class ConsentFilterFunctionsTest {
                 .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .sources(Sets.newHashSet(ImmutableProtectSource.builder()
+                .sources(Sets.newHashSet(ImmutableKnowledgebaseSource.builder()
                         .name(Knowledgebase.ICLUSION)
                         .sourceEvent(Strings.EMPTY)
                         .sourceUrls(Sets.newHashSet())
-                        .evidenceType(ProtectEvidenceType.AMPLIFICATION)
+                        .evidenceType(EvidenceType.AMPLIFICATION)
                         .build()))
                 .build();
 

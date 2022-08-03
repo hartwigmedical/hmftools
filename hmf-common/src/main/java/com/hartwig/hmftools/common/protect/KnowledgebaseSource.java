@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ProtectSource {
+public abstract class KnowledgebaseSource {
 
     @NotNull
     public abstract Knowledgebase name();
@@ -23,7 +23,7 @@ public abstract class ProtectSource {
     public abstract Set<String> sourceUrls();
 
     @NotNull
-    public abstract ProtectEvidenceType evidenceType();
+    public abstract EvidenceType evidenceType();
 
     @Nullable
     public abstract Integer rangeRank();

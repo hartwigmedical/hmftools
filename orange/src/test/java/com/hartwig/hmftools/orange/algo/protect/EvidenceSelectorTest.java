@@ -7,7 +7,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.protect.ProtectSource;
+import com.hartwig.hmftools.common.protect.KnowledgebaseSource;
 import com.hartwig.hmftools.common.protect.ProtectTestFactory;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 
@@ -17,8 +17,8 @@ public class EvidenceSelectorTest {
 
     @Test
     public void canInterpretProtectData() {
-        ProtectSource trialSource = ProtectTestFactory.createSource(EvidenceSelector.TRIAL_SOURCES.iterator().next());
-        ProtectSource evidenceSource = ProtectTestFactory.createSource(Knowledgebase.VICC_CGI);
+        KnowledgebaseSource trialSource = ProtectTestFactory.createSource(EvidenceSelector.TRIAL_SOURCES.iterator().next());
+        KnowledgebaseSource evidenceSource = ProtectTestFactory.createSource(Knowledgebase.VICC_CGI);
 
         assert !EvidenceSelector.TRIAL_SOURCES.contains(evidenceSource.name());
 

@@ -9,7 +9,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
+import com.hartwig.hmftools.common.protect.EvidenceType;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.test.SomaticVariantTestFactory;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -90,12 +90,12 @@ public class VariantEvidenceTest {
         ProtectEvidence reportedEvidence = findByGene(evidences, "reportable");
         assertTrue(reportedEvidence.reported());
         assertEquals(reportedEvidence.sources().size(), 1);
-        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, reportedEvidence.sources().iterator().next().evidenceType());
+        assertEquals(EvidenceType.HOTSPOT_MUTATION, reportedEvidence.sources().iterator().next().evidenceType());
 
         ProtectEvidence unreportedEvidence = findByGene(evidences, "unreported");
         assertFalse(unreportedEvidence.reported());
         assertEquals(unreportedEvidence.sources().size(), 1);
-        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, unreportedEvidence.sources().iterator().next().evidenceType());
+        assertEquals(EvidenceType.HOTSPOT_MUTATION, unreportedEvidence.sources().iterator().next().evidenceType());
     }
 
     @Test
@@ -206,19 +206,19 @@ public class VariantEvidenceTest {
         assertTrue(evidenceHigh.reported());
         assertEquals("match", evidenceHigh.event());
         assertEquals(evidenceHigh.sources().size(), 1);
-        assertEquals(ProtectEvidenceType.EXON_MUTATION, evidenceHigh.sources().iterator().next().evidenceType());
+        assertEquals(EvidenceType.EXON_MUTATION, evidenceHigh.sources().iterator().next().evidenceType());
 
         ProtectEvidence evidenceMedium = findByGene(evidences, "geneMedium");
         assertFalse(evidenceMedium.reported());
         assertEquals("match", evidenceMedium.event());
         assertEquals(evidenceMedium.sources().size(), 1);
-        assertEquals(ProtectEvidenceType.EXON_MUTATION, evidenceMedium.sources().iterator().next().evidenceType());
+        assertEquals(EvidenceType.EXON_MUTATION, evidenceMedium.sources().iterator().next().evidenceType());
 
         ProtectEvidence evidenceLow = findByGene(evidences, "geneLow");
         assertFalse(evidenceLow.reported());
         assertEquals("match", evidenceLow.event());
         assertEquals(evidenceLow.sources().size(), 1);
-        assertEquals(ProtectEvidenceType.EXON_MUTATION, evidenceLow.sources().iterator().next().evidenceType());
+        assertEquals(EvidenceType.EXON_MUTATION, evidenceLow.sources().iterator().next().evidenceType());
     }
 
     @Test
@@ -272,12 +272,12 @@ public class VariantEvidenceTest {
         ProtectEvidence actEvidence = findByGene(evidences, activatedGene);
         assertTrue(actEvidence.reported());
         assertEquals(actEvidence.sources().size(), 1);
-        assertEquals(ProtectEvidenceType.ACTIVATION, actEvidence.sources().iterator().next().evidenceType());
+        assertEquals(EvidenceType.ACTIVATION, actEvidence.sources().iterator().next().evidenceType());
 
         ProtectEvidence inactEvidence = findByGene(evidences, inactivatedGene);
         assertFalse(inactEvidence.reported());
         assertEquals(inactEvidence.sources().size(), 1);
-        assertEquals(ProtectEvidenceType.INACTIVATION, inactEvidence.sources().iterator().next().evidenceType());
+        assertEquals(EvidenceType.INACTIVATION, inactEvidence.sources().iterator().next().evidenceType());
     }
 
     @NotNull

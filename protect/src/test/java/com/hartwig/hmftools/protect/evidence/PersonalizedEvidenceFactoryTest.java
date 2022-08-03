@@ -9,7 +9,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
+import com.hartwig.hmftools.common.protect.EvidenceType;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
@@ -76,35 +76,35 @@ public class PersonalizedEvidenceFactoryTest {
 
     @Test
     public void canDetermineEvidenceTypes() {
-        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION,
+        assertEquals(EvidenceType.HOTSPOT_MUTATION,
                 PersonalizedEvidenceFactory.determineEvidenceType(ServeTestFactory.createTestActionableHotspot()));
 
         ActionableRange range =
                 ImmutableActionableRange.builder().from(ServeTestFactory.createTestActionableRange()).rangeType(RangeType.EXON).build();
-        assertEquals(ProtectEvidenceType.EXON_MUTATION, PersonalizedEvidenceFactory.determineEvidenceType(range));
+        assertEquals(EvidenceType.EXON_MUTATION, PersonalizedEvidenceFactory.determineEvidenceType(range));
 
         ActionableGene gene = ImmutableActionableGene.builder()
                 .from(ServeTestFactory.createTestActionableGene())
                 .event(GeneLevelEvent.INACTIVATION)
                 .build();
-        assertEquals(ProtectEvidenceType.INACTIVATION, PersonalizedEvidenceFactory.determineEvidenceType(gene));
+        assertEquals(EvidenceType.INACTIVATION, PersonalizedEvidenceFactory.determineEvidenceType(gene));
 
         ActionableGene amplification = ImmutableActionableGene.builder()
                 .from(ServeTestFactory.createTestActionableGene())
                 .event(GeneLevelEvent.AMPLIFICATION)
                 .build();
-        assertEquals(ProtectEvidenceType.AMPLIFICATION, PersonalizedEvidenceFactory.determineEvidenceType(amplification));
+        assertEquals(EvidenceType.AMPLIFICATION, PersonalizedEvidenceFactory.determineEvidenceType(amplification));
 
         ActionableGene overexpression = ImmutableActionableGene.builder()
                 .from(ServeTestFactory.createTestActionableGene())
                 .event(GeneLevelEvent.OVEREXPRESSION)
                 .build();
-        assertEquals(ProtectEvidenceType.OVER_EXPRESSION, PersonalizedEvidenceFactory.determineEvidenceType(overexpression));
+        assertEquals(EvidenceType.OVER_EXPRESSION, PersonalizedEvidenceFactory.determineEvidenceType(overexpression));
 
-        assertEquals(ProtectEvidenceType.FUSION_PAIR,
+        assertEquals(EvidenceType.FUSION_PAIR,
                 PersonalizedEvidenceFactory.determineEvidenceType(ServeTestFactory.createTestActionableFusion()));
 
-        assertEquals(ProtectEvidenceType.SIGNATURE,
+        assertEquals(EvidenceType.SIGNATURE,
                 PersonalizedEvidenceFactory.determineEvidenceType(ServeTestFactory.createTestActionableCharacteristic()));
     }
 

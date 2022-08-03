@@ -10,8 +10,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.linx.ImmutableHomozygousDisruption;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
-import com.hartwig.hmftools.common.protect.ProtectSource;
+import com.hartwig.hmftools.common.protect.EvidenceType;
+import com.hartwig.hmftools.common.protect.KnowledgebaseSource;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.serve.ServeTestFactory;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
@@ -64,7 +64,7 @@ public class DisruptionEvidenceTest {
         assertEquals(DisruptionEvidence.HOMOZYGOUS_DISRUPTION_EVENT, evidence.event());
 
         assertEquals(evidence.sources().size(), 1);
-        assertEquals(ProtectEvidenceType.INACTIVATION, findByKnowledgebase(evidence.sources(), Knowledgebase.CKB).evidenceType());
+        assertEquals(EvidenceType.INACTIVATION, findByKnowledgebase(evidence.sources(), Knowledgebase.CKB).evidenceType());
     }
 
     @NotNull
@@ -79,8 +79,8 @@ public class DisruptionEvidenceTest {
     }
 
     @NotNull
-    private static ProtectSource findByKnowledgebase(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase knowledgebaseToFind) {
-        for (ProtectSource source : sources) {
+    private static KnowledgebaseSource findByKnowledgebase(@NotNull Set<KnowledgebaseSource> sources, @NotNull Knowledgebase knowledgebaseToFind) {
+        for (KnowledgebaseSource source : sources) {
             if (source.name() == knowledgebaseToFind) {
                 return source;
             }

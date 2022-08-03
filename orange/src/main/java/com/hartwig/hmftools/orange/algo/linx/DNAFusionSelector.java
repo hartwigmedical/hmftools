@@ -5,7 +5,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
+import com.hartwig.hmftools.common.protect.EventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.sv.linx.FusionPhasedType;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
@@ -26,7 +26,7 @@ final class DNAFusionSelector {
         List<LinxFusion> filtered = Lists.newArrayList();
         for (LinxFusion fusion : allFusions) {
             if (!fusion.reported()) {
-                boolean hasEvidence = EvidenceEvaluator.hasEvidence(evidences, null, ProtectEventGenerator.fusionEvent(fusion));
+                boolean hasEvidence = EvidenceEvaluator.hasEvidence(evidences, null, EventGenerator.fusionEvent(fusion));
                 boolean hasReportedType = !fusion.reportedType().equals(KnownFusionType.NONE.toString());
                 boolean isFusionOfOncogene = isInframeFusionWithOncogene(fusion, driverGenes);
                 if (hasReportedType || hasEvidence || isFusionOfOncogene) {

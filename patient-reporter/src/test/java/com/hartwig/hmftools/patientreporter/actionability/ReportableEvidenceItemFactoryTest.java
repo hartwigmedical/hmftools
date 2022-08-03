@@ -6,9 +6,9 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.protect.ImmutableProtectSource;
+import com.hartwig.hmftools.common.protect.ImmutableKnowledgebaseSource;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
+import com.hartwig.hmftools.common.protect.EvidenceType;
 import com.hartwig.hmftools.common.protect.ProtectTestFactory;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
@@ -25,11 +25,11 @@ public class ReportableEvidenceItemFactoryTest {
                 .treatment("A")
                 .onLabel(true)
                 .level(EvidenceLevel.A)
-                .sources(Sets.newHashSet(ImmutableProtectSource.builder()
+                .sources(Sets.newHashSet(ImmutableKnowledgebaseSource.builder()
                         .name(Knowledgebase.VICC_CIVIC)
                         .sourceEvent(Strings.EMPTY)
                         .sourceUrls(Sets.newHashSet())
-                        .evidenceType(ProtectEvidenceType.AMPLIFICATION)
+                        .evidenceType(EvidenceType.AMPLIFICATION)
                         .build()))
                 .build();
         ProtectEvidence item2 = ProtectTestFactory.builder()
@@ -37,11 +37,11 @@ public class ReportableEvidenceItemFactoryTest {
                 .treatment("A")
                 .onLabel(true)
                 .level(EvidenceLevel.A)
-                .sources(Sets.newHashSet(ImmutableProtectSource.builder()
+                .sources(Sets.newHashSet(ImmutableKnowledgebaseSource.builder()
                         .name(Knowledgebase.VICC_CGI)
                         .sourceEvent(Strings.EMPTY)
                         .sourceUrls(Sets.newHashSet())
-                        .evidenceType(ProtectEvidenceType.AMPLIFICATION)
+                        .evidenceType(EvidenceType.AMPLIFICATION)
                         .build()))
                 .build();
         ProtectEvidence item3 = ProtectTestFactory.builder()
@@ -49,11 +49,11 @@ public class ReportableEvidenceItemFactoryTest {
                 .treatment("B")
                 .onLabel(true)
                 .level(EvidenceLevel.A)
-                .sources(Sets.newHashSet(ImmutableProtectSource.builder()
+                .sources(Sets.newHashSet(ImmutableKnowledgebaseSource.builder()
                         .name(Knowledgebase.ICLUSION)
                         .sourceEvent(Strings.EMPTY)
                         .sourceUrls(Sets.newHashSet())
-                        .evidenceType(ProtectEvidenceType.AMPLIFICATION)
+                        .evidenceType(EvidenceType.AMPLIFICATION)
                         .build()))
                 .build();
         ProtectEvidence item4 = ProtectTestFactory.builder()
@@ -61,11 +61,11 @@ public class ReportableEvidenceItemFactoryTest {
                 .treatment("C")
                 .onLabel(true)
                 .level(EvidenceLevel.C)
-                .sources(Sets.newHashSet(ImmutableProtectSource.builder()
+                .sources(Sets.newHashSet(ImmutableKnowledgebaseSource.builder()
                         .name(Knowledgebase.VICC_CGI)
                         .sourceEvent(Strings.EMPTY)
                         .sourceUrls(Sets.newHashSet())
-                        .evidenceType(ProtectEvidenceType.AMPLIFICATION)
+                        .evidenceType(EvidenceType.AMPLIFICATION)
                         .build()))
                 .build();
 

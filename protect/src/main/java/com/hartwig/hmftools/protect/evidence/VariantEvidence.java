@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
+import com.hartwig.hmftools.common.protect.EventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.variant.OtherEffectsInterpreter;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -129,7 +129,7 @@ public class VariantEvidence {
                 .gene(variant.gene())
                 .transcript(transcript)
                 .isCanonical(isCanonical)
-                .event(ProtectEventGenerator.variantEvent(variant))
+                .event(EventGenerator.variantEvent(variant))
                 .germline(isGermline)
                 .reported(report)
                 .eventIsHighDriver(EvidenceDriverLikelihood.interpretVariant(driverInterpretation))

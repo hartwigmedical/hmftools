@@ -7,7 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ProtectEvidenceComparator implements Comparator<ProtectEvidence> {
+public class EvidenceComparator implements Comparator<ProtectEvidence> {
 
     @Override
     public int compare(@NotNull ProtectEvidence evidence1, @NotNull ProtectEvidence evidence2) {

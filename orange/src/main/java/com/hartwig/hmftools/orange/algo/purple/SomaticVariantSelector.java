@@ -5,7 +5,7 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
+import com.hartwig.hmftools.common.protect.EventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
@@ -35,7 +35,7 @@ final class SomaticVariantSelector {
         for (SomaticVariant variant : allVariants) {
             if (!variant.reported()) {
                 boolean isNearHotspot = variant.hotspot() == Hotspot.HOTSPOT || variant.hotspot() == Hotspot.NEAR_HOTSPOT;
-                boolean hasEvidence = EvidenceEvaluator.hasEvidence(evidences, variant.gene(), ProtectEventGenerator.variantEvent(variant));
+                boolean hasEvidence = EvidenceEvaluator.hasEvidence(evidences, variant.gene(), EventGenerator.variantEvent(variant));
                 boolean isExonicAndHasPhasedReportedVariant =
                         !variant.gene().isEmpty() && hasReportedVariantWithPhase(reportedSomaticVariants, variant.topLocalPhaseSet());
                 boolean isCuppaRelevantVariant = isRelevantForCuppa(variant);

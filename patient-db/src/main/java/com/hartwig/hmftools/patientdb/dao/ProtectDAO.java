@@ -10,7 +10,7 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Iterables;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.protect.ProtectSource;
+import com.hartwig.hmftools.common.protect.KnowledgebaseSource;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -57,7 +57,7 @@ class ProtectDAO {
 
     private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep19 inserter, @NotNull String sample,
             @NotNull ProtectEvidence evidence) {
-        for (ProtectSource source : evidence.sources()) {
+        for (KnowledgebaseSource source : evidence.sources()) {
             StringJoiner sourceUrlJoiner = new StringJoiner(",");
             for (String sourceUrl : source.sourceUrls()) {
                 sourceUrlJoiner.add(sourceUrl);

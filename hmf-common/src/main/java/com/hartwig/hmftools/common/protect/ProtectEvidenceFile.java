@@ -115,9 +115,9 @@ public final class ProtectEvidenceFile {
 
     @NotNull
     @VisibleForTesting
-    static String sourcesToString(@NotNull Iterable<ProtectSource> sources) {
+    static String sourcesToString(@NotNull Iterable<KnowledgebaseSource> sources) {
         StringJoiner main = new StringJoiner(SOURCES_DELIMITER);
-        for (ProtectSource source : sources) {
+        for (KnowledgebaseSource source : sources) {
             StringJoiner joiner = new StringJoiner(SOURCES_ITEM_DELIMITER);
             joiner.add(source.name().toString());
             joiner.add(source.sourceEvent());
@@ -144,16 +144,16 @@ public final class ProtectEvidenceFile {
 
     @NotNull
     @VisibleForTesting
-    static Set<ProtectSource> stringToSources(@NotNull String sourcesString) {
-        Set<ProtectSource> sources = Sets.newHashSet();
+    static Set<KnowledgebaseSource> stringToSources(@NotNull String sourcesString) {
+        Set<KnowledgebaseSource> sources = Sets.newHashSet();
         for (String entry : sourcesString.split(SOURCES_DELIMITER)) {
             String[] items = entry.split("\\" + SOURCES_ITEM_DELIMITER, -1);
 
-            sources.add(ImmutableProtectSource.builder()
+            sources.add(ImmutableKnowledgebaseSource.builder()
                     .name(Knowledgebase.lookupKnowledgebase(items[0]))
                     .sourceEvent(items[1])
                     .sourceUrls(urlsToSet(items[2]))
-                    .evidenceType(ProtectEvidenceType.valueOf(items[3]))
+                    .evidenceType(EvidenceType.valueOf(items[3]))
                     .rangeRank(emptyToNullInteger(items[4]))
                     .evidenceUrls(urlsToSet(items[5]))
                     .build());

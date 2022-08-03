@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
+import com.hartwig.hmftools.common.protect.EventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
@@ -82,7 +82,7 @@ public class FusionEvidence {
         return personalizedEvidenceFactory.somaticEvidence(actionable)
                 .reported(fusion.reported())
                 .gene(geneFromActionable(actionable))
-                .event(ProtectEventGenerator.fusionEvent(fusion))
+                .event(EventGenerator.fusionEvent(fusion))
                 .eventIsHighDriver(EvidenceDriverLikelihood.interpretFusion(fusion.likelihood()))
                 .build();
     }
