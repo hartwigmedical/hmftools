@@ -20,8 +20,5 @@ public abstract class ActionableCharacteristic implements ActionableEvent {
     public abstract TumorCharacteristicsComparator comparator();
 
     @Nullable
-    public abstract Double minCutoff();
-
-    @Nullable
-    public abstract Double maxCutoff();
+    public abstract Double cutoff();
 }

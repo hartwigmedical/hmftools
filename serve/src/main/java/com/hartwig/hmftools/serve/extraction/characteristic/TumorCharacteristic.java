@@ -16,8 +16,5 @@ public abstract class TumorCharacteristic {
     public abstract TumorCharacteristicsComparator comparator();
 
     @Nullable
-    public abstract Double minCutoff();
-
-    @Nullable
-    public abstract Double maxCutoff();
+    public abstract Double cutoff();
 }
