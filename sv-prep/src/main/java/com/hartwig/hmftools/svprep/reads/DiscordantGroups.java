@@ -1,23 +1,18 @@
 package com.hartwig.hmftools.svprep.reads;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
+import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.reads.ReadRecord.UNMAPPED_CHR;
 
 import java.util.List;
 import java.util.Set;
 
-import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.google.common.collect.Sets;
 
 public final class DiscordantGroups
 {
@@ -34,37 +29,59 @@ public final class DiscordantGroups
         {
             ReadGroup group1 = readGroups.get(i);
 
-            ChrBaseRegion[] regions1 = groupRegions(group1);
+            GroupBoundary[] group1Boundaries = groupBoundaries(group1);
+            ReadRecord read1 = group1.reads().get(0);
+            ReadRecord[] boundaryReads = null;
+            GroupBoundary[] innerBoundaries = null;
             List<ReadGroup> closeGroups = null;
 
             for(int j = i + 1; j < readGroups.size(); ++j)
             {
                 ReadGroup group2 = readGroups.get(j);
+                ReadRecord read2 = group2.reads().get(0);
+
+                if(read2.orientation() != read1.orientation() || read2.mateOrientation() != read1.mateOrientation())
+                    continue;
+
+                int group2Boundary = read2.orientation() == POS_ORIENT ? read2.end() : read2.start();
+
+                if(abs(group2Boundary - group1Boundaries[SE_START].Position) > MAX_START_DISTANCE)
+                    break;
 
                 if(assignedGroups.contains(group2.id()))
                     continue;
 
-                ChrBaseRegion[] regions2 = groupRegions(group2);
+                GroupBoundary[] group2Boundaries = groupBoundaries(group2);
 
-                if(regionsWithinRange(regions1, regions2))
+                if(!regionsWithinRange(group1Boundaries, group2Boundaries))
+                    continue;
+
+                if(closeGroups == null)
                 {
-                    if(closeGroups == null)
-                        closeGroups = Lists.newArrayList(group1);
+                    closeGroups = Lists.newArrayList(group1);
+                    boundaryReads = new ReadRecord[] {read1, read1};
+                    innerBoundaries = new GroupBoundary[] { group1Boundaries[SE_START], group1Boundaries[SE_END] };
+                }
 
-                    closeGroups.add(group2);
+                closeGroups.add(group2);
 
-                    // widen with new group
-                    regions1[SE_START].setStart(min(regions1[SE_START].start(), regions2[SE_START].start()));
-                    regions1[SE_START].setEnd(max(regions1[SE_START].end(), regions2[SE_START].end()));
-                    regions1[SE_END].setStart(min(regions1[SE_END].start(), regions2[SE_END].start()));
-                    regions1[SE_END].setEnd(max(regions1[SE_END].end(), regions2[SE_END].end()));
+                // widen with new group and record the reads at the innermost boundary
+                if(isCloserToJunction(innerBoundaries, group2Boundaries, SE_START))
+                {
+                    boundaryReads[SE_START] = read2;
+                    innerBoundaries[SE_START] = group2Boundaries[SE_START];
+                }
+                if(isCloserToJunction(innerBoundaries, group2Boundaries, SE_END))
+                {
+                    boundaryReads[SE_END] = read2;
+                    innerBoundaries[SE_END] = group2Boundaries[SE_END];
                 }
             }
 
             if(closeGroups != null && closeGroups.size() >= MIN_FRAGMENT_COUNT)
             {
                 closeGroups.forEach(x -> assignedGroups.add(x.id()));
-                addJunctions(closeGroups, regions1, discordantJunctions);
+                addJunctions(closeGroups, innerBoundaries, boundaryReads, discordantJunctions);
             }
         }
 
@@ -72,50 +89,23 @@ public final class DiscordantGroups
     }
 
     private static void addJunctions(
-            final List<ReadGroup> readGroups, final ChrBaseRegion[] regions, final List<JunctionData> discordantJunctions)
+            final List<ReadGroup> readGroups, final GroupBoundary[] innerBoundaries, final ReadRecord[] boundaryReads,
+            final List<JunctionData> discordantJunctions)
     {
-        // determine orientation and then create junctions for any local regions
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            // find a read matching the region boundary and orientation
-            ChrBaseRegion region = regions[se];
-            int junctionPosition = 0;
-            byte junctionOrientation = 0;
-            ReadRecord boundaryRead = null;
+            JunctionData junctionData = new JunctionData(innerBoundaries[se].Position, innerBoundaries[se].Orientation, boundaryReads[se]);
+            discordantJunctions.add(junctionData);
+
+            junctionData.markDiscordantGroup();
 
             for(ReadGroup readGroup : readGroups)
             {
-                ReadRecord read = readGroup.reads().stream()
-                        .filter(x -> x.start() == region.start() && x.orientation() == NEG_ORIENT).findFirst().orElse(null);
+                junctionData.SupportingGroups.add(readGroup);
+                readGroup.addJunctionPosition(junctionData.Position);
 
-                if(read != null)
-                {
-                    junctionPosition = read.start();
-                    junctionOrientation = read.orientation();
-                    boundaryRead = read;
-                    break;
-                }
-
-                read = readGroup.reads().stream()
-                        .filter(x -> x.start() == region.end() && x.orientation() == POS_ORIENT).findFirst().orElse(null);
-
-                if(read != null)
-                {
-                    junctionPosition = read.end();
-                    junctionOrientation = read.orientation();
-                    boundaryRead = read;
-                    break;
-                }
-            }
-
-            if(boundaryRead != null)
-            {
-                JunctionData junctionData = new JunctionData(junctionPosition, junctionOrientation, boundaryRead);
-                discordantJunctions.add(junctionData);
-
-                junctionData.markDiscordantGroup();
-                readGroups.forEach(x -> junctionData.SupportingGroups.add(x));
-                readGroups.forEach(x -> x.addJunctionPosition(junctionData.Position));
+                readGroup.reads().forEach(x -> x.setReadType(ReadType.SUPPORT, true));
+                // readGroup.reads().forEach(x -> junctionData.addReadType(x, ReadType.SUPPORT)); // no need
             }
         }
     }
@@ -144,17 +134,29 @@ public final class DiscordantGroups
         return false;
     }
 
-    private static boolean regionsWithinRange(final ChrBaseRegion[] regions1, final ChrBaseRegion[] regions2)
+    private static boolean isCloserToJunction(final GroupBoundary[] current, final GroupBoundary[] test, int seIndex)
+    {
+        if(current[seIndex].Orientation == POS_ORIENT)
+        {
+            return test[seIndex].Position > current[seIndex].Position;
+        }
+        else
+        {
+            return test[seIndex].Position < current[seIndex].Position;
+        }
+    }
+
+    private static boolean regionsWithinRange(final GroupBoundary[] boundaries1, final GroupBoundary[] boundaries2)
     {
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            if(!regions1[se].Chromosome.equals(regions2[se].Chromosome))
+            if(!boundaries1[se].Chromosome.equals(boundaries2[se].Chromosome))
                 return false;
 
             if(!positionWithin(
-                    regions2[se].start(),
-                    regions1[se].start() - MAX_START_DISTANCE,
-                    regions1[se].start() + MAX_START_DISTANCE))
+                    boundaries2[se].Position,
+                    boundaries1[se].Position - MAX_START_DISTANCE,
+                    boundaries1[se].Position + MAX_START_DISTANCE))
             {
                 return false;
             }
@@ -163,32 +165,31 @@ public final class DiscordantGroups
         return true;
     }
 
-    private static ChrBaseRegion[] groupRegions(final ReadGroup readGroup)
+    private static GroupBoundary[] groupBoundaries(final ReadGroup readGroup)
     {
         ReadRecord read = readGroup.reads().get(0);
-        String chr1 = read.Chromosome;
-        String chr2 = read.MateChromosome;
-        int pos1 = read.orientation() == POS_ORIENT ? read.end() : read.start();
-        int pos2 = readGroup.reads().get(0).MatePosStart;
 
+        GroupBoundary boundary1 = new GroupBoundary(
+                read.Chromosome, read.orientation() == POS_ORIENT ? read.end() : read.start(),
+                read.orientation());
 
-        boolean firstIsLower = false;
+        GroupBoundary boundary2;
 
-        if(HumanChromosome.chromosomeRank(chr1) < HumanChromosome.chromosomeRank(chr2))
+        if(readGroup.size() == 2)
         {
-            firstIsLower = true;
-        }
-        else if(HumanChromosome.chromosomeRank(chr1) > HumanChromosome.chromosomeRank(chr2))
-        {
-            firstIsLower = false;
+            ReadRecord read2 = readGroup.reads().get(1);
+            boundary2 = new GroupBoundary(
+                    read2.Chromosome, read2.orientation() == POS_ORIENT ? read2.end() : read2.start(),
+                    read2.orientation());
         }
         else
         {
-            firstIsLower = pos1 < pos2;
+            boundary2 = new GroupBoundary(
+                    read.MateChromosome,
+                    read.mateOrientation() == POS_ORIENT ? read.MatePosStart + read.record().getReadLength() : read.MatePosStart,
+                    read.mateOrientation());
         }
 
-        return firstIsLower ?
-                new ChrBaseRegion[] { new ChrBaseRegion(chr1, pos1, pos1), new ChrBaseRegion(chr2, pos2, pos2) } :
-                new ChrBaseRegion[] { new ChrBaseRegion(chr2, pos2, pos2), new ChrBaseRegion(chr1, pos1, pos1) };
+        return new GroupBoundary[] { boundary1, boundary2 };
     }
 }

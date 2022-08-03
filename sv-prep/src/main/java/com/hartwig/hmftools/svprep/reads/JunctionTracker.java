@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.svprep.SvConstants.LOW_BASE_QUALITY;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_MAP_QUALITY;
+import static com.hartwig.hmftools.svprep.reads.DiscordantGroups.formDiscordantJunctions;
 import static com.hartwig.hmftools.svprep.reads.DiscordantGroups.isDiscordantGroup;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.INSERT_MAP_OVERLAP;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.POLY_G_SC;
@@ -205,11 +206,16 @@ public class JunctionTracker
         {
             supportedJunctions.clear();
 
+            boolean hasBlacklistedRead = false;
+
             for(ReadRecord read : readGroup.reads())
             {
                 // supporting reads cannot fall in blacklist regions
                 if(readInBlacklist(read))
+                {
+                    hasBlacklistedRead = true;
                     continue;
+                }
 
                 if(read.readType() != NO_SUPPORT)
                     checkJunctionSupport(read, supportedJunctions);
@@ -229,7 +235,8 @@ public class JunctionTracker
                     readGroup.addJunctionPosition(junctionData.Position);
                 }
             }
-            else if(!groupInBlacklist(readGroup) && isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMax()))
+
+            if(!hasBlacklistedRead && isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMax()))
             {
                 candidateDiscordantGroups.add(readGroup);
             }
@@ -240,8 +247,8 @@ public class JunctionTracker
             SV_LOGGER.info("region({}) checking discordant groups from {} read groups", mRegion, candidateDiscordantGroups.size());
         }
 
-        // List<JunctionData> discordantJunctions = formDiscordantJunctions(candidateDiscordantGroups);
-        // discordantJunctions.forEach(x -> addJunction(x));
+        List<JunctionData> discordantJunctions = formDiscordantJunctions(candidateDiscordantGroups);
+        discordantJunctions.forEach(x -> addJunction(x));
 
         // no obvious need to re-check support at these junctions since all proximate facing read groups have already been tested
         // and allocated to these groups

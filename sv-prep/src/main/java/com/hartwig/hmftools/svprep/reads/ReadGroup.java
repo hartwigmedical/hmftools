@@ -189,7 +189,8 @@ public class ReadGroup
 
     public String toString()
     {
-        return String.format("%s reads(%d) state(%s) partitions(%d)", id(), mReads.size(), mStatus, partitionCount());
+        return String.format("reads(%d) initRead(%s:%d-%d) id(%s) partitions(%d) state(%s)",
+                mReads.size(), mReads.get(0).Chromosome, mReads.get(0).start(), mReads.get(0).end(), id(), partitionCount(), mStatus);
     }
 
     public boolean hasSupplementaryMatch(final SupplementaryReadData suppData)

@@ -85,14 +85,8 @@ public class ReadRecord
     public int start() { return Positions[SE_START]; }
     public int end() { return Positions[SE_END]; }
 
-    public byte orientation()
-    {
-        // first in pair has orientation of +1 if not reversed, and vice versa for the second in the pair
-        if(isFirstOfPair())
-            return !isReadReversed() ? POS_ORIENT : NEG_ORIENT;
-        else
-            return isReadReversed() ? NEG_ORIENT : POS_ORIENT;
-    }
+    public byte orientation() { return !isReadReversed() ? POS_ORIENT : NEG_ORIENT; }
+    public byte mateOrientation() { return !hasFlag(SAMFlag.MATE_REVERSE_STRAND) ? POS_ORIENT : NEG_ORIENT; }
 
     public int flags() { return mRecord.getFlags(); }
     public Cigar cigar() { return mRecord.getCigar(); }
