@@ -10,32 +10,32 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public class RelevantTreatmentAprroachCuration {
+public class RelevantTreatmentAproachCuration {
 
-    private static final Logger LOGGER = LogManager.getLogger(RelevantTreatmentAprroachCuration.class);
+    private static final Logger LOGGER = LogManager.getLogger(RelevantTreatmentAproachCuration.class);
 
     @NotNull
     private final Map<RelevantTreatmentApprochCurationEntryKey, RelevantTreatmentApprochCurationEntry> curations;
     @NotNull
     private final Set<RelevantTreatmentApprochCurationEntryKey> usedCurations = Sets.newHashSet();
 
-    public RelevantTreatmentAprroachCuration(
+    public RelevantTreatmentAproachCuration(
             @NotNull final Map<RelevantTreatmentApprochCurationEntryKey, RelevantTreatmentApprochCurationEntry> curations) {
         this.curations = curations;
     }
 
-    public void reportUnusedFilterEntries() {
-        int unusedFilterEntryCount = 0;
+    public void reportUnusedCuratedEntries() {
+        int unusedCuratedEntryCount = 0;
 
         for (RelevantTreatmentApprochCurationEntryKey entrySet : curations.keySet()) {
-            LOGGER.debug("entry debug: " + entrySet);
+            LOGGER.debug("Entry debug: " + entrySet);
             if (!usedCurations.contains(entrySet)) {
-                unusedFilterEntryCount++;
-                LOGGER.warn(" Curation entry '{}' hasn't been used for treatment Approch curation", entrySet);
+                unusedCuratedEntryCount++;
+                LOGGER.warn(" Curation entry '{}' hasn't been used for treatment approach curation", entrySet);
             }
         }
 
-        LOGGER.debug(" Found {} unused filter entries during treatment Approch curation", unusedFilterEntryCount);
+        LOGGER.debug(" Found {} unused curated entries during treatment approach curation", unusedCuratedEntryCount);
     }
 
     @NotNull
@@ -52,18 +52,14 @@ public class RelevantTreatmentAprroachCuration {
             return Strings.EMPTY;
         } else {
             switch (curationEntry.curationType()) {
-                case EVENT_TREATMENT_APPROACH_CURATION_IGNORE: {
-                    usedCurations.add(key);
-                    return Strings.EMPTY;
-                }
+                case EVENT_TREATMENT_APPROACH_CURATION_IGNORE:
                 case DIRECTION_TREATMENT_APPROACH_CURATION_IGNORE: {
-
                     usedCurations.add(key);
                     return Strings.EMPTY;
                 }
                 case TREATMENT_APPROACH_CURATION: {
                     usedCurations.add(key);
-                    return curationEntry.curatedtreatmentApproach() == null ? Strings.EMPTY : curationEntry.curatedtreatmentApproach();
+                    return curationEntry.curatedTreatmentApproach() == null ? Strings.EMPTY : curationEntry.curatedTreatmentApproach();
                 }
                 default: {
                     LOGGER.warn("Curation entry found with unrecognized type: {}", curationEntry);

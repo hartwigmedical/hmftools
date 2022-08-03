@@ -19,8 +19,8 @@ public class RelevantTreatmentApproachCurationFile {
 
     @NotNull
     public static Map<RelevantTreatmentApprochCurationEntryKey, RelevantTreatmentApprochCurationEntry> read(
-            @NotNull String drugClassCurationTsv) throws IOException {
-        List<String> lines = Files.readAllLines(new File(drugClassCurationTsv).toPath());
+            @NotNull String treatmentApproachCurationFile) throws IOException {
+        List<String> lines = Files.readAllLines(new File(treatmentApproachCurationFile).toPath());
         // Skip header
         return fromLines(lines.subList(1, lines.size()));
     }
@@ -43,7 +43,7 @@ public class RelevantTreatmentApproachCurationFile {
                     ImmutableRelevantTreatmentApprochCurationEntry.builder()
                             .curationType(RelevantTreatmentApproachCurationType.valueOf(values[0]))
                             .curationKey(entryKey)
-                            .curatedtreatmentApproach(values.length == 6 ? values[5] : null)
+                            .curatedTreatmentApproach(values.length == 6 ? values[5] : null)
                             .build());
         }
         return mapEntry;

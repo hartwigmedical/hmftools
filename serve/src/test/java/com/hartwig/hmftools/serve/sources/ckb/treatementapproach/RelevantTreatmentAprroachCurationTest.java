@@ -44,7 +44,7 @@ public class RelevantTreatmentAprroachCurationTest {
                         EvidenceDirection.RESPONSIVE,
                         Strings.EMPTY));
 
-        RelevantTreatmentAprroachCuration curator = new RelevantTreatmentAprroachCuration(curationEntries);
+        RelevantTreatmentAproachCuration curator = new RelevantTreatmentAproachCuration(curationEntries);
 
         RelevantTreatmentApprochCurationEntryKey keyMatch1 = ImmutableRelevantTreatmentApprochCurationEntryKey.builder()
                 .treatment("Olutasidenib")
@@ -79,7 +79,7 @@ public class RelevantTreatmentAprroachCurationTest {
         return ImmutableRelevantTreatmentApprochCurationEntry.builder()
                 .curationType(type)
                 .curationKey(canGenerateCurationKey(treatment, treatmentApproach, event, level, direction))
-                .curatedtreatmentApproach(curation)
+                .curatedTreatmentApproach(curation)
                 .build();
     }
 

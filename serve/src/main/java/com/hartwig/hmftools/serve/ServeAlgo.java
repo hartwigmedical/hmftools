@@ -42,7 +42,7 @@ import com.hartwig.hmftools.serve.sources.iclusion.IclusionReader;
 import com.hartwig.hmftools.serve.sources.vicc.ViccExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.ViccExtractorFactory;
 import com.hartwig.hmftools.serve.sources.vicc.ViccReader;
-import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentAprroachCuration;
+import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentAproachCuration;
 import com.hartwig.hmftools.vicc.annotation.ViccClassificationConfig;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
@@ -146,7 +146,7 @@ public class ServeAlgo {
 
         Map<RelevantTreatmentApprochCurationEntryKey, RelevantTreatmentApprochCurationEntry> treatmentApproachMap = RelevantTreatmentApproachCurationFile.read(ckbDrugCurationTsv);
 
-        RelevantTreatmentAprroachCuration curator = new RelevantTreatmentAprroachCuration(treatmentApproachMap);
+        RelevantTreatmentAproachCuration curator = new RelevantTreatmentAproachCuration(treatmentApproachMap);
 
         LOGGER.info("Running CKB knowledge extraction");
         return extractor.extract(ckbEntries, curator);
