@@ -47,6 +47,7 @@ known_hotspot_file | Known hotspot SVs, matches known-pair fusions as used by Li
 filter_sgls | Filter SGLs from output VCF entirely
 pon_distance | Buffer distance for matching PON entries
 min_qual_rescue_mobile_element_insertion | Min QUAL to rescue a mobile LINE insertion, default = 500
+repeat_mask_file | Resource file for repeat masker annotation (avaialable from resources), eg. 38.fa.out.gz
 
 ### Filtering Arguments
 See config for filters in the Hard and Soft filters sections below.
