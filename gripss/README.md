@@ -16,6 +16,7 @@ java -jar gripss.jar \
    -pon_sgl_file /path/to/gridss_pon_single_breakend.bed \
    -pon_sv_file /path/to/gridss_pon_breakpoint.bedpe \
    -known_hotspot_file /path/to/KnownFusionPairs.bedpe \
+   -repeat_mask_file /path_to/37.fa.out.gz \
    -vcf /path/to/SAMPLE_T.gridss.unfiltered.vcf.gz \
    -output_dir /output_dir/ 
 ```
@@ -46,6 +47,7 @@ reference | Reference ID
 pon_sgl_file | PON for SGL breakends
 pon_sv_file | PON for SVs
 known_hotspot_file | Known hotspot SVs, matches known-pair fusions as used by Linx
+repeat_mask_file | Repeat mask file
 filter_sgls | Filter SGLs from output VCF entirely
 pon_distance | Buffer distance for matching PON entries
 min_qual_rescue_mobile_element_insertion | Min QUAL to rescue a mobile LINE insertion, default = 500

@@ -202,6 +202,7 @@ public class RepeatMaskAnnotations
             String line = null;
             String currentChr = "";
             List<RepeatMaskData> entries = null;
+            int index = 0;
 
             // first 3 lines contain the header, then expect columns as:
             // SW     perc perc perc  query      position in query           matching       repeat              position in  repeat
@@ -214,7 +215,6 @@ public class RepeatMaskAnnotations
 
             while((line = fileReader.readLine()) != null)
             {
-                // String lineDelim = line.replaceAll(" ", ",");
                 final String[] values = line.trim().split("\\s{1,}", -1);
 
                 String chromosome = refGenomeVersion.versionedChromosome(values[4]);
@@ -229,15 +229,25 @@ public class RepeatMaskAnnotations
                     mChrDataMap.put(chromosome, entries);
                 }
 
-                // note BED start position adjustment
-                BaseRegion region = new BaseRegion(Integer.parseInt(values[5]) + 1, Integer.parseInt(values[6]));
-                int id = Integer.parseInt(values[14]);
-                int swScore = Integer.parseInt(values[0]);
-                char orientation = values[8].charAt(0);
-                String classType = values[10];
-                String repeat = values[9];
+                try
+                {
+                    // note BED start position adjustment
+                    BaseRegion region = new BaseRegion(Integer.parseInt(values[5]) + 1, Integer.parseInt(values[6]));
+                    int id = Integer.parseInt(values[14]);
+                    int swScore = Integer.parseInt(values[0]);
+                    char orientation = values[8].charAt(0);
+                    String classType = values[10];
+                    String repeat = values[9];
 
-                entries.add(new RepeatMaskData(id, region, swScore, orientation, repeat, classType));
+                    entries.add(new RepeatMaskData(id, region, swScore, orientation, repeat, classType));
+                }
+                catch(Exception e)
+                {
+                    GR_LOGGER.error("invalid RM file entry: index({}) line({})", line, index);
+                    return false;
+                }
+
+                ++index;
             }
 
             GR_LOGGER.info("loaded {} repeat-mask entries from file({})",
