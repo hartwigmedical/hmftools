@@ -68,7 +68,7 @@ public class ActionableTrialFactory {
                 .treatment(ImmutableTreatment.builder()
                         .treament(trial.acronym())
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
-                        .relevantTreatmentApproaches(Sets.newHashSet("study"))
+                        .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
