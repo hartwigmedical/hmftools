@@ -76,7 +76,6 @@ public class JunctionsTest
 
         addRead(suppRead2, CANDIDATE_SUPPORT);
 
-        // a read group starting in the first bucket but with the junction in the next
         ReadRecord read5 = ReadRecord.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 950, REF_BASES.substring(20, 120), "100M"));
 
@@ -104,14 +103,13 @@ public class JunctionsTest
         ReadRecord suppRead4 = ReadRecord.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 990, REF_BASES.substring(0, 73), "70M3S"));
 
-        // partitionBuckets.findBucket(readGroup1.minStartPosition()).addSupportingRead(suppRead4);
         addRead(suppRead4, CANDIDATE_SUPPORT);
 
         mJunctionTracker.assignFragments();
 
         assertEquals(4, mJunctionTracker.junctions().size());
-        assertEquals(1, mJunctionTracker.junctions().get(0).supportingFragmentCount());
-        assertEquals(1, mJunctionTracker.junctions().get(1).supportingFragmentCount());
+        assertEquals(1, mJunctionTracker.junctions().get(0).exactSupportFragmentCount());
+        assertEquals(1, mJunctionTracker.junctions().get(1).exactSupportFragmentCount());
         assertEquals(3, mJunctionTracker.junctions().get(2).supportingFragmentCount());
         assertEquals(4, mJunctionTracker.junctions().get(3).supportingFragmentCount());
     }
@@ -157,8 +155,8 @@ public class JunctionsTest
         assertEquals(4, mJunctionTracker.junctions().size());
         assertEquals(119, mJunctionTracker.junctions().get(0).Position);
         assertEquals(160, mJunctionTracker.junctions().get(1).Position);
-        assertEquals(1, mJunctionTracker.junctions().get(0).SupportingGroups.size());
-        assertEquals(1, mJunctionTracker.junctions().get(1).SupportingGroups.size());
+        assertEquals(1, mJunctionTracker.junctions().get(0).exactSupportFragmentCount());
+        assertEquals(1, mJunctionTracker.junctions().get(1).exactSupportFragmentCount());
 
         assertEquals(241, mJunctionTracker.junctions().get(2).Position);
         assertEquals(277, mJunctionTracker.junctions().get(3).Position);

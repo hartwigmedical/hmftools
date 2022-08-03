@@ -3,8 +3,11 @@ package com.hartwig.hmftools.svprep.reads;
 import static java.lang.String.format;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class JunctionData
 {
@@ -14,7 +17,10 @@ public class JunctionData
     public final ReadRecord InitialRead;
     public final List<ReadGroup> JunctionGroups; // with a read matching the junction
     public final List<ReadGroup> SupportingGroups;
+    public final List<ReadGroup> ExactSupportGroups;
     public final List<RemoteJunction> RemoteJunctions;
+
+    public final Map<ReadType,List<ReadRecord>> ReadTypeReads;
 
     private boolean mInternalIndel;
     private boolean mDiscordantGroup;
@@ -28,7 +34,14 @@ public class JunctionData
 
         JunctionGroups = Lists.newArrayList();
         SupportingGroups = Lists.newArrayList();
+        ExactSupportGroups = Lists.newArrayList();
         RemoteJunctions = Lists.newArrayList();
+        ReadTypeReads = Maps.newHashMap();
+
+        ReadTypeReads.put(ReadType.JUNCTION, Lists.newArrayList());
+        ReadTypeReads.put(ReadType.SUPPORT, Lists.newArrayList());
+        ReadTypeReads.put(ReadType.EXACT_SUPPORT, Lists.newArrayList());
+
         InitialRead = read;
 
         mHotspot = false;
@@ -41,6 +54,8 @@ public class JunctionData
 
     public int junctionFragmentCount() { return JunctionGroups.size(); }
     public int supportingFragmentCount() { return SupportingGroups.size(); }
+    public int exactSupportFragmentCount() { return ExactSupportGroups.size(); }
+    public int totalFragmentCount() { return JunctionGroups.size() + SupportingGroups.size() + ExactSupportGroups.size(); }
 
     public boolean hotspot() { return mHotspot; }
     public void markHotspot() { mHotspot = true; }
@@ -53,6 +68,14 @@ public class JunctionData
 
     public void setDepth(int depth) { mDepth = depth; }
     public int depth() { return mDepth; }
+
+    public void addReadType(final ReadRecord read, final ReadType type)
+    {
+        if(ReadTypeReads.containsKey(type))
+        {
+            ReadTypeReads.get(type).add(read);
+        }
+    }
 
     public void addRemoteJunction(final RemoteJunction remoteJunction)
     {
@@ -68,7 +91,8 @@ public class JunctionData
 
     public String toString()
     {
-        return format("loc(%d:%d) frags(junc=%d supp=%d) remotes(%d)",
-                Position, Orientation, junctionFragmentCount(), supportingFragmentCount(), RemoteJunctions.size());
+        return format("loc(%d:%d) frags(junc=%d exact=%d supp=%d) remotes(%d)",
+                Position, Orientation, junctionFragmentCount(), exactSupportFragmentCount(), supportingFragmentCount(),
+                RemoteJunctions.size());
     }
 }

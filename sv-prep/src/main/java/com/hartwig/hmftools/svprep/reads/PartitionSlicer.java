@@ -283,7 +283,7 @@ public class PartitionSlicer
         }
 
         mStats.JunctionCount += mJunctionTracker.junctions().size();
-        int junctionFragments = (int)junctionGroups.stream().filter(x -> x.isJunctionFragment()).count();
+        int junctionFragments = (int)junctionGroups.stream().filter(x -> x.hasJunctionRead()).count();
         mStats.JunctionFragmentCount += junctionFragments;
         mStats.SupportingFragmentCount += junctionGroups.size() - junctionFragments;
         mStats.InitialSupportingFragmentCount += mJunctionTracker.initialSupportingFrags();

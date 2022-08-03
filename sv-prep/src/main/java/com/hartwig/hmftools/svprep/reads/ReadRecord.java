@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.svprep.reads.ReadType.NO_SUPPORT;
+import static com.hartwig.hmftools.svprep.reads.ReadType.rank;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
@@ -93,17 +94,6 @@ public class ReadRecord
             return isReadReversed() ? NEG_ORIENT : POS_ORIENT;
     }
 
-    public byte mateOrientation()
-    {
-        // first in pair has orientation of +1 if not reversed, and vice versa for the second in the pair
-        boolean mateReversed = hasFlag(SAMFlag.MATE_REVERSE_STRAND);
-
-        if(!isFirstOfPair())
-            return !mateReversed ? POS_ORIENT : NEG_ORIENT;
-        else
-            return mateReversed ? NEG_ORIENT : POS_ORIENT;
-    }
-
     public int flags() { return mRecord.getFlags(); }
     public Cigar cigar() { return mRecord.getCigar(); }
     public boolean isReadReversed() { return ( mRecord.getFlags() & SAMFlag.READ_REVERSE_STRAND.intValue()) != 0; }
@@ -123,7 +113,14 @@ public class ReadRecord
     public void setFilters(int filters) { mFilters = filters; }
     public int filters() { return mFilters; }
 
-    public void setReadType(ReadType type) { mReadType = type; }
+    public void setReadType(ReadType type) { setReadType(type, false); }
+
+    public void setReadType(ReadType type, boolean checkRank)
+    {
+        if(!checkRank || rank(type) > rank(mReadType)) // keep the highest
+            mReadType = type;
+    }
+
     public ReadType readType() { return mReadType; }
 
     public void setWritten() { mWritten = true; }

@@ -204,62 +204,47 @@ public class ResultsWriter
                 boolean hasPloyAT = false;
                 boolean expectLeftClipped = junctionData.Orientation == NEG_ORIENT;
 
-                for(ReadGroup readGroup : junctionData.JunctionGroups)
+                for(ReadRecord read : junctionData.ReadTypeReads.get(ReadType.JUNCTION))
                 {
-                    for(ReadRecord read : readGroup.reads())
+                    // check the read supports this junction (it can only support another junction)
+                    boolean supportsJunction =
+                            (expectLeftClipped && read.start() == junctionData.Position && read.cigar().isLeftClipped())
+                            || (!expectLeftClipped && read.end() == junctionData.Position && read.cigar().isRightClipped());
+
+                    if(!supportsJunction)
+                        continue;
+
+                    if(ReadFilterType.isSet(read.filters(), MIN_MAP_QUAL))
+                        ++lowMapQualFrags;
+
+                    maxMapQual = max(maxMapQual, read.mapQuality());
+
+                    if(!junctionData.internalIndel())
                     {
-                        if(read.readType() != ReadType.JUNCTION)
-                            continue;
+                        if(!hasPloyAT)
+                            hasPloyAT = hasPolyATSoftClip(read, expectLeftClipped);
 
-                        // check the read supports this junction (it can only support another junction)
-                        boolean supportsJuncction =
-                                (expectLeftClipped && read.start() == junctionData.Position && read.cigar().isLeftClipped())
-                                || (!expectLeftClipped && read.end() == junctionData.Position && read.cigar().isRightClipped());
+                        int scLength = expectLeftClipped ?
+                                read.cigar().getFirstCigarElement().getLength() : read.cigar().getLastCigarElement().getLength();
 
-                        if(!supportsJuncction)
-                            continue;
-
-                        if(ReadFilterType.isSet(read.filters(), MIN_MAP_QUAL))
-                            ++lowMapQualFrags;
-
-                        maxMapQual = max(maxMapQual, read.mapQuality());
-
-                        if(!junctionData.internalIndel())
+                        if(scLength > maxSoftClip)
                         {
-                            if(!hasPloyAT)
-                                hasPloyAT = hasPolyATSoftClip(read, expectLeftClipped);
-
-                            int scLength = expectLeftClipped ?
-                                    read.cigar().getFirstCigarElement().getLength() : read.cigar().getLastCigarElement().getLength();
-
-                            if(scLength > maxSoftClip)
-                            {
-                                maxSoftClip = scLength;
-                                softClipBases = ReadRecord.getSoftClippedBases(read.record(), expectLeftClipped);
-                            }
+                            maxSoftClip = scLength;
+                            softClipBases = ReadRecord.getSoftClippedBases(read.record(), expectLeftClipped);
                         }
                     }
                 }
 
-                int exactSupportFrags = 0;
-                int discordantFrags = 0;
-                for(ReadGroup readGroup : junctionData.SupportingGroups)
-                {
-                    for(ReadRecord read : readGroup.reads())
-                    {
-                        if(read.readType() == ReadType.EXACT_SUPPORT)
-                        {
-                            ++exactSupportFrags;
-                            maxMapQual = max(maxMapQual, read.mapQuality());
+                int exactSupportFrags = junctionData.ExactSupportGroups.size();
+                int discordantFrags = junctionData.SupportingGroups.size();
 
-                            if(ReadFilterType.isSet(read.filters(), MIN_MAP_QUAL))
-                                ++lowMapQualFrags;
-                        }
-                        else
-                        {
-                            ++discordantFrags;
-                        }
-                    }
+                for(ReadRecord read : junctionData.ReadTypeReads.get(ReadType.EXACT_SUPPORT))
+                {
+                    ++exactSupportFrags;
+                    maxMapQual = max(maxMapQual, read.mapQuality());
+
+                    if(ReadFilterType.isSet(read.filters(), MIN_MAP_QUAL))
+                        ++lowMapQualFrags;
                 }
 
                 mJunctionWriter.write(format("%s,%d,%d,%d,%d,%d,%d,%d",

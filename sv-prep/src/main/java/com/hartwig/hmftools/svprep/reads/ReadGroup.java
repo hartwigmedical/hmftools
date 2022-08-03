@@ -27,6 +27,7 @@ public class ReadGroup
     private Set<Integer> mJunctionPositions;
     private boolean mIsRemoteExpected;
     private boolean mHasRemoteNonSupplementaries;
+    private boolean mRemoved;
 
     public static int MAX_GROUP_READ_COUNT = 4;
 
@@ -39,6 +40,7 @@ public class ReadGroup
         mJunctionPositions = null;
         mIsRemoteExpected = false;
         mHasRemoteNonSupplementaries = false;
+        mRemoved = false;
         addRead(read);
     }
 
@@ -76,25 +78,21 @@ public class ReadGroup
     public boolean hasRemoteNonSupplementaries() { return mHasRemoteNonSupplementaries; }
     public void markHasRemoteNonSupplementaries() { mHasRemoteNonSupplementaries = true; }
 
+    public boolean removed() { return mRemoved; }
+    public void markRemoved() { mRemoved = true; }
+
     public boolean isSimpleComplete()
     {
         // no supplementaries and both reads received
         return mReads.size() == 2 && mReads.stream().allMatch(x -> !x.hasSuppAlignment() && !x.isSupplementaryAlignment());
     }
 
-    public boolean hasTypeAndMapQual(final ReadType type, int minMapQual)
-    {
-        return mReads.stream().anyMatch(x -> x.readType() == type && x.mapQuality() >= minMapQual);
-    }
-
     public boolean allNoSupport() { return mReads.stream().allMatch(x -> x.readType() == ReadType.NO_SUPPORT); }
 
-    public boolean isJunctionFragment()
+    public boolean hasJunctionRead()
     {
         return mReads.stream().anyMatch(x -> x.readType() == JUNCTION);
     }
-
-    // public boolean hasDuplicates() { return mReads.stream().anyMatch(x -> x.hasFlag(SAMFlag.DUPLICATE_READ)); }
 
     public void setGroupState()
     {
@@ -212,4 +210,17 @@ public class ReadGroup
     {
         return suppData != null && region.containsPosition(suppData.Chromosome, suppData.Position);
     }
+
+    public static void addUniqueReadGroups(final Set<String> readIds, final List<ReadGroup> uniqueGroups, final List<ReadGroup> readGroups)
+    {
+        for(ReadGroup readGroup : readGroups)
+        {
+            if(readIds.contains(readGroup.id()))
+                continue;
+
+            readIds.add(readGroup.id());
+            uniqueGroups.add(readGroup);
+        }
+    }
+
 }
