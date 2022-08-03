@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.serve.extraction.codon;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
@@ -24,9 +26,9 @@ public class CodonExtractorTest {
     @Test
     public void canFindByGene() {
         List<DriverGene> driverGenes = createTestDriverGenes();
-        assertEquals(DriverCategory.TSG, CodonExtractor.findByGene(driverGenes, "TP53"));
-        assertEquals(DriverCategory.ONCO, CodonExtractor.findByGene(driverGenes, "KRAS"));
-        assertNull(CodonExtractor.findByGene(driverGenes, "AB"));
+        assertTrue(CodonExtractor.geneInDriverGenes(driverGenes, "TP53"));
+        assertTrue(CodonExtractor.geneInDriverGenes(driverGenes, "KRAS"));
+        assertFalse(CodonExtractor.geneInDriverGenes(driverGenes, "AB"));
     }
 
     @Test
