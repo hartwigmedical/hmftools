@@ -108,21 +108,19 @@ public class GeneLevelExtractor {
     @VisibleForTesting
     GeneLevelAnnotation extractGeneLevelEvent(@NotNull String gene, @NotNull String event) {
         GeneLevelEvent result = GeneLevelEvent.ANY_MUTATION;
+        for (String keyPhrase : genericKeyPhrases) {
+            if (event.contains(keyPhrase)) {
+                result = GeneLevelEvent.ANY_MUTATION;
+            }
+        }
         for (String keyPhrase : activationKeyPhrases) {
             if (event.contains(keyPhrase)) {
                 result = GeneLevelEvent.ACTIVATION;
             }
         }
-
         for (String keyPhrase : inactivationKeyPhrases) {
             if (event.contains(keyPhrase)) {
                 result = GeneLevelEvent.INACTIVATION;
-            }
-        }
-
-        for (String keyPhrase : genericKeyPhrases) {
-            if (event.contains(keyPhrase)) {
-                result = GeneLevelEvent.ANY_MUTATION;
             }
         }
 
