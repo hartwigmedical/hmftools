@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.svprep.reads.ReadFilterType.POLY_G_SC;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.SOFT_CLIP_LOW_BASE_QUAL;
 import static com.hartwig.hmftools.svprep.reads.ReadRecord.hasPolyATSoftClip;
 
+import static htsjdk.samtools.SAMFlag.DUPLICATE_READ;
 import static htsjdk.samtools.SAMFlag.MATE_UNMAPPED;
 import static htsjdk.samtools.SAMFlag.PROPER_PAIR;
 import static htsjdk.samtools.SAMFlag.READ_UNMAPPED;
@@ -88,7 +89,7 @@ public class ResultsWriter
 
             writer.write("ReadId,GroupCount,ExpectedCount,GroupStatus,HasExternal,ReadType,Chromosome,PosStart,PosEnd,Cigar");
             writer.write(",FragLength,MateChr,MatePosStart,MapQual,SuppData,Flags,Filters");
-            writer.write(",FirstInPair,ReadReversed,Proper,Unmapped,MateUnmapped,Supplementary,JunctionPositions");
+            writer.write(",FirstInPair,ReadReversed,Proper,Unmapped,MateUnmapped,Supplementary,Duplicate,JunctionPositions");
 
             writer.newLine();
 
@@ -150,9 +151,9 @@ public class ResultsWriter
                     read.fragmentInsertSize(), read.MateChromosome, read.MatePosStart, read.mapQuality(),
                     suppData != null ? suppData.asCsv() : "N/A", read.flags(), read.filters()));
 
-            mReadWriter.write(format(",%s,%s,%s,%s,%s,%s",
+            mReadWriter.write(format(",%s,%s,%s,%s,%s,%s,%s",
                     read.isFirstOfPair(), read.isReadReversed(), read.hasFlag(PROPER_PAIR), read.hasFlag(READ_UNMAPPED),
-                    read.isMateUnmapped(), read.hasFlag(SUPPLEMENTARY_ALIGNMENT)));
+                    read.isMateUnmapped(), read.hasFlag(SUPPLEMENTARY_ALIGNMENT), read.hasFlag(DUPLICATE_READ)));
 
             mReadWriter.write(format(",%s", junctionPositions));
 

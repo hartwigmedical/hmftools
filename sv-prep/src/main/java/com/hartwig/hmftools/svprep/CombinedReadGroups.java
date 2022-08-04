@@ -158,9 +158,10 @@ public class CombinedReadGroups
             return;
 
         // supplementaries logic:
-        // an expected supplementary read, if matched, will collect its actual read that was cached
+        // an expected supplementary read, if matched, will collect its actual read that was cached to then be written to the BAM
         // an actual supplementary read, if matched, is marked as belonging to a read group with non-supplementaries
         // an actual supplementary read, if not matched, caches its actual read with the stored expected read
+        // unclaimed supplementaries are not given back in the purge process since their non-supps are likely duplicates
 
         // only store this read if other remote partitions within this same read group are expected
         // and factor in remote partitions already processed
@@ -196,9 +197,12 @@ public class CombinedReadGroups
         addedReads.add(read);
 
         // cache its actual read if its a supp-only group, in case it's a duplicate
-        if(actualRead != null && readGroup.onlySupplementaries())
+        if(readGroup.onlySupplementaries())
         {
-            read.setCachedRead(actualRead);
+            if(actualRead != null)
+                read.setCachedRead(actualRead);
+
+            read.markSupplementaryOnlyGroup();
         }
 
         // also make a link to this readId from each other expected remote partition back to this read's partition
@@ -304,6 +308,13 @@ public class CombinedReadGroups
                 while(index < reads.size())
                 {
                     ExpectedRead read = reads.get(index);
+
+                    if(read.hasCachedRead() || read.supplementaryOnlyGroup())
+                    {
+                        // unmatched supplementaries likely belong to duplicates are so are dropped now with retrieval of their non-supps
+                        reads.remove(index);
+                        continue;
+                    }
 
                     if(!read.found())
                     {

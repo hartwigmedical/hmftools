@@ -231,7 +231,7 @@ public class PartitionSlicer
     private void writeData()
     {
         boolean captureCompleteGroups = mConfig.writeReads();
-        List<ReadGroup> junctionGroups = mJunctionTracker.formUniqueJunctionGroups();
+        List<ReadGroup> junctionGroups = mJunctionTracker.formUniqueAssignedGroups();
 
         if(captureCompleteGroups)
         {
@@ -240,12 +240,9 @@ public class PartitionSlicer
 
             junctionGroups.forEach(x -> assignReadGroup(x, spanningGroupsMap));
 
-            List<ReadGroup> expectedGroups = mJunctionTracker.expectedGroups();
-            expectedGroups.forEach(x -> assignReadGroup(x, spanningGroupsMap));
-            expectedGroups.forEach(x -> x.reads().forEach(y -> y.setReadType(EXPECTED)));
-
-            int spanningGroups = spanningGroupsMap.size();
-            int totalGroups = junctionGroups.size() + expectedGroups.size();
+            int spanningGroupCount = spanningGroupsMap.size();
+            int totalGroupCount = junctionGroups.size();
+            int expectedGroupCount = (int)junctionGroups.stream().filter(x -> x.groupStatus() == ReadGroupStatus.EXPECTED).count();
 
             final Map<String,List<ExpectedRead>> missedReadsMap = Maps.newHashMap();
             mCombinedReadGroups.processSpanningReadGroups(mRegion, spanningGroupsMap, missedReadsMap);
@@ -254,25 +251,23 @@ public class PartitionSlicer
             List<ReadGroup> recoveredReadGroups = findMissedReads(missedReadsMap);
             mPerCounters[PC_MATE_SLICE].stop();
 
-            if(totalGroups == 0 && missedReadsMap.isEmpty())
+            if(totalGroupCount == 0 && missedReadsMap.isEmpty())
                 return;
 
             int matchedReads = spanningGroupsMap.values().stream().mapToInt(x -> (int)x.reads().stream().filter(y -> y.written()).count()).sum();
 
-            SV_LOGGER.debug("region({}) readGroups({}) complete(local={} spanning={}) expectedNotFound({}) matchedReads({})",
-                    mRegion, totalGroups, totalGroups - spanningGroups, spanningGroups, expectedGroups.size(), matchedReads);
+            SV_LOGGER.debug("region({}) readGroups({}) complete(local={} spanning={}) expected({}) matchedReads({})",
+                    mRegion, totalGroupCount, totalGroupCount - spanningGroupCount, spanningGroupCount, expectedGroupCount, matchedReads);
 
             if(mConfig.WriteTypes.contains(BAM))
             {
                 mWriter.writeBamRecords(junctionGroups);
-                mWriter.writeBamRecords(expectedGroups);
                 mWriter.writeBamRecords(recoveredReadGroups);
             }
 
             if(mConfig.WriteTypes.contains(READS))
             {
                 mWriter.writeReadGroup(junctionGroups);
-                mWriter.writeReadGroup(expectedGroups);
                 mWriter.writeReadGroup(recoveredReadGroups);
             }
         }

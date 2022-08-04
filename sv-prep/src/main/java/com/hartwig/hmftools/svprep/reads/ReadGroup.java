@@ -25,7 +25,6 @@ public class ReadGroup
     private final Set<String> mRemotePartitions; // given that supplementaries are no longer included, this is now 0 or 1 entries
     private int mExpectedReadCount;
     private Set<Integer> mJunctionPositions;
-    private boolean mIsRemoteExpected;
     private boolean mHasRemoteNonSupplementaries;
     private boolean mRemoved;
 
@@ -38,7 +37,6 @@ public class ReadGroup
         mRemotePartitions = Sets.newHashSet();
         mExpectedReadCount = 0;
         mJunctionPositions = null;
-        mIsRemoteExpected = false;
         mHasRemoteNonSupplementaries = false;
         mRemoved = false;
         addRead(read);
@@ -50,7 +48,7 @@ public class ReadGroup
 
     public boolean isComplete() { return mStatus == ReadGroupStatus.COMPLETE; }
 
-    public boolean spansPartitions() { return !mRemotePartitions.isEmpty() || mIsRemoteExpected; }
+    public boolean spansPartitions() { return !mRemotePartitions.isEmpty() || mStatus == ReadGroupStatus.EXPECTED; }
     public int partitionCount() { return mRemotePartitions.size() + 1; }
     public int expectedReadCount() { return mExpectedReadCount; }
     public Set<String> remotePartitions() { return mRemotePartitions; }
@@ -72,9 +70,6 @@ public class ReadGroup
 
     public ReadGroupStatus groupStatus() { return mStatus; }
 
-    public boolean isRemoteExpected() { return mIsRemoteExpected; }
-    public void markRemoteExpected() { mIsRemoteExpected = true; }
-
     public boolean hasRemoteNonSupplementaries() { return mHasRemoteNonSupplementaries; }
     public void markHasRemoteNonSupplementaries() { mHasRemoteNonSupplementaries = true; }
 
@@ -93,6 +88,8 @@ public class ReadGroup
     {
         return mReads.stream().anyMatch(x -> x.readType() == JUNCTION);
     }
+
+    public void setGroupState(final ReadGroupStatus status) { mStatus = status; }
 
     public void setGroupState()
     {

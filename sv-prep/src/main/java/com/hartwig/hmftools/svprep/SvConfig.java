@@ -29,6 +29,8 @@ import static com.hartwig.hmftools.svprep.SvConstants.MIN_SUPPORTING_READ_DISTAN
 import static com.hartwig.hmftools.svprep.WriteType.BAM;
 import static com.hartwig.hmftools.svprep.WriteType.READS;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -73,6 +75,7 @@ public class SvConfig
     public final int MaxPartitionReads;
     public final boolean ApplyDownsampling;
     public final boolean CaptureDepth;
+    public final boolean FindDiscordantGroups;
     public final boolean RetrieveBlacklistMates;
     public final List<ChrBaseRegion> SpecificRegions;
 
@@ -95,6 +98,7 @@ public class SvConfig
     private static final String LOG_READ_IDS = "log_read_ids";
     private static final String MAX_PARTITION_READS = "max_partition_reads";
     private static final String APPLY_DOWNSAMPLING = "apply_downsampling";
+    private static final String FIND_DISCORDANT_GROUPS = "discordant_groups";
     private static final String CAPTURE_DEPTH = "capture_depth";
 
     public SvConfig(final CommandLine cmd)
@@ -167,11 +171,36 @@ public class SvConfig
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "1"));
         MaxPartitionReads = Integer.parseInt(cmd.getOptionValue(MAX_PARTITION_READS, "0"));
         CaptureDepth = cmd.hasOption(CAPTURE_DEPTH);
+        FindDiscordantGroups = cmd.hasOption(FIND_DISCORDANT_GROUPS);
         ApplyDownsampling = cmd.hasOption(APPLY_DOWNSAMPLING);
         RetrieveBlacklistMates = false;
     }
 
-    public boolean isValid() { return mIsValid; }
+    public boolean isValid()
+    {
+        if(!mIsValid)
+            return false;
+
+        if(!Files.exists(Paths.get(BamFile)))
+        {
+            SV_LOGGER.error("invalid bam file path: {}", BamFile);
+            return false;
+        }
+
+        if(!Files.exists(Paths.get(RefGenomeFile)))
+        {
+            SV_LOGGER.error("invalid ref genome file: {}", RefGenomeFile);
+            return false;
+        }
+
+        if(ExistingJunctionFile != null && !Files.exists(Paths.get(ExistingJunctionFile)))
+        {
+            SV_LOGGER.error("invalid existing junctions file: {}", ExistingJunctionFile);
+            return false;
+        }
+
+        return true;
+    }
 
     public String formFilename(final WriteType writeType)
     {
@@ -230,6 +259,7 @@ public class SvConfig
 
         CalcFragmentLength = false;
         CaptureDepth = false;
+        FindDiscordantGroups = true;
         WriteTypes = Sets.newHashSet();
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();
@@ -261,6 +291,7 @@ public class SvConfig
         options.addOption(LOG_READ_IDS, true, "Log specific read IDs, separated by ';'");
         options.addOption(MAX_PARTITION_READS, true, "Limit to stop processing reads in partition, for debug");
         options.addOption(CAPTURE_DEPTH, false, "Capture depth for junctions");
+        options.addOption(FIND_DISCORDANT_GROUPS, false, "Find junctions from discordant groups");
         options.addOption(APPLY_DOWNSAMPLING, false, "Apply downsampling of reads in high-depth regions");
         options.addOption(THREADS, true, "Thread count");
         ReadFilterConfig.addCmdLineArgs(options);

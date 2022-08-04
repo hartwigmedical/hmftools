@@ -35,6 +35,9 @@ public class SvPrepApplication
 
     public void run()
     {
+        if(!mConfig.isValid())
+            System.exit(1);
+
         SV_LOGGER.info("sample({}) starting SV prep", mConfig.SampleId);
 
         long startTimeMs = System.currentTimeMillis();

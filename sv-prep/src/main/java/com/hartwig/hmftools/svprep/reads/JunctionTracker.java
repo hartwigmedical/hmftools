@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.svprep.reads.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.svprep.reads.ReadGroup.addUniqueReadGroups;
 import static com.hartwig.hmftools.svprep.reads.ReadRecord.findIndelCoords;
 import static com.hartwig.hmftools.svprep.reads.ReadType.EXACT_SUPPORT;
+import static com.hartwig.hmftools.svprep.reads.ReadType.EXPECTED;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
 import static com.hartwig.hmftools.svprep.reads.ReadType.NO_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.SUPPORT;
@@ -52,11 +53,13 @@ public class JunctionTracker
     private final Map<String,ReadGroup> mReadGroupMap; // keyed by readId
     private final List<ReadGroup> mReadGroups; // order by first read's start position
     private final Set<String> mExpectedReadIds; // as indicated by another partition
+    private final List<ReadGroup> mExpectedReadGroups;
 
     private final List<JunctionData> mJunctions; // ordered by position
     private int mLastJunctionIndex;
 
     private int mInitialSupportingFrags;
+    private final boolean mFindDiscordantGroups;
     private final int[] mBaseDepth;
 
     public JunctionTracker(
@@ -79,16 +82,19 @@ public class JunctionTracker
         mReadGroupMap = Maps.newHashMap();
         mReadGroups = Lists.newArrayList();
         mExpectedReadIds = Sets.newHashSet();
+        mExpectedReadGroups = Lists.newArrayList();
         mJunctions = Lists.newArrayList();
         mLastJunctionIndex = -1;
         mInitialSupportingFrags = 0;
+
+        mFindDiscordantGroups = config.FindDiscordantGroups;
 
         mBaseDepth = config.CaptureDepth ? new int[mRegion.baseLength()] : null;
     }
 
     public List<JunctionData> junctions() { return mJunctions; }
 
-    public List<ReadGroup> formUniqueJunctionGroups()
+    public List<ReadGroup> formUniqueAssignedGroups()
     {
         // fragments can be added to more than one junction, so now collect up the unique ones
         List<ReadGroup> junctionGroups = Lists.newArrayList();
@@ -101,15 +107,18 @@ public class JunctionTracker
             addUniqueReadGroups(readIds, junctionGroups, junction.ExactSupportGroups);
         }
 
-        return junctionGroups;
-    }
+        // also gather up expected remote reads and mark them as such
+        for(ReadGroup readGroup : mExpectedReadGroups)
+        {
+            if(readIds.contains(readGroup.id()))
+                continue;
 
-    public List<ReadGroup> expectedGroups()
-    {
-        // groups not required by a junction but expected from other partitions
-        return mReadGroupMap.values().stream()
-                .filter(x -> x.isRemoteExpected() && x.junctionPositions() == null)
-                .collect(Collectors.toList());
+            readGroup.setGroupState(ReadGroupStatus.EXPECTED);
+            readGroup.reads().forEach(x -> x.setReadType(EXPECTED));
+            junctionGroups.add(readGroup);
+        }
+
+        return junctionGroups;
     }
 
     public int initialSupportingFrags() { return mInitialSupportingFrags; }
@@ -172,7 +181,7 @@ public class JunctionTracker
 
             if(mExpectedReadIds.contains(readGroup.id()))
             {
-                readGroup.markRemoteExpected();
+                mExpectedReadGroups.add(readGroup);
                 mExpectedReadIds.remove(readGroup.id());
             }
 
@@ -236,22 +245,30 @@ public class JunctionTracker
                 }
             }
 
-            if(!hasBlacklistedRead && isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMax()))
+            if(mFindDiscordantGroups && !hasBlacklistedRead && isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMax()))
             {
                 candidateDiscordantGroups.add(readGroup);
             }
         }
 
-        if(candidateDiscordantGroups.size() > 1000)
+        if(mFindDiscordantGroups)
         {
-            SV_LOGGER.info("region({}) checking discordant groups from {} read groups", mRegion, candidateDiscordantGroups.size());
+            if(candidateDiscordantGroups.size() > 1000)
+            {
+                SV_LOGGER.debug("region({}) checking discordant groups from {} read groups", mRegion, candidateDiscordantGroups.size());
+            }
+
+            List<JunctionData> discordantJunctions = formDiscordantJunctions(candidateDiscordantGroups);
+
+            if(!discordantJunctions.isEmpty())
+            {
+                SV_LOGGER.debug("region({}) found discordant group junctions", mRegion, discordantJunctions.size());
+                discordantJunctions.forEach(x -> addJunction(x));
+            }
+
+            // no obvious need to re-check support at these junctions since all proximate facing read groups have already been tested
+            // and allocated to these groups
         }
-
-        List<JunctionData> discordantJunctions = formDiscordantJunctions(candidateDiscordantGroups);
-        discordantJunctions.forEach(x -> addJunction(x));
-
-        // no obvious need to re-check support at these junctions since all proximate facing read groups have already been tested
-        // and allocated to these groups
 
         if(mBaseDepth != null)
         {
