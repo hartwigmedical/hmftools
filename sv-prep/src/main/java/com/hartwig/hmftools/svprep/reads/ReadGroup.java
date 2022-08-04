@@ -1,9 +1,8 @@
 package com.hartwig.hmftools.svprep.reads;
 
 import static com.hartwig.hmftools.svprep.CombinedReadGroups.formChromosomePartition;
+import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
-
-import static htsjdk.samtools.SAMFlag.SUPPLEMENTARY_ALIGNMENT;
 
 import java.util.List;
 import java.util.Set;
@@ -14,9 +13,6 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
-import htsjdk.samtools.SAMFlag;
-import htsjdk.samtools.SAMRecord;
-
 public class ReadGroup
 {
     private final List<ReadRecord> mReads;
@@ -25,7 +21,8 @@ public class ReadGroup
     private final Set<String> mRemotePartitions; // given that supplementaries are no longer included, this is now 0 or 1 entries
     private int mExpectedReadCount;
     private Set<Integer> mJunctionPositions;
-    private boolean mHasRemoteNonSupplementaries;
+    private boolean mHasRemoteJunctionReads;
+    private boolean mConditionalOnRemoteReads;
     private boolean mRemoved;
 
     public static int MAX_GROUP_READ_COUNT = 4;
@@ -37,7 +34,8 @@ public class ReadGroup
         mRemotePartitions = Sets.newHashSet();
         mExpectedReadCount = 0;
         mJunctionPositions = null;
-        mHasRemoteNonSupplementaries = false;
+        mHasRemoteJunctionReads = false;
+        mConditionalOnRemoteReads = false;
         mRemoved = false;
         addRead(read);
     }
@@ -70,8 +68,10 @@ public class ReadGroup
 
     public ReadGroupStatus groupStatus() { return mStatus; }
 
-    public boolean hasRemoteNonSupplementaries() { return mHasRemoteNonSupplementaries; }
-    public void markHasRemoteNonSupplementaries() { mHasRemoteNonSupplementaries = true; }
+    public boolean hasRemoteJunctionReads() { return mHasRemoteJunctionReads; }
+    public void markHasRemoteJunctionReads() { mHasRemoteJunctionReads = true; }
+
+    public void markConditionalOnRemoteReads() { mConditionalOnRemoteReads = true; }
 
     public boolean removed() { return mRemoved; }
     public void markRemoved() { mRemoved = true; }
@@ -93,7 +93,7 @@ public class ReadGroup
 
     public void setGroupState()
     {
-        if(onlySupplementaries())
+        if(conditionalOnRemoteReads())
         {
             if(mReads.size() == 2)
                 mStatus = ReadGroupStatus.PAIRED;
@@ -138,7 +138,10 @@ public class ReadGroup
             mStatus = ReadGroupStatus.INCOMPLETE;
     }
 
-    public boolean onlySupplementaries() { return mReads.stream().allMatch(x -> x.isSupplementaryAlignment()); }
+    public boolean conditionalOnRemoteReads()
+    {
+        return mConditionalOnRemoteReads || mReads.stream().allMatch(x -> x.isSupplementaryAlignment() || x.readType() == CANDIDATE_SUPPORT);
+    }
 
     public void setPartitionCount(final ChrBaseRegion region, int partitionSize)
     {

@@ -54,6 +54,7 @@ public class JunctionTracker
     private final List<ReadGroup> mReadGroups; // order by first read's start position
     private final Set<String> mExpectedReadIds; // as indicated by another partition
     private final List<ReadGroup> mExpectedReadGroups;
+    private final List<ReadGroup> mRemoteCandidateReadGroups; // reads with their mate(s) in another partition, but not suppporting a junction
 
     private final List<JunctionData> mJunctions; // ordered by position
     private int mLastJunctionIndex;
@@ -83,6 +84,7 @@ public class JunctionTracker
         mReadGroups = Lists.newArrayList();
         mExpectedReadIds = Sets.newHashSet();
         mExpectedReadGroups = Lists.newArrayList();
+        mRemoteCandidateReadGroups = Lists.newArrayList();
         mJunctions = Lists.newArrayList();
         mLastJunctionIndex = -1;
         mInitialSupportingFrags = 0;
@@ -119,6 +121,13 @@ public class JunctionTracker
         }
 
         return junctionGroups;
+    }
+
+    public List<ReadGroup> getRemoteCandidateReadGroups()
+    {
+        // gather up groups with a read in another partition and not linked to a junction
+        // to then pass to the combined cache to avoid a latter reslice
+        return mRemoteCandidateReadGroups.stream().filter(x -> x.junctionPositions() == null).collect(Collectors.toList());
     }
 
     public int initialSupportingFrags() { return mInitialSupportingFrags; }
@@ -243,6 +252,10 @@ public class JunctionTracker
 
                     readGroup.addJunctionPosition(junctionData.Position);
                 }
+            }
+            else
+            {
+                mRemoteCandidateReadGroups.add(readGroup);
             }
 
             if(mFindDiscordantGroups && !hasBlacklistedRead && isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMax()))

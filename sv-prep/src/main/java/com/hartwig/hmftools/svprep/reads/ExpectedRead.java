@@ -20,7 +20,7 @@ public class ExpectedRead
     private boolean mFound;
 
     private ReadRecord mCachedRead;
-    private boolean mSupplementaryOnlyGroup;
+    private boolean mRemoteCandidateGroup;
 
     public ExpectedRead(final String chromosome, final int position, boolean firstInPair, boolean isSupplementary, boolean found)
     {
@@ -32,7 +32,7 @@ public class ExpectedRead
         mExpectedMatchCount = 1;
         mMatchCount = 0;
         mCachedRead = null;
-        mSupplementaryOnlyGroup = false;
+        mRemoteCandidateGroup = false;
     }
 
     public boolean fullyMatched() { return mMatchCount >= mExpectedMatchCount; }
@@ -48,8 +48,8 @@ public class ExpectedRead
     public boolean hasCachedRead() { return mCachedRead != null; }
     public ReadRecord getCachedRead() { return mCachedRead; }
 
-    public boolean supplementaryOnlyGroup() { return mSupplementaryOnlyGroup; }
-    public void markSupplementaryOnlyGroup() { mSupplementaryOnlyGroup = true; }
+    public boolean remoteCandidateGroup() { return mRemoteCandidateGroup; }
+    public void markRemoteCandidateGroup() { mRemoteCandidateGroup = true; }
 
     public boolean matches(final ExpectedRead other)
     {

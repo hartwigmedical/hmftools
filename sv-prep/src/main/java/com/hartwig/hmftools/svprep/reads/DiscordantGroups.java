@@ -114,7 +114,6 @@ public final class DiscordantGroups
     {
         // only the first read is used and so only that is checked
         return isDiscordantRead(readGroup.reads().get(0), maxFragmentLength);
-        // return readGroup.reads().stream().anyMatch(x -> isDiscordantRead(x, maxFragmentLength));
     }
 
     private static boolean isDiscordantRead(final ReadRecord read, final int maxFragmentLength)

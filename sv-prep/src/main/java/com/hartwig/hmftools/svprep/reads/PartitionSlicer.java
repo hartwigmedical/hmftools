@@ -235,10 +235,14 @@ public class PartitionSlicer
 
         if(captureCompleteGroups)
         {
-            // read groups that span chromosomes or partitions need to be complete, so gather up their state to enable this
+            // read groups that span chromosomes or partitions need to be completed, so gather up their state to enable this
             Map<String,ReadGroup> spanningGroupsMap = Maps.newHashMap();
 
             junctionGroups.forEach(x -> assignReadGroup(x, spanningGroupsMap));
+
+            // inform the cache of incomplete groups with a possible remote junction or support read to avoid reslicing for these later
+            List<ReadGroup> remoteCandidateGroups = mJunctionTracker.getRemoteCandidateReadGroups();
+            remoteCandidateGroups.forEach(x -> assignReadGroup(x, spanningGroupsMap));
 
             int spanningGroupCount = spanningGroupsMap.size();
             int totalGroupCount = junctionGroups.size();

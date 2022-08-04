@@ -77,7 +77,7 @@ public class SvPrepApplication
             System.gc();
         }
 
-        mCombinedReadGroups.writeRemainingReadGroups(mWriter);
+        mCombinedReadGroups.logStats(mWriter);
 
         mWriter.close();
 

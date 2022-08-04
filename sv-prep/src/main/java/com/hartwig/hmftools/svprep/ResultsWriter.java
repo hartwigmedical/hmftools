@@ -18,10 +18,8 @@ import static com.hartwig.hmftools.svprep.reads.ReadFilterType.SOFT_CLIP_LOW_BAS
 import static com.hartwig.hmftools.svprep.reads.ReadRecord.hasPolyATSoftClip;
 
 import static htsjdk.samtools.SAMFlag.DUPLICATE_READ;
-import static htsjdk.samtools.SAMFlag.MATE_UNMAPPED;
 import static htsjdk.samtools.SAMFlag.PROPER_PAIR;
 import static htsjdk.samtools.SAMFlag.READ_UNMAPPED;
-import static htsjdk.samtools.SAMFlag.SECONDARY_ALIGNMENT;
 import static htsjdk.samtools.SAMFlag.SUPPLEMENTARY_ALIGNMENT;
 
 import java.io.BufferedWriter;
@@ -38,8 +36,6 @@ import com.hartwig.hmftools.svprep.reads.ReadGroupStatus;
 import com.hartwig.hmftools.svprep.reads.ReadRecord;
 import com.hartwig.hmftools.svprep.reads.ReadType;
 import com.hartwig.hmftools.svprep.reads.RemoteJunction;
-
-import htsjdk.samtools.SAMRecord;
 
 public class ResultsWriter
 {
@@ -107,7 +103,7 @@ public class ResultsWriter
     {
         for(ReadGroup readGroup : readGroups)
         {
-            if(readGroup.onlySupplementaries() && !readGroup.hasRemoteNonSupplementaries())
+            if(readGroup.conditionalOnRemoteReads() && !readGroup.hasRemoteJunctionReads())
                 continue;
 
             String junctionPosStr = "";
@@ -297,7 +293,7 @@ public class ResultsWriter
 
         for(ReadGroup readGroup : readGroups)
         {
-            if(readGroup.onlySupplementaries() && !readGroup.hasRemoteNonSupplementaries())
+            if(readGroup.conditionalOnRemoteReads() && !readGroup.hasRemoteJunctionReads())
                 continue;
 
             readGroup.reads().stream().filter(x -> !filterBamRecord(x)).forEach(x -> mBamWriter.writeRecord(x.record()));

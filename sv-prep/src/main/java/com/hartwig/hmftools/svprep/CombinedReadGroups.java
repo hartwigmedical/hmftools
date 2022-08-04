@@ -3,6 +3,8 @@ package com.hartwig.hmftools.svprep;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
+import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
+import static com.hartwig.hmftools.svprep.reads.ReadType.EXPECTED;
 
 import java.util.List;
 import java.util.Map;
@@ -18,6 +20,7 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.reads.ExpectedRead;
 import com.hartwig.hmftools.svprep.reads.ReadGroup;
 import com.hartwig.hmftools.svprep.reads.ReadRecord;
+import com.hartwig.hmftools.svprep.reads.ReadType;
 
 public class CombinedReadGroups
 {
@@ -46,6 +49,7 @@ public class CombinedReadGroups
 
     private int mLastSnapshotCount;
     private int mMatchedGroups;
+    private int mPurgedCandidates;
 
     public CombinedReadGroups(final SvConfig config)
     {
@@ -57,6 +61,7 @@ public class CombinedReadGroups
         mUnmappedReadIds = Sets.newHashSet();
         mLastSnapshotCount = 0;
         mMatchedGroups = 0;
+        mPurgedCandidates = 0;
         mPerfCounter = new PerformanceCounter("ReadMerge");
     }
 
@@ -87,7 +92,26 @@ public class CombinedReadGroups
         if(sourcePartitionMap == null)
             return expectedReadIds;
 
-        sourcePartitionMap.values().forEach(x -> expectedReadIds.addAll(x));
+        // only include readIds from groups with a written read, ie not remote candidates
+        for(Map.Entry<String,Set<String>> entry : sourcePartitionMap.entrySet())
+        {
+            String sourceChrPartition = entry.getKey();
+            Set<String> readIds = entry.getValue();
+
+            Map<String,List<ExpectedRead>> readGroupReads = mChrPartitionReadGroupReads.get(sourceChrPartition);
+
+            for(String readId : readIds)
+            {
+                List<ExpectedRead> reads = readGroupReads.get(readId);
+                if(reads == null || reads.stream().allMatch(x -> x.remoteCandidateGroup()))
+                    continue;
+
+                expectedReadIds.add(readId);
+            }
+        }
+
+        // sourcePartitionMap.values().forEach(x -> expectedReadIds.addAll(x));
+
         return expectedReadIds;
     }
 
@@ -196,13 +220,15 @@ public class CombinedReadGroups
         readGroupReads.add(read);
         addedReads.add(read);
 
-        // cache its actual read if its a supp-only group, in case it's a duplicate
-        if(readGroup.onlySupplementaries())
+        // for groups which are conditional to be written on their mate being a junction or support read, cache their read
+        // this also prevents supplementaries of duplicates being written
+        if(readGroup.conditionalOnRemoteReads())
         {
             if(actualRead != null)
                 read.setCachedRead(actualRead);
 
-            read.markSupplementaryOnlyGroup();
+            read.markRemoteCandidateGroup();
+            // return; // don't register the read ID as expected
         }
 
         // also make a link to this readId from each other expected remote partition back to this read's partition
@@ -250,14 +276,20 @@ public class CombinedReadGroups
             else
                 matchedRead.markFound();
 
-            if(readGroup.onlySupplementaries())
-                readGroup.markHasRemoteNonSupplementaries();
+            if(readGroup.conditionalOnRemoteReads() && !matchedRead.remoteCandidateGroup())
+                readGroup.markHasRemoteJunctionReads();
+            else if(matchedRead.remoteCandidateGroup() && actualRead.readType() == ReadType.EXPECTED)
+                readGroup.markConditionalOnRemoteReads();
         }
         else
         {
-            // pick up supplementaries which were waiting for their group
-            if(matchedRead.hasCachedRead())
+            if(matchedRead.remoteCandidateGroup() && readGroup.reads().stream().allMatch(x -> x.readType() == EXPECTED))
             {
+                readGroup.markConditionalOnRemoteReads();
+            }
+            else if(matchedRead.hasCachedRead() && !readGroup.conditionalOnRemoteReads())
+            {
+                // pick up supplementaries or candidate supporting reads which were waiting for their group
                 readGroup.addRead(matchedRead.getCachedRead());
                 readGroup.setGroupState();
             }
@@ -309,10 +341,12 @@ public class CombinedReadGroups
                 {
                     ExpectedRead read = reads.get(index);
 
-                    if(read.hasCachedRead() || read.supplementaryOnlyGroup())
+                    if(read.hasCachedRead() || read.remoteCandidateGroup())
                     {
                         // unmatched supplementaries likely belong to duplicates are so are dropped now with retrieval of their non-supps
+                        // otherwise are lone candidate reads cached to avoid a re-slice but can now be purged
                         reads.remove(index);
+                        ++mPurgedCandidates;
                         continue;
                     }
 
@@ -356,8 +390,8 @@ public class CombinedReadGroups
 
         if(abs(newCount - mLastSnapshotCount) > LOG_CACH_DIFF)
         {
-            SV_LOGGER.info("spanning partition processed({}) groups cached({} -> {}) matchedGroups({}) unmapped({})",
-                    mProcessedPartitions.size(), mLastSnapshotCount, newCount, mMatchedGroups, mUnmappedReadIds.size());
+            SV_LOGGER.info("spanning partition processed({}) groups cached({} -> {}) matchedGroups({}) purgedCandidates({}) unmapped({})",
+                    mProcessedPartitions.size(), mLastSnapshotCount, newCount, mMatchedGroups, mPurgedCandidates, mUnmappedReadIds.size());
 
             mLastSnapshotCount = newCount;
         }
@@ -372,7 +406,7 @@ public class CombinedReadGroups
         return !mConfig.SpecificChromosomes.contains(chromosome);
     }
 
-    public void writeRemainingReadGroups(final ResultsWriter writer)
+    public void logStats(final ResultsWriter writer)
     {
         if(!mConfig.writeReads())
             return;
@@ -402,8 +436,8 @@ public class CombinedReadGroups
 
         if(mProcessedPartitions.size() > 10 || totalMissed > 0)
         {
-            SV_LOGGER.info("final spanning partition cache: readGroups({}) matched({}) reads({} found={} missed={})",
-                    readGroups, mMatchedGroups, totalCachedReads, foundReadCount, totalMissed);
+            SV_LOGGER.info("final spanning partition cache: readGroups({}) matched({}) purgedCandidate({}) reads({} found={} missed={})",
+                    readGroups, mMatchedGroups, mPurgedCandidates, totalCachedReads, foundReadCount, totalMissed);
 
             mPerfCounter.logStats();
         }

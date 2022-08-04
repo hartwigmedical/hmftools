@@ -49,17 +49,13 @@ public class PartitionThread extends Thread
                 PartitionSlicer slicer = new PartitionSlicer(
                         partition.TaskId, partition.Region, mConfig, mCombinedReadGroups, mExistingJunctionCache, mWriter, mCombinedStats);
 
-                boolean logAndGc = partition.TaskId > 0 && (partition.TaskId % 10) == 0;
-                if(logAndGc)
+                if(partition.TaskId > 0 && (partition.TaskId % 10) == 0)
                 {
                     SV_LOGGER.info("chromosome({}) processing partition({}), remaining({})",
                             mChromosome, partition.TaskId, mPartitions.size());
                 }
 
                 slicer.run();
-
-                //if(logAndGc)
-                //    System.gc();
             }
             catch(NoSuchElementException e)
             {

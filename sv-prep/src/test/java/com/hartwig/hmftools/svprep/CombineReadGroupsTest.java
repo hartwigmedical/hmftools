@@ -1,12 +1,8 @@
 package com.hartwig.hmftools.svprep;
 
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.CHR_1;
-import static com.hartwig.hmftools.svprep.SvPrepTestUtils.DEFAULT_BASE_QUAL;
-import static com.hartwig.hmftools.svprep.SvPrepTestUtils.DEFAULT_MAP_QUAL;
-import static com.hartwig.hmftools.svprep.SvPrepTestUtils.buildFlags;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.createSamRecord;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.readIdStr;
-import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -20,6 +16,7 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.reads.ExpectedRead;
 import com.hartwig.hmftools.svprep.reads.ReadGroup;
 import com.hartwig.hmftools.svprep.reads.ReadRecord;
+import com.hartwig.hmftools.svprep.reads.ReadType;
 
 import org.junit.Test;
 
@@ -51,8 +48,8 @@ public class CombineReadGroupsTest
     {
         int readId = 0;
 
-        Map<String,ReadGroup> spanningGroupsMap = Maps.newHashMap();
-        Map<String,List<ExpectedRead>> missedReadsMap = Maps.newHashMap();
+        Map<String, ReadGroup> spanningGroupsMap = Maps.newHashMap();
+        Map<String, List<ExpectedRead>> missedReadsMap = Maps.newHashMap();
 
         // 2 reads, no supp, spanning different partitions
         ReadRecord read1 = ReadRecord.from(createSamRecord(
@@ -161,7 +158,7 @@ public class CombineReadGroupsTest
         int readId = 0;
 
         Map<String, ReadGroup> spanningGroupsMap = Maps.newHashMap();
-        Map<String,List<ExpectedRead>> missedReadsMap = Maps.newHashMap();
+        Map<String, List<ExpectedRead>> missedReadsMap = Maps.newHashMap();
 
         // 2 reads, one with a supp, spanning different partitions
         ReadRecord read1 = ReadRecord.from(createSamRecord(
@@ -185,7 +182,7 @@ public class CombineReadGroupsTest
         rg1 = new ReadGroup(read3);
         rg1.setPartitionCount(REGION_2, PARTITION_SIZE);
         assertEquals(2, rg1.partitionCount());
-        assertTrue(rg1.onlySupplementaries());
+        assertTrue(rg1.conditionalOnRemoteReads());
 
         spanningGroupsMap.clear();
         missedReadsMap.clear();
@@ -193,7 +190,7 @@ public class CombineReadGroupsTest
         spanningGroupsMap.put(rg1.id(), rg1);
         mCombinedReadGroups.processSpanningReadGroups(REGION_2, spanningGroupsMap, missedReadsMap);
         assertEquals(0, getExpectedReadsCount(null));
-        assertTrue(rg1.hasRemoteNonSupplementaries());
+        assertTrue(rg1.hasRemoteJunctionReads());
 
         mCombinedReadGroups.reset();
         spanningGroupsMap.clear();
@@ -220,7 +217,6 @@ public class CombineReadGroupsTest
         mCombinedReadGroups.processSpanningReadGroups(REGION_1, spanningGroupsMap, missedReadsMap);
         assertEquals(0, getExpectedReadsCount(null));
         assertEquals(3, rg1.reads().size());
-
 
         // test a group spanning 3 partitions
         mCombinedReadGroups.reset();
@@ -264,6 +260,87 @@ public class CombineReadGroupsTest
         spanningGroupsMap.put(rg1.id(), rg1);
         mCombinedReadGroups.processSpanningReadGroups(REGION_3, spanningGroupsMap, missedReadsMap);
         assertEquals(0, getExpectedReadsCount(null));
-        assertTrue(rg1.hasRemoteNonSupplementaries());
+        assertTrue(rg1.hasRemoteJunctionReads());
+    }
+
+    @Test
+    public void testCombinedGroupsRemoteCandidates()
+    {
+        int readId = 0;
+
+        Map<String, ReadGroup> spanningGroupsMap = Maps.newHashMap();
+        Map<String, List<ExpectedRead>> missedReadsMap = Maps.newHashMap();
+
+        // a read group split across partitions, both only candidates for support, neither should be written
+        ReadRecord read1 = ReadRecord.from(createSamRecord(
+                readIdStr(++readId), CHR_1, 800, CHR_1, 10800, true, false, ""));
+
+        read1.setReadType(ReadType.CANDIDATE_SUPPORT);
+
+        ReadGroup rg1 = new ReadGroup(read1);
+        rg1.setPartitionCount(REGION_1, PARTITION_SIZE);
+        assertEquals(2, rg1.partitionCount());
+        assertTrue(rg1.conditionalOnRemoteReads());
+
+        spanningGroupsMap.put(rg1.id(), rg1);
+        mCombinedReadGroups.processSpanningReadGroups(REGION_1, spanningGroupsMap, missedReadsMap);
+        assertEquals(2, getExpectedReadsCount(null));
+
+        ReadRecord read2 = ReadRecord.from(createSamRecord(
+                readIdStr(readId), CHR_1, 10800, CHR_1, 800, false, false, ""));
+
+        read2.setReadType(ReadType.CANDIDATE_SUPPORT);
+
+        ReadGroup rg2 = new ReadGroup(read2);
+        rg2.setPartitionCount(REGION_2, PARTITION_SIZE);
+        assertEquals(2, rg2.partitionCount());
+        assertTrue(rg2.conditionalOnRemoteReads());
+
+        spanningGroupsMap.clear();
+        missedReadsMap.clear();
+
+        spanningGroupsMap.put(rg2.id(), rg2);
+        mCombinedReadGroups.processSpanningReadGroups(REGION_2, spanningGroupsMap, missedReadsMap);
+        assertEquals(0, getExpectedReadsCount(null));
+        assertFalse(rg2.hasRemoteJunctionReads()); // won't be written to the BAM for this reason
+        assertTrue(missedReadsMap.isEmpty());
+        assertEquals(1, rg2.reads().size());
+
+        mCombinedReadGroups.reset();
+        spanningGroupsMap.clear();
+        missedReadsMap.clear();
+
+        // this time with the second group containing an actual junction fragment
+        read1 = ReadRecord.from(createSamRecord(
+                readIdStr(++readId), CHR_1, 800, CHR_1, 10800, true, false, ""));
+
+        read1.setReadType(ReadType.CANDIDATE_SUPPORT);
+
+        rg1 = new ReadGroup(read1);
+        rg1.setPartitionCount(REGION_1, PARTITION_SIZE);
+        assertEquals(2, rg1.partitionCount());
+        assertTrue(rg1.conditionalOnRemoteReads());
+
+        spanningGroupsMap.put(rg1.id(), rg1);
+        mCombinedReadGroups.processSpanningReadGroups(REGION_1, spanningGroupsMap, missedReadsMap);
+        assertEquals(2, getExpectedReadsCount(null));
+
+        read2 = ReadRecord.from(createSamRecord(
+                readIdStr(readId), CHR_1, 10800, CHR_1, 800, false, false, ""));
+
+        read2.setReadType(ReadType.JUNCTION);
+
+        rg2 = new ReadGroup(read2);
+        rg2.setPartitionCount(REGION_2, PARTITION_SIZE);
+        assertEquals(2, rg2.partitionCount());
+
+        spanningGroupsMap.clear();
+        missedReadsMap.clear();
+
+        spanningGroupsMap.put(rg2.id(), rg2);
+        mCombinedReadGroups.processSpanningReadGroups(REGION_2, spanningGroupsMap, missedReadsMap);
+        assertEquals(0, getExpectedReadsCount(null));
+        assertEquals(2, rg2.reads().size()); // has picked up the cached candidate support read
+
     }
 }
