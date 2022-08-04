@@ -48,7 +48,7 @@ import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
-import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentAprroachCuration;
+import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentAproachCuration;
 import com.hartwig.hmftools.serve.util.ProgressTracker;
 
 import org.apache.logging.log4j.LogManager;
@@ -69,7 +69,7 @@ public class CkbExtractor {
 
     @NotNull
     public ExtractionResult extract(@NotNull List<CkbEntry> ckbEntries,
-            @NotNull RelevantTreatmentAprroachCuration curator) {
+            @NotNull RelevantTreatmentAproachCuration curator) {
         List<ExtractionResult> extractions = Lists.newArrayList();
 
         ProgressTracker tracker = new ProgressTracker("CKB", ckbEntries.size());
@@ -112,6 +112,8 @@ public class CkbExtractor {
 
             tracker.update();
         }
+
+        curator.reportUnusedCuratedEntries();
 
         return ExtractionFunctions.merge(extractions);
     }

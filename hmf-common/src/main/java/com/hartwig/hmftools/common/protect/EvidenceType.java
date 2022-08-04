@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.protect;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum ProtectEvidenceType {
+public enum EvidenceType {
     VIRAL_PRESENCE("Viral"),
     SIGNATURE("Signature"),
     ACTIVATION("Activation"),
@@ -22,7 +22,7 @@ public enum ProtectEvidenceType {
 
     private final String mDisplay;
 
-    ProtectEvidenceType(@NotNull final String display) {
+    EvidenceType(@NotNull final String display) {
         mDisplay = display;
     }
 

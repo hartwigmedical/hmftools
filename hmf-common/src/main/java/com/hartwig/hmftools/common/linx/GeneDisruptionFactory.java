@@ -28,7 +28,7 @@ public final class GeneDisruptionFactory {
     public static List<GeneDisruption> convert(@NotNull List<LinxBreakend> breakends,
             @NotNull List<LinxSvAnnotation> structuralVariants) {
         List<GeneDisruption> reportableDisruptions = Lists.newArrayList();
-        Map<SvAndGeneKey, Pair<LinxBreakend, LinxBreakend>> pairedMap = mapBreakendsPerStructuralVariant(breakends);
+        Map<SvAndTranscriptKey, Pair<LinxBreakend, LinxBreakend>> pairedMap = mapBreakendsPerStructuralVariant(breakends);
 
         for (Pair<LinxBreakend, LinxBreakend> pairedBreakend : pairedMap.values()) {
             LinxBreakend primaryBreakendLeft = pairedBreakend.getLeft();
@@ -90,28 +90,28 @@ public final class GeneDisruptionFactory {
     }
 
     @NotNull
-    private static Map<SvAndGeneKey, Pair<LinxBreakend, LinxBreakend>> mapBreakendsPerStructuralVariant(
+    private static Map<SvAndTranscriptKey, Pair<LinxBreakend, LinxBreakend>> mapBreakendsPerStructuralVariant(
             @NotNull List<LinxBreakend> breakends) {
-        Map<SvAndGeneKey, List<LinxBreakend>> breakendsPerSvAndGene = Maps.newHashMap();
+        Map<SvAndTranscriptKey, List<LinxBreakend>> breakendsPerSvAndTranscript = Maps.newHashMap();
         for (LinxBreakend breakend : breakends) {
-            SvAndGeneKey key = new SvAndGeneKey(breakend.svId(), breakend.gene());
-            List<LinxBreakend> currentBreakends = breakendsPerSvAndGene.get(key);
+            SvAndTranscriptKey key = new SvAndTranscriptKey(breakend.svId(), breakend.transcriptId());
+            List<LinxBreakend> currentBreakends = breakendsPerSvAndTranscript.get(key);
             if (currentBreakends == null) {
                 currentBreakends = Lists.newArrayList();
             }
             currentBreakends.add(breakend);
-            breakendsPerSvAndGene.put(key, currentBreakends);
+            breakendsPerSvAndTranscript.put(key, currentBreakends);
         }
 
-        return toPairedMap(breakendsPerSvAndGene);
+        return toPairedMap(breakendsPerSvAndTranscript);
     }
 
     @NotNull
-    private static Map<SvAndGeneKey, Pair<LinxBreakend, LinxBreakend>> toPairedMap(
-            @NotNull Map<SvAndGeneKey, List<LinxBreakend>> breakendsPerSvAndGene) {
-        Map<SvAndGeneKey, Pair<LinxBreakend, LinxBreakend>> pairedMap = Maps.newHashMap();
+    private static Map<SvAndTranscriptKey, Pair<LinxBreakend, LinxBreakend>> toPairedMap(
+            @NotNull Map<SvAndTranscriptKey, List<LinxBreakend>> breakendsPerSvAndTranscript) {
+        Map<SvAndTranscriptKey, Pair<LinxBreakend, LinxBreakend>> pairedMap = Maps.newHashMap();
 
-        for (Map.Entry<SvAndGeneKey, List<LinxBreakend>> entry : breakendsPerSvAndGene.entrySet()) {
+        for (Map.Entry<SvAndTranscriptKey, List<LinxBreakend>> entry : breakendsPerSvAndTranscript.entrySet()) {
             List<LinxBreakend> breakends = entry.getValue();
 
             if (breakends.size() != 1 && breakends.size() != 2) {
@@ -168,14 +168,14 @@ public final class GeneDisruptionFactory {
         return breakend.orientation() * breakend.strand() < 0;
     }
 
-    private static class SvAndGeneKey {
+    private static class SvAndTranscriptKey {
         private final int variantId;
         @NotNull
-        private final String gene;
+        private final String transcriptId;
 
-        private SvAndGeneKey(final int variantId, @NotNull final String gene) {
+        private SvAndTranscriptKey(final int variantId, @NotNull final String transcriptId) {
             this.variantId = variantId;
-            this.gene = gene;
+            this.transcriptId = transcriptId;
         }
 
         @Override
@@ -186,13 +186,13 @@ public final class GeneDisruptionFactory {
             if (o == null || getClass() != o.getClass()) {
                 return false;
             }
-            final SvAndGeneKey that = (SvAndGeneKey) o;
-            return Objects.equals(variantId, that.variantId) && Objects.equals(gene, that.gene);
+            final SvAndTranscriptKey that = (SvAndTranscriptKey) o;
+            return Objects.equals(variantId, that.variantId) && Objects.equals(transcriptId, that.transcriptId);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(variantId, gene);
+            return Objects.hash(variantId, transcriptId);
         }
     }
 }

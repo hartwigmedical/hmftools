@@ -8,7 +8,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneTestFactory;
-import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
+import com.hartwig.hmftools.common.protect.EventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectTestFactory;
 import com.hartwig.hmftools.common.test.SomaticVariantTestFactory;
@@ -53,7 +53,7 @@ public class SomaticVariantSelectorTest {
                 SomaticVariantTestFactory.builder().gene("gene 2").canonicalEffect("no evidence").reported(false).build();
 
         ProtectEvidence evidence =
-                ProtectTestFactory.builder().gene(withEvidence.gene()).event(ProtectEventGenerator.variantEvent(withEvidence)).build();
+                ProtectTestFactory.builder().gene(withEvidence.gene()).event(EventGenerator.variantEvent(withEvidence)).build();
 
         List<ReportableVariant> variants =
                 SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(withEvidence, withoutEvidence),

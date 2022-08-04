@@ -6,8 +6,7 @@ public enum TumorCharacteristicsComparator {
     EQUAL_OR_LOWER("<="),
     EQUAL_OR_GREATER(">="),
     LOWER("<"),
-    GREATER(">"),
-    BETWEEN(",");
+    GREATER(">");
 
     @NotNull
     private final String keyPhrase;

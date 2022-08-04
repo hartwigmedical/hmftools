@@ -45,6 +45,6 @@ public abstract class ProtectEvidence {
     public abstract EvidenceDirection direction();
 
     @NotNull
-    public abstract Set<ProtectSource> sources();
+    public abstract Set<KnowledgebaseSource> sources();
 
 }

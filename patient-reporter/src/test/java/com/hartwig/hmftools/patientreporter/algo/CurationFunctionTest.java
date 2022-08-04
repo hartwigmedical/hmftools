@@ -12,9 +12,9 @@ import com.hartwig.hmftools.common.linx.GeneDisruption;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.linx.ImmutableGeneDisruption;
 import com.hartwig.hmftools.common.linx.ImmutableHomozygousDisruption;
-import com.hartwig.hmftools.common.protect.ImmutableProtectSource;
+import com.hartwig.hmftools.common.protect.ImmutableKnowledgebaseSource;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
+import com.hartwig.hmftools.common.protect.EvidenceType;
 import com.hartwig.hmftools.common.protect.ProtectTestFactory;
 import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.common.purple.interpretation.GainLossTestFactory;
@@ -200,11 +200,11 @@ public class CurationFunctionTest {
                 .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .sources(Sets.newHashSet(ImmutableProtectSource.builder()
+                .sources(Sets.newHashSet(ImmutableKnowledgebaseSource.builder()
                         .name(Knowledgebase.ICLUSION)
                         .sourceEvent(Strings.EMPTY)
                         .sourceUrls(Sets.newHashSet())
-                        .evidenceType(ProtectEvidenceType.AMPLIFICATION)
+                        .evidenceType(EvidenceType.AMPLIFICATION)
                         .build()))
                 .build();
 
@@ -218,11 +218,11 @@ public class CurationFunctionTest {
                 .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .sources(Sets.newHashSet(ImmutableProtectSource.builder()
+                .sources(Sets.newHashSet(ImmutableKnowledgebaseSource.builder()
                         .name(Knowledgebase.ICLUSION)
                         .sourceEvent(Strings.EMPTY)
                         .sourceUrls(Sets.newHashSet())
-                        .evidenceType(ProtectEvidenceType.AMPLIFICATION)
+                        .evidenceType(EvidenceType.AMPLIFICATION)
                         .build()))
                 .build();
 
@@ -236,11 +236,11 @@ public class CurationFunctionTest {
                 .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .sources(Sets.newHashSet(ImmutableProtectSource.builder()
+                .sources(Sets.newHashSet(ImmutableKnowledgebaseSource.builder()
                         .name(Knowledgebase.ICLUSION)
                         .sourceEvent(Strings.EMPTY)
                         .sourceUrls(Sets.newHashSet())
-                        .evidenceType(ProtectEvidenceType.AMPLIFICATION)
+                        .evidenceType(EvidenceType.AMPLIFICATION)
                         .build()))
                 .build();
         return Lists.newArrayList(evidence1, evidence2, evidence3);

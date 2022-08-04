@@ -43,6 +43,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep14;
 import org.jooq.InsertValuesStep15;
+import org.jooq.InsertValuesStep16;
 import org.jooq.InsertValuesStep17;
 import org.jooq.InsertValuesStep19;
 import org.jooq.InsertValuesStep21;
@@ -187,12 +188,11 @@ public class ServeDAO {
 
         List<ActionableCharacteristic> actionableCharacteristics = actionableEvents.characteristics();
         for (List<ActionableCharacteristic> batch : Iterables.partition(actionableCharacteristics, Utils.DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep17 inserter = context.insertInto(ACTIONABLECHARACTERISTIC,
+            InsertValuesStep16 inserter = context.insertInto(ACTIONABLECHARACTERISTIC,
                     ACTIONABLECHARACTERISTIC.MODIFIED,
                     ACTIONABLECHARACTERISTIC.NAME,
                     ACTIONABLECHARACTERISTIC.COMPARATOR,
-                    ACTIONABLECHARACTERISTIC.MINCUTOFF,
-                    ACTIONABLECHARACTERISTIC.MAXCUTOFF,
+                    ACTIONABLECHARACTERISTIC.CUTOFF,
                     ACTIONABLECHARACTERISTIC.SOURCE,
                     ACTIONABLECHARACTERISTIC.SOURCEEVENT,
                     ACTIONABLECHARACTERISTIC.SOURCEURLS,
@@ -445,13 +445,12 @@ public class ServeDAO {
                         : ActionableFileFunctions.urlsToString(actionableFusion.evidenceUrls()));
     }
 
-    private static void addRecordCharacteristics(@NotNull Timestamp timestamp, @NotNull InsertValuesStep17 inserter,
+    private static void addRecordCharacteristics(@NotNull Timestamp timestamp, @NotNull InsertValuesStep16 inserter,
             @NotNull ActionableCharacteristic actionableCharacteristic) {
         inserter.values(timestamp,
                 actionableCharacteristic.name(),
                 actionableCharacteristic.comparator(),
-                actionableCharacteristic.minCutoff(),
-                actionableCharacteristic.maxCutoff(),
+                actionableCharacteristic.cutoff(),
                 actionableCharacteristic.source(),
                 actionableCharacteristic.sourceEvent(),
                 ActionableFileFunctions.urlsToString(actionableCharacteristic.sourceUrls()).isEmpty()

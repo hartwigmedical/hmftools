@@ -17,7 +17,7 @@ public class ProtectEvidenceComparatorTest {
         ProtectEvidence evidence3 = ProtectTestFactory.builder().reported(true).gene("B").build();
 
         List<ProtectEvidence> evidences = Lists.newArrayList(evidence1, evidence2, evidence3);
-        evidences.sort(new ProtectEvidenceComparator());
+        evidences.sort(new EvidenceComparator());
 
         assertEquals(evidence1, evidences.get(0));
         assertEquals(evidence3, evidences.get(1));

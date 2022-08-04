@@ -5,10 +5,10 @@ import java.util.Set;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.doid.DoidParents;
+import com.hartwig.hmftools.common.protect.EvidenceType;
+import com.hartwig.hmftools.common.protect.ImmutableKnowledgebaseSource;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
-import com.hartwig.hmftools.common.protect.ImmutableProtectSource;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
-import com.hartwig.hmftools.common.protect.ProtectSource;
+import com.hartwig.hmftools.common.protect.KnowledgebaseSource;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
@@ -89,8 +89,8 @@ public class PersonalizedEvidenceFactory {
     }
 
     @NotNull
-    private static ProtectSource resolveProtectSource(@NotNull ActionableEvent actionable) {
-        return ImmutableProtectSource.builder()
+    private static KnowledgebaseSource resolveProtectSource(@NotNull ActionableEvent actionable) {
+        return ImmutableKnowledgebaseSource.builder()
                 .name(actionable.source())
                 .sourceEvent(actionable.sourceEvent())
                 .sourceUrls(actionable.sourceUrls())
@@ -108,31 +108,31 @@ public class PersonalizedEvidenceFactory {
 
     @VisibleForTesting
     @NotNull
-    static ProtectEvidenceType determineEvidenceType(@NotNull ActionableEvent actionable) {
+    static EvidenceType determineEvidenceType(@NotNull ActionableEvent actionable) {
         if (actionable instanceof ActionableHotspot) {
-            return ProtectEvidenceType.HOTSPOT_MUTATION;
+            return EvidenceType.HOTSPOT_MUTATION;
         } else if (actionable instanceof ActionableRange) {
             return fromActionableRange((ActionableRange) actionable);
         } else if (actionable instanceof ActionableGene) {
             return fromActionableGene((ActionableGene) actionable);
         } else if (actionable instanceof ActionableFusion) {
-            return ProtectEvidenceType.FUSION_PAIR;
+            return EvidenceType.FUSION_PAIR;
         } else if (actionable instanceof ActionableCharacteristic) {
             return fromActionableCharacteristic((ActionableCharacteristic) actionable);
         } else if (actionable instanceof ActionableHLA) {
-            return ProtectEvidenceType.HLA;
+            return EvidenceType.HLA;
         } else {
             throw new IllegalStateException("Unexpected actionable event detected in variant evidence: " + actionable);
         }
     }
 
     @NotNull
-    private static ProtectEvidenceType fromActionableRange(@NotNull ActionableRange range) {
+    private static EvidenceType fromActionableRange(@NotNull ActionableRange range) {
         switch (range.rangeType()) {
             case EXON:
-                return ProtectEvidenceType.EXON_MUTATION;
+                return EvidenceType.EXON_MUTATION;
             case CODON:
-                return ProtectEvidenceType.CODON_MUTATION;
+                return EvidenceType.CODON_MUTATION;
             default: {
                 throw new IllegalStateException("Unsupported range type: " + range.rangeType());
             }
@@ -140,26 +140,26 @@ public class PersonalizedEvidenceFactory {
     }
 
     @NotNull
-    private static ProtectEvidenceType fromActionableGene(@NotNull ActionableGene gene) {
+    private static EvidenceType fromActionableGene(@NotNull ActionableGene gene) {
         switch (gene.event()) {
             case AMPLIFICATION:
-                return ProtectEvidenceType.AMPLIFICATION;
+                return EvidenceType.AMPLIFICATION;
             case OVEREXPRESSION:
-                return ProtectEvidenceType.OVER_EXPRESSION;
+                return EvidenceType.OVER_EXPRESSION;
             case DELETION:
-                return ProtectEvidenceType.DELETION;
+                return EvidenceType.DELETION;
             case UNDEREXPRESSION:
-                return ProtectEvidenceType.UNDER_EXPRESSION;
+                return EvidenceType.UNDER_EXPRESSION;
             case ACTIVATION:
-                return ProtectEvidenceType.ACTIVATION;
+                return EvidenceType.ACTIVATION;
             case INACTIVATION:
-                return ProtectEvidenceType.INACTIVATION;
+                return EvidenceType.INACTIVATION;
             case ANY_MUTATION:
-                return ProtectEvidenceType.ANY_MUTATION;
+                return EvidenceType.ANY_MUTATION;
             case FUSION:
-                return ProtectEvidenceType.PROMISCUOUS_FUSION;
+                return EvidenceType.PROMISCUOUS_FUSION;
             case WILD_TYPE:
-                return ProtectEvidenceType.WILD_TYPE;
+                return EvidenceType.WILD_TYPE;
             default: {
                 throw new IllegalStateException("Unsupported gene level event: " + gene.event());
             }
@@ -167,7 +167,7 @@ public class PersonalizedEvidenceFactory {
     }
 
     @NotNull
-    private static ProtectEvidenceType fromActionableCharacteristic(@NotNull ActionableCharacteristic characteristic) {
+    private static EvidenceType fromActionableCharacteristic(@NotNull ActionableCharacteristic characteristic) {
         switch (characteristic.name()) {
             case MICROSATELLITE_UNSTABLE:
             case MICROSATELLITE_STABLE:
@@ -176,10 +176,10 @@ public class PersonalizedEvidenceFactory {
             case HIGH_TUMOR_MUTATIONAL_BURDEN:
             case LOW_TUMOR_MUTATIONAL_BURDEN:
             case HOMOLOGOUS_RECOMBINATION_DEFICIENT:
-                return ProtectEvidenceType.SIGNATURE;
+                return EvidenceType.SIGNATURE;
             case HPV_POSITIVE:
             case EBV_POSITIVE:
-                return ProtectEvidenceType.VIRAL_PRESENCE;
+                return EvidenceType.VIRAL_PRESENCE;
             default: {
                 throw new IllegalStateException("Unsupported tumor characteristic: " + characteristic.name());
             }

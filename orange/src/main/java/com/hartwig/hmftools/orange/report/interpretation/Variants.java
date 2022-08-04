@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.AminoAcids;
-import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
+import com.hartwig.hmftools.common.protect.EventGenerator;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
@@ -129,7 +129,7 @@ public final class Variants {
         }
 
         // Reuse PROTECT formatting for ORANGE report.
-        String event = ProtectEventGenerator.variantEvent(variant);
+        String event = EventGenerator.variantEvent(variant);
         return variant.gene() + addon + " " + AminoAcids.forceSingleLetterProteinAnnotation(event);
     }
 

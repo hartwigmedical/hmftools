@@ -19,10 +19,10 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
-import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
-import com.hartwig.hmftools.common.protect.ProtectSource;
+import com.hartwig.hmftools.common.protect.EvidenceType;
+import com.hartwig.hmftools.common.protect.KnowledgebaseSource;
+import com.hartwig.hmftools.common.protect.EventGenerator;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
@@ -214,58 +214,58 @@ public class FusionEvidenceTest {
         ProtectEvidence evidence1 = findByFusion(evidences, reportedFusionMatch);
         assertTrue(evidence1.reported());
         assertEquals(evidence1.sources().size(), 1);
-        assertEquals(ProtectEvidenceType.FUSION_PAIR, findByKnowledgebase(evidence1, Knowledgebase.CKB, "treatment6").evidenceType());
+        assertEquals(EvidenceType.FUSION_PAIR, findByKnowledgebase(evidence1, Knowledgebase.CKB, "treatment6").evidenceType());
 
         ProtectEvidence evidence2 = findByFusion(evidences, reportedPromiscuousMatch5);
         assertTrue(evidence2.reported());
         assertEquals(evidence2.sources().size(), 1);
-        assertEquals(ProtectEvidenceType.PROMISCUOUS_FUSION,
+        assertEquals(EvidenceType.PROMISCUOUS_FUSION,
                 findByKnowledgebase(evidence2, Knowledgebase.ACTIN, "treatment4").evidenceType());
 
         ProtectEvidence evidence3 = findByFusion(evidences, reportedPromiscuousMatch3);
         assertTrue(evidence3.reported());
         assertEquals(evidence3.sources().size(), 1);
-        assertEquals(ProtectEvidenceType.PROMISCUOUS_FUSION,
+        assertEquals(EvidenceType.PROMISCUOUS_FUSION,
                 findByKnowledgebase(evidence3, Knowledgebase.ACTIN, "treatment1").evidenceType());
 
         ProtectEvidence evidence4 = findByFusion(evidences, reportedPromiscuousNonMatch);
         assertTrue(evidence4.reported());
         assertEquals(evidence4.sources().size(), 1);
-        assertEquals(ProtectEvidenceType.PROMISCUOUS_FUSION,
+        assertEquals(EvidenceType.PROMISCUOUS_FUSION,
                 findByKnowledgebase(evidence4, Knowledgebase.ACTIN, "treatment2").evidenceType());
 
         ProtectEvidence evidence5 = findByFusion(evidences, unreportedPromiscuousMatch);
         assertFalse(evidence5.reported());
         assertEquals(evidence5.sources().size(), 1);
-        assertEquals(ProtectEvidenceType.PROMISCUOUS_FUSION,
+        assertEquals(EvidenceType.PROMISCUOUS_FUSION,
                 findByKnowledgebase(evidence5, Knowledgebase.ACTIN, "treatment3").evidenceType());
 
         ProtectEvidence evidence6 = findByFusion(evidences, reportedPromiscuousMatch);
         assertTrue(evidence6.reported());
         assertEquals(evidence6.sources().size(), 1);
-        assertEquals(ProtectEvidenceType.ACTIVATION, findByKnowledgebase(evidence6, Knowledgebase.ACTIN, "treatment7").evidenceType());
+        assertEquals(EvidenceType.ACTIVATION, findByKnowledgebase(evidence6, Knowledgebase.ACTIN, "treatment7").evidenceType());
 
         ProtectEvidence evidence7 = findByFusion(evidences, reportedOtherMatch);
         assertFalse(evidence7.reported());
         assertEquals(evidence7.sources().size(), 1);
-        assertEquals(ProtectEvidenceType.PROMISCUOUS_FUSION,
+        assertEquals(EvidenceType.PROMISCUOUS_FUSION,
                 findByKnowledgebase(evidence7, Knowledgebase.CKB, "treatment9").evidenceType());
 
         ProtectEvidence evidence8 = findByFusion(evidences, reportedIgKnown);
         assertFalse(evidence8.reported());
         assertEquals(evidence8.sources().size(), 1);
-        assertEquals(ProtectEvidenceType.FUSION_PAIR, findByKnowledgebase(evidence8, Knowledgebase.CKB, "treatment10").evidenceType());
+        assertEquals(EvidenceType.FUSION_PAIR, findByKnowledgebase(evidence8, Knowledgebase.CKB, "treatment10").evidenceType());
 
         ProtectEvidence evidence9 = findByFusion(evidences, reportedIgPromiscuous);
         assertFalse(evidence9.reported());
         assertEquals(evidence9.sources().size(), 1);
-        assertEquals(ProtectEvidenceType.PROMISCUOUS_FUSION,
+        assertEquals(EvidenceType.PROMISCUOUS_FUSION,
                 findByKnowledgebase(evidence9, Knowledgebase.CKB, "treatment11").evidenceType());
     }
 
     @NotNull
     private static ProtectEvidence findByFusion(@NotNull List<ProtectEvidence> evidences, @NotNull LinxFusion fusion) {
-        String event = ProtectEventGenerator.fusionEvent(fusion);
+        String event = EventGenerator.fusionEvent(fusion);
         for (ProtectEvidence evidence : evidences) {
             if (evidence.event().equals(event)) {
                 return evidence;
@@ -336,10 +336,10 @@ public class FusionEvidenceTest {
     }
 
     @NotNull
-    private static ProtectSource findByKnowledgebase(@NotNull ProtectEvidence evidence, @NotNull Knowledgebase knowledgebaseToFind,
+    private static KnowledgebaseSource findByKnowledgebase(@NotNull ProtectEvidence evidence, @NotNull Knowledgebase knowledgebaseToFind,
             @NotNull String treatment) {
         if (evidence.treatment().equals(treatment)) {
-            for (ProtectSource source : evidence.sources()) {
+            for (KnowledgebaseSource source : evidence.sources()) {
                 if (source.name() == knowledgebaseToFind) {
                     return source;
                 }

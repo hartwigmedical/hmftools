@@ -8,8 +8,8 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
-import com.hartwig.hmftools.common.protect.ProtectSource;
+import com.hartwig.hmftools.common.protect.EvidenceType;
+import com.hartwig.hmftools.common.protect.KnowledgebaseSource;
 import com.hartwig.hmftools.common.purple.interpretation.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
 import com.hartwig.hmftools.common.purple.interpretation.GainLossTestFactory;
@@ -63,12 +63,12 @@ public class CopyNumberEvidenceTest {
         ProtectEvidence ampEvidence = find(evidences, geneAmp);
         assertTrue(ampEvidence.reported());
         assertEquals(ampEvidence.sources().size(), 1);
-        assertEquals(ProtectEvidenceType.AMPLIFICATION, findByKnowledgebase(ampEvidence.sources(), Knowledgebase.CKB).evidenceType());
+        assertEquals(EvidenceType.AMPLIFICATION, findByKnowledgebase(ampEvidence.sources(), Knowledgebase.CKB).evidenceType());
 
         ProtectEvidence delEvidence = find(evidences, geneDel);
         assertTrue(delEvidence.reported());
         assertEquals(delEvidence.sources().size(), 1);
-        assertEquals(ProtectEvidenceType.INACTIVATION, findByKnowledgebase(delEvidence.sources(), Knowledgebase.CKB).evidenceType());
+        assertEquals(EvidenceType.INACTIVATION, findByKnowledgebase(delEvidence.sources(), Knowledgebase.CKB).evidenceType());
     }
 
     @NotNull
@@ -83,8 +83,8 @@ public class CopyNumberEvidenceTest {
     }
 
     @NotNull
-    private static ProtectSource findByKnowledgebase(@NotNull Set<ProtectSource> sources, @NotNull Knowledgebase knowledgebaseToFind) {
-        for (ProtectSource source : sources) {
+    private static KnowledgebaseSource findByKnowledgebase(@NotNull Set<KnowledgebaseSource> sources, @NotNull Knowledgebase knowledgebaseToFind) {
+        for (KnowledgebaseSource source : sources) {
             if (source.name() == knowledgebaseToFind) {
                 return source;
             }

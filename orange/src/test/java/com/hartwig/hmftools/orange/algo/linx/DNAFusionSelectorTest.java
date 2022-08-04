@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneTestFactory;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
-import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
+import com.hartwig.hmftools.common.protect.EventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectTestFactory;
 import com.hartwig.hmftools.common.sv.linx.FusionPhasedType;
@@ -30,7 +30,7 @@ public class DNAFusionSelectorTest {
         LinxFusion noEvidence =
                 LinxTestFactory.fusionBuilder().reported(false).name("no evidence").geneStart("gene 3").geneEnd("gene 4").build();
 
-        ProtectEvidence evidence = ProtectTestFactory.builder().event(ProtectEventGenerator.fusionEvent(withEvidence)).build();
+        ProtectEvidence evidence = ProtectTestFactory.builder().event(EventGenerator.fusionEvent(withEvidence)).build();
 
         List<LinxFusion> fusions = DNAFusionSelector.selectInterestingUnreportedFusions(Lists.newArrayList(withEvidence, noEvidence),
                 Lists.newArrayList(evidence),

@@ -9,7 +9,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
+import com.hartwig.hmftools.common.protect.EventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.interpretation.CopyNumberInterpretation;
@@ -190,7 +190,7 @@ final class CopyNumberSelector {
     }
 
     private static boolean hasEvidence(@NotNull List<ProtectEvidence> evidences, @NotNull GainLoss gainLoss) {
-        return EvidenceEvaluator.hasEvidence(evidences, gainLoss.gene(), ProtectEventGenerator.copyNumberEvent(gainLoss));
+        return EvidenceEvaluator.hasEvidence(evidences, gainLoss.gene(), EventGenerator.copyNumberEvent(gainLoss));
     }
 
     private static boolean locusPresent(@NotNull List<GainLoss> gainsLosses, @NotNull String chromosome, @NotNull String chromosomeBand) {

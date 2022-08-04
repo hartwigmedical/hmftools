@@ -28,10 +28,10 @@ public class ProtectEvidenceFileTest {
         ProtectEvidence evidence1 = findByTreatmentAndEvent(evidences, "Cobimetinib + Vemurafenib", "p.Val600Glu");
         assertEquals(1, evidence1.sources().size());
 
-        ProtectSource evidence1Source = findBySource(evidence1.sources(), Knowledgebase.VICC_CGI);
+        KnowledgebaseSource evidence1Source = findBySource(evidence1.sources(), Knowledgebase.VICC_CGI);
         assertEquals("hotspot", evidence1Source.sourceEvent());
         assertEquals(Sets.newHashSet("https://www.google.com/#q=FDA"), evidence1Source.sourceUrls());
-        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, evidence1Source.evidenceType());
+        assertEquals(EvidenceType.HOTSPOT_MUTATION, evidence1Source.evidenceType());
         assertNull(evidence1Source.rangeRank());
         assertTrue(evidence1Source.evidenceUrls().isEmpty());
 
@@ -39,10 +39,10 @@ public class ProtectEvidenceFileTest {
         ProtectEvidence evidence2 = findByTreatmentAndEvent(evidences, "Dabrafenib", "p.Val600Glu");
         assertEquals(1, evidence2.sources().size());
 
-        ProtectSource evidence2Source = findBySource(evidence2.sources(), Knowledgebase.VICC_CGI);
+        KnowledgebaseSource evidence2Source = findBySource(evidence2.sources(), Knowledgebase.VICC_CGI);
         assertEquals("hotspot", evidence2Source.sourceEvent());
         assertEquals(Sets.newHashSet("https://www.google.com/#q=FDA", "https://www.google.com/#q=NCCN"), evidence2Source.sourceUrls());
-        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, evidence2Source.evidenceType());
+        assertEquals(EvidenceType.HOTSPOT_MUTATION, evidence2Source.evidenceType());
         assertNull(evidence2Source.rangeRank());
         assertTrue(evidence2Source.evidenceUrls().isEmpty());
 
@@ -50,18 +50,18 @@ public class ProtectEvidenceFileTest {
         ProtectEvidence evidence3 = findByTreatmentAndEvent(evidences, "Dabrafenib + Trametinib", "p.Val600Glu");
         assertEquals(2, evidence3.sources().size());
 
-        ProtectSource evidence3Source1 = findBySource(evidence3.sources(), Knowledgebase.VICC_CGI);
+        KnowledgebaseSource evidence3Source1 = findBySource(evidence3.sources(), Knowledgebase.VICC_CGI);
         assertEquals("hotspot", evidence3Source1.sourceEvent());
         assertTrue(evidence3Source1.sourceUrls().isEmpty());
-        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, evidence3Source1.evidenceType());
+        assertEquals(EvidenceType.HOTSPOT_MUTATION, evidence3Source1.evidenceType());
         assertNull(evidence3Source1.rangeRank());
         assertEquals(Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/25399551", "http://www.ncbi.nlm.nih.gov/pubmed/27283860"),
                 evidence3Source1.evidenceUrls());
 
-        ProtectSource evidence3Source2 = findBySource(evidence3.sources(), Knowledgebase.VICC_CIVIC);
+        KnowledgebaseSource evidence3Source2 = findBySource(evidence3.sources(), Knowledgebase.VICC_CIVIC);
         assertEquals("hotspot", evidence3Source2.sourceEvent());
         assertEquals(Sets.newHashSet("https://www.google.com/#q=FDA"), evidence3Source2.sourceUrls());
-        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, evidence3Source2.evidenceType());
+        assertEquals(EvidenceType.HOTSPOT_MUTATION, evidence3Source2.evidenceType());
         assertNull(evidence3Source2.rangeRank());
         assertTrue(evidence3Source2.evidenceUrls().isEmpty());
 
@@ -69,10 +69,10 @@ public class ProtectEvidenceFileTest {
         ProtectEvidence evidence4 = findByTreatmentAndEvent(evidences, "Vemurafenib", "p.Val600Glu");
         assertEquals(1, evidence4.sources().size());
 
-        ProtectSource evidence4Source = findBySource(evidence4.sources(), Knowledgebase.VICC_CGI);
+        KnowledgebaseSource evidence4Source = findBySource(evidence4.sources(), Knowledgebase.VICC_CGI);
         assertEquals("hotspot", evidence4Source.sourceEvent());
         assertEquals(Sets.newHashSet("https://www.google.com/#q=FDA"), evidence4Source.sourceUrls());
-        assertEquals(ProtectEvidenceType.HOTSPOT_MUTATION, evidence4Source.evidenceType());
+        assertEquals(EvidenceType.HOTSPOT_MUTATION, evidence4Source.evidenceType());
         assertEquals("600", String.valueOf(evidence4Source.rangeRank()));
         assertTrue(evidence4Source.evidenceUrls().isEmpty());
 
@@ -80,37 +80,37 @@ public class ProtectEvidenceFileTest {
         ProtectEvidence evidence5 = findByTreatmentAndEvent(evidences, "Vemurafenib", "some mutation");
         assertEquals(1, evidence5.sources().size());
 
-        ProtectSource evidence5Source1 = findBySource(evidence5.sources(), Knowledgebase.VICC_CGI);
+        KnowledgebaseSource evidence5Source1 = findBySource(evidence5.sources(), Knowledgebase.VICC_CGI);
         assertEquals("hotspot", evidence5Source1.sourceEvent());
         assertEquals(Sets.newHashSet("https://www.google.com/#q=FDA"), evidence5Source1.sourceUrls());
-        assertEquals(ProtectEvidenceType.SIGNATURE, evidence5Source1.evidenceType());
+        assertEquals(EvidenceType.SIGNATURE, evidence5Source1.evidenceType());
         assertNull(evidence5Source1.rangeRank());
         assertTrue(evidence5Source1.evidenceUrls().isEmpty());
     }
 
     @Test
     public void canConvertSourcesBackAndForth() {
-        Set<ProtectSource> sources = Sets.newHashSet();
+        Set<KnowledgebaseSource> sources = Sets.newHashSet();
 
-        sources.add(ImmutableProtectSource.builder()
+        sources.add(ImmutableKnowledgebaseSource.builder()
                 .name(Knowledgebase.VICC_CGI)
                 .sourceEvent("event 1")
                 .sourceUrls(Sets.newHashSet("url1", "url2", "url3"))
-                .evidenceType(ProtectEvidenceType.ANY_MUTATION)
+                .evidenceType(EvidenceType.ANY_MUTATION)
                 .rangeRank(1)
                 .evidenceUrls(Sets.newHashSet("url4", "url5", "url6"))
                 .build());
 
-        sources.add(ImmutableProtectSource.builder()
+        sources.add(ImmutableKnowledgebaseSource.builder()
                 .name(Knowledgebase.VICC_CIVIC)
                 .sourceEvent("event 2")
-                .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
+                .evidenceType(EvidenceType.HOTSPOT_MUTATION)
                 .build());
 
-        sources.add(ImmutableProtectSource.builder()
+        sources.add(ImmutableKnowledgebaseSource.builder()
                 .name(Knowledgebase.VICC_JAX)
                 .sourceEvent("event 3")
-                .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
+                .evidenceType(EvidenceType.HOTSPOT_MUTATION)
                 .evidenceUrls(Sets.newHashSet("url1"))
                 .build());
 
@@ -130,8 +130,8 @@ public class ProtectEvidenceFileTest {
     }
 
     @NotNull
-    private static ProtectSource findBySource(@NotNull Iterable<ProtectSource> sources, @NotNull Knowledgebase sourceToFind) {
-        for (ProtectSource source : sources) {
+    private static KnowledgebaseSource findBySource(@NotNull Iterable<KnowledgebaseSource> sources, @NotNull Knowledgebase sourceToFind) {
+        for (KnowledgebaseSource source : sources) {
             if (source.name() == sourceToFind) {
                 return source;
             }

@@ -9,8 +9,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceComparator;
-import com.hartwig.hmftools.common.protect.ProtectSource;
+import com.hartwig.hmftools.common.protect.KnowledgebaseSource;
+import com.hartwig.hmftools.common.protect.EvidenceComparator;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
@@ -213,7 +213,7 @@ public class ClinicalEvidenceChapter implements ReportChapter {
     @NotNull
     private static String display(@NotNull ProtectEvidence evidence) {
         Set<String> sourceNames = Sets.newHashSet();
-        for (ProtectSource source : evidence.sources()) {
+        for (KnowledgebaseSource source : evidence.sources()) {
             sourceNames.add(source.name().display());
         }
 
@@ -227,7 +227,7 @@ public class ClinicalEvidenceChapter implements ReportChapter {
     @NotNull
     private static Set<ProtectEvidence> filterOnDirections(@NotNull List<ProtectEvidence> evidences,
             @NotNull Set<EvidenceDirection> allowedDirections) {
-        Set<ProtectEvidence> filtered = Sets.newTreeSet(new ProtectEvidenceComparator());
+        Set<ProtectEvidence> filtered = Sets.newTreeSet(new EvidenceComparator());
         for (ProtectEvidence evidence : evidences) {
             if (allowedDirections.contains(evidence.direction())) {
                 filtered.add(evidence);
@@ -239,7 +239,7 @@ public class ClinicalEvidenceChapter implements ReportChapter {
     @NotNull
     private static String url(@NotNull ProtectEvidence evidence) {
         String urlString = Strings.EMPTY;
-        for (ProtectSource source : evidence.sources()) {
+        for (KnowledgebaseSource source : evidence.sources()) {
 
             if (source.evidenceUrls().isEmpty()) {
                 urlString = Strings.EMPTY;

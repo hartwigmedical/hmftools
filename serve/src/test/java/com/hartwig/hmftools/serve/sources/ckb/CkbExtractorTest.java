@@ -19,7 +19,7 @@ import com.hartwig.hmftools.serve.refgenome.RefGenomeResourceTestFactory;
 import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentApproachCurationType;
 import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentApprochCurationEntry;
 import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentApprochCurationEntryKey;
-import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentAprroachCuration;
+import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentAproachCuration;
 import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentAprroachCurationTest;
 
 import org.apache.commons.compress.utils.Lists;
@@ -46,7 +46,7 @@ public class CkbExtractorTest {
                         EvidenceLevel.A,
                         EvidenceDirection.RESPONSIVE,
                         "AA"));
-        RelevantTreatmentAprroachCuration curator = new RelevantTreatmentAprroachCuration(curationEntries);
+        RelevantTreatmentAproachCuration curator = new RelevantTreatmentAproachCuration(curationEntries);
 
         List<CkbEntry> ckbEntries = Lists.newArrayList();
         ckbEntries.add(create("KIT", "amp", "KIT amp", "sensitive", "Actionable"));

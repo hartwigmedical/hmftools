@@ -9,7 +9,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneTestFactory;
-import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
+import com.hartwig.hmftools.common.protect.EventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectTestFactory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -119,7 +119,7 @@ public class CopyNumberSelectorTest {
 
         ProtectEvidence evidence = ProtectTestFactory.builder()
                 .gene(lowerGainWithEvidence.gene())
-                .event(ProtectEventGenerator.copyNumberEvent(lowerGainWithEvidence))
+                .event(EventGenerator.copyNumberEvent(lowerGainWithEvidence))
                 .build();
 
         List<GainLoss> interesting =
@@ -152,7 +152,7 @@ public class CopyNumberSelectorTest {
 
         ProtectEvidence evidence = ProtectTestFactory.builder()
                 .gene(interestingLoss.gene())
-                .event(ProtectEventGenerator.copyNumberEvent(interestingLoss))
+                .event(EventGenerator.copyNumberEvent(interestingLoss))
                 .build();
 
         List<GainLoss> interesting = CopyNumberSelector.selectInterestingUnreportedGainsLosses(allLosses,

@@ -21,7 +21,7 @@ import com.hartwig.hmftools.serve.cancertype.CancerTypeConstants;
 import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.ImmutableRelevantTreatmentApprochCurationEntryKey;
 import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentApprochCurationEntryKey;
-import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentAprroachCuration;
+import com.hartwig.hmftools.serve.sources.ckb.treatementapproach.RelevantTreatmentAproachCuration;
 import com.hartwig.hmftools.serve.treatment.ImmutableTreatment;
 
 import org.apache.logging.log4j.LogManager;
@@ -70,10 +70,8 @@ class ActionableEntryFactory {
 
     @NotNull
     public static Set<ActionableEntry> toActionableEntries(@NotNull CkbEntry entry, @NotNull String sourceEvent,
-            @NotNull RelevantTreatmentAprroachCuration curator, @NotNull String gene, @NotNull EventType eventType) {
+            @NotNull RelevantTreatmentAproachCuration curator, @NotNull String gene, @NotNull EventType eventType) {
         Set<ActionableEntry> actionableEntries = Sets.newHashSet();
-        Set<String> sourceRelevantTreatmentApproaches = Sets.newHashSet();
-        Set<String> curatedRelevantTreatmentApproaches = Sets.newHashSet();
 
         for (Evidence evidence : evidencesWithUsableType(entry.evidences())) {
             EvidenceLevel level = resolveLevel(evidence.ampCapAscoEvidenceLevel());
@@ -117,6 +115,8 @@ class ActionableEntryFactory {
                     blacklistedCancerTypes.add(CancerTypeConstants.BONE_MARROW_TYPE);
                 }
 
+                Set<String> sourceRelevantTreatmentApproaches = Sets.newHashSet();
+                Set<String> curatedRelevantTreatmentApproaches = Sets.newHashSet();
                 for (RelevantTreatmentApproaches relevantTreatmentApproaches : evidence.relevantTreatmentApproaches()) {
                     DrugClass relevantTreatmentApproachesInfo = relevantTreatmentApproaches.drugClass();
 
@@ -125,23 +125,22 @@ class ActionableEntryFactory {
                     }
                 }
 
-                String treatmentApprochString = String.join(",", sourceRelevantTreatmentApproaches);
-                String treatmentApprochInterpret = Strings.EMPTY;
+                String treatmentApproachString = String.join(",", sourceRelevantTreatmentApproaches);
+                String treatmentApproachInterpret = Strings.EMPTY;
                 if (sourceRelevantTreatmentApproaches.isEmpty()) {
-                    treatmentApprochInterpret = null;
-                } else if (treatmentApprochString.substring(treatmentApprochString.length()-1).equals(",")) {
-                    treatmentApprochInterpret = treatmentApprochString.substring(0, treatmentApprochString.length() - 1);
+                    treatmentApproachInterpret = null;
+                } else if (treatmentApproachString.substring(treatmentApproachString.length() - 1).equals(",")) {
+                    treatmentApproachInterpret = treatmentApproachString.substring(0, treatmentApproachString.length() - 1);
                 } else {
-                    treatmentApprochInterpret = treatmentApprochString;
+                    treatmentApproachInterpret = treatmentApproachString;
                 }
-
-                LOGGER.info(treatmentApprochInterpret);
 
                 RelevantTreatmentApprochCurationEntryKey key = ImmutableRelevantTreatmentApprochCurationEntryKey.builder()
                         .treatment(treatment)
-                        .treatmentApproach(treatmentApprochInterpret)
+                        .treatmentApproach(treatmentApproachInterpret == null || treatmentApproachInterpret.isEmpty()
+                                ? null
+                                : treatmentApproachInterpret)
                         .event(gene + " " + eventType)
-                        .level(level)
                         .direction(direction)
                         .build();
 

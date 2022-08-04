@@ -21,51 +21,51 @@ public class ProtectEventGeneratorTest {
 
     @Test
     public void canTestToVariantEvent() {
-        assertEquals("p.Gly12Cys", ProtectEventGenerator.toVariantEvent("p.Gly12Cys", "c.123A>C", "missense_variant", CodingEffect.MISSENSE));
-        assertEquals("c.123A>C splice", ProtectEventGenerator.toVariantEvent("p.?", "c.123A>C", "missense_variant", CodingEffect.SPLICE));
-        assertEquals("c.123A>C", ProtectEventGenerator.toVariantEvent("", "c.123A>C", "missense_variant", CodingEffect.MISSENSE));
-        assertEquals("upstream", ProtectEventGenerator.toVariantEvent("", "", "upstream_gene_variant", CodingEffect.SPLICE));
-        assertEquals("missense_variant", ProtectEventGenerator.toVariantEvent("", "", "missense_variant", CodingEffect.MISSENSE));
+        assertEquals("p.Gly12Cys", EventGenerator.toVariantEvent("p.Gly12Cys", "c.123A>C", "missense_variant", CodingEffect.MISSENSE));
+        assertEquals("c.123A>C splice", EventGenerator.toVariantEvent("p.?", "c.123A>C", "missense_variant", CodingEffect.SPLICE));
+        assertEquals("c.123A>C", EventGenerator.toVariantEvent("", "c.123A>C", "missense_variant", CodingEffect.MISSENSE));
+        assertEquals("upstream", EventGenerator.toVariantEvent("", "", "upstream_gene_variant", CodingEffect.SPLICE));
+        assertEquals("missense_variant", EventGenerator.toVariantEvent("", "", "missense_variant", CodingEffect.MISSENSE));
     }
 
     @Test
     public void canGenerateEventForReportableVariant() {
         ReportableVariant base = ReportableVariantTestFactory.builder().isCanonical(true).canonicalHgvsCodingImpact("coding").build();
-        assertEquals("coding", ProtectEventGenerator.variantEvent(base));
+        assertEquals("coding", EventGenerator.variantEvent(base));
 
         ReportableVariant nonCanonical = ReportableVariantTestFactory.builder()
                 .from(base)
                 .isCanonical(false)
                 .otherReportedEffects(OtherEffectsTestFactory.create())
                 .build();
-        assertNotNull(ProtectEventGenerator.variantEvent(nonCanonical));
+        assertNotNull(EventGenerator.variantEvent(nonCanonical));
     }
 
     @Test
     public void canGenerateEventForVariant() {
         Variant base = SomaticVariantTestFactory.builder().canonicalEffect("some effect").build();
-        assertEquals("some effect", ProtectEventGenerator.variantEvent(base));
+        assertEquals("some effect", EventGenerator.variantEvent(base));
 
-        String upstreamEffect = ProtectEventGenerator.UPSTREAM_GENE_VARIANT;
+        String upstreamEffect = EventGenerator.UPSTREAM_GENE_VARIANT;
         Variant upstream = ImmutableSomaticVariantImpl.builder().from(base).canonicalEffect(upstreamEffect).build();
-        assertEquals("upstream", ProtectEventGenerator.variantEvent(upstream));
+        assertEquals("upstream", EventGenerator.variantEvent(upstream));
 
         Variant coding = ImmutableSomaticVariantImpl.builder().from(upstream).canonicalHgvsCodingImpact("coding impact").build();
-        assertEquals("coding impact", ProtectEventGenerator.variantEvent(coding));
+        assertEquals("coding impact", EventGenerator.variantEvent(coding));
 
         Variant protein = ImmutableSomaticVariantImpl.builder().from(coding).canonicalHgvsProteinImpact("protein impact").build();
-        assertEquals("protein impact", ProtectEventGenerator.variantEvent(protein));
+        assertEquals("protein impact", EventGenerator.variantEvent(protein));
     }
 
     @Test
     public void canGenerateEventForCopyNumber() {
         GainLoss gainLoss = GainLossTestFactory.createTestGainLoss();
-        assertEquals(gainLoss.interpretation().display(), ProtectEventGenerator.copyNumberEvent(gainLoss));
+        assertEquals(gainLoss.interpretation().display(), EventGenerator.copyNumberEvent(gainLoss));
     }
 
     @Test
     public void canGenerateEventForFusion() {
         LinxFusion fusion = LinxTestFactory.fusionBuilder().geneStart("start").geneEnd("end").build();
-        assertEquals("start - end fusion", ProtectEventGenerator.fusionEvent(fusion));
+        assertEquals("start - end fusion", EventGenerator.fusionEvent(fusion));
     }
 }

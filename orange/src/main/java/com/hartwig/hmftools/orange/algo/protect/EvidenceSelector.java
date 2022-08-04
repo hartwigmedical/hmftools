@@ -5,7 +5,7 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.protect.ProtectSource;
+import com.hartwig.hmftools.common.protect.KnowledgebaseSource;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 
 import org.apache.commons.compress.utils.Lists;
@@ -61,8 +61,8 @@ final class EvidenceSelector {
         return filtered;
     }
 
-    private static boolean hasTrialSource(@NotNull Iterable<ProtectSource> sources) {
-        for (ProtectSource source : sources) {
+    private static boolean hasTrialSource(@NotNull Iterable<KnowledgebaseSource> sources) {
+        for (KnowledgebaseSource source : sources) {
             if (TRIAL_SOURCES.contains(source.name())) {
                 return true;
             }

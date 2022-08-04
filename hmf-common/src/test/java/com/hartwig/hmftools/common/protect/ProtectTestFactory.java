@@ -27,11 +27,11 @@ public final class ProtectTestFactory {
     }
 
     @NotNull
-    public static ProtectSource createSource(@NotNull Knowledgebase knowledgebase) {
-        return ImmutableProtectSource.builder()
+    public static KnowledgebaseSource createSource(@NotNull Knowledgebase knowledgebase) {
+        return ImmutableKnowledgebaseSource.builder()
                 .name(knowledgebase)
                 .sourceEvent("any mutation")
-                .evidenceType(ProtectEvidenceType.ANY_MUTATION)
+                .evidenceType(EvidenceType.ANY_MUTATION)
                 .build();
     }
 }

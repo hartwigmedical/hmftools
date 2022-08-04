@@ -12,11 +12,11 @@ import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class ProtectEventGenerator {
+public final class EventGenerator {
 
     static final String UPSTREAM_GENE_VARIANT = "upstream_gene_variant";
 
-    private ProtectEventGenerator() {
+    private EventGenerator() {
     }
 
     @NotNull

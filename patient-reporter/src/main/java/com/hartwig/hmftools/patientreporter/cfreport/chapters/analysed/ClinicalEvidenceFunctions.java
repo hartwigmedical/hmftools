@@ -10,8 +10,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
-import com.hartwig.hmftools.common.protect.ProtectSource;
+import com.hartwig.hmftools.common.protect.EvidenceType;
+import com.hartwig.hmftools.common.protect.KnowledgebaseSource;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -156,7 +156,7 @@ public class ClinicalEvidenceFunctions {
                     Map<String, String> sourceUrls = Maps.newHashMap();
                     Set<String> evidenceUrls = Sets.newHashSet();
 
-                    for (ProtectSource source : responsive.sources()) {
+                    for (KnowledgebaseSource source : responsive.sources()) {
                         for (String url : source.evidenceUrls()) {
                             evidenceUrls.add(url);
                         }
@@ -225,12 +225,12 @@ public class ClinicalEvidenceFunctions {
     }
 
     @NotNull
-    private static String determineEvidenceType(@NotNull ProtectSource source) {
+    private static String determineEvidenceType(@NotNull KnowledgebaseSource source) {
 
         String evidenceRank = Strings.EMPTY;
         String evidenceSource = source.evidenceType().display();
-        if (source.evidenceType().equals(ProtectEvidenceType.CODON_MUTATION) || source.evidenceType()
-                .equals(ProtectEvidenceType.EXON_MUTATION)) {
+        if (source.evidenceType().equals(EvidenceType.CODON_MUTATION) || source.evidenceType()
+                .equals(EvidenceType.EXON_MUTATION)) {
             evidenceRank = String.valueOf(source.rangeRank());
         }
 

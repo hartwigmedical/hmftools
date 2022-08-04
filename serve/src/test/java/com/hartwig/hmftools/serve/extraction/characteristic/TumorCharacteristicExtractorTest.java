@@ -31,7 +31,7 @@ public class TumorCharacteristicExtractorTest {
 
         assertEquals(TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE, characteristic.name());
         assertNull(characteristic.comparator());
-        assertNull(characteristic.maxCutoff());
+        assertNull(characteristic.cutoff());
     }
 
     @Test
@@ -42,7 +42,7 @@ public class TumorCharacteristicExtractorTest {
 
         assertEquals(TumorCharacteristicAnnotation.MICROSATELLITE_STABLE, characteristic.name());
         assertNull(characteristic.comparator());
-        assertNull(characteristic.maxCutoff());
+        assertNull(characteristic.cutoff());
     }
 
     @Test
@@ -53,7 +53,7 @@ public class TumorCharacteristicExtractorTest {
 
         assertEquals(TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_LOAD, characteristic.name());
         assertEquals(TumorCharacteristicsComparator.LOWER, characteristic.comparator());
-        assertEquals(140, characteristic.maxCutoff(), EPSILON);
+        assertEquals(140, characteristic.cutoff(), EPSILON);
     }
 
     @Test
@@ -64,7 +64,7 @@ public class TumorCharacteristicExtractorTest {
 
         assertEquals(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD, characteristic.name());
         assertEquals(TumorCharacteristicsComparator.EQUAL_OR_GREATER, characteristic.comparator());
-        assertEquals(140, characteristic.maxCutoff(), EPSILON);
+        assertEquals(140, characteristic.cutoff(), EPSILON);
     }
 
     @Test
@@ -75,7 +75,7 @@ public class TumorCharacteristicExtractorTest {
 
         assertEquals(TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_BURDEN, characteristic.name());
         assertEquals(TumorCharacteristicsComparator.EQUAL_OR_LOWER, characteristic.comparator());
-        assertEquals(3, characteristic.maxCutoff(), EPSILON);
+        assertEquals(3, characteristic.cutoff(), EPSILON);
     }
 
     @Test
@@ -86,7 +86,7 @@ public class TumorCharacteristicExtractorTest {
 
         assertEquals(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_BURDEN, characteristic.name());
         assertEquals(TumorCharacteristicsComparator.GREATER, characteristic.comparator());
-        assertEquals(14.5, characteristic.maxCutoff(), EPSILON);
+        assertEquals(14.5, characteristic.cutoff(), EPSILON);
     }
 
     @Test
@@ -97,7 +97,7 @@ public class TumorCharacteristicExtractorTest {
 
         assertEquals(TumorCharacteristicAnnotation.HOMOLOGOUS_RECOMBINATION_DEFICIENT, characteristic.name());
         assertNull(characteristic.comparator());
-        assertNull(characteristic.maxCutoff());
+        assertNull(characteristic.cutoff());
     }
 
     @Test
@@ -108,7 +108,7 @@ public class TumorCharacteristicExtractorTest {
 
         assertEquals(TumorCharacteristicAnnotation.HPV_POSITIVE, characteristic.name());
         assertNull(characteristic.comparator());
-        assertNull(characteristic.maxCutoff());
+        assertNull(characteristic.cutoff());
     }
 
     @Test
@@ -119,7 +119,7 @@ public class TumorCharacteristicExtractorTest {
 
         assertEquals(TumorCharacteristicAnnotation.EBV_POSITIVE, characteristic.name());
         assertNull(characteristic.comparator());
-        assertNull(characteristic.maxCutoff());
+        assertNull(characteristic.cutoff());
     }
 
     @Test

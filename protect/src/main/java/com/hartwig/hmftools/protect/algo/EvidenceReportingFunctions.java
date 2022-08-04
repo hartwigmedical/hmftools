@@ -7,10 +7,10 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceComparator;
-import com.hartwig.hmftools.common.protect.ProtectSource;
+import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
+import com.hartwig.hmftools.common.protect.KnowledgebaseSource;
+import com.hartwig.hmftools.common.protect.EvidenceComparator;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 
@@ -29,7 +29,7 @@ public final class EvidenceReportingFunctions {
         List<ProtectEvidence> meetsMaxLevelSources = onlyReportWhenMeetsMaxLevelForSources(evidences);
         List<ProtectEvidence> maxLevelPerTreatmentEvent = onlyReportHighestLevelForTreatmentAndEvent(meetsMaxLevelSources);
 
-        maxLevelPerTreatmentEvent.sort(new ProtectEvidenceComparator());
+        maxLevelPerTreatmentEvent.sort(new EvidenceComparator());
         return maxLevelPerTreatmentEvent;
     }
 
@@ -52,7 +52,7 @@ public final class EvidenceReportingFunctions {
 
     private static boolean meetsMaxReportableLevelForKnowledgebases(@NotNull ProtectEvidence evidence) {
         EvidenceLevel lowestMaxReportingLevel = EvidenceLevel.A;
-        for (ProtectSource source : evidence.sources()) {
+        for (KnowledgebaseSource source : evidence.sources()) {
             Knowledgebase knowledgebase = source.name();
             EvidenceLevel maxLevelForSource = evidence.direction().isCertain()
                     ? knowledgebase.maxCertainEvidenceReportingLevel()
@@ -150,7 +150,7 @@ public final class EvidenceReportingFunctions {
     }
 
     private static boolean isExclusiveTrialEvidence(@NotNull ProtectEvidence evidence) {
-        for (ProtectSource source : evidence.sources()) {
+        for (KnowledgebaseSource source : evidence.sources()) {
             if (!TRIAL_SOURCES.contains(source.name())) {
                 return false;
             }

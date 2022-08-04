@@ -79,9 +79,9 @@ public class GeneLevelExtractor {
 
     @Nullable
     GeneLevelAnnotation extractWildTypeEvent(@NotNull String gene, @NotNull EventType type) {
-        DriverCategory driverCategory = findByGene(driverGenes, gene);
+        boolean geneInDriverGenesDatabase = geneInDriverGenes(driverGenes, gene);
 
-        if (driverCategory == null && driverInconsistencyMode.isActive()) {
+        if (!geneInDriverGenesDatabase && driverInconsistencyMode.isActive()) {
             if (driverInconsistencyMode == DriverInconsistencyMode.WARN_ONLY) {
                 LOGGER.warn("Wildtype event {} on {} is not included in driver catalog and won't ever be reported.", type, gene);
             } else if (driverInconsistencyMode == DriverInconsistencyMode.FILTER) {
@@ -93,16 +93,6 @@ public class GeneLevelExtractor {
         }
 
         return ImmutableGeneLevelAnnotation.builder().gene(gene).event(GeneLevelEvent.WILD_TYPE).build();
-    }
-
-    @Nullable
-    private static DriverCategory findByGene(@NotNull List<DriverGene> driverGenes, @NotNull String gene) {
-        for (DriverGene driverGene : driverGenes) {
-            if (driverGene.gene().equals(gene)) {
-                return driverGene.likelihoodType();
-            }
-        }
-        return null;
     }
 
     static boolean geneInDriverGenes(@NotNull List<DriverGene> driverGenes, @NotNull String gene) {
@@ -118,21 +108,19 @@ public class GeneLevelExtractor {
     @VisibleForTesting
     GeneLevelAnnotation extractGeneLevelEvent(@NotNull String gene, @NotNull String event) {
         GeneLevelEvent result = GeneLevelEvent.ANY_MUTATION;
+        for (String keyPhrase : genericKeyPhrases) {
+            if (event.contains(keyPhrase)) {
+                result = GeneLevelEvent.ANY_MUTATION;
+            }
+        }
         for (String keyPhrase : activationKeyPhrases) {
             if (event.contains(keyPhrase)) {
                 result = GeneLevelEvent.ACTIVATION;
             }
         }
-
         for (String keyPhrase : inactivationKeyPhrases) {
             if (event.contains(keyPhrase)) {
                 result = GeneLevelEvent.INACTIVATION;
-            }
-        }
-
-        for (String keyPhrase : genericKeyPhrases) {
-            if (event.contains(keyPhrase)) {
-                result = GeneLevelEvent.ANY_MUTATION;
             }
         }
 
