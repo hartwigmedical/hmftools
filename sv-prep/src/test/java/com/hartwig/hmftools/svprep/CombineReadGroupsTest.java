@@ -261,6 +261,51 @@ public class CombineReadGroupsTest
         mCombinedReadGroups.processSpanningReadGroups(REGION_3, spanningGroupsMap, missedReadsMap);
         assertEquals(0, getExpectedReadsCount(null));
         assertTrue(rg1.hasRemoteJunctionReads());
+
+        // repeat with different ordering
+        mCombinedReadGroups.reset();
+        spanningGroupsMap.clear();
+        missedReadsMap.clear();
+
+        read1 = ReadRecord.from(createSamRecord(
+                readIdStr(++readId), CHR_1, 800, CHR_1, 10801, true, false, "1;20800;-;46S30M;255;0"));
+
+        rg1 = new ReadGroup(read1);
+        rg1.setPartitionCount(REGION_1, PARTITION_SIZE);
+        assertEquals(3, rg1.partitionCount());
+
+        spanningGroupsMap.put(rg1.id(), rg1);
+        mCombinedReadGroups.processSpanningReadGroups(REGION_1, spanningGroupsMap, missedReadsMap);
+        assertEquals(3, getExpectedReadsCount(null));
+
+        read2 = ReadRecord.from(createSamRecord(
+                readIdStr(readId), CHR_1, 10801, CHR_1, 800, false, false, ""));
+
+        rg1 = new ReadGroup(read2);
+        rg1.setPartitionCount(REGION_2, PARTITION_SIZE);
+        assertEquals(2, rg1.partitionCount());
+
+        spanningGroupsMap.clear();
+        missedReadsMap.clear();
+        spanningGroupsMap.put(rg1.id(), rg1);
+        mCombinedReadGroups.processSpanningReadGroups(REGION_1, spanningGroupsMap, missedReadsMap);
+        assertEquals(3, getExpectedReadsCount(null));
+
+        // now the supplementary
+        read3 = ReadRecord.from(createSamRecord(
+                readIdStr(readId), CHR_1, 20800, CHR_1, 10801, true, true, "1;800;-;46S30M;255;0"));
+
+        rg1 = new ReadGroup(read3);
+        rg1.setPartitionCount(REGION_3, PARTITION_SIZE);
+        assertEquals(3, rg1.partitionCount());
+
+        spanningGroupsMap.clear();
+        missedReadsMap.clear();
+        spanningGroupsMap.put(rg1.id(), rg1);
+        mCombinedReadGroups.processSpanningReadGroups(REGION_3, spanningGroupsMap, missedReadsMap);
+        assertEquals(0, getExpectedReadsCount(null));
+        assertTrue(rg1.hasRemoteJunctionReads());
+
     }
 
     @Test

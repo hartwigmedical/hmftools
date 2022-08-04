@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svprep.reads;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import java.util.List;
@@ -41,8 +43,13 @@ public class ExpectedRead
     public boolean found() { return mFound; }
     public void markFound() { mFound = true; }
 
-    public int expectedMatchCount() { return mExpectedMatchCount; }
-    public void setExpectedMatchCount(int count) { mExpectedMatchCount = count; }
+    public void setExpectedMatchCount(int count)
+    {
+        if(IsSupplementary)
+            mExpectedMatchCount = min(count, 2); // supplementaries only come through on their partner
+        else
+            mExpectedMatchCount = max(count,mExpectedMatchCount);
+    }
 
     public void setCachedRead(final ReadRecord read) { mCachedRead = read; }
     public boolean hasCachedRead() { return mCachedRead != null; }
