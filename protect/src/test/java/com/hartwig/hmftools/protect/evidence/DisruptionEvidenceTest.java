@@ -29,6 +29,8 @@ public class DisruptionEvidenceTest {
         String geneAmp = "geneAmp";
         String geneInact = "geneInact";
         String geneDel = "geneDel";
+        String geneUnder = "geneUnder";
+
         ActionableGene amp = ImmutableActionableGene.builder()
                 .from(ServeTestFactory.createTestActionableGene())
                 .gene(geneAmp)
@@ -48,8 +50,15 @@ public class DisruptionEvidenceTest {
                 .source(Knowledgebase.CKB)
                 .build();
 
+        ActionableGene underexpression = ImmutableActionableGene.builder()
+                .from(ServeTestFactory.createTestActionableGene())
+                .gene(geneUnder)
+                .event(GeneLevelEvent.UNDEREXPRESSION)
+                .source(Knowledgebase.CKB)
+                .build();
+
         DisruptionEvidence disruptionEvidence =
-                new DisruptionEvidence(EvidenceTestFactory.create(), Lists.newArrayList(amp, inactivation, deletion));
+                new DisruptionEvidence(EvidenceTestFactory.create(), Lists.newArrayList(amp, inactivation, deletion, underexpression));
 
         HomozygousDisruption matchAmp = create(geneAmp);
         HomozygousDisruption matchInact = create(geneInact);
