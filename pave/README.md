@@ -131,6 +131,8 @@ Nucleotide numbering conventions:
 * Nucleotide *1 is the 1st base 3’ of the translation stop codon
 * Use most 3’ position in case of homology for duplications and deletions (with an exception for homology at splice boundary.  See https://www.hgvs.org/mutnomen/recs-DNA.html#except)
 
+TERT only is also annotated into the upstream region for 300 bases upstream of the start codon of the canonical transcript due to the widespread conventions around TERT promoter mutations
+
 Examples:
 
 Type | Location | Examples | Notes
