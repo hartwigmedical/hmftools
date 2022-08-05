@@ -78,6 +78,7 @@ public class SvConfig
     public final boolean FindDiscordantGroups;
     public final boolean RetrieveBlacklistMates;
     public final List<ChrBaseRegion> SpecificRegions;
+    public final boolean UseCacheBam;
 
     private boolean mIsValid;
 
@@ -100,6 +101,7 @@ public class SvConfig
     private static final String APPLY_DOWNSAMPLING = "apply_downsampling";
     private static final String FIND_DISCORDANT_GROUPS = "discordant_groups";
     private static final String CAPTURE_DEPTH = "capture_depth";
+    private static final String USE_CACHE_BAM = "use_cache_bam";
 
     public SvConfig(final CommandLine cmd)
     {
@@ -173,6 +175,7 @@ public class SvConfig
         CaptureDepth = cmd.hasOption(CAPTURE_DEPTH);
         FindDiscordantGroups = cmd.hasOption(FIND_DISCORDANT_GROUPS);
         ApplyDownsampling = cmd.hasOption(APPLY_DOWNSAMPLING);
+        UseCacheBam = cmd.hasOption(USE_CACHE_BAM);
         RetrieveBlacklistMates = false;
     }
 
@@ -216,6 +219,7 @@ public class SvConfig
             case SV_BED: return filename + "bed";
             case READS: return filename + "reads.csv";
             case BAM: return filename + "bam";
+            case CACHE_BAM: return filename + "cache";
             case JUNCTIONS: return filename + "junctions.csv";
             case FRAGMENT_LENGTH_DIST: return filename + "fragment_lengths";
         }
@@ -268,6 +272,7 @@ public class SvConfig
         MaxPartitionReads = 0;
         ApplyDownsampling = false;
         RetrieveBlacklistMates = false;
+        UseCacheBam = false;
     }
 
     public static Options createCmdLineOptions()
@@ -293,6 +298,7 @@ public class SvConfig
         options.addOption(CAPTURE_DEPTH, false, "Capture depth for junctions");
         options.addOption(FIND_DISCORDANT_GROUPS, false, "Find junctions from discordant groups");
         options.addOption(APPLY_DOWNSAMPLING, false, "Apply downsampling of reads in high-depth regions");
+        options.addOption(USE_CACHE_BAM, false, "Write a BAM to cache candidate reads");
         options.addOption(THREADS, true, "Thread count");
         ReadFilterConfig.addCmdLineArgs(options);
 

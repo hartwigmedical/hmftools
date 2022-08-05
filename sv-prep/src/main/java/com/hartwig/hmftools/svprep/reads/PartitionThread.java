@@ -53,6 +53,7 @@ public class PartitionThread extends Thread
                 {
                     SV_LOGGER.info("chromosome({}) processing partition({}), remaining({})",
                             mChromosome, partition.TaskId, mPartitions.size());
+                    System.gc();
                 }
 
                 slicer.run();

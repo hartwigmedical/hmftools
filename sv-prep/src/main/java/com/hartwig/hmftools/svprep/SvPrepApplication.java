@@ -77,6 +77,9 @@ public class SvPrepApplication
             System.gc();
         }
 
+        if(mConfig.UseCacheBam)
+            mSpanningReadCache.candidateBamWriter().assignCandidateReads(mWriter);
+
         mWriter.close();
 
         long timeTakenMs = System.currentTimeMillis() - startTimeMs;

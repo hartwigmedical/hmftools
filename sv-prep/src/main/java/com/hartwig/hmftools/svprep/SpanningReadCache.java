@@ -10,10 +10,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.beust.jcommander.internal.Sets;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.reads.ReadGroup;
@@ -43,6 +43,7 @@ public class SpanningReadCache
     private int mLastSnapshotCount;
     private int mMatchedCandidates;
     private int mPurgedCandidates;
+    private final CandidateBamWriter mCandidateBamWriter;
 
     public SpanningReadCache(final SvConfig config)
     {
@@ -54,11 +55,14 @@ public class SpanningReadCache
         mLastSnapshotCount = 0;
         mMatchedCandidates = 0;
         mPurgedCandidates = 0;
+        mCandidateBamWriter = new CandidateBamWriter(config);
         mPerfCounter = new PerformanceCounter("SpanningReads");
     }
 
     private static final String CHR_PARTITION_DELIM = "_";
     private static final int LOG_CACH_DIFF = 50000;
+
+    public CandidateBamWriter candidateBamWriter() { return mCandidateBamWriter; }
 
     public static String formChromosomePartition(final String chromosome, int position, int partitionSize)
     {
@@ -66,7 +70,7 @@ public class SpanningReadCache
         return chromosome + CHR_PARTITION_DELIM + partition;
     }
 
-    private static String chrFromChrPartition(final String chrPartition)
+    public static String chrFromChrPartition(final String chrPartition)
     {
         return chrPartition.split(CHR_PARTITION_DELIM, 2)[0];
     }
@@ -128,31 +132,38 @@ public class SpanningReadCache
         if(ignoreChromosome(read.Chromosome))
             return;
 
-        Map<String,CachedReadGroup> cachedReadGroups = mCandidatePartitionGroups.get(sourceChrPartition);
-
-        if(cachedReadGroups != null)
+        if(mConfig.UseCacheBam)
         {
-            CachedReadGroup cachedReadGroup = cachedReadGroups.get(readGroup.id());
+            mCandidateBamWriter.addJunctionReadId(readGroup.remotePartitions(), read.id());
+        }
+        else
+        {
+            Map<String,CachedReadGroup> cachedReadGroups = mCandidatePartitionGroups.get(sourceChrPartition);
 
-            if(cachedReadGroup != null)
+            if(cachedReadGroups != null)
             {
-                mMatchedCandidates += cachedReadGroup.Reads.size();
-                cachedReadGroup.Reads.forEach(x -> readGroup.addRead(x));
-                cachedReadGroup.Reads.clear();
+                CachedReadGroup cachedReadGroup = cachedReadGroups.get(readGroup.id());
 
-                cachedReadGroups.remove(readGroup.id());
-
-                // also purge from other remote partitions
-                for(String otherRemotePartitions : cachedReadGroup.Partitions)
+                if(cachedReadGroup != null)
                 {
-                    if(!otherRemotePartitions.equals(sourceChrPartition))
+                    mMatchedCandidates += cachedReadGroup.Reads.size();
+                    cachedReadGroup.Reads.forEach(x -> readGroup.addRead(x));
+                    cachedReadGroup.Reads.clear();
+
+                    cachedReadGroups.remove(readGroup.id());
+
+                    // also purge from other remote partitions
+                    for(String otherRemotePartitions : cachedReadGroup.Partitions)
                     {
-                        Map<String, CachedReadGroup> otherReadGroups = mCandidatePartitionGroups.get(otherRemotePartitions);
+                        if(!otherRemotePartitions.equals(sourceChrPartition))
+                        {
+                            Map<String, CachedReadGroup> otherReadGroups = mCandidatePartitionGroups.get(otherRemotePartitions);
 
-                        if(otherReadGroups == null)
-                            continue;
+                            if(otherReadGroups == null)
+                                continue;
 
-                        otherReadGroups.remove(readGroup.id());
+                            otherReadGroups.remove(readGroup.id());
+                        }
                     }
                 }
             }
@@ -185,6 +196,12 @@ public class SpanningReadCache
 
         if(ignoreChromosome(read.Chromosome))
             return;
+
+        if(mConfig.UseCacheBam)
+        {
+            mCandidateBamWriter.writeCandidateRead(read);
+            return;
+        }
 
         /*
         // don't store reads which fall in blacklist regions
@@ -275,6 +292,17 @@ public class SpanningReadCache
 
     private void logCacheCount(boolean forceLog)
     {
+        if(mConfig.UseCacheBam)
+        {
+            if(!forceLog)
+                return;
+
+            int junctionReadIds = mJunctionPartitionReadIds.values().stream().mapToInt(x -> x.size()).sum();
+
+            SV_LOGGER.info("spanning cache partition processed({}) junctionIds({})", mProcessedPartitions.size(), junctionReadIds);
+            return;
+        }
+
         // read groups spanning multiple partitions will be double-counted, but ignore this
         int newCount = mCandidatePartitionGroups.values().stream()
                 .mapToInt(x -> x.values().stream().mapToInt(y -> y.Reads.size()).sum()).sum();

@@ -6,5 +6,6 @@ public enum WriteType
     SV_BED,
     READS,
     BAM,
+    CACHE_BAM,
     FRAGMENT_LENGTH_DIST;
 }

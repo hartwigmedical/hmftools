@@ -20,7 +20,7 @@ public class BamWriter
     private final SvConfig mConfig;
 
     private int mRecordWriteCount;
-    private SAMFileWriter mWriter;
+    private final SAMFileWriter mWriter;
     private String mOutputBam;
 
     public BamWriter(final SvConfig config)
