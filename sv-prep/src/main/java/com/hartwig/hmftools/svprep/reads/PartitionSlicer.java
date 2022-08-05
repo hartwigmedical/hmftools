@@ -1,17 +1,11 @@
 package com.hartwig.hmftools.svprep.reads;
 
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.common.sv.ExcludedRegions.getPolyGRegion;
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.nanosToSeconds;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_FRACTION;
 import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_THRESHOLD;
-import static com.hartwig.hmftools.svprep.WriteType.BAM;
-import static com.hartwig.hmftools.svprep.WriteType.READS;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
-import static com.hartwig.hmftools.svprep.reads.ReadType.RECOVERED;
 
 import java.io.File;
 import java.util.List;
@@ -22,7 +16,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-import com.hartwig.hmftools.svprep.CombinedReadGroups;
 import com.hartwig.hmftools.svprep.CombinedStats;
 import com.hartwig.hmftools.svprep.ExistingJunctionCache;
 import com.hartwig.hmftools.svprep.ResultsWriter;
@@ -31,7 +24,6 @@ import com.hartwig.hmftools.svprep.SvConfig;
 import com.hartwig.hmftools.svprep.WriteType;
 
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
@@ -60,8 +52,7 @@ public class PartitionSlicer
 
     private static final int PC_SLICE = 0;
     private static final int PC_JUNCTIONS = 1;
-    private static final int PC_MATE_SLICE = 2;
-    private static final int PC_TOTAL = 3;
+    private static final int PC_TOTAL = 2;
 
     public PartitionSlicer(
             final int id, final ChrBaseRegion region, final SvConfig config, final SpanningReadCache spanningReadCache,
@@ -106,7 +97,6 @@ public class PartitionSlicer
         mPerCounters = new PerformanceCounter[PC_TOTAL+1];
         mPerCounters[PC_SLICE] = new PerformanceCounter("Slice");
         mPerCounters[PC_JUNCTIONS] = new PerformanceCounter("Junctions");
-        mPerCounters[PC_MATE_SLICE] = new PerformanceCounter("UnmatchedSlice");
         mPerCounters[PC_TOTAL] = new PerformanceCounter("Total");
 
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
@@ -248,23 +238,15 @@ public class PartitionSlicer
             int totalGroupCount = junctionGroups.size();
             int expectedGroupCount = (int)junctionGroups.stream().filter(x -> x.groupStatus() == ReadGroupStatus.EXPECTED).count();
 
-            final Map<String,List<ExpectedRead>> missedReadsMap = Maps.newHashMap();
             mSpanningReadCache.processSpanningReadGroups(mRegion, spanningGroupsMap);
 
-            mPerCounters[PC_MATE_SLICE].start();
-            List<ReadGroup> recoveredReadGroups = findMissedReads(missedReadsMap);
-            mPerCounters[PC_MATE_SLICE].stop();
-
-            if(totalGroupCount == 0 && missedReadsMap.isEmpty())
+            if(totalGroupCount == 0)
                 return;
 
-            int matchedReads = spanningGroupsMap.values().stream().mapToInt(x -> (int)x.reads().stream().filter(y -> y.written()).count()).sum();
-
-            SV_LOGGER.debug("region({}) readGroups({}) complete(local={} spanning={}) expected({}) matchedReads({})",
-                    mRegion, totalGroupCount, totalGroupCount - spanningGroupCount, spanningGroupCount, expectedGroupCount, matchedReads);
+            SV_LOGGER.debug("region({}) readGroups({}) complete(local={} spanning={}) expected({})",
+                    mRegion, totalGroupCount, totalGroupCount - spanningGroupCount, spanningGroupCount, expectedGroupCount);
 
             mWriter.writeReadGroup(junctionGroups);
-            mWriter.writeReadGroup(recoveredReadGroups);
         }
 
         if(mConfig.WriteTypes.contains(WriteType.JUNCTIONS))
@@ -299,136 +281,6 @@ public class PartitionSlicer
             else
                 ++mStats.LocalIncompleteGroups;
         }
-    }
-
-    private static final int MAX_MISSED_READ_DEPTH = 100000;
-
-    private List<ReadGroup> findMissedReads(final Map<String,List<ExpectedRead>> missedReadsMap)
-    {
-        List<ReadGroup> readGroups = Lists.newArrayList();
-
-        if(missedReadsMap.isEmpty())
-            return readGroups;
-
-        int missedReadCount = missedReadsMap.values().stream().mapToInt(x -> x.size()).sum();
-        SV_LOGGER.trace("region({}) searching for {} missed reads", mRegion, missedReadCount);
-
-        // ignore reads in blacklist locations
-        int blacklistCount = 0;
-
-        // form 2 lists both order by missed read position
-        Map<Integer,List<ExpectedRead>> positionReads = Maps.newHashMap();
-        Map<Integer,List<String>> positionReadIds = Maps.newHashMap();
-
-        for(Map.Entry<String, List<ExpectedRead>> entry : missedReadsMap.entrySet())
-        {
-            String readId = entry.getKey();
-
-            for(ExpectedRead missedRead : entry.getValue())
-            {
-                if(mFilterRegion != null)
-                {
-                    if(mFilterRegion.containsPosition(missedRead.Position) || mFilterRegion.containsPosition(missedRead.Position + mConfig.ReadLength))
-                        continue;
-                }
-
-                boolean inBlacklist = mConfig.Blacklist.inBlacklistLocation(
-                        missedRead.Chromosome, missedRead.Position, missedRead.Position + mConfig.ReadLength);
-
-                if(inBlacklist)
-                {
-                    ++blacklistCount;
-
-                    if(!mConfig.RetrieveBlacklistMates)
-                        continue;
-                }
-
-                List<ExpectedRead> posReads = positionReads.get(missedRead.Position);
-                if(posReads == null)
-                {
-                    positionReads.put(missedRead.Position, Lists.newArrayList(missedRead));
-                    positionReadIds.put(missedRead.Position, Lists.newArrayList(readId));
-                }
-                else
-                {
-                    posReads.add(missedRead);
-                    positionReadIds.get(missedRead.Position).add(readId);
-                }
-            }
-        }
-
-        for(Map.Entry<Integer,List<ExpectedRead>> entry : positionReads.entrySet())
-        {
-            int position = entry.getKey();
-            List<ExpectedRead> missedReads = entry.getValue();
-            List<String> missedReadIds = positionReadIds.get(position);
-            int posMissedReadCount = missedReadIds.size();
-
-            long startTime = System.nanoTime();
-
-            findMissedReads(readGroups, position, missedReads, missedReadIds);
-
-            double sliceTime = nanosToSeconds(startTime, System.nanoTime());
-
-            if(sliceTime > 2)
-            {
-                SV_LOGGER.debug("slice time({}) for {} missed reads, location({}:{})",
-                        format("%.3f", sliceTime), posMissedReadCount, mRegion.Chromosome, position);
-            }
-        }
-
-        readGroups.forEach(x -> x.setGroupState());
-
-        if(missedReadsMap.size() != readGroups.size())
-        {
-            SV_LOGGER.debug("region({}) missed reads({}) recovered({}) in-blacklist({})",
-                    mRegion, missedReadsMap.size(), readGroups.size(), blacklistCount);
-        }
-
-        return readGroups;
-    }
-
-    private void findMissedReads(
-            List<ReadGroup> readGroups, int position, final List<ExpectedRead> missedReads, final List<String> missedReadIds)
-    {
-        final SAMRecordIterator iterator = mSamReader.queryAlignmentStart(mRegion.Chromosome, position);
-
-        int readCount = 0;
-        while(iterator.hasNext())
-        {
-            final SAMRecord record = iterator.next();
-            ++readCount;
-
-            if(readCount >= MAX_MISSED_READ_DEPTH)
-                break;
-
-            for(int i = 0; i < missedReads.size(); ++i)
-            {
-                if(missedReadIds.get(i).equals(record.getReadName()))
-                {
-                    ExpectedRead missedRead = missedReads.get(i);
-
-                    if(missedRead.FirstInPair != record.getFirstOfPairFlag())
-                        continue;
-
-                    if(missedRead.IsSupplementary != record.getSupplementaryAlignmentFlag())
-                        continue;
-
-                    ReadRecord read = ReadRecord.from(record);
-                    read.setReadType(RECOVERED);
-                    readGroups.add(new ReadGroup(read));
-
-                    missedReads.remove(i);
-                    missedReadIds.remove(i);
-                    break;
-                }
-            }
-
-            if(missedReads.isEmpty())
-                break;
-        }
-
-        iterator.close();
     }
 
     private boolean checkReadRateLimits(int positionStart)

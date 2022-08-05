@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.svprep.reads;
 
-import static com.hartwig.hmftools.svprep.CombinedReadGroups.formChromosomePartition;
+import static com.hartwig.hmftools.svprep.SpanningReadCache.formChromosomePartition;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
 
@@ -70,8 +70,6 @@ public class ReadGroup
 
     public boolean hasRemoteJunctionReads() { return mHasRemoteJunctionReads; }
     public void markHasRemoteJunctionReads() { mHasRemoteJunctionReads = true; }
-
-    public void markConditionalOnRemoteReads() { mConditionalOnRemoteReads = true; }
 
     public boolean removed() { return mRemoved; }
     public void markRemoved() { mRemoved = true; }
@@ -200,20 +198,6 @@ public class ReadGroup
     {
         return String.format("reads(%d) initRead(%s:%d-%d) id(%s) partitions(%d) state(%s)",
                 mReads.size(), mReads.get(0).Chromosome, mReads.get(0).start(), mReads.get(0).end(), id(), partitionCount(), mStatus);
-    }
-
-    public boolean hasSupplementaryMatch(final SupplementaryReadData suppData)
-    {
-        for(ReadRecord read : mReads)
-        {
-            if(read.supplementaryAlignment() == suppData)
-                continue;
-
-            if(read.Chromosome.equals(suppData.Chromosome) && read.start() == suppData.Position && read.cigar().toString().equals(suppData.Cigar))
-                return true;
-        }
-
-        return false;
     }
 
     private static boolean supplementaryInRegion(final SupplementaryReadData suppData, final ChrBaseRegion region)

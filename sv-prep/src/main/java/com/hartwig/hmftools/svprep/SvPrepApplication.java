@@ -77,8 +77,6 @@ public class SvPrepApplication
             System.gc();
         }
 
-        // mSpanningReadCache.logStats();
-
         mWriter.close();
 
         long timeTakenMs = System.currentTimeMillis() - startTimeMs;

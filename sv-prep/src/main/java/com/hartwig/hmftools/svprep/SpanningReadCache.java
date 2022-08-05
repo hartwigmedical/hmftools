@@ -27,35 +27,14 @@ public class SpanningReadCache
     // a cache of read groups found from each chr-partition to help retrieve complete fragments (ie expected reads within a group)
     // when a new chr-partition completes, the following steps are done:
     // - record that the chr-partition has been processed (in mProcessedPartitions)
-    // - search for any expected reads (ie mates from other read groups) in mChrPartitionReadGroupReads
-    // - if a read is matched, make note of it has already been written (to BAM) or record that it has been for future matches
-    // - remove any group once all reads have been matched/found
-    // - for newly registered expected reads (ie in future chr-partitions), store the in mChrPartitionReadGroupReads
-    // - also make a link of other (ie a 3rd) future chr-partitions back to the new chr-partition to speed up checking
-    // - purge any unmatched groups from this chr-partition if they weren't matched
+    // for read groups that support a junction:
+    // - pick up an cached candidate or supplementary reads, which then will be written to file
+    // - for the group's unprocessed remote partitions, cache the readId to aid with identifying expected reads
+    // for read groups with only candidate / supplementary reads
+    // - if no unprocessed partitions then drop immediately
+    // - otherwise cache as now (ie source partition and readId)
 
-    /*
-    - JUNCTIONs
-        - if has no unprocessed remote partitions -> DONE
-        - otherwise register readId only against remote partitions to be picked up as an expected readId
-        - pick up any SUPPORT reads
-            - add to read group and they will then be written
-            - remove these from CombinedCache
-
-    - SUPPORTs
-        - use the expected ReadIds to pick these up to avoid passing to the cache at all
-        - logically (due to synchronisation) will be either EXPECTED or have remote unprocessed partitions
-        - if no unprocessed partitions then drop immediately -> DONE
-        - otherwise cache as now (ie source partition and readId)
-
-     */
-
-    private final Map<String,Map<String,List<ReadRecord>>> mChrPartitionReadGroupReads; // keyed by chromosome-partition then readId
     private final Map<String,Map<String, CachedReadGroup>> mCandidatePartitionGroups; // keyed by chromosome-partition then readId
-
-    // a map of remote chr-partition to read partition to readIds
-    private final Map<String,Map<String,Set<String>>> mExpectedChrPartitionReadIds;
-
     private final Map<String,Set<String>> mJunctionPartitionReadIds;
 
     private final PerformanceCounter mPerfCounter;
@@ -69,9 +48,7 @@ public class SpanningReadCache
     {
         mConfig = config;
         mPartitionSize = config.PartitionSize;
-        mChrPartitionReadGroupReads = Maps.newHashMap();
         mCandidatePartitionGroups = Maps.newHashMap();
-        mExpectedChrPartitionReadIds = Maps.newHashMap();
         mJunctionPartitionReadIds = Maps.newHashMap();
         mProcessedPartitions = Sets.newHashSet();
         mLastSnapshotCount = 0;
@@ -135,7 +112,7 @@ public class SpanningReadCache
             }
         }
 
-        // purge any expected reads which were already found
+        // purge any cached candidate reads and junction readIds which are no longer relevant
         purgePartition(sourceChrPartition);
 
         logCacheCount(false);
@@ -298,13 +275,9 @@ public class SpanningReadCache
 
     private void logCacheCount(boolean forceLog)
     {
-        // int newCount = getCachedReadsCount(null);
-
         // read groups spanning multiple partitions will be double-counted, but ignore this
         int newCount = mCandidatePartitionGroups.values().stream()
                 .mapToInt(x -> x.values().stream().mapToInt(y -> y.Reads.size()).sum()).sum();
-
-        // int newCount = mChrPartitionReadGroupReads.values().stream().mapToInt(x -> x.values().stream().mapToInt(y -> y.size()).sum()).sum();
 
         if(abs(newCount - mLastSnapshotCount) > LOG_CACH_DIFF || forceLog)
         {
@@ -332,23 +305,6 @@ public class SpanningReadCache
             return;
 
         logCacheCount(true);
-
-        /*
-        int readGroups = 0;
-
-        for(Map<String,List<ReadRecord>> readGroupReads : mChrPartitionReadGroupReads.values())
-        {
-            readGroups += readGroupReads.size();
-        }
-
-        if(mProcessedPartitions.size() > 10)
-        {
-            SV_LOGGER.info("final spanning cache: readGroups({}) matched({}) purgedCandidate({})",
-                    readGroups, mMatchedCandidates, mPurgedCandidates);
-
-            mPerfCounter.logStats();
-        }
-        */
     }
 
     private class CachedReadGroup
@@ -368,14 +324,12 @@ public class SpanningReadCache
             return format("reads(%s) partitions(%s) id(%s)", Reads.size(), id(), Partitions);
         }
     }
+
     @VisibleForTesting
-    public Map<String,Map<String,List<ReadRecord>>> chrPartitionReadGroupsMap() { return mChrPartitionReadGroupReads; }
-    public Map<String,Map<String,CachedReadGroup>> candidatePartitionGroupsMap() { return mCandidatePartitionGroups; }
     public Map<String,Set<String>> junctionPartitionReadIdsMap() { return mJunctionPartitionReadIds; }
 
     public void reset()
     {
-        mChrPartitionReadGroupReads.clear();
         mCandidatePartitionGroups.clear();
         mJunctionPartitionReadIds.clear();
         mProcessedPartitions.clear();
@@ -391,136 +345,4 @@ public class SpanningReadCache
 
         return cachedReadGroups.stream().mapToInt(x -> x.Reads.size()).sum();
     }
-
-    private void processJunctionReadOld(
-            final List<String> unprocessedPartitions, final ReadGroup readGroup)
-    {
-        final ReadRecord read = readGroup.reads().get(0);
-
-        if(ignoreChromosome(read.Chromosome))
-            return;
-
-        for(String remotePartition : readGroup.remotePartitions())
-        {
-            Map<String,List<ReadRecord>> readGroupReads = mChrPartitionReadGroupReads.get(remotePartition);
-
-            if(readGroupReads == null)
-                continue;
-
-            List<ReadRecord> cachedReads = readGroupReads.get(readGroup.id());
-
-            if(cachedReads != null)
-            {
-                cachedReads.forEach(x -> readGroup.addRead(x));
-                readGroupReads.remove(readGroup.id());
-            }
-        }
-
-        // only store this junction readId if other remote unprocessed partitions within this same read group are expected
-        if(unprocessedPartitions.isEmpty())
-            return;
-
-        // store the junction group's readId against each unprocessed partition, to use to capture expected reads
-        for(String unprocessedPartition : unprocessedPartitions)
-        {
-            Set<String> readIds = mJunctionPartitionReadIds.get(unprocessedPartition);
-
-            if(readIds == null)
-            {
-                readIds = Sets.newHashSet();
-                mJunctionPartitionReadIds.put(unprocessedPartition, readIds);
-            }
-
-            readIds.add(readGroup.id());
-        }
-    }
-
-    private void processCandidateReadOld(
-            final List<String> unprocessedPartitions, final ReadGroup readGroup, final ReadRecord read)
-    {
-        if(unprocessedPartitions.isEmpty())
-            return;
-
-        if(ignoreChromosome(read.Chromosome))
-            return;
-
-        String readChrPartition = chrPartition(read.Chromosome, read.start());
-
-        /*
-        // don't store reads which fall in blacklist regions
-        if(!mConfig.RetrieveBlacklistMates && expectedRead != null && mConfig.Blacklist.inBlacklistLocation(
-                expectedRead.Chromosome, expectedRead.Position, expectedRead.Position + mConfig.ReadLength))
-        {
-            return;
-        }
-        */
-
-        Map<String,List<ReadRecord>> partitionReadGroupReads = mChrPartitionReadGroupReads.get(readChrPartition);
-
-        if(partitionReadGroupReads == null)
-        {
-            partitionReadGroupReads = Maps.newHashMap();
-            mChrPartitionReadGroupReads.put(readChrPartition, partitionReadGroupReads);
-        }
-
-        List<ReadRecord> readGroupReads = partitionReadGroupReads.get(readGroup.id());
-
-        if(readGroupReads == null)
-        {
-            readGroupReads = Lists.newArrayList();
-            partitionReadGroupReads.put(readGroup.id(), readGroupReads);
-        }
-
-        readGroupReads.add(read);
-
-        // also make a link to this readId from each other expected remote partition back to this read's partition
-        for(String unprocessedPartition : unprocessedPartitions)
-        {
-            Map<String,Set<String>> sourcePartitionMap = mExpectedChrPartitionReadIds.get(unprocessedPartition);
-            if(sourcePartitionMap == null)
-            {
-                sourcePartitionMap = Maps.newHashMap();
-                mExpectedChrPartitionReadIds.put(unprocessedPartition, sourcePartitionMap);
-            }
-
-            Set<String> readIds = sourcePartitionMap.get(readChrPartition);
-            if(readIds == null)
-            {
-                readIds = Sets.newHashSet();
-                sourcePartitionMap.put(readChrPartition, readIds);
-            }
-
-            readIds.add(readGroup.id());
-        }
-    }
-
-    private void purgeUnmatchedReadsOld(final String chrPartition)
-    {
-        mJunctionPartitionReadIds.remove(chrPartition); // no further value
-
-        Map<String,Set<String>> sourcePartitionMap = mExpectedChrPartitionReadIds.get(chrPartition);
-        if(sourcePartitionMap == null)
-            return;
-
-        mExpectedChrPartitionReadIds.remove(chrPartition);
-
-        for(Map.Entry<String,Set<String>> entry : sourcePartitionMap.entrySet())
-        {
-            String sourceChrPartition = entry.getKey();
-            Set<String> readIds = entry.getValue();
-
-            Map<String,List<ReadRecord>> readGroupReads = mChrPartitionReadGroupReads.get(sourceChrPartition);
-
-            for(String readId : readIds)
-            {
-                List<ReadRecord> reads = readGroupReads.get(readId);
-                if(reads == null)
-                    continue;
-
-                mPurgedCandidates += reads.size();
-                readGroupReads.remove(readId);
-            }
-        }
-    }
-
 }

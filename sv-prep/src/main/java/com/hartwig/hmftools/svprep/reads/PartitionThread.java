@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 
-import com.hartwig.hmftools.svprep.CombinedReadGroups;
 import com.hartwig.hmftools.svprep.CombinedStats;
 import com.hartwig.hmftools.svprep.ExistingJunctionCache;
 import com.hartwig.hmftools.svprep.ResultsWriter;
