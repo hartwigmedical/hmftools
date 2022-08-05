@@ -22,14 +22,14 @@ public class SvPrepApplication
 {
     private final SvConfig mConfig;
     private final ResultsWriter mWriter;
-    private final CombinedReadGroups mCombinedReadGroups;
+    private final SpanningReadCache mSpanningReadCache;
     private final ExistingJunctionCache mExistingJunctionCache;
 
     public SvPrepApplication(final CommandLine cmd)
     {
         mConfig = new SvConfig(cmd);
         mWriter = new ResultsWriter(mConfig);
-        mCombinedReadGroups = new CombinedReadGroups(mConfig);
+        mSpanningReadCache = new SpanningReadCache(mConfig);
         mExistingJunctionCache = new ExistingJunctionCache();
     }
 
@@ -58,7 +58,7 @@ public class SvPrepApplication
 
             SV_LOGGER.info("processing chromosome({})", chromosomeStr);
 
-            ChromosomeTask chromosomeTask = new ChromosomeTask(chromosomeStr, mConfig, mCombinedReadGroups, mExistingJunctionCache, mWriter);
+            ChromosomeTask chromosomeTask = new ChromosomeTask(chromosomeStr, mConfig, mSpanningReadCache, mExistingJunctionCache, mWriter);
             chromosomeTask.process();
             combinedStats.addPartitionStats(chromosomeTask.combinedStats().ReadStats);
 
@@ -77,7 +77,7 @@ public class SvPrepApplication
             System.gc();
         }
 
-        mCombinedReadGroups.logStats(mWriter);
+        // mSpanningReadCache.logStats();
 
         mWriter.close();
 

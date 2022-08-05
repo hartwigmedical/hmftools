@@ -126,7 +126,7 @@ public class JunctionTracker
     public List<ReadGroup> getRemoteCandidateReadGroups()
     {
         // gather up groups with a read in another partition and not linked to a junction
-        // to then pass to the combined cache to avoid a latter reslice
+        // to then pass to the combined cache
         return mRemoteCandidateReadGroups.stream().filter(x -> x.junctionPositions() == null).collect(Collectors.toList());
     }
 
@@ -190,6 +190,7 @@ public class JunctionTracker
 
             if(mExpectedReadIds.contains(readGroup.id()))
             {
+                readGroup.markHasRemoteJunctionReads();
                 mExpectedReadGroups.add(readGroup);
                 mExpectedReadIds.remove(readGroup.id());
             }

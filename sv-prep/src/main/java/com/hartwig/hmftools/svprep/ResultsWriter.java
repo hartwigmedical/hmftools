@@ -103,8 +103,10 @@ public class ResultsWriter
     {
         for(ReadGroup readGroup : readGroups)
         {
-            if(readGroup.conditionalOnRemoteReads() && !readGroup.hasRemoteJunctionReads())
+            if(filterReadGroup(readGroup))
                 continue;
+
+            writeBamRecords(readGroup);
 
             String junctionPosStr = "";
 
@@ -124,14 +126,24 @@ public class ResultsWriter
                         read, readGroup.size(), readGroup.expectedReadCount(), readGroup.groupStatus(), readGroup.spansPartitions(),
                         junctionPosStr);
             }
+
+            readGroup.reads().forEach(x -> x.setWritten());
         }
+    }
+
+    private static boolean filterReadGroup(final ReadGroup readGroup)
+    {
+        if(readGroup.conditionalOnRemoteReads() && !readGroup.hasRemoteJunctionReads())
+            return true;
+
+        return false;
     }
 
     private void writeReadData(
             final ReadRecord read, int readCount, int expectedReadCount, final ReadGroupStatus status, boolean spansPartitions,
             final String junctionPositions)
     {
-        if(mReadWriter == null || read.written())
+        if(mReadWriter == null)
             return;
 
         try
@@ -281,7 +293,7 @@ public class ResultsWriter
         }
     }
 
-    public synchronized void writeBamRecords(final List<ReadGroup> readGroups)
+    private void writeBamRecords(final ReadGroup readGroup)
     {
         if(mBamWriter == null)
             return;
@@ -291,20 +303,20 @@ public class ResultsWriter
         // - above the poly-G(C) threshold
         // - cannot be a group of only supplementaries (in case the group is an unmarked duplicate)
 
-        for(ReadGroup readGroup : readGroups)
+        for(ReadRecord read : readGroup.reads())
         {
-            if(readGroup.conditionalOnRemoteReads() && !readGroup.hasRemoteJunctionReads())
+            if(filterBamRecord(read))
                 continue;
 
-            readGroup.reads().stream().filter(x -> !filterBamRecord(x)).forEach(x -> mBamWriter.writeRecord(x.record()));
+            if(read.written())
+                continue;
+
+            mBamWriter.writeRecord(read.record());
         }
     }
 
     private boolean filterBamRecord(final ReadRecord read)
     {
-        if(read.written())
-            return true;
-
         if(ReadFilterType.isSet(read.filters(), POLY_G_SC))
             return true;
 

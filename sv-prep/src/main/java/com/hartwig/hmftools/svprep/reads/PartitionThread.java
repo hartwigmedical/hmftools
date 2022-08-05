@@ -9,13 +9,14 @@ import com.hartwig.hmftools.svprep.CombinedReadGroups;
 import com.hartwig.hmftools.svprep.CombinedStats;
 import com.hartwig.hmftools.svprep.ExistingJunctionCache;
 import com.hartwig.hmftools.svprep.ResultsWriter;
+import com.hartwig.hmftools.svprep.SpanningReadCache;
 import com.hartwig.hmftools.svprep.SvConfig;
 
 public class PartitionThread extends Thread
 {
     private final String mChromosome;
     private final SvConfig mConfig;
-    private final CombinedReadGroups mCombinedReadGroups;
+    private final SpanningReadCache mSpanningReadCache;
     private final ResultsWriter mWriter;
     private final CombinedStats mCombinedStats;
     private final ExistingJunctionCache mExistingJunctionCache;
@@ -24,12 +25,12 @@ public class PartitionThread extends Thread
 
     public PartitionThread(
             final String chromosome, final SvConfig config, final Queue<PartitionTask> partitions,
-            final CombinedReadGroups combinedReadGroups, final ExistingJunctionCache existingJunctionCache,
+            final SpanningReadCache spanningReadCache, final ExistingJunctionCache existingJunctionCache,
             final ResultsWriter writer, final CombinedStats combinedStats)
     {
         mChromosome = chromosome;
         mConfig = config;
-        mCombinedReadGroups = combinedReadGroups;
+        mSpanningReadCache = spanningReadCache;
         mExistingJunctionCache = existingJunctionCache;
         mWriter = writer;
         mCombinedStats = combinedStats;
@@ -47,7 +48,7 @@ public class PartitionThread extends Thread
                 PartitionTask partition = mPartitions.remove();
 
                 PartitionSlicer slicer = new PartitionSlicer(
-                        partition.TaskId, partition.Region, mConfig, mCombinedReadGroups, mExistingJunctionCache, mWriter, mCombinedStats);
+                        partition.TaskId, partition.Region, mConfig, mSpanningReadCache, mExistingJunctionCache, mWriter, mCombinedStats);
 
                 if(partition.TaskId > 0 && (partition.TaskId % 10) == 0)
                 {

@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_THRESHOLD;
 import static com.hartwig.hmftools.svprep.WriteType.BAM;
 import static com.hartwig.hmftools.svprep.WriteType.READS;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
-import static com.hartwig.hmftools.svprep.reads.ReadType.EXPECTED;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
 import static com.hartwig.hmftools.svprep.reads.ReadType.RECOVERED;
 
@@ -27,6 +26,7 @@ import com.hartwig.hmftools.svprep.CombinedReadGroups;
 import com.hartwig.hmftools.svprep.CombinedStats;
 import com.hartwig.hmftools.svprep.ExistingJunctionCache;
 import com.hartwig.hmftools.svprep.ResultsWriter;
+import com.hartwig.hmftools.svprep.SpanningReadCache;
 import com.hartwig.hmftools.svprep.SvConfig;
 import com.hartwig.hmftools.svprep.WriteType;
 
@@ -40,7 +40,7 @@ public class PartitionSlicer
     private final int mId;
     private final SvConfig mConfig;
     private final ChrBaseRegion mRegion;
-    private final CombinedReadGroups mCombinedReadGroups;
+    private final SpanningReadCache mSpanningReadCache;
     private final ResultsWriter mWriter;
     private final ReadFilters mReadFilters;
     private final ChrBaseRegion mFilterRegion;
@@ -64,13 +64,13 @@ public class PartitionSlicer
     private static final int PC_TOTAL = 3;
 
     public PartitionSlicer(
-            final int id, final ChrBaseRegion region, final SvConfig config, final CombinedReadGroups combinedReadGroups,
+            final int id, final ChrBaseRegion region, final SvConfig config, final SpanningReadCache spanningReadCache,
             final ExistingJunctionCache existingJunctionCache, final ResultsWriter writer, final CombinedStats combinedStats)
     {
         mId = id;
         mConfig = config;
         mReadFilters = config.ReadFiltering;
-        mCombinedReadGroups = combinedReadGroups;
+        mSpanningReadCache = spanningReadCache;
         mWriter = writer;
         mRegion = region;
         mCombinedStats = combinedStats;
@@ -126,7 +126,7 @@ public class PartitionSlicer
 
         mPerCounters[PC_JUNCTIONS].start();
 
-        mJunctionTracker.setExpectedReads(mCombinedReadGroups.getExpectedReadIds(mRegion));
+        mJunctionTracker.setExpectedReads(mSpanningReadCache.getExpectedReadIds(mRegion));
 
         mJunctionTracker.assignFragments();
         mJunctionTracker.filterJunctions();
@@ -249,7 +249,7 @@ public class PartitionSlicer
             int expectedGroupCount = (int)junctionGroups.stream().filter(x -> x.groupStatus() == ReadGroupStatus.EXPECTED).count();
 
             final Map<String,List<ExpectedRead>> missedReadsMap = Maps.newHashMap();
-            mCombinedReadGroups.processSpanningReadGroups(mRegion, spanningGroupsMap, missedReadsMap);
+            mSpanningReadCache.processSpanningReadGroups(mRegion, spanningGroupsMap);
 
             mPerCounters[PC_MATE_SLICE].start();
             List<ReadGroup> recoveredReadGroups = findMissedReads(missedReadsMap);
@@ -263,17 +263,8 @@ public class PartitionSlicer
             SV_LOGGER.debug("region({}) readGroups({}) complete(local={} spanning={}) expected({}) matchedReads({})",
                     mRegion, totalGroupCount, totalGroupCount - spanningGroupCount, spanningGroupCount, expectedGroupCount, matchedReads);
 
-            if(mConfig.WriteTypes.contains(BAM))
-            {
-                mWriter.writeBamRecords(junctionGroups);
-                mWriter.writeBamRecords(recoveredReadGroups);
-            }
-
-            if(mConfig.WriteTypes.contains(READS))
-            {
-                mWriter.writeReadGroup(junctionGroups);
-                mWriter.writeReadGroup(recoveredReadGroups);
-            }
+            mWriter.writeReadGroup(junctionGroups);
+            mWriter.writeReadGroup(recoveredReadGroups);
         }
 
         if(mConfig.WriteTypes.contains(WriteType.JUNCTIONS))
@@ -292,7 +283,7 @@ public class PartitionSlicer
     {
         readGroup.setPartitionCount(mRegion, mConfig.PartitionSize);
 
-        if(readGroup.spansPartitions())
+        if(readGroup.spansPartitions() && readGroup.groupStatus() != ReadGroupStatus.EXPECTED)
         {
             ++mStats.SpanningGroups;
 

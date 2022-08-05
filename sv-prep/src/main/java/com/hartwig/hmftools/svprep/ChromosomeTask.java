@@ -24,7 +24,7 @@ public class ChromosomeTask implements AutoCloseable
 {
     private final String mChromosome;
     private final SvConfig mConfig;
-    private final CombinedReadGroups mCombinedReadGroups;
+    private final SpanningReadCache mSpanningReadCache;
     private final ExistingJunctionCache mExistingJunctionCache;
     private final ResultsWriter mWriter;
     private final Queue<PartitionTask> mPartitions;
@@ -32,12 +32,12 @@ public class ChromosomeTask implements AutoCloseable
     private final CombinedStats mCombinedStats;
 
     public ChromosomeTask(
-            final String chromosome, final SvConfig config, final CombinedReadGroups combinedReadGroups,
+            final String chromosome, final SvConfig config, final SpanningReadCache spanningReadCache,
             final ExistingJunctionCache existingJunctionCache, final ResultsWriter writer)
     {
         mChromosome = chromosome;
         mConfig = config;
-        mCombinedReadGroups = combinedReadGroups;
+        mSpanningReadCache = spanningReadCache;
         mExistingJunctionCache = existingJunctionCache;
         mWriter = writer;
 
@@ -69,7 +69,7 @@ public class ChromosomeTask implements AutoCloseable
 
         for(int i = 0; i < min(mPartitions.size(), mConfig.Threads); ++i)
         {
-            workers.add(new PartitionThread(mChromosome, mConfig, mPartitions, mCombinedReadGroups, mExistingJunctionCache, mWriter, mCombinedStats));
+            workers.add(new PartitionThread(mChromosome, mConfig, mPartitions, mSpanningReadCache, mExistingJunctionCache, mWriter, mCombinedStats));
         }
 
         for(Thread worker : workers)
@@ -90,6 +90,8 @@ public class ChromosomeTask implements AutoCloseable
 
         SV_LOGGER.debug("chromosome({}) filters({})",
                 mChromosome, ReadFilterType.filterCountsToString(mCombinedStats.ReadStats.ReadFilterCounts));
+
+        mSpanningReadCache.logStats();
 
         if(mCombinedStats.ReadStats.TotalReads > 10000)
         {

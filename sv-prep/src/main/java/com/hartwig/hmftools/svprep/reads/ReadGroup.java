@@ -46,7 +46,7 @@ public class ReadGroup
 
     public boolean isComplete() { return mStatus == ReadGroupStatus.COMPLETE; }
 
-    public boolean spansPartitions() { return !mRemotePartitions.isEmpty() || mStatus == ReadGroupStatus.EXPECTED; }
+    public boolean spansPartitions() { return !mRemotePartitions.isEmpty(); }
     public int partitionCount() { return mRemotePartitions.size() + 1; }
     public int expectedReadCount() { return mExpectedReadCount; }
     public Set<String> remotePartitions() { return mRemotePartitions; }
@@ -140,7 +140,16 @@ public class ReadGroup
 
     public boolean conditionalOnRemoteReads()
     {
-        return mConditionalOnRemoteReads || mReads.stream().allMatch(x -> x.isSupplementaryAlignment() || x.readType() == CANDIDATE_SUPPORT);
+        // a candidate read needs to check that its remote mate read supports a junction
+        // and for supplementaries needs to check the the remote mate read(s) aren't duplicates
+        // an exception is where a supplementary supporting a junction is paired with a non-supp candidate
+        if(mReads.stream().allMatch(x -> x.isSupplementaryAlignment()))
+            return true;
+
+        if(mReads.stream().allMatch(x -> x.readType() == CANDIDATE_SUPPORT))
+            return true;
+
+        return false;
     }
 
     public void setPartitionCount(final ChrBaseRegion region, int partitionSize)
