@@ -189,12 +189,12 @@ public class FusionEvidenceTest {
 
         LinxFusion reportedFusionMatch = create("EML4", "ALK", true, KNOWN_PAIR.toString());
         LinxFusion reportedFusionUnMatch = create("NRG1", "NRG1", true, EXON_DEL_DUP.toString());
-        LinxFusion reportedPromiscuousMatch5 = create("BRAF", "other gene", true, PROMISCUOUS_5.toString());
-        LinxFusion reportedPromiscuousMatch3 = create("other gene", "EGFR", true, PROMISCUOUS_3.toString());
-        LinxFusion reportedPromiscuousUnMatch3 = create("other gene", "KRAS", true, PROMISCUOUS_3.toString());
-        LinxFusion reportedPromiscuousNonMatch = create("other gene", "TP53", true, PROMISCUOUS_3.toString());
-        LinxFusion unreportedPromiscuousMatch = create("other gene", "PTEN", false, PROMISCUOUS_3.toString());
-        LinxFusion reportedPromiscuousMatch = create("other gene", "CDK4", true, PROMISCUOUS_3.toString());
+        LinxFusion reportedPromiscuousMatch5 = create("other gene", "BRAF", true, PROMISCUOUS_5.toString());
+        LinxFusion reportedPromiscuousMatch3 = create("EGFR", "other gene", true, PROMISCUOUS_3.toString());
+        LinxFusion reportedPromiscuousUnMatch3 = create("KRAS", "other gene", true, PROMISCUOUS_3.toString());
+        LinxFusion reportedPromiscuousNonMatch = create("TP53", "other gene", true, PROMISCUOUS_3.toString());
+        LinxFusion unreportedPromiscuousMatch = create("PTEN", "other gene", false, PROMISCUOUS_3.toString());
+        LinxFusion reportedPromiscuousMatch = create("CDK4", "other gene", true, PROMISCUOUS_3.toString());
         LinxFusion reportedOtherMatch = create("other gene", "AB", false, NONE.toString());
         LinxFusion reportedIgPromiscuous = create("IGH", "other gene", false, IG_PROMISCUOUS.toString());
         LinxFusion reportedIgKnown = create("IGH", "BCL2", false, IG_KNOWN_PAIR.toString());
