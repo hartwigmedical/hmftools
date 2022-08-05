@@ -23,7 +23,7 @@ public class Cdr3SequenceTsvWriter
         FrameShifted, VGene, JGene, VAnchor, D, JAnchor, VAnchorAA, DAA, JAnchorAA, VLayoutSeq, JLayoutSeq, overlap
     }
 
-    private static final String FILE_EXTENSION = ".cdr3.sequence.tsv";
+    private static final String FILE_EXTENSION = ".cider.sequence.tsv";
 
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
     {

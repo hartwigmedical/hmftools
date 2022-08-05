@@ -10,7 +10,6 @@ class ReadLayoutBuilder(inputReads: List<ReadLayout.Read>, minBaseQuality: Int, 
     val minBaseQuality: Byte = minBaseQuality.toByte()
     val minMatchedBases: Int = minMatchedBases
     val minMatchRatio: Double = minMatchRatio
-    val alignLeft: Boolean = alignLeft
     val inputReadList: List<ReadLayout.Read>
 
     init
@@ -69,7 +68,7 @@ class ReadLayoutBuilder(inputReads: List<ReadLayout.Read>, minBaseQuality: Int, 
                 //val (matchCount, compareCount) = layoutMatch(readLayout, readData, alignLeft, minBaseQuality)
                 //val matchRatio = matchCount / compareCount.toDouble()
 
-                if (layoutMatch(readLayout, readData, alignLeft, minBaseQuality))
+                if (layoutMatch(readLayout, readData, minBaseQuality, minMatchedBases))
                 {
                     //sLogger.info("match found")
                     matchedLayout = readLayout
@@ -81,7 +80,6 @@ class ReadLayoutBuilder(inputReads: List<ReadLayout.Read>, minBaseQuality: Int, 
                 val overlay = ReadLayout()
                 addToOverlay(overlay, readData, minBaseQuality)
                 readLayouts.add(overlay)
-                sLogger.info("new overlay: seq: {}", overlay.consensusSequence())
             }
             else
             {
@@ -197,35 +195,25 @@ class ReadLayoutBuilder(inputReads: List<ReadLayout.Read>, minBaseQuality: Int, 
         }
 
         //
-        // score the read pairs.
-        //
         @JvmStatic
-        fun layoutMatch(layout: ReadLayout, readData: ReadLayout.Read, alignLeft: Boolean, baseQualityCutoff: Byte): Boolean
+        fun layoutMatch(layout: ReadLayout, readData: ReadLayout.Read, baseQualityCutoff: Byte, minOverlap: Int): Boolean
         {
-            // calculate start end offset for both
-            val layoutOffsetStart: Int
-            val readOffsetStart: Int
-            var n: Int
+            // NOTE: alignedPosition is with respect to itself.
+            // i.e. for a layout it is the position from layout start
+            // for a read it is position from the read sequence start
+            // it can actually be negative or larger than the sequence
 
-            if (alignLeft)
-            {
-                layoutOffsetStart = layout.alignedPosition
-                readOffsetStart = readData.alignedPosition
-                n = Math.min(layout.highQualSequence.length - layoutOffsetStart, readData.sequence.length - readOffsetStart)
-            }
-            else
-            {
-                // aligned right, so the aligned position is the last value
-                n = Math.min(layout.alignedPosition, readData.alignedPosition)
-                layoutOffsetStart = layout.alignedPosition - n
-                readOffsetStart = readData.alignedPosition - n
+            val alignedPosMin = Math.min(layout.alignedPosition, readData.alignedPosition)
 
-                // since the aligned position is the index of the last instead of 1 past last
-                // we must adjust for it
-                n += 1
-            }
+            // this will work also if the position is negative, i.e. before the sequence
+            val layoutOffsetStart: Int = layout.alignedPosition - alignedPosMin
+            val readOffsetStart: Int = readData.alignedPosition - alignedPosMin
 
-            //val n: Int = Math.min(layout.highQualSequence.length - layoutOffsetStart, readData.sequence.length - readOffsetStart)
+            // n is the number of bases overlap
+            val n: Int = Math.min(layout.length - layoutOffsetStart, readData.sequence.length - readOffsetStart)
+
+            if (n < minOverlap)
+                return false
 
             // we only compare the CDR3 DNA part, the other part we ignore
             return sequenceMatch(layout.highQualSequence, readData.sequence,

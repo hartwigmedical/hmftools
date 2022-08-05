@@ -5,23 +5,31 @@ import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter
 import htsjdk.samtools.SAMUtils
 import java.io.BufferedWriter
+import java.io.File
 
-object VJReadOverlayFile
+object VJReadLayoutFile
 {
-    private const val EXTENSION = ".overlay"
+    private const val FILE_EXTENSION = ".cider.layout"
+
+    private fun generateFilename(basePath: String, sample: String): String
+    {
+        return basePath + File.separator + sample + FILE_EXTENSION
+    }
 
     @JvmStatic
-    fun writeOverlays(filePath: String, overlayMap: Map<VJGeneType, List<ReadLayout>>, minSoftClipBases: Int)
+    fun writeLayouts(outputDir: String, sampleId: String, overlayMap: Map<VJGeneType, List<ReadLayout>>, minSoftClipBases: Int)
     {
+        val filePath = generateFilename(outputDir, sampleId)
+
         createBufferedWriter(filePath).use { writer ->
             for ((geneType, overlayList) in overlayMap)
             {
-                writeOverlays(writer, geneType, overlayList, minSoftClipBases)
+                writeLayouts(writer, geneType, overlayList, minSoftClipBases)
             }
         }
     }
 
-    private fun writeOverlays(writer: BufferedWriter, geneType: VJGeneType, overlayList: List<ReadLayout>, minSoftClipBases: Int)
+    private fun writeLayouts(writer: BufferedWriter, geneType: VJGeneType, overlayList: List<ReadLayout>, minSoftClipBases: Int)
     {
         // sort the overlays by number of reads
         val sortedOverlayList = overlayList.sortedByDescending({ o -> o.reads.size })
@@ -66,7 +74,8 @@ object VJReadOverlayFile
 
         writer.write("${i} type: ${geneType}, read count: ${overlay.reads.size}, split(5) read count: ${numSplitReads5Bases}, ")
         writer.write("split(10) read count: ${numSplitReads10Bases}, ")
-        writer.write("AA: ${aa1}-${aa2}\n")
+        writer.write("AA: ${aa1}-${aa2}, ")
+        writer.write("aligned: ${overlay.alignedPosition}\n")
         writer.write("    ${sequence1}-${sequence2}\n")
         writer.write("    ${support1}-${support2}\n")
 
@@ -112,7 +121,8 @@ object VJReadOverlayFile
 
         writer.write("${i} type: ${geneType}, read count: ${overlay.reads.size}, split(5) read count: ${numSplitReads5Bases}, ")
         writer.write("split(10) read count: ${numSplitReads10Bases}, ")
-        writer.write("AA: ${aa}\n")
+        writer.write("AA: ${aa}, ")
+        writer.write("aligned: ${overlay.alignedPosition}\n")
         writer.write("    ${sequence}\n")
         writer.write("    ${support}\n")
 
@@ -122,7 +132,7 @@ object VJReadOverlayFile
             val readPadding = Math.max(overlay.alignedPosition - r.alignedPosition, 0)
             val paddedSeq = " ".repeat(readPadding) + r.sequence
             val paddedQual = " ".repeat(readPadding) + SAMUtils.phredToFastq(r.baseQualities)
-            writer.write("    read: ${read.read}\n")
+            writer.write("    read: ${read.read}, aligned: ${r.alignedPosition}\n")
             writer.write("    ${insertDashes(paddedSeq, anchorRange)}\n")
             writer.write("    ${insertDashes(paddedQual, anchorRange)}\n")
         }

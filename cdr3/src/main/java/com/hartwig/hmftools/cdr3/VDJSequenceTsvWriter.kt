@@ -37,7 +37,7 @@ object VDJSequenceTsvWriter
         support
     }
 
-    private const val FILE_EXTENSION = ".cdr3.vdj_seq.tsv"
+    private const val FILE_EXTENSION = ".cider.vdj_seq.tsv"
 
     @JvmStatic
     fun generateFilename(basePath: String, sample: String): String

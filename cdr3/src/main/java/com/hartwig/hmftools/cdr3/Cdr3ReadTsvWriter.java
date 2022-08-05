@@ -16,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class Cdr3ReadTsvWriter
 {
-    private static final String FILE_EXTENSION = ".cdr3.read.tsv";
+    private static final String FILE_EXTENSION = ".cider.read.tsv";
 
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
     {

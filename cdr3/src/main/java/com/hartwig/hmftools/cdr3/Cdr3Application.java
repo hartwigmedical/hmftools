@@ -6,7 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -150,7 +150,7 @@ public class Cdr3Application
             }
 
             List<ReadLayout> readLayouts = VJReadLayoutAdaptor.buildOverlays(geneType, readCandidates,
-                    mParams.MinBaseQuality, 30, 1.0, mParams.numBasesToTrim);
+                    mParams.MinBaseQuality, 20, 1.0, mParams.numBasesToTrim);
 
             // now log the sequences
             for (ReadLayout layout : readLayouts)
@@ -185,7 +185,7 @@ public class Cdr3Application
             layoutMap.put(geneType, readLayouts);
         }
 
-        VJReadOverlayFile.writeOverlays(mParams.OutputDir + "/overlays", layoutMap, 5);
+        VJReadLayoutFile.writeLayouts(mParams.OutputDir, mParams.SampleId, layoutMap, 5);
 
         // now try to find the VDJs
         VJLayoutAligner vjLayoutAligner = new VJLayoutAligner(20, 1.0);
@@ -231,7 +231,7 @@ public class Cdr3Application
         if (!mParams.writeFilteredBam)
             return;
 
-        String outBamPath = mParams.OutputDir + "/" + mParams.SampleId + ".cdr3.bam";
+        String outBamPath = mParams.OutputDir + "/" + mParams.SampleId + ".cider.bam";
 
         final SamReaderFactory readerFactory = readerFactory(mParams);
         SAMFileHeader samFileHeader;
@@ -261,7 +261,7 @@ public class Cdr3Application
 
     public static void main(final String... args) throws IOException, InterruptedException
     {
-        sLogger.info("{}", LocalDate.now());
+        sLogger.info("{}", LocalDateTime.now());
         sLogger.info("args: {}", String.join(" ", args));
 
         Cdr3Application cdr3Application = new Cdr3Application();

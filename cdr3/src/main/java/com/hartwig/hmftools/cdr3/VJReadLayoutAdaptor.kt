@@ -4,7 +4,6 @@ import com.hartwig.hmftools.cdr3.layout.LayoutTree
 import com.hartwig.hmftools.cdr3.layout.LayoutTreeBuilder
 import com.hartwig.hmftools.cdr3.layout.ReadLayout
 import com.hartwig.hmftools.cdr3.layout.ReadLayoutBuilder
-import htsjdk.samtools.util.SequenceUtil
 import org.apache.logging.log4j.LogManager
 
 // helper class to convert from the outer VJ classes to the overlay classes
@@ -12,29 +11,37 @@ object VJReadLayoutAdaptor
 {
     private val sLogger = LogManager.getLogger(javaClass)
 
-    @JvmStatic
-    fun readCandidateToLayoutRead(readCandidate: VJReadCandidate) : ReadLayout.Read
+    fun readCandidateToLayoutRead(readCandidate: VJReadCandidate, trimBases: Int) : ReadLayout.Read
     {
+        val retainStart: Int
+        val retainEnd: Int
+        val alignedPosition: Int
+
         if (readCandidate.vjGeneType.isV)
         {
             // for V, we layout from the anchor start, left to right
             // we are only interested in what comes after anchor start
-            val vAnchorStart: Int = readCandidate.anchorOffsetStart
-            return ReadLayout.Read(readCandidate, ReadKey(readCandidate.read.readName, readCandidate.read.firstOfPairFlag),
-                readCandidate.readSequence.substring(vAnchorStart),
-                readCandidate.baseQualities.drop(vAnchorStart).toByteArray(),
-                0)
+            retainStart = Math.max(readCandidate.anchorOffsetStart, trimBases)
+            retainEnd = readCandidate.readLength - trimBases
+
+            // aligned position we must take into account that we remove all bases before vAnchor start
+            alignedPosition = readCandidate.anchorOffsetEnd - 1 - retainStart
         }
         else
         {
             // for J, we layout from the anchor last, right to left
             // we are only interested in what comes before anchor end
-            val jAnchorEnd: Int = readCandidate.anchorOffsetEnd
-            return ReadLayout.Read(readCandidate, ReadKey(readCandidate.read.readName, readCandidate.read.firstOfPairFlag),
-                readCandidate.readSequence.substring(0, jAnchorEnd),
-                readCandidate.baseQualities.take(jAnchorEnd).toByteArray(),
-                jAnchorEnd - 1)
+            retainStart = trimBases
+            retainEnd = Math.min(readCandidate.anchorOffsetEnd, readCandidate.readLength - trimBases)
+
+            // aligned position we must take into account that we remove all bases before vAnchor start
+            alignedPosition = readCandidate.anchorOffsetStart - retainStart
         }
+
+        return ReadLayout.Read(readCandidate, ReadKey(readCandidate.read.readName, readCandidate.read.firstOfPairFlag),
+            readCandidate.readSequence.substring(retainStart, retainEnd),
+            readCandidate.baseQualities.sliceArray(retainStart until retainEnd),
+            alignedPosition)
     }
 
     @JvmStatic
@@ -67,24 +74,37 @@ object VJReadLayoutAdaptor
         // we more or less get the top one
         val anchorLength = overlayReads.maxOfOrNull { o: VJReadCandidate -> o.anchorOffsetEnd - o.anchorOffsetStart } ?: 0
 
-        // for V read we align to anchor start, for J read we align to last base of the anchor
+        val anchorRange =
+        // for V read we align to last base of anchor, for J read we align to first base of the anchor
         if (geneType.isV)
-            return overlay.alignedPosition until overlay.alignedPosition + anchorLength
+            overlay.alignedPosition - anchorLength + 1 .. overlay.alignedPosition
         else if (geneType.isJ)
-            return overlay.alignedPosition - anchorLength + 1 .. overlay.alignedPosition
-        return null
+            overlay.alignedPosition until overlay.alignedPosition + anchorLength
+        else
+            null
+
+        if (anchorRange == null)
+            return null
+
+        // protect against 0 and end
+        return Math.max(0, anchorRange.first) until Math.min(anchorRange.last + 1, overlay.length)
     }
 
     // we also make sure they are aligned to codons
     @JvmStatic
     fun getCdr3Range(geneType: VJGeneType, overlay: ReadLayout) : IntRange?
     {
+        val anchorRange = getAnchorRange(geneType, overlay)
+
+        if (anchorRange == null)
+            return null
+
         // for V it is the sequence after the aligned position
         // for J it is the sequence before
         if (geneType.isV)
-            return overlay.alignedPosition until overlay.consensusSequence().length
+            return anchorRange.first until overlay.consensusSequence().length
         else if (geneType.isJ)
-            return 0 until overlay.alignedPosition
+            return 0 .. anchorRange.last
         return null
     }
 
@@ -120,7 +140,7 @@ object VJReadLayoutAdaptor
     {
         sLogger.info("building {} overlays from {} reads", geneType, readCandidates.size)
 
-        val overlayInputs = readCandidates.map({ o -> readCandidateToLayoutRead(o) }).toList()
+        val overlayInputs = readCandidates.map({ o -> readCandidateToLayoutRead(o, numBasesToTrim) }).toList()
         // for V type we build from left, J we build from right
         val overlayBuilder = ReadLayoutBuilder(
             inputReads = overlayInputs,

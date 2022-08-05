@@ -32,6 +32,11 @@ data class VJReadCandidate(
         ALIGN, EXACT
     }
 
+    val readLength: Int get()
+    {
+        return read.readLength
+    }
+
     // read sequence in the order that the gene is transcribed
     val readSequence: String get()
     {

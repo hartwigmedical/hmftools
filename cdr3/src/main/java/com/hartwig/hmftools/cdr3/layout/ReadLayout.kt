@@ -192,7 +192,12 @@ class ReadLayout(
         if (!mutableReadSet.add(read.readKey))
             return false
 
-        if (read.alignedPosition > alignedPosition)
+        if (mutableReads.isEmpty())
+        {
+            // this if first read
+            alignedPosition = read.alignedPosition
+        }
+        else if (read.alignedPosition > alignedPosition)
         {
             // update max offset for each group item
             val offsetChange = read.alignedPosition - alignedPosition
