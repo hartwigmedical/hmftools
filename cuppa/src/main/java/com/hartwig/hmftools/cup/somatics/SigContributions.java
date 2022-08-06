@@ -176,7 +176,7 @@ public class SigContributions
     {
         Map<String,Map<String,Double>> sampleSigContributions = Maps.newHashMap();
 
-        CUP_LOGGER.debug("building SNV signature contributions for {} samples", sampleCountMatrix.Cols);
+        CUP_LOGGER.debug("building SNV signature contributions for {} samples", sampleCountMatrix.Rows);
 
         SomaticSigs somaticSigs = new SomaticSigs(null);
 
@@ -190,7 +190,7 @@ public class SigContributions
                 continue;
             }
 
-            final double[] sampleCounts = sampleCountMatrix.getCol(sampleIndexMap.get(sampleId));
+            final double[] sampleCounts = sampleCountMatrix.getRow(sampleIndexMap.get(sampleId));
 
             final double[] sigAllocations = somaticSigs.fitSampleCounts(sampleCounts);
 

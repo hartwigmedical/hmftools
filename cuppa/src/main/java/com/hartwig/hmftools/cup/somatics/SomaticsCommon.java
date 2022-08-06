@@ -62,7 +62,10 @@ public final class SomaticsCommon
             final Matrix subMatrix = loadRefSampleCounts(filename, samplesList, Lists.newArrayList("BucketName"));
 
             if(subMatrix == null)
+            {
+                CUP_LOGGER.info("failed to load type({}) file{{}}", type, filename);
                 return null;
+            }
 
             CUP_LOGGER.info("combined {} counts from {} samples", type, samplesList.size());
 
@@ -70,7 +73,7 @@ public final class SomaticsCommon
 
             if(combinedMatrix == null)
             {
-                combinedMatrix = new Matrix(refSampleCount, subMatrix.Rows);
+                combinedMatrix = new Matrix(refSampleCount, subMatrix.Cols);
             }
 
             final double[][] combinedData = combinedMatrix.getData();
