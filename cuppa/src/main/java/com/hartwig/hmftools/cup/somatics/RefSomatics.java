@@ -255,7 +255,7 @@ public class RefSomatics implements RefClassifier
         // take any existing counts
         if(existingRefSampleCounts != null)
         {
-            refMatrix = new Matrix(refSampleIds.size(), existingRefSampleCounts.Rows);
+            refMatrix = new Matrix(refSampleIds.size(), existingRefSampleCounts.Cols);
 
             int refSampleIndex = 0;
 
