@@ -12,22 +12,32 @@ public class FileSources
     public final String Purple;
     public final String SomaticVcf;
     public final String GermlineVcf;
+    public final String Cuppa;
+    public final String Lilac;
+    public final String Chord;
 
     public static final String SAMPLE_DIR = "sample_dir";
     public static final String LINX_DIR = "linx_dir";
     public static final String PURPLE_DIR = "purple_dir";
+    public static final String CUPPA_DIR = "cuppa_dir";
+    public static final String LILAC_DIR = "lilac_dir";
+    public static final String CHORD_DIR = "chord_dir";
 
     // specify Sage VCFs instead of the default Purple VCFs
     public static final String SOMATIC_VCF = "somatic_vcf";
     public static final String GERMLINE_VCF = "germline_vcf";
 
-    public FileSources(final String source, final String linx, final String purple, final String somaticVcf, final String germlineVcf)
+    public FileSources(final String source, final String linx, final String purple, final String somaticVcf, final String germlineVcf,
+            final String cuppa, final String lilac, final String chord)
     {
         Source = source;
         Linx = linx;
         Purple = purple;
         SomaticVcf = somaticVcf;
         GermlineVcf = germlineVcf;
+        Cuppa = cuppa;
+        Lilac = lilac;
+        Chord = chord;
     }
 
     public static FileSources sampleInstance(final FileSources fileSources, final String sampleId)
@@ -43,7 +53,10 @@ public class FileSources
                 fileSources.Linx.replaceAll("\\*", sampleId),
                 fileSources.Purple.replaceAll("\\*", sampleId),
                 fileSources.SomaticVcf.replaceAll("\\*", sampleId),
-                fileSources.GermlineVcf.replaceAll("\\*", sampleId));
+                fileSources.GermlineVcf.replaceAll("\\*", sampleId),
+                fileSources.Cuppa.replaceAll("\\*", sampleId),
+                fileSources.Lilac.replaceAll("\\*", sampleId),
+                fileSources.Chord.replaceAll("\\*", sampleId));
     }
 
     public static FileSources fromConfig(final String fileSourceStr)
@@ -62,6 +75,9 @@ public class FileSources
         String purpleDir = "";
         String somaticVcf = "";
         String germlineVcf = "";
+        String cuppaDir = "";
+        String lilacDir = "";
+        String chordDir = "";
 
         int itemIndex = 1;
 
@@ -97,6 +113,18 @@ public class FileSources
             {
                 germlineVcf = value;
             }
+            else if(type.equals(LILAC_DIR))
+            {
+                lilacDir = value;
+            }
+            else if(type.equals(CHORD_DIR))
+            {
+                chordDir = value;
+            }
+            else if(type.equals(CUPPA_DIR))
+            {
+                cuppaDir = value;
+            }
         }
 
         if(linxDir.isEmpty())
@@ -105,7 +133,16 @@ public class FileSources
         if(purpleDir.isEmpty())
             purpleDir = sampleDir;
 
-        return new FileSources(source, linxDir, purpleDir, somaticVcf, germlineVcf);
+        if(chordDir.isEmpty())
+            chordDir = sampleDir;
+
+        if(cuppaDir.isEmpty())
+            cuppaDir = sampleDir;
+
+        if(lilacDir.isEmpty())
+            lilacDir = sampleDir;
+
+        return new FileSources(source, linxDir, purpleDir, somaticVcf, germlineVcf, cuppaDir, lilacDir, chordDir);
     }
 
     private static String getDirectory(final String sampleDir, final String typeDir)

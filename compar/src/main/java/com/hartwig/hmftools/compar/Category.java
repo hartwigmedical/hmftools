@@ -8,7 +8,10 @@ public enum Category
     GERMLINE_VARIANT,
     GERMLINE_DELETION,
     FUSION,
-    DISRUPTION;
+    DISRUPTION,
+    CUPPA,
+    LILAC,
+    CHORD;
 
     public static final String ALL_CATEGORIES = "ALL";
 }
