@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsInde
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
@@ -33,6 +34,8 @@ public class CuppaDataFile
     public static final String FLD_REF_CANCER_TYPE = "RefCancerType";
     public static final String FLD_REF_VALUE = "RefValue";
 
+    public static final String CUPPA_DATAFILE = ".cup.data.csv";
+
     public CuppaDataFile(
             final CategoryType category, final ResultType resultType,
             final String dataType, final String value, final Map<String,Double> cancerTypeValues)
@@ -42,6 +45,11 @@ public class CuppaDataFile
         Result = resultType;
         Value = value;
         CancerTypeValues = cancerTypeValues;
+    }
+
+    public static String generateFilename(final String basePath, final String sample)
+    {
+        return basePath + File.separator + sample + CUPPA_DATAFILE;
     }
 
     public static String header()
@@ -117,4 +125,30 @@ public class CuppaDataFile
 
         return results;
     }
+
+    public static List<String> getRankedCancerTypes(final Map<String,Double> cancerTypeValues)
+    {
+        List<String> cancerTypes = Lists.newArrayList();
+        List<Double> scores = Lists.newArrayList();
+
+        for(Map.Entry<String,Double> entry : cancerTypeValues.entrySet())
+        {
+            int index = 0;
+            double score = entry.getValue();
+
+            while(index < scores.size())
+            {
+                if(score > scores.get(index))
+                    break;
+
+                ++index;
+            }
+
+            scores.add(index, score);
+            cancerTypes.add(index, entry.getKey());
+        }
+
+        return cancerTypes;
+    }
+
 }

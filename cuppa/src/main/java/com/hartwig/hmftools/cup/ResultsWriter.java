@@ -63,7 +63,7 @@ public class ResultsWriter
             boolean isSingleSample = mSampleDataCache.isSingleSample();
 
             final String detailedFilename = isSingleSample ?
-                    mConfig.OutputDir + mSampleDataCache.SpecificSample.Id + ".cup.data.csv"
+                    CuppaDataFile.generateFilename(mConfig.OutputDir, mSampleDataCache.SpecificSample.Id)
                     : mConfig.formOutputFilename("SAMPLE_DATA");
 
             mDetailedWriter = createBufferedWriter(detailedFilename, false);

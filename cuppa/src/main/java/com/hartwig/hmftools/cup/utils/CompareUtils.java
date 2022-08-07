@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
 import com.hartwig.hmftools.cup.common.SampleResult;
 
 public final class CompareUtils
@@ -47,29 +48,8 @@ public final class CompareUtils
 
     public static List<String> getRankedCancerTypes(final SampleResult result)
     {
-        List<String> cancerTypes = Lists.newArrayList();
-        List<Double> scores = Lists.newArrayList();
-
-        for(Map.Entry<String,Double> entry : result.CancerTypeValues.entrySet())
-        {
-            int index = 0;
-            double score = entry.getValue();
-
-            while(index < scores.size())
-            {
-                if(score > scores.get(index))
-                    break;
-
-                ++index;
-            }
-
-            scores.add(index, score);
-            cancerTypes.add(index, entry.getKey());
-        }
-
-        return cancerTypes;
+        return CuppaDataFile.getRankedCancerTypes(result.CancerTypeValues);
     }
-
 
     public static final String EMPTY_RESULTS_CSV = DATA_DELIM + DATA_DELIM;
 

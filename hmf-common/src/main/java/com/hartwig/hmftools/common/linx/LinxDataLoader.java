@@ -16,36 +16,43 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class LinxDataLoader {
+public final class LinxDataLoader
+{
 
     private static final Logger LOGGER = LogManager.getLogger(LinxDataLoader.class);
 
-    private LinxDataLoader() {
+    private LinxDataLoader()
+    {
     }
 
     @NotNull
     public static LinxData load(@NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxDriverCatalogTsv)
-            throws IOException {
+            throws IOException
+    {
         return load(null, linxFusionTsv, linxBreakendTsv, linxDriverCatalogTsv, null, null);
     }
 
     @NotNull
     public static LinxData load(@Nullable String linxStructuralVariantTsv, @NotNull String linxFusionTsv, @NotNull String linxBreakendTsv,
             @NotNull String linxDriverCatalogTsv, @Nullable String linxDriverTsv, @Nullable String linxGermlineDisruptionTsv)
-            throws IOException {
+            throws IOException
+    {
         LOGGER.info("Loading LINX data from {}", new File(linxFusionTsv).getParent());
         List<LinxFusion> allFusions = LinxFusion.read(linxFusionTsv);
 
         List<LinxFusion> reportableFusions = Lists.newArrayList();
-        for (LinxFusion fusion : allFusions) {
-            if (fusion.reported()) {
+        for(LinxFusion fusion : allFusions)
+        {
+            if(fusion.reported())
+            {
                 reportableFusions.add(fusion);
             }
         }
         LOGGER.info(" Loaded {} fusions (of which {} are reportable) from {}", allFusions.size(), reportableFusions.size(), linxFusionTsv);
 
         List<LinxSvAnnotation> allStructuralVariants = Lists.newArrayList();
-        if (linxStructuralVariantTsv != null) {
+        if(linxStructuralVariantTsv != null)
+        {
             allStructuralVariants = LinxSvAnnotation.read(linxStructuralVariantTsv);
             LOGGER.info(" Loaded {} structural variants from {}", allStructuralVariants.size(), linxStructuralVariantTsv);
         }
@@ -66,18 +73,22 @@ public final class LinxDataLoader {
         LOGGER.info(" Loaded {} reportable homozygous disruptions from {}", homozygousDisruptions.size(), linxDriverCatalogTsv);
 
         List<LinxDriver> allDrivers = Lists.newArrayList();
-        if (linxDriverTsv != null) {
+        if(linxDriverTsv != null)
+        {
             allDrivers = LinxDriver.read(linxDriverTsv);
             LOGGER.info(" Loaded {} drivers from {}", allDrivers.size(), linxDriverTsv);
         }
 
         List<LinxGermlineSv> allGermlineDisruptions = Lists.newArrayList();
         List<LinxGermlineSv> reportableGermlineDisruptions = Lists.newArrayList();
-        if (linxGermlineDisruptionTsv != null) {
+        if(linxGermlineDisruptionTsv != null)
+        {
             allGermlineDisruptions = LinxGermlineSv.read(linxGermlineDisruptionTsv);
 
-            for (LinxGermlineSv germlineDisruption : allGermlineDisruptions) {
-                if (germlineDisruption.Reported) {
+            for(LinxGermlineSv germlineDisruption : allGermlineDisruptions)
+            {
+                if(germlineDisruption.Reported)
+                {
                     reportableGermlineDisruptions.add(germlineDisruption);
                 }
             }
@@ -101,10 +112,13 @@ public final class LinxDataLoader {
     }
 
     @NotNull
-    private static List<LinxBreakend> selectReportable(@NotNull List<LinxBreakend> breakends) {
+    private static List<LinxBreakend> selectReportable(@NotNull List<LinxBreakend> breakends)
+    {
         List<LinxBreakend> reportableBreakends = Lists.newArrayList();
-        for (LinxBreakend breakend : breakends) {
-            if (breakend.reportedDisruption()) {
+        for(LinxBreakend breakend : breakends)
+        {
+            if(breakend.reportedDisruption())
+            {
                 reportableBreakends.add(breakend);
             }
         }

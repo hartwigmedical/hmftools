@@ -14,7 +14,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface LinxData {
+public interface LinxData
+{
 
     @NotNull
     List<LinxSvAnnotation> allStructuralVariants();
