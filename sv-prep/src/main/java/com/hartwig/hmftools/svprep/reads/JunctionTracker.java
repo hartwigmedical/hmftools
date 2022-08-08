@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.LOW_BASE_QUALITY;
+import static com.hartwig.hmftools.svprep.SvConstants.MAX_HIGH_QUAL_BASE_MISMATCHES;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_LINE_SOFT_CLIP_LENGTH;
@@ -27,7 +28,6 @@ import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.EXACT_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.EXPECTED;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
-import static com.hartwig.hmftools.svprep.reads.ReadType.NO_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.RemoteJunction.addRemoteJunction;
 
@@ -753,6 +753,7 @@ public class JunctionTracker
             int junctionReadOffset = juncReadEndPosIndex - readEndPosIndex - endPosDiff;
 
             // test against all the read's right soft-clipped bases
+            int highQualMismatches = 0;
             for(int i = readLength - scLength; i < readLength; ++i)
             {
                 char readBase = read.readBases().charAt(i);
@@ -769,7 +770,10 @@ public class JunctionTracker
                 if(read.baseQualities()[i] < LOW_BASE_QUALITY || juncRead.baseQualities()[juncIndex] < LOW_BASE_QUALITY)
                     continue;
 
-                return false;
+                ++highQualMismatches;
+
+                if(highQualMismatches > MAX_HIGH_QUAL_BASE_MISMATCHES)
+                    return false;
             }
         }
         else
@@ -805,6 +809,7 @@ public class JunctionTracker
             int softClipDiff = juncReadScLength - scLength;
             int junctionReadOffset = softClipDiff - posOffset;
             int juncReadLength = juncRead.readBases().length();
+            int highQualMismatches = 0;
 
             for(int i = 0; i < scLength; ++i)
             {
@@ -822,7 +827,10 @@ public class JunctionTracker
                 if(read.baseQualities()[i] < LOW_BASE_QUALITY || juncRead.baseQualities()[juncIndex] < LOW_BASE_QUALITY)
                     continue;
 
-                return false;
+                ++highQualMismatches;
+
+                if(highQualMismatches > MAX_HIGH_QUAL_BASE_MISMATCHES)
+                    return false;
             }
         }
 

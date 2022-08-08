@@ -66,8 +66,13 @@ public class ReadSupportTest
 
         assertTrue(hasExactJunctionSupport(supportRead, junctionData, READ_FILTERS));
 
-        // testing mismatches
+        // testing mismatches - 1 is allowed
         record.getReadBases()[0] = (byte)'A';
+
+        supportRead = ReadRecord.from(record);
+        assertTrue(hasExactJunctionSupport(supportRead, junctionData, READ_FILTERS));
+
+        record.getReadBases()[1] = (byte)'A';
 
         supportRead = ReadRecord.from(record);
         assertFalse(hasExactJunctionSupport(supportRead, junctionData, READ_FILTERS));
@@ -122,6 +127,11 @@ public class ReadSupportTest
         // testing mismatches
         record.getReadBases()[58] = (byte)'T';
         record.getReadBases()[62] = (byte)'T';
+
+        supportRead = ReadRecord.from(record);
+        assertTrue(hasExactJunctionSupport(supportRead, junctionData, READ_FILTERS));
+
+        record.getReadBases()[61] = (byte)'T';
 
         supportRead = ReadRecord.from(record);
         assertFalse(hasExactJunctionSupport(supportRead, junctionData, READ_FILTERS));
