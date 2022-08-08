@@ -83,7 +83,7 @@ public class FusionEvidence {
     }
 
     private boolean match(@NotNull LinxFusion fusion, @NotNull ActionableGene actionable) {
-        if (fusion.reportedType().equals(KnownFusionType.PROMISCUOUS_3.name())) {
+        if (fusion.reportedType().equals(KnownFusionType.PROMISCUOUS_3.toString())) {
             if (knownFusionCache.hasPromiscuousThreeGene(fusion.geneEnd())) {
                 return actionable.gene().equals(fusion.geneEnd());
             }
