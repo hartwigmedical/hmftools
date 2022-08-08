@@ -23,8 +23,7 @@ public final class SvConstants
     public static final int MIN_INDEL_SUPPORT_LENGTH = 20;
     public static final int LOW_BASE_QUALITY = 20;
 
-    public static final int REPEAT_BREAK_SC_CHECK_LENGTH = 6;
-    public static final int REPEAT_BREAK_MATCH_CHECK_LENGTH = 9;
+    public static final int REPEAT_BREAK_CHECK_LENGTH = 9;
     public static final int REPEAT_BREAK_MIN_MAP_QUAL = 40;
     public static final int REPEAT_BREAK_MIN_SC_LENGTH = 50;
 

@@ -14,10 +14,9 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.svprep.SvConstants.MAX_SOFT_CLIP_LOW_QUAL_COUNT;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_LINE_SOFT_CLIP_LENGTH;
-import static com.hartwig.hmftools.svprep.SvConstants.REPEAT_BREAK_MATCH_CHECK_LENGTH;
+import static com.hartwig.hmftools.svprep.SvConstants.REPEAT_BREAK_CHECK_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.REPEAT_BREAK_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.svprep.SvConstants.REPEAT_BREAK_MIN_SC_LENGTH;
-import static com.hartwig.hmftools.svprep.SvConstants.REPEAT_BREAK_SC_CHECK_LENGTH;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.BREAK_IN_REPEAT;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.INSERT_MAP_OVERLAP;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.MIN_ALIGN_MATCH;
@@ -29,8 +28,6 @@ import static com.hartwig.hmftools.svprep.reads.ReadFilterType.SOFT_CLIP_LOW_BAS
 import static com.hartwig.hmftools.svprep.reads.ReadRecord.getSoftClippedBases;
 
 import static htsjdk.samtools.CigarOperator.M;
-import static htsjdk.samtools.CigarOperator.binaryToEnum;
-import static htsjdk.samtools.SAMFlag.MATE_UNMAPPED;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.SAMRecord;
@@ -189,17 +186,17 @@ public class ReadFilters
         if(leftClipped)
         {
             // 0-9 sc bases, length = 10, checked range is 4-9 and 10-17
-            startIndex = max(scLength - REPEAT_BREAK_SC_CHECK_LENGTH, 0);
+            startIndex = max(scLength - REPEAT_BREAK_CHECK_LENGTH, 0);
         }
         else
         {
             // 91-100 sc bases, length = 10, checked range 83-90 and 91-96
-            startIndex = max(readLength - scLength - REPEAT_BREAK_MATCH_CHECK_LENGTH, 0);
+            startIndex = max(readLength - scLength - REPEAT_BREAK_CHECK_LENGTH, 0);
         }
 
-        int endIndex = min(startIndex + REPEAT_BREAK_SC_CHECK_LENGTH + REPEAT_BREAK_MATCH_CHECK_LENGTH, readLength);
+        int endIndex = min(startIndex + REPEAT_BREAK_CHECK_LENGTH + REPEAT_BREAK_CHECK_LENGTH, readLength);
 
-        if(endIndex - startIndex < REPEAT_BREAK_SC_CHECK_LENGTH + REPEAT_BREAK_MATCH_CHECK_LENGTH)
+        if(endIndex - startIndex < REPEAT_BREAK_CHECK_LENGTH + REPEAT_BREAK_CHECK_LENGTH)
             return false;
 
         byte firstBase = readBases[startIndex];

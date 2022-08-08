@@ -55,8 +55,9 @@ public class PartitionSlicer
     private static final int PC_TOTAL = 2;
 
     public PartitionSlicer(
-            final int id, final ChrBaseRegion region, final SvConfig config, final SpanningReadCache spanningReadCache,
-            final ExistingJunctionCache existingJunctionCache, final ResultsWriter writer, final CombinedStats combinedStats)
+            final int id, final ChrBaseRegion region, final SvConfig config, final SamReader samReader, final BamSlicer bamSlicer,
+            final SpanningReadCache spanningReadCache, final ExistingJunctionCache existingJunctionCache, final ResultsWriter writer,
+            final CombinedStats combinedStats)
     {
         mId = id;
         mConfig = config;
@@ -70,11 +71,8 @@ public class PartitionSlicer
 
         mJunctionTracker.addExistingJunctions(existingJunctionCache.getRegionJunctions(mRegion));
 
-        mSamReader = mConfig.BamFile != null ?
-                SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
-
-        mBamSlicer = new BamSlicer(0, false, true, false);
-        mBamSlicer.setKeepUnmapped();
+        mSamReader = samReader;
+        mBamSlicer = bamSlicer;
 
         if(mConfig.ApplyDownsampling)
         {

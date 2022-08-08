@@ -2,14 +2,20 @@ package com.hartwig.hmftools.svprep.reads;
 
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 
+import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.svprep.CombinedStats;
 import com.hartwig.hmftools.svprep.ExistingJunctionCache;
 import com.hartwig.hmftools.svprep.ResultsWriter;
 import com.hartwig.hmftools.svprep.SpanningReadCache;
 import com.hartwig.hmftools.svprep.SvConfig;
+
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 
 public class PartitionThread extends Thread
 {
@@ -20,6 +26,8 @@ public class PartitionThread extends Thread
     private final CombinedStats mCombinedStats;
     private final ExistingJunctionCache mExistingJunctionCache;
 
+    private final SamReader mSamReader;
+    private final BamSlicer mBamSlicer;
     private final Queue<PartitionTask> mPartitions;
 
     public PartitionThread(
@@ -35,6 +43,12 @@ public class PartitionThread extends Thread
         mCombinedStats = combinedStats;
         mPartitions = partitions;
 
+        mSamReader = mConfig.BamFile != null ?
+                SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
+
+        mBamSlicer = new BamSlicer(0, false, true, false);
+        mBamSlicer.setKeepUnmapped();
+
         start();
     }
 
@@ -47,7 +61,8 @@ public class PartitionThread extends Thread
                 PartitionTask partition = mPartitions.remove();
 
                 PartitionSlicer slicer = new PartitionSlicer(
-                        partition.TaskId, partition.Region, mConfig, mSpanningReadCache, mExistingJunctionCache, mWriter, mCombinedStats);
+                        partition.TaskId, partition.Region, mConfig, mSamReader, mBamSlicer,
+                        mSpanningReadCache, mExistingJunctionCache, mWriter, mCombinedStats);
 
                 boolean logAndGc = partition.TaskId > 0 && (partition.TaskId % 10) == 0;
 
@@ -67,6 +82,15 @@ public class PartitionThread extends Thread
                 SV_LOGGER.trace("all tasks complete");
                 break;
             }
+        }
+
+        try
+        {
+            mSamReader.close();
+        }
+        catch(IOException e)
+        {
+            SV_LOGGER.error("failed to close bam file: {}", e.toString());
         }
     }
 }

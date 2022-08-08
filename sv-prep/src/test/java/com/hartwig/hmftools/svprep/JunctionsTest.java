@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.BLACKLIST_LOCATIONS;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.CHR_1;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.HOTSPOT_CACHE;
+import static com.hartwig.hmftools.svprep.SvPrepTestUtils.buildFlags;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.createSamRecord;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.readIdStr;
 import static com.hartwig.hmftools.svprep.reads.ReadFilters.isRepetitiveSectionBreak;
@@ -56,7 +57,8 @@ public class JunctionsTest
                 readIdStr(++readId), CHR_1, 800, REF_BASES.substring(0, 100), "30S70M"));
 
         ReadRecord read2 = ReadRecord.from(createSamRecord(
-                readIdStr(readId), CHR_1, 820, REF_BASES.substring(20, 120), "100M"));
+                readIdStr(readId), CHR_1, 820, REF_BASES.substring(20, 120), "100M",
+                buildFlags(false, true, false)));
 
         addRead(read1, JUNCTION);
         addRead(read2, NO_SUPPORT);
@@ -70,7 +72,8 @@ public class JunctionsTest
                 readIdStr(++readId), CHR_1, 950, REF_BASES.substring(0, 100), "30S70M"));
 
         ReadRecord read4 = ReadRecord.from(createSamRecord(
-                readIdStr(readId), CHR_1, 980, REF_BASES.substring(20, 120), "100M"));
+                readIdStr(readId), CHR_1, 980, REF_BASES.substring(20, 120), "100M",
+                buildFlags(false, true, false)));
 
         addRead(read3, JUNCTION);
         addRead(read4, NO_SUPPORT);
@@ -123,21 +126,20 @@ public class JunctionsTest
         assertEquals(NEG_ORIENT, junctionData.Orientation);
         assertEquals(1, junctionData.junctionFragmentCount());
         assertEquals(1, junctionData.exactSupportFragmentCount());
-        assertEquals(1, mJunctionTracker.junctions().get(1).exactSupportFragmentCount());
 
         junctionData = mJunctionTracker.junctions().stream().filter(x -> x.Position == 1049).findFirst().orElse(null);
         assertNotNull(junctionData);
         assertEquals(POS_ORIENT, junctionData.Orientation);
         assertEquals(1, junctionData.junctionFragmentCount());
         assertEquals(1, junctionData.exactSupportFragmentCount());
-        assertEquals(2, junctionData.supportingFragmentCount());
+        assertEquals(4, junctionData.supportingFragmentCount());
 
         junctionData = mJunctionTracker.junctions().stream().filter(x -> x.Position == 1059).findFirst().orElse(null);
         assertNotNull(junctionData);
         assertEquals(POS_ORIENT, junctionData.Orientation);
         assertEquals(1, junctionData.junctionFragmentCount());
-        assertEquals(1, junctionData.exactSupportFragmentCount());
-        assertEquals(3, junctionData.supportingFragmentCount());
+        assertEquals(2, junctionData.exactSupportFragmentCount());
+        assertEquals(5, junctionData.supportingFragmentCount());
     }
 
     @Test
@@ -271,59 +273,35 @@ public class JunctionsTest
     }
 
     @Test
-    public void testRepetitiveBreaks()
+    public void testProximateJunctions()
     {
-        String bases = generateRandomBases(30);
+        int readId = 0;
 
-        assertFalse(isRepetitiveSectionBreak(bases.getBytes(), true, 10));
-        assertFalse(isRepetitiveSectionBreak(bases.getBytes(), false, 10));
+        ReadRecord read1 = ReadRecord.from(createSamRecord(
+                readIdStr(++readId), CHR_1, 800, REF_BASES.substring(0, 100), "30S70M"));
 
-        bases = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+        read1.setReadType(JUNCTION);
 
-        assertTrue(isRepetitiveSectionBreak(bases.getBytes(), true, 10));
-        assertTrue(isRepetitiveSectionBreak(bases.getBytes(), false, 10));
+        ReadRecord read2 = ReadRecord.from(createSamRecord(
+                readIdStr(++readId), CHR_1, 820, REF_BASES.substring(20, 120), "100M"));
 
-        // 2-base repeats
-        bases = "ATATATATATATATATATATATATATATAT";
+        /*
+        read2.setReadType(JUNCTION);
+        addRead();
+        junctionTracker.processRead(read1);
+        junctionTracker.processRead(read2);
 
-        assertTrue(isRepetitiveSectionBreak(bases.getBytes(), true, 10));
-        assertTrue(isRepetitiveSectionBreak(bases.getBytes(), false, 10));
+        ReadRecord suppRead1 = ReadRecord.from(createSamRecord(
+                readIdStr(++readId), CHR_1, 800, REF_BASES.substring(0, 73), "3S70M"));
 
-        // with an error
-        bases = "ATATATAGATATATATATATAGATATATAT";
+        suppRead1.setReadType(CANDIDATE_SUPPORT);
+        junctionTracker.processRead(suppRead1);
 
-        assertFalse(isRepetitiveSectionBreak(bases.getBytes(), true, 10));
-        assertFalse(isRepetitiveSectionBreak(bases.getBytes(), false, 10));
+        junctionTracker.assignFragments();
 
-        // 3-base repeats
-        bases = "ATCATCATCATCATCATCATCATCATCATCATC";
-
-        assertTrue(isRepetitiveSectionBreak(bases.getBytes(), true, 10));
-        assertTrue(isRepetitiveSectionBreak(bases.getBytes(), false, 10));
-
-        // with an error
-        bases = "ATCATCATGATCATCATCATCATCGTCATCATC";
-
-        assertFalse(isRepetitiveSectionBreak(bases.getBytes(), true, 10));
-        assertFalse(isRepetitiveSectionBreak(bases.getBytes(), false, 10));
+        assertTrue(junctionTracker.junctions().isEmpty());
+         */
     }
 
-    @Test
-    public void testPolyATReads()
-    {
-        String aRepeat = "AAAAAAAAAACAAAAAAA";
-        String tRepeat = "TTTTTGTTTTTTTTTTTT";
-        String bases = aRepeat + generateRandomBases(30) + tRepeat;
 
-        ReadRecord read = ReadRecord.from(createSamRecord("01",  CHR_1, 100, bases, "18S30M18S"));
-        assertTrue(hasPolyATSoftClip(read, true));
-        assertTrue(hasPolyATSoftClip(read, false));
-
-        aRepeat = "AAAAACGAAACAAAAAAA";
-        tRepeat = "TTTTTGTTTTTAGTTTTT";
-        bases = aRepeat + generateRandomBases(30) + tRepeat;
-        read = ReadRecord.from(createSamRecord("01",  CHR_1, 100, bases, "18S30M18S"));
-        assertFalse(hasPolyATSoftClip(read, true));
-        assertFalse(hasPolyATSoftClip(read, false));
-    }
 }

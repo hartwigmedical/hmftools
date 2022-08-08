@@ -183,6 +183,7 @@ public class JunctionTracker
     {
         List<ReadGroup> candidateSupportGroups = Lists.newArrayList();
 
+        // for(ReadGroup readGroup : mReadGroupMap.values())
         for(ReadGroup readGroup : mReadGroups)
         {
             if(readGroup.removed())
@@ -210,11 +211,18 @@ public class JunctionTracker
 
             // read groups can be assigned to more than one junction
             if(readGroup.hasReadType(JUNCTION))
+            {
                 createJunction(readGroup);
-
-            if(readGroup.hasReadType(CANDIDATE_SUPPORT))
                 candidateSupportGroups.add(readGroup);
+            }
+            else if(readGroup.hasReadType(CANDIDATE_SUPPORT))
+            {
+                candidateSupportGroups.add(readGroup);
+            }
         }
+
+        if(mJunctions.isEmpty())
+            return;
 
         mLastJunctionIndex = -1; // reset before supporting fragment assignment
         mInitialSupportingFrags = candidateSupportGroups.size();
@@ -236,8 +244,9 @@ public class JunctionTracker
                     continue;
                 }
 
-                if(read.readType() == CANDIDATE_SUPPORT)
-                    checkJunctionSupport(read, supportedJunctions);
+                // allow reads that match a junction to be considered for support (eg exact) for other junctions
+                if(read.readType() == CANDIDATE_SUPPORT || read.readType() == JUNCTION)
+                    checkJunctionSupport(readGroup, read, supportedJunctions);
             }
 
             if(!supportedJunctions.isEmpty())
@@ -516,7 +525,7 @@ public class JunctionTracker
         mJunctions.add(index, newJunction);
     }
 
-    private void checkJunctionSupport(final ReadRecord read, final Map<JunctionData,ReadType> supportedJunctions)
+    private void checkJunctionSupport(final ReadGroup readGroup, final ReadRecord read, final Map<JunctionData,ReadType> supportedJunctions)
     {
         // first check indel support
         checkIndelSupport(read, supportedJunctions);
@@ -532,25 +541,13 @@ public class JunctionTracker
         }
 
         if(closeJunctionIndex == -1)
-        {
-            if(mJunctions.size() < 20)
-            {
-                for(JunctionData junctionData : mJunctions)
-                {
-                    checkReadSupportsJunction(read, junctionData, supportedJunctions);
-                }
-
-                return;
-            }
-
             closeJunctionIndex = findJunctionIndex(read);
-        }
 
         if(closeJunctionIndex < 0)
             return;
 
         setLastJunctionIndex(closeJunctionIndex);
-        checkReadSupportsJunction(read, mJunctions.get(closeJunctionIndex), supportedJunctions);
+        checkReadSupportsJunction(readGroup, read, mJunctions.get(closeJunctionIndex), supportedJunctions);
 
         // check up and down from this location
         for(int i = 0; i <= 1; ++i)
@@ -566,7 +563,7 @@ public class JunctionTracker
                 if(!readWithinJunctionRange(read, junctionData))
                     break;
 
-                checkReadSupportsJunction(read, junctionData, supportedJunctions);
+                checkReadSupportsJunction(readGroup, read, junctionData, supportedJunctions);
 
                 if(searchUp)
                     ++index;
@@ -577,9 +574,13 @@ public class JunctionTracker
     }
 
     private void checkReadSupportsJunction(
-            final ReadRecord read, final JunctionData junctionData, final Map<JunctionData,ReadType> supportedJunctions)
+            final ReadGroup readGroup, final ReadRecord read, final JunctionData junctionData,
+            final Map<JunctionData,ReadType> supportedJunctions)
     {
         if(reachedFragmentCap(junctionData.supportingFragmentCount())) // to limit processing
+            return;
+
+        if(readGroup.hasJunctionPosition(junctionData.Position))
             return;
 
         ReadType readType = supportedJunctions.get(junctionData);
@@ -612,10 +613,23 @@ public class JunctionTracker
 
     private int findJunctionIndex(final ReadRecord read)
     {
+        if(mJunctions.size() <= 5)
+        {
+            for(int index = 0; index < mJunctions.size(); ++index)
+            {
+                if(readWithinJunctionRange(read, mJunctions.get(index)))
+                    return index;
+            }
+
+            return -1;
+        }
+
         // binary search on junctions if the collection gets too large
         int currentIndex = mJunctions.size() / 2;
         int lowerIndex = 0;
         int upperIndex = mJunctions.size() - 1;
+
+        int iterations = 0;
 
         while(true)
         {
@@ -644,6 +658,15 @@ public class JunctionTracker
             }
             else
             {
+                break;
+            }
+
+            ++iterations;
+
+            if(iterations > 1000)
+            {
+                SV_LOGGER.warn("junction index search iterations({}}) junctions({}) index(cur={} low={} high={})",
+                        iterations, mJunctions.size(), currentIndex, lowerIndex, upperIndex);
                 break;
             }
         }
@@ -919,4 +942,43 @@ public class JunctionTracker
         int baseIndex = position - mRegion.start();
         return baseIndex >= 0 && baseIndex < mBaseDepth.length ? mBaseDepth[baseIndex] : 0;
     }
+
+    /*
+    private boolean hasFragmentOverlaps(final JunctionData junctionData, int index, boolean searchNext)
+    {
+        JunctionData nextJunction = null;
+
+        if(searchNext)
+        {
+            if(index + 1 >= mJunctions.size())
+                return false;
+
+            nextJunction = mJunctions.get(index + 1);
+        }
+        else
+        {
+            if(index == 0)
+                return false;
+
+            nextJunction = mJunctions.get(index - 1);
+        }
+
+        if(nextJunction.Orientation != junctionData.Orientation)
+            return false;
+
+        if(abs(nextJunction.Position - junctionData.Orientation) > 10)
+            return false;
+
+        if(!junctionHasSupport(nextJunction))
+            return false;
+
+        for(ReadGroup readGroup : nextJunction.ExactSupportGroups)
+        {
+            if(readGroup.hasJunctionPosition(junctionData.Position))
+                return true;
+        }
+
+        return false;
+    }
+    */
 }

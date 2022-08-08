@@ -14,6 +14,8 @@ import static com.hartwig.hmftools.svprep.reads.JunctionTracker.hasDiscordantJun
 import static com.hartwig.hmftools.svprep.reads.JunctionTracker.hasExactJunctionSupport;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.INSERT_MAP_OVERLAP;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.svprep.reads.ReadFilters.isRepetitiveSectionBreak;
+import static com.hartwig.hmftools.svprep.reads.ReadRecord.hasPolyATSoftClip;
 
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
@@ -212,12 +214,69 @@ public class ReadSupportTest
         assertFalse(ReadFilterType.isSet(filters, INSERT_MAP_OVERLAP));
     }
 
+    @Test
+    public void testRepetitiveBreaks()
+    {
+        String bases = generateRandomBases(30);
+
+        assertFalse(isRepetitiveSectionBreak(bases.getBytes(), true, 10));
+        assertFalse(isRepetitiveSectionBreak(bases.getBytes(), false, 10));
+
+        bases = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+
+        assertTrue(isRepetitiveSectionBreak(bases.getBytes(), true, 10));
+        assertTrue(isRepetitiveSectionBreak(bases.getBytes(), false, 10));
+
+        // 2-base repeats
+        bases = "ATATATATATATATATATATATATATATAT";
+
+        assertTrue(isRepetitiveSectionBreak(bases.getBytes(), true, 10));
+        assertTrue(isRepetitiveSectionBreak(bases.getBytes(), false, 10));
+
+        // with an error
+        bases = "ATATATAGATATATATATATAGATATATAT";
+
+        assertFalse(isRepetitiveSectionBreak(bases.getBytes(), true, 10));
+        assertFalse(isRepetitiveSectionBreak(bases.getBytes(), false, 10));
+
+        // 3-base repeats
+        bases = "ATCATCATCATCATCATCATCATCATCATCATC";
+
+        assertTrue(isRepetitiveSectionBreak(bases.getBytes(), true, 10));
+        assertTrue(isRepetitiveSectionBreak(bases.getBytes(), false, 10));
+
+        // with an error
+        bases = "ATCATCATGATCATCATCATCATCGTCATCATC";
+
+        assertFalse(isRepetitiveSectionBreak(bases.getBytes(), true, 10));
+        assertFalse(isRepetitiveSectionBreak(bases.getBytes(), false, 10));
+    }
+
+    @Test
+    public void testPolyATReads()
+    {
+        String aRepeat = "AAAAAAAAAACAAAAAAA";
+        String tRepeat = "TTTTTGTTTTTTTTTTTT";
+        String bases = aRepeat + generateRandomBases(30) + tRepeat;
+
+        ReadRecord read = ReadRecord.from(createSamRecord("01",  CHR_1, 100, bases, "18S30M18S"));
+        assertTrue(hasPolyATSoftClip(read, true));
+        assertTrue(hasPolyATSoftClip(read, false));
+
+        aRepeat = "AAAAACGAAACAAAAAAA";
+        tRepeat = "TTTTTGTTTTTAGTTTTT";
+        bases = aRepeat + generateRandomBases(30) + tRepeat;
+        read = ReadRecord.from(createSamRecord("01",  CHR_1, 100, bases, "18S30M18S"));
+        assertFalse(hasPolyATSoftClip(read, true));
+        assertFalse(hasPolyATSoftClip(read, false));
+    }
+
     private static ReadRecord createRead(
             final String readId, int readStart, boolean firstInPair, boolean reversed)
     {
         return ReadRecord.from(createSamRecord(
                 readId, CHR_1, readStart, "", "100M",
-                buildFlags(firstInPair, reversed, false, false, false),
+                buildFlags(firstInPair, reversed, false),
                 DEFAULT_MAP_QUAL, DEFAULT_BASE_QUAL));
     }
 }

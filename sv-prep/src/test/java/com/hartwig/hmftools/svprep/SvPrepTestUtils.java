@@ -26,7 +26,7 @@ public final class SvPrepTestUtils
 
     public static String readIdStr(int readId) { return format("READ_%02d", readId); }
 
-    public static int buildFlags(boolean firstInPair, boolean reversed, boolean duplicate, boolean supplementary, boolean secondary)
+    public static int buildFlags(boolean firstInPair, boolean reversed, boolean supplementary)
     {
         int flags = 0;
 
@@ -41,8 +41,8 @@ public final class SvPrepTestUtils
         else
             flags = setReadFlag(flags, SAMFlag.SECOND_OF_PAIR);
 
-        if(secondary)
-            flags = setReadFlag(flags, SAMFlag.SECONDARY_ALIGNMENT);
+        // if(secondary)
+        //    flags = setReadFlag(flags, SAMFlag.SECONDARY_ALIGNMENT);
 
         if(supplementary)
             flags = setReadFlag(flags, SAMFlag.SUPPLEMENTARY_ALIGNMENT);
@@ -55,8 +55,14 @@ public final class SvPrepTestUtils
     {
         return createSamRecord(
                 readId, chromosome, readStart, readBases, cigar,
-                buildFlags(true, false, false, false, false),
+                buildFlags(true, false, false),
                 DEFAULT_MAP_QUAL, DEFAULT_BASE_QUAL);
+    }
+
+    public static SAMRecord createSamRecord(
+            final String readId, final String chromosome, int readStart, final String readBases, final String cigar, int flags)
+    {
+        return createSamRecord( readId, chromosome, readStart, readBases, cigar, flags, DEFAULT_MAP_QUAL, DEFAULT_BASE_QUAL);
     }
 
     public static SAMRecord createSamRecord(
@@ -65,7 +71,7 @@ public final class SvPrepTestUtils
     {
         SAMRecord record = createSamRecord(
                 readId, chromosome, readStart, "", "100M",
-                buildFlags(firstInPair, false, false, isSupp, false),
+                buildFlags(firstInPair, false, isSupp),
                 DEFAULT_MAP_QUAL, DEFAULT_BASE_QUAL);
 
         record.setMateReferenceName(mateChr);

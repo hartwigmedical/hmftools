@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.svprep.SvCommon.ITEM_DELIM;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.WriteType.JUNCTIONS;
 import static com.hartwig.hmftools.svprep.WriteType.READS;
-import static com.hartwig.hmftools.svprep.WriteType.SV_BED;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.MIN_MAP_QUAL;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.POLY_G_SC;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.SOFT_CLIP_LOW_BASE_QUAL;
@@ -42,7 +41,6 @@ public class ResultsWriter
     private final SvConfig mConfig;
 
     private final BufferedWriter mReadWriter;
-    private final BufferedWriter mBedWriter;
     private final BufferedWriter mJunctionWriter;
     private final BamWriter mBamWriter;
 
@@ -52,7 +50,6 @@ public class ResultsWriter
 
         if(mConfig.OutputDir == null)
         {
-            mBedWriter = null;
             mReadWriter = null;
             mJunctionWriter = null;
             mBamWriter = null;
@@ -60,7 +57,6 @@ public class ResultsWriter
         }
 
         mJunctionWriter = initialiseJunctionWriter();
-        mBedWriter = initialiseBedWriter();
         mReadWriter = initialiseReadWriter();
         mBamWriter = new BamWriter(config);
     }
@@ -68,7 +64,6 @@ public class ResultsWriter
     public void close()
     {
         closeBufferedWriter(mReadWriter);
-        closeBufferedWriter(mBedWriter);
         closeBufferedWriter(mJunctionWriter);
         mBamWriter.close();
     }
@@ -326,13 +321,5 @@ public class ResultsWriter
         }
 
         return false;
-    }
-
-    private BufferedWriter initialiseBedWriter()
-    {
-        if(!mConfig.WriteTypes.contains(SV_BED))
-            return null;
-
-        return null;
     }
 }

@@ -216,7 +216,6 @@ public class SvConfig
 
         switch(writeType)
         {
-            case SV_BED: return filename + "bed";
             case READS: return filename + "reads.csv";
             case BAM: return filename + "bam";
             case CACHE_BAM: return filename + "cache";
