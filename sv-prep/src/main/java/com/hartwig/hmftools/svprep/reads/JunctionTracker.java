@@ -312,7 +312,7 @@ public class JunctionTracker
             if(read.isUnmapped())
                 continue;
 
-            if(read.hasSuppAlignment())
+            if(mConfig.TrackRemotes && read.hasSuppAlignment())
             {
                 addRemoteJunction(remoteJunctions, RemoteJunction.fromSupplementaryData(read.supplementaryAlignment()));
             }
@@ -339,7 +339,8 @@ public class JunctionTracker
 
             if(!mRegion.containsPosition(position))
             {
-                addRemoteJunction(remoteJunctions, new RemoteJunction(mRegion.Chromosome, position, orientation));
+                if(mConfig.TrackRemotes)
+                    addRemoteJunction(remoteJunctions, new RemoteJunction(mRegion.Chromosome, position, orientation));
             }
             else
             {
@@ -357,18 +358,15 @@ public class JunctionTracker
         junctions.forEach(x -> x.JunctionGroups.add(readGroup));
         junctions.forEach(x -> readGroup.addJunctionPosition(x.Position));
 
-        if(!remoteJunctions.isEmpty())
+        for(RemoteJunction remoteJunction : remoteJunctions)
         {
-            for(RemoteJunction remoteJunction : remoteJunctions)
+            for(JunctionData junctionData : junctions)
             {
-                for(JunctionData junctionData : junctions)
-                {
-                    // ignore remotes (typically) supplementaries which point to junction in another read in this group
-                    if(remoteJunction.matches(mRegion.Chromosome, junctionData.Position, junctionData.Orientation))
-                        continue;
+                // ignore remotes (typically) supplementaries which point to junction in another read in this group
+                if(remoteJunction.matches(mRegion.Chromosome, junctionData.Position, junctionData.Orientation))
+                    continue;
 
-                    junctionData.addRemoteJunction(remoteJunction);
-                }
+                junctionData.addRemoteJunction(remoteJunction);
             }
         }
     }
