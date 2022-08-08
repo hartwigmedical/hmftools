@@ -234,8 +234,9 @@ public class PartitionSlicer
             List<ReadGroup> remoteCandidateGroups = mJunctionTracker.getRemoteCandidateReadGroups();
             remoteCandidateGroups.forEach(x -> assignReadGroup(x, spanningGroupsMap));
 
+            int remoteCandidateCount = remoteCandidateGroups.size();
             int spanningGroupCount = spanningGroupsMap.size();
-            int totalGroupCount = junctionGroups.size();
+            int totalGroupCount = junctionGroups.size() + remoteCandidateCount;
             int expectedGroupCount = (int)junctionGroups.stream().filter(x -> x.groupStatus() == ReadGroupStatus.EXPECTED).count();
 
             mSpanningReadCache.processSpanningReadGroups(mRegion, spanningGroupsMap);
@@ -243,8 +244,8 @@ public class PartitionSlicer
             if(totalGroupCount == 0)
                 return;
 
-            SV_LOGGER.debug("region({}) readGroups({}) complete(local={} spanning={}) expected({})",
-                    mRegion, totalGroupCount, totalGroupCount - spanningGroupCount, spanningGroupCount, expectedGroupCount);
+            SV_LOGGER.debug("region({}) readGroups({} spanning={} candidate={}) expected({})",
+                    mRegion, totalGroupCount, spanningGroupCount, remoteCandidateCount, expectedGroupCount);
 
             mWriter.writeReadGroup(junctionGroups);
         }
@@ -255,7 +256,7 @@ public class PartitionSlicer
         }
 
         mStats.JunctionCount += mJunctionTracker.junctions().size();
-        int junctionFragments = (int)junctionGroups.stream().filter(x -> x.hasJunctionRead()).count();
+        int junctionFragments = (int)junctionGroups.stream().filter(x -> x.hasReadType(JUNCTION)).count();
         mStats.JunctionFragmentCount += junctionFragments;
         mStats.SupportingFragmentCount += junctionGroups.size() - junctionFragments;
         mStats.InitialSupportingFragmentCount += mJunctionTracker.initialSupportingFrags();

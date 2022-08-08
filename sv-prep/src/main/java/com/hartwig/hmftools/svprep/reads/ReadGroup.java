@@ -22,7 +22,6 @@ public class ReadGroup
     private int mExpectedReadCount;
     private Set<Integer> mJunctionPositions;
     private boolean mHasRemoteJunctionReads;
-    private boolean mConditionalOnRemoteReads;
     private boolean mRemoved;
 
     public static int MAX_GROUP_READ_COUNT = 4;
@@ -35,7 +34,6 @@ public class ReadGroup
         mExpectedReadCount = 0;
         mJunctionPositions = null;
         mHasRemoteJunctionReads = false;
-        mConditionalOnRemoteReads = false;
         mRemoved = false;
         addRead(read);
     }
@@ -57,6 +55,8 @@ public class ReadGroup
     {
         mReads.add(read);
     }
+
+    public boolean hasJunctionPosition(int position) { return mJunctionPositions != null && mJunctionPositions.contains(position); }
 
     public void addJunctionPosition(int position)
     {
@@ -82,10 +82,7 @@ public class ReadGroup
 
     public boolean allNoSupport() { return mReads.stream().allMatch(x -> x.readType() == ReadType.NO_SUPPORT); }
 
-    public boolean hasJunctionRead()
-    {
-        return mReads.stream().anyMatch(x -> x.readType() == JUNCTION);
-    }
+    public boolean hasReadType(final ReadType type) { return mReads.stream().anyMatch(x -> x.readType() == type); }
 
     public void setGroupState(final ReadGroupStatus status) { mStatus = status; }
 

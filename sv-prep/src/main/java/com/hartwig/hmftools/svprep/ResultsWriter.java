@@ -249,7 +249,6 @@ public class ResultsWriter
 
                 for(ReadRecord read : junctionData.ReadTypeReads.get(ReadType.EXACT_SUPPORT))
                 {
-                    ++exactSupportFrags;
                     maxMapQual = max(maxMapQual, read.mapQuality());
 
                     if(ReadFilterType.isSet(read.filters(), MIN_MAP_QUAL))

@@ -13,14 +13,17 @@ import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.LOW_BASE_QUALITY;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
+import static com.hartwig.hmftools.svprep.SvConstants.MIN_LINE_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.svprep.reads.DiscordantGroups.formDiscordantJunctions;
 import static com.hartwig.hmftools.svprep.reads.DiscordantGroups.isDiscordantGroup;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.INSERT_MAP_OVERLAP;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.POLY_G_SC;
+import static com.hartwig.hmftools.svprep.reads.ReadFilterType.SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.svprep.reads.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.svprep.reads.ReadGroup.addUniqueReadGroups;
 import static com.hartwig.hmftools.svprep.reads.ReadRecord.findIndelCoords;
+import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.EXACT_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.EXPECTED;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
@@ -46,6 +49,7 @@ import com.hartwig.hmftools.svprep.SvConfig;
 public class JunctionTracker
 {
     private final ChrBaseRegion mRegion;
+    private final SvConfig mConfig;
     private final ReadFilterConfig mFilterConfig;
     private final HotspotCache mHotspotCache;
     private final List<BaseRegion> mBlacklistRegions;
@@ -60,13 +64,13 @@ public class JunctionTracker
     private int mLastJunctionIndex;
 
     private int mInitialSupportingFrags;
-    private final boolean mFindDiscordantGroups;
     private final int[] mBaseDepth;
 
     public JunctionTracker(
             final ChrBaseRegion region, final SvConfig config, final HotspotCache hotspotCache, final BlacklistLocations blacklist)
     {
         mRegion = region;
+        mConfig = config;
         mFilterConfig = config.ReadFiltering.config();
         mHotspotCache = hotspotCache;
 
@@ -88,8 +92,6 @@ public class JunctionTracker
         mJunctions = Lists.newArrayList();
         mLastJunctionIndex = -1;
         mInitialSupportingFrags = 0;
-
-        mFindDiscordantGroups = config.FindDiscordantGroups;
 
         mBaseDepth = config.CaptureDepth ? new int[mRegion.baseLength()] : null;
     }
@@ -206,14 +208,12 @@ public class JunctionTracker
             if(readGroup.reads().stream().anyMatch(x -> ReadFilterType.isSet(x.filters(), POLY_G_SC)))
                 continue;
 
-            if(readGroup.hasJunctionRead())
-            {
+            // read groups can be assigned to more than one junction
+            if(readGroup.hasReadType(JUNCTION))
                 createJunction(readGroup);
-            }
-            else
-            {
+
+            if(readGroup.hasReadType(CANDIDATE_SUPPORT))
                 candidateSupportGroups.add(readGroup);
-            }
         }
 
         mLastJunctionIndex = -1; // reset before supporting fragment assignment
@@ -236,7 +236,7 @@ public class JunctionTracker
                     continue;
                 }
 
-                if(read.readType() != NO_SUPPORT)
+                if(read.readType() == CANDIDATE_SUPPORT)
                     checkJunctionSupport(read, supportedJunctions);
             }
 
@@ -245,6 +245,10 @@ public class JunctionTracker
                 for(Map.Entry<JunctionData,ReadType> entry : supportedJunctions.entrySet())
                 {
                     JunctionData junctionData = entry.getKey();
+
+                    // group may already have a junction read, so skip if this is the case
+                    if(readGroup.hasJunctionPosition(junctionData.Position))
+                        continue;
 
                     if(entry.getValue() == EXACT_SUPPORT)
                         junctionData.ExactSupportGroups.add(readGroup);
@@ -259,13 +263,13 @@ public class JunctionTracker
                 mRemoteCandidateReadGroups.add(readGroup);
             }
 
-            if(mFindDiscordantGroups && !hasBlacklistedRead && isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMax()))
+            if(mConfig.FindDiscordantGroups && !hasBlacklistedRead && isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMax()))
             {
                 candidateDiscordantGroups.add(readGroup);
             }
         }
 
-        if(mFindDiscordantGroups)
+        if(mConfig.FindDiscordantGroups)
         {
             if(candidateDiscordantGroups.size() > 1000)
             {
@@ -315,7 +319,7 @@ public class JunctionTracker
 
             SoftClipSide scSide = SoftClipSide.fromCigar(read.cigar());
 
-            if(scSide == null || scSide.Length < mFilterConfig.MinSoftClipLength)
+            if(scSide == null || ReadFilterType.isSet(read.filters(), SOFT_CLIP_LENGTH) || scSide.Length < MIN_LINE_SOFT_CLIP_LENGTH)
                 continue;
 
             byte orientation = scSide.isLeft() ? NEG_ORIENT : POS_ORIENT;
@@ -585,6 +589,7 @@ public class JunctionTracker
             junctionData.addReadType(read, EXACT_SUPPORT);
             read.setReadType(EXACT_SUPPORT, true);
             supportedJunctions.put(junctionData, EXACT_SUPPORT);
+            return;
         }
 
         if(readType != SUPPORT && hasDiscordantJunctionSupport(read, junctionData, mFilterConfig))
@@ -731,7 +736,12 @@ public class JunctionTracker
             if(abs(readRightPos - junctionData.Position) > filterConfig.MinSupportingReadDistance)
                 return false;
 
+            // must also overlap the junction
             int scLength = read.cigar().getLastCigarElement().getLength();
+
+            if(readRightPos + scLength < junctionData.Position)
+                return false;
+
             int readLength = read.readBases().length();
             int readEndPosIndex = readLength - scLength - 1;
 
@@ -786,6 +796,9 @@ public class JunctionTracker
             // junc read index = sc length diff - position diff
 
             int scLength = read.cigar().getFirstCigarElement().getLength();
+
+            if(readLeftPos - scLength > junctionData.Position)
+                return false;
 
             int juncReadScLength = juncRead.cigar().getFirstCigarElement().getLength();
             int posOffset = juncRead.start() - readLeftPos;

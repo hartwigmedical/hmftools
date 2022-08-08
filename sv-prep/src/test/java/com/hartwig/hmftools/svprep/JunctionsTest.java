@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.svprep;
 
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.BLACKLIST_LOCATIONS;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.CHR_1;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.HOTSPOT_CACHE;
@@ -10,13 +12,16 @@ import static com.hartwig.hmftools.svprep.reads.ReadFilters.isRepetitiveSectionB
 import static com.hartwig.hmftools.svprep.reads.ReadRecord.hasPolyATSoftClip;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
+import static com.hartwig.hmftools.svprep.reads.ReadType.NO_SUPPORT;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
 
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.svprep.reads.JunctionData;
 import com.hartwig.hmftools.svprep.reads.JunctionTracker;
 import com.hartwig.hmftools.svprep.reads.ReadRecord;
 import com.hartwig.hmftools.svprep.reads.ReadType;
@@ -54,14 +59,13 @@ public class JunctionsTest
                 readIdStr(readId), CHR_1, 820, REF_BASES.substring(20, 120), "100M"));
 
         addRead(read1, JUNCTION);
-        addRead(read2, JUNCTION);
+        addRead(read2, NO_SUPPORT);
 
         ReadRecord suppRead1 = ReadRecord.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 800, REF_BASES.substring(0, 73), "3S70M"));
 
         addRead(suppRead1, CANDIDATE_SUPPORT);
 
-        // spanning read
         ReadRecord read3 = ReadRecord.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 950, REF_BASES.substring(0, 100), "30S70M"));
 
@@ -69,7 +73,7 @@ public class JunctionsTest
                 readIdStr(readId), CHR_1, 980, REF_BASES.substring(20, 120), "100M"));
 
         addRead(read3, JUNCTION);
-        addRead(read4, JUNCTION);
+        addRead(read4, NO_SUPPORT);
 
         ReadRecord suppRead2 = ReadRecord.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 950, REF_BASES.substring(0, 73), "3S70M"));
@@ -82,7 +86,7 @@ public class JunctionsTest
         ReadRecord read6 = ReadRecord.from(createSamRecord(
                 readIdStr(readId), CHR_1, 980, REF_BASES.substring(0, 100), "70M30S"));
 
-        addRead(read5, JUNCTION);
+        addRead(read5, NO_SUPPORT);
         addRead(read6, JUNCTION);
 
         ReadRecord suppRead3 = ReadRecord.from(createSamRecord(
@@ -90,7 +94,6 @@ public class JunctionsTest
 
         addRead(suppRead3, CANDIDATE_SUPPORT);
 
-        // and a junction in the next bucket but with a supporting read in the previous
         ReadRecord read7 = ReadRecord.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 1010, REF_BASES.substring(10, 90), "50M30S"));
 
@@ -98,7 +101,7 @@ public class JunctionsTest
                 readIdStr(readId), CHR_1, 1010, REF_BASES.substring(0, 50), "50M"));
 
         addRead(read7, JUNCTION);
-        addRead(read8, JUNCTION);
+        addRead(read8, NO_SUPPORT);
 
         ReadRecord suppRead4 = ReadRecord.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 990, REF_BASES.substring(0, 73), "70M3S"));
@@ -108,10 +111,33 @@ public class JunctionsTest
         mJunctionTracker.assignFragments();
 
         assertEquals(4, mJunctionTracker.junctions().size());
-        assertEquals(1, mJunctionTracker.junctions().get(0).exactSupportFragmentCount());
+
+        JunctionData junctionData = mJunctionTracker.junctions().stream().filter(x -> x.Position == 800).findFirst().orElse(null);
+        assertNotNull(junctionData);
+        assertEquals(NEG_ORIENT, junctionData.Orientation);
+        assertEquals(1, junctionData.junctionFragmentCount());
+        assertEquals(1, junctionData.exactSupportFragmentCount());
+
+        junctionData = mJunctionTracker.junctions().stream().filter(x -> x.Position == 950).findFirst().orElse(null);
+        assertNotNull(junctionData);
+        assertEquals(NEG_ORIENT, junctionData.Orientation);
+        assertEquals(1, junctionData.junctionFragmentCount());
+        assertEquals(1, junctionData.exactSupportFragmentCount());
         assertEquals(1, mJunctionTracker.junctions().get(1).exactSupportFragmentCount());
-        assertEquals(3, mJunctionTracker.junctions().get(2).supportingFragmentCount());
-        assertEquals(4, mJunctionTracker.junctions().get(3).supportingFragmentCount());
+
+        junctionData = mJunctionTracker.junctions().stream().filter(x -> x.Position == 1049).findFirst().orElse(null);
+        assertNotNull(junctionData);
+        assertEquals(POS_ORIENT, junctionData.Orientation);
+        assertEquals(1, junctionData.junctionFragmentCount());
+        assertEquals(1, junctionData.exactSupportFragmentCount());
+        assertEquals(2, junctionData.supportingFragmentCount());
+
+        junctionData = mJunctionTracker.junctions().stream().filter(x -> x.Position == 1059).findFirst().orElse(null);
+        assertNotNull(junctionData);
+        assertEquals(POS_ORIENT, junctionData.Orientation);
+        assertEquals(1, junctionData.junctionFragmentCount());
+        assertEquals(1, junctionData.exactSupportFragmentCount());
+        assertEquals(3, junctionData.supportingFragmentCount());
     }
 
     @Test
@@ -153,13 +179,30 @@ public class JunctionsTest
         mJunctionTracker.assignFragments();
 
         assertEquals(4, mJunctionTracker.junctions().size());
-        assertEquals(119, mJunctionTracker.junctions().get(0).Position);
-        assertEquals(160, mJunctionTracker.junctions().get(1).Position);
-        assertEquals(1, mJunctionTracker.junctions().get(0).exactSupportFragmentCount());
-        assertEquals(1, mJunctionTracker.junctions().get(1).exactSupportFragmentCount());
 
-        assertEquals(241, mJunctionTracker.junctions().get(2).Position);
-        assertEquals(277, mJunctionTracker.junctions().get(3).Position);
+        JunctionData junctionData = mJunctionTracker.junctions().stream().filter(x -> x.Position == 119).findFirst().orElse(null);
+        assertNotNull(junctionData);
+        assertEquals(POS_ORIENT, junctionData.Orientation);
+        assertEquals(1, junctionData.junctionFragmentCount());
+        assertEquals(1, junctionData.exactSupportFragmentCount());
+
+        junctionData = mJunctionTracker.junctions().stream().filter(x -> x.Position == 160).findFirst().orElse(null);
+        assertNotNull(junctionData);
+        assertEquals(NEG_ORIENT, junctionData.Orientation);
+        assertEquals(1, junctionData.junctionFragmentCount());
+        assertEquals(1, junctionData.exactSupportFragmentCount());
+
+        junctionData = mJunctionTracker.junctions().stream().filter(x -> x.Position == 241).findFirst().orElse(null);
+        assertNotNull(junctionData);
+        assertEquals(POS_ORIENT, junctionData.Orientation);
+        assertEquals(1, junctionData.junctionFragmentCount());
+        assertEquals(0, junctionData.exactSupportFragmentCount());
+
+        junctionData = mJunctionTracker.junctions().stream().filter(x -> x.Position == 277).findFirst().orElse(null);
+        assertNotNull(junctionData);
+        assertEquals(NEG_ORIENT, junctionData.Orientation);
+        assertEquals(1, junctionData.junctionFragmentCount());
+        assertEquals(0, junctionData.exactSupportFragmentCount());
     }
 
     @Test

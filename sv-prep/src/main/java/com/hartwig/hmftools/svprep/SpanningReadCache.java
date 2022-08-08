@@ -333,6 +333,7 @@ public class SpanningReadCache
             return;
 
         logCacheCount(true);
+        mPerfCounter.logStats();
     }
 
     private class CachedReadGroup

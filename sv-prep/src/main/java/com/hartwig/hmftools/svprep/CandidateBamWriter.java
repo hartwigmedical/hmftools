@@ -6,8 +6,6 @@ import static com.hartwig.hmftools.svprep.SpanningReadCache.chrFromChrPartition;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.WriteType.CACHE_BAM;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
-import static com.hartwig.hmftools.svprep.reads.ReadType.EXPECTED;
-import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
 
 import java.io.File;
 import java.util.List;
@@ -19,9 +17,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
-import com.hartwig.hmftools.svprep.depth.DepthTask;
 import com.hartwig.hmftools.svprep.reads.ReadGroup;
 import com.hartwig.hmftools.svprep.reads.ReadGroupStatus;
 import com.hartwig.hmftools.svprep.reads.ReadRecord;
@@ -33,7 +29,6 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
-import htsjdk.variant.variantcontext.VariantContext;
 
 public class CandidateBamWriter
 {
@@ -97,6 +92,8 @@ public class CandidateBamWriter
         if(mCandidatesWriters.isEmpty())
             return;
 
+        SV_LOGGER.info("assigning candidate reads for {} chromosomes", mChrJunctionReadIds.size());
+
         // close before re-accessing
         mCandidatesWriters.values().forEach(x -> x.close());
 
@@ -150,7 +147,7 @@ public class CandidateBamWriter
         @Override
         public Long call()
         {
-            SV_LOGGER.info("chr({}) assignment candidates from {} junction fragments", mChromosome, mJunctionReadIds.size());
+            SV_LOGGER.info("chr({}) assigning candidates from {} junction fragments", mChromosome, mJunctionReadIds.size());
 
             int matchedCandidates = 0;
             int recordCount = 0;
