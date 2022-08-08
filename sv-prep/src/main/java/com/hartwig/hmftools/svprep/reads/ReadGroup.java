@@ -2,8 +2,8 @@ package com.hartwig.hmftools.svprep.reads;
 
 import static com.hartwig.hmftools.svprep.SpanningReadCache.formChromosomePartition;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
-import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -22,9 +22,6 @@ public class ReadGroup
     private int mExpectedReadCount;
     private Set<Integer> mJunctionPositions;
     private boolean mHasRemoteJunctionReads;
-    private boolean mRemoved;
-
-    public static int MAX_GROUP_READ_COUNT = 4;
 
     public ReadGroup(final ReadRecord read)
     {
@@ -34,7 +31,6 @@ public class ReadGroup
         mExpectedReadCount = 0;
         mJunctionPositions = null;
         mHasRemoteJunctionReads = false;
-        mRemoved = false;
         addRead(read);
     }
 
@@ -70,9 +66,6 @@ public class ReadGroup
 
     public boolean hasRemoteJunctionReads() { return mHasRemoteJunctionReads; }
     public void markHasRemoteJunctionReads() { mHasRemoteJunctionReads = true; }
-
-    public boolean removed() { return mRemoved; }
-    public void markRemoved() { mRemoved = true; }
 
     public boolean isSimpleComplete()
     {
@@ -214,4 +207,11 @@ public class ReadGroup
         }
     }
 
+    public static class ReadGroupComparator implements Comparator<ReadGroup>
+    {
+        public int compare(final ReadGroup first, final ReadGroup second)
+        {
+            return first.reads().get(0).start() - second.reads().get(0).start();
+        }
+    }
 }

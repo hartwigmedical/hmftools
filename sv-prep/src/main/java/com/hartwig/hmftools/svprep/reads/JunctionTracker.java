@@ -31,6 +31,7 @@ import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
 import static com.hartwig.hmftools.svprep.reads.ReadType.SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.RemoteJunction.addRemoteJunction;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -55,7 +56,6 @@ public class JunctionTracker
     private final List<BaseRegion> mBlacklistRegions;
 
     private final Map<String,ReadGroup> mReadGroupMap; // keyed by readId
-    private final List<ReadGroup> mReadGroups; // order by first read's start position
     private final Set<String> mExpectedReadIds; // as indicated by another partition
     private final List<ReadGroup> mExpectedReadGroups;
     private final List<ReadGroup> mRemoteCandidateReadGroups; // reads with their mate(s) in another partition, but not suppporting a junction
@@ -85,7 +85,6 @@ public class JunctionTracker
         }
 
         mReadGroupMap = Maps.newHashMap();
-        mReadGroups = Lists.newArrayList();
         mExpectedReadIds = Sets.newHashSet();
         mExpectedReadGroups = Lists.newArrayList();
         mRemoteCandidateReadGroups = Lists.newArrayList();
@@ -164,13 +163,13 @@ public class JunctionTracker
     private void addReadGroup(final ReadGroup readGroup)
     {
         mReadGroupMap.put(readGroup.id(), readGroup);
-        mReadGroups.add(readGroup);
+        // mReadGroups.add(readGroup);
     }
 
     private void removeReadGroup(final ReadGroup readGroup)
     {
         mReadGroupMap.remove(readGroup.id());
-        readGroup.markRemoved();
+        // readGroup.markRemoved();
     }
 
     public void addExistingJunctions(final List<JunctionData> existingJunctions)
@@ -183,12 +182,12 @@ public class JunctionTracker
     {
         List<ReadGroup> candidateSupportGroups = Lists.newArrayList();
 
-        // for(ReadGroup readGroup : mReadGroupMap.values())
-        for(ReadGroup readGroup : mReadGroups)
-        {
-            if(readGroup.removed())
-                continue;
+        // order by first read's start position, this is required for discordant read groups
+        List<ReadGroup> readGroups = mReadGroupMap.values().stream().collect(Collectors.toList());
+        Collections.sort(readGroups, new ReadGroup.ReadGroupComparator());
 
+        for(ReadGroup readGroup : readGroups)
+        {
             captureDepth(readGroup);
 
             if(mExpectedReadIds.contains(readGroup.id()))
