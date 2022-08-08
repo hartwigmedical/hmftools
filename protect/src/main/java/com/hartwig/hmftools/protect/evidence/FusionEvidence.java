@@ -25,18 +25,13 @@ public class FusionEvidence {
     private final List<ActionableGene> actionablePromiscuous;
     @NotNull
     private final List<ActionableFusion> actionableFusions;
-    @NotNull
-    private final KnownFusionCache knownFusionCache;
 
     public FusionEvidence(@NotNull final PersonalizedEvidenceFactory personalizedEvidenceFactory,
-            @NotNull final List<ActionableGene> actionableGenes, @NotNull final List<ActionableFusion> actionableFusions,
-            @NotNull final KnownFusionCache fusionCache) {
+            @NotNull final List<ActionableGene> actionableGenes, @NotNull final List<ActionableFusion> actionableFusions) {
         this.personalizedEvidenceFactory = personalizedEvidenceFactory;
-        this.actionablePromiscuous = actionableGenes.stream()
-                .filter(x -> x.event().equals(GeneLevelEvent.FUSION))
-                .collect(Collectors.toList());
+        this.actionablePromiscuous =
+                actionableGenes.stream().filter(x -> x.event().equals(GeneLevelEvent.FUSION)).collect(Collectors.toList());
         this.actionableFusions = actionableFusions;
-        this.knownFusionCache = fusionCache;
     }
 
     @NotNull
@@ -51,7 +46,6 @@ public class FusionEvidence {
                 evidences.addAll(evidence(allFusion));
             }
         }
-
         return evidences;
     }
 
@@ -84,29 +78,12 @@ public class FusionEvidence {
 
     private boolean match(@NotNull LinxFusion fusion, @NotNull ActionableGene actionable) {
         if (fusion.reportedType().equals(KnownFusionType.PROMISCUOUS_3.toString())) {
-            if (knownFusionCache.hasPromiscuousThreeGene(fusion.geneEnd())) {
-                return actionable.gene().equals(fusion.geneEnd());
-            }
+            return actionable.gene().equals(fusion.geneEnd());
         } else if (fusion.reportedType().equals(KnownFusionType.PROMISCUOUS_5.toString())) {
-            if (knownFusionCache.hasPromiscuousFiveGene(fusion.geneStart())) {
-                return actionable.gene().equals(fusion.geneStart());
-            }
-        } else if (fusion.reportedType().equals(KnownFusionType.IG_PROMISCUOUS.toString())) {
-            if (knownFusionCache.hasPromiscuousIgFusion(fusion.geneStart())) {
-                return actionable.gene().equals(fusion.geneStart());
-            } else if (knownFusionCache.hasPromiscuousIgFusion(fusion.geneEnd())) {
-                return actionable.gene().equals(fusion.geneEnd());
-            }
-        } else if (fusion.reportedType().equals(KnownFusionType.NONE.toString())) {
-            if (knownFusionCache.hasPromiscuousThreeGene(fusion.geneEnd())) {
-                return actionable.gene().equals(fusion.geneEnd());
-            } else if (knownFusionCache.hasPromiscuousFiveGene(fusion.geneStart())) {
-                return actionable.gene().equals(fusion.geneStart());
-            } else {
-                return actionable.gene().equals(fusion.geneEnd()) || actionable.gene().equals(fusion.geneStart());
-            }
+            return actionable.gene().equals(fusion.geneStart());
+        } else {
+            return actionable.gene().equals(fusion.geneStart()) || actionable.gene().equals(fusion.geneEnd());
         }
-        return false;
     }
 
     private static boolean match(@NotNull LinxFusion fusion, @NotNull ActionableFusion actionable) {

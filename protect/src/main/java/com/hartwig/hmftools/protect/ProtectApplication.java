@@ -67,9 +67,7 @@ public class ProtectApplication {
 
         List<DriverGene> driverGenes = readDriverGenesFromFile(config.driverGeneTsv());
 
-        KnownFusionCache fusionCache = RefGenomeManagerFactory.buildKnownFusionCacheFromFile(config.knownFusionFile());
-
-        ProtectAlgo algo = ProtectAlgo.build(actionableEvents, patientTumorDoids, driverGenes, fusionCache, doidParentModel);
+        ProtectAlgo algo = ProtectAlgo.build(actionableEvents, patientTumorDoids, driverGenes, doidParentModel);
         List<ProtectEvidence> evidences = algo.run(config);
 
         String filename = ProtectEvidenceFile.generateFilename(config.outputDir(), config.tumorSampleId());
