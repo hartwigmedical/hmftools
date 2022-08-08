@@ -107,28 +107,6 @@ public class FusionEvidenceTest {
                         .relevantTreatmentApproaches(Sets.newHashSet("drugClasses"))
                         .build())
                 .build();
-        ActionableGene activation = ImmutableActionableGene.builder()
-                .from(ServeTestFactory.createTestActionableGene())
-                .gene("CDK4")
-                .event(GeneLevelEvent.ACTIVATION)
-                .source(Knowledgebase.ACTIN)
-                .treatment(ImmutableTreatment.builder()
-                        .treament("treatment7")
-                        .sourceRelevantTreatmentApproaches(Sets.newHashSet("drugClasses"))
-                        .relevantTreatmentApproaches(Sets.newHashSet("drugClasses"))
-                        .build())
-                .build();
-        ActionableGene any = ImmutableActionableGene.builder()
-                .from(ServeTestFactory.createTestActionableGene())
-                .gene("DUX8")
-                .event(GeneLevelEvent.ANY_MUTATION)
-                .source(Knowledgebase.ACTIN)
-                .treatment(ImmutableTreatment.builder()
-                        .treament("treatment8")
-                        .sourceRelevantTreatmentApproaches(Sets.newHashSet("drugClasses"))
-                        .relevantTreatmentApproaches(Sets.newHashSet("drugClasses"))
-                        .build())
-                .build();
         ActionableGene other = ImmutableActionableGene.builder()
                 .from(ServeTestFactory.createTestActionableGene())
                 .gene("AB")
@@ -180,8 +158,6 @@ public class FusionEvidenceTest {
                         promiscuous3_3,
                         promiscuous5,
                         amp,
-                        activation,
-                        any,
                         other,
                         ig_fusion),
                 Lists.newArrayList(fusion, ig_pair),
@@ -209,7 +185,7 @@ public class FusionEvidenceTest {
                         reportedIgKnown),
                 Lists.newArrayList(unreportedPromiscuousMatch, reportedOtherMatch, reportedIgPromiscuous));
 
-        assertEquals(9, evidences.size());
+        assertEquals(8, evidences.size());
 
         ProtectEvidence evidence1 = findByFusion(evidences, reportedFusionMatch);
         assertTrue(evidence1.reported());
@@ -239,11 +215,6 @@ public class FusionEvidenceTest {
         assertEquals(evidence5.sources().size(), 1);
         assertEquals(EvidenceType.PROMISCUOUS_FUSION,
                 findByKnowledgebase(evidence5, Knowledgebase.ACTIN, "treatment3").evidenceType());
-
-        ProtectEvidence evidence6 = findByFusion(evidences, reportedPromiscuousMatch);
-        assertTrue(evidence6.reported());
-        assertEquals(evidence6.sources().size(), 1);
-        assertEquals(EvidenceType.ACTIVATION, findByKnowledgebase(evidence6, Knowledgebase.ACTIN, "treatment7").evidenceType());
 
         ProtectEvidence evidence7 = findByFusion(evidences, reportedOtherMatch);
         assertFalse(evidence7.reported());

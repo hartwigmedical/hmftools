@@ -25,7 +25,7 @@ public class DisruptionEvidence {
         this.personalizedEvidenceFactory = personalizedEvidenceFactory;
         this.actionableGenes = actionableGenes.stream()
                 .filter(x -> x.event() == GeneLevelEvent.ANY_MUTATION || x.event() == GeneLevelEvent.INACTIVATION
-                        || x.event() == GeneLevelEvent.DELETION)
+                        || x.event() == GeneLevelEvent.DELETION || x.event() == GeneLevelEvent.UNDEREXPRESSION)
                 .collect(Collectors.toList());
     }
 

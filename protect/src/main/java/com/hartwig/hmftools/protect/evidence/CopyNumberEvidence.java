@@ -26,7 +26,7 @@ public class CopyNumberEvidence {
         this.actionableGenes = actionableGenes.stream()
                 .filter(x -> x.event() == GeneLevelEvent.INACTIVATION || x.event() == GeneLevelEvent.AMPLIFICATION
                         || x.event() == GeneLevelEvent.OVEREXPRESSION || x.event() == GeneLevelEvent.DELETION
-                        || x.event() == GeneLevelEvent.UNDEREXPRESSION)
+                        || x.event() == GeneLevelEvent.UNDEREXPRESSION || x.event() == GeneLevelEvent.ANY_MUTATION)
                 .collect(Collectors.toList());
     }
 
@@ -75,6 +75,7 @@ public class CopyNumberEvidence {
             case INACTIVATION:
             case DELETION:
             case UNDEREXPRESSION:
+            case ANY_MUTATION:
                 return reportable.interpretation() == CopyNumberInterpretation.FULL_LOSS
                         || reportable.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS;
             default:

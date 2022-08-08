@@ -33,8 +33,7 @@ public class FusionEvidence {
             @NotNull final KnownFusionCache fusionCache) {
         this.personalizedEvidenceFactory = personalizedEvidenceFactory;
         this.actionablePromiscuous = actionableGenes.stream()
-                .filter(x -> x.event().equals(GeneLevelEvent.FUSION) || x.event().equals(GeneLevelEvent.ACTIVATION) || x.event()
-                        .equals(GeneLevelEvent.ANY_MUTATION))
+                .filter(x -> x.event().equals(GeneLevelEvent.FUSION))
                 .collect(Collectors.toList());
         this.actionableFusions = actionableFusions;
         this.knownFusionCache = fusionCache;
@@ -61,10 +60,6 @@ public class FusionEvidence {
         List<ProtectEvidence> evidences = Lists.newArrayList();
         for (ActionableGene promiscuous : actionablePromiscuous) {
             if (promiscuous.event().equals(GeneLevelEvent.FUSION) && match(fusion, promiscuous)) {
-                evidences.add(evidence(fusion, promiscuous));
-            }
-            if ((promiscuous.event().equals(GeneLevelEvent.ACTIVATION) || promiscuous.event().equals(GeneLevelEvent.ANY_MUTATION))
-                    && match(fusion, promiscuous)) {
                 evidences.add(evidence(fusion, promiscuous));
             }
         }

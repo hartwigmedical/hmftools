@@ -39,6 +39,11 @@ public class LoadServeDatabase {
         KnownEvents knownEvents = KnownEventsLoader.readFromDir(serveActionabilityDir, refGenomeVersion);
         List<EventInterpretation> eventInterpretation =
                 EventInterpretationFile.read(EventInterpretationFile.eventInterpretationTsv(serveActionabilityDir));
+
+        LOGGER.info(" Loaded {} event interpretations from {}",
+                eventInterpretation.size(),
+                EventInterpretationFile.eventInterpretationTsv(serveActionabilityDir));
+
         ServeDatabaseAccess dbWriter = ServeDatabaseAccess.databaseAccess(cmd);
 
         dbWriter.writeServeDAO(actionableEvents, knownEvents, eventInterpretation);

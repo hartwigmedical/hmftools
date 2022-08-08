@@ -61,7 +61,7 @@ public class PersonalizedEvidenceFactory {
 
     public boolean isOnLabel(@NotNull CancerType applicableCancerType, @NotNull Set<CancerType> blacklistCancerTypes,
             @NotNull String treatment) {
-        return patientTumorDoids.contains(applicableCancerType.doid()) && !isBlacklisted(blacklistCancerTypes, treatment);
+        return patientTumorDoids.contains(applicableCancerType.doid());
     }
 
     @VisibleForTesting
