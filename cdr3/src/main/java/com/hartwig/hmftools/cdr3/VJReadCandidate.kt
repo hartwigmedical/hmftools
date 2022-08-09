@@ -20,8 +20,8 @@ data class VJReadCandidate(
     val vjGeneType: VJGeneType,
     val anchorMatchType: AnchorMatchType,
     val useReverseComplement: Boolean,
-    val anchorOffsetStart: Int, // this is after reverse complement if needed
-    val anchorOffsetEnd: Int, // this is after reverse complement if needed
+    val anchorOffsetStart: Int, // this is after reverse complement if needed, can be negative
+    val anchorOffsetEnd: Int, // this is after reverse complement if needed, can be after sequence end
     val anchorLocation: GeneLocation?, // could be null if not mapped
     val leftSoftClip: Int,
     val rightSoftClip: Int
@@ -64,33 +64,15 @@ data class VJReadCandidate(
         else bq
     }
 
+    // this is the sequence that is the potential CDR3 sequence
     val anchorSequence: String get()
     {
-        return readSequence.substring(anchorOffsetStart, anchorOffsetEnd)
+        return readSequence.substring(Math.max(anchorOffsetStart, 0), Math.min(anchorOffsetEnd, readLength))
     }
 
-    // this is the sequence that is the potential CDR3 sequence
-    val potentialCdr3Dna: String get()
+    val anchorAA: String get()
     {
-        var readSeq: String = read.readString
-        if (useReverseComplement)
-            readSeq = SequenceUtil.reverseComplement(readSeq)
-
-        return if (vjGeneType.isV)
-            // we want the anchor plus what is after it
-            readSeq.substring(anchorOffsetStart)
-        else
-            // we want the anchor plus what is before it
-            readSeq.take(anchorOffsetEnd)
-    }
-
-    val potentialCdr3AA: String get()
-    {
-        var dnaSeq = potentialCdr3Dna
-        // for J sequence we must shift it to codon start
-        if (vjGeneType.isJ)
-            dnaSeq = dnaSeq.substring(anchorOffsetStart % 3)
-        return Codons.aminoAcidFromBases(dnaSeq)
+        return Codons.aminoAcidFromBases(anchorSequence)
     }
 }
 

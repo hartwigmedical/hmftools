@@ -14,7 +14,8 @@ fun roundToMultiple(v: Int, m: Int) : Int
 class AnchorBlosumSearcher(
     val vjGeneStore: VJGeneStore,
     val minPartialAnchorAminoAcidLength: Int,
-    val maxBlosumDistancePerAminoAcid: Int)
+    val maxBlosumDistancePerAminoAcid: Int,
+    val similarityScoreConstant: Int)
 {
     val blosumMapping = BlosumMapping()
 
@@ -33,13 +34,13 @@ class AnchorBlosumSearcher(
         val templateAnchorSequences : Set<String> = vjGeneStore.getAnchorSequenceSet(targetAnchorGeneType)
         val anchorBlosumMatches = ArrayList<AnchorBlosumMatch>()
 
-        if (targetAnchorGeneType.isJ)
+        if (targetAnchorGeneType.vj == VJ.J)
         {
             // we want to find the J anchor, by searching forward
             for (i in startOffset until endOffset - 3)
             {
                 val aa = Codons.codonToAminoAcid(dnaSeq.substring(i, i + 3))
-                if (aa == 'W' || aa == 'F') // we might revisit this case later
+                if (aa == Cdr3Utils.conservedAA(targetAnchorGeneType)) // we might revisit this case later
                 {
                     // this is a potential match
                     for (templateAnchorSeq in templateAnchorSequences)
@@ -54,13 +55,13 @@ class AnchorBlosumSearcher(
                 }
             }
         }
-        else if (targetAnchorGeneType.isV)
+        else if (targetAnchorGeneType.vj == VJ.V)
         {
-            // if we got the J anchor, we have to search in the reverse direction
+            // if we got the V anchor, we have to search in the reverse direction
             for (i in (endOffset - 1) downTo  startOffset + 3)
             {
                 val aa = Codons.codonToAminoAcid(dnaSeq.substring(i - 3, i))
-                if (aa == 'C')
+                if (aa == Cdr3Utils.conservedAA(targetAnchorGeneType))
                 {
                     // V anchor ends with C
                     for (templateAnchorSeq in templateAnchorSequences)
@@ -107,7 +108,7 @@ class AnchorBlosumSearcher(
         // we might want to deal with partial sequence matches
         if (anchorStart < 0)
         {
-            if (!geneType.isV)
+            if (geneType.vj != VJ.V)
                 return null
 
             // since we are searching backwards in the sequence, we just have to deal
@@ -120,7 +121,7 @@ class AnchorBlosumSearcher(
 
         if (anchorEnd >= dnaSeq.length)
         {
-            if (!geneType.isJ)
+            if (geneType.vj != VJ.J)
                 return null
 
             val rightTrim = roundToMultiple(anchorEnd - dnaSeq.length, 3)
@@ -177,7 +178,7 @@ class AnchorBlosumSearcher(
 
     fun calcSimilarityScore(anchorGeneType: VJGeneType, refAnchorAA: String, seqAA: String) : Int
     {
-        val score = maxBlosumDistancePerAminoAcid * (seqAA.length - minPartialAnchorAminoAcidLength) - calcBlosumDistance(anchorGeneType, refAnchorAA, seqAA)
+        val score = maxBlosumDistancePerAminoAcid * (seqAA.length - similarityScoreConstant) - calcBlosumDistance(anchorGeneType, refAnchorAA, seqAA)
         return score
     }
 

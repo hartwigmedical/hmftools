@@ -18,8 +18,7 @@ public class TestVJGeneStore implements VJGeneStore
     private final Multimap<String, VJGene> mAnchorSequenceMap = ArrayListMultimap.create();
 
     private final Map<VJGeneType, Multimap<String, VJGene>> mGeneTypeAnchorSeqMap = new HashMap<>();
-    private final Map<VJGeneType, Multimap<String, VJGene>> mGeneTypeAnchorAminoAcidSeqMap = new HashMap<>();
-    private final Multimap<GeneLocation, VJGene> mGeneLocationImgtGeneMap = ArrayListMultimap.create();
+    private final Multimap<VJAnchorReferenceLocation, VJGene> mGeneLocationVJGeneMap = ArrayListMultimap.create();
 
     @Override
     public List<VJGene> getVJGenes()
@@ -54,23 +53,15 @@ public class TestVJGeneStore implements VJGeneStore
     }
 
     @Override
-    public Collection<VJGene> getByAnchorAminoAcidSequence(
-            @NotNull VJGeneType geneType, @NotNull String anchorAminoAcidSeq)
+    public Collection<VJGene> getByAnchorGeneLocation(@NotNull VJAnchorReferenceLocation vjAnchorReferenceLocation)
     {
-        Multimap<String, VJGene> anchorAASeqMap = mGeneTypeAnchorAminoAcidSeqMap.get(geneType);
-        return anchorAASeqMap != null ? anchorAASeqMap.get(anchorAminoAcidSeq) : Collections.emptySet();
+        return mGeneLocationVJGeneMap.get(vjAnchorReferenceLocation);
     }
 
     @Override
-    public Collection<VJGene> getByAnchorGeneLocation(@NotNull GeneLocation geneLocation)
+    public Collection<VJAnchorReferenceLocation> getVJAnchorReferenceLocations()
     {
-        return mGeneLocationImgtGeneMap.get(geneLocation);
-    }
-
-    @Override
-    public Collection<GeneLocation> getVJGenomeRegions()
-    {
-        return mGeneLocationImgtGeneMap.keySet();
+        return mGeneLocationVJGeneMap.keySet();
     }
 
     public TestVJGeneStore(List<VJGene> vjGenes)
@@ -82,7 +73,7 @@ public class TestVJGeneStore implements VJGeneStore
         {
             if (gene.getAnchorLocation() != null)
             {
-                mGeneLocationImgtGeneMap.put(gene.getAnchorLocation(), gene);
+                mGeneLocationVJGeneMap.put(new VJAnchorReferenceLocation(gene.getType().getVj(), gene.getAnchorLocation()), gene);
             }
 
             if (!gene.getAnchorSequence().isEmpty())
@@ -90,8 +81,6 @@ public class TestVJGeneStore implements VJGeneStore
                 mAnchorSequenceMap.put(gene.getAnchorSequence(), gene);
                 mGeneTypeAnchorSeqMap.computeIfAbsent(gene.getType(), o -> ArrayListMultimap.create())
                         .put(gene.getAnchorSequence(), gene);
-                mGeneTypeAnchorAminoAcidSeqMap.computeIfAbsent(gene.getType(), o -> ArrayListMultimap.create())
-                        .put(gene.getAnchorAminoAcidSequence(), gene);
             }
         }
     }

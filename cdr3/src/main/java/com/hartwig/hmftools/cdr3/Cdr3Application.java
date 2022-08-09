@@ -70,7 +70,7 @@ public class Cdr3Application
         Instant start = Instant.now();
 
         VJGeneStore vjGeneStore = new Cdr3GeneLoader(mParams.refGenomeVersion);
-        Cdr3ReadScreener readProcessor = new Cdr3ReadScreener(vjGeneStore, mParams.MaxAnchorAlignDistance);
+        Cdr3ReadScreener readProcessor = new Cdr3ReadScreener(vjGeneStore, mParams.MaxAnchorAlignDistance, CiderConstants.MIN_CANDIDATE_READ_ANCHOR_OVERLAP);
         readBamFile(readProcessor, vjGeneStore);
 
         //VJReadJoiner vjReadJoiner = new VJReadJoiner(readProcessor.getCdr3ReadMatches());
@@ -115,8 +115,8 @@ public class Cdr3Application
             samRecordQueue.add(samRecord);
         };
 
-        Collection<GenomeRegion> genomeRegions = vjGeneStore.getVJGenomeRegions().stream()
-                .map(o -> GenomeRegions.create(o.getChromosome(), o.getPosStart() - mParams.MaxAnchorAlignDistance, o.getPosEnd() + mParams.MaxAnchorAlignDistance))
+        Collection<GenomeRegion> genomeRegions = vjGeneStore.getVJAnchorReferenceLocations().stream()
+                .map(o -> GenomeRegions.create(o.getChromosome(), o.getStart() - mParams.MaxAnchorAlignDistance, o.getEnd() + mParams.MaxAnchorAlignDistance))
                 .collect(Collectors.toList());
 
         AsyncBamReader.processBam(mParams.BamPath, readerFactory, genomeRegions, lociBamRecordHander, mParams.ThreadCount, 0);
@@ -128,8 +128,8 @@ public class Cdr3Application
 
         sLogger.info("found {} VJ read records", readProcessor.getAllMatchedReads().size());
 
-        String readTsvFile = Cdr3ReadTsvWriter.generateFilename(mParams.OutputDir, mParams.SampleId);
-        Cdr3ReadTsvWriter.write(readTsvFile, readProcessor.getVJReadCandidates());
+        //String readTsvFile = Cdr3ReadTsvWriter.generateFilename(mParams.OutputDir, mParams.SampleId);
+        //Cdr3ReadTsvWriter.write(readTsvFile, readProcessor.getVJReadCandidates());
 
         // now build the consensus overlay sequences
         //var geneTypes = new VJGeneType[] { VJGeneType.IGHV, VJGeneType.IGHJ };
@@ -169,12 +169,12 @@ public class Cdr3Application
                 String anchorSupport = VJReadLayoutAdaptor.getAnchorSupport(geneType, layout);
                 String cdr3Support = VJReadLayoutAdaptor.getCdr3Support(geneType, layout);
 
-                if (geneType.isV())
+                if (geneType.getVj() == VJ.V)
                 {
                     sLogger.info("V sequence: {}-{}", anchor, cdr3);
                     sLogger.info("V support:  {}-{}", anchorSupport, cdr3Support);
                     sLogger.info("V AA seq:  {}-{}", Codons.aminoAcidFromBases(anchor), Codons.aminoAcidFromBases(cdr3));
-                } else if (geneType.isJ())
+                } else if (geneType.getVj() == VJ.J)
                 {
                     sLogger.info("J sequence: {}-{}", cdr3, anchor);
                     sLogger.info("J support:  {}-{}", cdr3Support, anchorSupport);

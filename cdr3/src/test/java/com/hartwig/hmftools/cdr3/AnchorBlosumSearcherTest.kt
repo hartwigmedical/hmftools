@@ -44,7 +44,7 @@ class AnchorBlosumSearcherTest
     @Test
     fun testFindJAnchor()
     {
-        val anchorBlosumSearcher = AnchorBlosumSearcher(vjGeneStore, 8, 2)
+        val anchorBlosumSearcher = AnchorBlosumSearcher(vjGeneStore, 8, 2, 8)
 
         val vAnchorSeq = "CGAGTCGAAGACACGGCTGTGTATTACTGT"
         val jAnchorSeq = "TGGGGCCAAGGGACCACGGTCACCGTCTCC"
@@ -70,7 +70,7 @@ class AnchorBlosumSearcherTest
     @Test
     fun testFindJAnchorPartial()
     {
-        val anchorBlosumSearcher = AnchorBlosumSearcher(vjGeneStore, 7, 2)
+        val anchorBlosumSearcher = AnchorBlosumSearcher(vjGeneStore, 7, 2, 7)
 
         val vAnchorSeq = "CGAGTCGAAGACACGGCTGTGTATTACTGT"
         val jAnchorSeq = "TGGGGCCAAGGGACCACGGTCACCGTCTCC".dropLast(8) // chop off 8 bases
@@ -95,7 +95,7 @@ class AnchorBlosumSearcherTest
     @Test
     fun testFindVAnchor()
     {
-        val anchorBlosumSearcher = AnchorBlosumSearcher(vjGeneStore, 8, 2)
+        val anchorBlosumSearcher = AnchorBlosumSearcher(vjGeneStore, 8, 2, 8)
 
         val vAnchorSeq = "CGAGTCGAAGACACGGCTGTGTATTACTGT"
         val jAnchorSeq = "TGGGGCCAAGGGACCACGGTCACCGTCTCC"
@@ -119,7 +119,7 @@ class AnchorBlosumSearcherTest
     @Test
     fun testFindVAnchorPartial()
     {
-        val anchorBlosumSearcher = AnchorBlosumSearcher(vjGeneStore, 7, 2)
+        val anchorBlosumSearcher = AnchorBlosumSearcher(vjGeneStore, 7, 2, 7)
 
         val vAnchorSeq = "CGAGTCGAAGACACGGCTGTGTATTACTGT".drop(8) // chop off 8
         val jAnchorSeq = "TGGGGCCAAGGGACCACGGTCACCGTCTCC"

@@ -11,6 +11,8 @@ object VJReadLayoutFile
 {
     private const val FILE_EXTENSION = ".cider.layout"
 
+    class LayoutId(var nextId: Int = 0)
+
     private fun generateFilename(basePath: String, sample: String): String
     {
         return basePath + File.separator + sample + FILE_EXTENSION
@@ -22,33 +24,31 @@ object VJReadLayoutFile
         val filePath = generateFilename(outputDir, sampleId)
 
         createBufferedWriter(filePath).use { writer ->
+            val layoutId = LayoutId()
             for ((geneType, overlayList) in overlayMap)
             {
-                writeLayouts(writer, geneType, overlayList, minSoftClipBases)
+                writeLayouts(writer, geneType, overlayList, layoutId)
             }
         }
     }
 
-    private fun writeLayouts(writer: BufferedWriter, geneType: VJGeneType, overlayList: List<ReadLayout>, minSoftClipBases: Int)
+    private fun writeLayouts(writer: BufferedWriter, geneType: VJGeneType, overlayList: List<ReadLayout>, layoutId: LayoutId)
     {
         // sort the overlays by number of reads
         val sortedOverlayList = overlayList.sortedByDescending({ o -> o.reads.size })
 
-        for (i in sortedOverlayList.indices)
+        for (layout in sortedOverlayList)
         {
-            writeLayout1(sortedOverlayList, i, geneType, writer)
+            writeLayout1(layout, layoutId.nextId++, geneType, writer)
         }
     }
 
     private fun writeLayout(
-        sortedOverlayList: List<ReadLayout>,
-        i: Int,
+        overlay: ReadLayout,
+        id: Int,
         geneType: VJGeneType,
-        writer: BufferedWriter
-    )
+        writer: BufferedWriter)
     {
-        val overlay: ReadLayout = sortedOverlayList[i]
-
         // count how many split reads
         val numSplitReads5Bases = overlay.reads.map { o -> VJReadLayoutAdaptor.toReadCandidate(o) }
             .count { o -> Math.max(o.leftSoftClip, o.rightSoftClip) >= 5 }
@@ -59,8 +59,8 @@ object VJReadLayoutFile
         val anchorRange = VJReadLayoutAdaptor.getAnchorRange(geneType, overlay)!!
         val cdr3Range = VJReadLayoutAdaptor.getCdr3Range(geneType, overlay)!!
 
-        val range1 = if (geneType.isV) anchorRange else cdr3Range
-        val range2 = if (geneType.isV) cdr3Range else anchorRange
+        val range1 = if (geneType.vj == VJ.V) anchorRange else cdr3Range
+        val range2 = if (geneType.vj == VJ.V) cdr3Range else anchorRange
 
         val sequence1 = safeSubstring(overlay.consensusSequence(), range1)
         val sequence2 = safeSubstring(overlay.consensusSequence(), range2)
@@ -72,7 +72,7 @@ object VJReadLayoutFile
         val aa1 = Codons.aminoAcidFromBases(sequence1.substring(sequence1.length % 3))
         val aa2 = Codons.aminoAcidFromBases(sequence2)
 
-        writer.write("${i} type: ${geneType}, read count: ${overlay.reads.size}, split(5) read count: ${numSplitReads5Bases}, ")
+        writer.write("${id} type: ${geneType}, read count: ${overlay.reads.size}, split(5) read count: ${numSplitReads5Bases}, ")
         writer.write("split(10) read count: ${numSplitReads10Bases}, ")
         writer.write("AA: ${aa1}-${aa2}, ")
         writer.write("aligned: ${overlay.alignedPosition}\n")
@@ -92,14 +92,11 @@ object VJReadLayoutFile
     }
 
     private fun writeLayout1(
-        sortedOverlayList: List<ReadLayout>,
-        i: Int,
+        overlay: ReadLayout,
+        id: Int,
         geneType: VJGeneType,
-        writer: BufferedWriter
-    )
+        writer: BufferedWriter)
     {
-        val overlay: ReadLayout = sortedOverlayList[i]
-
         // count how many split reads
         val numSplitReads5Bases = overlay.reads.map { o -> VJReadLayoutAdaptor.toReadCandidate(o) }
             .count { o -> Math.max(o.leftSoftClip, o.rightSoftClip) >= 5 }
@@ -119,7 +116,7 @@ object VJReadLayoutFile
         sequence = insertDashes(sequence, anchorRange)
         support = insertDashes(support, anchorRange)
 
-        writer.write("${i} type: ${geneType}, read count: ${overlay.reads.size}, split(5) read count: ${numSplitReads5Bases}, ")
+        writer.write("${id} type: ${geneType}, read count: ${overlay.reads.size}, split(5) read count: ${numSplitReads5Bases}, ")
         writer.write("split(10) read count: ${numSplitReads10Bases}, ")
         writer.write("AA: ${aa}, ")
         writer.write("aligned: ${overlay.alignedPosition}\n")

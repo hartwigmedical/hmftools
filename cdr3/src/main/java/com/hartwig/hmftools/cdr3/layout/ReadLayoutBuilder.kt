@@ -77,16 +77,16 @@ class ReadLayoutBuilder(inputReads: List<ReadLayout.Read>, minBaseQuality: Int, 
 
             if (matchedLayout == null)
             {
-                val overlay = ReadLayout()
-                addToOverlay(overlay, readData, minBaseQuality)
-                readLayouts.add(overlay)
+                val layout = ReadLayout()
+                layout.addRead(readData, minBaseQuality)
+                readLayouts.add(layout)
             }
             else
             {
                 // add to all layouts that match
                 // for (l in matchedLayouts)
                     //addToOverlay(l, readData, minBaseQuality)
-                addToOverlay(matchedLayout, readData, minBaseQuality)
+                matchedLayout.addRead(readData, minBaseQuality)
             }
         }
 
@@ -125,74 +125,6 @@ class ReadLayoutBuilder(inputReads: List<ReadLayout.Read>, minBaseQuality: Int, 
     companion object
     {
         private val sLogger = LogManager.getLogger(ReadLayoutBuilder::class.java)
-
-        fun addToOverlay(group: ReadLayout, read: ReadLayout.Read, minBaseQuality: Byte)
-        {
-            group.addRead(read, minBaseQuality)
-
-            /*
-
-            if (readData.alignedPosition > group.alignedPosition)
-            {
-                // update max offset for each group item
-                val offsetChange = readData.alignedPosition - group.alignedPosition
-                group.reads.forEach({ o -> o.overlayOffset += offsetChange })
-
-                // also need to add some items
-                for (i in 0 until offsetChange)
-                {
-                    group.support.add(BaseSupport())
-                }
-
-                // rotate the new items to the front
-                Collections.rotate(group.support, offsetChange)
-
-                group.alignedPosition = readData.alignedPosition
-            }
-
-            // now use the aligned position to line up the read with the group
-            val seqOffset = group.alignedPosition - readData.alignedPosition
-
-            group.reads.add(
-                ReadLayout.Read(
-                    readData.key, readData.sequence, readData.baseQualities,
-                    seqOffset
-                )
-            )
-
-            for (i in group.support.size until readData.sequence.length + seqOffset)
-            {
-                group.support.add(BaseSupport())
-            }
-
-            // now we want to update the consensus sequence
-            // we recalculate it from scratch for now
-
-            // update the support
-            for (i in readData.sequence.indices)
-            {
-                val baseQual = readData.baseQualities[i]
-
-                if (baseQual < minBaseQuality)
-                    continue
-
-                val b: Char = readData.sequence[i]
-                if (b != 'N')
-                    group.support[seqOffset + i].addToCount(b)
-            }
-
-            // now read out the sequence
-            val stringBuilder = StringBuilder(group.support.size)
-
-            for (baseSupport in group.support)
-            {
-                stringBuilder.append(baseSupport.likelyBase())
-            }
-
-            group.sequence = stringBuilder.toString()
-
-             */
-        }
 
         //
         @JvmStatic

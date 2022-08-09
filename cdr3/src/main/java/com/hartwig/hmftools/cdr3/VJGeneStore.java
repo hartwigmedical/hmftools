@@ -14,7 +14,6 @@ public interface VJGeneStore
     Set<String> getAnchorSequenceSet(@NotNull VJGeneType geneType);
     Collection<VJGene> getByAnchorSequence(@NotNull String anchorSeq);
     Collection<VJGene> getByAnchorSequence(@NotNull VJGeneType geneType, @NotNull String anchorSeq);
-    Collection<VJGene> getByAnchorAminoAcidSequence(@NotNull VJGeneType geneType, @NotNull String anchorAminoAcidSeq);
-    Collection<VJGene> getByAnchorGeneLocation(@NotNull GeneLocation geneLocation);
-    Collection<GeneLocation> getVJGenomeRegions();
+    Collection<VJGene> getByAnchorGeneLocation(@NotNull VJAnchorReferenceLocation vjAnchorReferenceLocation);
+    Collection<VJAnchorReferenceLocation> getVJAnchorReferenceLocations();
 }

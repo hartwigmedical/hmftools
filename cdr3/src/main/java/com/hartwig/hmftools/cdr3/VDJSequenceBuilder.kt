@@ -15,8 +15,9 @@ object VDJSequenceBuilder
     {
         val anchorBlosumSearcher = AnchorBlosumSearcher(
             vjGeneStore,
-            Cdr3Constants.MIN_PARTIAL_ANCHOR_AA_LENGTH,
-            Cdr3Constants.MAX_BLOSUM_DIFF_PER_AA
+            CiderConstants.MIN_PARTIAL_ANCHOR_AA_LENGTH,
+            CiderConstants.MAX_BLOSUM_DIFF_PER_AA,
+            CiderConstants.ANCHOR_SIMILARITY_SCORE_CONSTANT
         )
 
         val vdjList = ArrayList<VDJSequence>()
@@ -89,8 +90,8 @@ object VDJSequenceBuilder
 
         val layoutAnchorRange: IntRange = VJReadLayoutAdaptor.getAnchorRange(layoutGeneType, layout)!!
 
-        val searchStart = if (targetAnchorType.isV) 0 else layoutAnchorRange.last + 1
-        val searchEnd = if (targetAnchorType.isV) layoutAnchorRange.first else layoutSeq.length
+        val searchStart = if (targetAnchorType.vj == VJ.V) 0 else layoutAnchorRange.last + 1
+        val searchEnd = if (targetAnchorType.vj == VJ.V) layoutAnchorRange.first else layoutSeq.length
 
         // find all the homolog sequences
         val anchorBlosumMatches: List<AnchorBlosumSearcher.AnchorBlosumMatch> =
@@ -104,7 +105,7 @@ object VDJSequenceBuilder
         var vAnchorRange: IntRange
         var jAnchorRange: IntRange
 
-        if (layoutGeneType.isV)
+        if (layoutGeneType.vj == VJ.V)
         {
             vAnchorRange = VJReadLayoutAdaptor.getAnchorRange(layoutGeneType, layout)!!
             jAnchorRange = anchorBlosumMatch.anchorStart until anchorBlosumMatch.anchorEnd
@@ -126,7 +127,7 @@ object VDJSequenceBuilder
         val vAnchor: VJAnchor
         val jAnchor: VJAnchor
 
-        if (layoutGeneType.isV)
+        if (layoutGeneType.vj == VJ.V)
         {
             vAnchor = createVJAnchorByReadMatch(
                 type = VJAnchor.Type.V,
@@ -344,7 +345,7 @@ object VDJSequenceBuilder
                 vdj1.aminoAcidSequenceFormatted, vdj1.vAnchor.matchMethod, vdj1.jAnchor.matchMethod,
                 vdj2.aminoAcidSequenceFormatted, vdj2.vAnchor.matchMethod, vdj2.jAnchor.matchMethod)
 
-            throw RuntimeException("canont merge VDJs: different lengths between anchors")
+            throw RuntimeException("cannot merge VDJs: different lengths between anchors")
         }
 
         sLogger.debug("start merge: {}(v:{}, j:{}, aligned pos:{}, within layout: {}-{}, v: {}, j: {}) and " +

@@ -12,27 +12,63 @@ data class GeneLocation(val chromosome: String, val posStart: Int, val posEnd: I
         val baseRegionCompare = super.compareTo(other)
         return if (baseRegionCompare == 0) strand.compareTo(other.strand) else baseRegionCompare
     }
+
+    override fun toString(): String
+    {
+        return "${chromosome}:${posStart}-${posEnd}(${strand.asChar()})"
+    }
 }
 
-enum class VJGeneType
+enum class VJ
 {
-    IGHV,
-    IGHJ,
-    IGKV,
-    IGKJ,
-    IGLV,
-    IGLJ,
-    TRAV,
-    TRAJ,
-    TRBV,
-    TRBJ,
-    TRDV,
-    TRDJ,
-    TRGV,
-    TRGJ;
+    V, J
+}
 
-    val isV: Boolean get() { return name[3] == 'V'; }
-    val isJ: Boolean get() { return name[3] == 'J'; }
+enum class VJGeneType(val vj: VJ)
+{
+    IGHV(VJ.V),
+    IGHJ(VJ.J),
+    IGKV(VJ.V),
+    IGKJ(VJ.J),
+    IGLV(VJ.V),
+    IGLJ(VJ.J),
+    TRAV(VJ.V),
+    TRAJ(VJ.J),
+    TRBV(VJ.V),
+    TRBJ(VJ.J),
+    TRDV(VJ.V),
+    TRDJ(VJ.J),
+    TRGV(VJ.V),
+    TRGJ(VJ.J);
+}
+
+// store the anchor location also whether it is V or J
+data class VJAnchorReferenceLocation(val vj: VJ, val geneLocation: GeneLocation)
+{
+    val chromosome: String get() = geneLocation.chromosome
+    val start: Int get() = geneLocation.posStart
+    val end: Int get() = geneLocation.posEnd
+    val strand: Strand get() = geneLocation.strand
+
+    fun baseLength() : Int
+    {
+        return geneLocation.baseLength()
+    }
+
+    // get the reference position of the end of the anchor
+    // this is the end of the C codon for V and the start of the W / F codon for J
+    fun anchorEndReferencePosition() : Int
+    {
+        if (vj == VJ.V && geneLocation.strand == Strand.FORWARD ||
+            vj == VJ.J && geneLocation.strand == Strand.REVERSE)
+        {
+            return geneLocation.posEnd
+        }
+        else
+        {
+            return geneLocation.posStart
+        }
+    }
 }
 
 data class VJGene

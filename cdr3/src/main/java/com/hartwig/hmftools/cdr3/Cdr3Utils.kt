@@ -45,6 +45,15 @@ object Cdr3Utils
         return partitions
     }
 
+    fun conservedAA(vjGeneType: VJGeneType): Char
+    {
+        if (vjGeneType.vj == VJ.V)
+            return 'C'
+        if (vjGeneType == VJGeneType.IGHJ)
+            return 'W'
+        return 'F'
+    }
+
     @JvmStatic
     fun countsToString(counts: IntArray): String
     {
@@ -62,6 +71,8 @@ object Cdr3Utils
         return stringBuilder.toString()
     }
 
+    // insert dashes. Note that this works even if some dash positions
+    // are invalid
     fun insertDashes(str: String, vararg dashPos: Int): String
     {
         val stringBuilder = StringBuilder(str)

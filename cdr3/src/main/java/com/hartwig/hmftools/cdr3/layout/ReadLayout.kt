@@ -2,8 +2,6 @@ package com.hartwig.hmftools.cdr3.layout
 
 import com.hartwig.hmftools.cdr3.Cdr3Utils
 import com.hartwig.hmftools.cdr3.ReadKey
-import org.apache.logging.log4j.Level
-import org.apache.logging.log4j.Logger
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
@@ -86,42 +84,72 @@ class ReadLayout(
     class BaseSupport
     {
         internal var likelyBase: Char = 'N'
-        private val mutableCountMap: MutableMap<Char, Int> = HashMap()
+        private var aCount: Int = 0
+        private var cCount: Int = 0
+        private var gCount: Int = 0
+        private var tCount: Int = 0
 
-        val countMap: Map<Char, Int> get() { return mutableCountMap }
+        fun generateCountMap() : Map<Char, Int>
+        {
+            val countMap: MutableMap<Char, Int> = HashMap()
+
+            for (base in arrayOf('A', 'C', 'G', 'T'))
+            {
+                val baseCount = count(base)
+
+                if (baseCount > 0)
+                    countMap[base] = baseCount
+            }
+
+            return countMap
+        }
 
         fun count(base: Char): Int
         {
-            return countMap.getOrDefault(base, 0)
+            return when (base)
+                {
+                    'A' -> aCount
+                    'C' -> cCount
+                    'G' -> gCount
+                    'T' -> tCount
+                    else -> 0
+                }
         }
 
         // return true if the likely base has changed, false otherwise
         fun addToCount(base: Char) : Boolean
         {
-            mutableCountMap.merge(base, 1, Int::plus)
-            return updateLikelyBase()
+            when (base)
+            {
+                'A' -> ++aCount
+                'C' -> ++cCount
+                'G' -> ++gCount
+                'T' -> ++tCount
+            }
+            return updateLikelyBase(base)
         }
 
-        private fun updateLikelyBase() : Boolean
+        private fun updateLikelyBase(baseWithAddedCount: Char) : Boolean
         {
-            val prevLikelyBase = likelyBase
-            val entry = countMap.entries.maxByOrNull({ o -> o.value })
-            if (entry == null)
-                likelyBase = 'N'
-            else
-                likelyBase = entry.key
-
-            return (likelyBase != prevLikelyBase)
+            if (likelyBase != baseWithAddedCount &&
+                count(baseWithAddedCount) > count(likelyBase))
+            {
+                likelyBase = baseWithAddedCount
+                return true
+            }
+            return false
         }
 
         fun likelyBaseSupport(): Map.Entry<Char, Int>
         {
-            return countMap.entries.maxByOrNull({ o -> o.value }) ?: sNullSupport
+            if (likelyBase == 'N')
+                return sNullSupport
+            return AbstractMap.SimpleImmutableEntry(likelyBase, likelyBaseSupportCount())
         }
 
         fun likelyBaseSupportCount(): Int
         {
-            return likelyBaseSupport().value
+            return count(likelyBase)
         }
     }
 
@@ -274,18 +302,9 @@ class ReadLayout(
         sequenceCache = stringBuilder.toString()
     }
 
-    fun getReadOffset(read: Read) : Int
+    private fun getReadOffset(read: Read) : Int
     {
         return alignedPosition - read.alignedPosition
-    }
-
-    fun logOverlay(logger: Logger, logLevel: Level)
-    {
-        if (!logger.isEnabled(logLevel))
-            return
-        logger.log(logLevel, "Read overlay: {} reads", reads.size)
-        logger.log(logLevel, "sequence: {}", allSequenceSupport.sequence)
-        logger.log(logLevel, "support : {}", allSequenceSupport.supportString())
     }
 
     fun mergeIn(layout: ReadLayout, alignedPositionOffset: Int, minBaseQuality: Byte)

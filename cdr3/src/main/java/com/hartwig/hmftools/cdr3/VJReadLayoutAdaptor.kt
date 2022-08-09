@@ -17,7 +17,7 @@ object VJReadLayoutAdaptor
         val retainEnd: Int
         val alignedPosition: Int
 
-        if (readCandidate.vjGeneType.isV)
+        if (readCandidate.vjGeneType.vj == VJ.V)
         {
             // for V, we layout from the anchor start, left to right
             // we are only interested in what comes after anchor start
@@ -76,9 +76,9 @@ object VJReadLayoutAdaptor
 
         val anchorRange =
         // for V read we align to last base of anchor, for J read we align to first base of the anchor
-        if (geneType.isV)
+        if (geneType.vj == VJ.V)
             overlay.alignedPosition - anchorLength + 1 .. overlay.alignedPosition
-        else if (geneType.isJ)
+        else if (geneType.vj == VJ.J)
             overlay.alignedPosition until overlay.alignedPosition + anchorLength
         else
             null
@@ -101,10 +101,10 @@ object VJReadLayoutAdaptor
 
         // for V it is the sequence after the aligned position
         // for J it is the sequence before
-        if (geneType.isV)
-            return anchorRange.first until overlay.consensusSequence().length
-        else if (geneType.isJ)
-            return 0 .. anchorRange.last
+        if (geneType.vj == VJ.V)
+            return anchorRange.last + 1 until overlay.consensusSequence().length
+        else if (geneType.vj == VJ.J)
+            return 0 until anchorRange.first
         return null
     }
 
@@ -147,13 +147,13 @@ object VJReadLayoutAdaptor
             minBaseQuality = minBaseQuality,
             minMatchedBases = minMatchedBases,
             minMatchRatio = minMatchRatio,
-            alignLeft = geneType.isV)
+            alignLeft = geneType.vj == VJ.V)
         val readOverlays = overlayBuilder.build()
         return readOverlays
 
         /*
 
-        val useReverseComplement = geneType.isJ
+        val useReverseComplement = geneType.vj == VJ.J
         val overlayInputs = readCandidates.map({ o -> readCandidateToLayoutRead(o) })
             .toList()
 
@@ -187,7 +187,7 @@ object VJReadLayoutAdaptor
         val sequence = overlay.sequence
         val support = overlay.supportString()
 
-        if (geneType.isV)
+        if (geneType.vj == VJ.V)
         {
             val anchorStart = overlay.alignedPosition - anchorLength
             val anchorEnd = overlay.alignedPosition
@@ -198,7 +198,7 @@ object VJReadLayoutAdaptor
             sLogger.info("V sequence: {}-{}", anchor, cdr3)
             sLogger.info("V support:  {}-{}", anchorSupport, cdr3Support)
             sLogger.info("V AA seq:  {}-{}", Codons.aminoAcidFromBases(anchor), Codons.aminoAcidFromBases(cdr3))
-        } else if (geneType.isJ)
+        } else if (geneType.vj == VJ.J)
         {
             val anchorStart = overlay.alignedPosition
             val anchorEnd = overlay.alignedPosition + anchorLength

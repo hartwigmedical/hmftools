@@ -41,14 +41,14 @@ class ReadLayoutBuilderTest
     }
 
     @Test
-    fun testAddToOverlay()
+    fun testAddToLayout()
     {
         val group = ReadLayout()
         var seq = "CAGGTG"
 
         // we are aligned at the T
         var readData = ReadLayout.Read("read1", ReadKey("read1", true), seq, ByteArray(seq.length){ 50 }, 4)
-        ReadLayoutBuilder.addToOverlay(group, readData, MIN_BASE_QUALITY)
+        group.addRead(readData, MIN_BASE_QUALITY)
 
         assertEquals(seq, group.consensusSequence())
         assertEquals(4, group.alignedPosition)
@@ -56,7 +56,7 @@ class ReadLayoutBuilderTest
         // now test a sequence that extend the start by 3 bases
         seq = "AGCCAGGT"
         readData = ReadLayout.Read("read2", ReadKey("read2", true), seq, ByteArray(seq.length){ 50 }, 7)
-        ReadLayoutBuilder.addToOverlay(group, readData, MIN_BASE_QUALITY)
+        group.addRead(readData, MIN_BASE_QUALITY)
 
         assertEquals(seq + "G", group.consensusSequence())
         assertEquals(7, group.alignedPosition)
@@ -64,7 +64,7 @@ class ReadLayoutBuilderTest
         // now test a sequence that extend the end by 3 bases
         seq = "AGGTGCAA"
         readData = ReadLayout.Read("read3", ReadKey("read3", true), seq, ByteArray(seq.length){ 50 }, 3)
-        ReadLayoutBuilder.addToOverlay(group, readData, MIN_BASE_QUALITY)
+        group.addRead(readData, MIN_BASE_QUALITY)
 
         assertEquals("AGCC" + seq, group.consensusSequence())
         assertEquals(7, group.alignedPosition)
@@ -72,18 +72,18 @@ class ReadLayoutBuilderTest
         assertEquals(3, group.reads.size)
 
         // lets see if we got the correct support counts
-        assertEquals(mapOf('A' to 1), group.highQualSequenceSupport.support[0].countMap)
-        assertEquals(mapOf('G' to 1), group.highQualSequenceSupport.support[1].countMap)
-        assertEquals(mapOf('C' to 1), group.highQualSequenceSupport.support[2].countMap)
-        assertEquals(mapOf('C' to 2), group.highQualSequenceSupport.support[3].countMap)
-        assertEquals(mapOf('A' to 3), group.highQualSequenceSupport.support[4].countMap)
-        assertEquals(mapOf('G' to 3), group.highQualSequenceSupport.support[5].countMap)
-        assertEquals(mapOf('G' to 3), group.highQualSequenceSupport.support[6].countMap)
-        assertEquals(mapOf('T' to 3), group.highQualSequenceSupport.support[7].countMap)
-        assertEquals(mapOf('G' to 2), group.highQualSequenceSupport.support[8].countMap)
-        assertEquals(mapOf('C' to 1), group.highQualSequenceSupport.support[9].countMap)
-        assertEquals(mapOf('A' to 1), group.highQualSequenceSupport.support[10].countMap)
-        assertEquals(mapOf('A' to 1), group.highQualSequenceSupport.support[11].countMap)
+        assertEquals(mapOf('A' to 1), group.highQualSequenceSupport.support[0].generateCountMap())
+        assertEquals(mapOf('G' to 1), group.highQualSequenceSupport.support[1].generateCountMap())
+        assertEquals(mapOf('C' to 1), group.highQualSequenceSupport.support[2].generateCountMap())
+        assertEquals(mapOf('C' to 2), group.highQualSequenceSupport.support[3].generateCountMap())
+        assertEquals(mapOf('A' to 3), group.highQualSequenceSupport.support[4].generateCountMap())
+        assertEquals(mapOf('G' to 3), group.highQualSequenceSupport.support[5].generateCountMap())
+        assertEquals(mapOf('G' to 3), group.highQualSequenceSupport.support[6].generateCountMap())
+        assertEquals(mapOf('T' to 3), group.highQualSequenceSupport.support[7].generateCountMap())
+        assertEquals(mapOf('G' to 2), group.highQualSequenceSupport.support[8].generateCountMap())
+        assertEquals(mapOf('C' to 1), group.highQualSequenceSupport.support[9].generateCountMap())
+        assertEquals(mapOf('A' to 1), group.highQualSequenceSupport.support[10].generateCountMap())
+        assertEquals(mapOf('A' to 1), group.highQualSequenceSupport.support[11].generateCountMap())
     }
 
     @Test
@@ -95,7 +95,7 @@ class ReadLayoutBuilderTest
 
         // we are aligned at the T
         var readData = ReadLayout.Read("read1", ReadKey("read1", true), seq, baseQual, 4)
-        ReadLayoutBuilder.addToOverlay(layout, readData, MIN_BASE_QUALITY)
+        layout.addRead(readData, MIN_BASE_QUALITY)
 
         assertEquals(seq, layout.consensusSequence())
         assertEquals(4, layout.alignedPosition)
@@ -130,7 +130,7 @@ class ReadLayoutBuilderTest
 
         // we are aligned at the A
         var readData = TestUtils.createRead("read1", seq, baseQual, 1)
-        ReadLayoutBuilder.addToOverlay(layout, readData, MIN_BASE_QUALITY)
+        layout.addRead(readData, MIN_BASE_QUALITY)
 
         // another sequence which does not include A, A is actually 2 positions before the start of sequence
         // the GTG part matches
@@ -159,7 +159,7 @@ class ReadLayoutBuilderTest
 
         // we are aligned at 2 bases before the start of layout
         val read1 = TestUtils.createRead("read1", seq, baseQual, -2)
-        ReadLayoutBuilder.addToOverlay(layout, read1, MIN_BASE_QUALITY)
+        layout.addRead(read1, MIN_BASE_QUALITY)
 
         assertEquals(seq, layout.consensusSequence())
         assertEquals(-2, layout.alignedPosition)
@@ -195,7 +195,7 @@ class ReadLayoutBuilderTest
 
         // we are aligned at the T
         var readData = ReadLayout.Read("read1", ReadKey("read1", true), seq, ByteArray(seq.length){ 50 }, 4)
-        ReadLayoutBuilder.addToOverlay(group, readData, MIN_BASE_QUALITY)
+        group.addRead(readData, MIN_BASE_QUALITY)
 
         assertEquals(seq, group.consensusSequence())
         assertEquals(4, group.alignedPosition)
