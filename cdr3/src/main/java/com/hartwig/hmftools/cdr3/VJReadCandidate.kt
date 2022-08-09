@@ -18,7 +18,7 @@ data class VJReadCandidate(
     val read: SAMRecord,
     val vjGenes: List<VJGene>,
     val vjGeneType: VJGeneType,
-    val anchorMatchType: AnchorMatchType,
+    val anchorMatchMethod: AnchorMatchMethod,
     val useReverseComplement: Boolean,
     val anchorOffsetStart: Int, // this is after reverse complement if needed, can be negative
     val anchorOffsetEnd: Int, // this is after reverse complement if needed, can be after sequence end
@@ -27,7 +27,7 @@ data class VJReadCandidate(
     val rightSoftClip: Int
 )
 {
-    enum class AnchorMatchType
+    enum class AnchorMatchMethod
     {
         ALIGN, EXACT
     }
@@ -58,7 +58,7 @@ data class VJReadCandidate(
 
     val baseQualityString: String get()
     {
-        var bq = read.baseQualityString
+        val bq = read.baseQualityString
         return if (useReverseComplement)
             bq.reversed()
         else bq

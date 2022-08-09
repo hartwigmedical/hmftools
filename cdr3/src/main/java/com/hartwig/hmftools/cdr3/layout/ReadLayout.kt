@@ -9,12 +9,12 @@ import kotlin.collections.HashSet
 
 //data class
 
-class ReadLayout(
-    internal val allSequenceSupport: SequenceSupport = SequenceSupport(),
-    internal val highQualSequenceSupport: SequenceSupport = SequenceSupport(),
-    var alignedPosition: Int = 0
-)
+class ReadLayout(var id: String = String())
 {
+    internal val allSequenceSupport: SequenceSupport = SequenceSupport()
+    internal val highQualSequenceSupport: SequenceSupport = SequenceSupport()
+    var alignedPosition: Int = 0
+
     data class Read (
         // have a source that allows us to refer back to where this comes from
         val source: Any,
@@ -307,14 +307,16 @@ class ReadLayout(
         return alignedPosition - read.alignedPosition
     }
 
-    fun mergeIn(layout: ReadLayout, alignedPositionOffset: Int, minBaseQuality: Byte)
+    // merge all the reads from another layout. alignedPositionShift specifies the change to
+    // the aligned position of the reads that are merged in.
+    fun mergeIn(layout: ReadLayout, alignedPositionShift: Int, minBaseQuality: Byte)
     {
         for (r in layout.reads)
         {
-            if (alignedPositionOffset == 0)
+            if (alignedPositionShift == 0)
                 addRead(r, minBaseQuality)
             else
-                addRead(r.copy(alignedPosition = r.alignedPosition + alignedPositionOffset), minBaseQuality)
+                addRead(r.copy(alignedPosition = r.alignedPosition + alignedPositionShift), minBaseQuality)
         }
     }
 
@@ -325,15 +327,15 @@ class ReadLayout(
         // merge in another layout to this layout, and create a new layout
         // the new layout will have the same aligned position as this layout
         fun merge(layout1: ReadLayout, layout2: ReadLayout,
-                  alignedPositionOffset1: Int, alignedPositionOffset2: Int,
+                  alignedPositionShift1: Int, alignedPositionShift2: Int,
                   minBaseQuality: Byte) : ReadLayout
         {
             // unfortunately in java / kotlin it is difficult to clone objects
             // will do it the slow way of building it from ground up again
             val merged = ReadLayout()
 
-            merged.mergeIn(layout1, alignedPositionOffset1, minBaseQuality)
-            merged.mergeIn(layout2, alignedPositionOffset2, minBaseQuality)
+            merged.mergeIn(layout1, alignedPositionShift1, minBaseQuality)
+            merged.mergeIn(layout2, alignedPositionShift2, minBaseQuality)
             return merged
         }
     }

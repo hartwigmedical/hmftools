@@ -60,7 +60,7 @@ class AnchorBlosumSearcherTest
         val vAnchorEnd = vAnchorStart + vAnchorSeq.length
 
         val testSeq = fullSeq.substring(vAnchorEnd)
-        val anchorBlosumMatch: AnchorBlosumSearcher.AnchorBlosumMatch? = anchorBlosumSearcher.findAnchorHomolog(testSeq, VJGeneType.IGHJ).firstOrNull()
+        val anchorBlosumMatch: AnchorBlosumMatch? = anchorBlosumSearcher.searchForAnchor(testSeq, VJGeneType.IGHJ)
 
         assertNotNull(anchorBlosumMatch)
         assertEquals(45, anchorBlosumMatch.anchorStart)
@@ -85,7 +85,7 @@ class AnchorBlosumSearcherTest
         val vAnchorEnd = vAnchorStart + vAnchorSeq.length
 
         val testSeq = fullSeq.substring(vAnchorEnd)
-        val anchorBlosumMatch: AnchorBlosumSearcher.AnchorBlosumMatch? = anchorBlosumSearcher.findAnchorHomolog(testSeq, VJGeneType.IGHJ).firstOrNull()
+        val anchorBlosumMatch: AnchorBlosumMatch? = anchorBlosumSearcher.searchForAnchor(testSeq, VJGeneType.IGHJ)
 
         assertNotNull(anchorBlosumMatch)
         assertEquals(45, anchorBlosumMatch.anchorStart)
@@ -109,7 +109,7 @@ class AnchorBlosumSearcherTest
         assertNotEquals(-1, jAnchorStart)
 
         val testSeq = fullSeq.substring(0, jAnchorStart)
-        val anchorBlosumMatch: AnchorBlosumSearcher.AnchorBlosumMatch? = anchorBlosumSearcher.findAnchorHomolog(testSeq, VJGeneType.IGHV).firstOrNull()
+        val anchorBlosumMatch: AnchorBlosumMatch? = anchorBlosumSearcher.searchForAnchor(testSeq, VJGeneType.IGHV)
 
         assertNotNull(anchorBlosumMatch)
         assertEquals(27, anchorBlosumMatch.anchorStart)
@@ -132,7 +132,7 @@ class AnchorBlosumSearcherTest
         assertNotEquals(-1, jAnchorStart)
 
         val testSeq = fullSeq.substring(0, jAnchorStart)
-        val anchorBlosumMatch: AnchorBlosumSearcher.AnchorBlosumMatch? = anchorBlosumSearcher.findAnchorHomolog(testSeq, VJGeneType.IGHV).firstOrNull()
+        val anchorBlosumMatch: AnchorBlosumMatch? = anchorBlosumSearcher.searchForAnchor(testSeq, VJGeneType.IGHV)
 
         assertNotNull(anchorBlosumMatch)
         assertEquals(1, anchorBlosumMatch.anchorStart)

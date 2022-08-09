@@ -54,6 +54,27 @@ object Cdr3Utils
         return 'F'
     }
 
+    fun getPairedVjGeneType(vjGene: VJGeneType) : VJGeneType
+    {
+        return when (vjGene)
+        {
+            VJGeneType.IGHV -> VJGeneType.IGHJ
+            VJGeneType.IGHJ -> VJGeneType.IGHV
+            VJGeneType.IGKV -> VJGeneType.IGKJ
+            VJGeneType.IGKJ -> VJGeneType.IGKV
+            VJGeneType.IGLV -> VJGeneType.IGLJ
+            VJGeneType.IGLJ -> VJGeneType.IGLV
+            VJGeneType.TRAV -> VJGeneType.TRAJ
+            VJGeneType.TRAJ -> VJGeneType.TRAV
+            VJGeneType.TRBV -> VJGeneType.TRBJ
+            VJGeneType.TRBJ -> VJGeneType.TRBV
+            VJGeneType.TRDV -> VJGeneType.TRDJ
+            VJGeneType.TRDJ -> VJGeneType.TRDV
+            VJGeneType.TRGV -> VJGeneType.TRGJ
+            VJGeneType.TRGJ -> VJGeneType.TRGV
+        }
+    }
+
     @JvmStatic
     fun countsToString(counts: IntArray): String
     {
@@ -90,4 +111,16 @@ object Cdr3Utils
         return stringBuilder.toString()
     }
 
+    private fun safeSubstring(str: String, range: IntRange): String
+    {
+        if (str.length <= range.first)
+        {
+            return ""
+        }
+        if (str.length <= range.last)
+        {
+            return str.substring(range.first)
+        }
+        return str.substring(range)
+    }
 }

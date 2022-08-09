@@ -2,13 +2,10 @@ package com.hartwig.hmftools.cdr3;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.math3.util.IntegerSequence;
 import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -16,7 +13,7 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.genome.region.Strand;
-import com.hartwig.hmftools.common.samtools.SamRecordUtils;
+import com.hartwig.hmftools.common.samtools.CigarUtils;
 import com.hartwig.hmftools.common.utils.IntPair;
 
 import org.apache.logging.log4j.LogManager;
@@ -168,7 +165,7 @@ public class Cdr3ReadScreener
 
                     return createCdr3ReadMatch(samRecord,
                             genes,
-                            VJReadCandidate.AnchorMatchType.ALIGN,
+                            VJReadCandidate.AnchorMatchMethod.ALIGN,
                             anchorLocation.getStrand() == Strand.REVERSE,
                             readAnchorStart,
                             readAnchorEnd, anchorLocation.getGeneLocation());
@@ -210,7 +207,7 @@ public class Cdr3ReadScreener
                 {
                     VJReadCandidate readCandidate = createCdr3ReadMatch(samRecord,
                             genes,
-                            VJReadCandidate.AnchorMatchType.EXACT,
+                            VJReadCandidate.AnchorMatchMethod.EXACT,
                             useRevComp,
                             anchorIndex,
                             anchorIndex + anchorSeq.length(),
@@ -228,7 +225,7 @@ public class Cdr3ReadScreener
 
     @Nullable
     public VJReadCandidate createCdr3ReadMatch(SAMRecord samRecord, List<VJGene> VJGenes,
-            VJReadCandidate.AnchorMatchType templateMatchType, boolean useRevComp,
+            VJReadCandidate.AnchorMatchMethod templateMatchType, boolean useRevComp,
             int readAnchorStart, int readAnchorEnd, @Nullable GeneLocation templateLocation)
     {
         if (VJGenes.isEmpty())
@@ -253,8 +250,8 @@ public class Cdr3ReadScreener
 
         // since we don't actually know whether the aligned part is the anchor sequence, we have to use
         // the soft clip that we think make sense
-        int leftSoftClip = SamRecordUtils.leftSoftClip(samRecord);
-        int rightSoftClip = SamRecordUtils.rightSoftClip(samRecord);
+        int leftSoftClip = CigarUtils.leftSoftClip(samRecord);
+        int rightSoftClip = CigarUtils.rightSoftClip(samRecord);
 
         VJReadCandidate readMatch = new VJReadCandidate(samRecord, VJGenes, geneType, templateMatchType, useRevComp,
                 readAnchorStart, readAnchorEnd, templateLocation, leftSoftClip, rightSoftClip);
@@ -324,7 +321,7 @@ public class Cdr3ReadScreener
     static IntPair extrapolateAnchorReadRange(SAMRecord record, final VJAnchorReferenceLocation anchorLocation)
     {
         // we always use the reference position to find it
-        int anchorEndReferencePos = anchorLocation.anchorEndReferencePosition();
+        int anchorEndReferencePos = anchorLocation.anchorBoundaryReferencePosition();
         int anchorEndReadOffset = extrapolateReadOffsetAtRefPosition(record, anchorEndReferencePos);
 
         if (anchorEndReadOffset == -1)

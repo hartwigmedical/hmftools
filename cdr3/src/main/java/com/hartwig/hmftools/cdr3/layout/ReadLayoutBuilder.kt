@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.cdr3.layout
 
-import com.hartwig.hmftools.common.utils.Doubles
 import org.apache.logging.log4j.LogManager
 import java.util.*
 import kotlin.collections.ArrayList
@@ -65,9 +64,6 @@ class ReadLayoutBuilder(inputReads: List<ReadLayout.Read>, minBaseQuality: Int, 
                 }
 
                 // test the read against this overlay
-                //val (matchCount, compareCount) = layoutMatch(readLayout, readData, alignLeft, minBaseQuality)
-                //val matchRatio = matchCount / compareCount.toDouble()
-
                 if (layoutMatch(readLayout, readData, minBaseQuality, minMatchedBases))
                 {
                     //sLogger.info("match found")
@@ -94,33 +90,6 @@ class ReadLayoutBuilder(inputReads: List<ReadLayout.Read>, minBaseQuality: Int, 
 
         return readLayouts
     }
-
-    /*
-    fun clusterReads(readDataList: ArrayList<VJReadData>, mismatchCutoff: Double, minMatchedBases: Int, minBaseQuality: Byte)
-    {
-        // create a list of all pairs
-        val matrix = Matrix(readDataList.size, readDataList.size)
-
-        for (i in 0 until readDataList.size)
-        {
-            val read1 = readDataList[i]
-            assert(read1.index == i)
-
-            for (j in i + 1 until readDataList.size)
-            {
-                val read2 = readDataList[j]
-                assert(read2.index == j)
-
-                val similarity = scoreReadPair(read1, read2, minBaseQuality, minMatchedBases)
-
-                matrix[i, j] = similarity
-            }
-        }
-
-        // now we need to define a direction to process each of these pairs
-        // we should process the longest reads
-        // and the most similar reads
-    }*/
 
     companion object
     {

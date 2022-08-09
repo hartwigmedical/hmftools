@@ -1,3 +1,5 @@
+/*
+
 package com.hartwig.hmftools.cdr3;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -44,10 +46,10 @@ public class Cdr3SequenceTsvWriter
             {
                 // we want to use the indices to work where things are
                 String vdjSeq = vdj.getVdjSequence();
-                List<VJGene> vGenes = VJReadLayoutAdaptor.getImgtGenes(vdj.getVLayout());
+                List<VJGene> vGenes = VJReadLayoutAdaptor.getVjGenes(vdj.getVLayout());
                 IntRange vAnchorRange = VJReadLayoutAdaptor.getAnchorRange(VJGeneType.IGHV, vdj.getVLayout());
 
-                List<VJGene> jGenes = VJReadLayoutAdaptor.getImgtGenes(vdj.getJLayout());
+                List<VJGene> jGenes = VJReadLayoutAdaptor.getVjGenes(vdj.getJLayout());
                 // we need to shift it
                 IntRange jAnchorRange = VJReadLayoutAdaptor.getAnchorRange(VJGeneType.IGHJ, vdj.getJLayout());
                 int jSeqOffset = vdjSeq.length() - vdj.getJLayout().consensusSequence().length();
@@ -105,3 +107,5 @@ public class Cdr3SequenceTsvWriter
         }
     }
 }
+
+ */

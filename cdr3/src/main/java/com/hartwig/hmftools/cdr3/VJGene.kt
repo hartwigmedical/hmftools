@@ -42,6 +42,32 @@ enum class VJGeneType(val vj: VJ)
     TRGJ(VJ.J);
 }
 
+data class VJGene
+    (
+    val id: String,
+    val name: String,
+    val allele: String,
+    val geneLocation: GeneLocation?,
+    val sequence: String,
+    val anchorSequence: String,
+    val anchorLocation: GeneLocation?
+)
+{
+    val type: VJGeneType
+
+    init
+    {
+        type = VJGeneType.valueOf(name.take(4))
+    }
+
+    val vj: VJ get() { return type.vj }
+    val anchorAminoAcidSequence: String = Codons.aminoAcidFromBases(anchorSequence)
+    val chromosome: String? get() { return geneLocation?.chromosome() }
+    val startPosition: Int get() { return geneLocation?.start() ?: -1 }
+    val endPosition: Int get() { return geneLocation?.end() ?: -1 }
+    val strand: Strand? get() { return geneLocation?.strand }
+}
+
 // store the anchor location also whether it is V or J
 data class VJAnchorReferenceLocation(val vj: VJ, val geneLocation: GeneLocation)
 {
@@ -57,7 +83,7 @@ data class VJAnchorReferenceLocation(val vj: VJ, val geneLocation: GeneLocation)
 
     // get the reference position of the end of the anchor
     // this is the end of the C codon for V and the start of the W / F codon for J
-    fun anchorEndReferencePosition() : Int
+    fun anchorBoundaryReferencePosition() : Int
     {
         if (vj == VJ.V && geneLocation.strand == Strand.FORWARD ||
             vj == VJ.J && geneLocation.strand == Strand.REVERSE)
@@ -71,42 +97,3 @@ data class VJAnchorReferenceLocation(val vj: VJ, val geneLocation: GeneLocation)
     }
 }
 
-data class VJGene
-    (
-    val id: String,
-    val name: String,
-    val allele: String,
-    val geneLocation: GeneLocation?,
-    val sequence: String,
-    val anchorSequence: String,
-    val anchorLocation: GeneLocation?
-)
-{
-    val type: VJGeneType = VJGeneType.valueOf(name.take(4))
-    val anchorAminoAcidSequence: String = Codons.aminoAcidFromBases(anchorSequence)
-    val chromosome: String? get() { return geneLocation?.chromosome() }
-    val startPosition: Int get() { return geneLocation?.start() ?: -1 }
-    val endPosition: Int get() { return geneLocation?.end() ?: -1 }
-    val strand: Strand? get() { return geneLocation?.strand }
-}
-
-fun getConservedAA(vjGeneType: VJGeneType) : Char
-{
-    return when (vjGeneType)
-    {
-        VJGeneType.IGHV -> 'C'
-        VJGeneType.IGHJ -> 'W'
-        VJGeneType.IGKV -> 'C'
-        VJGeneType.IGKJ -> 'F'
-        VJGeneType.IGLV -> 'C'
-        VJGeneType.IGLJ -> 'F'
-        VJGeneType.TRAV -> 'C'
-        VJGeneType.TRAJ -> 'F'
-        VJGeneType.TRBV -> 'C'
-        VJGeneType.TRBJ -> 'F'
-        VJGeneType.TRDV -> 'C'
-        VJGeneType.TRDJ -> 'F'
-        VJGeneType.TRGV -> 'C'
-        VJGeneType.TRGJ -> 'F'
-    }
-}

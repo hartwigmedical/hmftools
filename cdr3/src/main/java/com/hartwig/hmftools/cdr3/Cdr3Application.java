@@ -8,6 +8,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +22,6 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParametersDelegate;
 import com.beust.jcommander.UnixStyleUsageFormatter;
 import com.hartwig.hmftools.cdr3.layout.ReadLayout;
-import com.hartwig.hmftools.cdr3.layout.VDJCandidate;
 import com.hartwig.hmftools.common.codon.Codons;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
@@ -30,6 +31,7 @@ import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
@@ -38,7 +40,6 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
-import kotlin.ranges.IntRange;
 
 public class Cdr3Application
 {
@@ -73,7 +74,26 @@ public class Cdr3Application
         Cdr3ReadScreener readProcessor = new Cdr3ReadScreener(vjGeneStore, mParams.MaxAnchorAlignDistance, CiderConstants.MIN_CANDIDATE_READ_ANCHOR_OVERLAP);
         readBamFile(readProcessor, vjGeneStore);
 
-        //VJReadJoiner vjReadJoiner = new VJReadJoiner(readProcessor.getCdr3ReadMatches());
+        //String readTsvFile = Cdr3ReadTsvWriter.generateFilename(mParams.OutputDir, mParams.SampleId);
+        //Cdr3ReadTsvWriter.write(readTsvFile, readProcessor.getVJReadCandidates());
+
+        var vjReadLayoutAdaptor = new VJReadLayoutAdaptor();
+
+        Map<VJGeneType, List<ReadLayout>> layoutMap = buildLayouts(vjReadLayoutAdaptor, readProcessor.getVJReadCandidates().values());
+
+        var anchorBlosumSearcher = new AnchorBlosumSearcher(
+                vjGeneStore,
+                CiderConstants.MIN_PARTIAL_ANCHOR_AA_LENGTH,
+                CiderConstants.MAX_BLOSUM_DIFF_PER_AA,
+                CiderConstants.ANCHOR_SIMILARITY_SCORE_CONSTANT);
+        var vdjSeqBuilder = new VDJSequenceBuilder(vjReadLayoutAdaptor, anchorBlosumSearcher, (byte)mParams.MinBaseQuality,
+                CiderConstants.MIN_VJ_LAYOUT_JOIN_OVERLAP_BASES);
+        List<VDJSequence> vdjSequences = vdjSeqBuilder.buildVDJSequences(layoutMap);
+
+        VDJSequenceTsvWriter.writeVDJSequences(mParams.OutputDir, mParams.SampleId, vdjSequences);
+
+        writeCdr3Bam(readProcessor.getAllMatchedReads());
+
 
         Instant finish = Instant.now();
         long seconds = Duration.between(start, finish).getSeconds();
@@ -127,10 +147,11 @@ public class Cdr3Application
         readProcessorThread.join();
 
         sLogger.info("found {} VJ read records", readProcessor.getAllMatchedReads().size());
+    }
 
-        //String readTsvFile = Cdr3ReadTsvWriter.generateFilename(mParams.OutputDir, mParams.SampleId);
-        //Cdr3ReadTsvWriter.write(readTsvFile, readProcessor.getVJReadCandidates());
-
+    @NotNull
+    private Map<VJGeneType, List<ReadLayout>> buildLayouts(VJReadLayoutAdaptor vjReadLayoutAdaptor, Collection<VJReadCandidate> readCandidates)
+    {
         // now build the consensus overlay sequences
         //var geneTypes = new VJGeneType[] { VJGeneType.IGHV, VJGeneType.IGHJ };
         var geneTypes = VJGeneType.values();
@@ -138,10 +159,10 @@ public class Cdr3Application
 
         for (VJGeneType geneType : geneTypes)
         {
-            List<VJReadCandidate> readCandidates = readProcessor.getVJReadCandidates().values().stream()
+            List<VJReadCandidate> readsOfGeneType = readCandidates.stream()
                     .filter(o -> o.getVjGeneType() == geneType).collect(Collectors.toList());
 
-            for (var read : readCandidates)
+            for (var read : readsOfGeneType)
             {
                 if ((read.getAnchorOffsetEnd() - read.getAnchorOffsetStart()) > 30)
                 {
@@ -149,14 +170,14 @@ public class Cdr3Application
                 }
             }
 
-            List<ReadLayout> readLayouts = VJReadLayoutAdaptor.buildOverlays(geneType, readCandidates,
+            List<ReadLayout> readLayouts = vjReadLayoutAdaptor.buildLayouts(geneType, readsOfGeneType,
                     mParams.MinBaseQuality, 20, 1.0, mParams.numBasesToTrim);
 
             // now log the sequences
             for (ReadLayout layout : readLayouts)
             {
                 List<VJReadCandidate> overlayReads =
-                        layout.getReads().stream().map(VJReadLayoutAdaptor::toReadCandidate).collect(Collectors.toList());
+                        layout.getReads().stream().map(vjReadLayoutAdaptor::toReadCandidate).collect(Collectors.toList());
                 int numSplitReads = (int) overlayReads.stream().filter(o -> Math.max(o.getLeftSoftClip(), o.getRightSoftClip()) > 5).count();
                 int anchorLength =
                         overlayReads.stream().map(o -> o.getAnchorOffsetEnd() - o.getAnchorOffsetStart()).max(Integer::compareTo).orElse(0);
@@ -164,10 +185,10 @@ public class Cdr3Application
                         geneType, layout.getReads().size(), numSplitReads, anchorLength);
 
                 // get the sequence, remember aligned position is the anchor start
-                String anchor = VJReadLayoutAdaptor.getAnchorSequence(geneType, layout);
-                String cdr3 = VJReadLayoutAdaptor.getCdr3Sequence(geneType, layout);
-                String anchorSupport = VJReadLayoutAdaptor.getAnchorSupport(geneType, layout);
-                String cdr3Support = VJReadLayoutAdaptor.getCdr3Support(geneType, layout);
+                String anchor = vjReadLayoutAdaptor.getAnchorSequence(geneType, layout);
+                String cdr3 = vjReadLayoutAdaptor.getCdr3Sequence(geneType, layout);
+                String anchorSupport = vjReadLayoutAdaptor.getAnchorSupport(geneType, layout);
+                String cdr3Support = vjReadLayoutAdaptor.getCdr3Support(geneType, layout);
 
                 if (geneType.getVj() == VJ.V)
                 {
@@ -185,45 +206,21 @@ public class Cdr3Application
             layoutMap.put(geneType, readLayouts);
         }
 
-        VJReadLayoutFile.writeLayouts(mParams.OutputDir, mParams.SampleId, layoutMap, 5);
+        // use flatMap to turn many lists to one
+        List<ReadLayout> allLayouts = layoutMap.values().stream().flatMap(List::stream).collect(Collectors.toList());
 
-        // now try to find the VDJs
-        VJLayoutAligner vjLayoutAligner = new VJLayoutAligner(20, 1.0);
-        List<VDJCandidate> vdjCandidates = vjLayoutAligner.findAlignedVJs(layoutMap.get(VJGeneType.IGHV), layoutMap.get(VJGeneType.IGHJ));
+        // sort from most number of reads to lowest
+        allLayouts.sort(Collections.reverseOrder(Comparator.comparing(layout -> layout.getReads().size())));
 
-        // now print them out
-        for (VDJCandidate vdj : vdjCandidates)
+        // give each an ID
+        int nextId = 1;
+        for (ReadLayout layout : allLayouts)
         {
-            // we want to use the indices to work where things are
-            String vdjSeq = vdj.getVdjSequence();
-            IntRange vAnchorRange = VJReadLayoutAdaptor.getAnchorRange(VJGeneType.IGHV, vdj.getVLayout());
-
-            // we need to shift it
-            IntRange jAnchorRange = VJReadLayoutAdaptor.getAnchorRange(VJGeneType.IGHJ, vdj.getJLayout());
-            int jSeqOffset = vdjSeq.length() - vdj.getJLayout().consensusSequence().length();
-            jAnchorRange = new IntRange(jAnchorRange.getStart() + jSeqOffset, jAnchorRange.getEndInclusive() + jSeqOffset);
-
-            String vAnchor = vdjSeq.substring(vAnchorRange.getStart(), vAnchorRange.getEndInclusive() + 1);
-            String cdr = vdjSeq.substring(vAnchorRange.getEndInclusive() + 1, jAnchorRange.getStart());
-            String jAnchor = vdjSeq.substring(jAnchorRange.getStart(), jAnchorRange.getEndInclusive() + 1);
-
-            // now split it up into VDJ
-            sLogger.debug("v and j overlap");
-            sLogger.debug("v: {}", vdj.getVLayout().consensusSequence());
-            sLogger.debug("j: {}", vdj.getJLayout().consensusSequence());
-            sLogger.debug("overlap: {}", vdj.getOverlapSeq());
-            sLogger.debug("vdj: {}-{}-{}", vAnchor, cdr, jAnchor);
-            sLogger.debug("vdj AA: {}-{}-{}", Codons.aminoAcidFromBases(vAnchor), Codons.aminoAcidFromBases(cdr), Codons.aminoAcidFromBases(jAnchor));
+            layout.setId(Integer.toString(nextId++));
         }
 
-        String vdjTsvFile = Cdr3SequenceTsvWriter.generateFilename(mParams.OutputDir, mParams.SampleId);
-        Cdr3SequenceTsvWriter.write(vdjTsvFile, vdjCandidates);
-
-        List<VDJSequence> vdjSequences = VDJSequenceBuilder.buildVDJSequences(layoutMap, vjGeneStore, (byte)mParams.MinBaseQuality);
-
-        VDJSequenceTsvWriter.writeVDJSequences(mParams.OutputDir, mParams.SampleId, vdjSequences);
-
-        writeCdr3Bam(readProcessor.getAllMatchedReads());
+        VJReadLayoutFile.writeLayouts(mParams.OutputDir, mParams.SampleId, layoutMap, 5);
+        return layoutMap;
     }
 
     public void writeCdr3Bam(Collection<SAMRecord> samRecords) throws IOException

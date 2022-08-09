@@ -8,7 +8,6 @@ import java.util.Collection;
 
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.codon.Codons;
-import com.hartwig.hmftools.common.samtools.SamRecordUtils;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -16,6 +15,13 @@ import org.jetbrains.annotations.NotNull;
 
 public class Cdr3ReadTsvWriter
 {
+    private enum Column
+    {
+        readId, firstOfPair, chromosome, alignStart, alignEnd,
+        vGene, jGene, vAnchorMatch, jAnchorMatch,
+        vSoftClip, jSoftClip, dnaSeq, aaSeq
+    }
+
     private static final String FILE_EXTENSION = ".cider.read.tsv";
 
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
@@ -28,10 +34,7 @@ public class Cdr3ReadTsvWriter
     {
         CSVFormat csvFormat = CSVFormat.Builder.create()
                 .setDelimiter('\t').setRecordSeparator('\n')
-                .setHeader(
-                        "readId", "firstOfPair", "chromosome", "alignStart", "alignEnd",
-                        "vGene", "jGene", "vAnchorMatch", "jAnchorMatch",
-                        "vSoftClip", "jSoftClip", "dnaSeq", "aaSeq")
+                .setHeader(Column.class)
                 .build();
         try (CSVPrinter csvPrinter = csvFormat.print(createBufferedWriter(filename)))
         {
@@ -67,24 +70,22 @@ public class Cdr3ReadTsvWriter
                 csvPrinter.print(vMatch != null ? vMatch.getVjGenes().get(0).getName() : "none");
                 csvPrinter.print(jMatch != null ? jMatch.getVjGenes().get(0).getName() : "none");
 
-                csvPrinter.print(vMatch != null ? vMatch.getAnchorMatchType() : "none");
-                csvPrinter.print(jMatch != null ? jMatch.getAnchorMatchType() : "none");
+                csvPrinter.print(vMatch != null ? vMatch.getAnchorMatchMethod() : "none");
+                csvPrinter.print(jMatch != null ? jMatch.getAnchorMatchMethod() : "none");
 
                 int vSoftClip = 0;
                 int jSoftClip = 0;
 
-                if (vMatch != null && vMatch.getAnchorMatchType() == VJReadCandidate.AnchorMatchType.ALIGN)
+                if (vMatch != null && vMatch.getAnchorMatchMethod() == VJReadCandidate.AnchorMatchMethod.ALIGN)
                 {
                     // for v we want soft clip to be on the downstream side
-                    vSoftClip = vMatch.getUseReverseComplement() ?
-                            SamRecordUtils.leftSoftClip(vMatch.getRead()) : SamRecordUtils.rightSoftClip(vMatch.getRead());
+                    vSoftClip = vMatch.getUseReverseComplement() ? vMatch.getLeftSoftClip() : vMatch.getRightSoftClip();
                 }
 
-                if (jMatch != null && jMatch.getAnchorMatchType() == VJReadCandidate.AnchorMatchType.ALIGN)
+                if (jMatch != null && jMatch.getAnchorMatchMethod() == VJReadCandidate.AnchorMatchMethod.ALIGN)
                 {
                     // for v we want soft clip to be on the upstream side
-                    jSoftClip = jMatch.getUseReverseComplement() ?
-                            SamRecordUtils.rightSoftClip(jMatch.getRead()) : SamRecordUtils.leftSoftClip(jMatch.getRead());
+                    jSoftClip = jMatch.getUseReverseComplement() ? jMatch.getRightSoftClip() : jMatch.getLeftSoftClip();
                 }
 
                 // NOTE: following are definitely a bit wrong, but we will sort it out later

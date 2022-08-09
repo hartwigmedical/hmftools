@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.cdr3
 
 import com.hartwig.hmftools.cdr3.layout.ReadLayout
-import com.hartwig.hmftools.cdr3.layout.VDJCandidate
 import org.apache.logging.log4j.LogManager
 
+/*
 // try to overlay V and J together and create a single VDJ
 class VJLayoutAligner(minMatchedBases: Int, minMatchRatio: Double)
 {
@@ -79,3 +79,4 @@ class VJLayoutAligner(minMatchedBases: Int, minMatchRatio: Double)
         private val sLogger = LogManager.getLogger(VJLayoutAligner::class.java)
     }
 }
+ */

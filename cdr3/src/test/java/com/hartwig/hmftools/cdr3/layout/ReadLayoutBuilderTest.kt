@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cdr3.layout
 
 import com.hartwig.hmftools.cdr3.ReadKey
+import com.hartwig.hmftools.cdr3.TestUtils
 import htsjdk.samtools.SAMUtils
 import kotlin.test.*
 

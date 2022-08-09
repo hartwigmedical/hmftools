@@ -9,25 +9,31 @@ fun roundToMultiple(v: Int, m: Int) : Int
     return (ceil(v / m.toDouble()) * m).toInt()
 }
 
+data class AnchorBlosumMatch(
+    val anchorStart: Int,
+    val anchorEnd: Int,
+    val templateAnchorSeq: String,
+    val templateGenes: Collection<VJGene>,
+    val similarityScore: Int)
+
+// create a very simple interface so we can mock the data
+interface IAnchorBlosumSearcher
+{
+    fun searchForAnchor(dnaSeq: String, targetAnchorGeneType: VJGeneType, startOffset: Int = 0,
+                        endOffset: Int = dnaSeq.length) : AnchorBlosumMatch?
+}
+
 // we want to return a score of whether a sequence
 // looks like an anchor
 class AnchorBlosumSearcher(
     val vjGeneStore: VJGeneStore,
     val minPartialAnchorAminoAcidLength: Int,
     val maxBlosumDistancePerAminoAcid: Int,
-    val similarityScoreConstant: Int)
+    val similarityScoreConstant: Int) : IAnchorBlosumSearcher
 {
     val blosumMapping = BlosumMapping()
 
-    data class AnchorBlosumMatch(
-        val anchorStart: Int,
-        val anchorEnd: Int,
-        val templateAnchorSeq: String,
-        val templateGenes: Collection<VJGene>,
-        val similarityScore: Int)
-
-    fun findAnchorHomolog(dnaSeq: String, targetAnchorGeneType: VJGeneType, startOffset: Int = 0, endOffset: Int = dnaSeq.length)
-        : List<AnchorBlosumMatch>
+    override fun searchForAnchor(dnaSeq: String, targetAnchorGeneType: VJGeneType, startOffset: Int, endOffset: Int) : AnchorBlosumMatch?
     {
         sLogger.debug("finding anchor for {}, seq: {}, offset: {}-{}", targetAnchorGeneType, dnaSeq, startOffset, endOffset)
 
@@ -48,7 +54,7 @@ class AnchorBlosumSearcher(
                         val start: Int = i
                         val end: Int = i + templateAnchorSeq.length
                         // make sure the anchor is long enough, for now we don't allow short anchors
-                        val anchorHomolog = testForAnchorHomolog(targetAnchorGeneType, dnaSeq, start, end, templateAnchorSeq)
+                        val anchorHomolog = tryMatchWithBlosum(targetAnchorGeneType, dnaSeq, start, end, templateAnchorSeq)
                         if (anchorHomolog != null)
                             anchorBlosumMatches.add(anchorHomolog)
                     }
@@ -68,7 +74,7 @@ class AnchorBlosumSearcher(
                     {
                         val start: Int = i - templateAnchorSeq.length
                         val end: Int = i
-                        val anchorHomolog = testForAnchorHomolog(targetAnchorGeneType, dnaSeq, start, end, templateAnchorSeq)
+                        val anchorHomolog = tryMatchWithBlosum(targetAnchorGeneType, dnaSeq, start, end, templateAnchorSeq)
                         if (anchorHomolog != null)
                             anchorBlosumMatches.add(anchorHomolog)
                     }
@@ -77,24 +83,15 @@ class AnchorBlosumSearcher(
         }
 
         if (anchorBlosumMatches.isEmpty())
-            return emptyList()
+            return null
 
         // sort them by most similar to least
         anchorBlosumMatches.sortByDescending({ o -> o.similarityScore })
-        if (anchorBlosumMatches.first().similarityScore >= 0)
-        {
-            // remove all matches with negative similarity
-            anchorBlosumMatches.removeIf({ o -> o.similarityScore < 0 })
-            return anchorBlosumMatches
-        }
-        else
-        {
-            // only keep the first one
-            return anchorBlosumMatches.subList(0, 1)
-        }
+
+        return anchorBlosumMatches.maxByOrNull({ match -> match.similarityScore })
     }
 
-    private fun testForAnchorHomolog(
+    private fun tryMatchWithBlosum(
         geneType: VJGeneType,
         dnaSeq: String,
         inputAnchorStart: Int,

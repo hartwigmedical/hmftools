@@ -33,6 +33,7 @@ object VDJSequenceTsvWriter
         jSimilarityScore,
         cdr3Seq,
         cdr3AA,
+        layoutId,
         vdjSeq,
         support
     }
@@ -104,6 +105,7 @@ object VDJSequenceTsvWriter
                 Column.jSimilarityScore -> csvPrinter.print(jAnchorByBlosum?.similarityScore ?: "null")
                 Column.cdr3Seq -> csvPrinter.print(vdj.dSequence)
                 Column.cdr3AA -> csvPrinter.print(aminoAcidFromBases(vdj.dSequence))
+                Column.layoutId -> csvPrinter.print(vdj.layout.id)
                 Column.vdjSeq -> csvPrinter.print(vdj.sequence)
                 Column.support -> csvPrinter.print(Cdr3Utils.countsToString(vdj.supportCounts))
             }
@@ -111,9 +113,10 @@ object VDJSequenceTsvWriter
         csvPrinter.println()
     }
 
+    // we want to replace X with _, easier to see in file
     fun aminoAcidFromBases(dna: String): String
     {
-        return Codons.aminoAcidFromBases(dna).replace('X', '_')
+        return Codons.aminoAcidFromBases(dna).replace(Codons.STOP_AMINO_ACID, '_')
     }
 
     fun filterString(vdj: VDJSequence): List<String>
@@ -124,7 +127,7 @@ object VDJSequenceTsvWriter
         {
             filters.add("OUT_OF_FRAME")
         }
-        if (vdj.aminoAcidSequence.contains('X'))
+        if (vdj.aminoAcidSequence.contains(Codons.STOP_AMINO_ACID))
         {
             filters.add("CONTAINS_STOP")
         }

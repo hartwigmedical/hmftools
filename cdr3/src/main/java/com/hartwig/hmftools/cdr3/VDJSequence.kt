@@ -48,8 +48,8 @@ data class VJAnchorByReadMatch(
 class VDJSequence(
     val id: String,
     val layout: ReadLayout,
-    val layoutStart: Int,
-    val layoutEnd: Int,
+    val layoutSliceStart: Int,
+    val layoutSliceEnd: Int,
     val vAnchor: VJAnchor,
     val jAnchor: VJAnchor)
 {
@@ -63,12 +63,12 @@ class VDJSequence(
 
     val length: Int get()
     {
-        return layoutEnd - layoutStart
+        return layoutSliceEnd - layoutSliceStart
     }
 
     val sequence: String get()
     {
-        return layout.consensusSequence().substring(layoutStart, layoutEnd)
+        return layout.consensusSequence().substring(layoutSliceStart, layoutSliceEnd)
     }
 
     val sequenceFormatted: String get()
@@ -119,7 +119,7 @@ class VDJSequence(
 
     val supportCounts: IntArray get()
     {
-        return layout.highQualSupportCounts().sliceArray(layoutStart until layoutEnd)
+        return layout.highQualSupportCounts().sliceArray(layoutSliceStart until layoutSliceEnd)
     }
 
     val supportString: String get()
@@ -136,7 +136,7 @@ class VDJSequence(
 
     fun getSupportAt(index: Int) : Map.Entry<Char, Int>
     {
-        return layout.getHighQualSequenceSupportAt(layoutStart + index)
+        return layout.getHighQualSequenceSupportAt(layoutSliceStart + index)
     }
 
 }
