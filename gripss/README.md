@@ -33,7 +33,7 @@ Argument | Description
 ---|---
 sample | Sample ID
 ref_genome | Reference genome fasta file
-ref_genome_version | V37 (default), V38 or HG19 (ie 37 with 'chr' prefix)
+ref_genome_version | V37 (default) or V38
 vcf | Input VCF from GRIDSS 
 output_dir | Output directory
 

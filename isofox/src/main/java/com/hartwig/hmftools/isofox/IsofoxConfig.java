@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsem
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG19;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
@@ -178,15 +177,7 @@ public class IsofoxConfig
         RefGenomeFile = refGenomeFilename != null ? new File(refGenomeFilename) : null;
         RefGenome = loadRefGenome(refGenomeFilename);
 
-        if(cmd.hasOption(REF_GENOME_VERSION))
-        {
-            RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION));
-        }
-        else
-        {
-            RefGenomeVersion refGenVersionOverride = checkRefGenomeVersion();
-            RefGenVersion = refGenVersionOverride != null ? refGenVersionOverride : V37;
-        }
+        RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
 
         Filters = new GeneRegionFilters(RefGenVersion);
         Filters.loadConfig(cmd);
@@ -365,22 +356,6 @@ public class IsofoxConfig
             return OutputDir + SampleId + ISF_FILE_ID + OutputIdentifier + "." + fileId;
         else
             return OutputDir + SampleId + ISF_FILE_ID + fileId;
-    }
-
-    private RefGenomeVersion checkRefGenomeVersion()
-    {
-        if(BamFile == null || !Files.exists(Paths.get(BamFile)) || RefGenomeFile == null)
-            return null;
-
-        final SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(RefGenomeFile).open(new File(BamFile));
-
-        if(samReader == null)
-            return null;
-
-        if(RefGenomeFunctions.samReaderUsesChrInContigs(samReader))
-            return HG19;
-
-        return V37;
     }
 
     public boolean skipFilteredRead(final String readId) { return FilteredReadIds != null && !FilteredReadIds.contains(readId); }

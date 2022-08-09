@@ -5,7 +5,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.samtools.CigarUtils
 import com.hartwig.hmftools.common.samtools.CigarUtils.*
-import com.hartwig.hmftools.common.samtools.SamRecordUtils
 import com.hartwig.hmftools.teal.ReadGroup
 import com.hartwig.hmftools.teal.TealUtils
 import com.hartwig.hmftools.teal.util.TelomereMatcher
@@ -28,7 +27,7 @@ class BreakEndSupportCounter(refGenomeVersion: RefGenomeVersion, telomereMatchTh
     private val mTelomereMatchThreshold = telomereMatchThreshold
     private val mMinTelomereMatchLength = 12
     private val mRefGenomeCoordinates = when (refGenomeVersion) {
-                                            RefGenomeVersion.V37, RefGenomeVersion.HG19 -> RefGenomeCoordinates.COORDS_37
+                                            RefGenomeVersion.V37 -> RefGenomeCoordinates.COORDS_37
                                             RefGenomeVersion.V38 -> RefGenomeCoordinates.COORDS_38 }
 
     private fun matchesTelomere(seq: String, gRich: Boolean): Boolean

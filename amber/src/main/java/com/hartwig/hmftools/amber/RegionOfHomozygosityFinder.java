@@ -217,7 +217,6 @@ public class RegionOfHomozygosityFinder
         switch (mRefGenomeVersion)
         {
             case V37:
-            case HG19:
                 resourcePath = "rohExcluded.37.bed";
                 break;
             case V38:

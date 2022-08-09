@@ -47,7 +47,7 @@ Argument | Description
 ---|---
 sample | Sample ID
 ref_genome | Reference genome fasta file
-ref_genome_version | V37 (default), V38 or HG19 (ie 37 with 'chr' prefix)
+ref_genome_version | V37 (default) or V38
 reference_bam | Sample's germline BAM 
 resource_dir | Path to Lilac resource files, ie hla_ref_aminoacid_sequences.csv, hla_ref_nucleotide_sequences.csv and lilac_allele_frequencies.csv.
 

@@ -195,7 +195,6 @@ public class AmberApplication implements AutoCloseable
         switch (mConfig.refGenomeVersion)
         {
             case V37:
-            case HG19:
                 // we don't have excluded region for v37 genome
                 return Collections.emptyList();
             case V38:

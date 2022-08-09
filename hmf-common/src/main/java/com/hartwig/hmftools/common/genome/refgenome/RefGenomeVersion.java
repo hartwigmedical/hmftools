@@ -7,8 +7,7 @@ import org.jetbrains.annotations.NotNull;
 public enum RefGenomeVersion
 {
     V37("37", true),
-    V38("38", false),
-    HG19("37", true); // included to distinguish from GRCh37 since has has the 'chr' prefix
+    V38("38", false);
 
     @NotNull
     private final String mIdentifier;
@@ -24,17 +23,13 @@ public enum RefGenomeVersion
     @NotNull
     public static RefGenomeVersion from(@NotNull final String version)
     {
-        if (version.equals(V37.toString()) || version.equals("RG_37") || version.equals("37") || version.equals("HG37"))
+        if(version.equals(V37.toString()) || version.equals("37") || version.equals("HG37"))
         {
             return V37;
         }
-        else if (version.equals(V38.toString()) || version.equals("RG_38") || version.equals("38") || version.equals("HG38"))
+        else if(version.equals(V38.toString()) || version.equals("38") || version.equals("HG38"))
         {
             return V38;
-        }
-        else if (version.equals(HG19.toString()) || version.equals("RG_19") || version.equals("19") || version.equals("HG19"))
-        {
-            return HG19;
         }
 
         throw new IllegalArgumentException("Cannot resolve ref genome version: " + version);
@@ -54,11 +49,11 @@ public enum RefGenomeVersion
     @NotNull
     public String versionedChromosome(@NotNull String chromosome)
     {
-        if (this == V38 || this == HG19)
+        if(this == V38)
         {
             return RefGenomeFunctions.enforceChrPrefix(chromosome);
         }
-        else if (this == V37)
+        else if(this == V37)
         {
             return RefGenomeFunctions.stripChrPrefix(chromosome);
         }
@@ -72,12 +67,12 @@ public enum RefGenomeVersion
     public String addVersionToFilePath(final String filePath)
     {
         String modifiedFilePath = filePath;
-        if (filePath.endsWith(GZIP_EXTENSION))
+        if(filePath.endsWith(GZIP_EXTENSION))
         {
             modifiedFilePath = filePath.substring(0, filePath.indexOf(GZIP_EXTENSION));
         }
 
-        if (!modifiedFilePath.contains("."))
+        if(!modifiedFilePath.contains("."))
         {
             throw new IllegalStateException("Cannot include ref genome version in file path that has no proper extension: " + filePath);
         }
@@ -86,7 +81,7 @@ public enum RefGenomeVersion
         String versionedFilePath =
                 modifiedFilePath.substring(0, extensionStart) + "." + this.mIdentifier + modifiedFilePath.substring(extensionStart);
 
-        if (filePath.endsWith(GZIP_EXTENSION))
+        if(filePath.endsWith(GZIP_EXTENSION))
         {
             versionedFilePath = versionedFilePath + GZIP_EXTENSION;
         }

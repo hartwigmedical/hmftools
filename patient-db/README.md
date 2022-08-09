@@ -5,13 +5,13 @@
 The following commands will create a user with write permissions, a user with read permissions and a database.  
 
 ```
-mysql> ​CREATE USER 'purple_writer'@'localhost' IDENTIFIED WITH mysql_native_password BY 'purple_writer_password'; 
+mysql> ​CREATE USER 'writer'@'localhost' IDENTIFIED WITH mysql_native_password BY 'writer_password'; 
 Query OK, 0 rows affected (0.00 sec)
-mysql> ​CREATE USER 'purple_reader'@'localhost' IDENTIFIED WITH mysql_native_password BY 'purple_reader_password'; 
+mysql> ​CREATE USER 'reader'@'localhost' IDENTIFIED WITH mysql_native_password BY 'reader_password'; 
 Query OK, 0 rows affected (0.00 sec)
 mysql> CREATE DATABASE patientdb; 
 Query OK, 1 row affected (0.00 sec)
-mysql> GRANT ALL on patientdb.* TO 'purple_writer'@'localhost'; 
+mysql> GRANT ALL on patientdb.* TO 'writer'@'localhost'; 
 Query OK, 0 rows affected (0.00 sec)
 mysql> GRANT SELECT on patientdb.* TO 'purple_reader'@'localhost'; 
 Query OK, 0 rows affected (0.00 sec)
@@ -65,7 +65,7 @@ Either somatic or germline data only can be loaded if the configs -somatic_only 
 
 ## Use Queries
 
-After connecting to the PURPLE database (eg `mysql -u purple_reader -p -d patientdb`), you can query the following PURPLE tables:
+After connecting to the PURPLE database (eg `mysql -u reader -p -d patientdb`), you can query the following PURPLE tables:
 
 ```
 SELECT * FROM purity WHERE sampleId = 'COLO829T';

@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.lilac;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_DELIM;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG19;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.COMMON_ALLELES_FREQ_CUTOFF;
@@ -127,9 +126,6 @@ public class ReferenceData
         else
         {
             STOP_LOSS_ON_C_INDEL = new Indel("6", 31237115, "CN", "C");
-
-            if(version == HG19)
-                LilacConstants.HLA_CHR = "chr6"; // should be abe to get from transcript info at time of use when get rid of NamedBed
         }
     }
 
