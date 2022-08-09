@@ -80,6 +80,7 @@ public class JunctionTracker
 
         if(chrRegions != null)
         {
+            // extract the blacklist regions just for this partition
             chrRegions.stream().filter(x -> positionsOverlap(mRegion.start(), mRegion.end(), x.start(), x.end()))
                     .forEach(x -> mBlacklistRegions.add(x));
         }
@@ -140,7 +141,7 @@ public class JunctionTracker
         if(readGroup == null)
         {
             readGroup = new ReadGroup(read);
-            addReadGroup(readGroup);
+            mReadGroupMap.put(readGroup.id(), readGroup);
             return;
         }
 
@@ -151,25 +152,13 @@ public class JunctionTracker
             if(readGroup.allNoSupport())
             {
                 captureDepth(readGroup);
-                removeReadGroup(readGroup);
+                mReadGroupMap.remove(readGroup.id());
             }
             else if(groupInBlacklist(readGroup))
             {
-                removeReadGroup(readGroup);
+                mReadGroupMap.remove(readGroup.id());
             }
         }
-    }
-
-    private void addReadGroup(final ReadGroup readGroup)
-    {
-        mReadGroupMap.put(readGroup.id(), readGroup);
-        // mReadGroups.add(readGroup);
-    }
-
-    private void removeReadGroup(final ReadGroup readGroup)
-    {
-        mReadGroupMap.remove(readGroup.id());
-        // readGroup.markRemoved();
     }
 
     public void addExistingJunctions(final List<JunctionData> existingJunctions)
@@ -182,11 +171,9 @@ public class JunctionTracker
     {
         List<ReadGroup> candidateSupportGroups = Lists.newArrayList();
 
-        // order by first read's start position, this is required for discordant read groups
-        List<ReadGroup> readGroups = mReadGroupMap.values().stream().collect(Collectors.toList());
-        Collections.sort(readGroups, new ReadGroup.ReadGroupComparator());
-
-        for(ReadGroup readGroup : readGroups)
+        // create junctions from read groups and then assignment supporting of various kinds
+        // NOTE: the read groups are not ordered by position until the discordant group routine below
+        for(ReadGroup readGroup : mReadGroupMap.values())
         {
             captureDepth(readGroup);
 
@@ -225,6 +212,9 @@ public class JunctionTracker
 
         mLastJunctionIndex = -1; // reset before supporting fragment assignment
         mInitialSupportingFrags = candidateSupportGroups.size();
+
+        // order by first read's start position to assist with efficient junction look-up using the last junction index
+        Collections.sort(candidateSupportGroups, new ReadGroup.ReadGroupComparator());
 
         List<ReadGroup> candidateDiscordantGroups = Lists.newArrayList();
         Map<JunctionData,ReadType> supportedJunctions = Maps.newHashMap();

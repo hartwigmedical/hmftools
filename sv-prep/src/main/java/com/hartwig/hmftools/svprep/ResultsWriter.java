@@ -179,7 +179,11 @@ public class ResultsWriter
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write("Chromosome,Position,Orientation,JunctionFrags,SupportFrags,DiscordantFrags,LowMapQualFrags,MaxQual");
-            writer.write(",MaxSoftClip,BaseDepth,HasPolyAT,Indel,Hotspot,SoftClipBases,InitialReadId,RemoteJunctionCount,RemoteJunctions");
+            writer.write(",MaxSoftClip,BaseDepth,HasPolyAT,Indel,Hotspot,SoftClipBases,InitialReadId");
+
+            if(mConfig.TrackRemotes)
+                writer.write(",RemoteJunctionCount,RemoteJunctions");
+
             writer.newLine();
 
             return writer;
@@ -258,26 +262,30 @@ public class ResultsWriter
                         maxSoftClip, junctionData.depth(), hasPloyAT, junctionData.internalIndel(), junctionData.hotspot(),
                         softClipBases, junctionData.InitialRead != null ? junctionData.InitialRead.id() : "EXISTING"));
 
-                // RemoteChromosome:RemotePosition:RemoteOrientation;Fragments then separated by ';'
-                String remoteJunctionsStr = "";
-
-                if(!junctionData.RemoteJunctions.isEmpty())
+                if(mConfig.TrackRemotes)
                 {
-                    Collections.sort(junctionData.RemoteJunctions, new RemoteJunction.RemoteJunctionSorter());
+                    // RemoteChromosome:RemotePosition:RemoteOrientation;Fragments then separated by ';'
+                    String remoteJunctionsStr = "";
 
-                    StringJoiner sj = new StringJoiner(ITEM_DELIM);
-
-                    for(int i = 0; i < min(junctionData.RemoteJunctions.size(), 10); ++i)
+                    if(!junctionData.RemoteJunctions.isEmpty())
                     {
-                        RemoteJunction remoteJunction = junctionData.RemoteJunctions.get(i);
-                        sj.add(format("%s:%d:%d;%d",
-                                remoteJunction.Chromosome, remoteJunction.Position, remoteJunction.Orientation, remoteJunction.Fragments));
-                        // junctionData.RemoteJunctions.forEach(x -> sj.add(format("%s:%d:%d", x.Chromosome, x.Position, x.Orientation)));
+                        Collections.sort(junctionData.RemoteJunctions, new RemoteJunction.RemoteJunctionSorter());
+
+                        StringJoiner sj = new StringJoiner(ITEM_DELIM);
+
+                        for(int i = 0; i < min(junctionData.RemoteJunctions.size(), 10); ++i)
+                        {
+                            RemoteJunction remoteJunction = junctionData.RemoteJunctions.get(i);
+                            sj.add(format("%s:%d:%d;%d",
+                                    remoteJunction.Chromosome, remoteJunction.Position, remoteJunction.Orientation, remoteJunction.Fragments));
+                            // junctionData.RemoteJunctions.forEach(x -> sj.add(format("%s:%d:%d", x.Chromosome, x.Position, x.Orientation)));
+                        }
+                        remoteJunctionsStr = sj.toString();
                     }
-                    remoteJunctionsStr = sj.toString();
+
+                    mJunctionWriter.write(format(",%d,%s", junctionData.RemoteJunctions.size(), remoteJunctionsStr));
                 }
 
-                mJunctionWriter.write(format(",%d,%s", junctionData.RemoteJunctions.size(), remoteJunctionsStr));
                 mJunctionWriter.newLine();
             }
         }
