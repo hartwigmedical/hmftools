@@ -8,7 +8,7 @@ They match the current tool version, configuration and resource files as used in
 
 1. Download the latest release JAR for each tool as listed [here](https://github.com/hartwigmedical/hmftools#current-versions).
 
-2. Download the resources files for either GRCh37 or GRCh38 from [HMFTools-Resources > DNA-Resources](https://resources.hartwigmedicalfoundation.nl/). The reference genome files are available separately [HMFTools-Resources > Ref-Genome](https://resources.hartwigmedicalfoundation.nl/).
+2. Download the resources files for either GRCh37 or GRCh38 from [HMFTools-Resources > DNA-Resources](https://resources.hartwigmedicalfoundation.nl/). The latest resource files version is v5.30. The reference genome files are available separately [HMFTools-Resources > Ref-Genome](https://resources.hartwigmedicalfoundation.nl/).
 
 3. Call the pipeline with the following arguments:
 - a sample tumorId and referenceId (eg 'COLO829T' and 'COLO829R' below)

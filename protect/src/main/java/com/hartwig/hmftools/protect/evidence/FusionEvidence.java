@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.protect.EventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
