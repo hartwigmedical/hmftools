@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
@@ -153,9 +154,51 @@ public class GenerateDriverGeneFiles
                 List<GenomeRegion> regionsWithUtr = getTranscriptRegions(geneData, transData, true, previousRegionEnd);
                 List<GenomeRegion> regionsWithoutUtr = getTranscriptRegions(geneData, transData, false, previousRegionEnd);
 
+                // merge any overlap with the previous gene region
+                for(int i = 0; i <= 1; ++i)
+                {
+                    List<GenomeRegion> newRegions = i == 0 ? regionsWithUtr : regionsWithoutUtr;
+
+                    if(newRegions.isEmpty())
+                        continue;
+
+                    List<NamedBed> allRegions = i == 0 ? panelRegionsWithUtr : panelRegionsWithoutUtr;
+
+                    if(allRegions.isEmpty())
+                        continue;
+
+                    NamedBed lastRegion = allRegions.get(allRegions.size() - 1);
+                    if(!lastRegion.chromosome().equals(chromosome.toString()))
+                        continue;
+
+                    int newLastRegionEnd = 0;
+                    int regionsRemoved = 0;
+                    while(!newRegions.isEmpty())
+                    {
+                        GenomeRegion newRegion = newRegions.get(0);
+                        if(newRegion.start() > lastRegion.end() + 1)
+                            break;
+
+                        // otherwise remove the new region and merge
+                        newLastRegionEnd = max(newRegion.end(), lastRegion.end());
+                        newRegions.remove(0);
+                        ++regionsRemoved;
+                    }
+
+                    if(newLastRegionEnd > 0)
+                    {
+                        NamedBed newLastRegion = ImmutableNamedBed.builder().from(lastRegion).end(newLastRegionEnd).build();
+                        allRegions.set(allRegions.size() - 1, newLastRegion);
+
+                        GU_LOGGER.debug("gene({}) removed {} regions from overlap with previous region(gene={} range={}->{})",
+                                geneData.GeneName, regionsRemoved, lastRegion.name(), lastRegion.start(), lastRegion.end());
+                    }
+                }
+
+                /*
                 int minRegionStart = regionsWithUtr.stream().mapToInt(x -> x.start()).min().orElse(0);
 
-                if(previousRegionEnd > 0 && previousRegionEnd >= minRegionStart)
+                if(previousRegionEnd > 0 && previousRegionEnd >= minRegionStart - 1)
                 {
                     GU_LOGGER.warn("gene({}) regionStart({}) overlaps previous gene({}) regionEnd({})",
                             geneData.GeneName, minRegionStart, previousGene, previousRegionEnd);
@@ -163,6 +206,7 @@ public class GenerateDriverGeneFiles
 
                 previousRegionEnd = regionsWithUtr.stream().mapToInt(x -> x.end()).max().orElse(0);
                 previousGene = geneData.GeneName;
+                */
 
                 regionsWithUtr.stream()
                         .map(x -> ImmutableNamedBed.builder().from(x).name(geneData.GeneName).build())
@@ -277,9 +321,10 @@ public class GenerateDriverGeneFiles
 
     public static void main(String[] args) throws IOException, ParseException
     {
-        // See also https://github.com/hartwigmedical/scratchpad/tree/master/genePanel
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
+
+        setLogLevel(cmd);
 
         GenerateDriverGeneFiles generator = new GenerateDriverGeneFiles(cmd);
         generator.run();
