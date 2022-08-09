@@ -62,8 +62,7 @@ public class ProtectAlgo {
 
     @NotNull
     public static ProtectAlgo build(@NotNull ActionableEvents actionableEvents, @NotNull Set<String> patientTumorDoids,
-            @NotNull List<DriverGene> driverGenes, @NotNull final KnownFusionCache fusionCache,
-            @NotNull final DoidParents doidParentModel) {
+            @NotNull List<DriverGene> driverGenes, @NotNull final DoidParents doidParentModel) {
         PersonalizedEvidenceFactory personalizedEvidenceFactory = new PersonalizedEvidenceFactory(patientTumorDoids, doidParentModel);
 
         VariantEvidence variantEvidenceFactory = new VariantEvidence(personalizedEvidenceFactory,
@@ -73,7 +72,7 @@ public class ProtectAlgo {
         CopyNumberEvidence copyNumberEvidenceFactory = new CopyNumberEvidence(personalizedEvidenceFactory, actionableEvents.genes());
         DisruptionEvidence disruptionEvidenceFactory = new DisruptionEvidence(personalizedEvidenceFactory, actionableEvents.genes());
         FusionEvidence fusionEvidenceFactory =
-                new FusionEvidence(personalizedEvidenceFactory, actionableEvents.genes(), actionableEvents.fusions(), fusionCache);
+                new FusionEvidence(personalizedEvidenceFactory, actionableEvents.genes(), actionableEvents.fusions());
         PurpleSignatureEvidence purpleSignatureEvidenceFactory =
                 new PurpleSignatureEvidence(personalizedEvidenceFactory, actionableEvents.characteristics());
         VirusEvidence virusEvidenceFactory = new VirusEvidence(personalizedEvidenceFactory, actionableEvents.characteristics());
