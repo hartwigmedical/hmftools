@@ -10,6 +10,7 @@ ref_genome=$1 && shift
 known_hotspot_file=$1 && shift
 pon_sv_file=$1 && shift
 pon_sgl_file=$1 && shift
+repeat_mask_file=$1 && shift
 
 if [[ ! -d "${output_dir}" ]]; then
   mkdir ${output_dir}
@@ -37,6 +38,7 @@ java -jar ${gripss_jar} \
   -known_hotspot_file ${known_hotspot_file} \
   -pon_sv_file ${pon_sv_file} \
   -pon_sgl_file ${pon_sgl_file} \
+  -repeat_mask_file ${repeat_mask_file} \
   -vcf ${gridss_vcf} \
   -output_dir ${output_dir} \
   -output_id somatic \
