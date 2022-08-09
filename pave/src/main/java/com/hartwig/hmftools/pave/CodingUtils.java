@@ -94,7 +94,7 @@ public final class CodingUtils
         {
             cc.RegionType = UPSTREAM;
 
-            if(PROMOTOR_UPSTREAM_GENE_IDS.contains(transData.GeneId))
+            if(!transData.nonCoding() && PROMOTOR_UPSTREAM_GENE_IDS.contains(transData.GeneId))
                 cc.CodingType = ENHANCER;
 
             return;
