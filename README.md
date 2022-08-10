@@ -38,13 +38,14 @@ Resource files for each component (GRCh37 and GRCh38) are available to download 
 
 ## Actionability and Clinical Reporting Tools
 
-Component | Description | Current Version
----|---|---
-[Serve](./serve/README.md) | Harmonisation of evidence from clinical annotation databases | [1.11](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.11) 
-[Protect](./protect/README.md) | Matching of molecular results to treatments and clinical trials | [2.2](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v2.2)
-[Rose](./rose/README.md) | Actionability of clinically relevant molecular findings | [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/rose-v1.0)
-[Virus Interpreter](./virus-interpreter/README.md) | Filtering, annotation and interpretation of virus breakend data | [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/virus-interpreter-v1.2)
-[Orange](./orange/README.md) | PDF summary report and JSON file of all WGS output | [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.10)
+Component | Description                                                          | Current Version
+---|----------------------------------------------------------------------|---
+[Serve](./serve/README.md) | Harmonisation of evidence from clinical annotation databases         | [1.12](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.12) 
+[Protect](./protect/README.md) | Matching of molecular results to treatments and clinical trials      | [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v2.3)
+[Rose](./rose/README.md) | Actionability of clinically relevant molecular findings              | [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/rose-v1.1)
+[Virus Interpreter](./virus-interpreter/README.md) | Filtering, annotation and interpretation of virus breakend data      | [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/virus-interpreter-v1.2)
+[Orange](./orange/README.md) | PDF summary report and JSON file of all WGS output                   | [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.10)
+Patient-reporter | PDF summary report and JSON file of all clinical relevant WGS output | 7.25.1
 
 ## RNA Tools
 

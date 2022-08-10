@@ -124,6 +124,9 @@ the signature is match for actionability.
 
 #### Other matchings for the clinical conclusion
 
+###### Tumor location of the patient
+At the start of the clinical conclusion, the patient tumor location is mentioned. 
+
 ###### Molecular Tissue of Origin classifier
 The molecular tissue of origin classifier predicts the primary tumor location of the patient based on the WGS date by 
 [CUPPA](../cuppa/README.md). When this classify a tumor location with a likelihood above the 80% the primary tumor location is added. 
@@ -154,5 +157,10 @@ conclusion | The clinical conclusion of the sample | BRCA2 inactivation, potenti
 - We don't interpret the type alteration for NO_MSI_HRD_PROFILE, EXTRACELLULAR_DOMAIN_MUTATION and RESISTANCE_MUTATION
 
 ## Version History and Download Links
+- [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/rose-v1.1)
+  - Add the primary tumor location of the patient at the start of the clinical summary 
+  - Add space between signature and the score of the signature 
+  - Improve variant annotation due to use canonical annotation when protein annotation is empty 
+  - Use the correct input file of the driver gene tsv dependent of the reference genome version
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/rose-v1.0)
     - Initial release. 
