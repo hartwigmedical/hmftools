@@ -19,9 +19,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_CANDIDATE_AA;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_CANDIDATE_COVERAGE;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_CANDIDATE_FRAGS;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_CANDIDATE_NUC;
-import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_QC;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_SOMATIC_VCF;
-import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_SUMMARY;
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_LOW_COVERAGE_DEPTH;
 import static com.hartwig.hmftools.lilac.evidence.Candidates.addPhasedCandidates;
 import static com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory.calculateGeneCoverage;
@@ -34,6 +32,8 @@ import static com.hartwig.hmftools.lilac.variant.SomaticCodingCount.addVariant;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.hla.LilacAllele;
+import com.hartwig.hmftools.common.hla.LilacQcData;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.lilac.coverage.HlaYCoverage;
 import com.hartwig.hmftools.lilac.evidence.Candidates;
@@ -620,8 +620,8 @@ public class LilacApplication
 
         LL_LOGGER.info("writing output to {}", mConfig.OutputDir);
 
-        mSolutionSummary.write(mConfig.formFileId(LILAC_FILE_SUMMARY));
-        mSummaryMetrics.writefile(mConfig.formFileId(LILAC_FILE_QC));
+        mSolutionSummary.write(LilacAllele.generateFilename(mConfig.OutputDir, mConfig.Sample));
+        mSummaryMetrics.writefile(LilacQcData.generateFilename(mConfig.OutputDir, mConfig.Sample));
 
         HlaComplexFile.writeToFile(mConfig.formFileId(LILAC_FILE_CANDIDATE_COVERAGE), mRankedComplexes);
 
@@ -658,8 +658,8 @@ public class LilacApplication
 
         mSolutionSummary = new SolutionSummary(null, mTumorCoverage, mTumorCopyNumber, mSomaticCodingCounts, mRnaCoverage);
 
-        mSolutionSummary.write(mConfig.formFileId(LILAC_FILE_SUMMARY));
-        mSummaryMetrics.writefile(mConfig.formFileId(LILAC_FILE_QC));
+        mSolutionSummary.write(LilacAllele.generateFilename(mConfig.OutputDir, mConfig.Sample));
+        mSummaryMetrics.writefile(LilacQcData.generateFilename(mConfig.OutputDir, mConfig.Sample));
     }
 
     private boolean validateFragments(final List<Fragment> fragments)

@@ -21,8 +21,6 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.flagstat.Flagstat;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.hla.HlaType;
-import com.hartwig.hmftools.common.hla.HlaTypeDetails;
 import com.hartwig.hmftools.common.metrics.WGSMetricWithQC;
 import com.hartwig.hmftools.common.peach.PeachCalls;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
@@ -490,10 +488,12 @@ public class DatabaseAccess implements AutoCloseable {
         snpCheckDAO.write(sample, isPass);
     }
 
-    public void writeHla(@NotNull final String sample, @NotNull final HlaType type, @NotNull final List<HlaTypeDetails> details) {
+    /*
+    public void writeHla(@NotNull final String sample, @NotNull final HlaTypes type, @NotNull final List<HlaTypeDetails> details) {
         hlaTypeDAO.writeType(sample, type);
         hlaTypeDAO.writeTypeDetails(sample, details);
     }
+    */
 
     public void clearCpctEcrf() {
         ecrfDAO.clearCpct();
@@ -589,8 +589,8 @@ public class DatabaseAccess implements AutoCloseable {
         LOGGER.info("Deleting PEACH data for sample: {}", sample);
         peachDAO.deletePeachForSample(sample);
 
-        LOGGER.info("Deleting HLA data for sample: {}", sample);
-        hlaTypeDAO.deleteHlaFprSample(sample);
+        // LOGGER.info("Deleting HLA data for sample: {}", sample);
+        hlaTypeDAO.deleteSampleData(sample);
 
         LOGGER.info("Deleting virus breakend data for sample: {}", sample);
         virusBreakendDAO.deleteVirusBreakendForSample(sample);

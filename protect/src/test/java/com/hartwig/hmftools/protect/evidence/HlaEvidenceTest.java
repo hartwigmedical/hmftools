@@ -5,9 +5,9 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.lilac.ImmutableLilacData;
-import com.hartwig.hmftools.common.lilac.LilacAllele;
-import com.hartwig.hmftools.common.lilac.LilacData;
+import com.hartwig.hmftools.common.hla.ImmutableLilacSummaryData;
+import com.hartwig.hmftools.common.hla.LilacAllele;
+import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.lilac.LilacTestFactory;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.serve.ServeTestFactory;
@@ -30,20 +30,20 @@ public class HlaEvidenceTest {
         HlaEvidence hlaEvidence =
                 new HlaEvidence(EvidenceTestFactory.create(), Lists.newArrayList(hla));
 
-        LilacData lilacDataActionable = createTestLilacData("Allele 1");
+        LilacSummaryData lilacDataActionable = createTestLilacData("Allele 1");
         List<ProtectEvidence> evidenceActionable = hlaEvidence.evidence(lilacDataActionable);
         assertEquals(1, evidenceActionable.size());
 
-        LilacData lilacDataNonActionable = createTestLilacData("Allele 2");
+        LilacSummaryData lilacDataNonActionable = createTestLilacData("Allele 2");
         List<ProtectEvidence> evidenceNonActionable = hlaEvidence.evidence(lilacDataNonActionable);
         assertEquals(0, evidenceNonActionable.size());
     }
 
     @NotNull
-    private static LilacData createTestLilacData(@NotNull String hlaType) {
+    private static LilacSummaryData createTestLilacData(@NotNull String hlaType) {
         List<LilacAllele> alleles = Lists.newArrayList();
-        alleles.add(LilacTestFactory.builder().name(hlaType).build());
+        alleles.add(LilacTestFactory.builder().allele(hlaType).build());
 
-        return ImmutableLilacData.builder().qc("PASS").alleles(alleles).build();
+        return ImmutableLilacSummaryData.builder().qc("PASS").alleles(alleles).build();
     }
 }

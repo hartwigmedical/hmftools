@@ -24,8 +24,7 @@ import com.hartwig.hmftools.common.flagstat.Flagstat;
 import com.hartwig.hmftools.common.flagstat.FlagstatFile;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.isofox.IsofoxDataLoader;
-import com.hartwig.hmftools.common.lilac.LilacData;
-import com.hartwig.hmftools.common.lilac.LilacDataLoader;
+import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxDataLoader;
 import com.hartwig.hmftools.common.metrics.WGSMetrics;
@@ -300,8 +299,8 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    private static LilacData loadLilacData(@NotNull OrangeConfig config) throws IOException {
-        return LilacDataLoader.load(config.lilacQcCsv(), config.lilacResultCsv());
+    private static LilacSummaryData loadLilacData(@NotNull OrangeConfig config) throws IOException {
+        return LilacSummaryData.load(config.lilacQcCsv(), config.lilacResultCsv());
     }
 
     @NotNull

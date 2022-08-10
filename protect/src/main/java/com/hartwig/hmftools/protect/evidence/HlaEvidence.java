@@ -3,8 +3,8 @@ package com.hartwig.hmftools.protect.evidence;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.lilac.LilacAllele;
-import com.hartwig.hmftools.common.lilac.LilacData;
+import com.hartwig.hmftools.common.hla.LilacAllele;
+import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLA;
 
@@ -23,7 +23,7 @@ public class HlaEvidence {
         this.actionableHLA = actionableHLA;
     }
 
-    public List<ProtectEvidence> evidence(@NotNull LilacData lilacData) {
+    public List<ProtectEvidence> evidence(@NotNull LilacSummaryData lilacData) {
         List<ProtectEvidence> result = Lists.newArrayList();
         for (LilacAllele lilacAllele : lilacData.alleles()) {
             result.addAll(evidence(lilacAllele, lilacData.qc()));

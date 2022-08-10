@@ -8,10 +8,10 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.chord.ChordTestFactory;
 import com.hartwig.hmftools.common.flagstat.FlagstatTestFactory;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.hla.ImmutableLilacSummaryData;
 import com.hartwig.hmftools.common.isofox.IsofoxTestFactory;
-import com.hartwig.hmftools.common.lilac.ImmutableLilacData;
-import com.hartwig.hmftools.common.lilac.LilacAllele;
-import com.hartwig.hmftools.common.lilac.LilacData;
+import com.hartwig.hmftools.common.hla.LilacAllele;
+import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.lilac.LilacTestFactory;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.metrics.WGSMetricsTestFactory;
@@ -69,7 +69,7 @@ public final class OrangeReportTestFactory {
                 .tumorSample(createMinimalOrangeSample())
                 .purple(PurpleInterpretationTestFactory.createMinimalTestPurpleData())
                 .linx(LinxInterpretationTestFactory.createMinimalTestLinxData())
-                .lilac(ImmutableLilacData.builder().qc(Strings.EMPTY).build())
+                .lilac(ImmutableLilacSummaryData.builder().qc(Strings.EMPTY).build())
                 .virusInterpreter(ImmutableVirusInterpreterData.builder().build())
                 .chord(ChordTestFactory.createMinimalTestChordAnalysis())
                 .cuppa(CuppaTestFactory.createMinimalCuppaData())
@@ -154,12 +154,12 @@ public final class OrangeReportTestFactory {
     }
 
     @NotNull
-    private static LilacData createTestLilacData() {
+    private static LilacSummaryData createTestLilacData() {
         List<LilacAllele> alleles = Lists.newArrayList();
-        alleles.add(LilacTestFactory.builder().name("Allele 1").build());
-        alleles.add(LilacTestFactory.builder().name("Allele 2").somaticInframeIndel(1D).build());
+        alleles.add(LilacTestFactory.builder().allele("Allele 1").build());
+        alleles.add(LilacTestFactory.builder().allele("Allele 2").somaticInframeIndel(1D).build());
 
-        return ImmutableLilacData.builder().qc("PASS").alleles(alleles).build();
+        return ImmutableLilacSummaryData.builder().qc("PASS").alleles(alleles).build();
     }
 
     @NotNull

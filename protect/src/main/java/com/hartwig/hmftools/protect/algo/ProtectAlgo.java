@@ -10,8 +10,7 @@ import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.lilac.LilacData;
-import com.hartwig.hmftools.common.lilac.LilacDataLoader;
+import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxDataLoader;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
@@ -112,7 +111,7 @@ public class ProtectAlgo {
         LinxData linxData = loadLinxData(config);
         VirusInterpreterData virusInterpreterData = loadVirusInterpreterData(config);
         ChordData chordAnalysis = ChordDataFile.read(config.chordPredictionTxt(), true);
-        LilacData lilacData = loadLilacData(config);
+        LilacSummaryData lilacData = loadLilacData(config);
 
         return determineEvidence(purpleData, linxData, virusInterpreterData, chordAnalysis, lilacData);
     }
@@ -145,13 +144,13 @@ public class ProtectAlgo {
     }
 
     @NotNull
-    private static LilacData loadLilacData(@NotNull ProtectConfig config) throws IOException {
-        return LilacDataLoader.load(config.lilacQcCsv(), config.lilacResultCsv());
+    private static LilacSummaryData loadLilacData(@NotNull ProtectConfig config) throws IOException {
+        return LilacSummaryData.load(config.lilacQcCsv(), config.lilacResultCsv());
     }
 
     @NotNull
     private List<ProtectEvidence> determineEvidence(@NotNull PurpleData purpleData, @NotNull LinxData linxData,
-            @NotNull VirusInterpreterData virusInterpreterData, @NotNull ChordData chordAnalysis, @NotNull LilacData lilacData) {
+            @NotNull VirusInterpreterData virusInterpreterData, @NotNull ChordData chordAnalysis, @NotNull LilacSummaryData lilacData) {
         LOGGER.info("Evidence extraction started");
         List<ProtectEvidence> variantEvidence = variantEvidenceFactory.evidence(purpleData.reportableGermlineVariants(),
                 purpleData.reportableSomaticVariants(),

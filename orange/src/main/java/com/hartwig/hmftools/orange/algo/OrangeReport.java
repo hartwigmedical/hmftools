@@ -8,7 +8,7 @@ import java.util.Set;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.lilac.LilacData;
+import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.wildtype.WildTypeGene;
@@ -65,7 +65,7 @@ public abstract class OrangeReport {
     public abstract IsofoxInterpretedData isofox();
 
     @NotNull
-    public abstract LilacData lilac();
+    public abstract LilacSummaryData lilac();
 
     @NotNull
     public abstract VirusInterpreterData virusInterpreter();

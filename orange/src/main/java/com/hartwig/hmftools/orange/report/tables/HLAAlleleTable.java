@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.lilac.LilacAllele;
+import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
@@ -35,7 +35,7 @@ public final class HLAAlleleTable {
                         Cells.createHeader("RNA Frags"), Cells.createHeader("Tumor CN"), Cells.createHeader("Somatic #mutations") });
 
         for (LilacAllele allele : sort(alleles)) {
-            table.addCell(Cells.createContent(allele.name()));
+            table.addCell(Cells.createContent(allele.allele()));
             table.addCell(Cells.createContent(String.valueOf(allele.refFragments())));
             table.addCell(Cells.createContent(String.valueOf(allele.tumorFragments())));
             table.addCell(Cells.createContent(rnaFragmentString(allele)));
@@ -49,13 +49,13 @@ public final class HLAAlleleTable {
     @NotNull
     private static List<LilacAllele> sort(@NotNull List<LilacAllele> alleles) {
         return alleles.stream()
-                .sorted(Comparator.comparing(LilacAllele::name).thenComparingInt(LilacAllele::refFragments))
+                .sorted(Comparator.comparing(LilacAllele::allele).thenComparingInt(LilacAllele::refFragments))
                 .collect(Collectors.toList());
     }
 
     @NotNull
     private static String rnaFragmentString(@NotNull LilacAllele allele) {
-        return allele.rnaFragments() != null ? String.valueOf(allele.rnaFragments()) : ReportResources.NOT_AVAILABLE;
+        return String.valueOf(allele.rnaFragments());
     }
 
     @NotNull

@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
 
+import com.hartwig.hmftools.common.hla.ImmutableLilacAllele;
+import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.lilac.coverage.AlleleCoverage;
 import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;
 import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
@@ -43,7 +45,7 @@ public class SolutionSummary
         {
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
-            writer.write(generateAlleleHeader());
+            writer.write(LilacAllele.header());
             writer.newLine();
 
             if(ReferenceCoverage != null)
@@ -64,30 +66,6 @@ public class SolutionSummary
         }
     }
 
-    private final String generateAlleleHeader()
-    {
-        StringJoiner header = new StringJoiner(DELIM)
-                .add("Allele")
-                .add("RefTotal")
-                .add("RefUnique")
-                .add("RefShared")
-                .add("RefWild")
-                .add("TumorTotal")
-                .add("TumorUnique")
-                .add("TumorShared")
-                .add("TumorWild")
-                .add("TumorCopyNumber")
-                .add("RnaTotal")
-                .add("RnaUnique")
-                .add("RnaShared")
-                .add("RnaWild")
-                .add("SomaticMissense")
-                .add("SomaticNonsenseOrFrameshift")
-                .add("SomaticSplice")
-                .add("SomaticSynonymous")
-                .add("SomaticInframeIndel");
-        return header.toString();
-    }
 
     private final String generateAlleleBody(int index)
     {
@@ -102,7 +80,9 @@ public class SolutionSummary
         double copyNumber = TumorCopyNumber.get(index);
         SomaticCodingCount codingCount = SomaticCodingCount.get(index);
 
-        StringJoiner header = new StringJoiner(DELIM)
+        // TODO: use LilacAllele write method
+
+        StringJoiner alelelData = new StringJoiner(DELIM)
                 .add(ref.Allele.toString())
                 .add(String.valueOf(round(ref.TotalCoverage)))
                 .add(String.valueOf(ref.UniqueCoverage))
@@ -123,7 +103,7 @@ public class SolutionSummary
                 .add(String.format("%.2f", codingCount.synonymous()))
                 .add(String.format("%.2f", codingCount.inframeIndel()));
 
-        return header.toString();
+        return alelelData.toString();
     }
 
     public static SolutionSummary create(

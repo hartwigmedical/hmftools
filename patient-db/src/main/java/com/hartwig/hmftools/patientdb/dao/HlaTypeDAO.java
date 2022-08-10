@@ -6,12 +6,10 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.HLATYPE
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.hartwig.hmftools.common.hla.HlaType;
-import com.hartwig.hmftools.common.hla.HlaTypeDetails;
+import com.hartwig.hmftools.common.hla.HlaTypes;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep15;
 
 class HlaTypeDAO {
 
@@ -22,7 +20,8 @@ class HlaTypeDAO {
         this.context = context;
     }
 
-    void writeType(@NotNull final String sample, @NotNull HlaType type) {
+    /*
+    void writeType(@NotNull final String sample, @NotNull HlaTypes type) {
         context.delete(HLATYPE).where(HLATYPE.SAMPLEID.eq(sample)).execute();
 
         LocalDateTime timestamp = LocalDateTime.now();
@@ -90,8 +89,10 @@ class HlaTypeDAO {
         }
         inserter.execute();
     }
+    */
 
-    void deleteHlaFprSample(@NotNull String sample) {
+    public void deleteSampleData(@NotNull String sample)
+    {
         context.delete(HLATYPE).where(HLATYPE.SAMPLEID.eq(sample)).execute();
         context.delete(HLATYPEDETAILS).where(HLATYPEDETAILS.SAMPLEID.eq(sample)).execute();
 

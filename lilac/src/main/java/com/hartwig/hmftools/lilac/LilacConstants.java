@@ -106,8 +106,6 @@ public class LilacConstants
     }
 
     // output file IDs
-    public static String LILAC_FILE_SUMMARY = "lilac.csv";
-    public static String LILAC_FILE_QC = "lilac.qc.csv";
     public static String LILAC_FILE_CANDIDATE_COVERAGE = "candidates.coverage.csv";
     public static String LILAC_FILE_CANDIDATE_FRAGS = "candidates.fragments.csv";
     public static String LILAC_FILE_ALL_FRAGMENTS = "fragments.csv";

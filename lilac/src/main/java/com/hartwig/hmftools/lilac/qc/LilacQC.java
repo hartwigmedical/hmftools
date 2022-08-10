@@ -26,6 +26,7 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.hla.LilacQcData;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 public final class LilacQC
@@ -65,7 +66,7 @@ public final class LilacQC
     public List<String> getHeaderItems()
     {
         List<String> columns = Lists.newArrayList();
-        columns.add("Status");
+        columns.add(LilacQcData.FLD_QC_STATUS);
         columns.add("ScoreMargin");
         columns.add("NextSolutionAlleles");
         columns.add("MedianBaseQuality");
