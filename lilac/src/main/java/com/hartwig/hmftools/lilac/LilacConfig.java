@@ -27,7 +27,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -326,7 +325,6 @@ public class LilacConfig
         addRefGenomeConfig(options);
         addOutputDir(options);
         addLoggingOptions(options);
-        DatabaseAccess.addDatabaseCmdLineArgs((Options) options);
         return options;
     }
 
@@ -338,5 +336,4 @@ public class LilacConfig
         String[] alleles = allelesStr.split(ITEM_DELIM, -1);
         return Arrays.stream(alleles).map(x -> HlaAllele.fromString(x)).collect(Collectors.toList());
     }
-
 }

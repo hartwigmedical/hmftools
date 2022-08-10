@@ -73,7 +73,6 @@ import com.hartwig.hmftools.lilac.variant.LilacVCF;
 import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
 import com.hartwig.hmftools.lilac.variant.SomaticVariant;
 import com.hartwig.hmftools.lilac.variant.SomaticVariantAnnotation;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -718,20 +717,6 @@ public class LilacApplication
         return true;
     }
 
-    public void writeDatabaseResults(final CommandLine cmd)
-    {
-        if(!DatabaseAccess.hasDatabaseConfig(cmd))
-            return;
-
-        /*
-        LL_LOGGER.info("Writing output to DB");
-        DatabaseAccess dbAccess = DatabaseAccess.databaseAccess((CommandLine) cmd, (boolean) true);
-        HlaType type = HlaFiles.type((String) outputFile, (String) outputQCFile);
-        List typeDetails = HlaFiles.typeDetails((String) outputFile);
-        dbAccess.writeHla(sample, type, typeDetails);
-        */
-    }
-
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = LilacConfig.createOptions();
@@ -749,9 +734,6 @@ public class LilacApplication
             if(lilac.run())
             {
                 lilac.writeFileOutputs();
-
-                if(DatabaseAccess.hasDatabaseConfig(cmd))
-                    lilac.writeDatabaseResults(cmd);
             }
 
             long endTime = System.currentTimeMillis();
